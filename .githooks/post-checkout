@@ -1,0 +1,4 @@
+#!/bin/sh
+# Git LFS hook. Required because core.hooksPath points to .githooks.
+command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. Install Git LFS, then run: git lfs install --skip-repo"; exit 2; }
+git lfs post-checkout "$@"

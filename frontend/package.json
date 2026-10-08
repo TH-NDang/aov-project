@@ -1,0 +1,21 @@
+{
+  "name": "aov-frontend",
+  "private": true,
+  "packageManager": "pnpm@11.28.4",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:wiki": "pnpm --filter @aov/aov-wiki dev",
+    "dev:stream": "pnpm --filter @aov/aov-stream dev",
+    "dev:admin": "pnpm --filter @aov/admin-aov dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.3",
+    "@types/node": "^22.0.0"
+  }
+}
