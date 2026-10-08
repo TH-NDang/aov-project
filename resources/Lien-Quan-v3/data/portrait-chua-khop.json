@@ -1,0 +1,314 @@
+[
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-0a947891a0b358528784.png",
+    "figmaName": "Fennik - Sứ giả may mắn",
+    "exportDuplicateIndex": 0,
+    "nodeId": "733:1224",
+    "frameOrder": 11,
+    "hero": "Fennik",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.3448275862068966,
+        "heroSkin-10",
+        "Fennik Phong Tranh Thám Xuân"
+      ],
+      [
+        0.3157894736842105,
+        "heroSkin-5",
+        "Fennik Tay đua F1"
+      ],
+      [
+        0.3,
+        "heroSkin-7",
+        "Fennik Phi hồ ẩn sĩ"
+      ]
+    ],
+    "bytes": 208188,
+    "sha256": "9598a32770beb9d8da103b244ff77ae0a760b4cb705d9f3c49c6c7bfc8a77fb9",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/fennik-su-gia-may-man-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": true,
+    "assetId": "asset-0a947891a0b358528784"
+  },
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-ee9e7617a228570e9d7e.png",
+    "figmaName": "Florentino - Quán Quân",
+    "exportDuplicateIndex": 0,
+    "nodeId": "733:1193",
+    "frameOrder": 9,
+    "hero": "Florentino",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.5555555555555556,
+        "heroSkin-12",
+        "Florentino S-Quang Vinh"
+      ],
+      [
+        0.4,
+        "heroSkin-10",
+        "Florentino Xứ sở thần tiên"
+      ],
+      [
+        0.38095238095238093,
+        "heroSkin-9",
+        "Florentino Bá vương âm nhạc"
+      ]
+    ],
+    "bytes": 201199,
+    "sha256": "3fc3308dd04908b65fbf1214278e2b1b33b7c14d6aa96f7a3b798ad27e0307cf",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/florentino-quan-quan-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": true,
+    "assetId": "asset-ee9e7617a228570e9d7e"
+  },
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-b7e28b6d08075af185fa.png",
+    "figmaName": "Max - Người đưa thư",
+    "exportDuplicateIndex": 0,
+    "nodeId": "733:906",
+    "frameOrder": 10,
+    "hero": "Max",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.4,
+        "heroSkin-4",
+        "Max Quang Vinh"
+      ],
+      [
+        0.34782608695652173,
+        "heroSkin-9",
+        "Max \"Không trêu bạn\""
+      ],
+      [
+        0.3076923076923077,
+        "heroSkin-5",
+        "Max Thần đồng sinh hóa"
+      ]
+    ],
+    "bytes": 204546,
+    "sha256": "e1e276ffe29bf8076c3ee32e057c471b761c8a1d6d50c0ca60013e27a5b01a6c",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/max-nguoi-dua-thu-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": true,
+    "assetId": "asset-b7e28b6d08075af185fa"
+  },
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-08eb50a1ff84578984b9.png",
+    "figmaName": "Ngộ Không - Đại náo văn phòng",
+    "exportDuplicateIndex": 0,
+    "nodeId": "733:353",
+    "frameOrder": 15,
+    "hero": "Ngộ Không",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.46153846153846156,
+        "heroSkin-7",
+        "Ngộ Không Đặc vụ băng hầu"
+      ],
+      [
+        0.42857142857142855,
+        "heroSkin-13",
+        "Ngộ Không Tề Thiên Võ Thánh"
+      ],
+      [
+        0.32,
+        "heroSkin-11",
+        "Ngộ Không Cổ thần Ai Cập"
+      ]
+    ],
+    "bytes": 195686,
+    "sha256": "2011c469dc34db8475e2478584e708c2d430d7531559c8e4dfc462c847ca8c9d",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/ngo-khong-dai-nao-van-phong-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": true,
+    "assetId": "asset-08eb50a1ff84578984b9"
+  },
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-b7987de27d6258d18f55.png",
+    "figmaName": "Omega - Khởi Nguyên",
+    "exportDuplicateIndex": 0,
+    "nodeId": "733:361",
+    "frameOrder": 6,
+    "hero": "Omega",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.45454545454545453,
+        "heroSkin-2",
+        "Omega Người máy xanh"
+      ],
+      [
+        0.3,
+        "heroSkin-5",
+        "Omega Hộ vệ Carano"
+      ],
+      [
+        0.3,
+        "heroSkin-4",
+        "Omega Hộ vệ ba bích"
+      ]
+    ],
+    "bytes": 198900,
+    "sha256": "788644eb378d5e3112fd995928a503e6f0ecf21773c89c6fe1c70fe83e305ed7",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/omega-khoi-nguyen-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": true,
+    "assetId": "asset-b7987de27d6258d18f55"
+  },
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-27942c324f5457dcade3.png",
+    "figmaName": "Ryoma - Bá Tước Rừng Đen",
+    "exportDuplicateIndex": 0,
+    "nodeId": "733:484",
+    "frameOrder": 13,
+    "hero": "Ryoma",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.4666666666666667,
+        "heroSkin-3",
+        "Ryoma Đại Tướng Nguyệt Tộc"
+      ],
+      [
+        0.41379310344827586,
+        "heroSkin-2",
+        "Ryoma Thợ Săn Tiền Thưởng"
+      ],
+      [
+        0.4,
+        "heroSkin-5",
+        "Ryoma Samurai Huyền thoại"
+      ]
+    ],
+    "bytes": 206485,
+    "sha256": "6cb0878f4b4e7fe19b9c9ebf61a1614e2c863c6d8a863acac2b880f0be88f0d0",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/ryoma-ba-tuoc-rung-den-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": true,
+    "assetId": "asset-27942c324f5457dcade3"
+  },
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-285d881e59be505b9109.png",
+    "figmaName": "Wisp - Te Tò He",
+    "exportDuplicateIndex": 0,
+    "nodeId": "733:741",
+    "frameOrder": 9,
+    "hero": "Wisp",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.6,
+        "heroSkin-8",
+        "Wisp Bé hề"
+      ],
+      [
+        0.4,
+        "heroSkin-9",
+        "Wisp Tiểu Ronin"
+      ],
+      [
+        0.26666666666666666,
+        "heroSkin-2",
+        "Wisp Hải Tặc Nhí"
+      ]
+    ],
+    "bytes": 204521,
+    "sha256": "8da4dc345f61dec6a5ddf41d9b54026e00f098a92d10a5065b814e03f5403d47",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/ban-khac/01/wisp-te-to-he-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": false,
+    "assetId": "asset-285d881e59be505b9109"
+  },
+  {
+    "kind": "skin",
+    "sourceFile": "assets/skin/portrait/source/asset-940606c681fa5b53998c.png",
+    "figmaName": "Wisp - Te Tò He",
+    "exportDuplicateIndex": 1,
+    "nodeId": "733:742",
+    "frameOrder": 10,
+    "hero": "Wisp",
+    "skinId": null,
+    "matchTitle": null,
+    "method": "unmatched",
+    "suggestions": [
+      [
+        0.6,
+        "heroSkin-8",
+        "Wisp Bé hề"
+      ],
+      [
+        0.4,
+        "heroSkin-9",
+        "Wisp Tiểu Ronin"
+      ],
+      [
+        0.26666666666666666,
+        "heroSkin-2",
+        "Wisp Hải Tặc Nhí"
+      ]
+    ],
+    "bytes": 205347,
+    "sha256": "24bd6e4c648d65d162c32763afe4ecec58d2afc974b689a2cb1b725a7d518a64",
+    "width": 278,
+    "height": 436,
+    "status": "ok",
+    "file": "temp/portrait/wisp-te-to-he-portrait.png",
+    "frameId": "857:2",
+    "source": "User-provided Figma PNG export",
+    "isPrimary": true,
+    "assetId": "asset-940606c681fa5b53998c"
+  }
+]

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <base href="../">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tổng quan portrait · Liên Quân</title>
+  <link rel="stylesheet" href="program/preview/portrait-view.css">
+</head>
+<body>
+  <header class="intro">
+    <div class="eyebrow">LIÊN QUÂN · BỘ ẢNH FIGMA</div>
+    <h1>Tổng quan portrait</h1>
+    <p>Xem ảnh đã ghép, đối chiếu bản trùng và kiểm tra những mục còn thiếu.</p>
+    <div class="summary"><span class="dot"></span><span id="summary">Đang đọc dữ liệu…</span></div>
+    <div class="stats" id="stats"></div>
+  </header>
+  <main>
+    <nav class="tabs" id="tabs" aria-label="Nhóm ảnh"></nav>
+    <div class="tools">
+      <label class="search"><span>Tìm kiếm</span><input id="search" type="search" placeholder="Tên tướng, trang phục hoặc file…" autocomplete="off"></label>
+      <label><span>Tướng</span><select id="hero-filter"><option value="">Tất cả tướng</option></select></label>
+      <button id="reset" class="quiet" type="button">Xóa bộ lọc</button>
+    </div>
+    <div class="section-heading"><div><h2 id="section-title"></h2><p id="section-note"></p></div><span id="result-count" class="count" aria-live="polite"></span></div>
+    <div id="gallery" class="gallery"></div>
+    <div id="empty" class="empty" hidden>Không có mục phù hợp với bộ lọc hiện tại.</div>
+    <div class="more"><button id="load-more" type="button" hidden>Xem thêm</button><span id="loaded-count"></span></div>
+    <footer>Dữ liệu và ảnh cũ được giữ nguyên. <a href="data/heroes.json" target="_blank">Xem JSON tướng và trang phục</a> · <a href="note/HUONG-DAN.txt" target="_blank">Hướng dẫn bộ ảnh</a></footer>
+  </main>
+  <dialog id="detail" aria-labelledby="detail-title">
+    <div class="dialog-top"><span id="detail-kind"></span><button id="close-detail" aria-label="Đóng chi tiết" type="button">✕</button></div>
+    <div class="detail-layout">
+      <div class="preview"><img id="detail-image" alt=""><span id="detail-image-label"></span></div>
+      <div class="detail-copy">
+        <div id="detail-hero" class="eyebrow"></div><h2 id="detail-title"></h2><p id="detail-status"></p>
+        <div id="detail-badge"></div>
+        <section id="version-section"><h3>Các bản portrait</h3><p id="version-note">Bản cuối trong frame được chọn làm ảnh chính. Bấm ảnh để đối chiếu.</p><div id="versions" class="versions"></div></section>
+        <section id="original-section"><h3>Ảnh trong dữ liệu cũ</h3><div id="originals" class="originals"></div></section>
+        <div class="file-info"><span>File đang xem</span><a id="detail-file" target="_blank"></a><span id="source-name"></span></div>
+        <button id="related" class="quiet" type="button" hidden>Xem trang phục của tướng</button>
+      </div>
+    </div>
+  </dialog>
+  <script src="program/shared/data.js"></script>
+  <script src="program/shared/portrait-review-data.js"></script>
+  <script src="program/preview/portrait-view.js"></script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "heroes": [],
+  "skins": [
+    {
+      "hero": "Slimz",
+      "id": "slimz-heroskin-8",
+      "name": "\"Siêu Cấp Tối Thượng\"",
+      "sourceSkinId": "heroSkin-8"
+    },
+    {
+      "hero": "Natalya",
+      "id": "natalya-heroskin-7",
+      "name": "Biệt đội băng lam",
+      "sourceSkinId": "heroSkin-7"
+    },
+    {
+      "hero": "Thane",
+      "id": "thane-heroskin-2",
+      "name": "",
+      "sourceSkinId": "heroSkin-2"
+    }
+  ]
+}

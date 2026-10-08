@@ -1,0 +1,24 @@
+{
+  "sourcePackage": "Lien-Quan-v2",
+  "pathBase": "package-root",
+  "topLevel": [
+    "assets",
+    "preview",
+    "data",
+    "note",
+    "program",
+    "temp"
+  ],
+  "assetFiles": 4836,
+  "portraitFiles": 1303,
+  "status": "verified",
+  "listHeadsRenamed": 129,
+  "historyNote": "Bộ v2 và lịch sử của nó được giữ nguyên; bộ này dùng lịch sử thao tác mới.",
+  "heroes": 129,
+  "skins": 1101,
+  "sourceFilesChecked": 6177,
+  "oldFilesUnchanged": true,
+  "allPathsVerified": true,
+  "managerSaveRestoreVerified": true,
+  "equipmentSaveVerified": true
+}

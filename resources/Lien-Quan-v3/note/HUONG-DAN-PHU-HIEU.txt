@@ -1,0 +1,35 @@
+PHÙ HIỆU
+
+NGUỒN VÀ NGÀY THU
+Website: https://lienquan.garena.vn/hoc-vien/phu-hieu/
+Thông tin chi tiết: phuhieudulieu.xlsx do người dùng cung cấp.
+Ngày thu ghi trong data/phu-hieu.json: 03/10/2026.
+Bộ có 4 hệ và 31 phù hiệu. Mốc thu là mốc bộ dữ liệu, không tự suy ra ngày tạo từng ảnh.
+Link ảnh nền/icon theo từng mục nằm trong sourceUrl và nguồn đi kèm trong JSON.
+
+PHÂN BIỆT ẢNH
+assets/phu-hieu/he: ảnh hệ; assets/phu-hieu/icon: icon phù hiệu nhỏ.
+background của hệ là ảnh nền gốc từ Garena.
+icon đại diện hệ là ảnh tái tạo bằng ImageGen theo mẫu Garena, nền trong suốt,
+không có vòng ngoài; không phải file icon hệ nguyên bản được tải từ website.
+referenceFile chỉ ảnh tham chiếu; derived/method/note trong JSON ghi tính chất tái tạo.
+Không gộp ngày collectedOn với ngày tạo ảnh tái tạo khi ngày đó chưa được ghi riêng.
+Giữ sourceUrl, SHA256 và thông tin tái tạo khi mang ảnh sang ứng dụng khác.
+
+DỮ LIỆU VÀ VỊ TRÍ
+data/phu-hieu.json: hệ, cấp, mô tả, icon và vị trí.
+position.group dùng tên hệ; tier từ 1 đến 3; row/column bắt đầu từ 0.
+Vị trí theo Excel và websitePosition của Garena lưu riêng, không đồng nhất.
+source.raw giữ nội dung do người dùng cung cấp; không tự bổ sung số liệu bị cắt.
+Các mô tả Ma chú, Đấu khí, Luyện kim từng có dấu hiệu thiếu nội dung; cần đối chiếu nguồn.
+Tên hiển thị có dấu; tên file không dấu, không khoảng trắng.
+
+XEM VÀ DÙNG Ở NƠI KHÁC
+preview/Xem-phu-hieu.html xem các hệ và chi tiết.
+Các đường dẫn file/referenceFile trong JSON tính từ thư mục chứa assets/data.
+Có thể đổi asset base URL hoặc vị trí ảnh; cập nhật JSON và src/href của trang xem cho khớp.
+Trang HTML hiện nhúng nội dung: sửa JSON thủ công chưa tự cập nhật tên/mô tả/vị trí trong HTML.
+Chưa có công cụ biên tập phù hiệu tự lưu giống công cụ portrait/trang bị.
+Giữ id khi tích hợp vào ứng dụng; làm bản sao trước khi sửa dữ liệu.
+Không cần vị trí hoặc tên thư mục dự án ban đầu để dùng các ảnh và JSON.
+Nguồn/ngày tổng hợp: note/NGUON-VA-NGAY-THU-THAP.txt và data/nguon-thu-thap.json.

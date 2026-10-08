@@ -1,0 +1,84 @@
+NGUỒN VÀ NGÀY THU THẬP
+Tài liệu xuất xứ của bộ ảnh/dữ liệu Liên Quân. Ngày ghi tài liệu: 07/10/2026.
+Ngày bên dưới là mốc thu thập hoặc nhận gói ảnh, không phải ngày cập nhật game.
+Phiên bản website hiện tại có thể khác nội dung tại thời điểm thu thập.
+
+1. HEAD / COVER TƯỚNG, TRANG PHỤC VÀ ICON BẬC
+Nguồn: Garena Liên Quân.
+Trang danh mục: https://lienquan.garena.vn/hoc-vien/tuong-skin/
+Ảnh lấy từ từng trang tướng và các mục trang phục trên trang đó.
+Link trang tướng (page) và link ảnh gốc (url) lưu theo từng bản ghi trong
+ data/danh-sach-anh.json; tên hiện dùng có thể do người sử dụng đặt lại.
+Ngày tải: 22/09/2026, theo tài liệu thu thập của bộ ảnh Garena.
+Phạm vi lúc tải: 129 trang tướng, gồm 2 dạng Flowborn; 2.456 ảnh tương ứng
+1.228 bộ head/cover (129 bộ mặc định + 1.099 bộ trang phục), và 194 nhãn bậc.
+Head/cover lấy ở mục trang phục trong từng trang chi tiết, không lấy head
+ở trang danh mục tổng quan; giữ nguyên dữ liệu ảnh nguồn.
+Nhãn bậc/nhãn đặc biệt nằm trên tên trang phục, loại trùng theo nội dung file.
+Flowborn-ad: https://lienquan.garena.vn/hoc-vien/tuong-skin/d/flowborn/
+Flowborn-mid: https://lienquan.garena.vn/hoc-vien/tuong-skin/d/flowborn-2/
+Không dùng /2026/04/ hay /2024/05/ trong link ảnh làm ngày thu thập.
+
+2. ICON TƯỚNG VÀ CHIÊU ARENA OF VALOR
+Nguồn: Liquipedia, mục Arena of Valor.
+Trang danh mục: https://liquipedia.net/honorofkings/Portal:Heroes/Arena_of_Valor
+Link trang chiêu theo tướng ở heroes[].sources.skills trong data/heroes.json;
+link từng icon chiêu ở skills[].variants[].sourceUrl.
+Ngày tải icon chiêu: 22/09/2026, theo hướng dẫn thu thập; 603 ảnh PNG
+từ 129 mục tướng, gồm hai dạng Flowborn. Link và ngày theo icon lưu trong
+data/nguon-icon-chieu.json.
+Ngày tải icon danh sách tướng: chưa được ghi rõ; nhóm này có manifest riêng
+data/nguon-icon-tuong.json, không tự gán theo ngày tải icon chiêu.
+Tên đường dẫn honorofkings của website
+không đồng nghĩa đây là bộ chiêu Honor of Kings; phạm vi thu là Arena of Valor.
+Icon danh sách tướng từ Liquipedia dùng listHead, khác head Garena.
+
+3. PORTRAIT TỪ FIGMA
+Nguồn: file thiết kế Figma do người dùng cung cấp.
+File key: PfkEKzA4gz02VCRBRoHRWa.
+Frame tướng: https://www.figma.com/design/PfkEKzA4gz02VCRBRoHRWa/?node-id=733-140
+Frame trang phục: https://www.figma.com/design/PfkEKzA4gz02VCRBRoHRWa/?node-id=857-2
+Ngày xuất/nhận gói PNG: 06/10/2026, theo ghi nhận thao tác.
+Đây không phải ngày tạo ảnh gốc hoặc ngày thiết kế file Figma.
+Gói nhận gồm 135 ảnh tướng và 1.168 ảnh trang phục; PNG 1x, 278 × 436.
+Xuất từng ảnh riêng; khung bọc được kiểm tra để tránh cắt phần hình.
+Bản chưa có thay đổi lựa chọn dùng ảnh cuối trong frame làm chính, giữ các bản khác.
+Sau khi biên tập, ảnh chính có thể do người dùng chọn; isPrimary/portrait là trạng thái có hiệu lực.
+Tên lớp, nodeId nếu có, frameId, sourceFile, originalSourceName, SHA256 và
+trạng thái ghép lưu trong data/portrait-sources.json. Nguồn portrait giữ ở
+assets/hero/portrait/source hoặc assets/skin/portrait/source.
+Figma là nguồn cung cấp file này; không tự diễn giải là nguồn phát hành artwork gốc.
+
+4. TRANG BỊ
+Nguồn ảnh: https://lienquan.garena.vn/hoc-vien/trang-bi/
+Nguồn chi tiết: trangbidulieu.xlsx do người dùng cung cấp.
+Ngày thu thập ghi trong JSON: 30/09/2026 (data/trang-bi.json: collectedOn).
+Link ảnh và dữ liệu Excel theo món: data/trang-bi-nguon-du-lieu.json.
+Các công thức/vị trí có thể được người dùng xác nhận thêm sau mốc thu thập;
+ngày collectedOn không phải ngày xác nhận tất cả công thức.
+
+5. PHÙ HIỆU
+Nguồn: https://lienquan.garena.vn/hoc-vien/phu-hieu/
+Nguồn chi tiết: phuhieudulieu.xlsx do người dùng cung cấp.
+Ngày thu thập ghi trong JSON: 03/10/2026 (data/phu-hieu.json: collectedOn).
+Icon phù hiệu nhỏ có sourceUrl trong JSON. Background hệ là ảnh Garena.
+Icon đại diện hệ là ảnh tái tạo bằng ImageGen theo mẫu Garena, nền trong suốt,
+không có vòng ngoài; không phải file icon hệ nguyên bản tải từ website.
+Mốc collectedOn của bộ dữ liệu không khẳng định ngày tạo từng icon tái tạo.
+
+6. NGỌC
+Chưa thu thập. assets/ngoc đang trống; data/ngoc.json ghi not-collected.
+Không có link/ngày nguồn được tự đặt cho phần này.
+
+TRA CỨU
+Nguồn tổng hợp dạng JSON: data/nguon-thu-thap.json.
+Mã, vị trí ảnh đang dùng và SHA256: data/danh-sach-tai-nguyen.json.
+Giữ cả URL gốc và SHA256 khi mang đi hoặc đổi tên để có thể đối chiếu nội dung.
+Không lấy lastEditedAt hoặc ngày sửa file làm ngày thu thập ban đầu.
+
+ĐƯỜNG DẪN VÀ CÁCH MANG ĐI
+Các đường dẫn assets/, data/, preview/, program/, temp/ trong tài liệu tính từ
+thư mục chứa các phần này, không tính từ thư mục note và không phụ thuộc tên thư mục.
+Giữ các phần đi cùng nhau khi chuyển nơi lưu. Không cần giữ thư mục dự án ban đầu.
+Nếu đặt tài nguyên ở vị trí khác, cập nhật đường dẫn trong JSON và phần đọc ảnh của
+trang xem/chương trình; các link website nguồn vẫn giữ nguyên để truy xuất xuất xứ.

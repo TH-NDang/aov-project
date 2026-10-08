@@ -1,0 +1,10 @@
+#!/bin/sh
+# Check that newly added code comments are written in English.
+root="$(git rev-parse --show-toplevel)" || exit 1
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "[pre-commit] Node.js not found; skipping English comment check." >&2
+  exit 0
+fi
+
+exec node "$root/.githooks/check-english-comments.mjs"

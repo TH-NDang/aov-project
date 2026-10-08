@@ -1,0 +1,23 @@
+{
+  "status": "historical",
+  "sourcePackage": "Lien-Quan-v2",
+  "previousMigration": {
+    "status": "verified",
+    "heroes": 129,
+    "skins": 1101,
+    "portraitFiles": 1303,
+    "equipment": 112,
+    "enchantments": 31,
+    "assetFiles": 4836,
+    "conflictingBasenames": 0,
+    "sourceFilesChecked": 7433,
+    "oldFilesUnchanged": true,
+    "allReferencedAssetsExist": true,
+    "assetChecksumsMatch": true,
+    "stableEntityIds": true,
+    "managersSaveAndRestoreVerified": true,
+    "httpVerified": true,
+    "selfContained": true
+  },
+  "currentStructureReport": "data/kiem-tra-cau-truc.json"
+}

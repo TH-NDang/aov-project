@@ -1,0 +1,58 @@
+TƯỚNG, TRANG PHỤC VÀ ICON CHIÊU
+
+NGUỒN VÀ MỐC THU THẬP
+Head/cover/bậc: https://lienquan.garena.vn/hoc-vien/tuong-skin/
+Icon danh sách tướng và chiêu: https://liquipedia.net/honorofkings/Portal:Heroes/Arena_of_Valor
+Head/cover/bậc Garena và icon chiêu Liquipedia tải ngày 22/09/2026,
+theo tài liệu thu thập. Ngày tải icon danh sách tướng chưa được ghi riêng.
+Portrait Figma: các frame 733:140 và 857:2 trong file PfkEKzA4gz02VCRBRoHRWa;
+gói PNG được xuất/nhận 06/10/2026. Link đầy đủ ở NGUON-VA-NGAY-THU-THAP.txt.
+Link từng ảnh Garena: data/danh-sach-anh.json, trường page/url.
+Link từng ảnh chiêu: data/nguon-icon-chieu.json; trong heroes.json có sources.skills
+và variants[].sourceUrl. Icon danh sách: data/nguon-icon-tuong.json.
+Phạm vi Garena lúc tải: 129 trang tướng, 2.456 ảnh head/cover, 194 nhãn bậc.
+Ảnh lấy từ mục trang phục trong trang chi tiết, giữ nguyên dữ liệu nguồn.
+Flowborn-ad lấy ở /hoc-vien/tuong-skin/d/flowborn/; Flowborn-mid ở /flowborn-2/.
+
+PHÂN BIỆT ẢNH
+head: ảnh đại diện Garena của tướng/trang phục.
+listHead: icon dùng trong danh sách tướng từ Liquipedia; tên có -list-head.
+cover: ảnh minh họa rộng. portrait: ảnh dọc nhận từ Figma, không thay thế cover.
+Ảnh chiêu trong assets/skill là icon, không phải video chiêu thức.
+Flowborn-mid và Flowborn-ad có bộ chiêu riêng; giữ các mã riêng này để liên kết.
+
+JSON VÀ TÊN FILE
+Dữ liệu chính: data/heroes.json. heroes[].id và skins[].id là khóa liên kết.
+sourceSkinId là mã nguồn; mã local-... dùng cho mục do người dùng tự bổ sung.
+Ảnh mặc định Garena (heroSkin-1) thuộc tướng; mục trang phục khác thuộc skin.
+Ảnh chính: <tướng>-portrait.png hoặc <tướng>-<trang phục>-portrait.png.
+Các bản khác được giữ ở portrait/variants; portraitAlternates ghi các đường dẫn đó.
+Nguồn portrait được giữ riêng trong portrait/source, không đổi nội dung theo ảnh chính.
+Trường portrait null là chưa có ảnh khớp, không có nghĩa ảnh gốc bị mất khỏi toàn bộ bộ dữ liệu.
+
+CHIÊU VÀ DẠNG TƯỚNG
+slot 0 = nội tại; slot 1 trở lên = chiêu theo thứ tự nguồn.
+variant index bắt đầu từ 1; tên icon <tướng>-<slot>-<variant>.<đuôi ảnh>.
+Một chiêu có thể có nhiều icon trong cùng khung hoặc ở các tab dạng khác nhau.
+Không xem tab Show all và các tab từng dạng như những chiêu mới trùng lặp.
+forms/variantBySlot ánh xạ các biến thể với dạng tướng khi bộ dữ liệu có thông tin đó.
+Ghi nhận lúc thu: Edras dạng 1 Human Form, dạng 2 Light Form, dạng 3 Dark Form;
+mỗi dạng có chiêu 0–4, tổng 15 ảnh. Flowborn-mid là Mage; Flowborn-ad là Marksman.
+Preyta lấy tab S4 2026, không lấy tab S3 2026. Chỉ lấy tab Arena of Valor,
+không lấy Removed Heroes hoặc ảnh trang phục/minh họa làm icon chiêu.
+Ảnh dùng chung giữa các dạng vẫn giữ theo số dạng; giữ độ phân giải nguồn, không phóng to/tái tạo.
+Không tự gán dạng dựa riêng vào số file; đối chiếu page nguồn và ánh xạ đã ghi.
+Video còn null là chưa có video tương ứng; không diễn giải icon như video.
+
+XEM
+preview/Xem-head-cover.html: head, cover và listHead.
+preview/Xem-portrait.html: portrait, các bản khác, ảnh chưa ghép và mục thiếu.
+preview/Xem-bac-trang-phuc.html: icon bậc; liên kết bằng badgeId.
+Các bậc dùng ảnh lấy từ nhãn trên tên trang phục ở trang Garena; không suy từ tên file portrait.
+
+ĐƯỜNG DẪN VÀ CÁCH MANG ĐI
+Các đường dẫn assets/, data/, preview/, program/, temp/ trong tài liệu tính từ
+thư mục chứa các phần này, không tính từ thư mục note và không phụ thuộc tên thư mục.
+Giữ các phần đi cùng nhau khi chuyển nơi lưu. Không cần giữ thư mục dự án ban đầu.
+Nếu đặt tài nguyên ở vị trí khác, cập nhật đường dẫn trong JSON và phần đọc ảnh của
+trang xem/chương trình; các link website nguồn vẫn giữ nguyên để truy xuất xuất xứ.

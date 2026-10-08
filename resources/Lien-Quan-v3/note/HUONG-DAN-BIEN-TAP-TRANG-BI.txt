@@ -1,0 +1,56 @@
+BIÊN TẬP TRANG BỊ
+
+NGUỒN
+Ảnh: https://lienquan.garena.vn/hoc-vien/trang-bi/
+Chi tiết: trangbidulieu.xlsx do người dùng cung cấp; mốc thu thập 30/09/2026.
+Nguồn từng món ở data/trang-bi-nguon-du-lieu.json. Quan hệ xác nhận sau mốc thu
+được ghi trong JSON hiện hành, không diễn giải như dữ liệu game được cập nhật tự động.
+
+MỞ CÔNG CỤ
+program/Mo-bien-tap-trang-bi.cmd hoặc program/trang-bi/Chay-bien-tap.cmd.
+Mặc định http://127.0.0.1:8785/; cần Node.js trên máy sử dụng.
+Máy chủ chỉ nghe trên 127.0.0.1. Nếu muốn đổi cổng, cấu hình PORT và địa chỉ mở phù hợp.
+Tất cả đường dẫn trong hướng dẫn tính từ thư mục chứa assets/data/preview/program.
+
+THAO TÁC
+1. Chọn nhóm ở bảng shop. Kéo món từ danh sách trái vào ô mong muốn.
+2. Bấm món để thêm/sửa nhiều vị trí, hàng/cột bắt đầu từ 0. Ô trống số nghĩa chưa xác định.
+3. Kéo nguyên liệu vào vùng Ghép từ, hoặc chọn ứng viên Excel. Nhập số lượng cho từng món.
+4. Chọn Xác nhận công thức rồi bấm Áp dụng công thức. Không cần ghép chỉ dùng khi đã xác nhận món cơ bản, danh sách nguyên liệu phải rỗng.
+5. Nâng cấp thành được suy ra tự động từ các công thức đã xác nhận.
+6. Bấm Lưu JSON: ghi data/trang-bi.json, data/api-items.json, data/builds.json và cập nhật dữ liệu trong preview/Xem-trang-bi.html. Bản trước khi lưu nằm trong program/backup/trang-bi/<thời điểm>/.
+
+Các chỉnh sửa chỉ ở bộ nhớ cho đến khi bấm Lưu JSON. Hoàn tác khôi phục thao tác gần nhất, sau đó cần lưu lại. Đóng trang khi chưa lưu sẽ có nhắc nhở.
+Gợi ý Excel có thể gồm liên kết xuyên cấp. Chưa xác nhận và chưa nhập số lượng thì không tự đưa vào công thức chính thức.
+Vị trí trùng được giữ và báo sau khi lưu, không ghi đè món khác.
+Chênh lệch giá nguyên liệu chỉ để đối chiếu; combineCost vẫn null vì chưa xác nhận quy tắc tính phí trong game.
+Nếu JSON bị sửa ở nơi khác, máy chủ từ chối bản lưu cũ và yêu cầu tải lại trang.
+
+SƠ ĐỒ GHÉP: Ô nguyên liệu nối sang trang bị đích bằng mũi tên. Sơ đồ tự mở rộng công thức đã xác nhận của nguyên liệu, không ép đủ ba cấp. Bấm ô để chỉnh món tương ứng. Số lượng trên ô tính cho một món cha; cùng nguyên liệu ở hai nhánh được giữ riêng. JSON chỉ lưu nguyên liệu trực tiếp. Bản nháp hiển thị trước khi áp dụng; dấu ? nghĩa là chưa nhập số lượng.
+
+NỐI TRÊN SHOP: Bấm món để hiện các đường nguyên liệu và nâng cấp. Kéo chấm từ nguyên liệu sang món đích, hoặc bấm lần lượt hai chấm. Nhập số lượng tại thanh công thức trên bảng shop, Áp dụng công thức rồi Lưu JSON. Bỏ để xóa liên kết trực tiếp. Esc hủy thao tác nối. Liên kết ngoài nhóm/nhánh đang xem được báo bằng số lượng.
+
+HAI ĐẦU NỐI: Cột giữa có chấm trái Ghép từ và chấm phải Nâng cấp thành. Kéo chấm trái cấp 2 về cấp 1 sẽ tạo nguyên liệu cấp 1 cho cấp 2. Kéo chấm phải cấp 2 sang cấp 3 sẽ tạo nguyên liệu cấp 2 cho cấp 3. Sau khi áp dụng, chiều Nâng cấp thành tự tính; Lưu JSON để ghi file.
+
+ĐƯỜNG NỐI: Liên kết cùng cột đi ra bên trái. Liên kết vượt cột tìm đường vuông góc qua khoảng trống, kiểm tra tránh mọi ô trang bị. Vị trí cột không quyết định cấp hay nguyên liệu; cấp 3 vẫn nhận trực tiếp cấp 1.
+
+KHÁC NHÓM: Chọn món đích rồi mở Thêm nguyên liệu · tất cả nhóm, tìm tên có hoặc không dấu và bấm nguyên liệu. Món liên quan ngoài bảng hiện ở vùng riêng kèm đường nối; không thêm vị trí shop. Nhãn Ghép khác nhóm đối chiếu nhóm chính của nguyên liệu trực tiếp với món đích. Các món ngoài bảng vẫn có chấm nối. Nhập số lượng, áp dụng và lưu như cũ.
+
+SỐ LƯỢNG MẶC ĐỊNH: Mọi nguyên liệu mới thêm bằng tìm kiếm, gợi ý hoặc kéo nối đều có số lượng 1. Có thể sửa trước khi áp dụng. Số lượng đã lưu được giữ nguyên.
+
+ĐƯỜNG DẪN VÀ BẢN SAO
+Ảnh: assets/trang-bi. Khi Lưu JSON, ghi data/trang-bi.json, data/api-items.json,
+data/builds.json và nội dung nhúng trong preview/Xem-trang-bi.html.
+Bản sao trước khi ghi nằm ở program/backup/trang-bi/<thời điểm>/.
+Nguồn Excel và các quan hệ cần đối chiếu nằm trong data/trang-bi-nguon-du-lieu.json.
+Dữ liệu chính là data/trang-bi.json; api-items.json và builds.json là các bản tạo lại.
+Hoàn tác trên giao diện áp dụng cho bản nháp trong phiên; bấm Lưu JSON để ghi bản nháp đó.
+Không có nút khôi phục một lần lưu đã hoàn tất trong công cụ trang bị.
+Để khôi phục một lần lưu: dừng công cụ, chọn thư mục bản sao cùng thời điểm,
+sao chép trang-bi.json, api-items.json, builds.json vào data và Xem-trang-bi.html vào preview,
+rồi mở lại công cụ. Giữ một bản sao dữ liệu hiện tại trước khi thực hiện.
+Không sửa JSON ở nơi khác khi đang biên tập. Nếu bị báo dữ liệu đã đổi, tải lại trước khi lưu.
+Giữ mã trang bị và công thức đã xác nhận; không dùng lại bước nhập Excel để ghi đè.
+
+Dữ liệu và nguồn gốc: note/HUONG-DAN-TRANG-BI.txt; ngày/link tổng hợp: note/NGUON-VA-NGAY-THU-THAP.txt.
+Không cần giữ tên hoặc vị trí thư mục dự án để dùng công cụ.

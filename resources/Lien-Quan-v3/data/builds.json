@@ -1,0 +1,3755 @@
+{
+  "items": [
+    {
+      "itemId": "kiem-ngan",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "kiem-dai",
+          "name": "Kiếm dài",
+          "image": "assets/trang-bi/kiem-dai.png",
+          "price": 910
+        },
+        {
+          "itemId": "chuy-co",
+          "name": "Chùy cổ",
+          "image": "assets/trang-bi/chuy-co.png",
+          "price": 740
+        },
+        {
+          "itemId": "thuong-dau-si",
+          "name": "Thương đấu sĩ",
+          "image": "assets/trang-bi/thuong-dau-si.png",
+          "price": 830
+        },
+        {
+          "itemId": "thuong-xuyen-pha",
+          "name": "Thương xuyên phá",
+          "image": "assets/trang-bi/thuong-xuyen-pha.png",
+          "price": 1900
+        },
+        {
+          "itemId": "guom-uriel",
+          "name": "Gươm Uriel",
+          "image": "assets/trang-bi/guom-uriel.png",
+          "price": 2000
+        },
+        {
+          "itemId": "giap-thong-kho",
+          "name": "Giáp thống khổ",
+          "image": "assets/trang-bi/giap-thong-kho.png",
+          "price": 1940
+        },
+        {
+          "itemId": "huyet-anh-dao",
+          "name": "Huyết ảnh đao",
+          "image": "assets/trang-bi/huyet-anh-dao.png",
+          "price": 830
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dao-gam",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "chuy-co",
+          "name": "Chùy cổ",
+          "image": "assets/trang-bi/chuy-co.png",
+          "price": 740
+        },
+        {
+          "itemId": "song-dao",
+          "name": "Song đao",
+          "image": "assets/trang-bi/song-dao.png",
+          "price": 780
+        },
+        {
+          "itemId": "guom-sam-set",
+          "name": "Gươm sấm sét",
+          "image": "assets/trang-bi/guom-sam-set.png",
+          "price": 1840
+        },
+        {
+          "itemId": "phi-tieu",
+          "name": "Phi tiêu",
+          "image": "assets/trang-bi/phi-tieu.png",
+          "price": 750
+        },
+        {
+          "itemId": "giay-du-muc",
+          "name": "Giày du mục",
+          "image": "assets/trang-bi/giay-du-muc.png",
+          "price": 700
+        },
+        {
+          "itemId": "liem-doat-menh",
+          "name": "Liềm đoạt mệnh",
+          "image": "assets/trang-bi/liem-doat-menh.png",
+          "price": 2000
+        },
+        {
+          "itemId": "huyet-cung",
+          "name": "Huyết cung",
+          "image": "assets/trang-bi/huyet-cung.png",
+          "price": 1100
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "gang-tay",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "vuot-hung-tan",
+          "name": "Vuốt hung tàn",
+          "image": "assets/trang-bi/vuot-hung-tan.png",
+          "price": 1960
+        },
+        {
+          "itemId": "song-dao-bao-tap",
+          "name": "Song đao bão táp",
+          "image": "assets/trang-bi/song-dao-bao-tap.png",
+          "price": 1920
+        },
+        {
+          "itemId": "thanh-kiem",
+          "name": "Thánh Kiếm",
+          "image": "assets/trang-bi/thanh-kiem.png",
+          "price": 2120
+        },
+        {
+          "itemId": "cung-ta-ma",
+          "name": "Cung tà ma",
+          "image": "assets/trang-bi/cung-ta-ma.png",
+          "price": 2250
+        },
+        {
+          "itemId": "diet-than-cung",
+          "name": "Diệt thần cung",
+          "image": "assets/trang-bi/diet-than-cung.png",
+          "price": 2980
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "chuy-mau",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "quy-kiem",
+          "name": "Quỷ Kiếm",
+          "image": "assets/trang-bi/quy-kiem.png",
+          "price": 1800
+        },
+        {
+          "itemId": "kiem-fafnir",
+          "name": "Kiếm Fafnir",
+          "image": "assets/trang-bi/kiem-fafnir.png",
+          "price": 2040
+        },
+        {
+          "itemId": "cung-ta-ma",
+          "name": "Cung tà ma",
+          "image": "assets/trang-bi/cung-ta-ma.png",
+          "price": 2250
+        },
+        {
+          "itemId": "huyet-anh-dao",
+          "name": "Huyết ảnh đao",
+          "image": "assets/trang-bi/huyet-anh-dao.png",
+          "price": 830
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "chuy-xich",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "thuong-xuyen-pha",
+          "name": "Thương xuyên phá",
+          "image": "assets/trang-bi/thuong-xuyen-pha.png",
+          "price": 1900
+        },
+        {
+          "itemId": "phuc-hop-kiem",
+          "name": "Phức hợp kiếm",
+          "image": "assets/trang-bi/phuc-hop-kiem.png",
+          "price": 2150
+        },
+        {
+          "itemId": "kiem-fafnir",
+          "name": "Kiếm Fafnir",
+          "image": "assets/trang-bi/kiem-fafnir.png",
+          "price": 2040
+        },
+        {
+          "itemId": "hercule-thinh-no",
+          "name": "Hercule thịnh nộ",
+          "image": "assets/trang-bi/hercule-thinh-no.png",
+          "price": 2000
+        },
+        {
+          "itemId": "liem-doat-menh",
+          "name": "Liềm đoạt mệnh",
+          "image": "assets/trang-bi/liem-doat-menh.png",
+          "price": 2000
+        },
+        {
+          "itemId": "huyet-cung",
+          "name": "Huyết cung",
+          "image": "assets/trang-bi/huyet-cung.png",
+          "price": 1100
+        },
+        {
+          "itemId": "chuy-bang-suong",
+          "name": "Chùy băng sương",
+          "image": "assets/trang-bi/chuy-bang-suong.png",
+          "price": 2060
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "kiem-dai",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-ngan",
+            "name": "Kiếm ngắn",
+            "image": "assets/trang-bi/kiem-ngan.png",
+            "price": 250,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "kiem-truy-hon",
+          "name": "Kiếm truy hồn",
+          "image": "assets/trang-bi/kiem-truy-hon.png",
+          "price": 2000
+        },
+        {
+          "itemId": "nanh-fenrir",
+          "name": "Nanh Fenrir",
+          "image": "assets/trang-bi/nanh-fenrir.png",
+          "price": 2800
+        },
+        {
+          "itemId": "dao-truy-hon",
+          "name": "Đao truy hồn",
+          "image": "assets/trang-bi/dao-truy-hon.png",
+          "price": 1900
+        },
+        {
+          "itemId": "thanh-kiem",
+          "name": "Thánh Kiếm",
+          "image": "assets/trang-bi/thanh-kiem.png",
+          "price": 2120
+        },
+        {
+          "itemId": "giap-ho-menh",
+          "name": "Giáp hộ mệnh",
+          "image": "assets/trang-bi/giap-ho-menh.png",
+          "price": 2400
+        },
+        {
+          "itemId": "cung-ta-ma",
+          "name": "Cung tà ma",
+          "image": "assets/trang-bi/cung-ta-ma.png",
+          "price": 2250
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "guom-loki",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "guom-hien-te",
+            "name": "Gươm hiến tế",
+            "image": "assets/trang-bi/guom-hien-te.png",
+            "price": 700,
+            "quantity": 1
+          },
+          {
+            "itemId": "guom-nguyen-to",
+            "name": "Gươm nguyên tố",
+            "image": "assets/trang-bi/guom-nguyen-to.png",
+            "price": 820,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "riu-leviathan",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "riu-gnoll",
+            "name": "Rìu Gnoll",
+            "image": "assets/trang-bi/riu-gnoll.png",
+            "price": 700,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-chan",
+            "name": "Giáp chân",
+            "image": "assets/trang-bi/giap-chan.png",
+            "price": 900,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "kiem-truy-hon",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "dao-truy-kich",
+            "name": "Đao truy kích",
+            "image": "assets/trang-bi/dao-truy-kich.png",
+            "price": 700,
+            "quantity": 1
+          },
+          {
+            "itemId": "kiem-dai",
+            "name": "Kiếm dài",
+            "image": "assets/trang-bi/kiem-dai.png",
+            "price": 910,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "cung-bao-to",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "cung-gio-loc",
+            "name": "Cung gió lốc",
+            "image": "assets/trang-bi/cung-gio-loc.png",
+            "price": 700,
+            "quantity": 1
+          },
+          {
+            "itemId": "song-dao",
+            "name": "Song đao",
+            "image": "assets/trang-bi/song-dao.png",
+            "price": 780,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "chuy-co",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-ngan",
+            "name": "Kiếm ngắn",
+            "image": "assets/trang-bi/kiem-ngan.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "dao-gam",
+            "name": "Dao găm",
+            "image": "assets/trang-bi/dao-gam.png",
+            "price": 290,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "phuc-hop-kiem",
+          "name": "Phức hợp kiếm",
+          "image": "assets/trang-bi/phuc-hop-kiem.png",
+          "price": 2150
+        },
+        {
+          "itemId": "guom-uriel",
+          "name": "Gươm Uriel",
+          "image": "assets/trang-bi/guom-uriel.png",
+          "price": 2000
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "song-dao",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "dao-gam",
+            "name": "Dao găm",
+            "image": "assets/trang-bi/dao-gam.png",
+            "price": 290,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "cung-bao-to",
+          "name": "Cung bão tố",
+          "image": "assets/trang-bi/cung-bao-to.png",
+          "price": 2000
+        },
+        {
+          "itemId": "vuot-hung-tan",
+          "name": "Vuốt hung tàn",
+          "image": "assets/trang-bi/vuot-hung-tan.png",
+          "price": 1960
+        },
+        {
+          "itemId": "song-dao-bao-tap",
+          "name": "Song đao bão táp",
+          "image": "assets/trang-bi/song-dao-bao-tap.png",
+          "price": 1920
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "thuong-dau-si",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-ngan",
+            "name": "Kiếm ngắn",
+            "image": "assets/trang-bi/kiem-ngan.png",
+            "price": 250,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "thuong-xuyen-pha",
+          "name": "Thương xuyên phá",
+          "image": "assets/trang-bi/thuong-xuyen-pha.png",
+          "price": 1900
+        },
+        {
+          "itemId": "thuong-longinus",
+          "name": "Thương Longinus",
+          "image": "assets/trang-bi/thuong-longinus.png",
+          "price": 2030
+        },
+        {
+          "itemId": "kiem-muramasa",
+          "name": "Kiếm Muramasa",
+          "image": "assets/trang-bi/kiem-muramasa.png",
+          "price": 2020
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "vuot-hung-tan",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "song-dao",
+            "name": "Song đao",
+            "image": "assets/trang-bi/song-dao.png",
+            "price": 780,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-tay",
+            "name": "Găng tay",
+            "image": "assets/trang-bi/gang-tay.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "thuong-xuyen-pha",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "thuong-dau-si",
+            "name": "Thương đấu sĩ",
+            "image": "assets/trang-bi/thuong-dau-si.png",
+            "price": 830,
+            "quantity": 1
+          },
+          {
+            "itemId": "kiem-ngan",
+            "name": "Kiếm ngắn",
+            "image": "assets/trang-bi/kiem-ngan.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "chuy-xich",
+            "name": "Chùy xích",
+            "image": "assets/trang-bi/chuy-xich.png",
+            "price": 450,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "guom-sam-set",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "phi-tieu",
+            "name": "Phi tiêu",
+            "image": "assets/trang-bi/phi-tieu.png",
+            "price": 750,
+            "quantity": 1
+          },
+          {
+            "itemId": "dao-gam",
+            "name": "Dao găm",
+            "image": "assets/trang-bi/dao-gam.png",
+            "price": 290,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "thuong-longinus",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "thuong-dau-si",
+            "name": "Thương đấu sĩ",
+            "image": "assets/trang-bi/thuong-dau-si.png",
+            "price": 830,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "nanh-fenrir",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-dai",
+            "name": "Kiếm dài",
+            "image": "assets/trang-bi/kiem-dai.png",
+            "price": 910,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "xa-nhat-cung",
+      "recipe": {
+        "status": "unverified",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "phi-tieu",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "dao-gam",
+            "name": "Dao găm",
+            "image": "assets/trang-bi/dao-gam.png",
+            "price": 290,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "guom-sam-set",
+          "name": "Gươm sấm sét",
+          "image": "assets/trang-bi/guom-sam-set.png",
+          "price": 1840
+        },
+        {
+          "itemId": "kiem-fafnir",
+          "name": "Kiếm Fafnir",
+          "image": "assets/trang-bi/kiem-fafnir.png",
+          "price": 2040
+        },
+        {
+          "itemId": "thap-tu-kiem",
+          "name": "Thập tự kiếm",
+          "image": "assets/trang-bi/thap-tu-kiem.png",
+          "price": 1900
+        },
+        {
+          "itemId": "diet-than-cung",
+          "name": "Diệt thần cung",
+          "image": "assets/trang-bi/diet-than-cung.png",
+          "price": 2980
+        },
+        {
+          "itemId": "chuy-bang-suong",
+          "name": "Chùy băng sương",
+          "image": "assets/trang-bi/chuy-bang-suong.png",
+          "price": 2060
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "rua-tho-san",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "dao-truy-kich",
+          "name": "Đao truy kích",
+          "image": "assets/trang-bi/dao-truy-kich.png",
+          "price": 700
+        },
+        {
+          "itemId": "guom-hien-te",
+          "name": "Gươm hiến tế",
+          "image": "assets/trang-bi/guom-hien-te.png",
+          "price": 700
+        },
+        {
+          "itemId": "cung-gio-loc",
+          "name": "Cung gió lốc",
+          "image": "assets/trang-bi/cung-gio-loc.png",
+          "price": 700
+        },
+        {
+          "itemId": "riu-gnoll",
+          "name": "Rìu Gnoll",
+          "image": "assets/trang-bi/riu-gnoll.png",
+          "price": 700
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dao-truy-hon",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-dai",
+            "name": "Kiếm dài",
+            "image": "assets/trang-bi/kiem-dai.png",
+            "price": 910,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dao-truy-kich",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "rua-tho-san",
+            "name": "Rựa thợ săn",
+            "image": "assets/trang-bi/rua-tho-san.jpg",
+            "price": 250,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "kiem-truy-hon",
+          "name": "Kiếm truy hồn",
+          "image": "assets/trang-bi/kiem-truy-hon.png",
+          "price": 2000
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "guom-hien-te",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "rua-tho-san",
+            "name": "Rựa thợ săn",
+            "image": "assets/trang-bi/rua-tho-san.jpg",
+            "price": 250,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "guom-loki",
+          "name": "Gươm Loki",
+          "image": "assets/trang-bi/guom-loki.png",
+          "price": 2000
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "cung-gio-loc",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "rua-tho-san",
+            "name": "Rựa thợ săn",
+            "image": "assets/trang-bi/rua-tho-san.jpg",
+            "price": 250,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "cung-bao-to",
+          "name": "Cung bão tố",
+          "image": "assets/trang-bi/cung-bao-to.png",
+          "price": 2000
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "gang-giac-dau",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "dai-khang-phep",
+          "name": "Đai kháng phép",
+          "image": "assets/trang-bi/dai-khang-phep.png",
+          "price": 1000
+        },
+        {
+          "itemId": "guom-uriel",
+          "name": "Gươm Uriel",
+          "image": "assets/trang-bi/guom-uriel.png",
+          "price": 2000
+        },
+        {
+          "itemId": "phu-chu-truong-sinh",
+          "name": "Phù chú trường sinh",
+          "image": "assets/trang-bi/phu-chu-truong-sinh.png",
+          "price": 2190
+        },
+        {
+          "itemId": "huan-chuong-troy",
+          "name": "Huân chương Troy",
+          "image": "assets/trang-bi/huan-chuong-troy.png",
+          "price": 2320
+        },
+        {
+          "itemId": "giay-kien-cuong",
+          "name": "Giày kiên cường",
+          "image": "assets/trang-bi/giay-kien-cuong.png",
+          "price": 700
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "huyet-truong",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "qua-cau-bang-suong",
+          "name": "Quả cầu băng sương",
+          "image": "assets/trang-bi/qua-cau-bang-suong.png",
+          "price": 2200
+        },
+        {
+          "itemId": "quyen-truong-rhea",
+          "name": "Quyền trượng Rhea",
+          "image": "assets/trang-bi/quyen-truong-rhea.png",
+          "price": 2050
+        },
+        {
+          "itemId": "the-uoc-carano",
+          "name": "Thệ ước Carano",
+          "image": "assets/trang-bi/the-uoc-carano.jpg",
+          "price": 2050
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "vong-duc-hanh",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-ma-thuat",
+            "name": "Dây chuyền ma thuật",
+            "image": "assets/trang-bi/day-chuyen-ma-thuat.png",
+            "price": 120,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "day-chuyen-luc-bao",
+          "name": "Dây chuyền lục bảo",
+          "image": "assets/trang-bi/day-chuyen-luc-bao.png",
+          "price": 1800
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "phuong-hoang-le",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-ma-thuat",
+            "name": "Dây chuyền ma thuật",
+            "image": "assets/trang-bi/day-chuyen-ma-thuat.png",
+            "price": 120,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "ngoc-dai-phap-su",
+          "name": "Ngọc đại pháp sư",
+          "image": "assets/trang-bi/ngoc-dai-phap-su.png",
+          "price": 1800
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "mat-na-ma-quai",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "xuyen-tam-lenh",
+          "name": "Xuyên tâm lệnh",
+          "image": "assets/trang-bi/xuyen-tam-lenh.png",
+          "price": 1980
+        },
+        {
+          "itemId": "guom-hien-triet",
+          "name": "Gươm hiền triết",
+          "image": "assets/trang-bi/guom-hien-triet.png",
+          "price": 2100
+        },
+        {
+          "itemId": "truong-hon-mang",
+          "name": "Trượng hỗn mang",
+          "image": "assets/trang-bi/truong-hon-mang.png",
+          "price": 2050
+        },
+        {
+          "itemId": "ma-phap-truong-bao",
+          "name": "Ma pháp trường bào",
+          "image": "assets/trang-bi/ma-phap-truong-bao.jpg",
+          "price": 2160
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "guom-nguyen-to",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "guom-loki",
+          "name": "Gươm Loki",
+          "image": "assets/trang-bi/guom-loki.png",
+          "price": 2000
+        },
+        {
+          "itemId": "guom-tan-the",
+          "name": "Gươm tận thế",
+          "image": "assets/trang-bi/guom-tan-the.png",
+          "price": 1800
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "so-ma-thuat",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "bang-nhan-skadi",
+          "name": "Băng nhẫn Skadi",
+          "image": "assets/trang-bi/bang-nhan-skadi.png",
+          "price": 2100
+        },
+        {
+          "itemId": "qua-cau-bang-suong",
+          "name": "Quả cầu băng sương",
+          "image": "assets/trang-bi/qua-cau-bang-suong.png",
+          "price": 2200
+        },
+        {
+          "itemId": "truong-bang",
+          "name": "Trượng băng",
+          "image": "assets/trang-bi/truong-bang.png",
+          "price": 2020
+        },
+        {
+          "itemId": "vuong-mien-hecate",
+          "name": "Vương miện Hecate",
+          "image": "assets/trang-bi/vuong-mien-hecate.png",
+          "price": 2400
+        },
+        {
+          "itemId": "sach-thanh",
+          "name": "Sách thánh",
+          "image": "assets/trang-bi/sach-thanh.png",
+          "price": 2610
+        },
+        {
+          "itemId": "sach-truy-hon",
+          "name": "Sách truy hồn",
+          "image": "assets/trang-bi/sach-truy-hon.png",
+          "price": 1900
+        },
+        {
+          "itemId": "thap-tu-kiem",
+          "name": "Thập tự kiếm",
+          "image": "assets/trang-bi/thap-tu-kiem.png",
+          "price": 1900
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "nhan-ma-phap",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "thuong-longinus",
+          "name": "Thương Longinus",
+          "image": "assets/trang-bi/thuong-longinus.png",
+          "price": 2030
+        },
+        {
+          "itemId": "dao-truy-hon",
+          "name": "Đao truy hồn",
+          "image": "assets/trang-bi/dao-truy-hon.png",
+          "price": 1900
+        },
+        {
+          "itemId": "guom-nguyen-to",
+          "name": "Gươm nguyên tố",
+          "image": "assets/trang-bi/guom-nguyen-to.png",
+          "price": 820
+        },
+        {
+          "itemId": "kiem-muramasa",
+          "name": "Kiếm Muramasa",
+          "image": "assets/trang-bi/kiem-muramasa.png",
+          "price": 2020
+        },
+        {
+          "itemId": "bang-nhan-skadi",
+          "name": "Băng nhẫn Skadi",
+          "image": "assets/trang-bi/bang-nhan-skadi.png",
+          "price": 2100
+        },
+        {
+          "itemId": "mat-na-berith",
+          "name": "Mặt nạ Berith",
+          "image": "assets/trang-bi/mat-na-berith.png",
+          "price": 1800
+        },
+        {
+          "itemId": "ngoc-dai-phap-su",
+          "name": "Ngọc đại pháp sư",
+          "image": "assets/trang-bi/ngoc-dai-phap-su.png",
+          "price": 1800
+        },
+        {
+          "itemId": "guom-hien-triet",
+          "name": "Gươm hiền triết",
+          "image": "assets/trang-bi/guom-hien-triet.png",
+          "price": 2100
+        },
+        {
+          "itemId": "sach-truy-hon",
+          "name": "Sách truy hồn",
+          "image": "assets/trang-bi/sach-truy-hon.png",
+          "price": 1900
+        },
+        {
+          "itemId": "day-chuyen-luc-bao",
+          "name": "Dây chuyền lục bảo",
+          "image": "assets/trang-bi/day-chuyen-luc-bao.png",
+          "price": 1800
+        },
+        {
+          "itemId": "truong-hon-mang",
+          "name": "Trượng hỗn mang",
+          "image": "assets/trang-bi/truong-hon-mang.png",
+          "price": 2050
+        },
+        {
+          "itemId": "giay-thuat-si",
+          "name": "Giày thuật sĩ",
+          "image": "assets/trang-bi/giay-thuat-si.png",
+          "price": 700
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "sach-co",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "sach-thanh",
+          "name": "Sách thánh",
+          "image": "assets/trang-bi/sach-thanh.png",
+          "price": 2610
+        },
+        {
+          "itemId": "guom-tan-the",
+          "name": "Gươm tận thế",
+          "image": "assets/trang-bi/guom-tan-the.png",
+          "price": 1800
+        },
+        {
+          "itemId": "day-chuyen-luc-bao",
+          "name": "Dây chuyền lục bảo",
+          "image": "assets/trang-bi/day-chuyen-luc-bao.png",
+          "price": 1800
+        },
+        {
+          "itemId": "ma-phap-truong-bao",
+          "name": "Ma pháp trường bào",
+          "image": "assets/trang-bi/ma-phap-truong-bao.jpg",
+          "price": 2160
+        },
+        {
+          "itemId": "the-uoc-carano",
+          "name": "Thệ ước Carano",
+          "image": "assets/trang-bi/the-uoc-carano.jpg",
+          "price": 2050
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "day-chuyen-ma-thuat",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "vong-duc-hanh",
+          "name": "Vòng đức hạnh",
+          "image": "assets/trang-bi/vong-duc-hanh.png",
+          "price": 720
+        },
+        {
+          "itemId": "phuong-hoang-le",
+          "name": "Phượng hoàng lệ",
+          "image": "assets/trang-bi/phuong-hoang-le.png",
+          "price": 500
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "nhan-lapis",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "khien-huyen-thoai",
+          "name": "Khiên huyền thoại",
+          "image": "assets/trang-bi/khien-huyen-thoai.png",
+          "price": 2180
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "sach-phep",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "huyet-truong",
+          "name": "Huyết trượng",
+          "image": "assets/trang-bi/huyet-truong.png",
+          "price": 800
+        },
+        {
+          "itemId": "vong-duc-hanh",
+          "name": "Vòng đức hạnh",
+          "image": "assets/trang-bi/vong-duc-hanh.png",
+          "price": 720
+        },
+        {
+          "itemId": "phuong-hoang-le",
+          "name": "Phượng hoàng lệ",
+          "image": "assets/trang-bi/phuong-hoang-le.png",
+          "price": 500
+        },
+        {
+          "itemId": "mat-na-ma-quai",
+          "name": "Mặt nạ ma quái",
+          "image": "assets/trang-bi/mat-na-ma-quai.png",
+          "price": 960
+        },
+        {
+          "itemId": "guom-nguyen-to",
+          "name": "Gươm nguyên tố",
+          "image": "assets/trang-bi/guom-nguyen-to.png",
+          "price": 820
+        },
+        {
+          "itemId": "so-ma-thuat",
+          "name": "Sớ ma thuật",
+          "image": "assets/trang-bi/so-ma-thuat.png",
+          "price": 820
+        },
+        {
+          "itemId": "xuyen-tam-lenh",
+          "name": "Xuyên tâm lệnh",
+          "image": "assets/trang-bi/xuyen-tam-lenh.png",
+          "price": 1980
+        },
+        {
+          "itemId": "ngoc-dai-phap-su",
+          "name": "Ngọc đại pháp sư",
+          "image": "assets/trang-bi/ngoc-dai-phap-su.png",
+          "price": 1800
+        },
+        {
+          "itemId": "truong-bung-no",
+          "name": "Trượng bùng nổ",
+          "image": "assets/trang-bi/truong-bung-no.png",
+          "price": 1800
+        },
+        {
+          "itemId": "guom-tan-the",
+          "name": "Gươm tận thế",
+          "image": "assets/trang-bi/guom-tan-the.png",
+          "price": 1800
+        },
+        {
+          "itemId": "truong-hon-mang",
+          "name": "Trượng hỗn mang",
+          "image": "assets/trang-bi/truong-hon-mang.png",
+          "price": 2050
+        },
+        {
+          "itemId": "cau-chiem-tinh",
+          "name": "Cầu chiêm tinh",
+          "image": "assets/trang-bi/cau-chiem-tinh.png",
+          "price": 800
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giap-hiep-si",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "khien-huyen-thoai",
+          "name": "Khiên huyền thoại",
+          "image": "assets/trang-bi/khien-huyen-thoai.png",
+          "price": 2180
+        },
+        {
+          "itemId": "khien-that-truyen",
+          "name": "Khiên thất truyền",
+          "image": "assets/trang-bi/khien-that-truyen.png",
+          "price": 2100
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giap-chan",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "riu-leviathan",
+          "name": "Rìu Leviathan",
+          "image": "assets/trang-bi/riu-leviathan.png",
+          "price": 2000
+        },
+        {
+          "itemId": "phu-chu-truong-sinh",
+          "name": "Phù chú trường sinh",
+          "image": "assets/trang-bi/phu-chu-truong-sinh.png",
+          "price": 2190
+        },
+        {
+          "itemId": "khien-that-truyen",
+          "name": "Khiên thất truyền",
+          "image": "assets/trang-bi/khien-that-truyen.png",
+          "price": 2100
+        },
+        {
+          "itemId": "giap-cuong-no",
+          "name": "Giáp cuồng nộ",
+          "image": "assets/trang-bi/giap-cuong-no.png",
+          "price": 1900
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "day-chuyen-hong-ngoc",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "dao-truy-hon",
+          "name": "Đao truy hồn",
+          "image": "assets/trang-bi/dao-truy-hon.png",
+          "price": 1900
+        },
+        {
+          "itemId": "bang-nhan-skadi",
+          "name": "Băng nhẫn Skadi",
+          "image": "assets/trang-bi/bang-nhan-skadi.png",
+          "price": 2100
+        },
+        {
+          "itemId": "mat-na-berith",
+          "name": "Mặt nạ Berith",
+          "image": "assets/trang-bi/mat-na-berith.png",
+          "price": 1800
+        },
+        {
+          "itemId": "truong-bang",
+          "name": "Trượng băng",
+          "image": "assets/trang-bi/truong-bang.png",
+          "price": 2020
+        },
+        {
+          "itemId": "sach-truy-hon",
+          "name": "Sách truy hồn",
+          "image": "assets/trang-bi/sach-truy-hon.png",
+          "price": 1900
+        },
+        {
+          "itemId": "nham-thuan",
+          "name": "Nham thuẫn",
+          "image": "assets/trang-bi/nham-thuan.png",
+          "price": 1980
+        },
+        {
+          "itemId": "giap-thong-kho",
+          "name": "Giáp thống khổ",
+          "image": "assets/trang-bi/giap-thong-kho.png",
+          "price": 1940
+        },
+        {
+          "itemId": "ao-choang-than-ra",
+          "name": "Áo choàng thần Ra",
+          "image": "assets/trang-bi/ao-choang-than-ra.png",
+          "price": 2060
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "bua-suc-manh",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "ao-choang-than-ra",
+          "name": "Áo choàng thần Ra",
+          "image": "assets/trang-bi/ao-choang-than-ra.png",
+          "price": 2060
+        },
+        {
+          "itemId": "giap-gaia",
+          "name": "Giáp Gaia",
+          "image": "assets/trang-bi/giap-gaia.png",
+          "price": 2180
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giap-nhe",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "giap-hiep-si",
+          "name": "Giáp hiệp sĩ",
+          "image": "assets/trang-bi/giap-hiep-si.png",
+          "price": 730
+        },
+        {
+          "itemId": "tim-incubus",
+          "name": "Tim Incubus",
+          "image": "assets/trang-bi/tim-incubus.png",
+          "price": 720
+        },
+        {
+          "itemId": "gang-bach-kim",
+          "name": "Găng bạch kim",
+          "image": "assets/trang-bi/gang-bach-kim.png",
+          "price": 660
+        },
+        {
+          "itemId": "nham-thuan",
+          "name": "Nham thuẫn",
+          "image": "assets/trang-bi/nham-thuan.png",
+          "price": 1980
+        },
+        {
+          "itemId": "phu-chu-truong-sinh",
+          "name": "Phù chú trường sinh",
+          "image": "assets/trang-bi/phu-chu-truong-sinh.png",
+          "price": 2190
+        },
+        {
+          "itemId": "giap-ho-menh",
+          "name": "Giáp hộ mệnh",
+          "image": "assets/trang-bi/giap-ho-menh.png",
+          "price": 2400
+        },
+        {
+          "itemId": "giap-thong-kho",
+          "name": "Giáp thống khổ",
+          "image": "assets/trang-bi/giap-thong-kho.png",
+          "price": 1940
+        },
+        {
+          "itemId": "giap-cuong-no",
+          "name": "Giáp cuồng nộ",
+          "image": "assets/trang-bi/giap-cuong-no.png",
+          "price": 1900
+        },
+        {
+          "itemId": "hercule-thinh-no",
+          "name": "Hercule thịnh nộ",
+          "image": "assets/trang-bi/hercule-thinh-no.png",
+          "price": 2000
+        },
+        {
+          "itemId": "giay-ho-ve",
+          "name": "Giày hộ vệ",
+          "image": "assets/trang-bi/giay-ho-ve.png",
+          "price": 700
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "nhan-hong-ngoc",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "thuong-longinus",
+          "name": "Thương Longinus",
+          "image": "assets/trang-bi/thuong-longinus.png",
+          "price": 2030
+        },
+        {
+          "itemId": "giap-chan",
+          "name": "Giáp chân",
+          "image": "assets/trang-bi/giap-chan.png",
+          "price": 900
+        },
+        {
+          "itemId": "kiem-muramasa",
+          "name": "Kiếm Muramasa",
+          "image": "assets/trang-bi/kiem-muramasa.png",
+          "price": 2020
+        },
+        {
+          "itemId": "quy-kiem",
+          "name": "Quỷ Kiếm",
+          "image": "assets/trang-bi/quy-kiem.png",
+          "price": 1800
+        },
+        {
+          "itemId": "phuc-hop-kiem",
+          "name": "Phức hợp kiếm",
+          "image": "assets/trang-bi/phuc-hop-kiem.png",
+          "price": 2150
+        },
+        {
+          "itemId": "gang-bach-kim",
+          "name": "Găng bạch kim",
+          "image": "assets/trang-bi/gang-bach-kim.png",
+          "price": 660
+        },
+        {
+          "itemId": "dai-khang-phep",
+          "name": "Đai kháng phép",
+          "image": "assets/trang-bi/dai-khang-phep.png",
+          "price": 1000
+        },
+        {
+          "itemId": "xuyen-tam-lenh",
+          "name": "Xuyên tâm lệnh",
+          "image": "assets/trang-bi/xuyen-tam-lenh.png",
+          "price": 1980
+        },
+        {
+          "itemId": "quyen-truong-rhea",
+          "name": "Quyền trượng Rhea",
+          "image": "assets/trang-bi/quyen-truong-rhea.png",
+          "price": 2050
+        },
+        {
+          "itemId": "guom-hien-triet",
+          "name": "Gươm hiền triết",
+          "image": "assets/trang-bi/guom-hien-triet.png",
+          "price": 2100
+        },
+        {
+          "itemId": "hoa-he-bao-thach",
+          "name": "Hoả hệ bảo thạch",
+          "image": "assets/trang-bi/hoa-he-bao-thach.png",
+          "price": 900
+        },
+        {
+          "itemId": "ao-choang-bang-gia",
+          "name": "Áo choàng băng giá",
+          "image": "assets/trang-bi/ao-choang-bang-gia.png",
+          "price": 1970
+        },
+        {
+          "itemId": "huan-chuong-troy",
+          "name": "Huân chương Troy",
+          "image": "assets/trang-bi/huan-chuong-troy.png",
+          "price": 2320
+        },
+        {
+          "itemId": "giap-gaia",
+          "name": "Giáp Gaia",
+          "image": "assets/trang-bi/giap-gaia.png",
+          "price": 2180
+        },
+        {
+          "itemId": "tho-he-bao-thach",
+          "name": "Thổ hệ bảo thạch",
+          "image": "assets/trang-bi/tho-he-bao-thach.png",
+          "price": 900
+        },
+        {
+          "itemId": "liem-doat-menh",
+          "name": "Liềm đoạt mệnh",
+          "image": "assets/trang-bi/liem-doat-menh.png",
+          "price": 2000
+        },
+        {
+          "itemId": "chuy-bang-suong",
+          "name": "Chùy băng sương",
+          "image": "assets/trang-bi/chuy-bang-suong.png",
+          "price": 2060
+        },
+        {
+          "itemId": "liet-hoa-than-toc",
+          "name": "Liệt hoả thần tốc",
+          "image": "assets/trang-bi/liet-hoa-than-toc.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-mo-troi",
+          "name": "Liệt hoả mở trói",
+          "image": "assets/trang-bi/liet-hoa-mo-troi.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-hoi-huyet",
+          "name": "Liệt hoả hồi huyết",
+          "image": "assets/trang-bi/liet-hoa-hoi-huyet.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-ma-nhan",
+          "name": "Liệt hoả ma nhãn",
+          "image": "assets/trang-bi/liet-hoa-ma-nhan.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-than-khien",
+          "name": "Liệt hoả thần khiên",
+          "image": "assets/trang-bi/liet-hoa-than-khien.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-hoi-huyet",
+          "name": "Đại địa hồi huyết",
+          "image": "assets/trang-bi/dai-dia-hoi-huyet.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-ma-nhan",
+          "name": "Đại địa ma nhãn",
+          "image": "assets/trang-bi/dai-dia-ma-nhan.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-than-khien",
+          "name": "Đại địa thần khiên",
+          "image": "assets/trang-bi/dai-dia-than-khien.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-mo-troi",
+          "name": "Đại địa mở trói",
+          "image": "assets/trang-bi/dai-dia-mo-troi.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-than-toc",
+          "name": "Đại địa thần tốc",
+          "image": "assets/trang-bi/dai-dia-than-toc.png",
+          "price": 1900
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "tim-incubus",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "ao-choang-than-ra",
+          "name": "Áo choàng thần Ra",
+          "image": "assets/trang-bi/ao-choang-than-ra.png",
+          "price": 2060
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "kiem-muramasa",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "thuong-dau-si",
+            "name": "Thương đấu sĩ",
+            "image": "assets/trang-bi/thuong-dau-si.png",
+            "price": 830,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "quy-kiem",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "huyet-anh-dao",
+            "name": "Huyết ảnh đao",
+            "image": "assets/trang-bi/huyet-anh-dao.png",
+            "price": 830,
+            "quantity": 1
+          },
+          {
+            "itemId": "chuy-mau",
+            "name": "Chùy máu",
+            "image": "assets/trang-bi/chuy-mau.png",
+            "price": 410,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "phuc-hop-kiem",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "chuy-co",
+            "name": "Chùy cổ",
+            "image": "assets/trang-bi/chuy-co.png",
+            "price": 740,
+            "quantity": 1
+          },
+          {
+            "itemId": "chuy-xich",
+            "name": "Chùy xích",
+            "image": "assets/trang-bi/chuy-xich.png",
+            "price": 450,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "song-dao-bao-tap",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "song-dao",
+            "name": "Song đao",
+            "image": "assets/trang-bi/song-dao.png",
+            "price": 780,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-tay",
+            "name": "Găng tay",
+            "image": "assets/trang-bi/gang-tay.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "thanh-kiem",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-dai",
+            "name": "Kiếm dài",
+            "image": "assets/trang-bi/kiem-dai.png",
+            "price": 910,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-tay",
+            "name": "Găng tay",
+            "image": "assets/trang-bi/gang-tay.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "kiem-fafnir",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "phi-tieu",
+            "name": "Phi tiêu",
+            "image": "assets/trang-bi/phi-tieu.png",
+            "price": 750,
+            "quantity": 1
+          },
+          {
+            "itemId": "chuy-mau",
+            "name": "Chùy máu",
+            "image": "assets/trang-bi/chuy-mau.png",
+            "price": 410,
+            "quantity": 1
+          },
+          {
+            "itemId": "chuy-xich",
+            "name": "Chùy xích",
+            "image": "assets/trang-bi/chuy-xich.png",
+            "price": 450,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "riu-gnoll",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "rua-tho-san",
+            "name": "Rựa thợ săn",
+            "image": "assets/trang-bi/rua-tho-san.jpg",
+            "price": 250,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "riu-leviathan",
+          "name": "Rìu Leviathan",
+          "image": "assets/trang-bi/riu-leviathan.png",
+          "price": 2000
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "gang-bach-kim",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "khien-huyen-thoai",
+          "name": "Khiên huyền thoại",
+          "image": "assets/trang-bi/khien-huyen-thoai.png",
+          "price": 2180
+        },
+        {
+          "itemId": "ao-choang-bang-gia",
+          "name": "Áo choàng băng giá",
+          "image": "assets/trang-bi/ao-choang-bang-gia.png",
+          "price": 1970
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dai-khang-phep",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "gang-giac-dau",
+            "name": "Găng giác đấu",
+            "image": "assets/trang-bi/gang-giac-dau.png",
+            "price": 220,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "huan-chuong-troy",
+          "name": "Huân chương Troy",
+          "image": "assets/trang-bi/huan-chuong-troy.png",
+          "price": 2320
+        },
+        {
+          "itemId": "giap-gaia",
+          "name": "Giáp Gaia",
+          "image": "assets/trang-bi/giap-gaia.png",
+          "price": 2180
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giay-thep",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "giay-du-muc",
+          "name": "Giày du mục",
+          "image": "assets/trang-bi/giay-du-muc.png",
+          "price": 700
+        },
+        {
+          "itemId": "giay-phu-thuy",
+          "name": "Giày phù thủy",
+          "image": "assets/trang-bi/giay-phu-thuy.png",
+          "price": 700
+        },
+        {
+          "itemId": "giay-thuat-si",
+          "name": "Giày thuật sĩ",
+          "image": "assets/trang-bi/giay-thuat-si.png",
+          "price": 700
+        },
+        {
+          "itemId": "giay-kien-cuong",
+          "name": "Giày kiên cường",
+          "image": "assets/trang-bi/giay-kien-cuong.png",
+          "price": 700
+        },
+        {
+          "itemId": "giay-ho-ve",
+          "name": "Giày hộ vệ",
+          "image": "assets/trang-bi/giay-ho-ve.png",
+          "price": 700
+        },
+        {
+          "itemId": "giay-hermes",
+          "name": "Giày Hermes",
+          "image": "assets/trang-bi/giay-hermes.png",
+          "price": 700
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giay-du-muc",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giay-thep",
+            "name": "Giày thép",
+            "image": "assets/trang-bi/giay-thep.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "dao-gam",
+            "name": "Dao găm",
+            "image": "assets/trang-bi/dao-gam.png",
+            "price": 290,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "xuyen-tam-lenh",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "mat-na-ma-quai",
+            "name": "Mặt nạ ma quái",
+            "image": "assets/trang-bi/mat-na-ma-quai.png",
+            "price": 960,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "bang-nhan-skadi",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "so-ma-thuat",
+            "name": "Sớ ma thuật",
+            "image": "assets/trang-bi/so-ma-thuat.png",
+            "price": 820,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "qua-cau-bang-suong",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "huyet-truong",
+            "name": "Huyết trượng",
+            "image": "assets/trang-bi/huyet-truong.png",
+            "price": 800,
+            "quantity": 1
+          },
+          {
+            "itemId": "so-ma-thuat",
+            "name": "Sớ ma thuật",
+            "image": "assets/trang-bi/so-ma-thuat.png",
+            "price": 820,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "mat-na-berith",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "cau-chiem-tinh",
+            "name": "Cầu chiêm tinh",
+            "image": "assets/trang-bi/cau-chiem-tinh.png",
+            "price": 800,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "truong-bang",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "so-ma-thuat",
+            "name": "Sớ ma thuật",
+            "image": "assets/trang-bi/so-ma-thuat.png",
+            "price": 820,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "quyen-truong-rhea",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "huyet-truong",
+            "name": "Huyết trượng",
+            "image": "assets/trang-bi/huyet-truong.png",
+            "price": 800,
+            "quantity": 2
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "ngoc-dai-phap-su",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "phuong-hoang-le",
+            "name": "Phượng hoàng lệ",
+            "image": "assets/trang-bi/phuong-hoang-le.png",
+            "price": 500,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "vuong-mien-hecate",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "so-ma-thuat",
+            "name": "Sớ ma thuật",
+            "image": "assets/trang-bi/so-ma-thuat.png",
+            "price": 820,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "truong-bung-no",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "cau-chiem-tinh",
+            "name": "Cầu chiêm tinh",
+            "image": "assets/trang-bi/cau-chiem-tinh.png",
+            "price": 800,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "sach-thanh",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "so-ma-thuat",
+            "name": "Sớ ma thuật",
+            "image": "assets/trang-bi/so-ma-thuat.png",
+            "price": 820,
+            "quantity": 2
+          },
+          {
+            "itemId": "sach-co",
+            "name": "Sách cổ",
+            "image": "assets/trang-bi/sach-co.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "guom-hien-triet",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "mat-na-ma-quai",
+            "name": "Mặt nạ ma quái",
+            "image": "assets/trang-bi/mat-na-ma-quai.png",
+            "price": 960,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "guom-tan-the",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "guom-nguyen-to",
+            "name": "Gươm nguyên tố",
+            "image": "assets/trang-bi/guom-nguyen-to.png",
+            "price": 820,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-co",
+            "name": "Sách cổ",
+            "image": "assets/trang-bi/sach-co.png",
+            "price": 540,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "sach-truy-hon",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "so-ma-thuat",
+            "name": "Sớ ma thuật",
+            "image": "assets/trang-bi/so-ma-thuat.png",
+            "price": 820,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "day-chuyen-luc-bao",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-co",
+            "name": "Sách cổ",
+            "image": "assets/trang-bi/sach-co.png",
+            "price": 540,
+            "quantity": 1
+          },
+          {
+            "itemId": "vong-duc-hanh",
+            "name": "Vòng đức hạnh",
+            "image": "assets/trang-bi/vong-duc-hanh.png",
+            "price": 720,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "truong-hon-mang",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "mat-na-ma-quai",
+            "name": "Mặt nạ ma quái",
+            "image": "assets/trang-bi/mat-na-ma-quai.png",
+            "price": 960,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "thap-tu-kiem",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "phi-tieu",
+            "name": "Phi tiêu",
+            "image": "assets/trang-bi/phi-tieu.png",
+            "price": 750,
+            "quantity": 1
+          },
+          {
+            "itemId": "so-ma-thuat",
+            "name": "Sớ ma thuật",
+            "image": "assets/trang-bi/so-ma-thuat.png",
+            "price": 820,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "guom-uriel",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "chuy-co",
+            "name": "Chùy cổ",
+            "image": "assets/trang-bi/chuy-co.png",
+            "price": 740,
+            "quantity": 1
+          },
+          {
+            "itemId": "kiem-ngan",
+            "name": "Kiếm ngắn",
+            "image": "assets/trang-bi/kiem-ngan.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-giac-dau",
+            "name": "Găng giác đấu",
+            "image": "assets/trang-bi/gang-giac-dau.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giay-phu-thuy",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giay-thep",
+            "name": "Giày thép",
+            "image": "assets/trang-bi/giay-thep.png",
+            "price": 250,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giay-thuat-si",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giay-thep",
+            "name": "Giày thép",
+            "image": "assets/trang-bi/giay-thep.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-ma-phap",
+            "name": "Nhẫn ma pháp",
+            "image": "assets/trang-bi/nhan-ma-phap.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "hoa-he-bao-thach",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "nguyen-to-bao-thach",
+            "name": "Nguyên tố bảo thạch",
+            "image": "assets/trang-bi/nguyen-to-bao-thach.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "liet-hoa-than-toc",
+          "name": "Liệt hoả thần tốc",
+          "image": "assets/trang-bi/liet-hoa-than-toc.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-mo-troi",
+          "name": "Liệt hoả mở trói",
+          "image": "assets/trang-bi/liet-hoa-mo-troi.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-hoi-huyet",
+          "name": "Liệt hoả hồi huyết",
+          "image": "assets/trang-bi/liet-hoa-hoi-huyet.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-ma-nhan",
+          "name": "Liệt hoả ma nhãn",
+          "image": "assets/trang-bi/liet-hoa-ma-nhan.png",
+          "price": 1900
+        },
+        {
+          "itemId": "liet-hoa-than-khien",
+          "name": "Liệt hoả thần khiên",
+          "image": "assets/trang-bi/liet-hoa-than-khien.png",
+          "price": 1900
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "nham-thuan",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "phu-chu-truong-sinh",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-chan",
+            "name": "Giáp chân",
+            "image": "assets/trang-bi/giap-chan.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-giac-dau",
+            "name": "Găng giác đấu",
+            "image": "assets/trang-bi/gang-giac-dau.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giap-ho-menh",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-dai",
+            "name": "Kiếm dài",
+            "image": "assets/trang-bi/kiem-dai.png",
+            "price": 910,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "khien-huyen-thoai",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-hiep-si",
+            "name": "Giáp hiệp sĩ",
+            "image": "assets/trang-bi/giap-hiep-si.png",
+            "price": 730,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-bach-kim",
+            "name": "Găng bạch kim",
+            "image": "assets/trang-bi/gang-bach-kim.png",
+            "price": 660,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-lapis",
+            "name": "Nhẫn Lapis",
+            "image": "assets/trang-bi/nhan-lapis.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "khien-that-truyen",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-hiep-si",
+            "name": "Giáp hiệp sĩ",
+            "image": "assets/trang-bi/giap-hiep-si.png",
+            "price": 730,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-chan",
+            "name": "Giáp chân",
+            "image": "assets/trang-bi/giap-chan.png",
+            "price": 900,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giap-thong-kho",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          },
+          {
+            "itemId": "kiem-ngan",
+            "name": "Kiếm ngắn",
+            "image": "assets/trang-bi/kiem-ngan.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "ao-choang-bang-gia",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "gang-bach-kim",
+            "name": "Găng bạch kim",
+            "image": "assets/trang-bi/gang-bach-kim.png",
+            "price": 660,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "ao-choang-than-ra",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "tim-incubus",
+            "name": "Tim Incubus",
+            "image": "assets/trang-bi/tim-incubus.png",
+            "price": 720,
+            "quantity": 1
+          },
+          {
+            "itemId": "bua-suc-manh",
+            "name": "Bùa sức mạnh",
+            "image": "assets/trang-bi/bua-suc-manh.png",
+            "price": 140,
+            "quantity": 1
+          },
+          {
+            "itemId": "day-chuyen-hong-ngoc",
+            "name": "Dây chuyền hồng ngọc",
+            "image": "assets/trang-bi/day-chuyen-hong-ngoc.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giap-cuong-no",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-chan",
+            "name": "Giáp chân",
+            "image": "assets/trang-bi/giap-chan.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "hercule-thinh-no",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 2
+          },
+          {
+            "itemId": "chuy-xich",
+            "name": "Chùy xích",
+            "image": "assets/trang-bi/chuy-xich.png",
+            "price": 450,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "huan-chuong-troy",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "dai-khang-phep",
+            "name": "Đai kháng phép",
+            "image": "assets/trang-bi/dai-khang-phep.png",
+            "price": 1000,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-giac-dau",
+            "name": "Găng giác đấu",
+            "image": "assets/trang-bi/gang-giac-dau.png",
+            "price": 220,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giap-gaia",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "dai-khang-phep",
+            "name": "Đai kháng phép",
+            "image": "assets/trang-bi/dai-khang-phep.png",
+            "price": 1000,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "bua-suc-manh",
+            "name": "Bùa sức mạnh",
+            "image": "assets/trang-bi/bua-suc-manh.png",
+            "price": 140,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giay-kien-cuong",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giay-thep",
+            "name": "Giày thép",
+            "image": "assets/trang-bi/giay-thep.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-giac-dau",
+            "name": "Găng giác đấu",
+            "image": "assets/trang-bi/gang-giac-dau.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giay-ho-ve",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giay-thep",
+            "name": "Giày thép",
+            "image": "assets/trang-bi/giay-thep.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "giap-nhe",
+            "name": "Giáp nhẹ",
+            "image": "assets/trang-bi/giap-nhe.png",
+            "price": 220,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "tho-he-bao-thach",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "nguyen-to-bao-thach",
+            "name": "Nguyên tố bảo thạch",
+            "image": "assets/trang-bi/nguyen-to-bao-thach.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "dai-dia-hoi-huyet",
+          "name": "Đại địa hồi huyết",
+          "image": "assets/trang-bi/dai-dia-hoi-huyet.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-ma-nhan",
+          "name": "Đại địa ma nhãn",
+          "image": "assets/trang-bi/dai-dia-ma-nhan.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-than-khien",
+          "name": "Đại địa thần khiên",
+          "image": "assets/trang-bi/dai-dia-than-khien.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-mo-troi",
+          "name": "Đại địa mở trói",
+          "image": "assets/trang-bi/dai-dia-mo-troi.png",
+          "price": 1900
+        },
+        {
+          "itemId": "dai-dia-than-toc",
+          "name": "Đại địa thần tốc",
+          "image": "assets/trang-bi/dai-dia-than-toc.png",
+          "price": 1900
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "giay-hermes",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "giay-thep",
+            "name": "Giày thép",
+            "image": "assets/trang-bi/giay-thep.png",
+            "price": 250,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "cung-ta-ma",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "chuy-mau",
+            "name": "Chùy máu",
+            "image": "assets/trang-bi/chuy-mau.png",
+            "price": 410,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-tay",
+            "name": "Găng tay",
+            "image": "assets/trang-bi/gang-tay.png",
+            "price": 300,
+            "quantity": 1
+          },
+          {
+            "itemId": "kiem-dai",
+            "name": "Kiếm dài",
+            "image": "assets/trang-bi/kiem-dai.png",
+            "price": 910,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "thuong-khung-kiem",
+      "recipe": {
+        "status": "unverified",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "liem-doat-menh",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "chuy-xich",
+            "name": "Chùy xích",
+            "image": "assets/trang-bi/chuy-xich.png",
+            "price": 450,
+            "quantity": 1
+          },
+          {
+            "itemId": "dao-gam",
+            "name": "Dao găm",
+            "image": "assets/trang-bi/dao-gam.png",
+            "price": 290,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "nguyen-to-bao-thach",
+      "recipe": {
+        "status": "none",
+        "combineCost": null,
+        "components": []
+      },
+      "buildsInto": [
+        {
+          "itemId": "hoa-he-bao-thach",
+          "name": "Hoả hệ bảo thạch",
+          "image": "assets/trang-bi/hoa-he-bao-thach.png",
+          "price": 900
+        },
+        {
+          "itemId": "tho-he-bao-thach",
+          "name": "Thổ hệ bảo thạch",
+          "image": "assets/trang-bi/tho-he-bao-thach.png",
+          "price": 900
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "huyet-anh-dao",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "kiem-ngan",
+            "name": "Kiếm ngắn",
+            "image": "assets/trang-bi/kiem-ngan.png",
+            "price": 250,
+            "quantity": 1
+          },
+          {
+            "itemId": "chuy-mau",
+            "name": "Chùy máu",
+            "image": "assets/trang-bi/chuy-mau.png",
+            "price": 410,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "quy-kiem",
+          "name": "Quỷ Kiếm",
+          "image": "assets/trang-bi/quy-kiem.png",
+          "price": 1800
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "diet-than-cung",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "huyet-cung",
+            "name": "Huyết cung",
+            "image": "assets/trang-bi/huyet-cung.png",
+            "price": 1100,
+            "quantity": 1
+          },
+          {
+            "itemId": "phi-tieu",
+            "name": "Phi tiêu",
+            "image": "assets/trang-bi/phi-tieu.png",
+            "price": 750,
+            "quantity": 1
+          },
+          {
+            "itemId": "gang-tay",
+            "name": "Găng tay",
+            "image": "assets/trang-bi/gang-tay.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "huyet-cung",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "chuy-xich",
+            "name": "Chùy xích",
+            "image": "assets/trang-bi/chuy-xich.png",
+            "price": 450,
+            "quantity": 1
+          },
+          {
+            "itemId": "dao-gam",
+            "name": "Dao găm",
+            "image": "assets/trang-bi/dao-gam.png",
+            "price": 290,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "diet-than-cung",
+          "name": "Diệt thần cung",
+          "image": "assets/trang-bi/diet-than-cung.png",
+          "price": 2980
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "chuy-bang-suong",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "phi-tieu",
+            "name": "Phi tiêu",
+            "image": "assets/trang-bi/phi-tieu.png",
+            "price": 750,
+            "quantity": 1
+          },
+          {
+            "itemId": "chuy-xich",
+            "name": "Chùy xích",
+            "image": "assets/trang-bi/chuy-xich.png",
+            "price": 450,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "cau-chiem-tinh",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "sach-phep",
+            "name": "Sách phép",
+            "image": "assets/trang-bi/sach-phep.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [
+        {
+          "itemId": "mat-na-berith",
+          "name": "Mặt nạ Berith",
+          "image": "assets/trang-bi/mat-na-berith.png",
+          "price": 1800
+        },
+        {
+          "itemId": "truong-bung-no",
+          "name": "Trượng bùng nổ",
+          "image": "assets/trang-bi/truong-bung-no.png",
+          "price": 1800
+        }
+      ],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "ma-phap-truong-bao",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "mat-na-ma-quai",
+            "name": "Mặt nạ ma quái",
+            "image": "assets/trang-bi/mat-na-ma-quai.png",
+            "price": 960,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-co",
+            "name": "Sách cổ",
+            "image": "assets/trang-bi/sach-co.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "the-uoc-carano",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "huyet-truong",
+            "name": "Huyết trượng",
+            "image": "assets/trang-bi/huyet-truong.png",
+            "price": 800,
+            "quantity": 1
+          },
+          {
+            "itemId": "sach-co",
+            "name": "Sách cổ",
+            "image": "assets/trang-bi/sach-co.png",
+            "price": 540,
+            "quantity": 1
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "liet-hoa-than-toc",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "hoa-he-bao-thach",
+            "name": "Hoả hệ bảo thạch",
+            "image": "assets/trang-bi/hoa-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "liet-hoa-mo-troi",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "hoa-he-bao-thach",
+            "name": "Hoả hệ bảo thạch",
+            "image": "assets/trang-bi/hoa-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "liet-hoa-hoi-huyet",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "hoa-he-bao-thach",
+            "name": "Hoả hệ bảo thạch",
+            "image": "assets/trang-bi/hoa-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "liet-hoa-ma-nhan",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "hoa-he-bao-thach",
+            "name": "Hoả hệ bảo thạch",
+            "image": "assets/trang-bi/hoa-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "liet-hoa-than-khien",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "hoa-he-bao-thach",
+            "name": "Hoả hệ bảo thạch",
+            "image": "assets/trang-bi/hoa-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dai-dia-hoi-huyet",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "tho-he-bao-thach",
+            "name": "Thổ hệ bảo thạch",
+            "image": "assets/trang-bi/tho-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dai-dia-ma-nhan",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "tho-he-bao-thach",
+            "name": "Thổ hệ bảo thạch",
+            "image": "assets/trang-bi/tho-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dai-dia-than-khien",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "tho-he-bao-thach",
+            "name": "Thổ hệ bảo thạch",
+            "image": "assets/trang-bi/tho-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dai-dia-mo-troi",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "tho-he-bao-thach",
+            "name": "Thổ hệ bảo thạch",
+            "image": "assets/trang-bi/tho-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    },
+    {
+      "itemId": "dai-dia-than-toc",
+      "recipe": {
+        "status": "verified",
+        "combineCost": null,
+        "components": [
+          {
+            "itemId": "tho-he-bao-thach",
+            "name": "Thổ hệ bảo thạch",
+            "image": "assets/trang-bi/tho-he-bao-thach.png",
+            "price": 900,
+            "quantity": 1
+          },
+          {
+            "itemId": "nhan-hong-ngoc",
+            "name": "Nhẫn hồng ngọc",
+            "image": "assets/trang-bi/nhan-hong-ngoc.png",
+            "price": 300,
+            "quantity": 2
+          }
+        ]
+      },
+      "buildsInto": [],
+      "buildsIntoComplete": false
+    }
+  ]
+}

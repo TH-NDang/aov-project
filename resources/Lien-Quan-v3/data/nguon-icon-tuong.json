@@ -1,0 +1,1292 @@
+[
+  {
+    "hero": "Airi",
+    "file": "assets/hero/head/airi-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/75/Airi_Hero_New_Icon.jpg",
+    "bytes": 5830,
+    "sha256": "fec2406f3a83f1c1e268351e4308917f696da2a1bcdd811e06239e1fa3cad32d",
+    "originalFile": "airi-head.jpg",
+    "heroId": "airi",
+    "collectedOn": null
+  },
+  {
+    "hero": "Aoi",
+    "file": "assets/hero/head/aoi-list-head.png",
+    "source": "https://liquipedia.net/commons/images/8/8f/Aoi_Hero_Icon.png",
+    "bytes": 31291,
+    "sha256": "a6ac8f3dcd1b091b6eda325c126709dd77f2e3f709814737a8fb03b4d8ea3551",
+    "originalFile": "aoi-head.png",
+    "heroId": "aoi",
+    "collectedOn": null
+  },
+  {
+    "hero": "Astrid",
+    "file": "assets/hero/head/astrid-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/de/Astrid_Hero_Icon.jpg",
+    "bytes": 5267,
+    "sha256": "715b9d15cc60513b06cdc3d36f88d55c20d9934fc1b31c47869e5a8100e64394",
+    "originalFile": "astrid-head.jpg",
+    "heroId": "astrid",
+    "collectedOn": null
+  },
+  {
+    "hero": "Billow",
+    "file": "assets/hero/head/billow-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/f/fd/Billow_Hero_Icon.jpg",
+    "bytes": 8464,
+    "sha256": "1b19718613fd9613917c9cf7fadb607f8a4cadc0699845eb46cd6900a36e7c46",
+    "originalFile": "billow-head.jpg",
+    "heroId": "billow",
+    "collectedOn": null
+  },
+  {
+    "hero": "Bright",
+    "file": "assets/hero/head/bright-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/0/0d/Bright_Hero_Icon.jpg",
+    "bytes": 5900,
+    "sha256": "5f42b63ff6ceff4c603ac023240e60dc5315f237db1933c2ea7070a54ac2a722",
+    "originalFile": "bright-head.jpg",
+    "heroId": "bright",
+    "collectedOn": null
+  },
+  {
+    "hero": "Kriknak",
+    "file": "assets/hero/head/kriknak-list-head.png",
+    "source": "https://liquipedia.net/commons/images/b/b3/Kriknak_Hero_Icon.png",
+    "bytes": 7922,
+    "sha256": "588660d6cced7764c52ccddeb00c46f7775a7f46dca1f3599ee93026d5f96572",
+    "originalFile": "kriknak-head.png",
+    "heroId": "kriknak",
+    "collectedOn": null
+  },
+  {
+    "hero": "Butterfly",
+    "file": "assets/hero/head/butterfly-list-head.png",
+    "source": "https://liquipedia.net/commons/images/3/3f/Butterfly_Hero_Icon_2019.png",
+    "bytes": 32817,
+    "sha256": "3cce7770d4866961632875d5b6138ae381912b8bd3e23bb8316ff3457a65689e",
+    "originalFile": "butterfly-head.png",
+    "heroId": "butterfly",
+    "collectedOn": null
+  },
+  {
+    "hero": "Enzo",
+    "file": "assets/hero/head/enzo-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/9/92/Enzo_Hero_Icon.jpg",
+    "bytes": 4240,
+    "sha256": "b60d518b119e10d9bd0c16cf74689d398f114f8dbe35496f87a215cd8004ba7e",
+    "originalFile": "enzo-head.jpg",
+    "heroId": "enzo",
+    "collectedOn": null
+  },
+  {
+    "hero": "Keera",
+    "file": "assets/hero/head/keera-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/74/Keera_Hero_Icon.jpg",
+    "bytes": 8108,
+    "sha256": "c1e19bce535b54f6dba25c010ffa23bf48f7528c564d315433a2517a87001c29",
+    "originalFile": "keera-head.jpg",
+    "heroId": "keera",
+    "collectedOn": null
+  },
+  {
+    "hero": "Kaine",
+    "file": "assets/hero/head/kaine-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/c/cb/Kaine_Hero_Icon.png/180px-Kaine_Hero_Icon.png",
+    "bytes": 63429,
+    "sha256": "710dea6bf7e3dec94a101ef947893c1c3651a0c4fd2a8772f807db1fc31fb235",
+    "originalFile": "kaine-head.png",
+    "heroId": "kaine",
+    "collectedOn": null
+  },
+  {
+    "hero": "Liliana",
+    "file": "assets/hero/head/liliana-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/8/8b/Liliana_Hero_Icon.jpg",
+    "bytes": 6887,
+    "sha256": "9594e6ba05d8a5ee76960e87ea9ce6f25540839df508acc1766d1f7413ef1d57",
+    "originalFile": "liliana-head.jpg",
+    "heroId": "liliana",
+    "collectedOn": null
+  },
+  {
+    "hero": "Murad",
+    "file": "assets/hero/head/murad-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/0/05/Murad_Hero_Icon.jpg",
+    "bytes": 5274,
+    "sha256": "d1536bd1bbc1cbd11c9614d4dac00e69bfd010878a80961791e3384dd928e3a5",
+    "originalFile": "murad-head.jpg",
+    "heroId": "murad",
+    "collectedOn": null
+  },
+  {
+    "hero": "Nakroth",
+    "file": "assets/hero/head/nakroth-list-head.png",
+    "source": "https://liquipedia.net/commons/images/9/9e/Nakroth_2020_Hero_Icon.png",
+    "bytes": 32632,
+    "sha256": "cbb853d06bc1d81c478597153103df90f0f6a8f7de525169840ac5fde08b4fd4",
+    "originalFile": "nakroth-head.png",
+    "heroId": "nakroth",
+    "collectedOn": null
+  },
+  {
+    "hero": "Paine",
+    "file": "assets/hero/head/paine-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/7e/Paine_Hero_Icon.jpg",
+    "bytes": 14079,
+    "sha256": "31ea3445b766b4e999cfd742960bc88e393e90395567da0437f2f93ea8103c61",
+    "originalFile": "paine-head.jpg",
+    "heroId": "paine",
+    "collectedOn": null
+  },
+  {
+    "hero": "Qi",
+    "file": "assets/hero/head/qi-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/c/c6/Qi_Hero_Icon.png/180px-Qi_Hero_Icon.png",
+    "bytes": 59628,
+    "sha256": "8502ba6a6d6c0198e985f54627129f8d53e9db7a5ab77acc38be7a7580545352",
+    "originalFile": "qi-head.png",
+    "heroId": "qi",
+    "collectedOn": null
+  },
+  {
+    "hero": "Quillen",
+    "file": "assets/hero/head/quillen-list-head.png",
+    "source": "https://liquipedia.net/commons/images/5/58/Quillen_Hero_Icon.png",
+    "bytes": 25736,
+    "sha256": "92292b7c202bc98647c13f792b39b91d1c88bd40480247fef3733705fa543e03",
+    "originalFile": "quillen-head.png",
+    "heroId": "quillen",
+    "collectedOn": null
+  },
+  {
+    "hero": "Raz",
+    "file": "assets/hero/head/raz-list-head.png",
+    "source": "https://liquipedia.net/commons/images/c/ca/Raz_Hero_Icon.png",
+    "bytes": 22222,
+    "sha256": "529218b97c4a9d47cdeff9714edcc0c1296c1ce9ceb89f130db29caf1c490ef7",
+    "originalFile": "raz-head.png",
+    "heroId": "raz",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ryoma",
+    "file": "assets/hero/head/ryoma-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/0/0d/Ryoma_Hero_Icon.jpg",
+    "bytes": 5922,
+    "sha256": "52d2622c236f4fc28f5918648c7fff01b442becc492524b1365f2a25210f6855",
+    "originalFile": "ryoma-head.jpg",
+    "heroId": "ryoma",
+    "collectedOn": null
+  },
+  {
+    "hero": "Sinestrea",
+    "file": "assets/hero/head/sinestrea-list-head.png",
+    "source": "https://liquipedia.net/commons/images/6/67/Sinestrea_Hero_Icon.png",
+    "bytes": 20157,
+    "sha256": "5c756a002572526932657db2c46baaab48892561bdcc195ea80309cf2b0b0ede",
+    "originalFile": "sinestrea-head.png",
+    "heroId": "sinestrea",
+    "collectedOn": null
+  },
+  {
+    "hero": "The Flash",
+    "file": "assets/hero/head/the-flash-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/a/a4/The_Flash_Hero_Icon.jpg",
+    "bytes": 7307,
+    "sha256": "e575738cb989261f8c2d861b8e5268e29eed71de78f8eb6df5cadd8d81429b1d",
+    "originalFile": "the-flash-head.jpg",
+    "heroId": "the-flash",
+    "collectedOn": null
+  },
+  {
+    "hero": "Volkath",
+    "file": "assets/hero/head/volkath-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/4/44/Volkath_Hero_Icon.jpg/180px-Volkath_Hero_Icon.jpg",
+    "bytes": 7531,
+    "sha256": "b8fbe4d2360b002ab9d92b41273d35150fa79cc90a81cbec07e70225c54b190c",
+    "originalFile": "volkath-head.jpg",
+    "heroId": "volkath",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ngộ Không",
+    "file": "assets/hero/head/ngo-khong-list-head.png",
+    "source": "https://liquipedia.net/commons/images/c/c3/WuKong_2019_Hero_Icon.png",
+    "bytes": 31750,
+    "sha256": "54597c5d98df33444da2163855b548d5a2d8e198fd86e69034048598398f3426",
+    "originalFile": "ngo-khong-head.png",
+    "heroId": "ngo-khong",
+    "collectedOn": null
+  },
+  {
+    "hero": "Yan",
+    "file": "assets/hero/head/yan-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/73/Yan_Hero_Icon.jpg",
+    "bytes": 7128,
+    "sha256": "d486cc21f9ba243241d8909816c341d5845deb18afc8e295297b458dd9f5a3ae",
+    "originalFile": "yan-head.jpg",
+    "heroId": "yan",
+    "collectedOn": null
+  },
+  {
+    "hero": "Zata",
+    "file": "assets/hero/head/zata-list-head.png",
+    "source": "https://liquipedia.net/commons/images/d/de/Zata_Hero_Icon.png",
+    "bytes": 20941,
+    "sha256": "000a2441f7323013e89a8af487772bc836d61bfa601329d5da6cb7b9cc0b5159",
+    "originalFile": "zata-head.png",
+    "heroId": "zata",
+    "collectedOn": null
+  },
+  {
+    "hero": "Zephys",
+    "file": "assets/hero/head/zephys-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/5/53/Zephys_Hero_Icon_2022.jpg/180px-Zephys_Hero_Icon_2022.jpg",
+    "bytes": 7426,
+    "sha256": "fc6ede4bda6726a81ad780dbeee36bd0ffe8cd07f78127e16a50c1b5e845fa95",
+    "originalFile": "zephys-head.jpg",
+    "heroId": "zephys",
+    "collectedOn": null
+  },
+  {
+    "hero": "Zill",
+    "file": "assets/hero/head/zill-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/f/fa/Zill_Hero_Icon.jpg",
+    "bytes": 5848,
+    "sha256": "f799c6883f4f77a90a39077c470ca979b8b025438b0faa0ef456912a8935847b",
+    "originalFile": "zill-head.jpg",
+    "heroId": "zill",
+    "collectedOn": null
+  },
+  {
+    "hero": "Zuka",
+    "file": "assets/hero/head/zuka-list-head.png",
+    "source": "https://liquipedia.net/commons/images/d/df/Zuka_Hero_Icon_2019.png",
+    "bytes": 31093,
+    "sha256": "cde1bcc825125a4b8201cecfb672416db951fd916611de460828e6083d8d6bf5",
+    "originalFile": "zuka-head.png",
+    "heroId": "zuka",
+    "collectedOn": null
+  },
+  {
+    "hero": "Allain",
+    "file": "assets/hero/head/allain-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/5/5f/Allain_Hero_Icon.jpg/180px-Allain_Hero_Icon.jpg",
+    "bytes": 7147,
+    "sha256": "b18206b249dba90b6edb25564c3515d250be9737acbfa0f08b96b85824c82621",
+    "originalFile": "allain-head.jpg",
+    "heroId": "allain",
+    "collectedOn": null
+  },
+  {
+    "hero": "Amily",
+    "file": "assets/hero/head/amily-list-head.png",
+    "source": "https://liquipedia.net/commons/images/7/7c/Amily_Hero_Icon.png",
+    "bytes": 21043,
+    "sha256": "4e9d045e79d3aefcc384ac8dd35b0fb2f75f2f6cec3d0af9476b4e7f03c5947f",
+    "originalFile": "amily-head.png",
+    "heroId": "amily",
+    "collectedOn": null
+  },
+  {
+    "hero": "Arduin",
+    "file": "assets/hero/head/arduin-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/e/ed/Arduin_Hero_Icon.jpg",
+    "bytes": 6505,
+    "sha256": "465d25a05787aaae9961ddca76462c65d61e3f6e340349e7167615ae616da4da",
+    "originalFile": "arduin-head.jpg",
+    "heroId": "arduin",
+    "collectedOn": null
+  },
+  {
+    "hero": "Arthur",
+    "file": "assets/hero/head/arthur-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/6/6f/Arthur_hero_icon_2022.jpg",
+    "bytes": 7163,
+    "sha256": "a12483474c24eea3cb16af09462a1d897ed967e53c7f73dcc71fa7e00a723ee0",
+    "originalFile": "arthur-head.jpg",
+    "heroId": "arthur",
+    "collectedOn": null
+  },
+  {
+    "hero": "Bijan",
+    "file": "assets/hero/head/bijan-list-head.png",
+    "source": "https://liquipedia.net/commons/images/4/44/Bijan_Hero_Icon.png",
+    "bytes": 32581,
+    "sha256": "91d528aa8750170cc3daf64475bcfdc0908daac84d19ead79ecfbe92863c850c",
+    "originalFile": "bijan-head.png",
+    "heroId": "bijan",
+    "collectedOn": null
+  },
+  {
+    "hero": "Biron",
+    "file": "assets/hero/head/biron-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/1/12/Kuang_Tie_Hero_Icon.png/180px-Kuang_Tie_Hero_Icon.png",
+    "bytes": 54129,
+    "sha256": "cb1ff3c0cb5aadeff578897909f6ecc188e0d5ccfc596a8730978c9863cc7190",
+    "originalFile": "biron-head.png",
+    "heroId": "biron",
+    "collectedOn": null
+  },
+  {
+    "hero": "Bolt Baron",
+    "file": "assets/hero/head/bolt-baron-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/9/9b/Sikong_Zhen_Hero_Icon.png/180px-Sikong_Zhen_Hero_Icon.png",
+    "bytes": 48083,
+    "sha256": "3242fc5a985d9f80c34204a68027ff047edc79a41a78eb183b2ebd1cc828300f",
+    "originalFile": "bolt-baron-head.png",
+    "heroId": "bolt-baron",
+    "collectedOn": null
+  },
+  {
+    "hero": "Charlotte",
+    "file": "assets/hero/head/charlotte-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/b/b2/Charlotte_Hero_Icon.jpg/180px-Charlotte_Hero_Icon.jpg",
+    "bytes": 7422,
+    "sha256": "d92dca8f80bcef77a4ed825a73efb9e57c869f84aa6c8faae56084b2f71ad457",
+    "originalFile": "charlotte-head.jpg",
+    "heroId": "charlotte",
+    "collectedOn": null
+  },
+  {
+    "hero": "Dextra",
+    "file": "assets/hero/head/dextra-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/2/2e/Dextra_Hero_Icon.jpg",
+    "bytes": 2815,
+    "sha256": "df1bcca65486d4a75677a4e23a7aa6d969936f19c3529f230bc18bbff17284f4",
+    "originalFile": "dextra-head.jpg",
+    "heroId": "dextra",
+    "collectedOn": null
+  },
+  {
+    "hero": "Edras",
+    "file": "assets/hero/head/edras-list-head.png",
+    "source": "https://liquipedia.net/commons/images/e/ec/Edras_Hero_Icon.png",
+    "bytes": 43528,
+    "sha256": "4a0e85510a8c66c66707c45f021b01fe88554f8dbcd90916274c97ab27308c72",
+    "originalFile": "edras-head.png",
+    "heroId": "edras",
+    "collectedOn": null
+  },
+  {
+    "hero": "Errol",
+    "file": "assets/hero/head/errol-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/5/5c/Errol_Hero_Icon.jpg",
+    "bytes": 6215,
+    "sha256": "7f8d9a006da56d99d22e0af8a75a12ec333044e57f6b8a14394c9483e7fa812d",
+    "originalFile": "errol-head.jpg",
+    "heroId": "errol",
+    "collectedOn": null
+  },
+  {
+    "hero": "Florentino",
+    "file": "assets/hero/head/florentino-list-head.png",
+    "source": "https://liquipedia.net/commons/images/5/59/Florentino_Hero_Icon.png",
+    "bytes": 27193,
+    "sha256": "01d2d15a53b439bda65a06fe87690a64babbdfb3af070ac9f28033000a13c880",
+    "originalFile": "florentino-head.png",
+    "heroId": "florentino",
+    "collectedOn": null
+  },
+  {
+    "hero": "Heino",
+    "file": "assets/hero/head/heino-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/4/47/Heino_Hero_Icon.jpg/180px-Heino_Hero_Icon.jpg",
+    "bytes": 7887,
+    "sha256": "112ecc69e86e15c2d6f3a093256d16abc78ea83b317019f6be2d49aa736a3fb2",
+    "originalFile": "heino-head.jpg",
+    "heroId": "heino",
+    "collectedOn": null
+  },
+  {
+    "hero": "Kil’Groth",
+    "file": "assets/hero/head/kil-groth-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/f/f1/Kil%27Groth_Hero_Icon.jpg",
+    "bytes": 5828,
+    "sha256": "1962dab682c86af6344a7021085082f31bbbffedec8616b8d7fc1334f646d46d",
+    "originalFile": "kil-groth-head.jpg",
+    "heroId": "kil-groth",
+    "collectedOn": null
+  },
+  {
+    "hero": "Lữ Bố",
+    "file": "assets/hero/head/lu-bo-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/a/a9/Lubu_2019_Hero_Icon.jpg",
+    "bytes": 6770,
+    "sha256": "cbefa44f5152562d6a984af9b51256487a0ffc55e97f2111fda13d5371637c19",
+    "originalFile": "lu-bo-head.jpg",
+    "heroId": "lu-bo",
+    "collectedOn": null
+  },
+  {
+    "hero": "Maloch",
+    "file": "assets/hero/head/maloch-list-head.png",
+    "source": "https://liquipedia.net/commons/images/4/4c/Maloch_Hero_Icon_2019.png",
+    "bytes": 26121,
+    "sha256": "98b26c8d7a14f00cf1a5dc3f88e71fdbab5cf1a09b59a83b8d76f16854be2ab6",
+    "originalFile": "maloch-head.png",
+    "heroId": "maloch",
+    "collectedOn": null
+  },
+  {
+    "hero": "Omen",
+    "file": "assets/hero/head/omen-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/0/08/Omen_Hero_Icon.jpg",
+    "bytes": 6875,
+    "sha256": "870e4d5b19bcfdea036015d959c8fdd3a9f30e9ee30fc0f05218543032fb4196",
+    "originalFile": "omen-head.jpg",
+    "heroId": "omen",
+    "collectedOn": null
+  },
+  {
+    "hero": "Rourke",
+    "file": "assets/hero/head/rourke-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/b/ba/Rourke_Hero_Icon.jpg",
+    "bytes": 6334,
+    "sha256": "d243f3e193f03b7007dc3052a800eb493828f7249cc4ebf8827310ca9fa70c53",
+    "originalFile": "rourke-head.jpg",
+    "heroId": "rourke",
+    "collectedOn": null
+  },
+  {
+    "hero": "Richter",
+    "file": "assets/hero/head/richter-list-head.png",
+    "source": "https://liquipedia.net/commons/images/f/fa/Richter_Hero_Icon.png",
+    "bytes": 28287,
+    "sha256": "7c860c28b57a9370253659658ef1c34f8aa178be26995d0361aa6fc59c1bd14d",
+    "originalFile": "richter-head.png",
+    "heroId": "richter",
+    "collectedOn": null
+  },
+  {
+    "hero": "Roxie",
+    "file": "assets/hero/head/roxie-list-head.png",
+    "source": "https://liquipedia.net/commons/images/3/3a/Roxie_Hero_Icon_2022.png",
+    "bytes": 32535,
+    "sha256": "76ac73eda1ed51a2025e93974f1b9727bec50c610a38626d7b8e3dcb9ab50e90",
+    "originalFile": "roxie-head.png",
+    "heroId": "roxie",
+    "collectedOn": null
+  },
+  {
+    "hero": "Skud",
+    "file": "assets/hero/head/skud-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/4/4c/Skud_Hero_New_Icon.jpg",
+    "bytes": 6313,
+    "sha256": "f099b01d011dd84ad7b9575ffce6edd657a41318b501a52aae3b42292936e967",
+    "originalFile": "skud-head.jpg",
+    "heroId": "skud",
+    "collectedOn": null
+  },
+  {
+    "hero": "Superman",
+    "file": "assets/hero/head/superman-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/b/b4/Superman_Hero_Icon.jpg",
+    "bytes": 6311,
+    "sha256": "794a0eb751ef055d3e10347ec5d921326f9a2d3f83f165c053f1c687c6813336",
+    "originalFile": "superman-head.jpg",
+    "heroId": "superman",
+    "collectedOn": null
+  },
+  {
+    "hero": "Taara",
+    "file": "assets/hero/head/taara-list-head.png",
+    "source": "https://liquipedia.net/commons/images/e/e1/Taara_Hero_Icon_2020.png",
+    "bytes": 23298,
+    "sha256": "33c8934984b84dca30b75c2e7f4d71f38b1034a9f8427b1c81839f7817d1e592",
+    "originalFile": "taara-head.png",
+    "heroId": "taara",
+    "collectedOn": null
+  },
+  {
+    "hero": "Tachi",
+    "file": "assets/hero/head/tachi-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/d5/Tachi_Hero_Icon.jpg",
+    "bytes": 3224,
+    "sha256": "663a73b1948da2c85f685ad79554cefc33ee5fc7008af6af3e6ea2c8fad59d44",
+    "originalFile": "tachi-head.jpg",
+    "heroId": "tachi",
+    "collectedOn": null
+  },
+  {
+    "hero": "Tamyn",
+    "file": "assets/hero/head/tamyn-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/e/ee/Tamyn_Hero_Icon.jpg",
+    "bytes": 7653,
+    "sha256": "e3f8b9c8472dc36d5b377d06fc434a5cd7c5705604c2a6839c4623be52be306d",
+    "originalFile": "tamyn-head.jpg",
+    "heroId": "tamyn",
+    "collectedOn": null
+  },
+  {
+    "hero": "Veres",
+    "file": "assets/hero/head/veres-list-head.png",
+    "source": "https://liquipedia.net/commons/images/1/17/Veres_Hero_Icon.png",
+    "bytes": 29234,
+    "sha256": "dae525e6f1870b05cbe1dca71e2c741844d26ac885f44952342ec6e1aede1f3f",
+    "originalFile": "veres-head.png",
+    "heroId": "veres",
+    "collectedOn": null
+  },
+  {
+    "hero": "Wiro",
+    "file": "assets/hero/head/wiro-list-head.png",
+    "source": "https://liquipedia.net/commons/images/c/c9/Wiro_Sableng_Hero_Icon.png",
+    "bytes": 25022,
+    "sha256": "d9c5fc75813baa462b024fc0e17be292eb51c3f8059e92c00f0846096e79e5ce",
+    "originalFile": "wiro-head.png",
+    "heroId": "wiro",
+    "collectedOn": null
+  },
+  {
+    "hero": "Wonder Woman",
+    "file": "assets/hero/head/wonder-woman-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/c/c2/Wonder_Woman_Hero_Icon.jpg",
+    "bytes": 5728,
+    "sha256": "2eb603f6ddc25d84b029de02344a56e8ec73a28841637f495a593b0210dde05a",
+    "originalFile": "wonder-woman-head.jpg",
+    "heroId": "wonder-woman",
+    "collectedOn": null
+  },
+  {
+    "hero": "Yena",
+    "file": "assets/hero/head/yena-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/73/Yena_Hero_Icon.jpg",
+    "bytes": 5312,
+    "sha256": "b26ed81c9d191ca062d7e34a4a8e21a2203ebd1ed91133ca890fe8cab701f225",
+    "originalFile": "yena-head.jpg",
+    "heroId": "yena",
+    "collectedOn": null
+  },
+  {
+    "hero": "Triệu Vân",
+    "file": "assets/hero/head/trieu-van-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/4/41/Zanis_2019_Hero_Icon.jpg",
+    "bytes": 10669,
+    "sha256": "1d25d9cf92129cd62212be034ae09ef5c7190752195d5db170a3051a2e60af99",
+    "originalFile": "trieu-van-head.jpg",
+    "heroId": "trieu-van",
+    "collectedOn": null
+  },
+  {
+    "hero": "Aleister",
+    "file": "assets/hero/head/aleister-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/5/56/Aleister_hero_icon_2022.jpg/180px-Aleister_hero_icon_2022.jpg",
+    "bytes": 9213,
+    "sha256": "a510d0dcc2971d5fd1cccbb95d4ca2df1c4262e97d9fee744ac6efbbcb838359",
+    "originalFile": "aleister-head.jpg",
+    "heroId": "aleister",
+    "collectedOn": null
+  },
+  {
+    "hero": "Annette",
+    "file": "assets/hero/head/annette-list-head.png",
+    "source": "https://liquipedia.net/commons/images/c/c2/Annette_Hero_Icon.png",
+    "bytes": 30119,
+    "sha256": "ca47d5f43f17302d61f07ce3d23ae8028e82e48ef587d27791e08e842051f3fe",
+    "originalFile": "annette-head.png",
+    "heroId": "annette",
+    "collectedOn": null
+  },
+  {
+    "hero": "Azzen’Ka",
+    "file": "assets/hero/head/azzen-ka-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/d5/Azzen%27Ka_Hero_Icon_2025.jpg",
+    "bytes": 8007,
+    "sha256": "189684bed2cdfbe84996bc530130e02eba059ea4b7e589ab98dc0c9fcbc220f6",
+    "originalFile": "azzen-ka-head.jpg",
+    "heroId": "azzen-ka",
+    "collectedOn": null
+  },
+  {
+    "hero": "Bonnie",
+    "file": "assets/hero/head/bonnie-list-head.png",
+    "source": "https://liquipedia.net/commons/images/6/60/Bonnie_Hero_Icon.png",
+    "bytes": 10197,
+    "sha256": "eae76f436c7de6fe42928aa769cf82972effa78121d6a0efe32607db65258c23",
+    "originalFile": "bonnie-head.png",
+    "heroId": "bonnie",
+    "collectedOn": null
+  },
+  {
+    "hero": "D’Arcy",
+    "file": "assets/hero/head/d-arcy-list-head.png",
+    "source": "https://liquipedia.net/commons/images/7/70/Darcy_Hero_Icon.png",
+    "bytes": 23326,
+    "sha256": "494eadf9f122ccf35b393e4138f2a79bc2b0f8c3fd62f5726298fdb8aec84198",
+    "originalFile": "d-arcy-head.png",
+    "heroId": "d-arcy",
+    "collectedOn": null
+  },
+  {
+    "hero": "Điêu Thuyền",
+    "file": "assets/hero/head/dieu-thuyen-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/3/38/Diao_chan_2019_Hero_Icon.jpg",
+    "bytes": 7885,
+    "sha256": "46a2d34a630004e225abc89e3bbab3db4d6be733468271e07db1888add0fe4ee",
+    "originalFile": "dieu-thuyen-head.jpg",
+    "heroId": "dieu-thuyen",
+    "collectedOn": null
+  },
+  {
+    "hero": "Dirak",
+    "file": "assets/hero/head/dirak-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/2/23/Dirak_Hero_Icon.jpg",
+    "bytes": 6257,
+    "sha256": "344646b44c0a3cf6ee37d784032972195576522bfa92c3687f514d9035ac2dbd",
+    "originalFile": "dirak-head.jpg",
+    "heroId": "dirak",
+    "collectedOn": null
+  },
+  {
+    "hero": "Dyadia",
+    "file": "assets/hero/head/dyadia-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/b/be/Shao_Siyuan_Hero_Icon.jpg/180px-Shao_Siyuan_Hero_Icon.jpg",
+    "bytes": 8710,
+    "sha256": "5d357c6162f92a4b5e1a75b128c41b7b0535025000adc04237d251b5ff633f76",
+    "originalFile": "dyadia-head.jpg",
+    "heroId": "dyadia",
+    "collectedOn": null
+  },
+  {
+    "hero": "Flowborn-mid",
+    "file": "assets/hero/head/flowborn-mid-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/8/8c/Child_of_the_Primal_Flow_-_Mage_Hero_Icon_Dec_2024.png/180px-Child_of_the_Primal_Flow_-_Mage_Hero_Icon_Dec_2024.png",
+    "bytes": 53526,
+    "sha256": "4facb4b21292e57621be08b8fea3393aeeafae2b4bd545bbfa79de698c04fca5",
+    "originalFile": "flowborn-mid-head.png",
+    "heroId": "flowborn-mid",
+    "collectedOn": null
+  },
+  {
+    "hero": "Gildur",
+    "file": "assets/hero/head/gildur-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/c/cd/Gildur_Hero_New_Icon.jpg",
+    "bytes": 9656,
+    "sha256": "4c6c9ea3e3e2de474fcbc0af3bf9418cc67d258062cd8b722d7cbf348aabd396",
+    "originalFile": "gildur-head.jpg",
+    "heroId": "gildur",
+    "collectedOn": null
+  },
+  {
+    "hero": "Goverra",
+    "file": "assets/hero/head/goverra-list-head.png",
+    "source": "https://liquipedia.net/commons/images/6/6e/Goverra_Hero_Icon_Zoom.png",
+    "bytes": 43636,
+    "sha256": "a3e5b6a2bf872460afc28e9d73a017c6a621583256bd532226a2a8fa49872725",
+    "originalFile": "goverra-head.png",
+    "heroId": "goverra",
+    "collectedOn": null
+  },
+  {
+    "hero": "Iggy",
+    "file": "assets/hero/head/iggy-list-head.png",
+    "source": "https://liquipedia.net/commons/images/9/9b/Iggy_Hero_Icon.png",
+    "bytes": 27784,
+    "sha256": "496580ba07ef62a7735a3cafae73202ab6eddf473dd40223c521c1e95fbabf77",
+    "originalFile": "iggy-head.png",
+    "heroId": "iggy",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ignis",
+    "file": "assets/hero/head/ignis-list-head.png",
+    "source": "https://liquipedia.net/commons/images/e/ef/Ignis_Hero_Icon.png",
+    "bytes": 23145,
+    "sha256": "15cb1da5bdaf2678250474ea7d3c6775d3bb61110c788b15e6cd4130c68eddc2",
+    "originalFile": "ignis-head.png",
+    "heroId": "ignis",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ilumia",
+    "file": "assets/hero/head/ilumia-list-head.png",
+    "source": "https://liquipedia.net/commons/images/8/87/Ilumia_Hero_Icon.png",
+    "bytes": 22243,
+    "sha256": "1d05196f42bba125c386c3d6724728362cb1795c5e582c88d05b79ffbac432f1",
+    "originalFile": "ilumia-head.png",
+    "heroId": "ilumia",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ishar",
+    "file": "assets/hero/head/ishar-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/5/50/Ishar_Hero_Icon.jpg",
+    "bytes": 6074,
+    "sha256": "462dd267f44d722a86abf1c18792c50a0654c3828e57d84941efdcab0b5458dd",
+    "originalFile": "ishar-head.jpg",
+    "heroId": "ishar",
+    "collectedOn": null
+  },
+  {
+    "hero": "Kahlii",
+    "file": "assets/hero/head/kahlii-list-head.png",
+    "source": "https://liquipedia.net/commons/images/8/84/Kahlii_Hero_Icon.png",
+    "bytes": 22715,
+    "sha256": "73f7cdf23f93d6a67f03eb0fa176df58aaf7c304b2efe88208fc8ffa541b5a76",
+    "originalFile": "kahlii-head.png",
+    "heroId": "kahlii",
+    "collectedOn": null
+  },
+  {
+    "hero": "Krixi",
+    "file": "assets/hero/head/krixi-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/4/44/Krixi_Hero_Icon.jpg",
+    "bytes": 8703,
+    "sha256": "706ecb19a2a23854fe643140b92ba7ee46fc3bf59ef669497477ff01afa1db29",
+    "originalFile": "krixi-head.jpg",
+    "heroId": "krixi",
+    "collectedOn": null
+  },
+  {
+    "hero": "Jinna",
+    "file": "assets/hero/head/jinna-list-head.png",
+    "source": "https://liquipedia.net/commons/images/4/41/Jinnar_Hero_Icon_2019.png",
+    "bytes": 32873,
+    "sha256": "44068fff6ba33554226e4be01e769cc4778c16660e8320b5336baceedc53e583",
+    "originalFile": "jinna-head.png",
+    "heroId": "jinna",
+    "collectedOn": null
+  },
+  {
+    "hero": "Lauriel",
+    "file": "assets/hero/head/lauriel-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/70/Lauriel_Hero_Icon.jpg",
+    "bytes": 6924,
+    "sha256": "1c0bccba681c40716251f80e9a70702f60a2022b142f37f916f624a0b906b4b6",
+    "originalFile": "lauriel-head.jpg",
+    "heroId": "lauriel",
+    "collectedOn": null
+  },
+  {
+    "hero": "Lorion",
+    "file": "assets/hero/head/lorion-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/df/Lorion_Hero_Icon.jpg",
+    "bytes": 6735,
+    "sha256": "9751b22f286167df302424f1952d78763f79dfe2ec66eae683807e43e89805cd",
+    "originalFile": "lorion-head.jpg",
+    "heroId": "lorion",
+    "collectedOn": null
+  },
+  {
+    "hero": "Marja",
+    "file": "assets/hero/head/marja-list-head.png",
+    "source": "https://liquipedia.net/commons/images/6/6d/Marja_Hero_Icon.png",
+    "bytes": 29996,
+    "sha256": "8b774fa358b59712ea949f52c4fbc36e038fa78309bed92c851d5b7e6b319459",
+    "originalFile": "marja-head.png",
+    "heroId": "marja",
+    "collectedOn": null
+  },
+  {
+    "hero": "Mganga",
+    "file": "assets/hero/head/mganga-list-head.png",
+    "source": "https://liquipedia.net/commons/images/1/1b/Mganga_Hero_Icon_2022.png",
+    "bytes": 22897,
+    "sha256": "43113021f3739246593eed13c4b691c53fd31b0be6684e58c6adf62af9f4dc52",
+    "originalFile": "mganga-head.png",
+    "heroId": "mganga",
+    "collectedOn": null
+  },
+  {
+    "hero": "Natalya",
+    "file": "assets/hero/head/natalya-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/6/69/Natalya_Hero_New_Icon.jpg",
+    "bytes": 6931,
+    "sha256": "eb40055fd7f6fca0d8dded364a8aa431e91ab8da4168c623470791b83562bc80",
+    "originalFile": "natalya-head.jpg",
+    "heroId": "natalya",
+    "collectedOn": null
+  },
+  {
+    "hero": "Preyta",
+    "file": "assets/hero/head/preyta-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/da/Preyta_Hero_Icon_2026.jpg",
+    "bytes": 5638,
+    "sha256": "a7f18c7ce375548ec07a4d1a45fb2600c8bc7ec557cf90cf0a3bf42f556fb7bb",
+    "originalFile": "preyta-head.jpg",
+    "heroId": "preyta",
+    "collectedOn": null
+  },
+  {
+    "hero": "Sephera",
+    "file": "assets/hero/head/sephera-list-head.png",
+    "source": "https://liquipedia.net/commons/images/4/4c/Sephera_Hero_Icon.png",
+    "bytes": 21155,
+    "sha256": "f380477cf6164065e05959f758dc369831e990119e916d62a0dd2c5bf944692c",
+    "originalFile": "sephera-head.png",
+    "heroId": "sephera",
+    "collectedOn": null
+  },
+  {
+    "hero": "Tulen",
+    "file": "assets/hero/head/tulen-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/4/47/Tulen_Hero_New_Icon.jpg",
+    "bytes": 5342,
+    "sha256": "8379250d7aca18cd31b36daf1266da7350b71c2c1fc0172483648b6b7b0984ee",
+    "originalFile": "tulen-head.jpg",
+    "heroId": "tulen",
+    "collectedOn": null
+  },
+  {
+    "hero": "Veera",
+    "file": "assets/hero/head/veera-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/4/49/Veera_hero_icon_2022.jpg",
+    "bytes": 10856,
+    "sha256": "b92c9c61d51c825210cd7d255b0dc470ac61b4cf61caf428f80673c7475a0e21",
+    "originalFile": "veera-head.jpg",
+    "heroId": "veera",
+    "collectedOn": null
+  },
+  {
+    "hero": "Yue",
+    "file": "assets/hero/head/yue-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/3/3f/Yue_Hero_Icon.jpg",
+    "bytes": 9644,
+    "sha256": "dae88426fb97cca402dee1ffface9dabb3d4ae52db7649df87e766c653da0703",
+    "originalFile": "yue-head.jpg",
+    "heroId": "yue",
+    "collectedOn": null
+  },
+  {
+    "hero": "Capheny",
+    "file": "assets/hero/head/capheny-list-head.png",
+    "source": "https://liquipedia.net/commons/images/b/b0/Capheny_Hero_Icon.png",
+    "bytes": 26308,
+    "sha256": "fc8618a4f3bd30570d9c092d9727082614bc54e38f1b198a17bb133820ca590d",
+    "originalFile": "capheny-head.png",
+    "heroId": "capheny",
+    "collectedOn": null
+  },
+  {
+    "hero": "Celica",
+    "file": "assets/hero/head/celica-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/c/c5/Celica_Hero_Icon.jpg",
+    "bytes": 7438,
+    "sha256": "37357fc693e8cc571a6b5825f19342d4f3526db679fd4c4afc61bf98756e85f4",
+    "originalFile": "celica-head.jpg",
+    "heroId": "celica",
+    "collectedOn": null
+  },
+  {
+    "hero": "Eland’orr",
+    "file": "assets/hero/head/eland-orr-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/6/6b/Eland%27orr_Hero_Icon.jpg",
+    "bytes": 11266,
+    "sha256": "78c09da7568424892fda7be1b5bd31b925a754d66dd89bc108622f9d77bf22f0",
+    "originalFile": "eland-orr-head.jpg",
+    "heroId": "eland-orr",
+    "collectedOn": null
+  },
+  {
+    "hero": "Elsu",
+    "file": "assets/hero/head/elsu-list-head.png",
+    "source": "https://liquipedia.net/commons/images/8/88/Elsu_Hero_Icon.png",
+    "bytes": 28779,
+    "sha256": "eaa5b9019984c9ae91f97cb696e6f5aad8612b88d15abd622b17e95445a2dcb9",
+    "originalFile": "elsu-head.png",
+    "heroId": "elsu",
+    "collectedOn": null
+  },
+  {
+    "hero": "Erin",
+    "file": "assets/hero/head/erin-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/8/87/Ailin_Hero_Icon.png/180px-Ailin_Hero_Icon.png",
+    "bytes": 55427,
+    "sha256": "cfe36872cc1509de66997a74c8c99625ced1bb445b4e228be92193cce76cc8ef",
+    "originalFile": "erin-head.png",
+    "heroId": "erin",
+    "collectedOn": null
+  },
+  {
+    "hero": "Fennik",
+    "file": "assets/hero/head/fennik-list-head.png",
+    "source": "https://liquipedia.net/commons/images/a/ac/Fennik_Hero_Icon.png",
+    "bytes": 22274,
+    "sha256": "99d85bb60229efd5c4ae58cef16fcf766d655ae20f042b9cc8a22f7a5ba3273e",
+    "originalFile": "fennik-head.png",
+    "heroId": "fennik",
+    "collectedOn": null
+  },
+  {
+    "hero": "Flowborn-ad",
+    "file": "assets/hero/head/flowborn-ad-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/8/83/Child_of_the_Primal_Flow_-_Archer_Hero_Icon.png/180px-Child_of_the_Primal_Flow_-_Archer_Hero_Icon.png",
+    "bytes": 63334,
+    "sha256": "c49c2db3a858b911ecee58f5c68a4864d3ed4f4edb6337d5f4bd1c0b2af25171",
+    "originalFile": "flowborn-ad-head.png",
+    "heroId": "flowborn-ad",
+    "collectedOn": null
+  },
+  {
+    "hero": "Hayate",
+    "file": "assets/hero/head/hayate-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/4/45/Hayate_Hero_Icon.jpg",
+    "bytes": 5463,
+    "sha256": "e80848e4e90791954526db99adff1239774f01234b2e96707fc13121401dc062",
+    "originalFile": "hayate-head.jpg",
+    "heroId": "hayate",
+    "collectedOn": null
+  },
+  {
+    "hero": "Laville",
+    "file": "assets/hero/head/laville-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/72/Laville_Hero_Icon.jpg",
+    "bytes": 9121,
+    "sha256": "f1653557c3e0012a88d4333ed738a2fd6a94a81389a21870abc87d51c0d216a6",
+    "originalFile": "laville-head.jpg",
+    "heroId": "laville",
+    "collectedOn": null
+  },
+  {
+    "hero": "Lindis",
+    "file": "assets/hero/head/lindis-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/79/Lindis_Hero_Icon.jpg",
+    "bytes": 6061,
+    "sha256": "1fcf70477e717b4c8456409699cd914cad94dfcd0a43cfcf6a159a4c70bdba29",
+    "originalFile": "lindis-head.jpg",
+    "heroId": "lindis",
+    "collectedOn": null
+  },
+  {
+    "hero": "Moren",
+    "file": "assets/hero/head/moren-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/a/a5/Moren_2026_Hero_Icon.jpg/180px-Moren_2026_Hero_Icon.jpg",
+    "bytes": 8542,
+    "sha256": "5e7450e9cb3e23c839e6cab9a1bb179a79bcee83b1634700a034699cd1f7c85c",
+    "originalFile": "moren-head.jpg",
+    "heroId": "moren",
+    "collectedOn": null
+  },
+  {
+    "hero": "Slimz",
+    "file": "assets/hero/head/slimz-list-head.png",
+    "source": "https://liquipedia.net/commons/images/2/25/Slimz_Hero_Icon.png",
+    "bytes": 23306,
+    "sha256": "c0a46f760101ea6f61e812227ea941f261164076d9daca9a42a0289aa5c5bfd8",
+    "originalFile": "slimz-head.png",
+    "heroId": "slimz",
+    "collectedOn": null
+  },
+  {
+    "hero": "Stuart",
+    "file": "assets/hero/head/stuart-list-head.png",
+    "source": "https://liquipedia.net/commons/images/2/24/Stuart_Hero_Icon.png",
+    "bytes": 32008,
+    "sha256": "58bf4976386349d9f8a92f6f6abc01573ca1a40b5f547228ec9ff49b4792058e",
+    "originalFile": "stuart-head.png",
+    "heroId": "stuart",
+    "collectedOn": null
+  },
+  {
+    "hero": "Tel’Annas",
+    "file": "assets/hero/head/tel-annas-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/0/01/Tel%27Annas_Hero_New_Icon.jpg",
+    "bytes": 9269,
+    "sha256": "937bd59005cbbdf0ab5350b969400edded28e16922a804a19cd43d20e9b77aa0",
+    "originalFile": "tel-annas-head.jpg",
+    "heroId": "tel-annas",
+    "collectedOn": null
+  },
+  {
+    "hero": "Teeri",
+    "file": "assets/hero/head/teeri-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/e/e7/Teeri_Hero_Icon.jpg",
+    "bytes": 10065,
+    "sha256": "71a187a73f798c4bfe9b3c07bed2c42f71521ae6e57ecd22ca171292b0268f95",
+    "originalFile": "teeri-head.jpg",
+    "heroId": "teeri",
+    "collectedOn": null
+  },
+  {
+    "hero": "Thorne",
+    "file": "assets/hero/head/thorne-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/d3/Thorne_hero_icon.jpg",
+    "bytes": 4788,
+    "sha256": "891b4ea18c66b47b3d16e909a5290d4dc836ac40d81e7dbdf15e8b725f2fda04",
+    "originalFile": "thorne-head.jpg",
+    "heroId": "thorne",
+    "collectedOn": null
+  },
+  {
+    "hero": "Valhein",
+    "file": "assets/hero/head/valhein-list-head.png",
+    "source": "https://liquipedia.net/commons/images/6/63/Valhein_Hero_Icon.png",
+    "bytes": 22578,
+    "sha256": "51019fdf0d05d809418287157c8f5cae425f83a0c3f6c10197ffc272fe39da03",
+    "originalFile": "valhein-head.png",
+    "heroId": "valhein",
+    "collectedOn": null
+  },
+  {
+    "hero": "Violet",
+    "file": "assets/hero/head/violet-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/7/73/Violet_2019_Hero_Icon.jpg",
+    "bytes": 7708,
+    "sha256": "27358dd245a4d6c69e31684bf5f1882e77cd63d6c24226dd0e08dfcd82f32bc5",
+    "originalFile": "violet-head.jpg",
+    "heroId": "violet",
+    "collectedOn": null
+  },
+  {
+    "hero": "Wisp",
+    "file": "assets/hero/head/wisp-list-head.png",
+    "source": "https://liquipedia.net/commons/images/8/8b/Wisp_Hero_Icon.png",
+    "bytes": 23258,
+    "sha256": "3c6057568e46c660149c2ebf55338dcecae3452fe3d23c87d73bbbcdb3a5bb70",
+    "originalFile": "wisp-head.png",
+    "heroId": "wisp",
+    "collectedOn": null
+  },
+  {
+    "hero": "Yorn",
+    "file": "assets/hero/head/yorn-list-head.png",
+    "source": "https://liquipedia.net/commons/images/0/05/Yorn_Hero_Icon_2019.png",
+    "bytes": 28087,
+    "sha256": "8500f94c2a7a32b09f9a19da438f368a8289bf86e0e51f8508838f46eee685df",
+    "originalFile": "yorn-head.png",
+    "heroId": "yorn",
+    "collectedOn": null
+  },
+  {
+    "hero": "Alice",
+    "file": "assets/hero/head/alice-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/9/9c/Alice_Hero_Icon.jpg",
+    "bytes": 5891,
+    "sha256": "ac18c74597bfaf5d0609e97bab11df402516b9110235ae571de8940bc6ebabd6",
+    "originalFile": "alice-head.jpg",
+    "heroId": "alice",
+    "collectedOn": null
+  },
+  {
+    "hero": "Arum",
+    "file": "assets/hero/head/arum-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/5/5b/Arum_Hero_Icon.jpg",
+    "bytes": 6751,
+    "sha256": "644c3a7d60d56809399b4a30d49ac9e20d031a2e15acb7249d90b57f6364b4bc",
+    "originalFile": "arum-head.jpg",
+    "heroId": "arum",
+    "collectedOn": null
+  },
+  {
+    "hero": "Aya",
+    "file": "assets/hero/head/aya-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/0/0b/Aya_Hero_Icon.jpg",
+    "bytes": 6325,
+    "sha256": "83d71b95fdf0486896b65b6c192a0009ae31eb6f3380932467481552eac2de77",
+    "originalFile": "aya-head.jpg",
+    "heroId": "aya",
+    "collectedOn": null
+  },
+  {
+    "hero": "Baldum",
+    "file": "assets/hero/head/baldum-list-head.png",
+    "source": "https://liquipedia.net/commons/images/0/09/Baldum_Hero_Icon.png",
+    "bytes": 22695,
+    "sha256": "33a8808c25b1b701dea39ae4aad83cd128e87059a548be22c08529de8c385152",
+    "originalFile": "baldum-head.png",
+    "heroId": "baldum",
+    "collectedOn": null
+  },
+  {
+    "hero": "Chaugnar",
+    "file": "assets/hero/head/chaugnar-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/f/f5/Chaugnar_Hero_Icon.jpg",
+    "bytes": 3960,
+    "sha256": "d71a2a82848963f220222e4e98d1a9184f05d40fd713da2cb3bdb60e3db7489d",
+    "originalFile": "chaugnar-head.jpg",
+    "heroId": "chaugnar",
+    "collectedOn": null
+  },
+  {
+    "hero": "Cresht",
+    "file": "assets/hero/head/cresht-list-head.png",
+    "source": "https://liquipedia.net/commons/images/c/c6/Cresht_Hero_Icon_2019.png",
+    "bytes": 26383,
+    "sha256": "68c49e9dc4637f3b911d566fcd8b0d1a6e30301599f924dbb99cee2a3d4dc7fc",
+    "originalFile": "cresht-head.png",
+    "heroId": "cresht",
+    "collectedOn": null
+  },
+  {
+    "hero": "Dolia",
+    "file": "assets/hero/head/dolia-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/4/43/Doria_Hero_Icon.jpg/180px-Doria_Hero_Icon.jpg",
+    "bytes": 8080,
+    "sha256": "5b226feba6a64ff3a7cba92d5bec82b661d6e06047c8a828774f1ffa7303963d",
+    "originalFile": "dolia-head.jpg",
+    "heroId": "dolia",
+    "collectedOn": null
+  },
+  {
+    "hero": "Helen",
+    "file": "assets/hero/head/helen-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/thumb/e/e1/Helen_Hero_Icon.jpg/180px-Helen_Hero_Icon.jpg",
+    "bytes": 8288,
+    "sha256": "ec3273f56b683c889b6ec54e1ef05d14a64f6e88420dcfeacf09cf9cb9a7e031",
+    "originalFile": "helen-head.jpg",
+    "heroId": "helen",
+    "collectedOn": null
+  },
+  {
+    "hero": "Grakk",
+    "file": "assets/hero/head/grakk-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/f/fb/Grakk_Hero_Icon.jpg",
+    "bytes": 5806,
+    "sha256": "b6cd51dcabfff87c40ee05938f6d043f61730854a28a0888a0c6cce4e01b774d",
+    "originalFile": "grakk-head.jpg",
+    "heroId": "grakk",
+    "collectedOn": null
+  },
+  {
+    "hero": "Lumburr",
+    "file": "assets/hero/head/lumburr-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/de/Lumburr_Hero_Icon.jpg",
+    "bytes": 6859,
+    "sha256": "23106c3b9dda9dbb6ccd752aaa52aa115dc692c21a751487a039f2e0d7a76d58",
+    "originalFile": "lumburr-head.jpg",
+    "heroId": "lumburr",
+    "collectedOn": null
+  },
+  {
+    "hero": "Krizzix",
+    "file": "assets/hero/head/krizzix-list-head.png",
+    "source": "https://liquipedia.net/commons/images/0/01/Krizzix_Hero_Icon.png",
+    "bytes": 21684,
+    "sha256": "ce9e08882bb21cddb8f1f57c606d0330e46db8cc0ab074dfe77307388679f130",
+    "originalFile": "krizzix-head.png",
+    "heroId": "krizzix",
+    "collectedOn": null
+  },
+  {
+    "hero": "Mina",
+    "file": "assets/hero/head/mina-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/3/38/Mina_Hero_Icon.jpg",
+    "bytes": 6477,
+    "sha256": "21f25c2e238af219267cc4049848f215fb1a3e27165a7fb687354d801d446924",
+    "originalFile": "mina-head.jpg",
+    "heroId": "mina",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ming",
+    "file": "assets/hero/head/ming-list-head.png",
+    "source": "https://liquipedia.net/commons/images/thumb/c/c4/Ming_Shiyin_Hero_Icon.png/180px-Ming_Shiyin_Hero_Icon.png",
+    "bytes": 59782,
+    "sha256": "f6699f215440cb25035f1f1ac867c8d86d30cfa23173eb2a38b9e3df70405426",
+    "originalFile": "ming-head.png",
+    "heroId": "ming",
+    "collectedOn": null
+  },
+  {
+    "hero": "Omega",
+    "file": "assets/hero/head/omega-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/6/6d/Omega_Hero_Icon_2020.jpg",
+    "bytes": 6848,
+    "sha256": "1387e1cfb594cd0d2882bcaf92551a7d4be29dacd985a01474f80a6872327a73",
+    "originalFile": "omega-head.jpg",
+    "heroId": "omega",
+    "collectedOn": null
+  },
+  {
+    "hero": "Rouie",
+    "file": "assets/hero/head/rouie-list-head.png",
+    "source": "https://liquipedia.net/commons/images/6/61/Rouie_Hero_Icon.png",
+    "bytes": 31535,
+    "sha256": "6aaa027d02026c90f724aa8eb10803141990fd06708dcce60206b1e7a226cad1",
+    "originalFile": "rouie-head.png",
+    "heroId": "rouie",
+    "collectedOn": null
+  },
+  {
+    "hero": "TeeMee",
+    "file": "assets/hero/head/teemee-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/d/d3/TeeMee_Hero_Icon.jpg",
+    "bytes": 6978,
+    "sha256": "89dcca139f026d89cb7115ec99badb5873f057233194c3dc439ff278b644d408",
+    "originalFile": "teemee-head.jpg",
+    "heroId": "teemee",
+    "collectedOn": null
+  },
+  {
+    "hero": "Toro",
+    "file": "assets/hero/head/toro-list-head.png",
+    "source": "https://liquipedia.net/commons/images/1/12/Toro_Hero_Icon.png",
+    "bytes": 24533,
+    "sha256": "b370e073be60223d25d242b58b1b5e5106ecd7605c44f436086e51875ae1351b",
+    "originalFile": "toro-head.png",
+    "heroId": "toro",
+    "collectedOn": null
+  },
+  {
+    "hero": "Xeniel",
+    "file": "assets/hero/head/xeniel-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/2/28/Xeniel_Hero_Icon.jpg",
+    "bytes": 7217,
+    "sha256": "4f3fe80587272092f4b955ab5ffcacb4aafd14593c54e415e55fcf86ecdb7e70",
+    "originalFile": "xeniel-head.jpg",
+    "heroId": "xeniel",
+    "collectedOn": null
+  },
+  {
+    "hero": "Zip",
+    "file": "assets/hero/head/zip-list-head.png",
+    "source": "https://liquipedia.net/commons/images/e/e3/Zip_Hero_Icon.png",
+    "bytes": 10199,
+    "sha256": "31561dd34ba02192c318a07d1f3a54a71ed99671a07cc5e8e81749f7dbfaef58",
+    "originalFile": "zip-head.png",
+    "heroId": "zip",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ata",
+    "file": "assets/hero/head/ata-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/3/35/Ata_Hero_Icon.jpg",
+    "bytes": 9704,
+    "sha256": "8535d80a112fa049dc3519bf10cdbc95fa6d87b4a33f1a95334cb154ab7027aa",
+    "originalFile": "ata-head.jpg",
+    "heroId": "ata",
+    "collectedOn": null
+  },
+  {
+    "hero": "Max",
+    "file": "assets/hero/head/max-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/6/6d/Max_Hero_New_Icon.jpg",
+    "bytes": 7435,
+    "sha256": "2409f1f17b8ee32bfd76d66dfcc9deaa4e89dddaeec16de330b9e5269cf64cf3",
+    "originalFile": "max-head.jpg",
+    "heroId": "max",
+    "collectedOn": null
+  },
+  {
+    "hero": "Ormarr",
+    "file": "assets/hero/head/ormarr-list-head.png",
+    "source": "https://liquipedia.net/commons/images/8/81/Ormarr_Hero_Icon_2017.png",
+    "bytes": 23222,
+    "sha256": "12532c24c85978585e68c932eff3e7d8eda5b7b8a76066f317472d34c5e969c0",
+    "originalFile": "ormarr-head.png",
+    "heroId": "ormarr",
+    "collectedOn": null
+  },
+  {
+    "hero": "Thane",
+    "file": "assets/hero/head/thane-list-head.jpg",
+    "source": "https://liquipedia.net/commons/images/1/14/Thane_Hero_Icon.jpg",
+    "bytes": 6162,
+    "sha256": "43d24948d05410b8a41ff0c0e21a559060928eb4342e6e1e5d4cf2293cc6f02c",
+    "originalFile": "thane-head.jpg",
+    "heroId": "thane",
+    "collectedOn": null
+  },
+  {
+    "hero": "Y’bneth",
+    "file": "assets/hero/head/y-bneth-list-head.png",
+    "source": "https://liquipedia.net/commons/images/3/3e/Y%27bneth_Hero_Icon.png",
+    "bytes": 23337,
+    "sha256": "b32b31b65375a807900e1f4a431dc0503284b60c6b4c69b40877041f753c7cce",
+    "originalFile": "y-bneth-head.png",
+    "heroId": "y-bneth",
+    "collectedOn": null
+  }
+]

@@ -1,0 +1,62 @@
+BỘ ẢNH VÀ DỮ LIỆU LIÊN QUÂN
+
+PHẠM VI VÀ XUẤT XỨ
+Bộ gồm ảnh tướng, trang phục, chiêu Arena of Valor, trang bị và phù hiệu.
+Head/cover và bậc: Garena https://lienquan.garena.vn/hoc-vien/tuong-skin/; tải 22/09/2026.
+Icon tướng/chiêu: https://liquipedia.net/honorofkings/Portal:Heroes/Arena_of_Valor
+Icon chiêu tải 22/09/2026; ngày tải icon danh sách tướng chưa ghi rõ.
+Portrait: file Figma PfkEKzA4gz02VCRBRoHRWa do người dùng cung cấp; nhận gói 06/10/2026.
+Trang bị: https://lienquan.garena.vn/hoc-vien/trang-bi/; mốc thu 30/09/2026.
+Phù hiệu: https://lienquan.garena.vn/hoc-vien/phu-hieu/; mốc thu 03/10/2026.
+Ngọc: chưa thu thập. Ngày thu không được suy từ ngày sửa file hoặc URL upload.
+Chi tiết ngày, loại nguồn và link theo phần: note/NGUON-VA-NGAY-THU-THAP.txt.
+
+CẤU TRÚC VÀ CÁCH DÙNG
+assets/hero/{head,portrait,cover}: ảnh tướng; listHead có hậu tố -list-head để phân biệt.
+assets/skin/{head,portrait,cover}: ảnh trang phục.
+portrait/variants/01, 02... giữ các bản khác; skin/portrait/grade chứa icon bậc.
+portrait/source giữ nguyên nguồn portrait, tên file theo mã tài nguyên;
+tên nguồn do người cung cấp đặt vẫn được ghi trong JSON.
+assets/skill: icon chiêu theo slot và biến thể.
+assets/phu-hieu: ảnh hệ và icon nhỏ. assets/trang-bi: icon trang bị.
+assets/ngoc: thư mục dành cho bộ ngọc, hiện chưa có ảnh.
+preview/: các trang HTML xem ảnh, dữ liệu và giao diện biên tập.
+data/: JSON chính, nguồn và chỉ mục; note/: tài liệu TXT.
+program/: mã chạy, file mở công cụ, JS/CSS và cache JS được tạo từ JSON.
+temp/portrait/: ảnh chưa xác định mục nhận. Không dùng chúng như ảnh đã ghép.
+
+DỮ LIỆU CHÍNH
+heroes.json: tướng, trang phục, các dạng/biến thể chiêu, bậc và đường dẫn ảnh.
+trang-bi.json: trang bị, vị trí shop và công thức đã xác nhận.
+phu-hieu.json: hệ, cấp, mô tả và vị trí phù hiệu.
+ngoc.json: trạng thái chưa thu thập; không có nội dung tự tạo.
+danh-sach-tai-nguyen.json: mã tài nguyên, SHA256 và nơi sử dụng.
+portrait-sources.json / danh-sach-anh.json / nguon-thu-thap.json: xuất xứ và link.
+Tên hiển thị có thể giữ dấu; tên file quản lý dùng chữ thường, không dấu, dấu gạch nối.
+Dùng id để liên kết, không dùng tên ảnh hoặc vị trí làm khóa.
+Trang phục chỉ có portrait vẫn hợp lệ; head/cover để null, không tạo ảnh giả.
+
+XEM VÀ BIÊN TẬP
+preview/index.html: trang vào thư viện. Các trang xem mở trực tiếp được.
+program/Mo-thu-vien.cmd: mở thư viện trên Windows.
+program/Mo-quan-ly.cmd: sửa ảnh/thông tin tướng và trang phục, mặc định 127.0.0.1:8786.
+program/Mo-bien-tap-trang-bi.cmd: sửa trang bị, mặc định 127.0.0.1:8785.
+Muốn ghi file phải chạy công cụ; mở HTML biên tập trực tiếp không thay thế máy chủ lưu.
+Portrait cần Python + Pillow; trang bị cần Node.js. Có thể đổi cách chạy trên máy đích,
+miễn chương trình đọc đúng thư mục chứa assets/data/preview và chỉ ghi vào bộ đó.
+Bản sao mỗi lần lưu nằm trong program/backup; chi tiết ở hướng dẫn từng công cụ.
+Các trang dùng cache JS hoặc nội dung nhúng: sửa JSON thủ công cần đồng bộ phần xem.
+
+TÀI LIỆU RIÊNG
+NGUON-VA-NGAY-THU-THAP.txt: nguồn, link, ngày và mức độ ghi nhận ngày.
+HUONG-DAN-HERO-SKIN-SKILL.txt: ý nghĩa các loại ảnh, chiêu và liên kết JSON.
+HUONG-DAN-PORTRAIT.txt: chọn/chuyển ảnh, tên, nguồn và lưu/khôi phục.
+HUONG-DAN-TRANG-BI.txt và HUONG-DAN-BIEN-TAP-TRANG-BI.txt: schema và thao tác.
+HUONG-DAN-PHU-HIEU.txt: nguồn icon, vị trí và cách xem.
+
+ĐƯỜNG DẪN VÀ CÁCH MANG ĐI
+Các đường dẫn assets/, data/, preview/, program/, temp/ trong tài liệu tính từ
+thư mục chứa các phần này, không tính từ thư mục note và không phụ thuộc tên thư mục.
+Giữ các phần đi cùng nhau khi chuyển nơi lưu. Không cần giữ thư mục dự án ban đầu.
+Nếu đặt tài nguyên ở vị trí khác, cập nhật đường dẫn trong JSON và phần đọc ảnh của
+trang xem/chương trình; các link website nguồn vẫn giữ nguyên để truy xuất xuất xứ.

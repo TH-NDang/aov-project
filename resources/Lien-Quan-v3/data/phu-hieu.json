@@ -1,0 +1,1368 @@
+{
+  "schemaVersion": "1.0",
+  "collectedOn": "2026-10-03",
+  "sources": {
+    "excel": "phuhieudulieu.xlsx",
+    "website": "https://lienquan.garena.vn/hoc-vien/phu-hieu/"
+  },
+  "positionConvention": {
+    "group": "Tên hệ",
+    "row": "0,1,2 ứng với cấp I,II,III",
+    "column": "Thứ tự trong cấp, bắt đầu từ 0 theo Excel",
+    "source": "Excel",
+    "websitePosition": "Thứ tự trên Garena lưu riêng; không đồng nhất với bố cục trong game"
+  },
+  "groups": [
+    {
+      "id": "thap-quang-minh",
+      "name": "Tháp quang minh",
+      "order": 0,
+      "description": "Thích hợp: Xạ thủ, Pháp sư đã trải qua Thánh quan tẩy lễ",
+      "background": {
+        "file": "assets/phu-hieu/he/thap-quang-minh-background.jpg",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-2.jpg",
+        "width": 1193,
+        "height": 537,
+        "sha256": "428c3a2d8b0cff1f721bbf16ebab097b2b9b0a355d3f05718c299b0b4024ec63"
+      },
+      "icon": {
+        "file": "assets/phu-hieu/he/thap-quang-minh-icon.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-2.jpg",
+        "width": 1254,
+        "height": 1254,
+        "sha256": "f209f63516b77d7bb4a269fd4862f540457adb6e6e23cbc9d98a3142d5f877f5",
+        "derived": true,
+        "method": "ai-reconstruction",
+        "outerRing": false,
+        "transparent": true,
+        "referenceFile": "assets/phu-hieu/he/thap-quang-minh-background.jpg",
+        "note": "Ảnh tái tạo bằng ImageGen theo mẫu gốc Garena, không phải file icon gốc."
+      },
+      "source": {
+        "sheet": "Danh sách phù hiệu",
+        "row": 2,
+        "raw": {
+          "A": "thap-quan-minh",
+          "B": "Tháp quan minh",
+          "C": "Thích hợp: Xạ thủ, Pháp sư đã trải qua Thánh quan tẩy lễ"
+        }
+      }
+    },
+    {
+      "id": "vuc-hon-mang",
+      "name": "Vực hỗn mang",
+      "order": 1,
+      "description": "Thích hợp: Đấu sĩ, Sát thủ gồm các lĩnh chủ Vực hỗn mang",
+      "background": {
+        "file": "assets/phu-hieu/he/vuc-hon-mang-background.jpg",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-3.jpg",
+        "width": 1193,
+        "height": 537,
+        "sha256": "a4e7f62c56bbb9c02f9bf3f2038c553b3ce801caecbfdf5e5ed155251c3bd86f"
+      },
+      "icon": {
+        "file": "assets/phu-hieu/he/vuc-hon-mang-icon.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-3.jpg",
+        "width": 1254,
+        "height": 1254,
+        "sha256": "be92cc79ee64e86142b4129221db4363bd3856a6c154b0d7a1a17a0e98429bd7",
+        "derived": true,
+        "method": "ai-reconstruction",
+        "outerRing": false,
+        "transparent": true,
+        "referenceFile": "assets/phu-hieu/he/vuc-hon-mang-background.jpg",
+        "note": "Ảnh tái tạo bằng ImageGen theo mẫu gốc Garena, không phải file icon gốc."
+      },
+      "source": {
+        "sheet": "Danh sách phù hiệu",
+        "row": 3,
+        "raw": {
+          "A": "vuc-hon-mang",
+          "B": "Vực hỗn mang",
+          "C": "Thích hợp: Đấu sĩ, Sát thủ gồm các lĩnh chủ Vực hỗn mang"
+        }
+      }
+    },
+    {
+      "id": "rung-nguyen-sinh",
+      "name": "Rừng nguyên sinh",
+      "order": 2,
+      "description": "Thích hợp: Hỗ trợ, Đỡ đòn được bảo vệ bởi Sức mạnh rừng sâu",
+      "background": {
+        "file": "assets/phu-hieu/he/rung-nguyen-sinh-background.jpg",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-4.jpg",
+        "width": 1193,
+        "height": 537,
+        "sha256": "31bd728fd64225ec2b2a1ae3d1d77d1bfaaa72b379fdc115ada7dcc1dc4b7dd0"
+      },
+      "icon": {
+        "file": "assets/phu-hieu/he/rung-nguyen-sinh-icon.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-4.jpg",
+        "width": 1254,
+        "height": 1254,
+        "sha256": "277ac788bd94f488f14f5f00d0e8ff34858cfb0d373d6abbe89d0e58adfb24c3",
+        "derived": true,
+        "method": "ai-reconstruction",
+        "outerRing": false,
+        "transparent": true,
+        "referenceFile": "assets/phu-hieu/he/rung-nguyen-sinh-background.jpg",
+        "note": "Ảnh tái tạo bằng ImageGen theo mẫu gốc Garena, không phải file icon gốc."
+      },
+      "source": {
+        "sheet": "Danh sách phù hiệu",
+        "row": 4,
+        "raw": {
+          "A": "rung-nguyen-sinh",
+          "B": "Rừng nguyen sinh",
+          "C": "Thích hợp: Hỗ trợ, Đỡ đòn được bảo vệ bởi Sức mạnh rừng sâu"
+        }
+      }
+    },
+    {
+      "id": "thanh-khoi-nguyen",
+      "name": "Thành khởi nguyên",
+      "order": 3,
+      "description": "Thích hợp: Tất cả dạng tướng có ăng lực sáng tạo và khoa học kỹ thuật bậc nhất",
+      "background": {
+        "file": "assets/phu-hieu/he/thanh-khoi-nguyen-background.jpg",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-1.jpg",
+        "width": 1193,
+        "height": 537,
+        "sha256": "ebac2a4b61f1eaf835671e45efe49c59ef79e9fa912d0e2c18e3e72d42c80430"
+      },
+      "icon": {
+        "file": "assets/phu-hieu/he/thanh-khoi-nguyen-icon.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bg-badge-1.jpg",
+        "width": 1254,
+        "height": 1254,
+        "sha256": "0c34c5462d4c03b986505b5c3687aac6b8f27145755ea0fd8dcb74951ad6d533",
+        "derived": true,
+        "method": "ai-reconstruction",
+        "outerRing": false,
+        "transparent": true,
+        "referenceFile": "assets/phu-hieu/he/thanh-khoi-nguyen-background.jpg",
+        "note": "Ảnh tái tạo bằng ImageGen theo mẫu gốc Garena, không phải file icon gốc."
+      },
+      "source": {
+        "sheet": "Danh sách phù hiệu",
+        "row": 5,
+        "raw": {
+          "A": "thanh-khoi-nguyen",
+          "B": "Thành khởi nguyên",
+          "C": "Thích hợp: Tất cả dạng tướng có ăng lực sáng tạo và khoa học kỹ thuật bậc nhất"
+        }
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "tuong-phan",
+      "name": "Tương phản",
+      "groupId": "thap-quang-minh",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Tăng ST",
+      "description": "Sát thương gây ra cho\ntướng địch tăng 3% nhưng\nsát thương phải chịu cũng\ntăng lên 2% (tướng cận\nchiến chỉ thêm 1%)",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 0,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 0,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/tuong-phan.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20101.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "f955caeec5dd98e00bcce965ab7dd092f881ba0e42980ac91b013feea05c4d25"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 2,
+        "raw": {
+          "A": "tuong-phan",
+          "B": "Tương phản",
+          "C": "Tăng ST",
+          "D": "Sát thương gây ra cho\ntướng địch tăng 3% nhưng\nsát thương phải chịu cũng\ntăng lên 2% (tướng cận\nchiến chỉ thêm 1%)",
+          "E": "thap-quan-minh",
+          "F": "I",
+          "G": "0, 0, 0"
+        }
+      }
+    },
+    {
+      "id": "sung-man",
+      "name": "Sung mãn",
+      "groupId": "thap-quang-minh",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Hồi năng lượng",
+      "description": "Tung chiêu hoặc đòn đánh\nthường trúng tướng địch\nsẽ được hồi 8% năng lượng\ntối đa. Hồi chiêu 5 giây",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 0,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 0,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/sung-man.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20102.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "725740be663341af763045c52d94c4f77a6c3523c32cb1248e622999c3572a59"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 3,
+        "raw": {
+          "A": "sung-man",
+          "B": "Sung mãn",
+          "C": "Hồi năng lượng",
+          "D": "Tung chiêu hoặc đòn đánh\nthường trúng tướng địch\nsẽ được hồi 8% năng lượng\ntối đa. Hồi chiêu 5 giây",
+          "E": "thap-quan-minh",
+          "F": "I",
+          "G": "0, 0, 1"
+        }
+      }
+    },
+    {
+      "id": "thanh-chau",
+      "name": "Thánh châu",
+      "groupId": "thap-quang-minh",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Hồi chiêu",
+      "description": "Chiêu cuối được giảm thời\ngian hồi chiêu thêm 10%\n(nhưng không được vượt\nquá 40% tối đa)",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 0,
+        "column": 2
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 0,
+        "column": 2
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/thanh-chau.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20103.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "b6523d205a7ec7e49eea8c1a86f19f0f5b52b9fa9067eaf08bdc1e9becf11113"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 4,
+        "raw": {
+          "A": "thanh-chau",
+          "B": "Thánh châu",
+          "C": "Hồi chiêu",
+          "D": "Chiêu cuối được giảm thời\ngian hồi chiêu thêm 10%\n(nhưng không được vượt\nquá 40% tối đa)",
+          "E": "thap-quan-minh",
+          "F": "I",
+          "G": "0, 0, 2"
+        }
+      }
+    },
+    {
+      "id": "xuyen-tam",
+      "name": "Xuyên tâm",
+      "groupId": "thap-quang-minh",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Xuyên",
+      "description": "Nhận 18 - 60 xuyên giáp/\nxuyên giáp phép",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 1,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 1,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/xuyen-tam.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20202.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "deb113bd8c6a86aba97ef2c658626355e0bb2a51ae5682ee8cbfc489c135a9ce"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 5,
+        "raw": {
+          "A": "xuyen-tam",
+          "B": "Xuyên tâm",
+          "C": "Xuyên",
+          "D": "Nhận 18 - 60 xuyên giáp/\nxuyên giáp phép",
+          "E": "thap-quan-minh",
+          "F": "II",
+          "G": "0, 1, 1"
+        }
+      }
+    },
+    {
+      "id": "bi-quyet",
+      "name": "Bí quyết",
+      "groupId": "thap-quang-minh",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Chí mạng",
+      "description": "Bạn được nhận thêm 16 %\nchí mạng và thêm 8% công\nphép từ trang bị",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 1,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 1,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/bi-quyet.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20201.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "285697e1bbdd4493b513b0f5dcd90f62fdce8a0b0e5f6b2f16749eba02d980d7"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 6,
+        "raw": {
+          "A": "bi-quyet",
+          "B": "Bí quyết",
+          "C": "Chí mạng",
+          "D": "Bạn được nhận thêm 16 %\nchí mạng và thêm 8% công\nphép từ trang bị",
+          "E": "thap-quan-minh",
+          "F": "II",
+          "G": "0, 1, 0"
+        }
+      }
+    },
+    {
+      "id": "thanh-thuan",
+      "name": "Thánh thuẫn",
+      "groupId": "thap-quang-minh",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Phòng ngự",
+      "description": "Trong thời gian ngắn nhận\nsát thương vượt quá 30%\nmáu của bản thân sẽ lập\ntức được nhận lá chắn\nmiễn 400 (+30 mỗi cấp\ntướng) sát thương và 20%\nhút máu phép trong 6 giây,\nhạ hoặc phụ hạ trong thời\ngian này sẽ kéo dài hút\nmáu phép 3 giây. Hồi\nchiêu: 30 giây",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 2,
+        "column": 2
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 2,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/thanh-thuan.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20303.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "e0733d741ae7076911db5936e40ad95b715b865e7d23ff459a7cc1ed79b85a7a"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 7,
+        "raw": {
+          "A": "thanh-thuan",
+          "B": "Thánh thuẫn",
+          "C": "Phòng ngự",
+          "D": "Trong thời gian ngắn nhận\nsát thương vượt quá 30%\nmáu của bản thân sẽ lập\ntức được nhận lá chắn\nmiễn 400 (+30 mỗi cấp\ntướng) sát thương và 20%\nhút máu phép trong 6 giây,\nhạ hoặc phụ hạ trong thời\ngian này sẽ kéo dài hút\nmáu phép 3 giây. Hồi\nchiêu: 30 giây",
+          "E": "thap-quan-minh",
+          "F": "III",
+          "G": "0, 2, 2"
+        }
+      }
+    },
+    {
+      "id": "than-quang",
+      "name": "Thần quang",
+      "groupId": "thap-quang-minh",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Tăng ST",
+      "description": "Tung chiêu hoặc đánh\nthường đầu tiên trúng\ntướng địch sẽ tạo thành\nsát thương sấm sét gây 80\n(+ mỗi cấp tướng*8)(+30%\ncông phép) sát thương\nphép. Những chiêu hoặc\nđòn đánh thường tung sau\nđó sẽ giảm thời gian hồi\nchiêu 1 giây (khoảng cách\ngiữa 2 lần giảm hồi chiêu\nphải lớn hơn 0.5 giây). Hồi\nchiêu 12 giây",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 2,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 2,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/than-quang.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20302.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "3ca777f515f4de2cf5f113fc88b49532b245fe750819dafe418d99b215706fcd"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 8,
+        "raw": {
+          "A": "than-quan",
+          "B": "Thần quan",
+          "C": "Tăng ST",
+          "D": "Tung chiêu hoặc đánh\nthường đầu tiên trúng\ntướng địch sẽ tạo thành\nsát thương sấm sét gây 80\n(+ mỗi cấp tướng*8)(+30%\ncông phép) sát thương\nphép. Những chiêu hoặc\nđòn đánh thường tung sau\nđó sẽ giảm thời gian hồi\nchiêu 1 giây (khoảng cách\ngiữa 2 lần giảm hồi chiêu\nphải lớn hơn 0.5 giây). Hồi\nchiêu 12 giây",
+          "E": "thap-quan-minh",
+          "F": "III",
+          "G": "0, 2, 1"
+        }
+      }
+    },
+    {
+      "id": "tinh-linh",
+      "name": "Tinh linh",
+      "groupId": "thap-quang-minh",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Tăng ST",
+      "description": "Đòn đánh thường thứ 3\nliên tiếp trúng một tướng\nđịch sẽ nhận được một\nvòng sáng tiểu thiên thần\nquanh cơ thể trong 5 giây.\nTiểu thiên thần sẽ tự động\ncông kích kẻ địch bị chủ\nnhân tấn công trong phạm\nvi 9.5m. Tốc đánh bằng tốc\nđánh của chủ nhân và lực\ncông kích bằng 2% máu tối\nđa của mục tiêu chuyển\nthành sát thương chuẩn.\nHồi chiêu 10 giây",
+      "position": {
+        "group": "Tháp quang minh",
+        "row": 2,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Tháp quang minh",
+        "row": 2,
+        "column": 2
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/tinh-linh.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_20301.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "1f3481d85c52e239f9df7d99cb13b70d6fb5154d27e5d71a66feeb231df8039c"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 9,
+        "raw": {
+          "A": "tinh-linh",
+          "B": "Tinh linh",
+          "C": "Tăng ST",
+          "D": "Đòn đánh thường thứ 3\nliên tiếp trúng một tướng\nđịch sẽ nhận được một\nvòng sáng tiểu thiên thần\nquanh cơ thể trong 5 giây.\nTiểu thiên thần sẽ tự động\ncông kích kẻ địch bị chủ\nnhân tấn công trong phạm\nvi 9.5m. Tốc đánh bằng tốc\nđánh của chủ nhân và lực\ncông kích bằng 2% máu tối\nđa của mục tiêu chuyển\nthành sát thương chuẩn.\nHồi chiêu 10 giây",
+          "E": "thap-quan-minh",
+          "F": "III",
+          "G": "0, 2, 0"
+        }
+      }
+    },
+    {
+      "id": "ma-hoa",
+      "name": "Ma hỏa",
+      "groupId": "vuc-hon-mang",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Tăng ST",
+      "description": "Tung chiêu hoặc đòn đánh\nthường trúng tướng địch\nsẽ gây 50 (+5 mỗi cấp\ntướng) (+15%Công phép)\nsát thương phép. Hồi chiêu\n8 giây",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 0,
+        "column": 2
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 0,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/ma-hoa.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30104.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "0ebadd536932e3859ed563b302f04d6b4755cff763a47945d39ef86e51e4a804"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 10,
+        "raw": {
+          "A": "ma-hoa",
+          "B": "Ma hỏa",
+          "C": "Tăng ST",
+          "D": "Tung chiêu hoặc đòn đánh\nthường trúng tướng địch\nsẽ gây 50 (+5 mỗi cấp\ntướng) (+15%Công phép)\nsát thương phép. Hồi chiêu\n8 giây",
+          "E": "vuc-hon-mang",
+          "F": "I",
+          "G": "1, 0, 2"
+        }
+      }
+    },
+    {
+      "id": "du-anh",
+      "name": "Dư ảnh",
+      "groupId": "vuc-hon-mang",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Lướt tăng",
+      "description": "Mỗi khi dùng lướt sẽ được\ncộng dồn 1 dư ảnh trong 4\ngiây, tối đa cộng dồn 3 dư\nảnh. Đòn đánh thường sau\nđấy sẽ tiêu hao hết toàn bộ\nsố dư ảnh. Mỗi dư ảnh gây\n30 (+5 / cấp tướng) +(10%\ncông vật lý thêm) sát\nthương vật lý",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 0,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 0,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/du-anh.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30102.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "450c58cde21886e5375b64a01130c84956e384701b732342165edbc1e3cf578a"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 11,
+        "raw": {
+          "A": "du-anh",
+          "B": "Dư ảnh",
+          "C": "Lướt tăng",
+          "D": "Mỗi khi dùng lướt sẽ được\ncộng dồn 1 dư ảnh trong 4\ngiây, tối đa cộng dồn 3 dư\nảnh. Đòn đánh thường sau\nđấy sẽ tiêu hao hết toàn bộ\nsố dư ảnh. Mỗi dư ảnh gây\n30 (+5 / cấp tướng) +(10%\ncông vật lý thêm) sát\nthương vật lý",
+          "E": "vuc-hon-mang",
+          "F": "I",
+          "G": "1, 0, 1"
+        }
+      }
+    },
+    {
+      "id": "hap-huyet",
+      "name": "Hấp huyết",
+      "groupId": "vuc-hon-mang",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Hồi phục",
+      "description": "Hạ hoặc phụ sẽ được hồi\n9% máu bản thân đã mất\nvà 15% năng lượng",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 0,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 0,
+        "column": 2
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/hap-huyet.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30101.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "3e9f56b39626d51111098221d1929f2d8cd27528b4bd98e5c7abc5ceacec14b1"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 12,
+        "raw": {
+          "A": "hap-huyet",
+          "B": "Hấp huyết",
+          "C": "Hồi phục",
+          "D": "Hạ hoặc phụ sẽ được hồi\n9% máu bản thân đã mất\nvà 15% năng lượng",
+          "E": "vuc-hon-mang",
+          "F": "I",
+          "G": "1, 0, 0"
+        }
+      }
+    },
+    {
+      "id": "co-thu",
+      "name": "Cố thủ",
+      "groupId": "vuc-hon-mang",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Kháng hiệu ứng",
+      "description": "Nhận được 12,5% kháng\nhiệu ứng",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 1,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 1,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/co-thu.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30202.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "3659911829120b8c8ef75332a4571dcad5eeecbc1c49d048749bb526a4b322de"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 13,
+        "raw": {
+          "A": "co-thu",
+          "B": "Cố thủ",
+          "C": "Kháng hiệu ứng",
+          "D": "Nhận được 12,5% kháng\nhiệu ứng",
+          "E": "vuc-hon-mang",
+          "F": "II",
+          "G": "1, 1, 1"
+        }
+      }
+    },
+    {
+      "id": "cuong-cong",
+      "name": "Cường công",
+      "groupId": "vuc-hon-mang",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Tăng ST",
+      "description": "Nhận 10 - 38 công vật lý và\n15 - 57 công phép",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 1,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 1,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/cuong-cong.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30201.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "d35f7eda6fa3bf8013682b0c586f530e45544fdb485289f16712a793609a934d"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 14,
+        "raw": {
+          "A": "cuong-cong",
+          "B": "Cường công",
+          "C": "Tăng ST",
+          "D": "Nhận 10 - 38 công vật lý và\n15 - 57 công phép",
+          "E": "vuc-hon-mang",
+          "F": "II",
+          "G": "1, 1, 0"
+        }
+      }
+    },
+    {
+      "id": "ma-tinh",
+      "name": "Ma tính",
+      "groupId": "vuc-hon-mang",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Giảm hồi chiêu",
+      "description": "Sau khi tung chiêu cuối lập\ntức giảm 30% thời gian hồi\ncác chiêu khác và 20%\ngiảm hồi chiêu cuối trong\n6 giây. Hạ hoặc phụ hạ sẽ\nkéo dài hiệu ứng thêm 3\ngiây. Hồi chiêu 30 giây",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 2,
+        "column": 2
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 2,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/ma-tinh.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30304.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "5250cb29db46d5fc2d92b6ac8bbc7b8c5f6c1ee399bde23030ed6ab35fd994ed"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 15,
+        "raw": {
+          "A": "ma-tinh",
+          "B": "Ma tính",
+          "C": "Giảm hồi chiêu",
+          "D": "Sau khi tung chiêu cuối lập\ntức giảm 30% thời gian hồi\ncác chiêu khác và 20%\ngiảm hồi chiêu cuối trong\n6 giây. Hạ hoặc phụ hạ sẽ\nkéo dài hiệu ứng thêm 3\ngiây. Hồi chiêu 30 giây",
+          "E": "vuc-hon-mang",
+          "F": "III",
+          "G": "1, 2, 2"
+        }
+      }
+    },
+    {
+      "id": "ma-chu",
+      "name": "Ma chú",
+      "groupId": "vuc-hon-mang",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "ST chí mạng",
+      "description": "Tung chiêu hoặc đòn đánh\nthường trúng tướng địch\nsẽ cộng dồn 1.5 giây dấu\nấn, đủ 3 dấu ấn sẽ gây\ntrong phạm vi 2.5m quanh\nmục tiêu 36 (+4 mỗi cấp\ntướng) (+25%công vật lý\nthêm) (+15% công phép)\nsát thương phép. Sau 1\ngiây gây tiếp trong phạm vi\n2.5m quanh mục tiêu sát\nthương phép tương đương\n6% máu đã mất của nạn\nnhân (mỗi 100 công vật lý\nthêm hoặc 200 công phép tăng 1%). Hồi chiêu 15",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 2,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 2,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/ma-chu.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30302.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "5dfb1ac23f6d2a4feb3249fec8aec92f13e4fd35dfadd4f95c17c075a447c7eb"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 16,
+        "raw": {
+          "A": "ma-chu",
+          "B": "Ma chú",
+          "C": "ST chí mạng",
+          "D": "Tung chiêu hoặc đòn đánh\nthường trúng tướng địch\nsẽ cộng dồn 1.5 giây dấu\nấn, đủ 3 dấu ấn sẽ gây\ntrong phạm vi 2.5m quanh\nmục tiêu 36 (+4 mỗi cấp\ntướng) (+25%công vật lý\nthêm) (+15% công phép)\nsát thương phép. Sau 1\ngiây gây tiếp trong phạm vi\n2.5m quanh mục tiêu sát\nthương phép tương đương\n6% máu đã mất của nạn\nnhân (mỗi 100 công vật lý\nthêm hoặc 200 công phép tăng 1%). Hồi chiêu 15",
+          "E": "vuc-hon-mang",
+          "F": "III",
+          "G": "1, 2, 1"
+        }
+      }
+    },
+    {
+      "id": "dau-khi",
+      "name": "Đấu khí",
+      "groupId": "vuc-hon-mang",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "ST kéo dài",
+      "description": "Tung chiêu hoặc đánh\nthường trúng tướng địch\nsẽ được tăng 2 tốc chạy\ntrong 3 giây ( tướng đánh\nxa mỗi đòn được cộng dồn\n1 tầng, tướng đánh gần\nmỗi đòn được cộng dồn 2\ntầng), tối đa cộng dồn 10\ntầng. Khi đủ 10 tầng sẽ\nđược hồi 10% máu bản\nthân đã mất và nhận thêm\n15% xuyên giáp & xuyên",
+      "position": {
+        "group": "Vực hỗn mang",
+        "row": 2,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Vực hỗn mang",
+        "row": 2,
+        "column": 2
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/dau-khi.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_30301.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "98f10646491d460ff24a130dc0822ef0bb82da9abd65e09099969c8976962f04"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 17,
+        "raw": {
+          "A": "dau-khi",
+          "B": "Đấu khí",
+          "C": "ST kéo dài",
+          "D": "Tung chiêu hoặc đánh\nthường trúng tướng địch\nsẽ được tăng 2 tốc chạy\ntrong 3 giây ( tướng đánh\nxa mỗi đòn được cộng dồn\n1 tầng, tướng đánh gần\nmỗi đòn được cộng dồn 2\ntầng), tối đa cộng dồn 10\ntầng. Khi đủ 10 tầng sẽ\nđược hồi 10% máu bản\nthân đã mất và nhận thêm\n15% xuyên giáp & xuyên",
+          "E": "vuc-hon-mang",
+          "F": "III",
+          "G": "1, 2, 0"
+        }
+      }
+    },
+    {
+      "id": "canh-gac",
+      "name": "Canh gác",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Phòng ngự",
+      "description": "Khi đứng gần trụ (phạm vi\n6m), bản thân sẽ được\nnhận 15% kháng hiệu ứng\nvà 10% miễn thương",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 0,
+        "column": 2
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 0,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/canh-gac.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40103.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "5bea9fde007c29aab7e64cf97663dcea88c9453460cd2195121d89eeca6bd112"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 18,
+        "raw": {
+          "A": "canh-gac",
+          "B": "Canh gác",
+          "C": "Phòng ngự",
+          "D": "Khi đứng gần trụ (phạm vi\n6m), bản thân sẽ được\nnhận 15% kháng hiệu ứng\nvà 10% miễn thương",
+          "E": "rung-nguyen-sinh",
+          "F": "I",
+          "G": "2, 0, 2"
+        }
+      }
+    },
+    {
+      "id": "am-kich",
+      "name": "Ám kích",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Tăng sát",
+      "description": "Ở trong bụi cỏ tung đòn\nđánh thường sẽ cộng thêm\n4% sát thương chuẩn dựa\ntrên lượng máu của kẻ\nđịch khi đó. Rời khỏi bụi\ncỏ sau 4 giây vẫn nhận\nđược hiệu quả này. Thời\ngian hồi chiêu 10 giây",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 0,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 0,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/am-kich.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40102.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "2e4bbf297db3dc1cf0aa8d393ee826732bf42138fbb82692b9c3522899c74f8a"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 19,
+        "raw": {
+          "A": "am-kich",
+          "B": "Ám kích",
+          "C": "Tăng sát",
+          "D": "Ở trong bụi cỏ tung đòn\nđánh thường sẽ cộng thêm\n4% sát thương chuẩn dựa\ntrên lượng máu của kẻ\nđịch khi đó. Rời khỏi bụi\ncỏ sau 4 giây vẫn nhận\nđược hiệu quả này. Thời\ngian hồi chiêu 10 giây",
+          "E": "rung-nguyen-sinh",
+          "F": "I",
+          "G": "2, 0, 1"
+        }
+      }
+    },
+    {
+      "id": "nhay-ben",
+      "name": "Nhạy bén",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Chạy sông",
+      "description": "Trên đường sông được\nnhận thêm 10 tốc chạy và\nhồi thêm 20 máu cùng 10\nnăng lượng mỗi 5 giây",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 0,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 0,
+        "column": 2
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/nhay-ben.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40101.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "068d6bbbc290065ecd0de74dd9d71f8422bb03a84f42ea9dfba0eefd2e88f4b3"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 20,
+        "raw": {
+          "A": "nhay-ben",
+          "B": "Nhạy bén",
+          "C": "Chạy sông",
+          "D": "Trên đường sông được\nnhận thêm 10 tốc chạy và\nhồi thêm 20 máu cùng 10\nnăng lượng mỗi 5 giây",
+          "E": "rung-nguyen-sinh",
+          "F": "I",
+          "G": "2, 0, 0"
+        }
+      }
+    },
+    {
+      "id": "sinh-ton",
+      "name": "Sinh tồn",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Lượng máu",
+      "description": "Lính và quái rừng bi hạ gục\nphụ cận khiến bản thân\nđược tăng máu tối đa vĩnh\nviễn (lính cộng 1 tầng, quái\nrừng nhỏ cộng 2 tầng, quái\nrừng to cộng 3 tầng, mỗi\ntầng được 8 máu, tối đa\nđược cộng 100 tầng)",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 1,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 1,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/sinh-ton.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40202.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "42198d0044c6371ee65044ec830dece7ff2d238fca60135c0e599bfbbdcdebf5"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 21,
+        "raw": {
+          "A": "sinh-ton",
+          "B": "Sinh tồn",
+          "C": "Lượng máu",
+          "D": "Lính và quái rừng bi hạ gục\nphụ cận khiến bản thân\nđược tăng máu tối đa vĩnh\nviễn (lính cộng 1 tầng, quái\nrừng nhỏ cộng 2 tầng, quái\nrừng to cộng 3 tầng, mỗi\ntầng được 8 máu, tối đa\nđược cộng 100 tầng)",
+          "E": "rung-nguyen-sinh",
+          "F": "II",
+          "G": "2, 1, 1"
+        }
+      }
+    },
+    {
+      "id": "bom-mau",
+      "name": "Bơm máu",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Hồi máu",
+      "description": "Hiệu quả hồi máu và lá\nchẳn của bản thân tăng\n10%. Nếu máu của mục\ntiêu thấp dưới 50%, hiệu\nquả này sẽ tăng thêm 10%\nnữa (bao gôm trang bị, kỹ\nnăng phụ trợ)",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 1,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 1,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/bom-mau.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40201.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "f2b7a34ce85d4252d096e24903be90e1a44d5f6420da5933415beb4dcd57f25c"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 22,
+        "raw": {
+          "A": "bom-mau",
+          "B": "Bơm máu",
+          "C": "Hồi máu",
+          "D": "Hiệu quả hồi máu và lá\nchẳn của bản thân tăng\n10%. Nếu máu của mục\ntiêu thấp dưới 50%, hiệu\nquả này sẽ tăng thêm 10%\nnữa (bao gôm trang bị, kỹ\nnăng phụ trợ)",
+          "E": "rung-nguyen-sinh",
+          "F": "II",
+          "G": "2, 1, 0"
+        }
+      }
+    },
+    {
+      "id": "du-hiep",
+      "name": "Du hiệp",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Giao tranh",
+      "description": "Rời khỏi giao tranh một\nlúc sẽ khiến đòn đánh\nthường kế tiếp làm chậm\nđịch 30% trong 1 giây và\ngắn lên địch một dấu ấn\nbùng nổ. Sau 3 giây nó sẽ\nnổ tung gây 8% máu tối đa\ncủa bản thân thành ST\nphép",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 2,
+        "column": 2
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 2,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/du-hiep.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40307.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "30323364512b3181f20796260b16fc560dad5a05ec9b00430c5b71972ccc0a30"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 23,
+        "raw": {
+          "A": "du-hiep",
+          "B": "Du hiệp",
+          "C": "Giao tranh",
+          "D": "Rời khỏi giao tranh một\nlúc sẽ khiến đòn đánh\nthường kế tiếp làm chậm\nđịch 30% trong 1 giây và\ngắn lên địch một dấu ấn\nbùng nổ. Sau 3 giây nó sẽ\nnổ tung gây 8% máu tối đa\ncủa bản thân thành ST\nphép",
+          "E": "rung-nguyen-sinh",
+          "F": "III",
+          "G": "2, 2, 2"
+        }
+      }
+    },
+    {
+      "id": "moc-giap",
+      "name": "Mộc giáp",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Phòng ngự",
+      "description": "Gánh chịu sát thương sẽ\ncộng dồn (mỗi giây tính 1\nlần) trong 3 giây, đủ 4 lần\ngiúp bản thân gây sát\nthương phép bằng 2% máu\ntối đa của bản thân trong\nphạm vi 4 m đồng thời hồi\n5% máu tối đa, mỗi khi\ntrúng thêm 1 tướng địch sẽ\ngiúp hồi thêm 2% máu tối\nđa (hồi chiêu 10 giây).",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 2,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 2,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/moc-giap.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40306.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "4c8f710ef563dfedc33cc583667873898c73f3d91fe0e27125a7680bd69e095a"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 24,
+        "raw": {
+          "A": "moc-giap",
+          "B": "Mộc giáp",
+          "C": "Phòng ngự",
+          "D": "Gánh chịu sát thương sẽ\ncộng dồn (mỗi giây tính 1\nlần) trong 3 giây, đủ 4 lần\ngiúp bản thân gây sát\nthương phép bằng 2% máu\ntối đa của bản thân trong\nphạm vi 4 m đồng thời hồi\n5% máu tối đa, mỗi khi\ntrúng thêm 1 tướng địch sẽ\ngiúp hồi thêm 2% máu tối\nđa (hồi chiêu 10 giây).",
+          "E": "rung-nguyen-sinh",
+          "F": "III",
+          "G": "2, 2, 1"
+        }
+      }
+    },
+    {
+      "id": "troi-buoc",
+      "name": "Trói buộc",
+      "groupId": "rung-nguyen-sinh",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Sát thương khống chế·",
+      "description": "Khi tung chiêu khống chế\ntrúng tướng địch (khiêu\nkhích, hất tung, đánh lui,\nlàm choáng, hóa đá ... ) sẽ\ngiúp bản thân nhận hiệu\nquả thiêu đốt, mỗi 0.5 giây\ngây sát thương phép bằng\n2% lượng máu tối đa trong\n3 giây. Tướng địch bị thiêu\nđốt sẽ giảm 30 (+3 mỗi cấp\ntướng) giáp phép. Thời\ngian hồi chiêu 20 giây",
+      "position": {
+        "group": "Rừng nguyên sinh",
+        "row": 2,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Rừng nguyên sinh",
+        "row": 2,
+        "column": 2
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/troi-buoc.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_40303.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "dc80f965a5087732dd95360c6b47581294d70723f81bd4b5a941a4eaf8a7cded"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 25,
+        "raw": {
+          "A": "troi-buoc",
+          "B": "Trói buộc",
+          "C": "Sát thương khống chế·",
+          "D": "Khi tung chiêu khống chế\ntrúng tướng địch (khiêu\nkhích, hất tung, đánh lui,\nlàm choáng, hóa đá ... ) sẽ\ngiúp bản thân nhận hiệu\nquả thiêu đốt, mỗi 0.5 giây\ngây sát thương phép bằng\n2% lượng máu tối đa trong\n3 giây. Tướng địch bị thiêu\nđốt sẽ giảm 30 (+3 mỗi cấp\ntướng) giáp phép. Thời\ngian hồi chiêu 20 giây",
+          "E": "rung-nguyen-sinh",
+          "F": "III",
+          "G": "2, 2, 0"
+        }
+      }
+    },
+    {
+      "id": "qua-cau-bang-suong",
+      "name": "Quả cầu băng sương",
+      "groupId": "thanh-khoi-nguyen",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Kích hoạt",
+      "description": "Sau khi trận đấu bắt đầu 4\nphút, bạn sẽ nhận được\nQuả cầu băng sương. Sau\nkhi sử dụng sẽ được miễn\nsát thương nhưng không\nthể công kích, di chuyển và\nkhi kết thúc sẽ nhận được\nlá chắn, chỉ dùng 1 lần",
+      "position": {
+        "group": "Thành khởi nguyên",
+        "row": 0,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Thành khởi nguyên",
+        "row": 0,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/qua-cau-bang-suong.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/icon-badge.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "e4641a294ee4192a65939326cd4076e8b8eece90411bfbce8bae451496fd08d1"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 26,
+        "raw": {
+          "A": "qua-cau-bang-suong",
+          "B": "Quả cầu băng sương",
+          "C": "Kích hoạt",
+          "D": "Sau khi trận đấu bắt đầu 4\nphút, bạn sẽ nhận được\nQuả cầu băng sương. Sau\nkhi sử dụng sẽ được miễn\nsát thương nhưng không\nthể công kích, di chuyển và\nkhi kết thúc sẽ nhận được\nlá chắn, chỉ dùng 1 lần",
+          "E": "thanh-khoi-nguyen",
+          "F": "I",
+          "G": "3, 0, 0"
+        }
+      }
+    },
+    {
+      "id": "sieu-hoi-mau",
+      "name": "Siêu hồi máu",
+      "groupId": "thanh-khoi-nguyen",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Bảo mệnh",
+      "description": "Đổi Hồi máu thành Siêu\nhồi máu: Lập tức hồi 660\nmáu và 210 năng lượng\ncho bản thân.\nCơ chế trong mùa: Đổi \"Té\nnước\" thành \"Siêu té\nnước\".",
+      "position": {
+        "group": "Thành khởi nguyên",
+        "row": 0,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Thành khởi nguyên",
+        "row": 0,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/sieu-hoi-mau.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_10105.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "91e48ee3bcd796168d684d6afab3624b2becc408bc6486ca015b8f13034c94ab"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 27,
+        "raw": {
+          "A": "sieu-hoi-mau",
+          "B": "Siêu hồi máu",
+          "C": "Bảo mệnh",
+          "D": "Đổi Hồi máu thành Siêu\nhồi máu: Lập tức hồi 660\nmáu và 210 năng lượng\ncho bản thân.\nCơ chế trong mùa: Đổi \"Té\nnước\" thành \"Siêu té\nnước\".",
+          "E": "thanh-khoi-nguyen",
+          "F": "I",
+          "G": "3, 0, 1"
+        }
+      }
+    },
+    {
+      "id": "mat-ngu",
+      "name": "Mật ngữ",
+      "groupId": "thanh-khoi-nguyen",
+      "tier": 1,
+      "tierLabel": "I",
+      "summary": "Giảm hồi chiêu",
+      "description": "Kỹ năng phụ trợ của bạn\nđược giảm hồi chiêu thêm\n15%. (Trừng trị chỉ giảm\nthời gian dự trữ)",
+      "position": {
+        "group": "Thành khởi nguyên",
+        "row": 0,
+        "column": 2
+      },
+      "websitePosition": {
+        "group": "Thành khởi nguyên",
+        "row": 0,
+        "column": 2
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/mat-ngu.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_10106.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "16ec268c22d2d6175e81d9461534d4e6a9c0886082cc94a37ffd8ae8f74fb1ed"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 28,
+        "raw": {
+          "A": "mat-ngu",
+          "B": "Mật ngữ",
+          "C": "Giảm hồi chiêu",
+          "D": "Kỹ năng phụ trợ của bạn\nđược giảm hồi chiêu thêm\n15%. (Trừng trị chỉ giảm\nthời gian dự trữ)",
+          "E": "thanh-khoi-nguyen",
+          "F": "I",
+          "G": "3, 0, 2"
+        }
+      }
+    },
+    {
+      "id": "uy-ap",
+      "name": "Uy áp",
+      "groupId": "thanh-khoi-nguyen",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Doạn lính",
+      "description": "Mỗi 25 giây, tung chiêu\nhoặc tung đòn đánh\nthường vào lính sẽ hạ 1\nlính. Sau khi tích lũy hạ\nlính 10 lần, bản thân sẽ\nnhận được 200 vàng và làm\nmới Phù hiệu này (vô hiệu\nvới Xe công thành và Lính\nsiêu cấp).",
+      "position": {
+        "group": "Thành khởi nguyên",
+        "row": 1,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Thành khởi nguyên",
+        "row": 1,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/uy-ap.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/icon-badge-2.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "751c41b2ce3ed6d78ed60610f6936e4fa00b89f2308edafa209748d7c31a28bc"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 29,
+        "raw": {
+          "A": "uy-ap",
+          "B": "Uy áp",
+          "C": "Doạn lính",
+          "D": "Mỗi 25 giây, tung chiêu\nhoặc tung đòn đánh\nthường vào lính sẽ hạ 1\nlính. Sau khi tích lũy hạ\nlính 10 lần, bản thân sẽ\nnhận được 200 vàng và làm\nmới Phù hiệu này (vô hiệu\nvới Xe công thành và Lính\nsiêu cấp).",
+          "E": "thanh-khoi-nguyen",
+          "F": "II",
+          "G": "3, 1, 0"
+        }
+      }
+    },
+    {
+      "id": "tho-san",
+      "name": "Thợ săn",
+      "groupId": "thanh-khoi-nguyen",
+      "tier": 2,
+      "tierLabel": "II",
+      "summary": "Hạ tăng ST",
+      "description": "Nhận một cộng dồn khi\nvào trận, mỗi lần ha hoặc\nphụ hạ một tướng khác\nnhau sẽ nhận thêm một\ncộng dồn, tối đa 6. Mỗi\ncộng dồn tăng 8 công vật lý\nvà 12 công phép",
+      "position": {
+        "group": "Thành khởi nguyên",
+        "row": 1,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Thành khởi nguyên",
+        "row": 1,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/tho-san.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_10202.png",
+        "width": 64,
+        "height": 64,
+        "sha256": "411c4227e818d435350943b4b3507fc1c2a6818927432b4ecd9cd90b7d035b07"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 30,
+        "raw": {
+          "A": "tho-san",
+          "B": "Thợ săn",
+          "C": "Hạ tăng ST",
+          "D": "Nhận một cộng dồn khi\nvào trận, mỗi lần ha hoặc\nphụ hạ một tướng khác\nnhau sẽ nhận thêm một\ncộng dồn, tối đa 6. Mỗi\ncộng dồn tăng 8 công vật lý\nvà 12 công phép",
+          "E": "thanh-khoi-nguyen",
+          "F": "II",
+          "G": "3, 1, 1"
+        }
+      }
+    },
+    {
+      "id": "chuyen-sinh",
+      "name": "Chuyển sinh",
+      "groupId": "thanh-khoi-nguyen",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Đầu thai",
+      "description": "Sau khi tử vong sẽ nhận\nđược phù hiệu: \"Hồi sinh\".\nSau khi sử dụng sẽ hồi sinh\ntrong tế đàn. \"Hồi sinh\"\ncàng về sau sẽ càng tăng\nthêm thời gian hồi chiêu.\nTối đa dùng 2 lần. Thời\ngian hồi chiêu: 100 giây-\n310 giây. Sau 12 phút sẽ\ncấm sử dụng, số lần chưa\ndùng sẽ chuyển thành\n300/600 vàng",
+      "position": {
+        "group": "Thành khởi nguyên",
+        "row": 2,
+        "column": 0
+      },
+      "websitePosition": {
+        "group": "Thành khởi nguyên",
+        "row": 2,
+        "column": 0
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/chuyen-sinh.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_10302.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "3052043f9f9b6dec916d5ceda13fad8bd8ace640a5c3a1473b4dbf2196d0cd3c"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 31,
+        "raw": {
+          "A": "chuyen-sinh",
+          "B": "Chuyến sinh",
+          "C": "Đầu thai",
+          "D": "Sau khi tử vong sẽ nhận\nđược phù hiệu: \"Hồi sinh\".\nSau khi sử dụng sẽ hồi sinh\ntrong tế đàn. \"Hồi sinh\"\ncàng về sau sẽ càng tăng\nthêm thời gian hồi chiêu.\nTối đa dùng 2 lần. Thời\ngian hồi chiêu: 100 giây-\n310 giây. Sau 12 phút sẽ\ncấm sử dụng, số lần chưa\ndùng sẽ chuyển thành\n300/600 vàng",
+          "E": "thanh-khoi-nguyen",
+          "F": "III",
+          "G": "3, 2, 0"
+        }
+      }
+    },
+    {
+      "id": "luyen-kim",
+      "name": "Luyện kim",
+      "groupId": "thanh-khoi-nguyen",
+      "tier": 3,
+      "tierLabel": "III",
+      "summary": "Phát triển",
+      "description": "Mỗi 20 giây nhận một cộng\ndồn Luyện kim, tối đa\nnhận 3 cộng dồn. Tung\nchiêu/ đánh thường lên\ntướng địch hoặc trụ sẽ\ngiúp bản thân nhận 16\nvàng và tiêu hao 1 cộng\ndồn Luyện kim. Hạn mức\ntối đa vàng nhận được là",
+      "position": {
+        "group": "Thành khởi nguyên",
+        "row": 2,
+        "column": 1
+      },
+      "websitePosition": {
+        "group": "Thành khởi nguyên",
+        "row": 2,
+        "column": 1
+      },
+      "image": {
+        "file": "assets/phu-hieu/icon/luyen-kim.png",
+        "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/mowen_10301.png",
+        "width": 128,
+        "height": 128,
+        "sha256": "ca77924f521342ed641015ee689cfda817ab5e3883737d17e31d1a1e85d52514"
+      },
+      "source": {
+        "sheet": "Phù hiệu",
+        "row": 32,
+        "raw": {
+          "A": "luyen-kim",
+          "B": "Luyện kim",
+          "C": "Phát triển",
+          "D": "Mỗi 20 giây nhận một cộng\ndồn Luyện kim, tối đa\nnhận 3 cộng dồn. Tung\nchiêu/ đánh thường lên\ntướng địch hoặc trụ sẽ\ngiúp bản thân nhận 16\nvàng và tiêu hao 1 cộng\ndồn Luyện kim. Hạn mức\ntối đa vàng nhận được là",
+          "E": "thanh-khoi-nguyen",
+          "F": "III",
+          "G": "3, 2, 1"
+        }
+      }
+    }
+  ]
+}

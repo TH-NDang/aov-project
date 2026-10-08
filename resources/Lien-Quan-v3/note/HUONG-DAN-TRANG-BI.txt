@@ -1,0 +1,47 @@
+DỮ LIỆU TRANG BỊ
+
+NGUỒN VÀ NGÀY THU
+Ảnh: https://lienquan.garena.vn/hoc-vien/trang-bi/
+Thông tin chi tiết: trangbidulieu.xlsx do người dùng cung cấp.
+Ngày thu thập ghi trong data/trang-bi.json: 30/09/2026.
+Link ảnh, hàng/sheet và giá trị Excel theo món: data/trang-bi-nguon-du-lieu.json.
+Công thức và vị trí có thể được xác nhận sau đó; collectedOn không phải ngày
+xác nhận tất cả quan hệ. Ngày sửa file không thay thế ngày thu thập nguồn.
+
+FILE ĐI KÈM
+Dữ liệu chính: data/trang-bi.json. Ảnh: assets/trang-bi.
+Snapshot API: data/api-items.json. Quan hệ: data/builds.json.
+Trang xem: preview/Xem-trang-bi.html.
+Các điểm cần đối chiếu: data/trang-bi-can-kiem-tra.json.
+Chương trình và hướng dẫn biên tập: program/trang-bi, note/HUONG-DAN-BIEN-TAP-TRANG-BI.txt.
+Đường dẫn image tính từ thư mục chứa assets/data, không từ thư mục data.
+
+PHẠM VI TẠI NGÀY GHI NOTE 07/10/2026
+112 trang bị; 18 none, 92 verified, 2 unverified.
+Đây là thống kê của bản đang ghi tài liệu; JSON sử dụng thực tế có thể đã được chỉnh thêm.
+
+SCHEMA VÀ QUY TẮC
+id: khóa duy nhất; tên hiển thị, nhóm và vị trí không phải khóa.
+category: tên nhóm. tier: cấp 1–3. price: giá bằng vàng, không phải giá mua ảnh.
+shopPositions: mảng {group,row,column,variant}; group dùng tên nhóm.
+row/column bắt đầu từ 0; null nghĩa chưa xác định, khác vị trí 0.
+Một món có thể có nhiều vị trí; vị trí trùng được giữ để đối chiếu.
+variant: Đại địa, Liệt hoả hoặc null.
+recipe.status: none = xác nhận không cần ghép, components rỗng;
+unverified = chưa xác nhận, components rỗng; verified = công thức đã xác nhận.
+Không suy ra none chỉ từ cấp 1 hoặc ô Excel trống.
+components chỉ lưu nguyên liệu trực tiếp bằng itemId và quantity.
+quantity là số nguyên dương; không lặp itemId trong cùng công thức.
+Không tự tạo phí ghép: combineCost giữ null khi chưa xác nhận quy tắc giá cộng dồn.
+buildsInto suy ra từ công thức verified. buildsIntoComplete=false nghĩa danh sách
+có thể chưa đầy đủ; mảng rỗng không khẳng định món không thể nâng cấp.
+
+TÍCH HỢP Ở NƠI KHÁC
+Module tham khảo: program/trang-bi/backend-items.mjs, có validateCatalog và createItemService.
+Nạp JSON vào service, kiểm tra mã, số lượng, thành phần lặp và vòng lặp công thức.
+getItem(id) trả null nếu không có mã; adapter API có thể trả HTTP 404.
+listItems() tạo danh sách; nạp lại catalogue khi cập nhật dữ liệu.
+Chỉ bật additivePricing=true sau khi xác nhận quy tắc giá trong game.
+Ảnh có thể phục vụ ở URL khác: ghép image với asset base URL của ứng dụng,
+hoặc cập nhật đường dẫn một cách nhất quán; giữ id, source URL và SHA256 để đối chiếu.
+API snapshot không thay thế JSON chính khi biên tập.

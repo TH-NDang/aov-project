@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head><base href="../"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quản lý portrait · Liên Quân</title><link rel="stylesheet" href="program/portrait/style.css"></head>
+<body>
+<header><div><span class="eyebrow">LIÊN QUÂN · QUẢN LÝ ẢNH</span><h1>Sắp xếp và sửa portrait</h1><p>Chọn ảnh → chọn nơi nhận → kiểm tra tên → lưu. Có thể thêm trang phục chỉ có portrait.</p></div><div class="header-actions"><a href="/files/preview/Xem-portrait.html" target="_blank">Xem tổng quan ↗</a><button id="restore" type="button" disabled>Khôi phục lần lưu trước</button></div></header>
+<div id="message" role="status" aria-live="polite"></div>
+<nav id="mode-tabs" class="mode-tabs" aria-label="Cách quản lý"><button type="button" data-mode="images" class="active">Sắp xếp theo ảnh</button><button type="button" data-mode="metadata">Sửa thông tin / thêm ảnh từ máy</button></nav>
+<div id="image-workspace" class="image-workspace">
+  <main class="image-library">
+    <div id="image-tabs" class="image-tabs" aria-label="Lọc ảnh"></div>
+    <div class="image-tools"><label class="image-search">Tìm ảnh<input id="image-search" type="search" placeholder="Tên tướng, trang phục, tên trong Figma hoặc file…"></label><label>Tướng<select id="image-hero"><option value="">Tất cả tướng</option></select></label><button id="image-reset" type="button" class="quiet">Xóa lọc</button></div>
+    <div class="library-heading"><h2 id="library-title">Toàn bộ portrait</h2><span id="image-count" class="small" aria-live="polite"></span></div>
+    <p class="small library-note">Bấm ảnh để chuyển nơi lưu hoặc sửa tên. Dòng “Đang ở” cho biết ảnh đang được gán vào mục nào.</p>
+    <div id="image-grid" class="image-grid"></div><p id="image-empty" class="small" hidden>Không có ảnh phù hợp.</p>
+    <button id="image-more" type="button" class="quiet" hidden>Xem thêm ảnh</button>
+  </main>
+  <aside id="image-panel" class="image-panel" aria-labelledby="image-title" hidden>
+    <div class="panel-heading"><h2 id="image-title">Chuyển ảnh</h2><button id="image-close" type="button" aria-label="Đóng phần chuyển ảnh">✕</button></div>
+    <div class="panel-scroll">
+    <div class="picked-image"><img id="picked-preview" alt="Portrait đang chọn"><div><span class="small">Đang ở</span><strong id="picked-owner"></strong><span id="picked-original" class="small"></span><code id="picked-file"></code></div></div>
+    <section class="target-section"><h3>1. Chọn nơi nhận</h3><label>Tướng nhận ảnh<input id="target-hero" type="search" list="target-hero-options" autocomplete="off" placeholder="Gõ tên tướng…"></label><datalist id="target-hero-options"></datalist>
+      <div id="target-modes" class="target-modes"><button type="button" data-target="existing">Trang phục có sẵn</button><button type="button" data-target="new">Trang phục mới</button><button type="button" data-target="hero">Ảnh tướng</button></div>
+      <div id="existing-target"><label>Lọc trang phục<input id="target-search" type="search" placeholder="Gõ tên trang phục…"></label><label>Trang phục nhận ảnh<select id="target-skin"></select></label></div>
+      <p id="new-target-note" class="notice" hidden>Trang phục mới chỉ cần portrait. Head và cover có thể bổ sung sau.</p>
+      <div id="target-reference" class="target-reference"></div>
+    </section>
+    <section class="target-section"><h3>2. Kiểm tra hoặc sửa tên</h3><label id="target-name-label">Tên hiển thị<input id="target-name" maxlength="180" autocomplete="off"></label>
+      <label>Tên file portrait<input id="target-file-name" maxlength="180" autocomplete="off" placeholder="tên-tướng-tên-trang-phục-portrait.png"></label><button id="auto-file-name" type="button" class="text-button">Dùng tên file tự động</button>
+      <label id="target-badge-field">Bậc trang phục<select id="target-badge"><option value="">Chưa gắn bậc</option></select></label><div id="target-badge-preview"></div>
+    </section>
+    <section class="target-section"><h3>3. Cách dùng ảnh</h3><div class="role-choices"><label><input type="radio" name="image-role" value="primary" checked> Làm ảnh chính</label><label><input type="radio" name="image-role" value="alternate"> Giữ làm bản khác</label></div><div id="move-plan" class="move-plan"></div></section>
+    </div>
+    <div class="panel-footer"><div class="transfer-actions"><button id="image-save" type="button" class="primary">Lưu ảnh này</button><button id="image-save-next" type="button">Lưu & ảnh tiếp</button></div><p class="small">Có bản sao để khôi phục · Ctrl + Enter để lưu</p></div>
+  </aside>
+</div>
+<div id="metadata-view" class="workspace" hidden>
+<aside>
+  <label>Tìm tướng<input id="hero-search" type="search" placeholder="Ví dụ: Alice, Flowborn…"></label>
+  <select id="hero-list" size="9" aria-label="Chọn tướng"></select>
+  <div id="hero-caption" class="small"></div>
+  <label>Mục cần chỉnh<select id="item-list" aria-label="Chọn tướng hoặc trang phục"></select></label>
+  <p id="item-note" class="small"></p>
+  <div class="summary" id="summary"></div>
+  <p class="small">Tên hiển thị có thể giữ tiếng Việt. Mã tướng và mã trang phục luôn được giữ nguyên.</p>
+</aside>
+<main id="editor" hidden>
+  <div class="heading"><div><span id="entity-kind" class="eyebrow"></span><h2 id="entity-title"></h2></div><span id="dirty" class="tag" hidden>Chưa lưu</span></div>
+  <div class="edit-layout">
+    <div class="preview-box"><img id="preview" alt="Ảnh đang chọn"><span id="preview-label"></span><div class="old-images" id="old-images"></div></div>
+    <div class="form">
+      <label>Tên hiển thị<input id="name" maxlength="180" autocomplete="off"></label>
+      <div id="badge-field"><label>Bậc trang phục<select id="badge"><option value="">Không gắn bậc</option></select></label><div id="badge-preview"></div></div>
+      <div class="small" id="stable-id"></div>
+      <section><h3>Chọn ảnh chính</h3><p class="small">Bấm một ảnh dưới đây. Ảnh chính hiện tại vẫn được giữ khi bạn chọn bản khác.</p><div id="versions" class="versions"></div></section>
+      <section><h3>Thêm ảnh mới</h3><label class="upload">Chọn PNG, JPG hoặc WebP<input id="upload" type="file" accept="image/png,image/jpeg,image/webp"></label><p class="small">Giữ nguyên hình và kích thước. Ảnh được lưu thành PNG, tối đa 12 MB.</p><button id="clear-upload" class="quiet" type="button" hidden>Bỏ ảnh vừa chọn</button></section>
+      <section><h3>Ghép ảnh đang chưa khớp</h3><label>Ảnh chưa ghép<select id="unmatched"><option value="">Chọn ảnh chưa khớp…</option></select></label><p class="small">Chọn ảnh rồi xem trước. Khi lưu, ảnh được ghép vào đúng mục đang chỉnh.</p></section>
+    </div>
+  </div>
+  <div class="save-bar"><div><strong id="destination"></strong><p id="save-note" class="small">JSON, trang tổng quan và các bản ảnh sẽ được đồng bộ.</p></div><div><button id="discard" class="quiet" type="button">Bỏ thay đổi</button><button id="save" class="primary" type="button">Lưu thay đổi</button></div></div>
+</main>
+</div>
+<footer>Công cụ chỉ sửa bộ <strong>Lien-Quan-v3</strong>. Bộ ảnh và dữ liệu Garena/Liquipedia gốc giữ nguyên. Bản sao mỗi lần lưu nằm trong <strong>program/backup/portrait</strong>.</footer>
+<dialog id="restore-dialog"><h2>Khôi phục lần lưu trước?</h2><p id="restore-label"></p><p class="small">JSON và ảnh sẽ trở về trước lần lưu này. Những thay đổi chưa lưu sẽ được bỏ.</p><div class="restore-actions"><button id="cancel-restore" class="quiet" type="button">Giữ hiện tại</button><button id="confirm-restore" class="primary" type="button">Khôi phục</button></div></dialog>
+<script src="program/portrait/app.js"></script>
+<script src="program/portrait/image-library.js"></script>
+</body></html>

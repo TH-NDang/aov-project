@@ -1,0 +1,64 @@
+# =====================================================================
+# aov-project — normalize line endings and mark binary files
+# LF by default in the repository; Windows scripts keep CRLF.
+# =====================================================================
+
+* text=auto eol=lf
+
+# ---- Windows scripts ----
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
+*.ps1   text eol=crlf
+
+# ---- Unix scripts (always LF, even when checked out on Windows) ----
+mvnw    text eol=lf
+*.sh    text eol=lf
+
+# ---- Language-aware diffs ----
+*.java  text diff=java
+*.md    text diff=markdown
+*.sql   text
+*.yml   text
+*.yaml  text
+*.json  text
+*.ts    text
+*.tsx   text
+*.css   text
+*.html  text diff=html
+
+# ---- Generated files: hide long diffs in reviews ----
+pnpm-lock.yaml  text -diff linguist-generated=true
+
+# ---- Binary ----
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.avif  binary
+*.ico   binary
+*.svg   text
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.jar   binary
+*.zip   binary
+*.gz    binary
+*.zst   binary
+*.pdf   binary
+*.mp4   binary
+*.webm  binary
+
+# =====================================================================
+# Git LFS — images in resources/
+# Keep this block LAST so it overrides the "binary" rules above.
+# [pP][nN][gG]-style patterns also match upper-case extensions (.PNG, .JPG).
+# Requires Git LFS: run `git lfs install --skip-repo` once per machine before `git add`.
+# =====================================================================
+resources/**/*.[pP][nN][gG]      filter=lfs diff=lfs merge=lfs -text
+resources/**/*.[jJ][pP][gG]      filter=lfs diff=lfs merge=lfs -text
+resources/**/*.[jJ][pP][eE][gG]  filter=lfs diff=lfs merge=lfs -text
+resources/**/*.[gG][iI][fF]      filter=lfs diff=lfs merge=lfs -text
+resources/**/*.[wW][eE][bB][pP]  filter=lfs diff=lfs merge=lfs -text
+resources/**/*.[aA][vV][iI][fF]  filter=lfs diff=lfs merge=lfs -text

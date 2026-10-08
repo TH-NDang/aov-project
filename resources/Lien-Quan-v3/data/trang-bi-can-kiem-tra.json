@@ -1,0 +1,601 @@
+{
+  "issues": [
+    {
+      "id": "review-001",
+      "code": "level_difference",
+      "itemIds": [
+        "kiem-dai"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 2,
+      "garenaLevel": 1,
+      "excelCell": "E7"
+    },
+    {
+      "id": "review-002",
+      "code": "level_difference",
+      "itemIds": [
+        "dao-truy-hon"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E23"
+    },
+    {
+      "id": "review-003",
+      "code": "missing_position",
+      "itemIds": [
+        "giay-du-muc"
+      ],
+      "message": "Excel chưa có hàng và cột; giữ null, không suy ra vị trí từ cấp trang bị.",
+      "excelCell": "H56"
+    },
+    {
+      "id": "review-004",
+      "code": "level_difference",
+      "itemIds": [
+        "truong-bung-no"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 2,
+      "garenaLevel": 3,
+      "excelCell": "E65"
+    },
+    {
+      "id": "review-005",
+      "code": "level_difference",
+      "itemIds": [
+        "sach-truy-hon"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E69"
+    },
+    {
+      "id": "review-006",
+      "code": "level_difference",
+      "itemIds": [
+        "day-chuyen-luc-bao"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E70"
+    },
+    {
+      "id": "review-007",
+      "code": "level_difference",
+      "itemIds": [
+        "truong-hon-mang"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E71"
+    },
+    {
+      "id": "review-008",
+      "code": "level_difference",
+      "itemIds": [
+        "guom-uriel"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E73"
+    },
+    {
+      "id": "review-009",
+      "code": "level_difference",
+      "itemIds": [
+        "khien-huyen-thoai"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 2,
+      "garenaLevel": 3,
+      "excelCell": "E80"
+    },
+    {
+      "id": "review-010",
+      "code": "level_difference",
+      "itemIds": [
+        "giap-thong-kho"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E82"
+    },
+    {
+      "id": "review-011",
+      "code": "level_difference",
+      "itemIds": [
+        "giap-cuong-no"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E85"
+    },
+    {
+      "id": "review-012",
+      "code": "level_difference",
+      "itemIds": [
+        "hercule-thinh-no"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E86"
+    },
+    {
+      "id": "review-013",
+      "code": "level_difference",
+      "itemIds": [
+        "liem-doat-menh"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E95"
+    },
+    {
+      "id": "review-014",
+      "code": "level_difference",
+      "itemIds": [
+        "dai-dia-than-toc"
+      ],
+      "message": "Cấp trong Excel khác bộ lọc cấp trên Garena; giữ cấp Excel.",
+      "excelLevel": 3,
+      "garenaLevel": 2,
+      "excelCell": "E113"
+    },
+    {
+      "id": "review-015",
+      "code": "duplicate_position",
+      "itemIds": [
+        "thuong-xuyen-pha",
+        "cung-ta-ma"
+      ],
+      "message": "Nhiều trang bị có cùng vị trí trong Excel; cần đối chiếu shop trong game.",
+      "position": {
+        "group": "Công",
+        "row": 10,
+        "column": 1
+      }
+    },
+    {
+      "id": "review-016",
+      "code": "duplicate_position",
+      "itemIds": [
+        "xuyen-tam-lenh",
+        "cau-chiem-tinh"
+      ],
+      "message": "Nhiều trang bị có cùng vị trí trong Excel; cần đối chiếu shop trong game.",
+      "position": {
+        "group": "Phép",
+        "row": 8,
+        "column": 1
+      }
+    },
+    {
+      "id": "review-017",
+      "code": "duplicate_position",
+      "itemIds": [
+        "phu-chu-truong-sinh",
+        "ao-choang-bang-gia"
+      ],
+      "message": "Nhiều trang bị có cùng vị trí trong Excel; cần đối chiếu shop trong game.",
+      "position": {
+        "group": "Thủ",
+        "row": 6,
+        "column": 2
+      }
+    },
+    {
+      "id": "review-018",
+      "code": "shared_support_position",
+      "itemIds": [
+        "liet-hoa-than-toc",
+        "dai-dia-than-toc"
+      ],
+      "message": "Hai nhánh Đại địa/Liệt hoả có cùng vị trí trong Excel; tách bằng shopVariant.",
+      "position": {
+        "group": "Phụ trợ",
+        "row": 2,
+        "column": 2
+      }
+    },
+    {
+      "id": "review-019",
+      "code": "shared_support_position",
+      "itemIds": [
+        "liet-hoa-mo-troi",
+        "dai-dia-mo-troi"
+      ],
+      "message": "Hai nhánh Đại địa/Liệt hoả có cùng vị trí trong Excel; tách bằng shopVariant.",
+      "position": {
+        "group": "Phụ trợ",
+        "row": 3,
+        "column": 2
+      }
+    },
+    {
+      "id": "review-020",
+      "code": "shared_support_position",
+      "itemIds": [
+        "liet-hoa-hoi-huyet",
+        "dai-dia-hoi-huyet"
+      ],
+      "message": "Hai nhánh Đại địa/Liệt hoả có cùng vị trí trong Excel; tách bằng shopVariant.",
+      "position": {
+        "group": "Phụ trợ",
+        "row": 4,
+        "column": 2
+      }
+    },
+    {
+      "id": "review-021",
+      "code": "shared_support_position",
+      "itemIds": [
+        "liet-hoa-ma-nhan",
+        "dai-dia-ma-nhan"
+      ],
+      "message": "Hai nhánh Đại địa/Liệt hoả có cùng vị trí trong Excel; tách bằng shopVariant.",
+      "position": {
+        "group": "Phụ trợ",
+        "row": 1,
+        "column": 2
+      }
+    },
+    {
+      "id": "review-022",
+      "code": "shared_support_position",
+      "itemIds": [
+        "liet-hoa-than-khien",
+        "dai-dia-than-khien"
+      ],
+      "message": "Hai nhánh Đại địa/Liệt hoả có cùng vị trí trong Excel; tách bằng shopVariant.",
+      "position": {
+        "group": "Phụ trợ",
+        "row": 0,
+        "column": 2
+      }
+    }
+  ],
+  "oneSidedRelations": [
+    {
+      "from": "kiem-ngan",
+      "to": "chuy-co",
+      "declaredBy": "kiem-ngan",
+      "field": "toLevel2"
+    },
+    {
+      "from": "kiem-ngan",
+      "to": "thuong-dau-si",
+      "declaredBy": "kiem-ngan",
+      "field": "toLevel2"
+    },
+    {
+      "from": "liet-hoa-than-toc",
+      "to": "thuong-longinus",
+      "declaredBy": "thuong-longinus",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "kiem-ngan",
+      "to": "xa-nhat-cung",
+      "declaredBy": "xa-nhat-cung",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "phi-tieu",
+      "to": "xa-nhat-cung",
+      "declaredBy": "xa-nhat-cung",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "kiem-ngan",
+      "to": "dao-truy-hon",
+      "declaredBy": "dao-truy-hon",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "kiem-dai",
+      "to": "dao-truy-hon",
+      "declaredBy": "dao-truy-hon",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "dao-gam",
+      "to": "vong-duc-hanh",
+      "declaredBy": "vong-duc-hanh",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "nhan-ma-phap",
+      "to": "kiem-ngan",
+      "declaredBy": "nhan-ma-phap",
+      "field": "toLevel2"
+    },
+    {
+      "from": "sach-co",
+      "to": "guom-tan-the",
+      "declaredBy": "sach-co",
+      "field": "toLevel3"
+    },
+    {
+      "from": "sach-co",
+      "to": "sach-thanh",
+      "declaredBy": "sach-co",
+      "field": "toLevel3"
+    },
+    {
+      "from": "sach-co",
+      "to": "ma-phap-truong-bao",
+      "declaredBy": "sach-co",
+      "field": "toLevel3"
+    },
+    {
+      "from": "day-chuyen-ma-thuat",
+      "to": "dao-gam",
+      "declaredBy": "day-chuyen-ma-thuat",
+      "field": "toLevel2"
+    },
+    {
+      "from": "nhan-lapis",
+      "to": "khien-huyen-thoai",
+      "declaredBy": "nhan-lapis",
+      "field": "toLevel3"
+    },
+    {
+      "from": "sach-phep",
+      "to": "kiem-ngan",
+      "declaredBy": "sach-phep",
+      "field": "toLevel2"
+    },
+    {
+      "from": "day-chuyen-hong-ngoc",
+      "to": "dao-truy-hon",
+      "declaredBy": "day-chuyen-hong-ngoc",
+      "field": "toLevel3"
+    },
+    {
+      "from": "day-chuyen-hong-ngoc",
+      "to": "truong-bang",
+      "declaredBy": "day-chuyen-hong-ngoc",
+      "field": "toLevel3"
+    },
+    {
+      "from": "day-chuyen-hong-ngoc",
+      "to": "mat-na-berith",
+      "declaredBy": "day-chuyen-hong-ngoc",
+      "field": "toLevel3"
+    },
+    {
+      "from": "day-chuyen-hong-ngoc",
+      "to": "sach-truy-hon",
+      "declaredBy": "day-chuyen-hong-ngoc",
+      "field": "toLevel3"
+    },
+    {
+      "from": "day-chuyen-hong-ngoc",
+      "to": "bang-nhan-skadi",
+      "declaredBy": "day-chuyen-hong-ngoc",
+      "field": "toLevel3"
+    },
+    {
+      "from": "day-chuyen-hong-ngoc",
+      "to": "ao-choang-than-ra",
+      "declaredBy": "day-chuyen-hong-ngoc",
+      "field": "toLevel3"
+    },
+    {
+      "from": "bua-suc-manh",
+      "to": "ao-choang-than-ra",
+      "declaredBy": "bua-suc-manh",
+      "field": "toLevel3"
+    },
+    {
+      "from": "bua-suc-manh",
+      "to": "giap-gaia",
+      "declaredBy": "bua-suc-manh",
+      "field": "toLevel3"
+    },
+    {
+      "from": "nhan-hong-ngoc",
+      "to": "kiem-ngan",
+      "declaredBy": "nhan-hong-ngoc",
+      "field": "toLevel2"
+    },
+    {
+      "from": "dai-dia-than-khien",
+      "to": "dai-khang-phep",
+      "declaredBy": "dai-khang-phep",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "giay-thep",
+      "to": "giay-du-muc",
+      "declaredBy": "giay-thep",
+      "field": "toLevel2"
+    },
+    {
+      "from": "mat-na-ma-quai",
+      "to": "xuyen-tam-lenh",
+      "declaredBy": "xuyen-tam-lenh",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "dai-dia-than-toc",
+      "to": "qua-cau-bang-suong",
+      "declaredBy": "qua-cau-bang-suong",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "dai-dia-ma-nhan",
+      "to": "guom-tan-the",
+      "declaredBy": "guom-tan-the",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "sach-phep",
+      "to": "sach-truy-hon",
+      "declaredBy": "sach-truy-hon",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "so-ma-thuat",
+      "to": "sach-truy-hon",
+      "declaredBy": "sach-truy-hon",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "sach-phep",
+      "to": "day-chuyen-luc-bao",
+      "declaredBy": "day-chuyen-luc-bao",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "day-chuyen-ma-thuat",
+      "to": "day-chuyen-luc-bao",
+      "declaredBy": "day-chuyen-luc-bao",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "mat-na-ma-quai",
+      "to": "truong-hon-mang",
+      "declaredBy": "truong-hon-mang",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "dao-gam",
+      "to": "guom-uriel",
+      "declaredBy": "guom-uriel",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "chuy-co",
+      "to": "guom-uriel",
+      "declaredBy": "guom-uriel",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "giap-nhe",
+      "to": "nham-thuan",
+      "declaredBy": "nham-thuan",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "kiem-ngan",
+      "to": "giap-ho-menh",
+      "declaredBy": "giap-ho-menh",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "giap-nhe",
+      "to": "giap-ho-menh",
+      "declaredBy": "giap-ho-menh",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "kiem-dai",
+      "to": "giap-ho-menh",
+      "declaredBy": "giap-ho-menh",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "dai-dia-ma-nhan",
+      "to": "khien-that-truyen",
+      "declaredBy": "khien-that-truyen",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "nhan-hong-ngoc",
+      "to": "giap-thong-kho",
+      "declaredBy": "giap-thong-kho",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "giap-chan",
+      "to": "giap-thong-kho",
+      "declaredBy": "giap-thong-kho",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "nhan-hong-ngoc",
+      "to": "giap-cuong-no",
+      "declaredBy": "giap-cuong-no",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "giap-chan",
+      "to": "giap-cuong-no",
+      "declaredBy": "giap-cuong-no",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "chuy-xich",
+      "to": "hercule-thinh-no",
+      "declaredBy": "hercule-thinh-no",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "kiem-ngan",
+      "to": "cung-ta-ma",
+      "declaredBy": "cung-ta-ma",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "dai-dia-than-khien",
+      "to": "cung-ta-ma",
+      "declaredBy": "cung-ta-ma",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "kiem-dai",
+      "to": "cung-ta-ma",
+      "declaredBy": "cung-ta-ma",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "kiem-ngan",
+      "to": "thuong-khung-kiem",
+      "declaredBy": "thuong-khung-kiem",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "kiem-dai",
+      "to": "thuong-khung-kiem",
+      "declaredBy": "thuong-khung-kiem",
+      "field": "fromLevel2"
+    },
+    {
+      "from": "nhan-hong-ngoc",
+      "to": "liem-doat-menh",
+      "declaredBy": "liem-doat-menh",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "dai-dia-mo-troi",
+      "to": "huyet-cung",
+      "declaredBy": "huyet-cung",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "sach-phep",
+      "to": "the-uoc-carano",
+      "declaredBy": "the-uoc-carano",
+      "field": "fromLevel1"
+    },
+    {
+      "from": "huyet-truong",
+      "to": "the-uoc-carano",
+      "declaredBy": "the-uoc-carano",
+      "field": "fromLevel2"
+    }
+  ],
+  "relationNote": "Các cột quan hệ có thể là liên kết trực tiếp hoặc xuyên cấp. Chỉ báo chênh lệch hai chiều; không tự thêm liên kết hoặc số lượng."
+}

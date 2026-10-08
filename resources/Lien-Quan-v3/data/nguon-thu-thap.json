@@ -1,0 +1,81 @@
+{
+  "documentedOn": "2026-10-07",
+  "timezone": "Asia/Bangkok",
+  "dateConvention": "YYYY-MM-DD; null khi chưa có ngày được ghi nhận. Không suy ra từ thời gian sửa file hoặc thư mục upload trong URL.",
+  "sources": [
+    {
+      "id": "garena-hero-skin",
+      "scope": "Head/cover tướng và trang phục; icon bậc",
+      "website": "https://lienquan.garena.vn/hoc-vien/tuong-skin/",
+      "collectedOn": "2026-09-22",
+      "dateNote": "Mốc tải theo tài liệu thu thập, không lấy từ URL upload.",
+      "detailManifest": "data/danh-sach-anh.json",
+      "dateEvidence": "Ngày tải: 22/09/2026 trong hướng dẫn thu thập bộ ảnh Garena.",
+      "originalScope": {
+        "heroPages": 129,
+        "headCoverImages": 2456,
+        "defaultSets": 129,
+        "skinSets": 1099,
+        "gradeImages": 194
+      },
+      "collectionMethod": "Ảnh lấy từ mục trang phục trong từng trang chi tiết tướng, giữ nguyên dữ liệu nguồn; nhãn bậc ở trên tên trang phục, loại trùng theo nội dung."
+    },
+    {
+      "id": "liquipedia-skills",
+      "scope": "Icon chiêu Arena of Valor",
+      "website": "https://liquipedia.net/honorofkings/Portal:Heroes/Arena_of_Valor",
+      "collectedOn": "2026-09-22",
+      "dateNote": "Mốc tải theo tài liệu thu thập.",
+      "detailManifest": "data/nguon-icon-chieu.json",
+      "dateEvidence": "Ngày tải: 22/09/2026 trong hướng dẫn thu thập icon kỹ năng.",
+      "originalScope": {
+        "heroes": 129,
+        "icons": 603
+      }
+    },
+    {
+      "id": "liquipedia-list-head",
+      "scope": "Icon danh sách tướng Arena of Valor",
+      "website": "https://liquipedia.net/honorofkings/Portal:Heroes/Arena_of_Valor",
+      "collectedOn": null,
+      "dateNote": "Manifest icon danh sách không ghi ngày tải; không dùng ngày thu kỹ năng để gán cho nhóm này.",
+      "detailManifest": "data/nguon-icon-tuong.json"
+    },
+    {
+      "id": "figma-portrait",
+      "scope": "Portrait tướng và trang phục do người dùng cung cấp",
+      "fileKey": "PfkEKzA4gz02VCRBRoHRWa",
+      "heroFrameUrl": "https://www.figma.com/design/PfkEKzA4gz02VCRBRoHRWa/?node-id=733-140",
+      "skinFrameUrl": "https://www.figma.com/design/PfkEKzA4gz02VCRBRoHRWa/?node-id=857-2",
+      "exportReceivedOn": "2026-10-06",
+      "dateNote": "Mốc xuất/nhận gói PNG theo ghi nhận thao tác; không phải ngày tạo thiết kế gốc.",
+      "detailManifest": "data/portrait-sources.json"
+    },
+    {
+      "id": "garena-equipment",
+      "scope": "Ảnh trang bị và thông tin chi tiết do người dùng cung cấp",
+      "website": "https://lienquan.garena.vn/hoc-vien/trang-bi/",
+      "collectedOn": "2026-09-30",
+      "dateEvidence": "collectedOn trong data/trang-bi.json",
+      "userSourceFile": "trangbidulieu.xlsx",
+      "detailManifest": "data/trang-bi-nguon-du-lieu.json"
+    },
+    {
+      "id": "garena-enchantments",
+      "scope": "Ảnh hệ, icon phù hiệu và thông tin do người dùng cung cấp",
+      "website": "https://lienquan.garena.vn/hoc-vien/phu-hieu/",
+      "collectedOn": "2026-10-03",
+      "dateEvidence": "collectedOn trong data/phu-hieu.json",
+      "userSourceFile": "phuhieudulieu.xlsx",
+      "dateNote": "Mốc của bộ dữ liệu; không khẳng định ngày tạo từng ảnh hệ tái tạo.",
+      "detailManifest": "data/phu-hieu.json"
+    },
+    {
+      "id": "arcana",
+      "scope": "Ngọc",
+      "collectedOn": null,
+      "status": "not-collected",
+      "detailManifest": "data/ngoc.json"
+    }
+  ]
+}

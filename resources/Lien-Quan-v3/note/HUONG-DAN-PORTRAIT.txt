@@ -1,0 +1,64 @@
+PORTRAIT TƯỚNG VÀ TRANG PHỤC
+
+XUẤT XỨ
+File Figma do người dùng cung cấp: PfkEKzA4gz02VCRBRoHRWa.
+Tướng: https://www.figma.com/design/PfkEKzA4gz02VCRBRoHRWa/?node-id=733-140
+Trang phục: https://www.figma.com/design/PfkEKzA4gz02VCRBRoHRWa/?node-id=857-2
+Gói PNG xuất/nhận ngày 06/10/2026; đây không phải ngày artwork gốc được tạo.
+135 ảnh tướng và 1.168 ảnh trang phục, PNG 1x, 278 × 436 ở gói nguồn.
+Tên lớp, thứ tự frame, node ID nếu có, SHA256 và tên nguồn nằm trong data/portrait-sources.json.
+Nguồn ảnh về sau do người dùng thêm được phân biệt bằng source/method và addedAt nếu có.
+Ngày chỉnh sửa hoặc thêm bản khác không được xem là ngày thu thập gói Figma.
+
+DỮ LIỆU VÀ ẢNH
+Danh sách tướng/trang phục: data/heroes.json.
+Ảnh chính: assets/hero/portrait hoặc assets/skin/portrait.
+Các bản khác: portrait/variants/01, 02...; liên kết bằng portraitAlternates.
+Nguồn bất biến: portrait/source; tên nguồn giữ ở originalSourceName/figmaName.
+Ảnh chưa ghép: temp/portrait, có danh sách trong data/portrait-chua-khop.json.
+Mục thiếu ảnh: data/chua-co-portrait.json. null là chưa có ảnh khớp.
+Icon bậc: assets/skin/portrait/grade; ghép vào trang phục bằng badgeId.
+Tên mặc định: <tướng>-portrait.png hoặc <tướng>-<trang phục>-portrait.png.
+Tên file không dấu, không khoảng trắng; tên hiển thị vẫn có thể giữ tiếng Việt.
+Giữ tất cả ảnh trùng; ảnh cuối trong frame làm chính khi nhận gói, trừ khi người dùng chọn lại.
+Giá trị portrait và isPrimary trong JSON hiện tại quyết định ảnh chính khi sử dụng.
+
+XEM VÀ MỞ CÔNG CỤ
+preview/Xem-portrait.html: xem ảnh, lọc tướng, đối chiếu các bản và head/cover.
+program/Mo-quan-ly.cmd: mở công cụ, mặc định http://127.0.0.1:8786/.
+Trên máy khác cần Python + Pillow; có thể chạy program/portrait/server.py.
+Giữ chương trình chạy khi biên tập; mở HTML trực tiếp chỉ phù hợp với phần xem.
+
+CHỌN VÀ CHUYỂN ẢNH
+1. Tìm/lọc ảnh, bấm ảnh để mở bảng thao tác.
+2. Chọn tướng nhận; chọn trang phục có sẵn, trang phục mới hoặc ảnh tướng.
+3. Kiểm tra tên hiển thị, tên file, bậc và nơi nhận.
+4. Chọn làm ảnh chính hoặc giữ làm bản khác; bấm Chuyển & lưu.
+Ảnh rời mục đang chứa nó; các bản khác ở mục đó vẫn được giữ.
+Nếu chuyển ảnh chính, mục nguồn dùng một bản còn lại hoặc portrait null.
+Nếu dùng làm chính ở nơi nhận, ảnh chính trước đó chuyển thành bản khác.
+Lưu & ảnh tiếp xử lý ảnh kế tiếp trong danh sách đang lọc.
+Ctrl + Enter để lưu; Esc đóng bảng; thay đổi chưa lưu có thể bỏ.
+
+TRANG PHỤC CHỈ CÓ PORTRAIT
+Chọn ảnh chưa ghép hoặc ảnh đang ở mục khác, chọn Trang phục mới rồi đặt tên.
+Mục được tạo có mã local-... và portrait; head/cover để null, không cần tạo ảnh giả.
+Mã tướng/trang phục hiện có giữ nguyên khi sửa tên hiển thị.
+Tab Sửa thông tin / thêm ảnh từ máy cho sửa tên, bậc và nhận PNG/JPG/WebP.
+Ảnh thêm chuyển thành PNG, giữ kích thước và hình, tối đa 12 MB;
+bản nguồn được giữ riêng. Không dùng ảnh hoàn toàn trong suốt làm portrait.
+
+LƯU VÀ KHÔI PHỤC
+Chỉ ghi file khi bấm Lưu. Chương trình đồng bộ heroes.json, manifest, cache JS,
+chỉ mục tài nguyên, danh sách chưa ghép/thiếu và tổng kết.
+Cache trong program/shared phục vụ HTML xem; tải lại trang sau khi lưu.
+Mỗi lần ghi có bản sao trong program/backup/portrait.
+Khôi phục lần lưu trước đưa JSON và ảnh về trước lần ghi gần nhất, có thể làm nhiều lần.
+Bỏ thay đổi chỉ bỏ bản nháp, khác với khôi phục thao tác đã lưu.
+Không sửa JSON đồng thời bằng ứng dụng khác; nếu dữ liệu đã đổi, tải lại trước khi ghi.
+
+ĐƯỜNG DẪN
+Mọi đường dẫn trên tính từ thư mục chứa assets/data/preview/program/temp/note.
+Có thể mang bộ sang nơi khác; không cần tên hoặc đường dẫn thư mục dự án ban đầu.
+Nếu đổi vị trí ảnh, đồng bộ trường portrait/portraitAlternates/sourceFile và chỉ mục.
+Link Figma là xuất xứ, không phải đường dẫn ảnh để frontend tải mỗi lần hiển thị.
