@@ -1,4 +1,4 @@
-import { createBrowserRouter, type RouteObject } from "react-router"
+import { createBrowserRouter, createMemoryRouter, type RouteObject } from "react-router"
 import { AppShell } from "./layout/app-shell"
 import type { RouteHandle } from "./layout/site-header"
 import { AppLoading, RouteError } from "./route-error"
@@ -97,4 +97,7 @@ const routes: RouteObject[] = [
   },
 ]
 
-export const router = createBrowserRouter(routes, { basename: import.meta.env.BASE_URL.replace(/\/$/, "") || "/" })
+export const router =
+  import.meta.env.VITE_ROUTER === "memory"
+    ? createMemoryRouter(routes)
+    : createBrowserRouter(routes, { basename: import.meta.env.BASE_URL.replace(/\/$/, "") || "/" })

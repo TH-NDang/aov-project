@@ -1,5 +1,8 @@
-/** Mount point of the dev/preview middleware that serves `resources/Lien-Quan-v3` (see vite.config.ts). */
-export const RESOURCES_BASE = "/__resources/"
+/**
+ * Where the working data set is served. Defaults to the dev/preview middleware that serves
+ * `resources/Lien-Quan-v3` (see vite.config.ts); static demo builds point it at bundled copies.
+ */
+export const RESOURCES_BASE = import.meta.env.VITE_RESOURCES_BASE ?? "/__resources/"
 
 /** Resolves a package-relative media path such as `assets/hero/head/airi-head.jpg`. */
 export function mediaUrl(path: string | null | undefined): string | undefined {
