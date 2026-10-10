@@ -1168,12 +1168,13 @@ Unique `(issuer, subject)`.
 
 ## 35. Audit event
 
-Có thể đặt `access.audit_event` hoặc schema `audit` riêng.
+Bảng `access.audit_event` (migration `V001__create_access_audit_event.sql`).
 
 ```text
 id UUID PK
 actor_issuer TEXT
 actor_subject TEXT
+actor_type VARCHAR(16)        HUMAN | SERVICE
 action VARCHAR(64)
 aggregate_type VARCHAR(64)
 aggregate_id UUID
@@ -1186,7 +1187,11 @@ occurred_at TIMESTAMPTZ
 metadata JSONB NULL
 ```
 
-Audit append-only ở application level.
+Audit append-only: application chỉ INSERT, và trigger `trg_audit_event_append_only` chặn mọi UPDATE/DELETE ở database.
+
+`request_id` lấy từ header `X-Request-Id` (chỉ nhận UUID, nếu không backend tự sinh).
+
+Ghi audit bắt buộc nằm trong transaction của thay đổi được audit (`Propagation.MANDATORY`).
 
 Không chứa token/password.
 
@@ -1227,7 +1232,7 @@ lock hero identity/authoring row
 -> publish
 ```
 
-Không giữ DB transaction trong lúc upload MinIO hay gọi external HTTP.
+Không giữ DB transaction trong lúc upload lên object storage hay gọi external HTTP.
 
 ---
 
