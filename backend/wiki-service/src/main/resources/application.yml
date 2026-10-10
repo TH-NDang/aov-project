@@ -17,6 +17,17 @@ spring:
   docker:
     compose:
       enabled: false
+  jackson:
+    deserialization:
+      # Reject unknown JSON fields (typos, stale clients). Jackson 3 accepts them by default.
+      fail-on-unknown-properties: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Keycloak realm URL, e.g. https://auth.example.com/realms/wikiaov
+          issuer-uri: ${JWT_ISSUER_URI}
+          audiences: ${JWT_AUDIENCE:wiki-service}
 
 server:
   port: ${PORT:8080}
@@ -27,3 +38,22 @@ management:
       exposure:
         include: health,info
 
+
+wiki:
+  security:
+    # Client whose client roles (resource_access.<client>.roles) carry the capabilities.
+    resource-client-id: ${JWT_RESOURCE_CLIENT_ID:wiki-service}
+  storage:
+    # Any S3-compatible service: SeaweedFS locally, Cloudflare R2 / AWS S3 in production (ADR-006).
+    endpoint: ${STORAGE_ENDPOINT:}
+    region: ${STORAGE_REGION:us-east-1}
+    bucket: ${STORAGE_BUCKET:wiki-media}
+    path-style-access: ${STORAGE_PATH_STYLE:true}
+    access-key: ${STORAGE_ACCESS_KEY:}
+    secret-key: ${STORAGE_SECRET_KEY:}
+    create-bucket-if-missing: false
+
+logging:
+  pattern:
+    # Adds the request id to every log line in the default (human-readable) format.
+    level: "%5p [%X{requestId:-}]"
