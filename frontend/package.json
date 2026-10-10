@@ -11,9 +11,14 @@
     "dev:stream": "pnpm --filter @aov/aov-stream dev",
     "dev:admin": "pnpm --filter @aov/admin-aov dev",
     "build": "turbo build",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
+"@tanstack/intent": "^0.5.5",
+    "@types/node": "^22.0.0",
+    "prettier": "3.9.9",
     "turbo": "^2.5.0",
     "typescript": "^5.9.3",
     "@types/node": "^22.0.0"

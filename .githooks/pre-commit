@@ -1,10 +1,12 @@
 #!/bin/sh
-# Check that newly added code comments are written in English.
+# 1. Format staged code (Spotless for Java, Prettier for the frontend).
+# 2. Check that newly added code comments are written in English.
 root="$(git rev-parse --show-toplevel)" || exit 1
 
 if ! command -v node >/dev/null 2>&1; then
-  echo "[pre-commit] Node.js not found; skipping English comment check." >&2
+  echo "[pre-commit] Node.js not found; skipping formatting and the English comment check." >&2
   exit 0
 fi
 
+node "$root/.githooks/format-staged.mjs" || exit 1
 exec node "$root/.githooks/check-english-comments.mjs"

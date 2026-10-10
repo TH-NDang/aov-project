@@ -1,0 +1,9 @@
+# Generated or installed files
+dist/
+node_modules/
+.turbo/
+coverage/
+pnpm-lock.yaml
+
+# Markdown docs keep their hand-written layout
+*.md
