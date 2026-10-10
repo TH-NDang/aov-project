@@ -3,3 +3,15 @@ spring:
     compose:
       enabled: false
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Never contacted: tests build tokens with spring-security-test.
+          issuer-uri: http://localhost:0/realms/test
+
+wiki:
+  storage:
+    endpoint: http://localhost:0
+    access-key: test
+    secret-key: test

@@ -1,0 +1,11 @@
+{
+  "identities": [
+    {
+      "name": "wiki-local",
+      "credentials": [
+        { "accessKey": "wiki-local", "secretKey": "wiki-local-storage" }
+      ],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

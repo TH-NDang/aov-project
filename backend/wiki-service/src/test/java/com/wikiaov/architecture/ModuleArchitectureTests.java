@@ -10,4 +10,3 @@ class ModuleArchitectureTests {
         ApplicationModules.of(WikiAovApplication.class).verify();
     }
 }
-

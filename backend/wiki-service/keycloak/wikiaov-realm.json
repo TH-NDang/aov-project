@@ -1,0 +1,306 @@
+{
+  "realm": "wikiaov",
+  "displayName": "WikiAOV (local)",
+  "enabled": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 900,
+  "roles": {
+    "realm": [
+      {
+        "name": "wiki-editor",
+        "description": "Edits drafts and uploads media",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wiki-service": [
+              "catalog:read",
+              "hero:write",
+              "item:write",
+              "arcana:write",
+              "spell:write",
+              "enchantment:write",
+              "media:write"
+            ]
+          }
+        }
+      },
+      {
+        "name": "wiki-publisher",
+        "description": "Editor plus publish/discard",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "wiki-editor"
+          ],
+          "client": {
+            "wiki-service": [
+              "hero:publish",
+              "item:publish",
+              "arcana:publish",
+              "spell:publish",
+              "enchantment:publish"
+            ]
+          }
+        }
+      },
+      {
+        "name": "wiki-patch-manager",
+        "description": "Manages patches and releases",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wiki-service": [
+              "catalog:read",
+              "patch:write",
+              "patch:publish"
+            ]
+          }
+        }
+      },
+      {
+        "name": "wiki-admin",
+        "description": "Everything, including regions and rulesets",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "wiki-publisher",
+            "wiki-patch-manager"
+          ],
+          "client": {
+            "wiki-service": [
+              "region:admin"
+            ]
+          }
+        }
+      }
+    ],
+    "client": {
+      "wiki-service": [
+        {
+          "name": "catalog:read",
+          "description": "Capability catalog:read"
+        },
+        {
+          "name": "hero:write",
+          "description": "Capability hero:write"
+        },
+        {
+          "name": "item:write",
+          "description": "Capability item:write"
+        },
+        {
+          "name": "arcana:write",
+          "description": "Capability arcana:write"
+        },
+        {
+          "name": "spell:write",
+          "description": "Capability spell:write"
+        },
+        {
+          "name": "enchantment:write",
+          "description": "Capability enchantment:write"
+        },
+        {
+          "name": "media:write",
+          "description": "Capability media:write"
+        },
+        {
+          "name": "hero:publish",
+          "description": "Capability hero:publish"
+        },
+        {
+          "name": "item:publish",
+          "description": "Capability item:publish"
+        },
+        {
+          "name": "arcana:publish",
+          "description": "Capability arcana:publish"
+        },
+        {
+          "name": "spell:publish",
+          "description": "Capability spell:publish"
+        },
+        {
+          "name": "enchantment:publish",
+          "description": "Capability enchantment:publish"
+        },
+        {
+          "name": "patch:write",
+          "description": "Capability patch:write"
+        },
+        {
+          "name": "patch:publish",
+          "description": "Capability patch:publish"
+        },
+        {
+          "name": "region:admin",
+          "description": "Capability region:admin"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "wiki-service",
+      "name": "wiki-service (resource server)",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "wiki-service-local-unused"
+    },
+    {
+      "clientId": "admin-aov",
+      "name": "admin-aov frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5175/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5175"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5175/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "wiki-importer",
+      "name": "Data import script",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "wiki-importer-local-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "wiki-local-cli",
+      "name": "Local testing with curl (password grant, local only)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@wikiaov.local",
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "Local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin-local",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "wiki-admin"
+      ]
+    },
+    {
+      "username": "editor",
+      "enabled": true,
+      "email": "editor@wikiaov.local",
+      "emailVerified": true,
+      "firstName": "Editor",
+      "lastName": "Local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "editor-local",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "wiki-editor"
+      ]
+    },
+    {
+      "username": "publisher",
+      "enabled": true,
+      "email": "publisher@wikiaov.local",
+      "emailVerified": true,
+      "firstName": "Publisher",
+      "lastName": "Local",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "publisher-local",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "wiki-publisher"
+      ]
+    },
+    {
+      "username": "service-account-wiki-importer",
+      "enabled": true,
+      "serviceAccountClientId": "wiki-importer",
+      "clientRoles": {
+        "wiki-service": [
+          "catalog:read",
+          "hero:write",
+          "item:write",
+          "arcana:write",
+          "spell:write",
+          "enchantment:write",
+          "media:write",
+          "hero:publish",
+          "item:publish",
+          "arcana:publish",
+          "spell:publish",
+          "enchantment:publish"
+        ]
+      }
+    }
+  ]
+}

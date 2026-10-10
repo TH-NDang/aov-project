@@ -1,0 +1,11 @@
+# Production profile. Every secret comes from environment variables; nothing is hard-coded here.
+logging:
+  structured:
+    format:
+      # JSON logs on stdout (Elastic Common Schema); MDC values such as requestId are included.
+      console: ecs
+
+management:
+  endpoint:
+    health:
+      show-details: never
