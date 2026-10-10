@@ -50,6 +50,27 @@ Khi dùng tooltip hoặc sidebar, bọc vùng giao diện bằng `TooltipProvide
 
 `cn` trong `@aov/ui/lib/utils` re-export từ package `cn` (cùng bộ merge class mà các component shadcn dùng), nên app không đóng gói thêm `tailwind-merge`.
 
+### Thanh cuộn dùng chung
+
+`@aov/ui/styles.css` áp sẵn thanh cuộn mảnh, màu trung tính cho mọi vùng cuộn của các app (`packages/ui/src/styles/scrollbar.css`), không cần thêm class. Theme tối đặt `color-scheme: dark` nên thanh cuộn gốc của trình duyệt cũng tối theo.
+
+Mọi rule nằm trong `@layer base`, nên ghi đè từ phía app chứ không sửa file chung:
+
+| Phạm vi | Cách làm |
+|---|---|
+| Cả app | Khai báo lại token trong CSS của app (ngoài `@layer`), ví dụ `:root { --scrollbar-thumb: color-mix(in oklab, var(--primary) 50%, transparent); }` |
+| Một vùng và các phần tử bên trong | Đặt token ngay trên phần tử: `[--scrollbar-thumb:var(--color-primary)]`, `[--scrollbar-width:none]` |
+| Một phần tử | Utility có sẵn của Tailwind: `scrollbar-none`, `scrollbar-auto`, `scrollbar-thumb-*`, `scrollbar-track-*`, `scrollbar-gutter-stable`; hoặc `scrollbar-native` để dùng lại thanh cuộn gốc |
+
+Token: `--scrollbar-width` (`auto`, `thin` hoặc `none`), `--scrollbar-thumb`, `--scrollbar-track`, `--scrollbar-thumb-hover` (chỉ component `ScrollArea` dùng, vì thanh cuộn gốc không có trạng thái hover).
+
+Lưu ý:
+
+- Style dùng `scrollbar-color`/`scrollbar-width` chuẩn. Trình duyệt chưa hỗ trợ (Safari cũ) giữ nguyên thanh cuộn gốc.
+- Muốn ẩn thanh cuộn mà vẫn cuộn được thì dùng `scrollbar-none`. Đừng dùng `::-webkit-scrollbar`: Chrome bỏ qua pseudo-element này khi phần tử đã có `scrollbar-color` hoặc `scrollbar-width`.
+- Thư viện tự ẩn thanh cuộn (Radix ScrollArea/Select, Base UI) dùng CSS ngoài layer nên vẫn thắng style chung.
+- Iframe nhúng từ trang khác (player stream…) giữ thanh cuộn của trang đó.
+
 ## admin-aov
 
 Trang quản trị cho biên tập viên, style mặc định của shadcn/ui, menu điều hướng đặt ở **bên phải** (`<Sidebar side="right" collapsible="icon">`, phím tắt Ctrl+B). Các màn hình nâng cấp từ bản mô phỏng HTML trong `resources/Lien-Quan-v3/preview`:
