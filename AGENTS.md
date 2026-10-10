@@ -40,23 +40,31 @@ aov-project/
 - Each module exposes public contracts at its package root; implementation goes in `internal/{web,application,domain,persistence,infrastructure}`.
 - Never use another module's entity, repository or `internal` package. Call its public contract.
 - IDs are `UUID`; human-readable identifiers are `code` slugs.
-- API base path: `/api/wiki/v1`. Errors are `ProblemDetail` with a stable `code`.
+- API paths: map `ApiPaths.ROOT + "/..."` (or `ApiPaths.ADMIN`) and declare `version = "1"` on the mapping.
+  Spring MVC native API versioning reads the version from `/api/wiki/{apiVersion}`. Never hard-code `/api/wiki/v1` in mappings.
+- Errors: throw `ApiException` with a module-owned enum implementing `ApiErrorCode` (placed in `internal/application`),
+  e.g. `HeroErrorCode.HERO_NOT_FOUND`. Never build error `ResponseEntity`s by hand. Codes must be unique across modules.
+- Query strings of public endpoints are whitelisted with `QueryParameters.requireOnly`; pages are returned as `PageSlice`.
 - Schema changes only through Flyway migrations in `src/main/resources/db/migration`. Never edit an applied migration. JPA `ddl-auto` stays `validate`.
 - Object storage only through the `ObjectStorage` port and `S3ObjectStorage` (AWS SDK for Java 2.x). No MinIO SDK.
 - Lombok + MapStruct are allowed. Avoid `@Data` on JPA entities.
 - Do not hold a DB transaction open during object storage or external HTTP calls.
+- Formatting is owned by Spotless with `eclipse-formatter.xml` (4 spaces, 120 columns, comments untouched).
+  Run `./mvnw.cmd spotless:apply` before building; `verify` fails on unformatted code.
 
 Commands (run inside `backend/wiki-service`):
 
 ```powershell
-./mvnw.cmd verify                                             # build + tests
+./mvnw.cmd verify                                             # build + tests + format check
+./mvnw.cmd spotless:apply                                     # format all Java files
 ./mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local" # run locally (Docker required)
 ```
 
 ## Frontend conventions (`frontend`)
 
 - React + TypeScript + Vite. Shared UI from `@aov/ui` (`packages/ui`).
-- Commands: `pnpm dev`, `pnpm typecheck`, `pnpm build` (run inside `frontend`).
+- Commands: `pnpm dev`, `pnpm typecheck`, `pnpm build`, `pnpm format` (run inside `frontend`).
+- Formatting is owned by Prettier (`frontend/.prettierrc.json`: no semicolons, double quotes, 120 columns).
 
 ## Git
 
@@ -74,7 +82,13 @@ git config core.hooksPath .githooks
 git lfs install --skip-repo
 ```
 
-- `pre-commit`: rejects Vietnamese text in comments of staged code under `backend/` and `frontend/` (requires Node.js).
+- `pre-commit` (requires Node.js):
+  1. Formats staged files: Java under `backend/wiki-service/src` with Spotless (needs Java, ~5-10 s),
+     frontend files with Prettier (skipped with a warning until `pnpm install` has installed it).
+     Fully staged files are re-staged. A partially staged file is formatted in the working tree only and
+     the commit stops: review it, `git add` it, commit again.
+  2. Rejects Vietnamese text in comments of staged code under `backend/` and `frontend/`.
+- Skip formatting once: `SKIP_FORMAT=1 git commit ...` (PowerShell: `$env:SKIP_FORMAT=1; git commit ...; Remove-Item Env:SKIP_FORMAT`).
 - `pre-push`, `post-checkout`, `post-commit`, `post-merge`: Git LFS hooks.
 - Bypass only for a genuine exception: `git commit --no-verify`.
 
