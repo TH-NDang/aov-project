@@ -26,7 +26,7 @@ export function MasterDetail({ children, detail, detailTitle, onCloseDetail, cla
   if (!wide) {
     return (
       <div className={frame}>
-        <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
+        <div className="min-w-0 flex-1 scrollbar-gutter-stable overflow-y-auto">{children}</div>
         <Drawer open={detail !== null} onOpenChange={(open) => !open && onCloseDetail()}>
           <DrawerContent className="max-h-[88svh]">
             <DrawerHeader className="sr-only">
@@ -45,13 +45,13 @@ export function MasterDetail({ children, detail, detailTitle, onCloseDetail, cla
     <div className={frame}>
       <ResizablePanelGroup orientation="horizontal">
         <ResizablePanel id="master" minSize="40%" className="min-w-0">
-          <div className="h-full overflow-y-auto">{children}</div>
+          <div className="h-full scrollbar-gutter-stable overflow-y-auto">{children}</div>
         </ResizablePanel>
         {detail !== null && (
           <>
             <ResizableHandle withHandle />
             <ResizablePanel id="detail" defaultSize="38%" minSize={340} maxSize="60%" className="min-w-0">
-              <aside aria-label={detailTitle} className="relative h-full overflow-y-auto bg-background">
+              <aside aria-label={detailTitle} className="relative h-full scrollbar-gutter-stable overflow-y-auto bg-background">
                 <div className="sticky top-0 z-20 h-0">
                   <Button
                     variant="ghost"
