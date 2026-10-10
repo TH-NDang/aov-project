@@ -1,0 +1,43 @@
+/*
+ * Shared scrollbar style for every app that imports `@aov/ui/styles.css`.
+ *
+ * It applies by default: every scroll container gets a thin, neutral scrollbar without extra classes.
+ * Everything lives in `@layer base`, so customize it from the outside instead of editing this file:
+ * - Whole app: redefine the tokens in the app's own unlayered CSS, e.g. `:root { --scrollbar-thumb: ... }`.
+ * - An element and its descendants: set a token on it, e.g. `[--scrollbar-thumb:var(--color-primary)]`
+ *   or `[--scrollbar-width:none]`.
+ * - One element: Tailwind's scrollbar utilities (`scrollbar-none`, `scrollbar-auto`, `scrollbar-thumb-*`,
+ *   `scrollbar-track-*`, `scrollbar-gutter-stable`) or `scrollbar-native` below.
+ *
+ * Libraries that hide their own scrollbars (Radix ScrollArea/Select, Base UI) do it with unlayered CSS,
+ * which still wins over these rules.
+ */
+@layer base {
+  :root {
+    /* auto | thin | none */
+    --scrollbar-width: thin;
+    --scrollbar-thumb: color-mix(in oklab, var(--muted-foreground) 45%, transparent);
+    /* Native scrollbars have no hover state; used by the ScrollArea component. */
+    --scrollbar-thumb-hover: color-mix(in oklab, var(--muted-foreground) 70%, transparent);
+    --scrollbar-track: transparent;
+  }
+
+  /* `scrollbar-width` is not inherited, so every element opts in; reading the tokens per element keeps
+     region overrides working. */
+  * {
+    scrollbar-width: var(--scrollbar-width);
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+
+  @media (forced-colors: active) {
+    * {
+      scrollbar-color: auto;
+    }
+  }
+}
+
+/* Gives an element the browser's own scrollbar back. */
+@utility scrollbar-native {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
