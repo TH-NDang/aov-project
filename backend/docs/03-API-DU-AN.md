@@ -1,6 +1,6 @@
 # WikiAOV Backend — API dự án
 
-**Base path:** `/api/wiki/v1` (tiền tố theo service, xem mục 3.6 của `01-BAN-DAC-TA-DU-AN.md`)  
+**Base path:** `/api/wiki/v1` (tiền tố theo service, xem mục 3.6 của `01-BAN-DAC-TA-DU-AN.md`; phiên bản theo mục 1.1)  
 **Format:** JSON UTF-8; lỗi dùng `application/problem+json`.  
 **Phạm vi:** Public read APIs + authenticated admin APIs cho backend hiện hành.  
 **Tài liệu liên quan:** `01-BAN-DAC-TA-DU-AN.md`, `02-DATABASE-DU-AN.md`
@@ -19,6 +19,27 @@
 8. Historical/current context phải xuất hiện rõ trong response khi ảnh hưởng dữ liệu.
 9. Revision-addressed resource đã publish là immutable và cache-friendly.
 10. Current/resolver endpoint là mutable, dùng ETag/conditional request.
+
+### 1.1 API versioning
+
+Phiên bản nằm trong path và được Spring MVC 7 native API versioning đọc ra:
+
+```text
+/api/wiki/v1/heroes
+ 0    1   2
+          └── segment 2 = phiên bản (v1 → 1)
+```
+
+- Controller map `ApiPaths.ROOT + "/heroes"` (`ROOT = /api/wiki/{apiVersion}`) và khai báo `version = "1"`.
+- Phiên bản hỗ trợ: `1`. Phiên bản khác (`v2`…) trả `400 INVALID_API_VERSION`, không âm thầm rơi về v1.
+- Chỉ đọc phiên bản cho path dưới `/api/wiki/`; actuator và `/error` không bị ảnh hưởng.
+- Thêm phiên bản mới: đăng ký trong `ApiVersioningConfiguration`, thêm mapping `version = "2"` cạnh mapping v1. Không đổi URL chỉ vì nâng Spring Boot, sửa lỗi hay thêm field.
+- Security và cache áp dụng cho mọi phiên bản (`/api/wiki/*/admin/**`).
+
+Request chặt chẽ:
+
+- Field JSON lạ bị từ chối (`fail-on-unknown-properties`) → `400 INVALID_REQUEST`, `errors[].code = UNKNOWN_FIELD`.
+- Query parameter ngoài whitelist hoặc lặp lại (`QueryParameters.requireOnly`) → `400 INVALID_QUERY_PARAMETER`.
 
 ---
 
@@ -1144,27 +1165,38 @@ Các endpoint này quyền cao, không sửa thường xuyên.
 ```json
 {
   "type": "about:blank",
-  "title": "Conflict",
+  "title": "Revision version conflict",
   "status": 409,
   "detail": "The revision was modified by another request.",
   "instance": "/api/wiki/v1/admin/heroes/...",
-  "code": "REVISION_VERSION_CONFLICT",
+  "code": "HERO_REVISION_VERSION_CONFLICT",
   "requestId": "...",
-  "parameters": {
+  "context": {
     "currentVersion": 8
-  },
-  "errors": []
+  }
 }
 ```
+
+`type` mặc định `about:blank` (có thể không xuất hiện). `errors` và `context` chỉ có khi có dữ liệu.
 
 ### Stable fields
 
 - HTTP status: transport/error class.
-- `code`: machine-readable business/technical error identity.
-- `parameters`: structured rendering/debug data.
-- `errors[].path`: field/path validation error.
-- `requestId`: correlation.
+- `code`: machine-readable business/technical error identity; duy nhất toàn hệ thống.
+- `title`: tên ngắn của loại lỗi, cố định theo `code`.
+- `context`: dữ liệu có cấu trúc giúp client xử lý, ví dụ `currentVersion`, `existingDraftId`.
+- `errors[]`: `path` (dạng `content.skills[1].name`), `code`, `message`.
+- `requestId`: correlation, do server sinh, trùng header `X-Request-Id`.
 - `detail`: fallback/debug text, không dùng làm branch key.
+
+Mọi response lỗi có `Cache-Control: no-store`. Lỗi xảy ra ngoài Spring MVC (filter, `/error`) cũng theo đúng hình dạng này.
+
+### Cách khai báo mã lỗi (implementation)
+
+- Mỗi module có một enum implement `ApiErrorCode` (`name`, `status`, `title`), ví dụ `HeroErrorCode`, `MediaErrorCode`; đặt trong `internal/application`.
+- Mã chung nằm ở `PlatformErrorCode`. `platform` không import mã của module nghiệp vụ.
+- Ném `ApiException(code, detail[, errors][, context])` từ application/web; không trả `ResponseEntity` lỗi thủ công.
+- Test `ErrorCodeUniquenessTests` chặn hai module khai báo trùng mã.
 
 ---
 
@@ -1175,12 +1207,30 @@ Các endpoint này quyền cao, không sửa thường xuyên.
 ```text
 INVALID_REQUEST
 INVALID_QUERY_PARAMETER
-PAYLOAD_TOO_LARGE
-UNSUPPORTED_MEDIA_TYPE
+INVALID_API_VERSION
+MISSING_API_VERSION
 UNAUTHENTICATED
 FORBIDDEN
+RESOURCE_NOT_FOUND
+METHOD_NOT_ALLOWED
+NOT_ACCEPTABLE
+PAYLOAD_TOO_LARGE
+UNSUPPORTED_MEDIA_TYPE
 INTERNAL_ERROR
 ```
+
+### Mã trong `errors[]` (cấp field)
+
+```text
+REQUIRED            thiếu tham số bắt buộc
+INVALID_VALUE       sai kiểu/định dạng
+UNKNOWN_FIELD       field JSON không được phép
+UNKNOWN_PARAMETER   query parameter ngoài whitelist
+REPEATED_PARAMETER  query parameter lặp lại
+NOT_BLANK, MIN, MAX, SIZE, PATTERN, ...   tên ràng buộc Bean Validation dạng UPPER_SNAKE
+```
+
+Module có thể thêm mã field riêng, ví dụ `HERO_PORTRAIT_REQUIRED` cho checklist publish.
 
 ### Hero
 
@@ -1318,7 +1368,10 @@ spell:write
 spell:publish
 enchantment:write
 enchantment:publish
+region:admin
 ```
+
+Ánh xạ vai trò → capability và cách kiểm tra: `01-BAN-DAC-TA-DU-AN.md` mục 20.4.
 
 Controller annotation chỉ là tầng đầu; application use case cần policy check cho action quan trọng.
 

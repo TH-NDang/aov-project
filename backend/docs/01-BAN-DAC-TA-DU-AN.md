@@ -60,6 +60,7 @@ Java 21 · Spring Boot 4.1.x · Maven Wrapper
 Spring Data JPA · Flyway · PostgreSQL
 Spring Security OAuth2 Resource Server · Spring Modulith
 Lombok · MapStruct · Testcontainers
+AWS SDK for Java 2.x (S3) — truy cập object storage
 ```
 
 Chi tiết cấu hình thư viện (annotation processing của Lombok/MapStruct, quy ước Flyway) xem `NOTE-SPRING-BOOT-4.md`. Nếu NOTE mâu thuẫn với bộ 01/02/03 (tên package, kiểu ID, API base path, cấu trúc package), bộ 01/02/03 được ưu tiên.
@@ -150,7 +151,7 @@ Ghi chú:
         ▼                  ▼                      ▼                    ▼
   ┌───────────┐     ┌──────────────┐      ┌───────────────────┐  ┌────────────────┐
   │ frontend  │     │ wiki-service │      │ community-service │  │ Object storage │
-  │ 3 app tĩnh│     │ Spring Boot  │      │ Spring Boot (sau) │  │ MinIO / S3     │
+  │ 3 app tĩnh│     │ Spring Boot  │      │ Spring Boot (sau) │  │ S3 storage     │
   │ (React)   │     └──────────────┘      └───────────────────┘  └────────────────┘
   └───────────┘            │                      │
                            ▼                      ▼
@@ -174,10 +175,10 @@ Trình duyệt
 reverse-proxy ── /             → aov-wiki      (bản build tĩnh)
               ── /admin/       → admin-aov     (bản build tĩnh)
               ── /api/wiki/**  → wiki-service:8080
-              ── /media/**     → minio:9000    (bucket wiki-media, chỉ prefix assets/, chỉ GET)
+              ── /media/**     → object storage (bucket wiki-media, chỉ prefix assets/, chỉ GET)
 
 wiki-service  ──→ postgres  (database: wiki)
-              ──→ minio     (S3 API, credential có quyền ghi)
+              ──→ object storage (S3 API, credential có quyền ghi)
               ──→ keycloak  (chỉ lấy JWKS để xác minh token)
 ```
 
@@ -188,7 +189,7 @@ Container:
 | `reverse-proxy` | TLS, routing, phục vụ file tĩnh của các app frontend | Caddy tự cấp chứng chỉ TLS, cấu hình ngắn |
 | `wiki-service` | Spring Boot JAR | Một instance là đủ ở giai đoạn đầu |
 | `postgres` | Database `wiki`; về sau thêm `keycloak`, `community` | Mỗi database một user DB riêng |
-| `minio` | Lưu bytes media | Bucket `wiki-media` |
+| object storage | Lưu bytes media | Bucket `wiki-media`; local dùng `seaweedfs`, production dùng dịch vụ S3-compatible (mục 13.2) |
 | `keycloak` | Phát JWT | Cần từ khi bật admin API (Phase 3) |
 
 Chạy bằng **Docker Compose trên một máy (VPS)** là đủ. Không dùng Kubernetes ở giai đoạn này.
@@ -294,9 +295,9 @@ aov-project/
 
 | Môi trường | Mục đích | Cách chạy |
 |---|---|---|
-| `local` | Phát triển | `docker compose` chạy postgres, minio, keycloak; `wiki-service` chạy từ IDE; các app frontend chạy `pnpm dev` |
-| `test` | Integration test | Testcontainers (PostgreSQL, MinIO); JWT giả lập trong test, không cần Keycloak |
-| `prod` | Thật | Một VPS, Docker Compose, reverse proxy TLS, backup PostgreSQL + MinIO |
+| `local` | Phát triển | `docker compose` chạy postgres, seaweedfs, keycloak; `wiki-service` chạy từ IDE; các app frontend chạy `pnpm dev` |
+| `test` | Integration test | Testcontainers (PostgreSQL, SeaweedFS); JWT giả lập trong test, không cần Keycloak |
+| `prod` | Thật | Một VPS, Docker Compose, reverse proxy TLS, backup PostgreSQL + object storage |
 
 `staging` thêm khi có người dùng thật và cần thử bản phát hành trước.
 
@@ -319,6 +320,7 @@ ADR-002  Chia hai deployable theo workload: wiki-service / community-service
 ADR-003  Base path theo service, reverse proxy route theo tiền tố, không rewrite
 ADR-004  Một identity provider, actor = (issuer, subject)
 ADR-005  Livestream chỉ nhúng player, không host video
+ADR-006  Object storage qua chuẩn S3 với AWS SDK for Java 2.x (đã ghi: docs/adr/ADR-006-object-storage-s3.md)
 ```
 
 ADR đặt tại `docs/adr/` của repository tương ứng.
@@ -713,7 +715,7 @@ SPLASH
 - `PORTRAIT`: ảnh hero chính dùng cho card/chọn tướng;
 - `SPLASH`: ảnh lớn/rộng có bối cảnh.
 
-Hero chỉ bind tới `MediaAsset.id`, không bind trực tiếp tới MinIO object key.
+Hero chỉ bind tới `MediaAsset.id`, không bind trực tiếp tới object key.
 
 ---
 
@@ -1056,7 +1058,7 @@ và retention phù hợp với lịch sử.
 
 ---
 
-## 13. Object storage và MinIO
+## 13. Object storage
 
 ### 13.1 Nguyên tắc
 
@@ -1068,23 +1070,49 @@ Không lưu artwork lớn trực tiếp trong bảng hero/item bằng BYTEA.
 
 ### 13.2 Abstraction
 
-Domain/application chỉ biết abstraction:
+Domain/application chỉ biết port:
 
 ```text
 ObjectStorage
 ```
 
-Adapter local/dev:
+Adapter duy nhất:
 
 ```text
-MinioObjectStorage
+S3ObjectStorage   (AWS SDK for Java 2.x: S3Client, S3Presigner)
 ```
 
-Production có thể thay bằng S3-compatible adapter khác mà không đổi Hero domain.
+Mọi môi trường dùng cùng adapter qua API chuẩn S3; chỉ khác cấu hình `wiki.storage.*` (ADR-006):
+
+| Môi trường | Storage | Ghi chú |
+|---|---|---|
+| `local` | SeaweedFS (`compose.yaml`) | `http://localhost:8333`, path-style; credential trong `seaweedfs/s3.json` |
+| `test` | SeaweedFS (Testcontainers) | Image pin version |
+| `prod` | Dịch vụ S3-compatible, dự kiến Cloudflare R2 | Chốt khi deploy |
+
+```yaml
+wiki:
+  storage:
+    endpoint: ${STORAGE_ENDPOINT}          # local: http://localhost:8333
+    region: ${STORAGE_REGION:us-east-1}
+    bucket: ${STORAGE_BUCKET:wiki-media}
+    path-style-access: ${STORAGE_PATH_STYLE:true}
+    access-key: ${STORAGE_ACCESS_KEY}
+    secret-key: ${STORAGE_SECRET_KEY}
+    create-bucket-if-missing: false      # local: true
+```
+
+Quy tắc:
+
+- không dùng SDK riêng của nhà cung cấp (MinIO SDK…); chỉ AWS SDK v2;
+- chỉ dùng thao tác S3 cơ bản: `PutObject`, `HeadObject`, `GetObject`, `CopyObject`, `DeleteObject`, presigned `PUT`/`GET`;
+- không dựa vào bucket versioning, object lock, event notification; version media do `MediaAssetVersion` và object key quản lý;
+- image MinIO đã bị gỡ khỏi Docker Hub (09/2026) nên local/test dùng SeaweedFS; đổi storage chỉ cần đổi cấu hình;
+- backup object storage là bắt buộc (`02-DATABASE-DU-AN.md` mục 41).
 
 ### 13.3 Object key
 
-Database lưu `objectKey`, không lưu URL môi trường cụ thể như `http://localhost:9000/...`.
+Database lưu `objectKey`, không lưu URL môi trường cụ thể như `http://localhost:8333/...`.
 
 Object key/version phải hỗ trợ immutable delivery.
 
@@ -1256,7 +1284,7 @@ backend/wiki-service/
 ├── .mvn/
 ├── .gitignore
 ├── .env.example
-├── compose.yaml            dependency local: postgres, minio, keycloak
+├── compose.yaml            dependency local: postgres, seaweedfs, keycloak
 │
 ├── scripts/
 │   ├── dev/
@@ -1329,7 +1357,7 @@ persistence -> domain/application ports khi áp dụng
 infrastructure -> ports/config cần implement
 ```
 
-Domain không phụ thuộc Spring MVC/MinIO cụ thể.
+Domain không phụ thuộc Spring MVC hay AWS SDK cụ thể.
 
 ---
 
@@ -1457,13 +1485,35 @@ issuer + subject
 
 Không tin actor ID do client gửi trong request body.
 
-### 20.4 Secrets
+### 20.4 Vai trò (actor) và ánh xạ quyền
+
+Backend chỉ kiểm tra **capability**. Vai trò là role tổng hợp (composite) trên identity provider; Keycloak bung vai trò thành client role của `wiki-service` trong token (`resource_access.wiki-service.roles`).
+
+| Capability | Editor | Publisher | Patch manager | Admin | Importer |
+|---|:-:|:-:|:-:|:-:|:-:|
+| `catalog:read` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `<domain>:write`, `media:write` | ✓ | ✓ | | ✓ | ✓ |
+| `<domain>:publish` | | ✓ | | ✓ | ✓ |
+| `patch:write`, `patch:publish` | | | ✓ | ✓ | |
+| `region:admin` | | | | ✓ | |
+
+Realm local: `backend/wiki-service/keycloak/wikiaov-realm.json`. Danh sách capability trong code: `com.wikiaov.access.Capabilities`.
+
+Kiểm tra quyền theo ba lớp:
+
+1. **URL** (`SecurityFilterChain`): GET public mở; `/api/wiki/v1/admin/**` cần `catalog:read`; còn lại từ chối.
+2. **Use case**: `@PreAuthorize("hasAuthority('<capability>')")` trên từng application service.
+3. **Domain policy**: luật phụ thuộc dữ liệu (ví dụ không tự duyệt draft của mình), ném `ApplicationException` với `ErrorKind.FORBIDDEN`.
+
+Use case lấy người gọi qua port `CurrentActor`, không phụ thuộc trực tiếp Spring Security. Token client credentials (có claim `client_id`) là actor loại `SERVICE`.
+
+### 20.5 Secrets
 
 Không commit:
 
 - JWT secrets/private keys;
 - database password;
-- MinIO/S3 credential;
+- S3 storage credential;
 - production token;
 - cookie/session secret.
 
@@ -1478,7 +1528,8 @@ Ví dụ:
 ```json
 {
   "status": 409,
-  "code": "VERSION_CONFLICT",
+  "code": "HERO_REVISION_VERSION_CONFLICT",
+  "title": "Revision version conflict",
   "detail": "The draft has changed.",
   "context": {
     "currentVersion": 9
@@ -1492,7 +1543,11 @@ Quy tắc:
 - `detail/message` là fallback/debug information;
 - business logic không so sánh chuỗi message;
 - validation có thể có `errors[]` với `path`, `code`, `message`;
-- response không lộ SQL, stack trace, secret hoặc internal path.
+- response không lộ SQL, stack trace, secret hoặc internal path;
+- mỗi module sở hữu enum mã lỗi riêng implement `ApiErrorCode`; mã duy nhất toàn hệ thống (có test kiểm tra);
+- mọi lỗi, kể cả 401/403 từ security filter và lỗi đi qua `/error`, dùng chung `ProblemDetails` và `Cache-Control: no-store`.
+
+Hình dạng đầy đủ, danh sách mã và cách khai báo: `03-API-DU-AN.md` phần G.
 
 Backend có thể dùng một ngôn ngữ fallback nhất quán cho detail. Không cần duplicate toàn bộ localization UI ở backend chỉ để hiển thị message.
 
@@ -1589,7 +1644,7 @@ Môi trường local tối thiểu:
 ```text
 Spring Boot
 PostgreSQL
-MinIO
+SeaweedFS  (object storage S3-compatible)
 Keycloak   (khi bật admin API)
 ```
 
@@ -1657,10 +1712,11 @@ Worker xử lý media/video/import có khả năng là ứng viên tách trướ
 - common error representation;
 - JWT Resource Server skeleton;
 - logging/requestId;
-- MinIO local.
+- Object storage local (SeaweedFS).
 
 ### Phase 2 — Media foundation
 
+- `ObjectStorage` port + `S3ObjectStorage` (AWS SDK for Java 2.x);
 - MediaAsset;
 - MediaAssetVersion;
 - upload/register object;
