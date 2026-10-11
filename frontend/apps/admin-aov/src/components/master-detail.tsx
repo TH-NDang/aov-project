@@ -16,12 +16,12 @@ interface MasterDetailProps {
 }
 
 /**
- * Workspace that fills the viewport below the header. On wide screens the detail opens as a
+ * Workspace that fills its tab's remaining height. On wide screens the detail opens as a
  * resizable panel beside the list; on narrow screens it slides up as a drawer.
  */
 export function MasterDetail({ children, detail, detailTitle, onCloseDetail, className }: MasterDetailProps) {
   const wide = useIsWide()
-  const frame = cn("flex h-[calc(100svh-3.5rem)] min-h-0", className)
+  const frame = cn("flex min-h-0 min-w-0 flex-1 overflow-hidden", className)
 
   if (!wide) {
     return (
@@ -40,7 +40,7 @@ export function MasterDetail({ children, detail, detailTitle, onCloseDetail, cla
     )
   }
 
-  // The panel group sets an inline `height: 100%`, so the fixed height lives on a wrapper.
+  // The panel group fills the height allocated by the containing tab workspace.
   return (
     <div className={frame}>
       <ResizablePanelGroup orientation="horizontal">
@@ -51,7 +51,10 @@ export function MasterDetail({ children, detail, detailTitle, onCloseDetail, cla
           <>
             <ResizableHandle withHandle />
             <ResizablePanel id="detail" defaultSize="38%" minSize={340} maxSize="60%" className="min-w-0">
-              <aside aria-label={detailTitle} className="relative h-full scrollbar-gutter-stable overflow-y-auto bg-background">
+              <aside
+                aria-label={detailTitle}
+                className="relative h-full scrollbar-gutter-stable overflow-y-auto bg-background"
+              >
                 <div className="sticky top-0 z-20 h-0">
                   <Button
                     variant="ghost"

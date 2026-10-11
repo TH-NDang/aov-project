@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite"
 import { createReadStream, statSync } from "node:fs"
 import { extname, resolve, sep } from "node:path"
 import { fileURLToPath, URL } from "node:url"
+import { jsonStorage } from "./server/json-storage.ts"
 
 const RESOURCES_ROOT = fileURLToPath(new URL("../../../resources/Lien-Quan-v3", import.meta.url))
 
@@ -50,14 +51,17 @@ function aovResources(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), aovResources()],
+  optimizeDeps: { include: ["@tanstack/react-table"] },
+  plugins: [react(), tailwindcss(), aovResources(), jsonStorage(fileURLToPath(new URL("./storage", import.meta.url)))],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
   build: {
     rolldownOptions: {
       output: {
         // Keep the framework in its own long-lived chunk; it changes far less often than app code.
         codeSplitting: {
-          groups: [{ name: "react-vendor", test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/ }],
+          groups: [
+            { name: "react-vendor", test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/ },
+          ],
         },
       },
     },

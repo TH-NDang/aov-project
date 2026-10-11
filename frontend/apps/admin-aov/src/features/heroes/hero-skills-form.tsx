@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useChangeEffect } from "@/hooks/use-change-effect"
 import { useForm } from "react-hook-form"
 import { Film } from "lucide-react"
 import { toast } from "sonner"
@@ -34,7 +34,7 @@ export function HeroSkillsForm({ hero }: { hero: Hero }) {
   const update = useUpdateHeroSkills(hero.id)
   const { register, handleSubmit, reset, formState } = useForm<SkillsForm>({ defaultValues: toForm(hero) })
 
-  useEffect(() => reset(toForm(hero)), [hero, reset])
+  useChangeEffect(() => reset(toForm(hero)), [hero, reset])
 
   const onSubmit = handleSubmit((values) =>
     update.mutate(

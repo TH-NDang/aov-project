@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react"
+import { useHotkeys } from "@/app/hotkeys"
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
@@ -22,19 +23,20 @@ interface ImageLightboxProps {
 
 /** Large preview with keyboard navigation through `images`. */
 export function ImageLightbox({ images, index, onIndexChange }: ImageLightboxProps) {
+  const { enabled } = useHotkeys()
   const image = index === null ? undefined : images[index]
   const hasPrev = index !== null && index > 0
   const hasNext = index !== null && index < images.length - 1
 
   useEffect(() => {
-    if (index === null) return
+    if (index === null || !enabled) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft" && index > 0) onIndexChange(index - 1)
       if (event.key === "ArrowRight" && index < images.length - 1) onIndexChange(index + 1)
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [index, images.length, onIndexChange])
+  }, [index, images.length, onIndexChange, enabled])
 
   return (
     <Dialog open={!!image} onOpenChange={(open) => !open && onIndexChange(null)}>

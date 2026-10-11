@@ -29,6 +29,7 @@ import { ItemIssues } from "./item-issues"
 import { ItemsTable } from "./items-table"
 import { ShopBoard } from "./shop-board"
 import { useItemWorkspace } from "./use-item-workspace"
+import { useHotkeys } from "@/app/hotkeys"
 
 const TABS = ["list", "shop", "review"] as const
 
@@ -37,6 +38,7 @@ const isTyping = (target: EventTarget | null) =>
   (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName))
 
 export function ItemsPage() {
+  const { enabled: hotkeysEnabled } = useHotkeys()
   const catalog = useItemCatalog()
   const issues = useItemIssues()
   const workspace = useItemWorkspace(catalog.data)
@@ -61,6 +63,7 @@ export function ItemsPage() {
 
   const { undo } = workspace
   useEffect(() => {
+    if (!hotkeysEnabled) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         (event.ctrlKey || event.metaKey) &&
@@ -74,7 +77,7 @@ export function ItemsPage() {
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [undo])
+  }, [undo, hotkeysEnabled])
 
   const onSave = () =>
     save.mutate(

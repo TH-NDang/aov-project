@@ -1,3 +1,8 @@
 packages:
   - apps/*
   - packages/*
+minimumReleaseAgeExclude:
+  - '@tanstack/react-table@9.2.8'
+  - '@tanstack/table-core@9.2.8'
+allowBuilds:
+  esbuild: true

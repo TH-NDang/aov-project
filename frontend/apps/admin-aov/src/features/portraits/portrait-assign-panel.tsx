@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { useHotkeys } from "@/app/hotkeys"
 import { Link } from "react-router"
 import { Check, ChevronsUpDown, ListChecks, Sparkles, TriangleAlert, Wand2 } from "lucide-react"
 import { toast } from "sonner"
@@ -85,6 +86,7 @@ interface PortraitAssignPanelProps {
 }
 
 export function PortraitAssignPanel({ row, index, onDirtyChange, onSaved }: PortraitAssignPanelProps) {
+  const { enabled: hotkeysEnabled } = useHotkeys()
   const badges = useBadges()
   const move = useMovePortrait()
   const [initial] = useState(() => initialDraft(row))
@@ -152,6 +154,7 @@ export function PortraitAssignPanel({ row, index, onDirtyChange, onSaved }: Port
   }
 
   useEffect(() => {
+    if (!hotkeysEnabled) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
         event.preventDefault()

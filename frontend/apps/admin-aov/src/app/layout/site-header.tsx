@@ -1,64 +1,53 @@
-import { Fragment, useEffect, useState, type ReactNode } from "react"
-import { Link, useMatches, useNavigation, type UIMatch } from "react-router"
-import { PanelRight, Search } from "lucide-react"
-import { Badge } from "@aov/ui/components/badge"
+import { useEffect, useState, type ReactNode } from "react"
+import { type UIMatch } from "react-router"
+import { createPortal } from "react-dom"
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@aov/ui/components/breadcrumb"
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type Modifier,
+} from "@dnd-kit/core"
+import { SortableContext, horizontalListSortingStrategy, sortableKeyboardCoordinates } from "@dnd-kit/sortable"
+import { PanelRight, Search } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Kbd, KbdGroup } from "@aov/ui/components/kbd"
-import { Separator } from "@aov/ui/components/separator"
 import { useSidebar } from "@aov/ui/components/sidebar"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { cn } from "@aov/ui/lib/utils"
-import { api } from "@/lib/api/client"
 import { CommandMenu } from "./command-menu"
+import { usePageTabs } from "./page-tabs"
+import { PageTabOverlay, SortablePageTab } from "./sortable-page-tab"
+import { useHotkeys } from "../hotkeys"
 
 export interface RouteHandle {
   crumb?: (match: UIMatch) => ReactNode
 }
 
-function Crumbs() {
-  const matches = useMatches() as UIMatch<unknown, RouteHandle | undefined>[]
-  const crumbs = matches.filter((match) => match.handle?.crumb)
-  return (
-    <Breadcrumb className="min-w-0">
-      <BreadcrumbList className="flex-nowrap">
-        {crumbs.map((match, index) => {
-          const last = index === crumbs.length - 1
-          const content = match.handle!.crumb!(match)
-          return (
-            <Fragment key={match.id}>
-              {index > 0 && <BreadcrumbSeparator className="hidden md:block" />}
-              <BreadcrumbItem className={cn("min-w-0", !last && "hidden md:inline-flex")}>
-                {last ? (
-                  <BreadcrumbPage className="truncate">{content}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link to={match.pathname}>{content}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-            </Fragment>
-          )
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
-  )
-}
+const horizontalOnly: Modifier = ({ transform }) => ({ ...transform, y: 0 })
+const modifiers = [horizontalOnly]
 
 export function SiteHeader() {
-  const { toggleSidebar } = useSidebar()
-  const navigation = useNavigation()
+  const { enabled } = useHotkeys()
+  const { sessions: tabs, activePath: pathname, closeTab, moveTab } = usePageTabs()
+  const { toggleSidebar, isMobile } = useSidebar()
   const [commandOpen, setCommandOpen] = useState(false)
+  const [dragging, setDragging] = useState<{ path: string; width?: number } | null>(null)
+  const draggedTab = tabs.find((tab) => tab.path === dragging?.path)
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+      keyboardCodes: { start: enabled ? ["Space", "Enter"] : [], cancel: ["Escape"], end: ["Space", "Enter"] },
+    }),
+  )
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (!enabled) return
       if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
         event.preventDefault()
         setCommandOpen((open) => !open)
@@ -66,57 +55,74 @@ export function SiteHeader() {
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+  }, [enabled])
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div
-        aria-hidden
-        className={cn(
-          "absolute inset-x-0 -bottom-px h-0.5 origin-left bg-primary transition-transform duration-500",
-          navigation.state === "loading" ? "scale-x-75" : "scale-x-0 duration-0",
-        )}
-      />
-      <Crumbs />
-      <div className="ml-auto flex items-center gap-2">
-        {api.mode === "mock" && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="outline" className="hidden sm:inline-flex">
-                Dữ liệu mẫu
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-64">
-              Đọc từ resources/Lien-Quan-v3. Thay đổi chỉ lưu trong trình duyệt này cho tới khi có admin API.
-            </TooltipContent>
-          </Tooltip>
-        )}
-        <Button
-          variant="outline"
-          className="h-8 w-9 justify-start gap-2 px-2 text-muted-foreground sm:w-56 lg:w-64"
-          onClick={() => setCommandOpen(true)}
+    <div className="sticky top-0 z-30 flex min-w-0 shrink-0 items-end gap-2 border-b bg-background px-2 pt-2">
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={modifiers}
+        onDragStart={({ active }) =>
+          setDragging({ path: String(active.id), width: active.rect.current.initial?.width })
+        }
+        onDragCancel={() => setDragging(null)}
+        onDragEnd={({ active, over }) => {
+          if (over) moveTab(String(active.id), String(over.id))
+          setDragging(null)
+        }}
+        accessibility={{
+          screenReaderInstructions: {
+            draggable:
+              "Nhấn Space để bắt đầu di chuyển tab, dùng mũi tên trái/phải, nhấn Space để thả hoặc Escape để hủy.",
+          },
+        }}
+      >
+        <nav
+          aria-label="Các trang đang mở"
+          className="flex min-w-0 flex-1 items-end gap-1 overflow-x-auto overflow-y-hidden"
         >
-          <Search className="size-4" />
-          <span className="hidden flex-1 text-left font-normal sm:inline">Tìm tướng, trang bị…</span>
-          <KbdGroup className="hidden sm:inline-flex">
-            <Kbd>Ctrl</Kbd>
-            <Kbd>K</Kbd>
-          </KbdGroup>
-        </Button>
-        <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-4" />
+          <SortableContext items={tabs.map((tab) => tab.path)} strategy={horizontalListSortingStrategy}>
+            {tabs.map((tab) => (
+              <SortablePageTab
+                key={tab.path}
+                tab={tab}
+                active={tab.path === pathname}
+                canClose={tabs.length > 1 || tab.path !== "/"}
+                onClose={() => closeTab(tab.path)}
+              />
+            ))}
+          </SortableContext>
+        </nav>
+        {createPortal(
+          <DragOverlay dropAnimation={null} modifiers={modifiers}>
+            {draggedTab && <PageTabOverlay tab={draggedTab} width={dragging?.width} />}
+          </DragOverlay>,
+          document.body,
+        )}
+      </DndContext>
+      <div className="flex shrink-0 items-center gap-1 pb-1">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8" onClick={toggleSidebar}>
-              <PanelRight />
-              <span className="sr-only">Mở/đóng menu</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={() => setCommandOpen(true)}
+              aria-label="Tìm kiếm (Ctrl K)"
+            >
+              <Search className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            Mở/đóng menu <Kbd className="ml-1">Ctrl B</Kbd>
-          </TooltipContent>
+          <TooltipContent>Tìm kiếm · Ctrl K</TooltipContent>
         </Tooltip>
+        {isMobile && (
+          <Button variant="ghost" size="icon" className="size-8" onClick={toggleSidebar} aria-label="Mở menu">
+            <PanelRight />
+          </Button>
+        )}
       </div>
       <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} />
-    </header>
+    </div>
   )
 }

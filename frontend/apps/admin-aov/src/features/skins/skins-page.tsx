@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import type { ColumnDef } from "@tanstack/react-table"
+import type { DataColumnDef as ColumnDef } from "@/components/data-table/table-features"
 import { Badge } from "@aov/ui/components/badge"
 import { ColumnHeader } from "@/components/data-table/column-header"
 import { DataTable } from "@/components/data-table/data-table"
@@ -70,8 +70,8 @@ export function SkinsPage() {
       {
         id: "hero",
         accessorFn: (row) => row.hero.id,
-        filterFn: facetFilterFn as never,
-        sortingFn: (a, b) => a.original.hero.name.localeCompare(b.original.hero.name, "vi"),
+        filterFn: facetFilterFn,
+        sortFn: (a, b) => a.original.hero.name.localeCompare(b.original.hero.name, "vi"),
         meta: { label: "Tướng" },
         header: ({ column }) => <ColumnHeader column={column} title="Tướng" />,
         cell: ({ row }) => (
@@ -84,7 +84,7 @@ export function SkinsPage() {
       {
         id: "badge",
         accessorFn: (row) => row.badge,
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Bậc" },
         header: ({ column }) => <ColumnHeader column={column} title="Bậc" />,
         cell: ({ row }) =>
@@ -100,7 +100,7 @@ export function SkinsPage() {
       {
         id: "portrait",
         accessorFn: (row) => row.portrait,
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Portrait" },
         header: ({ column }) => <ColumnHeader column={column} title="Portrait" />,
         cell: ({ row }) =>
@@ -118,7 +118,7 @@ export function SkinsPage() {
       {
         id: "art",
         accessorFn: (row) => row.art,
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Head & cover" },
         header: ({ column }) => <ColumnHeader column={column} title="Head & cover" />,
         cell: ({ row }) =>
@@ -131,7 +131,7 @@ export function SkinsPage() {
       {
         id: "kind",
         accessorFn: (row) => row.kind,
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Loại" },
         header: ({ column }) => <ColumnHeader column={column} title="Loại" />,
         cell: ({ row }) =>

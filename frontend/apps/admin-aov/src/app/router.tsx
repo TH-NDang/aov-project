@@ -3,6 +3,7 @@ import { AppShell } from "./layout/app-shell"
 import type { RouteHandle } from "./layout/site-header"
 import { AppLoading, RouteError } from "./route-error"
 import { HeroCrumb } from "@/features/heroes/hero-crumb"
+import { MediaWorkspace } from "@/features/media/media-workspace"
 
 const handle = (crumb: RouteHandle["crumb"]): RouteHandle => ({ crumb })
 const title = (text: string) => handle(() => text)
@@ -43,6 +44,11 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/skins/skins-page")).SkinsPage }),
           },
           {
+            path: "storage",
+            handle: title("Lưu trữ"),
+            lazy: async () => ({ Component: (await import("@/features/storage/storage-page")).StoragePage }),
+          },
+          {
             path: "items",
             handle: title("Trang bị"),
             lazy: async () => ({ Component: (await import("@/features/items/items-page")).ItemsPage }),
@@ -60,19 +66,39 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/placeholders/arcana-page")).ArcanaPage }),
           },
           {
-            path: "portraits",
-            handle: title("Portrait"),
-            lazy: async () => ({ Component: (await import("@/features/portraits/portraits-page")).PortraitsPage }),
+            path: "spells",
+            handle: title("Phụ trợ"),
+            lazy: async () => ({ Component: (await import("@/features/placeholders/spells-page")).SpellsPage }),
           },
           {
-            path: "media/head-cover",
-            handle: title("Head & cover"),
-            lazy: async () => ({ Component: (await import("@/features/media/head-cover-page")).HeadCoverPage }),
-          },
-          {
-            path: "media/badges",
-            handle: title("Bậc trang phục"),
-            lazy: async () => ({ Component: (await import("@/features/media/badges-page")).BadgesPage }),
+            element: <MediaWorkspace />,
+            children: [
+              {
+                path: "portraits",
+                handle: title("Không gian ảnh · Portrait"),
+                lazy: async () => ({ Component: (await import("@/features/portraits/portraits-page")).PortraitsPage }),
+              },
+              {
+                path: "media/head",
+                handle: title("Không gian ảnh · Head"),
+                lazy: async () => ({ Component: (await import("@/features/media/head-cover-page")).HeadPage }),
+              },
+              {
+                path: "media/cover",
+                handle: title("Không gian ảnh · Cover"),
+                lazy: async () => ({ Component: (await import("@/features/media/head-cover-page")).CoverPage }),
+              },
+              {
+                path: "media/head-cover",
+                handle: title("Không gian ảnh · Head & cover"),
+                lazy: async () => ({ Component: (await import("@/features/media/head-cover-page")).HeadCoverPage }),
+              },
+              {
+                path: "media/badges",
+                handle: title("Không gian ảnh · Bậc trang phục"),
+                lazy: async () => ({ Component: (await import("@/features/media/badges-page")).BadgesPage }),
+              },
+            ],
           },
           {
             path: "tournaments",

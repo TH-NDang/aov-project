@@ -12,7 +12,7 @@ import {
   CommandSeparator,
 } from "@aov/ui/components/command"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
-import { NAV_GROUPS } from "@/app/nav"
+import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
 import { MediaImage } from "@/components/media-image"
 import { useEnchantments, useHeroes, useItemCatalog } from "@/lib/queries"
 import { commandFilter, formatNumber } from "@/lib/text"
@@ -56,9 +56,9 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           <CommandList>
             <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
             <CommandGroup heading="Trang">
-              {NAV_GROUPS.flatMap((group) => group.items).map((item) => (
+              {[...NAV_ITEMS, ...MEDIA_NAV].map((item) => (
                 <CommandItem
-                  key={item.to}
+                  key={`${item.to}:${item.title}`}
                   value={`trang ${item.title} ${item.description}`}
                   onSelect={() => run(() => navigate(item.to))}
                 >

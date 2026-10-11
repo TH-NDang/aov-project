@@ -1,3 +1,4 @@
+import { useChangeEffect } from "@/hooks/use-change-effect"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Search, X } from "lucide-react"
 import {
@@ -98,7 +99,7 @@ export function PortraitsPage() {
     [rows, filter, heroFilter, search],
   )
 
-  useEffect(() => setLimit(PAGE), [filter, heroFilter, search])
+  useChangeEffect(() => setLimit(PAGE), [filter, heroFilter, search])
 
   useEffect(() => {
     const node = sentinel.current

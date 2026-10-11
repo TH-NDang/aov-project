@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useChangeEffect } from "@/hooks/use-change-effect"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -64,7 +64,7 @@ export function SkinEditor({ hero, skin, badges, badgeUsage, showHeroLink }: Ski
   })
   const { register, control, handleSubmit, reset, watch, formState } = form
 
-  useEffect(() => {
+  useChangeEffect(() => {
     reset({ name: skin.name, badgeId: skin.badgeId, portrait: skin.portrait })
   }, [skin, reset])
 

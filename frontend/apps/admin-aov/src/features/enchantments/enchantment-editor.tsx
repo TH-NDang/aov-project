@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useChangeEffect } from "@/hooks/use-change-effect"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -48,7 +48,7 @@ export function EnchantmentEditor({ item, group }: { item: Enchantment; group: E
     resolver: zodResolver(schema),
     defaultValues: toForm(item),
   })
-  useEffect(() => reset(toForm(item)), [item, reset])
+  useChangeEffect(() => reset(toForm(item)), [item, reset])
 
   const onSubmit = handleSubmit((values) =>
     update.mutate(

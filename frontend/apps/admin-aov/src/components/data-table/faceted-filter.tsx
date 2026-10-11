@@ -1,4 +1,6 @@
-import type { Column, FilterFn } from "@tanstack/react-table"
+import type { RowData } from "@tanstack/react-table"
+export { facetFilterFn } from "./table-features"
+import type { DataColumn as Column } from "./table-features"
 import type { ComponentType } from "react"
 import { Check, PlusCircle } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
@@ -22,17 +24,17 @@ export interface FacetOption {
   icon?: ComponentType<{ className?: string }>
 }
 
-/** Keeps rows whose cell value (stringified) is one of the selected facet values. */
-export const facetFilterFn: FilterFn<unknown> = (row, columnId, selected: string[]) =>
-  !selected?.length || selected.includes(String(row.getValue(columnId)))
-
-interface FacetedFilterProps<TData, TValue> {
+interface FacetedFilterProps<TData extends RowData, TValue> {
   column?: Column<TData, TValue>
   title: string
   options: FacetOption[]
 }
 
-export function FacetedFilter<TData, TValue>({ column, title, options }: FacetedFilterProps<TData, TValue>) {
+export function FacetedFilter<TData extends RowData, TValue>({
+  column,
+  title,
+  options,
+}: FacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues()
   const selected = new Set((column?.getFilterValue() as string[] | undefined) ?? [])
 
