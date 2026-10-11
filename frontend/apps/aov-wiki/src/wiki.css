@@ -1,0 +1,75 @@
+@import "@aov/ui/styles.css";
+
+:root.dark {
+  color-scheme: dark;
+  --background: #191c22;
+  --foreground: #eeeae2;
+  --card: #22262e;
+  --card-foreground: #eeeae2;
+  --popover: #22262e;
+  --popover-foreground: #eeeae2;
+  --primary: #dbbd80;
+  --primary-foreground: #17191e;
+  --secondary: #2b3039;
+  --secondary-foreground: #eeeae2;
+  --muted: #262b33;
+  --muted-foreground: #a3a6ad;
+  --accent: #31333a;
+  --accent-foreground: #eed6a2;
+  --border: #373b43;
+  --input: #373b43;
+  --ring: #dbbd80;
+
+  /* Header, modelled on the HoYoWiki navigation bar */
+  --header-bg: #000000a6;
+  --header-line: #ffffff14;
+  --header-text: #ebebeb;
+  --header-muted: #b2b2b2;
+  --gold: #e4c88e;
+  /* Logo background tone; underline of the AOVWiKi wordmark */
+  --amber-accent: #c98f45;
+}
+
+/* Exposes the tokens above as utilities: bg-header, border-header-line, text-header-muted, text-gold, bg-amber-accent… */
+@theme inline {
+  --color-header: var(--header-bg);
+  --color-header-line: var(--header-line);
+  --color-header-text: var(--header-text);
+  --color-header-muted: var(--header-muted);
+  --color-gold: var(--gold);
+  --color-amber-accent: var(--amber-accent);
+  --font-wordmark: "Arial Black", "Segoe UI", sans-serif;
+}
+
+@layer base {
+  #root {
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+  }
+  body {
+    min-width: 280px;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  button,
+  input,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
