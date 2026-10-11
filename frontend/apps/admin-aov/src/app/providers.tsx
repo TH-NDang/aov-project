@@ -5,6 +5,7 @@ import { Toaster } from "@aov/ui/components/sonner"
 import { TooltipProvider } from "@aov/ui/components/tooltip"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { ThemeProvider, useTheme } from "./theme"
+import { HotkeysProvider } from "./hotkeys"
 
 declare module "@tanstack/react-query" {
   interface Register {
@@ -14,7 +15,12 @@ declare module "@tanstack/react-query" {
 
 export const queryClient: QueryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, refetchOnWindowFocus: false },
+    queries: {
+      retry: 1,
+      gcTime: Infinity,
+      refetchOnWindowFocus: false,
+      refetchOnMount: (query) => query.state.isInvalidated,
+    },
   },
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
@@ -34,10 +40,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={200}>
-          {children}
-          <ThemedToaster />
-        </TooltipProvider>
+        <HotkeysProvider>
+          <TooltipProvider delayDuration={200}>
+            {children}
+            <ThemedToaster />
+          </TooltipProvider>
+        </HotkeysProvider>
       </QueryClientProvider>
     </ThemeProvider>
   )

@@ -1,3 +1,4 @@
+import { useChangeEffect } from "@/hooks/use-change-effect"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { Search, X } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
@@ -53,7 +54,7 @@ export function Gallery({ title, description, rows, groups, searchPlaceholder }:
     [rows, group, search],
   )
 
-  useEffect(() => setLimit(PAGE), [group, search])
+  useChangeEffect(() => setLimit(PAGE), [group, search])
   useEffect(() => {
     const node = sentinel.current
     if (!node) return

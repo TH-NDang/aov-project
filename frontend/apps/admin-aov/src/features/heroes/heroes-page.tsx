@@ -1,67 +1,49 @@
-import { useMemo } from "react"
-import { useNavigate } from "react-router"
-import type { ColumnDef } from "@tanstack/react-table"
-import { ExternalLink } from "lucide-react"
+import { useMemo, useState } from "react"
+import { Link, useNavigate } from "react-router"
+import { constructFilterFn, type ColumnFiltersState } from "@tanstack/react-table"
+import { ArrowUpRight, CheckCircle2, ExternalLink, ImageOff, RefreshCw, Shirt, Sparkles, Swords } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
+import { cn } from "@aov/ui/lib/utils"
 import { ColumnHeader } from "@/components/data-table/column-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { facetFilterFn } from "@/components/data-table/faceted-filter"
+import type { DataColumnDef } from "@/components/data-table/table-features"
 import { MediaImage } from "@/components/media-image"
 import { Page, PageHeader } from "@/components/page-header"
 import { useSearchParam } from "@/hooks/use-search-param"
-import type { Hero } from "@/lib/api/types"
 import { matchesQuery } from "@/lib/text"
 import { useHeroes } from "@/lib/queries"
+import { MECHANIC_LABEL, toHeroRow, type HeroReview, type HeroRow, type Mechanic } from "./hero-table-model"
 
-type Mechanic = "hero-form" | "skill-variant" | "none"
-
-interface HeroRow {
-  hero: Hero
-  skins: number
-  missingPortraits: number
-  skills: number
-  icons: number
-  mechanic: Mechanic
-  portrait: "ok" | "missing"
+const REVIEW_LABEL: Record<HeroReview, string> = {
+  portrait: "Portrait tướng",
+  skins: "Ảnh trang phục",
+  skills: "Kỹ năng",
+  ready: "Đủ ảnh và mô tả",
 }
-
-const MECHANIC_LABEL: Record<Mechanic, string> = {
-  "hero-form": "Đổi dạng tướng",
-  "skill-variant": "Biến thể chiêu",
-  none: "Thường",
-}
-
-function toRow(hero: Hero): HeroRow {
-  const skins = hero.skins.filter((skin) => !skin.isDefault)
-  return {
-    hero,
-    skins: skins.length,
-    missingPortraits: skins.filter((skin) => !skin.portrait).length,
-    skills: hero.skills.length,
-    icons: hero.skills.reduce((sum, skill) => sum + skill.variants.length, 0),
-    mechanic: hero.forms.length
-      ? "hero-form"
-      : hero.skills.some((skill) => skill.switchMode === "skill-variant")
-        ? "skill-variant"
-        : "none",
-    portrait: hero.portrait ? "ok" : "missing",
-  }
-}
-
-const columns: ColumnDef<HeroRow, any>[] = [
+const detailUrl = (row: HeroRow, tab?: string) =>
+  `/heroes/${encodeURIComponent(row.hero.id)}${tab ? `?tab=${tab}` : ""}`
+const columns: DataColumnDef<HeroRow>[] = [
   {
     id: "name",
     accessorFn: (row) => row.hero.name,
-    header: ({ column }) => <ColumnHeader column={column} title="Tướng" />,
+    meta: { label: "Tướng", className: "min-w-52" },
     enableHiding: false,
-    cell: ({ row }) => (
+    sortFn: (a, b) =>
+      a.original.hero.name.localeCompare(b.original.hero.name, "vi", { numeric: true, sensitivity: "base" }),
+    header: ({ column }) => <ColumnHeader column={column} title="Tướng" />,
+    cell: ({ row: { original: row } }) => (
       <div className="flex items-center gap-3">
-        <MediaImage path={row.original.hero.head} alt="" className="size-9 shrink-0 rounded-md object-cover" />
+        <MediaImage path={row.hero.head} alt="" className="size-11 shrink-0 rounded-lg border object-cover" />
         <div className="min-w-0">
-          <div className="truncate font-medium">{row.original.hero.name}</div>
-          <div className="truncate font-mono text-xs text-muted-foreground">{row.original.hero.id}</div>
+          <Link
+            to={detailUrl(row)}
+            className="truncate font-semibold hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {row.hero.name}
+          </Link>
+          <div className="truncate font-mono text-xs text-muted-foreground">{row.hero.id}</div>
         </div>
       </div>
     ),
@@ -69,69 +51,130 @@ const columns: ColumnDef<HeroRow, any>[] = [
   {
     id: "skins",
     accessorFn: (row) => row.skins,
-    meta: { label: "Trang phục", className: "text-right" },
+    meta: { label: "Trang phục", className: "text-right min-w-40" },
     header: ({ column }) => <ColumnHeader column={column} title="Trang phục" className="justify-end" />,
-    cell: ({ row }) => (
-      <div className="text-right tabular-nums">
-        {row.original.skins}
-        {row.original.missingPortraits > 0 && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="destructive" className="ml-2">
-                −{row.original.missingPortraits}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>{row.original.missingPortraits} trang phục thiếu portrait</TooltipContent>
-          </Tooltip>
-        )}
-      </div>
+    cell: ({ row: { original: row } }) => (
+      <Link
+        to={detailUrl(row, "skins")}
+        aria-label={`Trang phục của ${row.hero.name}`}
+        className="inline-flex flex-col items-end gap-1 rounded-md px-2 py-1 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="font-medium tabular-nums">{row.skins} trang phục</span>
+        <span
+          className={cn(
+            "text-xs",
+            row.missingPortraits ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+          )}
+        >
+          {row.missingPortraits
+            ? `${row.missingPortraits} thiếu portrait`
+            : row.skins
+              ? "Đủ portrait"
+              : "Chưa có trang phục"}
+        </span>
+      </Link>
     ),
   },
   {
     id: "skills",
     accessorFn: (row) => row.icons,
-    meta: { label: "Icon kỹ năng", className: "text-right" },
-    header: ({ column }) => <ColumnHeader column={column} title="Icon kỹ năng" className="justify-end" />,
-    cell: ({ row }) => (
-      <div className="text-right tabular-nums">
-        {row.original.icons}
-        <span className="text-muted-foreground"> · {row.original.skills} ô</span>
-      </div>
+    meta: { label: "Kỹ năng", className: "text-right min-w-44" },
+    header: ({ column }) => <ColumnHeader column={column} title="Kỹ năng" className="justify-end" />,
+    cell: ({ row: { original: row } }) => (
+      <Link
+        to={detailUrl(row, "skills")}
+        aria-label={`Kỹ năng của ${row.hero.name}`}
+        className="inline-flex flex-col items-end gap-1 rounded-md px-2 py-1 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="font-medium tabular-nums">
+          {row.skills} kỹ năng · {row.icons}/{row.expectedIcons} icon
+        </span>
+        <span
+          className={cn(
+            "text-xs",
+            row.missingDescriptions || !row.skills ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
+          )}
+        >
+          {!row.skills
+            ? "Chưa có kỹ năng"
+            : row.missingDescriptions
+              ? `${row.missingDescriptions} thiếu mô tả`
+              : "Đủ mô tả"}
+        </span>
+      </Link>
     ),
   },
   {
     id: "mechanic",
     accessorFn: (row) => row.mechanic,
-    filterFn: facetFilterFn as never,
+    filterFn: facetFilterFn,
     meta: { label: "Cơ chế" },
     header: ({ column }) => <ColumnHeader column={column} title="Cơ chế" />,
-    cell: ({ row }) =>
-      row.original.mechanic === "none" ? (
+    cell: ({ row: { original: row } }) =>
+      row.mechanic === "none" ? (
         <span className="text-muted-foreground">Thường</span>
       ) : (
         <Badge variant="outline">
-          {MECHANIC_LABEL[row.original.mechanic]}
-          {row.original.hero.forms.length > 0 && ` · ${row.original.hero.forms.length}`}
+          {MECHANIC_LABEL[row.mechanic]}
+          {row.hero.forms.length > 0 && ` · ${row.hero.forms.length}`}
         </Badge>
       ),
   },
   {
     id: "portrait",
     accessorFn: (row) => row.portrait,
-    filterFn: facetFilterFn as never,
+    filterFn: facetFilterFn,
     meta: { label: "Portrait" },
     header: ({ column }) => <ColumnHeader column={column} title="Portrait" />,
-    cell: ({ row }) =>
-      row.original.hero.portrait ? (
-        <div className="flex items-center gap-2">
-          <MediaImage path={row.original.hero.portrait} className="h-9 w-6 rounded-sm object-cover" />
-          {row.original.hero.portraitAlternates.length > 0 && (
-            <span className="text-xs text-muted-foreground">+{row.original.hero.portraitAlternates.length} bản</span>
+    cell: ({ row: { original: row } }) =>
+      row.hero.portrait ? (
+        <Link
+          to={detailUrl(row, "media")}
+          aria-label={`Ảnh của ${row.hero.name}`}
+          className="flex items-center gap-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <MediaImage path={row.hero.portrait} alt="" className="h-12 w-8 rounded-md border object-cover" />
+          {row.hero.portraitAlternates.length > 0 && (
+            <span className="text-xs text-muted-foreground">+{row.hero.portraitAlternates.length} bản</span>
           )}
-        </div>
+        </Link>
       ) : (
-        <Badge variant="destructive">Thiếu</Badge>
+        <Badge variant="outline" className="border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-400">
+          Thiếu ảnh
+        </Badge>
       ),
+  },
+  {
+    id: "review",
+    accessorFn: (row) => row.review,
+    getUniqueValues: (row) => row.review,
+    enableSorting: false,
+    meta: { label: "Hoàn thiện dữ liệu", className: "min-w-44" },
+    header: "Hoàn thiện dữ liệu",
+    filterFn: constructFilterFn({
+      filter: (value: HeroReview[], selected: HeroReview[]) =>
+        !selected.length || selected.some((item) => value.includes(item)),
+    }),
+    cell: ({ row: { original: row } }) => (
+      <div className="flex max-w-60 flex-wrap gap-1">
+        {row.review.includes("ready") ? (
+          <span className="inline-flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
+            <CheckCircle2 className="size-3.5" />
+            Đủ ảnh và mô tả
+          </span>
+        ) : (
+          row.review.map((issue) => (
+            <Badge
+              key={issue}
+              variant="outline"
+              className="border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-400"
+            >
+              {REVIEW_LABEL[issue]}
+            </Badge>
+          ))
+        )}
+      </div>
+    ),
   },
   {
     id: "version",
@@ -146,7 +189,7 @@ const columns: ColumnDef<HeroRow, any>[] = [
     enableSorting: false,
     header: "Nguồn",
     cell: ({ row }) => (
-      <div className="flex gap-1" onClick={(event) => event.stopPropagation()}>
+      <div className="flex gap-1">
         {row.original.hero.sources.portraits && (
           <Button variant="ghost" size="xs" asChild>
             <a href={row.original.hero.sources.portraits} target="_blank" rel="noreferrer">
@@ -164,20 +207,95 @@ const columns: ColumnDef<HeroRow, any>[] = [
       </div>
     ),
   },
+  {
+    id: "actions",
+    header: "Thao tác",
+    enableSorting: false,
+    enableHiding: false,
+    cell: ({ row }) => (
+      <Button variant="ghost" size="sm" asChild>
+        <Link to={detailUrl(row.original)} aria-label={`Mở chi tiết ${row.original.hero.name}`}>
+          Chi tiết <ArrowUpRight className="size-4" />
+        </Link>
+      </Button>
+    ),
+  },
 ]
 
 export function HeroesPage() {
   const navigate = useNavigate()
   const heroes = useHeroes()
   const [search, setSearch] = useSearchParam("q")
-  const rows = useMemo(() => heroes.data?.map(toRow), [heroes.data])
-
+  const [filters, setFilters] = useState<ColumnFiltersState>([])
+  const rows = useMemo(() => heroes.data?.map(toHeroRow), [heroes.data])
+  const reviewFilter = filters.find((filter) => filter.id === "review")?.value as HeroReview[] | undefined
+  const quickFilter = reviewFilter?.length === 1 ? reviewFilter[0] : reviewFilter?.length ? "mixed" : "all"
+  const setQuickFilter = (value: HeroReview | "all") =>
+    setFilters((current) => [
+      ...current.filter((filter) => filter.id !== "review"),
+      ...(value === "all" ? [] : [{ id: "review", value: [value] }]),
+    ])
+  const summaries = [
+    { value: "all" as const, title: "Tổng số tướng", count: rows?.length, icon: Swords },
+    {
+      value: "portrait" as const,
+      title: "Thiếu portrait tướng",
+      count: rows?.filter((row) => row.review.includes("portrait")).length,
+      icon: ImageOff,
+    },
+    {
+      value: "skins" as const,
+      title: "Trang phục thiếu portrait",
+      count: rows?.filter((row) => row.review.includes("skins")).length,
+      icon: Shirt,
+    },
+    {
+      value: "skills" as const,
+      title: "Kỹ năng cần bổ sung",
+      count: rows?.filter((row) => row.review.includes("skills")).length,
+      icon: Sparkles,
+    },
+  ]
   return (
     <Page>
       <PageHeader
         title="Tướng"
-        description="Thông tin, kỹ năng, trang phục và ảnh của từng tướng. Bấm một dòng để chỉnh sửa."
+        description="Quản lý hồ sơ tướng, theo dõi ảnh và nội dung kỹ năng cần bổ sung."
+        actions={
+          <Button variant="outline" size="sm" disabled={heroes.isFetching} onClick={() => void heroes.refetch()}>
+            <RefreshCw className={cn("size-4", heroes.isFetching && "animate-spin")} />
+            Tải lại
+          </Button>
+        }
       />
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        {summaries.map((summary) => (
+          <button
+            key={summary.value}
+            type="button"
+            aria-pressed={quickFilter === summary.value}
+            onClick={() => setQuickFilter(summary.value)}
+            className={cn(
+              "flex items-center gap-3 rounded-xl border p-4 text-left transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              quickFilter === summary.value && "border-primary bg-primary/5",
+            )}
+          >
+            <summary.icon className="size-5 shrink-0 text-muted-foreground" />
+            <div>
+              <p className="text-2xl font-semibold tabular-nums">{summary.count ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">{summary.title}</p>
+            </div>
+          </button>
+        ))}
+      </div>
+      {heroes.isError && (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+        >
+          Không tải được dữ liệu tướng. Bấm “Tải lại” để thử lại.
+        </div>
+      )}
       <DataTable
         columns={columns}
         data={rows}
@@ -188,7 +306,9 @@ export function HeroesPage() {
         search={search}
         onSearchChange={setSearch}
         initialSorting={[{ id: "name", desc: false }]}
-        initialVisibility={{ version: false }}
+        initialVisibility={{ version: false, sources: false }}
+        filters={filters}
+        onFiltersChange={setFilters}
         facets={[
           {
             columnId: "mechanic",
@@ -206,8 +326,16 @@ export function HeroesPage() {
               { value: "missing", label: "Thiếu" },
             ],
           },
+          {
+            columnId: "review",
+            title: "Cần bổ sung",
+            options: (Object.keys(REVIEW_LABEL) as HeroReview[]).map((value) => ({
+              value,
+              label: REVIEW_LABEL[value],
+            })),
+          },
         ]}
-        onRowClick={(row) => navigate(`/heroes/${row.hero.id}`)}
+        onRowClick={(row) => navigate(detailUrl(row))}
       />
     </Page>
   )

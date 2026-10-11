@@ -1,15 +1,11 @@
 {
   "extends": "@aov/typescript-config/react.json",
   "compilerOptions": {
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"]
     }
   },
-  "include": [
-    "src",
-    "vite.config.ts"
-  ]
+  "include": ["src", "vite.config.ts"]
 }

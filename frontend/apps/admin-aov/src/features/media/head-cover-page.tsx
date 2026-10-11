@@ -10,7 +10,7 @@ const GROUPS = [
   { value: "list-head", label: "Icon danh sách" },
 ]
 
-export function HeadCoverPage() {
+export function HeadCoverPage({ kind }: { kind?: "head" | "cover" }) {
   const heroes = useHeroes()
   const rows = useMemo<GalleryRow[] | undefined>(() => {
     if (!heroes.data) return undefined
@@ -55,16 +55,30 @@ export function HeadCoverPage() {
           })
       }
     }
-    return result
-  }, [heroes.data])
+    return kind ? result.filter((row) => row.group.endsWith(kind)) : result
+  }, [heroes.data, kind])
 
   return (
     <Gallery
-      title="Head & cover"
-      description="Ảnh head, cover của tướng và trang phục, cùng icon danh sách tướng. Bấm ảnh để xem lớn."
+      title={kind === "head" ? "Head" : kind === "cover" ? "Cover" : "Head & cover"}
+      description={
+        kind === "head"
+          ? "Ảnh head của tướng, trang phục và icon danh sách. Bấm ảnh để xem lớn."
+          : kind === "cover"
+            ? "Ảnh cover của tướng và trang phục. Bấm ảnh để xem lớn."
+            : "Ảnh head, cover của tướng và trang phục, cùng icon danh sách tướng. Bấm ảnh để xem lớn."
+      }
       rows={rows}
-      groups={GROUPS}
+      groups={kind ? GROUPS.filter((group) => group.value.endsWith(kind)) : GROUPS}
       searchPlaceholder="Tìm tướng, trang phục, file…"
     />
   )
+}
+
+export function HeadPage() {
+  return <HeadCoverPage kind="head" />
+}
+
+export function CoverPage() {
+  return <HeadCoverPage kind="cover" />
 }

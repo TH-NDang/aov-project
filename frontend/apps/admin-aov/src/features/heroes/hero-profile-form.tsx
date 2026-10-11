@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useChangeEffect } from "@/hooks/use-change-effect"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -40,7 +40,7 @@ export function HeroProfileForm({ hero }: { hero: Hero }) {
     defaultValues: toForm(hero),
   })
 
-  useEffect(() => reset(toForm(hero)), [hero, reset])
+  useChangeEffect(() => reset(toForm(hero)), [hero, reset])
 
   const onSubmit = handleSubmit((values) =>
     update.mutate(

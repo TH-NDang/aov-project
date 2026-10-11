@@ -1,7 +1,8 @@
-import { Outlet, ScrollRestoration } from "react-router"
 import { SidebarInset, SidebarProvider } from "@aov/ui/components/sidebar"
 import { AppSidebar } from "./app-sidebar"
 import { SiteHeader } from "./site-header"
+import { PageTabPanels, PageTabsProvider } from "./page-tabs"
+import { useHotkeys } from "../hotkeys"
 
 function readSidebarCookie(): boolean {
   const match = document.cookie.match(/(?:^|;\s*)sidebar_state=(true|false)/)
@@ -10,16 +11,16 @@ function readSidebarCookie(): boolean {
 
 /** Content on the left, navigation sidebar docked on the right edge. */
 export function AppShell() {
+  const { enabled } = useHotkeys()
   return (
-    <SidebarProvider defaultOpen={readSidebarCookie()}>
-      <SidebarInset className="min-w-0">
-        <SiteHeader />
-        <div className="flex min-h-0 flex-1 flex-col">
-          <Outlet />
-        </div>
-      </SidebarInset>
-      <AppSidebar />
-      <ScrollRestoration />
-    </SidebarProvider>
+    <PageTabsProvider>
+      <SidebarProvider defaultOpen={readSidebarCookie()} keyboardShortcutEnabled={enabled}>
+        <SidebarInset className="h-svh min-w-0 overflow-hidden">
+          <SiteHeader />
+          <PageTabPanels />
+        </SidebarInset>
+        <AppSidebar />
+      </SidebarProvider>
+    </PageTabsProvider>
   )
 }

@@ -1,5 +1,6 @@
 import { useMemo } from "react"
-import type { ColumnDef, ColumnFiltersState } from "@tanstack/react-table"
+import type { ColumnFiltersState } from "@tanstack/react-table"
+import type { DataColumnDef as ColumnDef } from "@/components/data-table/table-features"
 import { Badge } from "@aov/ui/components/badge"
 import type { Item, ItemCategory, ItemIssue, RecipeStatus } from "@/lib/api/types"
 import { ColumnHeader } from "@/components/data-table/column-header"
@@ -88,14 +89,14 @@ export function ItemsTable({
       {
         id: "category",
         accessorFn: (row) => row.item.category,
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Nhóm" },
         header: ({ column }) => <ColumnHeader column={column} title="Nhóm" />,
       },
       {
         id: "tier",
         accessorFn: (row) => row.tier,
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Cấp" },
         header: ({ column }) => <ColumnHeader column={column} title="Cấp" />,
         cell: ({ row }) => <Badge variant="outline">Cấp {row.original.tier}</Badge>,
@@ -110,7 +111,7 @@ export function ItemsTable({
       {
         id: "status",
         accessorFn: (row) => row.status,
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Công thức" },
         header: ({ column }) => <ColumnHeader column={column} title="Công thức" />,
         cell: ({ row }) => (
@@ -141,7 +142,7 @@ export function ItemsTable({
       {
         id: "issues",
         accessorFn: (row) => (row.issues ? "yes" : "no"),
-        filterFn: facetFilterFn as never,
+        filterFn: facetFilterFn,
         meta: { label: "Cần kiểm tra" },
         header: ({ column }) => <ColumnHeader column={column} title="Kiểm tra" />,
         cell: ({ row }) => (row.original.issues ? <Badge variant="destructive">{row.original.issues}</Badge> : null),

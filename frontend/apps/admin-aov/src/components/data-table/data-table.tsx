@@ -1,16 +1,13 @@
 import { useState, type ReactNode } from "react"
+import { useHotkeys } from "@/app/hotkeys"
 import {
   flexRender,
-  getCoreRowModel,
-  getFacetedUniqueValues,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
+  functionalUpdate,
+  useTable,
+  type RowData,
   type ColumnFiltersState,
   type SortingState,
-  type VisibilityState,
+  type ColumnVisibilityState,
 } from "@tanstack/react-table"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Settings2, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -29,6 +26,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@aov/ui/lib/utils"
 import { formatNumber } from "@/lib/text"
 import { FacetedFilter, type FacetOption } from "./faceted-filter"
+import { dataTableFeatures, EMPTY_TABLE_DATA, type DataColumnDef } from "./table-features"
 
 export interface DataTableFacet {
   columnId: string
@@ -36,17 +34,9 @@ export interface DataTableFacet {
   options: FacetOption[]
 }
 
-declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData, TValue> {
-    /** Label used by the column visibility menu. */
-    label?: string
-    className?: string
-  }
-}
-
-interface DataTableProps<TData> {
+interface DataTableProps<TData extends RowData> {
   // TanStack column value types differ per column, so the array is typed loosely.
-  columns: ColumnDef<TData, any>[]
+  columns: DataColumnDef<TData>[]
   data: TData[] | undefined
   isLoading?: boolean
   getRowId: (row: TData) => string
@@ -57,15 +47,17 @@ interface DataTableProps<TData> {
   facets?: DataTableFacet[]
   initialFilters?: ColumnFiltersState
   initialSorting?: SortingState
-  initialVisibility?: VisibilityState
+  initialVisibility?: ColumnVisibilityState
   toolbar?: ReactNode
   onRowClick?: (row: TData) => void
   selectedRowId?: string | null
   emptyMessage?: string
   pageSizes?: number[]
+  filters?: ColumnFiltersState
+  onFiltersChange?: (filters: ColumnFiltersState) => void
 }
 
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
   columns,
   data,
   isLoading,
@@ -83,36 +75,40 @@ export function DataTable<TData>({
   selectedRowId,
   emptyMessage = "Không có dữ liệu phù hợp.",
   pageSizes = [10, 20, 50, 100],
+  filters,
+  onFiltersChange,
 }: DataTableProps<TData>) {
+  const { enabled } = useHotkeys()
   const [sorting, setSorting] = useState<SortingState>(initialSorting)
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(initialFilters)
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(initialVisibility)
+  const [localFilters, setLocalFilters] = useState<ColumnFiltersState>(initialFilters)
+  const columnFilters = filters ?? localFilters
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>(initialVisibility)
   const [localSearch, setLocalSearch] = useState("")
   const globalFilter = search ?? localSearch
   const setGlobalFilter = onSearchChange ?? setLocalSearch
 
-  const table = useReactTable({
-    data: data ?? [],
+  const table = useTable({
+    features: dataTableFeatures,
+    data: data ?? EMPTY_TABLE_DATA,
     columns,
     getRowId: (row) => getRowId(row),
     state: { sorting, columnFilters, columnVisibility, globalFilter },
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: (updater) => {
+      const next = functionalUpdate(updater, columnFilters)
+      if (onFiltersChange) onFiltersChange(next)
+      else setLocalFilters(next)
+    },
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: (value: string) => setGlobalFilter(value ?? ""),
     globalFilterFn: (row, _columnId, value: string) => matchesSearch(row.original, value),
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
     autoResetPageIndex: true,
-    initialState: { pagination: { pageSize: pageSizes[1] ?? pageSizes[0] } },
+    initialState: { pagination: { pageIndex: 0, pageSize: pageSizes[1] ?? pageSizes[0] } },
   })
 
   const filtered = table.getFilteredRowModel().rows.length
   const isFiltered = columnFilters.length > 0 || globalFilter.length > 0
-  const { pageIndex, pageSize } = table.getState().pagination
+  const { pageIndex, pageSize } = table.state.pagination
   const visibleColumns = table.getVisibleLeafColumns().length
 
   return (
@@ -159,7 +155,7 @@ export function DataTable<TData>({
         )}
         <div className="ml-auto flex items-center gap-2">
           {toolbar}
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8">
                 <Settings2 /> Cột
@@ -192,7 +188,17 @@ export function DataTable<TData>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className={header.column.columnDef.meta?.className}>
+                  <TableHead
+                    key={header.id}
+                    className={header.column.columnDef.meta?.className}
+                    aria-sort={
+                      header.column.getIsSorted() === "asc"
+                        ? "ascending"
+                        : header.column.getIsSorted() === "desc"
+                          ? "descending"
+                          : undefined
+                    }
+                  >
                     {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                   </TableHead>
                 ))}
@@ -216,14 +222,22 @@ export function DataTable<TData>({
                   key={row.id}
                   data-state={row.id === selectedRowId ? "selected" : undefined}
                   className={cn(onRowClick && "cursor-pointer")}
-                  onClick={() => onRowClick?.(row.original)}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest("a,button,input,select,textarea,[role=button]")) return
+                    onRowClick?.(row.original)
+                  }}
                   onKeyDown={(event) => {
-                    if (onRowClick && (event.key === "Enter" || event.key === " ")) {
+                    if (
+                      enabled &&
+                      event.target === event.currentTarget &&
+                      onRowClick &&
+                      (event.key === "Enter" || event.key === " ")
+                    ) {
                       event.preventDefault()
                       onRowClick(row.original)
                     }
                   }}
-                  tabIndex={onRowClick ? 0 : undefined}
+                  tabIndex={onRowClick && enabled ? 0 : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>

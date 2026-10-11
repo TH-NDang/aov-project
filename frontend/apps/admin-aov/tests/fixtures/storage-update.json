@@ -1,0 +1,5 @@
+[
+  { "external_id": "001", "title": "Airi updated", "extra": "New column" },
+  { "external_id": "002", "title": "Aleister skipped", "extra": "Skip this" },
+  { "external_id": "003", "title": "New hero", "extra": "Added" }
+]

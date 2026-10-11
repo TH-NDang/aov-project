@@ -1,4 +1,5 @@
-import type { Column } from "@tanstack/react-table"
+import type { RowData } from "@tanstack/react-table"
+import type { DataColumn as Column } from "./table-features"
 import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
@@ -10,18 +11,22 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { cn } from "@aov/ui/lib/utils"
 
-interface ColumnHeaderProps<TData, TValue> {
+interface ColumnHeaderProps<TData extends RowData, TValue> {
   column: Column<TData, TValue>
   title: string
   className?: string
 }
 
-export function ColumnHeader<TData, TValue>({ column, title, className }: ColumnHeaderProps<TData, TValue>) {
+export function ColumnHeader<TData extends RowData, TValue>({
+  column,
+  title,
+  className,
+}: ColumnHeaderProps<TData, TValue>) {
   if (!column.getCanSort()) return <div className={className}>{title}</div>
   const sorted = column.getIsSorted()
   return (
     <div className={cn("flex items-center", className)}>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="-ml-3 h-8 data-[state=open]:bg-accent">
             <span>{title}</span>

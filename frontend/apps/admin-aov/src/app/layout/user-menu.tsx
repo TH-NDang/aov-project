@@ -37,7 +37,7 @@ export function UserMenu() {
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <DropdownMenu>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
