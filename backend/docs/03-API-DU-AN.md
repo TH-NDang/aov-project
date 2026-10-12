@@ -43,6 +43,61 @@ Request chặt chẽ:
 
 ---
 
+### 1.2 Tài khoản quản trị hiện tại
+
+`GET /api/wiki/v1/admin/me` yêu cầu JWT hợp lệ và capability `catalog:read`.
+Không nhận query parameter. Trả `Cache-Control: no-store` cùng đối tượng:
+
+```json
+{
+  "issuer": "http://localhost:8081/realms/wikiaov",
+  "subject": "subject-from-token",
+  "type": "HUMAN",
+  "displayName": "Biên tập viên",
+  "capabilities": ["catalog:read", "media:write"]
+}
+```
+
+Danh tính và quyền lấy từ JWT đã được backend xác minh; `displayName` có thể null.
+Không trả access token hoặc refresh token. Token thiếu/không hợp lệ trả `401 UNAUTHENTICATED`;
+thiếu quyền truy cập quản trị trả `403 FORBIDDEN`. Frontend dùng endpoint này để xác nhận
+phiên đăng nhập sau luồng mật khẩu hoặc Google của Keycloak qua backend (ADR-007).
+
+### 1.3 Đăng nhập admin qua Keycloak gateway
+
+Các endpoint dưới đây dùng base path `/api/wiki/v1/auth`, luôn trả `Cache-Control: no-store`.
+Mọi POST yêu cầu `Origin` khớp `ADMIN_ORIGIN` và `X-AOV-Auth: 1`.
+Cookie không dùng để xác thực các API admin khác.
+
+| Method/path | Request | Response |
+|---|---|---|
+| GET /config | Không query | `{ "googleEnabled": false }` |
+| POST /login | `{ "username": "editor", "password": "..." }` | Access token + thời hạn; đặt refresh cookie |
+| POST /refresh | Refresh cookie, không body | Access token mới + thời hạn; cập nhật refresh cookie |
+| POST /logout | Refresh cookie, không body | 204 sau khi revoke thành công; xóa cookie |
+| POST /google | Không body | `{ "state": "...", "authorizationUrl": "..." }`; đặt cookie ràng buộc flow |
+| GET /google/callback | state, code hoặc error; tùy chọn error_description, session_state, iss | Kiểm tra state một lần và cookie, đổi code, đặt refresh cookie, 303 về trang hoàn tất cố định |
+
+Response token: `{ "accessToken": "...", "expiresIn": 300 }`. Không có refresh token trong JSON.
+Refresh cookie: `aov_admin_refresh`, HttpOnly, SameSite=Lax, Secure (trừ local), path `/api/wiki/`;
+Max-Age theo refresh_expires_in từ IdP. Không có Domain. Không nhận query ở các endpoint trừ callback.
+Tên đăng nhập tối đa 254 ký tự, mật khẩu tối đa 1024 ký tự; không lưu và không log các giá trị này.
+
+- 401 AUTH_INVALID_CREDENTIALS: sai thông tin hoặc tài khoản cần hoàn tất bước xác minh ở Keycloak.
+- 401 AUTH_SESSION_EXPIRED: thiếu, hết hạn hoặc không xác minh được phiên.
+- 403 FORBIDDEN: thiếu catalog:read; không cấp refresh cookie mới.
+- 403 AUTH_ORIGIN_REJECTED: Origin/header chống CSRF không hợp lệ.
+- 429 AUTH_RATE_LIMITED: vượt giới hạn thử; chờ một phút. Local limiter: 30 lần/IP/phút,
+  10 lần/tên tài khoản/phút, refresh 120 lần/IP/phút, tạo Google flow 10 lần/IP/phút.
+- 503 AUTH_PROVIDER_UNAVAILABLE: IdP hoặc cấu hình client chưa sẵn sàng.
+- 503 AUTH_GOOGLE_DISABLED: Google chưa bật.
+- 400 AUTH_INVALID_STATE: Google state thiếu ràng buộc, hết hạn hoặc dùng lại.
+
+Callback hợp lệ nhưng bị từ chối/hủy sẽ chuyển về trang hoàn tất với trạng thái lỗi cố định;
+không chuyển thông báo thô của IdP hoặc token vào URL. Popup báo hoàn tất cho opener bằng
+postMessage kiểm tra origin, source và state. Frontend sau đó gọi refresh để lấy access token.
+State/verifier được lưu tối đa 5 phút, chỉ dùng một lần, xem giới hạn nhiều replica trong ADR-007.
+
 ## 2. Common request context
 
 ### Region
