@@ -51,7 +51,7 @@ Bám theo thanh điều hướng của https://wiki.hoyolab.com/pc/hsr/home (gi�
 - Giữa: ô tìm kiếm cao 32px, tối đa 540px, bo 23px, căn giữa màn hình bằng lưới 3 cột (`minmax(max-content, 1fr) | minmax(0, 540px) | minmax(max-content, 1fr)`).
 - Phải: chọn ngôn ngữ (viền 25%, bo 8px), avatar (không có chuông thông báo) — đều 32px, cách nhau 24px.
 - Dropdown/popover dùng chung hằng `PANEL_SURFACE` trong `wiki-header.tsx` (nền tối trong mờ, bo 12px).
-- Responsive: ≤1100px ẩn chữ "Sắp ra mắt"; ≤860px ô tìm kiếm thành nút kính lúp; ≤640px ẩn nút ngôn ngữ. Đã kiểm tra ở 320, 375, 1024, 1440px — không tràn ngang, không lỗi console.
+- Responsive: ≤1100px ẩn chữ "Sắp ra mắt"; ≤860px ô tìm kiếm thành nút kính lúp; ≤640px chuyển sang bố cục điện thoại (xem dưới). Đã kiểm tra ở 320, 375, 1024, 1440px — không tràn ngang, không lỗi console.
 
 ### Cách viết style
 
@@ -65,3 +65,13 @@ Lưu ý khi sửa:
 
 - Bo góc ghi bằng px (`rounded-[8px]`…) vì `rounded-md/lg/xl` đi theo token `--radius` của shadcn (10px), không phải mặc định của Tailwind.
 - Không đưa `font-wordmark`/`font-[...]` cùng `font-black` qua `cn()`: tailwind-merge coi họ font và độ đậm là xung đột và xoá mất một class. Tương tự, `leading-*` đặt trước `text-[size]` trong `cn()` sẽ bị xoá.
+
+## Điện thoại (≤640px)
+
+Theo bản mobile của HoYoWiki (https://wiki.hoyolab.com/m/hsr/home):
+
+- Cao 52px, lề ngang 15px. Ban đầu trong suốt trên ảnh nền; trong 100px cuộn đầu tiên nền đặc `#202329` và viền dưới hiện dần (`useScrollProgressVar` ghi biến CSS `--header-solid` thẳng lên thẻ header, không render lại React).
+- Trái: nút tròn 28px viền trắng 25% về **Trang chủ** (`/`), như nút home của HoYoWiki mobile. Mũi tên chọn khu vực cạnh AOVWiKi bị ẩn trên điện thoại.
+- Giữa: logo 28px + chữ AOVWiKi, căn giữa tuyệt đối.
+- Phải: nút tròn tìm kiếm và nút "⋯", cách nhau 12px.
+- Nút "⋯" mở tấm trượt từ dưới lên (`MoreMenu`, Drawer của `@aov/ui`), theo thứ tự: danh sách khu vực (AOV WiKi / Stream — cùng dữ liệu `SECTIONS` và component `SectionItemBody` với dropdown desktop), khối tài khoản (sắp ra mắt), dòng Ngôn ngữ. Nút tài khoản và ngôn ngữ bị ẩn khỏi header trên điện thoại.
