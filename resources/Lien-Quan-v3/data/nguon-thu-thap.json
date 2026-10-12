@@ -72,10 +72,24 @@
     },
     {
       "id": "arcana",
-      "scope": "Ngọc",
-      "collectedOn": null,
-      "status": "not-collected",
-      "detailManifest": "data/ngoc.json"
+      "scope": "Ảnh và thuộc tính bảng ngọc",
+      "collectedOn": "2026-09-23",
+      "status": "collected",
+      "detailManifest": "data/ngoc.json",
+      "website": "https://lienquan.garena.vn/hoc-vien/bang-ngoc/",
+      "providedArchive": "bang-ngoc-lien-quan.zip",
+      "dateEvidence": "Ngày thu thập: 2026-09-23 trong README gói người dùng cung cấp."
+    },
+    {
+      "id": "summoner-spells",
+      "scope": "Ảnh phụ trợ; thông tin chi tiết từ Excel người dùng",
+      "website": "https://lienquan.garena.vn/hoc-vien/phu-tro/",
+      "collectedOn": "2026-10-10",
+      "userSourceFile": "phutrodulieu.xlsx",
+      "providedArchive": "phu-tro.zip",
+      "detailManifest": "data/phu-tro.json",
+      "descriptionPolicy": "Chỉ dùng Excel; không dùng mô tả web.",
+      "zipOriginalCollectionDate": null
     }
   ]
 }

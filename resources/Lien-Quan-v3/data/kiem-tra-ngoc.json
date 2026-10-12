@@ -1,0 +1,24 @@
+{
+  "items": 88,
+  "images": 88,
+  "uniqueSourceUrls": 78,
+  "collectedOn": "2026-09-23",
+  "missingAttributes": [
+    "Xanh I Giáp phép",
+    "Xanh I Máu/Hồi chiêu"
+  ],
+  "allImagesDecoded": true,
+  "providedImagesPreserved": 87,
+  "recoveredImages": 1,
+  "originalAttributesPreserved": true,
+  "recovery": {
+    "name": "Tím I Công vật lý/Tốc chạy",
+    "url": "https://lienquan.garena.vn/wp-content/uploads/2024/05/046a41a39133bd3d631cda394b1728d55dbbb2bfb085c1.png",
+    "receivedOn": "2026-10-07",
+    "archiveBytes": 13312,
+    "restoredBytes": 16853,
+    "originalPrefixMatches": true,
+    "sha256": "e2eaa3fd86bb0d2641757ce2ce37372fe3e26dc9b685228674f19188f2b3c547"
+  },
+  "archiveSha256": "dc6794651b91aa62ced48a536a0650dd76dcec1b5da8712cd90a144ebc241080"
+}

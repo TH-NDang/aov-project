@@ -8,7 +8,8 @@ Icon chiêu tải 22/09/2026; ngày tải icon danh sách tướng chưa ghi rõ
 Portrait: file Figma PfkEKzA4gz02VCRBRoHRWa do người dùng cung cấp; nhận gói 06/10/2026.
 Trang bị: https://lienquan.garena.vn/hoc-vien/trang-bi/; mốc thu 30/09/2026.
 Phù hiệu: https://lienquan.garena.vn/hoc-vien/phu-hieu/; mốc thu 03/10/2026.
-Ngọc: chưa thu thập. Ngày thu không được suy từ ngày sửa file hoặc URL upload.
+Ngọc: https://lienquan.garena.vn/hoc-vien/bang-ngoc/; mốc thu 23/09/2026 theo gói người dùng cung cấp.
+Ngày thu không được suy từ ngày sửa file hoặc URL upload.
 Chi tiết ngày, loại nguồn và link theo phần: note/NGUON-VA-NGAY-THU-THAP.txt.
 
 CẤU TRÚC VÀ CÁCH DÙNG
@@ -19,7 +20,7 @@ portrait/source giữ nguyên nguồn portrait, tên file theo mã tài nguyên;
 tên nguồn do người cung cấp đặt vẫn được ghi trong JSON.
 assets/skill: icon chiêu theo slot và biến thể.
 assets/phu-hieu: ảnh hệ và icon nhỏ. assets/trang-bi: icon trang bị.
-assets/ngoc: thư mục dành cho bộ ngọc, hiện chưa có ảnh.
+assets/ngoc: 88 ảnh bảng ngọc.
 preview/: các trang HTML xem ảnh, dữ liệu và giao diện biên tập.
 data/: JSON chính, nguồn và chỉ mục; note/: tài liệu TXT.
 program/: mã chạy, file mở công cụ, JS/CSS và cache JS được tạo từ JSON.
@@ -29,7 +30,7 @@ DỮ LIỆU CHÍNH
 heroes.json: tướng, trang phục, các dạng/biến thể chiêu, bậc và đường dẫn ảnh.
 trang-bi.json: trang bị, vị trí shop và công thức đã xác nhận.
 phu-hieu.json: hệ, cấp, mô tả và vị trí phù hiệu.
-ngoc.json: trạng thái chưa thu thập; không có nội dung tự tạo.
+ngoc.json: ảnh, màu, cấp, thuộc tính và link nguồn của 88 mục ngọc.
 danh-sach-tai-nguyen.json: mã tài nguyên, SHA256 và nơi sử dụng.
 portrait-sources.json / danh-sach-anh.json / nguon-thu-thap.json: xuất xứ và link.
 Tên hiển thị có thể giữ dấu; tên file quản lý dùng chữ thường, không dấu, dấu gạch nối.
@@ -53,6 +54,7 @@ HUONG-DAN-HERO-SKIN-SKILL.txt: ý nghĩa các loại ảnh, chiêu và liên k�
 HUONG-DAN-PORTRAIT.txt: chọn/chuyển ảnh, tên, nguồn và lưu/khôi phục.
 HUONG-DAN-TRANG-BI.txt và HUONG-DAN-BIEN-TAP-TRANG-BI.txt: schema và thao tác.
 HUONG-DAN-PHU-HIEU.txt: nguồn icon, vị trí và cách xem.
+HUONG-DAN-NGOC.txt: nguồn/ngày, thuộc tính, ảnh và thông tin phục hồi ảnh.
 
 ĐƯỜNG DẪN VÀ CÁCH MANG ĐI
 Các đường dẫn assets/, data/, preview/, program/, temp/ trong tài liệu tính từ
@@ -60,3 +62,10 @@ thư mục chứa các phần này, không tính từ thư mục note và không
 Giữ các phần đi cùng nhau khi chuyển nơi lưu. Không cần giữ thư mục dự án ban đầu.
 Nếu đặt tài nguyên ở vị trí khác, cập nhật đường dẫn trong JSON và phần đọc ảnh của
 trang xem/chương trình; các link website nguồn vẫn giữ nguyên để truy xuất xuất xứ.
+
+PHỤ TRỢ
+Ảnh: https://lienquan.garena.vn/hoc-vien/phu-tro/; lấy ảnh web 10/10/2026.
+Mô tả và chi tiết: phutrodulieu.xlsx do người dùng cung cấp; không dùng mô tả website.
+ZIP dự phòng: phu-tro.zip; ngày thu gốc của Excel/ZIP chưa ghi rõ.
+Ảnh ở assets/phu-tro; JSON ở data/phu-tro.json; xem preview/Xem-phu-tro.html.
+Hướng dẫn: note/HUONG-DAN-PHU-TRO.txt.

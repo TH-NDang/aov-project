@@ -75370,6 +75370,1351 @@
           "enchantmentId": "luyen-kim"
         }
       ]
+    },
+    {
+      "id": "asset-ngoc-fbf7a0ece21b5b9fa959",
+      "file": "assets/ngoc/xanh-2-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 15557,
+      "sha256": "981b06a5c64ed3461abeaf7aa6587b6218fd0895d9074aa4ed6eb9b0f9b6e433",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/985ceb215d7cfd963391472001d2e1735dbab2663c1391.png"
+    },
+    {
+      "id": "asset-ngoc-67c10c99f47b519a8574",
+      "file": "assets/ngoc/xanh-1-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16037,
+      "sha256": "9a49a7f171d4b3e6807dab566999c8305d085ad92f55337ab145c9572c1fbcce",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/386c2bec6d867442d6b871e86c6c31bd5dbbaed5b55d91.png"
+    },
+    {
+      "id": "asset-ngoc-5778bb1ca2295e25a664",
+      "file": "assets/ngoc/xanh-2-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16067,
+      "sha256": "7fe4a8b51c6d86159db4fedb5ea1c526380b7a22ec8395c4a3cbfcc7cb88cfc3",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/d5f5c6849fef95e195bd8a3873cf24d45dbab3191e9f11.png"
+    },
+    {
+      "id": "asset-ngoc-7f78c1e71017562b9ff6",
+      "file": "assets/ngoc/xanh-3-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 15515,
+      "sha256": "2d7bd8bad326b180512623c4e8fb432b23a6afbcf8c6ee2cb50f225d8fec7757",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/cb214db34a5200d9a9babc902dbdb0e75dbaa86803e9a1.png"
+    },
+    {
+      "id": "asset-ngoc-69a5ced52d3c5616a994",
+      "file": "assets/ngoc/xanh-3-giam-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16020,
+      "sha256": "be7c3fe00ae454e1d1e10cf540733de1f72f12666bae183bf8b8d2e5e93477d6",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-giam-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/5521795176fd60028f7dd656d1f21f765dbaa958685601.png"
+    },
+    {
+      "id": "asset-ngoc-f97cd6e389bb5e779e65",
+      "file": "assets/ngoc/xanh-1-giap.png",
+      "kind": "arcana",
+      "bytes": 15174,
+      "sha256": "5829f492566ec3e61186295630d79b20d805b76cdc75a2b582faab314fa0da59",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/8af725f3a91ccb58ec7776ffb26cc5135dbbae1697dd91.png"
+    },
+    {
+      "id": "asset-ngoc-12c150f0fcc452a3b9bc",
+      "file": "assets/ngoc/xanh-2-giap.png",
+      "kind": "arcana",
+      "bytes": 15195,
+      "sha256": "7dec9a08934bd72fa5ec103823b0c959c2e1d081e85964f986bb1f96454aa0fc",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/9f5f238581db9d3fd895e5cb165d6e705dbab1fbbb7a31.png"
+    },
+    {
+      "id": "asset-ngoc-80b9c5eb37cc5e91a0ad",
+      "file": "assets/ngoc/xanh-3-giap.png",
+      "kind": "arcana",
+      "bytes": 15134,
+      "sha256": "318f669509d8c93eb9b3b289b8d051d350e285693368d5f06d741091c302bf3a",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/6b20648969855f29d43768fcc0c80e6b5dbaa81ec0b251.png"
+    },
+    {
+      "id": "asset-ngoc-8fa497c0203d52468666",
+      "file": "assets/ngoc/xanh-1-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 15523,
+      "sha256": "9de1658765da06aea18ef3d5bba35ce592b9c99f97b691dcfdce90ea60c66aa9",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/fe9e851f7cc0cb1d5096b930564619bc5dbbae57c8f841.png"
+    },
+    {
+      "id": "asset-ngoc-7078e59c0dd25d7a8085",
+      "file": "assets/ngoc/xanh-1-mau-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16055,
+      "sha256": "7ffdfe23df7442536fc67e64ef99f253f0a02b48327ad8cbd7795415b6e1b6f6",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-mau-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/aa69137cc61718eb9c4573514c6c75005dbbae423f5851.png"
+    },
+    {
+      "id": "asset-ngoc-cb415649a1625a3aaf62",
+      "file": "assets/ngoc/xanh-1-giap-giap-phep-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16624,
+      "sha256": "a42ea0c6af10f56a9d9f63a33005a7464c0cfc4637edd16c97a7eaee594338be",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-giap-giap-phep-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/6988b8a5ba9df6f88775c84dfb3a3f855dbbaf0abb9971.png"
+    },
+    {
+      "id": "asset-ngoc-b3b641bedc9c519284b4",
+      "file": "assets/ngoc/xanh-2-giap-giap-phep-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16699,
+      "sha256": "64594b11fcc2b94a5fdf105044c9a779c58207c7cd19fc2ecaa49da6578ff65f",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-giap-giap-phep-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/d0a527ff938b21e040bec205c62c44615dbab35b1f4a71.png"
+    },
+    {
+      "id": "asset-ngoc-bd4f9514a754580580ad",
+      "file": "assets/ngoc/xanh-3-giap-giap-phep-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16593,
+      "sha256": "b525ec81706bf3a5e884ca424d5b0557144277c1d90307d9b49aadd1ea968ccf",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-giap-giap-phep-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/b4428615b8a98fc4fdefbe2f0f53a5015dbaa976c21481.png"
+    },
+    {
+      "id": "asset-ngoc-ce01e0b9977e5fdd8e59",
+      "file": "assets/ngoc/xanh-3-toc-danh-xuyen-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 16141,
+      "sha256": "d9e0245973701e2bf082a92582448da26a9caca7abf72dc24b977dbd0855b4f3",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-toc-danh-xuyen-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/1b320435df09ec65266cd98d0baf7c9b5dbaa94271e901.png"
+    },
+    {
+      "id": "asset-ngoc-fb90f7ebc2bc5043826a",
+      "file": "assets/ngoc/xanh-2-toc-danh-xuyen-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 16202,
+      "sha256": "a599c4fd2df3d222fe3b7d69d5510496a0cc380bacffa46f7f1add8a0f3ac2f6",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-toc-danh-xuyen-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/64b65a13bc699f298500694f1324acb65dbab2f68adb21.png"
+    },
+    {
+      "id": "asset-ngoc-c058e5fb1e2d59bb87d7",
+      "file": "assets/ngoc/xanh-1-cong-vat-ly-xuyen-giap.png",
+      "kind": "arcana",
+      "bytes": 14202,
+      "sha256": "383a509098693cca66b5b6b282929c7f704164d0db6c63d7ef17eebb3ddb03cf",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-cong-vat-ly-xuyen-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/03694dbaebf12d55cec4948c906a478e5dbbae939a8191.png"
+    },
+    {
+      "id": "asset-ngoc-94114bd7eb9850618cc7",
+      "file": "assets/ngoc/xanh-3-cong-vat-ly-xuyen-giap.png",
+      "kind": "arcana",
+      "bytes": 14123,
+      "sha256": "3ba7075e3db76770153610ead0da7cc0111cc936196fc09168bb765ed49ca983",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-cong-vat-ly-xuyen-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/6da9d4a9710dd6767b2fb01946b034aa5dbaa92a495731.png"
+    },
+    {
+      "id": "asset-ngoc-c632f89137535404a2c9",
+      "file": "assets/ngoc/xanh-1-hut-phep-giap.png",
+      "kind": "arcana",
+      "bytes": 14766,
+      "sha256": "c243589e52b2aea6242b61c48b63d841ff5b86880712511a97dc8839e47191fd",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-hut-phep-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/e9e258be25648bfd647662edc46e3d465dbbaeeba6be91.png"
+    },
+    {
+      "id": "asset-ngoc-5620d8d0539a5b458806",
+      "file": "assets/ngoc/xanh-2-hut-phep-giap.png",
+      "kind": "arcana",
+      "bytes": 14788,
+      "sha256": "aac66872e82bc3ccdf31d57350ad31231d2f7d4a82e88a8fd8d79674a9a16099",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-hut-phep-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/82fcfb5751450e0b606d3e61b67ab0af5dbab33969a2c1.png"
+    },
+    {
+      "id": "asset-ngoc-2b50a1bd4fd55543a475",
+      "file": "assets/ngoc/xanh-2-cong-vat-ly-xuyen-giap.png",
+      "kind": "arcana",
+      "bytes": 14212,
+      "sha256": "0f2b77720e0dc06f0ed924395d24bbd5ae9b26c3c7b8cb3a354c07e435617f00",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-cong-vat-ly-xuyen-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/66cfc42d8ea34d60100e4501efcfa8a05dbab2c3b30381.png"
+    },
+    {
+      "id": "asset-ngoc-4af9564bec095781935c",
+      "file": "assets/ngoc/xanh-3-hut-mau-phep-giap.png",
+      "kind": "arcana",
+      "bytes": 14763,
+      "sha256": "298ed6cc262a22ce34886c1f68a31e5d82df51a1d4b6d46483637f05d35c0f77",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-hut-mau-phep-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/c3b7f78f7b25c68bd99b3ed153d5f0975dbaa966e12861.png"
+    },
+    {
+      "id": "asset-ngoc-af2c35f92bcc5c25946b",
+      "file": "assets/ngoc/xanh-1-cong-phep-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 17180,
+      "sha256": "74b4696be84fbd741991f839b0d506cde3f69498c8a939e71bef94814bd05457",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-cong-phep-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/7b756949e4fb32ca76ac11c2da5f51645dbbae746d6a21.png"
+    },
+    {
+      "id": "asset-ngoc-4ff4842cd1e35f59abc8",
+      "file": "assets/ngoc/xanh-2-cong-phep-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 17211,
+      "sha256": "017aa0945928e6b9df4e33ef66879076bbfef1b39228bf7ed180ba91a6c439b9",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-cong-phep-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/dc1170fed300e7da9fc97d9d7dc73d2f5dbab293008ac1.png"
+    },
+    {
+      "id": "asset-ngoc-e64ddefb7f5a5a7f875f",
+      "file": "assets/ngoc/xanh-3-cong-phep-giam-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 17129,
+      "sha256": "d9b3be8cf6b4569d428e01284554f8dc8442ccb5ad7227d86cbfcbcb86d1d1a8",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-cong-phep-giam-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/3a8c7879426abc487d4bb8f96972617f5dbaa88b65a2f1.png"
+    },
+    {
+      "id": "asset-ngoc-a74e9d96bbc251b38b48",
+      "file": "assets/ngoc/xanh-1-toc-danh-xuyen-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 16149,
+      "sha256": "58b11322970f74dde2d69136c8205e4c6183300fc2b1fb1f719525c70a63cfc3",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-toc-danh-xuyen-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/67ada1a2e2475b7b2a408868fa400a785dbbaebaeef9a1.png"
+    },
+    {
+      "id": "asset-ngoc-c60c42c2d46d5b228289",
+      "file": "assets/ngoc/xanh-2-mau-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16103,
+      "sha256": "b7059dd47506800c69ee0ac9234a8a27ddcab20c126e61a2202a6e12ca4dd1fc",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-mau-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/b104d5f79f9bd9117d2d088de8cee3025dbab24aa33c61.png"
+    },
+    {
+      "id": "asset-ngoc-45bf878ed5ae5cde9d9c",
+      "file": "assets/ngoc/xanh-3-mau-toi-da-giam-hoi-chieu.png",
+      "kind": "arcana",
+      "bytes": 16058,
+      "sha256": "e50b3984802bdfba39430db0bcf5f61e17f38c56fd5e59860cf282bcc07fc9c2",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-mau-toi-da-giam-hoi-chieu"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/9af4a3d03987d8645650b777c8454afe5dbaa851659231.png"
+    },
+    {
+      "id": "asset-ngoc-50e6ba4bcb765ddba87c",
+      "file": "assets/ngoc/xanh-1-giap-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 14979,
+      "sha256": "f8cc8f50dff5a77d6f0bd49c0720c0c6b54c34de420b6d1121b0727331cedf34",
+      "owners": [
+        {
+          "arcanaId": "xanh-1-giap-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/ad5dd08882f61cfd42d5295a3029106d5dbbae2c07f2d1.png"
+    },
+    {
+      "id": "asset-ngoc-dab17775c77b50d4b2c9",
+      "file": "assets/ngoc/xanh-2-giap-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 15003,
+      "sha256": "93414e71ead6c7dc0b5ad7938cea56d76682bbae9e1a4646a43b0a876fbbd9bd",
+      "owners": [
+        {
+          "arcanaId": "xanh-2-giap-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/c38f2cdb006a26d996dd733b2195b9295dbab22660ec81.png"
+    },
+    {
+      "id": "asset-ngoc-224d3b16bac75bba8eec",
+      "file": "assets/ngoc/xanh-3-giap-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 14970,
+      "sha256": "e5b02a1def2be9e0262b37448fad90d2c42f4a8ebf16c467941cc0c4fc15218a",
+      "owners": [
+        {
+          "arcanaId": "xanh-3-giap-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/7690a4b67160f80804b96d272e62f1fc5dbaa83d003c51.png"
+    },
+    {
+      "id": "asset-ngoc-bb685360a7a95cc19306",
+      "file": "assets/ngoc/tim-3-toc-danh-toc-chay.png",
+      "kind": "arcana",
+      "bytes": 16639,
+      "sha256": "2942db5f3ecb1737384a43dbeca23cef6a7263258ad695f981e95e8c21abf142",
+      "owners": [
+        {
+          "arcanaId": "tim-3-toc-danh-toc-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/40af8a62234d3cd119663d62b21816e15dbaa5eda06491.png"
+    },
+    {
+      "id": "asset-ngoc-b69243ee1c36592889a1",
+      "file": "assets/ngoc/tim-1-toc-danh-chay.png",
+      "kind": "arcana",
+      "bytes": 16732,
+      "sha256": "38fe46594e7af2d28f4cea7167e8142df0a79f77ec1c1ee537981b981b621a27",
+      "owners": [
+        {
+          "arcanaId": "tim-1-toc-danh-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/4b67bf139befd480ab2f75c958e4ce135dbbb2da4c88c1.png"
+    },
+    {
+      "id": "asset-ngoc-8d59d86c63195990a91d",
+      "file": "assets/ngoc/tim-3-mau-toi-da-hoi-mau.png",
+      "kind": "arcana",
+      "bytes": 16377,
+      "sha256": "aa4b2de2827bc3735c14e5bc3ab249969ecc62d2ba77470e31e58739db41b623",
+      "owners": [
+        {
+          "arcanaId": "tim-3-mau-toi-da-hoi-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/65754d3fbfc53c9c5ab666fa6e30083f5dbaa5a060d411.png"
+    },
+    {
+      "id": "asset-ngoc-7b98032a0d3f5961bf13",
+      "file": "assets/ngoc/tim-3-mau-hoi-mau-toc-chay.png",
+      "kind": "arcana",
+      "bytes": 16212,
+      "sha256": "b1a263f95ca099ec7165bcfe3d64d1befa4d88e1484b71860aef43dec3c5f337",
+      "owners": [
+        {
+          "arcanaId": "tim-3-mau-hoi-mau-toc-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/a84a0c2a715680f3d65d26dd6a5ecee25dbaa5d4e05211.png"
+    },
+    {
+      "id": "asset-ngoc-1cfceba833435f9083e5",
+      "file": "assets/ngoc/tim-2-mau-hoi-mau.png",
+      "kind": "arcana",
+      "bytes": 16512,
+      "sha256": "0ce1d83385db945e9a4734995b2bd7781dc26f404601deb7faafe9159d6cc94f",
+      "owners": [
+        {
+          "arcanaId": "tim-2-mau-hoi-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/41a8342712bef214a318df110f7b51cb5dbab143a8bd71.png"
+    },
+    {
+      "id": "asset-ngoc-0bc447ed7fc85f56964f",
+      "file": "assets/ngoc/tim-1-ty-le-chi-mang-mau.png",
+      "kind": "arcana",
+      "bytes": 16468,
+      "sha256": "7d0de357b8a8060760a86f638575a29f82f039d711b17969ccff48dadd44a082",
+      "owners": [
+        {
+          "arcanaId": "tim-1-ty-le-chi-mang-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/de9819b9fe743449f3c02225760ef4a45dbbb1ef1a5bb1.png"
+    },
+    {
+      "id": "asset-ngoc-ba0db4a796225dbca40b",
+      "file": "assets/ngoc/tim-1-mau-hoi-mau.png",
+      "kind": "arcana",
+      "bytes": 16532,
+      "sha256": "cd1b6c75c0360e379192abd7b895162d9c1eb2d540f2ea9620a3e80a9057e68f",
+      "owners": [
+        {
+          "arcanaId": "tim-1-mau-hoi-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/648c9f9a32006de20e5ef7876d7deb4e5dbbb213e96861.png"
+    },
+    {
+      "id": "asset-ngoc-d1629d166cf6588ca6fe",
+      "file": "assets/ngoc/tim-1-mau-hoi-mau-toc-chay.png",
+      "kind": "arcana",
+      "bytes": 16317,
+      "sha256": "5596e095f9db59ef1b342724bc4f4b3606de8e72b1f4ef889f032a34b6bc6807",
+      "owners": [
+        {
+          "arcanaId": "tim-1-mau-hoi-mau-toc-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/4b0b5c6d0517d3fed9ed088a541279605dbbb2a1b4b311.png"
+    },
+    {
+      "id": "asset-ngoc-52252fb71b5659f6af14",
+      "file": "assets/ngoc/tim-3-hut-mau-thu-phep.png",
+      "kind": "arcana",
+      "bytes": 16715,
+      "sha256": "5ac60ecee24fb5e57590659556e82b7e52711349a54b4c67bdcbb67a7ece57db",
+      "owners": [
+        {
+          "arcanaId": "tim-3-hut-mau-thu-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/89928ff0fbb871f595dfa1e33968f19b5dbaa5b7292241.png"
+    },
+    {
+      "id": "asset-ngoc-1c7fe4ed96e155958f38",
+      "file": "assets/ngoc/tim-2-hut-mau-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 16781,
+      "sha256": "af5ae3ce27c594b71064bd96a82d13e89cceb98982a2b5e2ac78e9c0b92f105a",
+      "owners": [
+        {
+          "arcanaId": "tim-2-hut-mau-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/712965230d22291e5bb6994954ae58895dbab125b8e781.png"
+    },
+    {
+      "id": "asset-ngoc-2d2d07398145514d9f7e",
+      "file": "assets/ngoc/tim-1-hut-mau-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 16768,
+      "sha256": "de11c92fb74d205c1450413000353c04806ec3bfefade4203dd01f57374287e3",
+      "owners": [
+        {
+          "arcanaId": "tim-1-hut-mau-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/5877ae05836c97b1d0e0527dd54bf8b45dbbb25da73c01.png"
+    },
+    {
+      "id": "asset-ngoc-07afeeee98d35fc2ba64",
+      "file": "assets/ngoc/tim-3-cong-vat-ly-toc-chay.png",
+      "kind": "arcana",
+      "bytes": 16793,
+      "sha256": "c2aff46eb070be564cdfb53499c449f8ae5f7d9f8b3bba95f415420eed5f0402",
+      "owners": [
+        {
+          "arcanaId": "tim-3-cong-vat-ly-toc-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/98ea3d0add4cebc2c2da81d14bec9b985dbaa5e3239ff1.png"
+    },
+    {
+      "id": "asset-ngoc-3a0fd301b9bb5cadbb36",
+      "file": "assets/ngoc/tim-1-cong-vat-ly-toc-chay.png",
+      "kind": "arcana",
+      "bytes": 16853,
+      "sha256": "e2eaa3fd86bb0d2641757ce2ce37372fe3e26dc9b685228674f19188f2b3c547",
+      "owners": [
+        {
+          "arcanaId": "tim-1-cong-vat-ly-toc-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/046a41a39133bd3d631cda394b1728d55dbbb2bfb085c1.png"
+    },
+    {
+      "id": "asset-ngoc-5e43b688a7a15e6bbf53",
+      "file": "assets/ngoc/tim-3-cong-phep-hut-mau-phep.png",
+      "kind": "arcana",
+      "bytes": 16715,
+      "sha256": "5ac60ecee24fb5e57590659556e82b7e52711349a54b4c67bdcbb67a7ece57db",
+      "owners": [
+        {
+          "arcanaId": "tim-3-cong-phep-hut-mau-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/28657b0ffd357a22c00bd9e3c2fb94dc5dbaa5c7170071.png"
+    },
+    {
+      "id": "asset-ngoc-fd8edb855d8a50658c57",
+      "file": "assets/ngoc/tim-2-cong-hut-mau-phep.png",
+      "kind": "arcana",
+      "bytes": 16535,
+      "sha256": "62c55ed1a80adcb3b83eb647d6682ea33e72918e6f9bc64cc639130b6771943d",
+      "owners": [
+        {
+          "arcanaId": "tim-2-cong-hut-mau-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/52e8d59fb42030dc07cbbbe5bf50e33d5dbab0f86ddc21.png"
+    },
+    {
+      "id": "asset-ngoc-f318db4b4c845f898401",
+      "file": "assets/ngoc/tim-1-cong-hut-mau-phep.png",
+      "kind": "arcana",
+      "bytes": 16496,
+      "sha256": "da9fcd82c958be038ca0e98455b36da229946c50185d011f1f90b34bec4557f7",
+      "owners": [
+        {
+          "arcanaId": "tim-1-cong-hut-mau-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/99be6d28d7e977d716b0a8317995d3225dbbb27c8b28c1.png"
+    },
+    {
+      "id": "asset-ngoc-445d07032ce7589cabc5",
+      "file": "assets/ngoc/tim-1-mau.png",
+      "kind": "arcana",
+      "bytes": 16654,
+      "sha256": "b0e5a0d781803f10cfa20a9a5bc0bb240480feb9fe54b29fdb199af6b4b56fc8",
+      "owners": [
+        {
+          "arcanaId": "tim-1-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/7d4fa67bdcef09f4d9402ad1b6db32845dbbb1906849f1.png"
+    },
+    {
+      "id": "asset-ngoc-92009455004a57e3923e",
+      "file": "assets/ngoc/tim-2-hut-mau-phep.png",
+      "kind": "arcana",
+      "bytes": 16781,
+      "sha256": "e3e3b1b295448c7bdc660c424ab8b65eaae08c70c6e394cd3ef1dd4fc0adaf52",
+      "owners": [
+        {
+          "arcanaId": "tim-2-hut-mau-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/f1468c5ddc95907313c7530461bb255d5dbaafb73ac7a1.png"
+    },
+    {
+      "id": "asset-ngoc-737fe27cae585aa69abd",
+      "file": "assets/ngoc/tim-1-hut-mau-phep.png",
+      "kind": "arcana",
+      "bytes": 16751,
+      "sha256": "c6fa9da353d5a56609099d7f4e593bfba30b64ccac85474118b97bbebd0f81bb",
+      "owners": [
+        {
+          "arcanaId": "tim-1-hut-mau-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/568a997b17a153ad8c0090b525a6e54c5dbbb1b1e60de1.png"
+    },
+    {
+      "id": "asset-ngoc-cce9640b34325ead84a9",
+      "file": "assets/ngoc/tim-1-hut-mau.png",
+      "kind": "arcana",
+      "bytes": 17008,
+      "sha256": "c388ff4bdf671a86d44eee2708e7f246cbc51dd5d74185fb7bd4e7688437d3b9",
+      "owners": [
+        {
+          "arcanaId": "tim-1-hut-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/a36965ac013c92a0f1c4e8a766c57fa15dbbb1cbe4e7a1.png"
+    },
+    {
+      "id": "asset-ngoc-cc0182d6735d5cb9b27e",
+      "file": "assets/ngoc/tim-3-hut-mau-phep.png",
+      "kind": "arcana",
+      "bytes": 16700,
+      "sha256": "26d89ddf2bcb8a3b9c378841657c1d59bb8ada0cb8dbaa1f8193211e5efec996",
+      "owners": [
+        {
+          "arcanaId": "tim-3-hut-mau-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/ecf15391090639ed2609ead3646dd1575dbaa5283e1951.png"
+    },
+    {
+      "id": "asset-ngoc-cc7cd437c95c5c89b557",
+      "file": "assets/ngoc/tim-3-mau-toi-da.png",
+      "kind": "arcana",
+      "bytes": 16530,
+      "sha256": "731d21e9efb4f981eb771301ead9bcf41b1876a66b0d5ead4e65532c360c0900",
+      "owners": [
+        {
+          "arcanaId": "tim-3-mau-toi-da"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/b4bbd1f3e34fcb420dedbe1c84e2f8bb5dbaa5057a4121.png"
+    },
+    {
+      "id": "asset-ngoc-bae121ae29815f85b537",
+      "file": "assets/ngoc/tim-2-toc-danh-chay.png",
+      "kind": "arcana",
+      "bytes": 16747,
+      "sha256": "33a61a235735ba7c817e7825c3663d98185045b65e8476edc8ba95a9886cd34c",
+      "owners": [
+        {
+          "arcanaId": "tim-2-toc-danh-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/82f4699b7d0bc250b4dedecb866679945dbaafeb210971.png"
+    },
+    {
+      "id": "asset-ngoc-971029322b6551ddb6df",
+      "file": "assets/ngoc/tim-2-mau-hoi-mau-toc-chay.png",
+      "kind": "arcana",
+      "bytes": 16267,
+      "sha256": "ba1c9d4abc3fd63fffa891e19782dbece5a73a983173755e2e5e3f372d154ace",
+      "owners": [
+        {
+          "arcanaId": "tim-2-mau-hoi-mau-toc-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/962b3b3d93c93b68224b3042ae32f4e25dbaaec2db7d31.png"
+    },
+    {
+      "id": "asset-ngoc-24f8463d55365d568c7b",
+      "file": "assets/ngoc/tim-2-hut-mau.png",
+      "kind": "arcana",
+      "bytes": 17024,
+      "sha256": "29e09f81045fb9cbcb8b2f65ced138a4686914aeed224a369f69456f7ad7fb60",
+      "owners": [
+        {
+          "arcanaId": "tim-2-hut-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bedc0c7772d8eead397c00ed65a3f4fb5dbaaf8b877c21.png"
+    },
+    {
+      "id": "asset-ngoc-4a7286f124df53cfa85e",
+      "file": "assets/ngoc/tim-2-ty-le-chi-mang-mau.png",
+      "kind": "arcana",
+      "bytes": 16456,
+      "sha256": "82c5c92dd7ab139fffec63dfeb8885b15d8e9eccc2a0e2379c4088609fe249d9",
+      "owners": [
+        {
+          "arcanaId": "tim-2-ty-le-chi-mang-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/0a0569f08b3722a7948c2dc807a892c85dbaaf5e421c91.png"
+    },
+    {
+      "id": "asset-ngoc-71a91d85a9c05b408a52",
+      "file": "assets/ngoc/tim-2-cong-vat-ly-toc-chay.png",
+      "kind": "arcana",
+      "bytes": 16910,
+      "sha256": "e44951e0e254ea3ab642207c9bb80723410fde6029ea6603ae0e08f70884b267",
+      "owners": [
+        {
+          "arcanaId": "tim-2-cong-vat-ly-toc-chay"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/8eb81b52a93c271799c74c38844d8dbd5dbaae80d3ec11.png"
+    },
+    {
+      "id": "asset-ngoc-27ecaf5401ad5dc19d99",
+      "file": "assets/ngoc/tim-2-mau-toi-da.png",
+      "kind": "arcana",
+      "bytes": 16628,
+      "sha256": "7158c21d03c21e48cd577b55a9461d563883559801d6af28614d7bf8a5c1df03",
+      "owners": [
+        {
+          "arcanaId": "tim-2-mau-toi-da"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/df2175e30512446acf5d78970ec01b585dbaae4c7556d1.png"
+    },
+    {
+      "id": "asset-ngoc-6a619fbb649d54659fb2",
+      "file": "assets/ngoc/do-3-cong-phep.png",
+      "kind": "arcana",
+      "bytes": 17283,
+      "sha256": "3365aa7b1b47ca5749faca1d8d1ac02f796923f41a0d1bc542a2cc0ca97ce286",
+      "owners": [
+        {
+          "arcanaId": "do-3-cong-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/079aa77056e962b0c8dfa87ff62355775dba6862df0c11.png"
+    },
+    {
+      "id": "asset-ngoc-b839f098ba2857d18296",
+      "file": "assets/ngoc/do-3-cong-vat-ly.png",
+      "kind": "arcana",
+      "bytes": 16408,
+      "sha256": "3d2a6fcde53d49f5dc097ebf121360c8c197e7e9e90c1de0c6141bdd06edcc24",
+      "owners": [
+        {
+          "arcanaId": "do-3-cong-vat-ly"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/3cf57bafb768ddec440476a5c58ad2e35dbaa42b575ae1.png"
+    },
+    {
+      "id": "asset-ngoc-8ef45552691e57e49026",
+      "file": "assets/ngoc/do-3-cong-vat-ly-xuyen-giap.png",
+      "kind": "arcana",
+      "bytes": 16408,
+      "sha256": "3d2a6fcde53d49f5dc097ebf121360c8c197e7e9e90c1de0c6141bdd06edcc24",
+      "owners": [
+        {
+          "arcanaId": "do-3-cong-vat-ly-xuyen-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/3cf57bafb768ddec440476a5c58ad2e35dbaa42b575ae1.png"
+    },
+    {
+      "id": "asset-ngoc-c70ea881a6b35a2eb799",
+      "file": "assets/ngoc/do-3-cong-vat-ly-hut-mau.png",
+      "kind": "arcana",
+      "bytes": 16408,
+      "sha256": "3d2a6fcde53d49f5dc097ebf121360c8c197e7e9e90c1de0c6141bdd06edcc24",
+      "owners": [
+        {
+          "arcanaId": "do-3-cong-vat-ly-hut-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/3cf57bafb768ddec440476a5c58ad2e35dbaa42b575ae1.png"
+    },
+    {
+      "id": "asset-ngoc-246593bfe9ed55d4badd",
+      "file": "assets/ngoc/do-3-ti-le-chi-mang-sat-thuong-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 17212,
+      "sha256": "df28836eae58e0619ef0480cf8e3658dfbedc09f08384faa1fe1c71a5f0cdf65",
+      "owners": [
+        {
+          "arcanaId": "do-3-ti-le-chi-mang-sat-thuong-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/0d0c5eafd9c5a7eefb99d8ad26ca97755dbaa4885c62c1.png"
+    },
+    {
+      "id": "asset-ngoc-1395f03499bc5389a824",
+      "file": "assets/ngoc/do-3-cong-phep-xuyen-thu-phep.png",
+      "kind": "arcana",
+      "bytes": 17283,
+      "sha256": "3365aa7b1b47ca5749faca1d8d1ac02f796923f41a0d1bc542a2cc0ca97ce286",
+      "owners": [
+        {
+          "arcanaId": "do-3-cong-phep-xuyen-thu-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/079aa77056e962b0c8dfa87ff62355775dba6862df0c11.png"
+    },
+    {
+      "id": "asset-ngoc-b173c1fc39cb59328b3b",
+      "file": "assets/ngoc/do-3-cong-phep-toc-danh.png",
+      "kind": "arcana",
+      "bytes": 17283,
+      "sha256": "3365aa7b1b47ca5749faca1d8d1ac02f796923f41a0d1bc542a2cc0ca97ce286",
+      "owners": [
+        {
+          "arcanaId": "do-3-cong-phep-toc-danh"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/079aa77056e962b0c8dfa87ff62355775dba6862df0c11.png"
+    },
+    {
+      "id": "asset-ngoc-d0914f3d529a572b8ee6",
+      "file": "assets/ngoc/do-3-ti-le-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 17212,
+      "sha256": "df28836eae58e0619ef0480cf8e3658dfbedc09f08384faa1fe1c71a5f0cdf65",
+      "owners": [
+        {
+          "arcanaId": "do-3-ti-le-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/0d0c5eafd9c5a7eefb99d8ad26ca97755dbaa4885c62c1.png"
+    },
+    {
+      "id": "asset-ngoc-2255e895021c58ed92ee",
+      "file": "assets/ngoc/do-3-toc-danh-ti-le-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 17206,
+      "sha256": "ab225efb2a660f55841e65dba8e4db7f6ecd896b4810da1db9dd1d09eaa5eb88",
+      "owners": [
+        {
+          "arcanaId": "do-3-toc-danh-ti-le-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/389eff3d95b4e9437e1f68aa6f1666d25dbaa4b1981481-1.png"
+    },
+    {
+      "id": "asset-ngoc-ab0c97bc73a05378bfbc",
+      "file": "assets/ngoc/do-2-cong-vat-ly-xuyen-giap.png",
+      "kind": "arcana",
+      "bytes": 16232,
+      "sha256": "bedc5d2f84f04fa87228c4ed6ae63e54be9e76a4fa1a1e8de7d1d0b68c571371",
+      "owners": [
+        {
+          "arcanaId": "do-2-cong-vat-ly-xuyen-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/1164871d952e7e4b059e545c3a5cf7705dbaab98e2cd31.png"
+    },
+    {
+      "id": "asset-ngoc-8cae0ec8ec405be39756",
+      "file": "assets/ngoc/do-2-cong-vat-ly.png",
+      "kind": "arcana",
+      "bytes": 16232,
+      "sha256": "bedc5d2f84f04fa87228c4ed6ae63e54be9e76a4fa1a1e8de7d1d0b68c571371",
+      "owners": [
+        {
+          "arcanaId": "do-2-cong-vat-ly"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/1164871d952e7e4b059e545c3a5cf7705dbaab98e2cd31.png"
+    },
+    {
+      "id": "asset-ngoc-e315463ce11e52899458",
+      "file": "assets/ngoc/do-2-toc-danh-ty-le-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 17191,
+      "sha256": "93efd84029d626a3f49d9c06628feea90b2dd25e8ea49a6e0dec3f98b3292e0c",
+      "owners": [
+        {
+          "arcanaId": "do-2-toc-danh-ty-le-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/15206edeb5c721af4332afd8c019240d5dbaab766ce291.png"
+    },
+    {
+      "id": "asset-ngoc-8b749e856c31532497b2",
+      "file": "assets/ngoc/do-2-cong-phep-xuyen-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 17412,
+      "sha256": "d0652d59a5d68ec7807d93c29409970434a4d0230328c21da566edab8ea4e6bf",
+      "owners": [
+        {
+          "arcanaId": "do-2-cong-phep-xuyen-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/ff2f1a7bdc4d928749ed857afaad6d695dbaab8b272f11.png"
+    },
+    {
+      "id": "asset-ngoc-025062e927ed518cb836",
+      "file": "assets/ngoc/do-2-cong-phep.png",
+      "kind": "arcana",
+      "bytes": 17244,
+      "sha256": "e8ea5e625282e71dbadb773d8ab1d32fcbfcc230fc2458ccdb343878f4dd55f8",
+      "owners": [
+        {
+          "arcanaId": "do-2-cong-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/62acb603ba3bec776b7413c6b6c993915dbaacf00457a1.png"
+    },
+    {
+      "id": "asset-ngoc-2d77665af06359a6b803",
+      "file": "assets/ngoc/do-2-ti-le-chi-mang1.png",
+      "kind": "arcana",
+      "bytes": 17191,
+      "sha256": "93efd84029d626a3f49d9c06628feea90b2dd25e8ea49a6e0dec3f98b3292e0c",
+      "owners": [
+        {
+          "arcanaId": "do-2-ti-le-chi-mang1"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/15206edeb5c721af4332afd8c019240d5dbaab766ce291.png"
+    },
+    {
+      "id": "asset-ngoc-653adb4fa4905dfcb4f2",
+      "file": "assets/ngoc/do-2-ti-le-chi-mang-sat-thuong-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 17191,
+      "sha256": "93efd84029d626a3f49d9c06628feea90b2dd25e8ea49a6e0dec3f98b3292e0c",
+      "owners": [
+        {
+          "arcanaId": "do-2-ti-le-chi-mang-sat-thuong-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/15206edeb5c721af4332afd8c019240d5dbaab766ce291.png"
+    },
+    {
+      "id": "asset-ngoc-f03e32d18ac55e7fa783",
+      "file": "assets/ngoc/do-2-cong-phep-toc-danh.png",
+      "kind": "arcana",
+      "bytes": 17412,
+      "sha256": "d0652d59a5d68ec7807d93c29409970434a4d0230328c21da566edab8ea4e6bf",
+      "owners": [
+        {
+          "arcanaId": "do-2-cong-phep-toc-danh"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/ff2f1a7bdc4d928749ed857afaad6d695dbaab8b272f11.png"
+    },
+    {
+      "id": "asset-ngoc-0700378eb4f559e2943a",
+      "file": "assets/ngoc/do-2-cong-vat-ly-hut-mau.png",
+      "kind": "arcana",
+      "bytes": 16232,
+      "sha256": "bedc5d2f84f04fa87228c4ed6ae63e54be9e76a4fa1a1e8de7d1d0b68c571371",
+      "owners": [
+        {
+          "arcanaId": "do-2-cong-vat-ly-hut-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/1164871d952e7e4b059e545c3a5cf7705dbaab98e2cd31.png"
+    },
+    {
+      "id": "asset-ngoc-2b5ba3c9b5ae58af83f2",
+      "file": "assets/ngoc/do-2-toc-danh-mau-giap.png",
+      "kind": "arcana",
+      "bytes": 17175,
+      "sha256": "df19d24771ea6d3634f370dffbafe039b4be59832622d06d174e99573bdc655e",
+      "owners": [
+        {
+          "arcanaId": "do-2-toc-danh-mau-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bb1f49ec3e79c433318b9996a59f541a5dbaaaca72ab01.png"
+    },
+    {
+      "id": "asset-ngoc-57e65d0564d65b4085da",
+      "file": "assets/ngoc/do-3-toc-danh-mau-giap.png",
+      "kind": "arcana",
+      "bytes": 17206,
+      "sha256": "ab225efb2a660f55841e65dba8e4db7f6ecd896b4810da1db9dd1d09eaa5eb88",
+      "owners": [
+        {
+          "arcanaId": "do-3-toc-danh-mau-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/389eff3d95b4e9437e1f68aa6f1666d25dbaa4b1981481.png"
+    },
+    {
+      "id": "asset-ngoc-4f44000c98a158ddb1d3",
+      "file": "assets/ngoc/do-1-toc-danh-ty-le-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 16679,
+      "sha256": "4c8bcc2a9bc8ee9027d44782df46e9cdce3e318ca07e8b5b71d0aa65083c49d8",
+      "owners": [
+        {
+          "arcanaId": "do-1-toc-danh-ty-le-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/2189ac4d38f5bf19fd95dd538bf964885dbbb10faabe91.png"
+    },
+    {
+      "id": "asset-ngoc-d3060d22c1db5dbb8888",
+      "file": "assets/ngoc/do-1-ty-le-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 15929,
+      "sha256": "5025deede47a407dd14b3177a5efc38cd1bb2805603d9edc993b4569fa79489b",
+      "owners": [
+        {
+          "arcanaId": "do-1-ty-le-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/71ea217106f0e0d5d7b8a8090144ebf05dbbb0f839d761.png"
+    },
+    {
+      "id": "asset-ngoc-f10fad3e80275eb2922a",
+      "file": "assets/ngoc/do-1-cong-phep-toc-danh.png",
+      "kind": "arcana",
+      "bytes": 16399,
+      "sha256": "dcde0c707523e2cb2aebf7221d6999368e794d3fe456c2195bc5be61c5ee0798",
+      "owners": [
+        {
+          "arcanaId": "do-1-cong-phep-toc-danh"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/b9fad32a6565fd4ffd011fc7273bf2435dbbb0e516d591.png"
+    },
+    {
+      "id": "asset-ngoc-9a0ed6fd016155f7b618",
+      "file": "assets/ngoc/do-1-cong-xuyen-giap-phep.png",
+      "kind": "arcana",
+      "bytes": 16046,
+      "sha256": "04df9d99ee6f5ccc77ba811e7de4c04b6df92333f67f77447000599034eb1a5d",
+      "owners": [
+        {
+          "arcanaId": "do-1-cong-xuyen-giap-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/3f92f5392af769c9ced85e2c92a112f25dbbb0cd414271.png"
+    },
+    {
+      "id": "asset-ngoc-44eca4870a4b5374a74d",
+      "file": "assets/ngoc/do-1-toc-danh-mau-giap.png",
+      "kind": "arcana",
+      "bytes": 16283,
+      "sha256": "8aa507cb02e04f237437e78e05930e26f5dbc5758940ee394868bf8bd3228c3b",
+      "owners": [
+        {
+          "arcanaId": "do-1-toc-danh-mau-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/f24d07226bc2bc676d4e9a3eac7500c95dbbb0ac2b08c1.png"
+    },
+    {
+      "id": "asset-ngoc-a3317ae472775d779eff",
+      "file": "assets/ngoc/do-1-ty-le-sat-thuong-chi-mang.png",
+      "kind": "arcana",
+      "bytes": 15939,
+      "sha256": "5411c52460c65847cee6d4d44edd1b2354e48437afce69a57ffb1b91a18ccee9",
+      "owners": [
+        {
+          "arcanaId": "do-1-ty-le-sat-thuong-chi-mang"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/065ab30e4804d5272643daf9140239df5dbbb0801316a1.png"
+    },
+    {
+      "id": "asset-ngoc-1a4b0fe41a2e57c0bd85",
+      "file": "assets/ngoc/do-1-cong-vat-ly-hut-mau.png",
+      "kind": "arcana",
+      "bytes": 15181,
+      "sha256": "b61fdb191709b8c8256981710a9ea27b8c8526fdb3c19d22ec7bd5afd02f2815",
+      "owners": [
+        {
+          "arcanaId": "do-1-cong-vat-ly-hut-mau"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/bd5b47618fcd7aa8f24175a8284c2b4c5dbbb00ec523b1.png"
+    },
+    {
+      "id": "asset-ngoc-f63ca41c9c1d50688be7",
+      "file": "assets/ngoc/do-1-cong-vat-ly-xuyen-giap.png",
+      "kind": "arcana",
+      "bytes": 14336,
+      "sha256": "3e78a44247d84142b59a7a1e3dccfa7fad7be69ab311bd36946deb5c830013ce",
+      "owners": [
+        {
+          "arcanaId": "do-1-cong-vat-ly-xuyen-giap"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/4835526a3b99375d36a9230d65d2c2985dbbaff7e94a21.png"
+    },
+    {
+      "id": "asset-ngoc-8c989641d6af5520946f",
+      "file": "assets/ngoc/do-1-cong-vat-ly.png",
+      "kind": "arcana",
+      "bytes": 14723,
+      "sha256": "397c2db3a1d02b3ea82fb09ba036ff367a9b0639d39c6bd57636e2f8734a74c4",
+      "owners": [
+        {
+          "arcanaId": "do-1-cong-vat-ly"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/ed83b200a3d5c57b6c34318ce4cc5c1b5dbbafdca47531.png"
+    },
+    {
+      "id": "asset-ngoc-bedadcbff0f35c55b315",
+      "file": "assets/ngoc/do-1-cong-phep.png",
+      "kind": "arcana",
+      "bytes": 16120,
+      "sha256": "291c954b1c4b469e7ca200c03237124dfdbcaf9fbd1b47f74a2179eaebe92dbf",
+      "owners": [
+        {
+          "arcanaId": "do-1-cong-phep"
+        }
+      ],
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2024/05/b062349bdf3af87ee18756d9fcbbe7215dbbafc521cdd1.png"
+    },
+    {
+      "id": "asset-phu-tro-toc-hanh",
+      "file": "assets/phu-tro/toc-hanh.png",
+      "kind": "summoner-spell",
+      "sha256": "7f5a04897e3bcae3d996cefd2a0546c93b07bbd34ca4e6f723a23a16822fb95e",
+      "bytes": 28933,
+      "owners": [
+        {
+          "spellId": "toc-hanh"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-cap-cuu",
+      "file": "assets/phu-tro/cap-cuu.png",
+      "kind": "summoner-spell",
+      "sha256": "6c01728189d17fa5d269c9ab4b47bbefa5a78a04d8ab20f05ef373148f47f687",
+      "bytes": 29188,
+      "owners": [
+        {
+          "spellId": "cap-cuu"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-trung-tri",
+      "file": "assets/phu-tro/trung-tri.png",
+      "kind": "summoner-spell",
+      "sha256": "3e369634918d238a6347082a9f892c1ccfd110eee63531ab70c2bee2fe362695",
+      "bytes": 26274,
+      "owners": [
+        {
+          "spellId": "trung-tri"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-trung-tri-thuong",
+      "file": "assets/phu-tro/trung-tri-thuong.webp",
+      "kind": "summoner-spell",
+      "sha256": "92cd7e858b816cd3e0f40342cc3a2c0f3979798a89afa9c3e8c60d7654c5f5b7",
+      "bytes": 3622,
+      "owners": [
+        {
+          "spellId": "trung-tri"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-trung-tri-te-tai",
+      "file": "assets/phu-tro/trung-tri-te-tai.webp",
+      "kind": "summoner-spell",
+      "sha256": "005aec6be7c19b2211c3af4a87d295f603c5d1889e39a444c15f33e6b9c5e70d",
+      "bytes": 3702,
+      "owners": [
+        {
+          "spellId": "trung-tri"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-boc-pha",
+      "file": "assets/phu-tro/boc-pha.png",
+      "kind": "summoner-spell",
+      "sha256": "d5cf062643dc72840802987a1046fbeccb64aaf7f021ae930dd8b4ff1e98e164",
+      "bytes": 28816,
+      "owners": [
+        {
+          "spellId": "boc-pha"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-toc-bien",
+      "file": "assets/phu-tro/toc-bien.png",
+      "kind": "summoner-spell",
+      "sha256": "98d241be8125b83c7d5cf3d2e63f3284f6fd2d29675df0297229bf4b2eef7b1e",
+      "bytes": 31488,
+      "owners": [
+        {
+          "spellId": "toc-bien"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-gam-thet",
+      "file": "assets/phu-tro/gam-thet.png",
+      "kind": "summoner-spell",
+      "sha256": "0a36c35c09019303cb913de71c9923137782eed41de4e25e1add5cddccfb4fb2",
+      "bytes": 30158,
+      "owners": [
+        {
+          "spellId": "gam-thet"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-ngat-ngu",
+      "file": "assets/phu-tro/ngat-ngu.png",
+      "kind": "summoner-spell",
+      "sha256": "b46517dfa1d20c88aa8411ded62ec75919bceaf491b32fe86ed188ed6fb32262",
+      "bytes": 28080,
+      "owners": [
+        {
+          "spellId": "ngat-ngu"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-thanh-tay",
+      "file": "assets/phu-tro/thanh-tay.png",
+      "kind": "summoner-spell",
+      "sha256": "1e5d446c6dc2cfca7d4bdb410c8cb73a6024610e344562c59a842a75cac39020",
+      "bytes": 25147,
+      "owners": [
+        {
+          "spellId": "thanh-tay"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-suy-nhuoc",
+      "file": "assets/phu-tro/suy-nhuoc.png",
+      "kind": "summoner-spell",
+      "sha256": "34a4d08532f14441f4733318e864e43ca195bfbc62eaba0e0c4bec4b6fb2716e",
+      "bytes": 1675386,
+      "owners": [
+        {
+          "spellId": "suy-nhuoc"
+        }
+      ],
+      "edit": {
+        "operation": "background-removal",
+        "tool": "imagegen",
+        "editedOn": "2026-10-11",
+        "transparentBackground": true,
+        "originalSha256": "59e58ab899734a787410e55153c254e6a6c9d1f77bfa8efa8076ed1424086088",
+        "originalWidth": 128,
+        "originalHeight": 128
+      }
+    },
+    {
+      "id": "asset-phu-tro-la-chan-sinh-menh",
+      "file": "assets/phu-tro/la-chan-sinh-menh.png",
+      "kind": "summoner-spell",
+      "sha256": "23437a9fe0028c71f0ae00e73348d5d31888a112b68cf53242ee091117b7bc39",
+      "bytes": 31731,
+      "owners": [
+        {
+          "spellId": "la-chan-sinh-menh"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-tu-bao-bon",
+      "file": "assets/phu-tro/tu-bao-bon.png",
+      "kind": "summoner-spell",
+      "sha256": "5221062de60dddfe04d84650ffc331c7addb080c4274d7044ccc59bf0190dbc8",
+      "bytes": 35463,
+      "owners": [
+        {
+          "spellId": "tu-bao-bon"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-bat-tu",
+      "file": "assets/phu-tro/bat-tu.webp",
+      "kind": "summoner-spell",
+      "sha256": "e0631539a05a636f46da36f07b59e4e1ae5611fc19a799007af9de972c8cf364",
+      "bytes": 2194,
+      "owners": [
+        {
+          "spellId": "bat-tu"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-cam-tru",
+      "file": "assets/phu-tro/cam-tru.webp",
+      "kind": "summoner-spell",
+      "sha256": "4e27ed472c2766f691b1140726f93c3505a63efd1848d261993a619158136122",
+      "bytes": 3790,
+      "owners": [
+        {
+          "spellId": "cam-tru"
+        }
+      ]
+    },
+    {
+      "id": "asset-phu-tro-vien-binh-lien-hiep",
+      "file": "assets/phu-tro/vien-binh-lien-hiep.webp",
+      "kind": "summoner-spell",
+      "sha256": "0c62259fe89b28620f07a262160c2eaf23341422d20177fff900735689f96b79",
+      "bytes": 3238,
+      "owners": [
+        {
+          "spellId": "vien-binh-lien-hiep"
+        }
+      ]
     }
   ]
 }

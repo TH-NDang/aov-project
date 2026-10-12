@@ -1,0 +1,45 @@
+BẢNG NGỌC LIÊN QUÂN — ẢNH VÀ THUỘC TÍNH
+
+NGUỒN VÀ NGÀY THU THẬP
+Website: https://lienquan.garena.vn/hoc-vien/bang-ngoc/
+Ngày thu: 23/09/2026, theo README gói bang-ngoc-lien-quan.zip do người dùng cung cấp.
+Đây là ngày thu của gói nguồn, không phải ngày nhập vào thư viện hay ngày sửa file.
+88 mục ngọc; 88 ảnh theo từng tên; 78 URL gốc khác nhau.
+Thuộc tính được lấy từ tooltip khi rê vào ảnh theo tài liệu gói.
+Các mục dùng chung URL vẫn giữ mục và file riêng theo tên; không bỏ bớt ngọc.
+
+FILE ĐI KÈM
+assets/ngoc/: PNG, giữ nội dung và kích thước nguồn; tên không dấu, không khoảng trắng.
+data/ngoc.json: JSON chính gồm collectedOn, sources và items.
+data/kiem-tra-ngoc.json: kiểm tra ảnh, nguồn và các mục thiếu thuộc tính.
+preview/Xem-ngoc.html: xem ngoại tuyến, lọc màu, cấp và tìm tên/thuộc tính.
+program/export/ngoc.csv: bảng phẳng UTF-8 BOM, mở trực tiếp bằng Excel.
+Đường dẫn ảnh tính từ thư mục chứa assets/data/preview/program/note, không từ data.
+Đổi vị trí ảnh cần cập nhật JSON, HTML và CSV cho khớp; không cần thư mục dự án ban đầu.
+
+DỮ LIỆU
+id từ tên file chuẩn hóa; name giữ nguyên nguồn. color: Đỏ, Tím, Xanh; level: 1–3.
+index_on_page giữ thứ tự nguồn, bắt đầu từ 1; không phải vị trí hàng/cột trong shop.
+attributes gồm raw/name/value/unit; attributes_text giữ văn bản nguồn.
+image_url và source_page là link gốc; originalImageFile giữ tên trong gói.
+image_file/image trỏ ảnh đi kèm; SHA256 và kích thước phục vụ đối chiếu.
+Dấu gạch dưới trong tên file được đổi thành gạch nối; không sửa tên/chỉ số thuộc tính.
+Ảnh giống nhau không đồng nghĩa các mục có cùng thuộc tính; không dùng URL/SHA làm khóa ngọc.
+
+THUỘC TÍNH THIẾU
+Xanh I Giáp phép và Xanh I Máu/Hồi chiêu có attribute_status=empty_on_source_hover.
+Theo tài liệu gói, tooltip chỉ có tên, không có dòng thuộc tính.
+Giữ attributes rỗng; không xem là 0 và không tự điền từ cấp/màu khác.
+
+ĐỐI CHIẾU ẢNH
+Ảnh Tím I Công vật lý/Tốc chạy trong ZIP bị cắt giữa dữ liệu PNG.
+Ngày 07/10/2026, ảnh được lấy lại từ đúng image_url Garena trong JSON.
+Bản đầy đủ khớp toàn bộ 13.312 byte tiền tố của bản ZIP và giải mã được; đủ 16.853 byte.
+imageRecovery ghi ngày lấy lại, link, SHA256 và kết quả đối chiếu.
+Bản bị cắt giữ ở temp/ngoc-source để đối chiếu; ảnh sử dụng nằm ở assets/ngoc.
+87 ảnh còn lại giữ nguyên byte của gói. Ngày lấy lại một ảnh không thay collectedOn của bộ.
+
+SỬ DỤNG
+HTML hiện nhúng nội dung: sửa JSON thủ công cần đồng bộ HTML/CSV nếu sử dụng chúng.
+Nguồn/ngày tổng hợp: note/NGUON-VA-NGAY-THU-THAP.txt và data/nguon-thu-thap.json.
+Giữ source URL, trạng thái thiếu thuộc tính và thông tin phục hồi khi mang dữ liệu sang nơi khác.

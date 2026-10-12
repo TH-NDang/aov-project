@@ -1,0 +1,43 @@
+{
+  "items": 14,
+  "regular": 9,
+  "legacy": 5,
+  "websiteImages": 11,
+  "zipImages": 5,
+  "images": 16,
+  "fallbacks": [
+    {
+      "id": "bat-tu",
+      "reason": "Không có mục ảnh trên trang đang kiểm tra",
+      "zipMember": "phu-tro/hien-khong-con/bat-tu.webp"
+    },
+    {
+      "id": "cam-tru",
+      "reason": "Không có mục ảnh trên trang đang kiểm tra",
+      "zipMember": "phu-tro/hien-khong-con/cam-tru.webp"
+    },
+    {
+      "id": "vien-binh-lien-hiep",
+      "reason": "Không có mục ảnh trên trang đang kiểm tra",
+      "zipMember": "phu-tro/hien-khong-con/vien-binh-lien-hiep.webp"
+    }
+  ],
+  "allImagesDecoded": true,
+  "descriptionsFromExcelOnly": true,
+  "positionsMissing": [
+    "la-chan-sinh-menh",
+    "tu-bao-bon",
+    "bat-tu",
+    "cam-tru",
+    "vien-binh-lien-hiep"
+  ],
+  "functionalStates": {
+    "trung-tri": [
+      "thuong",
+      "te-tai"
+    ]
+  },
+  "referenceImages": 1,
+  "removedConfirmedByUserOn": "2026-10-10",
+  "removed": 5
+}

@@ -1,0 +1,56 @@
+PHỤ TRỢ LIÊN QUÂN — ẢNH VÀ DỮ LIỆU
+
+NGUỒN VÀ NGÀY
+Ảnh web: https://lienquan.garena.vn/hoc-vien/phu-tro/
+Ngày đối chiếu danh sách và tải ảnh web: 10/10/2026.
+Excel: phutrodulieu.xlsx do người dùng cung cấp. Không có ngày thu gốc được ghi riêng.
+ZIP dự phòng: phu-tro.zip do người dùng cung cấp. Không suy ngày thu từ timestamp ZIP.
+Mô tả, hồi chiêu, mở khóa, vị trí và cột Cũ chỉ lấy từ Excel; không thu mô tả website.
+Tên mục trên website chỉ dùng để ghép đúng ảnh, không thay nội dung mô tả người dùng.
+11 ảnh đại diện tải từ Garena; 5 ảnh dùng từ ZIP: Bất tử, Cấm trụ, Viện binh liên hiệp,
+Trừng trị thường và Trừng trị tê tái. Giữ định dạng ảnh nguồn, ngoại trừ bản Suy nhược đã xử lý nền.
+Trừng trị có đúng hai states: thuong dùng ZIP; te-tai dùng ảnh Garena.
+Người dùng xác nhận ảnh web là Trừng trị tê tái ngày 10/10/2026.
+Bản tê tái trong ZIP lưu trong referenceImages để đối chiếu, không tính là trạng thái thứ ba.
+image mặc định là trạng thái thuong; defaultStateId=thuong.
+Hai ảnh biến thể trong ZIP không có mô tả riêng ở Excel, không tự bổ sung hiệu ứng.
+
+FILE VÀ ĐƯỜNG DẪN
+assets/phu-tro/: 16 ảnh PNG/WebP của 14 phụ trợ và các biến thể.
+data/phu-tro.json: dữ liệu chính; data/nguon-anh-phu-tro.json: URL hoặc thành viên ZIP, SHA256.
+data/kiem-tra-phu-tro.json: kiểm tra ảnh, lựa chọn nguồn và các trường chưa có.
+preview/Xem-phu-tro.html: tìm kiếm, lọc danh sách sử dụng/lưu trữ, xem theo vị trí và đối chiếu dữ liệu gốc.
+Đường dẫn image tính từ thư mục chứa assets/data/preview/note/program/temp, không từ data.
+Có thể ghép với asset base URL khác khi sử dụng, không cần thư mục dự án ban đầu.
+
+SCHEMA
+id là mã Excel, giữ nguyên. name và description giữ đúng dữ liệu người dùng.
+source.excel lưu tên file, sheet, số dòng và raw gồm đủ sáu cột gốc.
+position là {row,column} từ chuỗi Vị trí, bắt đầu từ 0; null là chưa có, không phải vị trí 0.
+unlock là {type,level,raw}; level từ Lv...; raw giữ nguyên văn, thiếu dữ liệu thì null.
+cooldown.seconds tách từ phần hồi chiêu trong mô tả Excel; raw giữ đoạn khớp và source=excel.
+charges tách riêng số lần lưu trữ và thời gian hồi một lần của Trừng trị trong Excel;
+không dùng thời gian lưu trữ làm cooldown của lần sử dụng.
+legacy/classification từ cột Cũ. Cột trống gọi là regular, không xác minh tình trạng trong game.
+source.website.present chỉ nói có mục ảnh trên trang lúc kiểm tra. Có trên web không xóa dấu cũ.
+image là ảnh đại diện mặc định; states là trạng thái chức năng, mỗi trạng thái có id/name/image.
+imageVariants giữ mảng trống để tương thích; ứng dụng mới đọc states.
+availability.status là available hoặc removed; source ghi nguồn xác nhận.
+Năm mục được đánh dấu Cũ được người dùng xác nhận không còn trong game ngày 10/10/2026.
+confirmedOn là ngày xác nhận, removedOn là ngày bỏ khỏi game (chưa biết nên null).
+Giữ legacy/classification và cột Cũ nguyên gốc để đối chiếu, giao diện dùng availability.
+Mặc định chỉ hiện danh sách sử dụng; mục removed vẫn giữ ảnh và mô tả trong bộ lọc Lưu trữ.
+Missing position/unlock dùng null, không dùng 0 hoặc đoán từ vị trí website.
+
+PHẠM VI
+14 phụ trợ: 9 mục thường, 5 mục đánh dấu cũ trong Excel.
+Ba mục không có trên trang đang kiểm tra dùng ảnh ZIP. Hai mục mùa S1/2026 vẫn có ảnh web
+nhưng vẫn giữ dấu cũ theo Excel. Số thứ tự website lưu riêng, không phải vị trí trong game.
+Ảnh và mô tả có thể phản ánh các thời điểm khác nhau; mô tả Excel được giữ như người dùng yêu cầu.
+Không kiểm tra hoặc áp dụng mô tả/hồi chiêu website cho các trường nội dung.
+HTML hiện nhúng JSON: nếu sửa JSON thủ công, cập nhật nội dung nhúng trong HTML để cùng dữ liệu.
+Hiện chỉ có preview, chưa có công cụ biên tập phụ trợ ghi JSON tự động.
+
+ẢNH SUY NHƯỢC
+Ngày xử lý 11/10/2026: bỏ nền trắng bên ngoài vòng tròn bằng ImageGen, lưu PNG nền trong suốt.
+Bản đang dùng là ảnh đã xử lý; URL Garena vẫn ghi nguồn gốc. Metadata edit ghi công cụ, ngày và SHA ảnh gốc.

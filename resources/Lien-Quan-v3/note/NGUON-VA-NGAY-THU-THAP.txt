@@ -67,8 +67,14 @@ không có vòng ngoài; không phải file icon hệ nguyên bản tải từ w
 Mốc collectedOn của bộ dữ liệu không khẳng định ngày tạo từng icon tái tạo.
 
 6. NGỌC
-Chưa thu thập. assets/ngoc đang trống; data/ngoc.json ghi not-collected.
-Không có link/ngày nguồn được tự đặt cho phần này.
+Nguồn: https://lienquan.garena.vn/hoc-vien/bang-ngoc/
+Ngày thu: 23/09/2026, theo README gói bang-ngoc-lien-quan.zip do người dùng cung cấp.
+88 mục và 88 ảnh, 78 URL gốc. Thuộc tính lấy từ tooltip theo tài liệu gói.
+Hai mục Xanh I Giáp phép và Xanh I Máu/Hồi chiêu không có thuộc tính trên tooltip;
+giữ empty_on_source_hover, không tự tạo chỉ số.
+Ảnh Tím I Công vật lý/Tốc chạy được lấy lại đúng URL ngày 07/10/2026 vì bản ZIP bị cắt;
+đã đối chiếu khớp phần dữ liệu gốc. Không thay mốc thu ban đầu của bộ.
+Link từng ảnh và thuộc tính: data/ngoc.json; hướng dẫn: note/HUONG-DAN-NGOC.txt.
 
 TRA CỨU
 Nguồn tổng hợp dạng JSON: data/nguon-thu-thap.json.
@@ -82,3 +88,10 @@ thư mục chứa các phần này, không tính từ thư mục note và không
 Giữ các phần đi cùng nhau khi chuyển nơi lưu. Không cần giữ thư mục dự án ban đầu.
 Nếu đặt tài nguyên ở vị trí khác, cập nhật đường dẫn trong JSON và phần đọc ảnh của
 trang xem/chương trình; các link website nguồn vẫn giữ nguyên để truy xuất xuất xứ.
+
+PHỤ TRỢ
+Ảnh: https://lienquan.garena.vn/hoc-vien/phu-tro/; lấy ảnh web 10/10/2026.
+Mô tả và chi tiết: phutrodulieu.xlsx do người dùng cung cấp; không dùng mô tả website.
+ZIP dự phòng: phu-tro.zip; ngày thu gốc của Excel/ZIP chưa ghi rõ.
+Ảnh ở assets/phu-tro; JSON ở data/phu-tro.json; xem preview/Xem-phu-tro.html.
+Hướng dẫn: note/HUONG-DAN-PHU-TRO.txt.
