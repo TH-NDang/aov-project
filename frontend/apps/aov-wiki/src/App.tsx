@@ -2,7 +2,10 @@ import { PageBackdrop } from "./components/page-backdrop"
 import { PageContainer } from "./components/page-container"
 import { WikiHeader } from "./components/wiki-header"
 
-const HOME_BACKGROUND = "/images/airi-thu-nguyen-ve-than-cover.jpg"
+const HOME_BACKGROUND = {
+  image: "/images/airi-thu-nguyen-ve-than-cover.jpg",
+  color: "#27283f",
+}
 
 export default function App() {
   return (
@@ -13,7 +16,7 @@ export default function App() {
       >
         Đến nội dung chính
       </a>
-      <PageBackdrop image={HOME_BACKGROUND} />
+      <PageBackdrop {...HOME_BACKGROUND} />
       <WikiHeader />
       <main id="main" tabIndex={-1} className="flex-1 pb-25 outline-none" aria-label="Nội dung wiki">
         <PageContainer className="pt-[71px] pb-[49px] max-[640px]:py-[15px]">

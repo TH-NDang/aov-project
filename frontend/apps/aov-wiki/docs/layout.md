@@ -9,12 +9,12 @@ Tham chiếu: https://wiki.hoyolab.com/pc/hsr/home (đo ở 1440px).
 
 ## Ảnh nền đầu trang
 
-- `PageBackdrop` (`src/components/page-backdrop.tsx`): `position: fixed`, phủ hết chiều ngang, cao 540px, `background-size: cover`, căn trên, độ mờ 45%, nằm dưới mọi nội dung (`-z-10`).
+- `PageBackdrop` (`src/components/page-backdrop.tsx`): `position: fixed`, lớp màu phủ hết chiều ngang, ảnh căn giữa giới hạn 1440px, cao 540px, `background-size: cover`, căn trên, độ mờ 45%, nằm dưới mọi nội dung (`-z-10`).
 - Lớp `::after` cao 364px ở đáy chuyển từ trong suốt sang màu nền trang, nên ảnh tan dần vào nền.
 - Ảnh đứng yên khi cuộn, nội dung trượt lên trên ảnh.
-- Điện thoại (≤640px), như bản mobile HoYoWiki: ảnh cuộn theo trang (`absolute`), cao 2/3 chiều rộng màn hình (250px ở 375px), độ mờ 20%, gradient phủ toàn bộ chiều cao ảnh.
+- Điện thoại (≤640px), như bản mobile HoYoWiki: ảnh cuộn theo trang (`absolute`), cao 2/3 chiều rộng màn hình (250px ở 375px), độ hiện ảnh 45%, gradient bắt đầu từ 45% chiều cao ảnh và chuyển về nền tối ở đáy.
 - Chưa có ảnh: hiện quầng sáng hổ phách (`--amber-accent`) làm chỗ giữ chỗ.
-- Thêm ảnh: đặt file vào `public/images/` (ví dụ `home-bg.jpg`) rồi gán `HOME_BACKGROUND = "/images/home-bg.jpg"` trong `src/App.tsx`. Nên dùng ảnh ngang, rộng ≥ 1920px, chủ thể ở nửa trên vì phần dưới bị gradient che.
+- Thêm ảnh: đặt file vào `public/images/` (ví dụ `home-bg.jpg`) rồi gán `HOME_BACKGROUND = { image: "/images/home-bg.jpg", color: "#27283f" }` trong `src/App.tsx`. Nên dùng ảnh ngang, rộng ≥ 1920px, chủ thể ở nửa trên vì phần dưới bị gradient che.
 
 ## Khoảng cách
 
@@ -30,3 +30,5 @@ Tham chiếu: https://wiki.hoyolab.com/pc/hsr/home (đo ở 1440px).
 - Tahoma là font hệ thống, chỉ có 2 độ đậm: thường (400) và đậm (700). Dùng `font-normal`/`font-bold`; `font-medium`/`font-semibold` sẽ hiển thị như thường hoặc đậm.
 - Có sẵn trên Windows và macOS; Android/iOS không có nên trình duyệt dùng Helvetica/Arial/Roboto thay thế.
 - Wordmark AOVWiKi trên header vẫn giữ Arial Black.
+
+- Hai mép ảnh dùng mask chuyển mượt vào lớp màu xung quanh; lớp màu đậm dần về nền trang ở hai bên. Cấu hình image/color độc lập để sau này lấy từ backend. Trên 4K ảnh vẫn rộng 1440px, nội dung vẫn giới hạn 1188px.
