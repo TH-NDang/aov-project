@@ -16,6 +16,9 @@ spring:
           issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081/realms/wikiaov}
 
 wiki:
+  auth:
+    secure-cookies: false
+    admin-origin: ${ADMIN_ORIGIN:http://localhost:5175}
   storage:
     # SeaweedFS from compose.yaml; keys match seaweedfs/s3.json.
     endpoint: ${STORAGE_ENDPOINT:http://localhost:8333}

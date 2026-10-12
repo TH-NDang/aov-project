@@ -224,6 +224,37 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "admin-aov-backend",
+      "name": "Admin backend authentication gateway",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "${ADMIN_AUTH_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5175/api/wiki/v1/auth/google/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "access.token.lifespan": "300"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
     }
   ],
   "users": [
@@ -302,5 +333,8 @@
         ]
       }
     }
-  ]
+  ],
+  "bruteForceProtected": true,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0
 }

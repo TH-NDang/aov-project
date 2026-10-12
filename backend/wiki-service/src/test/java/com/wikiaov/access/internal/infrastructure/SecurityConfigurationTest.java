@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.wikiaov.access.Capabilities;
+import com.wikiaov.access.internal.web.CurrentActorController;
 import com.wikiaov.platform.ApiPaths;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @WebMvcTest(controllers = {SecurityConfigurationTest.PublicProbe.class, SecurityConfigurationTest.AdminProbe.class})
 @Import({SecurityConfiguration.class, ProblemAuthenticationEntryPoint.class, ProblemAccessDeniedHandler.class,
         ProblemResponseWriter.class, SecurityConfigurationTest.PublicProbe.class,
-        SecurityConfigurationTest.AdminProbe.class})
+        SecurityConfigurationTest.AdminProbe.class, CurrentActorController.class, SecurityContextCurrentActor.class})
 @ActiveProfiles("test")
 class SecurityConfigurationTest {
 
@@ -39,6 +40,33 @@ class SecurityConfigurationTest {
 
     @MockitoBean
     JwtDecoder jwtDecoder;
+
+    @Test
+    void currentActorRequiresAuthenticationAndCatalogRead() throws Exception {
+        mvc.perform(get("/api/wiki/v1/admin/me")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/wiki/v1/admin/me").with(jwt())).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void currentActorReturnsVerifiedIdentityAndCapabilitiesWithoutCaching() throws Exception {
+        mvc.perform(get("/api/wiki/v1/admin/me").with(jwt()
+                .jwt(token -> token.subject("editor-42").issuer("http://localhost:8081/realms/wikiaov")
+                        .claim("name", "Editor"))
+                .authorities(authority(Capabilities.CATALOG_READ))))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL, "no-store"))
+                .andExpect(jsonPath("$.subject").value("editor-42"))
+                .andExpect(jsonPath("$.issuer").value("http://localhost:8081/realms/wikiaov"))
+                .andExpect(jsonPath("$.displayName").value("Editor"))
+                .andExpect(jsonPath("$.capabilities[0]").value("catalog:read"));
+    }
+
+    @Test
+    void currentActorRejectsUnknownParameters() throws Exception {
+        mvc.perform(get("/api/wiki/v1/admin/me?subject=someone-else")
+                .with(jwt().authorities(authority(Capabilities.CATALOG_READ))))
+                .andExpect(status().isBadRequest());
+    }
 
     @Test
     void publicReadIsOpenToAnonymousCallers() throws Exception {
