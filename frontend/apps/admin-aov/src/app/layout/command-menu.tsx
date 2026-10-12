@@ -13,6 +13,7 @@ import {
 } from "@aov/ui/components/command"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
+import { NavIcon } from "@/app/nav-icon"
 import { MediaImage } from "@/components/media-image"
 import { useEnchantments, useHeroes, useItemCatalog } from "@/lib/queries"
 import { commandFilter, formatNumber } from "@/lib/text"
@@ -62,7 +63,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                   value={`trang ${item.title} ${item.description}`}
                   onSelect={() => run(() => navigate(item.to))}
                 >
-                  <item.icon />
+                  <NavIcon item={item} />
                   <span>{item.title}</span>
                   <span className="ml-auto truncate text-xs text-muted-foreground">{item.description}</span>
                 </CommandItem>

@@ -6,6 +6,7 @@ import { FileQuestion, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
+import { NavIcon } from "@/app/nav-icon"
 
 export interface TabPresentation {
   path: string
@@ -15,15 +16,14 @@ export interface TabPresentation {
 const TAB_NAV = [...MEDIA_NAV, ...NAV_ITEMS]
 
 function TabLabel({ tab }: { tab: TabPresentation }) {
-  const Icon =
-    TAB_NAV.find((item) =>
-      (item.activePaths ?? [item.to]).some(
-        (path) => tab.path === path || (path !== "/" && tab.path.startsWith(path + "/")),
-      ),
-    )?.icon ?? FileQuestion
+  const item = TAB_NAV.find((item) =>
+    (item.activePaths ?? [item.to]).some(
+      (path) => tab.path === path || (path !== "/" && tab.path.startsWith(path + "/")),
+    ),
+  ) ?? { icon: FileQuestion }
   return (
     <>
-      <Icon aria-hidden="true" className="size-4 shrink-0" />
+      <NavIcon item={item} />
       <span className="truncate">{tab.label}</span>
     </>
   )
