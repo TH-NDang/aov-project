@@ -1,0 +1,82 @@
+{
+  "generator": "Built-in image_gen",
+  "transparentBackground": true,
+  "assets": [
+    {
+      "file": "dashboard.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a compact blue crystal command console with three gold rising bars. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "storage.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a small closed archive chest with stacked blue crystal data tablets. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "profile.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a gold circular medallion with a blue anonymous adventurer bust silhouette. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "character-book.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: an open leather character codex with a simple blue knight portrait on one page. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "armory.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: an open gold edged equipment chest holding a sword and blue shield. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "heroes.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a silver knight helmet with a blue plume. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "skins.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a royal blue cloak on gold shoulder armor. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "gallery.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: two overlapping gold picture frames with blue mountain silhouettes. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "items.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a blue shield and a single diagonal silver sword. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "enchantments.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a gold hexagonal talisman with a violet magical core. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "arcana.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: three large faceted rune gems red blue and green. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "spells.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a single bold gold lightning bolt around a cyan magic orb. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "tournaments.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a gold trophy cup with a blue central gem. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "streams.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a blue broadcast crystal with gold radio signal arcs. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "portrait.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a tall gold portrait frame containing a blue fantasy knight bust. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "head.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a circular blue knight avatar in a gold rim. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "cover.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a wide gold landscape picture frame with a blue mountain and rising sun. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "badges.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: a gold winged rank medal with a purple gem. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    },
+    {
+      "file": "users.webp",
+      "prompt": "Use case: stylized-concept. Asset type: one transparent square raster navigation icon for a Vietnamese fantasy MOBA wiki admin. Style: polished hand-painted fantasy game inventory icon, simple chunky silhouette, gold trim and rich blue enamel, restrained highlights, consistent 3/4 view, crisp contours. Subject: two blue adventurer bust silhouettes side by side in a gold circular medallion. Center a SINGLE icon occupying 85% of the square, keep all edges inside canvas. Actual transparent background. Easily recognizable at 24px. No text, no letters, no numbers, no background panel, no badge backdrop, no watermark, no tiny ornament, no cast shadow outside object."
+    }
+  ]
+}

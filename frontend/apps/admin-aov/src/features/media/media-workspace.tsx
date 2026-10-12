@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
 import { MEDIA_NAV } from "@/app/nav"
+import { NavIcon } from "@/app/nav-icon"
 
 export function MediaWorkspace() {
   return (
@@ -19,7 +20,7 @@ export function MediaWorkspace() {
                 )
               }
             >
-              <item.icon className="size-4" />
+              <NavIcon item={item} />
               {item.title}
             </NavLink>
           ))}

@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@aov/ui/components/sidebar"
 import { NAV_GROUPS, type NavItem, type NavSection } from "@/app/nav"
+import { NavIcon } from "@/app/nav-icon"
 import { useAttentionCounts } from "@/lib/use-wiki-index"
 import { UserMenu } from "./user-menu"
 import { HotkeyHelp } from "./hotkey-help"
@@ -37,9 +38,14 @@ function NavLink({ item, counts, nested = false }: { item: NavItem; counts: Atte
   const count = item.badge ? counts[item.badge] : undefined
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={isNavActive(item, pathname)} tooltip={item.title}>
+      <SidebarMenuButton
+        asChild
+        className="group-data-[collapsible=icon]:p-1!"
+        isActive={isNavActive(item, pathname)}
+        tooltip={item.title}
+      >
         <Link to={item.to} className={nested ? "pl-6" : undefined} onClick={() => isMobile && setOpenMobile(false)}>
-          <item.icon />
+          <NavIcon item={item} />
           <span>{item.title}</span>
         </Link>
       </SidebarMenuButton>
@@ -78,7 +84,7 @@ function WikiSection({ section, counts }: { section: NavSection; counts: Attenti
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="font-medium" tooltip={section.title}>
-            <section.icon />
+            <NavIcon item={section} />
             <span>{section.title}</span>
             <ChevronRight className="ml-auto transition-transform group-data-[state=open]/wiki-section:rotate-90" />
           </SidebarMenuButton>
