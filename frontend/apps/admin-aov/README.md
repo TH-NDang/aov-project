@@ -1,0 +1,107 @@
+# Admin AOV
+
+## Đăng nhập hiện tại
+
+Form tên người dùng/email và mật khẩu nằm trong modal của admin. Backend chuyển thông tin
+đến Keycloak bằng confidential client riêng; frontend không giữ client secret hoặc refresh token.
+Google mở cửa sổ riêng, backend xử lý Authorization Code + PKCE rồi đặt cùng loại cookie phiên.
+Giao diện không tự chuyển sang trang Keycloak khi mở admin.
+
+Access token chỉ giữ trong bộ nhớ; refresh token nằm trong cookie HttpOnly. POST auth yêu cầu
+Origin đúng và header chống CSRF. Quyền/tên người dùng lấy từ API `/api/wiki/v1/admin/me`.
+Đăng xuất thu hồi refresh token và xóa cache truy vấn; không xóa dữ liệu mẫu người dùng đã sửa.
+Google chỉ bật khi backend báo đã cấu hình. Không tự cấp quyền admin cho tài khoản Google mới.
+
+## Cấu hình Keycloak cho realm đã tồn tại
+
+File realm không tự cập nhật vào dữ liệu Docker đã tạo trước đó. Không xóa volume để áp dụng.
+Trong Keycloak Admin Console, chọn realm `wikiaov`:
+
+1. Tạo OpenID Connect client `admin-aov-backend`.
+2. Bật **Client authentication**, **Standard flow**, **Direct access grants**.
+   Tắt Implicit flow và Service accounts. Client frontend `admin-aov` cũ không cần đổi.
+3. Valid redirect URI: `http://localhost:5175/api/wiki/v1/auth/google/callback`.
+   Không cần thêm Web Origins vì backend thực hiện trao đổi token.
+4. Trong Advanced, đặt PKCE code challenge method **S256**, access token lifespan **5 phút**.
+5. Thêm audience mapper cho access token với Included Client Audience = `wiki-service`.
+   Giữ client scope `roles` để token có `resource_access.wiki-service.roles`.
+6. Lấy secret ở tab Credentials và đặt vào biến môi trường `ADMIN_AUTH_CLIENT_SECRET` của backend.
+   Không đưa secret vào frontend, Git hoặc nội dung chat.
+7. Bật brute-force protection của realm. Trong Tokens bật Revoke Refresh Token, Max Reuse = 0.
+
+Tài khoản local có sẵn trong realm vẫn dùng được nếu có capability `catalog:read`.
+Direct Grant không hỗ trợ required actions/MFA nhiều bước. Xử lý các tài khoản có yêu cầu này
+trong Keycloak; không bỏ yêu cầu xác minh để làm cho form hoạt động. Xem ADR-007.
+
+## Google
+
+Trong realm `wikiaov`, tạo Identity Provider **Google**, alias `google`, bật Enabled và hiển thị
+trên trang đăng nhập. Tạo OAuth client dạng Web application trong Google Cloud:
+
+- Authorized redirect URI local: `http://localhost:8081/realms/wikiaov/broker/google/endpoint`.
+- Điền Google Client ID và Client Secret vào Identity Provider của Keycloak, không điền ở frontend.
+- Nếu ứng dụng Google đang ở chế độ testing, thêm tài khoản thử vào danh sách test users.
+- Giữ bước xác nhận liên kết tài khoản; không tự liên kết tài khoản chỉ dựa vào email chưa xác minh.
+- Gán quyền quản trị phù hợp cho tài khoản Google tại Keycloak trước khi dùng admin.
+
+Sau khi cấu hình xong, đặt `GOOGLE_LOGIN_ENABLED=true` ở backend và khởi động lại backend.
+Nếu chưa có Google OAuth credentials thì đăng nhập tài khoản vẫn dùng được; nút Google bị vô hiệu hóa.
+
+## Chạy local
+
+Bạn tự chạy các lệnh sau (agent không tự khởi động dịch vụ):
+
+Trong `backend/wiki-service`, sau khi đã có client/secret:
+
+```powershell
+$env:ADMIN_AUTH_CLIENT_SECRET = "SECRET_TU_KEYCLOAK"
+docker compose --profile identity up -d
+./mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
+```
+
+Với realm hoàn toàn mới, compose truyền biến secret này vào file import. Với realm đã tồn tại,
+phải thực hiện các bước cấu hình client trên; import không ghi đè realm.
+
+Trong `frontend`:
+
+```powershell
+pnpm --filter @aov/admin-aov dev
+```
+
+Mở `http://localhost:5175`. Vite proxy `/api/wiki` về `http://localhost:8080`.
+Đặt biến môi trường shell `WIKI_API_TARGET` nếu cần đổi backend target.
+
+Production dùng HTTPS, cookie Secure mặc định bật; đặt `ADMIN_ORIGIN` bằng origin chính xác
+(không có dấu / cuối), `ADMIN_BASE_PATH=/admin/` nếu phục vụ app dưới /admin/.
+Build Vite với base tương ứng và reverse proxy phục vụ cả các file HTML/JS trong public/auth.
+Keycloak redirect URI phải khớp origin production + `/api/wiki/v1/auth/google/callback`.
+Không triển khai Vite dev/preview ra public. State Google hiện lưu trong bộ nhớ một backend;
+muốn nhiều replica cần cấu hình/thiết kế bổ sung theo ADR-007.
+
+## Phạm vi dữ liệu
+
+Auth nối backend thật. Các trang tướng/trang phục/trang bị vẫn dùng `createMockApi()`;
+JSON storage vẫn là công cụ phát triển cục bộ, không phải API production có phân quyền.
+Khi chuyển dữ liệu sang backend, dùng `backendRequest` để gửi Bearer token.
+
+## Kiểm tra sau thay đổi
+
+Trong `frontend`:
+
+```powershell
+pnpm exec prettier --write apps/admin-aov/src/app/auth apps/admin-aov/src/main.tsx apps/admin-aov/src/lib/api/authenticated-client.ts apps/admin-aov/tests/auth.test.ts
+pnpm --filter @aov/admin-aov typecheck
+pnpm --filter @aov/admin-aov test:auth
+pnpm --filter @aov/admin-aov build
+```
+
+Trong `backend/wiki-service`:
+
+```powershell
+./mvnw.cmd spotless:apply
+./mvnw.cmd "-Dtest=AuthControllerTest,AuthGuardsTest,AuthSessionsTest,SecurityConfigurationTest,KeycloakJwtAuthenticationConverterTest,SecurityContextCurrentActorTest" test
+./mvnw.cmd verify
+```
+
+Kiểm tra thủ công: sai mật khẩu; đúng mật khẩu có/không quyền; reload khôi phục phiên; đăng xuất;
+Google thành công/hủy/chặn popup; modal trên mobile; logout ở tab khác.

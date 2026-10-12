@@ -40,6 +40,14 @@ management:
 
 
 wiki:
+  auth:
+    admin-origin: ${ADMIN_ORIGIN:https://localhost}
+    admin-base-path: ${ADMIN_BASE_PATH:/}
+    client-id: ${ADMIN_AUTH_CLIENT_ID:admin-aov-backend}
+    client-secret: ${ADMIN_AUTH_CLIENT_SECRET:}
+    secure-cookies: true
+    google-enabled: ${GOOGLE_LOGIN_ENABLED:false}
+    google-callback-path: ${GOOGLE_CALLBACK_PATH:/api/wiki/v1/auth/google/callback}
   security:
     # Client whose client roles (resource_access.<client>.roles) carry the capabilities.
     resource-client-id: ${JWT_RESOURCE_CLIENT_ID:wiki-service}

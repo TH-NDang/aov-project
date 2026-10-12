@@ -34,7 +34,7 @@ class SecurityConfiguration {
             ProblemAuthenticationEntryPoint entryPoint,
             ProblemAccessDeniedHandler accessDeniedHandler) throws Exception {
         return http
-                // Bearer header only, no cookie credentials: CSRF does not apply. Revisit if moving to cookies.
+                // Admin APIs use Bearer tokens. AuthController guards cookie writes with origin + X-AOV-Auth.
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
@@ -42,6 +42,9 @@ class SecurityConfiguration {
                                 "/actuator/info")
                         .permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/wiki/*/auth/login", "/api/wiki/*/auth/refresh",
+                                "/api/wiki/*/auth/logout", "/api/wiki/*/auth/google")
+                        .permitAll()
                         // Admin rules must come before the public GET rule; "*" covers every API version.
                         .requestMatchers(ApiPaths.ANY_VERSION_ADMIN_PATTERN).hasAuthority(Capabilities.CATALOG_READ)
                         .requestMatchers(HttpMethod.GET, ApiPaths.ANY_VERSION_PATTERN).permitAll()

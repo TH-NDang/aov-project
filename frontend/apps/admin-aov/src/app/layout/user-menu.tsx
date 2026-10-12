@@ -1,5 +1,7 @@
 import { useState } from "react"
-import { ChevronsUpDown, DatabaseBackup, LogIn, Monitor, Moon, Sun } from "lucide-react"
+import { ChevronsUpDown, DatabaseBackup, LogOut, Monitor, Moon, Sun } from "lucide-react"
+import { useSession } from "@/app/auth/auth-gate"
+import { logout } from "@/app/auth/session"
 import { useTheme, type Theme } from "@/app/theme"
 import { toast } from "sonner"
 import {
@@ -29,6 +31,8 @@ import { api } from "@/lib/api/client"
 import { useResetLocalChanges } from "@/lib/queries"
 
 export function UserMenu() {
+  const { actor } = useSession()
+  const displayName = actor?.displayName || "Tài khoản quản trị"
   const { isMobile } = useSidebar()
   const { theme, setTheme } = useTheme()
   const [confirmReset, setConfirmReset] = useState(false)
@@ -44,12 +48,12 @@ export function UserMenu() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">BT</AvatarFallback>
+                <AvatarFallback className="rounded-lg">{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Biên tập viên</span>
+                <span className="truncate font-medium">{displayName}</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  {api.mode === "mock" ? "Dữ liệu mẫu · chưa đăng nhập" : "Đã đăng nhập"}
+                  {api.mode === "mock" ? "Đã đăng nhập · dữ liệu mẫu" : "Đã đăng nhập"}
                 </span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
@@ -63,8 +67,10 @@ export function UserMenu() {
           >
             <DropdownMenuLabel className="font-normal">
               <div className="grid text-sm leading-tight">
-                <span className="font-medium">Biên tập viên</span>
-                <span className="text-xs text-muted-foreground">Quyền: catalog:read, *:write</span>
+                <span className="font-medium">{displayName}</span>
+                <span className="max-w-72 whitespace-normal break-words text-xs text-muted-foreground">
+                  Quyền: {actor?.capabilities.join(", ")}
+                </span>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
@@ -87,8 +93,8 @@ export function UserMenu() {
                   <DatabaseBackup /> Bỏ mọi thay đổi trên dữ liệu mẫu
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem disabled>
-                <LogIn /> Đăng nhập Keycloak (sắp có)
+              <DropdownMenuItem onSelect={() => void logout()}>
+                <LogOut /> Đăng xuất
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>

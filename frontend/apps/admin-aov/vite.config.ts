@@ -51,6 +51,12 @@ function aovResources(): Plugin {
 }
 
 export default defineConfig({
+  server: {
+    proxy: { "/api/wiki": { target: process.env.WIKI_API_TARGET || "http://localhost:8080", changeOrigin: true } },
+  },
+  preview: {
+    proxy: { "/api/wiki": { target: process.env.WIKI_API_TARGET || "http://localhost:8080", changeOrigin: true } },
+  },
   optimizeDeps: { include: ["@tanstack/react-table"] },
   plugins: [react(), tailwindcss(), aovResources(), jsonStorage(fileURLToPath(new URL("./storage", import.meta.url)))],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
