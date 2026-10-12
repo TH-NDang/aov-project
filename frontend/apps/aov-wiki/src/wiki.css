@@ -30,7 +30,7 @@
   --amber-accent: #c98f45;
 }
 
-/* Exposes the tokens above as utilities: bg-header, border-header-line, text-header-muted, text-gold, bg-amber-accent… */
+/* Exposes the tokens above as utilities: bg-header, border-header-line, text-header-muted, text-gold, bg-amber-accent, font-heading… */
 @theme inline {
   --color-header: var(--header-bg);
   --color-header-line: var(--header-line);
@@ -38,7 +38,12 @@
   --color-header-muted: var(--header-muted);
   --color-gold: var(--gold);
   --color-amber-accent: var(--amber-accent);
+  /* System fonts, as HoYoWiki uses for Vietnamese and other Latin-script languages */
+  --font-sans: Tahoma, Helvetica, Arial, sans-serif;
+  --font-heading: var(--font-sans);
   --font-wordmark: "Arial Black", "Segoe UI", sans-serif;
+  /* Page body width, as on HoYoWiki: max-w-page */
+  --container-page: 1188px;
 }
 
 @layer base {
@@ -49,7 +54,6 @@
   }
   body {
     min-width: 280px;
-    font-family: "Segoe UI", system-ui, sans-serif;
   }
   button,
   input,
