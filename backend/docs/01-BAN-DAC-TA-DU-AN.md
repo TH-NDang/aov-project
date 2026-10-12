@@ -226,7 +226,8 @@ Kỹ năng và trang phục **không** là module riêng: chúng không có ý n
 - Client:
 
 ```text
-admin-aov      public client, Authorization Code + PKCE — biên tập viên đăng nhập trang quản trị
+admin-aov-backend confidential client — Direct Grant cho modal mật khẩu; Code + PKCE cho Google qua backend
+admin-aov      public client cũ, không dùng trong luồng admin hiện tại
 aov-wiki       public client, PKCE — chỉ cần khi có tính năng người dùng cuối đăng nhập (sau)
 aov-stream     public client, PKCE — chỉ cần khi có tính năng người dùng cuối đăng nhập (sau)
 wiki-importer  confidential client, client credentials — script import dữ liệu gọi admin API
@@ -236,6 +237,7 @@ wiki-importer  confidential client, client credentials — script import dữ li
 - `wiki-service`: public GET không cần token; admin API cần scope theo mục 20.
 - `community-service` (sau): tài khoản người dùng cuối. Biên tập viên và người dùng cuối nằm cùng IdP, khác nhau ở role/scope.
 - Actor identity thống nhất toàn hệ thống là `(issuer, subject)`, nên một người vừa biên tập wiki vừa đăng bài cộng đồng vẫn là một danh tính.
+- Luồng admin qua backend theo ADR-007: mật khẩu chỉ chuyển tiếp tới Keycloak, refresh token nằm trong cookie HttpOnly; access token giữ trong bộ nhớ frontend.
 - Không service nào lưu mật khẩu. Hồ sơ hiển thị (tên, avatar) thuộc `community-service`, khóa theo `(issuer, subject)`.
 - Trước khi Keycloak sẵn sàng, admin API **không được** mở ra ngoài production.
 
