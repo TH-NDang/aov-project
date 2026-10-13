@@ -38,6 +38,9 @@ aov-project/
 - Root package `com.wikiaov`. One deployable, modular monolith (Spring Modulith).
 - Modules: `hero`, `media`, `patch`, `item`, `arcana`, `spell`, `enchantment`, `gamemode`, `query`, `access`, `platform`.
 - Each module exposes public contracts at its package root; implementation goes in `internal/{web,application,domain,persistence,infrastructure}`.
+  Inside them (see `media`): `web/request` (request bodies), `application/response` (records returned by use cases and
+  sent as JSON), `domain/...` (plain Java rules, no JPA/Spring MVC/AWS), `persistence/entity` (JPA entities),
+  `persistence` (Spring Data repositories), `application/port` (interfaces implemented in `infrastructure`).
 - Never use another module's entity, repository or `internal` package. Call its public contract.
 - IDs are `UUID`; human-readable identifiers are `code` slugs.
 - API paths: map `ApiPaths.ROOT + "/..."` (or `ApiPaths.ADMIN`) and declare `version = "1"` on the mapping.
@@ -47,6 +50,9 @@ aov-project/
 - Query strings of public endpoints are whitelisted with `QueryParameters.requireOnly`; pages are returned as `PageSlice`.
 - Schema changes only through Flyway migrations in `src/main/resources/db/migration`. Never edit an applied migration. JPA `ddl-auto` stays `validate`.
 - Object storage only through the `ObjectStorage` port and `S3ObjectStorage` (AWS SDK for Java 2.x). No MinIO SDK.
+- Media bytes never pass through the backend: presigned upload to `incoming/`, then `complete` validates and copies to
+  the immutable `assets/` key. Other modules read assets via `MediaAssets` and report their references by implementing
+  `MediaUsageProvider`; they never touch media tables.
 - Lombok + MapStruct are allowed. Avoid `@Data` on JPA entities.
 - Do not hold a DB transaction open during object storage or external HTTP calls.
 - Formatting is owned by Spotless with `eclipse-formatter.xml` (4 spaces, 120 columns, comments untouched).
@@ -72,6 +78,7 @@ Commands (run inside `backend/wiki-service`):
 - One logical change per commit. Commit spec changes separately from code.
 - Never commit secrets (`.env`, keys, tokens). Only `.env.example` is tracked.
 - Images under `resources/` are stored with Git LFS (`.gitattributes`). Do not change those rules without asking.
+- CI: `.github/workflows/backend.yml` runs `mvnw verify` (with Docker, so Testcontainers tests run) on every push touching `backend/wiki-service`.
 
 ## Git hooks
 

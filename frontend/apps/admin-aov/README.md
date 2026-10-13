@@ -105,3 +105,28 @@ Trong `backend/wiki-service`:
 
 Kiểm tra thủ công: sai mật khẩu; đúng mật khẩu có/không quyền; reload khôi phục phiên; đăng xuất;
 Google thành công/hủy/chặn popup; modal trên mobile; logout ở tab khác.
+
+## Hồ sơ người dùng và avatar
+
+- Menu **Hồ sơ của tôi** (`/profile`): tên hiển thị, giới thiệu, ngôn ngữ, múi giờ; chọn/gỡ avatar rồi bấm **Lưu hồ sơ**.
+- Menu **Người dùng** (`/users`) chỉ hiện khi token có client role `wiki-service:user:read`.
+  Sửa hồ sơ người khác cần thêm `user:write`. Admin API vẫn cần `catalog:read`.
+- Có thể tự động áp dụng quyền cho admin bằng `./scripts/sync-user-roles.ps1` từ `backend/wiki-service`.
+  Script hỏi tài khoản quản trị Keycloak, bổ sung quyền còn thiếu và kiểm tra lại; chạy lại không tạo trùng.
+- Với realm đã tồn tại, thêm hai client role `user:read`, `user:write` vào `wiki-service`, thêm chúng vào composite
+  `wiki-admin` hoặc gán cho quản trị viên phù hợp, rồi đăng xuất/đăng nhập lại. Không cấp mặc định cho mọi editor.
+  Import realm mới đã chứa các role này; khởi động lại Keycloak không tự cập nhật realm đang có.
+- Backend mới áp dụng migration V003 khi bạn khởi động lại. Không reset database. Hồ sơ tạo ở lần lưu đầu;
+  danh sách này không phải toàn bộ tài khoản Keycloak. Thông tin hồ sơ dùng backend thật ngay cả khi dữ liệu wiki đang là mock.
+- Avatar: PNG/JPEG/WebP tối đa 25 MB (backend có thể cấu hình thấp hơn); browser PUT trực tiếp tới URL ký sẵn,
+  backend complete xác minh file rồi mới cho gắn asset. Không gửi token hoặc cookie admin tới storage.
+- Bucket local tự cấu hình CORS khi `wiki.storage.create-bucket-if-missing=true`, đúng `ADMIN_ORIGIN`
+  (mặc định `http://localhost:5175`). Backend không đọc file ảnh từ form multipart.
+- Production: provision CORS trên bucket cho origin frontend, methods PUT/GET/HEAD, headers cần ký;
+  storage endpoint dùng để ký URL phải truy cập được từ browser, HTTPS nếu frontend là HTTPS.
+- Avatar được đọc qua URL ký sẵn 15 phút; query làm mới định kỳ. Chưa crop/resize ảnh.
+- Gỡ avatar chỉ gỡ liên kết, không xóa bytes. File đã upload nhưng chưa lưu hồ sơ vẫn nằm trong media,
+  có thể kiểm tra qua media usage trước khi áp dụng chính sách dọn file.
+
+Kiểm tra: `pnpm --filter @aov/admin-aov test:users`. Backend: `./mvnw.cmd verify`
+(chạy PostgreSQL/SeaweedFS test riêng bằng Testcontainers, không dùng dữ liệu local của bạn).
