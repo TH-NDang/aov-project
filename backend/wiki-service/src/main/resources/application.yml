@@ -60,6 +60,16 @@ wiki:
     access-key: ${STORAGE_ACCESS_KEY:}
     secret-key: ${STORAGE_SECRET_KEY:}
     create-bucket-if-missing: false
+  media:
+    # Media policy (01 section 13.5). Only PNG, JPEG and WebP are accepted.
+    max-upload-size: 25MB
+    max-pixels: 40000000
+    max-dimension: 16384
+    upload-url-validity: 15m
+    upload-session-validity: 1h
+    validation-timeout: 5m
+    # Prefix that serves the assets/ prefix of the bucket (reverse proxy or CDN).
+    public-base-url: ${MEDIA_PUBLIC_BASE_URL:/media}
 
 logging:
   pattern:

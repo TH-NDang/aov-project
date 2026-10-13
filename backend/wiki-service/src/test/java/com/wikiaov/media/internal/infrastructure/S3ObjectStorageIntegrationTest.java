@@ -111,9 +111,10 @@ class S3ObjectStorageIntegrationTest {
         byte[] bytes = {1, 2, 3};
         storage.put("incoming/u1", new ByteArrayInputStream(bytes), bytes.length, "image/png");
 
-        storage.copy("incoming/u1", "assets/a2/v1.png");
+        storage.copy("incoming/u1", "assets/a2/v1.png", "image/png", "public, max-age=31536000, immutable");
 
-        assertThat(storage.stat("assets/a2/v1.png")).isPresent();
+        assertThat(storage.stat("assets/a2/v1.png"))
+                .hasValueSatisfying(object -> assertThat(object.contentType()).isEqualTo("image/png"));
         assertThat(storage.stat("incoming/u1")).isPresent();
     }
 
