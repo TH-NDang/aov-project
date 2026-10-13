@@ -2,7 +2,7 @@ import { useCallback, type CSSProperties, type ReactNode } from "react"
 import { Link } from "react-router"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { FileQuestion, X } from "lucide-react"
+import { X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
@@ -20,7 +20,7 @@ function TabLabel({ tab }: { tab: TabPresentation }) {
     (item.activePaths ?? [item.to]).some(
       (path) => tab.path === path || (path !== "/" && tab.path.startsWith(path + "/")),
     ),
-  ) ?? { icon: FileQuestion }
+  ) ?? { icon: "page" as const }
   return (
     <>
       <NavIcon item={item} />

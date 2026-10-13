@@ -1,29 +1,11 @@
-import {
-  Gem,
-  Database,
-  Hexagon,
-  ImageIcon,
-  Images,
-  LayoutDashboard,
-  type LucideIcon,
-  Medal,
-  Radio,
-  Shield,
-  Shirt,
-  Swords,
-  Trophy,
-  Zap,
-  Users,
-  UserRound,
-} from "lucide-react"
+import type { AovNavIconName } from "@/app/aov-nav-icon"
 
 export type NavBadgeKey = "unmatchedPortraits" | "itemIssues"
 
 export interface NavItem {
   title: string
   to: string
-  icon: LucideIcon
-  image?: string
+  icon: AovNavIconName
   /** Short helper shown in the command menu. */
   description: string
   badge?: NavBadgeKey
@@ -34,8 +16,7 @@ export interface NavItem {
 
 export interface NavSection {
   title: string
-  icon: LucideIcon
-  image?: string
+  icon: AovNavIconName
   items: NavItem[]
 }
 
@@ -51,9 +32,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         title: "Bảng điều khiển",
-        image: "/images/navigation/dashboard.webp",
+        icon: "dashboard",
         to: "/",
-        icon: LayoutDashboard,
         description: "Số liệu và việc cần xử lý",
       },
     ],
@@ -63,23 +43,20 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         title: "Lưu trữ",
-        image: "/images/navigation/storage.webp",
+        icon: "storage",
         to: "/storage",
-        icon: Database,
         description: "Bảng JSON riêng và import theo ID",
       },
       {
         title: "Hồ sơ của tôi",
-        image: "/images/navigation/profile.webp",
+        icon: "profile",
         to: "/profile",
-        icon: UserRound,
         description: "Tên hiển thị, avatar và thông tin cá nhân",
       },
       {
         title: "Người dùng",
-        image: "/images/navigation/users.webp",
+        icon: "users",
         to: "/users",
-        icon: Users,
         description: "Quản lý hồ sơ người dùng",
         capability: "user:read",
       },
@@ -91,28 +68,24 @@ export const NAV_GROUPS: NavGroup[] = [
     sections: [
       {
         title: "Sổ nhân vật",
-        image: "/images/navigation/character-book.webp",
-        icon: Swords,
+        icon: "characterBook",
         items: [
           {
             title: "Tướng",
-            image: "/images/navigation/heroes.webp",
+            icon: "heroes",
             to: "/heroes",
-            icon: Swords,
             description: "Thông tin, kỹ năng, trang phục",
           },
           {
             title: "Trang phục",
-            image: "/images/navigation/skins.webp",
+            icon: "skins",
             to: "/skins",
-            icon: Shirt,
             description: "Toàn bộ trang phục theo tướng",
           },
           {
             title: "Không gian ảnh",
-            image: "/images/navigation/gallery.webp",
+            icon: "gallery",
             to: "/portraits",
-            icon: Images,
             description: "Portrait, head, cover và bậc trang phục",
             badge: "unmatchedPortraits",
             activePaths: ["/portraits", "/media"],
@@ -121,36 +94,31 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       {
         title: "Kho trang bị",
-        image: "/images/navigation/armory.webp",
-        icon: Shield,
+        icon: "armory",
         items: [
           {
             title: "Trang bị",
-            image: "/images/navigation/items.webp",
+            icon: "items",
             to: "/items",
-            icon: Shield,
             description: "Shop, công thức ghép",
             badge: "itemIssues",
           },
           {
             title: "Phù hiệu",
-            image: "/images/navigation/enchantments.webp",
+            icon: "enchantments",
             to: "/enchantments",
-            icon: Hexagon,
             description: "Bốn hệ phù hiệu",
           },
           {
             title: "Bảng ngọc",
-            image: "/images/navigation/arcana.webp",
+            icon: "arcana",
             to: "/arcana",
-            icon: Gem,
             description: "Chưa thu thập dữ liệu",
           },
           {
             title: "Phụ trợ",
-            image: "/images/navigation/spells.webp",
+            icon: "spells",
             to: "/spells",
-            icon: Zap,
             description: "Phép phụ trợ cho tướng",
           },
         ],
@@ -162,17 +130,15 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         title: "Giải đấu",
-        image: "/images/navigation/tournaments.webp",
+        icon: "tournaments",
         to: "/tournaments",
-        icon: Trophy,
         description: "Giải, đội, lịch thi đấu",
         soon: true,
       },
       {
         title: "Livestream",
-        image: "/images/navigation/streams.webp",
+        icon: "streams",
         to: "/streams",
-        icon: Radio,
         description: "Kênh và trạng thái live",
         soon: true,
       },
@@ -183,30 +149,26 @@ export const NAV_GROUPS: NavGroup[] = [
 export const MEDIA_NAV: NavItem[] = [
   {
     title: "Portrait",
-    image: "/images/navigation/portrait.webp",
     to: "/portraits",
-    icon: ImageIcon,
+    icon: "portrait",
     description: "Ghép và sắp xếp portrait",
   },
   {
     title: "Head",
-    image: "/images/navigation/head.webp",
     to: "/media/head",
-    icon: ImageIcon,
+    icon: "head",
     description: "Head tướng, trang phục và icon danh sách",
   },
   {
     title: "Cover",
-    image: "/images/navigation/cover.webp",
     to: "/media/cover",
-    icon: Images,
+    icon: "cover",
     description: "Cover tướng và trang phục",
   },
   {
     title: "Bậc trang phục",
-    image: "/images/navigation/badges.webp",
     to: "/media/badges",
-    icon: Medal,
+    icon: "badges",
     description: "Nhãn bậc và sự kiện",
   },
 ]
