@@ -16,6 +16,21 @@ const routes: RouteObject[] = [
     handle: title("AOV Admin"),
     children: [
       {
+        path: "profile",
+        handle: title("Hồ sơ của tôi"),
+        lazy: async () => ({ Component: (await import("@/features/users/users-page")).ProfilePage }),
+      },
+      {
+        path: "users",
+        handle: title("Người dùng"),
+        lazy: async () => ({ Component: (await import("@/features/users/users-page")).UsersPage }),
+      },
+      {
+        path: "users/:userId",
+        handle: title("Chi tiết người dùng"),
+        lazy: async () => ({ Component: (await import("@/features/users/user-detail-page")).UserDetailPage }),
+      },
+      {
         errorElement: <RouteError />,
         children: [
           {
