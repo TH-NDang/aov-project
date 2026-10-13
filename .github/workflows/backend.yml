@@ -1,0 +1,53 @@
+# Builds and tests backend/wiki-service on every push that touches it.
+# GitHub-hosted Ubuntu runners have Docker, so the Testcontainers tests (PostgreSQL, SeaweedFS)
+# really run here instead of being skipped as on machines without Docker.
+name: backend
+
+on:
+  push:
+    paths:
+      - "backend/wiki-service/**"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    paths:
+      - "backend/wiki-service/**"
+      - ".github/workflows/backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend/wiki-service
+    steps:
+      # Images under resources/ are Git LFS objects the build does not need; skip downloading them.
+      - uses: actions/checkout@v5
+        with:
+          lfs: false
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      # Build, unit + integration tests, Spotless format check. "sh" works even if mvnw lost its executable bit.
+      - name: mvnw verify
+        run: sh mvnw --batch-mode --no-transfer-progress verify
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-service-test-reports
+          path: backend/wiki-service/target/surefire-reports/
+          retention-days: 7
