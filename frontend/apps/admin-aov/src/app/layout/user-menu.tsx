@@ -1,5 +1,8 @@
 import { useState } from "react"
-import { ChevronsUpDown, DatabaseBackup, LogOut, Monitor, Moon, Sun } from "lucide-react"
+import { ChevronsUpDown, DatabaseBackup, LogOut, Monitor, Moon, Sun, UserRound } from "lucide-react"
+import { useNavigate } from "react-router"
+import { useQuery } from "@tanstack/react-query"
+import { selfProfile, userKeys } from "@/features/users/user-api"
 import { useSession } from "@/app/auth/auth-gate"
 import { logout } from "@/app/auth/session"
 import { useTheme, type Theme } from "@/app/theme"
@@ -14,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@aov/ui/components/alert-dialog"
-import { Avatar, AvatarFallback } from "@aov/ui/components/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +35,14 @@ import { useResetLocalChanges } from "@/lib/queries"
 
 export function UserMenu() {
   const { actor } = useSession()
-  const displayName = actor?.displayName || "Tài khoản quản trị"
+  const navigate = useNavigate()
+  const profile = useQuery({
+    queryKey: [...userKeys.self, actor?.issuer, actor?.subject],
+    queryFn: ({ signal }) => selfProfile(signal),
+    enabled: !!actor,
+    refetchInterval: 600000,
+  })
+  const displayName = profile.data?.displayName || actor?.displayName || "Tài khoản quản trị"
   const { isMobile } = useSidebar()
   const { theme, setTheme } = useTheme()
   const [confirmReset, setConfirmReset] = useState(false)
@@ -48,6 +58,7 @@ export function UserMenu() {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="size-8 rounded-lg">
+                {profile.data?.avatarUrl && <AvatarImage src={profile.data.avatarUrl} referrerPolicy="no-referrer" />}
                 <AvatarFallback className="rounded-lg">{displayName.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -73,6 +84,11 @@ export function UserMenu() {
                 </span>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={() => navigate("/profile")}>
+              <UserRound />
+              Hồ sơ của tôi
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Giao diện</DropdownMenuLabel>
             <DropdownMenuRadioGroup value={theme} onValueChange={(value) => setTheme(value as Theme)}>

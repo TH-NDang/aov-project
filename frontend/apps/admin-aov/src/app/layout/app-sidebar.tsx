@@ -23,6 +23,7 @@ import { NavIcon } from "@/app/nav-icon"
 import { useAttentionCounts } from "@/lib/use-wiki-index"
 import { UserMenu } from "./user-menu"
 import { HotkeyHelp } from "./hotkey-help"
+import { useSession } from "@/app/auth/auth-gate"
 
 export function isNavActive(item: Pick<NavItem, "to" | "activePaths">, pathname: string) {
   return (item.activePaths ?? [item.to]).some((path) =>
@@ -33,9 +34,11 @@ export function isNavActive(item: Pick<NavItem, "to" | "activePaths">, pathname:
 type AttentionCounts = ReturnType<typeof useAttentionCounts>
 
 function NavLink({ item, counts, nested = false }: { item: NavItem; counts: AttentionCounts; nested?: boolean }) {
+  const { actor } = useSession()
   const { pathname } = useLocation()
   const { isMobile, setOpenMobile } = useSidebar()
   const count = item.badge ? counts[item.badge] : undefined
+  if (item.capability && !actor?.capabilities.includes(item.capability)) return null
   return (
     <SidebarMenuItem>
       <SidebarMenuButton

@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:users": "tsx --test tests/avatar-upload.test.ts",
     "test:auth": "tsx --test tests/auth.test.ts",
     "dev": "vite --port 5175 --strictPort",
     "build": "tsc -p tsconfig.json && vite build",

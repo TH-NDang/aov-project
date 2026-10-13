@@ -13,6 +13,8 @@ import {
   Swords,
   Trophy,
   Zap,
+  Users,
+  UserRound,
 } from "lucide-react"
 
 export type NavBadgeKey = "unmatchedPortraits" | "itemIssues"
@@ -27,6 +29,7 @@ export interface NavItem {
   badge?: NavBadgeKey
   soon?: boolean
   activePaths?: string[]
+  capability?: string
 }
 
 export interface NavSection {
@@ -64,6 +67,21 @@ export const NAV_GROUPS: NavGroup[] = [
         to: "/storage",
         icon: Database,
         description: "Bảng JSON riêng và import theo ID",
+      },
+      {
+        title: "Hồ sơ của tôi",
+        image: "/images/navigation/profile.webp",
+        to: "/profile",
+        icon: UserRound,
+        description: "Tên hiển thị, avatar và thông tin cá nhân",
+      },
+      {
+        title: "Người dùng",
+        image: "/images/navigation/users.webp",
+        to: "/users",
+        icon: Users,
+        description: "Quản lý hồ sơ người dùng",
+        capability: "user:read",
       },
     ],
   },

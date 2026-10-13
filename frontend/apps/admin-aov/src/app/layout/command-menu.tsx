@@ -17,6 +17,7 @@ import { NavIcon } from "@/app/nav-icon"
 import { MediaImage } from "@/components/media-image"
 import { useEnchantments, useHeroes, useItemCatalog } from "@/lib/queries"
 import { commandFilter, formatNumber } from "@/lib/text"
+import { useSession } from "@/app/auth/auth-gate"
 
 interface CommandMenuProps {
   open: boolean
@@ -24,6 +25,7 @@ interface CommandMenuProps {
 }
 
 export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
+  const { actor } = useSession()
   const navigate = useNavigate()
   const { resolvedTheme, setTheme } = useTheme()
   const [search, setSearch] = useState("")
@@ -57,17 +59,19 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           <CommandList>
             <CommandEmpty>Không tìm thấy kết quả.</CommandEmpty>
             <CommandGroup heading="Trang">
-              {[...NAV_ITEMS, ...MEDIA_NAV].map((item) => (
-                <CommandItem
-                  key={`${item.to}:${item.title}`}
-                  value={`trang ${item.title} ${item.description}`}
-                  onSelect={() => run(() => navigate(item.to))}
-                >
-                  <NavIcon item={item} />
-                  <span>{item.title}</span>
-                  <span className="ml-auto truncate text-xs text-muted-foreground">{item.description}</span>
-                </CommandItem>
-              ))}
+              {[...NAV_ITEMS, ...MEDIA_NAV]
+                .filter((item) => !item.capability || actor?.capabilities.includes(item.capability))
+                .map((item) => (
+                  <CommandItem
+                    key={`${item.to}:${item.title}`}
+                    value={`trang ${item.title} ${item.description}`}
+                    onSelect={() => run(() => navigate(item.to))}
+                  >
+                    <NavIcon item={item} />
+                    <span>{item.title}</span>
+                    <span className="ml-auto truncate text-xs text-muted-foreground">{item.description}</span>
+                  </CommandItem>
+                ))}
             </CommandGroup>
             {search.trim().length > 1 && (
               <CommandGroup heading="Tìm nhanh">
