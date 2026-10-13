@@ -34,7 +34,25 @@ Spring Boot tự khởi động PostgreSQL và SeaweedFS (object storage S3-comp
 | SeaweedFS | S3 API http://localhost:8333 (key trong `seaweedfs/s3.json`), filer UI xem file http://localhost:8888 |
 | Keycloak | http://localhost:8081 (admin console: `admin` / `admin-local`) |
 
-Realm được import từ `keycloak/wikiaov-realm.json` ở lần chạy đầu. Nếu sửa file realm, xoá volume `keycloak-data` để import lại.
+Realm được import từ `keycloak/wikiaov-realm.json` ở lần chạy đầu. File import không tự cập nhật realm đang tồn tại; giữ volume và cập nhật qua Admin API.
+
+### Cập nhật quyền quản lý hồ sơ
+
+Với Keycloak đang chạy, thực hiện từ `backend/wiki-service`:
+
+```powershell
+./scripts/sync-user-roles.ps1
+```
+
+Script hỏi thông tin quản trị của realm `master`, tạo `user:read` và `user:write` còn thiếu trong client
+`wiki-service`, bổ sung vào `wiki-admin`, rồi bảo đảm tài khoản `admin` có hai quyền này.
+Chạy lại không tạo trùng hoặc xóa quyền hiện có; không đổi mật khẩu hay tạo lại tài khoản.
+Sau khi thành công, đăng xuất và đăng nhập lại admin để lấy quyền mới.
+
+Có thể truyền `-ServerUrl`, `-Realm`, `-TargetUsername` và `-Credential` (PowerShell `PSCredential`).
+Máy chủ ngoài local phải dùng HTTPS. Không ghi mật khẩu hoặc token vào script.
+Script chỉ đồng bộ quyền hồ sơ, không đồng bộ toàn bộ cấu hình realm. Kiểm tra cuối dùng quyền hiệu lực
+qua [Keycloak Admin REST API](https://www.keycloak.org/docs-api/26.2.5/rest-api/).
 
 ## Đăng nhập và quyền (local)
 

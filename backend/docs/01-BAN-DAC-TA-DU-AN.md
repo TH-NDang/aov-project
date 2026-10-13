@@ -1390,7 +1390,7 @@ internal/
 │   ├── XxxAdminController.java
 │   └── request/          body của request (record + Bean Validation)
 ├── application/
-│   ├── CreateXxx.java    mỗi use case một class (@PreAuthorize, transaction)
+│   ├── service/          use case và lớp xử lý dùng chung (@PreAuthorize, transaction)
 │   ├── port/             interface do infrastructure implement (ví dụ ObjectStorage)
 │   └── response/         record use case trả về, controller trả thẳng ra JSON
 ├── domain/               Java thuần: quy tắc, enum, value object (chia thư mục con theo chủ đề)
