@@ -15,8 +15,13 @@ import org.jspecify.annotations.Nullable;
  * @param displayName  optional human-readable name, for display only
  * @param capabilities granted capabilities such as {@code hero:publish}
  */
-public record Actor(String issuer, String subject, ActorType type, @Nullable String displayName,
-        Set<String> capabilities) {
+public record Actor(
+        String issuer,
+        String subject,
+        ActorType type,
+        @Nullable String displayName,
+        Set<String> capabilities
+) {
 
     public Actor {
         Objects.requireNonNull(issuer, "issuer");

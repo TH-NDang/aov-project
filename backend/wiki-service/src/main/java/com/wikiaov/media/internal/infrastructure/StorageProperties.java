@@ -27,7 +27,8 @@ record StorageProperties(
         @DefaultValue("true") boolean pathStyleAccess,
         @Nullable String accessKey,
         @Nullable String secretKey,
-        @DefaultValue("false") boolean createBucketIfMissing) {
+        @DefaultValue("false") boolean createBucketIfMissing
+) {
 
     boolean hasStaticCredentials() {
         return accessKey != null && !accessKey.isBlank() && secretKey != null && !secretKey.isBlank();

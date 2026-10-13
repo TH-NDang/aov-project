@@ -18,9 +18,17 @@ import org.jspecify.annotations.Nullable;
  * @param reason         free-text note supplied by the actor, if any
  * @param metadata       extra structured data; must not contain secrets or tokens
  */
-public record AuditEntry(Actor actor, String action, String aggregateType, UUID aggregateId,
-        @Nullable UUID revisionId, @Nullable Long beforeVersion, @Nullable Long afterVersion,
-        @Nullable String reason, Map<String, Object> metadata) {
+public record AuditEntry(
+        Actor actor,
+        String action,
+        String aggregateType,
+        UUID aggregateId,
+        @Nullable UUID revisionId,
+        @Nullable Long beforeVersion,
+        @Nullable Long afterVersion,
+        @Nullable String reason,
+        Map<String, Object> metadata
+) {
 
     public AuditEntry {
         Objects.requireNonNull(actor, "actor");
