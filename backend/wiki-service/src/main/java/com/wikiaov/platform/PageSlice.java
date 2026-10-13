@@ -7,7 +7,12 @@ import java.util.function.Function;
  * Framework-neutral page of results; Spring's {@code Page} is never exposed to clients.
  * {@code totalPages = ceil(totalElements / size)}, and 0 when there are no elements.
  */
-public record PageSlice<T>(List<T> items, int page, int size, long totalElements) {
+public record PageSlice<T>(
+        List<T> items,
+        int page,
+        int size,
+        long totalElements
+) {
 
     public PageSlice {
         items = List.copyOf(items);

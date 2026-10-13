@@ -77,7 +77,7 @@ function formatJava(files) {
     const args = ["-q", "-B", "spotless:apply", `-DspotlessFiles=${patterns}`];
     const result = windows
       ? spawnSync("cmd.exe", ["/d", "/c", "mvnw.cmd", ...args], { cwd: moduleDir, encoding: "utf8" })
-      : spawnSync("./mvnw", args, { cwd: moduleDir, encoding: "utf8" });
+      : spawnSync("sh", ["./mvnw", ...args], { cwd: moduleDir, encoding: "utf8" });
     if (result.error || result.status !== 0) {
       console.error("[format] Spotless failed (syntax error, or Java/Maven not available):");
       console.error(result.error?.message ?? `${result.stdout}${result.stderr}`.trim().split("\n").slice(-30).join("\n"));

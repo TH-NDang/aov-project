@@ -12,7 +12,12 @@ import java.util.Map;
  * @param headers   headers the client must send with the request (the signature covers them)
  * @param expiresAt instant after which the URL is rejected
  */
-public record PresignedRequest(URI url, String method, Map<String, String> headers, Instant expiresAt) {
+public record PresignedRequest(
+        URI url,
+        String method,
+        Map<String, String> headers,
+        Instant expiresAt
+) {
 
     public PresignedRequest {
         headers = Map.copyOf(headers);

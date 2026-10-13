@@ -191,7 +191,10 @@ class ProblemDetailsExceptionHandlerTest {
         }
     }
 
-    record Payload(@NotBlank String code, @Min(1) int size) {
+    record Payload(
+            @NotBlank String code,
+            @Min(1) int size
+    ) {
     }
 
     @RestController

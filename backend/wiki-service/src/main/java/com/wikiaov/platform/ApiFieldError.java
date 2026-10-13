@@ -7,5 +7,9 @@ package com.wikiaov.platform;
  * @param code    stable code, e.g. {@code NOT_BLANK} or {@code HERO_PORTRAIT_REQUIRED}
  * @param message human-readable explanation
  */
-public record ApiFieldError(String path, String code, String message) {
+public record ApiFieldError(
+        String path,
+        String code,
+        String message
+) {
 }
