@@ -1,7 +1,7 @@
 # WikiAOV Backend — Bản đặc tả dự án
 
-**Trạng thái:** Tài liệu đặc tả hiện hành (canonical)  
-**Phạm vi:** Backend `wiki-service` (AOV Wiki). Mục 3 mô tả bối cảnh toàn hệ thống; frontend và các service khác chỉ được mô tả ở mức ranh giới.  
+**Trạng thái:** Tài liệu đặc tả hiện hành (canonical)
+**Phạm vi:** Backend `wiki-service` (AOV Wiki). Mục 3 mô tả bối cảnh toàn hệ thống; frontend và các service khác chỉ được mô tả ở mức ranh giới.
 **Tài liệu liên quan:** `02-DATABASE-DU-AN.md`, `03-API-DU-AN.md`
 
 ---
@@ -94,7 +94,7 @@ Phần còn lại của tài liệu này, cùng `02-DATABASE-DU-AN.md` và `03-A
 | Khu vực | Nội dung | Deployable | Trạng thái |
 |---|---|---|---|
 | **AOV Wiki** | Tướng (kỹ năng, trang phục), trang bị, phù hiệu, phụ trợ, bảng ngọc, chế độ chơi, lịch sử cập nhật | `wiki-service` | Triển khai ngay |
-| **Cộng đồng** | Bài viết, bình luận, thảo luận, hồ sơ người dùng, báo cáo/kiểm duyệt | `community-service` | Sau |
+| **Cộng đồng** | Bài viết, bình luận, thảo luận, báo cáo/kiểm duyệt | `community-service` | Sau |
 | **Giải đấu** | Giải, đội, lịch thi đấu, kết quả trận, cấm/chọn tướng | `community-service` | Sau |
 | **Livestream** | Danh sách kênh, trạng thái đang live, nhúng player | `community-service` | Sau |
 
@@ -238,7 +238,7 @@ wiki-importer  confidential client, client credentials — script import dữ li
 - `community-service` (sau): tài khoản người dùng cuối. Biên tập viên và người dùng cuối nằm cùng IdP, khác nhau ở role/scope.
 - Actor identity thống nhất toàn hệ thống là `(issuer, subject)`, nên một người vừa biên tập wiki vừa đăng bài cộng đồng vẫn là một danh tính.
 - Luồng admin qua backend theo ADR-007: mật khẩu chỉ chuyển tiếp tới Keycloak, refresh token nằm trong cookie HttpOnly; access token giữ trong bộ nhớ frontend.
-- Không service nào lưu mật khẩu. Hồ sơ hiển thị (tên, avatar) thuộc `community-service`, khóa theo `(issuer, subject)`.
+- Không service nào lưu mật khẩu. Hồ sơ hiển thị (tên, avatar, giới thiệu, locale, múi giờ) thuộc module `user` trong `wiki-service`, khóa theo `(issuer, subject)`; dùng chung qua API theo ADR-008.
 - Trước khi Keycloak sẵn sàng, admin API **không được** mở ra ngoài production.
 
 ### 3.8 Dữ liệu và giao tiếp giữa các service
@@ -371,7 +371,7 @@ Quản lý:
 
 Media domain không quyết định asset đó có ý nghĩa gameplay gì. Ví dụ:
 
-> `MediaAsset A20` là file/artwork nào — thuộc media.  
+> `MediaAsset A20` là file/artwork nào — thuộc media.
 > `A20 đang là portrait của Nakroth` — thuộc hero.
 
 ### 4.3 Patch domain
@@ -1051,12 +1051,20 @@ Không hard-delete asset đang được current/historical revision tham chiếu
 Ưu tiên lifecycle:
 
 ```text
-READY
-DEPRECATED
-BLOCKED
+ACTIVE       dùng bình thường, nhận version mới, được bind
+DEPRECATED   giữ cho lịch sử, không được bind mới
+BLOCKED      rút xuống (ví dụ lý do pháp lý), không được phục vụ/bind
 ```
 
 và retention phù hợp với lịch sử.
+
+### 12.8 Trạng thái version và version đang dùng
+
+- `MediaAssetVersion.state`: `READY` (đã kiểm tra, nằm ở key bất biến), `DEPRECATED`, `BLOCKED`.
+- Version **đang được phục vụ** là `MediaAsset.currentVersionId`; không có trạng thái `ACTIVE` riêng cho version.
+- Version đầu tiên của asset được activate tự động; các version sau phải activate tường minh (03 mục 33), để bản upload mới không âm thầm thay ảnh đang hiển thị.
+- Cùng bytes (cùng SHA-256) upload lại vào cùng asset → trả version đã có, không tạo version mới.
+- Asset chỉ được module khác bind khi `ACTIVE` và đã có `currentVersionId` (`MediaAssetReference.usable()`).
 
 ---
 
@@ -1116,30 +1124,52 @@ Quy tắc:
 
 Database lưu `objectKey`, không lưu URL môi trường cụ thể như `http://localhost:8333/...`.
 
-Object key/version phải hỗ trợ immutable delivery.
+Object key/version phải hỗ trợ immutable delivery. Bố cục bucket:
+
+```text
+incoming/{uploadId}                   upload trực tiếp đang chờ kiểm tra, không bao giờ public
+imports/...                           object do công cụ import đặt sẵn, không public
+assets/{assetId}/{versionId}.{ext}    bytes đã kiểm tra, bất biến
+```
+
+- URL public: `/media/{assetId}/{versionId}.{ext}`; reverse proxy/CDN map `/media/` vào prefix `assets/` (mục 3.4). Prefix cấu hình bằng `wiki.media.public-base-url`.
+- Khi copy sang `assets/`, backend ghi lại `Content-Type` theo định dạng đã xác minh và `Cache-Control: public, max-age=31536000, immutable`.
+- Object `incoming/` được xóa sau khi upload thành công; object còn sót (upload bỏ dở, bị từ chối) dọn bằng **lifecycle rule của bucket** (ví dụ xóa `incoming/` sau 1 ngày), không viết job riêng.
 
 ### 13.4 Upload flow
 
-Giai đoạn đơn giản có thể:
-
-```text
-Admin/API caller
- -> Spring Boot
- -> ObjectStorage
-```
-
-Hướng tối ưu hơn:
+Bytes không đi qua Spring Boot; backend chỉ cấp quyền và kiểm tra:
 
 ```text
 request upload
- -> backend cấp upload session / presigned PUT
+ -> backend tạo upload session REQUESTED + presigned PUT vào incoming/{uploadId}
  -> caller upload trực tiếp object storage
  -> complete upload
- -> backend stat/validate/hash/decode
- -> MediaAssetVersion READY
+ -> backend: stat -> đọc header + SHA-256 (stream) -> tìm bytes trùng -> copy sang assets/
+ -> một transaction ngắn: đánh số version, MediaAssetVersion READY, đóng session, audit
 ```
 
 Upload thành công ở object storage không đồng nghĩa media version đã READY.
+
+- Không giữ transaction trong lúc gọi object storage (mục 19.2). Session chuyển `REQUESTED → VALIDATING` trong transaction riêng để hai request complete cùng lúc không cùng chạy (optimistic lock).
+- Lỗi tạm thời (chưa upload xong, storage lỗi) đưa session về `REQUESTED` để thử lại; bytes không hợp lệ → `REJECTED` vĩnh viễn; quá hạn → `EXPIRED`.
+- Complete gọi lại sau khi đã thành công trả đúng version cũ (an toàn khi mất response).
+- Import hàng loạt: công cụ đặt file vào `imports/`, gọi `register` (03 mục 34); bytes được kiểm tra như upload, chạy lại import không tạo trùng.
+
+### 13.5 Chính sách media
+
+| Quy tắc | Giá trị mặc định (`wiki.media.*`) |
+|---|---|
+| Định dạng | PNG, JPEG, WebP (nhận diện bằng chữ ký file, không tin `Content-Type` client gửi) |
+| Dung lượng tối đa | `max-upload-size: 25MB` |
+| Số pixel tối đa | `max-pixels: 40000000` |
+| Cạnh dài tối đa | `max-dimension: 16384` |
+| Hiệu lực URL upload | `upload-url-validity: 15m` |
+| Hạn complete | `upload-session-validity: 1h` |
+
+- Backend **chỉ đọc header** để lấy định dạng và kích thước, không decode pixel: bộ nhớ không phụ thuộc kích thước ảnh, ảnh "bom giải nén" bị chặn từ header, và không cần thư viện ngoài (Java không tự đọc được WebP). Đổi lại, file JPEG hỏng phần dữ liệu ảnh có thể lọt qua; PNG/WebP bị cắt cụt vẫn bị phát hiện (trailer `IEND`, kích thước RIFF).
+- Chưa có AVIF/GIF/SVG. SVG cố ý không nhận (có thể chứa script).
+- Chưa tạo rendition (thumbnail/resize); phục vụ ảnh gốc. Rendition để Phase 6 khi có nhu cầu thật.
 
 ---
 
@@ -1226,6 +1256,7 @@ com.wikiaov
 ├── enchantment
 ├── gamemode
 ├── query
+├── user
 ├── access
 └── platform
 ```
@@ -1306,6 +1337,7 @@ backend/wiki-service/
     │   │   ├── enchantment/
     │   │   ├── gamemode/
     │   │   ├── query/
+    │   │   ├── user/
     │   │   ├── access/
     │   │   └── platform/
     │   │
@@ -1350,16 +1382,36 @@ hero/
     └── infrastructure/
 ```
 
+Thư mục con (module `media` là mẫu):
+
+```text
+internal/
+├── web/
+│   ├── XxxAdminController.java
+│   └── request/          body của request (record + Bean Validation)
+├── application/
+│   ├── CreateXxx.java    mỗi use case một class (@PreAuthorize, transaction)
+│   ├── port/             interface do infrastructure implement (ví dụ ObjectStorage)
+│   └── response/         record use case trả về, controller trả thẳng ra JSON
+├── domain/               Java thuần: quy tắc, enum, value object (chia thư mục con theo chủ đề)
+├── persistence/
+│   ├── XxxRepository.java   Spring Data repository
+│   └── entity/           JPA entity (@Entity)
+└── infrastructure/       cấu hình, adapter (S3, ...)
+```
+
 Quy tắc dependency nội bộ:
 
 ```text
 web -> application
-application -> domain
-persistence -> domain/application ports khi áp dụng
-infrastructure -> ports/config cần implement
+application -> domain, persistence (repository + entity), application/port
+persistence/entity -> domain (enum, value object)
+infrastructure -> application/port, config
 ```
 
-Domain không phụ thuộc Spring MVC hay AWS SDK cụ thể.
+- Domain không phụ thuộc JPA, Spring MVC hay AWS SDK.
+- JPA entity nằm ở `persistence/entity` và vẫn giữ hành vi bảo vệ bất biến (ví dụ `MediaAsset.activate`); không expose entity ra API mà map sang record trong `application/response`.
+- Request record chỉ có ở tầng web; use case nhận `Command` của chính nó.
 
 ---
 
@@ -1724,7 +1776,9 @@ Worker xử lý media/video/import có khả năng là ứng viên tách trướ
 - upload/register object;
 - validation;
 - activation;
-- reverse usage contract.
+- reverse usage contract (`MediaUsageProvider`), usage lookup và deprecate.
+
+Đã triển khai (migration `V002`, API 03 phần E). `media_rendition` và `media_usage_index` chưa tạo: chưa có nhu cầu.
 
 ### Phase 3 — Hero vertical slice
 

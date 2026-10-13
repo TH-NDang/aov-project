@@ -33,7 +33,8 @@ arcana        Arcana catalog/revisions/change sets
 spell         Spell/phụ trợ catalog/revisions/change sets
 enchantment   Enchantment/phù hiệu catalog/revisions/change sets
 gamemode      Game mode/system catalog revisions
-access        Local identity mapping/audit support nếu cần
+access        Audit support
+user_profile  Hồ sơ dùng chung, module user (ADR-008)
 ```
 
 `query` module không cần schema riêng nếu read model được dựng động. Nếu sau này materialize projection, có thể tạo schema `projection`; dữ liệu ở đó rebuild được và không phải source of truth.
@@ -67,7 +68,7 @@ created_by_issuer
 created_by_subject
 ```
 
-hoặc actor reference nội bộ nếu sau này có `access.user_account`, nhưng vẫn phải truy ra issuer + subject gốc.
+Hồ sơ hiển thị liên kết qua `user_profile.profile`; audit vẫn lưu issuer + subject gốc.
 
 ### Revision lifecycle
 
@@ -590,17 +591,22 @@ OTHER
 
 ## 14. `media.media_asset`
 
-Logical/semantic identity.
+Logical/semantic identity. Migration: `V002__create_media_tables.sql`.
 
 | Column | Type |
 |---|---|
 | id | UUID PK |
 | semantic_type | VARCHAR(64) |
-| lifecycle_state | VARCHAR(16) |
-| current_version_id | UUID NULL |
+| lifecycle_state | VARCHAR(16): `ACTIVE`, `DEPRECATED`, `BLOCKED` |
+| current_version_id | UUID NULL, FK `(current_version_id, id)` → `media_asset_version (id, asset_id)` |
+| last_version_no | BIGINT — số version cuối đã cấp, không dùng lại |
+| lock_version | BIGINT — optimistic lock, client thấy là `version` / `expectedVersion` |
 | created_at | TIMESTAMPTZ |
 | created_by_issuer | TEXT |
 | created_by_subject | TEXT |
+| updated_at | TIMESTAMPTZ |
+
+FK ghép bảo đảm `current_version_id` luôn là version **của chính asset đó**.
 
 `semantic_type` ví dụ:
 
@@ -618,7 +624,7 @@ PATCH_ART
 OTHER
 ```
 
-Semantic type không chứa owner ID.
+Semantic type không chứa owner ID. Không đặt CHECK cho cột này: thêm loại mới chỉ cần sửa enum `MediaSemanticType`.
 
 ---
 
@@ -631,17 +637,18 @@ Source bytes version.
 | id | UUID PK |
 | asset_id | UUID FK media_asset |
 | version_no | BIGINT |
-| state | VARCHAR(16) |
-| storage_alias | VARCHAR(64) |
-| object_key | TEXT |
+| state | VARCHAR(16): `READY`, `DEPRECATED`, `BLOCKED` |
+| storage_alias | VARCHAR(64) — hiện chỉ có `primary` |
+| object_key | TEXT — `assets/{assetId}/{versionId}.{ext}` |
 | object_version | TEXT NULL |
-| sha256 | CHAR(64) |
-| mime_type | VARCHAR(64) |
+| sha256 | VARCHAR(64), CHECK hex thường 64 ký tự |
+| mime_type | VARCHAR(64) — MIME đã xác minh từ bytes |
 | width | INTEGER |
 | height | INTEGER |
 | size_bytes | BIGINT |
 | activated_at | TIMESTAMPTZ NULL |
-| supersedes_version_id | UUID NULL |
+| supersedes_version_id | UUID NULL — version đang dùng ngay trước lần activate gần nhất |
+| lock_version | BIGINT |
 | created_at | TIMESTAMPTZ |
 | created_by_* | TEXT |
 
@@ -649,10 +656,12 @@ Constraints:
 
 ```text
 UNIQUE(asset_id, version_no)
-UNIQUE(storage_alias, object_key, object_version) tùy provider
+UNIQUE(asset_id, sha256)          cùng bytes chỉ lưu một lần mỗi asset
+UNIQUE(storage_alias, object_key)
+UNIQUE(id, asset_id)              đích của FK ghép từ media_asset
 ```
 
-Không overwrite bytes của một version đã READY/ACTIVE.
+Không overwrite bytes của một version đã READY. "Đang dùng" là `media_asset.current_version_id`, không phải một state.
 
 ### Khi tạo version mới
 
@@ -676,7 +685,7 @@ meaningful crop/framing khác
 
 ## 16. `media.media_rendition`
 
-Delivery derivative.
+Delivery derivative. **Chưa tạo** (01 mục 13.5): hiện phục vụ ảnh gốc.
 
 ```text
 id UUID PK
@@ -708,31 +717,33 @@ Resize/codec derivative không làm tăng MediaAssetVersion nếu source version
 
 `media.media_upload_session`
 
-```text
-id UUID PK
-asset_id UUID NULL
-intended_semantic_type VARCHAR(64) NULL
-object_key TEXT
-state VARCHAR(16)
-expected_mime_type VARCHAR(64) NULL
-expires_at TIMESTAMPTZ
-created_at
-created_by_issuer
-created_by_subject
-completed_at NULL
-error_code NULL
-```
+| Column | Type |
+|---|---|
+| id | UUID PK (`uploadId`) |
+| asset_id | UUID FK media_asset |
+| state | VARCHAR(16) |
+| object_key | TEXT UNIQUE — `incoming/{uploadId}` |
+| file_name | VARCHAR(255) NULL — chỉ để hiển thị, đã bỏ phần đường dẫn |
+| declared_mime_type | VARCHAR(64) — client khai báo, chỉ để lọc sớm |
+| declared_size_bytes | BIGINT |
+| expires_at | TIMESTAMPTZ — hạn gọi complete |
+| validation_started_at | TIMESTAMPTZ NULL |
+| completed_at | TIMESTAMPTZ NULL |
+| error_code | VARCHAR(64) NULL — lý do từ chối, ví dụ `UNSUPPORTED_FORMAT` |
+| version_id | UUID NULL FK media_asset_version — kết quả |
+| lock_version | BIGINT |
+| created_at, created_by_issuer, created_by_subject | |
 
 State:
 
 ```text
-REQUESTED
-UPLOADED
-VALIDATING
-READY
-REJECTED
-EXPIRED
+REQUESTED --complete--> VALIDATING --hợp lệ--> READY
+    |                       |--không hợp lệ--> REJECTED
+    |                       '--lỗi tạm thời--> REQUESTED (thử lại được)
+    '--quá expires_at--> EXPIRED
 ```
+
+`EXPIRED` được ghi khi có request chạm vào session quá hạn; API đọc trạng thái cũng báo `EXPIRED` ngay khi quá hạn. Không có job quét.
 
 Object upload xong chưa đồng nghĩa asset version READY.
 
@@ -744,12 +755,14 @@ Object upload xong chưa đồng nghĩa asset version READY.
 
 ```text
 id
-asset_id / asset_version_id
-source_type
-source_url NULL
+asset_id
+asset_version_id NULL
+source_type        OFFICIAL | GAME_CLIENT | COMMUNITY | OTHER
 source_label
+source_url NULL    chỉ http(s)
 observed_at NULL
 note NULL
+created_at
 ```
 
 Không tự fetch arbitrary source URL trong normal read flow.
@@ -758,7 +771,7 @@ Không tự fetch arbitrary source URL trong normal read flow.
 
 ## 19. Media usage projection
 
-`media.media_usage_index` là **projection**, không source of truth.
+`media.media_usage_index` là **projection**, không source of truth. **Chưa tạo**: hiện media hỏi trực tiếp từng module qua `MediaUsageProvider` (01 mục 12.6); chỉ dựng bảng này khi việc hỏi trực tiếp quá chậm.
 
 ```text
 asset_id
@@ -1148,24 +1161,26 @@ Không hard-code tree vào Hero revision; Hero/build sau này chỉ tham chiếu
 
 # PHẦN E — AUDIT / AUTH SUPPORT
 
-## 34. `access.user_account` (tùy chọn)
+## 34. `user_profile.profile` — hồ sơ dùng chung (ADR-008)
 
-Nếu chỉ dùng external issuer thì không bắt buộc ngay.
+Migration `V003__create_user_profiles.sql`; module `user` sở hữu. Thay phương án tùy chọn `access.user_account`.
 
-Nếu cần local profile:
+| Cột | Kiểu / quy tắc |
+|---|---|
+| id | UUID PK |
+| issuer, subject | TEXT, unique theo cặp, lấy từ JWT; không đổi |
+| display_name | VARCHAR(80), bắt buộc |
+| biography | VARCHAR(1000), mặc định rỗng |
+| locale | VARCHAR(35), BCP 47 với mã ngôn ngữ ISO |
+| time_zone | VARCHAR(64), IANA time zone |
+| avatar_asset_id | UUID nullable; tham chiếu qua contract media, không FK chéo module |
+| version | BIGINT > 0, optimistic version |
+| created_at, updated_at | TIMESTAMPTZ |
 
-```text
-id UUID PK
-issuer TEXT
-subject TEXT
-display_name
-state
-```
-
-Unique `(issuer, subject)`.
+Không lưu email, mật khẩu hoặc role. Index theo thời gian tạo và avatar. Hồ sơ được tạo ở lần lưu đầu,
+không tạo chỉ vì GET hoặc đăng nhập. Tên mặc định đọc từ actor khi chưa có hồ sơ.
 
 ---
-
 ## 35. Audit event
 
 Bảng `access.audit_event` (migration `V001__create_access_audit_event.sql`).

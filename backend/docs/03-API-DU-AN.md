@@ -98,6 +98,36 @@ không chuyển thông báo thô của IdP hoặc token vào URL. Popup báo ho�
 postMessage kiểm tra origin, source và state. Frontend sau đó gọi refresh để lấy access token.
 State/verifier được lưu tối đa 5 phút, chỉ dùng một lần, xem giới hạn nhiều replica trong ADR-007.
 
+### 1.4 Hồ sơ người dùng dùng chung (ADR-008)
+
+Base `/api/wiki/v1`, Bearer JWT đã xác minh. Tất cả response `no-store`.
+
+| Method/path | Quyền | Ý nghĩa |
+|---|---|---|
+| GET /users/me | Tài khoản HUMAN | Hồ sơ cá nhân hoặc giá trị khởi tạo version 0 |
+| PUT /users/me | Tài khoản HUMAN | Tạo/sửa hồ sơ của chính subject trong token |
+| GET /admin/users?search=&page=0&size=20 | catalog:read + user:read | PageSlice, tìm tên không phân biệt hoa thường; size 1–100 |
+| GET /admin/users/{id} | catalog:read + user:read | Chi tiết hồ sơ |
+| PUT /admin/users/{id} | catalog:read + user:write, HUMAN | Sửa hồ sơ đã tồn tại |
+| POST /users/me/avatar-uploads | HUMAN | `{fileName, contentType, sizeBytes}` → ticket PUT tới storage |
+| POST /users/me/avatar-uploads/{uploadId}/complete | Chủ upload, HUMAN | `{assetId, avatarUrl}` sau khi media xác minh |
+
+Body PUT: `{displayName, biography, locale, timeZone, avatarAssetId, expectedVersion}`.
+Avatar null để gỡ. `expectedVersion` bắt buộc; 0 chỉ khi tạo. Không nhận issuer, subject hay capability từ body.
+Tên tối đa 80 ký tự, giới thiệu 1000, locale 35, múi giờ 64. Response hồ sơ gồm
+`id, displayName, biography, locale, timeZone, avatarAssetId, avatarUrl, version, createdAt, updatedAt`.
+Không có hồ sơ: id và thời gian null; GET không ghi DB. Avatar URL ký sẵn hết hạn sau 15 phút, không lưu bền.
+
+Ticket: `{uploadId, assetId, method, uploadUrl, headers, expiresAt}`. Browser gửi đúng headers tới storage,
+không kèm Authorization/cookie của admin. Complete không tự gắn ảnh; PUT hồ sơ mới là bước áp dụng.
+Các lỗi upload dùng error code của media. Người khác không được complete hoặc gắn upload không thuộc mình.
+Danh sách admin chỉ có hồ sơ đã lưu, không đồng bộ danh sách tài khoản Keycloak.
+
+- 404 USER_PROFILE_NOT_FOUND: không có UUID hồ sơ.
+- 409 USER_PROFILE_CONFLICT: version cũ; tải lại rồi xem xét trước khi lưu, không tự retry ghi đè.
+- 422 USER_PROFILE_INVALID: nội dung, locale hoặc múi giờ không hợp lệ.
+- 422 USER_AVATAR_INVALID: avatar chưa READY/ACTIVE, không đúng loại hoặc không thuộc người sửa.
+- 401/403: token hoặc quyền không phù hợp. Không công khai danh sách hồ sơ.
 ## 2. Common request context
 
 ### Region
@@ -877,31 +907,69 @@ Không tạo `HeroPatchChangeSet`.
 
 # PHẦN E — ADMIN MEDIA API
 
+Quy ước chung của phần này:
+
+- Mọi route cần `catalog:read` (luật URL); route thay đổi dữ liệu cần thêm `media:write` (kiểm tra ở use case).
+- `version` trong response asset là optimistic lock; gửi lại dưới dạng `expectedVersion` khi activate/deprecate. Sai → `409 MEDIA_ASSET_VERSION_CONFLICT`, `context.currentVersion`.
+- Field ảnh (`mimeType`, `width`, `height`, `sha256`) luôn lấy từ bytes, không từ khai báo của client.
+- `url` là đường dẫn public bất biến `/media/{assetId}/{versionId}.{ext}` (01 mục 13.3).
+
 ## 30. Tạo logical MediaAsset
 
 ```http
 POST /api/wiki/v1/admin/media/assets
 ```
 
-Scope:
+Scope: `media:write`.
 
-```text
-media:write
-```
-
-Request:
+Request (`source` tùy chọn; `type` mặc định `OTHER`; `url` chỉ nhận http(s), chỉ lưu, không bao giờ fetch):
 
 ```json
 {
   "semanticType": "HERO_PORTRAIT",
   "source": {
-    "label": "...",
-    "url": "https://..."
+    "type": "OFFICIAL",
+    "label": "Garena press kit",
+    "url": "https://...",
+    "observedAt": "2026-10-01T00:00:00Z",
+    "note": "..."
   }
 }
 ```
 
-Response có `assetId`.
+`201 Created`, `Location: .../admin/media/assets/{assetId}`, body là asset detail (mục 30.1) với `state = ACTIVE`, `version = 0`, `currentVersionId = null`.
+
+### 30.1 Đọc asset
+
+```http
+GET /api/wiki/v1/admin/media/assets/{assetId}
+GET /api/wiki/v1/admin/media/assets?semanticType=HERO_PORTRAIT&page=0&size=20
+```
+
+Detail:
+
+```json
+{
+  "id": "...",
+  "semanticType": "HERO_PORTRAIT",
+  "state": "ACTIVE",
+  "version": 3,
+  "currentVersionId": "...",
+  "versions": [
+    {
+      "id": "...", "versionNo": 2, "state": "READY",
+      "mimeType": "image/webp", "width": 4096, "height": 6400, "sizeBytes": 1234567,
+      "sha256": "...", "url": "/media/{assetId}/{versionId}.webp",
+      "current": true, "createdAt": "...", "activatedAt": "..."
+    }
+  ],
+  "provenance": [{ "id": "...", "versionId": null, "type": "OFFICIAL", "label": "...", "url": "..." }],
+  "createdAt": "...",
+  "updatedAt": "..."
+}
+```
+
+Danh sách trả `PageSlice` (mục 46), mỗi item có `currentUrl`, sắp xếp mới nhất trước.
 
 ---
 
@@ -921,21 +989,36 @@ Request:
 }
 ```
 
-Response:
+`201 Created`, `Location: .../admin/media/uploads/{uploadId}`:
 
 ```json
 {
   "uploadId": "...",
+  "assetId": "...",
   "objectKey": "incoming/...",
   "method": "PUT",
   "uploadUrl": "https://...presigned...",
-  "expiresAt": "..."
+  "headers": { "content-type": "image/webp" },
+  "expiresAt": "...",
+  "completeBefore": "..."
 }
 ```
 
-Caller upload trực tiếp object storage.
+Caller upload trực tiếp object storage bằng `method`, gửi **đúng** `headers` (chữ ký bao gồm chúng). `expiresAt` là hạn của URL; `completeBefore` là hạn gọi complete.
 
-Không xem request content type là trusted final MIME.
+Không xem request content type là trusted final MIME; đây chỉ là bước lọc sớm:
+
+- `contentType` ngoài PNG/JPEG/WebP → `422 INVALID_MEDIA_OBJECT`, `context.reason = UNSUPPORTED_FORMAT`, `errors[0].path = contentType`.
+- `sizeBytes` vượt giới hạn → `422 INVALID_MEDIA_OBJECT`, `context.reason = TOO_LARGE`, `context.maxBytes`.
+- Asset không `ACTIVE` → `409 MEDIA_ASSET_NOT_ACTIVE`.
+
+Trạng thái upload (dùng khi mất response, mục 55):
+
+```http
+GET /api/wiki/v1/admin/media/uploads/{uploadId}
+```
+
+trả `state` (`REQUESTED`, `VALIDATING`, `READY`, `REJECTED`, `EXPIRED`), `versionId`, `errorCode`, `completeBefore`.
 
 ---
 
@@ -948,28 +1031,42 @@ POST /api/wiki/v1/admin/media/uploads/{uploadId}/complete
 Backend:
 
 1. stat object;
-2. bounded read/decode;
+2. đọc stream có giới hạn: chữ ký file, header, kích thước, SHA-256 (không decode pixel, 01 mục 13.5);
 3. kiểm tra actual MIME;
 4. kiểm tra dimensions/pixel count/size policy;
-5. SHA-256;
-6. tạo `MediaAssetVersion` READY;
+5. cùng SHA-256 đã có trên asset → trả version cũ (`duplicate = true`);
+6. copy sang `assets/{assetId}/{versionId}.{ext}`, tạo `MediaAssetVersion` READY; version đầu tiên được activate tự động;
 7. ghi provenance/audit.
 
-Response:
+`200 OK`:
 
 ```json
 {
   "assetId": "...",
   "versionId": "...",
+  "versionNo": 1,
   "state": "READY",
   "mimeType": "image/webp",
   "width": 4096,
   "height": 6400,
-  "sha256": "..."
+  "sizeBytes": 1234567,
+  "sha256": "...",
+  "url": "/media/{assetId}/{versionId}.webp",
+  "current": true,
+  "duplicate": false
 }
 ```
 
-Storage lỗi tạm thời -> `503 STORAGE_UNAVAILABLE`.
+Lỗi:
+
+| Trường hợp | Response | Upload sau đó |
+|---|---|---|
+| Chưa có object (chưa PUT xong) | `422 MEDIA_OBJECT_NOT_FOUND` | vẫn mở, gọi lại được |
+| Storage lỗi tạm thời | `503 STORAGE_UNAVAILABLE` | vẫn mở, gọi lại được |
+| Bytes không hợp lệ | `422 INVALID_MEDIA_OBJECT`, `context.reason` ∈ `EMPTY`, `UNSUPPORTED_FORMAT`, `CORRUPT_IMAGE`, `TOO_LARGE`, `DIMENSION_TOO_LARGE`, `TOO_MANY_PIXELS` | `REJECTED`; gọi lại → `409 MEDIA_UPLOAD_REJECTED` |
+| Quá `completeBefore` | `409 MEDIA_UPLOAD_EXPIRED` | `EXPIRED` |
+| Request khác đang complete | `409 MEDIA_UPLOAD_IN_PROGRESS` | không đổi |
+| Đã thành công trước đó | `200` cùng version | `READY` |
 
 ---
 
@@ -979,15 +1076,21 @@ Storage lỗi tạm thời -> `503 STORAGE_UNAVAILABLE`.
 POST /api/wiki/v1/admin/media/assets/{assetId}/versions/{versionId}/activate
 ```
 
+Request:
+
+```json
+{ "expectedVersion": 3 }
+```
+
 Chỉ dùng khi version là cùng semantic asset.
 
-Kết quả:
+Kết quả (`200`, asset detail):
 
 ```text
 MediaAsset.currentVersionId -> versionId
 ```
 
-Không làm HeroRevision thay đổi.
+Không làm HeroRevision thay đổi. Activate version đang dùng là no-op. Version không thuộc asset → `404 MEDIA_VERSION_NOT_FOUND`; version không `READY` → `409 MEDIA_VERSION_NOT_READY`.
 
 ---
 
@@ -999,7 +1102,17 @@ Nếu bạn đã có asset được import vào object storage trước:
 POST /api/wiki/v1/admin/media/imports/register
 ```
 
-Request chứa controlled `objectKey`, asset/semantic context; backend vẫn validate bytes và tạo version metadata.
+```json
+{
+  "assetId": "...",
+  "objectKey": "imports/heroes/nakroth/portrait.webp",
+  "source": { "type": "GAME_CLIENT", "label": "Client 1.62" }
+}
+```
+
+- `objectKey` phải nằm dưới `imports/`, chỉ gồm chữ, số, `.`, `_`, `-`, `/`; khác đi → `400 INVALID_REQUEST`, `errors[0].code = NOT_ALLOWED`.
+- Backend validate bytes như mục 32 và tạo version metadata; object nguồn được giữ nguyên.
+- `201 Created` khi tạo version mới; `200 OK` với `duplicate = true` khi asset đã có đúng bytes này (chạy lại import an toàn).
 
 Không nhận arbitrary external URL rồi coi nó là runtime object.
 
@@ -1014,7 +1127,7 @@ GET /api/wiki/v1/admin/media/assets/{assetId}/usages
 Query:
 
 ```text
-scope=CURRENT|DRAFT|HISTORICAL|ANY
+scope=CURRENT|DRAFT|HISTORICAL|ANY   (mặc định ANY)
 ```
 
 Response:
@@ -1032,7 +1145,7 @@ Response:
       "ownerDomain": "HERO",
       "ownerType": "HERO",
       "ownerId": "...",
-      "revisionId": "M5",
+      "revisionId": "...",
       "propertyRole": "PORTRAIT",
       "scope": "CURRENT"
     }
@@ -1040,7 +1153,7 @@ Response:
 }
 ```
 
-Usage index/projection không thay source-of-truth bindings.
+`counts` luôn tính trên toàn bộ usage; `scope` chỉ lọc `items`. Dữ liệu lấy trực tiếp từ các module sở hữu qua `MediaUsageProvider`; trước Phase 3 chưa module nào cung cấp nên kết quả rỗng.
 
 ---
 
@@ -1048,17 +1161,21 @@ Usage index/projection không thay source-of-truth bindings.
 
 Baseline không hard-delete asset đang được tham chiếu.
 
-Có thể expose:
-
 ```http
 POST /api/wiki/v1/admin/media/assets/{assetId}/deprecate
 ```
 
-Nếu có CURRENT references và policy không cho phép:
+```json
+{ "expectedVersion": 3, "reason": "Replaced by the new official portrait" }
+```
+
+Nếu có CURRENT references:
 
 ```text
-409 MEDIA_ASSET_IN_USE
+409 MEDIA_ASSET_IN_USE   (context.currentUsages)
 ```
+
+Draft/historical reference không chặn deprecate. Asset đã `DEPRECATED`/`BLOCKED` → no-op. Sau khi deprecate, asset không nhận upload mới (`409 MEDIA_ASSET_NOT_ACTIVE`) và không được bind mới.
 
 Historical asset/version chỉ purge khi retention policy chứng minh không cần tái tạo lịch sử.
 
@@ -1305,14 +1422,19 @@ HERO_MEDIA_BINDING_INCOMPLETE
 ### Media
 
 ```text
-MEDIA_ASSET_NOT_FOUND
-MEDIA_VERSION_NOT_FOUND
-MEDIA_VERSION_NOT_READY
-MEDIA_ASSET_IN_USE
-MEDIA_UPLOAD_EXPIRED
-MEDIA_OBJECT_NOT_FOUND
-INVALID_MEDIA_OBJECT
-STORAGE_UNAVAILABLE
+MEDIA_ASSET_NOT_FOUND          404
+MEDIA_ASSET_NOT_ACTIVE         409  context.state
+MEDIA_ASSET_VERSION_CONFLICT   409  context.currentVersion
+MEDIA_ASSET_IN_USE             409  context.currentUsages
+MEDIA_VERSION_NOT_FOUND        404
+MEDIA_VERSION_NOT_READY        409  context.state
+MEDIA_UPLOAD_NOT_FOUND         404
+MEDIA_UPLOAD_EXPIRED           409  context.expiresAt
+MEDIA_UPLOAD_REJECTED          409  context.reason
+MEDIA_UPLOAD_IN_PROGRESS       409
+MEDIA_OBJECT_NOT_FOUND         422
+INVALID_MEDIA_OBJECT           422  context.reason
+STORAGE_UNAVAILABLE            503
 ```
 
 ### Patch/region
