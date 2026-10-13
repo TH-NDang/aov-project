@@ -4,7 +4,10 @@ import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.port.ObjectStorage;
 import com.wikiaov.media.internal.application.port.PresignedRequest;
 import com.wikiaov.media.internal.application.port.StoredObject;
+
 import com.wikiaov.platform.ApiException;
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.time.Duration;
@@ -12,11 +15,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.MetadataDirective;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -61,14 +67,18 @@ class S3ObjectStorage implements ObjectStorage {
 
     @Override
     public InputStream open(String key) {
-        return call("open", key, () -> s3.getObject(request -> request.bucket(bucket).key(key)));
+        InputStream stream = call("open", key, () -> s3.getObject(request -> request.bucket(bucket).key(key)));
+        return new SdkExceptionTranslatingStream(stream);
     }
 
     @Override
-    public void copy(String sourceKey, String targetKey) {
+    public void copy(String sourceKey, String targetKey, String contentType, @Nullable String cacheControl) {
         call("copy", sourceKey, () -> s3.copyObject(request -> request
                 .sourceBucket(bucket).sourceKey(sourceKey)
-                .destinationBucket(bucket).destinationKey(targetKey)));
+                .destinationBucket(bucket).destinationKey(targetKey)
+                .metadataDirective(MetadataDirective.REPLACE)
+                .contentType(contentType)
+                .cacheControl(cacheControl)));
     }
 
     @Override
@@ -128,6 +138,41 @@ class S3ObjectStorage implements ObjectStorage {
             throw ex;
         } catch (SdkClientException ex) {
             throw unavailable(operation, ex);
+        }
+    }
+
+    /** The SDK reports network failures while streaming as unchecked exceptions; callers expect IOException. */
+    private static final class SdkExceptionTranslatingStream extends FilterInputStream {
+
+        SdkExceptionTranslatingStream(InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public int read() throws IOException {
+            try {
+                return super.read();
+            } catch (SdkException ex) {
+                throw new IOException("Reading from object storage failed", ex);
+            }
+        }
+
+        @Override
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            try {
+                return super.read(buffer, offset, length);
+            } catch (SdkException ex) {
+                throw new IOException("Reading from object storage failed", ex);
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } catch (SdkException ex) {
+                throw new IOException("Closing the object storage stream failed", ex);
+            }
         }
     }
 

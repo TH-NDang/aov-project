@@ -3,6 +3,7 @@ package com.wikiaov.media.internal.application.port;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Port for storing media bytes. The only implementation talks to any S3-compatible service (ADR-006).
@@ -21,14 +22,18 @@ public interface ObjectStorage {
     Optional<StoredObject> stat(String key);
 
     /**
-     * Opens the object for reading. The caller must close the stream.
+     * Opens the object for reading. The caller must close the stream. Failures while reading the stream are
+     * reported as {@link java.io.IOException}.
      *
      * @throws com.wikiaov.platform.ApiException with {@code MEDIA_OBJECT_NOT_FOUND} if the key does not exist
      */
     InputStream open(String key);
 
-    /** Copies an object inside the bucket, e.g. from {@code incoming/} to {@code assets/}. */
-    void copy(String sourceKey, String targetKey);
+    /**
+     * Copies an object inside the bucket, e.g. from {@code incoming/} to {@code assets/}, replacing its metadata
+     * with the verified {@code contentType} and the given {@code cacheControl} (may be {@code null}).
+     */
+    void copy(String sourceKey, String targetKey, String contentType, @Nullable String cacheControl);
 
     /** Deletes the object. Deleting a missing key is not an error. */
     void delete(String key);

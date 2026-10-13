@@ -2,6 +2,7 @@ package com.wikiaov.media.internal.infrastructure;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
@@ -23,10 +24,13 @@ class BucketInitializer implements ApplicationRunner {
 
     private final S3Client s3;
     private final String bucket;
+    private final String adminOrigin;
 
-    BucketInitializer(S3Client s3, StorageProperties properties) {
+    BucketInitializer(S3Client s3, StorageProperties properties,
+            @Value("${wiki.auth.admin-origin:http://localhost:5175}") String adminOrigin) {
         this.s3 = s3;
         this.bucket = properties.bucket();
+        this.adminOrigin = adminOrigin;
     }
 
     @Override
@@ -44,6 +48,13 @@ class BucketInitializer implements ApplicationRunner {
         } catch (SdkException ex) {
             // Do not block startup: storage may still be starting. Calls will fail with STORAGE_UNAVAILABLE.
             log.warn("Could not check object storage bucket '{}': {}", bucket, ex.getMessage());
+        }
+        try {
+            s3.putBucketCors(request -> request.bucket(bucket).corsConfiguration(cors -> cors.corsRules(rule -> rule
+                    .allowedOrigins(adminOrigin).allowedMethods("PUT", "GET", "HEAD")
+                    .allowedHeaders("*").exposeHeaders("ETag").maxAgeSeconds(600))));
+        } catch (SdkException ex) {
+            log.warn("Could not configure local upload CORS for bucket '{}'.", bucket);
         }
     }
 
