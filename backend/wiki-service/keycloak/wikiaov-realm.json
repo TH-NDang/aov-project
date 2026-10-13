@@ -68,7 +68,9 @@
           ],
           "client": {
             "wiki-service": [
-              "region:admin"
+              "region:admin",
+              "user:read",
+              "user:write"
             ]
           }
         }
@@ -76,6 +78,14 @@
     ],
     "client": {
       "wiki-service": [
+        {
+          "name": "user:read",
+          "description": "Read user profiles"
+        },
+        {
+          "name": "user:write",
+          "description": "Edit user profiles"
+        },
         {
           "name": "catalog:read",
           "description": "Capability catalog:read"

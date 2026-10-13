@@ -13,7 +13,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
  */
 class CacheControlInterceptor implements HandlerInterceptor {
 
-    private static final Pattern ADMIN_PATH = Pattern.compile("^/api/wiki/[^/]+/(admin|auth)(/.*)?$");
+    private static final Pattern ADMIN_PATH = Pattern.compile("^/api/wiki/[^/]+/(admin|auth|users)(/.*)?$");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {

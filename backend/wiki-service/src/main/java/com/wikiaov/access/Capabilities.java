@@ -7,6 +7,8 @@ package com.wikiaov.access;
 public final class Capabilities {
 
     public static final String CATALOG_READ = "catalog:read";
+    public static final String USER_READ = "user:read";
+    public static final String USER_WRITE = "user:write";
 
     public static final String HERO_WRITE = "hero:write";
     public static final String HERO_PUBLISH = "hero:publish";
