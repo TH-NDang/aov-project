@@ -16,7 +16,9 @@ export function MediaWorkspace() {
               className={({ isActive }) =>
                 cn(
                   "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-muted-foreground",
+                  isActive
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 [--aov-icon-accent:currentColor]"
+                    : "text-muted-foreground",
                 )
               }
             >
