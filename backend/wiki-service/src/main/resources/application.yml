@@ -40,6 +40,10 @@ management:
 
 
 wiki:
+  user:
+    profile-defaults:
+      locale: ${USER_DEFAULT_LOCALE:vi-VN}
+      time-zone: ${USER_DEFAULT_TIME_ZONE:Asia/Ho_Chi_Minh}
   auth:
     admin-origin: ${ADMIN_ORIGIN:https://localhost}
     admin-base-path: ${ADMIN_BASE_PATH:/}

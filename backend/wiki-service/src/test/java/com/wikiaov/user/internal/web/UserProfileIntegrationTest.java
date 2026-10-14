@@ -26,7 +26,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
+@SpringBootTest(properties = {"wiki.user.profile-defaults.locale=en-GB",
+        "wiki.user.profile-defaults.time-zone=Europe/London"})
 @AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
@@ -55,7 +56,9 @@ class UserProfileIntegrationTest {
         mvc.perform(get(BASE + "/users/me")).andExpect(status().isUnauthorized());
         mvc.perform(get(BASE + "/users/me").with(person(UUID.randomUUID().toString())))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
-                .andExpect(jsonPath("$.version").value(0)).andExpect(jsonPath("$.id").isEmpty());
+                .andExpect(jsonPath("$.version").value(0)).andExpect(jsonPath("$.id").isEmpty())
+                .andExpect(jsonPath("$.locale").value("en-GB"))
+                .andExpect(jsonPath("$.timeZone").value("Europe/London"));
         mvc.perform(get(BASE + "/users/me?unexpected=1").with(person("one"))).andExpect(status().isBadRequest());
         mvc.perform(get(BASE + "/users/me").with(jwt().jwt(token -> token.subject("service")
                 .claim("client_id", "importer")))).andExpect(status().isForbidden());
@@ -68,6 +71,9 @@ class UserProfileIntegrationTest {
                 .content(profile(0, null))).andExpect(status().isOk()).andExpect(jsonPath("$.version").value(1))
                 .andReturn().getResponse().getContentAsString();
         String id = JsonPath.read(saved, "$.id");
+        mvc.perform(get(BASE + "/users/me").with(person(subject))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.locale").value("vi-VN"))
+                .andExpect(jsonPath("$.timeZone").value("Asia/Ho_Chi_Minh"));
         mvc.perform(get(BASE + "/users/me").with(person(subject + "other"))).andExpect(jsonPath("$.id").isEmpty());
         mvc.perform(
                 put(BASE + "/users/me").with(person(subject)).contentType("application/json").content(profile(0, null)))

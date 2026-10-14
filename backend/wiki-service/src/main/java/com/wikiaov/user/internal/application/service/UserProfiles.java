@@ -9,6 +9,7 @@ import com.wikiaov.media.AvatarUploads;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
+import com.wikiaov.user.internal.application.ProfileDefaults;
 import com.wikiaov.user.internal.application.UserErrorCode;
 import com.wikiaov.user.internal.application.mapper.UserProfileMapper;
 import com.wikiaov.user.internal.application.response.UserProfile;
@@ -36,23 +37,26 @@ public class UserProfiles {
     private final AuditLog audit;
     private final AvatarUploads avatars;
     private final UserProfileMapper mapper;
+    private final ProfileDefaults defaults;
 
     public UserProfiles(ProfileRepository profiles, CurrentActor currentActor, AuditLog audit, AvatarUploads avatars,
-            Clock clock, UserProfileMapper mapper) {
+            Clock clock, UserProfileMapper mapper, ProfileDefaults defaults) {
         this.profiles = profiles;
         this.clock = clock;
         this.currentActor = currentActor;
         this.audit = audit;
         this.avatars = avatars;
         this.mapper = mapper;
+        this.defaults = defaults;
     }
 
     @Transactional(readOnly = true)
     public UserProfile self() {
         Actor actor = human();
         return profiles.findByIssuerAndSubject(actor.issuer(), actor.subject()).map(this::view).orElseGet(
-                () -> new UserProfile(null, actor.displayName() == null ? "" : actor.displayName(), "", "vi-VN",
-                        "Asia/Ho_Chi_Minh", null, null, 0, null, null));
+                () -> new UserProfile(null, actor.displayName() == null ? "" : actor.displayName(), "",
+                        defaults.locale(),
+                        defaults.timeZone(), null, null, 0, null, null));
     }
 
     @Transactional
