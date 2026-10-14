@@ -899,16 +899,45 @@ Ba khái niệm này độc lập.
 
 ### 11.1 Region
 
-Region đại diện thị trường/server/phạm vi phát hành.
+Region đại diện **thị trường/phạm vi phát hành** mà Wiki theo dõi lịch cập nhật và dữ liệu game.
+Không đại diện nơi cư trú của người dùng, ngôn ngữ giao diện hoặc vị trí máy chủ vật lý.
 
-Ví dụ:
+#### 11.1.1 Danh mục thị trường khởi đầu
 
-```text
-VN
-TH
-TW
-ID
-```
+Ưu tiên xác định danh mục thị trường trước khi nhập dữ liệu theo khu vực. Phạm vi khởi đầu của dự án:
+
+| Code | Thị trường | Tên sản phẩm tại thị trường | Locale gợi ý | Múi giờ tham chiếu | Nguồn chính thức |
+|---|---|---|---|---|---|
+| `VN` | Việt Nam | Liên Quân Mobile | `vi-VN` | `Asia/Ho_Chi_Minh` | [Garena Việt Nam](https://lienquan.garena.vn/) |
+| `TH` | Thái Lan | RoV: Arena of Valor | `th-TH` | `Asia/Bangkok` | [RoV Thái Lan](https://www.rov.in.th/) |
+| `TW` | Đài Loan | 傳說對決 | `zh-TW` | `Asia/Taipei` | [Garena Đài Loan](https://moba.garena.tw/) |
+| `ID` | Indonesia | Garena AOV | `id-ID` | `Asia/Jakarta` | [Garena Indonesia](https://main.aov.garena.co.id/) |
+| `GLOBAL` | Global (phạm vi quốc tế chờ xác định) | Arena of Valor | `en-US` | `UTC` | [Arena of Valor](https://www.arenaofvalor.com/) |
+
+Đối chiếu nguồn ngày **13/10/2026**. Tên sản phẩm và nguồn dùng để nhận diện thị trường;
+locale/múi giờ là lựa chọn cấu hình của dự án, không phải giới hạn ngôn ngữ hay địa lý do nhà phát hành công bố.
+Indonesia có nhiều múi giờ; `Asia/Jakarta` chỉ là giá trị tham chiếu, không áp cho mọi người dùng.
+
+Đây không phải danh sách toàn bộ thị trường AoV trên thế giới. `GLOBAL` là mục chuẩn bị cho phạm vi quốc tế,
+được seed ở trạng thái khóa theo yêu cầu ngày 13/10/2026, không gom dữ liệu mọi quốc gia hoặc thay thế VN.
+Locale `en-US` và múi giờ `UTC` của Global chỉ là cấu hình dự phòng của dự án. Trước khi mở Global hoặc thêm thị trường khác,
+cần xác minh phạm vi phát hành, nguồn cập nhật và lịch rollout tương ứng. Không suy ra một region riêng
+chỉ từ quốc gia của người chơi, ngôn ngữ bản dịch hoặc đội tuyển tham dự giải đấu.
+
+#### 11.1.2 Quy tắc sử dụng
+
+- Migration `V004__create_regions.sql` tạo danh mục: `VN` ACTIVE, `TH`/`TW`/`ID`/`GLOBAL` LOCKED, có lý do chưa hỗ trợ.
+- ACTIVE tại bước này chỉ cho phép chọn phạm vi dữ liệu VN hiện có trên Admin, không xác nhận đã triển khai
+  patch resolver. Admin hiện dùng adapter dữ liệu VN; Wiki triển khai bộ chọn ở giai đoạn sau.
+- Mã region ổn định; dùng UUID làm khóa chính theo quy ước chung. Không hard-code danh sách region trong frontend.
+- Có tên trong danh mục không đồng nghĩa Wiki đã có đủ dữ liệu. Khi triển khai API gameplay theo patch, chỉ mở lựa chọn đọc khi đã có
+  ruleset assignment và dữ liệu hiệu lực phù hợp; không tự lấy dữ liệu VN thay cho thị trường chưa sẵn sàng.
+- Market có thể dùng chung ruleset nhưng khác lịch phát hành. Không mặc định mỗi thị trường là một ruleset riêng.
+- `Region.timezone` phục vụ lịch phát hành; `user_profile.profile.time_zone` là lựa chọn cá nhân độc lập.
+- Không suy ra region từ locale/múi giờ trình duyệt. Người dùng phải chọn thị trường muốn tra cứu;
+  locale và múi giờ trong hồ sơ không bị đổi theo lựa chọn đó.
+- Admin hiển thị cả mục khóa với lý do, không cho chọn. Backend từ chối resolve mục khóa hoặc code không tồn tại
+  bằng `422 UNSUPPORTED_REGION`. Chưa cung cấp API bật/tắt; mở thị trường cần triển khai adapter/dữ liệu và cập nhật cấu hình có kiểm soát.
 
 ### 11.2 Locale
 
@@ -942,6 +971,9 @@ AOV-TEST
 ```
 
 Nhiều region có thể dùng chung ruleset.
+
+Các mã ruleset và ánh xạ minh họa bên dưới là ví dụ mô hình, không xác nhận rằng các bản phát hành
+VN/TH/TW/ID hiện có gameplay giống hoặc khác nhau. Assignment thực tế cần đối chiếu dữ liệu patch.
 
 ### 11.4 RegionRulesetAssignment
 

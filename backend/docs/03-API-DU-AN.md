@@ -138,6 +138,11 @@ Public gameplay read thường nhận:
 region=VN
 ```
 
+Danh mục thị trường khởi đầu: `VN`, `TH`, `TW`, `ID`, `GLOBAL` theo 01 mục 11.1.1.
+khả năng tra cứu thực tế phụ thuộc cấu hình và dữ liệu đã phát hành của từng region.
+Không suy ra `region` từ locale, múi giờ trình duyệt hoặc hồ sơ người dùng; không âm thầm chuyển
+thị trường chưa có dữ liệu sang VN. Locale/múi giờ mặc định của hồ sơ không phải danh mục thị trường game.
+
 Backend dùng region + thời điểm để resolve:
 
 ```text
@@ -1315,6 +1320,22 @@ Backend validate ruleset assignment của region tại effective time.
 ---
 
 ## 43. Region/ruleset admin
+
+### 43.1 Danh mục thị trường (đã triển khai)
+
+```http
+GET /api/wiki/v1/regions
+GET /api/wiki/v1/regions/{code}
+```
+
+Hai endpoint GET công khai, không nhận query parameter. Danh sách trả array theo `sort_order`, rồi `code`,
+gồm `id`, `code`, `displayName`, `productName`, `defaultLocale`, `timeZone`, `available`, `unavailableReason`.
+Danh mục nhỏ, không phân trang. Trả cả mục khóa để UI hiển thị trạng thái chưa hỗ trợ.
+Endpoint theo code xác nhận thị trường có thể chọn: `VN` trả 200; mục khóa hoặc không tồn tại trả
+`422 UNSUPPORTED_REGION`, không fallback. Đây không phải API resolve patch hoặc đổi thị trường trong hồ sơ.
+Trạng thái ban đầu: VN mở; TH/TW/ID/GLOBAL khóa. Global chưa là tập hợp dữ liệu của các thị trường.
+
+### 43.2 Quản trị region/ruleset (chưa triển khai)
 
 ```http
 GET  /api/wiki/v1/admin/regions
