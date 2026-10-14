@@ -17,28 +17,25 @@ export function ProfilePage() {
     refetchInterval: 600000,
   })
   return (
-    <Page>
-      <PageHeader
-        title="Hồ sơ của tôi"
-        description="Thông tin hiển thị dùng chung cho Wiki, Stream và các phần khác."
-      />
+    <Page className="gap-0 p-0 md:p-0">
       {query.isPending ? (
-        <p role="status">Đang tải hồ sơ…</p>
+        <p role="status" className="p-6">
+          Đang tải hồ sơ…
+        </p>
       ) : query.isError ? (
-        <div role="alert">
+        <div role="alert" className="p-6">
           <p>{profileError(query.error)}</p>
           <Button onClick={() => void query.refetch()}>Thử lại</Button>
         </div>
       ) : (
-        <div className="w-full max-w-2xl rounded-xl border bg-card p-4 sm:p-6">
-          <ProfileForm
-            key={`${actor?.subject}-${revision}`}
-            profile={query.data}
-            onReload={() => {
-              void query.refetch().then(() => setRevision((value) => value + 1))
-            }}
-          />
-        </div>
+        <ProfileForm
+          fullWidth
+          key={`${actor?.subject}-${revision}`}
+          profile={query.data}
+          onReload={() => {
+            void query.refetch().then(() => setRevision((value) => value + 1))
+          }}
+        />
       )}
     </Page>
   )

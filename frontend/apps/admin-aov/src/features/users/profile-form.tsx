@@ -1,30 +1,36 @@
 import { useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { Camera, LoaderCircle, UserRound } from "lucide-react"
+import { Camera, Check, Clock3, Languages, LoaderCircle, Pencil, UserRound } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { backendRequest } from "@/app/auth/session"
+import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { ProfilePreferencePicker, languageOptions, timeZoneOptions } from "./profile-preference-picker"
 import { uploadAvatar } from "./avatar-upload"
+import { initialProfileDraft, readBrowserPreferences } from "./profile-preferences"
 import { profileError, saveProfile, userKeys, type UserProfile } from "./user-api"
 
 export function ProfileForm({
   profile,
   admin = false,
   readOnly = false,
+  fullWidth = false,
   onSaved,
   onReload,
 }: {
   profile: UserProfile
   admin?: boolean
   readOnly?: boolean
+  fullWidth?: boolean
   onSaved?: () => void
   onReload: () => void
 }) {
   const cache = useQueryClient()
-  const [draft, setDraft] = useState(profile)
+  const [draft, setDraft] = useState(() => initialProfileDraft(profile, admin, readBrowserPreferences()))
   const [savedVersion, setSavedVersion] = useState(profile.version)
   const [savedAvatar, setSavedAvatar] = useState(profile.avatarAssetId)
+  const [editingName, setEditingName] = useState(false)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState("")
   const [error, setError] = useState("")
@@ -87,147 +93,203 @@ export function ProfileForm({
   }
 
   return (
-    <form onSubmit={save} className="space-y-6">
-      <div className="flex flex-wrap items-center gap-5 rounded-xl border bg-muted/30 p-5">
-        <div className="relative flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-          <UserRound className="size-10 text-muted-foreground" />
-          {draft.avatarUrl && (
-            <img
-              key={draft.avatarUrl}
-              src={draft.avatarUrl}
-              alt="Ảnh đại diện"
-              referrerPolicy="no-referrer"
-              className="absolute inset-0 size-full object-cover"
-              onError={(event) => {
-                event.currentTarget.hidden = true
-              }}
-            />
-          )}
-        </div>
-        <div className="min-w-0 space-y-2">
-          <p className="font-medium">Ảnh đại diện</p>
-          <p className="text-xs text-muted-foreground">
-            PNG, JPEG, WebP · tối đa 25 MB. Ảnh vuông sẽ hiển thị đẹp nhất.
-          </p>
-          {!readOnly && (
-            <div className="flex flex-wrap items-center gap-3">
-              <label
-                className={`inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-ring ${locked ? "pointer-events-none opacity-50" : "hover:bg-accent"}`}
-              >
-                <Camera className="size-4" /> Chọn ảnh
-                <input
-                  aria-label="Tải ảnh đại diện"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  disabled={locked}
-                  className="sr-only"
-                  onChange={(event) => {
-                    void choose(event.target.files?.[0])
-                    event.target.value = ""
+    <form onSubmit={save} className={fullWidth ? "w-full" : "overflow-hidden rounded-2xl border bg-card shadow-sm"}>
+      <div
+        aria-hidden="true"
+        className="relative h-32 overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-800 sm:h-44"
+      >
+        <div className="absolute -right-12 -top-24 size-80 rounded-full border border-white/10 bg-indigo-400/10" />
+        <div className="absolute right-20 top-8 size-64 rotate-45 rounded-3xl border border-white/10" />
+        <div className="absolute -bottom-32 left-1/4 size-60 rounded-full bg-violet-400/10 blur-3xl" />
+      </div>
+      <div className={`relative space-y-7 px-5 pb-6 sm:px-8 sm:pb-8 ${fullWidth ? "mx-auto w-full max-w-3xl" : ""}`}>
+        <div className="-mt-12 flex flex-wrap items-end gap-x-5 gap-y-4 sm:-mt-14">
+          <div className="relative shrink-0">
+            <div className="relative flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-muted shadow-sm sm:size-28">
+              <UserRound className="size-10 text-muted-foreground" />
+              {draft.avatarUrl && (
+                <img
+                  key={draft.avatarUrl}
+                  src={draft.avatarUrl}
+                  alt="Ảnh đại diện"
+                  referrerPolicy="no-referrer"
+                  className="absolute inset-0 size-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.hidden = true
                   }}
                 />
-              </label>
-              {draft.avatarAssetId && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  disabled={locked}
-                  onClick={() => setDraft((current) => ({ ...current, avatarAssetId: null, avatarUrl: null }))}
-                >
-                  Gỡ ảnh
-                </Button>
               )}
             </div>
-          )}
-          {uploading && (
-            <p role="status" className="flex items-center gap-2 text-sm">
-              <LoaderCircle className="size-4 animate-spin" />
-              {uploading}
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => {
-                  upload.current?.abort()
-                  setUploading("")
-                  setError("Đã hủy tải ảnh. Bạn có thể chọn ảnh khác.")
-                }}
-              >
-                Hủy
-              </Button>
-            </p>
-          )}
-          {!uploading && draft.avatarAssetId !== savedAvatar && (
-            <p className="text-xs text-muted-foreground">Bấm Lưu hồ sơ để áp dụng thay đổi ảnh.</p>
-          )}
+            {!readOnly && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    disabled={locked}
+                    aria-label="Chỉnh sửa ảnh đại diện"
+                    className="absolute bottom-0 right-0 size-8 rounded-full border-2 border-card bg-background shadow-sm"
+                  >
+                    <Pencil className="size-3.5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-72 max-w-[calc(100vw-2rem)] space-y-3">
+                  <p className="text-sm font-medium">Ảnh đại diện</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPEG, WebP · tối đa 25 MB. Nên chọn ảnh vuông.</p>
+                  <label
+                    className={`flex cursor-pointer items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-ring ${locked ? "pointer-events-none opacity-50" : "hover:bg-accent"}`}
+                  >
+                    <Camera className="size-4" />
+                    Chọn ảnh mới
+                    <input
+                      aria-label="Tải ảnh đại diện"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      disabled={locked}
+                      className="sr-only"
+                      onChange={(event) => {
+                        void choose(event.target.files?.[0])
+                        event.target.value = ""
+                      }}
+                    />
+                  </label>
+                  {draft.avatarAssetId && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={locked}
+                      className="w-full"
+                      onClick={() => setDraft((current) => ({ ...current, avatarAssetId: null, avatarUrl: null }))}
+                    >
+                      Gỡ ảnh đại diện
+                    </Button>
+                  )}
+                  <p className="text-xs text-muted-foreground">Bấm Lưu thay đổi để áp dụng ảnh mới.</p>
+                </PopoverContent>
+              </Popover>
+            )}
+          </div>
+          <div className="min-w-0 basis-48 flex-1 pb-1 pt-2">
+            {editingName && !readOnly ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  aria-label="Tên hiển thị"
+                  autoFocus
+                  required
+                  maxLength={80}
+                  value={draft.displayName}
+                  disabled={locked}
+                  onChange={(event) => change("displayName", event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault()
+                      setEditingName(false)
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  disabled={locked}
+                  aria-label="Xong chỉnh sửa tên"
+                  onClick={() => setEditingName(false)}
+                >
+                  <Check />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h1 className="min-w-0 break-words text-2xl font-semibold tracking-tight">
+                  {draft.displayName || "Tên của bạn"}
+                </h1>
+                {!readOnly && (
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    disabled={locked}
+                    className="size-8 shrink-0 text-muted-foreground"
+                    aria-label="Chỉnh sửa tên hiển thị"
+                    onClick={() => setEditingName(true)}
+                  >
+                    <Pencil className="size-3.5" />
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      <fieldset disabled={locked} className="grid min-w-0 gap-5 sm:grid-cols-2">
-        <label className="space-y-2 sm:col-span-2">
-          <span className="text-sm font-medium">Tên hiển thị</span>
-          <Input
-            required
-            maxLength={80}
-            value={draft.displayName}
-            onChange={(event) => change("displayName", event.target.value)}
-          />
-        </label>
-        <label className="space-y-2 sm:col-span-2">
+        {uploading && (
+          <div role="status" className="flex flex-wrap items-center gap-2 text-sm">
+            <LoaderCircle className="size-4 animate-spin" />
+            {uploading}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                upload.current?.abort()
+                setUploading("")
+                setError("Đã hủy tải ảnh.")
+              }}
+            >
+              Hủy
+            </Button>
+          </div>
+        )}
+        {!uploading && draft.avatarAssetId !== savedAvatar && (
+          <p className="text-xs text-muted-foreground">Ảnh đại diện có thay đổi chưa lưu.</p>
+        )}
+        <label className="block space-y-2">
           <span className="text-sm font-medium">Giới thiệu</span>
           <textarea
+            aria-label="Giới thiệu"
+            placeholder="Một vài điều về bạn…"
             maxLength={1000}
-            rows={4}
+            rows={3}
+            disabled={locked}
             value={draft.biography}
             onChange={(event) => change("biography", event.target.value)}
-            className="w-full resize-y rounded-md border bg-background px-3 py-2 text-sm"
+            className="block w-full resize-y rounded-lg border bg-background px-3 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
           />
           <span className="block text-right text-xs text-muted-foreground">{draft.biography.length}/1000</span>
         </label>
-        <label className="space-y-2">
-          <span className="text-sm font-medium">Ngôn ngữ</span>
-          <Input
-            required
-            maxLength={35}
-            list="profile-languages"
+        <div className="grid min-w-0 gap-5 border-t pt-6 sm:grid-cols-2">
+          <ProfilePreferencePicker
+            label="Ngôn ngữ"
+            icon={Languages}
             value={draft.locale}
-            onChange={(event) => change("locale", event.target.value)}
+            options={languageOptions}
+            disabled={locked}
+            onChange={(value) => change("locale", value)}
           />
-          <datalist id="profile-languages">
-            <option value="vi-VN" />
-            <option value="en-US" />
-            <option value="th-TH" />
-          </datalist>
-        </label>
-        <label className="space-y-2">
-          <span className="text-sm font-medium">Múi giờ</span>
-          <Input
-            required
-            maxLength={64}
-            list="profile-zones"
+          <ProfilePreferencePicker
+            label="Múi giờ"
+            showTime
+            icon={Clock3}
             value={draft.timeZone}
-            onChange={(event) => change("timeZone", event.target.value)}
+            options={timeZoneOptions}
+            disabled={locked}
+            onChange={(value) => change("timeZone", value)}
           />
-          <datalist id="profile-zones">
-            {Intl.supportedValuesOf("timeZone")
-              .concat("Asia/Ho_Chi_Minh", "UTC")
-              .map((zone, i) => (
-                <option key={`${zone}-${i}`} value={zone} />
-              ))}
-          </datalist>
-        </label>
-      </fieldset>
-      {error && (
-        <div role="alert" className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm text-destructive">
-          <p>{error}</p>
-          <Button type="button" variant="outline" disabled={locked} onClick={onReload}>
-            Bỏ bản đang sửa và tải hồ sơ mới
-          </Button>
         </div>
-      )}
-      {!readOnly && (
-        <Button type="submit" disabled={locked || !draft.displayName.trim()}>
-          {busy && <LoaderCircle className="animate-spin" />}Lưu hồ sơ
-        </Button>
-      )}
+        {error && (
+          <div role="alert" className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm text-destructive">
+            <p>{error}</p>
+            <Button type="button" variant="outline" disabled={locked} onClick={onReload}>
+              Bỏ bản đang sửa và tải hồ sơ mới
+            </Button>
+          </div>
+        )}
+        {!readOnly && (
+          <div className="flex justify-end border-t pt-5">
+            <Button type="submit" disabled={locked || !draft.displayName.trim()}>
+              {busy && <LoaderCircle className="animate-spin" />}Lưu thay đổi
+            </Button>
+          </div>
+        )}
+      </div>
     </form>
   )
 }
