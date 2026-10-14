@@ -108,7 +108,24 @@ Google thành công/hủy/chặn popup; modal trên mobile; logout ở tab khác
 
 ## Hồ sơ người dùng và avatar
 
-- Menu **Hồ sơ của tôi** (`/profile`): tên hiển thị, giới thiệu, ngôn ngữ, múi giờ; chọn/gỡ avatar rồi bấm **Lưu hồ sơ**.
+### Thị trường dữ liệu
+
+Header có bộ chọn thị trường: VN hiện dùng; TH, TW, ID và GLOBAL hiển thị nhưng khóa, kèm lý do.
+Danh mục lấy từ `GET /api/wiki/v1/regions`; backend cần khởi động lại để áp dụng migration V004.
+Khi API chưa sẵn sàng, hiển thị lỗi và nút thử lại, không tạo danh mục giả ở frontend.
+Admin hiện chỉ có adapter dữ liệu VN; bật region trong database chưa đủ để mở thị trường khác trên UI.
+Global là mục chờ xác định dữ liệu quốc tế, không tự trộn dữ liệu các thị trường.
+Chọn thị trường không đổi locale/múi giờ hồ sơ. Chưa triển khai bộ chọn trên Wiki.
+
+### Hồ sơ
+
+- Menu **Hồ sơ của tôi** (`/profile`): avatar và tên hiển thị trên nền cover, dùng biểu tượng bút để sửa.
+  Hướng dẫn định dạng ảnh chỉ hiện trong phần sửa avatar. Giới thiệu nằm dưới tên;
+  ngôn ngữ và múi giờ có danh sách tìm kiếm riêng, mở lại luôn hiện đầy đủ lựa chọn. Bấm **Lưu thay đổi** để áp dụng.
+- Hồ sơ chưa lưu được gợi ý ngôn ngữ và múi giờ độc lập từ trình duyệt. Hồ sơ đã lưu giữ nguyên lựa chọn;
+  Đây là thông tin hồ sơ, chưa tự đổi ngôn ngữ toàn bộ giao diện admin.
+  Backend dùng `USER_DEFAULT_LOCALE` (mặc định `vi-VN`) và `USER_DEFAULT_TIME_ZONE`
+  (mặc định `Asia/Ho_Chi_Minh`) khi khởi tạo hồ sơ; frontend giữ giá trị dự phòng nếu không đọc được thiết lập trình duyệt.
 - Menu **Người dùng** (`/users`) chỉ hiện khi token có client role `wiki-service:user:read`.
   Sửa hồ sơ người khác cần thêm `user:write`. Admin API vẫn cần `catalog:read`.
 - Có thể tự động áp dụng quyền cho admin bằng `./scripts/sync-user-roles.ps1` từ `backend/wiki-service`.

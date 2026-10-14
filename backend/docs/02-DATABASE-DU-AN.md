@@ -811,13 +811,21 @@ Không để Media module query trực tiếp toàn bộ internal hero/item tabl
 ```text
 id UUID PK
 code VARCHAR(16) UNIQUE
-name_key / metadata
- timezone VARCHAR(64)
+display_name VARCHAR(80)
+product_name VARCHAR(80)
+timezone VARCHAR(64)
 default_locale VARCHAR(16)
-lifecycle_state VARCHAR(16)
+lifecycle_state VARCHAR(16) — ACTIVE / LOCKED
+unavailable_reason VARCHAR(255) NULL — bắt buộc có khi LOCKED
+sort_order INTEGER
 ```
 
 `default_locale` chỉ là default; không khóa locale của caller.
+
+Migration `V004__create_regions.sql` tạo bảng và seed theo **01 mục 11.1.1**:
+`VN` ACTIVE; `TH`, `TW`, `ID`, `GLOBAL` LOCKED, cùng locale và múi giờ tham chiếu trong bảng đó.
+Seed region không tự tạo `region_ruleset_assignment` hay `patch_release` khi chưa xác minh dữ liệu.
+`timezone` là múi giờ tham chiếu lịch phát hành của thị trường, không phải múi giờ hồ sơ người dùng.
 
 ---
 
