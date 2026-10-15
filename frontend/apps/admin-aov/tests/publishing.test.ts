@@ -10,7 +10,7 @@ import {
 import { resourceContent } from "../src/features/publishing/resource-import"
 import { publishIssues, type Content, type Revision } from "../src/features/publishing/types"
 import type { Hero } from "../src/lib/api/types"
-import { mediaPath } from "../../../tooling/media-proxy"
+import { mediaPath } from "../../../tooling/media-proxy.mts"
 import { wikiRequest, WikiError, wikiErrorMessage } from "../../aov-wiki/src/features/heroes/wiki-api"
 
 test("section replacement matches the strict backend request and uses the latest draft version", async () => {

@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest, getSession } from "@/app/auth/session"
@@ -20,6 +20,17 @@ export function AssetPicker({
   resourcePath?: string | null
   sourceUrl?: string
 }) {
+  const alive = useRef(true)
+  const change = useRef(onChange)
+  useEffect(() => {
+    change.current = onChange
+  }, [onChange])
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
   const [page, setPage] = useState(0)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -40,6 +51,7 @@ export function AssetPicker({
     setMessage("")
     try {
       await upgradeHeroImage(backendRequest, value, file)
+      if (!alive.current) return
       await assets.refetch()
       setMessage("Đã nâng chất lượng trên cùng asset. Không cần sửa hoặc publish lại tướng.")
     } catch (error) {
@@ -57,7 +69,8 @@ export function AssetPicker({
         url: url || null,
         note: resourcePath ?? null,
       })
-      onChange(id)
+      if (!alive.current) return
+      change.current(id)
       await assets.refetch()
     } catch (error) {
       setError(errorMessage(error))
