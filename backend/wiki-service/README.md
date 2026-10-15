@@ -141,3 +141,45 @@ throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "Hero " + heroId + " was no
 
 Đã xong nền tảng (Phase 1): build, ranh giới module, Flyway, xử lý lỗi, request id, JWT + quyền theo capability, audit, object storage S3.
 Chưa có: entity và API nghiệp vụ (hero, patch, item…), luồng upload media (`MediaAsset`, `MediaAssetVersion`), import dữ liệu.
+
+
+## Domain core: Patch và Hero
+
+Migrations V005–V008 bổ sung gameplay context, Hero section revisions và patch history.
+Giữ PostgreSQL + Keycloak + SeaweedFS như cấu hình foundation. Không cần đổi storage hoặc thêm Redis.
+
+Luồng nhập dữ liệu thật:
+
+1. Với `region:admin`, tạo ruleset bằng POST `/api/wiki/v1/admin/rulesets`
+   (`code`, `description`), rồi gán cho region VN bằng POST
+   `/api/wiki/v1/admin/regions/{regionId}/ruleset-assignments`
+   (`rulesetId`, `validFrom`, `validTo` tùy chọn). Region ID lấy từ GET `/api/wiki/v1/regions`.
+2. Tạo patch (`code`, `translations`), variant (`rulesetId`, `variantCode`, `rulesetOrdinal`),
+   publish variant và schedule release (`regionId`, `effectiveAt`, `announcedAt?`, `sourceUrl?`).
+   Ordinal tăng theo ruleset, không dùng ngày phát hành để suy ra cùng ruleset cho mọi vùng.
+3. Tạo media assets, upload/complete để có usable HEAD/PORTRAIT/SPLASH và icon/art nếu cần.
+4. Tạo Hero với `code`, `initialLocale`, `name`, `rulesetId`; response trả `heroId`, `id` draft, version 1.
+5. PUT profile/overview-ratings/combat-stats/skills/skins/media-bindings của draft. Mỗi lần gửi
+   expectedDraftVersion mới nhất; full replace section. Không PUT lại media binding để nâng quality bytes.
+6. POST publish với expectedVersion. GET public Hero theo region/locale. Publish dữ liệu game patch sau
+   bằng draft cause GAME_PATCH và effectiveFromPatchVariantId; content correction giữ context cũ.
+7. Ghi hero-changes riêng khi đã đối chiếu snapshot, sau đó đọc Hero changes hoặc patch changes.
+
+Không có game fixture ngẫu nhiên trong migrations. VN vẫn có thể chọn nhưng trả PATCH_CONTEXT_UNAVAILABLE
+cho gameplay read cho tới khi hoàn thành bước ruleset/release. Region khác giữ khóa như foundation.
+Các catalog Item/Spell/Arcana/Enchantment/GameMode chưa có implementation trong domain core này.
+
+### Kiểm chứng
+
+```bash
+sh mvnw spotless:apply
+sh mvnw clean verify
+```
+
+`DomainCoreIntegrationTest` chạy PostgreSQL container trên CI có Docker, hoặc nhận
+WIKI_TEST_DB_URL khi kiểm tra với PostgreSQL ngoài (database dùng riêng cho test, user wiki_test,
+password rỗng trong nhánh cấu hình test này). Test tự truncate dữ liệu domain; tuyệt đối không trỏ vào
+DB phát triển/production. Bộ test kiểm tra timeline không overlap, rollout theo vùng, draft visibility,
+publish validation, section reuse/immutability, ETag, locale fallback, quality upgrade, reverse usage,
+patch changes hai chiều, duplicate draft, FK ownership và hai biên tập viên ghi đồng thời.
+Các test S3/SeaweedFS foundation vẫn cần Docker để chạy đầy đủ.

@@ -5,6 +5,58 @@
 **Phạm vi:** Public read APIs + authenticated admin APIs cho backend hiện hành.  
 **Tài liệu liên quan:** `01-BAN-DAC-TA-DU-AN.md`, `02-DATABASE-DU-AN.md`
 
+
+### Hợp đồng domain core đang triển khai
+
+Các mục bên dưới vẫn mô tả đích toàn backend; bảng này xác định phần đã có implementation.
+
+| Nhóm | API hiện có |
+|---|---|
+| Patch authoring | POST admin/rulesets, admin/regions/{id}/ruleset-assignments, admin/patches, admin/patches/{id}/variants, admin/patch-variants/{id}/publish, admin/patch-variants/{id}/releases |
+| Ruleset đọc | GET admin/rulesets |
+| Hero admin | GET/POST admin/heroes; GET admin/heroes/{id}; GET admin/heroes/{id}/revisions; GET revision/draft detail; POST drafts; PUT sáu section; POST publish/discard |
+| Hero public | GET heroes; heroes/{id}; heroes/{id}/manifest; heroes/{id}/changes |
+| Immutable section | hero-profile-revisions, hero-overview-rating-revisions, hero-stats-revisions, hero-skills-revisions, hero-skins-revisions, hero-media-binding-revisions |
+| Patch history | POST admin/patch-variants/{id}/hero-changes; GET patches, patches/{id}, patches/{id}/changes |
+
+Tất cả path trong bảng nối sau `/api/wiki/v1/`. POST tạo trả 201; publish variant trả 204;
+Hero mutation/publish/discard trả 200 với composition revision mới nhất. Create Hero trả
+`heroId` (identity) và `id` (draft revision); không nhầm hai ID này. Admin detail trả
+`{revision, content}`; `revision.sections` có key profile/overviewRatings/combatStats/skills/skins/mediaBindings.
+Admin list phân trang theo code, nhận page/size. Revision history admin trả array, giữ thứ tự revision_no giảm dần.
+
+Section PUT dùng payload phẳng, `expectedDraftVersion` và full section content; publish/discard dùng
+`expectedVersion`. `changeNote` tùy chọn. `sources` có thể bỏ qua và mặc định array rỗng.
+Profile: `{translations:[{locale,name,title?,summary?,lore?}],roles:["ASSASSIN"]}`.
+Skills: `{skills:[{skillKey,kind,formKey?,displayOrder,iconAssetId?,translations:[{locale,name,description}],effects:[]}]}`.
+Skins: `{skins:[{skinKey,displayOrder,artAssetId?,rarityCode?,translations:[{locale,name,description?,acquisitionNote?}]}]}`.
+Effect gồm effectType và metadata. Source gồm label, sourceUrl?, observedAt?, verificationState
+(UNVERIFIED/VERIFIED), note?. Hero media bindings nhận HEAD/PORTRAIT/SPLASH asset UUID.
+
+Create/fork và mutation yêu cầu scope như các mục nghiệp vụ. POST ruleset/assignment cần region:admin;
+variant/release publish cần patch:publish. Không có API sửa một revision đã PUBLISHED.
+Khi không chỉ định sourceRevisionId, fork chọn source theo gameplay applicability rồi publication sequence;
+khi chưa có active context phải truyền source tường minh.
+
+Public Hero list nhận region/locale/page/size/q/role/sort, chỉ sort code,asc hoặc code,desc.
+Hero detail/manifest nhận region/locale. Section resource nhận locale, chỉ trả section đã có published
+composition tham chiếu; nội dung không trả source/actor. Các resource section không resolve current media URL;
+Hero detail/list resolve asset current version để ETag đổi khi media được nâng chất lượng.
+Fallback locale: exact → vi-VN → locale đầu theo thứ tự chữ; response ghi actualLocale/fallbackApplied.
+
+Patch APIs nhận region/locale, list và changes nhận page/size; changes hiện chỉ có provider HERO.
+Không có provider domain khác trả INVALID_QUERY_PARAMETER. Patch detail trả metadata của release đã schedule
+cho đúng region (có thể chưa effective). Hero changes chỉ gồm các release đã effective trong region tại now.
+Changelog có type HERO_STAT_CHANGE/HERO_SKILL_CHANGE/HERO_ROLE_CHANGE/HERO_VISUAL_CHANGE/HERO_MECHANIC_CHANGE/HERO_OTHER_CHANGE;
+request admin vẫn dùng discriminator STAT/SKILL/ROLE/VISUAL/MECHANIC/OTHER. Change summary fallback theo locale.
+STAT dùng statKey/oldValue/newValue/unit, SKILL dùng skillKey/fieldKey/oldValue/newValue,
+ROLE dùng roleCode/added, VISUAL dùng mediaRole/oldAssetId/newAssetId, MECHANIC dùng mechanicKey/description,
+OTHER dùng description; tất cả cần changeKind. Change set là dữ liệu biên tập, không tự tạo khi publish.
+
+Các API Hero/Patch chưa hỗ trợ query at, nên không nhận query này. Quy tắc resolver theo thời điểm
+vẫn được thực hiện qua contract nội bộ GameplayContexts. Region create/update, catalog authoring khác,
+patch change dispatcher chi tiết và counts tổng hợp đa domain chưa triển khai.
+
 ---
 
 ## 1. Nguyên tắc API

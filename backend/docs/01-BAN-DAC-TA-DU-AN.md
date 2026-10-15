@@ -4,6 +4,34 @@
 **Phạm vi:** Backend `wiki-service` (AOV Wiki). Mục 3 mô tả bối cảnh toàn hệ thống; frontend và các service khác chỉ được mô tả ở mức ranh giới.
 **Tài liệu liên quan:** `02-DATABASE-DU-AN.md`, `03-API-DU-AN.md`
 
+
+### Trạng thái triển khai domain core
+
+`wiki-service` đã bổ sung Patch context và Hero vertical slice trên foundation hiện có:
+
+- Patch: ruleset, gán ruleset cho region theo khoảng `[validFrom, validTo)`, patch family,
+  translation, variant, publish metadata và schedule release. Không seed ruleset/patch game chưa xác minh.
+- Hero: identity, composition revision và sáu section độc lập; tạo/fork/sửa/publish/discard,
+  optimistic version, audit cùng transaction, giữ nguyên section đã publish khi không sửa.
+- Public: danh sách/chi tiết/manifest Hero theo region, fallback locale độc lập gameplay,
+  section resources bất biến, ETag cho current reads, reverse media usage.
+- Patch history: ghi change set có chủ đích sau khi Hero GAME_PATCH revision được publish;
+  query theo Hero và theo patch qua public contracts của module. Không tạo diff tự động.
+
+Publish Hero yêu cầu profile có role/translation, ratings theo scale đã khai báo, ít nhất một stat,
+ít nhất một skill và đủ HEAD/PORTRAIT/SPLASH usable đúng semantic type. Skin set rỗng hợp lệ.
+Mọi skill phải có translation cho các locale của profile. Source được giữ theo section; derived rating
+phải có source mô tả cách suy ra. Hệ thống chưa có workflow phê duyệt nguồn bắt buộc cho mọi field.
+
+GAME_PATCH revision phải có variant cùng ruleset; variant phải publish trước Hero. Metadata/changelog
+có thể publish trước thời điểm rollout. Content correction giữ applicability của source; không tự
+phát sinh change set. Change set được ghi riêng, cần `patch:write`; STAT/ROLE/VISUAL được đối chiếu
+snapshot, SKILL kiểm tra stable key và giá trị thay đổi; mô tả mechanic vẫn cần biên tập viên xác minh.
+
+Item/Spell/Arcana/Enchantment/GameMode vẫn là các phase mở rộng, chưa có catalog authoring/API.
+Chưa có Redis, projection materialized, full-text search hoặc tự sinh game data. Public Hero query
+hiện dựng read model trực tiếp; cần đo query và tối ưu theo batch trước khi tải dữ liệu/quy mô tăng lớn.
+
 ---
 
 ## 1. Mục đích tài liệu
