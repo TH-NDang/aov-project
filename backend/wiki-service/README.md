@@ -13,7 +13,11 @@ Chỉ gọi public contract giữa các module. Không dùng entity/repository n
 |---|---|
 | `platform` | Mô hình lỗi (`ApiErrorCode`, `ApiException`, `ProblemDetails`), API versioning, `ApiPaths`, `PageSlice`, `QueryParameters`, `X-Request-Id`, admin `no-store`, bean `Clock` |
 | `access` | Security (JWT Keycloak), `Actor` / `CurrentActor`, `Capabilities`, `AuditLog` (bảng `access.audit_event`) |
-| `media` | Port `ObjectStorage` + `S3ObjectStorage` (AWS SDK v2, ADR-006) |
+| `media` | ObjectStorage/S3, upload/version/activate, validation, provenance và reverse usage |
+| `patch` | Region, ruleset timeline, patch/variant/release và gameplay context resolver |
+| `hero` | Identity, sáu section revisions, draft/fork/publish/discard, public reads và change sets |
+| `query` | Patch page và tổng hợp thay đổi Hero qua public contracts |
+| `user` | Hồ sơ dùng chung, preferences và avatar |
 
 ## Chạy local
 
@@ -139,8 +143,9 @@ throw new ApiException(HeroErrorCode.HERO_NOT_FOUND, "Hero " + heroId + " was no
 
 ## Phạm vi hiện tại
 
-Đã xong nền tảng (Phase 1): build, ranh giới module, Flyway, xử lý lỗi, request id, JWT + quyền theo capability, audit, object storage S3.
-Chưa có: entity và API nghiệp vụ (hero, patch, item…), luồng upload media (`MediaAsset`, `MediaAssetVersion`), import dữ liệu.
+Đã có foundation, media lifecycle, Patch context và Hero domain core, cùng frontend admin/wiki kết nối API thật.
+Dữ liệu `resources` có thể đưa vào biểu mẫu draft để biên tập và upload qua Media API; chưa có bulk import tự động.
+Item/Spell/Arcana/Enchantment/GameMode vẫn là các catalog thuộc giai đoạn sau. Không có dữ liệu gameplay tổng hợp trong migrations.
 
 
 ## Domain core: Patch và Hero
