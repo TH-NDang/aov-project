@@ -45,7 +45,7 @@ jobs:
         run: sh mvnw --batch-mode --no-transfer-progress verify
 
       - name: Upload test reports
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: wiki-service-test-reports
