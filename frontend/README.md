@@ -111,3 +111,16 @@ features/     dashboard, heroes, skins, portraits, media, items, enchantments, p
 lib/api/      types, AdminApi, adapter dữ liệu mẫu, ApiError
 lib/domain/   quy tắc nghiệp vụ: kiểm tra danh mục trang bị, chuyển portrait
 ```
+
+## Hero: backend → admin → wiki
+
+Admin có khu vực `/publishing` kết nối wiki-service và `/publishing-media` quản lý ảnh backend.
+Hướng dẫn cấu hình và nhập từ `resources` nằm trong [README admin](apps/admin-aov/README.md#biên-tập-hero-với-backend).
+Công cụ tài nguyên cũ tiếp tục hoạt động độc lập, không tự đồng bộ thay đổi mock lên backend.
+
+Wiki đọc danh sách và chi tiết Hero đã publish từ `/api/wiki/v1`, theo `region` và `locale`.
+Ví dụ `http://localhost:5173/?region=VN&locale=vi-VN` hoặc thêm `hero=<UUID>` để mở chi tiết.
+Có tìm kiếm, lọc vai trò, phân trang, chỉ số, kỹ năng, trang phục và lịch sử patch theo vùng.
+Khi chưa có ruleset/release có hiệu lực, wiki hiển thị trạng thái thiếu context; không thay bằng dữ liệu mock.
+API dùng ETag/revalidation qua HTTP; ảnh dùng URL version immutable.
+Cả hai frontend cần reverse proxy `/api/wiki` và `/media` khi deploy production.

@@ -1767,3 +1767,22 @@ Published revision ID -> immutable identity/cache token
 ```
 
 Ba tài liệu `Cấu trúc dự án`, `Database dự án`, `API dự án` là bộ đặc tả backend hiện hành; khi kiến trúc thay đổi, cập nhật trực tiếp ba file này và dùng Git history/commit/ADR trong repository để lưu lý do thay đổi, không tạo song song bộ docs v1/v2 mới.
+
+## Bổ sung phục vụ admin và wiki Hero đầu cuối
+
+Hai API đọc admin bổ sung, yêu cầu `catalog:read` và giữ `no-store`:
+
+- `GET /api/wiki/v1/admin/patches?page=0&size=20`: `PageSlice` gồm `id`, `code`, `status`, `sequence`,
+  `variants[]`. Variant trả `id`, `rulesetId`, `variantCode`, `rulesetOrdinal`, `status`, `releases[]`.
+  Release gồm `id`, `regionId`, `effectiveAt`, `sourceUrl`, `status`. `size` từ 1 đến 100.
+- `GET /api/wiki/v1/admin/regions/{regionId}/ruleset-assignments`: mảng `id`, `rulesetId`, `validFrom`,
+  `validTo`. Dùng để tiếp tục thiết lập context sau khi tải lại admin, không suy diễn ruleset từ locale.
+
+Public Hero detail có thêm `skillMedia` và `skinMedia`, là map theo `skillKey` / `skinKey` tới
+`MediaAssetReference` usable hiện tại. Không có ảnh thì không có entry. Hai map này cùng `media`
+thuộc response resolver cần revalidation; không nhúng URL current vào section immutable.
+Activate media version thay ETag/detail URL ảnh nhưng giữ nguyên HeroRevision và section IDs.
+
+PUT section dùng body phẳng (`expectedDraftVersion`, các field của section, `sources`, `changeNote`),
+không bọc dữ liệu trong `content`. Admin preview vẫn trả `{revision, content}` với key enum section.
+Publish một draft có section chưa điền trả `422 HERO_INVALID_CONTENT`, không phải lỗi máy chủ.

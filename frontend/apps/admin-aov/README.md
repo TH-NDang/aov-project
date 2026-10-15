@@ -147,3 +147,68 @@ Chọn thị trường không đổi locale/múi giờ hồ sơ. Chưa triển k
 
 Kiểm tra: `pnpm --filter @aov/admin-aov test:users`. Backend: `./mvnw.cmd verify`
 (chạy PostgreSQL/SeaweedFS test riêng bằng Testcontainers, không dùng dữ liệu local của bạn).
+
+## Biên tập Hero với backend
+
+- `/heroes`: công cụ chuẩn bị tài nguyên hiện có; thay đổi mock lưu trong trình duyệt, chưa publish.
+- `/publishing`: danh mục backend, tạo Hero, chọn ruleset, mở draft/revision.
+- `/publishing/:heroId`: sửa từng section, lưu với optimistic version, fork/publish/discard.
+- `/publishing-media`: upload MediaAsset và nâng chất lượng cùng artwork mà không sửa HeroRevision.
+
+Từ `/publishing`, mở **Gameplay context** để tạo ruleset, gán timeline vùng, tạo patch/variant,
+publish variant và nhập lịch phát hành có URL nguồn. Các danh mục này đọc lại được sau khi tải trang.
+Ngôn ngữ không quyết định ruleset; lịch phát hành dùng ngày giờ máy bạn và được gửi dưới dạng UTC.
+
+Chọn ruleset rồi tạo một Hero, ví dụ `nakroth`. Trong draft, mở **Nhập từ tài nguyên**, chọn Nakroth,
+bấm **Điền vào biểu mẫu**. Nguồn và đường dẫn `resources/Lien-Quan-v3/data/heroes.json` được giữ lại.
+Import chỉ điền thông tin đã có: không suy đoán vai trò, chỉ số, đánh giá hoặc mô tả chiêu còn thiếu.
+Điền các trường thiếu và lưu từng phần; backend kiểm tra đầy đủ nội dung trước khi nhận section.
+Khi mở phần ảnh, có thể chọn asset đã có, upload file, hoặc nhập ảnh đúng vai trò từ resources.
+HEAD/PORTRAIT/SPLASH là ba asset riêng; icon chiêu và artwork trang phục có semantic type riêng.
+Ảnh LFS pointer phải tải bằng `git lfs pull` trước khi import.
+
+Checklist publish nhắc các phần thiếu, và khóa publish khi còn section chưa lưu. Backend là nơi quyết
+định cuối cùng về validation và quyền. Lỗi version conflict giữ nội dung biểu mẫu: ghi lại phần cần
+đổi, bấm **Bỏ chỉnh sửa và tải bản mới**, rồi nhập lại. Chuyển tab của admin giữ biểu mẫu theo cơ chế
+page tabs hiện có. Đóng tab hoặc tải lại trang không lưu thay đổi chưa gửi lên backend.
+Bản published chỉ đọc; tạo draft kế thừa để sửa. `GAME_PATCH` cần variant của cùng ruleset;
+sửa lỗi nội dung dùng `CONTENT_CORRECTION` và giữ gameplay applicability cũ.
+Sau khi publish bản `GAME_PATCH`, form **Ghi lịch sử thay đổi gameplay** cho phép nhập các mục
+STAT/SKILL/ROLE/VISUAL/MECHANIC/OTHER. Chỉ ghi sau khi đối chiếu snapshot nguồn và đích.
+
+### Chạy cùng wiki-service
+
+Khởi động PostgreSQL/SeaweedFS/Keycloak và backend theo README của wiki-service, rồi từ `frontend`:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm dev:admin
+pnpm dev:wiki
+```
+
+Admin: http://localhost:5175/publishing, wiki: http://localhost:5173.
+Đăng nhập tài khoản có `catalog:read`; chỉnh Hero cần `hero:write`, xuất bản cần `hero:publish`,
+ảnh cần `media:write`, context cần `region:admin` / `patch:write` / `patch:publish` theo thao tác.
+Auth dùng gateway/session hiện có, không lưu access token trong localStorage.
+
+Vite dev/preview chuyển `/api/wiki` tới `http://localhost:8080` và `/media/{asset}/{version}.ext`
+tới SeaweedFS filer `http://localhost:8888/buckets/wiki-media/assets/…`.
+Chỉ GET/HEAD và đường dẫn asset hợp lệ được cho qua media proxy; `incoming/` và `imports/` không được phục vụ.
+Có thể đặt `WIKI_API_TARGET`, `WIKI_MEDIA_FILER_TARGET`, `WIKI_MEDIA_BUCKET` trong shell trước khi chạy Vite.
+`VITE_WIKI_URL` đổi địa chỉ nút xem wiki trong admin (mặc định `http://localhost:5173`).
+Khi deploy, reverse proxy/CDN phải phục vụ `/media` chỉ từ prefix `assets/`; Vite proxy chỉ dành cho dev/preview.
+Upload dùng presigned URL trực tiếp tới S3. CORS bucket phải cho phép đúng origin admin; initializer local đã hỗ trợ.
+Không công khai filer hoặc dùng credential storage trên frontend production.
+
+Kiểm tra luồng tích hợp frontend:
+
+```bash
+pnpm --filter @aov/admin-aov test:publishing
+pnpm typecheck
+pnpm build
+```
+
+GitHub Actions `frontend` chạy kiểm thử adapter/import/media proxy cùng typecheck/build.
+`backend` chạy integration test có PostgreSQL + SeaweedFS: upload ảnh thật → sáu section → publish →
+public API/ETag → activate ảnh chất lượng mới, giữ HeroRevision và kiểm tra reverse usage.
+Dữ liệu tổng hợp trong các test chỉ nằm trong database/container test, không được seed vào dữ liệu thực.

@@ -183,3 +183,12 @@ DB phát triển/production. Bộ test kiểm tra timeline không overlap, rollo
 publish validation, section reuse/immutability, ETag, locale fallback, quality upgrade, reverse usage,
 patch changes hai chiều, duplicate draft, FK ownership và hai biên tập viên ghi đồng thời.
 Các test S3/SeaweedFS foundation vẫn cần Docker để chạy đầy đủ.
+
+### Tích hợp frontend Hero
+
+Admin `/publishing` đã dùng API thật cho context, draft, sáu section, fork/publish/discard.
+`/publishing-media` dùng upload/version/activate hiện có; nâng chất lượng ảnh không ghi HeroRevision.
+Wiki dùng public API theo region/locale, có trạng thái thiếu context và chưa publish.
+Xem [hướng dẫn admin](../../frontend/apps/admin-aov/README.md#biên-tập-hero-với-backend).
+Integration test Media kiểm chứng presigned upload thật qua SeaweedFS rồi publish Hero, đọc public,
+ETag, nâng version ảnh và reverse usage. Cần Docker; không seed dữ liệu tổng hợp vào môi trường thực.
