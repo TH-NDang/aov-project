@@ -5,6 +5,34 @@
 **Phạm vi:** logical + implementation-oriented schema cho backend hiện hành.  
 **Tài liệu liên quan:** `01-BAN-DAC-TA-DU-AN.md`, `03-API-DU-AN.md`
 
+
+### Migrations domain core đã triển khai
+
+| Migration | Nội dung |
+|---|---|
+| V005 | ruleset, assignment, patch/translation/variant/release |
+| V006 | Hero identity/external identity/composition revision |
+| V007 | sáu section, translations, stat values, skill/skin identities và snapshots, effects, media bindings, source refs |
+| V008 | Hero change set/summary và các typed STAT/SKILL/ROLE/VISUAL/MECHANIC/OTHER change tables |
+
+V005 sử dụng extension PostgreSQL `btree_gist` để exclusion constraint chặn assignment overlap.
+Tài khoản migration cần được phép tạo extension này hoặc DBA provision trước. Không cần extension
+cho runtime request. Release có partial unique theo region/effective time; application kiểm tra thứ tự
+ordinal không mâu thuẫn timeline trong transaction khóa region.
+
+Section root/composition dùng FK ghép `(section_revision_id, hero_id)` để không compose nhầm Hero.
+Published root, section và các row con được bảo vệ bằng trigger; source chỉ được ghi cho DRAFT section.
+Change history append-only, không có normal API update/delete. Một draft cho mỗi hero/ruleset bằng
+partial unique index. Application khóa Hero identity trước mutation/publish và kiểm tra expected version.
+
+`hero.hero_overview_rating_revision` có thêm version/actor như các section khác. `hero.rating_scale`
+seed `GAME_OVERVIEW_10` (0–10) là dictionary nội bộ, không phải seed chỉ số của tướng.
+Media refs vẫn là logical ID, không có FK sang media; patch refs được xác minh qua `GameplayContexts`.
+Persistence của domain core dùng `JdbcClient`, không tạo JPA relationship xuyên module.
+
+Draft section bị thay bằng snapshot mới có thể thành row không còn composition tham chiếu; chưa purge.
+External identity hiện chỉ có schema, chưa có admin API quản lý mapping provider.
+
 ---
 
 ## 1. Nguyên tắc database
