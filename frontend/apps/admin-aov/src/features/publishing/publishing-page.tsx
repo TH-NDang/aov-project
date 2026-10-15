@@ -133,8 +133,8 @@ function PublishingWorkspace({ heroId }: { heroId: string }) {
   }
   const update = (value: NonNullable<Content[Section]>) => {
     if (!preview) return
-    setPreview({ ...preview, content: { ...preview.content, [section]: value } })
-    setDirty(new Set([...dirty, section]))
+    setPreview((current) => (current ? { ...current, content: { ...current.content, [section]: value } } : current))
+    setDirty((current) => new Set([...current, section]))
   }
   return (
     <Page>

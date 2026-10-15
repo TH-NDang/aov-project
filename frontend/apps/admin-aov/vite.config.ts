@@ -1,4 +1,4 @@
-import { mediaPath } from "../../tooling/media-proxy"
+import { mediaPath } from "../../tooling/media-proxy.mts"
 import { defineConfig, type Plugin } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"

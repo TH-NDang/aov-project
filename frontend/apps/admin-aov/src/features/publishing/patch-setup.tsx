@@ -49,7 +49,7 @@ export function PatchSetup({ rulesets, regions }: { rulesets: Ruleset[]; regions
       await action()
       await queryClient.invalidateQueries({ queryKey: ["publishing-rulesets"] })
       await queryClient.invalidateQueries({ queryKey: ["publishing-patches"] })
-      await assignments.refetch()
+      if (regionId) await assignments.refetch()
       setMessage(message)
     } catch (error) {
       setError(errorMessage(error))
