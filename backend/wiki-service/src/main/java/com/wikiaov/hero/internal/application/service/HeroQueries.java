@@ -71,6 +71,22 @@ public class HeroQueries {
             bindings.bindings().forEach(
                     (role, id) -> media.find(id).filter(a -> a.usable()).ifPresent(a -> assets.put(role.name(), a)));
             result.put("media", assets);
+            Map<String, Object> skillMedia = new LinkedHashMap<>();
+            var skills = (Skills) sections.content(HeroSection.SKILLS, rev.sections().get(HeroSection.SKILLS));
+            skills.skills().forEach(skill -> {
+                if (skill.iconAssetId() != null)
+                    media.find(skill.iconAssetId()).filter(a -> a.usable())
+                            .ifPresent(a -> skillMedia.put(skill.skillKey(), a));
+            });
+            result.put("skillMedia", skillMedia);
+            Map<String, Object> skinMedia = new LinkedHashMap<>();
+            var skins = (Skins) sections.content(HeroSection.SKINS, rev.sections().get(HeroSection.SKINS));
+            skins.skins().forEach(skin -> {
+                if (skin.artAssetId() != null)
+                    media.find(skin.artAssetId()).filter(a -> a.usable())
+                            .ifPresent(a -> skinMedia.put(skin.skinKey(), a));
+            });
+            result.put("skinMedia", skinMedia);
         }
         var profile = (Profile) sections.content(HeroSection.PROFILE, rev.sections().get(HeroSection.PROFILE));
         String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),

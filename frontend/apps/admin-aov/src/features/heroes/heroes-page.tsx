@@ -32,7 +32,7 @@ const columns: DataColumnDef<HeroRow>[] = [
     enableHiding: false,
     sortFn: (a, b) =>
       a.original.hero.name.localeCompare(b.original.hero.name, "vi", { numeric: true, sensitivity: "base" }),
-    header: ({ column }) => <ColumnHeader column={column} title="Tướng" />,
+    header: ({ column }) => <ColumnHeader column={column} title="Tài nguyên tướng" />,
     cell: ({ row: { original: row } }) => (
       <div className="flex items-center gap-3">
         <MediaImage path={row.hero.head} alt="" className="size-11 shrink-0 rounded-lg border object-cover" />
@@ -259,13 +259,18 @@ export function HeroesPage() {
   return (
     <Page>
       <PageHeader
-        title="Tướng"
-        description="Quản lý hồ sơ tướng, theo dõi ảnh và nội dung kỹ năng cần bổ sung."
+        title="Tài nguyên tướng"
+        description="Duyệt và chuẩn bị dữ liệu resources. Thay đổi tại đây được lưu cục bộ; mở Biên tập backend để tạo draft và publish."
         actions={
-          <Button variant="outline" size="sm" disabled={heroes.isFetching} onClick={() => void heroes.refetch()}>
-            <RefreshCw className={cn("size-4", heroes.isFetching && "animate-spin")} />
-            Tải lại
-          </Button>
+          <>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/publishing">Biên tập backend</Link>
+            </Button>
+            <Button variant="outline" size="sm" disabled={heroes.isFetching} onClick={() => void heroes.refetch()}>
+              <RefreshCw className={cn("size-4", heroes.isFetching && "animate-spin")} />
+              Tải lại
+            </Button>
+          </>
         }
       />
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">

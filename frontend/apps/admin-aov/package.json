@@ -13,7 +13,8 @@
     "test:storage": "node --experimental-strip-types --test tests/storage.test.ts",
     "test:table": "node --experimental-strip-types --test tests/table.test.ts",
     "test:heroes": "node --experimental-strip-types --test tests/heroes.test.ts",
-    "test:tabs": "tsx --tsconfig tests/tsconfig.json --test tests/page-tabs.test.tsx"
+    "test:tabs": "tsx --tsconfig tests/tsconfig.json --test tests/page-tabs.test.tsx",
+    "test:publishing": "tsx --tsconfig tests/tsconfig.json --test tests/publishing.test.ts tests/wiki-public.test.tsx"
   },
   "dependencies": {
     "@aov/ui": "workspace:*",

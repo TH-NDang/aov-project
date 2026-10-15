@@ -71,7 +71,21 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: "characterBook",
         items: [
           {
-            title: "Tướng",
+            title: "Biên tập backend",
+            icon: "heroes",
+            to: "/publishing",
+            description: "Draft, publish và lịch sử phiên bản tướng",
+            capability: "catalog:read",
+          },
+          {
+            title: "Media backend",
+            icon: "gallery",
+            to: "/publishing-media",
+            description: "Upload và nâng chất lượng ảnh đã publish",
+            capability: "catalog:read",
+          },
+          {
+            title: "Tài nguyên tướng",
             icon: "heroes",
             to: "/heroes",
             description: "Thông tin, kỹ năng, trang phục",

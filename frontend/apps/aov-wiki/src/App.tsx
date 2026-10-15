@@ -1,3 +1,4 @@
+import { HeroWiki } from "./features/heroes/hero-wiki"
 import { PageBackdrop } from "./components/page-backdrop"
 import { PageContainer } from "./components/page-container"
 import { WikiHeader } from "./components/wiki-header"
@@ -27,7 +28,9 @@ export default function App() {
             Tra cứu tướng, trang bị, phù hiệu Liên Quân Mobile.
           </p>
         </PageContainer>
-        <PageContainer>{/* Home content goes here */}</PageContainer>
+        <PageContainer>
+          <HeroWiki />
+        </PageContainer>
       </main>
     </>
   )

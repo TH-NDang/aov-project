@@ -20,7 +20,7 @@ public class HeroValidation {
         this.store = store;
     }
     public void validate(HeroSection section, Object value) {
-        if (!validator.validate(value).isEmpty())
+        if (value == null || !validator.validate(value).isEmpty())
             throw invalid("The hero section is incomplete or invalid.");
         switch (section) {
             case PROFILE -> {
