@@ -115,6 +115,37 @@ public class PatchAuthoring {
     public List<Map<String, Object>> rulesets() {
         return store.rows("SELECT id,code,description,lifecycle_state FROM patch.gameplay_ruleset ORDER BY code");
     }
+    @PreAuthorize("hasAuthority('catalog:read')")
+    @Transactional(readOnly = true)
+    public com.wikiaov.platform.PageSlice<Map<String, Object>> catalog(int page, int size) {
+        if (page < 0 || size < 1 || size > 100)
+            throw invalid("Invalid page bounds.");
+        var rows = store.rows(
+                "SELECT id,code,status,sequence FROM patch.game_patch ORDER BY sequence DESC LIMIT ? OFFSET ?", size,
+                (long) page * size);
+        var items = rows.stream().map(row -> {
+            Map<String, Object> result = new java.util.LinkedHashMap<>(row);
+            result.put("variants", store.rows(
+                    "SELECT id,ruleset_id AS \"rulesetId\",variant_code AS \"variantCode\",ruleset_ordinal AS \"rulesetOrdinal\",status FROM patch.patch_variant WHERE patch_id=? ORDER BY ruleset_ordinal",
+                    row.get("id")).stream().map(variant -> {
+                        Map<String, Object> value = new java.util.LinkedHashMap<>(variant);
+                        value.put("releases", store.rows(
+                                "SELECT id,region_id AS \"regionId\",effective_at AS \"effectiveAt\",source_url AS \"sourceUrl\",status FROM patch.patch_release WHERE patch_variant_id=? ORDER BY effective_at",
+                                variant.get("id")));
+                        return value;
+                    }).toList());
+            return result;
+        }).toList();
+        long count = ((Number) store.one("SELECT count(*) n FROM patch.game_patch").get("n")).longValue();
+        return new com.wikiaov.platform.PageSlice<>(items, page, size, count);
+    }
+    @PreAuthorize("hasAuthority('catalog:read')")
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> assignments(UUID regionId) {
+        return store.rows(
+                "SELECT id,ruleset_id AS \"rulesetId\",valid_from AS \"validFrom\",valid_to AS \"validTo\" FROM patch.region_ruleset_assignment WHERE region_id=? ORDER BY valid_from DESC",
+                regionId);
+    }
     private Timestamp now() {
         return Timestamp.from(clock.instant());
     }

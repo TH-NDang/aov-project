@@ -15,6 +15,17 @@ public class PatchAdminController {
     public PatchAdminController(PatchAuthoring authoring) {
         this.authoring = authoring;
     }
+    @GetMapping(path = "/patches", version = "1")
+    com.wikiaov.platform.PageSlice<Map<String, Object>> catalog(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("page", "size"));
+        return authoring.catalog(page, size);
+    }
+    @GetMapping(path = "/regions/{id}/ruleset-assignments", version = "1")
+    List<Map<String, Object>> assignments(@PathVariable UUID id, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return authoring.assignments(id);
+    }
     @PostMapping(path = "/rulesets", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     Map<String, UUID> ruleset(@Valid @RequestBody Ruleset body) {

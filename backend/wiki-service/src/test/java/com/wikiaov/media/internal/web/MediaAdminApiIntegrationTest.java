@@ -430,6 +430,94 @@ class MediaAdminApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON).content(json));
     }
 
+    @Test
+    void realMediaUploadsFlowThroughHeroPublicationAndQualityUpgrade() throws Exception {
+        clock.set(Instant.parse("2030-01-01T00:00:00Z"));
+        String root = "/api/wiki/v1";
+        String suffix = UUID.randomUUID().toString();
+        String ruleset = (String) pipeline(post(root + "/admin/rulesets"),
+                Map.of("code", "TEST-" + suffix, "description", "Synthetic integration fixture"), 201).get("id");
+        String region = "5d5dcd5e-15b9-4d43-884d-111111111111";
+        pipeline(post(root + "/admin/regions/" + region + "/ruleset-assignments"),
+                Map.of("rulesetId", ruleset, "validFrom", "2029-01-01T00:00:00Z"), 201);
+        String patch = (String) pipeline(post(root + "/admin/patches"), Map.of("code", "fixture-" + suffix,
+                "translations",
+                List.of(Map.of("locale", "vi-VN", "title", "Synthetic test patch", "summary", "Not game data"))), 201)
+                .get("id");
+        String variant = (String) pipeline(post(root + "/admin/patches/" + patch + "/variants"),
+                Map.of("rulesetId", ruleset, "variantCode", "TEST", "rulesetOrdinal", 1), 201).get("id");
+        pipeline(post(root + "/admin/patch-variants/" + variant + "/publish"), null, 204);
+        pipeline(post(root + "/admin/patch-variants/" + variant + "/releases"),
+                Map.of("regionId", region, "effectiveAt", "2029-01-02T00:00:00Z"), 201);
+        Map<String, String> assets = new java.util.HashMap<>();
+        for (String semantic : List.of("HEAD", "PORTRAIT", "SPLASH", "SKILL_ICON", "SKIN_ART")) {
+            String asset = createAsset("HERO_" + semantic);
+            uploadVersion(asset, TestImages.png(40, 30), "image/png");
+            assets.put(semantic, asset);
+        }
+        var draft = pipeline(post(root + "/admin/heroes"), Map.of("code", "fixture-" + suffix,
+                "name", "Synthetic test hero", "initialLocale", "vi-VN", "rulesetId", ruleset), 201);
+        String hero = (String) draft.get("heroId"), revision = (String) draft.get("id");
+        String path = root + "/admin/heroes/" + hero + "/drafts/" + revision;
+        mvc.perform(get(root + "/heroes/" + hero)).andExpect(status().isNotFound());
+        Map<String, Object> sections = new java.util.LinkedHashMap<>();
+        sections.put("profile", Map.of("translations",
+                List.of(Map.of("locale", "vi-VN", "name", "Synthetic test hero")), "roles", List.of("ASSASSIN")));
+        sections.put("overview-ratings", Map.of("scaleCode", "GAME_OVERVIEW_10", "survivability", 1, "attackDamage", 2,
+                "skillEffects", 3, "difficulty", 4));
+        sections.put("combat-stats",
+                Map.of("values", List.of(Map.of("statKey", "HP", "baseValue", 100, "unit", "POINT"))));
+        sections.put("skills",
+                Map.of("skills", List.of(Map.of("skillKey", "skill-1", "kind", "ACTIVE", "displayOrder", 0,
+                        "iconAssetId", assets.get("SKILL_ICON"), "translations", List.of(Map.of("locale", "vi-VN",
+                                "name", "Test skill", "description", "Synthetic description, not game data")),
+                        "effects", List.of()))));
+        sections.put("skins", Map.of("skins", List.of(Map.of("skinKey", "skin-1", "displayOrder", 0,
+                "artAssetId", assets.get("SKIN_ART"), "translations",
+                List.of(Map.of("locale", "vi-VN", "name", "Test skin"))))));
+        sections.put("media-bindings", Map.of("bindings", Map.of("HEAD", assets.get("HEAD"), "PORTRAIT",
+                assets.get("PORTRAIT"), "SPLASH", assets.get("SPLASH"))));
+        for (var section : sections.entrySet()) {
+            Map<String, Object> body = new java.util.HashMap<>((Map<String, Object>) section.getValue());
+            body.put("expectedDraftVersion", draft.get("version"));
+            draft = pipeline(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                    .put(path + "/" + section.getKey()), body, 200);
+        }
+        var published = pipeline(post(path + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
+        var first = mvc.perform(get(root + "/heroes/" + hero)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.skillMedia.skill-1.currentVersion.url").isNotEmpty())
+                .andExpect(jsonPath("$.skinMedia.skin-1.currentVersion.url").isNotEmpty()).andReturn().getResponse();
+        String tag = first.getHeader("ETag");
+        mvc.perform(get(root + "/heroes/" + hero).header("If-None-Match", tag)).andExpect(status().isNotModified());
+        String upgraded = uploadVersion(assets.get("PORTRAIT"), TestImages.png(80, 60), "image/png");
+        String versionId = JsonPath.read(upgraded, "$.versionId");
+        String assetDetails = mvc.perform(get(BASE + "/assets/" + assets.get("PORTRAIT")).with(editor()))
+                .andReturn().getResponse().getContentAsString();
+        Number expectedVersion = JsonPath.read(assetDetails, "$.version");
+        activate(assets.get("PORTRAIT"), versionId, expectedVersion.longValue()).andExpect(status().isOk());
+        mvc.perform(get(root + "/heroes/" + hero).header("If-None-Match", tag)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.revisionId").value(published.get("id")))
+                .andExpect(jsonPath("$.media.PORTRAIT.currentVersion.versionId").value(versionId));
+        mvc.perform(get(BASE + "/assets/" + assets.get("PORTRAIT") + "/usages").with(reader()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].scope", hasItem("CURRENT")));
+    }
+
+    private Map<String, Object> pipeline(
+            org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder request,
+            Object body, int expected) throws Exception {
+        request.with(jwt().jwt(t -> t.subject("pipeline").issuer("http://localhost/realms/test"))
+                .authorities(java.util.stream.Stream
+                        .of("catalog:read", "hero:write", "hero:publish", "region:admin", "patch:write",
+                                "patch:publish")
+                        .map(SimpleGrantedAuthority::new).toArray(SimpleGrantedAuthority[]::new)));
+        var mapper = tools.jackson.databind.json.JsonMapper.builder().build();
+        if (body != null)
+            request.contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsString(body));
+        String result = mvc.perform(request).andExpect(status().is(expected)).andReturn().getResponse()
+                .getContentAsString();
+        return result.isEmpty() ? Map.of() : mapper.readValue(result, Map.class);
+    }
+
     private static RequestPostProcessor editor() {
         return jwt().jwt(token -> token.subject("editor-1").issuer("http://localhost/realms/test"))
                 .authorities(new SimpleGrantedAuthority(Capabilities.CATALOG_READ),

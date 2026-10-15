@@ -114,6 +114,20 @@ class DomainCoreIntegrationTest {
         release(variant, VN, "2026-01-02T00:00:00Z", 201);
     }
     @Test
+    void adminCanResumePatchSetupAndIncompleteHeroPublicationIsRejected() throws Exception {
+        mvc.perform(get(ROOT + "/admin/patches")).andExpect(status().isUnauthorized());
+        var catalog = send(get(ROOT + "/admin/patches?page=0&size=20"), null, 200);
+        assertThat(((List<?>) catalog.get("items"))).hasSize(1);
+        var assignments = mvc.perform(get(ROOT + "/admin/regions/" + VN + "/ruleset-assignments")
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(assignments).contains("rulesetId", ruleset.toString(), "validFrom");
+        var draft = create();
+        send(post(path(uuid(draft, "heroId"), id(draft)) + "/publish"),
+                Map.of("expectedVersion", 1), 422);
+        send(get(ROOT + "/admin/patches?size=101"), null, 422);
+    }
+    @Test
     void regionalTimelineIsIndependentOfLocaleAndRejectsOverlap() throws Exception {
         assertThat(contexts.resolve("VN", clock.instant()).patchVariantId()).isEqualTo(variant);
         assign(VN, ruleset, "2026-02-01T00:00:00Z", null, 409);

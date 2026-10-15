@@ -39,6 +39,21 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/dashboard/dashboard-page")).DashboardPage }),
           },
           {
+            path: "publishing-media",
+            handle: title("Media backend"),
+            lazy: async () => ({ Component: (await import("@/features/publishing/media-page")).PublishedMediaPage }),
+          },
+          {
+            path: "publishing",
+            handle: title("Biên tập backend"),
+            lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
+          },
+          {
+            path: "publishing/:heroId",
+            handle: title("Phiên bản tướng"),
+            lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
+          },
+          {
             path: "heroes",
             handle: title("Tướng"),
             children: [

@@ -32,6 +32,17 @@ export function isApiError(error: unknown, code?: string): error is ApiError {
 
 /** Vietnamese messages keyed by stable error codes. */
 const MESSAGES: Record<string, string> = {
+  HERO_REVISION_VERSION_CONFLICT: "Draft đã được người khác sửa. Hãy tải bản mới trước khi tiếp tục.",
+  HERO_PATCH_CHANGE_CONFLICT: "Tướng đã có change set trong variant này. Kiểm tra lịch sử đã ghi trước khi thử lại.",
+  HERO_DRAFT_EXISTS: "Tướng đã có draft trong ruleset này. Hãy mở draft hiện có.",
+  HERO_CODE_EXISTS: "Mã tướng đã tồn tại. Hãy mở tướng trong danh mục backend.",
+  HERO_INVALID_CONTENT: "Nội dung section chưa đầy đủ hoặc không hợp lệ. Kiểm tra các trường và nguồn.",
+  HERO_INVALID_MEDIA: "Ảnh chưa sẵn sàng hoặc không đúng loại. Chọn asset đã hoàn tất upload.",
+  HERO_REVISION_NOT_EDITABLE: "Phiên bản này không còn là draft có thể sửa.",
+  PATCH_CONTEXT_UNAVAILABLE: "Vùng chưa có ruleset và lịch phát hành có hiệu lực.",
+  PATCH_CONFLICT: "Dữ liệu patch trùng hoặc timeline chồng lấn với dữ liệu đã có.",
+  PATCH_INVALID: "Thông tin patch chưa hợp lệ. Kiểm tra ruleset, thứ tự và timeline vùng.",
+  FORBIDDEN: "Tài khoản chưa có quyền thực hiện thao tác này.",
   VERSION_CONFLICT: "Dữ liệu vừa được người khác thay đổi. Hãy tải lại rồi chỉnh tiếp.",
   NOT_FOUND: "Không tìm thấy dữ liệu.",
   INVALID_REQUEST: "Dữ liệu gửi lên chưa hợp lệ.",
