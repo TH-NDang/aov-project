@@ -13,9 +13,9 @@
   },
   "scripts": {
     "dev": "turbo dev",
-    "dev:wiki": "pnpm --filter @aov/aov-wiki dev",
-    "dev:stream": "pnpm --filter @aov/aov-stream dev",
-    "dev:admin": "pnpm --filter @aov/admin-aov dev",
+    "dev:wiki": "pnpm --filter @aov/aov-wiki dev --host 0.0.0.0",
+    "dev:stream": "pnpm --filter @aov/aov-stream dev --host 0.0.0.0",
+    "dev:admin": "pnpm --filter @aov/admin-aov dev --host 0.0.0.0",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "format": "prettier --write .",
