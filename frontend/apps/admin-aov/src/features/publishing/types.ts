@@ -62,6 +62,9 @@ export interface Skin {
   skinKey: string
   displayOrder: number
   artAssetId: string | null
+  headAssetId?: string | null
+  portraitAssetId?: string | null
+  images?: Partial<Record<MediaRole, ImageOption[]>>
   rarityCode: string | null
   translations: (Translation & { description: string | null; acquisitionNote: string | null })[]
 }
@@ -70,8 +73,13 @@ export interface Skins {
   sources: Source[]
 }
 export type MediaRole = "HEAD" | "PORTRAIT" | "SPLASH"
+export interface ImageOption {
+  assetId: string
+  label: string | null
+}
 export interface Bindings {
   bindings: Partial<Record<MediaRole, string>>
+  images?: Partial<Record<MediaRole, ImageOption[]>>
   sources: Source[]
 }
 export interface Content {

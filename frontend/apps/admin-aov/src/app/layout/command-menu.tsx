@@ -85,7 +85,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                 )}
                 <CommandItem
                   value={`tim portrait ${search}`}
-                  onSelect={() => run(() => navigate(`/portraits?q=${encodeURIComponent(search.trim())}`))}
+                  onSelect={() => run(() => navigate(`/hero/media?q=${encodeURIComponent(search.trim())}`))}
                 >
                   <Search />
                   Tìm portrait “{search.trim()}”

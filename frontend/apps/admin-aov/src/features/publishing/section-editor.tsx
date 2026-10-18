@@ -1,6 +1,8 @@
 import { Button } from "@aov/ui/components/button"
 import type { Hero } from "@/lib/api/types"
 import { AssetPicker } from "./asset-picker"
+import { SkinBadgePicker } from "../media/skin-badge-picker"
+import { retainImageOptions } from "./image-options"
 import { Field, SourceFields, control } from "./fields"
 import {
   ROLES,
@@ -423,16 +425,16 @@ export function SectionEditor({
                   onChange({ ...p, skins: p.skins.map((v, n) => (n === i ? { ...v, skinKey } : v)) })
                 }
               />
-              <Field
-                label="Mã bậc"
-                value={s.rarityCode ?? ""}
-                onChange={(rarityCode) =>
-                  onChange({
-                    ...p,
-                    skins: p.skins.map((v, n) => (n === i ? { ...v, rarityCode: rarityCode || null } : v)),
-                  })
-                }
-              />
+              <label className="grid gap-1.5 text-sm">
+                Bậc / nhãn trang phục
+                <SkinBadgePicker
+                  value={s.rarityCode}
+                  locale={locale}
+                  onChange={(rarityCode) =>
+                    onChange({ ...p, skins: p.skins.map((v, n) => (n === i ? { ...v, rarityCode } : v)) })
+                  }
+                />
+              </label>
               {s.translations.map((t, j) => (
                 <div key={j} className="space-y-3 border-l-2 pl-3">
                   {(
@@ -489,15 +491,35 @@ export function SectionEditor({
               >
                 Thêm bản dịch trang phục
               </Button>
-              <AssetPicker
-                semanticType="HERO_SKIN_ART"
-                value={s.artAssetId}
-                onChange={(artAssetId) =>
-                  onChange({ ...p, skins: p.skins.map((v, n) => (n === i ? { ...v, artAssetId } : v)) })
-                }
-                resourcePath={resource?.skins.find((skin) => skin.id === s.skinKey)?.cover}
-                sourceUrl={resource?.sources.portraits}
-              />
+              <div className="grid gap-3 lg:grid-cols-3">
+                {(
+                  [
+                    ["HEAD", "headAssetId", "Head", "head"],
+                    ["PORTRAIT", "portraitAssetId", "Portrait", "portrait"],
+                    ["SPLASH", "artAssetId", "Cover", "cover"],
+                  ] as const
+                ).map(([role, key, title, resourceKey]) => (
+                  <div key={role} className="space-y-2">
+                    <h4 className="text-sm font-medium">{title}</h4>
+                    <AssetPicker
+                      semanticType="HERO_SKIN_ART"
+                      value={s[key] ?? null}
+                      onChange={(assetId) =>
+                        onChange({
+                          ...p,
+                          skins: p.skins.map((v, n) =>
+                            n === i
+                              ? { ...v, [key]: assetId, images: retainImageOptions(v.images, role, v[key], assetId) }
+                              : v,
+                          ),
+                        })
+                      }
+                      resourcePath={resource?.skins.find((skin) => skin.id === s.skinKey)?.[resourceKey]}
+                      sourceUrl={resource?.sources.portraits}
+                    />
+                  </div>
+                ))}
+              </div>
               <Button
                 type="button"
                 variant="outline"
@@ -552,7 +574,13 @@ export function SectionEditor({
             <AssetPicker
               semanticType={`HERO_${role}`}
               value={p.bindings[role] ?? null}
-              onChange={(assetId) => onChange({ ...p, bindings: { ...p.bindings, [role as MediaRole]: assetId } })}
+              onChange={(assetId) =>
+                onChange({
+                  ...p,
+                  bindings: { ...p.bindings, [role as MediaRole]: assetId },
+                  images: retainImageOptions(p.images, role, p.bindings[role], assetId),
+                })
+              }
               resourcePath={
                 role === "HEAD" ? resource?.head : role === "PORTRAIT" ? resource?.portrait : resource?.cover
               }

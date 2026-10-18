@@ -22,6 +22,7 @@ const types: Record<string, string> = {
   HERO_SPLASH: "Ảnh nền tướng",
   HERO_SKILL_ICON: "Icon kỹ năng",
   HERO_SKIN_ART: "Trang phục",
+  SKIN_BADGE: "Icon bậc / nhãn trang phục",
   ITEM_ICON: "Trang bị",
   ARCANA_ICON: "Ngọc",
   SPELL_ICON: "Phụ trợ",

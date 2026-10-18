@@ -83,15 +83,6 @@ export function HotkeyHelp() {
       action: "Hoàn tác sửa trang bị",
       context: "Khi không đang gõ trong ô nhập liệu.",
     })
-  if (pathname === "/portraits")
-    pageKeys.push(
-      { keys: ["Ctrl / ⌘", "Enter"], action: "Lưu gán portrait", context: "Khi đã chọn ảnh và nơi nhận hợp lệ." },
-      {
-        keys: ["Ctrl / ⌘", "Shift", "Enter"],
-        action: "Lưu và chuyển ảnh tiếp theo",
-        context: "Trong bảng gán portrait.",
-      },
-    )
   if (["/publishing", "/items"].includes(pathname))
     pageKeys.push({
       keys: ["Enter / Space"],

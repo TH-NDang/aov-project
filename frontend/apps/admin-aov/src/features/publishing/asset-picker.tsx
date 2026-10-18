@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest, getSession } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
@@ -14,13 +14,18 @@ export function AssetPicker({
   onChange,
   resourcePath,
   sourceUrl,
+  onUploaded,
+  onBusyChange,
 }: {
   semanticType: string
   value: string | null
   onChange: (value: string) => void
   resourcePath?: string | null
   sourceUrl?: string
+  onUploaded?: (assetId: string, fileName: string) => void
+  onBusyChange?: (busy: boolean) => void
 }) {
+  const queryClient = useQueryClient()
   const alive = useRef(true)
   const change = useRef(onChange)
   useEffect(() => {
@@ -35,6 +40,10 @@ export function AssetPicker({
   const [page, setPage] = useState(0)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    onBusyChange?.(busy)
+    return () => onBusyChange?.(false)
+  }, [busy, onBusyChange])
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
   const [label, setLabel] = useState("Ảnh do biên tập viên cung cấp")
@@ -63,6 +72,7 @@ export function AssetPicker({
       if (!alive.current) return
       await assets.refetch()
       await selectedAsset.refetch()
+      await queryClient.invalidateQueries({ queryKey: ["hero-content-asset", value] })
       setMessage("Đã nâng chất lượng trên cùng asset. Không cần sửa hoặc publish lại tướng.")
     } catch (error) {
       setError(errorMessage(error))
@@ -74,13 +84,15 @@ export function AssetPicker({
     setBusy(true)
     setError("")
     try {
-      const id = await uploadHeroImage(backendRequest, await file, semanticType, {
+      const selectedFile = await file
+      const id = await uploadHeroImage(backendRequest, selectedFile, semanticType, {
         label,
         url: url || null,
         note: resourcePath ?? null,
       })
       if (!alive.current) return
       change.current(id)
+      onUploaded?.(id, selectedFile.name)
       await assets.refetch()
     } catch (error) {
       setError(errorMessage(error))

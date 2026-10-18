@@ -15,6 +15,10 @@ const source = z.object({
   note: nullableText,
 })
 const translation = z.object({ locale: text, name: text })
+const imageOptions = z.partialRecord(
+  z.enum(["HEAD", "PORTRAIT", "SPLASH"]),
+  z.array(z.object({ assetId: text, label: nullableText })),
+)
 const contentSchema = z.object({
   PROFILE: z
     .object({
@@ -65,6 +69,9 @@ const contentSchema = z.object({
           skinKey: text,
           displayOrder: number,
           artAssetId: nullableText,
+          headAssetId: nullableText.optional(),
+          portraitAssetId: nullableText.optional(),
+          images: imageOptions.optional(),
           rarityCode: nullableText,
           translations: z.array(translation.extend({ description: nullableText, acquisitionNote: nullableText })),
         }),
@@ -73,7 +80,11 @@ const contentSchema = z.object({
     })
     .nullable(),
   MEDIA_BINDINGS: z
-    .object({ bindings: z.partialRecord(z.enum(["HEAD", "PORTRAIT", "SPLASH"]), text), sources: z.array(source) })
+    .object({
+      bindings: z.partialRecord(z.enum(["HEAD", "PORTRAIT", "SPLASH"]), text),
+      images: imageOptions.optional(),
+      sources: z.array(source),
+    })
     .nullable(),
 })
 export const heroWorkingSchema = z.object({

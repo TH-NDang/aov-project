@@ -31,6 +31,7 @@ import { errorMessage } from "@/lib/api/errors"
 import type { Hero } from "@/lib/api/types"
 import { languageOptions } from "../users/profile-preference-picker"
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
+import { invalidateHeroCatalogs } from "./publishing-cache"
 import { BaselineContextForm } from "./baseline-context-form"
 import { HeroContent, localized } from "./hero-content"
 import { HeroCatalog } from "./hero-catalog"
@@ -219,7 +220,7 @@ export function PublishingWorkspace({
     try {
       await action()
       setMessage(success)
-      await queryClient.invalidateQueries({ queryKey: ["publishing-heroes"] })
+      await invalidateHeroCatalogs(queryClient)
       await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
       await revisions.refetch()
     } catch (failure) {
@@ -755,7 +756,7 @@ export function PublishingWorkspace({
                       onBusyChange={setBusy}
                       onMove={async (next) => {
                         await openRevision(next)
-                        await queryClient.invalidateQueries({ queryKey: ["publishing-heroes"] })
+                        await invalidateHeroCatalogs(queryClient)
                         await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
                         await revisions.refetch()
                         setMessage("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")

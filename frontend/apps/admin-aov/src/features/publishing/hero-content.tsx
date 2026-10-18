@@ -76,6 +76,7 @@ export function HeroAsset({
   className = "",
   preview = false,
   naturalAspectRatio,
+  frameAspectRatio,
 }: {
   id?: string | null
   alt?: string
@@ -83,6 +84,8 @@ export function HeroAsset({
   preview?: boolean
   /** Use the intrinsic image ratio, with this fallback while loading or when missing. */
   naturalAspectRatio?: number
+  /** Reserve a stable frame before the image loads, without cropping its contents. */
+  frameAspectRatio?: number
 }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const asset = useQuery({
@@ -92,13 +95,20 @@ export function HeroAsset({
     staleTime: 60000,
   })
   const thumbnail = (
-    <div className={cn("@container overflow-hidden rounded-xl border bg-muted/40", className)}>
+    <div
+      className={cn("@container overflow-hidden rounded-xl border bg-muted/40", className)}
+      style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}
+    >
       {asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
         <img
           src={asset.data.currentUrl}
           alt={alt}
           loading="lazy"
-          className={cn("size-full object-cover", naturalAspectRatio && "block h-auto w-full object-contain")}
+          className={cn(
+            "size-full object-cover",
+            frameAspectRatio && "object-contain",
+            naturalAspectRatio && "block h-auto w-full object-contain",
+          )}
           style={naturalAspectRatio ? { aspectRatio: `auto ${naturalAspectRatio}` } : undefined}
           onError={() => setFailedUrl(asset.data!.currentUrl)}
         />
@@ -118,7 +128,11 @@ export function HeroAsset({
     </div>
   )
   return preview && asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
-    <ImagePreview src={asset.data.currentUrl} alt={alt || "Ảnh"}>
+    <ImagePreview
+      src={asset.data.currentUrl}
+      alt={alt || "Ảnh"}
+      className={naturalAspectRatio || frameAspectRatio ? className : undefined}
+    >
       {thumbnail}
     </ImagePreview>
   ) : (
