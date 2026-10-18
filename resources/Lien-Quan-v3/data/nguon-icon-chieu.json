@@ -2486,7 +2486,7 @@
     "liquipedia_name": "Diao Chan",
     "slot": 0,
     "variant": 1,
-    "file": "assets/skill/dieu-thuyen-0-1.png",
+    "file": "assets/skill/diaochan-0-1.png",
     "url": "https://liquipedia.net/commons/images/0/08/Diao_Chan_AoV_Ice_Queen.png",
     "page": "https://liquipedia.net/honorofkings/Diao_Chan",
     "status": "ok",
@@ -2495,7 +2495,7 @@
     "height": 128,
     "sha256": "0c3464ad93e5df8aced86a7c16a7575dd66d4997fd95f810b86fb24b5a25cf89",
     "originalFile": "Anh/dieu-thuyen-0-1.png",
-    "heroId": "dieu-thuyen",
+    "heroId": "diaochan",
     "collectedOn": "2026-09-22"
   },
   {
@@ -2503,7 +2503,7 @@
     "liquipedia_name": "Diao Chan",
     "slot": 1,
     "variant": 1,
-    "file": "assets/skill/dieu-thuyen-1-1.png",
+    "file": "assets/skill/diaochan-1-1.png",
     "url": "https://liquipedia.net/commons/images/f/f4/Diao_Chan_AoV_Chilling_Frost.png",
     "page": "https://liquipedia.net/honorofkings/Diao_Chan",
     "status": "ok",
@@ -2512,7 +2512,7 @@
     "height": 128,
     "sha256": "a6ab06a4ac8ba24a24c1f837f44ee20f8bcdf409d7b1fc40c931ca85eeb2aa1b",
     "originalFile": "Anh/dieu-thuyen-1-1.png",
-    "heroId": "dieu-thuyen",
+    "heroId": "diaochan",
     "collectedOn": "2026-09-22"
   },
   {
@@ -2520,7 +2520,7 @@
     "liquipedia_name": "Diao Chan",
     "slot": 2,
     "variant": 1,
-    "file": "assets/skill/dieu-thuyen-2-1.png",
+    "file": "assets/skill/diaochan-2-1.png",
     "url": "https://liquipedia.net/commons/images/0/06/Diao_Chan_AoV_Diamond_Dust.png",
     "page": "https://liquipedia.net/honorofkings/Diao_Chan",
     "status": "ok",
@@ -2529,7 +2529,7 @@
     "height": 128,
     "sha256": "5d702c1e7b908f23adb79915770ec2f042770035c0ad4b342947e51daf410301",
     "originalFile": "Anh/dieu-thuyen-2-1.png",
-    "heroId": "dieu-thuyen",
+    "heroId": "diaochan",
     "collectedOn": "2026-09-22"
   },
   {
@@ -2537,7 +2537,7 @@
     "liquipedia_name": "Diao Chan",
     "slot": 3,
     "variant": 1,
-    "file": "assets/skill/dieu-thuyen-3-1.png",
+    "file": "assets/skill/diaochan-3-1.png",
     "url": "https://liquipedia.net/commons/images/c/c5/Diao_Chan_AoV_Blizzard.png",
     "page": "https://liquipedia.net/honorofkings/Diao_Chan",
     "status": "ok",
@@ -2546,7 +2546,7 @@
     "height": 128,
     "sha256": "cfa3d46172a496ff32daedf0b07b5d62514d681d12a63df010d504ab26e9f390",
     "originalFile": "Anh/dieu-thuyen-3-1.png",
-    "heroId": "dieu-thuyen",
+    "heroId": "diaochan",
     "collectedOn": "2026-09-22"
   },
   {
@@ -4458,7 +4458,7 @@
     "liquipedia_name": "Jinnar",
     "slot": 0,
     "variant": 1,
-    "file": "assets/skill/jinna-0-1.png",
+    "file": "assets/skill/jinnar-0-1.png",
     "url": "https://liquipedia.net/commons/images/5/52/Jinnar_Comet.png",
     "page": "https://liquipedia.net/honorofkings/Jinnar",
     "status": "ok",
@@ -4467,7 +4467,7 @@
     "height": 128,
     "sha256": "43afbaf3a3796c4c56aa25110ed4ee46b782c3074dff7b8d8ec7d657017e8c80",
     "originalFile": "Anh/jinna-0-1.png",
-    "heroId": "jinna",
+    "heroId": "jinnar",
     "collectedOn": "2026-09-22"
   },
   {
@@ -4475,7 +4475,7 @@
     "liquipedia_name": "Jinnar",
     "slot": 1,
     "variant": 1,
-    "file": "assets/skill/jinna-1-1.png",
+    "file": "assets/skill/jinnar-1-1.png",
     "url": "https://liquipedia.net/commons/images/4/4a/Jinnar_Force_Orbs.png",
     "page": "https://liquipedia.net/honorofkings/Jinnar",
     "status": "ok",
@@ -4484,7 +4484,7 @@
     "height": 128,
     "sha256": "a3c44308e2372df62a00ee901d79812f62a051e2121fb656eaac1e4c63c77a92",
     "originalFile": "Anh/jinna-1-1.png",
-    "heroId": "jinna",
+    "heroId": "jinnar",
     "collectedOn": "2026-09-22"
   },
   {
@@ -4492,7 +4492,7 @@
     "liquipedia_name": "Jinnar",
     "slot": 2,
     "variant": 1,
-    "file": "assets/skill/jinna-2-1.png",
+    "file": "assets/skill/jinnar-2-1.png",
     "url": "https://liquipedia.net/commons/images/0/02/Jinnar_Resonance.png",
     "page": "https://liquipedia.net/honorofkings/Jinnar",
     "status": "ok",
@@ -4501,7 +4501,7 @@
     "height": 128,
     "sha256": "15ab6ee70f535d8c86f5357410eadccd9b4a813accf41e4319c85e7039fa03e1",
     "originalFile": "Anh/jinna-2-1.png",
-    "heroId": "jinna",
+    "heroId": "jinnar",
     "collectedOn": "2026-09-22"
   },
   {
@@ -4509,7 +4509,7 @@
     "liquipedia_name": "Jinnar",
     "slot": 3,
     "variant": 1,
-    "file": "assets/skill/jinna-3-1.png",
+    "file": "assets/skill/jinnar-3-1.png",
     "url": "https://liquipedia.net/commons/images/7/7d/Jinnar_Exuberance.png",
     "page": "https://liquipedia.net/honorofkings/Jinnar",
     "status": "ok",
@@ -4518,7 +4518,7 @@
     "height": 128,
     "sha256": "48282becf3bf057f4ea6af006ae12f84e59fb8bc0224c45f19065ce91ccae3d8",
     "originalFile": "Anh/jinna-3-1.png",
-    "heroId": "jinna",
+    "heroId": "jinnar",
     "collectedOn": "2026-09-22"
   },
   {
@@ -5461,7 +5461,7 @@
     "liquipedia_name": "Lu Bu",
     "slot": 0,
     "variant": 1,
-    "file": "assets/skill/lu-bo-0-1.png",
+    "file": "assets/skill/lu-bu-0-1.png",
     "url": "https://liquipedia.net/commons/images/d/d4/Lu_Bu_AoV_Martial_Master.png",
     "page": "https://liquipedia.net/honorofkings/Lu_Bu",
     "status": "ok",
@@ -5470,7 +5470,7 @@
     "height": 128,
     "sha256": "abf4b4e9012d8772507484b6943c275976a993060fe4766b96c62dfc90aeff55",
     "originalFile": "Anh/lu-bo-0-1.png",
-    "heroId": "lu-bo",
+    "heroId": "lu-bu",
     "collectedOn": "2026-09-22"
   },
   {
@@ -5478,7 +5478,7 @@
     "liquipedia_name": "Lu Bu",
     "slot": 1,
     "variant": 1,
-    "file": "assets/skill/lu-bo-1-1.png",
+    "file": "assets/skill/lu-bu-1-1.png",
     "url": "https://liquipedia.net/commons/images/d/d4/Lu_Bu_AoV_Red_Stallion.png",
     "page": "https://liquipedia.net/honorofkings/Lu_Bu",
     "status": "ok",
@@ -5487,7 +5487,7 @@
     "height": 128,
     "sha256": "c391c67d859582eea211e3d65f676c98d73628e3ebd23fb11d5cf6baea28c877",
     "originalFile": "Anh/lu-bo-1-1.png",
-    "heroId": "lu-bo",
+    "heroId": "lu-bu",
     "collectedOn": "2026-09-22"
   },
   {
@@ -5495,7 +5495,7 @@
     "liquipedia_name": "Lu Bu",
     "slot": 2,
     "variant": 1,
-    "file": "assets/skill/lu-bo-2-1.png",
+    "file": "assets/skill/lu-bu-2-1.png",
     "url": "https://liquipedia.net/commons/images/4/42/Lu_Bu_AoV_Impale.png",
     "page": "https://liquipedia.net/honorofkings/Lu_Bu",
     "status": "ok",
@@ -5504,7 +5504,7 @@
     "height": 128,
     "sha256": "f762f76fc3844782b6201852d7d6a923fafce2e7ef45c93d938b91473a2d0e72",
     "originalFile": "Anh/lu-bo-2-1.png",
-    "heroId": "lu-bo",
+    "heroId": "lu-bu",
     "collectedOn": "2026-09-22"
   },
   {
@@ -5512,7 +5512,7 @@
     "liquipedia_name": "Lu Bu",
     "slot": 3,
     "variant": 1,
-    "file": "assets/skill/lu-bo-3-1.png",
+    "file": "assets/skill/lu-bu-3-1.png",
     "url": "https://liquipedia.net/commons/images/4/4a/Lu_Bu_AoV_Conqueror.png",
     "page": "https://liquipedia.net/honorofkings/Lu_Bu",
     "status": "ok",
@@ -5521,7 +5521,7 @@
     "height": 128,
     "sha256": "ddf6468dec6e59ee44cc3dee67d835e22cd2a07d50b6495583106a3475134cd1",
     "originalFile": "Anh/lu-bo-3-1.png",
-    "heroId": "lu-bo",
+    "heroId": "lu-bu",
     "collectedOn": "2026-09-22"
   },
   {
@@ -6923,7 +6923,7 @@
     "liquipedia_name": "Riktor",
     "slot": 0,
     "variant": 1,
-    "file": "assets/skill/richter-0-1.png",
+    "file": "assets/skill/riktor-0-1.png",
     "url": "https://liquipedia.net/commons/images/7/7b/Riktor_Battle_Instinct.png",
     "page": "https://liquipedia.net/honorofkings/Riktor",
     "status": "ok",
@@ -6932,7 +6932,7 @@
     "height": 128,
     "sha256": "5ea148f9aec3f67592644f7393c4718e8f37b298b0d6643eb7845fc4312d01c7",
     "originalFile": "Anh/richter-0-1.png",
-    "heroId": "richter",
+    "heroId": "riktor",
     "collectedOn": "2026-09-22"
   },
   {
@@ -6940,7 +6940,7 @@
     "liquipedia_name": "Riktor",
     "slot": 1,
     "variant": 1,
-    "file": "assets/skill/richter-1-1.png",
+    "file": "assets/skill/riktor-1-1.png",
     "url": "https://liquipedia.net/commons/images/4/48/Riktor_Jungle_Strike.png",
     "page": "https://liquipedia.net/honorofkings/Riktor",
     "status": "ok",
@@ -6949,7 +6949,7 @@
     "height": 128,
     "sha256": "1f01c21530a9ec9dd3d9ce92f81c1c55e4660a17c8507ec828113ae070aa105e",
     "originalFile": "Anh/richter-1-1.png",
-    "heroId": "richter",
+    "heroId": "riktor",
     "collectedOn": "2026-09-22"
   },
   {
@@ -6957,7 +6957,7 @@
     "liquipedia_name": "Riktor",
     "slot": 1,
     "variant": 2,
-    "file": "assets/skill/richter-1-2.png",
+    "file": "assets/skill/riktor-1-2.png",
     "url": "https://liquipedia.net/commons/images/a/a6/Riktor_Jungle_Strike_2.png",
     "page": "https://liquipedia.net/honorofkings/Riktor",
     "status": "ok",
@@ -6966,7 +6966,7 @@
     "height": 128,
     "sha256": "5a2e2aa314e6fd40f490b1745f42b10de21cf69ddd069f9ec2fa6c8ae9ef6831",
     "originalFile": "Anh/richter-1-2.png",
-    "heroId": "richter",
+    "heroId": "riktor",
     "collectedOn": "2026-09-22"
   },
   {
@@ -6974,7 +6974,7 @@
     "liquipedia_name": "Riktor",
     "slot": 2,
     "variant": 1,
-    "file": "assets/skill/richter-2-1.png",
+    "file": "assets/skill/riktor-2-1.png",
     "url": "https://liquipedia.net/commons/images/d/d8/Riktor_Retaliate.png",
     "page": "https://liquipedia.net/honorofkings/Riktor",
     "status": "ok",
@@ -6983,7 +6983,7 @@
     "height": 128,
     "sha256": "e357499d9cf4e71ad46a53b75a090901157c53f13e5d38315ed061056e72a823",
     "originalFile": "Anh/richter-2-1.png",
-    "heroId": "richter",
+    "heroId": "riktor",
     "collectedOn": "2026-09-22"
   },
   {
@@ -6991,7 +6991,7 @@
     "liquipedia_name": "Riktor",
     "slot": 2,
     "variant": 2,
-    "file": "assets/skill/richter-2-2.png",
+    "file": "assets/skill/riktor-2-2.png",
     "url": "https://liquipedia.net/commons/images/d/d5/Riktor_Retaliate_2.png",
     "page": "https://liquipedia.net/honorofkings/Riktor",
     "status": "ok",
@@ -7000,7 +7000,7 @@
     "height": 128,
     "sha256": "3830daae0e6aba903fa5efcef8fae4bd2f39e78c898d7a35c60585b5cdf21f24",
     "originalFile": "Anh/richter-2-2.png",
-    "heroId": "richter",
+    "heroId": "riktor",
     "collectedOn": "2026-09-22"
   },
   {
@@ -7008,7 +7008,7 @@
     "liquipedia_name": "Riktor",
     "slot": 3,
     "variant": 1,
-    "file": "assets/skill/richter-3-1.png",
+    "file": "assets/skill/riktor-3-1.png",
     "url": "https://liquipedia.net/commons/images/e/e7/Riktor_Mark_of_the_Hunter.png",
     "page": "https://liquipedia.net/honorofkings/Riktor",
     "status": "ok",
@@ -7017,7 +7017,7 @@
     "height": 128,
     "sha256": "5f15bf119ee84158a9e3947193b64882373e42f44600d281a05b12f8f2ba6484",
     "originalFile": "Anh/richter-3-1.png",
-    "heroId": "richter",
+    "heroId": "riktor",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9167,7 +9167,7 @@
     "liquipedia_name": "Wukong",
     "slot": 0,
     "variant": 1,
-    "file": "assets/skill/ngo-khong-0-1.png",
+    "file": "assets/skill/wukong-0-1.png",
     "url": "https://liquipedia.net/commons/images/7/7b/Wukong_AoV_God_of_War.png",
     "page": "https://liquipedia.net/honorofkings/Wukong",
     "status": "ok",
@@ -9176,7 +9176,7 @@
     "height": 128,
     "sha256": "94f220baeb6a77d46e9a7e09f1434693eb6e8f178fe33eccfcd040513bc34d32",
     "originalFile": "Anh/ngo-khong-0-1.png",
-    "heroId": "ngo-khong",
+    "heroId": "wukong",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9184,7 +9184,7 @@
     "liquipedia_name": "Wukong",
     "slot": 1,
     "variant": 1,
-    "file": "assets/skill/ngo-khong-1-1.png",
+    "file": "assets/skill/wukong-1-1.png",
     "url": "https://liquipedia.net/commons/images/3/38/Wukong_AoV_Shadow_Clone.png",
     "page": "https://liquipedia.net/honorofkings/Wukong",
     "status": "ok",
@@ -9193,7 +9193,7 @@
     "height": 128,
     "sha256": "535ba6b3d188d569b2169adb7bdf2d20793c407404944420b7217618bc796864",
     "originalFile": "Anh/ngo-khong-1-1.png",
-    "heroId": "ngo-khong",
+    "heroId": "wukong",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9201,7 +9201,7 @@
     "liquipedia_name": "Wukong",
     "slot": 2,
     "variant": 1,
-    "file": "assets/skill/ngo-khong-2-1.png",
+    "file": "assets/skill/wukong-2-1.png",
     "url": "https://liquipedia.net/commons/images/4/44/Wukong_AoV_Great_Sage.png",
     "page": "https://liquipedia.net/honorofkings/Wukong",
     "status": "ok",
@@ -9210,7 +9210,7 @@
     "height": 128,
     "sha256": "80a7e462696258bc18228841b4d4707ab5cf576b610c32edaaf74d22c1b9b255",
     "originalFile": "Anh/ngo-khong-2-1.png",
-    "heroId": "ngo-khong",
+    "heroId": "wukong",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9218,7 +9218,7 @@
     "liquipedia_name": "Wukong",
     "slot": 3,
     "variant": 1,
-    "file": "assets/skill/ngo-khong-3-1.png",
+    "file": "assets/skill/wukong-3-1.png",
     "url": "https://liquipedia.net/commons/images/3/3f/Wukong_AoV_Monkey_Business.png",
     "page": "https://liquipedia.net/honorofkings/Wukong",
     "status": "ok",
@@ -9227,7 +9227,7 @@
     "height": 128,
     "sha256": "75f9c66573d8c0b6260a8990a1b01d8bdffee8e51ceb7480bbaf8143b80ca690",
     "originalFile": "Anh/ngo-khong-3-1.png",
-    "heroId": "ngo-khong",
+    "heroId": "wukong",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9830,7 +9830,7 @@
     "liquipedia_name": "Zanis",
     "slot": 0,
     "variant": 1,
-    "file": "assets/skill/trieu-van-0-1.png",
+    "file": "assets/skill/zanis-0-1.png",
     "url": "https://liquipedia.net/commons/images/a/ae/Zanis_Dragoon.png",
     "page": "https://liquipedia.net/honorofkings/Zanis",
     "status": "ok",
@@ -9839,7 +9839,7 @@
     "height": 128,
     "sha256": "0bf7103642241ac2692af3cee653888d2adb093810802c6ca364cd3d69de91d5",
     "originalFile": "Anh/trieu-van-0-1.png",
-    "heroId": "trieu-van",
+    "heroId": "zanis",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9847,7 +9847,7 @@
     "liquipedia_name": "Zanis",
     "slot": 1,
     "variant": 1,
-    "file": "assets/skill/trieu-van-1-1.png",
+    "file": "assets/skill/zanis-1-1.png",
     "url": "https://liquipedia.net/commons/images/3/33/Zanis_Bloodwyrm.png",
     "page": "https://liquipedia.net/honorofkings/Zanis",
     "status": "ok",
@@ -9856,7 +9856,7 @@
     "height": 128,
     "sha256": "d2852c040d0ba4456aea67cbeeebb93b71ebfebdbf718d2e27720aee455cabbd",
     "originalFile": "Anh/trieu-van-1-1.png",
-    "heroId": "trieu-van",
+    "heroId": "zanis",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9864,7 +9864,7 @@
     "liquipedia_name": "Zanis",
     "slot": 2,
     "variant": 1,
-    "file": "assets/skill/trieu-van-2-1.png",
+    "file": "assets/skill/zanis-2-1.png",
     "url": "https://liquipedia.net/commons/images/f/f3/Zanis_Tail_Sweep.png",
     "page": "https://liquipedia.net/honorofkings/Zanis",
     "status": "ok",
@@ -9873,7 +9873,7 @@
     "height": 128,
     "sha256": "c0a511ac144ff8da6f77d0d6ef1e0d3c019a0b336fed374bde6a1d46aadf382b",
     "originalFile": "Anh/trieu-van-2-1.png",
-    "heroId": "trieu-van",
+    "heroId": "zanis",
     "collectedOn": "2026-09-22"
   },
   {
@@ -9881,7 +9881,7 @@
     "liquipedia_name": "Zanis",
     "slot": 3,
     "variant": 1,
-    "file": "assets/skill/trieu-van-3-1.png",
+    "file": "assets/skill/zanis-3-1.png",
     "url": "https://liquipedia.net/commons/images/9/92/Zanis_Dragon%27s_Wrath.png",
     "page": "https://liquipedia.net/honorofkings/Zanis",
     "status": "ok",
@@ -9890,7 +9890,7 @@
     "height": 128,
     "sha256": "d1cfc2416c7051ef35218370a3a52ad1cca31dc1c810cd735b96c616f7a01d98",
     "originalFile": "Anh/trieu-van-3-1.png",
-    "heroId": "trieu-van",
+    "heroId": "zanis",
     "collectedOn": "2026-09-22"
   },
   {

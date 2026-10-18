@@ -3,19 +3,19 @@
   "skins": [
     {
       "hero": "Slimz",
-      "id": "slimz-heroskin-8",
+      "id": "slimz-sieu-cap-toi-thuong-1",
       "name": "\"Siêu Cấp Tối Thượng\"",
       "sourceSkinId": "heroSkin-8"
     },
     {
       "hero": "Natalya",
-      "id": "natalya-heroskin-7",
+      "id": "natalya-biet-doi-bang-lam-1",
       "name": "Biệt đội băng lam",
       "sourceSkinId": "heroSkin-7"
     },
     {
       "hero": "Thane",
-      "id": "thane-heroskin-2",
+      "id": "thane-thane-1",
       "name": "",
       "sourceSkinId": "heroSkin-2"
     }

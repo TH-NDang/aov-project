@@ -4,7 +4,7 @@ import { PageContainer } from "./components/page-container"
 import { WikiHeader } from "./components/wiki-header"
 
 const HOME_BACKGROUND = {
-  image: "/images/airi-thu-nguyen-ve-than-cover.jpg",
+  image: "/images/airi-thu-nguyen-ve-than-1-cover.jpg",
   color: "#27283f",
 }
 
