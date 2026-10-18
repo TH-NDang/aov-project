@@ -9,6 +9,7 @@ public enum RegionErrorCode implements ApiErrorCode {
     public HttpStatus status() {
         return HttpStatus.UNPROCESSABLE_ENTITY;
     }
+
     public String title() {
         return "Unsupported region";
     }

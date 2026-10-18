@@ -1,6 +1,8 @@
 package com.wikiaov.patch;
+
 import java.time.Instant;
 import java.util.UUID;
+
 public record GameplayContext(
         UUID regionId,
         String regionCode,

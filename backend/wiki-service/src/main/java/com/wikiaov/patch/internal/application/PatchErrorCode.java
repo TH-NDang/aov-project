@@ -1,6 +1,8 @@
 package com.wikiaov.patch.internal.application;
+
 import com.wikiaov.platform.ApiErrorCode;
 import org.springframework.http.HttpStatus;
+
 public enum PatchErrorCode implements ApiErrorCode {
     PATCH_NOT_FOUND(HttpStatus.NOT_FOUND),
     PATCH_CONTEXT_UNAVAILABLE(HttpStatus.UNPROCESSABLE_ENTITY),
@@ -10,9 +12,11 @@ public enum PatchErrorCode implements ApiErrorCode {
     PatchErrorCode(HttpStatus status) {
         this.status = status;
     }
+
     public HttpStatus status() {
         return status;
     }
+
     public String title() {
         return "Patch request failed";
     }

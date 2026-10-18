@@ -1,11 +1,14 @@
 package com.wikiaov.hero.internal.web.request;
+
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 import java.util.*;
+
 public final class HeroSectionRequests {
     private HeroSectionRequests() {
     }
+
     public record ProfileRequest(
             @NotNull @Positive Long expectedDraftVersion,
             List<ProfileTranslation> translations,
@@ -17,6 +20,7 @@ public final class HeroSectionRequests {
             return new Profile(translations, roles, sources == null ? List.of() : sources);
         }
     }
+
     public record RatingsRequest(
             @NotNull @Positive Long expectedDraftVersion,
             String scaleCode,
@@ -34,6 +38,7 @@ public final class HeroSectionRequests {
                     sources == null ? List.of() : sources);
         }
     }
+
     public record StatsRequest(
             @NotNull @Positive Long expectedDraftVersion,
             List<Stat> values,
@@ -44,6 +49,7 @@ public final class HeroSectionRequests {
             return new Stats(values, sources == null ? List.of() : sources);
         }
     }
+
     public record SkillsRequest(
             @NotNull @Positive Long expectedDraftVersion,
             List<Skill> skills,
@@ -54,6 +60,7 @@ public final class HeroSectionRequests {
             return new Skills(skills, sources == null ? List.of() : sources);
         }
     }
+
     public record SkinsRequest(
             @NotNull @Positive Long expectedDraftVersion,
             List<Skin> skins,
@@ -64,6 +71,7 @@ public final class HeroSectionRequests {
             return new Skins(skins, sources == null ? List.of() : sources);
         }
     }
+
     public record BindingsRequest(
             @NotNull @Positive Long expectedDraftVersion,
             Map<MediaRole, UUID> bindings,

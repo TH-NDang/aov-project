@@ -12,12 +12,15 @@ public enum HeroSection {
         this.table = "hero.hero_" + table + "_revision";
         this.column = column + "_revision_id";
     }
+
     public String table() {
         return table;
     }
+
     public String column() {
         return column;
     }
+
     @com.fasterxml.jackson.annotation.JsonValue
     public String jsonKey() {
         return switch (this) {
@@ -29,6 +32,7 @@ public enum HeroSection {
             case MEDIA_BINDINGS -> "mediaBindings";
         };
     }
+
     public static HeroSection path(String path) {
         return valueOf(path.toUpperCase(java.util.Locale.ROOT).replace('-', '_'));
     }
