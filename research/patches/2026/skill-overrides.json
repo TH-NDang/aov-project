@@ -1,0 +1,1325 @@
+[
+  {
+    "code": "celica",
+    "slot": 1,
+    "skillKey": "skill-1-1",
+    "name": "Bùng nổ",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Celica <color=#74D1F7>tăng tốc chạy</color> 80% trong 2 giây (giảm dần theo thời gian) đồng thời có thể hủy trạng thái <color=#DEC48E>Pháo giàn</color>.\n<color=#DEC48E>Nội tại chiêu:</color> Tăng 35 <color=#FA8741>công vật lý</color> cho Celica.",
+    "afterDescription": "Celica <color=#74D1F7>tăng tốc chạy</color> 80% trong 3 giây (giảm dần theo thời gian) đồng thời có thể hủy trạng thái <color=#DEC48E>Pháo giàn</color>.\n<color=#DEC48E>Nội tại chiêu:</color> Tăng 35 <color=#FA8741>công vật lý</color> cho Celica, khi kích hoạt chiêu sẽ tăng gấp đôi hiệu ứng này.",
+    "changes": [
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.passiveAttackMultiplier",
+        "oldValue": "1",
+        "newValue": "2 while active",
+        "kind": "BUFF"
+      },
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.speedDurationSeconds",
+        "oldValue": "2",
+        "newValue": "3",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "trong 3 giây (giảm dần theo thời gian)",
+          "newText": "trong 2 giây (giảm dần theo thời gian)"
+        },
+        {
+          "oldText": ", khi kích hoạt chiêu sẽ tăng gấp đôi hiệu ứng này",
+          "newText": ""
+        }
+      ],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "celica",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Pháo thần công",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Celica lướt theo hướng chỉ định và kích hoạt <color=#DEC48E>trạng thái pháo giàn</color> trong 15 giây, tăng 240 giáp và giáp phép nhưng không thể di chuyển. Mỗi đòn đánh thường lên địch trong trung tâm oanh tạc sẽ gây 300 <color=#FA8741>(+100%Công vật lý)</color><color=#EC354C>sát thương vật lý</color>. Đối với địch ở rìa, sát thương sẽ bị giảm 40%; tổng cộng cô có thể bắn 7 lần.\n<color=#DEC48E>Khi Celica kích hoạt trạng thái pháo giàn sẽ lập tức làm mới chiêu 1, tung chiêu 1 hoặc kích hoạt lại chiêu cuối sẽ hủy ngay trạng thái pháo giàn</color>\nHồi chiêu: 22 giây, giảm 3 giây mỗi cấp chiêu.",
+    "afterDescription": "Celica lướt theo hướng chỉ định và kích hoạt <color=#DEC48E>trạng thái pháo giàn</color> trong 15 giây, tăng 240 giáp và giáp phép nhưng không thể di chuyển. Mỗi đòn đánh thường lên địch trong trung tâm oanh tạc sẽ gây 300 <color=#FA8741>(+100%Công vật lý)</color><color=#EC354C>sát thương vật lý</color>. Đối với địch ở rìa, sát thương sẽ bị giảm 40%; tổng cộng cô có thể bắn 7 lần.\n<color=#DEC48E>Khi Celica kích hoạt trạng thái pháo giàn sẽ lập tức làm mới chiêu 1, tung chiêu 1 hoặc kích hoạt lại chiêu cuối sẽ hủy ngay trạng thái pháo giàn</color>\nHồi chiêu: 20 giây, giảm 2 giây mỗi cấp chiêu.",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.cooldownSeconds",
+        "oldValue": "22 - 3/rank",
+        "newValue": "20 - 2/rank",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": "Hồi chiêu: 22 giây, giảm 3 giây mỗi cấp chiêu.",
+    "appendedAfterObservation": "Hồi chiêu: 20 giây, giảm 2 giây mỗi cấp chiêu.",
+    "notes": []
+  },
+  {
+    "code": "yorn",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Vô tận tên",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Nội tại: Đòn đánh thường thứ năm liên tiếp bắn ra 7 lần Vô tận tên tầm xa công kích những kẻ địch trước mặt gây (máu tối đa mục tiêu 2% và mỗi 250 công vật lý thêm tăng 1%) <color=#FE3347>sát thương vật lý</color> (có thể chí mạng). Đối với mục tiêu không phải tướng Yorn sẽ gây <color=#FE8941>(+40%Công vật lý)</color> <color=#FE3347>sát thương vật lý</color>.",
+    "afterDescription": "Nội tại: Đòn đánh thường thứ năm liên tiếp bắn ra 7 lần Vô tận tên tầm xa công kích những kẻ địch trước mặt gây 28–56 (tăng theo cấp tướng) (máu tối đa mục tiêu 1.5% và mỗi 250 công vật lý thêm tăng 1%) <color=#FE3347>sát thương vật lý</color> (có thể chí mạng). Đối với mục tiêu không phải tướng Yorn sẽ gây <color=#FE8941>(+40%Công vật lý)</color> <color=#FE3347>sát thương vật lý</color>.",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.heroDamage",
+        "oldValue": "2% target.maxHealth",
+        "newValue": "28–56 + 1.5% target.maxHealth",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "28 (tăng theo cấp tướng) (máu tối đa mục tiêu 1.5%",
+          "newText": "(máu tối đa mục tiêu 2%"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "28 (tăng theo cấp tướng)",
+          "newText": "28–56 (tăng theo cấp tướng)"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "yorn",
+    "slot": 1,
+    "skillKey": "skill-1-1",
+    "name": "Tên nổ",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Yorn bắn một mũi tên gây 550 <color=#FE8941>(+100%công vật lý cộng thêm)</color> <color=#FE3347>sát thương vật lý</color> và <color=#FE7F90>làm chậm</color> địch 30% trong 2 giây. Ngoài ra đòn đánh thường tiếp theo sẽ kích hoạt nội tại.",
+    "afterDescription": "Yorn bắn một mũi tên gây 550 <color=#FE8941>(+100%công vật lý cộng thêm)</color> <color=#FE3347>sát thương vật lý</color> và <color=#FE7F90>làm chậm</color> địch 30% trong 2 giây đồng thời khiến chúng bị lộ diện theo thời gian tương tự. Ngoài ra đòn đánh thường tiếp theo sẽ kích hoạt nội tại.",
+    "changes": [
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.reveal",
+        "oldValue": "Chưa có hiệu ứng lộ diện mới.",
+        "newValue": "Mục tiêu trúng chiêu bị lộ diện.",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": " đồng thời khiến chúng bị lộ diện theo thời gian tương tự",
+          "newText": ""
+        }
+      ],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "yorn",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Tên thần",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Sau khi tụ lực trong thoáng chốc, Yorn bắn một mũi tên cường hóa theo hướng chỉ định <color=#FE7F90>đẩy lùi</color> và <color=#FE7F90>làm choáng</color> tất cả kẻ địch phía trước trong 0.8 giây. Trong quá trình bay, mũi tên không gây sát thương lên lính và quái.\nSau khi trúng tướng địch, mũi tên sẽ gây 300<color=#FE8941>(+80%công vật lý cộng thêm)</color> <color=#FE3347>sát thương vật lý</color> trong phạm vi lên tất cả đơn vị địch bao gồm cả lính và quái đồng thời gây thêm <color=#D47FFF>sát thương phép</color> tương đương 7% máu đã mất của mục tiêu. Phần sát thương phép gây lên quái tối đa là 1000. Ngoài ra đòn đánh thường kế tiếp sẽ kích hoạt nội tại Vô tận tên.",
+    "afterDescription": "Sau khi tụ lực trong thoáng chốc, Yorn bắn một mũi tên cường hóa theo hướng chỉ định <color=#FE7F90>đẩy lùi</color> và <color=#FE7F90>làm choáng</color> tất cả kẻ địch phía trước trong 0.8 giây. Trong quá trình bay, mũi tên không gây sát thương lên lính và quái.\nSau khi trúng tướng địch, mũi tên sẽ gây 300<color=#FE8941>(+80%công vật lý cộng thêm)</color> <color=#FE3347>sát thương vật lý</color> trong phạm vi lên tất cả đơn vị địch bao gồm cả lính và quái đồng thời gây thêm <color=#D47FFF>sát thương phép</color> tương đương 7% máu đã mất của mục tiêu. Phần sát thương phép gây lên quái tối đa là 1000. Ngoài ra đòn đánh thường kế tiếp sẽ kích hoạt nội tại Vô tận tên đồng thời Yorn nhận tầm nhìn của các đơn vị địch trên đường bay của mũi tên trong 1 giây.\nKhi mũi tên trúng đích, mục tiêu và bản thân Yorn cùng bị lộ diện.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.vision",
+        "oldValue": "Chưa có cơ chế tầm nhìn mới.",
+        "newValue": "Soi đường bay; khi trúng, mục tiêu và Yorn cùng lộ diện.",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": " đồng thời Yorn nhận tầm nhìn của các đơn vị địch trên đường bay của mũi tên trong 1 giây",
+          "newText": ""
+        }
+      ],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": "Khi mũi tên trúng đích, mục tiêu và bản thân Yorn cùng bị lộ diện.",
+    "notes": []
+  },
+  {
+    "code": "eland-orr",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Tinh linh ấn",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Nội tại: Eland'orr đánh thường sẽ cộng dồn dấu ấn lên mục tiêu, đủ 3 dấu ấn sẽ bùng nổ một lần gây 150 <color=#FF8941>(+40%Công vật lý)</color> <color=#CE7DF8>sát thương phép</color>. Sau khi tung chiêu hoặc thu hồi đèn tinh linh, Eland'orr đánh thường sẽ gây thêm <color=#FF8941>45%Công vật lý</color> <color=#F2344A>sát thương vật lý</color>;\nEland'orr sau khi tung chiêu có thể kích hoạt lại để trở về vị trí đèn tinh linh; khi không cầm đèn tinh linh Eland'orr được tăng 30 tốc chạy.",
+    "afterDescription": "Nội tại: Eland'orr đánh thường sẽ cộng dồn dấu ấn lên mục tiêu, đủ 3 dấu ấn sẽ bùng nổ một lần gây 150 <color=#FF8941>(+40%Công vật lý)</color> <color=#CE7DF8>sát thương phép</color>. Sau khi tung chiêu hoặc thu hồi đèn tinh linh, Eland'orr đánh thường sẽ gây thêm 16–30 (tăng theo cấp tướng) <color=#FF8941>(+35%Công vật lý)</color> <color=#F2344A>sát thương vật lý</color>;\nEland'orr sau khi tung chiêu có thể kích hoạt lại để trở về vị trí đèn tinh linh; khi không cầm đèn tinh linh Eland'orr được tăng 30 tốc chạy.\nSát thương vật lý thêm sau khi tung chiêu hoặc thu hồi đèn tinh linh có thể chí mạng.",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.bonusAttackCanCrit",
+        "oldValue": "false",
+        "newValue": "true after casting or retrieving the lantern",
+        "kind": "BUFF"
+      },
+      {
+        "slot": 0,
+        "fieldKey": "passive.bonusPhysicalDamage",
+        "oldValue": "0.45 physicalAttack",
+        "newValue": "16–30 + 0.35 physicalAttack",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây thêm 16 <color=#FF8941>(+35%Công vật lý)</color>",
+          "newText": "gây thêm <color=#FF8941>45%Công vật lý</color>"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây thêm 16 ",
+          "newText": "gây thêm 16–30 (tăng theo cấp tướng) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": "Sát thương vật lý thêm sau khi tung chiêu hoặc thu hồi đèn tinh linh có thể chí mạng.",
+    "notes": []
+  },
+  {
+    "code": "natalya",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Quả cầu hắc ám",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Natalya tung ra một quả cầu năng lượng, thứ khi bay hết tầm tối đa sẽ bùng nổ gây choáng địch 1 giây, rồi tiếp tục lơ lửng thêm thoáng chốc khiến các nạn nhân trong vùng ảnh hưởng chịu 130 (+15 mỗi cấp chiêu) <color=#B17EFD>(+15%Công phép)</color> <color=#D07DFB>sát thương phép</color>, và bị làm chậm 50% tốc chạy trong 1.5 giây.",
+    "afterDescription": "Natalya tung ra một quả cầu năng lượng, thứ khi bay hết tầm tối đa sẽ bùng nổ gây choáng địch 1 giây, rồi tiếp tục lơ lửng thêm thoáng chốc khiến các nạn nhân trong vùng ảnh hưởng chịu 100 (+20 mỗi cấp chiêu) <color=#B17EFD>(+15%Công phép)</color> <color=#D07DFB>sát thương phép</color>, và bị làm chậm 50% tốc chạy trong 1.5 giây.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.magicDamage",
+        "oldValue": "130 + 15/rank + 0.15 magicAttack",
+        "newValue": "100 + 20/rank + 0.15 magicAttack",
+        "kind": "NERF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "chịu 100 ",
+          "newText": "chịu 130 (+15 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "chịu 100 ",
+          "newText": "chịu 100 (+20 mỗi cấp chiêu) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "natalya",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Tia sáng tử vong",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Natalya phóng ra một luồng năng lượng chết chóc gây 120 (+30 mỗi cấp chiêu) <color=#B17EFD>(+15%Công phép)</color> <color=#D07DFB>sát thương phép</color> mỗi 0.25 giây, đồng thời nhận được một lớp <color=#74D1F7>lá chắn</color> giúp miễn dịch trạng thái khống chế, và chặn 850<color=#B17EFD>(+100%Công phép)</color> sát thương.\n(Chiêu này tối đa kéo dài 3.5 giây, ấn lần nữa sau khi tung chiêu 1 giây để hủy).",
+    "afterDescription": "Natalya phóng ra một luồng năng lượng chết chóc gây 100 (+50 mỗi cấp chiêu) <color=#B17EFD>(+15%Công phép)</color> <color=#D07DFB>sát thương phép</color> mỗi 0.25 giây, đồng thời nhận được một lớp <color=#74D1F7>lá chắn</color> giúp miễn dịch trạng thái khống chế, và chặn 850<color=#B17EFD>(+100%Công phép)</color> sát thương.\n(Chiêu này tối đa kéo dài 3.5 giây, ấn lần nữa sau khi tung chiêu 1 giây để hủy).",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.magicDamage",
+        "oldValue": "120 + 30/rank + 0.15 magicAttack",
+        "newValue": "100 + 50/rank + 0.15 magicAttack",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 100 ",
+          "newText": "gây 120 (+30 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 100 ",
+          "newText": "gây 100 (+50 mỗi cấp chiêu) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "lauriel",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Trời phạt",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Nội tại: Các chiêu thức trúng đích của Lauriel sẽ khắc <color=#D7BE8D>dấu ấn Trời phạt</color>lên mục tiêu. Khi đạt đủ 4 lần tích lũy, <color=#D7BE8D>dấu ấn</color> sẽ bùng nổ giúp Lauriel <color=#6BC772>hồi</color> 120 (+10 mỗi cấp tướng) <color=#6BC772>(+1% máu thêm)</color> máu, gây 160 <color=#B17EFC>(+50%Công phép)</color> sát thương chuẩn ( lên đến 600 với đơn vị không phải tướng) và <color=#F97C8E>làm chậm</color> 50% - 90% tốc chạy của kẻ địch xung quanh trong 1 giây (tăng theo cấp tướng).",
+    "afterDescription": "Nội tại: Các chiêu thức trúng đích của Lauriel sẽ khắc <color=#D7BE8D>dấu ấn Trời phạt</color>lên mục tiêu. Khi đạt đủ 4 lần tích lũy, <color=#D7BE8D>dấu ấn</color> sẽ bùng nổ giúp Lauriel <color=#6BC772>hồi</color> 140 (+10 mỗi cấp tướng) <color=#6BC772>(+1% máu thêm)</color> máu, gây 160 <color=#B17EFC>(+50%Công phép)</color> sát thương chuẩn ( lên đến 600 với đơn vị không phải tướng) và <color=#F97C8E>làm chậm</color> 50% - 90% tốc chạy của kẻ địch xung quanh trong 1 giây (tăng theo cấp tướng).",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.heal",
+        "oldValue": "120 + 10/heroLevel + 0.01 bonusHealth",
+        "newValue": "140 + 10/heroLevel + 0.01 bonusHealth",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "hồi</color> 140 ",
+          "newText": "hồi</color> 120 (+10 mỗi cấp tướng) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "hồi</color> 140 ",
+          "newText": "hồi</color> 140 (+10 mỗi cấp tướng) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "aleister",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Ma thuật đen",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Nội tại: Mỗi chiêu thức bất kỳ của Aleister khiến nạn nhân phải gánh chịu một dấu ấn Ma thuật đen. Khi tích đủ 3 cộng dồn, năng lượng sẽ bùng nổ gây 55 (+8 mỗi cấp tướng) <color=#9F73E7>(+30%Công phép)</color> sát thương chuẩn.",
+    "afterDescription": "Nội tại: Mỗi chiêu thức bất kỳ của Aleister khiến nạn nhân phải gánh chịu một dấu ấn Ma thuật đen. Khi tích đủ 3 cộng dồn, năng lượng sẽ bùng nổ gây 84 (+6 mỗi cấp tướng) <color=#9F73E7>(+30%Công phép)</color> sát thương chuẩn.",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.damage",
+        "oldValue": "55 + 8*heroLevel + 0.3 magicAttack",
+        "newValue": "84 + 6*heroLevel + 0.3 magicAttack",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "84 (tăng theo cấp tướng)",
+          "newText": "55 (+8 mỗi cấp tướng)"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "84 (tăng theo cấp tướng)",
+          "newText": "84 (+6 mỗi cấp tướng)"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": [
+      "The supplied capture and the article both describe true damage; the article also appends an inconsistent magic-damage abbreviation. Existing true-damage wording is retained."
+    ]
+  },
+  {
+    "code": "aleister",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Ma trận thống khổ",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Aleister triệu hồi pháp trận, mỗi 0.5 giây gây 125 (+15 mỗi cấp chiêu) <color=#9F73E7>(+30%Công phép)</color> <color=#BA72E5>sát thương phép</color> lên kẻ địch trong phạm vi, kéo dài 4 giây.",
+    "afterDescription": "Aleister triệu hồi pháp trận, mỗi 0.5 giây gây 115 (+23 mỗi cấp chiêu) <color=#9F73E7>(+30%Công phép)</color> <color=#BA72E5>sát thương phép</color> lên kẻ địch trong phạm vi, kéo dài 4 giây.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.magicDamage",
+        "oldValue": "125 + 15/rank + 0.3 magicAttack",
+        "newValue": "115 + 23/rank + 0.3 magicAttack",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 115 ",
+          "newText": "gây 125 (+15 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 115 ",
+          "newText": "gây 115 (+23 mỗi cấp chiêu) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "toro",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Dư chấn",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Toro gầm lên tụ lực tại chỗ giúp bản thân nhận <color=#72E7F8>lá chắn</color> chặn 300 (+6%Máu tối đa) sát thương trong 3 giây. Chưa hết, hắn còn gây 200 (+40 mỗi cấp chiêu) (+4%Máu tối đa) <color=#F5344A>sát thương vật lý</color> lên những kẻ địch lân cận. Địch càng gần trung tâm sẽ càng chịu nhiều sát thương, tối đa tăng 100%.\nNếu trong phạm vi có kẻ địch, Toro sẽ được làm mới Sừng trâu và <color=#FC7E8F>làm chậm</color> 50% tốc chạy của chúng đồng thời kéo mục tiêu không phải tướng về vùng trung tâm trong 1.5 giây.\nTrong khi tung chiêu này cũng có thể dùng các chiêu khác.",
+    "afterDescription": "Toro gầm lên tụ lực tại chỗ giúp bản thân nhận <color=#72E7F8>lá chắn</color> chặn 300 (+6%Máu tối đa) sát thương trong 3 giây. Chưa hết, hắn còn gây 180 (+36 mỗi cấp chiêu) (+3.5%Máu tối đa) <color=#F5344A>sát thương vật lý</color> lên những kẻ địch lân cận. Địch càng gần trung tâm sẽ càng chịu nhiều sát thương, tối đa tăng 100%.\nNếu trong phạm vi có kẻ địch, Toro sẽ được làm mới Sừng trâu và <color=#FC7E8F>làm chậm</color> 50% tốc chạy của chúng đồng thời kéo mục tiêu không phải tướng về vùng trung tâm trong 1.5 giây.\nTrong khi tung chiêu này cũng có thể dùng các chiêu khác.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.physicalDamage",
+        "oldValue": "200 + 40/rank + 0.04 maxHealth",
+        "newValue": "180 + 36/rank + 0.035 maxHealth",
+        "kind": "NERF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 180 (+3.5%Máu tối đa)",
+          "newText": "gây 200 (+40 mỗi cấp chiêu) (+4%Máu tối đa)"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 180 (+3.5%Máu tối đa)",
+          "newText": "gây 180 (+36 mỗi cấp chiêu) (+3.5%Máu tối đa)"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "baldum",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Địa chấn",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Baldum gây 6 lần 50 <color=#FE8841>(+40%Công vật lý)</color>(+15%Tăng giáp) <color=#D07DFC>sát thương phép</color> lên những kẻ địch xung quanh, kèm giảm 30% <color=#FF7F90>tốc chạy</color> của chúng trong 2 giây. Mỗi lần trúng đích, Baldum được tăng thêm 6% (+0.5% mỗi cấp chiêu) <color=#75EEFF>miễn thương</color> (tối đa cộng dồn 4 lần) trong 2 giây.",
+    "afterDescription": "Baldum gây 6 lần 50 <color=#FE8841>(+40%Công vật lý)</color>(+15%Tăng giáp) <color=#D07DFC>sát thương phép</color> lên những kẻ địch xung quanh, kèm giảm 30% <color=#FF7F90>tốc chạy</color> của chúng trong 2 giây. Mỗi lần trúng đích, Baldum được tăng thêm 4% (+0.8% mỗi cấp chiêu) <color=#75EEFF>miễn thương</color> (tối đa cộng dồn 5 lần) trong 2 giây.\nKhi kích hoạt chiêu, Baldum nhận ngay 2 tầng miễn thương.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.initialReductionStacks",
+        "oldValue": "0",
+        "newValue": "2",
+        "kind": "BUFF"
+      },
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.damageReductionPercentPerStack",
+        "oldValue": "6 + 0.5/rank",
+        "newValue": "4 + 0.8/rank",
+        "kind": "ADJUSTMENT"
+      },
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.maximumReductionStacks",
+        "oldValue": "4",
+        "newValue": "5",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "tăng thêm 4%",
+          "newText": "tăng thêm 6% (+0.5% mỗi cấp chiêu)"
+        },
+        {
+          "oldText": "tối đa cộng dồn 5 lần",
+          "newText": "tối đa cộng dồn 4 lần"
+        },
+        {
+          "oldText": "\n(Mở để nhận 2 lần).",
+          "newText": ""
+        }
+      ],
+      "after": [
+        {
+          "oldText": "tăng thêm 4%",
+          "newText": "tăng thêm 4% (+0.8% mỗi cấp chiêu)"
+        },
+        {
+          "oldText": "(Mở để nhận 2 lần).",
+          "newText": "Khi kích hoạt chiêu, Baldum nhận ngay 2 tầng miễn thương."
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "krizzix",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Ẩn đột",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Sau khi thoát khỏi tầm nhìn của địch trong 3 giây, Krizzix được cường hóa đòn đánh thường kế tiếp gây 160 (+12 mỗi cấp tướng) <color=#B27EFE>(+45%Công phép)</color> <color=#D17DFC>sát thương phép</color> (có thể kích hoạt kỹ năng của trang bị) và làm chậm tốc chạy diện rộng quanh kẻ địch trúng chiêu 50% trong 1.5 giây. Nếu Krizzix tung đòn đánh thường cường hóa khi kẻ địch không nhìn thấy hắn, thời gian hồi của chiêu này tăng thành 10 giây.",
+    "afterDescription": "Sau khi thoát khỏi tầm nhìn của địch trong 3 giây, Krizzix được cường hóa đòn đánh thường kế tiếp gây 235 (+17 mỗi cấp tướng) <color=#B27EFE>(+55%Công phép)</color> <color=#D17DFC>sát thương phép</color> (có thể kích hoạt kỹ năng của trang bị) và làm chậm tốc chạy diện rộng quanh kẻ địch trúng chiêu 50% trong 1.5 giây. Nếu Krizzix tung đòn đánh thường cường hóa khi kẻ địch không nhìn thấy hắn, thời gian hồi của chiêu này tăng thành 10 giây.",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.magicDamage",
+        "oldValue": "160 + 12*heroLevel + 0.45 magicAttack",
+        "newValue": "235 + 17*heroLevel + 0.55 magicAttack",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 235 ",
+          "newText": "gây 160 (+12 mỗi cấp tướng) "
+        },
+        {
+          "oldText": "(+55%Công phép)",
+          "newText": "(+45%Công phép)"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 235 ",
+          "newText": "gây 235 (+17 mỗi cấp tướng) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "ryoma",
+    "slot": 1,
+    "skillKey": "skill-1-1",
+    "name": "Thần hành bách biến",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Ryoma nhảy lùi lại để tung một đường kiếm cực mạnh, gây 200 <color=#FD8841>(+120%Công vật lý)</color> <color=#D9364D>sát thương vật lý</color> lên kẻ địch lân cận. Nếu chiêu thức đánh trúng kẻ địch hoặc vượt địa hình, trong 4 giây kế Ryoma sẽ được tái sử dụng chiêu này\nHồi chiêu: 8 giây.",
+    "afterDescription": "Ryoma nhảy lùi lại để tung một đường kiếm cực mạnh, gây 200 <color=#FD8841>(+120%Công vật lý)</color> <color=#D9364D>sát thương vật lý</color> lên kẻ địch lân cận. Nếu chiêu thức đánh trúng kẻ địch hoặc vượt địa hình, trong 4 giây kế Ryoma sẽ được tái sử dụng chiêu này\nHồi chiêu: 10 giây, giảm 0.4 giây mỗi cấp chiêu.",
+    "changes": [
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.cooldownSeconds",
+        "oldValue": "8",
+        "newValue": "10 - 0.4/rank",
+        "kind": "NERF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": "Hồi chiêu: 8 giây.",
+    "appendedAfterObservation": "Hồi chiêu: 10 giây, giảm 0.4 giây mỗi cấp chiêu.",
+    "notes": []
+  },
+  {
+    "code": "ryoma",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Loạn trảm",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Ryoma đâm kiếm liên tục 4 lần, mỗi đợt gây 130 (+50 mỗi cấp chiêu) <color=#FD8841>(+70%Công vật lý)</color> <color=#D9364D>sát thương vật lý</color>. Mỗi đợt đâm kiếm trúng kẻ địch giúp Ryoma hồi 80 <color=#FD8841>(+70%Công vật lý)</color> máu; (giảm nửa hiệu lực với các đơn vị không phải tướng) và giảm hồi Nhất kích tất sát 1 giây.\nHồi chiêu giảm theo cấp chiêu: 12–10 giây.",
+    "afterDescription": "Ryoma đâm kiếm liên tục 4 lần, mỗi đợt gây 110 (+55 mỗi cấp chiêu) <color=#FD8841>(+70%Công vật lý)</color> <color=#D9364D>sát thương vật lý</color>. Mỗi đợt đâm kiếm trúng kẻ địch giúp Ryoma hồi 80 <color=#FD8841>(+70%Công vật lý)</color> máu; (giảm nửa hiệu lực với các đơn vị không phải tướng) và giảm hồi Nhất kích tất sát 1 giây.\nHồi chiêu giảm theo cấp chiêu: 12.5–10 giây.",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.cooldownSeconds",
+        "oldValue": "12–10",
+        "newValue": "12.5–10",
+        "kind": "NERF"
+      },
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.physicalDamage",
+        "oldValue": "130 + 50/rank + 0.7 physicalAttack",
+        "newValue": "110 + 55/rank + 0.7 physicalAttack",
+        "kind": "NERF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 110 ",
+          "newText": "gây 130 (+50 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 110 ",
+          "newText": "gây 110 (+55 mỗi cấp chiêu) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": "Hồi chiêu giảm theo cấp chiêu: 12–10 giây.",
+    "appendedAfterObservation": "Hồi chiêu giảm theo cấp chiêu: 12.5–10 giây.",
+    "notes": [
+      "Only cooldown endpoints are published. No middle-rank value has been invented."
+    ]
+  },
+  {
+    "code": "ata",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Biển sâu chúc phúc",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Khi mất máu, Ata sẽ nhận <color=#DCC28F><Thanh máu ảo></color>. Trong thời gian hiệu lực, sát thương Ata gây lên tướng sẽ chuyển hóa 45% thành máu thật, còn sát thương lên đơn vị không phải tướng sẽ chuyển hóa 20% (bỏ qua giảm sát thương của kẻ địch). Sau 7 giây, thanh máu ảo bắt đầu giảm dần với tốc độ 3% máu tối đa mỗi giây. Ngoài ra, đòn đánh thường của Ata sẽ gây thêm 10(+1%Máu tối đa) <color=#EC354C>sát thương vật lý</color>.",
+    "afterDescription": "Khi mất máu, Ata sẽ nhận <color=#DCC28F><Thanh máu ảo></color>. Trong thời gian hiệu lực, sát thương Ata gây lên tướng sẽ chuyển hóa 45% thành máu thật, còn sát thương lên đơn vị không phải tướng sẽ chuyển hóa 20% (bỏ qua giảm sát thương của kẻ địch). Sau 7 giây, thanh máu ảo bắt đầu giảm dần với tốc độ 3% máu tối đa mỗi giây. Ngoài ra, đòn đánh thường của Ata sẽ gây thêm 28–56 (tăng theo cấp tướng)(+1%Máu tối đa) <color=#EC354C>sát thương vật lý</color>.",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.bonusDamage",
+        "oldValue": "10 + 0.01 maxHealth",
+        "newValue": "28–56 + 0.01 maxHealth",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "28 (tăng theo cấp tướng)",
+          "newText": "10"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "28 (tăng theo cấp tướng)",
+          "newText": "28–56 (tăng theo cấp tướng)"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "ata",
+    "slot": 1,
+    "skillKey": "skill-1-1",
+    "name": "Đạp sóng",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Ata nhảy xổ đến điểm đã chọn gây 150 (+10% máu tối đa bản thân) <color=#EC354C>sát thương vật lý</color>. Chiêu thức có thể được tung ra thêm 1 lần gây sát thương tương tự và <color=#FA7C8F>hất tung</color> kẻ địch trong 0.5 giây đồng thời khiến Ata được <color=#74D1F7>miễn khống</color>. Ngoài ra khi kết thúc chiêu Ata còn có thể di chuyển thêm một đoạn về phía trước.\nHồi chiêu: 8 giây, giảm 0.3 giây mỗi cấp chiêu.",
+    "afterDescription": "Ata nhảy xổ đến điểm đã chọn gây 150 (+10% máu tối đa bản thân) <color=#EC354C>sát thương vật lý</color>. Chiêu thức có thể được tung ra thêm 1 lần gây sát thương tương tự và <color=#FA7C8F>hất tung</color> kẻ địch trong 0.5 giây đồng thời khiến Ata được <color=#74D1F7>miễn khống</color>. Ngoài ra khi kết thúc chiêu Ata còn có thể di chuyển thêm một đoạn về phía trước.\nHồi chiêu: 7.5 giây, giảm 0.3 giây mỗi cấp chiêu.",
+    "changes": [
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.cooldownSeconds",
+        "oldValue": "8 - 0.3/rank",
+        "newValue": "7.5 - 0.3/rank",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": "Hồi chiêu: 8 giây, giảm 0.3 giây mỗi cấp chiêu.",
+    "appendedAfterObservation": "Hồi chiêu: 7.5 giây, giảm 0.3 giây mỗi cấp chiêu.",
+    "notes": []
+  },
+  {
+    "code": "ata",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Phóng mỏ neo",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Ata vung mỏ neo xương cá gây 150 <color=#FA8741>(+50%Công vật lý)</color> <color=#EC354C>sát thương vật lý</color> theo hướng chỉ định kèm hiệu ứng <color=#FA7C8F>làm chậm</color> 50% tốc chạy trong 1.5 giây. Nếu đánh trúng địa hình, Ata sẽ đột kích đến vị trí đó và <color=#FA7C8F>đẩy lùi</color> địch theo đường lướt đồng thời lúc đâm vào địa hình sẽ gây tiếp 150 (+15 mỗi cấp chiêu) (+6%Máu tối đa) <color=#EC354C>sát thương vật lý</color> kèm hiệu ứng <color=#FA7C8F>choáng</color> 0.75 giây.\nNội tại: Sau khi <Phóng mỏ neo>, trong 3 giây kế tiếp đòn đánh thường của Ata sẽ kéo địch trở lại và khiến hắn <color=#FA7C8F>bị choáng</color>.",
+    "afterDescription": "Ata vung mỏ neo xương cá gây 150 <color=#FA8741>(+50%Công vật lý)</color> <color=#EC354C>sát thương vật lý</color> theo hướng chỉ định kèm hiệu ứng <color=#FA7C8F>làm chậm</color> 50% tốc chạy trong 1.5 giây. Nếu đánh trúng địa hình, Ata sẽ đột kích đến vị trí đó và <color=#FA7C8F>đẩy lùi</color> địch theo đường lướt đồng thời lúc đâm vào địa hình sẽ gây tiếp 150 (+30 mỗi cấp chiêu) (+6%Máu tối đa) <color=#EC354C>sát thương vật lý</color> kèm hiệu ứng <color=#FA7C8F>choáng</color> 0.75 giây.\nNội tại: Sau khi <Phóng mỏ neo>, trong 3 giây kế tiếp đòn đánh thường của Ata sẽ kéo địch trở lại và khiến hắn <color=#FA7C8F>bị choáng</color>.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.collisionPhysicalDamage",
+        "oldValue": "150 + 15/rank + 0.06 maxHealth",
+        "newValue": "150 + 30/rank + 0.06 maxHealth",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây tiếp 150 (+6%Máu tối đa)",
+          "newText": "gây tiếp 150 (+15 mỗi cấp chiêu) (+6%Máu tối đa)"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây tiếp 150 (+6%Máu tối đa)",
+          "newText": "gây tiếp 150 (+30 mỗi cấp chiêu) (+6%Máu tối đa)"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "amily",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Liên hoàn cước",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Amily đột kích theo hướng chỉ định tung liên hoàn cước gây 2 lần sát thương, mỗi lần gây 75 <color=#FF8941>(+45%Công vật lý)</color> <color=#F3344A>sát thương vật lý</color>. Lần thứ hai sẽ <color=#FD7E8F>hất tung</color> mục tiêu đồng thời <color=#73E7F7>cường hóa</color> đòn đánh thường kế tiếp. Ngoài ra, đòn đánh thường cường hóa có hiệu ứng <color=#73E7F7>đột kích</color> và gây thêm 72 <color=#FF8941>(+54%Công vật lý)</color> <color=#F3344A>sát thương vật lý</color>.\nSau khi thoát giao tranh, Amily được <color=#8DDA47>hồi</color> 1% máu tối đa và 1% năng lượng mỗi giây đồng thời <color=#73E7F7>tăng</color> 10 tốc chạy.",
+    "afterDescription": "Amily đột kích theo hướng chỉ định tung liên hoàn cước gây 2 lần sát thương, mỗi lần gây 75 <color=#FF8941>(+45%Công vật lý)</color> <color=#F3344A>sát thương vật lý</color>. Lần thứ hai sẽ <color=#FD7E8F>hất tung</color> mục tiêu đồng thời <color=#73E7F7>cường hóa</color> đòn đánh thường kế tiếp. Ngoài ra, đòn đánh thường cường hóa có hiệu ứng <color=#73E7F7>đột kích</color> và gây thêm 72 <color=#FF8941>(+54%Công vật lý)</color> <color=#F3344A>sát thương vật lý</color>.\nSau khi thoát giao tranh, Amily được <color=#8DDA47>hồi</color> 1% máu tối đa và 1% năng lượng mỗi giây đồng thời <color=#73E7F7>tăng</color> 10 tốc chạy.\nKhi không có mục tiêu, Amily vẫn có thể tung đòn đánh thường cường hóa để lướt về phía trước.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.empoweredAttackDashWithoutTarget",
+        "oldValue": "false",
+        "newValue": "true",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": "Khi không có mục tiêu, Amily vẫn có thể tung đòn đánh thường cường hóa để lướt về phía trước.",
+    "notes": []
+  },
+  {
+    "code": "roxie",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Ba lô lửa",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "Roxie tăng 25% tốc chạy và tạo lá chắn lửa giúp chặn 100 (+60 mỗi cấp chiêu) (+8%Máu tối đa) sát thương trong 3 giây.\nSuốt thời gian này các kẻ địch va phải Roxi sẽ phải chịu 100 (+30 mỗi cấp chiêu) <color=#B17EFD>(+50%Công phép)</color> <color=#D17DFC>sát thương phép</color> và bị làm chậm 50% tốc chạy trong 2 giây đồng thời dính <color=#DEC48F>dấu ấn cuốc lửa</color>.",
+    "afterDescription": "Roxie tăng 25% tốc chạy và tạo lá chắn lửa giúp chặn 250 (+50 mỗi cấp chiêu) (+8%Máu tối đa) sát thương trong 3 giây.\nSuốt thời gian này các kẻ địch va phải Roxi sẽ phải chịu 180 (+36 mỗi cấp chiêu) <color=#B17EFD>(+50%Công phép)</color> <color=#D17DFC>sát thương phép</color> và bị làm chậm 50% tốc chạy trong 2 giây đồng thời dính <color=#DEC48F>dấu ấn cuốc lửa</color>.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.magicDamage",
+        "oldValue": "100 + 30/rank + 0.5 magicAttack",
+        "newValue": "180 + 36/rank + 0.5 magicAttack",
+        "kind": "BUFF"
+      },
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.shield",
+        "oldValue": "100 + 60/rank + 0.08 maxHealth",
+        "newValue": "250 + 50/rank + 0.08 maxHealth",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "chặn 250 (+8%Máu tối đa)",
+          "newText": "chặn 100 (+60 mỗi cấp chiêu) (+8%Máu tối đa)"
+        },
+        {
+          "oldText": "phải chịu 180 ",
+          "newText": "phải chịu 100 (+30 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "chặn 250 (+8%Máu tối đa)",
+          "newText": "chặn 250 (+50 mỗi cấp chiêu) (+8%Máu tối đa)"
+        },
+        {
+          "oldText": "phải chịu 180 ",
+          "newText": "phải chịu 180 (+36 mỗi cấp chiêu) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "d-arcy",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Lập phương thứ nguyên",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "D'Arcy tạo ra một Lập phương thứ nguyên tại điểm đã chọn và sau 1 giây lập phương bùng nổ gây 500 <color=#C677F1>(+100%Công phép)</color> <color=#C677F1>sát thương phép</color>, vùng trung tâm tăng thêm 50% sát thương. Mỗi mục tiêu bị trúng chiêu sẽ giúp D'Arcy nhận thêm 5 lực lượng thứ nguyên. <color=#D5D57A>Hiệu ứng cường hóa</color>:Tăng phạm vi chiêu <Lập phương thứ",
+    "afterDescription": "D'Arcy tạo ra một Lập phương thứ nguyên tại điểm đã chọn và sau 1 giây lập phương bùng nổ gây 500 <color=#C677F1>(+100%Công phép)</color> <color=#C677F1>sát thương phép</color>, vùng trung tâm tăng thêm 50% sát thương. Mỗi mục tiêu bị trúng chiêu sẽ giúp D'Arcy nhận thêm 5 lực lượng thứ nguyên. <color=#D5D57A>Nếu vùng trung tâm nằm trong phạm vi <Ma trận thứ nguyên> thì <Lập phương thứ nguyên> sẽ bùng nổ khi Ma trận cưỡng chế kéo kẻ địch về.</color> <color=#D5D57A>Hiệu ứng cường hóa</color>:Tăng phạm vi chiêu <Lập phương thứ",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.skill_2DetonationLink",
+        "oldValue": "Chưa có cơ chế nổ đồng bộ mới.",
+        "newValue": "Nếu tâm chiêu 2 hoặc bản cường hóa nằm trong pháp trận, lập phương nổ khi chiêu 3 kéo mục tiêu về.",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": " <color=#D5D57A>Nếu vùng trung tâm nằm trong phạm vi <Ma trận thứ nguyên> thì <Lập phương thứ nguyên> sẽ bùng nổ khi Ma trận cưỡng chế kéo kẻ địch về.</color>",
+          "newText": ""
+        }
+      ],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": [
+      "The captured skill-2 description contains the newly added cross-skill interaction; remove it from the source predecessor as well as adding the explicit condition to the target ultimate. The existing truncated final phrase is preserved, not invented."
+    ]
+  },
+  {
+    "code": "d-arcy",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Ma trận thứ nguyên",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": "D'Arcy triệu hồi Ma trận thứ nguyên liên tục <color=#F97C8E>làm chậm</color> kẻ địch 30% trong phạm vi 2 giây và gây 200 <color=#C677F1>(+55%Công phép)</color> <color=#C677F1>sát thương phép</color> lên chúng đồng thời <color=#D5D57A>đánh dấu</color> mục tiêu. Sau 2 giây, kẻ địch dính <color=#D5D57A>dấu ấn</color> sẽ bị cưỡng chế di dời đến trung tâm pháp trận và bị làm <color=#F97C8E>choáng</color> 0.5 giây đồng thời trong 6 giây kế D'Arcy có thể tung chiêu lần nữa để dịch chuyển ngay đến vị trí pháp trận kèm gây 300 <color=#C677F1>(+110%Công phép)</color> <color=#C677F1>sát thương phép</color>. Ngoài ra khi tung chiêu này, D'Arcy lập tức được hồi đầy lực lượng thứ nguyên. Nếu tung chiêu không trúng tướng địch, bản thân sẽ được giảm 30% thời gian hồi chiêu này.",
+    "afterDescription": "D'Arcy triệu hồi Ma trận thứ nguyên liên tục <color=#F97C8E>làm chậm</color> kẻ địch 30% trong phạm vi 2 giây và gây 200 <color=#C677F1>(+55%Công phép)</color> <color=#C677F1>sát thương phép</color> lên chúng đồng thời <color=#D5D57A>đánh dấu</color> mục tiêu. Sau 2 giây, kẻ địch dính <color=#D5D57A>dấu ấn</color> sẽ bị cưỡng chế di dời đến trung tâm pháp trận và bị làm <color=#F97C8E>choáng</color> 0.5 giây đồng thời trong 6 giây kế D'Arcy có thể tung chiêu lần nữa để dịch chuyển ngay đến vị trí pháp trận kèm gây 300 <color=#C677F1>(+110%Công phép)</color> <color=#C677F1>sát thương phép</color>. Ngoài ra khi tung chiêu này, D'Arcy lập tức được hồi đầy lực lượng thứ nguyên. Nếu tung chiêu không trúng tướng địch, bản thân sẽ được giảm 30% thời gian hồi chiêu này.\nTrong giai đoạn đầu của Ma trận thứ nguyên, nếu tâm Lập phương thứ nguyên hoặc bản cường hóa nằm trong pháp trận, lập phương sẽ nổ ngay sau khi Ma trận kéo mục tiêu về.",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.skill_2DetonationLink",
+        "oldValue": "Chưa có cơ chế nổ đồng bộ mới.",
+        "newValue": "Nếu tâm chiêu 2 hoặc bản cường hóa nằm trong pháp trận, lập phương nổ khi chiêu 3 kéo mục tiêu về.",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": "Trong giai đoạn đầu của Ma trận thứ nguyên, nếu tâm Lập phương thứ nguyên hoặc bản cường hóa nằm trong pháp trận, lập phương sẽ nổ ngay sau khi Ma trận kéo mục tiêu về.",
+    "notes": []
+  },
+  {
+    "code": "dirak",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Thiên hỏa trận",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Dirak dựng lên một pháp trận trong khu vực chỉ định. Sau 1.5 giây hoặc sau khi chọn hướng lần nữa, 3 thiên thạch sẽ rơi xuống gây sát thương phép và <color=#FD7E8F>đẩy lùi</color> kẻ địch. Mỗi thiên thạch sẽ gây 200 <color=#B17EFC>(+25%Công phép) sát thương phép</color> (chỉ kích hoạt một lần trên kẻ địch đơn lẻ). Nếu va vào địa hình, các thiên thạch sẽ nổ tung gây choáng 0.5 giây và làm chậm 40% (có thể cộng dồn) kéo dài 1 giây đồng thời gắn <color=#D4BB8A>dấu ấn</color> lên tướng địch.\nNếu pháp trận được đặt trong địa hình, các thiên thạch sẽ lập tức rơi xuống gây lượng sát thương phép tương đương và làm choáng kẻ địch 0.5 giây kèm <color=#FD7E8F>đẩy lùi</color> tướng địch đồng thời gắn <color=#D4BB8A>dấu ấn</color> lên chúng.\n<color=#D4BB8A>Dirak được tăng tầm nhìn.</color>\nHồi chiêu: 11 giây, giảm 0.6 giây mỗi cấp chiêu.",
+    "afterDescription": "Dirak dựng lên một pháp trận trong khu vực chỉ định. Sau 1.5 giây hoặc sau khi chọn hướng lần nữa, 3 thiên thạch sẽ rơi xuống gây sát thương phép và <color=#FD7E8F>đẩy lùi</color> kẻ địch. Mỗi thiên thạch sẽ gây 200 <color=#B17EFC>(+25%Công phép) sát thương phép</color> (chỉ kích hoạt một lần trên kẻ địch đơn lẻ). Nếu va vào địa hình, các thiên thạch sẽ nổ tung gây choáng 0.5 giây và làm chậm 40% (có thể cộng dồn) kéo dài 1 giây đồng thời gắn <color=#D4BB8A>dấu ấn</color> lên tướng địch.\nNếu pháp trận được đặt trong địa hình, các thiên thạch sẽ lập tức rơi xuống gây lượng sát thương phép tương đương và làm choáng kẻ địch 0.5 giây kèm <color=#FD7E8F>đẩy lùi</color> tướng địch đồng thời gắn <color=#D4BB8A>dấu ấn</color> lên chúng.\n<color=#D4BB8A>Dirak được tăng tầm nhìn.</color>\nNếu điểm rơi Thiên hỏa trận nằm trong vòng trong Kim quang ấn, thiên thạch rơi xuống ngay.\nHồi chiêu: 12.5 giây, giảm 0.5 giây mỗi cấp chiêu.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.skill_1InnerAreaLink",
+        "oldValue": "Chưa có cơ chế rơi ngay trong vòng chiêu 1.",
+        "newValue": "Thiên thạch rơi ngay nếu điểm rơi nằm trong vòng trong chiêu 1.",
+        "kind": "BUFF"
+      },
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.cooldownSeconds",
+        "oldValue": "11 - 0.6/rank",
+        "newValue": "12.5 - 0.5/rank",
+        "kind": "NERF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": "Hồi chiêu: 11 giây, giảm 0.6 giây mỗi cấp chiêu.",
+    "appendedAfterObservation": "Nếu điểm rơi Thiên hỏa trận nằm trong vòng trong Kim quang ấn, thiên thạch rơi xuống ngay.\nHồi chiêu: 12.5 giây, giảm 0.5 giây mỗi cấp chiêu.",
+    "notes": []
+  },
+  {
+    "code": "dirak",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Lô cốt tử quang",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Dirak giải phóng sức mạnh nhận được Khiên lô cốt đồng thời hình thành lên lá chắn chặn toàn bộ các loại đạn của tướng địch trong 6 giây. Mỗi giây Dirak sẽ tiêu hao -5% năng lượng và mỗi khi chặn sát thương sẽ giúp anh <color=#86CB4A>hồi</color> 2% máu tối đa và năng lượng. (Không thể chặn sát thương trụ) Tung khiên xong giúp Dirak chuyển chiêu sang giai đoạn 2 kéo dài 20 giây (khiên đỡ được đạn của địch thì sẽ sớm tiến vào giai đoạn 2 nếu không thì sau 2 giây mới chuyển).\n<Khiên lô cốt>: Giúp Dirak tăng 25% tốc đánh (tăng theo cấp chiêu, mỗi cấp + 25%)và cường hóa đòn đánh thường mỗi 0.2 giây gây <color=#FD8841>(+50%Công vật lý)</color> <color=#B17EFC>(+25%Công phép) sát thương phép</color> trong phạm vi.\n<Pháo tử quang> (Chiêu giai đoạn 2): Gây 800 <color=#B17EFC>(+100%Công phép) sát thương phép</color> và cộng thêm 15% máu đã mất của mục tiêu theo đường thẳng trong phạm",
+    "afterDescription": "Dirak giải phóng sức mạnh nhận được Khiên lô cốt đồng thời hình thành lên lá chắn chặn toàn bộ các loại đạn của tướng địch trong 6 giây. Mỗi giây Dirak sẽ tiêu hao -5% năng lượng và mỗi khi chặn sát thương sẽ giúp anh <color=#86CB4A>hồi</color> 2% máu tối đa và năng lượng. (Không thể chặn sát thương trụ)\n<Khiên lô cốt>: Giúp Dirak tăng 25% tốc đánh (tăng theo cấp chiêu, mỗi cấp + 25%)và cường hóa đòn đánh thường mỗi 0.2 giây gây <color=#FD8841>(+50%Công vật lý)</color> <color=#B17EFC>(+25%Công phép) sát thương phép</color> trong phạm vi.",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.cannonSeparation",
+        "oldValue": "Pháo tử quang là phần của chiêu 3.",
+        "newValue": "Pháo tử quang tách sang chiêu 4.",
+        "kind": "REWORK"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": [
+        {
+          "oldText": "Dirak giải phóng sức mạnh nhận được Khiên lô cốt đồng thời hình thành lên lá chắn chặn toàn bộ các loại đạn của tướng địch trong 6 giây. Mỗi giây Dirak sẽ tiêu hao -5% năng lượng và mỗi khi chặn sát thương sẽ giúp anh <color=#86CB4A>hồi</color> 2% máu tối đa và năng lượng. (Không thể chặn sát thương trụ) Tung khiên xong giúp Dirak chuyển chiêu sang giai đoạn 2 kéo dài 20 giây (khiên đỡ được đạn của địch thì sẽ sớm tiến vào giai đoạn 2 nếu không thì sau 2 giây mới chuyển).\n<Khiên lô cốt>: Giúp Dirak tăng 25% tốc đánh (tăng theo cấp chiêu, mỗi cấp + 25%)và cường hóa đòn đánh thường mỗi 0.2 giây gây <color=#FD8841>(+50%Công vật lý)</color> <color=#B17EFC>(+25%Công phép) sát thương phép</color> trong phạm vi.\n<Pháo tử quang> (Chiêu giai đoạn 2): Gây 800 <color=#B17EFC>(+100%Công phép) sát thương phép</color> và cộng thêm 15% máu đã mất của mục tiêu theo đường thẳng trong phạm",
+          "newText": "Dirak giải phóng sức mạnh nhận được Khiên lô cốt đồng thời hình thành lên lá chắn chặn toàn bộ các loại đạn của tướng địch trong 6 giây. Mỗi giây Dirak sẽ tiêu hao -5% năng lượng và mỗi khi chặn sát thương sẽ giúp anh <color=#86CB4A>hồi</color> 2% máu tối đa và năng lượng. (Không thể chặn sát thương trụ)\n<Khiên lô cốt>: Giúp Dirak tăng 25% tốc đánh (tăng theo cấp chiêu, mỗi cấp + 25%)và cường hóa đòn đánh thường mỗi 0.2 giây gây <color=#FD8841>(+50%Công vật lý)</color> <color=#B17EFC>(+25%Công phép) sát thương phép</color> trong phạm vi."
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": [
+      "The old cannon paragraph is moved out, not copied with its old 800 + 100% AP + missing-health formula. Shield duration, healing and empowered basic attacks are preserved from the snapshot. The patch does not confirm whether the shield energy drain changes."
+    ]
+  },
+  {
+    "code": "dirak",
+    "slot": 4,
+    "skillKey": "skill-4-1",
+    "name": "Pháo tử quang",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": null,
+    "afterDescription": "Dirak bắn Pháo tử quang gây 500 (+250 mỗi cấp chiêu) (+80%Công phép) sát thương phép.\nHồi chiêu: 50 giây, giảm 5 giây mỗi cấp chiêu.\nTiêu hao năng lượng: 90, tăng 5 mỗi cấp chiêu.",
+    "changes": [
+      {
+        "slot": 4,
+        "fieldKey": "skill_4.magicDamage",
+        "oldValue": null,
+        "newValue": "500 + 250/rank + 0.80 magicAttack",
+        "kind": "REWORK"
+      },
+      {
+        "slot": 4,
+        "fieldKey": "skill_4.cooldownSeconds",
+        "oldValue": null,
+        "newValue": "50 - 5/rank",
+        "kind": "REWORK"
+      },
+      {
+        "slot": 4,
+        "fieldKey": "skill_4.energyCost",
+        "oldValue": null,
+        "newValue": "90 + 5/rank",
+        "kind": "REWORK"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "notes": [
+      "This is a newly independent active slot. It has no old independent skill and no source-backed icon assignment. Do not invent either.",
+      "The article does not mention a missing-health component for the new independent cannon; the old component is not silently carried over."
+    ]
+  },
+  {
+    "code": "errol",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Tay ác ma",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Mọi đòn đánh và chiêu trúng đích giúp Errol tích lũy 1 quỷ trảo lực liên tục 5 giây, tối đa 5 lần. Mỗi một lần tăng 3% tốc chạy, 7% - 14% tốc đánh (tăng theo cấp tướng) và 3% hút máu vật lý. Từ lần thứ 5 trở đi mỗi khi đạt được quỷ trảo lực sẽ giảm 10% hồi chiêu 2. Ngoài ra đòn đánh thường thứ 3 của Errol còn kèm hiệu ứng đột kích và gây <color=#FE8941>150%Công vật lý</color>sát thương vật lý.",
+    "afterDescription": "Mọi đòn đánh và chiêu trúng đích giúp Errol tích lũy 1 quỷ trảo lực liên tục 5 giây, tối đa 5 lần. Mỗi một lần tăng 3% tốc chạy, 7% - 14% tốc đánh (tăng theo cấp tướng) và 3% hút máu vật lý. Từ lần thứ 5 trở đi mỗi khi đạt được quỷ trảo lực sẽ giảm 10% hồi chiêu 2. Ngoài ra đòn đánh thường thứ 3 của Errol còn kèm hiệu ứng đột kích và gây <color=#FE8941>150%Công vật lý</color>sát thương vật lý.\nKhi hết thời gian duy trì, Quỷ trảo lực giảm từng tầng; mỗi tầng tiếp theo tồn tại thêm 1 giây.",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.stackDecay",
+        "oldValue": null,
+        "newValue": "Cộng dồn giảm từng tầng; mỗi tầng kế tiếp tồn tại thêm 1 giây.",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": "Khi hết thời gian duy trì, Quỷ trảo lực giảm từng tầng; mỗi tầng tiếp theo tồn tại thêm 1 giây.",
+    "notes": []
+  },
+  {
+    "code": "ngo-khong",
+    "slot": 0,
+    "skillKey": "skill-0-1",
+    "name": "Vô địch thiên hạ",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Nội tại: Mỗi lần Ngộ Không tung một chiêu thức, đòn đánh thường tiếp theo sẽ được cường hóa gây 340–508 (tăng theo cấp tướng) <color=#FD8841>(+100%Công vật lý)</color> <color=#DB364E>sát thương vật lý</color> đồng thời kèm hiệu ứng đột kích.\nNgộ Không sở hữu thêm 18% tỷ lệ chí mạng nhưng sát thương chí mạng gốc là 175%.",
+    "afterDescription": "Nội tại: Mỗi lần Ngộ Không tung một chiêu thức, đòn đánh thường tiếp theo sẽ được cường hóa gây 450 <color=#FD8841>(+100%Công vật lý)</color> <color=#DB364E>sát thương vật lý</color> đồng thời kèm hiệu ứng đột kích.\nNgộ Không sở hữu thêm 18% tỷ lệ chí mạng nhưng sát thương chí mạng gốc là 175%.",
+    "changes": [
+      {
+        "slot": 0,
+        "fieldKey": "passive.empoweredPhysicalDamage",
+        "oldValue": "340–508 + 1.0 physicalAttack",
+        "newValue": "450 + 1.0 physicalAttack",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 340 ",
+          "newText": "gây 340–508 (tăng theo cấp tướng) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 340 ",
+          "newText": "gây 450 "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "flowborn-ad",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Nỏ tiễn liên hoàn",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Flowborn bắn 7 lượt nỏ tiễn về khu vực chỉ định (tốc độ thi triển tăng theo tốc đánh) gây 70 (+35 mỗi cấp chiêu) <color=#FA8741>(+28%Công vật lý)</color> <color=#EF354B>sát thương vật lý</color> lên kẻ địch (khóa mục tiêu trong phạm vi) đồng thời nhận 10% <color=#74D1F7>tăng tốc chạy</color>. Nếu thi triển lần nữa sẽ được <color=#74D1F7>lơ lửng</color>.\nCó thể tiêu hao 5 tầng “Dòng chảy” để thi triển thêm <Nỏ tiễn liên hoàn>.",
+    "afterDescription": "Flowborn bắn 7 lượt nỏ tiễn về khu vực chỉ định (tốc độ thi triển tăng theo tốc đánh) gây 64 (+32 mỗi cấp chiêu) <color=#FA8741>(+26%Công vật lý)</color> <color=#EF354B>sát thương vật lý</color> lên kẻ địch (khóa mục tiêu trong phạm vi) đồng thời nhận 10% <color=#74D1F7>tăng tốc chạy</color>. Nếu thi triển lần nữa sẽ được <color=#74D1F7>lơ lửng</color>.\nCó thể tiêu hao 5 tầng “Dòng chảy” để thi triển thêm <Nỏ tiễn liên hoàn>.",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.physicalDamage",
+        "oldValue": "70 + 35/rank + 0.28 physicalAttack",
+        "newValue": "64 + 32/rank + 0.26 physicalAttack",
+        "kind": "NERF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 70 ",
+          "newText": "gây 70 (+35 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 70 ",
+          "newText": "gây 64 (+32 mỗi cấp chiêu) "
+        },
+        {
+          "oldText": "(+28%Công vật lý)",
+          "newText": "(+26%Công vật lý)"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "kriknak",
+    "slot": 1,
+    "skillKey": "skill-1-1",
+    "name": "Ấu trùng quỷ",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Kriknak gọi một bầy ấu trùng quỷ tấn công một mục tiêu (ưu tiên tướng), gây 300 (+50 mỗi cấp chiêu) <color=#F78641>(+140%công vật lý cộng thêm)</color> <color=#EC354B>sát thương vật lý</color>, và <color=#D7D77A>đánh dấu Ấu trùng</color> lên nạn nhân. Mọi đòn đánh thường hoặc chiêu thức của Kriknak đều sẽ kích hoạt <color=#D7D77A>dấu ấn Ấu trùng</color> gây máu tối đa mục tiêu 8% thành <color=#EC354B>sát thương vật lý</color> <color=#F78641>(Mỗi 50 công vật lý thêm giúp tăng thêm 1%)</color> đồng thời giảm 3 giây thời gian hồi chiêu và giúp hồi 35 năng lượng.",
+    "afterDescription": "Kriknak gọi một bầy ấu trùng quỷ tấn công một mục tiêu (ưu tiên tướng), gây 325 (+65 mỗi cấp chiêu) <color=#F78641>(+150%công vật lý cộng thêm)</color> <color=#EC354B>sát thương vật lý</color>, và <color=#D7D77A>đánh dấu Ấu trùng</color> lên nạn nhân. Mọi đòn đánh thường hoặc chiêu thức của Kriknak đều sẽ kích hoạt <color=#D7D77A>dấu ấn Ấu trùng</color> gây máu tối đa mục tiêu 8% thành <color=#EC354B>sát thương vật lý</color> <color=#F78641>(Mỗi 50 công vật lý thêm giúp tăng thêm 1%)</color> đồng thời giảm 3 giây thời gian hồi chiêu và giúp hồi 35 năng lượng.",
+    "changes": [
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.physicalDamage",
+        "oldValue": "300 + 50/rank + 1.4 bonusPhysicalAttack",
+        "newValue": "325 + 65/rank + 1.5 bonusPhysicalAttack",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 300 ",
+          "newText": "gây 300 (+50 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 300 ",
+          "newText": "gây 325 (+65 mỗi cấp chiêu) "
+        },
+        {
+          "oldText": "(+140%công vật lý cộng thêm)",
+          "newText": "(+150%công vật lý cộng thêm)"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "gildur",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Vụ nổ vàng",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Gildur bắn ra chưởng lực năng lượng hoàng kim. Khi bắn trúng kẻ địch hoặc đến điểm cuối, chưởng lực sẽ nổ tung gây 380 (+76 mỗi cấp chiêu) <color=#9E73E6>(+55%Công phép)</color> <color=#B972E4>sát thương phép</color> và <color=#E4758A>làm choáng</color> các nạn nhân trong phạm vi 1 giây.\nNgoài ra, vụ nổ còn để lại một đám lửa hoàng kim liên tục thiêu đốt kẻ địch trong 4 giây và mỗi 0.5 giây gây 30 (+6 mỗi cấp chiêu) <color=#9E73E6>(+5%Công phép)</color> <color=#B972E4>sát thương phép</color> trong phạm vi.",
+    "afterDescription": "Gildur bắn ra chưởng lực năng lượng hoàng kim. Khi bắn trúng kẻ địch hoặc đến điểm cuối, chưởng lực sẽ nổ tung gây 350 (+70 mỗi cấp chiêu) <color=#9E73E6>(+50%Công phép)</color> <color=#B972E4>sát thương phép</color> và <color=#E4758A>làm choáng</color> các nạn nhân trong phạm vi 1 giây.\nNgoài ra, vụ nổ còn để lại một đám lửa hoàng kim liên tục thiêu đốt kẻ địch trong 4 giây và mỗi 0.5 giây gây 35 (+7 mỗi cấp chiêu) <color=#9E73E6>(+5%Công phép)</color> <color=#B972E4>sát thương phép</color> trong phạm vi.",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.initialMagicDamage",
+        "oldValue": "380 + 76/rank + 0.55 magicAttack",
+        "newValue": "350 + 70/rank + 0.5 magicAttack",
+        "kind": "NERF"
+      },
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.periodicMagicDamage",
+        "oldValue": "30 + 6/rank + 0.05 magicAttack",
+        "newValue": "35 + 7/rank + 0.05 magicAttack",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 380 ",
+          "newText": "gây 380 (+76 mỗi cấp chiêu) "
+        },
+        {
+          "oldText": "gây 30 ",
+          "newText": "gây 30 (+6 mỗi cấp chiêu) "
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 380 ",
+          "newText": "gây 350 (+70 mỗi cấp chiêu) "
+        },
+        {
+          "oldText": "(+55%Công phép)",
+          "newText": "(+50%Công phép)"
+        },
+        {
+          "oldText": "gây 30 ",
+          "newText": "gây 35 (+7 mỗi cấp chiêu) "
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "gildur",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Vương quốc vàng",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Gildur triệu hồi pháp trận, mỗi 0.5 giây gây 100 <color=#9E73E6>(+45%Công phép)</color> <color=#B972E4>sát thương phép</color> cho kẻ địch trong phạm vi và <color=#E4758A>làm chậm 20%</color> trong 1 giây đồng thời <color=#E4758A>làm choáng</color> 0.56 giây.\n(Chiêu này cần được tung liên tục, tối đa kéo dài 3.3 giây, sau khi tung chiêu 1 giây nếu di chuyển hoặc dùng chiêu khác sẽ bị ngắt)\nHồi chiêu: 42 giây, giảm 7 giây mỗi cấp chiêu.",
+    "afterDescription": "Gildur triệu hồi pháp trận, mỗi 0.5 giây gây 100 <color=#9E73E6>(+45%Công phép)</color> <color=#B972E4>sát thương phép</color> cho kẻ địch trong phạm vi và <color=#E4758A>làm chậm 20%</color> trong 1 giây đồng thời <color=#E4758A>làm choáng</color> 0.56 giây.\n(Chiêu này cần được tung liên tục, tối đa kéo dài 3.3 giây, sau khi tung chiêu 1 giây nếu di chuyển hoặc dùng chiêu khác sẽ bị ngắt)\nHồi chiêu: 45 giây, giảm 5 giây mỗi cấp chiêu.",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.cooldownSeconds",
+        "oldValue": "42 - 7/rank",
+        "newValue": "45 - 5/rank",
+        "kind": "NERF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": "Hồi chiêu: 42 giây, giảm 7 giây mỗi cấp chiêu.",
+    "appendedAfterObservation": "Hồi chiêu: 45 giây, giảm 5 giây mỗi cấp chiêu.",
+    "notes": []
+  },
+  {
+    "code": "trieu-van",
+    "slot": 1,
+    "skillKey": "skill-1-1",
+    "name": "Long huyết",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Triệu Vân cường hóa bản thân giúp tăng <color=#FA8741>60%</color> tốc chạy trong 3 giây. Đòn đánh thường kế tiếp sẽ được cường hóa trong 4 giây gây thêm 250 <color=#FA8741>(+100%Công vật lý)</color> <color=#EF354B>sát thương vật lý</color> lên những kẻ địch lân cận",
+    "afterDescription": "Triệu Vân cường hóa bản thân giúp tăng <color=#FA8741>60%</color> tốc chạy trong 3 giây. Đòn đánh thường kế tiếp sẽ được cường hóa trong 4 giây gây thêm 250 <color=#FA8741>(+100%Công vật lý)</color> <color=#EF354B>sát thương vật lý</color> lên những kẻ địch lân cận\nĐòn đánh thường cường hóa có thể đột kích tới mục tiêu; khi không có mục tiêu, Triệu Vân lướt về phía trước.",
+    "changes": [
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.empoweredAttackDash",
+        "oldValue": "Chưa có cơ chế đột kích mới.",
+        "newValue": "Đòn cường hóa lao tới mục tiêu; không có mục tiêu thì lướt tới trước.",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": "Đòn đánh thường cường hóa có thể đột kích tới mục tiêu; khi không có mục tiêu, Triệu Vân lướt về phía trước.",
+    "notes": []
+  },
+  {
+    "code": "raz",
+    "slot": 1,
+    "skillKey": "skill-1-1",
+    "name": "Cú đấm thăng hoa",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Raz lao tới tung một cú đấm móc đầy uy lực lên những kẻ địch trong vùng ảnh hưởng, gây 550 <color=#7EFDD3>(+100%Công phép)</color> <color=#8D90FB>sát thương phép</color> kèm hiệu ứng <color=#FD7E90>hất tung</color> 0.75 giây; chiêu trúng địch giúp hồi 25 nội năng.\nHồi chiêu: 10 giây, giảm 0.8 giây mỗi cấp chiêu.",
+    "afterDescription": "Raz lao tới tung một cú đấm móc đầy uy lực lên những kẻ địch trong vùng ảnh hưởng, gây 550 <color=#7EFDD3>(+100%Công phép)</color> <color=#8D90FB>sát thương phép</color> kèm hiệu ứng <color=#FD7E90>hất tung</color> 0.75 giây; chiêu trúng địch giúp hồi 25 nội năng.\nHồi chiêu: 8 giây, giảm 0.3 giây mỗi cấp chiêu.",
+    "changes": [
+      {
+        "slot": 1,
+        "fieldKey": "skill_1.cooldownSeconds",
+        "oldValue": "10 - 0.8/rank",
+        "newValue": "8 - 0.3/rank",
+        "kind": "ADJUSTMENT"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": "Hồi chiêu: 10 giây, giảm 0.8 giây mỗi cấp chiêu.",
+    "appendedAfterObservation": "Hồi chiêu: 8 giây, giảm 0.3 giây mỗi cấp chiêu.",
+    "notes": []
+  },
+  {
+    "code": "raz",
+    "slot": 2,
+    "skillKey": "skill-2-1",
+    "name": "Cú đấm chân không",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Raz vung tay mạnh đến mức sức gió của cú đấm gây 500 (+60 mỗi cấp chiêu) <color=#B27FFF>(+80%Công phép)</color> <color=#D07DFB>sát thương phép</color> lên kẻ địch đầu tiên trúng phải. Ngoài ra nạn nhân còn bị giảm 50 (+30 mỗi cấp chiêu) giáp phép và 90% <color=#FD7E90>tốc chạy</color>; chiêu trúng địch giúp hồi 25 nội năng. Sau khi đánh trúng mục tiêu, Raz còn gây lượng sát thương phép tương tự cho đơn vị phía sau gần nhất (giảm nửa sát thương đối với tướng).",
+    "afterDescription": "Raz vung tay mạnh đến mức sức gió của cú đấm gây 450 (+90 mỗi cấp chiêu) <color=#B27FFF>(+90%Công phép)</color> <color=#D07DFB>sát thương phép</color> lên kẻ địch đầu tiên trúng phải. Ngoài ra nạn nhân còn bị giảm 100 (+20 mỗi cấp chiêu) giáp phép và 90% <color=#FD7E90>tốc chạy</color>; chiêu trúng địch giúp hồi 25 nội năng. Sau khi đánh trúng mục tiêu, Raz còn gây lượng sát thương phép tương tự cho đơn vị phía sau gần nhất (giảm nửa sát thương đối với tướng).",
+    "changes": [
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.magicDamage",
+        "oldValue": "500 + 60/rank + 0.8 magicAttack",
+        "newValue": "450 + 90/rank + 0.9 magicAttack",
+        "kind": "ADJUSTMENT"
+      },
+      {
+        "slot": 2,
+        "fieldKey": "skill_2.magicDefenseReduction",
+        "oldValue": "50 + 30/rank",
+        "newValue": "100 + 20/rank",
+        "kind": "BUFF"
+      }
+    ],
+    "replacements": {
+      "before": [
+        {
+          "oldText": "gây 500 ",
+          "newText": "gây 500 (+60 mỗi cấp chiêu) "
+        },
+        {
+          "oldText": "giảm 50 giáp phép",
+          "newText": "giảm 50 (+30 mỗi cấp chiêu) giáp phép"
+        }
+      ],
+      "after": [
+        {
+          "oldText": "gây 500 ",
+          "newText": "gây 450 (+90 mỗi cấp chiêu) "
+        },
+        {
+          "oldText": "(+80%Công phép)",
+          "newText": "(+90%Công phép)"
+        },
+        {
+          "oldText": "giảm 50 giáp phép",
+          "newText": "giảm 100 (+20 mỗi cấp chiêu) giáp phép"
+        }
+      ]
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": null,
+    "notes": []
+  },
+  {
+    "code": "volkath",
+    "slot": 3,
+    "skillKey": "skill-3-1",
+    "name": "Chiến vương bất tử",
+    "date": "2026-10-15",
+    "sourceUrl": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+    "beforeDescription": "Volkath triệu hồi sức mạnh bản thân giúp thoát khỏi các trạng thái khống chế đang gánh chịu và trở thành kỵ sĩ trong 8 giây đồng thời khiến các đòn đánh thường gây 100 <color=#FD8841>(+120%Công vật lý)</color> <color=#DA374F>sát thương vật lý</color> kèm hiệu ứng đánh thường lên kẻ địch trong phạm vi hình tròn. Ngoài ra, mỗi tướng địch bị đánh trúng sẽ giúp Volkath <color=#84C949>hồi</color> 6% máu tối đa bản thân <color=#FD8841>(+120%công vật lý cộng thêm)</color> máu. Từ mục tiêu thứ hai trở đi chỉ còn hồi 50%.. Tái kích hoạt chiêu thức sẽ khiến Volkath biến thành <Chiến vương bất tử> và được <color=#73E9FA>miễn tử</color> trong 3.5 giây đồng thời <color=#FC7E8F>hất tung</color> kẻ địch xung quanh trong 0.5 giây kèm gây 100 <color=#FD8841>(+120%Công vật lý)</color> <color=#DA374F>sát thương vật lý</color>.",
+    "afterDescription": "Volkath triệu hồi sức mạnh bản thân giúp thoát khỏi các trạng thái khống chế đang gánh chịu và trở thành kỵ sĩ trong 8 giây đồng thời khiến các đòn đánh thường gây 100 <color=#FD8841>(+120%Công vật lý)</color> <color=#DA374F>sát thương vật lý</color> kèm hiệu ứng đánh thường lên kẻ địch trong phạm vi hình tròn. Ngoài ra, mỗi tướng địch bị đánh trúng sẽ giúp Volkath <color=#84C949>hồi</color> 6% máu tối đa bản thân <color=#FD8841>(+120%công vật lý cộng thêm)</color> máu. Từ mục tiêu thứ hai trở đi chỉ còn hồi 50%.. Tái kích hoạt chiêu thức sẽ khiến Volkath biến thành <Chiến vương bất tử> và được <color=#73E9FA>miễn tử</color> trong 3.5 giây đồng thời <color=#FC7E8F>hất tung</color> kẻ địch xung quanh trong 0.5 giây kèm gây 100 <color=#FD8841>(+120%Công vật lý)</color> <color=#DA374F>sát thương vật lý</color>.\nHiệu ứng miễn tử hoạt động đúng cả khi Chiến vương bất tử được Dolia làm mới.",
+    "changes": [
+      {
+        "slot": 3,
+        "fieldKey": "skill_3.doliaRefreshImmortality",
+        "oldValue": "Có thể bị hạ trong miễn tử sau khi Dolia làm mới chiêu 3.",
+        "newValue": "Sửa lỗi bị hạ trong tình huống này.",
+        "kind": "FIX"
+      }
+    ],
+    "replacements": {
+      "before": [],
+      "after": []
+    },
+    "appendedBeforeObservation": null,
+    "appendedAfterObservation": "Hiệu ứng miễn tử hoạt động đúng cả khi Chiến vương bất tử được Dolia làm mới.",
+    "notes": [
+      "The buggy prior interaction is recorded in change metadata, not presented as an intended skill rule."
+    ]
+  },
+  {
+    "code": "hayate",
+    "slot": null,
+    "skillKey": null,
+    "name": "Ghi nhận hạ Boss",
+    "date": "2026-09-29",
+    "sourceUrl": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+    "beforeDescription": null,
+    "afterDescription": null,
+    "beforeObservation": "Có lỗi ghi nhận hạ Boss khi gần tướng đi rừng địch.",
+    "afterObservation": "Sửa trường hợp ghi nhận hạ Boss sai.",
+    "changes": [
+      {
+        "slot": null,
+        "fieldKey": "gameplay.bossKillOwnership",
+        "oldValue": "Có lỗi ghi nhận hạ Boss khi gần tướng đi rừng địch.",
+        "newValue": "Sửa trường hợp ghi nhận hạ Boss sai.",
+        "kind": "FIX"
+      }
+    ],
+    "notes": [
+      "Hero-wide boss-kill ownership bug fix. Keep as gameplay note/change-set metadata; no specific skill slot is established by the source."
+    ]
+  }
+]

@@ -1,0 +1,710 @@
+{
+  "schemaVersion": 1,
+  "retrievedOn": "2026-10-18",
+  "locale": "vi-VN",
+  "regionCode": "vn",
+  "rulesetCode": "aov-standard",
+  "provenance": {
+    "valueOrigin": "official_patch_article",
+    "classificationOrigin": "editorial_interpretation_of_explicit_changes",
+    "timePrecision": "DATE",
+    "skillSlot": "0 = passive; positive integers = numbered active skills; null = hero-wide gameplay",
+    "numericNotation": "Published formulas are retained without assuming whether per-level terms use level or level minus one. Rank arrays are only provided when explicitly published as endpoints or when verified against the supplied snapshot.",
+    "baselineCaution": "The supplied snapshot contains many post-29-September values despite its stated pre-S4 context. Reconstruct only the explicitly documented changed fields; do not relabel an unchanged post-patch snapshot as a complete pre-patch state.",
+    "unknownOldValue": "null means the article does not describe the prior mechanic; it does not prove that the mechanic was absent."
+  },
+  "patches": [
+    {
+      "date": "2026-09-29",
+      "publishedOn": "2026-09-28",
+      "url": "https://lienquan.garena.vn/chi-tiet-ban-cap-nhat-vet-nut-thoi-khong-29-09-2026/",
+      "title": "Vết nứt thời không — 29.09.2026",
+      "heroes": [
+        {
+          "code": "preyta",
+          "name": "Preyta",
+          "kinds": ["REWORK"],
+          "summary": "Làm lại bộ kỹ năng dịch bệnh.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.disease",
+              "oldValue": null,
+              "newValue": "Dấu bệnh gây sát thương định kỳ; đủ 3 dấu sẽ nổ lan.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 0,
+              "fieldKey": "passive.evolution",
+              "oldValue": null,
+              "newValue": "Tích năng lượng khi chiêu trúng tướng hoặc hạ lính/quái; năng lượng tăng công phép và tiến hóa kỹ năng.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.enhancement",
+              "oldValue": null,
+              "newValue": "Cường hóa đánh thường 4 giây: tăng tốc đánh, tầm đánh, tốc chạy; đòn thứ 3 gây sát thương lan.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.evolutionThreshold",
+              "oldValue": null,
+              "newValue": "25 năng lượng: mọi đòn đánh cường hóa gây sát thương lan.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.area",
+              "oldValue": null,
+              "newValue": "Pháp trận gây sát thương và làm chậm; sau 1 giây gây sát thương, hất tung.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.evolutionThreshold",
+              "oldValue": null,
+              "newValue": "75 năng lượng: mở rộng phạm vi.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.waves",
+              "oldValue": null,
+              "newValue": "Tụ lực bắn 3 sóng phép; di chuyển hoặc bấm lại để bắn ngay; tầm tối đa 1800.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.evolutionThreshold",
+              "oldValue": null,
+              "newValue": "145 năng lượng: có thể di chuyển khi thi triển.",
+              "kind": "REWORK"
+            }
+          ],
+          "notes": [
+            "The article supplies the new mechanics but no complete old skill text or numeric coefficients. Do not invent a complete pre-rework kit.",
+            "The article calls the first evolution threshold disease stacks, whereas the later thresholds and supplied snapshot use disease energy. The shared evolution resource is normalized to energy with this discrepancy retained.",
+            "The supplied JSON already describes the reworked kit and adds numeric values absent from this article."
+          ]
+        },
+        {
+          "code": "yorn",
+          "name": "Yorn",
+          "kinds": ["BUFF", "ADJUSTMENT"],
+          "summary": "Thêm tầm nhìn, đổi sát thương nội tại.",
+          "changes": [
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.reveal",
+              "oldValue": "Chưa có hiệu ứng lộ diện mới.",
+              "newValue": "Mục tiêu trúng chiêu bị lộ diện.",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.vision",
+              "oldValue": "Chưa có cơ chế tầm nhìn mới.",
+              "newValue": "Soi đường bay; khi trúng, mục tiêu và Yorn cùng lộ diện.",
+              "kind": "ADJUSTMENT"
+            },
+            {
+              "slot": 0,
+              "fieldKey": "passive.heroDamage",
+              "oldValue": "2% target.maxHealth",
+              "newValue": "28–56 + 1.5% target.maxHealth",
+              "kind": "ADJUSTMENT"
+            }
+          ],
+          "notes": [
+            "The passive bullet is nested under skill 2 in the page markup but explicitly refers to passive damage.",
+            "The flat damage rises with hero level; the article gives endpoints only."
+          ]
+        },
+        {
+          "code": "celica",
+          "name": "Celica",
+          "kinds": ["BUFF"],
+          "summary": "Tăng cơ động và công kích.",
+          "changes": [
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.passiveAttackMultiplier",
+              "oldValue": "1",
+              "newValue": "2 while active",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.speedDurationSeconds",
+              "oldValue": "2",
+              "newValue": "3",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.cooldownSeconds",
+              "oldValue": "22 - 3/rank",
+              "newValue": "20 - 2/rank",
+              "kind": "BUFF"
+            }
+          ],
+          "notes": [
+            "The supplied snapshot already has the new skill-1 mechanics and skill-3 cooldown array 20/18/16."
+          ]
+        },
+        {
+          "code": "eland-orr",
+          "sourceAliases": ["elandorr", "Eland’orr", "Eland'orr"],
+          "name": "Eland’orr",
+          "kinds": ["BUFF", "ADJUSTMENT"],
+          "summary": "Cho sát thương thêm chí mạng.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.bonusAttackCanCrit",
+              "oldValue": "false",
+              "newValue": "true after casting or retrieving the lantern",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 0,
+              "fieldKey": "passive.bonusPhysicalDamage",
+              "oldValue": "0.45 physicalAttack",
+              "newValue": "16–30 + 0.35 physicalAttack",
+              "kind": "ADJUSTMENT"
+            }
+          ],
+          "notes": [
+            "The supplied JSON uses elandorr, while the resource catalogue uses eland-orr.",
+            "Only the enhanced physical attack component changes; the three-mark magic explosion is not the changed field."
+          ]
+        },
+        {
+          "code": "natalya",
+          "name": "Natalya",
+          "kinds": ["BUFF", "NERF"],
+          "summary": "Dời sức mạnh về cuối trận.",
+          "changes": [
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.magicDamage",
+              "oldValue": "130 + 15/rank + 0.15 magicAttack",
+              "newValue": "100 + 20/rank + 0.15 magicAttack",
+              "kind": "NERF"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.magicDamage",
+              "oldValue": "120 + 30/rank + 0.15 magicAttack",
+              "newValue": "100 + 50/rank + 0.15 magicAttack",
+              "kind": "ADJUSTMENT"
+            }
+          ],
+          "notes": [
+            "The ultimate decreases early and increases late; its mixed direction is retained instead of describing every rank as a nerf."
+          ]
+        },
+        {
+          "code": "lauriel",
+          "name": "Lauriel",
+          "kinds": ["BUFF"],
+          "summary": "Tăng hồi phục nội tại.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.heal",
+              "oldValue": "120 + 10/heroLevel + 0.01 bonusHealth",
+              "newValue": "140 + 10/heroLevel + 0.01 bonusHealth",
+              "kind": "BUFF"
+            }
+          ]
+        },
+        {
+          "code": "aleister",
+          "name": "Aleister",
+          "kinds": ["BUFF", "NERF"],
+          "summary": "Đổi sát thương và tăng trưởng.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.damage",
+              "oldValue": "55 + 8*heroLevel + 0.3 magicAttack",
+              "newValue": "84 + 6*heroLevel + 0.3 magicAttack",
+              "kind": "ADJUSTMENT"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.magicDamage",
+              "oldValue": "125 + 15/rank + 0.3 magicAttack",
+              "newValue": "115 + 23/rank + 0.3 magicAttack",
+              "kind": "ADJUSTMENT"
+            }
+          ],
+          "notes": [
+            "The article labels the passive true damage but appends a magic-damage abbreviation. The formula is retained without changing the existing damage type.",
+            "The supplied snapshot has 84 passive base and 115/138/161/184/207/230 skill-2 base damage."
+          ]
+        },
+        {
+          "code": "toro",
+          "name": "Toro",
+          "kinds": ["NERF"],
+          "summary": "Giảm sát thương chiêu hai.",
+          "changes": [
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.physicalDamage",
+              "oldValue": "200 + 40/rank + 0.04 maxHealth",
+              "newValue": "180 + 36/rank + 0.035 maxHealth",
+              "kind": "NERF"
+            }
+          ]
+        },
+        {
+          "code": "baldum",
+          "name": "Baldum",
+          "kinds": ["BUFF", "ADJUSTMENT"],
+          "summary": "Thêm miễn thương khi mở chiêu.",
+          "changes": [
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.initialReductionStacks",
+              "oldValue": "0",
+              "newValue": "2",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.damageReductionPercentPerStack",
+              "oldValue": "6 + 0.5/rank",
+              "newValue": "4 + 0.8/rank",
+              "kind": "ADJUSTMENT"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.maximumReductionStacks",
+              "oldValue": "4",
+              "newValue": "5",
+              "kind": "BUFF"
+            }
+          ]
+        },
+        {
+          "code": "krizzix",
+          "name": "Krizzix",
+          "kinds": ["BUFF"],
+          "summary": "Tăng sát thương nội tại.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.magicDamage",
+              "oldValue": "160 + 12*heroLevel + 0.45 magicAttack",
+              "newValue": "235 + 17*heroLevel + 0.55 magicAttack",
+              "kind": "BUFF"
+            }
+          ]
+        },
+        {
+          "code": "ryoma",
+          "name": "Ryoma",
+          "kinds": ["NERF"],
+          "summary": "Giảm nhịp chiêu và sát thương.",
+          "changes": [
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.cooldownSeconds",
+              "oldValue": "8",
+              "newValue": "10 - 0.4/rank",
+              "kind": "NERF"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.cooldownSeconds",
+              "oldValue": "12–10",
+              "newValue": "12.5–10",
+              "kind": "NERF"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.physicalDamage",
+              "oldValue": "130 + 50/rank + 0.7 physicalAttack",
+              "newValue": "110 + 55/rank + 0.7 physicalAttack",
+              "kind": "NERF"
+            }
+          ],
+          "notes": [
+            "The article gives only ultimate cooldown endpoints; do not invent a rounded middle-rank value. The supplied snapshot shows 12.5/11.3/10 after the patch."
+          ]
+        },
+        {
+          "code": "ata",
+          "name": "Ata",
+          "kinds": ["BUFF"],
+          "summary": "Tăng sát thương và nhịp chiêu.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.bonusDamage",
+              "oldValue": "10 + 0.01 maxHealth",
+              "newValue": "28–56 + 0.01 maxHealth",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.cooldownSeconds",
+              "oldValue": "8 - 0.3/rank",
+              "newValue": "7.5 - 0.3/rank",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.collisionPhysicalDamage",
+              "oldValue": "150 + 15/rank + 0.06 maxHealth",
+              "newValue": "150 + 30/rank + 0.06 maxHealth",
+              "kind": "BUFF"
+            }
+          ],
+          "notes": [
+            "The changed skill-2 component is the terrain collision damage, not the initial anchor hit."
+          ]
+        },
+        {
+          "code": "amily",
+          "name": "Amily",
+          "kinds": ["BUFF"],
+          "summary": "Đòn cường hóa lướt không mục tiêu.",
+          "changes": [
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.empoweredAttackDashWithoutTarget",
+              "oldValue": "false",
+              "newValue": "true",
+              "kind": "BUFF"
+            }
+          ]
+        },
+        {
+          "code": "roxie",
+          "name": "Roxie",
+          "kinds": ["BUFF"],
+          "summary": "Tăng sát thương và lá chắn.",
+          "changes": [
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.magicDamage",
+              "oldValue": "100 + 30/rank + 0.5 magicAttack",
+              "newValue": "180 + 36/rank + 0.5 magicAttack",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.shield",
+              "oldValue": "100 + 60/rank + 0.08 maxHealth",
+              "newValue": "250 + 50/rank + 0.08 maxHealth",
+              "kind": "BUFF"
+            }
+          ]
+        },
+        {
+          "code": "d-arcy",
+          "name": "D’Arcy",
+          "kinds": ["BUFF"],
+          "summary": "Nối pháp trận và lập phương.",
+          "changes": [
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.skill_2DetonationLink",
+              "oldValue": "Chưa có cơ chế nổ đồng bộ mới.",
+              "newValue": "Nếu tâm chiêu 2 hoặc bản cường hóa nằm trong pháp trận, lập phương nổ khi chiêu 3 kéo mục tiêu về.",
+              "kind": "BUFF"
+            }
+          ],
+          "notes": [
+            "The supplied snapshot describes this interaction in skill 2, while the patch article groups the new mechanic under skill 3."
+          ],
+          "sourceAliases": ["darcy", "D’Arcy"]
+        },
+        {
+          "code": "hayate",
+          "name": "Hayate",
+          "kinds": ["FIX"],
+          "summary": "Sửa ghi nhận hạ quái lớn.",
+          "changes": [
+            {
+              "slot": null,
+              "fieldKey": "gameplay.bossKillOwnership",
+              "oldValue": "Có lỗi ghi nhận hạ Boss khi gần tướng đi rừng địch.",
+              "newValue": "Sửa trường hợp ghi nhận hạ Boss sai.",
+              "kind": "FIX"
+            }
+          ],
+          "notes": [
+            "This is a gameplay bug fix. The separate Kid skin movement-display fix is visual and is excluded."
+          ]
+        }
+      ],
+      "excluded": [
+        {
+          "subject": "Hayate – Siêu đạo chích Kid",
+          "reason": "Skin movement rendering after recall; cosmetic only."
+        },
+        {
+          "subject": "Billow",
+          "reason": "Missing floating damage text at low graphics; display only."
+        },
+        {
+          "subject": "Battlefield, equipment, enchantments, spells and entertainment mode",
+          "reason": "Outside the requested hero-change import."
+        }
+      ]
+    },
+    {
+      "date": "2026-10-15",
+      "publishedOn": "2026-10-15",
+      "url": "https://lienquan.garena.vn/dieu-chinh-giua-mua-pb-vet-nut-thoi-khong-15-10-2026/",
+      "title": "Điều chỉnh giữa mùa Vết nứt thời không — 15.10.2026",
+      "heroes": [
+        {
+          "code": "dirak",
+          "name": "Dirak",
+          "kinds": ["REWORK", "BUFF", "NERF"],
+          "summary": "Tách pháo thành chiêu độc lập.",
+          "changes": [
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.skill_1InnerAreaLink",
+              "oldValue": "Chưa có cơ chế rơi ngay trong vòng chiêu 1.",
+              "newValue": "Thiên thạch rơi ngay nếu điểm rơi nằm trong vòng trong chiêu 1.",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.cooldownSeconds",
+              "oldValue": "11 - 0.6/rank",
+              "newValue": "12.5 - 0.5/rank",
+              "kind": "NERF"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.cannonSeparation",
+              "oldValue": "Pháo tử quang là phần của chiêu 3.",
+              "newValue": "Pháo tử quang tách sang chiêu 4.",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 4,
+              "fieldKey": "skill_4.magicDamage",
+              "oldValue": null,
+              "newValue": "500 + 250/rank + 0.80 magicAttack",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 4,
+              "fieldKey": "skill_4.cooldownSeconds",
+              "oldValue": null,
+              "newValue": "50 - 5/rank",
+              "kind": "REWORK"
+            },
+            {
+              "slot": 4,
+              "fieldKey": "skill_4.energyCost",
+              "oldValue": null,
+              "newValue": "90 + 5/rank",
+              "kind": "REWORK"
+            }
+          ],
+          "notes": [
+            "The new active slot is explicitly skill 4, not a second variant of skill 3. No new skill icon should be invented.",
+            "The patch provides skill-4 values, but does not state a before-versus-after cannon damage comparison."
+          ]
+        },
+        {
+          "code": "errol",
+          "name": "Errol",
+          "kinds": ["BUFF"],
+          "summary": "Nội tại mất từng tầng.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.stackDecay",
+              "oldValue": null,
+              "newValue": "Cộng dồn giảm từng tầng; mỗi tầng kế tiếp tồn tại thêm 1 giây.",
+              "kind": "BUFF"
+            }
+          ],
+          "notes": [
+            "The article describes a new decay mechanic but does not give the complete old expiration algorithm."
+          ]
+        },
+        {
+          "code": "ngo-khong",
+          "name": "Ngộ Không",
+          "kinds": ["BUFF", "NERF"],
+          "summary": "Đổi sát thương đánh cường hóa.",
+          "changes": [
+            {
+              "slot": 0,
+              "fieldKey": "passive.empoweredPhysicalDamage",
+              "oldValue": "340–508 + 1.0 physicalAttack",
+              "newValue": "450 + 1.0 physicalAttack",
+              "kind": "ADJUSTMENT"
+            }
+          ],
+          "notes": [
+            "Higher early damage and lower late base damage; do not label the entire level range as a buff."
+          ]
+        },
+        {
+          "code": "flowborn-ad",
+          "sourceAliases": ["flowborn"],
+          "name": "Flowborn",
+          "kinds": ["NERF"],
+          "summary": "Giảm sát thương nỏ liên hoàn.",
+          "changes": [
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.physicalDamage",
+              "oldValue": "70 + 35/rank + 0.28 physicalAttack",
+              "newValue": "64 + 32/rank + 0.26 physicalAttack",
+              "kind": "NERF"
+            }
+          ],
+          "notes": [
+            "The physical-attack formula identifies the marksman form. Do not apply this to flowborn-mid / flowborn-2."
+          ]
+        },
+        {
+          "code": "kriknak",
+          "name": "Kriknak",
+          "kinds": ["BUFF"],
+          "summary": "Tăng sát thương chiêu một.",
+          "changes": [
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.physicalDamage",
+              "oldValue": "300 + 50/rank + 1.4 bonusPhysicalAttack",
+              "newValue": "325 + 65/rank + 1.5 bonusPhysicalAttack",
+              "kind": "BUFF"
+            }
+          ]
+        },
+        {
+          "code": "gildur",
+          "name": "Gildur",
+          "kinds": ["BUFF", "NERF"],
+          "summary": "Đổi sát thương, giảm nhịp khống chế.",
+          "changes": [
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.initialMagicDamage",
+              "oldValue": "380 + 76/rank + 0.55 magicAttack",
+              "newValue": "350 + 70/rank + 0.5 magicAttack",
+              "kind": "NERF"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.periodicMagicDamage",
+              "oldValue": "30 + 6/rank + 0.05 magicAttack",
+              "newValue": "35 + 7/rank + 0.05 magicAttack",
+              "kind": "BUFF"
+            },
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.cooldownSeconds",
+              "oldValue": "42 - 7/rank",
+              "newValue": "45 - 5/rank",
+              "kind": "NERF"
+            }
+          ]
+        },
+        {
+          "code": "trieu-van",
+          "name": "Triệu Vân",
+          "kinds": ["BUFF"],
+          "summary": "Đánh cường hóa có đột kích.",
+          "changes": [
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.empoweredAttackDash",
+              "oldValue": "Chưa có cơ chế đột kích mới.",
+              "newValue": "Đòn cường hóa lao tới mục tiêu; không có mục tiêu thì lướt tới trước.",
+              "kind": "BUFF"
+            }
+          ]
+        },
+        {
+          "code": "raz",
+          "name": "Raz",
+          "kinds": ["BUFF", "NERF"],
+          "summary": "Đổi nhịp combo và xuyên phép.",
+          "changes": [
+            {
+              "slot": 1,
+              "fieldKey": "skill_1.cooldownSeconds",
+              "oldValue": "10 - 0.8/rank",
+              "newValue": "8 - 0.3/rank",
+              "kind": "ADJUSTMENT"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.magicDamage",
+              "oldValue": "500 + 60/rank + 0.8 magicAttack",
+              "newValue": "450 + 90/rank + 0.9 magicAttack",
+              "kind": "ADJUSTMENT"
+            },
+            {
+              "slot": 2,
+              "fieldKey": "skill_2.magicDefenseReduction",
+              "oldValue": "50 + 30/rank",
+              "newValue": "100 + 20/rank",
+              "kind": "BUFF"
+            }
+          ],
+          "notes": [
+            "Skill-1 cooldown improves early but changes from 6 to 6.5 seconds at final rank under the snapshot's rank-minus-one convention. The description of higher cast frequency is not a buff at every rank.",
+            "Skill-2 damage has lower base, stronger rank growth and higher AP scaling; direction depends on rank and AP."
+          ]
+        },
+        {
+          "code": "volkath",
+          "name": "Volkath",
+          "kinds": ["FIX"],
+          "summary": "Sửa miễn tử sau làm mới chiêu.",
+          "changes": [
+            {
+              "slot": 3,
+              "fieldKey": "skill_3.doliaRefreshImmortality",
+              "oldValue": "Có thể bị hạ trong miễn tử sau khi Dolia làm mới chiêu 3.",
+              "newValue": "Sửa lỗi bị hạ trong tình huống này.",
+              "kind": "FIX"
+            }
+          ],
+          "notes": [
+            "The change belongs to Volkath's immortality interaction. It does not establish a separate change to Dolia's kit."
+          ]
+        }
+      ],
+      "excluded": [
+        {
+          "subject": "Evita",
+          "reason": "New hero release, not a modification of an existing baseline hero. The article gives qualitative mechanics without numeric stats or image mapping. Needs a separate new-hero draft rather than a fabricated before/after pair."
+        },
+        {
+          "subject": "Nakroth",
+          "effectiveDate": "2026-10-16",
+          "reason": "The article explicitly dates this sweep-attack bug fix to 16 October. Do not label it as the 15 October patch."
+        },
+        {
+          "subject": "Murad – Tuyệt Thế Thần Binh; Sinestrea skins",
+          "reason": "Missing or incorrect visual effects; cosmetic only."
+        },
+        {
+          "subject": "Cứu viện, Du hiệp, Caesar, entertainment-mode teleport, UI and events",
+          "reason": "Outside hero gameplay change scope. The control-immunity issue is an enchantment bug, not a change to every affected hero."
+        }
+      ]
+    }
+  ]
+}
