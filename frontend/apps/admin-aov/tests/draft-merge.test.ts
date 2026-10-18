@@ -1,7 +1,12 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import { reconcileDraft } from "../src/app/drafts/draft-merge"
-import { heroWorkingConflict, mergeHeroWorkingCopy } from "../src/features/publishing/hero-working-copy"
+import {
+  heroWorkingConflict,
+  heroWorkingSchema,
+  mergeHeroWorkingCopy,
+} from "../src/features/publishing/hero-working-copy"
+import { retainImageOptions } from "../src/features/publishing/image-options"
 import { fixtureContent } from "./fixtures/hero-workspace-data"
 
 test("three-way merge preserves remote changes to untouched fields and flags overlapping text edits", () => {
@@ -70,4 +75,28 @@ test("hero working copies retain remote skills and Vietnamese text while only th
   assert.equal(merged.content.PROFILE!.translations[1].name, "My English")
   assert.equal(merged.content.PROFILE!.translations[0].name, "Tên Việt mới")
   assert.deepEqual(merged.content.SKILLS, remote.content.SKILLS)
+})
+
+test("restored working copies retain every skin role and alternate image when the main image changes", () => {
+  const value = { content: structuredClone(fixtureContent), notes: {} }
+  const skin = value.content.SKINS!.skins[0]
+  skin.headAssetId = "skin-head"
+  skin.portraitAssetId = "skin-portrait"
+  skin.images = { PORTRAIT: [{ assetId: "alternate-2", label: "portrait-2.png" }] }
+  value.content.MEDIA_BINDINGS = {
+    bindings: { HEAD: "old-head" },
+    images: { HEAD: [{ assetId: "alternate-1", label: "head-1.png" }] },
+    sources: [],
+  }
+  const restored = heroWorkingSchema.parse(value)
+  assert.deepEqual(restored, value)
+  const before = structuredClone(restored.content.MEDIA_BINDINGS!.images)
+  const next = retainImageOptions(before, "HEAD", "old-head", "alternate-1", "new-head")
+  assert.deepEqual(
+    next.HEAD!.map((item) => item.assetId),
+    ["alternate-1", "old-head", "new-head"],
+  )
+  assert.equal(next.HEAD![0].label, "head-1.png")
+  assert.deepEqual(before, { HEAD: [{ assetId: "alternate-1", label: "head-1.png" }] })
+  assert.deepEqual(restored.content.SKINS, value.content.SKINS)
 })

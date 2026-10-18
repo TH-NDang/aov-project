@@ -32,20 +32,12 @@ import {
 import { Progress } from "@aov/ui/components/progress"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Page, PageHeader } from "@/components/page-header"
-import {
-  useArcanaStatus,
-  useAudit,
-  useBadges,
-  useEnchantments,
-  useItemCatalog,
-  useItemIssues,
-  usePortraits,
-} from "@/lib/queries"
+import { useArcanaStatus, useAudit, useEnchantments, useItemCatalog, useItemIssues } from "@/lib/queries"
 import { formatNumber, formatRelative } from "@/lib/text"
-import { useHeroIndex } from "@/lib/use-wiki-index"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { createPublishingApi } from "../publishing/publishing-api"
+import type { PageSlice } from "../publishing/types"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -84,26 +76,23 @@ export function DashboardPage() {
     enabled: canReadHeroes,
     staleTime: 30000,
   })
-  const { index } = useHeroIndex()
-  const portraits = usePortraits()
+  const images = useQuery({
+    queryKey: ["managed-images", "dashboard"],
+    queryFn: () => backendRequest<PageSlice<unknown>>("/admin/media/assets?page=0&size=1"),
+    enabled: canReadHeroes,
+    staleTime: 30000,
+  })
+  const badges = useQuery({
+    queryKey: ["skin-badges", "dashboard"],
+    queryFn: () => backendRequest<PageSlice<unknown>>("/admin/skin-badges?page=0&size=1"),
+    enabled: canReadHeroes,
+    staleTime: 30000,
+  })
   const catalog = useItemCatalog()
   const issues = useItemIssues()
   const enchantments = useEnchantments()
-  const badges = useBadges()
   const arcana = useArcanaStatus()
   const audit = useAudit()
-
-  const heroStats = useMemo(() => {
-    if (!index) return undefined
-    const skins = index.heroes.flatMap((hero) => hero.skins.filter((skin) => !skin.isDefault))
-    return {
-      heroes: index.heroes.length,
-      skins: skins.length,
-      heroPortraits: index.heroes.filter((hero) => hero.portrait).length,
-      skinPortraits: skins.filter((skin) => skin.portrait).length,
-      skinArt: skins.filter((skin) => skin.head && skin.cover).length,
-    }
-  }, [index])
 
   const itemStats = useMemo(() => {
     const items = catalog.data?.items
@@ -129,9 +118,6 @@ export function DashboardPage() {
     }
   }, [catalog.data])
 
-  const unmatched =
-    index && portraits.data ? portraits.data.filter((row) => !index.owners.has(row.file)).length : undefined
-
   const stats: StatTile[] = [
     ...(canReadHeroes
       ? [
@@ -142,22 +128,22 @@ export function DashboardPage() {
             icon: Swords,
             to: "/publishing",
           },
+          {
+            label: "Ảnh đã lưu",
+            value: images.data?.totalElements,
+            hint: "Thư viện Media backend",
+            icon: ImageIcon,
+            to: "/image-management",
+          },
+          {
+            label: "Bậc trang phục",
+            value: badges.data?.totalElements,
+            hint: "Tên và icon theo ngôn ngữ",
+            icon: Medal,
+            to: "/hero/media?tab=badges",
+          },
         ]
       : []),
-    {
-      label: "Portrait trang phục",
-      value: heroStats?.skinPortraits,
-      hint: "Ảnh trong tài nguyên",
-      icon: ImageIcon,
-      to: "/portraits",
-    },
-    {
-      label: "Portrait chưa khớp",
-      value: unmatched,
-      hint: "Tài nguyên chưa có nơi nhận",
-      icon: ImageIcon,
-      to: "/portraits?tab=unmatched",
-    },
     {
       label: "Trang bị",
       value: itemStats?.total,
@@ -166,23 +152,9 @@ export function DashboardPage() {
       to: "/items",
     },
     { label: "Phù hiệu", value: enchantments.data?.length, hint: "4 hệ", icon: Hexagon, to: "/enchantments" },
-    {
-      label: "Bậc trang phục",
-      value: badges.data?.length,
-      hint: "Nhãn bậc & sự kiện",
-      icon: Medal,
-      to: "/media/badges",
-    },
   ]
 
   const coverage: CoverageRow[] = [
-    ...(heroStats
-      ? [
-          { label: "Portrait tướng trong tài nguyên", done: heroStats.heroPortraits, total: heroStats.heroes },
-          { label: "Portrait trang phục trong tài nguyên", done: heroStats.skinPortraits, total: heroStats.skins },
-          { label: "Head & cover trang phục trong tài nguyên", done: heroStats.skinArt, total: heroStats.skins },
-        ]
-      : []),
     ...(itemStats
       ? [
           { label: "Công thức trang bị đã chốt", done: itemStats.settled, total: itemStats.total },
@@ -192,13 +164,6 @@ export function DashboardPage() {
   ]
 
   const todos: TodoRow[] = [
-    {
-      title: "Portrait chưa khớp",
-      description: "Ảnh xuất từ Figma chưa gán cho tướng hay trang phục nào",
-      count: unmatched ?? 0,
-      icon: ImageIcon,
-      to: "/portraits?tab=unmatched",
-    },
     {
       title: "Trang bị cần kiểm tra",
       description: "Lệch cấp, trùng hoặc thiếu vị trí so với Excel",
@@ -222,7 +187,7 @@ export function DashboardPage() {
     <Page>
       <PageHeader title="Bảng điều khiển" description="Tình trạng dữ liệu AOV Wiki và những việc cần xử lý." />
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {stats.map((stat) => (
           <Link
             key={stat.label}
@@ -286,7 +251,7 @@ export function DashboardPage() {
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>Độ phủ dữ liệu</CardTitle>
-            <CardDescription>Tỉ lệ hoàn thiện bộ tài nguyên ảnh và dữ liệu trang bị.</CardDescription>
+            <CardDescription>Tỉ lệ hoàn thiện dữ liệu trang bị đã thu thập.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {coverage.length === 0 && <Skeleton className="h-64 w-full" />}

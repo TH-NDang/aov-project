@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
+import { invalidateHeroCatalogs } from "./publishing-cache"
 
 import type { components } from "./generated/hero-api"
 export type ImportJob = components["schemas"]["HeroImportJobView"]
@@ -43,6 +44,7 @@ export function useImportJobs() {
   }, [updates, cache])
   useEffect(() => {
     if (!finishedUpdates) return
+    void invalidateHeroCatalogs(cache)
     for (const key of ["publishing-preview", "publishing-revisions", "hero-comparison", "rich-text-heroes"])
       void cache.invalidateQueries({ queryKey: [key] })
   }, [finishedUpdates, cache])

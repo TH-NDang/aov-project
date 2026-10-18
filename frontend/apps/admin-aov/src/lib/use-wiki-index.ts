@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import type { Hero, Skin } from "@/lib/api/types"
 import { buildOwnerIndex } from "@/lib/domain/portraits"
-import { useHeroes, useItemIssues, usePortraits } from "@/lib/queries"
+import { useHeroes, useItemIssues } from "@/lib/queries"
 
 export interface HeroIndex {
   heroes: Hero[]
@@ -41,15 +41,11 @@ export function useHeroIndex() {
 
 /** Counts surfaced as badges in the navigation and on the dashboard. */
 export function useAttentionCounts() {
-  const { index } = useHeroIndex()
-  const portraits = usePortraits()
   const issues = useItemIssues()
   return useMemo(
     () => ({
-      unmatchedPortraits:
-        index && portraits.data ? portraits.data.filter((row) => !index.owners.has(row.file)).length : undefined,
       itemIssues: issues.data?.length,
     }),
-    [index, portraits.data, issues.data],
+    [issues.data],
   )
 }

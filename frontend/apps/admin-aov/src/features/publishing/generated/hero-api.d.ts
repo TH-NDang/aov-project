@@ -314,6 +314,119 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/wiki/v1/admin/hero-media": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["heroMediaGroups"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/wiki/v1/admin/skin-badges": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["skinBadgeCatalog"]
+    put?: never
+    post: operations["createSkinBadge"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/wiki/v1/admin/skin-badges/{id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations["updateSkinBadge"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/wiki/v1/admin/skin-badges/{id}/skins": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["skinBadgeRelations"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/wiki/v1/admin/skin-badges/{id}/group": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations["assignSkinBadgeGroup"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/wiki/v1/admin/skin-badge-groups": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Pages whole groups. Search group codes/names or contained badge codes/names; stable code order, unassigned last. Empty search includes empty groups. */
+    get: operations["skinBadgeGroups"]
+    put?: never
+    post: operations["createSkinBadgeGroup"]
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/wiki/v1/admin/skin-badge-groups/{id}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations["updateSkinBadgeGroup"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -714,6 +827,197 @@ export interface components {
     }
     HeroCatalogPage: {
       items: components["schemas"]["HeroCatalogRow"][]
+      page: number
+      size: number
+      /** Format: int64 */
+      totalElements: number
+    }
+    HeroImageOption: {
+      /** Format: uuid */
+      assetId: string
+      label?: string | null
+    }
+    HeroImageOptions: {
+      HEAD?: components["schemas"]["HeroImageOption"][]
+      PORTRAIT?: components["schemas"]["HeroImageOption"][]
+      SPLASH?: components["schemas"]["HeroImageOption"][]
+    }
+    HeroMediaBindings: {
+      bindings: {
+        /** Format: uuid */
+        HEAD?: string
+        /** Format: uuid */
+        PORTRAIT?: string
+        /** Format: uuid */
+        SPLASH?: string
+      }
+      images?: components["schemas"]["HeroImageOptions"]
+      sources: components["schemas"]["HeroSource"][]
+    }
+    HeroSkinTranslation: {
+      locale: string
+      name: string
+      description?: string | null
+      acquisitionNote?: string | null
+    }
+    HeroSkin: {
+      skinKey: string
+      displayOrder: number
+      /** Format: uuid */
+      artAssetId?: string | null
+      /** Format: uuid */
+      headAssetId?: string | null
+      /** Format: uuid */
+      portraitAssetId?: string | null
+      rarityCode?: string | null
+      translations: components["schemas"]["HeroSkinTranslation"][]
+      images?: components["schemas"]["HeroImageOptions"]
+    }
+    HeroSkinSet: {
+      skins: components["schemas"]["HeroSkin"][]
+      sources: components["schemas"]["HeroSource"][]
+    }
+    HeroMediaEntry: {
+      /** @enum {string} */
+      ownerType: "HERO" | "SKIN"
+      skinKey: string | null
+      name: string
+      /** Format: uuid */
+      assetId: string | null
+      label: string | null
+      main: boolean
+      rarityCode: string | null
+    }
+    HeroMediaGroup: {
+      /** Format: uuid */
+      heroId: string
+      code: string
+      name: string
+      actualLocale: string | null
+      revision: components["schemas"]["HeroComparisonRevision"]
+      entries: components["schemas"]["HeroMediaEntry"][]
+    }
+    HeroMediaPage: {
+      items: components["schemas"]["HeroMediaGroup"][]
+      page: number
+      size: number
+      /** Format: int64 */
+      totalElements: number
+    }
+    SkinBadgeTranslation: {
+      locale: string
+      displayName: string
+      /** Format: uuid */
+      iconAssetId?: string | null
+    }
+    SkinBadgeView: {
+      /** Format: uuid */
+      id: string
+      code: string
+      /** @enum {string} */
+      kind: "UNKNOWN" | "RARITY" | "EVENT"
+      /** Format: int64 */
+      version: number
+      translations: components["schemas"]["SkinBadgeTranslation"][]
+      displayName: string
+      /** Format: uuid */
+      iconAssetId: string | null
+      actualLocale: string | null
+      fallbackApplied: boolean
+      /** Format: int64 */
+      skinCount: number
+      /** Format: uuid */
+      groupId: string | null
+    }
+    SkinBadgePage: {
+      items: components["schemas"]["SkinBadgeView"][]
+      page: number
+      size: number
+      /** Format: int64 */
+      totalElements: number
+    }
+    SkinBadgeCreate: {
+      code?: string
+      /** @enum {string} */
+      kind: "UNKNOWN" | "RARITY" | "EVENT"
+      translations: components["schemas"]["SkinBadgeTranslation"][]
+      /** Format: uuid */
+      groupId?: string | null
+      /**
+       * @description Source market for an automatically generated badge code. The code is allocated from the name and this market when code is omitted.
+       * @default vn
+       */
+      regionCode: string
+    }
+    SkinBadgeUpdate: {
+      /** Format: int64 */
+      expectedVersion: number
+      /** @enum {string} */
+      kind: "UNKNOWN" | "RARITY" | "EVENT"
+      translations: components["schemas"]["SkinBadgeTranslation"][]
+    }
+    SkinBadgeRelation: {
+      /** Format: uuid */
+      heroId: string
+      heroCode: string
+      heroName: string
+      skinKey: string
+      skinName: string
+      /** Format: uuid */
+      revisionId: string
+      /** Format: uuid */
+      artAssetId: string | null
+    }
+    SkinBadgeRelationPage: {
+      items: components["schemas"]["SkinBadgeRelation"][]
+      page: number
+      size: number
+      /** Format: int64 */
+      totalElements: number
+    }
+    /** @description groupId=null unassigns; metadata updates preserve the current group. */
+    SkinBadgeAssignGroup: {
+      /** Format: int64 */
+      expectedVersion: number
+      /** Format: uuid */
+      groupId: string | null
+    }
+    SkinBadgeGroupTranslation: {
+      locale: string
+      displayName: string
+    }
+    SkinBadgeGroupCreate: {
+      code: string
+      /** @enum {string} */
+      kind: "RANK" | "THEME"
+      translations: components["schemas"]["SkinBadgeGroupTranslation"][]
+    }
+    SkinBadgeGroupUpdate: {
+      /** Format: int64 */
+      expectedVersion: number
+      /** @enum {string} */
+      kind: "RANK" | "THEME"
+      translations: components["schemas"]["SkinBadgeGroupTranslation"][]
+    }
+    /** @description Whole display group. The final virtual __ungrouped group has null id/kind/name. If matchedByGroup=true omit q when fetching children; badgeCount then covers all children. Otherwise forward q. */
+    SkinBadgeGroupView: {
+      /** Format: uuid */
+      id: string | null
+      code: string
+      /** @enum {string|null} */
+      kind: "RANK" | "THEME" | null
+      /** Format: int64 */
+      version: number
+      translations: components["schemas"]["SkinBadgeGroupTranslation"][]
+      displayName: string | null
+      actualLocale: string | null
+      fallbackApplied: boolean
+      /** Format: int64 */
+      badgeCount: number
+      matchedByGroup: boolean
+    }
+    SkinBadgeGroupPage: {
+      items: components["schemas"]["SkinBadgeGroupView"][]
       page: number
       size: number
       /** Format: int64 */
@@ -1456,6 +1760,239 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+    }
+  }
+  heroMediaGroups: {
+    parameters: {
+      query: {
+        rulesetId: string
+        role: "HEAD" | "PORTRAIT" | "SPLASH"
+        locale?: string
+        q?: string
+        page?: number
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HeroMediaPage"]
+        }
+      }
+    }
+  }
+  skinBadgeCatalog: {
+    parameters: {
+      query?: {
+        rulesetId?: string
+        locale?: string
+        q?: string
+        page?: number
+        size?: number
+        groupId?: string
+        ungrouped?: boolean
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgePage"]
+        }
+      }
+    }
+  }
+  createSkinBadge: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SkinBadgeCreate"]
+      }
+    }
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgeView"]
+        }
+      }
+    }
+  }
+  updateSkinBadge: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SkinBadgeUpdate"]
+      }
+    }
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgeView"]
+        }
+      }
+    }
+  }
+  skinBadgeRelations: {
+    parameters: {
+      query: {
+        rulesetId: string
+        locale?: string
+        page?: number
+        size?: number
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgeRelationPage"]
+        }
+      }
+    }
+  }
+  assignSkinBadgeGroup: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SkinBadgeAssignGroup"]
+      }
+    }
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgeView"]
+        }
+      }
+    }
+  }
+  skinBadgeGroups: {
+    parameters: {
+      query?: {
+        locale?: string
+        q?: string
+        page?: number
+        size?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgeGroupPage"]
+        }
+      }
+    }
+  }
+  createSkinBadgeGroup: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SkinBadgeGroupCreate"]
+      }
+    }
+    responses: {
+      /** @description Success */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgeGroupView"]
+        }
+      }
+    }
+  }
+  updateSkinBadgeGroup: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SkinBadgeGroupUpdate"]
+      }
+    }
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["SkinBadgeGroupView"]
+        }
       }
     }
   }

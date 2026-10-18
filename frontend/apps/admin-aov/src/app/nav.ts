@@ -1,6 +1,6 @@
 import type { AovNavIconName } from "@/app/aov-nav-icon"
 
-export type NavBadgeKey = "unmatchedPortraits" | "itemIssues"
+export type NavBadgeKey = "itemIssues"
 
 export interface NavItem {
   title: string
@@ -92,10 +92,10 @@ export const NAV_GROUPS: NavGroup[] = [
           {
             title: "Không gian ảnh",
             icon: "gallery",
-            to: "/portraits",
+            to: "/hero/media",
             description: "Portrait, head, cover và bậc trang phục",
-            badge: "unmatchedPortraits",
-            activePaths: ["/portraits", "/media"],
+            activePaths: ["/hero/media", "/media"],
+            capability: "catalog:read",
           },
         ],
       },
@@ -168,27 +168,27 @@ export const NAV_GROUPS: NavGroup[] = [
 export const MEDIA_NAV: NavItem[] = [
   {
     title: "Portrait",
-    to: "/portraits",
+    to: "/hero/media",
     icon: "portrait",
-    description: "Ghép và sắp xếp portrait",
+    description: "Portrait theo tướng, trang phục và ảnh chính",
   },
   {
     title: "Head",
-    to: "/media/head",
+    to: "/hero/media?tab=head",
     icon: "head",
     description: "Head tướng, trang phục và icon danh sách",
   },
   {
     title: "Cover",
-    to: "/media/cover",
+    to: "/hero/media?tab=cover",
     icon: "cover",
     description: "Cover tướng và trang phục",
   },
   {
     title: "Bậc trang phục",
-    to: "/media/badges",
+    to: "/hero/media?tab=badges",
     icon: "badges",
-    description: "Nhãn bậc và sự kiện",
+    description: "Tên, icon theo ngôn ngữ và trang phục liên quan",
   },
 ]
 
