@@ -4,7 +4,7 @@ import { JSDOM } from "jsdom"
 import { act, useState } from "react"
 import { createMemoryRouter, RouterProvider, useParams, useSearchParams } from "react-router"
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
-import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
+import { PageTabPanels, PageTabsProvider, usePageTabs, usePageCloseGuard } from "../src/app/layout/page-tabs"
 import { useChangeEffect } from "../src/hooks/use-change-effect"
 import { useTable } from "@tanstack/react-table"
 import { dataTableFeatures } from "../src/components/data-table/table-features"
@@ -38,11 +38,13 @@ test("tab sessions preserve drafts, filters, route params, DOM, scroll and query
     },
   })
   const loads = new Map<string, number>()
+  let allowClose = true
   function Page({ name }: { name: string }) {
     const { heroId } = useParams()
     const id = heroId ?? name
     const [search, setSearch] = useSearchParams()
     const [draft, setDraft] = useState("")
+    usePageCloseGuard(() => !draft || allowClose)
     useChangeEffect(() => setDraft(""), [id])
     const table = useTable({
       features: dataTableFeatures,
@@ -205,6 +207,10 @@ test("tab sessions preserve drafts, filters, route params, DOM, scroll and query
     assert.equal(panel("/heroes/airi").querySelector('[data-testid="query"]')!.textContent, "skins")
     await navigate("/heroes/tamyn")
     assert.equal(panel("/heroes/tamyn").querySelector('[data-testid="route"]')!.textContent, "tamyn")
+    allowClose = false
+    await click(dom.window.document.querySelector('[data-close="/heroes/airi"]')!)
+    assert.ok(panel("/heroes/airi"), "An inactive dirty tab must remain open when its guard rejects closing")
+    allowClose = true
     assert.equal(panel("/heroes/airi").querySelector('[data-testid="route"]')!.textContent, "airi")
     await click(dom.window.document.querySelector('[data-close="/heroes/airi"]')!)
     assert.equal(dom.window.document.querySelector('[data-page-tab="/heroes/airi"]'), null)

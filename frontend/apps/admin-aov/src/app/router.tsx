@@ -1,8 +1,7 @@
-import { createBrowserRouter, createMemoryRouter, type RouteObject } from "react-router"
+import { createBrowserRouter, createMemoryRouter, Navigate, type RouteObject } from "react-router"
 import { AppShell } from "./layout/app-shell"
 import type { RouteHandle } from "./layout/site-header"
 import { AppLoading, RouteError } from "./route-error"
-import { HeroCrumb } from "@/features/heroes/hero-crumb"
 import { MediaWorkspace } from "@/features/media/media-workspace"
 
 const handle = (crumb: RouteHandle["crumb"]): RouteHandle => ({ crumb })
@@ -15,6 +14,11 @@ const routes: RouteObject[] = [
     hydrateFallbackElement: <AppLoading />,
     handle: title("AOV Admin"),
     children: [
+      {
+        path: "terminology",
+        handle: title("Thuật ngữ & tham chiếu"),
+        lazy: async () => ({ Component: (await import("@/features/terminology/terminology-page")).TerminologyPage }),
+      },
       {
         path: "profile",
         handle: title("Hồ sơ của tôi"),
@@ -39,14 +43,46 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/dashboard/dashboard-page")).DashboardPage }),
           },
           {
+            path: "game-configuration",
+            handle: title("Phiên bản và thị trường"),
+            lazy: async () => ({
+              Component: (await import("@/features/publishing/game-configuration-page")).GameConfigurationPage,
+            }),
+          },
+          {
             path: "publishing-media",
-            handle: title("Media backend"),
-            lazy: async () => ({ Component: (await import("@/features/publishing/media-page")).PublishedMediaPage }),
+            handle: { pageTab: false } satisfies RouteHandle,
+            element: <Navigate to="/image-management" replace />,
+          },
+          {
+            path: "image-management",
+            handle: title("Quản lý ảnh"),
+            lazy: async () => ({
+              Component: (await import("@/features/media/image-management-page")).ImageManagementPage,
+            }),
           },
           {
             path: "publishing",
-            handle: title("Biên tập backend"),
+            handle: title("Tướng"),
             lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
+          },
+          {
+            path: "publishing/import",
+            handle: title("Import tướng"),
+            element: null,
+          },
+          {
+            path: "publishing/new",
+            handle: title("Tạo tướng"),
+            lazy: async () => ({ Component: (await import("@/features/publishing/create-hero-page")).CreateHeroPage }),
+          },
+          {
+            path: "publishing/:heroId/translations",
+            handle: title("Biên dịch tướng"),
+            lazy: async () => {
+              const { PublishingPage } = await import("@/features/publishing/publishing-page")
+              return { Component: () => <PublishingPage translationMode /> }
+            },
           },
           {
             path: "publishing/:heroId",
@@ -54,24 +90,19 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
           },
           {
-            path: "heroes",
-            handle: title("Tướng"),
-            children: [
-              {
-                index: true,
-                lazy: async () => ({ Component: (await import("@/features/heroes/heroes-page")).HeroesPage }),
-              },
-              {
-                path: ":heroId",
-                handle: handle((match) => <HeroCrumb heroId={match.params.heroId!} />),
-                lazy: async () => ({ Component: (await import("@/features/heroes/hero-detail-page")).HeroDetailPage }),
-              },
-            ],
+            path: "heroes/*",
+            handle: { pageTab: false } satisfies RouteHandle,
+            element: <Navigate to="/publishing" replace />,
           },
           {
-            path: "skins",
-            handle: title("Trang phục"),
-            lazy: async () => ({ Component: (await import("@/features/skins/skins-page")).SkinsPage }),
+            path: "reference/skins/*",
+            handle: { pageTab: false } satisfies RouteHandle,
+            element: <Navigate to="/publishing" replace />,
+          },
+          {
+            path: "skins/*",
+            handle: { pageTab: false } satisfies RouteHandle,
+            element: <Navigate to="/publishing" replace />,
           },
           {
             path: "storage",

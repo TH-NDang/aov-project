@@ -1,17 +1,34 @@
 import type { InputHTMLAttributes, ReactNode } from "react"
 import type { Source } from "./types"
 import { Button } from "@aov/ui/components/button"
+import { AdminRichTextField } from "../terminology/rich-text-field"
 export const control = "w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
 export function Field({
   label,
   value,
   onChange,
   multiline,
+  richTextLocale,
   ...props
-}: { label: string; value: string | number; onChange: (value: string) => void; multiline?: boolean } & Omit<
-  InputHTMLAttributes<HTMLInputElement>,
-  "onChange" | "value"
->) {
+}: {
+  label: string
+  value: string | number
+  onChange: (value: string) => void
+  multiline?: boolean
+  richTextLocale?: string
+} & Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value">) {
+  if (multiline && richTextLocale !== undefined)
+    return (
+      <AdminRichTextField
+        key={richTextLocale}
+        label={label}
+        value={String(value)}
+        onChange={onChange}
+        locale={richTextLocale}
+        disabled={props.disabled}
+        required={props.required}
+      />
+    )
   return (
     <label className="grid gap-1.5 text-sm">
       <span>{label}</span>

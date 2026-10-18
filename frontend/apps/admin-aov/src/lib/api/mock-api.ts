@@ -1,3 +1,4 @@
+import { randomId } from "@/lib/random-id"
 import type { AdminApi } from "./client"
 import { ApiError } from "./errors"
 import type {
@@ -118,10 +119,7 @@ export function createMockApi(): AdminApi {
   const loadPortraits = () => (portraitData ??= fetchData<PortraitSource[]>("portrait-sources.json"))
 
   function audit(entry: Omit<AuditEntry, "id" | "at">) {
-    changes.audit = [{ ...entry, id: crypto.randomUUID(), at: new Date().toISOString() }, ...changes.audit].slice(
-      0,
-      AUDIT_LIMIT,
-    )
+    changes.audit = [{ ...entry, id: randomId(), at: new Date().toISOString() }, ...changes.audit].slice(0, AUDIT_LIMIT)
   }
 
   function commitHero(heroes: Map<string, Hero>, hero: Hero) {

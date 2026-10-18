@@ -19,11 +19,13 @@
     "build": "turbo build",
     "typecheck": "turbo typecheck",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "generate:hero-api": "openapi-typescript ../backend/wiki-service/src/main/resources/contracts/hero-authoring.openapi.json -o apps/admin-aov/src/features/publishing/generated/hero-api.d.ts && prettier --write apps/admin-aov/src/features/publishing/generated/hero-api.d.ts"
   },
   "devDependencies": {
     "@tanstack/intent": "^0.5.5",
     "@types/node": "^22.0.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "3.9.9",
     "turbo": "^2.5.0",
     "typescript": "^5.9.3"

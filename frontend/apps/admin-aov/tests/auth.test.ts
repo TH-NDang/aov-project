@@ -116,3 +116,20 @@ test("refresh failure prevents the request", async () => {
   )
   await assert.rejects(request("/admin/me"), /Expired/)
 })
+
+test("empty successful command responses do not become JSON parse failures", async () => {
+  for (const status of [200, 204, 205]) {
+    const request = createAuthenticatedClient(
+      async () => "token",
+      () => {},
+      async () => new Response(null, { status }),
+    )
+    assert.equal(await request("/admin/heroes/import/upload-sessions/session", { method: "DELETE" }), undefined)
+  }
+  const malformed = createAuthenticatedClient(
+    async () => "token",
+    () => {},
+    async () => new Response("{broken", { status: 200 }),
+  )
+  await assert.rejects(malformed("/admin/me"), SyntaxError)
+})

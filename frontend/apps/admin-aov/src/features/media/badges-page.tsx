@@ -1,7 +1,5 @@
 import { useMemo } from "react"
-import { Link } from "react-router"
 import { Badge } from "@aov/ui/components/badge"
-import { Button } from "@aov/ui/components/button"
 import { badgeLabel } from "@/components/badge-picker"
 import { useBadges } from "@/lib/queries"
 import { useHeroIndex } from "@/lib/use-wiki-index"
@@ -24,17 +22,12 @@ export function BadgesPage() {
         key: badge.id,
         path: badge.icon,
         title: badgeLabel(badge.id),
-        note: usage ? `${usage} trang phục` : "Chưa gắn cho trang phục nào",
+        note: usage ? `${usage} trang phục trong tài nguyên` : "Chưa gắn cho trang phục nào trong tài nguyên",
         group: usage ? "used" : "unused",
         tag: usage ? <Badge variant="secondary">{usage}</Badge> : undefined,
         meta: (
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="font-mono text-xs text-muted-foreground">{badge.id}</span>
-            {usage > 0 && (
-              <Button variant="outline" size="sm" asChild>
-                <Link to={`/skins?q=${encodeURIComponent(badge.id)}`}>Xem {usage} trang phục</Link>
-              </Button>
-            )}
           </div>
         ),
       }
@@ -44,7 +37,7 @@ export function BadgesPage() {
   return (
     <Gallery
       title="Bậc trang phục"
-      description="Nhãn bậc (A, S, SS, SSS…) và nhãn sự kiện gắn trên portrait trang phục."
+      description="Nhãn bậc (A, S, SS, SSS…) và nhãn sự kiện trong bộ tài nguyên ảnh. Số lượt dùng phản ánh tài nguyên, không phải danh mục trang phục backend."
       rows={rows}
       groups={GROUPS}
       searchPlaceholder="Tìm bậc: huu han, ss, christmas…"

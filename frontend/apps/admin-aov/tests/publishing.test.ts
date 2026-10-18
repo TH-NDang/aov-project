@@ -13,6 +13,60 @@ import type { Hero } from "../src/lib/api/types"
 import { mediaPath } from "../../../tooling/media-proxy.mts"
 import { wikiRequest, WikiError, wikiErrorMessage } from "../../aov-wiki/src/features/heroes/wiki-api"
 
+test("admin preview maps backend section keys and retains imported head bindings", async () => {
+  const profile = { roles: [], translations: [{ locale: "vi-VN", name: "Airi" }], sources: [] }
+  const bindings = { bindings: { HEAD: "head-asset", PORTRAIT: "portrait-asset", SPLASH: "splash-asset" }, sources: [] }
+  const api = createPublishingApi(
+    async <T>() =>
+      ({
+        revision: { id: "revision", sections: { profile: "profile-section", mediaBindings: "media-section" } },
+        content: {
+          profile,
+          mediaBindings: bindings,
+          skills: { skills: [{ skillKey: "s1", iconAssetId: "skill-asset" }], sources: [] },
+          skins: { skins: [{ skinKey: "skin1", artAssetId: "skin-asset" }], sources: [] },
+        },
+      }) as T,
+  )
+  const preview = await api.read("hero", "revision")
+  assert.equal(preview.content.MEDIA_BINDINGS?.bindings.HEAD, "head-asset")
+  assert.deepEqual(preview.content.PROFILE, profile)
+  assert.equal(preview.revision.sections.MEDIA_BINDINGS, "media-section")
+  assert.equal(preview.content.SKILLS?.skills[0].iconAssetId, "skill-asset")
+  assert.equal(preview.content.SKINS?.skins[0].artAssetId, "skin-asset")
+  assert.equal(preview.content.COMBAT_STATS, null)
+})
+
+test("asset detail resolves the active version URL rather than assuming a list response", async () => {
+  const detail = {
+    id: "skin",
+    semanticType: "HERO_SKIN_ART",
+    state: "ACTIVE",
+    version: 3,
+    currentVersionId: "v2",
+    versions: [
+      { id: "v1", url: "https://media.test/old.webp" },
+      { id: "v2", url: "https://media.test/current.webp" },
+    ],
+    provenance: [
+      {
+        id: "source",
+        versionId: "v2",
+        type: "OFFICIAL",
+        label: "Official art",
+        url: "https://source.test/art",
+        observedAt: null,
+        note: "Original source",
+      },
+    ],
+  }
+  const api = createPublishingApi(async <T>() => detail as T)
+  assert.equal((await api.asset("skin")).currentUrl, "https://media.test/current.webp")
+  assert.deepEqual((await api.asset("skin")).provenance, detail.provenance)
+  detail.currentVersionId = "missing"
+  assert.equal((await api.asset("skin")).currentUrl, null)
+})
+
 test("section replacement matches the strict backend request and uses the latest draft version", async () => {
   const calls: { path: string; body: Record<string, unknown> }[] = []
   const request: Request = async <T>(path: string, init?: RequestInit) => {
@@ -147,4 +201,26 @@ test("quality upgrades activate an asset version without changing hero content",
   assert.equal(calls.at(-1)?.path, "/admin/media/assets/asset/versions/v2/activate")
   assert.deepEqual(calls.at(-1)?.body, { expectedVersion: 12 })
   assert.ok(calls.every((call) => !call.path.includes("/heroes")))
+})
+
+test("image URL download omits credentials and rejects non-image responses", async () => {
+  const { imageFromUrl } = await import("../src/features/publishing/image-url")
+  const original = globalThis.fetch
+  try {
+    globalThis.fetch = async (_url, init) => {
+      assert.equal(init?.credentials, "omit")
+      assert.equal(init?.redirect, "error")
+      assert.equal(init?.referrerPolicy, "no-referrer")
+      return new Response(new Uint8Array([1, 2, 3]), { headers: { "content-type": "image/png" } })
+    }
+    const file = await imageFromUrl("https://images.example.org/hero.png")
+    assert.equal(file.type, "image/png")
+    assert.equal(file.size, 3)
+    await assert.rejects(imageFromUrl("http://images.example.org/hero.png"), /HTTPS/)
+    await assert.rejects(imageFromUrl("https://user:password@images.example.org/hero.png"), /mật khẩu/)
+    globalThis.fetch = async () => new Response("not an image", { headers: { "content-type": "text/html" } })
+    await assert.rejects(imageFromUrl("https://images.example.org/page"), /PNG/)
+  } finally {
+    globalThis.fetch = original
+  }
 })

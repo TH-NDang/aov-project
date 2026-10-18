@@ -1,0 +1,300 @@
+import * as React from "react"
+import { ArrowUpRight, BookOpen, Swords, UserRound, X } from "lucide-react"
+import {
+  createEntityIndex,
+  parseRichText,
+  resolveEntityRoute,
+  safeLinkUrl,
+  safeEntityIconUrl,
+  type EntityReference,
+  type RichTextNode,
+} from "../lib/entity-rich-text"
+import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+
+export interface EntityRichTextProps {
+  text: string
+  entities?: EntityReference[]
+  index?: ReturnType<typeof createEntityIndex>
+  locale: string
+  fallbackLocale?: string
+  autoRecognize?: boolean
+  firstOccurrenceOnly?: boolean
+  icons?: boolean
+  resolveIcon?: EntityIconResolver
+  context: "admin" | "wiki"
+  className?: string
+}
+
+const emptyEntities: EntityReference[] = []
+const kindLabels = { hero: "Tướng", item: "Trang bị", term: "Thuật ngữ" }
+const hexColor = /^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i
+
+export type EntityIconResolver = (entity: EntityReference) => Promise<string | null | undefined>
+
+export function EntityReferenceIcon({
+  entity,
+  resolveIcon,
+  className = "size-4",
+}: {
+  entity: EntityReference
+  resolveIcon?: EntityIconResolver
+  className?: string
+}) {
+  const [resolved, setResolved] = React.useState<string | undefined>(undefined)
+  const [failed, setFailed] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    setResolved(undefined)
+    if (!resolveIcon || !entity.iconAssetId) return
+    let active = true
+    void resolveIcon(entity).then(
+      (value) => {
+        if (active) setResolved(safeEntityIconUrl(value))
+      },
+      () => {},
+    )
+    return () => {
+      active = false
+    }
+  }, [entity.id, entity.kind, entity.iconAssetId, resolveIcon])
+  const icon = safeEntityIconUrl(entity.icon) ?? resolved
+  const Fallback = entity.kind === "hero" ? UserRound : entity.kind === "item" ? Swords : BookOpen
+  return icon && failed !== icon ? (
+    <img
+      src={icon}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      className={`inline shrink-0 rounded-sm bg-muted object-cover align-text-bottom ${className}`}
+      onError={() => setFailed(icon)}
+    />
+  ) : (
+    <span
+      aria-hidden="true"
+      className={`inline-flex shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground align-text-bottom ${className}`}
+      data-slot="entity-icon-placeholder"
+    >
+      <Fallback className="size-[70%]" />
+    </span>
+  )
+}
+
+function renderDescriptionNodes(nodes: RichTextNode[]): React.ReactNode {
+  return nodes.map((node, position) => {
+    if (node.type === "text") return <React.Fragment key={position}>{node.text}</React.Fragment>
+    if (node.type === "reference") return <React.Fragment key={position}>{node.label}</React.Fragment>
+    if (node.type === "strong") return <strong key={position}>{renderDescriptionNodes(node.children)}</strong>
+    if (node.type === "emphasis") return <em key={position}>{renderDescriptionNodes(node.children)}</em>
+    return (
+      <span key={position} style={hexColor.test(node.color) ? { color: node.color } : undefined}>
+        {renderDescriptionNodes(node.children)}
+      </span>
+    )
+  })
+}
+
+function EntityMention({
+  node,
+  locale,
+  context,
+  explicitColor,
+  index,
+  icons,
+  resolveIcon,
+}: {
+  node: Extract<RichTextNode, { type: "reference" }>
+  locale: string
+  context: "admin" | "wiki"
+  explicitColor?: string
+  index: ReturnType<typeof createEntityIndex>
+  icons: boolean
+  resolveIcon?: EntityIconResolver
+}) {
+  const [open, setOpen] = React.useState(false)
+  const trigger = React.useRef<HTMLButtonElement>(null)
+  const content = React.useRef<HTMLDivElement>(null)
+  const closeTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const titleId = React.useId()
+  const descriptionId = React.useId()
+  const suppressFocus = React.useRef(false)
+  React.useEffect(() => () => clearTimeout(closeTimer.current), [])
+  const cancelClose = () => clearTimeout(closeTimer.current)
+  const show = () => {
+    cancelClose()
+    setOpen(true)
+  }
+  const scheduleClose = () => {
+    cancelClose()
+    closeTimer.current = setTimeout(() => {
+      const active = trigger.current?.ownerDocument.activeElement
+      if (active !== trigger.current && !content.current?.contains(active ?? null)) setOpen(false)
+    }, 180)
+  }
+  const entity = node.entity
+  const translation = Array.isArray(entity.translations)
+    ? entity.translations.find((entry) => entry.locale === node.actualLocale)
+    : undefined
+  const description = translation?.description || "Chưa có mô tả cho mục này."
+  const descriptionNodes = React.useMemo(
+    () => (open ? parseRichText(description, index, { autoRecognize: false }) : []),
+    [open, description, index],
+  )
+  const name = translation?.name || node.label
+  const kind = kindLabels[entity.kind] || kindLabels.term
+  const route = safeLinkUrl(resolveEntityRoute(entity, context, locale))
+  const color = explicitColor ?? entity.display?.color
+  const style: React.CSSProperties = {
+    fontWeight: "inherit",
+    fontStyle: "inherit",
+    ...(typeof color === "string" && hexColor.test(color) ? { color } : {}),
+  }
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          ref={trigger}
+          type="button"
+          aria-label={`${kind}: ${node.label}`}
+          className={`inline cursor-pointer rounded-sm decoration-dotted underline-offset-4 hover:bg-accent hover:decoration-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${entity.display?.underline === false ? "" : "underline"}`}
+          style={style}
+          onPointerEnter={(event) => {
+            if (event.pointerType !== "touch") show()
+          }}
+          onPointerLeave={scheduleClose}
+          onFocus={() => {
+            if (!suppressFocus.current) show()
+          }}
+          onBlur={scheduleClose}
+          onClick={(event) => {
+            event.preventDefault()
+            show()
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              cancelClose()
+              setOpen(false)
+              event.preventDefault()
+            }
+          }}
+        >
+          {icons && entity.display?.showIcon !== false && entity.kind !== "term" && (
+            <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="mr-1 size-[1.1em]" />
+          )}
+          {node.label}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        ref={content}
+        align="start"
+        collisionPadding={12}
+        sideOffset={8}
+        className="w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl p-0 break-words shadow-xl"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+        onPointerEnter={cancelClose}
+        onPointerLeave={scheduleClose}
+        onFocusCapture={cancelClose}
+        onBlurCapture={scheduleClose}
+        onEscapeKeyDown={() => {
+          suppressFocus.current = true
+          trigger.current?.focus()
+          queueMicrotask(() => {
+            suppressFocus.current = false
+          })
+        }}
+      >
+        <div className="flex items-start gap-3 border-b bg-muted/30 p-4">
+          <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-11 rounded-lg border" />
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{kind}</div>
+            <div id={titleId} className="font-semibold leading-snug">
+              {name}
+            </div>
+          </div>
+          <button
+            type="button"
+            aria-label={`Đóng thông tin ${name}`}
+            className="-mr-2 -mt-2 flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+            onClick={() => setOpen(false)}
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+        <div className="space-y-3 p-4">
+          {node.actualLocale.toLowerCase() !== locale.toLowerCase() && (
+            <div className="text-xs text-muted-foreground">Ngôn ngữ dự phòng: {node.actualLocale}</div>
+          )}
+          <p
+            id={descriptionId}
+            className="max-h-52 overflow-y-auto whitespace-pre-wrap text-sm leading-6 text-muted-foreground"
+          >
+            {renderDescriptionNodes(descriptionNodes)}
+          </p>
+          {route && (
+            <a
+              href={route}
+              className="flex min-h-10 items-center justify-between gap-3 rounded-md border px-3 text-sm font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              Mở trang {name}
+              <ArrowUpRight className="size-4 shrink-0" aria-hidden="true" />
+            </a>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export function EntityRichText({
+  text,
+  entities = emptyEntities,
+  index,
+  locale,
+  fallbackLocale = "vi-VN",
+  autoRecognize = true,
+  firstOccurrenceOnly = false,
+  icons = true,
+  resolveIcon,
+  context,
+  className,
+}: EntityRichTextProps) {
+  const resolvedIndex = React.useMemo(
+    () => index ?? createEntityIndex(entities, locale, fallbackLocale),
+    [index, entities, locale, fallbackLocale],
+  )
+  const nodes = React.useMemo(
+    () => parseRichText(text, resolvedIndex, { autoRecognize, firstOccurrenceOnly }),
+    [text, resolvedIndex, autoRecognize, firstOccurrenceOnly],
+  )
+  const renderNodes = (items: RichTextNode[], explicitColor?: string): React.ReactNode =>
+    items.map((node, position) => {
+      if (node.type === "text") return <React.Fragment key={position}>{node.text}</React.Fragment>
+      if (node.type === "strong") return <strong key={position}>{renderNodes(node.children, explicitColor)}</strong>
+      if (node.type === "emphasis") return <em key={position}>{renderNodes(node.children, explicitColor)}</em>
+      if (node.type === "color")
+        return (
+          <span key={position} style={hexColor.test(node.color) ? { color: node.color } : undefined}>
+            {renderNodes(node.children, hexColor.test(node.color) ? node.color : explicitColor)}
+          </span>
+        )
+      return (
+        <EntityMention
+          key={`${node.entity.id}-${position}`}
+          node={node}
+          locale={locale}
+          context={context}
+          explicitColor={explicitColor}
+          index={resolvedIndex}
+          icons={icons}
+          resolveIcon={resolveIcon}
+        />
+      )
+    })
+  return (
+    <span className={className} data-slot="entity-rich-text">
+      {renderNodes(nodes)}
+    </span>
+  )
+}

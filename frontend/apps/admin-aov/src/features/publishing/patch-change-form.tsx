@@ -1,3 +1,5 @@
+import { randomId } from "@/lib/random-id"
+import { useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
@@ -9,7 +11,8 @@ const api = createPublishingApi(backendRequest)
 const labels = { STAT: "Chỉ số", SKILL: "Kỹ năng", ROLE: "Vai trò", VISUAL: "Ảnh", MECHANIC: "Cơ chế", OTHER: "Khác" }
 type ChangeType = keyof typeof labels
 export function PatchChangeForm({ revision, locale }: { revision: Revision; locale: string }) {
-  const [rows, setRows] = useState<{ id: string; type: ChangeType }[]>([{ id: crypto.randomUUID(), type: "SKILL" }])
+  const cache = useQueryClient()
+  const [rows, setRows] = useState<{ id: string; type: ChangeType }[]>([{ id: randomId(), type: "SKILL" }])
   const [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState("")
@@ -69,7 +72,11 @@ export function PatchChangeForm({ revision, locale }: { revision: Revision; loca
               summaryTranslations: [{ locale: text("locale"), summary: text("summary") }],
               changes,
             })
-            .then(() => setSaved(true))
+            .then(() => {
+              setSaved(true)
+              void cache.invalidateQueries({ queryKey: ["patch-changes"] })
+              void cache.invalidateQueries({ queryKey: ["publishing-heroes"] })
+            })
             .catch((error) => setError(errorMessage(error)))
             .finally(() => setBusy(false))
         }}
@@ -186,7 +193,7 @@ export function PatchChangeForm({ revision, locale }: { revision: Revision; loca
             <Button
               type="button"
               variant="outline"
-              onClick={() => setRows([...rows, { id: crypto.randomUUID(), type: "SKILL" }])}
+              onClick={() => setRows([...rows, { id: randomId(), type: "SKILL" }])}
             >
               Thêm mục
             </Button>

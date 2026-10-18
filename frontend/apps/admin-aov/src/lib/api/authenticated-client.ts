@@ -33,7 +33,8 @@ export function createAuthenticatedClient(
           (response.status === 401 ? "UNAUTHENTICATED" : response.status === 403 ? "FORBIDDEN" : "HTTP_ERROR"),
       })
     }
-    if (response.status === 204) return undefined as T
-    return response.json() as Promise<T>
+    if (response.status === 204 || response.status === 205) return undefined as T
+    const body = await response.text()
+    return body.trim() ? (JSON.parse(body) as T) : (undefined as T)
   }
 }

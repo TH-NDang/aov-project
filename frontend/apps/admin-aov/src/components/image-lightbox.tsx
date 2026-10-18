@@ -19,10 +19,11 @@ interface ImageLightboxProps {
   images: LightboxImage[]
   index: number | null
   onIndexChange: (index: number | null) => void
+  onCloseAutoFocus?: (event: Event) => void
 }
 
 /** Large preview with keyboard navigation through `images`. */
-export function ImageLightbox({ images, index, onIndexChange }: ImageLightboxProps) {
+export function ImageLightbox({ images, index, onIndexChange, onCloseAutoFocus }: ImageLightboxProps) {
   const { enabled } = useHotkeys()
   const image = index === null ? undefined : images[index]
   const hasPrev = index !== null && index > 0
@@ -40,7 +41,10 @@ export function ImageLightbox({ images, index, onIndexChange }: ImageLightboxPro
 
   return (
     <Dialog open={!!image} onOpenChange={(open) => !open && onIndexChange(null)}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-6xl"
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
         {image && (
           <>
             <DialogHeader>
@@ -51,7 +55,7 @@ export function ImageLightbox({ images, index, onIndexChange }: ImageLightboxPro
               <MediaImage
                 path={image.path}
                 alt={image.title}
-                className="max-h-[60vh] w-auto max-w-full object-contain"
+                className="max-h-[70dvh] w-auto max-w-full object-contain"
                 fallbackClassName="h-64 w-full"
               />
               {hasPrev && (

@@ -83,7 +83,13 @@ export interface Content {
   MEDIA_BINDINGS: Bindings | null
 }
 export type Cause =
-  "GAME_PATCH" | "CONTENT_CORRECTION" | "TRANSLATION" | "IMPORT_CORRECTION" | "VISUAL_UPDATE" | "OTHER"
+  | "DATA_BASELINE"
+  | "GAME_PATCH"
+  | "CONTENT_CORRECTION"
+  | "TRANSLATION"
+  | "IMPORT_CORRECTION"
+  | "VISUAL_UPDATE"
+  | "OTHER"
 export interface Revision {
   id: string
   heroId: string
@@ -105,6 +111,20 @@ export interface HeroRow {
   id: string
   code: string
   revisions: Revision[]
+  lastEditedAt?: string | null
+  gameplayChanges?: HeroGameplayChange[]
+}
+export interface HeroGameplayChange {
+  id: string
+  rulesetId: string
+  seasonId: string | null
+  patchVariantId: string
+  fromHeroRevisionId: string | null
+  toHeroRevisionId: string
+  changeKinds: string[]
+  recordedAt: string
+  summary: string | null
+  actualLocale: string | null
 }
 export interface PageSlice<T> {
   items: T[]
@@ -130,6 +150,18 @@ export interface Asset {
   version: number
   currentVersionId: string | null
   currentUrl: string | null
+}
+export interface AssetProvenance {
+  id: string
+  versionId: string | null
+  type: string
+  label: string
+  url: string | null
+  observedAt: string | null
+  note: string | null
+}
+export interface AssetDetail extends Asset {
+  provenance: AssetProvenance[]
 }
 
 export function publishIssues(content: Content): string[] {

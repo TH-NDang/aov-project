@@ -1,22 +1,68 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useBeforeUnload, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  ArrowLeft,
+  BookOpen,
+  CheckCircle2,
+  FileUp,
+  GitCompareArrows,
+  Languages,
+  MoreHorizontal,
+  Plus,
+  Save,
+  Settings2,
+  X,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
+import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage } from "@/lib/api/errors"
 import type { Hero } from "@/lib/api/types"
-import { createPublishingApi } from "./publishing-api"
+import { languageOptions } from "../users/profile-preference-picker"
+import { createPublishingApi, heroPreviewKey } from "./publishing-api"
+import { BaselineContextForm } from "./baseline-context-form"
+import { HeroContent, localized } from "./hero-content"
+import { HeroCatalog } from "./hero-catalog"
+import { HeroRevisionHistory } from "./hero-revision-history"
+import { HeroTranslationStatus } from "./hero-translation-status"
+import { TranslationEditor, type TranslatableSection } from "./translation-editor"
+import { DataLanguage } from "./data-language"
 import { Box, Field, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
-import { PatchSetup } from "./patch-setup"
 import { SectionEditor, emptySection } from "./section-editor"
+import { ImportContextPicker, type ImportContext } from "./import-context"
+import { CatalogContext, type CatalogFilter } from "./catalog-context"
+import { usePublicationOverview, useContentLocale } from "./publication-overview"
 import { resourceContent } from "./resource-import"
 import { SECTIONS, publishIssues, type Cause, type Content, type Preview, type Revision, type Section } from "./types"
+import { heroLocationId, readHeroLocation, type HeroWorkspaceView } from "./hero-location"
+import { useHeroLocation } from "./use-hero-location"
+import { HeroNavigationGuard } from "./hero-navigation-guard"
+import { useLocalDraft } from "@/app/drafts/use-local-draft"
+import { DraftStatus } from "@/app/drafts/draft-status"
+import {
+  dirtyHeroSections,
+  emptyHeroContent,
+  heroWorkingConflict,
+  heroWorkingSchema,
+  mergeHeroWorkingCopy,
+  type HeroWorkingCopy,
+} from "./hero-working-copy"
+
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = {
+  DATA_BASELINE: "Mốc dữ liệu đã biết",
   CONTENT_CORRECTION: "Sửa nội dung",
   GAME_PATCH: "Cập nhật gameplay",
   TRANSLATION: "Bản dịch",
@@ -24,43 +70,64 @@ const CAUSES: Record<Cause, string> = {
   VISUAL_UPDATE: "Thay artwork",
   OTHER: "Khác",
 }
+const STATES = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
 
-export function PublishingPage() {
+export function PublishingPage({ translationMode = false }: { translationMode?: boolean }) {
   const { heroId = "" } = useParams()
-  return <PublishingWorkspace key={heroId} heroId={heroId} />
+  return <PublishingWorkspace key={`${heroId}:${translationMode}`} heroId={heroId} translationMode={translationMode} />
 }
 
-function PublishingWorkspace({ heroId }: { heroId: string }) {
+export function PublishingWorkspace({
+  heroId,
+  revisionId,
+  onUnsavedChange,
+  translationMode = false,
+}: {
+  heroId: string
+  revisionId?: string
+  onUnsavedChange?: (unsafe: boolean, busy?: boolean) => void
+  translationMode?: boolean
+}) {
   const queryClient = useQueryClient()
   const capabilities = useSession().actor?.capabilities ?? []
   const canWrite = capabilities.includes("hero:write")
   const canPublish = capabilities.includes("hero:publish")
-  const [page, setPage] = useState(0)
-  const [ruleset, setRuleset] = useState("")
-  const [locale, setLocale] = useState("vi-VN")
-  const [selectedId, setSelectedId] = useState("")
-  const [preview, setPreview] = useState<Preview | null>(null)
-  const [section, setSection] = useState<Section>("PROFILE")
-  const [dirty, setDirty] = useState<Set<Section>>(new Set())
+  const { params: urlParams, update: updateLocation } = useHeroLocation()
+  const requestedRevision = revisionId ?? heroLocationId(urlParams.get("revision"))
+  const [selectedId, setSelectedId] = useState(requestedRevision)
+  const [editing, setEditing] = useState(false)
+  const [managementOpen, setManagementOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
-  const [note, setNote] = useState("")
-  const [cause, setCause] = useState<Cause>("CONTENT_CORRECTION")
-  const [variant, setVariant] = useState("")
+  const [cause, setCause] = useState<Cause>(translationMode ? "TRANSLATION" : "CONTENT_CORRECTION")
+  const [importContext, setImportContext] = useState<ImportContext | null>(null)
   const [resourceId, setResourceId] = useState("")
   const [showResources, setShowResources] = useState(false)
-  const [showContext, setShowContext] = useState(false)
+  const filter: CatalogFilter = {
+    seasonId: heroLocationId(urlParams.get("season")),
+    variantId: heroLocationId(urlParams.get("patch")),
+  }
+  const setFilter = (next: CatalogFilter) => updateLocation({ season: next.seasonId, patch: next.variantId })
+  const editorRef = useRef<HTMLDivElement>(null)
+  const managementRef = useRef<HTMLDivElement>(null)
+  const overview = usePublicationOverview()
+  const displayLocale = useContentLocale()
+  const location = readHeroLocation(urlParams, translationMode, displayLocale)
+  const { view, section, targetLocale, sourceLocale } = location
+  const setSection = (value: Section) => updateLocation({ section: value })
+  const setContentLocale = (value: string) => updateLocation({ readLocale: value })
+  const setTargetLocale = (value: string) => updateLocation({ target: value })
+  const setSourceLocale = (value: string) => updateLocation({ source: value })
   const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets })
   const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions })
-  const heroes = useQuery({ queryKey: ["publishing-heroes", page], queryFn: () => api.heroes(page) })
   const revisions = useQuery({
     queryKey: ["publishing-revisions", heroId],
     queryFn: () => api.revisions(heroId),
     enabled: !!heroId,
   })
   const read = useQuery({
-    queryKey: ["publishing-preview", heroId, selectedId],
+    queryKey: heroPreviewKey(heroId, selectedId),
     queryFn: () => api.read(heroId, selectedId),
     enabled: !!heroId && !!selectedId,
     staleTime: Infinity,
@@ -69,46 +136,82 @@ function PublishingWorkspace({ heroId }: { heroId: string }) {
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
   })
+  const initialCopy: HeroWorkingCopy = { content: read.data?.content ?? emptyHeroContent, notes: {} }
+  const localDraft = useLocalDraft({
+    form: `hero:${heroId}:${selectedId}`,
+    initialValue: initialCopy,
+    baseVersion: read.data?.revision.version ?? null,
+    schema: heroWorkingSchema,
+    enabled: !!heroId && !!selectedId && !!read.data && canWrite && read.data.revision.state === "DRAFT",
+    hasConflict: heroWorkingConflict,
+    merge: mergeHeroWorkingCopy,
+  })
+  const preview: Preview | null = read.data ? { ...read.data, content: localDraft.value.content } : null
+  const dirty = new Set(dirtyHeroSections(localDraft.value, initialCopy))
+  const note = localDraft.value.notes[section] ?? ""
+  const setNote = (value: string) => {
+    const notes = { ...localDraft.value.notes }
+    if (value) notes[section] = value
+    else delete notes[section]
+    localDraft.update({ ...localDraft.value, notes })
+  }
   const resources = useQuery({
     queryKey: ["publishing-resources"],
     queryFn: async () => {
       const response = await fetch("/__resources/data/heroes.json", { cache: "no-store" })
       if (!response.ok || !response.headers.get("content-type")?.includes("application/json"))
-        throw new Error("Nhập tài nguyên cần Vite dev/preview và thư mục resources/Lien-Quan-v3.")
+        throw new Error("Resource import requires the Vite resource endpoint.")
       return ((await response.json()) as { heroes: Hero[] }).heroes
     },
     enabled: showResources,
   })
-  const resource = resources.data?.find((h) => h.id === resourceId)
+  const resource = resources.data?.find((hero) => hero.id === resourceId)
+  const revision = preview?.revision
+  const writable = canWrite && revision?.state === "DRAFT"
+  const translating = view === "translations"
+  const locale = translating ? targetLocale : location.readLocale
+  const issues = preview ? publishIssues(preview.content) : []
+
   useEffect(() => {
-    setSelectedId("")
-    setPreview(null)
-    setDirty(new Set())
+    if (requestedRevision === selectedId) return
+    setSelectedId(requestedRevision)
+    setEditing(false)
     setResourceId("")
     setError("")
-  }, [heroId])
+  }, [heroId, requestedRevision])
   useEffect(() => {
-    if (!selectedId && revisions.data?.length) {
-      const candidates = revisions.data.filter((r) => !ruleset || r.rulesetId === ruleset)
+    if (!selectedId && !requestedRevision && revisions.data?.length) {
       const chosen =
-        candidates.find((r) => r.state === "DRAFT") ?? candidates.find((r) => r.state === "PUBLISHED") ?? candidates[0]
-      if (chosen) setSelectedId(chosen.id)
+        revisions.data.find((row) => row.state === "DRAFT") ??
+        revisions.data.find((row) => row.state === "PUBLISHED") ??
+        revisions.data[0]
+      if (chosen) {
+        setSelectedId(chosen.id)
+        updateLocation({ revision: chosen.id })
+      }
     }
-  }, [revisions.data, ruleset, selectedId])
+  }, [revisions.data, selectedId, requestedRevision])
   useEffect(() => {
-    if (read.data && !dirty.size && !busy) {
-      setPreview(structuredClone(read.data))
-      setDirty(new Set())
+    onUnsavedChange?.(busy, busy)
+  }, [busy, onUnsavedChange])
+  useEffect(() => {
+    if (editing) {
+      editorRef.current?.focus({ preventScroll: true })
+      editorRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
     }
-  }, [read.data])
+  }, [editing])
+  useEffect(() => {
+    if (managementOpen) managementRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+  }, [managementOpen])
   useBeforeUnload((event) => {
-    if (dirty.size || busy) {
+    if (busy) {
       event.preventDefault()
       event.returnValue = ""
     }
   })
-  const revision = preview?.revision
-  const writable = canWrite && revision?.state === "DRAFT"
+  const canLeave = () => !busy
+  usePageCloseGuard(canLeave, !!heroId && !onUnsavedChange)
+
   async function run(action: () => Promise<unknown>, success: string) {
     setBusy(true)
     setError("")
@@ -117,383 +220,675 @@ function PublishingWorkspace({ heroId }: { heroId: string }) {
       await action()
       setMessage(success)
       await queryClient.invalidateQueries({ queryKey: ["publishing-heroes"] })
+      await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
       await revisions.refetch()
-    } catch (error) {
-      setError(errorMessage(error))
+    } catch (failure) {
+      setError(errorMessage(failure))
     } finally {
       setBusy(false)
     }
   }
-  async function openRevision(r: Revision) {
-    const data = await api.read(r.heroId, r.id)
-    queryClient.setQueryData(["publishing-preview", r.heroId, r.id], data)
-    setPreview(data)
-    setSelectedId(r.id)
-    setDirty(new Set())
+  async function openRevision(next: Revision) {
+    const data = await api.read(next.heroId, next.id)
+    queryClient.setQueryData(["publishing-preview", next.heroId, next.id], data)
+    setSelectedId(next.id)
+    updateLocation({ revision: next.id, compare: null, changes: null })
+    setEditing(false)
   }
-  const update = (value: NonNullable<Content[Section]>) => {
-    if (!preview) return
-    setPreview((current) => (current ? { ...current, content: { ...current.content, [section]: value } } : current))
-    setDirty((current) => new Set([...current, section]))
+  function update(value: NonNullable<Content[Section]>) {
+    localDraft.update({ ...localDraft.value, content: { ...localDraft.value.content, [section]: value } })
   }
+  function switchView(next: HeroWorkspaceView) {
+    if (busy) return
+    updateLocation({
+      view: next,
+      ...(next === "translations" && !["PROFILE", "SKILLS", "SKINS"].includes(section) ? { section: "PROFILE" } : {}),
+    })
+    setEditing(false)
+  }
+  function cancelSection() {
+    const notes = { ...localDraft.value.notes }
+    delete notes[section]
+    localDraft.update({
+      content: { ...localDraft.value.content, [section]: structuredClone(read.data?.content[section]) },
+      notes,
+    })
+    setEditing(false)
+    setError("")
+  }
+  async function refresh() {
+    if (!canLeave()) return
+    await run(async () => {
+      const fresh = await api.read(heroId, selectedId)
+      queryClient.setQueryData(["publishing-preview", heroId, selectedId], fresh)
+      setEditing(false)
+    }, "Đã tải phiên bản mới nhất.")
+  }
+
   return (
-    <Page>
-      <PageHeader
-        title="Biên tập và xuất bản tướng"
-        description="Draft, lịch sử phiên bản và dữ liệu công khai từ wiki-service."
-        actions={
-          <Button variant="outline" onClick={() => setShowContext(!showContext)}>
-            Gameplay context
-          </Button>
-        }
-      />
-      {showContext && <PatchSetup rulesets={rulesets.data ?? []} regions={regions.data ?? []} />}
-      {[rulesets.error, regions.error, heroes.error, revisions.error, read.error].filter(Boolean).map((error, i) => (
-        <p key={i} role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
-          {errorMessage(error)}
+    <Page className={`@container min-w-0 ${heroId ? "mx-auto w-full max-w-6xl" : ""}`}>
+      {!onUnsavedChange && <HeroNavigationGuard unsafe={busy} busy={busy} />}
+      {!heroId ? (
+        <PageHeader
+          title="Tướng"
+          actions={
+            canWrite ? (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/publishing/import">
+                    <FileUp className="size-4" />
+                    Import
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/publishing/new">
+                    <Plus className="size-4" />
+                    Tạo tướng
+                  </Link>
+                </Button>
+              </>
+            ) : undefined
+          }
+        />
+      ) : (
+        <header className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
+              {!onUnsavedChange && (
+                <Button variant="ghost" size="icon" asChild>
+                  <Link
+                    to="/publishing"
+                    aria-label="Danh sách tướng"
+                    onClick={(event) => {
+                      if (!canLeave()) event.preventDefault()
+                    }}
+                  >
+                    <ArrowLeft className="size-4" />
+                  </Link>
+                </Button>
+              )}
+              <div className="min-w-0">
+                <h1 className="truncate text-lg font-semibold">
+                  {localized(preview?.content.PROFILE?.translations, displayLocale)?.name || "Hồ sơ tướng"}
+                </h1>
+                <p className="text-xs text-muted-foreground">{revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}</p>
+              </div>
+              {revision && (
+                <Badge variant={revision.state === "DRAFT" ? "secondary" : "outline"}>{STATES[revision.state]}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {revision && (
+                <label className="flex items-center gap-2 text-sm">
+                  <span className="sr-only">Phiên bản dữ liệu</span>
+                  <select
+                    aria-label="Phiên bản dữ liệu"
+                    className={`${control} max-w-60`}
+                    value={selectedId}
+                    disabled={busy}
+                    onChange={(event) => {
+                      setSelectedId(event.target.value)
+                      updateLocation({ revision: event.target.value, compare: null, changes: null })
+                      setEditing(false)
+                    }}
+                  >
+                    {revisions.data?.map((row) => (
+                      <option key={row.id} value={row.id}>
+                        Bản #{row.revisionNo} · {STATES[row.state]}
+                        {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
+                          ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label="Thao tác tướng">
+                    <MoreHorizontal className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => setManagementOpen(true)}>
+                    <Settings2 />
+                    Quản lý phiên bản & xuất bản
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled={busy} onSelect={() => void refresh()}>
+                    Tải dữ liệu mới nhất
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <div className="flex gap-1 overflow-x-auto border-b" role="tablist" aria-label="Không gian quản lý tướng">
+            {(
+              [
+                ["overview", BookOpen, "Thông tin tướng"],
+                ["translations", Languages, "Bản dịch"],
+                ["history", GitCompareArrows, "Lịch sử & so sánh"],
+              ] as const
+            ).map(([key, Icon, label]) => (
+              <Button
+                key={key}
+                role="tab"
+                aria-selected={view === key}
+                aria-controls={`workspace-${key}`}
+                disabled={busy}
+                variant="ghost"
+                className={`shrink-0 rounded-b-none border-b-2 ${view === key ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+                onClick={() => switchView(key)}
+              >
+                <Icon className="size-4" />
+                {label}
+              </Button>
+            ))}
+          </div>
+        </header>
+      )}
+      {[rulesets.error, regions.error, revisions.error, read.error].filter(Boolean).map((failure, index) => (
+        <p key={index} role="alert" className="rounded-xl border border-destructive/30 p-4 text-sm text-destructive">
+          {errorMessage(failure)}
         </p>
       ))}
       {error && (
-        <div role="alert" className="space-y-2 rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
+        <div role="alert" className="space-y-1 rounded-xl border border-destructive/30 p-4 text-sm text-destructive">
           <p>{error}</p>
-          <p>
-            Bản đang sửa được giữ nguyên. Nếu có xung đột phiên bản, dùng “Bỏ chỉnh sửa và tải bản mới”, rồi nhập lại
-            phần thay đổi.
-          </p>
+          <p>Phần đang sửa vẫn được giữ lại. Nếu có xung đột, hủy chỉnh sửa nhóm này rồi tải dữ liệu mới nhất.</p>
         </div>
       )}
       {message && (
-        <p role="status" className="rounded-lg border border-emerald-500/30 p-3 text-sm">
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm"
+        >
+          <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
           {message}
         </p>
       )}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="grid gap-1 text-sm">
-          Ruleset
-          <select
-            className={control}
-            value={ruleset}
-            disabled={dirty.size > 0 || busy}
-            onChange={(e) => {
-              setRuleset(e.target.value)
-              setSelectedId("")
-              setPreview(null)
-            }}
-          >
-            <option value="">Tất cả ruleset</option>
-            {rulesets.data?.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.code}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Field label="Ngôn ngữ nhập mới" value={locale} onChange={setLocale} />
-      </div>
       {!heroId ? (
         <>
-          {canWrite && (
-            <Box title="Tạo tướng">
-              <form
-                className="grid items-end gap-3 sm:grid-cols-3"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const f = new FormData(e.currentTarget)
-                  void run(async () => {
-                    const r = await api.create(String(f.get("code")), String(f.get("name")), locale, ruleset)
-                    setMessage(`Đã tạo draft ${r.id}`)
-                  }, "Đã tạo tướng. Mở tướng bên dưới để nhập nội dung.")
-                }}
-              >
-                <label className="grid gap-1 text-sm">
-                  Mã tướng
-                  <input className={control} name="code" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required />
-                </label>
-                <label className="grid gap-1 text-sm">
-                  Tên tướng
-                  <input className={control} name="name" required />
-                </label>
-                <Button disabled={!ruleset || busy}>Tạo draft</Button>
-              </form>
-              {!ruleset && (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  Chọn ruleset trước khi tạo. Nếu chưa có ruleset, mở Gameplay context.
-                </p>
-              )}
-            </Box>
+          {overview.data ? (
+            <CatalogContext data={overview.data} value={filter} onChange={setFilter} />
+          ) : (
+            <p role={overview.error ? "alert" : "status"}>
+              {overview.error ? errorMessage(overview.error) : "Đang tải mùa và patch…"}
+            </p>
           )}
-          <Box title="Danh mục backend">
-            {heroes.isPending ? (
-              <p role="status">Đang tải…</p>
-            ) : !heroes.data?.items.length ? (
-              <p>Chưa có tướng trong backend. Tạo draft để bắt đầu nhập dữ liệu.</p>
-            ) : (
-              <ul className="divide-y">
-                {heroes.data.items.map((h) => (
-                  <li key={h.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                    <Link className="font-medium underline underline-offset-4" to={`/publishing/${h.id}`}>
-                      {h.code}
-                    </Link>
-                    <div className="flex gap-2">
-                      {h.revisions
-                        .filter((r) => !ruleset || r.rulesetId === ruleset)
-                        .map((r) => (
-                          <Badge key={r.id} variant={r.state === "PUBLISHED" ? "default" : "outline"}>
-                            #{r.revisionNo} {r.state}
-                          </Badge>
-                        ))}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" disabled={!page || busy} onClick={() => setPage(page - 1)}>
-                Trước
-              </Button>
-              <span>Trang {page + 1}</span>
-              <Button
-                variant="outline"
-                disabled={!heroes.data || (page + 1) * 20 >= heroes.data.totalElements || busy}
-                onClick={() => setPage(page + 1)}
-              >
-                Sau
-              </Button>
-            </div>
-          </Box>
+          <HeroCatalog ruleset="" locale={displayLocale} overview={overview.data} filter={filter} />
         </>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button variant="outline" asChild>
-              <Link to="/publishing">Danh mục backend</Link>
-            </Button>
-            <label className="flex min-w-60 flex-1 items-center gap-2 text-sm">
-              Phiên bản
-              <select
-                className={control}
-                value={selectedId}
-                disabled={!!dirty.size || busy}
-                onChange={(e) => {
-                  setPreview(null)
-                  setSelectedId(e.target.value)
-                }}
-              >
-                {revisions.data
-                  ?.filter((r) => !ruleset || r.rulesetId === ruleset)
-                  .map((r) => (
-                    <option key={r.id} value={r.id}>
-                      #{r.revisionNo} · {r.state} · v{r.version} ·{" "}
-                      {rulesets.data?.find((s) => s.id === r.rulesetId)?.code}
-                    </option>
-                  ))}
-              </select>
-            </label>
-          </div>
-          {(read.isFetching || revisions.isPending) && <p role="status">Đang tải phiên bản…</p>}
+          {(read.isFetching || revisions.isPending) && !preview && (
+            <div
+              role="status"
+              className="flex min-h-48 items-center justify-center rounded-xl border bg-muted/20 text-sm text-muted-foreground"
+            >
+              Đang tải hồ sơ tướng…
+            </div>
+          )}
           {preview && revision && (
             <>
-              <Box title={`Phiên bản #${revision.revisionNo}`}>
-                <div className="flex flex-wrap gap-2">
-                  <Badge>{revision.state}</Badge>
-                  <Badge variant="outline">v{revision.version}</Badge>
-                  <span className="text-sm">{CAUSES[revision.cause]}</span>
+              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span>
+                  {rulesets.data?.find((row) => row.id === revision.rulesetId)?.code || "Bộ quy tắc gameplay"} · Bản #
+                  {revision.revisionNo}
+                  {dirty.size ? ` · ${dirty.size} nhóm chưa lưu` : ""}
+                </span>
+                {!translating && !editing && (
+                  <label className="flex items-center gap-2">
+                    <Languages className="size-3.5" />
+                    <span className="sr-only">Ngôn ngữ hiển thị nội dung</span>
+                    <select
+                      aria-label="Ngôn ngữ hiển thị nội dung"
+                      className="max-w-44 rounded-md border bg-background px-2 py-1.5 text-xs"
+                      value={locale}
+                      disabled={busy}
+                      onChange={(event) => setContentLocale(event.target.value)}
+                    >
+                      {languageOptions.map((option) => (
+                        <option value={option.value} key={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+              {writable && <DraftStatus draft={localDraft} disabled={busy} />}
+              {revision.state !== "DRAFT" && (editing || translating) && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-4 text-sm">
+                  <p>Đang xem bản chỉ đọc. Tạo bản nháp để chỉnh sửa hoặc thêm bản dịch.</p>
+                  {canWrite && (
+                    <Button variant="outline" onClick={() => setManagementOpen(true)}>
+                      Tạo bản nháp
+                    </Button>
+                  )}
                 </div>
-                <p className="break-all font-mono text-xs text-muted-foreground">
-                  {heroId} / {revision.id}
-                </p>
-                {revision.state === "PUBLISHED" && canWrite && (
-                  <form
-                    className="grid items-end gap-3 sm:grid-cols-3"
-                    onSubmit={(e) => {
-                      e.preventDefault()
-                      void run(
-                        async () =>
-                          openRevision(await api.fork(revision, cause, cause === "GAME_PATCH" ? variant : null)),
-                        "Đã tạo draft kế thừa các section.",
-                      )
+              )}
+              <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
+                {view === "overview" && !editing && (
+                  <HeroContent
+                    content={preview.content}
+                    locale={locale}
+                    editable={!!writable}
+                    busy={busy}
+                    tab={location.tab}
+                    onTabChange={(tab) => updateLocation({ tab })}
+                    onEdit={(next) => {
+                      setSection(next)
+                      setEditing(true)
+                      setError("")
+                      setMessage("")
                     }}
+                  />
+                )}
+                {translating && (
+                  <HeroTranslationStatus
+                    content={preview.content}
+                    selectedLocale={targetLocale}
+                    disabled={busy}
+                    onSelect={(next) => {
+                      updateLocation({
+                        target: next,
+                        source:
+                          sourceLocale === next
+                            ? languageOptions.find((option) => option.value !== next)!.value
+                            : sourceLocale,
+                        section: "PROFILE",
+                      })
+                      setError("")
+                    }}
+                  />
+                )}
+                {view === "history" && (
+                  <HeroRevisionHistory
+                    heroId={heroId}
+                    revision={revision}
+                    revisions={revisions.data ?? []}
+                    locale={locale}
+                    content={preview.content}
+                    disabled={busy}
+                    onOpenRevision={(next) => void run(() => openRevision(next), "Đã mở phiên bản.")}
+                  />
+                )}
+                {(editing || translating) && (
+                  <div
+                    ref={editorRef}
+                    tabIndex={-1}
+                    className="scroll-mt-4 space-y-4 outline-none"
+                    role="region"
+                    aria-label="Chỉnh sửa nội dung"
                   >
-                    <label className="grid gap-1 text-sm">
-                      Lý do tạo bản mới
-                      <select className={control} value={cause} onChange={(e) => setCause(e.target.value as Cause)}>
-                        {Object.entries(CAUSES).map(([key, label]) => (
-                          <option key={key} value={key}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    {cause === "GAME_PATCH" && (
-                      <Field label="Patch variant ID" required value={variant} onChange={setVariant} />
+                    {!translating && (
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>
+                          <ArrowLeft className="size-4" />
+                          Xem hồ sơ
+                        </Button>
+                        <Badge variant="outline">Chỉnh sửa bản nháp</Badge>
+                      </div>
                     )}
-                    <Button disabled={busy}>Tạo draft từ bản này</Button>
-                  </form>
-                )}
-                {revision.state === "PUBLISHED" && (
-                  <a
-                    className="inline-block text-sm underline"
-                    href={`${import.meta.env.VITE_WIKI_URL || "http://localhost:5173"}/?hero=${heroId}&region=VN&locale=${encodeURIComponent(locale)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Xem trên wiki (bản đang hiệu lực tại VN)
-                  </a>
-                )}
-              </Box>
-              {writable && (
-                <Box title="Nhập từ tài nguyên">
-                  <Button variant="outline" onClick={() => setShowResources(!showResources)}>
-                    {showResources ? "Đóng danh mục" : "Mở danh mục resources"}
-                  </Button>
-                  {showResources && (
-                    <div className="space-y-3">
-                      {resources.isError && <p role="alert">{errorMessage(resources.error)}</p>}
-                      <label className="grid gap-1 text-sm">
-                        Tướng nguồn
-                        <select className={control} value={resourceId} onChange={(e) => setResourceId(e.target.value)}>
-                          <option value="">Chọn tướng để đối chiếu</option>
-                          {resources.data?.map((h) => (
-                            <option value={h.id} key={h.id}>
-                              {h.name} · {h.id}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      {resource && (
-                        <>
-                          <p className="text-sm text-muted-foreground">
-                            Chỉ nhập tên, kỹ năng và danh sách trang phục đã ghi nhận. Nội dung thiếu vẫn để trống; bạn
-                            cần bổ sung vai trò và mô tả trước khi lưu. Ảnh được chọn trong từng section, chưa tự tải
-                            hàng loạt.
-                          </p>
-                          <Button
-                            disabled={busy || !!dirty.size}
-                            onClick={() => {
-                              setPreview({
-                                ...preview,
-                                content: { ...preview.content, ...resourceContent(resource, locale) },
-                              })
-                              setDirty(new Set(["PROFILE", "SKILLS", "SKINS"]))
-                            }}
+                    {translating && (
+                      <fieldset
+                        disabled={busy}
+                        className="grid gap-4 rounded-xl border bg-card p-4 @min-[600px]:grid-cols-2"
+                      >
+                        <label className="grid gap-2 text-sm">
+                          <span className="flex items-center gap-2">
+                            <BookOpen className="size-4 text-muted-foreground" />
+                            Ngôn ngữ nguồn
+                          </span>
+                          <select
+                            aria-label="Ngôn ngữ nguồn"
+                            className={control}
+                            value={sourceLocale}
+                            onChange={(event) => setSourceLocale(event.target.value)}
                           >
-                            Điền vào biểu mẫu
+                            {languageOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <DataLanguage value={targetLocale} onChange={setTargetLocale} />
+                        {sourceLocale === locale && (
+                          <p role="status" className="text-sm text-amber-600 @min-[600px]:col-span-2">
+                            Chọn ngôn ngữ đích khác nguồn để bắt đầu biên dịch.
+                          </p>
+                        )}
+                      </fieldset>
+                    )}
+                    <div className="flex gap-1 overflow-x-auto" aria-label="Các phần nội dung">
+                      {SECTIONS.filter(([key]) => !translating || ["PROFILE", "SKILLS", "SKINS"].includes(key)).map(
+                        ([key, , label]) => (
+                          <Button
+                            key={key}
+                            type="button"
+                            disabled={busy}
+                            className="shrink-0"
+                            variant={section === key ? "secondary" : "ghost"}
+                            onClick={() => setSection(key)}
+                          >
+                            {label}
+                            {dirty.has(key) && (
+                              <span className="size-1.5 rounded-full bg-amber-500" aria-label="Chưa lưu" />
+                            )}
                           </Button>
-                        </>
+                        ),
                       )}
                     </div>
-                  )}
-                </Box>
-              )}
-              <div className="flex flex-wrap gap-2" aria-label="Các phần nội dung">
-                {SECTIONS.map(([key, , label]) => (
-                  <Button key={key} variant={section === key ? "default" : "outline"} onClick={() => setSection(key)}>
-                    {label}
-                    {dirty.has(key) ? " *" : ""}
-                  </Button>
-                ))}
+                    <Box title={SECTIONS.find((row) => row[0] === section)![2]}>
+                      <form
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          void run(async () => {
+                            const value = preview.content[section] ?? emptySection(section, locale)
+                            const next = await api.save(revision, section, value, note)
+                            const saved = await api.read(heroId, revision.id)
+                            queryClient.setQueryData(["publishing-preview", heroId, revision.id], saved)
+                            const notes = { ...localDraft.value.notes }
+                            delete notes[section]
+                            localDraft.rebase(
+                              { content: { ...preview.content, [section]: saved.content[section] }, notes },
+                              { content: saved.content, notes: {} },
+                              next.version,
+                            )
+                            if (!translating) setEditing(false)
+                          }, "Đã lưu nội dung vào bản nháp.")
+                        }}
+                      >
+                        <fieldset
+                          disabled={
+                            !writable ||
+                            busy ||
+                            !localDraft.ready ||
+                            localDraft.invalid ||
+                            localDraft.conflict ||
+                            read.isFetching ||
+                            (translating && sourceLocale === locale)
+                          }
+                          className="space-y-5"
+                        >
+                          {translating ? (
+                            <TranslationEditor
+                              section={section as TranslatableSection}
+                              value={
+                                (preview.content[section] ?? emptySection(section, locale)) as NonNullable<
+                                  Content[TranslatableSection]
+                                >
+                              }
+                              sourceLocale={sourceLocale}
+                              targetLocale={locale}
+                              onChange={update}
+                            />
+                          ) : (
+                            <SectionEditor
+                              section={section}
+                              value={preview.content[section]}
+                              locale={locale}
+                              onChange={update}
+                              resource={resource}
+                            />
+                          )}
+                          <Field label="Ghi chú thay đổi" value={note} onChange={setNote} />
+                          {writable && (
+                            <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-card/95 px-4 py-3 backdrop-blur-sm md:-mx-6 md:px-6">
+                              <p className="text-xs text-muted-foreground">
+                                {dirty.has(section) ? "Có thay đổi chưa lưu" : "Chưa có thay đổi trong nhóm này"}
+                              </p>
+                              <div className="flex gap-2">
+                                <Button type="button" variant="outline" onClick={cancelSection}>
+                                  <X className="size-4" />
+                                  <span className="hidden sm:inline">Hủy chỉnh sửa nhóm này</span>
+                                  <span className="sm:hidden">Hủy</span>
+                                </Button>
+                                <Button disabled={!dirty.has(section)}>
+                                  <Save className="size-4" />
+                                  {busy ? "Đang lưu…" : "Lưu phần này"}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </fieldset>
+                      </form>
+                    </Box>
+                  </div>
+                )}
               </div>
-              <Box title={SECTIONS.find((s) => s[0] === section)![2]}>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault()
-                    void run(async () => {
-                      const next = await api.save(
-                        revision,
-                        section,
-                        preview.content[section] ?? emptySection(section, locale),
-                        note,
-                      )
-                      queryClient.setQueryData(
-                        ["publishing-preview", heroId, revision.id],
-                        await api.read(heroId, revision.id),
-                      )
-                      setPreview({
-                        ...preview,
-                        revision: next,
-                        content: {
-                          ...preview.content,
-                          [section]: preview.content[section] ?? emptySection(section, locale),
-                        },
-                      })
-                      setDirty(new Set([...dirty].filter((s) => s !== section)))
-                    }, "Đã lưu section vào draft.")
-                  }}
+              {managementOpen && (
+                <section
+                  ref={managementRef}
+                  className="scroll-mt-4 space-y-5 rounded-2xl border bg-muted/10 p-4 @min-[650px]:p-6"
+                  aria-label="Quản lý phiên bản"
                 >
-                  <fieldset disabled={!writable || busy || read.isFetching} className="space-y-4">
-                    <SectionEditor
-                      section={section}
-                      value={preview.content[section]}
-                      locale={locale}
-                      onChange={update}
-                      resource={resource}
-                    />
-                    <Field label="Ghi chú thay đổi" value={note} onChange={setNote} />
-                    {writable && <Button>Lưu phần này</Button>}
-                  </fieldset>
-                </form>
-              </Box>
-              {revision.state === "PUBLISHED" &&
-                revision.cause === "GAME_PATCH" &&
-                revision.effectiveFromPatchVariantId &&
-                capabilities.includes("patch:write") && (
-                  <PatchChangeForm key={revision.id} revision={revision} locale={locale} />
-                )}
-              <Box title="Kiểm tra trước khi xuất bản">
-                <ul className="list-inside list-disc space-y-1 text-sm">
-                  {publishIssues(preview.content).map((issue) => (
-                    <li key={issue}>{issue}</li>
-                  ))}
-                </ul>
-                {!publishIssues(preview.content).length && (
-                  <p className="text-sm">
-                    Đã có đủ sáu phần. Backend sẽ kiểm tra chi tiết dữ liệu và media khi publish.
-                  </p>
-                )}
-                {dirty.size > 0 && (
-                  <p className="text-sm text-amber-600">
-                    Còn {dirty.size} phần chưa lưu. Lưu từng phần trước khi publish.
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-3">
-                  {revision.state === "DRAFT" && canPublish && (
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 className="font-semibold">Quản lý phiên bản</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Bản #{revision.revisionNo} · {STATES[revision.state]} · {CAUSES[revision.cause]}
+                      </p>
+                    </div>
                     <Button
-                      disabled={busy || !!dirty.size || !!publishIssues(preview.content).length}
-                      onClick={() =>
-                        void run(
-                          async () => openRevision(await api.publish(revision, note)),
-                          "Đã publish. Wiki sẽ hiện bản mới khi gameplay context có hiệu lực.",
-                        )
-                      }
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Đóng quản lý phiên bản"
+                      onClick={() => setManagementOpen(false)}
                     >
-                      Publish tướng
+                      <X className="size-4" />
                     </Button>
+                  </div>
+                  {revision.state === "PUBLISHED" && canWrite && (
+                    <Box title="Tạo bản nháp kế thừa">
+                      <form
+                        className="space-y-4"
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          void run(async () => {
+                            await openRevision(
+                              await api.fork(
+                                revision,
+                                cause,
+                                cause === "GAME_PATCH" ? (importContext?.patchVariantId ?? null) : null,
+                              ),
+                            )
+                            setManagementOpen(false)
+                          }, "Đã tạo bản nháp từ phiên bản đã chọn.")
+                        }}
+                      >
+                        <label className="grid gap-2 text-sm">
+                          Loại thay đổi
+                          <select
+                            className={control}
+                            value={cause}
+                            onChange={(event) => setCause(event.target.value as Cause)}
+                          >
+                            {Object.entries(CAUSES)
+                              .filter(([key]) => key !== "DATA_BASELINE")
+                              .map(([key, label]) => (
+                                <option value={key} key={key}>
+                                  {label}
+                                </option>
+                              ))}
+                          </select>
+                        </label>
+                        {cause === "GAME_PATCH" && (
+                          <>
+                            <ImportContextPicker
+                              regions={regions.data ?? []}
+                              value={importContext}
+                              onChange={setImportContext}
+                              disabled={busy}
+                              locale={locale}
+                              onLocaleChange={translating ? setTargetLocale : setContentLocale}
+                            />
+                            {importContext && importContext.rulesetId !== revision.rulesetId && (
+                              <p className="text-sm text-destructive">Chọn patch thuộc cùng bộ quy tắc gameplay.</p>
+                            )}
+                          </>
+                        )}
+                        <Button
+                          disabled={
+                            busy ||
+                            !!dirty.size ||
+                            (cause === "GAME_PATCH" &&
+                              (!importContext || importContext.rulesetId !== revision.rulesetId))
+                          }
+                        >
+                          Tạo bản nháp từ mốc này
+                        </Button>
+                      </form>
+                    </Box>
                   )}
-                  {writable && (
-                    <Button
-                      variant="outline"
+                  {revision.cause === "DATA_BASELINE" && (
+                    <p className="rounded-xl border bg-card p-4 text-sm leading-6 text-muted-foreground">
+                      Đây là mốc dữ liệu đã thu thập. Khi chưa có bản trước để đối chiếu, lịch sử không thể kết luận
+                      tướng đã thay đổi gì ở patch này. Bạn có thể bổ sung mốc cũ rồi so sánh sau.
+                    </p>
+                  )}
+                  {writable && revision.cause === "DATA_BASELINE" && !revision.sourceRevisionId && (
+                    <BaselineContextForm
+                      revision={revision}
                       disabled={busy || !!dirty.size}
-                      onClick={() => void run(async () => openRevision(await api.discard(revision)), "Đã hủy draft.")}
-                    >
-                      Hủy draft
-                    </Button>
+                      onBusyChange={setBusy}
+                      onMove={async (next) => {
+                        await openRevision(next)
+                        await queryClient.invalidateQueries({ queryKey: ["publishing-heroes"] })
+                        await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
+                        await revisions.refetch()
+                        setMessage("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")
+                      }}
+                    />
                   )}
-                  <Button
-                    variant="outline"
-                    disabled={busy}
-                    onClick={() =>
-                      void run(async () => {
-                        await queryClient.invalidateQueries({ queryKey: ["publishing-preview", heroId, selectedId] })
-                        const fresh = await api.read(heroId, selectedId)
-                        setPreview(fresh)
-                        setDirty(new Set())
-                      }, "Đã tải lại phiên bản từ backend.")
-                    }
-                  >
-                    Bỏ chỉnh sửa và tải bản mới
-                  </Button>
-                </div>
-              </Box>
+                  {revision.state === "PUBLISHED" &&
+                    revision.cause === "GAME_PATCH" &&
+                    revision.effectiveFromPatchVariantId &&
+                    capabilities.includes("patch:write") && (
+                      <PatchChangeForm key={revision.id} revision={revision} locale={locale} />
+                    )}
+                  <Box title="Kiểm tra trước khi xuất bản">
+                    {issues.length ? (
+                      <ul className="space-y-2 text-sm text-muted-foreground">
+                        {issues.map((issue) => (
+                          <li key={issue} className="flex gap-2">
+                            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
+                            {issue}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="flex items-center gap-2 text-sm">
+                        <CheckCircle2 className="size-4 text-emerald-600" />
+                        Đã đủ nội dung chính. Hệ thống sẽ kiểm tra dữ liệu và ảnh khi xuất bản.
+                      </p>
+                    )}
+                    {dirty.size > 0 && (
+                      <p className="text-sm text-amber-600">Lưu {dirty.size} nhóm đang chỉnh sửa trước khi xuất bản.</p>
+                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {revision.state === "DRAFT" && canPublish && (
+                        <Button
+                          disabled={busy || !!dirty.size || !!issues.length}
+                          onClick={() =>
+                            void run(async () => {
+                              const published = await api.publish(revision, note)
+                              await localDraft.discard()
+                              await openRevision(published)
+                            }, "Đã xuất bản phiên bản tướng.")
+                          }
+                        >
+                          Xuất bản tướng
+                        </Button>
+                      )}
+                      {writable && (
+                        <Button
+                          variant="outline"
+                          disabled={busy || !!dirty.size}
+                          onClick={() => {
+                            if (window.confirm("Hủy bản nháp này? Bản đã xuất bản vẫn được giữ lại."))
+                              void run(async () => {
+                                const discarded = await api.discard(revision)
+                                await localDraft.discard()
+                                await openRevision(discarded)
+                              }, "Đã hủy bản nháp.")
+                          }}
+                        >
+                          Hủy bản nháp
+                        </Button>
+                      )}
+                    </div>
+                  </Box>
+                  {writable && !translating && (
+                    <details className="rounded-xl border bg-card p-4">
+                      <summary className="cursor-pointer text-sm font-medium">
+                        Điền dữ liệu từ tài nguyên tham khảo
+                      </summary>
+                      <div className="mt-4 space-y-4">
+                        <Button variant="outline" onClick={() => setShowResources(!showResources)}>
+                          {showResources ? "Đóng danh mục" : "Mở danh mục resources"}
+                        </Button>
+                        {showResources && (
+                          <>
+                            {resources.isError && <p role="alert">{errorMessage(resources.error)}</p>}
+                            <label className="grid gap-2 text-sm">
+                              Tướng nguồn
+                              <select
+                                className={control}
+                                value={resourceId}
+                                onChange={(event) => setResourceId(event.target.value)}
+                              >
+                                <option value="">Chọn tướng để đối chiếu</option>
+                                {resources.data?.map((hero) => (
+                                  <option value={hero.id} key={hero.id}>
+                                    {hero.name} · {hero.id}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            {resource && (
+                              <>
+                                <p className="text-sm text-muted-foreground">
+                                  Điền tên, kỹ năng và trang phục vào bản đang sửa. Dữ liệu còn thiếu có thể bổ sung sau
+                                  trong bản nháp.
+                                </p>
+                                <Button
+                                  disabled={busy || !!dirty.size}
+                                  onClick={() => {
+                                    localDraft.update({
+                                      ...localDraft.value,
+                                      content: { ...preview.content, ...resourceContent(resource, locale) },
+                                    })
+                                    updateLocation({ view: "overview" })
+                                    setEditing(true)
+                                    setManagementOpen(false)
+                                  }}
+                                >
+                                  Điền vào bản nháp
+                                </Button>
+                              </>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </details>
+                  )}
+                  <details className="text-xs text-muted-foreground">
+                    <summary className="cursor-pointer">Mã định danh hệ thống</summary>
+                    <dl className="mt-3 space-y-2 break-all font-mono">
+                      <div>
+                        <dt>Tướng</dt>
+                        <dd>{heroId}</dd>
+                      </div>
+                      <div>
+                        <dt>Phiên bản</dt>
+                        <dd>{revision.id}</dd>
+                      </div>
+                    </dl>
+                  </details>
+                </section>
+              )}
             </>
           )}
         </>

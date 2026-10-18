@@ -81,6 +81,7 @@ export function SectionEditor({
                 key={key}
                 label={label}
                 multiline={key === "lore" || key === "summary"}
+                richTextLocale={t.locale}
                 required={key === "name"}
                 value={t[key] ?? ""}
                 onChange={(text) =>
@@ -310,6 +311,7 @@ export function SectionEditor({
                   <Field
                     label="Mô tả đã xác minh"
                     multiline
+                    richTextLocale={t.locale}
                     required
                     value={t.description}
                     onChange={(description) =>
@@ -446,6 +448,7 @@ export function SectionEditor({
                       label={label}
                       required={key === "locale" || key === "name"}
                       multiline={key === "description"}
+                      richTextLocale={t.locale}
                       value={t[key] ?? ""}
                       onChange={(text) =>
                         onChange({

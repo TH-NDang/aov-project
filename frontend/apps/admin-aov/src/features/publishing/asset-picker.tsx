@@ -5,6 +5,7 @@ import { backendRequest, getSession } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, uploadHeroImage, upgradeHeroImage } from "./publishing-api"
 import { resourceImage } from "./resource-import"
+import { imageFromUrl } from "./image-url"
 import { control, Field } from "./fields"
 const api = createPublishingApi(backendRequest)
 export function AssetPicker({
@@ -44,6 +45,14 @@ export function AssetPicker({
     queryFn: () => api.assets(semanticType, page),
     enabled: open,
   })
+  const selectedAsset = useQuery({
+    queryKey: ["publishing-asset", value],
+    queryFn: () => api.asset(value!),
+    enabled: !!value,
+    staleTime: 60000,
+  })
+  const [imageFailed, setImageFailed] = useState(false)
+  useEffect(() => setImageFailed(false), [selectedAsset.data?.currentUrl])
   async function upgrade(file: File) {
     if (!value) return
     setBusy(true)
@@ -53,6 +62,7 @@ export function AssetPicker({
       await upgradeHeroImage(backendRequest, value, file)
       if (!alive.current) return
       await assets.refetch()
+      await selectedAsset.refetch()
       setMessage("Đã nâng chất lượng trên cùng asset. Không cần sửa hoặc publish lại tướng.")
     } catch (error) {
       setError(errorMessage(error))
@@ -80,6 +90,36 @@ export function AssetPicker({
   }
   return (
     <div className="space-y-2 rounded-lg border p-3">
+      {value && (
+        <div className="flex min-h-16 items-center gap-3">
+          {selectedAsset.data?.currentUrl && !imageFailed ? (
+            <img
+              src={selectedAsset.data.currentUrl}
+              alt="Ảnh đã gắn"
+              className="size-16 rounded-md border bg-muted object-contain"
+              loading="lazy"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <span className="grid size-16 place-items-center rounded-md bg-muted text-center text-xs text-muted-foreground">
+              {selectedAsset.isPending ? "Đang tải…" : "Chưa xem được ảnh"}
+            </span>
+          )}
+          {(selectedAsset.error || imageFailed) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setImageFailed(false)
+                void selectedAsset.refetch()
+              }}
+            >
+              Tải lại ảnh
+            </Button>
+          )}
+        </div>
+      )}
       <p className="text-xs text-muted-foreground">{value ? `Asset đã chọn: ${value}` : "Chưa chọn ảnh"}</p>
       <Button type="button" size="sm" variant="outline" onClick={() => setOpen(!open)}>
         {open ? "Đóng kho ảnh" : "Chọn / tải ảnh"}
@@ -128,6 +168,17 @@ export function AssetPicker({
             <fieldset disabled={busy} className="space-y-3 border-t pt-3">
               <Field label="Nguồn ảnh" value={label} onChange={setLabel} />
               <Field label="URL nguồn ảnh" type="url" value={url} onChange={setUrl} />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={!url || busy}
+                onClick={() => void upload(imageFromUrl(url))}
+              >
+                Tải ảnh từ link và chọn
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Link ảnh trực tiếp HTTPS. Nếu nguồn không cho tải, chọn file từ máy bên dưới.
+              </p>
               <label className="grid gap-1 text-sm">
                 Tải ảnh mới
                 <input

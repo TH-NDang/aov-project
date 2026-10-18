@@ -1,3 +1,6 @@
+import { useLocation } from "react-router"
+import { BackgroundTasksProvider } from "../background-tasks"
+import { ImportWorkspaceHost } from "./import-workspace-host"
 import { SidebarInset, SidebarProvider } from "@aov/ui/components/sidebar"
 import { AppSidebar } from "./app-sidebar"
 import { SiteHeader } from "./site-header"
@@ -12,15 +15,21 @@ function readSidebarCookie(): boolean {
 /** Content on the left, navigation sidebar docked on the right edge. */
 export function AppShell() {
   const { enabled } = useHotkeys()
+  const importing = useLocation().pathname === "/publishing/import"
   return (
-    <PageTabsProvider>
-      <SidebarProvider defaultOpen={readSidebarCookie()} keyboardShortcutEnabled={enabled}>
-        <SidebarInset className="h-svh min-w-0 overflow-hidden">
-          <SiteHeader />
-          <PageTabPanels />
-        </SidebarInset>
-        <AppSidebar />
-      </SidebarProvider>
-    </PageTabsProvider>
+    <BackgroundTasksProvider>
+      <PageTabsProvider>
+        <SidebarProvider defaultOpen={readSidebarCookie()} keyboardShortcutEnabled={enabled}>
+          <SidebarInset className="h-svh min-w-0 overflow-hidden">
+            <SiteHeader />
+            <div className={`${importing ? "hidden" : "flex"} min-h-0 flex-1 flex-col`}>
+              <PageTabPanels />
+            </div>
+            <ImportWorkspaceHost />
+          </SidebarInset>
+          <AppSidebar />
+        </SidebarProvider>
+      </PageTabsProvider>
+    </BackgroundTasksProvider>
   )
 }

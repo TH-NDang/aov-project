@@ -1,3 +1,4 @@
+import { BackgroundTaskStatus } from "./background-task-status"
 import { Link, useLocation } from "react-router"
 import { useEffect, useState } from "react"
 import { BookOpenText, ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react"
@@ -176,6 +177,7 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
+        <BackgroundTaskStatus />
         <HotkeyHelp />
         <UserMenu />
       </SidebarFooter>
