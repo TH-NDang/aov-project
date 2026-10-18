@@ -1445,3 +1445,109 @@ erDiagram
 ```
 
 Cross-module MediaAsset references trong diagram là logical references dù database implementation có thể không tạo cross-schema FK.
+
+## Bổ sung V009 — Mùa xếp hạng
+
+`patch.ranked_season`: id UUID, region_id, code, display_name, season_year/season_number tùy chọn, starts_at và ends_at. Unique (region_id, code), end > start, exclusion constraint ngăn khoảng mùa chồng lấn theo thị trường. Không seed mùa chưa xác minh. `patch.patch_release.season_id` nullable tham chiếu mùa. Backend kiểm tra cùng thị trường và effectiveAt nằm trong mùa khi gán. Không chỉnh các migration V000–V008 đã áp dụng.
+
+## V010 — mốc dữ liệu Hero đã quan sát
+
+V010 bổ sung DATA_BASELINE vào constraint cause của hero_revision. Không đổi hoặc suy đoán mốc cho dữ liệu legacy. Không sửa migration cũ. DATA_BASELINE tạo qua luồng mới luôn có effective_from_patch_variant_id; section chưa biết chỉ nằm trong draft, publication vẫn giữ validation đầy đủ.
+
+ruleset_ordinal là thứ tự so sánh, không phải ID hay tên mùa. Chèn trước một variant dịch các ordinal từ vị trí đó theo thứ tự giảm dần trong cùng transaction khóa ruleset để giữ unique constraint. Các FK vẫn dùng UUID, không thay đổi liên kết revision/release. Thứ tự tương đối của các variant đã tồn tại không đổi.
+
+
+### Bảng `hero.import_job`
+
+V016 bổ sung `notification_dismissed boolean NOT NULL DEFAULT false`. Cờ thuộc chủ tác vụ (`owner_issuer` + `owner_subject`) và chỉ được bật khi `completed = total`; không xóa yêu cầu, kết quả hay lịch sử import.
+
+Migration V011 lưu tác vụ import: `id` (UUID, khóa chống gửi trùng), `owner_issuer`, `owner_subject`, `owner_type`, `request_json`, `results_json`, `completed`, `total`, `created_at`, `updated_at`. JSON chứa danh sách yêu cầu nhập và kết quả từng dòng theo thứ tự. Không lưu credentials. Tiến trình và thay đổi tướng commit trong cùng giao dịch. Khóa tác vụ chỉ tồn tại trong giao dịch; không cần phục hồi lease sau sự cố.
+
+## Tổng quan phát hành
+
+Tổng quan admin tái sử dụng bảng JPA hiện có trong module patch, không lưu cờ current có thể lỗi thời theo thời gian. Trạng thái mùa/release được tính tại một thời điểm backend chung và trả về asOf. Không thêm migration cho màn hình tổng quan hoặc chỉ số độ đầy đủ bản dịch; chỉ số được tính từ snapshot, không được lưu như trạng thái duyệt.
+
+
+## Mùa dùng chung và lịch thị trường (16/10/2026)
+
+Quyết định này thay thế mô hình mùa thuộc region trong các mục bổ sung trước.
+Mùa là danh mục chung, có mã, tên, năm/số mùa tùy chọn và ordinal. Ngày tạo, tên mã,
+ngôn ngữ không quyết định thứ tự. Khi tạo có thể chèn trước một mùa hoặc nối cuối.
+Patch variant gắn trực tiếp season_id; tạo patch theo mùa đồng thời tạo game_patch và
+variant trong một transaction. Backend đặt ordinal xuyên suốt ruleset, chèn trước patch
+trong cùng mùa hoặc cuối mùa (trước patch đầu mùa sau). Không sửa snapshot đã nhập.
+
+Lịch mùa chuyển sang season_schedule (season_id, region_id, starts_at, ends_at), unique
+mùa/thị trường và không chồng khoảng theo thị trường. Một mùa có nhiều lịch. Patch release
+vẫn là ngày áp dụng theo thị trường, phải nằm trong lịch mùa của patch, đúng ruleset được
+thị trường sử dụng, không đảo thứ tự gameplay. Mùa/patch chưa có lịch vẫn hiện ở admin.
+Current tính theo thời gian server và thị trường, không theo ngày tạo hay ordinal lớn nhất.
+
+V012 giữ ID và dữ liệu lịch cũ; mùa cũ khác ID không tự gộp khi chưa xác minh tương đương.
+Mã mùa cũ bị trùng được thêm UUID để bảo toàn; variant chỉ tự gắn mùa nếu các release
+của nó cùng một mùa. Trường hợp chưa rõ nằm ở nhóm patch cũ chưa gắn mùa.
+Ruleset aov-vn đổi mã thành aov-standard, giữ ID; nếu cả hai mã tồn tại thì migration
+báo xung đột và rollback, không tự gộp dữ liệu.
+
+API: GET admin/seasons không cần regionId; POST nhận code, displayName, seasonYear?,
+seasonNumber?, beforeSeasonId?. POST admin/seasons/{id}/schedules nhận regionId,
+startsAt, endsAt. POST admin/season-patches nhận seasonId, rulesetId, beforeVariantId?,
+patch:{code,translations:[{locale,title,summary,description?}]}, trả id của variant.
+Quyền tạo mùa/patch/lịch mùa là patch:write, phát hành patch vẫn cần patch:publish.
+Publication overview trả seasons chung, seasonSchedules riêng và variants.seasonId.
+
+Nhập/tạo tướng chọn mùa và patch, không bắt chọn thị trường hay lịch phát hành.
+GET admin/heroes/import/contexts?seasonId= trả context của variant DRAFT/PUBLISHED.
+Request dùng contextId; alias releaseId và lookup lịch cũ được giữ cho job đã nhận trước
+nâng cấp. Context mới có regionId/regionCode/effectiveAt null. Dữ liệu có thể soạn trước
+khi phát hành; publish tướng vẫn yêu cầu variant đã publish. BASELINE vẫn chỉ là trạng thái
+quan sát, không tự tạo lịch sử thay đổi. API contexts có regionId vẫn phục vụ client cũ.
+
+
+## Độ chính xác ngày/giờ lịch phát hành (16/10/2026)
+
+V013 giữ nguyên timestamp cũ. Release mới nhận đúng một trong effectiveAt (ISO instant)
+và effectiveOn (YYYY-MM-DD). Ngày không có giờ được lưu DATE, effective_at null, status DRAFT;
+không tự áp dụng vào nửa đêm. POST admin/patch-releases/{id}/confirm (patch:publish) xác nhận
+đang áp dụng ở thời điểm server, chỉ khi ngày đã tới, đúng ruleset/lịch mùa và không đảo thứ tự.
+Ghi confirmed_at và mốc kích hoạt nội bộ effective_at; không biến thời điểm xác nhận thành
+thời điểm phát hành được nguồn công bố. Gọi lại xác nhận thành công là idempotent.
+Overview trả effectiveAt null khi có effectiveOn, confirmedAt riêng; phase AWAITING_CONFIRMATION
+trước xác nhận. Nguồn lịch sử chỉ biết ngày vẫn xem/nhập dữ liệu được mà không cần xác nhận
+rằng patch cũ đang áp dụng hiện tại.
+
+Lịch mùa nhận đúng một startsAt/startsOn và một endsAt/endsOn. startsOn/endsOn được lưu
+DATE; ngày kết thúc không có giờ được hiểu bao gồm cả ngày đó. Khoảng kiểm tra chồng lấn
+nội bộ dùng ranh giới ngày theo múi giờ thị trường, không phải giờ diễn ra đã xác minh.
+Overview không trả các ranh giới suy ra như timestamp sự kiện. Lịch mùa chỉ có ngày có
+phase RECORDED, không được tự khẳng định là current từ giờ suy ra.
+Frontend hiển thị ngày nếu chỉ có DATE, ngày kèm giờ nếu có timestamp, không thêm nhãn
+“Chưa rõ giờ”. Form có ngày và giờ tùy chọn; giờ nhập theo múi giờ thiết bị được hiển thị
+ngay dưới ô. Ngày thuần không dịch theo múi giờ người xem.
+
+### Lịch mùa chưa biết ngày kết thúc (V014)
+
+Ngày kết thúc mùa là tùy chọn. Thiếu ngày kết thúc nghĩa là chưa xác định, không tự suy ra
+mùa đang diễn ra vô thời hạn. POST lịch mùa cập nhật bản ghi hiện có theo mùa/thị trường,
+cho phép bổ sung ngày kết thúc sau. Ràng buộc chống chồng lấn áp dụng cho các lịch đủ hai mốc.
+Patch có thể ghi nhận trước khi có lịch mùa; khi lịch mùa đã có, kiểm tra các mốc đã biết.
+Form lịch dùng panel bên phải trên desktop, từ dưới trên mobile; bộ chọn lịch thống nhất,
+chỉ hiện nhập giờ khi chọn Thêm giờ. Ngày không có giờ vẫn giữ độ chính xác theo ngày.
+### Bản nháp thiếu dữ liệu khi import
+
+Bản nháp được thiếu vai trò tướng và mô tả kỹ năng. Mô tả chưa có được lưu chuỗi rỗng,
+không tự tạo nội dung. Tên, mã nhận diện, kiểu dữ liệu và tính hợp lệ của ảnh vẫn được kiểm tra.
+Preview trả cảnh báo rõ vai trò còn thiếu, mã kỹ năng và ngôn ngữ thiếu mô tả. Khi xuất bản,
+backend bắt buộc vai trò và mô tả kỹ năng, trả errors[] gồm đường dẫn trường thiếu.
+Quy định này thay thế yêu cầu vai trò bắt buộc ngay khi tạo/import bản nháp trước đây.
+### Phiên upload import (V015)
+
+Bảng `hero.upload_session`: UUID id, owner_issuer, owner_subject, state_json text tối đa 5 MB, version bigint, updated_at. Dữ liệu phiên gồm manifest đã ánh xạ và checkpoint assetId/uploadId/completed; không lưu file bytes, token hay URL ký. Phiên được báo cáo như tham chiếu media DRAFT để không bị dọn khi đang dở. Xóa phiên sau khi backend nhận job cùng UUID; lịch sử chuyển sang import_job.
+
+### Read model danh mục tướng theo thay đổi gameplay
+
+Danh mục tướng admin có read model JPA trên các bảng hero hiện có, không thêm schema hay cột
+cho `lastEditedAt` hoặc phân loại thay đổi. Lần sửa tính từ hero.created_at và hero_revision.updated_at;
+thay đổi gameplay đọc từ hero_patch_change_set và sáu bảng change_kind, bất biến sau ghi nhận.
+Phạm vi mùa/thứ tự patch lấy qua hợp đồng công khai module patch, không join entity internal giữa module.
+Các mapping classification chỉ đọc và truy vấn theo nhóm ID change set của trang.

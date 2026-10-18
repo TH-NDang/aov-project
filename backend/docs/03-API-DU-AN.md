@@ -23,7 +23,7 @@ Tất cả path trong bảng nối sau `/api/wiki/v1/`. POST tạo trả 201; pu
 Hero mutation/publish/discard trả 200 với composition revision mới nhất. Create Hero trả
 `heroId` (identity) và `id` (draft revision); không nhầm hai ID này. Admin detail trả
 `{revision, content}`; `revision.sections` có key profile/overviewRatings/combatStats/skills/skins/mediaBindings.
-Admin list phân trang theo code, nhận page/size. Revision history admin trả array, giữ thứ tự revision_no giảm dần.
+Admin list phân trang theo code mặc định; bộ lọc thay đổi gameplay/tìm kiếm được mô tả ở mục Danh mục tướng bên dưới. Revision history admin trả array, giữ thứ tự revision_no giảm dần.
 
 Section PUT dùng payload phẳng, `expectedDraftVersion` và full section content; publish/discard dùng
 `expectedVersion`. `changeNote` tùy chọn. `sources` có thể bỏ qua và mặc định array rỗng.
@@ -54,7 +54,7 @@ ROLE dùng roleCode/added, VISUAL dùng mediaRole/oldAssetId/newAssetId, MECHANI
 OTHER dùng description; tất cả cần changeKind. Change set là dữ liệu biên tập, không tự tạo khi publish.
 
 Các API Hero/Patch chưa hỗ trợ query at, nên không nhận query này. Quy tắc resolver theo thời điểm
-vẫn được thực hiện qua contract nội bộ GameplayContexts. Region create/update, catalog authoring khác,
+vẫn được thực hiện qua contract nội bộ GameplayContexts. Region update, catalog authoring khác,
 patch change dispatcher chi tiết và counts tổng hợp đa domain chưa triển khai.
 
 ---
@@ -1401,6 +1401,12 @@ POST /api/wiki/v1/admin/regions/{regionId}/ruleset-assignments
 
 Các endpoint này quyền cao, không sửa thường xuyên.
 
+`POST /admin/regions` yêu cầu quyền `region:admin`; body gồm `code` (2–16 ký tự viết hoa,
+chữ số hoặc dấu gạch nối, bắt đầu bằng chữ), `displayName`, `productName`, `defaultLocale`,
+`timezone` (IANA) và `available` (boolean bắt buộc). Trả `201 {id}`; mã trùng trả `409`,
+locale/múi giờ không hợp lệ trả `422`. Form admin mặc định `available=false`, tạo thị trường
+ở trạng thái `LOCKED`; chỉ bật khi dữ liệu sẵn sàng. Thao tác được ghi audit `REGION_CREATED`.
+
 ---
 
 # PHẦN G — ERROR CONTRACT
@@ -1786,3 +1792,208 @@ Activate media version thay ETag/detail URL ảnh nhưng giữ nguyên HeroRevis
 PUT section dùng body phẳng (`expectedDraftVersion`, các field của section, `sources`, `changeNote`),
 không bọc dữ liệu trong `content`. Admin preview vẫn trả `{revision, content}` với key enum section.
 Publish một draft có section chưa điền trả `422 HERO_INVALID_CONTENT`, không phải lỗi máy chủ.
+
+## Bổ sung API import Hero và mùa xếp hạng
+
+- GET `admin/heroes/import/fields`: danh sách trường cố định `{key,label,type}`; quyền hero:write.
+- POST `admin/heroes/import/preview`: `{code,rulesetId,locale,values,policies,expectedRevisionId?,expectedVersion?}`. policies: FILL_EMPTY/OVERWRITE/SKIP. Trả `{code,heroId,revisionId,version,before,after,changed}`. Không ghi DB.
+- POST `admin/heroes/import/apply`: cùng request, bắt buộc mang revisionId/version đã preview nếu tướng tồn tại; mismatch trả 409. Tướng mới dùng code duy nhất, UUID do backend tạo. Một request một tướng, ghi draft nguyên tử, không tự xuất bản.
+- Trường ban đầu: name/title/summary/lore/roles/skills/skins/head/portrait/splash. Trường ảnh trong file là URL HTTPS, frontend tải qua Media API rồi gửi UUID asset cho backend; không lưu URL ngoài làm binding. Mảng JSON giữ cấu trúc section hiện hành; vai trò hợp lệ bắt buộc khi tạo mới. Trường ngoài danh mục trả 422.
+- GET `admin/seasons?regionId=UUID`: quyền catalog:read.
+- POST `admin/seasons`: quyền patch:write; body regionId, code, displayName, seasonYear?, seasonNumber?, startsAt, endsAt. Trả 201; trùng mã/chồng lịch trả 409.
+- POST `admin/patch-variants/{id}/releases`: thêm seasonId tùy chọn; phải cùng region và chứa effectiveAt.
+
+Contract mới nằm tại `wiki-service/src/main/resources/contracts/hero-authoring.openapi.json`; `pnpm generate:hero-api` sinh type cho import và mùa xếp hạng. CI kiểm tra file sinh không lệch contract. Các API có trước vẫn dùng type hiện hành, chưa chuyển toàn bộ service sang generated client.
+
+Draft có thể lưu từng binding ảnh; publish vẫn yêu cầu đủ HEAD/PORTRAIT/SPLASH và các asset usable, đúng semantic type.
+
+## Cập nhật contract import theo mùa/patch
+
+Thay thế request import ở mục trước: bắt buộc thêm releaseId và mode (BASELINE, PATCH_UPDATE, CORRECTION). rulesetId vẫn được gửi và đối chiếu server-side. GET admin/heroes/import/contexts?regionId=&seasonId= trả release đã đặt lịch trong mùa, gồm tên mùa/patch, ruleset, variant, thời điểm hiệu lực. Release cũ chưa gắn season_id được ghép theo thị trường và khoảng mùa không chồng lấn; release gắn mùa rõ ràng phải khớp.
+
+Preview thêm classification (NEW_TO_CATALOG, BASELINE, CHANGED, UNCHANGED, INSUFFICIENT_DATA), canApply, sourcePatchVariantId, warnings. NEW_TO_CATALOG chỉ nói chưa có identity trong kho. Thiếu mốc trả canApply=false; apply từ chối 422. Preview không viết DB hoặc tải ảnh. expectedRevisionId/version tham chiếu chính snapshot dùng để so sánh, kiểm tra lại dưới khóa Hero khi apply.
+
+POST admin/heroes bắt buộc releaseId, tạo DATA_BASELINE gắn patch tương ứng. Import mốc độc lập cho tướng đã có không sao chép snapshot tương lai. Publish và sửa dữ liệu cũ không tự lan thay đổi vào những snapshot về sau.
+
+POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trước variant đó trong cùng ruleset (rulesetOrdinal gửi giá trị dương nhưng được suy ra từ anchor). Không có beforeVariantId thì ordinal phải là vị trí dương chưa dùng. Khóa ruleset tuần tự hóa việc chèn và đặt lịch release. OpenAPI import/mùa/context và TypeScript được cập nhật cùng nhau.
+
+
+### Tác vụ import tướng bền vững
+
+- `PUT /admin/heroes/import/jobs/{id}/notification-dismissal`: chủ tác vụ có `hero:write` (và quyền nền `catalog:read`) đóng thông báo đã hoàn tất; trả 200 với `HeroImportJobView`. Gọi lại an toàn. Tác vụ đang chạy trả 409 `HERO_IMPORT_JOB_CONFLICT`; không tồn tại hoặc khác issuer/subject trả 404. Không xóa lịch sử.
+- `HeroImportJobView.notificationDismissed` là boolean, được trả qua create/get/list; mặc định false cho tác vụ mới và dữ liệu cũ. GET list vẫn giữ các tác vụ đã đóng để xem lịch sử. Frontend chỉ ẩn thông báo tác vụ server khi backend xác nhận cờ true, bỏ qua dấu đóng server cũ trong localStorage; cần bấm × lại một lần để đồng bộ bản ghi cũ. Polling 3 giây khi tab hoạt động và tải lại khi focus giúp đồng bộ các trình duyệt/tab. Lỗi lưu giữ thông báo để thử lại và tải lại trạng thái nhằm xử lý trường hợp mất phản hồi sau commit.
+
+- `POST /admin/heroes/import/jobs`: quyền `hero:write`, body `{id: UUID, rows: HeroImportRequest[]}`, 1–200 dòng mã tướng không trùng; trả 202. `id` là khóa idempotency: gửi lại cùng dữ liệu trả cùng tác vụ, khác dữ liệu trả 409.
+- `GET /admin/heroes/import/jobs`: tác vụ đang chạy và 20 tác vụ hoàn tất gần nhất của người gọi.
+- `GET /admin/heroes/import/jobs/{id}`: tác vụ của người gọi; không tồn tại hoặc của tài khoản khác trả 404.
+- Kết quả: `id`, `status` (`RUNNING`, `COMPLETED`, `COMPLETED_WITH_ERRORS`), `completed`, `total`, `createdAt`, `updatedAt`, `results` gồm `code`, `succeeded`, `errorCode`, `detail`. Không trả payload nhập liệu qua API tiến trình.
+- Chỉ sau 202 mới được đóng web an toàn. Ảnh phải upload và complete trước khi gửi; `values` tham chiếu UUID asset. Worker giữ nguyên kiểm tra phiên bản khi áp dụng. Không tự xuất bản.
+
+
+### Ánh xạ dữ liệu liên quan khi import tướng
+
+`GET /admin/heroes/import/relation-fields` (quyền `hero:write`, cùng quyền nền `catalog:read`) trả các trường được phép của `skills` và `skins`: mã, tên/mô tả bản dịch, thứ tự, loại/dạng/hiệu ứng kỹ năng; bậc/cách sở hữu trang phục; `iconAssetId` hoặc `artAssetId`. Mỗi trường có `key`, `label`, `type`. Endpoint metadata không thêm cột tự do. Payload import vẫn dùng các mảng Skill/Skin của hợp đồng hiện có. Ảnh trong payload gửi tác vụ luôn là UUID asset đã upload hoàn tất, không phải đường dẫn máy người dùng.
+
+## Tổng quan phát hành cho admin
+
+- GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
+- GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
+
+Frontend dùng TanStack Query cho tổng quan (làm mới 60 giây), danh mục và snapshot tướng, bảng thay đổi theo variant/locale (chỉ tải khi mở). Sau mutation thiết lập mùa/patch hoặc ghi thay đổi, invalidate các cache liên quan. Đổi trang giữ cache theo cơ chế workspace hiện có.
+
+
+## Mùa dùng chung và lịch thị trường (16/10/2026)
+
+Quyết định này thay thế mô hình mùa thuộc region trong các mục bổ sung trước.
+Mùa là danh mục chung, có mã, tên, năm/số mùa tùy chọn và ordinal. Ngày tạo, tên mã,
+ngôn ngữ không quyết định thứ tự. Khi tạo có thể chèn trước một mùa hoặc nối cuối.
+Patch variant gắn trực tiếp season_id; tạo patch theo mùa đồng thời tạo game_patch và
+variant trong một transaction. Backend đặt ordinal xuyên suốt ruleset, chèn trước patch
+trong cùng mùa hoặc cuối mùa (trước patch đầu mùa sau). Không sửa snapshot đã nhập.
+
+Lịch mùa chuyển sang season_schedule (season_id, region_id, starts_at, ends_at), unique
+mùa/thị trường và không chồng khoảng theo thị trường. Một mùa có nhiều lịch. Patch release
+vẫn là ngày áp dụng theo thị trường, phải nằm trong lịch mùa của patch, đúng ruleset được
+thị trường sử dụng, không đảo thứ tự gameplay. Mùa/patch chưa có lịch vẫn hiện ở admin.
+Current tính theo thời gian server và thị trường, không theo ngày tạo hay ordinal lớn nhất.
+
+V012 giữ ID và dữ liệu lịch cũ; mùa cũ khác ID không tự gộp khi chưa xác minh tương đương.
+Mã mùa cũ bị trùng được thêm UUID để bảo toàn; variant chỉ tự gắn mùa nếu các release
+của nó cùng một mùa. Trường hợp chưa rõ nằm ở nhóm patch cũ chưa gắn mùa.
+Ruleset aov-vn đổi mã thành aov-standard, giữ ID; nếu cả hai mã tồn tại thì migration
+báo xung đột và rollback, không tự gộp dữ liệu.
+
+API: GET admin/seasons không cần regionId; POST nhận code, displayName, seasonYear?,
+seasonNumber?, beforeSeasonId?. POST admin/seasons/{id}/schedules nhận regionId,
+startsAt, endsAt. POST admin/season-patches nhận seasonId, rulesetId, beforeVariantId?,
+patch:{code,translations:[{locale,title,summary,description?}]}, trả id của variant.
+Quyền tạo mùa/patch/lịch mùa là patch:write, phát hành patch vẫn cần patch:publish.
+Publication overview trả seasons chung, seasonSchedules riêng và variants.seasonId.
+
+Nhập/tạo tướng chọn mùa và patch, không bắt chọn thị trường hay lịch phát hành.
+GET admin/heroes/import/contexts?seasonId= trả context của variant DRAFT/PUBLISHED.
+Request dùng contextId; alias releaseId và lookup lịch cũ được giữ cho job đã nhận trước
+nâng cấp. Context mới có regionId/regionCode/effectiveAt null. Dữ liệu có thể soạn trước
+khi phát hành; publish tướng vẫn yêu cầu variant đã publish. BASELINE vẫn chỉ là trạng thái
+quan sát, không tự tạo lịch sử thay đổi. API contexts có regionId vẫn phục vụ client cũ.
+
+
+## Độ chính xác ngày/giờ lịch phát hành (16/10/2026)
+
+V013 giữ nguyên timestamp cũ. Release mới nhận đúng một trong effectiveAt (ISO instant)
+và effectiveOn (YYYY-MM-DD). Ngày không có giờ được lưu DATE, effective_at null, status DRAFT;
+không tự áp dụng vào nửa đêm. POST admin/patch-releases/{id}/confirm (patch:publish) xác nhận
+đang áp dụng ở thời điểm server, chỉ khi ngày đã tới, đúng ruleset/lịch mùa và không đảo thứ tự.
+Ghi confirmed_at và mốc kích hoạt nội bộ effective_at; không biến thời điểm xác nhận thành
+thời điểm phát hành được nguồn công bố. Gọi lại xác nhận thành công là idempotent.
+Overview trả effectiveAt null khi có effectiveOn, confirmedAt riêng; phase AWAITING_CONFIRMATION
+trước xác nhận. Nguồn lịch sử chỉ biết ngày vẫn xem/nhập dữ liệu được mà không cần xác nhận
+rằng patch cũ đang áp dụng hiện tại.
+
+Lịch mùa nhận đúng một startsAt/startsOn và một endsAt/endsOn. startsOn/endsOn được lưu
+DATE; ngày kết thúc không có giờ được hiểu bao gồm cả ngày đó. Khoảng kiểm tra chồng lấn
+nội bộ dùng ranh giới ngày theo múi giờ thị trường, không phải giờ diễn ra đã xác minh.
+Overview không trả các ranh giới suy ra như timestamp sự kiện. Lịch mùa chỉ có ngày có
+phase RECORDED, không được tự khẳng định là current từ giờ suy ra.
+Frontend hiển thị ngày nếu chỉ có DATE, ngày kèm giờ nếu có timestamp, không thêm nhãn
+“Chưa rõ giờ”. Form có ngày và giờ tùy chọn; giờ nhập theo múi giờ thiết bị được hiển thị
+ngay dưới ô. Ngày thuần không dịch theo múi giờ người xem.
+
+### Lịch mùa chưa biết ngày kết thúc (V014)
+
+Ngày kết thúc mùa là tùy chọn. Thiếu ngày kết thúc nghĩa là chưa xác định, không tự suy ra
+mùa đang diễn ra vô thời hạn. POST lịch mùa cập nhật bản ghi hiện có theo mùa/thị trường,
+cho phép bổ sung ngày kết thúc sau. Ràng buộc chống chồng lấn áp dụng cho các lịch đủ hai mốc.
+Patch có thể ghi nhận trước khi có lịch mùa; khi lịch mùa đã có, kiểm tra các mốc đã biết.
+Form lịch dùng panel bên phải trên desktop, từ dưới trên mobile; bộ chọn lịch thống nhất,
+chỉ hiện nhập giờ khi chọn Thêm giờ. Ngày không có giờ vẫn giữ độ chính xác theo ngày.
+### Bản nháp thiếu dữ liệu khi import
+
+Bản nháp được thiếu vai trò tướng và mô tả kỹ năng. Mô tả chưa có được lưu chuỗi rỗng,
+không tự tạo nội dung. Tên, mã nhận diện, kiểu dữ liệu và tính hợp lệ của ảnh vẫn được kiểm tra.
+Preview trả cảnh báo rõ vai trò còn thiếu, mã kỹ năng và ngôn ngữ thiếu mô tả. Khi xuất bản,
+backend bắt buộc vai trò và mô tả kỹ năng, trả errors[] gồm đường dẫn trường thiếu.
+Quy định này thay thế yêu cầu vai trò bắt buộc ngay khi tạo/import bản nháp trước đây.
+### API khôi phục upload import
+
+Quyền `hero:write` và quyền nền `catalog:read`; mọi phiên chỉ chủ sở hữu issuer/subject truy cập.
+- GET `/admin/heroes/import/upload-sessions`: các phiên đang dở của người gọi.
+- PUT `/admin/heroes/import/upload-sessions/{id}`: `{version,state}`; version=-1 tạo, cập nhật dùng version hiện tại. State là object tối đa 5 MB. Trả `{id,version,updatedAt,state}`. Gửi lại cùng state là idempotent; khác state và version cũ trả 409. Không tồn tại/khác chủ trả 404.
+- DELETE cùng đường dẫn: xóa checkpoint của người gọi sau khi gửi job thành công. Không xóa media.
+
+Checkpoint lưu trước PUT storage và sau complete. Khi khôi phục, thử complete lượt cũ trước; chỉ tạo lượt upload mới nếu file chưa có, hết hạn hoặc bị từ chối. Dữ liệu đã thay đổi thì dừng, không tự ghi đè bản xem trước cũ. Thay thế giới hạn trước đây: đóng web trước 202 vẫn tạm dừng upload nhưng có thể tiếp tục từ checkpoint.
+
+### So sánh snapshot tướng trong admin
+
+`GET /admin/heroes/{heroId}/revisions/{revisionId}/comparison?fromRevisionId=UUID` cần `catalog:read`.
+Không nhận query khác. Không truyền fromRevisionId thì dùng sourceRevisionId của đích; nếu không có
+trả `{status:"BASELINE_ONLY",from:null,to,before:{},after,changes:[],warnings}`. Không tự chọn snapshot
+mới nhất hoặc dựng dữ liệu trước đó từ một trạng thái rỗng.
+
+Khi có nguồn cùng hero/ruleset, trả `{status:"AVAILABLE",from,to,before,after,changes,warnings}`;
+from/to là metadata HeroRevisionView; before/after có sáu section theo key JSON camelCase. Mỗi change
+gồm `{section,path,kind,before,after}`, kind ADDED/REMOVED/CHANGED; path là JSON Pointer tương đối với
+section, các mảng nhận diện dùng mã kỹ năng/trang phục/chỉ số/locale thay cho chỉ số dòng. Số bằng nhau
+khác số lẻ thập phân không tính là thay đổi; sources không tham gia diff. Snapshot khác ruleset trả 422;
+nguồn/đích không thuộc hero trả 404. Endpoint chỉ đọc, không ghi nhận thay đổi game/changelog.
+
+Khi so sánh effects loại SOURCE_SNAPSHOT, chỉ đối chiếu dữ liệu gameplay đã thu thập gồm cooldown,
+energyCost, levelTable và tags. Tên/link ảnh nguồn, cờ rà soát, thuộc tính tướng lặp lại và review_required
+trong bảng không tạo khác biệt kỹ năng. before/after và payload khác biệt vẫn giữ dữ liệu nguồn nguyên
+vẹn; không sửa snapshot đã lưu. Khi bổ sung trường gameplay capture mới cần mở rộng phép chiếu này.
+
+### Import chỉ số và dữ liệu nguồn có cấu trúc
+
+`GET /admin/heroes/import/fields` thêm overviewRatings và combatStats, type=json.
+`values.overviewRatings` nhận `{scaleCode,survivability,attackDamage,skillEffects,difficulty,derived,sources}`;
+scale đã có GAME_OVERVIEW_10 giới hạn 0–10, derived bắt buộc có nguồn. `values.combatStats` nhận
+`{values:[{statKey,baseValue?,growthPerLevel?,unit}],sources}`; mỗi dòng phải có ít nhất một số đã biết.
+Đây là field cấp object: OVERWRITE thay cả object, FILL_EMPTY chỉ điền nếu section chưa có dữ liệu,
+SKIP giữ nguyên. Bỏ field khỏi values không xóa section. Tên field/kiểu không hợp lệ trả 422.
+Thứ tự chỉ số được chuẩn hóa theo statKey nên import lại cùng dữ liệu không tạo sửa đổi do thứ tự dòng.
+Skill.effects có thể giữ SOURCE_SNAPSHOT.metadata.reviewFlags hoặc review_flags; preview báo cảnh báo
+cho kỹ năng có cờ chưa rõ, giữ nguyên dữ liệu nguồn thay vì suy luận mô tả hoặc dạng chiêu còn thiếu.
+
+### Chỉnh mốc của baseline nháp đầu tiên
+
+`POST /admin/heroes/{heroId}/drafts/{draftId}/baseline-context`, quyền `hero:write`, body
+`{expectedVersion,contextId}` trả HeroRevisionView. Chỉ DRAFT DATA_BASELINE độc lập (sourceRevisionId=null)
+và chưa có snapshot PUBLISHED cùng hero/ruleset; target phải là context mùa/patch cùng ruleset.
+Backend khóa hero, kiểm tra version, đổi effectiveFromPatchVariantId, tăng version và ghi audit
+HERO_BASELINE_CONTEXT_CHANGED. Cùng context là no-op không tăng version. Giữ nguyên sáu section và
+tham chiếu media. Sai version/trạng thái trả 409; sai loại baseline, đã có lịch sử xuất bản hoặc khác
+ruleset trả 422. Không có endpoint đổi mốc của snapshot đã PUBLISHED; nhập lịch sử sau xuất bản dùng
+baseline độc lập đúng mốc và kiểm chứng nguồn.
+
+### Danh mục tướng theo thay đổi gameplay
+
+`GET /admin/heroes` tiếp tục cần `catalog:read` và giữ `{id,code,revisions}` trong từng dòng. Query:
+`page=0`, `size=20` (1–100), `q` tối đa 100 ký tự sau trim, `seasonId?`, `patchVariantId?`,
+`rulesetId?`, `locale=vi-VN`, `sort=code|edited-desc`. Tham số khác trả 400; sort/locale/phạm vi
+không hợp lệ trả 422. Tìm kiếm không phân biệt hoa thường trên mã và tên snapshot theo từng ruleset,
+trước khi phân trang/count. Khi không lọc mùa/patch, chọn snapshot chưa hủy theo `rulesetOrdinal`
+rồi `revisionNo` giảm dần; bổ sung lịch sử sau này không thay tên ở patch mới hơn. Khi lọc mùa/patch,
+chỉ tìm tên đích của change set mới nhất trong phạm vi đó. Nhận tên của mọi bản dịch đã lưu.
+`%`, `_` và `\` là ký tự tìm literal; khoảng trắng
+trong truy vấn mã có thể thay dấu `-` (`dieu thuyen` tìm `dieu-thuyen`). Không tự bỏ dấu tên.
+
+Mùa/patch lọc membership bằng change set gameplay đã được ghi nhận, không lọc theo mọi snapshot
+đang áp dụng ở mốc đó. Patch phải thuộc mùa/ruleset đã chọn. Chỉ GAME_PATCH PUBLISHED có change
+set được tính; bản nháp, baseline, bản dịch, hiệu chỉnh và số liệu tự khác nhau không được tự gán
+BUFF/NERF. Không có thay đổi đã biên tập trong mùa thì trả trang rỗng, không hiển thị kế thừa.
+
+Mỗi dòng thêm `lastEditedAt` (ISO instant hoặc null) và `gameplayChanges` gồm
+`{id,rulesetId,seasonId?,patchVariantId,fromHeroRevisionId?,toHeroRevisionId,changeKinds,recordedAt,summary?,actualLocale?}`.
+Chọn mùa/patch trả tất cả change set trong phạm vi, theo rulesetOrdinal giảm dần; không chọn trả
+change set mới nhất của từng ruleset. Ngày tạo change set không thay thứ tự gameplay. `changeKinds`
+là các loại đã biên tập không trùng trong change set (BUFF, NERF, ADJUSTMENT, REWORK, FIX, OTHER),
+không suy ra từ dấu tăng/giảm của chỉ số. `summary` dự phòng exact locale → vi-VN → locale chữ cái
+đầu tiên, có `actualLocale`; thiếu bản dịch thì hai trường null. `toHeroRevisionId` mở đúng snapshot
+của thay đổi. Lọc theo ruleset chỉ trả tướng có snapshot chưa hủy trong ruleset đó.
+
+`lastEditedAt` là max của `hero.created_at` và tất cả `hero_revision.updated_at` của tướng, gồm
+nháp, import, dịch, hiệu chỉnh, hủy. Đây là lần sửa dữ liệu tướng, không phải lúc biên tập summary
+changelog hoặc ngày áp dụng game. Không lấy `published_at` hay giờ server để thay timestamp thiếu.
+`edited-desc` dùng đúng công thức trên, sau đó mã và UUID tăng dần để phân trang ổn định. Query
+dùng JPA để lọc/count và tải revision, classification, translation theo nhóm của trang; không tải
+toàn nội dung section hay gọi lịch sử thay đổi riêng cho từng tướng.

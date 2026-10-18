@@ -2053,3 +2053,142 @@ Một implementation được xem là đi đúng đặc tả khi tối thiểu:
 - cache semantics không phụ thuộc việc overwrite immutable resource;
 - integration/architecture/acceptance test bao phủ các invariant quan trọng.
 
+
+## Bổ sung: chuẩn hóa Hero và import theo trường nghiệp vụ
+
+Phạm vi triển khai ưu tiên Hero; chưa mở rộng Item/Arcana/Spell/Enchantment. Admin tách cấu hình game và thư viện ảnh khỏi Sổ nhân vật. Lưu trữ JSON cũ không còn trong menu; giữ file và đường dẫn để chuyển dữ liệu, không tự xóa.
+
+Hero identity/revision được chuyển sang JPA repository, giữ khóa ghi theo Hero và expectedVersion. Sáu section snapshot đã dùng JPA; truy vấn lịch sử và phân giải ngữ cảnh chuyên biệt vẫn giữ SQL; không coi việc đổi persistence là thay đổi quy tắc publish.
+
+Import JSON/CSV ánh xạ mã tướng vào UUID hiện hữu; backend cung cấp danh mục trường cho phép. Luồng preview không ghi dữ liệu; apply kiểm tra revision/version và ghi draft trong một transaction cho mỗi tướng. Chính sách theo trường gồm bổ sung chỗ trống, ghi đè và bỏ qua. Ô trống không xóa nội dung. Mảng kỹ năng/trang phục hiện thay cả danh sách khi ghi đè; không tự suy diễn merge. Không tự publish. Các trường chưa hỗ trợ không được tạo mới.
+
+Mùa xếp hạng thuộc thị trường, có mã ổn định, tên hiển thị, khoảng thời gian [startsAt, endsAt), năm/số mùa tùy chọn. Mùa không thay thế patch/ruleset; một mùa chứa nhiều release. Không suy ra rulesetOrdinal từ tên mùa.
+
+Upload ảnh trong biểu mẫu tái sử dụng Media API. Link HTTPS có thể tải trực tiếp từ trình duyệt khi nguồn cho CORS; không gửi credential API tới nguồn ảnh. Nguồn chặn CORS phải dùng file local ở giai đoạn này. Worker nhập URL chưa được triển khai, không mở API proxy tải URL tùy ý.
+
+## Nhập liệu theo mốc đã biết và patch
+
+Luồng admin: thị trường → mùa → patch/release → chọn loại nhập → ánh xạ → duyệt → lưu draft. Tạo tướng mới và import bắt buộc có release thuộc mùa đã khai báo; ruleset phải khớp release. Không suy ra thời điểm game cập nhật từ ngày nhập dữ liệu.
+
+- BASELINE: snapshot độc lập tại patch được chọn, cause DATA_BASELINE. Không kế thừa snapshot mới hơn hoặc tự tạo changelog. Có thể bổ sung mốc lịch sử của tướng đã tồn tại; các section chưa biết để trống trong draft và phải hoàn thiện trước publish.
+- PATCH_UPDATE: so sánh với snapshot đã publish gần nhất trước patch đích, hoặc tiếp tục draft GAME_PATCH đúng patch. Không có mốc trước thì INSUFFICIENT_DATA, không cho apply; hướng dẫn dùng BASELINE. Khác biệt giữa hai mốc không tự chứng minh thay đổi thuộc patch nào; changelog vẫn phải biên tập và kiểm chứng riêng.
+- CORRECTION: chỉ sửa snapshot tại đúng patch đích, cause IMPORT_CORRECTION; không tạo sự kiện thay đổi game.
+- Nếu đã có draft thuộc patch/loại nhập khác trong cùng ruleset, yêu cầu hoàn tất hoặc bỏ draft đó; không âm thầm chuyển ngữ cảnh.
+- Baseline mới luôn có effectiveFromPatchVariantId. Dữ liệu legacy có mốc null được giữ nguyên, nhưng không dùng làm mốc so sánh cho luồng import mới vì chưa biết thời điểm quan sát.
+- Mốc quá khứ bổ sung không ghi lại các snapshot về sau. Mốc tương lai chưa được chọn làm dữ liệu hiện tại trước lịch rollout. Tướng chưa có trong kho không đồng nghĩa mới ra mắt.
+- Khi cần chèn patch quá khứ vào chuỗi đã có, chọn beforeVariantId cùng ruleset. Backend khóa ruleset và dịch thứ tự các variant sau, giữ nguyên ID và thứ tự tương đối; lịch release vẫn phải phù hợp thời gian. Không tự sửa lịch đã khai báo.
+
+
+### Import tướng chạy nền
+
+Tác vụ import được lưu ở backend sau bước xác nhận. Người dùng có thể đóng hoặc tải lại web và xem lại tiến trình bằng cùng tài khoản. Mỗi tướng có kết quả riêng; lỗi một tướng không hủy các tướng đã lưu. Backend tiếp tục tác vụ chưa hoàn tất sau khi khởi động lại. Chuẩn bị file và upload ảnh vẫn diễn ra trước khi gửi tác vụ. Xem ADR-009-DURABLE-HERO-IMPORT.md.
+
+## Tổng quan phát hành và tiến độ dịch trong admin
+
+Trang phiên bản hiển thị ruleset theo thị trường, mùa hiện tại và patch đang áp dụng; lịch gán ruleset giữ riêng để xem cả quá khứ/tương lai. Mùa hiện tại tính theo khoảng [startsAt, endsAt). Patch hiện tại yêu cầu thị trường/ruleset active, assignment đang hiệu lực, patch và variant PUBLISHED, release SCHEDULED và effectiveAt không ở tương lai. Không lấy patch nháp hoặc patch tương lai làm hiện tại.
+
+Mùa mở rộng thành các release; patch mở bảng thay đổi được ghi nhận rõ ràng. Giai đoạn này provider thay đổi chỉ có Hero; chưa giả lập dữ liệu Item hoặc quái. Import DATA_BASELINE không tạo changelog.
+
+Danh mục tướng dùng mùa/patch để lọc các thay đổi gameplay đã được biên tập trong hero_patch_change_set. Chọn mùa chỉ trả các tướng có change set thuộc patch của mùa đó; chọn thêm patch thu hẹp đúng patch, không kéo các tướng không đổi từ mốc trước vào kết quả. Một mùa có thể vừa tăng sức mạnh ở patch trước vừa giảm ở patch sau: giữ tất cả change set trong phạm vi để giao diện tổng hợp đúng loại thay đổi. Không chọn mùa/patch thì trả toàn bộ tướng, kèm change set gần nhất theo thứ tự gameplay cho từng ruleset nếu có. DATA_BASELINE, import, bản dịch, hiệu chỉnh hoặc draft GAME_PATCH không tự trở thành gameplay change; không suy đoán BUFF/NERF từ số liệu. Các phiên bản ruleset khác nhau hiển thị riêng. Icon thị trường chỉ biểu thị bản đã xuất bản đang được áp dụng thực tế; bản nháp không được gắn nhãn đang áp dụng.
+
+Tìm mã hoặc tên được thực hiện ở backend trước phân trang; khi không lọc mùa/patch, tên lấy từ snapshot chưa bị hủy mới nhất của từng ruleset theo thứ tự gameplay rồi số revision, nhận cả các bản dịch đã có. Khi lọc mùa/patch, tên lấy từ đích của change set mới nhất trong phạm vi, không dùng tên của patch khác. Tạo bổ sung snapshot lịch sử sau này không làm tên cũ thay tên ở patch mới hơn. Tìm mã cho phép khoảng trắng thay dấu gạch nối, không thêm cơ chế suy đoán ngôn ngữ hoặc bỏ dấu. Lần sửa gần nhất lấy từ timestamp thực lưu: lớn nhất của hero.created_at và hero_revision.updated_at của tướng, gồm tạo, import, bản dịch và hủy nháp. Không dùng ngày patch, published_at hay thời điểm đọc để giả làm ngày sửa. Có thể sắp xếp theo mã hoặc ngày sửa giảm dần, giữ thứ tự mã/UUID khi bằng nhau.
+
+Ngôn ngữ đọc theo locale hồ sơ người dùng, dự phòng vi-VN rồi bản có sẵn, có nhãn dự phòng. Ngôn ngữ nhập vẫn được chọn trong tạo/sửa/import. Tiến độ dịch dựa trên trường bắt buộc và trường tùy chọn đã có nội dung ở bất kỳ ngôn ngữ nào của cùng snapshot, gồm profile/kỹ năng/trang phục; mẫu số là bộ ngôn ngữ hỗ trợ của admin. Đủ nội dung không đồng nghĩa đã duyệt hoặc đã kiểm chứng nguồn; chưa triển khai workflow duyệt/stale translation trong đợt này.
+
+
+## Mùa dùng chung và lịch thị trường (16/10/2026)
+
+Quyết định này thay thế mô hình mùa thuộc region trong các mục bổ sung trước.
+Mùa là danh mục chung, có mã, tên, năm/số mùa tùy chọn và ordinal. Ngày tạo, tên mã,
+ngôn ngữ không quyết định thứ tự. Khi tạo có thể chèn trước một mùa hoặc nối cuối.
+Patch variant gắn trực tiếp season_id; tạo patch theo mùa đồng thời tạo game_patch và
+variant trong một transaction. Backend đặt ordinal xuyên suốt ruleset, chèn trước patch
+trong cùng mùa hoặc cuối mùa (trước patch đầu mùa sau). Không sửa snapshot đã nhập.
+
+Lịch mùa chuyển sang season_schedule (season_id, region_id, starts_at, ends_at), unique
+mùa/thị trường và không chồng khoảng theo thị trường. Một mùa có nhiều lịch. Patch release
+vẫn là ngày áp dụng theo thị trường, phải nằm trong lịch mùa của patch, đúng ruleset được
+thị trường sử dụng, không đảo thứ tự gameplay. Mùa/patch chưa có lịch vẫn hiện ở admin.
+Current tính theo thời gian server và thị trường, không theo ngày tạo hay ordinal lớn nhất.
+
+V012 giữ ID và dữ liệu lịch cũ; mùa cũ khác ID không tự gộp khi chưa xác minh tương đương.
+Mã mùa cũ bị trùng được thêm UUID để bảo toàn; variant chỉ tự gắn mùa nếu các release
+của nó cùng một mùa. Trường hợp chưa rõ nằm ở nhóm patch cũ chưa gắn mùa.
+Ruleset aov-vn đổi mã thành aov-standard, giữ ID; nếu cả hai mã tồn tại thì migration
+báo xung đột và rollback, không tự gộp dữ liệu.
+
+API: GET admin/seasons không cần regionId; POST nhận code, displayName, seasonYear?,
+seasonNumber?, beforeSeasonId?. POST admin/seasons/{id}/schedules nhận regionId,
+startsAt, endsAt. POST admin/season-patches nhận seasonId, rulesetId, beforeVariantId?,
+patch:{code,translations:[{locale,title,summary,description?}]}, trả id của variant.
+Quyền tạo mùa/patch/lịch mùa là patch:write, phát hành patch vẫn cần patch:publish.
+Publication overview trả seasons chung, seasonSchedules riêng và variants.seasonId.
+
+Nhập/tạo tướng chọn mùa và patch, không bắt chọn thị trường hay lịch phát hành.
+GET admin/heroes/import/contexts?seasonId= trả context của variant DRAFT/PUBLISHED.
+Request dùng contextId; alias releaseId và lookup lịch cũ được giữ cho job đã nhận trước
+nâng cấp. Context mới có regionId/regionCode/effectiveAt null. Dữ liệu có thể soạn trước
+khi phát hành; publish tướng vẫn yêu cầu variant đã publish. BASELINE vẫn chỉ là trạng thái
+quan sát, không tự tạo lịch sử thay đổi. API contexts có regionId vẫn phục vụ client cũ.
+
+
+## Độ chính xác ngày/giờ lịch phát hành (16/10/2026)
+
+V013 giữ nguyên timestamp cũ. Release mới nhận đúng một trong effectiveAt (ISO instant)
+và effectiveOn (YYYY-MM-DD). Ngày không có giờ được lưu DATE, effective_at null, status DRAFT;
+không tự áp dụng vào nửa đêm. POST admin/patch-releases/{id}/confirm (patch:publish) xác nhận
+đang áp dụng ở thời điểm server, chỉ khi ngày đã tới, đúng ruleset/lịch mùa và không đảo thứ tự.
+Ghi confirmed_at và mốc kích hoạt nội bộ effective_at; không biến thời điểm xác nhận thành
+thời điểm phát hành được nguồn công bố. Gọi lại xác nhận thành công là idempotent.
+Overview trả effectiveAt null khi có effectiveOn, confirmedAt riêng; phase AWAITING_CONFIRMATION
+trước xác nhận. Nguồn lịch sử chỉ biết ngày vẫn xem/nhập dữ liệu được mà không cần xác nhận
+rằng patch cũ đang áp dụng hiện tại.
+
+Lịch mùa nhận đúng một startsAt/startsOn và một endsAt/endsOn. startsOn/endsOn được lưu
+DATE; ngày kết thúc không có giờ được hiểu bao gồm cả ngày đó. Khoảng kiểm tra chồng lấn
+nội bộ dùng ranh giới ngày theo múi giờ thị trường, không phải giờ diễn ra đã xác minh.
+Overview không trả các ranh giới suy ra như timestamp sự kiện. Lịch mùa chỉ có ngày có
+phase RECORDED, không được tự khẳng định là current từ giờ suy ra.
+Frontend hiển thị ngày nếu chỉ có DATE, ngày kèm giờ nếu có timestamp, không thêm nhãn
+“Chưa rõ giờ”. Form có ngày và giờ tùy chọn; giờ nhập theo múi giờ thiết bị được hiển thị
+ngay dưới ô. Ngày thuần không dịch theo múi giờ người xem.
+
+### Lịch mùa chưa biết ngày kết thúc (V014)
+
+Ngày kết thúc mùa là tùy chọn. Thiếu ngày kết thúc nghĩa là chưa xác định, không tự suy ra
+mùa đang diễn ra vô thời hạn. POST lịch mùa cập nhật bản ghi hiện có theo mùa/thị trường,
+cho phép bổ sung ngày kết thúc sau. Ràng buộc chống chồng lấn áp dụng cho các lịch đủ hai mốc.
+Patch có thể ghi nhận trước khi có lịch mùa; khi lịch mùa đã có, kiểm tra các mốc đã biết.
+Form lịch dùng panel bên phải trên desktop, từ dưới trên mobile; bộ chọn lịch thống nhất,
+chỉ hiện nhập giờ khi chọn Thêm giờ. Ngày không có giờ vẫn giữ độ chính xác theo ngày.
+### Bản nháp thiếu dữ liệu khi import
+
+Bản nháp được thiếu vai trò tướng và mô tả kỹ năng. Mô tả chưa có được lưu chuỗi rỗng,
+không tự tạo nội dung. Tên, mã nhận diện, kiểu dữ liệu và tính hợp lệ của ảnh vẫn được kiểm tra.
+Preview trả cảnh báo rõ vai trò còn thiếu, mã kỹ năng và ngôn ngữ thiếu mô tả. Khi xuất bản,
+backend bắt buộc vai trò và mô tả kỹ năng, trả errors[] gồm đường dẫn trường thiếu.
+Quy định này thay thế yêu cầu vai trò bắt buộc ngay khi tạo/import bản nháp trước đây.
+### Khôi phục upload import
+
+Khi xác nhận import, lưu phiên chuẩn bị trên backend trước khi upload ảnh. Phiên giữ dữ liệu đã ánh xạ, đường dẫn gốc, dấu vân tay SHA-256 của file và tiến trình từng ảnh. Đóng web tạm dừng upload; mở lại cùng tài khoản để tiếp tục, chọn lại folder/ZIP ban đầu cho ảnh còn thiếu. Không tải lại ảnh đã complete. Tác vụ đã nhận vẫn chạy nền như ADR-009. Không khôi phục hồi tố các lượt upload trước tính năng này.
+
+### Đối chiếu bản nháp và nguồn dữ liệu thu thập
+
+Admin được đối chiếu hai snapshot của cùng tướng/ruleset, kể cả bản nháp. Mặc định đối chiếu
+với sourceRevisionId được lưu khi tạo bản nháp. Snapshot độc lập không có nguồn trả trạng thái
+BASELINE_ONLY; không xem toàn bộ nội dung là thay đổi của patch. Chọn nguồn tường minh chỉ
+thực hiện đối chiếu, không sửa applicability, không tạo changelog và không chứng minh nguyên nhân.
+Các dòng kỹ năng, trang phục, chỉ số và bản dịch được ghép theo mã ổn định/locale; đổi thứ tự
+bản dịch không được tính là thay đổi nội dung. Sources dùng kiểm chứng nguồn, không tính vào diff gameplay.
+
+Import nhận thêm overviewRatings và combatStats theo cấu trúc section do backend cho phép,
+áp dụng chính sách FILL_EMPTY/OVERWRITE/SKIP trên cả object. Các section không được ánh xạ giữ nguyên.
+Rating quy đổi từ đếm thanh ảnh phải có derived=true và nguồn giải thích phương pháp, trong scale
+GAME_OVERVIEW_10 (0–10); không gắn nhãn số liệu chính thức. Không tự điền chỉ số hoặc đơn vị không biết.
+Metadata kỹ năng SOURCE_SNAPSHOT có thể giữ bảng cấp chiêu, nhãn/giá trị gốc, màu và reviewFlags;
+cảnh báo nguồn được giữ và hiển thị khi import, không tự suy luận dạng chiêu chưa thu thập.
+
+Nếu baseline ban đầu còn nháp đã chọn nhầm mùa/patch, admin có thể xác nhận đổi mốc quan sát
+trong cùng ruleset. Chỉ áp dụng với DATA_BASELINE độc lập chưa có sourceRevisionId và chưa có bất kỳ
+snapshot PUBLISHED nào trong cùng ruleset. Thao tác giữ nguyên section/ảnh, kiểm tra version và ghi audit;
+không tự chuyển hàng loạt hoặc sửa mốc của lịch sử đã xuất bản.

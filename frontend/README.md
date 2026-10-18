@@ -39,6 +39,8 @@ pnpm dlx shadcn@latest add button --cwd packages/ui
 
 ## Dùng UI chung
 
+Cơ chế giữ nội dung nhập khi chuyển trang và khôi phục sau tải lại trong Admin được mô tả tại [State và bản nháp nhập liệu](docs/ADMIN-STATE-AND-DRAFTS.md).
+
 ```tsx
 import { Button } from "@aov/ui/components/button"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
@@ -78,8 +80,8 @@ Trang quản trị cho biên tập viên, style mặc định của shadcn/ui, m
 | Trang | Đường dẫn | Từ mô phỏng | Phần nâng cao |
 |---|---|---|---|
 | Bảng điều khiển | `/` | `index.html` | Thẻ số liệu, độ phủ dữ liệu, danh sách việc cần xử lý dẫn tới đúng bộ lọc, biểu đồ trang bị theo nhóm, nhật ký thao tác |
-| Tướng | `/heroes`, `/heroes/:id` | — | Bảng lọc/sắp xếp; trang chi tiết có tab Thông tin, Kỹ năng (bảng dạng tướng), Trang phục, Ảnh |
-| Trang phục | `/skins` | — | Bảng toàn bộ trang phục, lọc theo bậc/portrait/head & cover; sửa tên, bậc, chọn ảnh chính |
+| Tướng | `/publishing`, `/publishing/:heroId` | — | Danh mục backend, bản nháp, kỹ năng, bản dịch, lịch sử và so sánh theo mùa/patch |
+| Trang phục của tướng | `/publishing/:heroId?tab=skins` | — | Quản lý trong phiên bản của từng tướng; không còn trang danh sách riêng |
 | Portrait | `/portraits` | `Xem-portrait.html`, `Quan-ly-portrait.html` | Tab có đếm số, gợi ý ghép kèm % khớp, xem trước các bước sẽ thực hiện, Lưu & ảnh tiếp (Ctrl+Enter / Ctrl+Shift+Enter) |
 | Head & cover, Bậc trang phục | `/media/*` | `Xem-head-cover.html`, `Xem-bac-trang-phuc.html` | Lọc theo loại, lightbox chuyển ảnh bằng ← → |
 | Trang bị | `/items` | `Xem-trang-bi.html`, `Bien-tap-trang-bi.html` | Bảng, bố cục shop kéo-thả (chuột, cảm ứng, bàn phím), sửa công thức có kiểm tra vòng lặp, cây công thức, hoàn tác Ctrl+Z, lưu theo lô, chặn rời trang khi chưa lưu |
@@ -90,9 +92,9 @@ Thêm: tìm kiếm toàn cục Ctrl+K (không phân biệt dấu), giao diện s
 
 ### Dữ liệu
 
-Chưa có admin API của `wiki-service`, nên app chạy với **dữ liệu mẫu**: Vite (dev/preview) phục vụ `resources/Lien-Quan-v3` tại `/__resources/` và lớp `src/lib/api/mock-api.ts` đọc các file JSON trong đó. Thay đổi được lưu trong localStorage của trình duyệt (chỉ phần bị sửa), có version cho từng bản ghi để báo xung đột như đặc tả 01/9.1, và có thể bỏ toàn bộ từ menu người dùng. Không có gì được ghi vào `resources/`.
+Danh mục tướng, phiên bản, bản dịch, trang phục của từng tướng và media đã upload đọc từ backend `wiki-service`. Các đường dẫn cũ `/heroes`, `/heroes/:slug`, `/skins` và `/reference/skins` chuyển về `/publishing`; mã tướng trong tài nguyên không được xem là UUID backend.
 
-Giao diện chỉ phụ thuộc interface `AdminApi` (`src/lib/api/client.ts`); khi `/api/wiki/v1/admin/**` sẵn sàng, chỉ cần thêm adapter gọi HTTP thay cho adapter mẫu. Lỗi dùng `ApiError` theo ProblemDetail và luôn rẽ nhánh theo `code`.
+Các công cụ ảnh và danh mục trang bị/phù hiệu hiện vẫn dùng adapter tài nguyên: Vite (dev/preview) phục vụ `resources/Lien-Quan-v3` tại `/__resources/`, lớp `src/lib/api/mock-api.ts` đọc JSON và lưu chỉnh sửa cục bộ trong trình duyệt. Những chỉnh sửa đó không ghi vào `resources/` hay tự đồng bộ sang danh mục tướng backend. Tìm kiếm toàn cục chuyển truy vấn tướng sang `/publishing`, không đưa ra trang chi tiết tài nguyên cũ.
 
 Ảnh trong `resources/` lưu bằng Git LFS. Muốn xem ảnh thật khi chạy admin:
 
