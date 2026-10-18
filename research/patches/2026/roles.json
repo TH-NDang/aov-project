@@ -1,0 +1,418 @@
+{
+  "schemaVersion": 1,
+  "retrievedOn": "2026-10-18",
+  "sourceUrl": "https://lienquan.garena.vn/",
+  "provenance": "Explicit official hero-card data-type taxonomy, resolved through the category menu data-id labels. No role is inferred from damage type or skill descriptions. The catalogue is current evidence, not proof of historical role changes.",
+  "taxonomy": [
+    {
+      "officialTypeId": "28",
+      "label": "Đấu sĩ",
+      "role": "WARRIOR"
+    },
+    {
+      "officialTypeId": "29",
+      "label": "Pháp sư",
+      "role": "MAGE"
+    },
+    {
+      "officialTypeId": "30",
+      "label": "Trợ thủ",
+      "role": "SUPPORT"
+    },
+    {
+      "officialTypeId": "31",
+      "label": "Đỡ đòn",
+      "role": "TANK"
+    },
+    {
+      "officialTypeId": "32",
+      "label": "Sát thủ",
+      "role": "ASSASSIN"
+    },
+    {
+      "officialTypeId": "33",
+      "label": "Xạ thủ",
+      "role": "MARKSMAN"
+    }
+  ],
+  "heroes": [
+    {
+      "code": "aleister",
+      "name": "Aleister",
+      "roles": ["MAGE"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/aleister/",
+      "officialTypeIds": ["29"],
+      "officialLabels": ["Pháp sư"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/aleister/']",
+        "dataType": "[29]",
+        "categoryMenuLabels": ["data-id=\"29\": Pháp sư"]
+      },
+      "notes": null
+    },
+    {
+      "code": "amily",
+      "name": "Amily",
+      "roles": ["WARRIOR"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/amily/",
+      "officialTypeIds": ["28"],
+      "officialLabels": ["Đấu sĩ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/amily/']",
+        "dataType": "[28]",
+        "categoryMenuLabels": ["data-id=\"28\": Đấu sĩ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "ata",
+      "name": "Ata",
+      "roles": ["WARRIOR"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ata/",
+      "officialTypeIds": ["28"],
+      "officialLabels": ["Đấu sĩ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ata/']",
+        "dataType": "[28]",
+        "categoryMenuLabels": ["data-id=\"28\": Đấu sĩ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "baldum",
+      "name": "Baldum",
+      "roles": ["TANK"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/baldum/",
+      "officialTypeIds": ["31"],
+      "officialLabels": ["Đỡ đòn"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/baldum/']",
+        "dataType": "[31]",
+        "categoryMenuLabels": ["data-id=\"31\": Đỡ đòn"]
+      },
+      "notes": null
+    },
+    {
+      "code": "celica",
+      "name": "Celica",
+      "roles": ["MARKSMAN"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/celica/",
+      "officialTypeIds": ["33"],
+      "officialLabels": ["Xạ thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/celica/']",
+        "dataType": "[33]",
+        "categoryMenuLabels": ["data-id=\"33\": Xạ thủ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "d-arcy",
+      "name": "D’Arcy",
+      "roles": ["MAGE"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/darcy/",
+      "officialTypeIds": ["29"],
+      "officialLabels": ["Pháp sư"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/darcy/']",
+        "dataType": "[29]",
+        "categoryMenuLabels": ["data-id=\"29\": Pháp sư"]
+      },
+      "notes": null
+    },
+    {
+      "code": "dirak",
+      "name": "Dirak",
+      "roles": ["MAGE"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/dirak/",
+      "officialTypeIds": ["29"],
+      "officialLabels": ["Pháp sư"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/dirak/']",
+        "dataType": "[29]",
+        "categoryMenuLabels": ["data-id=\"29\": Pháp sư"]
+      },
+      "notes": null
+    },
+    {
+      "code": "eland-orr",
+      "name": "Eland’orr",
+      "roles": ["MARKSMAN"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/elandorr/",
+      "officialTypeIds": ["33"],
+      "officialLabels": ["Xạ thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/elandorr/']",
+        "dataType": "[33]",
+        "categoryMenuLabels": ["data-id=\"33\": Xạ thủ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "errol",
+      "name": "Errol",
+      "roles": ["WARRIOR"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/errol/",
+      "officialTypeIds": ["28"],
+      "officialLabels": ["Đấu sĩ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/errol/']",
+        "dataType": "[28]",
+        "categoryMenuLabels": ["data-id=\"28\": Đấu sĩ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "flowborn-ad",
+      "name": "Flowborn",
+      "roles": ["MARKSMAN"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/flowborn/",
+      "officialTypeIds": ["33"],
+      "officialLabels": ["Xạ thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/flowborn/']",
+        "dataType": "[33]",
+        "categoryMenuLabels": ["data-id=\"33\": Xạ thủ"]
+      },
+      "notes": "Only the marksman card /flowborn/ is used. The separate /flowborn-2/ card is explicitly MAGE and is excluded."
+    },
+    {
+      "code": "gildur",
+      "name": "Gildur",
+      "roles": ["MAGE", "SUPPORT"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/gildur/",
+      "officialTypeIds": ["29", "30"],
+      "officialLabels": ["Pháp sư", "Trợ thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/gildur/']",
+        "dataType": "[29][30]",
+        "categoryMenuLabels": [
+          "data-id=\"29\": Pháp sư",
+          "data-id=\"30\": Trợ thủ"
+        ]
+      },
+      "notes": null
+    },
+    {
+      "code": "hayate",
+      "name": "Hayate",
+      "roles": ["MARKSMAN"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/hayate/",
+      "officialTypeIds": ["33"],
+      "officialLabels": ["Xạ thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/hayate/']",
+        "dataType": "[33]",
+        "categoryMenuLabels": ["data-id=\"33\": Xạ thủ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "kriknak",
+      "name": "Kriknak",
+      "roles": ["ASSASSIN"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/kriknak/",
+      "officialTypeIds": ["32"],
+      "officialLabels": ["Sát thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/kriknak/']",
+        "dataType": "[32]",
+        "categoryMenuLabels": ["data-id=\"32\": Sát thủ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "krizzix",
+      "name": "Krizzix",
+      "roles": ["SUPPORT"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/krizzix/",
+      "officialTypeIds": ["30"],
+      "officialLabels": ["Trợ thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/krizzix/']",
+        "dataType": "[30]",
+        "categoryMenuLabels": ["data-id=\"30\": Trợ thủ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "lauriel",
+      "name": "Lauriel",
+      "roles": ["MAGE"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/lauriel/",
+      "officialTypeIds": ["29"],
+      "officialLabels": ["Pháp sư"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/lauriel/']",
+        "dataType": "[29]",
+        "categoryMenuLabels": ["data-id=\"29\": Pháp sư"]
+      },
+      "notes": null
+    },
+    {
+      "code": "natalya",
+      "name": "Natalya",
+      "roles": ["MAGE"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/natalya/",
+      "officialTypeIds": ["29"],
+      "officialLabels": ["Pháp sư"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/natalya/']",
+        "dataType": "[29]",
+        "categoryMenuLabels": ["data-id=\"29\": Pháp sư"]
+      },
+      "notes": null
+    },
+    {
+      "code": "ngo-khong",
+      "name": "Ngộ Không",
+      "roles": ["ASSASSIN"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ngo-khong/",
+      "officialTypeIds": ["32"],
+      "officialLabels": ["Sát thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ngo-khong/']",
+        "dataType": "[32]",
+        "categoryMenuLabels": ["data-id=\"32\": Sát thủ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "preyta",
+      "name": "Preyta",
+      "roles": ["MAGE"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/preyta/",
+      "officialTypeIds": ["29"],
+      "officialLabels": ["Pháp sư"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/preyta/']",
+        "dataType": "[29]",
+        "categoryMenuLabels": ["data-id=\"29\": Pháp sư"]
+      },
+      "notes": null
+    },
+    {
+      "code": "raz",
+      "name": "Raz",
+      "roles": ["MAGE"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/raz/",
+      "officialTypeIds": ["29"],
+      "officialLabels": ["Pháp sư"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/raz/']",
+        "dataType": "[29]",
+        "categoryMenuLabels": ["data-id=\"29\": Pháp sư"]
+      },
+      "notes": null
+    },
+    {
+      "code": "roxie",
+      "name": "Roxie",
+      "roles": ["WARRIOR"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/roxie/",
+      "officialTypeIds": ["28"],
+      "officialLabels": ["Đấu sĩ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/roxie/']",
+        "dataType": "[28]",
+        "categoryMenuLabels": ["data-id=\"28\": Đấu sĩ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "ryoma",
+      "name": "Ryoma",
+      "roles": ["WARRIOR"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ryoma/",
+      "officialTypeIds": ["28"],
+      "officialLabels": ["Đấu sĩ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ryoma/']",
+        "dataType": "[28]",
+        "categoryMenuLabels": ["data-id=\"28\": Đấu sĩ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "toro",
+      "name": "Toro",
+      "roles": ["TANK"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/toro/",
+      "officialTypeIds": ["31"],
+      "officialLabels": ["Đỡ đòn"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/toro/']",
+        "dataType": "[31]",
+        "categoryMenuLabels": ["data-id=\"31\": Đỡ đòn"]
+      },
+      "notes": null
+    },
+    {
+      "code": "trieu-van",
+      "name": "Triệu Vân",
+      "roles": ["WARRIOR"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/trieu-van/",
+      "officialTypeIds": ["28"],
+      "officialLabels": ["Đấu sĩ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/trieu-van/']",
+        "dataType": "[28]",
+        "categoryMenuLabels": ["data-id=\"28\": Đấu sĩ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "volkath",
+      "name": "Volkath",
+      "roles": ["WARRIOR"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/volkath/",
+      "officialTypeIds": ["28"],
+      "officialLabels": ["Đấu sĩ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/volkath/']",
+        "dataType": "[28]",
+        "categoryMenuLabels": ["data-id=\"28\": Đấu sĩ"]
+      },
+      "notes": null
+    },
+    {
+      "code": "yorn",
+      "name": "Yorn",
+      "roles": ["MARKSMAN"],
+      "sourceUrl": "https://lienquan.garena.vn/",
+      "heroUrl": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/yorn/",
+      "officialTypeIds": ["33"],
+      "officialLabels": ["Xạ thủ"],
+      "evidence": {
+        "selector": "a.st-heroes__item[href='https://lienquan.garena.vn/hoc-vien/tuong-skin/d/yorn/']",
+        "dataType": "[33]",
+        "categoryMenuLabels": ["data-id=\"33\": Xạ thủ"]
+      },
+      "notes": null
+    }
+  ]
+}
