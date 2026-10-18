@@ -463,6 +463,8 @@ hero_id
 skin_key
 display_order
 art_asset_id UUID NULL
+head_asset_id UUID NULL
+portrait_asset_id UUID NULL
 rarity_code VARCHAR(64) NULL
 ```
 
@@ -1551,3 +1553,55 @@ cho `lastEditedAt` hoặc phân loại thay đổi. Lần sửa tính từ hero.
 thay đổi gameplay đọc từ hero_patch_change_set và sáu bảng change_kind, bất biến sau ghi nhận.
 Phạm vi mùa/thứ tự patch lấy qua hợp đồng công khai module patch, không join entity internal giữa module.
 Các mapping classification chỉ đọc và truy vấn theo nhóm ID change set của trang.
+
+### Không gian ảnh nhân vật và bậc trang phục (V017)
+
+Ảnh chính của tướng vẫn nằm trong `hero.hero_media_binding`, ba vai trò HEAD, PORTRAIT,
+SPLASH. Ảnh chính của trang phục nằm trong `hero.hero_skin_snapshot`: `head_asset_id`,
+`portrait_asset_id`, `art_asset_id` (cover/SPLASH). Các cột UUID là tham chiếu logical asset;
+module hero không đọc bảng media và không tạo FK sang schema media.
+
+Hai bảng ứng viên ảnh:
+
+| Bảng | Khóa và nội dung |
+|---|---|
+| `hero.hero_image_option` | PK `(media_binding_revision_id,media_role,image_order)`; asset_id, label nullable 255 ký tự; unique `(media_binding_revision_id,media_role,asset_id)` |
+| `hero.skin_image_option` | PK `(skin_set_revision_id,skin_key,media_role,image_order)`; asset_id, label nullable 255 ký tự; unique theo section/skin/role/asset; FK nội bộ tới snapshot trang phục |
+
+Mỗi vai trò tối đa 200 ảnh, `image_order` 0–199. Ảnh chính có thể đồng thời có mặt trong danh sách
+ứng viên; dữ liệu cũ không có danh sách vẫn hợp lệ. Chuyển ảnh chính giữ lại ảnh cũ trong danh sách.
+Các file `-1`, `-2` có asset/label riêng, kể cả khi bytes giống nhau. Trigger section bất biến áp dụng
+cho cả hai bảng: không sửa nội dung đã xuất bản. MediaUsageProvider báo cáo ảnh chính lẫn ứng viên.
+
+`hero.skin_badge` là danh mục nhãn dùng chung: UUID id, code VARCHAR(64) unique, kind
+UNKNOWN/RARITY/EVENT, version, created_at, updated_at. `hero.skin_badge_translation` có PK
+`(badge_id,locale)`, display_name VARCHAR(255), icon_asset_id UUID nullable. Tên và **icon cùng thuộc
+một bản dịch**; không đặt icon chung trên bảng cha. Semantic ảnh là SKIN_BADGE. Media usage dùng
+badge UUID, revisionId null, phạm vi CURRENT và role `BADGE_ICON:<locale>`.
+
+Migration chỉ đưa các rarity_code đã tồn tại vào danh mục UNKNOWN, không tạo tên/icon giả. Khi ghi
+bản nháp có mã bậc mới, mã được đăng ký UNKNOWN trong cùng transaction; chưa bắt buộc FK từ các
+snapshot lịch sử tới danh mục. Bản dịch cập nhật bằng optimistic version trên badge; các ngôn ngữ
+khác phải được giữ trong payload. Danh mục này không phải section revision của gameplay.
+
+### Nhóm bậc/chủ đề trang phục (V018)
+
+`hero.skin_badge_group`: UUID id, code VARCHAR(64) unique, kind RANK/THEME, version, created_at,
+updated_at. `hero.skin_badge_group_translation`: PK `(group_id,locale)`, display_name VARCHAR(255),
+FK nội bộ tới nhóm. `hero.skin_badge.group_id` nullable tham chiếu nhóm; mỗi nhãn có một nhóm hiển
+thị chính. Không có nhóm thật mang mã __ungrouped; đó là read model tổng hợp các nhãn group_id=null.
+
+Nhóm là metadata tổ chức, không phải section gameplay và không làm thay đổi rarity_code hay loại
+nhãn đã có. Tên nhóm hỗ trợ bản dịch, cùng chuỗi dự phòng exact locale → vi-VN → en-US → locale
+đầu tiên. Thêm/sửa nhóm có audit và expectedVersion; chuyển nhóm tăng version của nhãn. Sửa tên/icon
+nhãn bằng hợp đồng cũ giữ nguyên group_id, tránh client/import cũ vô tình bỏ nhóm.
+### Alias sau chuẩn hóa mã ảnh và nhân vật
+
+ADR-010 bổ sung hero.hero_code_alias (legacy_code → hero_id), hero.skin_key_alias
+(hero_id,legacy_key → skin_key), hero.skin_badge_code_alias (legacy_code → badge_id) và
+hero.image_file_alias (asset_id,legacy_name,file_name). Alias chỉ chuyển định danh; UUID và
+nội dung bản đã xuất bản không đổi. Khóa ngoại của snapshot/bản dịch/ứng viên trang phục cập
+nhật đồng bộ khi migration đổi khóa chính. Trigger bảo vệ nội dung vẫn bật sau migration.
+
+hero.identifier_namespace giữ hàng khóa skin-badge để tuần tự hóa cấp mã nhãn tự động qua JPA.
+Tên ảnh nhập lại bằng đường dẫn/mã cũ vẫn nối asset đã có; không di chuyển object key assets/.

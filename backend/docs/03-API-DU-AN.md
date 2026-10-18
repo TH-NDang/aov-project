@@ -1997,3 +1997,77 @@ changelog hoặc ngày áp dụng game. Không lấy `published_at` hay giờ se
 `edited-desc` dùng đúng công thức trên, sau đó mã và UUID tăng dần để phân trang ổn định. Query
 dùng JPA để lọc/count và tải revision, classification, translation theo nhóm của trang; không tải
 toàn nội dung section hay gọi lịch sử thay đổi riêng cho từng tướng.
+
+### Không gian ảnh và bản dịch bậc trang phục
+
+Các endpoint ngoài dưới đây dùng prefix `/api/wiki/v1`; mapping Java vẫn dùng ApiPaths.ADMIN
+và `version="1"`. Đọc cần `catalog:read`, ghi danh mục/bản nháp cần `hero:write`; upload riêng cần
+`media:write`. Media bytes chỉ đi qua presigned URL của storage.
+
+| Endpoint | Hợp đồng |
+|---|---|
+| `GET /admin/hero-media` | Query bắt buộc rulesetId, role HEAD/PORTRAIT/SPLASH; locale=vi-VN, q, page=0, size=20 (1–100). PageSlice nhóm tướng, chọn snapshot chưa hủy theo rulesetOrdinal rồi revisionNo, không lọc membership thay đổi mùa/patch. |
+| `GET /admin/skin-badges` | rulesetId tùy chọn để tính skinCount; locale, q, page, size. PageSlice danh mục và bản dịch. |
+| `POST /admin/skin-badges` | `{code,kind,translations:[{locale,displayName,iconAssetId}]}` → 201 SkinBadgeView. Code unique, kind UNKNOWN/RARITY/EVENT. |
+| `PUT /admin/skin-badges/{id}` | `{expectedVersion,kind,translations}` → 200 SkinBadgeView; code bất biến, thay toàn bộ translations, xung đột 409. |
+| `GET /admin/skin-badges/{id}/skins` | rulesetId bắt buộc, locale, page, size; PageSlice trang phục liên quan trong các snapshot đã chọn, không đếm trùng lịch sử. |
+
+HeroMediaGroup gồm `{heroId,code,name,actualLocale,revision,entries}`. Entry gồm
+`{ownerType:HERO|SKIN,skinKey?,name,assetId?,label?,main,rarityCode?}`. Thiếu ảnh chính vẫn có
+placeholder assetId=null; các file khác giữ từng hàng riêng. q tìm mã/tên tướng và mã/tên trang phục
+trước khi phân trang. Chỉ trả UUID asset; metadata/URL và nguồn phân giải qua Media API được cache.
+
+Section MEDIA_BINDINGS giữ `bindings:{HEAD?:UUID,PORTRAIT?:UUID,SPLASH?:UUID}`, bổ sung
+`images:{HEAD?:ImageOption[],PORTRAIT?:ImageOption[],SPLASH?:ImageOption[]}`. ImageOption là
+`{assetId,label?}`, tối đa 200 mỗi vai trò và không trùng assetId trong cùng vai trò. Skin giữ
+`artAssetId` cho cover, thêm `headAssetId`, `portraitAssetId`, `images` cùng cấu trúc. Dữ liệu cũ
+không có images được đọc như bản đồ rỗng. Ảnh tướng theo semantic HERO_HEAD/HERO_PORTRAIT/HERO_SPLASH;
+mọi ảnh trang phục dùng HERO_SKIN_ART. Đổi ảnh chính giữ ứng viên cũ/mới. Các request section vẫn
+cần expectedDraftVersion, chỉ ghi DRAFT; snapshot PUBLISHED bất biến.
+
+SkinBadgeView gồm `{id,code,kind,version,translations,displayName,iconAssetId,actualLocale,
+fallbackApplied,skinCount}`. Mỗi translation có `{locale,displayName,iconAssetId}`; icon nullable,
+locale không trùng, semantic bắt buộc SKIN_BADGE và asset phải dùng được. Projection chọn exact
+locale → vi-VN → en-US → locale đầu tiên. Tên/icon luôn cùng hàng dịch; không lấy icon dự phòng
+khi hàng dịch đích đã có nhưng thiếu icon. Chưa có bản dịch trả code, icon null, actualLocale null.
+SkinBadgeRelation gồm `{heroId,heroCode,heroName,skinKey,skinName,revisionId,artAssetId}`.
+
+### Nhóm bậc/chủ đề của nhãn trang phục
+
+| Endpoint | Hợp đồng |
+|---|---|
+| `GET /admin/skin-badge-groups` | locale, q, page, size; PageSlice nhóm cùng badgeCount, không cắt một nhóm thành các nhóm trùng tên theo trang nhãn. Đọc cần catalog:read. |
+| `POST /admin/skin-badge-groups` | `{code,kind:RANK|THEME,translations:[{locale,displayName}]}`; tạo nhóm, cần hero:write. |
+| `PUT /admin/skin-badge-groups/{id}` | `{expectedVersion,kind,translations}`; code bất biến, giữ optimistic version và thay toàn bộ bản dịch nhóm. |
+| `PUT /admin/skin-badges/{id}/group` | `{expectedVersion,groupId:UUID|null}`; chuyển/bỏ nhóm, giữ mọi tên/icon/loại nhãn; cần hero:write, xung đột 409. |
+
+GroupView gồm `{id,code,kind,version,translations,displayName,actualLocale,fallbackApplied,
+badgeCount,matchedByGroup}`. Nhóm tổng hợp chưa phân nhóm có id=null, code=__ungrouped,
+kind=null, displayName=null; UI đặt nhãn theo ngôn ngữ giao diện. q tìm mã/tên nhóm hoặc mã/tên
+nhãn con. Khi chính nhóm khớp, matchedByGroup=true, count gồm toàn bộ nhãn và UI bỏ q khi tải con;
+nếu chỉ nhãn khớp thì count theo q và UI gửi lại q. Chuỗi q rỗng không áp dụng nhánh khớp tên nhóm.
+
+`GET /admin/skin-badges` thêm query groupId hoặc ungrouped=true, không gửi cả hai; các tham số cũ
+vẫn hợp lệ. SkinBadgeView thêm groupId nullable. POST nhãn có thể nhận groupId; PUT metadata nhãn
+cũ giữ nguyên nhóm, chuyển nhóm chỉ qua endpoint riêng. Nhãn và nhóm vẫn dùng UUID của backend,
+không dùng tên hiển thị hoặc chỉ số trang làm khóa ánh xạ.
+
+Request chuyển nhóm bắt buộc có cả expectedVersion và groupId; bỏ groupId trả 400, gửi null
+là thao tác bỏ nhóm. Không dùng PUT metadata để ngầm chuyển nhóm.
+
+### Chuẩn hóa định danh và tên file ảnh
+
+Theo ADR-010, mã tướng dùng tên quốc tế; khóa trang phục có dạng
+`<hero-code>-<ten-trang-phuc-khong-dau>-<so>`, số từ 1. Alias mã/khóa cũ được phân giải trước khi
+import hoặc ghi section, bao gồm trước bước giữ ứng viên ảnh; không nhân đôi tướng/trang phục
+khi dùng lại JSON cũ. UUID, bản dịch, revision và tham chiếu ảnh không đổi.
+
+`POST /admin/skin-badges` cho phép bỏ code và gửi regionCode (mã quốc gia ISO chữ thường hoặc
+global, mặc định vn). Khi đó translations phải có tên; backend cấp mã `<ten>-<regionCode>-<so>`
+dưới khóa transaction JPA. Dấu `+` trong tên chuyển thành `plus`. Code tường minh vẫn được nhận
+để tương thích client cũ. Region không hợp lệ hoặc tên không tạo được slug ASCII trả 422.
+
+Metadata tên file Media và nhãn ứng viên được đổi đồng bộ với file nguồn trong resources;
+object key và bytes lưu trữ bất biến. Bảng ảnh hiển thị thumbnail chính trong cột tướng được ghim,
+không có cột Ảnh chính riêng. Ảnh trang phục chính có dấu kiểm nhỏ trên thumbnail; nhãn bậc chỉ
+hiển thị tên và icon, vẫn mở preview tại chỗ được.

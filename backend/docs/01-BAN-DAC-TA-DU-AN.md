@@ -2192,3 +2192,43 @@ Nếu baseline ban đầu còn nháp đã chọn nhầm mùa/patch, admin có th
 trong cùng ruleset. Chỉ áp dụng với DATA_BASELINE độc lập chưa có sourceRevisionId và chưa có bất kỳ
 snapshot PUBLISHED nào trong cùng ruleset. Thao tác giữ nguyên section/ảnh, kiểm tra version và ghi audit;
 không tự chuyển hàng loạt hoặc sửa mốc của lịch sử đã xuất bản.
+
+### Không gian ảnh nhân vật
+
+Portrait, Head và Cover được quản lý trên backend, nhóm theo tướng và các trang phục liên quan.
+Mỗi chủ thể/vai trò có một ảnh chính và nhiều ảnh ứng viên; giữ nguyên mọi file khác tên, gồm
+`-1`, `-2`, không tự bỏ ảnh vì bytes giống nhau. Chọn ảnh chính không làm mất ảnh cũ. Danh sách
+hiển thị cả trường hợp chưa có ảnh để biên tập viên bổ sung; nguồn và ghi chú đọc từ Media.
+
+Ảnh theo section revision của tướng, cùng quy tắc bản nháp/xuất bản hiện có. Chỉnh ảnh của snapshot
+đã xuất bản phải tạo bản nháp cập nhật hình ảnh, không sửa lịch sử. Thư viện chọn snapshot chưa hủy
+mới nhất theo thứ tự gameplay rồi revisionNo, không theo ngày tạo hoặc revisionNo đơn lẻ.
+
+Tên tướng và trang phục dùng các bản dịch hiện có. Bậc/nhãn trang phục có mã ổn định dùng chung,
+nhưng tên hiển thị và icon riêng cho từng ngôn ngữ. Có thể thêm bản dịch chưa có icon, giữ nguyên
+các bản dịch khác. Khi thiếu ngôn ngữ yêu cầu, dự phòng cả cặp tên/icon từ vi-VN, en-US rồi locale
+đầu tiên; UI ghi rõ ngôn ngữ thực tế. Một bản dịch đã tồn tại nhưng thiếu icon hiển thị ô trống,
+không ghép icon của ngôn ngữ khác. Loại chưa phân loại là UNKNOWN, không suy luận bậc/sự kiện.
+
+Nhập ảnh tài nguyên đi qua Media presigned upload/complete. Chỉ ánh xạ mã tướng/skin chính xác,
+giữ ảnh chính đang có và lưu các ứng viên vào bản nháp; không tự xuất bản. Không sửa dữ liệu trong
+resources. Báo cáo và checkpoint cục bộ cho phép tiếp tục mà không upload lại file đã hoàn tất.
+
+### Nhóm bậc và chủ đề trang phục
+
+Nhãn trang phục có một nhóm hiển thị chính, loại RANK (bậc) hoặc THEME (sự kiện/chủ đề).
+Đây là cách tổ chức thư viện để tìm và biên tập, không thay thế rarity_code của trang phục và
+không tự xác minh loại UNKNOWN/RARITY/EVENT của nhãn. Có thể tạo, đổi tên theo ngôn ngữ và chuyển
+nhãn sang nhóm khác. Nhãn chưa phân nhóm nằm trong nhóm tổng hợp Chưa phân nhóm.
+
+Các nhóm ban đầu dựa trên những họ mã nguồn rõ ràng; mã chưa nhận diện giữ nguyên chưa phân nhóm.
+Tên và icon của mọi bản dịch nhãn đang có được giữ nguyên. Chuyển nhóm dùng optimistic version
+của nhãn, không sửa các bản dịch hoặc nội dung snapshot tướng. Nhóm được phân trang độc lập;
+mở nhóm mới tải các nhãn, mở nhãn mới tải trang phục liên quan.
+
+Bảng ảnh hiển thị bậc/nhãn trên dòng trang phục và không có cột icon đi tới trang ở cuối bảng.
+Chọn ảnh hoặc trang phục mở khung chi tiết ngay tại chỗ, bên phải trên desktop và từ dưới trên
+mobile. Chỉ nút mở trang đầy đủ trong chi tiết mới điều hướng. Chi tiết cho chuyển Head/Portrait/
+Cover và chuyển tướng/trang phục cùng revision bằng dải ảnh chính; không đưa các ảnh bổ sung
+vào dải chuyển nhanh. Ảnh bổ sung được chọn từ bảng vẫn mở đúng file đã chọn. Khi đang sửa hoặc
+upload, việc chuyển ảnh vẫn bảo vệ dữ liệu chưa lưu.

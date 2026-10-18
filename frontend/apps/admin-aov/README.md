@@ -402,7 +402,7 @@ Phần này là phương án, chưa có migration, endpoint hay quyền nào dư
 | `reference.translation` | PK `(entry_id,locale)`, tên và mô tả ngắn; FK nội bộ tới entry, giới hạn độ dài và locale tương đương parser. |
 | `reference.alias` | `(entry_id,locale,normalized_alias)` cùng alias gốc, FK nội bộ tới translation; NFC + lower, giữ dấu tiếng Việt. Không đặt unique alias xuyên thực thể vì cần nhận biết/loại bỏ alias mơ hồ khi tạo index. |
 
-Tạo một Flyway migration mới, dự kiến `V017__reference_catalog.sql` nếu số đó vẫn trống lúc triển khai; không sửa V000–V016. Cấu hình JPA giữ validate. Mutation dùng optimistic version, transaction ngắn ghi entry/translation/alias cùng audit qua `AuditLog` và `CurrentActor`; cập nhật revision cấu hình/catalog để invalidation và ETag nhất quán. Không nhận actor từ request. Nếu dùng icon asset thì đọc qua `MediaAssets`, triển khai `MediaUsageProvider`; không đọc bảng media hoặc gọi object storage trong transaction. Lỗi dùng enum của module triển khai `ApiErrorCode` và `ApiException`.
+Tạo một Flyway migration mới, dùng số phiên bản tiếp theo còn trống khi triển khai (V017 đã dành cho không gian ảnh); không sửa V000–V016. Cấu hình JPA giữ validate. Mutation dùng optimistic version, transaction ngắn ghi entry/translation/alias cùng audit qua `AuditLog` và `CurrentActor`; cập nhật revision cấu hình/catalog để invalidation và ETag nhất quán. Không nhận actor từ request. Nếu dùng icon asset thì đọc qua `MediaAssets`, triển khai `MediaUsageProvider`; không đọc bảng media hoặc gọi object storage trong transaction. Lỗi dùng enum của module triển khai `ApiErrorCode` và `ApiException`.
 
 | Endpoint đề xuất (đường dẫn ngoài) | Quyền/ứng xử đề xuất |
 |---|---|
@@ -443,3 +443,56 @@ Màn hình so sánh gom theo `skillKey`, mỗi kỹ năng có một bảng trư�
 Nút **Màu thay đổi** cho chọn riêng màu tăng/giảm và lưu trên trình duyệt, đồng bộ các tab. Mũi tên và tên loại không đổi theo màu. Ảnh kỹ năng ưu tiên media đã gắn; khi thiếu có thể dùng ảnh tài nguyên hiện tại khớp chính xác tướng/slot/biến thể, được ghi rõ là ảnh tham chiếu. Không có ảnh phù hợp thì hiển thị ô giữ chỗ; thêm/xóa liên kết ảnh trên kỹ năng hiện có hiển thị cặp trước/sau.
 
 Link thư mục và ảnh chụp kỹ năng gốc được giữ để mở đối chiếu. Ghi chú nội dung tính theo review_index của bộ nguồn, gồm mô tả bị cắt và dạng chưa thu thập; các ghi chú đo màu/thanh đánh giá không làm tăng số tướng cần rà soát. Thông tin nguồn lặp trong mỗi kỹ năng không tạo chênh lệch kỹ năng khi chỉ đổi chỉ số tướng hoặc tên file ảnh. Ngôn ngữ đang xem và ngôn ngữ đích biên dịch được giữ độc lập khi chuyển tab.
+
+## Không gian ảnh từ backend
+
+`/hero/media` dùng các tab query `?tab=head`, `?tab=cover`, `?tab=badges` (mặc định Portrait), cùng một page tab và không có tiêu đề lớn lặp lại. Các URL cũ chuyển hướng và giữ bộ lọc. Ba tab ảnh dùng chung bảng nhóm theo tướng từ
+`GET /admin/hero-media`, chọn ruleset và tìm mã/tên. Mở nhóm để thấy ảnh tướng, trang phục,
+ảnh bổ sung và các ô chưa có ảnh. Mỗi file giữ nhãn riêng, gồm `-1`, `-2`; dấu kiểm trên thumbnail
+phân biệt lựa chọn đang dùng. Chọn ảnh/tên trang phục mở chi tiết bên phải trên desktop, từ dưới trên mobile.
+Metadata nguồn/ghi chú đọc qua Media và dùng cùng cache với trang tướng.
+
+Thêm ảnh hoặc đổi ảnh chính ghi section bản nháp có expectedDraftVersion, giữ tất cả ảnh cũ,
+trường của vai trò khác, nguồn và bản dịch. Snapshot đã xuất bản chỉ đọc; UI có đường mở trang
+tướng để tạo bản nháp. Bộ đếm portrait chưa khớp từ tài nguyên cũ đã được gỡ khỏi sidebar/dashboard.
+Không gian này không gọi catalog JSON tài nguyên để làm dữ liệu quản lý.
+
+Tab `?tab=badges` là danh mục backend. Mở nhóm xem trang phục dùng nhãn; sửa để thêm bản dịch với
+ngôn ngữ đã biết. Mỗi ngôn ngữ có tên và icon SKIN_BADGE riêng, mã nhãn dùng chung. Hiển thị có ghi
+ngôn ngữ dự phòng; một bản dịch đã có nhưng chưa chọn icon giữ ô trống. Tên đầy đủ được giữ theo
+nguồn, bao gồm chữ “Bậc” ở những nhãn có tiền tố này; không thêm đồng loạt cho nhãn sự kiện.
+Upload vẫn qua presigned storage URL, không gửi bytes ảnh qua backend.
+
+Nhập tài nguyên hiện có bằng `research/character-images/import-images.py` với preview, apply,
+verify và checkpoint cục bộ. Lưu vào bản nháp, không tự xuất bản. Xem README cùng thư mục để chạy lại.
+
+Không gian ảnh đã bỏ icon đi tới trang ở cuối bảng. Dòng trang phục có bậc/nhãn theo ngôn ngữ
+hiện tại. Chọn ảnh hoặc thẻ trang phục liên quan mở viewer tại chỗ; chỉ nút Mở trang tướng trong
+viewer điều hướng. Viewer dùng một preview của revision, có dải ảnh chính của các trang phục và
+ba vai trò Head/Portrait/Cover để chuyển nhanh, giữ nguồn và công cụ chỉnh sửa bản nháp.
+
+Tab bậc trang phục tải các nhóm RANK/THEME từ backend; mở nhóm mới tải từng trang nhãn, mở nhãn
+mới tải trang phục. Có công cụ tạo/sửa bản dịch nhóm và chuyển nhãn giữa các nhóm. Nhóm chưa
+phân loại là read model riêng, không tạo UUID giả. Đây là nhóm tổ chức thư viện; không tự thay
+đổi phân loại bậc/sự kiện của nhãn hoặc icon ngôn ngữ. Sửa metadata nhãn bằng client cũ vẫn giữ nhóm.
+
+Mỗi tướng là một nhóm rộng toàn trang, không còn cột tướng trống kéo dài bên trái. Thanh nhóm có
+ảnh chính, tên tướng, mã sao chép và bộ đếm ảnh/trang phục; bấm toàn vùng tên để mở rộng, bấm ảnh
+để xem chi tiết riêng. Thanh nhóm được ghim khi cuộn trong nhóm. Bảng ảnh và trang phục nằm ngay
+bên dưới; phiên bản chỉ hiện một lần. Trên mobile, tên file chuyển vào chi tiết và bậc nằm dưới tên
+trang phục để tránh cuộn ngang. Bộ đếm trang phục tính theo khóa riêng, không đếm trùng các ảnh bổ sung.
+Dải tab ảnh chỉ cuộn ngang khi thiếu chiều rộng. Sao chép mã không làm mở nhóm hoặc viewer.
+
+Danh sách tướng, nhóm nhãn, nhãn trong nhóm, trang phục liên quan và bộ chọn nhãn tự tải trang kế
+tiếp khi cuộn gần cuối, không có nút Tải thêm. Observer theo đúng vùng cuộn, dừng khi đang tải,
+gặp lỗi hoặc hết dữ liệu; nhóm thu gọn và tab ẩn không tiếp tục tải. Dữ liệu đã tải giữ trong TanStack Query.
+
+Ảnh bậc trang phục có thể xem nhanh tại chỗ, giữ đúng icon của ngôn ngữ đang hiển thị. Thao tác
+xem ảnh tách khỏi mở trang phục liên quan và sửa metadata; thiếu icon không mượn ảnh từ bản dịch khác.
+
+Ảnh chính thu nhỏ nằm ngay trong thanh tên tướng được ghim; cột Ảnh chính riêng đã bỏ. Dấu kiểm nhỏ
+trên thumbnail phân biệt ảnh chính của trang phục, không dùng thẻ đen lặp trong mỗi hàng. Bậc
+trang phục chỉ hiện tên/icon; tạo nhãn nhập tên và thị trường, backend tự cấp mã tăng dần.
+
+Mã tướng quốc tế và khóa trang phục đã chuẩn hóa cùng file tài nguyên theo ADR-010. Importer
+nhận alias cũ trước khi ghép dữ liệu; không đổi UUID hoặc upload lại chỉ vì đổi tên file.
