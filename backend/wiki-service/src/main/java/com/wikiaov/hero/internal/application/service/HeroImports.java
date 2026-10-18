@@ -8,8 +8,10 @@ import com.wikiaov.hero.internal.application.HeroImportRequest.Policy;
 import com.wikiaov.hero.internal.application.response.HeroImportPlan;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroImages;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.persistence.HeroIdentityRepository;
+import com.wikiaov.hero.internal.persistence.IdentifierAliases;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import java.util.*;
@@ -26,6 +28,7 @@ public class HeroImports {
     private final HeroValidation validation;
     private final GameplayContexts contexts;
     private final JsonMapper json;
+    private final IdentifierAliases aliases;
 
     public record Field(
             String key,
@@ -42,6 +45,7 @@ public class HeroImports {
             new Field("combatStats", "Chỉ số chiến đấu (JSON)", "json"),
             new Field("skills", "Kỹ năng (mảng JSON)", "json"),
             new Field("skins", "Trang phục (mảng JSON)", "json"),
+            new Field("images", "Các lựa chọn ảnh tướng (JSON)", "json"),
             new Field("head", "Ảnh đại diện", "image"),
             new Field("portrait", "Ảnh chân dung", "image"),
             new Field("splash", "Ảnh nền", "image"));
@@ -56,15 +60,19 @@ public class HeroImports {
                     new Field("displayOrder", "Thứ tự", "number"), new Field("rarityCode", "Mã bậc", "text"),
                     new Field("name", "Tên trang phục", "text"), new Field("description", "Mô tả", "text"),
                     new Field("acquisitionNote", "Cách sở hữu", "text"),
-                    new Field("artAssetId", "Ảnh trang phục", "image")));
+                    new Field("artAssetId", "Ảnh nền trang phục", "image"),
+                    new Field("headAssetId", "Ảnh head trang phục", "image"),
+                    new Field("portraitAssetId", "Ảnh portrait trang phục", "image"),
+                    new Field("images", "Các lựa chọn ảnh (JSON)", "json")));
 
     public HeroImports(HeroIdentityRepository heroes, HeroAuthoring authoring, HeroValidation validation,
-            GameplayContexts contexts, JsonMapper json) {
+            GameplayContexts contexts, JsonMapper json, IdentifierAliases aliases) {
         this.heroes = heroes;
         this.authoring = authoring;
         this.validation = validation;
         this.contexts = contexts;
         this.json = json;
+        this.aliases = aliases;
     }
 
     @Transactional(readOnly = true)
@@ -111,6 +119,7 @@ public class HeroImports {
         before.put("skills", skills == null ? List.of() : skills.skills());
         before.put("skins", skins == null ? List.of() : skins.skins());
         var bindings = (Bindings) content.get(HeroSection.MEDIA_BINDINGS);
+        before.put("images", bindings == null ? Map.of() : bindings.images());
         for (var role : MediaRole.values()) {
             var asset = bindings == null ? null : bindings.bindings().get(role);
             before.put(role.name().toLowerCase(Locale.ROOT), asset == null ? null : asset.toString());
@@ -124,7 +133,29 @@ public class HeroImports {
         // Normalize collections before comparison so a repeated import remains a no-op.
         after.put("roles", json.convertValue(after.get("roles"), Role[].class));
         after.put("skills", json.convertValue(after.get("skills"), Skill[].class));
-        after.put("skins", json.convertValue(after.get("skins"), Skin[].class));
+        var importedSkins = new Skins(Arrays.asList(json.convertValue(after.get("skins"), Skin[].class)), List.of());
+        validation.validate(HeroSection.SKINS, importedSkins);
+        after.put("skins",
+                aliases.skins(hero.map(h -> h.getId()).orElse(null), importedSkins).skins().toArray(Skin[]::new));
+        var existingSkins = (Skins) content.get(HeroSection.SKINS);
+        if (existingSkins != null) {
+            var incomingSkins = new Skins(Arrays.asList((Skin[]) after.get("skins")), List.of());
+            validation.validate(HeroSection.SKINS, incomingSkins);
+            var retainedSkins = (Skins) HeroImages.retain(existingSkins, incomingSkins);
+            after.put("skins", retainedSkins.skins().toArray(Skin[]::new));
+        }
+        if (bindings != null) {
+            Map<MediaRole, UUID> mains = new EnumMap<>(MediaRole.class);
+            for (var role : MediaRole.values()) {
+                var asset = after.get(role.name().toLowerCase(Locale.ROOT));
+                if (asset != null)
+                    mains.put(role, UUID.fromString(asset.toString()));
+            }
+            var incoming = new Bindings(mains, List.of(), imageOptions(after.get("images")));
+            validation.validate(HeroSection.MEDIA_BINDINGS, incoming);
+            var retained = (Bindings) HeroImages.retain(bindings, incoming);
+            after.put("images", retained.images());
+        }
         if (!empty(after.get("overviewRatings")))
             after.put("overviewRatings", json.convertValue(after.get("overviewRatings"), Ratings.class));
         if (!empty(after.get("combatStats"))) {
@@ -284,7 +315,7 @@ public class HeroImports {
         Map<MediaRole, UUID> links = new EnumMap<>(MediaRole.class);
         if (oldBindings != null)
             links.putAll(oldBindings.bindings());
-        boolean mediaChanged = false;
+        boolean mediaChanged = !Objects.equals(plan.before().get("images"), plan.after().get("images"));
         for (var role : MediaRole.values()) {
             String key = role.name().toLowerCase(Locale.ROOT);
             if (!Objects.equals(plan.before().get(key), plan.after().get(key))) {
@@ -295,7 +326,8 @@ public class HeroImports {
         if (mediaChanged) {
             draft = authoring.read(draft.heroId(), draft.id());
             authoring.update(draft.heroId(), draft.id(), HeroSection.MEDIA_BINDINGS, draft.version(),
-                    new Bindings(links, oldBindings == null ? List.of() : oldBindings.sources()),
+                    new Bindings(links, oldBindings == null ? List.of() : oldBindings.sources(),
+                            imageOptions(plan.after().get("images"))),
                     "Imported hero images");
         }
         return preview(input);
@@ -314,12 +346,20 @@ public class HeroImports {
             if (id != null)
                 bindings.put(role, UUID.fromString((String) id));
         }
-        validation.validate(HeroSection.MEDIA_BINDINGS, new Bindings(bindings, List.of()));
+        validation.validate(HeroSection.MEDIA_BINDINGS,
+                new Bindings(bindings, List.of(), imageOptions(values.get("images"))));
         var skills = Arrays.asList(json.convertValue(values.get("skills"), Skill[].class));
         if (!skills.isEmpty())
             validation.validate(HeroSection.SKILLS, new Skills(skills, List.of()));
         validation.validate(HeroSection.SKINS,
                 new Skins(Arrays.asList(json.convertValue(values.get("skins"), Skin[].class)), List.of()));
+    }
+
+    private Map<MediaRole, List<ImageOption>> imageOptions(Object value) {
+        var converted = json.convertValue(
+                Map.of("bindings", Map.of(), "sources", List.of(), "images", value == null ? Map.of() : value),
+                Bindings.class);
+        return converted.images();
     }
 
     private Profile profile(String locale, Map<String, Object> values, Profile old) {

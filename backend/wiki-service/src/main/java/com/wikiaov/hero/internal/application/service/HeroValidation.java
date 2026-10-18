@@ -67,11 +67,15 @@ public class HeroValidation {
                     unique(skin.translations().stream().map(SkinTranslation::locale).toList());
                     skin.translations().forEach(t -> locale(t.locale()));
                     asset(skin.artAssetId(), MediaSemanticType.HERO_SKIN_ART);
+                    asset(skin.headAssetId(), MediaSemanticType.HERO_SKIN_ART);
+                    asset(skin.portraitAssetId(), MediaSemanticType.HERO_SKIN_ART);
+                    images(skin.images(), true);
                 }
             }
             case MEDIA_BINDINGS -> {
                 var p = (Bindings) value;
                 p.bindings().forEach((role, id) -> asset(id, MediaSemanticType.valueOf("HERO_" + role.name())));
+                images(p.images(), false);
             }
         }
         List<Source> sources = switch (value) {
@@ -86,6 +90,15 @@ public class HeroValidation {
         for (var source : sources)
             if (source.sourceUrl() != null && !source.sourceUrl().matches("https?://[^\\s]+"))
                 throw invalid("Source URL must use HTTP or HTTPS.");
+    }
+
+    private void images(Map<MediaRole, List<ImageOption>> images, boolean skin) {
+        images.forEach((role, options) -> {
+            unique(options.stream().map(ImageOption::assetId).toList());
+            options.forEach(option -> asset(option.assetId(), skin
+                    ? MediaSemanticType.HERO_SKIN_ART
+                    : MediaSemanticType.valueOf("HERO_" + role.name())));
+        });
     }
 
     public void validatePublication(HeroSection section, Object value) {

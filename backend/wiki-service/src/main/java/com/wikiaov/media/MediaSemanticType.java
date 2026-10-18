@@ -8,6 +8,7 @@ public enum MediaSemanticType {
     HERO_SPLASH,
     HERO_SKILL_ICON,
     HERO_SKIN_ART,
+    SKIN_BADGE,
     ITEM_ICON,
     ARCANA_ICON,
     SPELL_ICON,

@@ -76,10 +76,11 @@ public final class HeroSectionRequests {
             @NotNull @Positive Long expectedDraftVersion,
             Map<MediaRole, UUID> bindings,
             List<Source> sources,
-            String changeNote
+            String changeNote,
+            Map<MediaRole, List<ImageOption>> images
     ) {
         public Bindings content() {
-            return new Bindings(bindings, sources == null ? List.of() : sources);
+            return new Bindings(bindings, sources == null ? List.of() : sources, images);
         }
     }
 }

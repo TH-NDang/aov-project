@@ -86,13 +86,23 @@ public class HeroQueries {
             });
             result.put("skillMedia", skillMedia);
             Map<String, Object> skinMedia = new LinkedHashMap<>();
+            Map<String, Object> skinHeadMedia = new LinkedHashMap<>();
+            Map<String, Object> skinPortraitMedia = new LinkedHashMap<>();
             var skins = (Skins) sections.content(HeroSection.SKINS, rev.sections().get(HeroSection.SKINS));
             skins.skins().forEach(skin -> {
                 if (skin.artAssetId() != null)
                     media.find(skin.artAssetId()).filter(a -> a.usable())
                             .ifPresent(a -> skinMedia.put(skin.skinKey(), a));
+                if (skin.headAssetId() != null)
+                    media.find(skin.headAssetId()).filter(a -> a.usable())
+                            .ifPresent(a -> skinHeadMedia.put(skin.skinKey(), a));
+                if (skin.portraitAssetId() != null)
+                    media.find(skin.portraitAssetId()).filter(a -> a.usable())
+                            .ifPresent(a -> skinPortraitMedia.put(skin.skinKey(), a));
             });
             result.put("skinMedia", skinMedia);
+            result.put("skinHeadMedia", skinHeadMedia);
+            result.put("skinPortraitMedia", skinPortraitMedia);
         }
         var profile = (Profile) sections.content(HeroSection.PROFILE, rev.sections().get(HeroSection.PROFILE));
         String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),

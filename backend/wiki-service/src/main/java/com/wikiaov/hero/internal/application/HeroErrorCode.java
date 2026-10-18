@@ -4,6 +4,10 @@ import com.wikiaov.platform.ApiErrorCode;
 import org.springframework.http.HttpStatus;
 
 public enum HeroErrorCode implements ApiErrorCode {
+    HERO_BADGE_GROUP_NOT_FOUND(HttpStatus.NOT_FOUND),
+    HERO_BADGE_GROUP_CONFLICT(HttpStatus.CONFLICT),
+    HERO_BADGE_NOT_FOUND(HttpStatus.NOT_FOUND),
+    HERO_BADGE_CONFLICT(HttpStatus.CONFLICT),
     HERO_IMPORT_JOB_NOT_FOUND(HttpStatus.NOT_FOUND),
     HERO_IMPORT_JOB_CONFLICT(HttpStatus.CONFLICT),
     HERO_NOT_FOUND(HttpStatus.NOT_FOUND),

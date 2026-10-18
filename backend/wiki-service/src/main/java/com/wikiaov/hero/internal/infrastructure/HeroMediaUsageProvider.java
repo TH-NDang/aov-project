@@ -31,7 +31,15 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
    JOIN hero.hero_skill_snapshot s ON s.skill_set_revision_id=r.skills_revision_id WHERE s.icon_asset_id=? AND r.state<>'DISCARDED'
    UNION SELECT DISTINCT r.hero_id,r.id,r.state,'SKIN_ART:'||s.skin_key FROM hero.hero_revision r
    JOIN hero.hero_skin_snapshot s ON s.skin_set_revision_id=r.skins_revision_id WHERE s.art_asset_id=? AND r.state<>'DISCARDED'
-   """, assetId, assetId, assetId);
+   UNION SELECT DISTINCT r.hero_id,r.id,r.state,'SKIN_HEAD:'||s.skin_key FROM hero.hero_revision r
+   JOIN hero.hero_skin_snapshot s ON s.skin_set_revision_id=r.skins_revision_id WHERE s.head_asset_id=? AND r.state<>'DISCARDED'
+   UNION SELECT DISTINCT r.hero_id,r.id,r.state,'SKIN_PORTRAIT:'||s.skin_key FROM hero.hero_revision r
+   JOIN hero.hero_skin_snapshot s ON s.skin_set_revision_id=r.skins_revision_id WHERE s.portrait_asset_id=? AND r.state<>'DISCARDED'
+   UNION SELECT DISTINCT r.hero_id,r.id,r.state,b.media_role FROM hero.hero_revision r
+   JOIN hero.hero_image_option b ON b.media_binding_revision_id=r.media_binding_revision_id WHERE b.asset_id=? AND r.state<>'DISCARDED'
+   UNION SELECT DISTINCT r.hero_id,r.id,r.state,'SKIN_'||CASE WHEN b.media_role='SPLASH' THEN 'ART' ELSE b.media_role END||':'||b.skin_key FROM hero.hero_revision r
+   JOIN hero.skin_image_option b ON b.skin_set_revision_id=r.skins_revision_id WHERE b.asset_id=? AND r.state<>'DISCARDED'
+   """, assetId, assetId, assetId, assetId, assetId, assetId, assetId);
         var at = clock.instant();
         var active = contexts.active(at);
         Set<UUID> current = new HashSet<>();

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 public interface HeroIdentityRepository extends JpaRepository<HeroIdentity, UUID> {
+    @Query("select h from HeroIdentity h where h.code=:code or h.id in (select a.heroId from HeroCodeAlias a where a.legacyCode=:code)")
     Optional<HeroIdentity> findByCode(String code);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
