@@ -21,10 +21,11 @@ import { CommandMenu } from "./command-menu"
 import { usePageTabs } from "./page-tabs"
 import { PageTabOverlay, SortablePageTab } from "./sortable-page-tab"
 import { useHotkeys } from "../hotkeys"
-import { RegionSelector } from "@/features/regions/region-selector"
 
 export interface RouteHandle {
   crumb?: (match: UIMatch) => ReactNode
+  /** Redirects can opt out of persistent tab sessions. */
+  pageTab?: boolean
 }
 
 const horizontalOnly: Modifier = ({ transform }) => ({ ...transform, y: 0 })
@@ -103,7 +104,6 @@ export function SiteHeader() {
         )}
       </DndContext>
       <div className="flex shrink-0 items-center gap-1 pb-1">
-        <RegionSelector />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

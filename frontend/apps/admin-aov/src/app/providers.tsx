@@ -6,6 +6,7 @@ import { TooltipProvider } from "@aov/ui/components/tooltip"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { ThemeProvider, useTheme } from "./theme"
 import { HotkeysProvider } from "./hotkeys"
+import { DraftPersistenceGuard } from "./drafts/draft-persistence-guard"
 
 declare module "@tanstack/react-query" {
   interface Register {
@@ -42,6 +43,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <HotkeysProvider>
           <TooltipProvider delayDuration={200}>
+            <DraftPersistenceGuard />
             {children}
             <ThemedToaster />
           </TooltipProvider>

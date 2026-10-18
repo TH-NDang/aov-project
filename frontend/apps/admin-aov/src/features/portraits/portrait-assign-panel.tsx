@@ -385,11 +385,10 @@ export function PortraitAssignPanel({ row, index, onDirtyChange, onSaved }: Port
         )}
         {hero && (
           <p className="text-xs text-muted-foreground">
-            Xem toàn bộ trang phục của{" "}
-            <Link to={`/heroes/${hero.id}?tab=skins`} className="underline underline-offset-4">
-              {hero.name}
+            <Link to={`/publishing?q=${encodeURIComponent(hero.name)}`} className="underline underline-offset-4">
+              Tìm {hero.name} trong danh mục tướng
             </Link>
-            .
+            . Trang phục được quản lý trong từng phiên bản tướng của backend.
           </p>
         )}
       </div>

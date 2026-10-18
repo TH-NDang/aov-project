@@ -1,19 +1,102 @@
-import type { Asset, Cause, Content, HeroRow, PageSlice, Preview, Region, Revision, Ruleset, Section } from "./types"
+import type {
+  Asset,
+  AssetDetail,
+  Cause,
+  Content,
+  HeroRow,
+  PageSlice,
+  Preview,
+  Region,
+  Revision,
+  Ruleset,
+  Section,
+} from "./types"
 import { SECTIONS } from "./types"
 import type { UploadTicket } from "../users/avatar-upload"
 export type Request = <T>(path: string, init?: RequestInit) => Promise<T>
+
+const sectionKeys = {
+  PROFILE: "profile",
+  OVERVIEW_RATINGS: "overviewRatings",
+  COMBAT_STATS: "combatStats",
+  SKILLS: "skills",
+  SKINS: "skins",
+  MEDIA_BINDINGS: "mediaBindings",
+} as const
+type WirePreview = {
+  revision: Omit<Revision, "sections"> & { sections: Record<string, string> }
+  content: Record<string, unknown>
+}
+export interface HeroComparison {
+  status: "AVAILABLE" | "BASELINE_ONLY"
+  from: Revision | null
+  to: Revision
+  before: Record<string, unknown>
+  after: Record<string, unknown>
+  changes: { section: string; path: string; kind: "ADDED" | "REMOVED" | "CHANGED"; before: unknown; after: unknown }[]
+  warnings: string[]
+}
+export const heroPreviewKey = (heroId: string, revisionId: string) =>
+  ["publishing-preview", heroId, revisionId] as const
+export interface HeroCatalogQuery {
+  q?: string
+  seasonId?: string
+  patchVariantId?: string
+  rulesetId?: string
+  locale?: string
+  sort?: "code" | "edited-desc"
+}
+export const heroCatalogKey = (query: HeroCatalogQuery) =>
+  [
+    "publishing-heroes",
+    "infinite",
+    {
+      q: query.q?.trim() ?? "",
+      seasonId: query.seasonId ?? "",
+      patchVariantId: query.patchVariantId ?? "",
+      rulesetId: query.rulesetId ?? "",
+      locale: query.locale ?? "vi-VN",
+      sort: query.sort ?? "code",
+    },
+  ] as const
+/** Translate the API's camelCase section keys at the boundary, keeping editor keys internal. */
+function previewFromApi(value: WirePreview): Preview {
+  return {
+    revision: {
+      ...value.revision,
+      sections: Object.fromEntries(
+        Object.entries(sectionKeys).map(([key, wire]) => [
+          key,
+          value.revision.sections[wire] ?? value.revision.sections[key],
+        ]),
+      ) as Revision["sections"],
+    },
+    content: Object.fromEntries(
+      Object.entries(sectionKeys).map(([key, wire]) => [key, value.content[wire] ?? value.content[key] ?? null]),
+    ) as unknown as Content,
+  }
+}
 
 export function createPublishingApi(request: Request) {
   const send = <T>(path: string, method: string, value?: unknown) =>
     request<T>(path, { method, body: value === undefined ? undefined : JSON.stringify(value) })
   return {
-    heroes: (page = 0) => request<PageSlice<HeroRow>>(`/admin/heroes?page=${page}&size=20`),
+    heroes: (page = 0, query: HeroCatalogQuery = {}, signal?: AbortSignal) => {
+      const params = new URLSearchParams({ page: String(page), size: "20" })
+      for (const [key, value] of Object.entries(query)) if (value?.trim()) params.set(key, value.trim())
+      return request<PageSlice<HeroRow>>(`/admin/heroes?${params}`, signal ? { signal } : undefined)
+    },
     revisions: (heroId: string) => request<Revision[]>(`/admin/heroes/${heroId}/revisions`),
-    read: (heroId: string, revisionId: string) => request<Preview>(`/admin/heroes/${heroId}/revisions/${revisionId}`),
+    read: async (heroId: string, revisionId: string) =>
+      previewFromApi(await request<WirePreview>(`/admin/heroes/${heroId}/revisions/${revisionId}`)),
+    comparison: (heroId: string, revisionId: string, fromRevisionId?: string) =>
+      request<HeroComparison>(
+        `/admin/heroes/${heroId}/revisions/${revisionId}/comparison${fromRevisionId ? `?fromRevisionId=${encodeURIComponent(fromRevisionId)}` : ""}`,
+      ),
     rulesets: () => request<Ruleset[]>("/admin/rulesets"),
     regions: () => request<Region[]>("/regions"),
-    create: (code: string, name: string, locale: string, rulesetId: string) =>
-      send<Revision>("/admin/heroes", "POST", { code, name, initialLocale: locale, rulesetId }),
+    create: (code: string, name: string, locale: string, rulesetId: string, contextId: string) =>
+      send<Revision>("/admin/heroes", "POST", { code, name, initialLocale: locale, rulesetId, contextId }),
     fork: (revision: Revision, cause: Cause, effectiveFromPatchVariantId: string | null) =>
       send<Revision>(`/admin/heroes/${revision.heroId}/drafts`, "POST", {
         rulesetId: revision.rulesetId,
@@ -38,6 +121,16 @@ export function createPublishingApi(request: Request) {
       }),
     assets: (semanticType: string, page = 0) =>
       request<PageSlice<Asset>>(`/admin/media/assets?semanticType=${semanticType}&page=${page}&size=20`),
+    asset: async (id: string): Promise<AssetDetail> => {
+      const detail = await request<Omit<AssetDetail, "currentUrl"> & { versions: { id: string; url: string }[] }>(
+        `/admin/media/assets/${id}`,
+      )
+      return {
+        ...detail,
+        provenance: detail.provenance ?? [],
+        currentUrl: detail.versions.find((version) => version.id === detail.currentVersionId)?.url ?? null,
+      }
+    },
     send,
   }
 }

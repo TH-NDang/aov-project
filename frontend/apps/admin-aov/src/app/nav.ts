@@ -28,6 +28,17 @@ export interface NavGroup {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
+    label: "Nội dung dùng chung",
+    items: [
+      {
+        title: "Thuật ngữ & tham chiếu",
+        to: "/terminology",
+        icon: "storage",
+        description: "Alias, hiển thị và xem trước tham chiếu",
+      },
+    ],
+  },
+  {
     label: "Tổng quan",
     items: [
       {
@@ -42,10 +53,11 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Dự án",
     items: [
       {
-        title: "Lưu trữ",
-        icon: "storage",
-        to: "/storage",
-        description: "Bảng JSON riêng và import theo ID",
+        title: "Quản lý ảnh",
+        icon: "gallery",
+        to: "/image-management",
+        description: "Ảnh, phiên bản và nơi sử dụng",
+        capability: "catalog:read",
       },
       {
         title: "Hồ sơ của tôi",
@@ -71,30 +83,11 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: "characterBook",
         items: [
           {
-            title: "Biên tập backend",
+            title: "Tướng",
             icon: "heroes",
             to: "/publishing",
             description: "Draft, publish và lịch sử phiên bản tướng",
             capability: "catalog:read",
-          },
-          {
-            title: "Media backend",
-            icon: "gallery",
-            to: "/publishing-media",
-            description: "Upload và nâng chất lượng ảnh đã publish",
-            capability: "catalog:read",
-          },
-          {
-            title: "Tài nguyên tướng",
-            icon: "heroes",
-            to: "/heroes",
-            description: "Thông tin, kỹ năng, trang phục",
-          },
-          {
-            title: "Trang phục",
-            icon: "skins",
-            to: "/skins",
-            description: "Toàn bộ trang phục theo tướng",
           },
           {
             title: "Không gian ảnh",
@@ -136,6 +129,18 @@ export const NAV_GROUPS: NavGroup[] = [
             description: "Phép phụ trợ cho tướng",
           },
         ],
+      },
+    ],
+  },
+  {
+    label: "Quản lý game",
+    items: [
+      {
+        title: "Phiên bản và thị trường",
+        icon: "storage",
+        to: "/game-configuration",
+        description: "Bộ quy tắc, bản cập nhật và lịch phát hành",
+        capability: "catalog:read",
       },
     ],
   },

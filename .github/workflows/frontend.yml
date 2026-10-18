@@ -3,11 +3,13 @@ on:
   push:
     paths:
       - "frontend/**"
+      - "backend/wiki-service/src/main/resources/contracts/**"
       - "resources/Lien-Quan-v3/data/heroes.json"
       - ".github/workflows/frontend.yml"
   pull_request:
     paths:
       - "frontend/**"
+      - "backend/wiki-service/src/main/resources/contracts/**"
       - "resources/Lien-Quan-v3/data/heroes.json"
       - ".github/workflows/frontend.yml"
   workflow_dispatch:
@@ -36,6 +38,8 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
+      - run: pnpm generate:hero-api
+      - run: git diff --exit-code -- apps/admin-aov/src/features/publishing/generated/hero-api.d.ts
       - run: pnpm typecheck
       - run: pnpm --filter @aov/admin-aov test:publishing
       - run: pnpm build

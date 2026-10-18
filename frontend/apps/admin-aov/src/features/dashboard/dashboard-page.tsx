@@ -1,19 +1,17 @@
 import { useMemo } from "react"
 import { Link } from "react-router"
+import { useQuery } from "@tanstack/react-query"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
   ChevronRight,
   Gem,
   Hexagon,
   History,
-  ImageOff,
   ImageIcon,
   Medal,
   ScrollText,
   Shield,
   ShieldAlert,
-  Shirt,
-  Sparkles,
   Swords,
   type LucideIcon,
 } from "lucide-react"
@@ -45,6 +43,11 @@ import {
 } from "@/lib/queries"
 import { formatNumber, formatRelative } from "@/lib/text"
 import { useHeroIndex } from "@/lib/use-wiki-index"
+import { useSession } from "@/app/auth/auth-gate"
+import { backendRequest } from "@/app/auth/session"
+import { createPublishingApi } from "../publishing/publishing-api"
+
+const publishing = createPublishingApi(backendRequest)
 
 const chartConfig = {
   count: { label: "Trang bị", color: "var(--chart-1)" },
@@ -73,6 +76,14 @@ interface TodoRow {
 }
 
 export function DashboardPage() {
+  const { actor } = useSession()
+  const canReadHeroes = actor?.capabilities.includes("catalog:read") ?? false
+  const heroes = useQuery({
+    queryKey: ["publishing-heroes", "dashboard"],
+    queryFn: () => publishing.heroes(),
+    enabled: canReadHeroes,
+    staleTime: 30000,
+  })
   const { index } = useHeroIndex()
   const portraits = usePortraits()
   const catalog = useItemCatalog()
@@ -85,16 +96,12 @@ export function DashboardPage() {
   const heroStats = useMemo(() => {
     if (!index) return undefined
     const skins = index.heroes.flatMap((hero) => hero.skins.filter((skin) => !skin.isDefault))
-    const skills = index.heroes.flatMap((hero) => hero.skills)
     return {
       heroes: index.heroes.length,
       skins: skins.length,
-      skillIcons: skills.reduce((sum, skill) => sum + skill.variants.length, 0),
       heroPortraits: index.heroes.filter((hero) => hero.portrait).length,
       skinPortraits: skins.filter((skin) => skin.portrait).length,
       skinArt: skins.filter((skin) => skin.head && skin.cover).length,
-      skills: skills.length,
-      skillDescriptions: skills.filter((skill) => skill.description).length,
     }
   }, [index])
 
@@ -126,14 +133,30 @@ export function DashboardPage() {
     index && portraits.data ? portraits.data.filter((row) => !index.owners.has(row.file)).length : undefined
 
   const stats: StatTile[] = [
-    { label: "Tướng", value: heroStats?.heroes, hint: "Danh mục hiện có", icon: Swords, to: "/heroes" },
-    { label: "Trang phục", value: heroStats?.skins, hint: "Không tính mặc định", icon: Shirt, to: "/skins" },
+    ...(canReadHeroes
+      ? [
+          {
+            label: "Tướng",
+            value: heroes.data?.totalElements,
+            hint: "Danh mục backend",
+            icon: Swords,
+            to: "/publishing",
+          },
+        ]
+      : []),
     {
-      label: "Icon kỹ năng",
-      value: heroStats?.skillIcons,
-      hint: "Gồm biến thể theo dạng",
-      icon: Sparkles,
-      to: "/heroes",
+      label: "Portrait trang phục",
+      value: heroStats?.skinPortraits,
+      hint: "Ảnh trong tài nguyên",
+      icon: ImageIcon,
+      to: "/portraits",
+    },
+    {
+      label: "Portrait chưa khớp",
+      value: unmatched,
+      hint: "Tài nguyên chưa có nơi nhận",
+      icon: ImageIcon,
+      to: "/portraits?tab=unmatched",
     },
     {
       label: "Trang bị",
@@ -155,10 +178,9 @@ export function DashboardPage() {
   const coverage: CoverageRow[] = [
     ...(heroStats
       ? [
-          { label: "Portrait tướng", done: heroStats.heroPortraits, total: heroStats.heroes },
-          { label: "Portrait trang phục", done: heroStats.skinPortraits, total: heroStats.skins },
-          { label: "Head & cover trang phục", done: heroStats.skinArt, total: heroStats.skins },
-          { label: "Mô tả kỹ năng", done: heroStats.skillDescriptions, total: heroStats.skills },
+          { label: "Portrait tướng trong tài nguyên", done: heroStats.heroPortraits, total: heroStats.heroes },
+          { label: "Portrait trang phục trong tài nguyên", done: heroStats.skinPortraits, total: heroStats.skins },
+          { label: "Head & cover trang phục trong tài nguyên", done: heroStats.skinArt, total: heroStats.skins },
         ]
       : []),
     ...(itemStats
@@ -178,13 +200,6 @@ export function DashboardPage() {
       to: "/portraits?tab=unmatched",
     },
     {
-      title: "Trang phục thiếu portrait",
-      description: "Trang phục có trong danh mục nhưng chưa có ảnh",
-      count: heroStats ? heroStats.skins - heroStats.skinPortraits : 0,
-      icon: ImageOff,
-      to: "/skins?portrait=missing",
-    },
-    {
       title: "Trang bị cần kiểm tra",
       description: "Lệch cấp, trùng hoặc thiếu vị trí so với Excel",
       count: issues.data?.length ?? 0,
@@ -197,13 +212,6 @@ export function DashboardPage() {
       count: itemStats?.unverified ?? 0,
       icon: ScrollText,
       to: "/items?recipe=unverified",
-    },
-    {
-      title: "Kỹ năng chưa có mô tả",
-      description: "Mới có tên và icon, chưa có nội dung",
-      count: heroStats ? heroStats.skills - heroStats.skillDescriptions : 0,
-      icon: Sparkles,
-      to: "/heroes",
     },
     ...(arcana.data && arcana.data.count === 0
       ? [{ title: "Bảng ngọc chưa thu thập", description: arcana.data.note, count: 1, icon: Gem, to: "/arcana" }]
@@ -278,7 +286,7 @@ export function DashboardPage() {
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>Độ phủ dữ liệu</CardTitle>
-            <CardDescription>Tỉ lệ mục đã có dữ liệu trên tổng số.</CardDescription>
+            <CardDescription>Tỉ lệ hoàn thiện bộ tài nguyên ảnh và dữ liệu trang bị.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {coverage.length === 0 && <Skeleton className="h-64 w-full" />}

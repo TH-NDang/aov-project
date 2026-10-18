@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
 import { NavIcon } from "@/app/nav-icon"
 import { MediaImage } from "@/components/media-image"
-import { useEnchantments, useHeroes, useItemCatalog } from "@/lib/queries"
+import { useEnchantments, useItemCatalog } from "@/lib/queries"
 import { commandFilter, formatNumber } from "@/lib/text"
 import { useSession } from "@/app/auth/auth-gate"
 
@@ -29,7 +29,6 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
   const navigate = useNavigate()
   const { resolvedTheme, setTheme } = useTheme()
   const [search, setSearch] = useState("")
-  const heroes = useHeroes()
   const items = useItemCatalog()
   const enchantments = useEnchantments()
 
@@ -75,13 +74,15 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
             </CommandGroup>
             {search.trim().length > 1 && (
               <CommandGroup heading="Tìm nhanh">
-                <CommandItem
-                  value={`tim trang phuc ${search}`}
-                  onSelect={() => run(() => navigate(`/skins?q=${encodeURIComponent(search.trim())}`))}
-                >
-                  <Search />
-                  Tìm trang phục “{search.trim()}”
-                </CommandItem>
+                {actor?.capabilities.includes("catalog:read") && (
+                  <CommandItem
+                    value={`tim tuong ${search}`}
+                    onSelect={() => run(() => navigate(`/publishing?q=${encodeURIComponent(search.trim())}`))}
+                  >
+                    <Search />
+                    Tìm tướng “{search.trim()}”
+                  </CommandItem>
+                )}
                 <CommandItem
                   value={`tim portrait ${search}`}
                   onSelect={() => run(() => navigate(`/portraits?q=${encodeURIComponent(search.trim())}`))}
@@ -92,21 +93,6 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
               </CommandGroup>
             )}
             <CommandSeparator />
-            {heroes.data && (
-              <CommandGroup heading="Tướng">
-                {heroes.data.map((hero) => (
-                  <CommandItem
-                    key={hero.id}
-                    value={`tuong ${hero.name} ${hero.id}`}
-                    onSelect={() => run(() => navigate(`/heroes/${hero.id}`))}
-                  >
-                    <MediaImage path={hero.head} className="size-6 rounded-sm object-cover" />
-                    <span>{hero.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{hero.skins.length} trang phục</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
             {items.data && (
               <CommandGroup heading="Trang bị">
                 {items.data.items.map((item) => (

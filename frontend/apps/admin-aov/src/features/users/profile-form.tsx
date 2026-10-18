@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Camera, Check, Clock3, Languages, LoaderCircle, Pencil, UserRound } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
@@ -10,6 +10,25 @@ import { ProfilePreferencePicker, languageOptions, timeZoneOptions } from "./pro
 import { uploadAvatar } from "./avatar-upload"
 import { initialProfileDraft, readBrowserPreferences } from "./profile-preferences"
 import { profileError, saveProfile, userKeys, type UserProfile } from "./user-api"
+import { z } from "zod"
+import { useSession } from "@/app/auth/auth-gate"
+import { useLocalDraft } from "@/app/drafts/use-local-draft"
+import { DraftStatus } from "@/app/drafts/draft-status"
+
+const profileDraftSchema = z.object({
+  displayName: z.string(),
+  biography: z.string(),
+  locale: z.string(),
+  timeZone: z.string(),
+  avatarAssetId: z.string().nullable(),
+})
+const profileFields = (profile: UserProfile) => ({
+  displayName: profile.displayName,
+  biography: profile.biography,
+  locale: profile.locale,
+  timeZone: profile.timeZone,
+  avatarAssetId: profile.avatarAssetId,
+})
 
 export function ProfileForm({
   profile,
@@ -27,9 +46,34 @@ export function ProfileForm({
   onReload: () => void
 }) {
   const cache = useQueryClient()
-  const [draft, setDraft] = useState(() => initialProfileDraft(profile, admin, readBrowserPreferences()))
-  const [savedVersion, setSavedVersion] = useState(profile.version)
-  const [savedAvatar, setSavedAvatar] = useState(profile.avatarAssetId)
+  const [server, setServer] = useState(profile)
+  useEffect(() => setServer(profile), [profile])
+  const localDraft = useLocalDraft({
+    form: admin ? `profile:${profile.id}` : "profile:me",
+    initialValue: profileFields(initialProfileDraft(server, admin, readBrowserPreferences())),
+    schema: profileDraftSchema,
+    baseVersion: server.version,
+    enabled: !readOnly,
+  })
+  const draft = localDraft.value
+  const [avatarPreview, setAvatarPreview] = useState<{ assetId: string; url: string } | null>(null)
+  const canReadMedia = useSession().actor?.capabilities.includes("catalog:read")
+  const avatar = useQuery({
+    queryKey: ["profile-draft-avatar", draft.avatarAssetId],
+    enabled: !!draft.avatarAssetId && draft.avatarAssetId !== server.avatarAssetId && canReadMedia,
+    queryFn: async () => {
+      const asset = await backendRequest<{
+        currentVersionId: string | null
+        versions: { id: string; url: string | null }[]
+      }>(`/admin/media/assets/${draft.avatarAssetId}`)
+      return asset.versions.find((version) => version.id === asset.currentVersionId)?.url ?? null
+    },
+    staleTime: 300000,
+  })
+  const avatarUrl =
+    draft.avatarAssetId === server.avatarAssetId
+      ? server.avatarUrl
+      : (avatar.data ?? (avatarPreview?.assetId === draft.avatarAssetId ? avatarPreview.url : null))
   const [editingName, setEditingName] = useState(false)
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState("")
@@ -39,14 +83,9 @@ export function ProfileForm({
     if (upload.current?.signal.aborted) setUploading("")
     return () => upload.current?.abort()
   }, [])
-  useEffect(() => {
-    setDraft((current) =>
-      current.avatarAssetId === profile.avatarAssetId ? { ...current, avatarUrl: profile.avatarUrl } : current,
-    )
-  }, [profile.avatarAssetId, profile.avatarUrl])
-  const locked = readOnly || busy || !!uploading
+  const locked = readOnly || busy || !!uploading || !localDraft.ready || localDraft.invalid || localDraft.conflict
   const change = (field: "displayName" | "biography" | "locale" | "timeZone", value: string) =>
-    setDraft((current) => ({ ...current, [field]: value }))
+    localDraft.update({ ...draft, [field]: value })
 
   async function choose(file?: File) {
     if (!file) return
@@ -56,8 +95,10 @@ export function ProfileForm({
     setError("")
     try {
       const result = await uploadAvatar(file, backendRequest, controller.signal, setUploading)
-      if (!controller.signal.aborted)
-        setDraft((current) => ({ ...current, avatarAssetId: result.assetId, avatarUrl: result.avatarUrl }))
+      if (!controller.signal.aborted) {
+        localDraft.update({ ...draft, avatarAssetId: result.assetId })
+        setAvatarPreview({ assetId: result.assetId, url: result.avatarUrl })
+      }
     } catch (cause) {
       if (!controller.signal.aborted) setError(profileError(cause))
     } finally {
@@ -77,11 +118,10 @@ export function ProfileForm({
         locale: draft.locale,
         timeZone: draft.timeZone,
         avatarAssetId: draft.avatarAssetId,
-        expectedVersion: savedVersion,
+        expectedVersion: server.version,
       })
-      setDraft(saved)
-      setSavedVersion(saved.version)
-      setSavedAvatar(saved.avatarAssetId)
+      setServer(saved)
+      localDraft.rebase(profileFields(saved), profileFields(saved), saved.version)
       await cache.invalidateQueries({ queryKey: userKeys.all })
       toast.success("Đã lưu hồ sơ.")
       onSaved?.()
@@ -107,10 +147,10 @@ export function ProfileForm({
           <div className="relative shrink-0">
             <div className="relative flex size-24 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-muted shadow-sm sm:size-28">
               <UserRound className="size-10 text-muted-foreground" />
-              {draft.avatarUrl && (
+              {avatarUrl && (
                 <img
-                  key={draft.avatarUrl}
-                  src={draft.avatarUrl}
+                  key={avatarUrl}
+                  src={avatarUrl}
                   alt="Ảnh đại diện"
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 size-full object-cover"
@@ -160,7 +200,7 @@ export function ProfileForm({
                       variant="ghost"
                       disabled={locked}
                       className="w-full"
-                      onClick={() => setDraft((current) => ({ ...current, avatarAssetId: null, avatarUrl: null }))}
+                      onClick={() => localDraft.update({ ...draft, avatarAssetId: null })}
                     >
                       Gỡ ảnh đại diện
                     </Button>
@@ -238,9 +278,10 @@ export function ProfileForm({
             </Button>
           </div>
         )}
-        {!uploading && draft.avatarAssetId !== savedAvatar && (
+        {!uploading && draft.avatarAssetId !== server.avatarAssetId && (
           <p className="text-xs text-muted-foreground">Ảnh đại diện có thay đổi chưa lưu.</p>
         )}
+        {!readOnly && <DraftStatus draft={localDraft} disabled={busy || !!uploading} />}
         <label className="block space-y-2">
           <span className="text-sm font-medium">Giới thiệu</span>
           <textarea
@@ -277,8 +318,16 @@ export function ProfileForm({
         {error && (
           <div role="alert" className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm text-destructive">
             <p>{error}</p>
-            <Button type="button" variant="outline" disabled={locked} onClick={onReload}>
-              Bỏ bản đang sửa và tải hồ sơ mới
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy || !!uploading}
+              onClick={() => {
+                void localDraft.flush()
+                onReload()
+              }}
+            >
+              Tải hồ sơ mới để đối chiếu, giữ nháp
             </Button>
           </div>
         )}

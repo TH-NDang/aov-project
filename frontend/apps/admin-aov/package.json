@@ -4,17 +4,20 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:drafts": "tsx --tsconfig tests/tsconfig.json --test tests/draft-store.test.ts tests/draft-merge.test.ts tests/draft-form.test.tsx tests/hero-workspace.test.tsx",
+    "test:rich-text": "tsx --tsconfig tests/tsconfig.json --test --test-concurrency=1 tests/entity-rich-text-core.test.ts tests/entity-rich-text-renderer.test.tsx tests/entity-rich-text-editor.test.tsx tests/entity-rich-text-catalog.test.tsx tests/entity-rich-text-storage.test.ts",
     "test:users": "tsx --test tests/avatar-upload.test.ts tests/profile-preferences.test.ts",
     "test:auth": "tsx --test tests/auth.test.ts",
     "dev": "vite --port 5175 --strictPort",
+    "dev:lan": "vite --host 0.0.0.0 --port 5175 --strictPort",
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview --port 5175 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
     "test:storage": "node --experimental-strip-types --test tests/storage.test.ts",
     "test:table": "node --experimental-strip-types --test tests/table.test.ts",
     "test:heroes": "node --experimental-strip-types --test tests/heroes.test.ts",
-    "test:tabs": "tsx --tsconfig tests/tsconfig.json --test tests/page-tabs.test.tsx",
-    "test:publishing": "tsx --tsconfig tests/tsconfig.json --test tests/publishing.test.ts tests/wiki-public.test.tsx"
+    "test:tabs": "tsx --tsconfig tests/tsconfig.json --test tests/page-tabs.test.tsx tests/page-tab-redirects.test.tsx",
+    "test:publishing": "tsx --tsconfig tests/tsconfig.json --test tests/publishing.test.ts tests/wiki-public.test.tsx tests/hero-import.test.tsx tests/hero-catalog.test.tsx tests/hero-workspace.test.tsx tests/background-tasks.test.tsx tests/import-relations.test.ts tests/import-upload-session.test.ts tests/skin-catalog.test.ts tests/catalog-data.test.ts tests/publication-overview.test.tsx tests/market-schedule.test.ts tests/schedule-date.test.ts tests/hero-comparison.test.ts tests/hero-history.test.tsx tests/import-resource-files.test.ts tests/baseline-migration.test.tsx tests/import-review-performance.test.tsx tests/hero-location.test.ts tests/hero-location-ui.test.tsx tests/hero-catalog-filtering.test.tsx tests/catalog-controls.test.tsx tests/draft-store.test.ts tests/draft-merge.test.ts tests/draft-form.test.tsx tests/hero-skill-comparison.test.ts tests/change-color-preferences.test.tsx tests/comparison-skill-icon.test.tsx tests/hero-skill-comparison-ui.test.tsx tests/hero-image-source.test.tsx"
   },
   "dependencies": {
     "@aov/ui": "workspace:*",
@@ -24,6 +27,8 @@
     "@hookform/resolvers": "^5.9.1",
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-table": "9.2.8",
+    "fflate": "^0.8.3",
+    "idb": "^8.0.4",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -31,7 +36,8 @@
     "react-router": "^7.18.4",
     "recharts": "3.8.0",
     "sonner": "^2.0.8",
-    "zod": "^4.6.5"
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@aov/typescript-config": "workspace:*",
@@ -40,6 +46,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.0",
+    "fake-indexeddb": "^6.2.6",
     "jsdom": "^30.1.2",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.23.15",

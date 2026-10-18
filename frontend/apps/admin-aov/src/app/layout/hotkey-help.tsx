@@ -92,13 +92,13 @@ export function HotkeyHelp() {
         context: "Trong bảng gán portrait.",
       },
     )
-  if (["/heroes", "/skins", "/items"].includes(pathname))
+  if (["/publishing", "/items"].includes(pathname))
     pageKeys.push({
       keys: ["Enter / Space"],
       action: "Mở chi tiết dòng đang focus",
       context: "Dùng Tab để đưa focus đến dòng trong bảng.",
     })
-  if (pathname.startsWith("/media/") || pathname.startsWith("/heroes/"))
+  if (pathname.startsWith("/media/") || pathname.startsWith("/publishing/"))
     pageKeys.push({ keys: ["←", "→"], action: "Ảnh trước / ảnh tiếp theo", context: "Khi đang mở ảnh lớn." })
 
   return (

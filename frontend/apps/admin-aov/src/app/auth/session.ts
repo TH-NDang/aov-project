@@ -1,3 +1,4 @@
+import { randomId } from "@/lib/random-id"
 import { createAuthRequest, isGoogleCompletion } from "./auth-api"
 import { createAuthenticatedClient } from "@/lib/api/authenticated-client"
 import { ApiError } from "@/lib/api/errors"
@@ -156,7 +157,7 @@ export function loginGoogle(): Promise<void> {
   if (!session.googleEnabled) return Promise.reject(new Error(messages.AUTH_GOOGLE_DISABLED))
   const popup = window.open(
     import.meta.env.BASE_URL + "auth/google-wait.html",
-    "aov-google-" + crypto.randomUUID(),
+    "aov-google-" + randomId(),
     "popup=yes,width=480,height=740,left=" +
       Math.max(0, window.screenX + (window.outerWidth - 480) / 2) +
       ",top=" +

@@ -32,6 +32,11 @@ export function isApiError(error: unknown, code?: string): error is ApiError {
 
 /** Vietnamese messages keyed by stable error codes. */
 const MESSAGES: Record<string, string> = {
+  HERO_IMPORT_CONTEXT_CONFLICT: "Patch không thuộc bộ quy tắc đã chọn. Hãy chọn lại mùa và patch.",
+  HERO_IMPORT_SNAPSHOT_EXISTS: "Patch này đã có mốc dữ liệu. Chọn loại nhập “Bổ sung / sửa dữ liệu”.",
+  HERO_IMPORT_MISSING_BASELINE: "Chưa có mốc dữ liệu phù hợp. Chọn “Dữ liệu ban đầu” để ghi nhận trạng thái đã biết.",
+  HERO_IMPORT_DRAFT_CONFLICT:
+    "Tướng đang có bản nháp ở patch hoặc loại nhập khác. Hoàn tất hoặc bỏ bản nháp đó trước khi tiếp tục.",
   HERO_REVISION_VERSION_CONFLICT: "Draft đã được người khác sửa. Hãy tải bản mới trước khi tiếp tục.",
   HERO_PATCH_CHANGE_CONFLICT: "Tướng đã có change set trong variant này. Kiểm tra lịch sử đã ghi trước khi thử lại.",
   HERO_DRAFT_EXISTS: "Tướng đã có draft trong ruleset này. Hãy mở draft hiện có.",
@@ -53,6 +58,18 @@ const MESSAGES: Record<string, string> = {
 
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
+    const required = error.problem.errors?.filter((item) => item.code === "HERO_PUBLICATION_REQUIRED")
+    if (required?.length)
+      return `Chưa thể xuất bản. Cần bổ sung: ${required
+        .map((item) =>
+          item.path === "PROFILE.roles"
+            ? "vai trò tướng"
+            : item.path
+                .replace("SKILLS.skills", "kỹ năng")
+                .replace(".translations", " · bản dịch")
+                .replace(".description", " · mô tả"),
+        )
+        .join("; ")}.`
     const base = MESSAGES[error.code] ?? "Thao tác không thành công."
     return error.problem.errors?.length ? `${base} ${error.problem.errors[0].message}` : base
   }
