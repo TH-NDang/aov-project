@@ -1,4 +1,5 @@
 package com.wikiaov.hero.internal.application.service;
+
 import com.wikiaov.access.*;
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
@@ -18,6 +19,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @Transactional(readOnly = true)
 public class HeroPatchChanges implements HeroChangeQueries {
@@ -38,6 +40,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         this.actors = actors;
         this.clock = clock;
     }
+
     @Transactional
     @PreAuthorize("hasAuthority('patch:write')")
     public UUID record(UUID variantId, com.wikiaov.hero.internal.domain.HeroChanges.Record input) {
@@ -104,12 +107,21 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 null, Map.of("changeSetId", id)));
         return id;
     }
+
+    @PreAuthorize("hasAuthority('catalog:read')")
+    public List<Map<String, Object>> forAuthoringVariant(UUID variantId, String locale) {
+        HeroValidation.locale(locale);
+        contexts.variant(variantId);
+        return load("patch_variant_id", variantId, locale);
+    }
+
     public List<Map<String, Object>> forVariant(UUID variantId, String locale) {
         HeroValidation.locale(locale);
         if (!contexts.variant(variantId).published())
             return List.of();
         return load("patch_variant_id", variantId, locale);
     }
+
     public PageSlice<Map<String, Object>> forHero(UUID heroId, String region, String locale, int page, int size) {
         HeroValidation.locale(locale);
         if (page < 0 || size < 1 || size > 100)
@@ -124,6 +136,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 }).toList();
         return new PageSlice<>(all.stream().skip((long) page * size).limit(size).toList(), page, size, all.size());
     }
+
     private void validateChange(Change change, com.wikiaov.hero.internal.domain.HeroChanges.Record input) {
         var to = store.revision(input.heroId(), input.toHeroRevisionId());
         var from = input.fromHeroRevisionId() == null
@@ -171,9 +184,11 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 throw HeroValidation.invalid("Visual changes must match the snapshots.");
         }
     }
+
     private static boolean sameNumber(java.math.BigDecimal a, java.math.BigDecimal b) {
         return a == null ? b == null : b != null && a.compareTo(b) == 0;
     }
+
     private List<Map<String, Object>> load(String column, UUID id, String locale) {
         return store
                 .rows("SELECT * FROM hero.hero_patch_change_set WHERE " + column + "=? ORDER BY created_at DESC,id", id)
@@ -181,6 +196,8 @@ public class HeroPatchChanges implements HeroChangeQueries {
                     Map<String, Object> result = new LinkedHashMap<>();
                     result.put("id", row.get("id"));
                     result.put("heroId", row.get("hero_id"));
+                    result.put("heroCode", store.rows("SELECT code FROM hero.hero WHERE id=?", row.get("hero_id"))
+                            .getFirst().get("code"));
 
                     result.put("patchVariantId", row.get("patch_variant_id"));
                     result.put("fromHeroRevisionId", row.get("from_hero_revision_id"));
@@ -210,6 +227,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
                     return result;
                 }).toList();
     }
+
     private static String camel(String key) {
         var words = key.split("_");
         StringBuilder s = new StringBuilder(words[0]);

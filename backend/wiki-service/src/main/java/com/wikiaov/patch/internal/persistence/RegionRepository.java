@@ -9,4 +9,5 @@ import org.springframework.data.repository.Repository;
 public interface RegionRepository extends Repository<Region, UUID> {
     List<Region> findAllByOrderBySortOrderAscCodeAsc();
     Optional<Region> findByCode(String code);
+    Region saveAndFlush(Region region);
 }

@@ -1,0 +1,2225 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Hero import and seasons",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/wiki/v1/admin/heroes/import/preview": {
+      "post": {
+        "operationId": "heroImportPreview",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HeroImportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kết quả import",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroImportPlan"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Bản xem trước đã cũ"
+          },
+          "422": {
+            "description": "Dữ liệu không hợp lệ"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/apply": {
+      "post": {
+        "operationId": "heroImportApply",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HeroImportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Kết quả import",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroImportPlan"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Bản xem trước đã cũ"
+          },
+          "422": {
+            "description": "Dữ liệu không hợp lệ"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/fields": {
+      "get": {
+        "operationId": "heroImportFields",
+        "responses": {
+          "200": {
+            "description": "Trường cho phép",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ImportField"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/seasons": {
+      "get": {
+        "operationId": "seasons",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Mùa theo thị trường",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Season"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSeason",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeasonInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Mùa đã tạo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Season"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Mã hoặc lịch mùa bị trùng"
+          }
+        }
+      }
+    },
+    "/admin/heroes/import/contexts": {
+      "get": {
+        "operationId": "heroImportContexts",
+        "parameters": [
+          {
+            "name": "regionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "seasonId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scheduled releases within the selected market and season",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthoringContext"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/jobs": {
+      "post": {
+        "operationId": "enqueueHeroImport",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HeroImportJobRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Import progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroImportJobView"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listHeroImports",
+        "responses": {
+          "200": {
+            "description": "Import progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeroImportJobView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/jobs/{id}": {
+      "get": {
+        "operationId": "getHeroImport",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Import progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroImportJobView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/relation-fields": {
+      "get": {
+        "operationId": "heroImportRelationFields",
+        "responses": {
+          "200": {
+            "description": "Trường ánh xạ kỹ năng và trang phục",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "skills",
+                    "skins"
+                  ],
+                  "properties": {
+                    "skills": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ImportRelationField"
+                      }
+                    },
+                    "skins": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ImportRelationField"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/publication-overview": {
+      "get": {
+        "operationId": "publicationOverview",
+        "responses": {
+          "200": {
+            "description": "Authoring overview at server time",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicationOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/season-patches": {
+      "post": {
+        "operationId": "createSeasonPatch",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeasonPatchInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid order or schedule"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/seasons/{seasonId}/schedules": {
+      "post": {
+        "operationId": "createSeasonSchedule",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeasonScheduleInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid order or schedule"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        },
+        "parameters": [
+          {
+            "name": "seasonId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/api/wiki/v1/admin/patch-releases/{id}/confirm": {
+      "post": {
+        "operationId": "confirmPatchRelease",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Confirmed as applied now"
+          },
+          "400": {
+            "description": "Invalid release date or timeline"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/patch-variants/{id}/releases": {
+      "post": {
+        "operationId": "createPatchRelease",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchReleaseInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate release"
+          },
+          "422": {
+            "description": "Invalid date precision or timeline"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/upload-sessions": {
+      "get": {
+        "operationId": "heroUploadSessions",
+        "responses": {
+          "200": {
+            "description": "Upload session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeroUploadSessionView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/upload-sessions/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "put": {
+        "operationId": "saveHeroUploadSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "version",
+                  "state"
+                ],
+                "properties": {
+                  "version": {
+                    "type": "integer",
+                    "minimum": -1
+                  },
+                  "state": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Upload session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroUploadSessionView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "409": {
+            "description": "Checkpoint version conflict"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteHeroUploadSession",
+        "responses": {
+          "200": {
+            "description": "Session removed"
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/import/jobs/{id}/notification-dismissal": {
+      "put": {
+        "operationId": "dismissHeroImportNotification",
+        "description": "Requires hero:write and job ownership. Idempotent; running jobs return 409. Import history is retained.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dismissed notification",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroImportJobView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Hero write capability required"
+          },
+          "404": {
+            "description": "Job does not exist or belongs to another account"
+          },
+          "409": {
+            "description": "Job is still running"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/{heroId}/revisions/{revisionId}/comparison": {
+      "get": {
+        "operationId": "heroRevisionComparison",
+        "description": "Đối chiếu snapshot cùng tướng/ruleset. Không tự ghi changelog; không có nguồn thì chỉ trả baseline.",
+        "parameters": [
+          {
+            "name": "heroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "revisionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "fromRevisionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Đối chiếu dữ liệu tướng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroComparison"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không có revision của tướng"
+          },
+          "422": {
+            "description": "Khác ruleset"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/baseline-context": {
+      "post": {
+        "operationId": "heroBaselineContext",
+        "description": "Đổi mốc quan sát của baseline nháp độc lập trước lần xuất bản đầu; giữ các section và ảnh.",
+        "parameters": [
+          {
+            "name": "heroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "draftId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "expectedVersion",
+                  "contextId"
+                ],
+                "properties": {
+                  "expectedVersion": {
+                    "type": "integer",
+                    "format": "int64",
+                    "minimum": 1
+                  },
+                  "contextId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Baseline nháp với mốc đã xác nhận",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroComparisonRevision"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Bản nháp đã thay đổi hoặc không còn sửa được"
+          },
+          "422": {
+            "description": "Không phải baseline ban đầu, khác ruleset, hoặc đã có lịch sử xuất bản"
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/heroes": {
+      "get": {
+        "operationId": "heroAdminCatalog",
+        "description": "Danh mục tướng: mùa/patch chỉ lọc các change set gameplay đã biên tập, không suy ra từ baseline hoặc nháp. Không lọc trả mọi tướng và change set gần nhất từng ruleset.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100,
+              "default": ""
+            }
+          },
+          {
+            "name": "seasonId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "patchVariantId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "rulesetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "vi-VN"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "code",
+                "edited-desc"
+              ],
+              "default": "code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Danh mục đã lọc trước phân trang, kèm các thay đổi gameplay và lần sửa thực lưu",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroCatalogPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Tham số không được phép hoặc sai kiểu"
+          },
+          "404": {
+            "description": "Không có mùa/patch đã yêu cầu"
+          },
+          "422": {
+            "description": "Bộ lọc, locale, sort hoặc phân trang không hợp lệ"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ImportPolicy": {
+        "type": "string",
+        "enum": [
+          "FILL_EMPTY",
+          "OVERWRITE",
+          "SKIP"
+        ]
+      },
+      "ImportField": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "json",
+              "image"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type"
+        ]
+      },
+      "HeroImportRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "rulesetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locale": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "values": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Chỉ nhận các field do GET import/fields công bố. Chính sách áp dụng trên cả object với overviewRatings/combatStats.",
+            "properties": {
+              "overviewRatings": {
+                "$ref": "#/components/schemas/HeroImportedRatings"
+              },
+              "combatStats": {
+                "$ref": "#/components/schemas/HeroImportedStats"
+              }
+            }
+          },
+          "policies": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ImportPolicy"
+            }
+          },
+          "expectedRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ImportMode"
+          },
+          "contextId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "code",
+          "rulesetId",
+          "locale",
+          "values",
+          "policies",
+          "contextId",
+          "mode"
+        ]
+      },
+      "HeroImportPlan": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "heroId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "before": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "after": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "classification": {
+            "type": "string",
+            "enum": [
+              "NEW_TO_CATALOG",
+              "BASELINE",
+              "CHANGED",
+              "UNCHANGED",
+              "INSUFFICIENT_DATA"
+            ]
+          },
+          "canApply": {
+            "type": "boolean"
+          },
+          "sourcePatchVariantId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "heroId",
+          "revisionId",
+          "version",
+          "before",
+          "after",
+          "changed",
+          "classification",
+          "canApply",
+          "warnings"
+        ]
+      },
+      "Season": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "seasonYear": {
+            "type": "integer",
+            "nullable": true
+          },
+          "seasonNumber": {
+            "type": "integer",
+            "nullable": true
+          },
+          "ordinal": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "displayName",
+          "seasonYear",
+          "seasonNumber",
+          "ordinal"
+        ]
+      },
+      "SeasonInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "seasonYear": {
+            "type": "integer",
+            "nullable": true
+          },
+          "seasonNumber": {
+            "type": "integer",
+            "nullable": true
+          },
+          "beforeSeasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "code",
+          "displayName"
+        ]
+      },
+      "ImportMode": {
+        "type": "string",
+        "enum": [
+          "BASELINE",
+          "PATCH_UPDATE",
+          "CORRECTION"
+        ]
+      },
+      "AuthoringContext": {
+        "type": "object",
+        "required": [
+          "contextId",
+          "regionId",
+          "seasonId",
+          "rulesetId",
+          "patchVariantId",
+          "regionCode",
+          "seasonName",
+          "patchCode",
+          "rulesetOrdinal",
+          "effectiveAt"
+        ],
+        "properties": {
+          "regionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulesetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patchVariantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "regionCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "seasonName": {
+            "type": "string"
+          },
+          "patchCode": {
+            "type": "string"
+          },
+          "rulesetOrdinal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "contextId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "HeroImportJobRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "rows"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rows": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 200,
+            "items": {
+              "$ref": "#/components/schemas/HeroImportRequest"
+            }
+          }
+        }
+      },
+      "HeroImportJobRow": {
+        "type": "object",
+        "required": [
+          "code",
+          "succeeded",
+          "errorCode",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "succeeded": {
+            "type": "boolean"
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "HeroImportJobView": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "completed",
+          "total",
+          "createdAt",
+          "updatedAt",
+          "results",
+          "notificationDismissed"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RUNNING",
+              "COMPLETED",
+              "COMPLETED_WITH_ERRORS"
+            ]
+          },
+          "completed": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroImportJobRow"
+            }
+          },
+          "notificationDismissed": {
+            "type": "boolean",
+            "description": "Owner dismissed this completed job notification; history is retained."
+          }
+        }
+      },
+      "ImportRelationField": {
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "type"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "PublicationMarket": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "displayName",
+          "available",
+          "currentRulesetId",
+          "currentSeasonId",
+          "currentReleaseId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "available": {
+            "type": "boolean"
+          },
+          "currentRulesetId": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentSeasonId": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentReleaseId": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PublicationSeason": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "displayName",
+          "ordinal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "PublicationVariant": {
+        "type": "object",
+        "required": [
+          "id",
+          "patchId",
+          "patchCode",
+          "rulesetId",
+          "rulesetOrdinal",
+          "status",
+          "seasonId"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "patchId": {
+            "type": "string"
+          },
+          "patchCode": {
+            "type": "string"
+          },
+          "rulesetId": {
+            "type": "string"
+          },
+          "rulesetOrdinal": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "PublicationRelease": {
+        "type": "object",
+        "required": [
+          "id",
+          "variantId",
+          "regionId",
+          "seasonId",
+          "effectiveAt",
+          "sourceUrl",
+          "status",
+          "phase",
+          "effectiveOn",
+          "confirmedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "variantId": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "string"
+          },
+          "seasonId": {
+            "type": "string",
+            "nullable": true
+          },
+          "effectiveAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "phase": {
+            "type": "string"
+          },
+          "effectiveOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "confirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "PublicationRuleset": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "description"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PublicationAssignment": {
+        "type": "object",
+        "required": [
+          "id",
+          "regionId",
+          "rulesetId",
+          "validFrom",
+          "validTo"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "regionId": {
+            "type": "string"
+          },
+          "rulesetId": {
+            "type": "string"
+          },
+          "validFrom": {
+            "type": "string"
+          },
+          "validTo": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "PublicationOverview": {
+        "type": "object",
+        "required": [
+          "asOf",
+          "markets",
+          "seasons",
+          "variants",
+          "releases",
+          "rulesets",
+          "assignments",
+          "seasonSchedules"
+        ],
+        "properties": {
+          "asOf": {
+            "type": "string"
+          },
+          "markets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationMarket"
+            }
+          },
+          "seasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationSeason"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationVariant"
+            }
+          },
+          "releases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationRelease"
+            }
+          },
+          "rulesets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationRuleset"
+            }
+          },
+          "assignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationAssignment"
+            }
+          },
+          "seasonSchedules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicationSeasonSchedule"
+            }
+          }
+        }
+      },
+      "PublicationSeasonSchedule": {
+        "type": "object",
+        "required": [
+          "id",
+          "seasonId",
+          "regionId",
+          "startsAt",
+          "endsAt",
+          "phase",
+          "startsOn",
+          "endsOn"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "regionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "phase": {
+            "type": "string"
+          },
+          "startsOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "endsOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "SeasonScheduleInput": {
+        "type": "object",
+        "description": "Create or update the market schedule for a season. Supply exactly one start date or timestamp. End is optional; omitted end means unknown, not an infinite season.",
+        "required": [
+          "regionId"
+        ],
+        "properties": {
+          "regionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "startsOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "endsOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "SeasonPatchInput": {
+        "type": "object",
+        "required": [
+          "seasonId",
+          "rulesetId",
+          "patch"
+        ],
+        "properties": {
+          "seasonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulesetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "beforeVariantId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "patch": {
+            "type": "object",
+            "required": [
+              "code",
+              "translations"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "maxLength": 64
+              },
+              "translations": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "locale",
+                    "title",
+                    "summary"
+                  ],
+                  "properties": {
+                    "locale": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "PatchReleaseInput": {
+        "type": "object",
+        "required": [
+          "regionId"
+        ],
+        "properties": {
+          "regionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "effectiveAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "effectiveOn": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sourceUrl": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 2000
+          },
+          "announcedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "description": "Exactly one non-null effectiveAt or effectiveOn is required. Date-only releases await explicit confirmation."
+      },
+      "HeroUploadSessionView": {
+        "type": "object",
+        "required": [
+          "id",
+          "version",
+          "updatedAt",
+          "state"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "HeroComparisonRevision": {
+        "type": "object",
+        "required": [
+          "id",
+          "heroId",
+          "rulesetId",
+          "revisionNo",
+          "state",
+          "version",
+          "cause",
+          "sections"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "heroId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulesetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revisionNo": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED",
+              "DISCARDED"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "publicationSequence": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "cause": {
+            "type": "string"
+          },
+          "sourceRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "effectiveFromPatchVariantId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "sections": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "HeroComparison": {
+        "type": "object",
+        "required": [
+          "status",
+          "from",
+          "to",
+          "before",
+          "after",
+          "changes",
+          "warnings"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "BASELINE_ONLY"
+            ]
+          },
+          "from": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeroComparisonRevision"
+              }
+            ]
+          },
+          "to": {
+            "$ref": "#/components/schemas/HeroComparisonRevision"
+          },
+          "before": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "profile": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "overviewRatings": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "combatStats": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "skills": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "skins": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "mediaBindings": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              }
+            }
+          },
+          "after": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "profile": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "overviewRatings": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "combatStats": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "skills": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "skins": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "mediaBindings": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              }
+            }
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "section",
+                "path",
+                "kind",
+                "before",
+                "after"
+              ],
+              "properties": {
+                "section": {
+                  "type": "string",
+                  "enum": [
+                    "profile",
+                    "overviewRatings",
+                    "combatStats",
+                    "skills",
+                    "skins",
+                    "mediaBindings"
+                  ]
+                },
+                "path": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "ADDED",
+                    "REMOVED",
+                    "CHANGED"
+                  ]
+                },
+                "before": {
+                  "nullable": true
+                },
+                "after": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "HeroSource": {
+        "type": "object",
+        "required": [
+          "label",
+          "verificationState"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "observedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "verificationState": {
+            "type": "string",
+            "enum": [
+              "UNVERIFIED",
+              "VERIFIED"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "HeroImportedRatings": {
+        "type": "object",
+        "required": [
+          "scaleCode",
+          "survivability",
+          "attackDamage",
+          "skillEffects",
+          "difficulty",
+          "derived",
+          "sources"
+        ],
+        "properties": {
+          "scaleCode": {
+            "type": "string"
+          },
+          "survivability": {
+            "type": "number"
+          },
+          "attackDamage": {
+            "type": "number"
+          },
+          "skillEffects": {
+            "type": "number"
+          },
+          "difficulty": {
+            "type": "number"
+          },
+          "derived": {
+            "type": "boolean"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroSource"
+            }
+          }
+        }
+      },
+      "HeroImportedStats": {
+        "type": "object",
+        "required": [
+          "values",
+          "sources"
+        ],
+        "properties": {
+          "values": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "required": [
+                "statKey",
+                "unit"
+              ],
+              "properties": {
+                "statKey": {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+                },
+                "unit": {
+                  "type": "string"
+                },
+                "baseValue": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "growthPerLevel": {
+                  "type": "number",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroSource"
+            }
+          }
+        }
+      },
+      "HeroCatalogGameplayChange": {
+        "type": "object",
+        "required": [
+          "id",
+          "rulesetId",
+          "seasonId",
+          "patchVariantId",
+          "fromHeroRevisionId",
+          "toHeroRevisionId",
+          "changeKinds",
+          "recordedAt",
+          "summary",
+          "actualLocale"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rulesetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "seasonId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "patchVariantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fromHeroRevisionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "toHeroRevisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "changeKinds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "BUFF",
+                "NERF",
+                "ADJUSTMENT",
+                "REWORK",
+                "FIX",
+                "OTHER"
+              ]
+            }
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualLocale": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "HeroCatalogRow": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "revisions",
+          "lastEditedAt",
+          "gameplayChanges"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroComparisonRevision"
+            }
+          },
+          "lastEditedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "gameplayChanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroCatalogGameplayChange"
+            }
+          }
+        }
+      },
+      "HeroCatalogPage": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroCatalogRow"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ]
+}

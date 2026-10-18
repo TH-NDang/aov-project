@@ -1,188 +1,210 @@
 package com.wikiaov.hero.internal.persistence;
+
 import com.wikiaov.access.Actor;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
-import java.math.BigDecimal;
-import java.sql.Timestamp;
+import com.wikiaov.hero.internal.persistence.entity.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.*;
 import org.springframework.stereotype.Repository;
-import tools.jackson.databind.json.JsonMapper;
+
 @Repository
 public class HeroSections {
-    private final HeroStore store;
-    private final JsonMapper json;
-    public HeroSections(HeroStore store, JsonMapper json) {
-        this.store = store;
-        this.json = json;
+    private final EntityManager entities;
+
+    public HeroSections(EntityManager entities) {
+        this.entities = entities;
     }
+
     public UUID create(UUID heroId, HeroSection section, Object content, Actor actor, Instant at) {
+        var revision = newRevision(section);
         UUID id = UUID.randomUUID();
-        store.write("INSERT INTO " + section.table()
-                + "(id,hero_id,state,created_at,created_by_issuer,created_by_subject) VALUES(?,?,'DRAFT',?,?,?)", id,
-                heroId, Timestamp.from(at), actor.issuer(), actor.subject());
+        revision.setId(id);
+        revision.setHeroId(heroId);
+        revision.setState("DRAFT");
+        revision.setCreatedAt(at);
+        revision.setCreatedByIssuer(actor.issuer());
+        revision.setCreatedBySubject(actor.subject());
+        entities.persist(revision);
+        entities.flush();
         if (content != null)
             switch (section) {
                 case PROFILE -> {
-                    var p = (Profile) content;
-                    for (var t : p.translations())
-                        store.write("INSERT INTO hero.hero_profile_translation VALUES(?,?,?,?,?,?)", id, t.locale(),
-                                t.name(), t.title(), t.summary(), t.lore());
-                    for (var role : p.roles())
-                        store.write("INSERT INTO hero.hero_profile_role VALUES(?,?)", id, role.name());
-                    sources(section, id, p.sources());
+                    var value = (Profile) content;
+                    value.translations().forEach(t -> entities.persist(
+                            new ProfileTranslationRow(id, t.locale(), t.name(), t.title(), t.summary(), t.lore())));
+                    value.roles().forEach(role -> entities.persist(new ProfileRoleRow(id, role.name())));
+                    sources(section, id, value.sources());
                 }
                 case OVERVIEW_RATINGS -> {
-                    var p = (Ratings) content;
-                    store.write(
-                            "UPDATE hero.hero_overview_rating_revision SET scale_code=?,survivability=?,attack_damage=?,skill_effects=?,difficulty=?,derived=? WHERE id=?",
-                            p.scaleCode(), p.survivability(), p.attackDamage(), p.skillEffects(), p.difficulty(),
-                            p.derived(), id);
-                    sources(section, id, p.sources());
+                    var value = (Ratings) content;
+                    var rating = (RatingRevision) revision;
+                    rating.setScaleCode(value.scaleCode());
+                    rating.setSurvivability(value.survivability());
+                    rating.setAttackDamage(value.attackDamage());
+                    rating.setSkillEffects(value.skillEffects());
+                    rating.setDifficulty(value.difficulty());
+                    rating.setDerived(value.derived());
+                    sources(section, id, value.sources());
                 }
                 case COMBAT_STATS -> {
-                    var p = (Stats) content;
-                    for (var v : p.values())
-                        store.write(
-                                "INSERT INTO hero.hero_combat_stat_value(stats_revision_id,stat_key,base_value,growth_per_level,unit_code) VALUES(?,?,?,?,?)",
-                                id, v.statKey(), v.baseValue(), v.growthPerLevel(), v.unit());
-                    sources(section, id, p.sources());
+                    var value = (Stats) content;
+                    value.values().forEach(v -> entities
+                            .persist(new StatRow(id, v.statKey(), v.baseValue(), v.growthPerLevel(), v.unit())));
+                    sources(section, id, value.sources());
                 }
                 case SKILLS -> {
-                    var p = (Skills) content;
-                    for (var v : p.skills()) {
-                        store.write("INSERT INTO hero.hero_skill VALUES(?,?,?) ON CONFLICT DO NOTHING", heroId,
-                                v.skillKey(), Timestamp.from(at));
-                        store.write("INSERT INTO hero.hero_skill_snapshot VALUES(?,?,?,?,?,?,?)", id, heroId,
-                                v.skillKey(), v.kind().name(), v.formKey(), v.displayOrder(), v.iconAssetId());
-                        for (var t : v.translations())
-                            store.write("INSERT INTO hero.hero_skill_translation VALUES(?,?,?,?,?)", id, v.skillKey(),
-                                    t.locale(), t.name(), t.description());
-                        for (int n = 0; n < v.effects().size(); n++) {
-                            var e = v.effects().get(n);
-                            store.write("INSERT INTO hero.hero_skill_effect VALUES(?,?,?,?,CAST(? AS jsonb))", id,
-                                    v.skillKey(), n, e.effectType(), json.writeValueAsString(e.metadata()));
+                    var value = (Skills) content;
+                    for (var skill : value.skills()) {
+                        if (entities.find(SkillIdentityRow.class,
+                                new SkillIdentityRow.Key(heroId, skill.skillKey())) == null)
+                            entities.persist(new SkillIdentityRow(heroId, skill.skillKey(), at));
+                        entities.flush();
+                        entities.persist(new SkillSnapshotRow(id, heroId, skill.skillKey(), skill.kind().name(),
+                                skill.formKey(), skill.displayOrder(), skill.iconAssetId()));
+                        entities.flush();
+                        skill.translations().forEach(t -> entities.persist(
+                                new SkillTranslationRow(id, skill.skillKey(), t.locale(), t.name(), t.description())));
+                        for (int n = 0; n < skill.effects().size(); n++) {
+                            var effect = skill.effects().get(n);
+                            entities.persist(new SkillEffectRow(id, skill.skillKey(), n, effect.effectType(),
+                                    effect.metadata()));
                         }
                     }
-                    sources(section, id, p.sources());
+                    sources(section, id, value.sources());
                 }
                 case SKINS -> {
-                    var p = (Skins) content;
-                    for (var v : p.skins()) {
-                        store.write("INSERT INTO hero.hero_skin VALUES(?,?,?) ON CONFLICT DO NOTHING", heroId,
-                                v.skinKey(), Timestamp.from(at));
-                        store.write("INSERT INTO hero.hero_skin_snapshot VALUES(?,?,?,?,?,?)", id, heroId, v.skinKey(),
-                                v.displayOrder(), v.artAssetId(), v.rarityCode());
-                        for (var t : v.translations())
-                            store.write("INSERT INTO hero.hero_skin_translation VALUES(?,?,?,?,?,?)", id, v.skinKey(),
-                                    t.locale(), t.name(), t.description(), t.acquisitionNote());
+                    var value = (Skins) content;
+                    for (var skin : value.skins()) {
+                        if (entities.find(SkinIdentityRow.class,
+                                new SkinIdentityRow.Key(heroId, skin.skinKey())) == null)
+                            entities.persist(new SkinIdentityRow(heroId, skin.skinKey(), at));
+                        entities.flush();
+                        entities.persist(new SkinSnapshotRow(id, heroId, skin.skinKey(), skin.displayOrder(),
+                                skin.artAssetId(), skin.rarityCode()));
+                        entities.flush();
+                        skin.translations().forEach(t -> entities.persist(new SkinTranslationRow(id, skin.skinKey(),
+                                t.locale(), t.name(), t.description(), t.acquisitionNote())));
                     }
-                    sources(section, id, p.sources());
+                    sources(section, id, value.sources());
                 }
                 case MEDIA_BINDINGS -> {
-                    var p = (Bindings) content;
-                    for (var e : p.bindings().entrySet())
-                        store.write("INSERT INTO hero.hero_media_binding VALUES(?,?,?)", id, e.getKey().name(),
-                                e.getValue());
-                    sources(section, id, p.sources());
+                    var value = (Bindings) content;
+                    value.bindings()
+                            .forEach((role, asset) -> entities.persist(new MediaBindingRow(id, role.name(), asset)));
+                    sources(section, id, value.sources());
                 }
             }
+        entities.flush();
         return id;
     }
+
     private void sources(HeroSection section, UUID id, List<Source> sources) {
         for (int n = 0; n < sources.size(); n++) {
-            var s = sources.get(n);
-            store.write("INSERT INTO hero.hero_source_reference VALUES(?,?,?,?,?,?,?,?,?)", UUID.randomUUID(),
-                    section.name(), id, n, s.label(), s.sourceUrl(),
-                    s.observedAt() == null ? null : Timestamp.from(s.observedAt()), s.verificationState().name(),
-                    s.note());
+            var source = sources.get(n);
+            entities.persist(new SourceReferenceRow(UUID.randomUUID(), section.name(), id, n, source.label(),
+                    source.sourceUrl(), source.observedAt(), source.verificationState().name(), source.note()));
         }
     }
+
     public List<Source> sources(HeroSection section, UUID id) {
-        return store.rows(
-                "SELECT * FROM hero.hero_source_reference WHERE owner_type=? AND owner_revision_id=? ORDER BY position",
-                section.name(), id).stream()
-                .map(r -> new Source(str(r, "label"), str(r, "source_url"),
-                        r.get("observed_at") == null ? null : ((Timestamp) r.get("observed_at")).toInstant(),
-                        Verification.valueOf(str(r, "verification_state")), str(r, "note")))
+        return entities.createQuery(
+                "select s from SourceReferenceRow s where s.ownerType = :type and s.ownerRevisionId = :id order by s.position",
+                SourceReferenceRow.class)
+                .setParameter("type", section.name()).setParameter("id", id).getResultList().stream()
+                .map(s -> new Source(s.getLabel(), s.getSourceUrl(), s.getObservedAt(),
+                        Verification.valueOf(s.getVerificationState()), s.getNote()))
                 .toList();
     }
+
     public Object content(HeroSection section, UUID id) {
         var src = sources(section, id);
         return switch (section) {
-            case PROFILE -> new Profile(store
-                    .rows("SELECT * FROM hero.hero_profile_translation WHERE profile_revision_id=? ORDER BY locale", id)
-                    .stream()
-                    .map(r -> new ProfileTranslation(str(r, "locale"), str(r, "name"), str(r, "title"),
-                            str(r, "summary"), str(r, "lore")))
+            case PROFILE -> new Profile(rows(ProfileTranslationRow.class, "profileRevisionId", id, "locale").stream()
+                    .map(t -> new ProfileTranslation(t.getLocale(), t.getName(), t.getTitle(), t.getSummary(),
+                            t.getLore()))
                     .toList(),
-                    new HashSet<>(store.rows(
-                            "SELECT role_code FROM hero.hero_profile_role WHERE profile_revision_id=? ORDER BY role_code",
-                            id).stream().map(r -> Role.valueOf(str(r, "role_code"))).toList()),
+                    new HashSet<>(rows(ProfileRoleRow.class, "profileRevisionId", id, "roleCode").stream()
+                            .map(r -> Role.valueOf(r.getRoleCode())).toList()),
                     src);
             case OVERVIEW_RATINGS -> {
-                var r = store.rows("SELECT * FROM hero.hero_overview_rating_revision WHERE id=?", id).getFirst();
-                yield new Ratings(str(r, "scale_code"), num(r, "survivability"), num(r, "attack_damage"),
-                        num(r, "skill_effects"), num(r, "difficulty"), (boolean) r.get("derived"), src);
+                var r = entities.find(RatingRevision.class, id);
+                yield new Ratings(r.getScaleCode(), r.getSurvivability(), r.getAttackDamage(), r.getSkillEffects(),
+                        r.getDifficulty(), r.isDerived(), src);
             }
-            case COMBAT_STATS -> new Stats(store
-                    .rows("SELECT * FROM hero.hero_combat_stat_value WHERE stats_revision_id=? ORDER BY stat_key", id)
-                    .stream().map(r -> new Stat(str(r, "stat_key"), num(r, "base_value"), num(r, "growth_per_level"),
-                            str(r, "unit_code")))
+            case COMBAT_STATS -> new Stats(rows(StatRow.class, "statsRevisionId", id, "statKey").stream()
+                    .map(v -> new Stat(v.getStatKey(), v.getBaseValue(), v.getGrowthPerLevel(), v.getUnitCode()))
                     .toList(), src);
-            case SKILLS -> new Skills(store
-                    .rows("SELECT * FROM hero.hero_skill_snapshot WHERE skill_set_revision_id=? ORDER BY display_order",
-                            id)
-                    .stream().map(r -> {
-                        String key = str(r, "skill_key");
-                        return new Skill(key, SkillKind.valueOf(str(r, "kind")), str(r, "form_key"),
-                                ((Number) r.get("display_order")).intValue(), (UUID) r.get("icon_asset_id"),
-                                store.rows(
-                                        "SELECT * FROM hero.hero_skill_translation WHERE skill_set_revision_id=? AND skill_key=? ORDER BY locale",
-                                        id, key).stream()
-                                        .map(t -> new SkillTranslation(str(t, "locale"), str(t, "name"),
-                                                str(t, "description")))
-                                        .toList(),
-                                store.rows(
-                                        "SELECT * FROM hero.hero_skill_effect WHERE skill_set_revision_id=? AND skill_key=? ORDER BY effect_order",
-                                        id, key).stream()
-                                        .map(e -> new Effect(str(e, "effect_type"),
-                                                json.readValue(e.get("metadata").toString(), Map.class)))
-                                        .toList());
-                    }).toList(), src);
-            case SKINS -> new Skins(store
-                    .rows("SELECT * FROM hero.hero_skin_snapshot WHERE skin_set_revision_id=? ORDER BY display_order",
-                            id)
-                    .stream().map(r -> {
-                        String key = str(r, "skin_key");
-                        return new Skin(key, ((Number) r.get("display_order")).intValue(), (UUID) r.get("art_asset_id"),
-                                str(r, "rarity_code"),
-                                store.rows(
-                                        "SELECT * FROM hero.hero_skin_translation WHERE skin_set_revision_id=? AND skin_key=? ORDER BY locale",
-                                        id, key).stream()
-                                        .map(t -> new SkinTranslation(str(t, "locale"), str(t, "name"),
-                                                str(t, "description"), str(t, "acquisition_note")))
-                                        .toList());
-                    }).toList(), src);
+            case SKILLS -> new Skills(rows(SkillSnapshotRow.class, "skillSetRevisionId", id, "displayOrder").stream()
+                    .map(s -> new Skill(s.getSkillKey(), SkillKind.valueOf(s.getKind()), s.getFormKey(),
+                            s.getDisplayOrder(), s.getIconAssetId(),
+                            rows(SkillTranslationRow.class, "skillSetRevisionId", id, "locale").stream()
+                                    .filter(t -> t.getSkillKey().equals(s.getSkillKey()))
+                                    .map(t -> new SkillTranslation(t.getLocale(), t.getName(), t.getDescription()))
+                                    .toList(),
+                            rows(SkillEffectRow.class, "skillSetRevisionId", id, "effectOrder").stream()
+                                    .filter(e -> e.getSkillKey().equals(s.getSkillKey()))
+                                    .map(e -> new Effect(e.getEffectType(), e.getMetadata())).toList()))
+                    .toList(), src);
+            case SKINS -> new Skins(
+                    rows(SkinSnapshotRow.class, "skinSetRevisionId", id, "displayOrder").stream()
+                            .map(s -> new Skin(s.getSkinKey(), s.getDisplayOrder(), s.getArtAssetId(),
+                                    s.getRarityCode(),
+                                    rows(SkinTranslationRow.class, "skinSetRevisionId", id, "locale").stream()
+                                            .filter(t -> t.getSkinKey().equals(s.getSkinKey()))
+                                            .map(t -> new SkinTranslation(t.getLocale(), t.getName(),
+                                                    t.getDescription(), t.getAcquisitionNote()))
+                                            .toList()))
+                            .toList(),
+                    src);
             case MEDIA_BINDINGS -> {
                 Map<MediaRole, UUID> bindings = new EnumMap<>(MediaRole.class);
-                store.rows("SELECT * FROM hero.hero_media_binding WHERE media_binding_revision_id=?", id)
-                        .forEach(r -> bindings.put(MediaRole.valueOf(str(r, "media_role")), (UUID) r.get("asset_id")));
+                rows(MediaBindingRow.class, "mediaBindingRevisionId", id, "mediaRole")
+                        .forEach(b -> bindings.put(MediaRole.valueOf(b.getMediaRole()), b.getAssetId()));
                 yield new Bindings(bindings, src);
             }
         };
     }
+
     public void publish(HeroSection section, UUID id, UUID heroId) {
-        var rows = store.rows("SELECT state FROM " + section.table() + " WHERE id=? AND hero_id=? FOR UPDATE", id,
-                heroId);
-        if (rows.isEmpty() || "DISCARDED".equals(rows.getFirst().get("state")))
+        entities.flush();
+        var revision = entities.find(type(section), id, LockModeType.PESSIMISTIC_WRITE);
+        if (revision == null || !revision.getHeroId().equals(heroId) || "DISCARDED".equals(revision.getState()))
             throw new IllegalStateException("Invalid section ownership or lifecycle.");
-        store.write("UPDATE " + section.table() + " SET state='PUBLISHED' WHERE id=? AND state='DRAFT'", id);
+        if ("DRAFT".equals(revision.getState()))
+            revision.setState("PUBLISHED");
+        entities.flush();
     }
-    private static String str(Map<String, Object> r, String key) {
-        return (String) r.get(key);
+
+    private <T> List<T> rows(Class<T> type, String owner, UUID id, String order) {
+        return entities
+                .createQuery(
+                        "select e from " + type.getSimpleName() + " e where e." + owner + " = :id order by e." + order,
+                        type)
+                .setParameter("id", id).getResultList();
     }
-    private static BigDecimal num(Map<String, Object> r, String key) {
-        return (BigDecimal) r.get(key);
+
+    private static SectionRevision newRevision(HeroSection section) {
+        return switch (section) {
+            case PROFILE -> new ProfileRevision();
+            case OVERVIEW_RATINGS -> new RatingRevision();
+            case COMBAT_STATS -> new StatsRevision();
+            case SKILLS -> new SkillsRevision();
+            case SKINS -> new SkinsRevision();
+            case MEDIA_BINDINGS -> new MediaRevision();
+        };
+    }
+
+    private static Class<? extends SectionRevision> type(HeroSection section) {
+        return switch (section) {
+            case PROFILE -> ProfileRevision.class;
+            case OVERVIEW_RATINGS -> RatingRevision.class;
+            case COMBAT_STATS -> StatsRevision.class;
+            case SKILLS -> SkillsRevision.class;
+            case SKINS -> SkinsRevision.class;
+            case MEDIA_BINDINGS -> MediaRevision.class;
+        };
     }
 }

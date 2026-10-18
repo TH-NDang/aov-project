@@ -447,8 +447,13 @@ class MediaAdminApiIntegrationTest {
         String variant = (String) pipeline(post(root + "/admin/patches/" + patch + "/variants"),
                 Map.of("rulesetId", ruleset, "variantCode", "TEST", "rulesetOrdinal", 1), 201).get("id");
         pipeline(post(root + "/admin/patch-variants/" + variant + "/publish"), null, 204);
-        pipeline(post(root + "/admin/patch-variants/" + variant + "/releases"),
-                Map.of("regionId", region, "effectiveAt", "2029-01-02T00:00:00Z"), 201);
+        String season = (String) pipeline(post(root + "/admin/seasons"),
+                Map.of("code", "fixture-season", "displayName", "Test season"), 201).get("id");
+        pipeline(post(root + "/admin/seasons/" + season + "/schedules"),
+                Map.of("regionId", region, "startsAt", "2029-01-01T00:00:00Z", "endsAt", "2030-01-01T00:00:00Z"),
+                201);
+        String release = (String) pipeline(post(root + "/admin/patch-variants/" + variant + "/releases"),
+                Map.of("regionId", region, "seasonId", season, "effectiveAt", "2029-01-02T00:00:00Z"), 201).get("id");
         Map<String, String> assets = new java.util.HashMap<>();
         for (String semantic : List.of("HEAD", "PORTRAIT", "SPLASH", "SKILL_ICON", "SKIN_ART")) {
             String asset = createAsset("HERO_" + semantic);
@@ -456,7 +461,8 @@ class MediaAdminApiIntegrationTest {
             assets.put(semantic, asset);
         }
         var draft = pipeline(post(root + "/admin/heroes"), Map.of("code", "fixture-" + suffix,
-                "name", "Synthetic test hero", "initialLocale", "vi-VN", "rulesetId", ruleset), 201);
+                "name", "Synthetic test hero", "initialLocale", "vi-VN", "rulesetId", ruleset, "releaseId", release),
+                201);
         String hero = (String) draft.get("heroId"), revision = (String) draft.get("id");
         String path = root + "/admin/heroes/" + hero + "/drafts/" + revision;
         mvc.perform(get(root + "/heroes/" + hero)).andExpect(status().isNotFound());

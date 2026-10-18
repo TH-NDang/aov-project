@@ -11,6 +11,8 @@ spring:
           issuer-uri: http://localhost:0/realms/test
 
 wiki:
+  hero-import:
+    worker-enabled: false
   storage:
     endpoint: http://localhost:0
     access-key: test

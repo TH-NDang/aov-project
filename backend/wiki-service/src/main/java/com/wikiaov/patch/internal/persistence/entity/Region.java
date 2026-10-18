@@ -34,6 +34,19 @@ public class Region {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
+    public Region(UUID id, String code, String displayName, String productName, String defaultLocale,
+            String timezone, boolean available) {
+        this.id = id;
+        this.code = code;
+        this.displayName = displayName;
+        this.productName = productName;
+        this.defaultLocale = defaultLocale;
+        this.timezone = timezone;
+        this.lifecycleState = available ? "ACTIVE" : "LOCKED";
+        this.unavailableReason = available ? null : "Data is not available yet.";
+        this.sortOrder = 100;
+    }
+
     public boolean isAvailable() {
         return "ACTIVE".equals(lifecycleState);
     }
