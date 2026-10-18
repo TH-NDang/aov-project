@@ -26,6 +26,10 @@ public class SkinSnapshotRow {
 
     private String rarityCode;
 
+    private UUID headAssetId;
+
+    private UUID portraitAssetId;
+
     @NoArgsConstructor
     @AllArgsConstructor
     @EqualsAndHashCode

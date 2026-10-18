@@ -4,7 +4,9 @@ import com.wikiaov.access.*;
 import com.wikiaov.hero.internal.application.*;
 import com.wikiaov.hero.internal.application.HeroCommands.*;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
+import com.wikiaov.hero.internal.domain.CharacterCodes;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
+import com.wikiaov.hero.internal.domain.HeroImages;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.persistence.*;
 import com.wikiaov.patch.GameplayContexts;
@@ -26,8 +28,9 @@ public class HeroAuthoring {
     private final CurrentActor actors;
     private final AuditLog audit;
     private final Clock clock;
+    private final IdentifierAliases aliases;
     public HeroAuthoring(HeroStore store, HeroSections sections, HeroValidation validation, GameplayContexts contexts,
-            CurrentActor actors, AuditLog audit, Clock clock) {
+            CurrentActor actors, AuditLog audit, Clock clock, IdentifierAliases aliases) {
         this.store = store;
         this.sections = sections;
         this.validation = validation;
@@ -35,6 +38,7 @@ public class HeroAuthoring {
         this.actors = actors;
         this.audit = audit;
         this.clock = clock;
+        this.aliases = aliases;
     }
 
     @PreAuthorize("hasAuthority('hero:write')")
@@ -49,7 +53,7 @@ public class HeroAuthoring {
         try {
             var hero = new com.wikiaov.hero.internal.persistence.entity.HeroIdentity();
             hero.setId(id);
-            hero.setCode(input.code());
+            hero.setCode(CharacterCodes.hero(input.code()));
             hero.setCreatedAt(clock.instant());
             hero.setCreatedByIssuer(actor.issuer());
             hero.setCreatedBySubject(actor.subject());
@@ -148,7 +152,14 @@ public class HeroAuthoring {
         store.lockHero(heroId);
         var draft = editable(heroId, draftId, expected);
         validation.validate(section, content);
+        if (content instanceof Skins skins)
+            content = aliases.skins(heroId, skins);
+        if (content instanceof Bindings bindings)
+            content = aliases.bindings(bindings);
+        validation.validate(section, content);
         Object old = sections.content(section, draft.sections().get(section));
+        content = HeroImages.retain(old, content);
+        validation.validate(section, content);
         if (Objects.equals(old, content))
             return draft;
         UUID newId = sections.create(heroId, section, content, actors.require(), clock.instant());

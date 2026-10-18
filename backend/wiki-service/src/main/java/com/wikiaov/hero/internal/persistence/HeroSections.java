@@ -8,14 +8,18 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class HeroSections {
     private final EntityManager entities;
+    private final SkinBadgeRepository badges;
 
-    public HeroSections(EntityManager entities) {
+    public HeroSections(EntityManager entities, SkinBadgeRepository badges) {
         this.entities = entities;
+        this.badges = badges;
     }
 
     public UUID create(UUID heroId, HeroSection section, Object content, Actor actor, Instant at) {
@@ -78,13 +82,19 @@ public class HeroSections {
                 case SKINS -> {
                     var value = (Skins) content;
                     for (var skin : value.skins()) {
+                        ensureBadge(skin.rarityCode(), at);
                         if (entities.find(SkinIdentityRow.class,
                                 new SkinIdentityRow.Key(heroId, skin.skinKey())) == null)
                             entities.persist(new SkinIdentityRow(heroId, skin.skinKey(), at));
                         entities.flush();
                         entities.persist(new SkinSnapshotRow(id, heroId, skin.skinKey(), skin.displayOrder(),
-                                skin.artAssetId(), skin.rarityCode()));
+                                skin.artAssetId(), skin.rarityCode(), skin.headAssetId(), skin.portraitAssetId()));
                         entities.flush();
+                        skin.images().forEach((role, options) -> {
+                            for (int n = 0; n < options.size(); n++)
+                                entities.persist(new SkinImageOption(id, skin.skinKey(), role.name(), n,
+                                        options.get(n).assetId(), options.get(n).label()));
+                        });
                         skin.translations().forEach(t -> entities.persist(new SkinTranslationRow(id, skin.skinKey(),
                                 t.locale(), t.name(), t.description(), t.acquisitionNote())));
                     }
@@ -94,11 +104,34 @@ public class HeroSections {
                     var value = (Bindings) content;
                     value.bindings()
                             .forEach((role, asset) -> entities.persist(new MediaBindingRow(id, role.name(), asset)));
+                    value.images().forEach((role, options) -> {
+                        for (int n = 0; n < options.size(); n++)
+                            entities.persist(new HeroImageOption(id, role.name(), n,
+                                    options.get(n).assetId(), options.get(n).label()));
+                    });
                     sources(section, id, value.sources());
                 }
             }
         entities.flush();
         return id;
+    }
+
+    private void ensureBadge(String code, Instant at) {
+        if (code == null || badges.findByCode(code).isPresent())
+            return;
+        var badge = new SkinBadge();
+        badge.setId(UUID.randomUUID());
+        badge.setCode(code);
+        badge.setKind("UNKNOWN");
+        badge.setCreatedAt(at);
+        badge.setUpdatedAt(at);
+        try {
+            badges.saveAndFlush(badge);
+        } catch (DataIntegrityViolationException failure) {
+            throw new com.wikiaov.platform.ApiException(
+                    com.wikiaov.hero.internal.application.HeroErrorCode.HERO_BADGE_CONFLICT,
+                    "The badge catalog changed concurrently. Retry the hero change.");
+        }
     }
 
     private void sources(HeroSection section, UUID id, List<Source> sources) {
@@ -148,24 +181,40 @@ public class HeroSections {
                                     .filter(e -> e.getSkillKey().equals(s.getSkillKey()))
                                     .map(e -> new Effect(e.getEffectType(), e.getMetadata())).toList()))
                     .toList(), src);
-            case SKINS -> new Skins(
-                    rows(SkinSnapshotRow.class, "skinSetRevisionId", id, "displayOrder").stream()
-                            .map(s -> new Skin(s.getSkinKey(), s.getDisplayOrder(), s.getArtAssetId(),
-                                    s.getRarityCode(),
-                                    rows(SkinTranslationRow.class, "skinSetRevisionId", id, "locale").stream()
-                                            .filter(t -> t.getSkinKey().equals(s.getSkinKey()))
-                                            .map(t -> new SkinTranslation(t.getLocale(), t.getName(),
-                                                    t.getDescription(), t.getAcquisitionNote()))
-                                            .toList()))
-                            .toList(),
-                    src);
+            case SKINS -> {
+                var translations = rows(SkinTranslationRow.class, "skinSetRevisionId", id, "locale").stream()
+                        .collect(Collectors.groupingBy(SkinTranslationRow::getSkinKey));
+                var options = rows(SkinImageOption.class, "skinSetRevisionId", id, "imageOrder").stream()
+                        .collect(Collectors.groupingBy(SkinImageOption::getSkinKey));
+                yield new Skins(rows(SkinSnapshotRow.class, "skinSetRevisionId", id, "displayOrder").stream()
+                        .map(s -> new Skin(s.getSkinKey(), s.getDisplayOrder(), s.getArtAssetId(), s.getRarityCode(),
+                                translations.getOrDefault(s.getSkinKey(), List.of()).stream()
+                                        .map(t -> new SkinTranslation(t.getLocale(), t.getName(), t.getDescription(),
+                                                t.getAcquisitionNote()))
+                                        .toList(),
+                                s.getHeadAssetId(), s.getPortraitAssetId(),
+                                skinImages(options.getOrDefault(s.getSkinKey(), List.of()))))
+                        .toList(), src);
+            }
             case MEDIA_BINDINGS -> {
                 Map<MediaRole, UUID> bindings = new EnumMap<>(MediaRole.class);
                 rows(MediaBindingRow.class, "mediaBindingRevisionId", id, "mediaRole")
                         .forEach(b -> bindings.put(MediaRole.valueOf(b.getMediaRole()), b.getAssetId()));
-                yield new Bindings(bindings, src);
+                Map<MediaRole, List<ImageOption>> images = new EnumMap<>(MediaRole.class);
+                rows(HeroImageOption.class, "mediaBindingRevisionId", id, "imageOrder").forEach(option -> images
+                        .computeIfAbsent(MediaRole.valueOf(option.getMediaRole()), ignored -> new ArrayList<>())
+                        .add(new ImageOption(option.getAssetId(), option.getLabel())));
+                yield new Bindings(bindings, src, images);
             }
         };
+    }
+
+    private Map<MediaRole, List<ImageOption>> skinImages(List<SkinImageOption> options) {
+        Map<MediaRole, List<ImageOption>> images = new EnumMap<>(MediaRole.class);
+        options.forEach(option -> images
+                .computeIfAbsent(MediaRole.valueOf(option.getMediaRole()), ignored -> new ArrayList<>())
+                .add(new ImageOption(option.getAssetId(), option.getLabel())));
+        return images;
     }
 
     public void publish(HeroSection section, UUID id, UUID heroId) {

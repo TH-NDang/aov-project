@@ -846,6 +846,465 @@
           }
         }
       }
+    },
+    "/api/wiki/v1/admin/hero-media": {
+      "get": {
+        "operationId": "heroMediaGroups",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "rulesetId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HEAD",
+                "PORTRAIT",
+                "SPLASH"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "vi-VN",
+              "maxLength": 16
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroMediaPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/skin-badges": {
+      "get": {
+        "operationId": "skinBadgeCatalog",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "rulesetId",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "vi-VN",
+              "maxLength": 16
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "in": "query",
+            "name": "groupId",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ungrouped",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgePage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSkinBadge",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinBadgeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgeView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/skin-badges/{id}": {
+      "put": {
+        "operationId": "updateSkinBadge",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinBadgeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgeView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/skin-badges/{id}/skins": {
+      "get": {
+        "operationId": "skinBadgeRelations",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "rulesetId",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "vi-VN",
+              "maxLength": 16
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgeRelationPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/skin-badges/{id}/group": {
+      "put": {
+        "operationId": "assignSkinBadgeGroup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinBadgeAssignGroup"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgeView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/skin-badge-groups": {
+      "get": {
+        "operationId": "skinBadgeGroups",
+        "description": "Pages whole groups. Search group codes/names or contained badge codes/names; stable code order, unassigned last. Empty search includes empty groups.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "vi-VN",
+              "maxLength": 16
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgeGroupPage"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSkinBadgeGroup",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinBadgeGroupCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgeGroupView"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/skin-badge-groups/{id}": {
+      "put": {
+        "operationId": "updateSkinBadgeGroup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinBadgeGroupUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinBadgeGroupView"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2207,6 +2666,722 @@
             "format": "int64"
           }
         }
+      },
+      "HeroImageOption": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "assetId"
+        ]
+      },
+      "HeroImageOptions": {
+        "type": "object",
+        "properties": {
+          "HEAD": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroImageOption"
+            },
+            "maxItems": 200
+          },
+          "PORTRAIT": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroImageOption"
+            },
+            "maxItems": 200
+          },
+          "SPLASH": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroImageOption"
+            },
+            "maxItems": 200
+          }
+        }
+      },
+      "HeroMediaBindings": {
+        "type": "object",
+        "properties": {
+          "bindings": {
+            "type": "object",
+            "properties": {
+              "HEAD": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "PORTRAIT": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "SPLASH": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          "images": {
+            "$ref": "#/components/schemas/HeroImageOptions"
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroSource"
+            }
+          }
+        },
+        "required": [
+          "bindings",
+          "sources"
+        ]
+      },
+      "HeroSkinTranslation": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "acquisitionNote": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "locale",
+          "name"
+        ]
+      },
+      "HeroSkin": {
+        "type": "object",
+        "properties": {
+          "skinKey": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "displayOrder": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "artAssetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "headAssetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "portraitAssetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "rarityCode": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 64
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroSkinTranslation"
+            }
+          },
+          "images": {
+            "$ref": "#/components/schemas/HeroImageOptions"
+          }
+        },
+        "required": [
+          "skinKey",
+          "displayOrder",
+          "translations"
+        ]
+      },
+      "HeroSkinSet": {
+        "type": "object",
+        "properties": {
+          "skins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroSkin"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroSource"
+            }
+          }
+        },
+        "required": [
+          "skins",
+          "sources"
+        ]
+      },
+      "HeroMediaEntry": {
+        "type": "object",
+        "properties": {
+          "ownerType": {
+            "type": "string",
+            "enum": [
+              "HERO",
+              "SKIN"
+            ]
+          },
+          "skinKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "label": {
+            "type": "string",
+            "nullable": true
+          },
+          "main": {
+            "type": "boolean"
+          },
+          "rarityCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "ownerType",
+          "skinKey",
+          "name",
+          "assetId",
+          "label",
+          "main",
+          "rarityCode"
+        ]
+      },
+      "HeroMediaGroup": {
+        "type": "object",
+        "properties": {
+          "heroId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "actualLocale": {
+            "type": "string",
+            "nullable": true
+          },
+          "revision": {
+            "$ref": "#/components/schemas/HeroComparisonRevision"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroMediaEntry"
+            }
+          }
+        },
+        "required": [
+          "heroId",
+          "code",
+          "name",
+          "actualLocale",
+          "revision",
+          "entries"
+        ]
+      },
+      "HeroMediaPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroMediaGroup"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "SkinBadgeTranslation": {
+        "type": "object",
+        "properties": {
+          "locale": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "displayName": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "iconAssetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "locale",
+          "displayName"
+        ]
+      },
+      "SkinBadgeView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "RARITY",
+              "EVENT"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeTranslation"
+            }
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "iconAssetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "actualLocale": {
+            "type": "string",
+            "nullable": true
+          },
+          "fallbackApplied": {
+            "type": "boolean"
+          },
+          "skinCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "kind",
+          "version",
+          "translations",
+          "displayName",
+          "iconAssetId",
+          "actualLocale",
+          "fallbackApplied",
+          "skinCount",
+          "groupId"
+        ]
+      },
+      "SkinBadgePage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeView"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "SkinBadgeCreate": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "[a-z0-9]+(?:-[a-z0-9]+)*"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "RARITY",
+              "EVENT"
+            ]
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeTranslation"
+            },
+            "maxItems": 30
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "regionCode": {
+            "type": "string",
+            "pattern": "[a-z]{2}|global",
+            "default": "vn",
+            "description": "Source market for an automatically generated badge code. The code is allocated from the name and this market when code is omitted."
+          }
+        },
+        "required": [
+          "kind",
+          "translations"
+        ]
+      },
+      "SkinBadgeUpdate": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "RARITY",
+              "EVENT"
+            ]
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeTranslation"
+            },
+            "maxItems": 30
+          }
+        },
+        "required": [
+          "expectedVersion",
+          "kind",
+          "translations"
+        ]
+      },
+      "SkinBadgeRelation": {
+        "type": "object",
+        "properties": {
+          "heroId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "heroCode": {
+            "type": "string"
+          },
+          "heroName": {
+            "type": "string"
+          },
+          "skinKey": {
+            "type": "string"
+          },
+          "skinName": {
+            "type": "string"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "artAssetId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "heroId",
+          "heroCode",
+          "heroName",
+          "skinKey",
+          "skinName",
+          "revisionId",
+          "artAssetId"
+        ]
+      },
+      "SkinBadgeRelationPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeRelation"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
+      },
+      "SkinBadgeAssignGroup": {
+        "type": "object",
+        "required": [
+          "expectedVersion",
+          "groupId"
+        ],
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "groupId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "description": "groupId=null unassigns; metadata updates preserve the current group."
+      },
+      "SkinBadgeGroupTranslation": {
+        "type": "object",
+        "required": [
+          "locale",
+          "displayName"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string",
+            "maxLength": 16
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          }
+        }
+      },
+      "SkinBadgeGroupCreate": {
+        "type": "object",
+        "required": [
+          "code",
+          "kind",
+          "translations"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "[a-z0-9]+(?:-[a-z0-9]+)*"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "RANK",
+              "THEME"
+            ]
+          },
+          "translations": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeGroupTranslation"
+            }
+          }
+        }
+      },
+      "SkinBadgeGroupUpdate": {
+        "type": "object",
+        "required": [
+          "expectedVersion",
+          "kind",
+          "translations"
+        ],
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "RANK",
+              "THEME"
+            ]
+          },
+          "translations": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeGroupTranslation"
+            }
+          }
+        }
+      },
+      "SkinBadgeGroupView": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "kind",
+          "version",
+          "translations",
+          "displayName",
+          "actualLocale",
+          "fallbackApplied",
+          "badgeCount",
+          "matchedByGroup"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "code": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "RANK",
+              "THEME"
+            ],
+            "nullable": true
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "translations": {
+            "type": "array",
+            "maxItems": 30,
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeGroupTranslation"
+            }
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "actualLocale": {
+            "type": "string",
+            "nullable": true
+          },
+          "fallbackApplied": {
+            "type": "boolean"
+          },
+          "badgeCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "matchedByGroup": {
+            "type": "boolean"
+          }
+        },
+        "description": "Whole display group. The final virtual __ungrouped group has null id/kind/name. If matchedByGroup=true omit q when fetching children; badgeCount then covers all children. Otherwise forward q."
+      },
+      "SkinBadgeGroupPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkinBadgeGroupView"
+            }
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "totalElements"
+        ]
       }
     },
     "securitySchemes": {

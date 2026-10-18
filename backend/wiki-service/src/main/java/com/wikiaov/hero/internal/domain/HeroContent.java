@@ -144,8 +144,19 @@ public final class HeroContent {
             @PositiveOrZero int displayOrder,
             UUID artAssetId,
             @Size(max = 64) String rarityCode,
-            @NotEmpty @Size(max = 30) List<@Valid SkinTranslation> translations
+            @NotEmpty @Size(max = 30) List<@Valid SkinTranslation> translations,
+            UUID headAssetId,
+            UUID portraitAssetId,
+            Map<@NotNull MediaRole, @NotNull @Size(max = 200) List<@NotNull @Valid ImageOption>> images
     ) {
+        public Skin {
+            images = images == null ? Map.of() : images;
+        }
+
+        public Skin(String skinKey, int displayOrder, UUID artAssetId, String rarityCode,
+                List<SkinTranslation> translations) {
+            this(skinKey, displayOrder, artAssetId, rarityCode, translations, null, null, Map.of());
+        }
     }
 
     public record Skins(
@@ -154,9 +165,23 @@ public final class HeroContent {
     ) {
     }
 
+    public record ImageOption(
+            @NotNull UUID assetId,
+            @Size(max = 255) String label
+    ) {
+    }
+
     public record Bindings(
             @NotNull Map<@NotNull MediaRole, @NotNull UUID> bindings,
-            @NotNull @Size(max = 30) List<@Valid Source> sources
+            @NotNull @Size(max = 30) List<@Valid Source> sources,
+            Map<@NotNull MediaRole, @NotNull @Size(max = 200) List<@NotNull @Valid ImageOption>> images
     ) {
+        public Bindings {
+            images = images == null ? Map.of() : images;
+        }
+
+        public Bindings(Map<MediaRole, UUID> bindings, List<Source> sources) {
+            this(bindings, sources, Map.of());
+        }
     }
 }
