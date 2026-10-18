@@ -1,0 +1,919 @@
+{
+  "schemaVersion": "1.0",
+  "generatedOn": "2026-10-18",
+  "purpose": "Read-only readiness audit. No live data was changed.",
+  "roleTaxonomySource": {
+    "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/",
+    "retrievedOn": "2026-10-18",
+    "taxonomyIds": {
+      "28": "WARRIOR",
+      "31": "TANK",
+      "29": "MAGE",
+      "32": "ASSASSIN",
+      "30": "SUPPORT",
+      "33": "MARKSMAN"
+    },
+    "scope": "Current official catalog labels only, not historical role evidence."
+  },
+  "rules": {
+    "forkRequiresPublishedSource": true,
+    "oneDraftPerHeroRuleset": true,
+    "changeSetRequiresPublishedGamePatchTarget": true,
+    "publicationRequires": [
+      "nonempty roles",
+      "complete ratings",
+      "at least one numeric combat stat",
+      "nonempty skill set and nonblank skill descriptions",
+      "all HEAD/PORTRAIT/SPLASH bindings"
+    ],
+    "changesetIsAppendOnly": true
+  },
+  "heroes": [
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "preyta",
+      "heroName": "Preyta",
+      "heroId": "480e2f62-5741-4931-b963-0a70f37a3d0a",
+      "baselineRevisionId": "f6f56763-6ccd-477d-8afc-9e831a7848e6",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/preyta/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-1-2",
+          "displayOrder": 4,
+          "name": "Chiêu 1",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-1-1",
+              "name": "Dịch bệnh bùng phát"
+            }
+          ]
+        },
+        {
+          "skillKey": "skill-2-2",
+          "displayOrder": 5,
+          "name": "Chiêu 2",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-2-1",
+              "name": "Pháp trận hoại tử"
+            }
+          ]
+        },
+        {
+          "skillKey": "skill-3-2",
+          "displayOrder": 6,
+          "name": "Chiêu 3",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-3-1",
+              "name": "Làn sóng dịch bệnh"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      },
+      "partialReconstructionWarning": "Imported capture already has the new 2026 rework skill descriptions. Resource legacy descriptions are null. Patch article supplies new mechanics but no full old text. A complete pre-rework comparison cannot be established from these inputs.",
+      "resourceLegacySkills": [
+        {
+          "slot": 0,
+          "name": "Nội tại",
+          "description": null,
+          "sourceUrls": [
+            "https://liquipedia.net/commons/images/f/f6/Preyta_Toxic_Mutation.png"
+          ]
+        },
+        {
+          "slot": 1,
+          "name": "Chiêu 1",
+          "description": null,
+          "sourceUrls": [
+            "https://liquipedia.net/commons/images/f/f4/Preyta_Plague_Spread.png",
+            "https://liquipedia.net/commons/images/0/0c/Preyta_Plague_Spread_2.png"
+          ]
+        },
+        {
+          "slot": 2,
+          "name": "Chiêu 2",
+          "description": null,
+          "sourceUrls": [
+            "https://liquipedia.net/commons/images/e/e9/Preyta_Poison_Gas_Bomb_New.png",
+            "https://liquipedia.net/commons/images/4/43/Preyta_Poison_Gas_Bomb_New_2.png"
+          ]
+        },
+        {
+          "slot": 3,
+          "name": "Chiêu 3",
+          "description": null,
+          "sourceUrls": [
+            "https://liquipedia.net/commons/images/2/2a/Preyta_Plague_Specter_New.png",
+            "https://liquipedia.net/commons/images/c/cc/Preyta_Plague_Specter_New_2.png"
+          ]
+        }
+      ],
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "yorn",
+      "heroName": "Yorn",
+      "heroId": "76c6a33c-8222-4d89-93a0-87fdd3d97b6b",
+      "baselineRevisionId": "92d69283-c8fa-4c98-8f67-b1172c7be8d0",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MARKSMAN"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/yorn/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified"
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "celica",
+      "heroName": "Celica",
+      "heroId": "7493a8c4-49cb-4656-a1df-4900d195c058",
+      "baselineRevisionId": "8a9b17f5-9937-4b86-bf20-6ab05080fea0",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MARKSMAN"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/celica/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-3-2",
+          "displayOrder": 4,
+          "name": "Chiêu 3",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-3-1",
+              "name": "Pháo thần công"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "eland-orr",
+      "heroName": "Eland’orr",
+      "heroId": "575d2455-0331-4b6c-937b-d23c86334a7b",
+      "baselineRevisionId": "31c90b57-57c2-47b7-8d52-c843b253bc82",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MARKSMAN"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/elandorr/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-1-2",
+          "displayOrder": 4,
+          "name": "Chiêu 1",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-1-1",
+              "name": "Phi điệp"
+            }
+          ]
+        },
+        {
+          "skillKey": "skill-2-2",
+          "displayOrder": 5,
+          "name": "Chiêu 2",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-2-1",
+              "name": "Điệp vũ"
+            }
+          ]
+        },
+        {
+          "skillKey": "skill-3-2",
+          "displayOrder": 6,
+          "name": "Chiêu 3",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-3-1",
+              "name": "Phá kén"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Chỉ có biểu tượng; không suy đoán vai trò."
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "natalya",
+      "heroName": "Natalya",
+      "heroId": "cbf0ddc7-75f3-40f3-9d8b-f2a093657e1c",
+      "baselineRevisionId": "6c11ad21-de10-43f9-aecf-02b615262b4d",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/natalya/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "lauriel",
+      "heroName": "Lauriel",
+      "heroId": "4987331b-4cd1-4e4a-8fcb-18928b22f204",
+      "baselineRevisionId": "91608a55-4e02-4424-aca1-06336fc3e74d",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/lauriel/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Không suy đoán tên vai trò từ biểu tượng."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "aleister",
+      "heroName": "Aleister",
+      "heroId": "54e70e34-142c-48ce-807a-03c7f81ca462",
+      "baselineRevisionId": "61f3a744-c53f-4ed5-95bb-693af4d391f6",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/aleister/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified"
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "toro",
+      "heroName": "Toro",
+      "heroId": "21b5022b-9ef8-44db-86cf-8728367265c4",
+      "baselineRevisionId": "33dae0ec-bf19-4717-bd90-de4ae65774b9",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["TANK"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/toro/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Chỉ có biểu tượng; không suy đoán vai trò."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "baldum",
+      "heroName": "Baldum",
+      "heroId": "c3713b34-b22e-4ac1-8e85-7107eb562a43",
+      "baselineRevisionId": "7a9f8f43-38ef-4482-968f-ad6562cfec83",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["TANK"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/baldum/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-3-2",
+          "displayOrder": 4,
+          "name": "Chiêu 3",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-3-1",
+              "name": "Địa giam"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified"
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "krizzix",
+      "heroName": "Krizzix",
+      "heroId": "8db3cf23-aa9b-4e9f-a4e1-ec097efa3ada",
+      "baselineRevisionId": "1c4a0754-fcfd-42a7-9677-c2b6f0d3ef81",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["SUPPORT"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/krizzix/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "ryoma",
+      "heroName": "Ryoma",
+      "heroId": "4c5b1e2b-b1ac-4892-baad-5bf40b7c1d7d",
+      "baselineRevisionId": "47d6a886-6653-4457-b0e4-7691c8e5ade1",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["WARRIOR"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ryoma/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Không suy đoán tên vai trò từ biểu tượng."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "ata",
+      "heroName": "Ata",
+      "heroId": "9c03d8c4-a3bc-4331-9d9e-0109d5a3f118",
+      "baselineRevisionId": "5e2520ec-c83f-4fa1-a69a-601add6b7387",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["WARRIOR"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ata/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "amily",
+      "heroName": "Amily",
+      "heroId": "686d2917-1582-40a1-866e-6520461fa00a",
+      "baselineRevisionId": "8cb57a06-fd34-4c40-b438-84beabfd4476",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["WARRIOR"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/amily/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Chỉ có biểu tượng; không suy đoán vai trò."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "roxie",
+      "heroName": "Roxie",
+      "heroId": "3c02acaa-4e9c-4f8e-90c4-af9db009df2e",
+      "baselineRevisionId": "8125b024-8786-4820-ae8e-f5c28901c386",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["WARRIOR"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/roxie/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "d-arcy",
+      "heroName": "D’Arcy",
+      "heroId": "ffa7affc-b4cb-4da4-b8f9-d074895935bc",
+      "baselineRevisionId": "f5ff7194-bd41-4019-9d30-26d11b246033",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/darcy/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-1-2",
+          "displayOrder": 4,
+          "name": "Chiêu 1",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-1-1",
+              "name": "Du hành thứ nguyên"
+            }
+          ]
+        },
+        {
+          "skillKey": "skill-2-2",
+          "displayOrder": 5,
+          "name": "Chiêu 2",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-2-1",
+              "name": "Lập phương thứ nguyên"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified"
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-09-29",
+      "heroCode": "hayate",
+      "heroName": "Hayate",
+      "heroId": "599c9557-ff5b-4481-9e13-0fd229b797d9",
+      "baselineRevisionId": "cc7c2ddd-8387-4349-9556-e12016f827ec",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MARKSMAN"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/hayate/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Chỉ có biểu tượng; không suy đoán vai trò."
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "dirak",
+      "heroName": "Dirak",
+      "heroId": "43dec8c3-0197-4459-bbdf-9812fbc12dd6",
+      "baselineRevisionId": "6003d2c7-34ba-4692-ae66-17d2d6835971",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/dirak/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-2-2",
+          "displayOrder": 4,
+          "name": "Chiêu 2",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-2-1",
+              "name": "Thiên hỏa trận"
+            }
+          ]
+        },
+        {
+          "skillKey": "skill-3-2",
+          "displayOrder": 5,
+          "name": "Chiêu 3",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-3-1",
+              "name": "Lô cốt tử quang"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Không suy đoán tên vai trò từ biểu tượng."
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "errol",
+      "heroName": "Errol",
+      "heroId": "f56384c8-4f61-4b46-89c6-e129ad29341f",
+      "baselineRevisionId": "9ce0fcc4-a159-417f-a2a5-6461c9c03c93",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["WARRIOR"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/errol/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-2-2",
+          "displayOrder": 4,
+          "name": "Chiêu 2",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-2-1",
+              "name": "Tay đại đao"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified"
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "ngo-khong",
+      "heroName": "Ngộ Không",
+      "heroId": "bc81319e-2d0b-4d0e-ba3c-f3310e1695b2",
+      "baselineRevisionId": "bd9738a3-88ed-44d6-86bf-478afaaeb5c9",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["ASSASSIN"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/ngo-khong/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Không suy đoán tên vai trò từ biểu tượng."
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "flowborn-ad",
+      "heroName": "Flowborn",
+      "heroId": "e8988941-9924-4330-8fd1-bbcae6bb15b2",
+      "baselineRevisionId": "9b1cfe56-6d08-4c49-aad1-6cea34b59696",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MARKSMAN"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/flowborn/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-2-2",
+          "displayOrder": 4,
+          "name": "Chiêu 2",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-2-1",
+              "name": "Nỏ tiễn phá không"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "kriknak",
+      "heroName": "Kriknak",
+      "heroId": "ed9381c2-878f-4464-82e4-c79a6f49b0a4",
+      "baselineRevisionId": "8009cb6b-d4b5-40a5-b1bf-6d0eb64412c6",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["ASSASSIN"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/kriknak/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified"
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "gildur",
+      "heroName": "Gildur",
+      "heroId": "a84002f4-6045-4c75-88aa-2659e49061e3",
+      "baselineRevisionId": "8639671f-2ecd-4cda-bb33-d76441c11606",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE", "SUPPORT"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/gildur/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified"
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "trieu-van",
+      "heroName": "Triệu Vân",
+      "heroId": "55dd9e85-9054-4cfe-af6f-941b4eb3fce0",
+      "baselineRevisionId": "43df580d-1b3d-4f4f-8917-ebc1873d2a71",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["WARRIOR"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/trieu-van/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Biểu tượng không có nhãn chữ; không suy đoán."
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "raz",
+      "heroName": "Raz",
+      "heroId": "f2c93500-7b78-4d44-aea3-d6be4367672b",
+      "baselineRevisionId": "b4e372b0-0726-4702-a8aa-bfe131c7dcd6",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["MAGE"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/raz/"
+      },
+      "blockingMissingData": ["roles"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role."
+      ],
+      "blankSkillDescriptions": [],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Ảnh có các biểu tượng dưới dãy kỹ năng nhưng không có tên vai trò bằng chữ. Không suy đoán tên vai trò từ biểu tượng."
+      }
+    },
+    {
+      "patchDate": "2026-10-15",
+      "heroCode": "volkath",
+      "heroName": "Volkath",
+      "heroId": "cd0761da-a6e2-4f89-b004-3407680f2c2a",
+      "baselineRevisionId": "4912f3f2-9276-4412-ba2d-32ac41d14133",
+      "existingState": "DRAFT",
+      "roles": null,
+      "verifiedRoleLookup": {
+        "roles": ["WARRIOR"],
+        "url": "https://lienquan.garena.vn/hoc-vien/tuong-skin/d/volkath/"
+      },
+      "blockingMissingData": ["roles", "skillDescriptions"],
+      "safeRecommendations": [
+        "Apply official catalog role taxonomy with a dated source reference. Current role evidence does not prove the historical role.",
+        "Existing icon-only placeholder variants have no textual source. Preserve them in the backup. If excluding placeholders from this publishable working snapshot, explicitly document partial kit reconstruction and retain available primary descriptions."
+      ],
+      "blankSkillDescriptions": [
+        {
+          "skillKey": "skill-2-2",
+          "displayOrder": 4,
+          "name": "Chiêu 2",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-2-1",
+              "name": "Bá vương trảo"
+            }
+          ]
+        },
+        {
+          "skillKey": "skill-3-2",
+          "displayOrder": 5,
+          "name": "Chiêu 3",
+          "hasIcon": false,
+          "otherSameSlotDescriptions": [
+            {
+              "skillKey": "skill-3-1",
+              "name": "Chiến vương bất tử"
+            }
+          ]
+        }
+      ],
+      "mediaBindingsPresent": ["HEAD", "PORTRAIT", "SPLASH"],
+      "capturedRoleEvidence": {
+        "names": null,
+        "status": "not_textually_identified",
+        "note": "Không suy đoán tên vai trò từ biểu tượng."
+      },
+      "placeholderAssessment": {
+        "allBlankEntriesAreNonprimaryVariants": true,
+        "allHavePrimarySlotDescription": true,
+        "allHaveNoBoundIcon": true
+      }
+    }
+  ]
+}
