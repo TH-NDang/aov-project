@@ -23,6 +23,9 @@ class SecurityContextCurrentActor implements CurrentActor {
     @Override
     public Optional<Actor> find() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof AcceptedCommandAuthentication accepted && accepted.isAuthenticated()) {
+            return Optional.of(accepted.getPrincipal());
+        }
         if (!(authentication instanceof JwtAuthenticationToken token) || !token.isAuthenticated()) {
             return Optional.empty();
         }

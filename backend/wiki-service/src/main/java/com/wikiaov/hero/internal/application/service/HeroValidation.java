@@ -1,4 +1,5 @@
 package com.wikiaov.hero.internal.application.service;
+
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
@@ -9,6 +10,7 @@ import jakarta.validation.Validator;
 import java.math.BigDecimal;
 import java.util.*;
 import org.springframework.stereotype.Component;
+
 @Component
 public class HeroValidation {
     private final MediaAssets media;
@@ -19,6 +21,7 @@ public class HeroValidation {
         this.validator = validator;
         this.store = store;
     }
+
     public void validate(HeroSection section, Object value) {
         if (value == null || !validator.validate(value).isEmpty())
             throw invalid("The hero section is incomplete or invalid.");
@@ -68,8 +71,6 @@ public class HeroValidation {
             }
             case MEDIA_BINDINGS -> {
                 var p = (Bindings) value;
-                if (!p.bindings().keySet().equals(EnumSet.allOf(MediaRole.class)))
-                    throw invalid("HEAD, PORTRAIT and SPLASH bindings are required.");
                 p.bindings().forEach((role, id) -> asset(id, MediaSemanticType.valueOf("HERO_" + role.name())));
             }
         }
@@ -86,6 +87,18 @@ public class HeroValidation {
             if (source.sourceUrl() != null && !source.sourceUrl().matches("https?://[^\\s]+"))
                 throw invalid("Source URL must use HTTP or HTTPS.");
     }
+
+    public void validatePublication(HeroSection section, Object value) {
+        validate(section, value);
+        var errors = validator.validate(value, Publication.class).stream()
+                .map(v -> new com.wikiaov.platform.ApiFieldError(section.name() + "." + v.getPropertyPath(),
+                        "HERO_PUBLICATION_REQUIRED", "This field is required for publication."))
+                .sorted(Comparator.comparing(com.wikiaov.platform.ApiFieldError::path)).toList();
+        if (!errors.isEmpty())
+            throw new ApiException(HeroErrorCode.HERO_INVALID_CONTENT,
+                    "Complete the required fields before publishing.", errors);
+    }
+
     private void asset(UUID id, MediaSemanticType type) {
         if (id == null)
             return;
@@ -94,6 +107,7 @@ public class HeroValidation {
         if (!ref.usable() || ref.semanticType() != type)
             throw new ApiException(HeroErrorCode.HERO_INVALID_MEDIA, "The asset is not usable for this semantic role.");
     }
+
     public static void locale(String value) {
         try {
             var locale = new Locale.Builder().setLanguageTag(value).build();
@@ -103,10 +117,12 @@ public class HeroValidation {
             throw invalid("Use a canonical BCP 47 locale.");
         }
     }
+
     private static void unique(List<?> keys) {
         if (new HashSet<>(keys).size() != keys.size())
             throw invalid("Section keys, locales and display orders must be unique.");
     }
+
     public static ApiException invalid(String detail) {
         return new ApiException(HeroErrorCode.HERO_INVALID_CONTENT, detail);
     }
