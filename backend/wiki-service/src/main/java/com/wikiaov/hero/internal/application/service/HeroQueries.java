@@ -1,4 +1,5 @@
 package com.wikiaov.hero.internal.application.service;
+
 import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
@@ -12,6 +13,7 @@ import java.util.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
+
 @Service
 @Transactional(readOnly = true)
 public class HeroQueries {
@@ -30,6 +32,7 @@ public class HeroQueries {
         this.json = json;
         this.clock = clock;
     }
+
     public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at) {
         Map<UUID, Long> ordinals = new HashMap<>();
         return store.revisions(heroId).stream()
@@ -39,11 +42,13 @@ public class HeroQueries {
                 .max(Comparator.<HeroRevisionView>comparingLong(r -> ordinal(r, ordinals))
                         .thenComparingLong(HeroRevisionView::publicationSequence));
     }
+
     private long ordinal(HeroRevisionView rev, Map<UUID, Long> cache) {
         return rev.effectiveFromPatchVariantId() == null
                 ? 0
                 : cache.computeIfAbsent(rev.effectiveFromPatchVariantId(), id -> contexts.variant(id).rulesetOrdinal());
     }
+
     public Map<String, Object> detail(UUID heroId, String region, String locale, boolean manifest) {
         HeroValidation.locale(locale);
         Instant at = clock.instant();
@@ -52,6 +57,7 @@ public class HeroQueries {
                 "No published hero is available in this context."));
         return detail(rev, context, locale, manifest);
     }
+
     private Map<String, Object> detail(HeroRevisionView rev, GameplayContext ctx, String locale, boolean manifest) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("context", context(ctx, locale));
@@ -95,6 +101,7 @@ public class HeroQueries {
         ((Map<String, Object>) result.get("context")).put("fallbackApplied", !locale.equals(actual));
         return result;
     }
+
     public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
             String sort) {
         HeroValidation.locale(locale);
@@ -150,6 +157,7 @@ public class HeroQueries {
         return Map.of("context", context(ctx, locale), "items", items, "page", page, "size", size, "totalElements",
                 all.size(), "totalPages", all.isEmpty() ? 0 : (all.size() + size - 1) / size);
     }
+
     public Map<String, Object> section(HeroSection section, UUID id, String locale) {
         HeroValidation.locale(locale);
         if (store.rows(
@@ -158,6 +166,7 @@ public class HeroQueries {
             throw new ApiException(HeroErrorCode.HERO_REVISION_NOT_FOUND, "No published section exists with this ID.");
         return Map.of("id", id, "content", publicContent(section, id, locale));
     }
+
     private Map<String, Object> publicContent(HeroSection section, UUID id, String locale) {
         Map<String, Object> content = new LinkedHashMap<>(json.convertValue(sections.content(section, id), Map.class));
         content.remove("sources");
@@ -170,6 +179,7 @@ public class HeroQueries {
         }
         return content;
     }
+
     private void localize(Map<String, Object> object, String locale) {
         var translations = (List<Map<String, Object>>) object.remove("translations");
         String actual = translationLocale(translations.stream().map(t -> (String) t.get("locale")).toList(), locale);
@@ -179,6 +189,7 @@ public class HeroQueries {
         object.put("actualLocale", actual);
         object.put("fallbackApplied", !locale.equals(actual));
     }
+
     private static String translationLocale(List<String> values, String requested) {
         return values.contains(requested)
                 ? requested
@@ -187,6 +198,7 @@ public class HeroQueries {
                         : values.stream().sorted().findFirst()
                                 .orElseThrow(() -> HeroValidation.invalid("A published section has no translation."));
     }
+
     public static String sectionKey(HeroSection s) {
         return switch (s) {
             case PROFILE -> "profile";
@@ -197,6 +209,7 @@ public class HeroQueries {
             case MEDIA_BINDINGS -> "mediaBindings";
         };
     }
+
     private Map<String, Object> context(GameplayContext c, String locale) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("region", c.regionCode());

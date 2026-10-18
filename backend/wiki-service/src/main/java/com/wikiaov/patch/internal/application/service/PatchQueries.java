@@ -1,4 +1,5 @@
 package com.wikiaov.patch.internal.application.service;
+
 import com.wikiaov.patch.*;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.persistence.PatchStore;
@@ -7,6 +8,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 @Service
 @Transactional(readOnly = true)
 public class PatchQueries implements PatchCatalog {
@@ -16,6 +18,7 @@ public class PatchQueries implements PatchCatalog {
         this.store = store;
         this.regions = regions;
     }
+
     public Map<String, Object> published(UUID id, String region, String locale) {
         validateLocale(locale);
         var release = releases(region).stream().filter(r -> r.patchId().equals(id)).findFirst()
@@ -37,6 +40,7 @@ public class PatchQueries implements PatchCatalog {
         result.put("effectiveAt", release.effectiveAt());
         return result;
     }
+
     public PageSlice<Map<String, Object>> list(String region, String locale, int page, int size) {
         validateLocale(locale);
         if (page < 0 || size < 1 || size > 100)
@@ -46,6 +50,7 @@ public class PatchQueries implements PatchCatalog {
         return new PageSlice<>(ids.stream().skip(offset).limit(size).map(id -> published(id, region, locale)).toList(),
                 page, size, ids.size());
     }
+
     public List<PatchReleaseReference> releases(String region) {
         regions.select(region);
         return store.rows("""
@@ -57,6 +62,7 @@ public class PatchQueries implements PatchCatalog {
    """, region).stream().map(row -> new PatchReleaseReference((UUID) row.get("patch_id"), (UUID) row.get("variant_id"),
                 (UUID) row.get("ruleset_id"), ((Timestamp) row.get("effective_at")).toInstant())).toList();
     }
+
     private static void validateLocale(String value) {
         try {
             if (!new Locale.Builder().setLanguageTag(value).build().toLanguageTag().equals(value))

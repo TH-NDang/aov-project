@@ -1,4 +1,5 @@
 package com.wikiaov.hero.internal.infrastructure;
+
 import com.wikiaov.hero.internal.application.service.HeroQueries;
 import com.wikiaov.hero.internal.persistence.HeroStore;
 import com.wikiaov.media.*;
@@ -7,6 +8,7 @@ import java.time.Clock;
 import java.util.*;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 @Component
 public class HeroMediaUsageProvider implements MediaUsageProvider {
     private final HeroStore store;
@@ -19,6 +21,7 @@ public class HeroMediaUsageProvider implements MediaUsageProvider {
         this.contexts = contexts;
         this.clock = clock;
     }
+
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
         var rows = store.rows("""
