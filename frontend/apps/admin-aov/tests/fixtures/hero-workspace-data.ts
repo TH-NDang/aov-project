@@ -126,6 +126,24 @@ export function createHeroFixture(annotations = false, history = false) {
   const writes: { section: string; body: Record<string, unknown> }[] = []
   const fetcher: typeof fetch = async (input, init) => {
     const path = String(input).replace("/api/wiki/v1", "")
+    if (path.startsWith("/admin/reference-catalog"))
+      return Response.json({
+        rulesetId: revision.rulesetId,
+        items: [
+          {
+            id: revision.heroId,
+            kind: "hero",
+            iconAssetId: content.MEDIA_BINDINGS?.bindings.HEAD,
+            translations: content.PROFILE?.translations.map((text) => ({
+              locale: text.locale,
+              name: text.name,
+              aliases: [],
+              description: text.summary ?? "",
+            })),
+            destinations: { admin: `/hero/${revision.heroId}?revision=${revision.id}` },
+          },
+        ],
+      })
     if (/^\/admin\/(items|arcana|enchantments|spells)\?/.test(path))
       return Response.json({ items: [], page: 0, size: 100, totalElements: 0 })
     if (path === "/admin/reference-settings") {

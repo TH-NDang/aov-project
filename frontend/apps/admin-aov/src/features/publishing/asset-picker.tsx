@@ -8,6 +8,7 @@ import { createPublishingApi, uploadHeroImage, upgradeHeroImage } from "./publis
 import { resourceImage } from "./resource-import"
 import { imageFromUrl } from "./image-url"
 import { control, Field } from "./fields"
+import { invalidateMediaAsset } from "../media/media-cache"
 const api = createPublishingApi(backendRequest)
 export function AssetPicker({
   semanticType,
@@ -76,10 +77,8 @@ export function AssetPicker({
     setMessage("")
     try {
       await upgradeHeroImage(backendRequest, value, file)
+      await invalidateMediaAsset(queryClient, value)
       if (!alive.current) return
-      await assets.refetch()
-      await selectedAsset.refetch()
-      await queryClient.invalidateQueries({ queryKey: ["hero-content-asset", value] })
       setMessage("Đã nâng chất lượng trên cùng asset. Không cần sửa hoặc publish lại tướng.")
     } catch (error) {
       setError(errorMessage(error))
@@ -97,10 +96,10 @@ export function AssetPicker({
         url: url || null,
         note: resourcePath ?? null,
       })
+      await invalidateMediaAsset(queryClient, id)
       if (!alive.current) return
       change.current(id)
       onUploaded?.(id, selectedFile.name)
-      await assets.refetch()
     } catch (error) {
       setError(errorMessage(error))
     } finally {

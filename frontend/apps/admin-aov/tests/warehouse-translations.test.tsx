@@ -185,6 +185,25 @@ async function withUi(
         { id: "regional", code: "regional", description: "" },
         { id: "standard", code: "aov-standard", description: "" },
       ])
+    if (path === "/admin/reference-catalog") {
+      const rulesetId = url.searchParams.get("rulesetId") || "standard"
+      return Response.json({
+        rulesetId,
+        items: [
+          {
+            id: "item-uuid",
+            kind: "item",
+            iconAssetId: "item-icon",
+            autoMatch: false,
+            translations: [
+              { locale: "vi-VN", name: "Kiếm dài", aliases: [], description: "Công vật lý" },
+              { locale: "en-US", name: "Long Sword", aliases: [], description: "Physical attack" },
+            ],
+            destinations: { admin: `/items?item=item-uuid&ruleset=${rulesetId}` },
+          },
+        ],
+      })
+    }
     if (path === "/admin/spells/legacy/removals") {
       if (init?.method === "POST") {
         const body = JSON.parse(String(init.body))
@@ -373,10 +392,10 @@ async function withUi(
   }
 }
 
-test("warehouse references use real identities, all translations and lazy media in the selected ruleset", async () => {
-  await withUi(async ({ client, requests }) => {
-    const { loadWarehouseReferences } = await import("../src/features/terminology/catalog")
-    const references = await loadWarehouseReferences(client)
+test("compact references use real identities, all translations and lazy media in the selected ruleset", async () => {
+  await withUi(async ({ requests }) => {
+    const { referenceCatalogApi } = await import("../src/features/terminology/reference-api")
+    const references = await referenceCatalogApi.list()
     assert.equal(references[0].id, "item-uuid")
     assert.equal(references[0].iconAssetId, "item-icon")
     assert.deepEqual(
@@ -385,14 +404,19 @@ test("warehouse references use real identities, all translations and lazy media 
     )
     assert.equal(references[0].autoMatch, false)
     assert.equal(references[0].destinations?.admin, "/items?item=item-uuid&ruleset=standard")
-    assert.ok(requests.some((path) => path.startsWith("/admin/items?") && path.includes("rulesetId=standard")))
+    assert.ok(requests.includes("/admin/reference-catalog"))
     assert.equal(requests.filter((path) => path.startsWith("/admin/media/")).length, 0)
     assert.equal(
       requests.some((path) => path.includes("resources")),
       false,
     )
-    await loadWarehouseReferences(client, "regional")
-    assert.ok(requests.some((path) => path.startsWith("/admin/items?") && path.includes("rulesetId=regional")))
+    await referenceCatalogApi.list("regional")
+    assert.ok(requests.includes("/admin/reference-catalog?rulesetId=regional"))
+    assert.equal(requests.filter((path) => path.startsWith("/admin/reference-catalog")).length, 2)
+    assert.equal(
+      requests.some((path) => /^\/admin\/(items|heroes|rulesets)(\?|$)/.test(path)),
+      false,
+    )
   })
 })
 

@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, type QueryClient } from "@tanstack/react-query"
+import { invalidateReferenceCatalog } from "../terminology/reference-api"
 import { backendRequest } from "@/app/auth/session"
 import type { Request } from "../publishing/publishing-api"
 import type { PageSlice } from "../publishing/types"
@@ -16,6 +17,9 @@ export const warehouseKeys = {
   all: ["warehouse"] as const,
   catalog: (kind: WarehouseKind, rulesetId: string, locale: string) => ["warehouse", kind, rulesetId, locale] as const,
   metadata: (kind: "items" | "enchantments") => ["warehouse", "metadata", kind] as const,
+}
+export function invalidateWarehouseCatalogs(client: QueryClient) {
+  return Promise.all([client.invalidateQueries({ queryKey: warehouseKeys.all }), invalidateReferenceCatalog(client)])
 }
 export interface WarehouseScope {
   seasonId?: string

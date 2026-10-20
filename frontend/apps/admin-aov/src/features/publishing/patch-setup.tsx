@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react"
+import { invalidateReferenceCatalog } from "../terminology/reference-api"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
@@ -88,6 +89,7 @@ export function PatchSetup({
     try {
       await action()
       await queryClient.invalidateQueries({ queryKey: ["publishing-rulesets"] })
+      if (mode === "ruleset") await invalidateReferenceCatalog(queryClient)
       await queryClient.invalidateQueries({ queryKey: ["publishing-patches"] })
       if (regionId) await assignments.refetch()
       await queryClient.invalidateQueries({ queryKey: ["publication-overview"] })

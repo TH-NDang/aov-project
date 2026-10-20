@@ -14,6 +14,7 @@ import { AssetPicker } from "../publishing/asset-picker"
 import { upgradeHeroImage } from "../publishing/publishing-api"
 import { control } from "../publishing/fields"
 import type { Asset, PageSlice } from "../publishing/types"
+import { invalidateMediaAsset } from "./media-cache"
 
 const types: Record<string, string> = {
   USER_AVATAR: "Avatar người dùng",
@@ -152,11 +153,7 @@ export function ImageManagementPage() {
     setUpgradeError("")
     try {
       await upgradeHeroImage(backendRequest, selected, file)
-      await Promise.all([
-        cache.invalidateQueries({ queryKey: ["managed-image", selected] }),
-        cache.invalidateQueries({ queryKey: ["managed-images"] }),
-        cache.invalidateQueries({ queryKey: ["publishing-assets"] }),
-      ])
+      await invalidateMediaAsset(cache, selected)
     } catch (cause) {
       setUpgradeError(errorMessage(cause))
     } finally {
@@ -439,7 +436,6 @@ export function ImageManagementPage() {
               onChange={(id) => {
                 setUpload(false)
                 setSelected(id)
-                void cache.invalidateQueries({ queryKey: ["managed-images"] })
               }}
             />
           </div>

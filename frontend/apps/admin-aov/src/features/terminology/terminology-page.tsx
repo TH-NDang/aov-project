@@ -163,7 +163,7 @@ export function TerminologyPage() {
             </TabsList>
           </Tabs>
         </div>
-        {(catalog.heroes.isError || catalog.items.isError) && (
+        {catalog.catalog.isError && (
           <p role="alert">Không tải đủ danh mục. Các mục chưa tải sẽ không được tự nhận diện.</p>
         )}
         {catalog.settings.isError && (

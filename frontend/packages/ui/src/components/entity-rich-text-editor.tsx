@@ -496,7 +496,12 @@ export function EntityRichTextEditor({
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => choose(n)}
                     >
-                      <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-8 rounded-md" />
+                      <EntityReferenceIcon
+                        entity={entity}
+                        resolveIcon={resolveIcon}
+                        className="size-8 rounded-md"
+                        defer
+                      />
                       <span className="min-w-0">
                         <span className="block break-words font-medium">{translation.name}</span>
                         <span className="text-xs text-muted-foreground">

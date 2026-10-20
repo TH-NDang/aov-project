@@ -11,6 +11,7 @@ import {
   type RichTextNode,
 } from "../lib/entity-rich-text"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import { observeReferenceIcon } from "../lib/observe-reference-icon"
 
 export interface EntityRichTextProps {
   text: string
@@ -30,22 +31,42 @@ const emptyEntities: EntityReference[] = []
 const kindLabels = entityKindLabels
 const hexColor = /^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i
 
-export type EntityIconResolver = (entity: EntityReference) => Promise<string | null | undefined>
+export type EntityIconResolver = ((entity: EntityReference) => Promise<string | null | undefined>) & {
+  subscribe?: (entity: EntityReference, update: (url: string | null | undefined) => void) => () => void
+}
 
-export function EntityReferenceIcon({
-  entity,
-  resolveIcon,
-  className = "size-4",
-}: {
+type ReferenceIconProps = {
   entity: EntityReference
   resolveIcon?: EntityIconResolver
   className?: string
-}) {
+  defer?: boolean
+}
+
+export function EntityReferenceIcon(props: ReferenceIconProps) {
+  return props.defer ? <DeferredReferenceIcon {...props} /> : <ResolvedReferenceIcon {...props} />
+}
+
+function DeferredReferenceIcon(props: ReferenceIconProps) {
+  const element = React.useRef<HTMLSpanElement>(null)
+  const [visible, setVisible] = React.useState(false)
+  React.useEffect(() => {
+    if (visible || !element.current) return
+    return observeReferenceIcon(element.current, () => setVisible(true))
+  }, [visible])
+  return (
+    <span ref={element} aria-hidden="true" className={`inline-flex shrink-0 ${props.className ?? "size-4"}`}>
+      <ResolvedReferenceIcon {...props} resolveIcon={visible ? props.resolveIcon : undefined} className="size-full" />
+    </span>
+  )
+}
+
+function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: ReferenceIconProps) {
   const [resolved, setResolved] = React.useState<string | undefined>(undefined)
   const [failed, setFailed] = React.useState<string | null>(null)
   React.useEffect(() => {
     setResolved(undefined)
     if (!resolveIcon || !entity.iconAssetId) return
+    if (resolveIcon.subscribe) return resolveIcon.subscribe(entity, (url) => setResolved(safeEntityIconUrl(url)))
     let active = true
     void resolveIcon(entity).then(
       (value) => {
