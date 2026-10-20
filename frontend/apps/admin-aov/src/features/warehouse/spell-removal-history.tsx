@@ -5,7 +5,7 @@ import { Button } from "@aov/ui/components/button"
 import { errorMessage } from "@/lib/api/errors"
 import { Field, control } from "../publishing/fields"
 import { usePublicationOverview } from "../publishing/publication-overview"
-import { warehouseApi, warehouseKeys } from "./warehouse-api"
+import { warehouseApi, warehouseKeys, invalidateWarehouseCatalogs } from "./warehouse-api"
 import { WarehousePatchContext } from "./warehouse-patch-context"
 
 export function SpellRemovalHistory({
@@ -40,7 +40,7 @@ export function SpellRemovalHistory({
         notes: notes.trim() || null,
       }),
     onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: warehouseKeys.all })
+      await invalidateWarehouseCatalogs(client)
       await client.invalidateQueries({ queryKey: ["patch-spell-removals"] })
       setAdding(false)
       setPatchId(null)

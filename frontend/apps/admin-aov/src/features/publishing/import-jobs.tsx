@@ -45,7 +45,7 @@ export function useImportJobs() {
   useEffect(() => {
     if (!finishedUpdates) return
     void invalidateHeroCatalogs(cache)
-    for (const key of ["publishing-preview", "publishing-revisions", "hero-comparison", "rich-text-heroes"])
+    for (const key of ["publishing-preview", "publishing-revisions", "hero-comparison"])
       void cache.invalidateQueries({ queryKey: [key] })
   }, [finishedUpdates, cache])
   return query

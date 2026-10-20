@@ -10,7 +10,7 @@ import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { matchesQuery } from "@/lib/text"
 import { control } from "../publishing/fields"
-import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "./warehouse-api"
+import { useWarehouseCatalog, warehouseApi, warehouseKeys, invalidateWarehouseCatalogs } from "./warehouse-api"
 import { WarehouseControls, useWarehouseContext } from "./warehouse-controls"
 import { EnchantmentBranches } from "./enchantment-branches"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
@@ -129,7 +129,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
     setCreating(false)
   }
   async function refresh() {
-    await client.invalidateQueries({ queryKey: warehouseKeys.all })
+    await invalidateWarehouseCatalogs(client)
     await client.invalidateQueries({ queryKey: ["publication-overview"] })
   }
   async function save(code: string, content: SecondaryContent, patchId: string | null) {

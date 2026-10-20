@@ -32,7 +32,7 @@ import { matchesQuery } from "@/lib/text"
 import { errorMessage } from "@/lib/api/errors"
 import { HeroAsset } from "../publishing/hero-content"
 import { Field } from "../publishing/fields"
-import { warehouseApi, warehouseKeys, useWarehouseCatalog, useWarehouseMetadata } from "./warehouse-api"
+import { warehouseApi, invalidateWarehouseCatalogs, useWarehouseCatalog, useWarehouseMetadata } from "./warehouse-api"
 import { WarehouseControls, useWarehouseContext } from "./warehouse-controls"
 import { warehouseName, type ItemContent, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
 import { EnchantmentBranchEditor } from "./secondary-editor"
@@ -236,7 +236,7 @@ export function BackendItemsPage() {
     setEdits((previous) => new Map(previous).set(id, { content, patchId: patchId ?? previous.get(id)?.patchId }))
   }
   async function refresh() {
-    await client.invalidateQueries({ queryKey: warehouseKeys.all })
+    await invalidateWarehouseCatalogs(client)
   }
   async function saveAll() {
     setBusy(true)

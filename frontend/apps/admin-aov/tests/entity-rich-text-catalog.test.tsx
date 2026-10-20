@@ -17,26 +17,27 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
   const fetcher: typeof fetch = async (input, init) => {
     const url = String(input)
     requests.push(url)
-    if (url.includes("/admin/items?"))
+    if (url.includes("/admin/reference-catalog"))
       return Response.json({
         items: [
           {
+            id: "fixture-hero",
+            kind: "hero",
+            iconAssetId: "fixture-head",
+            translations: [{ locale: "vi-VN", name: "Airi", aliases: [], description: "Ninja rồng" }],
+            destinations: { admin: "/hero/fixture-hero?revision=fixture-draft" },
+          },
+          {
             id: "7c407f1b-cb6a-47ca-aeb8-7cc72753074d",
-            code: "qa-sword",
-            revision: { id: "item-draft", rulesetId: "fixture-rules" },
-            content: {
-              iconAssetId: null,
-              notes: null,
-              translations: [
-                { locale: "vi-VN", name: "Kiếm QA", description: "Trang bị tổng hợp cho QA." },
-                { locale: "en-US", name: "QA Sword", description: "Test equipment" },
-              ],
-            },
+            kind: "item",
+            autoMatch: false,
+            translations: [
+              { locale: "vi-VN", name: "Kiếm QA", aliases: [], description: "Trang bị tổng hợp cho QA." },
+              { locale: "en-US", name: "QA Sword", aliases: [], description: "Test equipment" },
+            ],
           },
         ],
-        page: 0,
-        size: 100,
-        totalElements: 1,
+        rulesetId: "fixture-rules",
       })
     if (url.endsWith("/admin/media/assets/fixture-head"))
       return Response.json({
@@ -45,19 +46,7 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
         currentUrl: "http://localhost:9000/head.png",
         versions: [{ id: "head-v1", url: "http://localhost:9000/head.png" }],
       })
-    const response = await fixture.fetcher(input, init)
-    if (url.includes("/admin/heroes?page=")) {
-      const data = await response.json()
-      for (const hero of data.items)
-        hero.revisions = hero.revisions.filter((revision: { state: string }) => revision.state === "DRAFT")
-      return Response.json(data)
-    }
-    if (url.endsWith("/revisions/fixture-draft")) {
-      const data = await response.json()
-      data.content.MEDIA_BINDINGS.bindings.HEAD = "fixture-head"
-      return Response.json(data)
-    }
-    return response
+    return fixture.fetcher(input, init)
   }
   const originals = new Map<string, PropertyDescriptor | undefined>()
   for (const [key, value] of Object.entries({
@@ -88,7 +77,6 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { TerminologyPage } = await import("../src/features/terminology/terminology-page")
-  const { loadHeroReferences } = await import("../src/features/terminology/catalog")
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
@@ -111,14 +99,6 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     })
   try {
     await verifySession()
-    const references = await loadHeroReferences(client)
-    assert.equal(references[0]?.translations[0]?.name, "Airi", "Imported drafts are available before publication")
-    assert.equal(references[0]?.iconAssetId, "fixture-head")
-    assert.equal(
-      requests.filter((url) => url.includes("/admin/media/assets/")).length,
-      0,
-      "The catalog does not eagerly load every head asset",
-    )
     await act(async () =>
       root.render(
         <QueryClientProvider client={client}>
@@ -136,7 +116,12 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     assert.match(document.querySelector("table")!.textContent!, /Airi/)
     assert.match(document.querySelector("table")!.textContent!, /Kiếm QA/)
     assert.equal(document.querySelector("table")!.textContent!.includes("Sát thương chuẩn"), false)
-    assert.ok(requests.some((url) => url.includes("/admin/items?") && url.includes("rulesetId=fixture-rules")))
+    assert.equal(requests.filter((url) => url.includes("/admin/reference-catalog")).length, 1)
+    assert.equal(
+      requests.some((url) => /\/admin\/(?:heroes|items|enchantments|arcana|spells)[/?]/.test(url)),
+      false,
+      "Reference loading does not download full catalogs or individual hero revisions",
+    )
     assert.equal(
       requests.some((url) => url.includes("/data/trang-bi.json")),
       false,

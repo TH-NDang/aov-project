@@ -14,7 +14,7 @@ import {
   changeDomain,
   type CatalogChangeKind,
 } from "./catalog-changes"
-import { warehouseApi, warehouseKeys } from "./warehouse-api"
+import { warehouseApi, invalidateWarehouseCatalogs } from "./warehouse-api"
 import type { WarehouseKind, WarehouseEntry } from "./warehouse-types"
 
 export function WarehouseChangeHistory({
@@ -169,7 +169,7 @@ export function WarehouseChangeHistory({
                   .mutateAsync(async () => {
                     const snapshot = await warehouseApi.read(kind, entryId, target)
                     const saved = await warehouseApi.fork(kind, snapshot, "GAME_PATCH", patch)
-                    await client.invalidateQueries({ queryKey: warehouseKeys.all })
+                    await invalidateWarehouseCatalogs(client)
                     await client.invalidateQueries({ queryKey: ["publication-overview"] })
                     onDraft?.(saved)
                     setMessage("Đã tạo nháp cập nhật game. Chỉnh sửa và xuất bản nháp trước khi xác nhận phân loại.")
@@ -263,7 +263,7 @@ export function WarehouseChangeHistory({
                           sourceUrl: source,
                         }),
                       })
-                      await client.invalidateQueries({ queryKey: warehouseKeys.all })
+                      await invalidateWarehouseCatalogs(client)
                       await client.invalidateQueries({ queryKey: ["publication-overview"] })
                       setMessage("Đã xác nhận lịch sử thay đổi.")
                       setEditing(false)

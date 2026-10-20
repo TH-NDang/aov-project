@@ -13,6 +13,7 @@ import { control } from "./fields"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
+import { invalidateHeroCatalogs } from "./publishing-cache"
 const api = createPublishingApi(backendRequest)
 const createHeroSchema = z.object({
   code: z.string(),
@@ -91,7 +92,7 @@ export function CreateHeroPage() {
                   context.contextId,
                 )
                 await draft.discard()
-                await cache.invalidateQueries({ queryKey: ["publishing-heroes"] })
+                await invalidateHeroCatalogs(cache)
                 navigate(`/hero/${revision.heroId}`, { replace: true })
               } catch (cause) {
                 setError(errorMessage(cause))

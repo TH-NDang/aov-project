@@ -1,3 +1,4 @@
+import { invalidateHeroCatalogs } from "./publishing-cache"
 import { useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { CalendarCog } from "lucide-react"
@@ -120,7 +121,7 @@ export function BaselineMigration({
                         failures.push(`${hero.code}: ${errorMessage(failure)}`)
                       }
                     }
-                    await cache.invalidateQueries({ queryKey: ["publishing-heroes"] })
+                    await invalidateHeroCatalogs(cache)
                     await cache.invalidateQueries({ queryKey: ["baseline-migration"] })
                     await cache.invalidateQueries({ queryKey: ["publishing-revisions"] })
                     setProgress(

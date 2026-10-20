@@ -11,6 +11,7 @@ import {
   wrapSelection,
 } from "@aov/ui/lib/entity-rich-text-editor"
 import { createEntityIndex, parseRichText, type EntityReference } from "@aov/ui/lib/entity-rich-text"
+import type { EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 
 const entities: EntityReference[] = [
   {
@@ -88,7 +89,15 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
   const { createRoot } = await import("react-dom/client")
   const { EntityRichTextEditor } = await import("@aov/ui/components/entity-rich-text-editor")
   let saved = ""
-  function Harness({ initial = "", catalog = entities }: { initial?: string; catalog?: EntityReference[] }) {
+  function Harness({
+    initial = "",
+    catalog = entities,
+    resolveIcon,
+  }: {
+    initial?: string
+    catalog?: EntityReference[]
+    resolveIcon?: EntityIconResolver
+  }) {
     const [value, setValue] = React.useState(initial)
     return (
       <EntityRichTextEditor
@@ -99,6 +108,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
           setValue(value)
         }}
         entities={catalog}
+        resolveIcon={resolveIcon}
         locale="vi-VN"
       />
     )
@@ -191,6 +201,63 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.ok(document.querySelector('[role="option"][aria-selected="true"]')!.textContent?.includes("Mục 12"))
     await key("Enter")
     assert.equal(saved, "<ref=item:item-12>Mục 12</ref>")
+    const observed = new Set<Element>()
+    let intersections!: IntersectionObserverCallback
+    let observerCount = 0
+    let observerRoot: Element | Document | null | undefined
+    originals.set("IntersectionObserver", Object.getOwnPropertyDescriptor(globalThis, "IntersectionObserver"))
+    Object.defineProperty(globalThis, "IntersectionObserver", {
+      configurable: true,
+      value: class {
+        constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+          intersections = callback
+          observerRoot = options?.root
+          observerCount++
+        }
+        observe(element: Element) {
+          observed.add(element)
+        }
+        unobserve(element: Element) {
+          observed.delete(element)
+        }
+        disconnect() {
+          observed.clear()
+        }
+      },
+    })
+    const iconRequests: string[] = []
+    const withIcons = catalog.map((entry) => ({ ...entry, iconAssetId: entry.id }))
+    await act(async () =>
+      root.render(
+        <Harness
+          key="deferred-icons"
+          catalog={withIcons}
+          resolveIcon={async (entry) => {
+            iconRequests.push(entry.id)
+            return `/media/${entry.id}.webp`
+          }}
+        />,
+      ),
+    )
+    await type("@Mục")
+    const rows = [...document.querySelectorAll<HTMLElement>('[role="option"]')]
+    const targets = rows.map((row) => row.querySelector("span")!)
+    assert.equal(rows.length, 12)
+    assert.equal(observerCount, 1)
+    assert.equal(observerRoot, document.querySelector('[role="listbox"]'))
+    assert.deepEqual(iconRequests, [])
+    const enter = async (target: Element) =>
+      act(async () =>
+        intersections([{ target, isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver),
+      )
+    await enter(targets[0]!)
+    assert.deepEqual(iconRequests, ["item-1"])
+    await key("ArrowUp")
+    await enter(targets[11]!)
+    assert.deepEqual(iconRequests, ["item-1", "item-12"])
+    assert.ok(rows[11]!.querySelector('img[src="/media/item-12.webp"]'))
+    await key("Escape")
+    assert.equal(observed.size, 0)
   } finally {
     await act(async () => root.unmount())
     await new Promise((resolve) => setTimeout(resolve, 30))
