@@ -65,3 +65,6 @@ out/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Local import checkpoints and database backups.
+.local-state/
