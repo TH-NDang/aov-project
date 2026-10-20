@@ -21,11 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class HeroCatalog {
+    private final com.wikiaov.hero.internal.persistence.HeroPatchAssessmentRepository assessments;
     private final HeroCatalogRepository catalog;
     private final HeroStore store;
     private final GameplayContexts contexts;
 
-    public HeroCatalog(HeroCatalogRepository catalog, HeroStore store, GameplayContexts contexts) {
+    public HeroCatalog(com.wikiaov.hero.internal.persistence.HeroPatchAssessmentRepository assessments,
+            HeroCatalogRepository catalog, HeroStore store, GameplayContexts contexts) {
+        this.assessments = assessments;
         this.catalog = catalog;
         this.store = store;
         this.contexts = contexts;
@@ -34,6 +37,11 @@ public class HeroCatalog {
     @PreAuthorize("hasAuthority('catalog:read')")
     public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
             UUID rulesetId, String locale, String sort) {
+        return list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort, false);
+    }
+    @PreAuthorize("hasAuthority('catalog:read')")
+    public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
+            UUID rulesetId, String locale, String sort, boolean includeUnchanged) {
         if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)
             throw HeroValidation.invalid("Invalid page bounds.");
         if (q.trim().length() > 100 || !Set.of("code", "edited-desc").contains(sort))
@@ -53,14 +61,30 @@ public class HeroCatalog {
         boolean filtered = seasonId != null || patchVariantId != null;
         if (filtered && variants.isEmpty())
             return new PageSlice<>(List.of(), page, size, 0);
+        Map<UUID, Long> scopeOrdinals = variants.values().stream().collect(Collectors.toMap(
+                PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
+        Set<UUID> snapshotVariants = new HashSet<>();
+        if (filtered && includeUnchanged) {
+            Map<UUID, Long> cutoffs = new HashMap<>();
+            variants.values().forEach(v -> cutoffs.merge(v.rulesetId(), v.rulesetOrdinal(), Math::max));
+            contexts.catalogVariants(null).stream().filter(v -> v.published()
+                    && v.rulesetOrdinal() <= cutoffs.getOrDefault(v.rulesetId(), -1L)).forEach(v -> {
+                        snapshotVariants.add(v.id());
+                        scopeOrdinals.put(v.id(), v.rulesetOrdinal());
+                    });
+        }
+        if (filtered && includeUnchanged && snapshotVariants.isEmpty())
+            return new PageSlice<>(List.of(), page, size, 0);
         var identities = catalog.page(new HeroCatalogRepository.Filter(q.trim().toLowerCase(Locale.ROOT), rulesetId,
-                variants.keySet(), variants.values().stream().collect(Collectors.toMap(PatchVariantReference::id,
-                        PatchVariantReference::rulesetOrdinal)),
-                filtered), page, size, sort.equals("edited-desc"));
+                variants.keySet(), scopeOrdinals, filtered && !includeUnchanged, snapshotVariants), page, size,
+                sort.equals("edited-desc"));
         if (identities.items().isEmpty())
             return new PageSlice<>(List.of(), page, size, identities.totalElements());
         var heroIds = identities.items().stream().map(hero -> hero.getId()).toList();
-        var revisions = store.revisions(heroIds).stream().collect(Collectors.groupingBy(HeroRevisionView::heroId));
+        var revisions = store.revisions(heroIds).stream()
+                .filter(r -> !filtered || !includeUnchanged || r.state().equals("PUBLISHED")
+                        && snapshotVariants.contains(r.effectiveFromPatchVariantId()))
+                .collect(Collectors.groupingBy(HeroRevisionView::heroId));
         var byRevision = revisions.values().stream().flatMap(Collection::stream)
                 .collect(Collectors.toMap(HeroRevisionView::id, revision -> revision));
         var changes = variants.isEmpty() ? List.<HeroPatchChangeSet>of() : catalog.changes(heroIds, variants.keySet());
@@ -75,6 +99,8 @@ public class HeroCatalog {
             translations.putAll(catalog.translations(changeIds).stream()
                     .collect(Collectors.groupingBy(HeroPatchChangeTranslation::getChangeSetId)));
         }
+        var overall = assessments.findAllById(changeIds).stream()
+                .collect(Collectors.toMap(a -> a.getChangeSetId(), a -> a.getKind()));
         Map<UUID, List<GameplayChange>> metadata = new HashMap<>();
         for (var change : selected) {
             var variant = variants.get(change.getPatchVariantId());
@@ -87,7 +113,8 @@ public class HeroCatalog {
                     .add(new GameplayChange(change.getId(), variant.rulesetId(), variant.seasonId(), variant.id(),
                             change.getFromHeroRevisionId(), change.getToHeroRevisionId(),
                             List.copyOf(classifications.getOrDefault(change.getId(), EnumSet.noneOf(Kind.class))),
-                            change.getCreatedAt(), summary.map(HeroPatchChangeTranslation::getSummary).orElse(null),
+                            overall.get(change.getId()), change.getCreatedAt(),
+                            summary.map(HeroPatchChangeTranslation::getSummary).orElse(null),
                             summary.map(HeroPatchChangeTranslation::getLocale).orElse(null)));
         }
         var edited = catalog.editedTimes(heroIds);

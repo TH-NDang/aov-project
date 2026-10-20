@@ -33,10 +33,12 @@ public class HeroAdminController {
             @RequestParam(defaultValue = "20") int size, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(required = false) UUID rulesetId, @RequestParam(defaultValue = "vi-VN") String locale,
-            @RequestParam(defaultValue = "code") String sort, HttpServletRequest request) {
+            @RequestParam(defaultValue = "code") String sort,
+            @RequestParam(defaultValue = "false") boolean includeUnchanged, HttpServletRequest request) {
         QueryParameters.requireOnly(request,
-                Set.of("page", "size", "q", "seasonId", "patchVariantId", "rulesetId", "locale", "sort"));
-        return catalog.list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort);
+                Set.of("page", "size", "q", "seasonId", "patchVariantId", "rulesetId", "locale", "sort",
+                        "includeUnchanged"));
+        return catalog.list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort, includeUnchanged);
     }
 
     @GetMapping(path = "/{heroId}", version = "1")

@@ -23,6 +23,11 @@ public class HeroChangesController {
         return Map.of("id", changes.record(id, body));
     }
 
+    @PutMapping(path = "/admin/hero-changes/{id}/assessment", version = "1")
+    Map<String, Object> assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
+        return changes.assess(id, input);
+    }
+
     @GetMapping(path = "/admin/patch-variants/{id}/hero-changes", version = "1")
     List<Map<String, Object>> authoringChanges(@PathVariable UUID id,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {

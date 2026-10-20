@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.domain.HeroImages;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.persistence.*;
 import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
 import java.time.Clock;
 import java.util.*;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class HeroAuthoring {
+    private final PatchDataReviews dataReviews;
     private final HeroStore store;
     private final HeroSections sections;
     private final HeroValidation validation;
@@ -29,8 +31,10 @@ public class HeroAuthoring {
     private final AuditLog audit;
     private final Clock clock;
     private final IdentifierAliases aliases;
-    public HeroAuthoring(HeroStore store, HeroSections sections, HeroValidation validation, GameplayContexts contexts,
+    public HeroAuthoring(PatchDataReviews dataReviews, HeroStore store, HeroSections sections,
+            HeroValidation validation, GameplayContexts contexts,
             CurrentActor actors, AuditLog audit, Clock clock, IdentifierAliases aliases) {
+        this.dataReviews = dataReviews;
         this.store = store;
         this.sections = sections;
         this.validation = validation;
@@ -198,6 +202,8 @@ public class HeroAuthoring {
         entity.setPublicationSequence(seq);
         entity.setPublishedAt(clock.instant());
         bump(draftId);
+        if (draft.cause() == Cause.DATA_BASELINE || draft.cause() == Cause.GAME_PATCH)
+            dataReviews.markDirty(draft.effectiveFromPatchVariantId());
         record("HERO_PUBLISHED", heroId, draftId, input.expectedVersion(), input.expectedVersion() + 1,
                 input.changeNote());
         return store.revision(heroId, draftId);

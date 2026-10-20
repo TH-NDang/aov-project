@@ -20,6 +20,7 @@ public record HeroCatalogView(
             UUID fromHeroRevisionId,
             UUID toHeroRevisionId,
             List<Kind> changeKinds,
+            Kind overallKind,
             Instant recordedAt,
             String summary,
             String actualLocale

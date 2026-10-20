@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.persistence.HeroSections;
 import com.wikiaov.hero.internal.persistence.HeroStore;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
@@ -23,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class HeroPatchChanges implements HeroChangeQueries {
+    private final PatchDataReviews dataReviews;
+    private final com.wikiaov.hero.internal.persistence.HeroPatchAssessmentRepository assessments;
     private final HeroStore store;
     private final PatchCatalog patches;
     private final HeroSections sections;
@@ -30,8 +33,12 @@ public class HeroPatchChanges implements HeroChangeQueries {
     private final AuditLog audit;
     private final CurrentActor actors;
     private final Clock clock;
-    public HeroPatchChanges(HeroStore store, GameplayContexts contexts, AuditLog audit, CurrentActor actors,
+    public HeroPatchChanges(PatchDataReviews dataReviews,
+            com.wikiaov.hero.internal.persistence.HeroPatchAssessmentRepository assessments,
+            HeroStore store, GameplayContexts contexts, AuditLog audit, CurrentActor actors,
             Clock clock, PatchCatalog patches, HeroSections sections) {
+        this.dataReviews = dataReviews;
+        this.assessments = assessments;
         this.patches = patches;
         this.sections = sections;
         this.store = store;
@@ -103,6 +110,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
                         kind, n, v.description());
             }
         }
+        dataReviews.markDirty(variantId);
         audit.record(new AuditEntry(actor, "HERO_PATCH_CHANGE_RECORDED", "HERO", input.heroId(), to.id(), null, null,
                 null, Map.of("changeSetId", id)));
         return id;
@@ -185,6 +193,38 @@ public class HeroPatchChanges implements HeroChangeQueries {
         }
     }
 
+    public record AssessmentInput(
+            Kind kind,
+            long expectedVersion
+    ) {
+    }
+    @Transactional
+    @PreAuthorize("hasAuthority('patch:write')")
+    public Map<String, Object> assess(UUID changeSetId, AssessmentInput input) {
+        var rows = store.rows("SELECT hero_id FROM hero.hero_patch_change_set WHERE id=?", changeSetId);
+        if (rows.isEmpty())
+            throw HeroValidation.invalid("The hero change set was not found.");
+        UUID heroId = (UUID) rows.getFirst().get("hero_id");
+        store.lockHero(heroId);
+        if (input.kind() == null)
+            throw HeroValidation.invalid("An overall classification is required.");
+        var value = assessments.findById(changeSetId)
+                .orElseGet(com.wikiaov.hero.internal.persistence.entity.HeroPatchAssessment::new);
+        if (value.getVersion() != input.expectedVersion())
+            throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT, "The overall assessment has changed.");
+        var actor = actors.require();
+        value.setChangeSetId(changeSetId);
+        value.setKind(input.kind());
+        value.setVersion(value.getVersion() + 1);
+        value.setUpdatedAt(clock.instant());
+        value.setUpdatedByIssuer(actor.issuer());
+        value.setUpdatedBySubject(actor.subject());
+        assessments.saveAndFlush(value);
+        audit.record(new AuditEntry(actor, "HERO_PATCH_ASSESSED", "HERO", heroId, null, input.expectedVersion(),
+                value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
+        return Map.of("kind", value.getKind(), "version", value.getVersion());
+    }
+
     private static boolean sameNumber(java.math.BigDecimal a, java.math.BigDecimal b) {
         return a == null ? b == null : b != null && a.compareTo(b) == 0;
     }
@@ -195,6 +235,9 @@ public class HeroPatchChanges implements HeroChangeQueries {
                 .stream().map(row -> {
                     Map<String, Object> result = new LinkedHashMap<>();
                     result.put("id", row.get("id"));
+                    var assessment = assessments.findById((UUID) row.get("id"));
+                    result.put("overallKind", assessment.map(a -> a.getKind().name()).orElse(null));
+                    result.put("assessmentVersion", assessment.map(a -> a.getVersion()).orElse(0L));
                     result.put("heroId", row.get("hero_id"));
                     result.put("heroCode", store.rows("SELECT code FROM hero.hero WHERE id=?", row.get("hero_id"))
                             .getFirst().get("code"));
