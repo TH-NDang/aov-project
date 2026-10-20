@@ -2,6 +2,7 @@ package com.wikiaov.access.internal.persistence;
 
 import com.wikiaov.access.AuditEntry;
 import com.wikiaov.access.AuditLog;
+import com.wikiaov.platform.CatalogCacheChanges;
 import com.wikiaov.platform.RequestIds;
 import java.sql.Timestamp;
 import java.time.Clock;
@@ -29,11 +30,13 @@ class JdbcAuditLog implements AuditLog {
     private final JdbcClient jdbc;
     private final JsonMapper json;
     private final Clock clock;
+    private final CatalogCacheChanges cacheChanges;
 
-    JdbcAuditLog(JdbcClient jdbc, JsonMapper json, Clock clock) {
+    JdbcAuditLog(JdbcClient jdbc, JsonMapper json, Clock clock, CatalogCacheChanges cacheChanges) {
         this.jdbc = jdbc;
         this.json = json;
         this.clock = clock;
+        this.cacheChanges = cacheChanges;
     }
 
     /** Requires an existing transaction so the audit record commits together with the audited change. */
@@ -56,5 +59,6 @@ class JdbcAuditLog implements AuditLog {
                 .param("occurredAt", Timestamp.from(clock.instant()))
                 .param("metadata", entry.metadata().isEmpty() ? null : json.writeValueAsString(entry.metadata()))
                 .update();
+        cacheChanges.changed(entry.aggregateType());
     }
 }

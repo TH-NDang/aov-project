@@ -5,7 +5,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.wikiaov.patch.GameplayContext;
+import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.terminology.PublicReferenceProvider;
+import java.time.Instant;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -60,6 +63,8 @@ class ReferenceSettingsIntegrationTest {
     JsonMapper json;
     @MockitoBean
     JwtDecoder decoder;
+    @MockitoBean
+    GameplayContexts contexts;
     @MockitoBean(name = "heroPublicReferences")
     PublicReferenceProvider heroes;
     @MockitoBean(name = "itemPublicReferences")
@@ -72,6 +77,9 @@ class ReferenceSettingsIntegrationTest {
     PublicReferenceProvider spells;
     @Test
     void persistsTranslationsChecksVersionsAndSharesOnlyPublishedReferences() throws Exception {
+        when(contexts.resolve(eq("VN"), any(Instant.class))).thenReturn(new GameplayContext(UUID.randomUUID(),
+                "VN", UUID.randomUUID(), "aov-standard", UUID.randomUUID(), "patch", UUID.randomUUID(), 1,
+                Instant.EPOCH));
         var initial = mvc.perform(get("/api/wiki/v1/reference-settings")).andExpect(status().isOk()).andReturn();
         var seed = json.readTree(initial.getResponse().getContentAsString());
         assertThat(seed.get("settings").get("entities").size()).isGreaterThan(0);
@@ -108,10 +116,10 @@ class ReferenceSettingsIntegrationTest {
                 .andExpect(jsonPath("$.settings.entities[0].destinations.admin").doesNotExist()).andReturn()
                 .getResponse().getContentAsString();
         assertThat(shared).contains("Slow", "Làm chậm").doesNotContain("Hidden draft", hiddenId);
-        when(heroes.references("VN", "vi-VN")).thenReturn(List.of(
+        when(heroes.references(any(PublicReferenceProvider.Scope.class), eq("vi-VN"))).thenReturn(List.of(
                 new PublicReferenceProvider.Candidate(UUID.randomUUID(), "hero", "Airi", "", "vi-VN", "/head.png")));
-        when(items.references("VN", "vi-VN")).thenReturn(List.of());
-        when(arcana.references("VN", "vi-VN"))
+        when(items.references(any(PublicReferenceProvider.Scope.class), eq("vi-VN"))).thenReturn(List.of());
+        when(arcana.references(any(PublicReferenceProvider.Scope.class), eq("vi-VN")))
                 .thenReturn(List.of(new PublicReferenceProvider.Candidate(UUID.fromString(arcanaId), "arcana", "Rune",
                         "", "vi-VN", "/rune.png")));
         var response = mvc.perform(get("/api/wiki/v1/reference-catalog?region=VN&locale=vi-VN"))

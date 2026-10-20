@@ -16,6 +16,8 @@ spring:
           issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081/realms/wikiaov}
 
 wiki:
+  read-model-cache:
+    enabled: ${READ_MODEL_CACHE_ENABLED:true}
   auth:
     secure-cookies: false
     admin-origin: ${ADMIN_ORIGIN:http://localhost:5175}
