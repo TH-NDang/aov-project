@@ -56,7 +56,10 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     { path: "/hero/:heroId", element: <PublishingPage /> },
   ]
   let router = createMemoryRouter(routes, {
-    initialEntries: ["/hero?search=all", "/hero?search=all&hero=fixture-hero&revision=fixture-draft&tab=media"],
+    initialEntries: [
+      "/hero?search=all&ruleset=fixture-rules",
+      "/hero?search=all&ruleset=fixture-rules&hero=fixture-hero&revision=fixture-draft&tab=media",
+    ],
   })
   const document = dom.window.document
   const mount = () =>
@@ -120,6 +123,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.equal(params.get("tab"), "skills")
     assert.equal(params.get("target"), "th-TH")
     assert.equal(params.get("section"), "SKILLS")
+    assert.equal(params.get("ruleset"), "fixture-rules")
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu bản dịch"]'))
     const nameInput = [...document.querySelectorAll("label")]
       .find((label) => label.textContent === "Tên · th-TH")!
