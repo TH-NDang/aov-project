@@ -369,6 +369,16 @@ class DomainCoreIntegrationTest {
         assertThat(changes.getFirst()).containsEntry("summary", "Reduced health").containsEntry("actualLocale",
                 "en-US");
         assertThat(changes.getFirst().get("changeKinds")).isEqualTo(List.of("NERF", "ADJUSTMENT", "REWORK"));
+        assertThat(changes.getFirst().get("overallKind")).isNull();
+        send(put(ROOT + "/admin/hero-changes/" + newerChange + "/assessment"),
+                Map.of("kind", "BUFF", "expectedVersion", 0), 200);
+        send(put(ROOT + "/admin/hero-changes/" + newerChange + "/assessment"),
+                Map.of("kind", "NERF", "expectedVersion", 0), 409);
+        var assessed = send(get(ROOT + "/admin/heroes?patchVariantId=" + second), null, 200);
+        var assessedHero = (Map<String, Object>) ((List<?>) assessed.get("items")).getFirst();
+        var assessedChange = (Map<String, Object>) ((List<?>) assessedHero.get("gameplayChanges")).getFirst();
+        assertThat(assessedChange).containsEntry("overallKind", "BUFF");
+        assertThat(assessedChange.get("changeKinds")).isEqualTo(List.of("NERF", "ADJUSTMENT", "REWORK"));
         assertThat(changes.get(1)).containsEntry("summary", "Tăng máu").containsEntry("actualLocale", "vi-VN");
         var exact = send(get(ROOT + "/admin/heroes?seasonId=" + season + "&patchVariantId=" + first), null, 200);
         changes = (List<Map<String, Object>>) ((List<Map<String, Object>>) exact.get("items")).getFirst()
@@ -405,6 +415,19 @@ class DomainCoreIntegrationTest {
                         List.of(Map.of("locale", "vi-VN", "name", "Historical backfill")),
                         "roles", List.of("ASSASSIN")),
                 200);
+        var atBaseline = send(get(ROOT + "/admin/heroes").param("patchVariantId", variant.toString())
+                .param("includeUnchanged", "true"), null, 200);
+        assertThat(atBaseline.get("totalElements")).isEqualTo(1);
+        assertThat(send(get(ROOT + "/admin/heroes").param("patchVariantId", first.toString())
+                .param("includeUnchanged", "true").param("q", "Current patch name"), null, 200)
+                .get("totalElements")).isEqualTo(0);
+        var atFirst = send(get(ROOT + "/admin/heroes").param("patchVariantId", first.toString())
+                .param("includeUnchanged", "true").param("q", "First patch name"), null, 200);
+        assertThat(atFirst.get("totalElements")).isEqualTo(1);
+        var inheritedRows = (List<Map<String, Object>>) atBaseline.get("items");
+        assertThat((List<?>) inheritedRows.getFirst().get("gameplayChanges")).isEmpty();
+        assertThat(((List<Map<String, Object>>) inheritedRows.getFirst().get("revisions")))
+                .extracting(row -> row.get("id")).containsExactly(baselineId.toString());
         assertThat(send(get(ROOT + "/admin/heroes").param("q", "Historical backfill"), null, 200)
                 .get("totalElements")).isEqualTo(0);
         assertThat(send(get(ROOT + "/admin/heroes").param("q", "Current patch name"), null, 200).get("totalElements"))

@@ -2,6 +2,7 @@ package com.wikiaov.query.internal.web;
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.platform.*;
+import com.wikiaov.spell.SpellChangeQueries;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import org.springframework.http.*;
@@ -11,9 +12,11 @@ import org.springframework.web.bind.annotation.*;
 public class PatchPageController {
     private final PatchCatalog patches;
     private final HeroChangeQueries heroes;
-    public PatchPageController(PatchCatalog patches, HeroChangeQueries heroes) {
+    private final SpellChangeQueries spells;
+    public PatchPageController(PatchCatalog patches, HeroChangeQueries heroes, SpellChangeQueries spells) {
         this.patches = patches;
         this.heroes = heroes;
+        this.spells = spells;
     }
     @GetMapping(version = "1")
     ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
@@ -36,14 +39,14 @@ public class PatchPageController {
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "domain", "page", "size"));
-        if (!"HERO".equals(domain))
+        if (!Set.of("HERO", "SPELL").contains(domain))
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "This domain does not have an implemented change provider.");
         if (page < 0 || size < 1 || size > 100)
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
         var patch = patches.published(id, region, locale);
         UUID variant = (UUID) patch.get("variantId");
-        var all = heroes.forVariant(variant, locale);
+        var all = domain.equals("SPELL") ? spells.forVariant(variant, locale) : heroes.forVariant(variant, locale);
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("patch", patch);
         response.put("variantId", variant);

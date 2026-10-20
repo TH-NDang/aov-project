@@ -23,12 +23,15 @@ public class PublicationOverview {
     private final GamePatchRepository patches;
     private final PatchVariantRepository variants;
     private final PatchReleaseRepository releases;
+    private final PatchDataReviewRepository reviews;
     private final Clock clock;
 
-    public PublicationOverview(RegionRepository regions, GameplayRulesetRepository rulesets,
+    public PublicationOverview(PatchDataReviewRepository reviews, RegionRepository regions,
+            GameplayRulesetRepository rulesets,
             RulesetAssignmentRepository assignments, RankedSeasonRepository seasons, SeasonScheduleRepository schedules,
             GamePatchRepository patches,
             PatchVariantRepository variants, PatchReleaseRepository releases, Clock clock) {
+        this.reviews = reviews;
         this.regions = regions;
         this.rulesets = rulesets;
         this.assignments = assignments;
@@ -43,6 +46,8 @@ public class PublicationOverview {
     @PreAuthorize("hasAuthority('catalog:read')")
     public Snapshot read() {
         var now = clock.instant();
+        var reviewById = reviews.findAll().stream()
+                .collect(Collectors.toMap(PatchDataReview::getPatchVariantId, Function.identity()));
         var allRulesets = rulesets.findAll();
         var activeRulesets = allRulesets.stream().filter(r -> "ACTIVE".equals(r.getLifecycleState()))
                 .map(GameplayRuleset::getId).collect(Collectors.toSet());
@@ -69,8 +74,15 @@ public class PublicationOverview {
                         && "PUBLISHED".equals(v.getStatus())
                         && "PUBLISHED".equals(patchById.get(v.getPatchId()).getStatus());
             }).max(Comparator.comparing(PatchRelease::getEffectiveAt)).orElse(null);
+            UUID currentSeason = release == null
+                    ? null
+                    : release.getSeasonId() != null
+                            ? release.getSeasonId()
+                            : variantById.get(release.getPatchVariantId()).getSeasonId();
+            if (currentSeason == null && season != null)
+                currentSeason = season.getSeasonId();
             return new Market(region.getId(), region.getCode(), region.getDisplayName(), region.isAvailable(),
-                    assignment == null ? null : assignment.getRulesetId(), season == null ? null : season.getSeasonId(),
+                    assignment == null ? null : assignment.getRulesetId(), currentSeason,
                     release == null ? null : release.getId());
         }).toList();
         Set<UUID> current = markets.stream().map(Market::currentReleaseId).filter(Objects::nonNull)
@@ -94,7 +106,12 @@ public class PublicationOverview {
                         .toList(),
                 allVariants.stream().sorted(Comparator.comparingLong(PatchVariant::getRulesetOrdinal).reversed())
                         .map(v -> new VariantView(v.getId(), v.getPatchId(), patchById.get(v.getPatchId()).getCode(),
-                                v.getRulesetId(), v.getRulesetOrdinal(), v.getSeasonId(), v.getStatus()))
+                                v.getRulesetId(), v.getRulesetOrdinal(), v.getSeasonId(), v.getStatus(),
+                                reviewById.containsKey(v.getId())
+                                        ? reviewById.get(v.getId()).getState()
+                                        : "IN_PROGRESS",
+                                reviewById.containsKey(v.getId()) ? reviewById.get(v.getId()).getVersion() : 0L,
+                                reviewById.containsKey(v.getId()) ? reviewById.get(v.getId()).getCompletedAt() : null))
                         .toList(),
                 allReleases.stream().sorted(Comparator.comparing(PatchRelease::getCreatedAt).reversed())
                         .map(r -> new ReleaseView(r.getId(), r.getPatchVariantId(), r.getRegionId(), r.getSeasonId(),

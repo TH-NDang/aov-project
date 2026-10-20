@@ -56,7 +56,10 @@ public final class PublicationOverviewView {
             UUID rulesetId,
             long rulesetOrdinal,
             UUID seasonId,
-            String status
+            String status,
+            String dataReviewState,
+            long dataReviewVersion,
+            Instant dataReviewedAt
     ) {
     }
     public record ReleaseView(

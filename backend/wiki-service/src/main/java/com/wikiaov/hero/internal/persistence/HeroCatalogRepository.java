@@ -21,7 +21,8 @@ public class HeroCatalogRepository {
             UUID rulesetId,
             Set<UUID> variants,
             Map<UUID, Long> ordinals,
-            boolean changesOnly
+            boolean changesOnly,
+            Set<UUID> snapshotVariants
     ) {
     }
 
@@ -59,6 +60,14 @@ public class HeroCatalogRepository {
                     cb.equal(revision.get("rulesetId"), filter.rulesetId()),
                     cb.notEqual(revision.get("state"), "DISCARDED"));
             result.add(cb.exists(revisions));
+        }
+        if (!filter.snapshotVariants().isEmpty()) {
+            var available = query.subquery(UUID.class);
+            var revision = available.from(HeroRevision.class);
+            available.select(revision.get("id")).where(cb.equal(revision.get("heroId"), hero.get("id")),
+                    revision.get("effectiveFromPatchVariantId").in(filter.snapshotVariants()),
+                    cb.equal(revision.get("state"), "PUBLISHED"));
+            result.add(cb.exists(available));
         }
         if (filter.changesOnly()) {
             var changes = query.subquery(UUID.class);
@@ -109,6 +118,9 @@ public class HeroCatalogRepository {
             result.add(change.get("patchVariantId").in(filter.variants()));
             result.add(cb.equal(revision.get("state"), "PUBLISHED"));
             result.add(cb.equal(revision.get("cause"), "GAME_PATCH"));
+        } else if (!filter.snapshotVariants().isEmpty()) {
+            result.add(revision.get("effectiveFromPatchVariantId").in(filter.snapshotVariants()));
+            result.add(cb.equal(revision.get("state"), "PUBLISHED"));
         } else {
             result.add(cb.notEqual(revision.get("state"), "DISCARDED"));
         }
