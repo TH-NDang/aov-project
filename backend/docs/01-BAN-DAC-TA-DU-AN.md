@@ -2232,3 +2232,72 @@ mobile. Chỉ nút mở trang đầy đủ trong chi tiết mới điều hướ
 Cover và chuyển tướng/trang phục cùng revision bằng dải ảnh chính; không đưa các ảnh bổ sung
 vào dải chuyển nhanh. Ảnh bổ sung được chọn từ bảng vẫn mở đúng file đã chọn. Khi đang sửa hoặc
 upload, việc chuyển ảnh vẫn bảo vệ dữ liệu chưa lưu.
+
+## Kho trang bị — đợt triển khai quản trị đầu tiên
+
+Item, Arcana, Spell và Enchantment dùng dữ liệu backend thật. Mỗi module sở hữu identity UUID,
+mã ổn định, snapshot gameplay theo ruleset và bản dịch riêng theo revision/locale. Tên, tóm tắt,
+mô tả, tên chỉ số, tên biến thể và nội dung nội tại/kích hoạt thuộc bản dịch; giá, cấp, tọa độ,
+công thức ghép và số liệu không được thay đổi theo ngôn ngữ hiển thị.
+
+Tạo mới cho phép lưu nháp thiếu dữ liệu và trả `missingFields`. Xuất bản kiểm tra ảnh đã upload,
+trường bắt buộc và patch quan sát cùng ruleset đã xuất bản. Bản đã xuất bản bất biến; sửa tiếp
+phải fork bản nháp với nguyên nhân rõ ràng. Dữ liệu nền không tự tạo thay đổi gameplay quá khứ.
+
+Trang bị có danh mục nhóm được dịch, vị trí hàng/cột bắt đầu từ 0 và công thức ghép bằng UUID
+trang bị thành phần cùng số lượng. Chưa xác minh giữ UNKNOWN, không suy diễn từ mô tả hoặc
+quan hệ gợi ý cũ. Tọa độ chưa biết giữ null. Ghi công thức được tuần tự hóa để kiểm tra chu trình.
+
+Phù hiệu tham chiếu danh mục nhánh riêng, có tên/mô tả/đối tượng phù hợp được dịch, icon, nền và
+màu hiển thị. Các nút có cấp I/II/III và thứ tự trong cấp. Bảng ngọc có màu, cấp và chỉ số số học;
+nhãn chỉ số được dịch. Phụ trợ có hồi chiêu, mở khóa, trạng thái khả dụng, trạng thái biến thể,
+điểm tích trữ và ảnh tham khảo; mô tả từng trạng thái tách khỏi gameplay.
+
+Ảnh được upload trực tiếp qua quy trình Media hiện có, giữ nguồn và ghi chú; module sở hữu chỉ
+kiểm tra `MediaAssets` và báo tham chiếu qua `MediaUsageProvider`. Nhập tài nguyên lần đầu giữ
+bản nháp để người quản trị xem xét nguồn, dữ liệu chưa biết và ngữ cảnh trước khi xuất bản.
+
+### Phụ trợ lưu trữ chưa rõ patch
+
+Phụ trợ có legacy=true và availability=REMOVED được xuất bản không có patch quan sát,
+trừ revision GAME_PATCH. Đây là hồ sơ lưu trữ, không phải snapshot gameplay đang áp dụng;
+các yêu cầu nội dung khác khi xuất bản vẫn giữ nguyên. Dữ liệu lưu trữ không tự trở thành
+thay đổi của patch và không được fallback như dữ liệu từ trước mọi patch.
+
+Khi có nguồn xác nhận, người có spell:publish được ghi sự kiện REMOVED riêng, liên kết
+revision đã xuất bản, patch đã xuất bản cùng ruleset, URL nguồn HTTP(S) và ghi chú.
+Sự kiện không sửa revision đã xuất bản, không suy diễn chỉ số trước/sau, có audit và
+chống ghi trùng cùng phụ trợ/patch. Hồ sơ lưu trữ được trả qua endpoint riêng.
+
+### Timeline và phân loại thay đổi
+
+Timeline kéo ngang để duyệt, chọn patch để lọc, không kéo đổi lịch sử đã xác nhận.
+Patch không có thay đổi ở một domain không tạo bản sao dữ liệu; snapshot trước được kế thừa.
+Dữ liệu nền là trạng thái đã quan sát, tách khỏi thêm mới trong game. Không suy ra buff/nerf từ dấu của chỉ số.
+Kho trang bị dùng DATA_BASELINE, ADDED, UPDATED, REMOVED, BUFF, NERF, BALANCE, REWORK, FIX.
+Các phân loại xác nhận có snapshot, nguồn và tóm tắt dịch riêng, không lấy sửa bản dịch/hiệu chỉnh làm game patch.
+Tướng tách phân loại từng kỹ năng/chỉ số khỏi đánh giá tổng thể tướng trong patch; chưa đánh giá giữ null.
+
+### Rà soát patch và xem dữ liệu kế thừa
+
+- Trạng thái nhập liệu `IN_PROGRESS` / `COMPLETE` độc lập xuất bản và lịch áp dụng game. Biên tập viên xác nhận hoàn tất sau khi rà soát tất cả nhóm; thêm snapshot gameplay hoặc ghi nhận thay đổi mới tự mở lại rà soát. Bản dịch và sửa nội dung không tự mở lại.
+- Bộ lọc có hai chế độ: chỉ thay đổi, hoặc toàn bộ dữ liệu tại mốc. Chế độ đầy đủ kế thừa snapshot đã xuất bản gần nhất không vượt quá patch đích, không lấy dữ liệu tương lai. Nhãn không thay đổi chỉ dùng sau xác nhận hoàn tất; trước đó ghi rõ kế thừa, chưa ghi nhận thay đổi.
+- Timeline từng nhóm ẩn patch hoàn tất không có thay đổi/dữ liệu nền. Timeline cấu hình vẫn giữ mọi mốc để quản lý. Mùa nằm trên tiêu đề timeline; patch là các thẻ bên dưới, có nút tạo mùa/patch theo quyền.
+- Mốc đang áp dụng lấy từ lịch phát hành thị trường đã xác nhận, không suy ra từ việc xuất bản dữ liệu.
+
+
+## Thuật ngữ và tham chiếu dùng chung (2026-10-20)
+
+Module `terminology` sở hữu định nghĩa thuật ngữ, bản dịch, tên gọi khác và cách trình bày tham chiếu;
+không sở hữu dữ liệu gameplay của tướng hoặc trang bị. Admin đọc cấu hình backend; API công khai sẵn sàng để wiki dùng cùng dữ liệu. Frontend wiki chỉ dùng thử và đã gỡ phần tích hợp thử theo yêu cầu.
+Biên tập dùng quyền hiện có `hero:write` cùng `catalog:read`; cấu hình được công khai sau khi lưu,
+không gắn với mùa/patch. Ghi nhận audit và kiểm tra `expectedVersion` để ngăn ghi đè.
+
+Danh mục admin có thể sử dụng bản nháp để biên tập. Danh mục công khai chỉ kết hợp tham chiếu tướng,
+trang bị đã xuất bản và có hiệu lực trong thị trường được chọn, thông qua contract
+`terminology.PublicReferenceProvider`. Không trả đường dẫn admin hoặc tùy chỉnh của đối tượng chưa
+công khai. Thiếu lịch gameplay không ngăn đọc các thuật ngữ chung.
+
+Tab **Thử hiển thị** dùng chung trình soạn mô tả, có thanh định dạng và chọn tham chiếu, chọn ngôn ngữ
+và ngữ cảnh admin/wiki. Nội dung thử không lưu vào dữ liệu game. JSON Vite cũ chỉ còn nguồn chuyển
+đổi tùy chọn: đọc vào nháp, kiểm tra rồi lưu backend, không tự ghi đè hoặc xóa file cũ.
