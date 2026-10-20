@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest, getSession } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
@@ -16,6 +17,7 @@ export function AssetPicker({
   sourceUrl,
   onUploaded,
   onBusyChange,
+  directUpload = false,
 }: {
   semanticType: string
   value: string | null
@@ -24,9 +26,14 @@ export function AssetPicker({
   sourceUrl?: string
   onUploaded?: (assetId: string, fileName: string) => void
   onBusyChange?: (busy: boolean) => void
+  directUpload?: boolean
 }) {
+  const thumbnailShape = ["SPELL_ICON", "ARCANA_ICON", "ENCHANTMENT_ICON"].includes(semanticType)
+    ? "rounded-full"
+    : "rounded-md"
   const queryClient = useQueryClient()
   const alive = useRef(true)
+  const fileInput = useRef<HTMLInputElement>(null)
   const change = useRef(onChange)
   useEffect(() => {
     change.current = onChange
@@ -108,12 +115,14 @@ export function AssetPicker({
             <img
               src={selectedAsset.data.currentUrl}
               alt="Ảnh đã gắn"
-              className="size-16 rounded-md border bg-muted object-contain"
+              className={`size-16 border bg-muted object-contain ${thumbnailShape}`}
               loading="lazy"
               onError={() => setImageFailed(true)}
             />
           ) : (
-            <span className="grid size-16 place-items-center rounded-md bg-muted text-center text-xs text-muted-foreground">
+            <span
+              className={`grid size-16 place-items-center bg-muted text-center text-xs text-muted-foreground ${thumbnailShape}`}
+            >
               {selectedAsset.isPending ? "Đang tải…" : "Chưa xem được ảnh"}
             </span>
           )}
@@ -133,9 +142,37 @@ export function AssetPicker({
         </div>
       )}
       <p className="text-xs text-muted-foreground">{value ? `Asset đã chọn: ${value}` : "Chưa chọn ảnh"}</p>
-      <Button type="button" size="sm" variant="outline" onClick={() => setOpen(!open)}>
-        {open ? "Đóng kho ảnh" : "Chọn / tải ảnh"}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        {directUpload && writable && (
+          <>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={busy}
+              onClick={() => fileInput.current?.click()}
+            >
+              <Upload className="size-4" /> Tải ảnh mới
+            </Button>
+            <input
+              ref={fileInput}
+              type="file"
+              aria-label="Tải ảnh mới"
+              hidden
+              disabled={busy}
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const file = event.target.files?.[0]
+                if (file) void upload(file)
+                event.target.value = ""
+              }}
+            />
+          </>
+        )}
+        <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => setOpen(!open)}>
+          {open ? "Đóng kho ảnh" : directUpload ? "Chọn từ kho ảnh" : "Chọn / tải ảnh"}
+        </Button>
+      </div>
       {open && (
         <div className="space-y-3">
           {assets.isPending && <p role="status">Đang tải ảnh…</p>}
@@ -155,7 +192,12 @@ export function AssetPicker({
                   onClick={() => onChange(asset.id)}
                 >
                   {asset.currentUrl && (
-                    <img className="aspect-square w-full object-cover" src={asset.currentUrl} alt="" loading="lazy" />
+                    <img
+                      className={`aspect-square w-full object-cover ${thumbnailShape}`}
+                      src={asset.currentUrl}
+                      alt=""
+                      loading="lazy"
+                    />
                   )}
                   <span className="block truncate text-xs">{asset.id.slice(0, 8)}</span>
                 </button>

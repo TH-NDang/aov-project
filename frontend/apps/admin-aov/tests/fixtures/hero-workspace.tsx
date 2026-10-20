@@ -15,11 +15,11 @@ const { PublishingPage } = await import("../../src/features/publishing/publishin
 const { TerminologyPage } = await import("../../src/features/terminology/terminology-page")
 createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-    <MemoryRouter initialEntries={["/publishing"]}>
+    <MemoryRouter initialEntries={["/hero"]}>
       <main className="min-h-svh bg-background text-foreground">
         <div className="border-b bg-muted/40 px-4 py-3 text-xs">
           Kiểm thử UI · dữ liệu giả lập riêng · không ghi dữ liệu thật{" "}
-          <Link className="ml-3 underline" to="/publishing">
+          <Link className="ml-3 underline" to="/hero">
             Danh sách
           </Link>
           <Link className="ml-3 underline" to="/terminology">
@@ -29,9 +29,9 @@ createRoot(document.getElementById("root")!).render(
         <div className="mx-auto max-w-6xl">
           <Routes>
             <Route path="/terminology" element={<TerminologyPage />} />
-            <Route path="/publishing" element={<PublishingPage />} />
-            <Route path="/publishing/:heroId" element={<PublishingPage />} />
-            <Route path="/publishing/:heroId/translations" element={<PublishingPage translationMode />} />
+            <Route path="/hero" element={<PublishingPage />} />
+            <Route path="/hero/:heroId" element={<PublishingPage />} />
+            <Route path="/hero/:heroId/translations" element={<PublishingPage translationMode />} />
           </Routes>
         </div>
       </main>

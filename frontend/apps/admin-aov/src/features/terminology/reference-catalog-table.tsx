@@ -1,10 +1,17 @@
+import { Link } from "react-router"
+import { ArrowUpRight, ChevronRight, Database, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
-import { resolveEntityRoute, foldEntitySearch, type EntityReference } from "@aov/ui/lib/entity-rich-text"
+import {
+  resolveEntityRoute,
+  foldEntitySearch,
+  entityKindLabels,
+  type EntityReference,
+} from "@aov/ui/lib/entity-rich-text"
 import { EntityReferenceIcon, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 
-const kinds = { hero: "Tướng", item: "Trang bị", term: "Thuật ngữ" }
+const kinds = entityKindLabels
 const fold = foldEntitySearch
 export function ReferenceCatalogTable({
   entities,
@@ -27,116 +34,118 @@ export function ReferenceCatalogTable({
 }) {
   const [search, setSearch] = useState("")
   const [kind, setKind] = useState("all")
-  const [language, setLanguage] = useState("all")
-  const [status, setStatus] = useState("all")
+  const [missingTranslation, setMissingTranslation] = useState(false)
+  const termsOnly = entities.every((entity) => entity.kind === "term")
+  const availableKinds = [...new Set(entities.map((entity) => entity.kind))]
   const [page, setPage] = useState(0)
-  const languages = useMemo(
-    () => [...new Set(entities.flatMap((entity) => entity.translations.map((text) => text.locale)))].sort(),
-    [entities],
-  )
   const rows = useMemo(
     () =>
       entities.filter((entity) => {
-        const key = `${entity.kind}:${entity.id}`
         return (
           (kind === "all" || entity.kind === kind) &&
-          (language === "all" || entity.translations.some((text) => text.locale === language)) &&
-          (status === "all" ||
-            (status === "custom"
-              ? customKeys.has(key)
-              : status === "available"
-                ? availableKeys.has(key)
-                : !availableKeys.has(key))) &&
+          (!missingTranslation ||
+            !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase())) &&
           fold([entity.id, ...entity.translations.flatMap((text) => [text.name, ...text.aliases])].join(" ")).includes(
             fold(search.trim()),
           )
         )
       }),
-    [entities, kind, language, status, customKeys, availableKeys, search],
+    [entities, kind, missingTranslation, locale, search],
   )
   const currentPage = Math.min(page, Math.max(0, Math.ceil(rows.length / 25) - 1))
   return (
     <section aria-label="Danh mục thuật ngữ và đối tượng liên quan" className="min-w-0 space-y-3 rounded-xl border p-4">
-      <h2 className="font-semibold">Danh mục thuật ngữ và đối tượng liên quan</h2>
       <div className="flex flex-wrap gap-3">
         <Input
           className="min-w-0 flex-1 basis-56"
           aria-label="Tìm danh mục"
-          placeholder="Tìm tên, alias hoặc ID…"
+          placeholder={termsOnly ? "Tìm thuật ngữ, tên gọi khác…" : "Tìm tên hoặc tên gọi khác…"}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value)
             setPage(0)
           }}
         />
-        <select
-          aria-label="Lọc loại tham chiếu"
-          className="rounded border bg-background p-2 text-sm"
-          value={kind}
-          onChange={(e) => {
-            setKind(e.target.value)
-            setPage(0)
-          }}
-        >
-          <option value="all">Mọi loại</option>
-          {Object.entries(kinds).map(([key, label]) => (
-            <option value={key} key={key}>
-              {label}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Lọc locale danh mục"
-          className="rounded border bg-background p-2 text-sm"
-          value={language}
-          onChange={(e) => {
-            setLanguage(e.target.value)
-            setPage(0)
-          }}
-        >
-          <option value="all">Mọi locale</option>
-          {languages.map((lang) => (
-            <option value={lang} key={lang}>
-              {lang}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label="Lọc trạng thái tham chiếu"
-          className="rounded border bg-background p-2 text-sm"
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value)
-            setPage(0)
-          }}
-        >
-          <option value="all">Mọi trạng thái</option>
-          <option value="custom">Có tùy chỉnh / glossary</option>
-          <option value="available">Sẵn sàng nhận diện</option>
-          <option value="unavailable">Thiếu dữ liệu nguồn</option>
-        </select>
+        {!termsOnly && availableKinds.length > 1 && (
+          <div
+            role="group"
+            aria-label="Lọc loại tham chiếu"
+            className="flex items-center gap-1 rounded-lg bg-muted p-1"
+          >
+            {[["all", "Tất cả"], ...availableKinds.map((key) => [key, kinds[key]])].map(([key, label]) => (
+              <Button
+                key={key}
+                size="sm"
+                variant={kind === key ? "secondary" : "ghost"}
+                aria-pressed={kind === key}
+                onClick={() => {
+                  setKind(key!)
+                  setPage(0)
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        )}
+        {(missingTranslation ||
+          entities.some(
+            (entity) => !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase()),
+          )) && (
+          <Button
+            size="sm"
+            variant={missingTranslation ? "secondary" : "outline"}
+            aria-pressed={missingTranslation}
+            onClick={() => {
+              setMissingTranslation((value) => !value)
+              setPage(0)
+            }}
+          >
+            Thiếu bản dịch
+          </Button>
+        )}
+        {(search || kind !== "all" || missingTranslation) && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setSearch("")
+              setKind("all")
+              setMissingTranslation(false)
+              setPage(0)
+            }}
+          >
+            <X className="size-4" />
+            Bỏ lọc
+          </Button>
+        )}
       </div>
       <p role="status" className="text-xs text-muted-foreground">
-        {rows.length} / {entities.length} mục · trang {currentPage + 1} / {Math.max(1, Math.ceil(rows.length / 25))} ·
-        tối đa 25 dòng/trang
+        {rows.length} mục{rows.length !== entities.length ? ` / ${entities.length}` : ""}
       </p>
       <div
         role="region"
         aria-label="Bảng tham chiếu, cuộn ngang để xem đích đến"
         tabIndex={0}
-        className="max-h-[480px] overflow-auto rounded border"
+        className="relative isolate max-h-[560px] overflow-auto rounded-xl border"
       >
         <table className="w-full min-w-[720px] text-left text-sm">
           <caption className="sr-only">
             Danh mục thật, bản dịch, alias và trạng thái tham chiếu. Chọn tên để chỉnh sửa.
           </caption>
-          <thead className="sticky top-0 z-10 bg-muted">
+          <thead className="sticky top-0 z-20 bg-muted">
             <tr>
-              {["Tên / loại", "Locale / alias", "Nguồn / trạng thái", "Đích đến"].map((heading) => (
-                <th key={heading} scope="col" className="p-3 font-medium">
-                  {heading}
-                </th>
-              ))}
+              {["Tên", "Bản dịch / tên gọi khác", "Nhận diện", ...(!termsOnly ? ["Dữ liệu gốc"] : [])].map(
+                (heading, index) => (
+                  <th
+                    key={heading}
+                    scope="col"
+                    className={`p-3 font-medium ${index === 0 ? "sticky left-0 z-20 bg-muted" : ""}`}
+                  >
+                    {heading}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody>
@@ -153,60 +162,63 @@ export function ReferenceCatalogTable({
                   className={`border-t align-top ${selected === key ? "bg-accent/50" : ""}`}
                   aria-selected={selected === key}
                 >
-                  <td className="p-3">
+                  <td className="sticky left-0 z-10 bg-card p-3">
                     <button
                       type="button"
-                      className="flex min-h-11 items-center gap-2 text-left font-medium underline-offset-4 hover:underline focus-visible:outline-2"
+                      className="group flex min-h-11 w-full min-w-44 cursor-pointer items-center gap-2 rounded-lg text-left font-medium hover:text-primary focus-visible:outline-2"
                       onClick={() => onSelect(key)}
                     >
-                      <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-8 rounded-md" />
+                      <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-9 rounded-lg" />
                       <span>
                         {text?.name || entity.id}
-                        <span className="block text-xs font-normal text-muted-foreground">{kinds[entity.kind]}</span>
+                        {!termsOnly && (
+                          <span className="block text-xs font-normal text-muted-foreground">{kinds[entity.kind]}</span>
+                        )}
                       </span>
+                      <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground group-hover:text-primary" />
                     </button>
-                    <code className="block max-w-48 break-all text-[10px] text-muted-foreground">{key}</code>
                   </td>
                   <td className="max-w-60 p-3">
-                    <span className="block">{entity.translations.map((text) => text.locale).join(", ")}</span>
+                    <span className="flex flex-wrap gap-1">
+                      {entity.translations.map((text) => (
+                        <span key={text.locale} className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                          {text.locale}
+                        </span>
+                      ))}
+                    </span>
                     <span className="text-xs text-muted-foreground">
-                      {text?.aliases.join(", ") || "Chưa có alias"}
+                      {text?.aliases.join(", ") || "Chưa có tên gọi khác"}
                       {text && text.locale !== locale ? ` · đang xem ${text.locale}` : ""}
                     </span>
                   </td>
                   <td className="p-3">
-                    <span className="block">
-                      {entity.kind === "hero"
-                        ? "Tướng · phiên bản gần nhất"
-                        : entity.kind === "item"
-                          ? "Tài nguyên · adapter local"
-                          : "Glossary · Vite"}
+                    <span className="inline-flex rounded-full bg-muted px-2 py-1 text-xs">
+                      {entity.autoMatch === false ||
+                      (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)
+                        ? "Chọn bằng @"
+                        : "Tự nhận diện"}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {available ? "Sẵn sàng nhận diện" : "Thiếu dữ liệu nguồn"}
-                      {customKeys.has(key) ? " · có tùy chỉnh" : ""}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    {(["admin", "wiki"] as const).map((context) => {
-                      const url = resolveEntityRoute(entity, context, locale)
-                      return (
-                        <div key={context} className="max-w-60 break-all text-xs">
-                          {context}:{" "}
-                          {available && url ? (
-                            <a href={url} className="underline underline-offset-4">
-                              {url}
-                            </a>
-                          ) : (
-                            "Chưa sẵn sàng"
-                          )}
-                        </div>
-                      )
-                    })}
-                    {entity.kind !== "hero" && (
-                      <span className="text-[10px] text-muted-foreground">Wiki cần nối API và route production.</span>
+                    {!available && <p className="mt-1 text-xs text-amber-600">Thiếu dữ liệu gốc</p>}
+                    {entity.kind !== "term" && customKeys.has(key) && (
+                      <p className="mt-1 text-xs text-muted-foreground">Có tùy chỉnh</p>
                     )}
                   </td>
+                  {!termsOnly && (
+                    <td className="p-3">
+                      {available && resolveEntityRoute(entity, "admin", locale) ? (
+                        <Link
+                          to={resolveEntityRoute(entity, "admin", locale)!}
+                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-primary hover:bg-primary/5"
+                        >
+                          <Database className="size-3.5" />
+                          Mở danh mục gốc
+                          <ArrowUpRight className="size-3.5" />
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Chưa có dữ liệu nguồn</span>
+                      )}
+                    </td>
+                  )}
                 </tr>
               )
             })}
@@ -216,26 +228,31 @@ export function ReferenceCatalogTable({
           <p className="p-5 text-sm text-muted-foreground">Không có mục phù hợp. Thử đổi bộ lọc hoặc tạo thuật ngữ.</p>
         )}
       </div>
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={currentPage === 0}
-          onClick={() => setPage(currentPage - 1)}
-        >
-          Trước
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={(currentPage + 1) * 25 >= rows.length}
-          onClick={() => setPage(currentPage + 1)}
-        >
-          Sau
-        </Button>
-      </div>
+      {rows.length > 25 && (
+        <div className="flex items-center justify-end gap-2">
+          <span className="text-xs text-muted-foreground">
+            Trang {currentPage + 1} / {Math.ceil(rows.length / 25)}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 0}
+            onClick={() => setPage(currentPage - 1)}
+          >
+            Trước
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={(currentPage + 1) * 25 >= rows.length}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Sau
+          </Button>
+        </div>
+      )}
     </section>
   )
 }

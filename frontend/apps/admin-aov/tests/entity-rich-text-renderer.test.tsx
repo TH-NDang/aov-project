@@ -10,7 +10,7 @@ const entity: EntityReference = {
   id: "hero-1",
   kind: "hero",
   translations: [{ locale: "vi-VN", name: "Lữ Bố", aliases: [], description: "Chiến binh <script>alert(1)</script>" }],
-  destinations: { admin: "/publishing/hero-1", wiki: "/heroes/lu-bo" },
+  destinations: { admin: "/hero/hero-1", wiki: "/heroes/lu-bo" },
   icon: "/images/lu-bo.png",
   display: { color: "#dd3344", underline: true, showIcon: true },
 }
@@ -153,7 +153,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     assert.ok(document.querySelector('[role="dialog"]'))
     assert.equal(document.querySelector("script"), null)
     assert.ok(document.body.textContent?.includes("Chiến binh <script>alert(1)</script>"))
-    assert.equal(document.querySelector("a")?.getAttribute("href"), "/publishing/hero-1")
+    assert.equal(document.querySelector("a")?.getAttribute("href"), "/hero/hero-1")
     assert.equal(document.querySelector("a a"), null)
     await act(async () => document.querySelector<HTMLAnchorElement>("a")!.focus())
     await settle()
@@ -237,7 +237,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     await mount("admin", "vi-VN", [unsafe])
     await act(async () => document.querySelector<HTMLButtonElement>("button")!.click())
     await settle()
-    assert.equal(document.querySelector("a")?.getAttribute("href"), "/publishing/hero-1")
+    assert.equal(document.querySelector("a")?.getAttribute("href"), "/hero/hero-1")
     assert.equal(document.querySelector("img"), null)
     assert.ok(!document.body.innerHTML.includes("javascript:"))
     assert.ok(!document.body.innerHTML.includes("background:url"))

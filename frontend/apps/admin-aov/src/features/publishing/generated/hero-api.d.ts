@@ -427,6 +427,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/wiki/v1/admin/patch-variants/{id}/data-review": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations["updatePatchDataReview"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -579,6 +595,12 @@ export interface components {
       status: string
       /** Format: uuid */
       seasonId: string | null
+      /** @enum {string} */
+      dataReviewState?: "IN_PROGRESS" | "COMPLETE"
+      /** Format: int64 */
+      dataReviewVersion?: number
+      /** Format: date-time */
+      dataReviewedAt?: string | null
     }
     PublicationRelease: {
       id: string
@@ -1724,6 +1746,7 @@ export interface operations {
         rulesetId?: string
         locale?: string
         sort?: "code" | "edited-desc"
+        includeUnchanged?: boolean
       }
       header?: never
       path?: never
@@ -1993,6 +2016,60 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["SkinBadgeGroupView"]
         }
+      }
+    }
+  }
+  updatePatchDataReview: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": {
+          /** @enum {string} */
+          state: "IN_PROGRESS" | "COMPLETE"
+          /** Format: int64 */
+          expectedVersion: number
+        }
+      }
+    }
+    responses: {
+      /** @description Editorial data review state */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": {
+            /** Format: uuid */
+            variantId: string
+            /** @enum {string} */
+            state: "IN_PROGRESS" | "COMPLETE"
+            /** Format: int64 */
+            version: number
+            /** Format: date-time */
+            completedAt: string | null
+          }
+        }
+      }
+      /** @description Stale review version */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Invalid review state or unpublished variant */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

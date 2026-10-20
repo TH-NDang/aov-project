@@ -126,6 +126,27 @@ export function createHeroFixture(annotations = false, history = false) {
   const writes: { section: string; body: Record<string, unknown> }[] = []
   const fetcher: typeof fetch = async (input, init) => {
     const path = String(input).replace("/api/wiki/v1", "")
+    if (/^\/admin\/(items|arcana|enchantments|spells)\?/.test(path))
+      return Response.json({ items: [], page: 0, size: 100, totalElements: 0 })
+    if (path === "/admin/reference-settings") {
+      if (init?.method === "PUT") {
+        const next = JSON.parse(String(init.body))
+        if (next.expectedVersion !== (storage?.version ?? 1))
+          return Response.json({ code: "REFERENCE_VERSION_CONFLICT", detail: "Version conflict" }, { status: 409 })
+        if (storage)
+          storage = { ...storage, version: storage.version + 1, rows: [{ id: "settings", settings: next.settings }] }
+        return Response.json({ version: storage?.version ?? 2, settings: next.settings })
+      }
+      return Response.json({
+        version: storage?.version ?? 1,
+        settings: storage?.rows[0]?.settings ?? {
+          schemaVersion: 1,
+          autoRecognize: true,
+          fallbackLocale: "vi-VN",
+          entities: [],
+        },
+      })
+    }
     if (path === "/__storage/") return Response.json(storage ? [storage] : [])
     if (storage && path === `/__storage/${storage.id}`) {
       if (init?.method === "PUT") {

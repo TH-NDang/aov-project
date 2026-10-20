@@ -1,5 +1,8 @@
+import { PatchDataReview } from "./patch-data-review"
 import { SharedPatchSetup, SeasonScheduleForm, PatchReleaseForm } from "./shared-version-setup"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router"
+import { CatalogTimeline } from "./catalog-timeline"
 import { useQuery } from "@tanstack/react-query"
 import { ChevronDown, RefreshCw, MoreHorizontal, Plus } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
@@ -11,7 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@aov/ui/components/dropdown-menu"
-import { MarketSchedule, PatchMarketSchedule } from "./market-schedule"
+import { MarketSchedule, PatchMarketSchedule, ConfirmRelease } from "./market-schedule"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { Page, PageHeader } from "@/components/page-header"
@@ -42,6 +45,25 @@ export function GameConfigurationPage() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets, enabled: !!setup })
   const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions, enabled: !!setup })
+  const [params, setParams] = useSearchParams()
+  const timelineScope = { seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }
+  const changeScope = (next: typeof timelineScope) => {
+    setParams(
+      (current) => {
+        const copy = new URLSearchParams(current)
+        for (const [key, value] of [
+          ["season", next.seasonId],
+          ["patch", next.variantId],
+        ]) {
+          if (value) copy.set(key, value)
+          else copy.delete(key)
+        }
+        return copy
+      },
+      { replace: true, preventScrollReset: true },
+    )
+    if (next.seasonId) setExpanded((old) => ({ ...old, [next.seasonId]: true }))
+  }
   const data = overview.data
   return (
     <Page>
@@ -174,6 +196,9 @@ export function GameConfigurationPage() {
                     return markets.map((m, index) => {
                       const season = data.seasons.find((s) => s.id === m.currentSeasonId)
                       const release = data.releases.find((r) => r.id === m.currentReleaseId)
+                      const pending = data.releases.find(
+                        (r) => r.regionId === m.id && r.phase === "AWAITING_CONFIRMATION",
+                      )
                       const variant = data.variants.find((v) => v.id === release?.variantId)
                       return (
                         <tr key={m.id}>
@@ -189,7 +214,24 @@ export function GameConfigurationPage() {
                             </div>
                           </td>
                           <td className="p-4">{season?.displayName ?? "Chưa có mùa hiện tại"}</td>
-                          <td className="p-4">{variant?.patchCode ?? "Chưa áp dụng"}</td>
+                          <td className="p-4">
+                            <div className="space-y-1">
+                              {variant ? (
+                                <>
+                                  <span>{variant.patchCode}</span>
+                                  <Badge className="ml-2">Đang áp dụng</Badge>
+                                </>
+                              ) : (
+                                <span>Chưa xác nhận patch hiện tại</span>
+                              )}
+                              {pending && (
+                                <div className="text-xs text-muted-foreground">
+                                  {data.variants.find((v) => v.id === pending.variantId)?.patchCode} · Chờ xác nhận
+                                  <ConfirmRelease id={pending.id} />
+                                </div>
+                              )}
+                            </div>
+                          </td>
                         </tr>
                       )
                     })
@@ -198,58 +240,87 @@ export function GameConfigurationPage() {
               </table>
             </div>
           </section>
-          <section className="space-y-3">
+          <section className="min-w-0 space-y-3">
             <h2 className="font-semibold">Mùa và bản cập nhật</h2>
+            <CatalogTimeline data={data} value={timelineScope} onChange={changeScope} showCounts={false} />
             {!data.seasons.length && (
               <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">
                 Chưa có mùa. Chọn “Tạo mùa” trong menu dấu ba chấm của bảng.
               </p>
             )}
-            {data.seasons.map((s) => {
-              const variants = data.variants
-                .filter((v) => v.seasonId === s.id)
-                .sort((a, b) => a.rulesetOrdinal - b.rulesetOrdinal)
-              const schedules = (data.seasonSchedules ?? []).filter((schedule) => schedule.seasonId === s.id)
-              return (
-                <details
-                  key={s.id}
-                  className="group rounded-xl border bg-card"
-                  open={expanded[s.id] ?? schedules.some((schedule) => schedule.phase === "CURRENT")}
-                  onToggle={(event) => {
-                    const open = event.currentTarget.open
-                    setExpanded((previous) => (previous[s.id] === open ? previous : { ...previous, [s.id]: open }))
-                  }}
-                >
-                  <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 p-4">
-                    <ChevronDown className="size-4" />
-                    <span className="font-semibold">{s.displayName}</span>
-                    <span className="text-xs text-muted-foreground">
-                      #{s.ordinal} · {schedules.length} thị trường đã lên lịch
-                    </span>
-                    <span className="ml-auto text-xs text-muted-foreground">{variants.length} patch</span>
-                  </summary>
-                  <div className="space-y-3 border-t p-3">
-                    <div className="space-y-2 p-3">
-                      {schedules.map((schedule) => (
-                        <p key={schedule.id} className="text-sm">
-                          {data.markets.find((m) => m.id === schedule.regionId)?.displayName} ·{" "}
-                          {dateLabel(schedule.startsOn ?? schedule.startsAt, locale)} –{" "}
-                          {dateLabel(schedule.endsOn ?? schedule.endsAt, locale)} · {phaseLabels[schedule.phase]}
-                        </p>
-                      ))}
+            {[...data.seasons]
+              .sort((a, b) => b.ordinal - a.ordinal)
+              .filter((s) => !timelineScope.seasonId || s.id === timelineScope.seasonId)
+              .map((s) => {
+                const variants = data.variants
+                  .filter((v) => v.seasonId === s.id && (!timelineScope.variantId || v.id === timelineScope.variantId))
+                  .sort((a, b) => a.rulesetOrdinal - b.rulesetOrdinal)
+                const schedules = (data.seasonSchedules ?? []).filter((schedule) => schedule.seasonId === s.id)
+                return (
+                  <details
+                    key={s.id}
+                    className="group rounded-xl border bg-card"
+                    open={
+                      expanded[s.id] ??
+                      (timelineScope.seasonId === s.id ||
+                        data.variants.some((v) => v.id === timelineScope.variantId && v.seasonId === s.id) ||
+                        schedules.some((schedule) => schedule.phase === "CURRENT"))
+                    }
+                    onToggle={(event) => {
+                      const open = event.currentTarget.open
+                      setExpanded((previous) => (previous[s.id] === open ? previous : { ...previous, [s.id]: open }))
+                    }}
+                  >
+                    <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 p-4">
+                      <ChevronDown className="size-4" />
+                      <span className="font-semibold">{s.displayName}</span>
+                      {data.markets.some((m) => m.currentSeasonId === s.id) && <Badge>Đang áp dụng</Badge>}
+                      <span className="text-xs text-muted-foreground">
+                        #{s.ordinal} · {schedules.length} thị trường đã lên lịch
+                      </span>
+                      <span className="ml-auto text-xs text-muted-foreground">{variants.length} patch</span>
+                    </summary>
+                    <div className="space-y-3 border-t p-3">
+                      <div className="space-y-2 p-3">
+                        {schedules.map((schedule) => {
+                          const market = data.markets.find((m) => m.id === schedule.regionId)
+                          return (
+                            <div key={schedule.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                              {market && <MarketBadge code={market.code} name={market.displayName} showName />}
+                              <span className="text-muted-foreground">
+                                {dateLabel(schedule.startsOn ?? schedule.startsAt, locale)} –{" "}
+                                {dateLabel(schedule.endsOn ?? schedule.endsAt, locale)} · {phaseLabels[schedule.phase]}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <details className="rounded-lg bg-muted/20 p-3">
+                        <summary className="cursor-pointer text-sm font-medium">
+                          Thiết lập lịch mùa theo thị trường
+                        </summary>
+                        <div className="pt-3">
+                          <SeasonScheduleForm seasonId={s.id} data={data} />
+                        </div>
+                      </details>
+                      {variants.length ? (
+                        variants.map((v) => (
+                          <PatchDisclosure
+                            key={v.id}
+                            variant={v}
+                            data={data}
+                            locale={locale}
+                            phase={v.status}
+                            selected={timelineScope.variantId === v.id}
+                          />
+                        ))
+                      ) : (
+                        <p className="p-4 text-sm text-muted-foreground">Chưa có patch trong mùa này.</p>
+                      )}
                     </div>
-                    <SeasonScheduleForm seasonId={s.id} data={data} />
-                    {variants.length ? (
-                      variants.map((v) => (
-                        <PatchDisclosure key={v.id} variant={v} data={data} locale={locale} phase={v.status} />
-                      ))
-                    ) : (
-                      <p className="p-4 text-sm text-muted-foreground">Chưa có patch trong mùa này.</p>
-                    )}
-                  </div>
-                </details>
-              )
-            })}
+                  </details>
+                )
+              })}
             {data.variants.some((v) => !v.seasonId) && (
               <details className="rounded-xl border bg-card">
                 <summary className="cursor-pointer p-4 font-medium">Patch cũ chưa gắn mùa</summary>
@@ -257,7 +328,14 @@ export function GameConfigurationPage() {
                   {data.variants
                     .filter((v) => !v.seasonId)
                     .map((v) => (
-                      <PatchDisclosure key={v.id} variant={v} data={data} locale={locale} phase={v.status} />
+                      <PatchDisclosure
+                        key={v.id}
+                        variant={v}
+                        data={data}
+                        locale={locale}
+                        phase={v.status}
+                        selected={timelineScope.variantId === v.id}
+                      />
                     ))}
                 </div>
               </details>
@@ -276,6 +354,7 @@ function PatchDisclosure({
   phase,
   time,
   source,
+  selected = false,
 }: {
   variant: Variant
   data: PublicationOverview
@@ -283,8 +362,12 @@ function PatchDisclosure({
   phase: string
   time?: string
   source?: string | null
+  selected?: boolean
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(selected)
+  useEffect(() => {
+    if (selected) setOpen(true)
+  }, [selected])
   return (
     <div className="overflow-hidden rounded-lg border">
       <button
@@ -295,6 +378,10 @@ function PatchDisclosure({
       >
         <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
         <span className="font-medium">{variant.patchCode}</span>
+        {data.releases.some(
+          (r) => r.variantId === variant.id && data.markets.some((m) => m.currentReleaseId === r.id),
+        ) && <Badge>Đang áp dụng</Badge>}
+        {variant.dataReviewState === "COMPLETE" && <Badge variant="secondary">Đã hoàn tất nhập liệu</Badge>}
         <Badge variant={phase === "CURRENT" ? "default" : "outline"}>{phaseLabels[phase] ?? phase}</Badge>
         <span className="text-xs text-muted-foreground">
           {data.rulesets.find((r) => r.id === variant.rulesetId)?.code}
@@ -314,7 +401,13 @@ function PatchDisclosure({
             </a>
           )}
           <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
-          <PatchReleaseForm variant={variant} data={data} />
+          <details className="m-3 rounded-lg bg-muted/20 p-3">
+            <summary className="cursor-pointer text-sm font-medium">Thiết lập lịch patch theo thị trường</summary>
+            <div className="pt-3">
+              <PatchReleaseForm variant={variant} data={data} />
+            </div>
+          </details>
+          <PatchDataReview variant={variant} />
           <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />
         </div>
       )}

@@ -1,5 +1,17 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { canonicalHeroUrl } from "../src/app/legacy-hero-redirect"
+
+test("legacy hero links preserve comparison filters, import state and anchors without touching media routes", () => {
+  assert.equal(
+    canonicalHeroUrl("/publishing/airi", "?revision=old&compare=base&view=history", "#skill-1"),
+    "/hero/airi?revision=old&compare=base&view=history#skill-1",
+  )
+  assert.equal(canonicalHeroUrl("/publishing/import", "?job=existing"), "/hero/import?job=existing")
+  assert.equal(canonicalHeroUrl("/publishing"), "/hero")
+  assert.equal(canonicalHeroUrl("/hero/media", "?tab=head"), "/hero/media?tab=head")
+  assert.equal(canonicalHeroUrl("/publishing-media"), "/publishing-media")
+})
 import {
   closeHeroLocation,
   heroLocationId,
@@ -46,7 +58,7 @@ test("full-page links carry hero navigation and comparison state without list-on
     "hero=hero-42&season=s3&patch=baseline&view=history&tab=media&revision=revision-1&compare=revision-0&diff=split&changes=skills&unrelated=value",
   )
   const url = new URL(heroPageLocation("hero-42", params, "revision-2"), "http://localhost")
-  assert.equal(url.pathname, "/publishing/hero-42")
+  assert.equal(url.pathname, "/hero/hero-42")
   assert.equal(url.searchParams.get("revision"), "revision-2")
   assert.equal(url.searchParams.get("view"), "history")
   assert.equal(url.searchParams.get("compare"), "revision-0")

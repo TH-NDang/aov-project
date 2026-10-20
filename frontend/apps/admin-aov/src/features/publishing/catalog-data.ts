@@ -52,6 +52,7 @@ export function heroCatalogRows(
   data: PublicationOverview | undefined,
   filter: CatalogFilter,
   ruleset = "",
+  includeUnchanged = false,
 ): HeroCatalogRow[] {
   const scoped = !!(filter.seasonId || filter.variantId)
   const ordinal = (change: HeroGameplayChange) =>
@@ -65,13 +66,14 @@ export function heroCatalogRows(
           (!filter.variantId || change.patchVariantId === filter.variantId),
       )
       .sort((a, b) => ordinal(b) - ordinal(a))
-    const revisions = scoped
-      ? [...new Set(changes.map((change) => change.rulesetId))].flatMap((rule) => {
-          const latest = changes.find((change) => change.rulesetId === rule)!
-          const revision = hero.revisions.find((item) => item.id === latest.toHeroRevisionId)
-          return revision ? [revision] : []
-        })
-      : selectCatalogRevisions(hero.revisions, data, { seasonId: "", variantId: "" }, ruleset)
+    const revisions =
+      scoped && !includeUnchanged
+        ? [...new Set(changes.map((change) => change.rulesetId))].flatMap((rule) => {
+            const latest = changes.find((change) => change.rulesetId === rule)!
+            const revision = hero.revisions.find((item) => item.id === latest.toHeroRevisionId)
+            return revision ? [revision] : []
+          })
+        : selectCatalogRevisions(hero.revisions, data, filter, ruleset)
     if (!revisions.length) return scoped || ruleset ? [] : [{ ...hero, changes: [], rowKey: hero.id }]
     return revisions.map((selectedRevision) => ({
       ...hero,

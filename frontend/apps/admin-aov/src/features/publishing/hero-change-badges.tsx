@@ -20,7 +20,7 @@ const kindStyles: Record<ChangeKind, KindStyle> = {
     icon: ArrowDown,
   },
   ADJUSTMENT: {
-    label: "Điều chỉnh",
+    label: "Cân bằng",
     icon: Scale,
   },
   REWORK: {
@@ -62,16 +62,18 @@ export function ChangeKindBadges({
   kinds,
   compact = false,
   maxVisible = 3,
+  emptyLabel = "Chưa có thay đổi gameplay",
 }: {
   kinds: readonly string[]
   compact?: boolean
   maxVisible?: number
+  emptyLabel?: string
 }) {
   const ordered = curatedChangeKinds(kinds)
   const unknown = kinds.filter((kind) => normalizeChangeKind(kind) === "OTHER" && kind !== "OTHER")
   const visible = ordered.slice(0, Math.max(1, maxVisible))
   const remaining = ordered.slice(visible.length)
-  if (!ordered.length) return <span className="text-xs text-muted-foreground">Chưa có thay đổi gameplay</span>
+  if (!ordered.length) return <span className="text-xs text-muted-foreground">{emptyLabel}</span>
   return (
     <TooltipProvider>
       <span className="inline-flex flex-wrap items-center gap-1.5">
@@ -140,7 +142,7 @@ export function HeroChangeSummary({
           {ordered.length ? (
             <ChangeKindBadges kinds={kinds} compact />
           ) : (
-            <span className="text-xs text-muted-foreground">Chưa phân loại</span>
+            <span className="text-xs text-muted-foreground">Chưa đánh giá tổng thể</span>
           )}
           {patchLabel && <span className="max-w-40 truncate text-xs text-muted-foreground">{patchLabel}</span>}
         </button>
@@ -153,7 +155,7 @@ export function HeroChangeSummary({
         {ordered.length ? (
           <ChangeKindBadges kinds={kinds} maxVisible={6} />
         ) : (
-          <span className="text-xs text-muted-foreground">Chưa phân loại</span>
+          <span className="text-xs text-muted-foreground">Chưa đánh giá tổng thể</span>
         )}
         <p className="whitespace-pre-wrap break-words text-sm leading-6">
           {summary || "Đã ghi nhận thay đổi. Mở chi tiết để xem nội dung đối chiếu."}

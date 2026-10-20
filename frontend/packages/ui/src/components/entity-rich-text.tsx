@@ -1,7 +1,8 @@
 import * as React from "react"
-import { ArrowUpRight, BookOpen, Swords, UserRound, X } from "lucide-react"
+import { ArrowUpRight, BookOpen, Swords, UserRound, X, Gem, Shield, Zap } from "lucide-react"
 import {
   createEntityIndex,
+  entityKindLabels,
   parseRichText,
   resolveEntityRoute,
   safeLinkUrl,
@@ -26,7 +27,7 @@ export interface EntityRichTextProps {
 }
 
 const emptyEntities: EntityReference[] = []
-const kindLabels = { hero: "Tướng", item: "Trang bị", term: "Thuật ngữ" }
+const kindLabels = entityKindLabels
 const hexColor = /^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i
 
 export type EntityIconResolver = (entity: EntityReference) => Promise<string | null | undefined>
@@ -57,7 +58,9 @@ export function EntityReferenceIcon({
     }
   }, [entity.id, entity.kind, entity.iconAssetId, resolveIcon])
   const icon = safeEntityIconUrl(entity.icon) ?? resolved
-  const Fallback = entity.kind === "hero" ? UserRound : entity.kind === "item" ? Swords : BookOpen
+  const Fallback = { hero: UserRound, item: Swords, enchantment: Shield, arcana: Gem, spell: Zap, term: BookOpen }[
+    entity.kind
+  ]
   return icon && failed !== icon ? (
     <img
       src={icon}

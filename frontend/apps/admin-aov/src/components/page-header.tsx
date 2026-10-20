@@ -1,4 +1,4 @@
-import type { ReactNode } from "react"
+import type { ComponentProps, ReactNode } from "react"
 import { cn } from "@aov/ui/lib/utils"
 
 interface PageHeaderProps {
@@ -25,6 +25,10 @@ export function PageHeader({ title, description, actions, className, children }:
 }
 
 /** Standard padded page body. */
-export function Page({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("flex flex-1 flex-col gap-6 p-4 md:p-6", className)}>{children}</div>
+export function Page({ className, children, ...props }: ComponentProps<"div">) {
+  return (
+    <div className={cn("flex flex-1 flex-col gap-6 p-4 md:p-6", className)} {...props}>
+      {children}
+    </div>
+  )
 }

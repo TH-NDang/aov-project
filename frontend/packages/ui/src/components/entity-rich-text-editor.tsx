@@ -1,5 +1,7 @@
 import * as React from "react"
-import { type EntityReference } from "../lib/entity-rich-text"
+import { Popover as PopoverPrimitive } from "radix-ui"
+import { textareaCaretRect } from "../lib/textarea-caret"
+import { entityKindLabels, type EntityReference } from "../lib/entity-rich-text"
 import {
   insertReference,
   mentionAt,
@@ -12,7 +14,7 @@ import { EntityRichText, EntityReferenceIcon, type EntityIconResolver } from "./
 import { Button } from "./button"
 
 const empty: EntityReference[] = []
-const kinds = { hero: "Tướng", item: "Trang bị", term: "Thuật ngữ" }
+const kinds = entityKindLabels
 export interface EntityRichTextEditorProps {
   label: string
   value: string
@@ -25,6 +27,8 @@ export interface EntityRichTextEditorProps {
   autoRecognize?: boolean
   maxLength?: number
   resolveIcon?: EntityIconResolver
+  renderPreview?: boolean
+  hideLabel?: boolean
 }
 
 export function EntityRichTextEditor({
@@ -39,10 +43,17 @@ export function EntityRichTextEditor({
   autoRecognize = true,
   maxLength = 100000,
   resolveIcon,
+  renderPreview = true,
+  hideLabel = false,
 }: EntityRichTextEditorProps) {
   const limit = Math.max(0, Math.min(100000, maxLength))
   const id = React.useId()
   const area = React.useRef<HTMLTextAreaElement>(null)
+  const popup = React.useRef<HTMLDivElement>(null)
+  const list = React.useRef<HTMLDivElement>(null)
+  const search = React.useRef<HTMLInputElement>(null)
+  const editor = React.useRef<HTMLDivElement>(null)
+  const [anchorRect, setAnchorRect] = React.useState<DOMRect | null>(null)
   const current = React.useRef(value)
   const selection = React.useRef<TextSelection>({ start: 0, end: 0 })
   const history = React.useRef<EditorSnapshot[]>([{ value, start: 0, end: 0 }])
@@ -133,12 +144,51 @@ export function EntityRichTextEditor({
     }
   })
   const mention = !isComposing && !dismissed && !picker ? mentionAt(value, caret) : null
-  const choices = React.useMemo(
+  const options = React.useMemo(
     () => referenceChoices(entities, locale, fallbackLocale, picker ? query : (mention?.query ?? "")),
     [entities, locale, fallbackLocale, picker, query, mention?.query],
   )
-  const options = choices.slice(0, 8)
   const open = (!!mention || picker) && !isComposing
+  const virtualAnchor = React.useMemo(
+    () => ({ current: { getBoundingClientRect: () => anchorRect ?? area.current!.getBoundingClientRect() } }),
+    [anchorRect],
+  )
+  React.useLayoutEffect(() => {
+    if (!open || !area.current) return
+    const input = area.current
+    const view = input.ownerDocument.defaultView!
+    const measure = () => setAnchorRect(textareaCaretRect(input, caret.end))
+    measure()
+    let frame = 0
+    const update = () => {
+      view.cancelAnimationFrame(frame)
+      frame = view.requestAnimationFrame(measure)
+    }
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(update)
+    observer?.observe(input)
+    view.addEventListener("resize", update)
+    view.addEventListener("scroll", update, true)
+    view.visualViewport?.addEventListener("resize", update)
+    view.visualViewport?.addEventListener("scroll", update)
+    return () => {
+      view.cancelAnimationFrame(frame)
+      observer?.disconnect()
+      view.removeEventListener("resize", update)
+      view.removeEventListener("scroll", update, true)
+      view.visualViewport?.removeEventListener("resize", update)
+      view.visualViewport?.removeEventListener("scroll", update)
+    }
+  }, [open, value, caret.end])
+  React.useLayoutEffect(() => {
+    if (!open) return
+    const container = list.current
+    const selected = container?.children[Math.min(active, options.length - 1)] as HTMLElement | undefined
+    if (!container || !selected) return
+    const bounds = container.getBoundingClientRect()
+    const row = selected.getBoundingClientRect()
+    if (row.bottom > bounds.bottom) container.scrollTop += row.bottom - bounds.bottom
+    else if (row.top < bounds.top) container.scrollTop -= bounds.top - row.top
+  }, [open, active, options.length])
   const choose = (index: number) => {
     const choice = options[index]
     if (!choice) return
@@ -183,16 +233,18 @@ export function EntityRichTextEditor({
   }
   return (
     <div
+      ref={editor}
       className="min-w-0 space-y-2"
       data-slot="entity-rich-text-editor"
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+        const target = event.relatedTarget as Node | null
+        if (!event.currentTarget.contains(target) && !popup.current?.contains(target)) {
           setPicker(false)
           setDismissed(true)
         }
       }}
     >
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className={hideLabel ? "sr-only" : "block text-sm font-medium"}>
         {label}
       </label>
       <div
@@ -356,93 +408,147 @@ export function EntityRichTextEditor({
         }}
       />
       <p id={`${id}-help`} className="text-xs text-muted-foreground">
-        Gõ @ sau khoảng trắng để chọn tham chiếu. Chọn văn bản rồi dùng thanh định dạng; Ctrl/⌘ B, I, Z. Nguồn được lưu
-        nguyên với thẻ an toàn.
+        Gõ @ và tên hoặc nhóm, ví dụ @Trang bị, @Phù hiệu, @Ngọc. Bôi chọn để định dạng; Ctrl/⌘ B, I, Z.
       </p>
-      {open && (
-        <div className="space-y-2 rounded-md border bg-popover p-2 text-popover-foreground">
-          {picker && (
-            <input
-              autoFocus
-              aria-label={`Tìm tham chiếu ${label}`}
-              className="w-full rounded border bg-background p-2 text-sm"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-                setActive(0)
+      <PopoverPrimitive.Root
+        open={open}
+        onOpenChange={(next) => {
+          if (!next) {
+            setPicker(false)
+            setDismissed(true)
+          }
+        }}
+      >
+        <PopoverPrimitive.Anchor virtualRef={virtualAnchor} />
+        {open && (
+          <PopoverPrimitive.Portal>
+            <PopoverPrimitive.Content
+              ref={popup}
+              data-slot="entity-reference-suggestions"
+              aria-label={`Chèn tham chiếu ${label}`}
+              align="start"
+              sideOffset={6}
+              collisionPadding={8}
+              onOpenAutoFocus={(event) => {
+                event.preventDefault()
+                if (picker) search.current?.focus()
               }}
-              onKeyDown={listKeys}
-            />
-          )}
-          <p className="text-xs text-muted-foreground" role="status">
-            {choices.length} kết quả · hiển thị tối đa 8 · ↑↓ chọn, Enter chèn, Esc đóng
-          </p>
-          <div
-            role="listbox"
-            id={`${id}-options`}
-            aria-label={`Gợi ý tham chiếu ${label}`}
-            className="max-h-64 overflow-y-auto"
-          >
-            {options.map(({ entity, translation }, n) => {
-              return (
-                <button
-                  key={`${entity.kind}:${entity.id}`}
-                  id={`${id}-option-${n}`}
-                  type="button"
-                  role="option"
-                  aria-selected={n === Math.min(active, options.length - 1)}
-                  className={`flex min-h-11 w-full items-center gap-2 rounded px-2 py-2 text-left text-sm ${n === Math.min(active, options.length - 1) ? "bg-accent text-accent-foreground" : "hover:bg-accent"}`}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => choose(n)}
-                >
-                  <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-8 rounded-md" />
-                  <span className="min-w-0">
-                    <span className="block break-words font-medium">{translation.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {kinds[entity.kind]} · {translation.locale}
-                      {translation.locale !== locale ? " (dự phòng)" : ""}
-                    </span>
-                  </span>
-                  <span className="ml-auto text-[10px] text-muted-foreground" aria-hidden="true">
-                    ↵
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setPicker(false)
-              setDismissed(true)
-              area.current?.focus()
-            }}
-          >
-            Đóng gợi ý
-          </Button>
-        </div>
-      )}
+              onCloseAutoFocus={(event) => event.preventDefault()}
+              onInteractOutside={(event) => {
+                if (editor.current?.contains(event.target as Node)) event.preventDefault()
+              }}
+              className="z-50 flex w-80 max-w-[calc(100vw-1rem)] flex-col gap-2 overflow-hidden rounded-xl border bg-popover p-2 text-popover-foreground shadow-lg outline-none"
+              style={{ maxHeight: "min(24rem, var(--radix-popover-content-available-height))" }}
+            >
+              {picker && (
+                <div role="group" aria-label="Nhóm tham chiếu" className="flex shrink-0 gap-1 overflow-x-auto">
+                  {Object.entries(kinds)
+                    .filter(([kind]) => entities.some((entity) => entity.kind === kind))
+                    .map(([kind, name]) => (
+                      <Button
+                        key={kind}
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setQuery(name)
+                          setActive(0)
+                        }}
+                      >
+                        {name}
+                      </Button>
+                    ))}
+                </div>
+              )}
+              {picker && (
+                <input
+                  ref={search}
+                  aria-label={`Tìm tham chiếu ${label}`}
+                  className="w-full shrink-0 rounded border bg-background p-2 text-sm"
+                  value={query}
+                  onChange={(e) => {
+                    setQuery(e.target.value)
+                    setActive(0)
+                  }}
+                  onKeyDown={listKeys}
+                />
+              )}
+              <p className="shrink-0 px-1 text-xs text-muted-foreground" role="status">
+                {options.length ? `${options.length} kết quả · ↑↓ chọn · Enter chèn` : "Không có tham chiếu phù hợp"}
+              </p>
+              <div
+                role="listbox"
+                ref={list}
+                id={`${id}-options`}
+                aria-label={`Gợi ý tham chiếu ${label}`}
+                className="min-h-0 max-h-64 overflow-y-auto overscroll-contain"
+              >
+                {options.map(({ entity, translation }, n) => {
+                  return (
+                    <button
+                      key={`${entity.kind}:${entity.id}`}
+                      id={`${id}-option-${n}`}
+                      type="button"
+                      role="option"
+                      aria-selected={n === Math.min(active, options.length - 1)}
+                      className={`flex min-h-11 w-full items-center gap-2 rounded px-2 py-2 text-left text-sm ${n === Math.min(active, options.length - 1) ? "bg-accent text-accent-foreground" : "hover:bg-accent"}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => choose(n)}
+                    >
+                      <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-8 rounded-md" />
+                      <span className="min-w-0">
+                        <span className="block break-words font-medium">{translation.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {kinds[entity.kind]} · {translation.locale}
+                          {translation.locale !== locale ? " (dự phòng)" : ""}
+                        </span>
+                      </span>
+                      <span className="ml-auto text-[10px] text-muted-foreground" aria-hidden="true">
+                        ↵
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                onClick={() => {
+                  setPicker(false)
+                  setDismissed(true)
+                  area.current?.focus()
+                }}
+              >
+                Đóng gợi ý
+              </Button>
+            </PopoverPrimitive.Content>
+          </PopoverPrimitive.Portal>
+        )}
+      </PopoverPrimitive.Root>
       {notice && (
         <p role="status" className="text-xs text-destructive">
           {notice}
         </p>
       )}
-      <details className="rounded-md border p-2 text-sm">
-        <summary className="cursor-pointer">Xem trước nội dung</summary>
-        <div className="mt-2 whitespace-pre-wrap break-words leading-7">
-          <EntityRichText
-            text={value}
-            entities={entities}
-            locale={locale}
-            fallbackLocale={fallbackLocale}
-            autoRecognize={autoRecognize}
-            context="admin"
-            resolveIcon={resolveIcon}
-          />
-        </div>
-      </details>
+      {renderPreview && (
+        <details className="rounded-md border p-2 text-sm">
+          <summary className="cursor-pointer">Xem trước nội dung</summary>
+          <div className="mt-2 whitespace-pre-wrap break-words leading-7">
+            <EntityRichText
+              text={value}
+              entities={entities}
+              locale={locale}
+              fallbackLocale={fallbackLocale}
+              autoRecognize={autoRecognize}
+              context="admin"
+              resolveIcon={resolveIcon}
+            />
+          </div>
+        </details>
+      )}
     </div>
   )
 }

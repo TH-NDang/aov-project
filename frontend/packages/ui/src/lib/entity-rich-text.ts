@@ -1,4 +1,12 @@
-export type EntityKind = "hero" | "item" | "term"
+export const entityKindLabels = {
+  hero: "Tướng",
+  item: "Trang bị",
+  enchantment: "Phù hiệu",
+  arcana: "Bảng ngọc",
+  spell: "Phụ trợ",
+  term: "Thuật ngữ",
+} as const
+export type EntityKind = keyof typeof entityKindLabels
 
 export type EntityReference = {
   id: string
@@ -109,7 +117,10 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
   const entities = settings.entities.map((entry): EntityReference => {
     const entity = object(entry)
     const id = string(entity.id, 128)
-    if (!identifier.test(id) || !["hero", "item", "term"].includes(entity.kind as string)) {
+    if (
+      !identifier.test(id) ||
+      !["hero", "item", "enchantment", "arcana", "spell", "term"].includes(entity.kind as string)
+    ) {
       throw new Error("Invalid entity identity")
     }
     const kind = entity.kind as EntityKind
@@ -181,12 +192,15 @@ export function resolveEntityRoute(entity: EntityReference, context: "admin" | "
   if (!identifier.test(entity.id)) return undefined
   const id = encodeURIComponent(entity.id)
   if (context === "admin") {
-    if (entity.kind === "hero") return `/publishing/${id}`
+    if (entity.kind === "hero") return `/hero/${id}`
     if (entity.kind === "item") return `/items?item=${id}`
+    if (entity.kind === "enchantment") return `/enchantments?item=${id}`
+    if (entity.kind === "arcana") return `/arcana?item=${id}`
+    if (entity.kind === "spell") return `/spells?item=${id}`
     if (entity.kind === "term") return `/terminology?term=${id}`
     return undefined
   }
-  if (!["hero", "item", "term"].includes(entity.kind)) return undefined
+  if (!["hero", "item", "enchantment", "arcana", "spell", "term"].includes(entity.kind)) return undefined
   return `/?${entity.kind}=${id}${language ? `&locale=${encodeURIComponent(language)}` : ""}`
 }
 
@@ -212,7 +226,7 @@ export function createEntityIndex(
       !entry ||
       typeof entry.id !== "string" ||
       !identifier.test(entry.id) ||
-      !["hero", "item", "term"].includes(entry.kind) ||
+      !["hero", "item", "enchantment", "arcana", "spell", "term"].includes(entry.kind) ||
       !Array.isArray(entry.translations)
     )
       continue
@@ -237,7 +251,7 @@ export function createEntityIndex(
     if (!translation) continue
     const match = { entity, actualLocale: translation.locale }
     byId.set(`${entity.kind}:${entity.id}`, match)
-    if (entity.autoMatch === false || (entity.kind === "item" && entity.autoMatch !== true)) continue
+    if (entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)) continue
     for (const alias of [translation.name, ...translation.aliases.slice(0, 20)]) {
       const name = fold(alias.trim(), accentInsensitive)
       if (!name || name.length > 200) continue
@@ -279,7 +293,7 @@ export function parseRichText(
   const recognized = new Set<string>()
   const tokens = Array.from(
     source.matchAll(
-      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|item|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
+      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|item|enchantment|arcana|spell|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
     ),
   )
   const pairs = new Map<number, number>()

@@ -47,9 +47,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
       root.render(
         <MemoryRouter
           key={String(translationMode)}
-          initialEntries={[
-            translationMode ? "/publishing/fixture-hero/translations?locale=en-US" : "/publishing/fixture-hero",
-          ]}
+          initialEntries={[translationMode ? "/hero/fixture-hero/translations?locale=en-US" : "/hero/fixture-hero"]}
         >
           <QueryClientProvider client={cache}>
             <PublishingWorkspace

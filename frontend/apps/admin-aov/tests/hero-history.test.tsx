@@ -9,10 +9,12 @@ import { createHeroFixture, fixturePreviousRevision } from "./fixtures/hero-work
 import type { Revision } from "../src/features/publishing/types"
 
 test("hero history distinguishes baseline from changes and preserves the selected comparison", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/fixture-hero" })
+  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero" })
   const fixture = createHeroFixture(false, true)
   const unexpected: string[] = []
   const fetcher: typeof fetch = async (input, init) => {
+    if (String(input).includes("/admin/items?"))
+      return Response.json({ items: [], page: 0, size: 100, totalElements: 0 })
     try {
       return await fixture.fetcher(input, init)
     } catch (failure) {

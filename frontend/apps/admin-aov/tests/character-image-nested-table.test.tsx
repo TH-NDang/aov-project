@@ -243,7 +243,7 @@ test("full-width hero groups load on scroll, keep every candidate and separate e
     assert.match(heroTable.textContent!, /airi-portrait-2\.png/)
     assert.match(skinTable.textContent!, /skin-portrait-2\.png/)
     assert.match(skinTable.textContent!, /Chưa chọn ảnh chính/)
-    assert.equal(document.querySelectorAll('a[href^="/publishing/"]').length, 0)
+    assert.equal(document.querySelectorAll('a[href^="/hero/"]').length, 0)
     await click(document.querySelector('[aria-label="Sao chép mã trang phục skin-a"]'))
     assert.deepEqual(copied, ["airi", "skin-a"])
     assert.equal(document.querySelector('[role="dialog"]'), null)

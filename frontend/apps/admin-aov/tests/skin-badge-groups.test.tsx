@@ -351,16 +351,14 @@ test("badge accordions page independently, retain loaded rows when collapsed and
     assert.equal(calls.filter((path) => path.startsWith("/admin/skin-badges?")).length, count)
     await click(document.querySelector(`[aria-label="Xem trang phục dùng nhãn ${badge.code}"]`))
     await waitFor(() => !!document.querySelector('button[aria-label="Xem trang phục Mặc định"]'))
-    assert.equal(document.querySelector('a[href^="/publishing/"]'), null)
+    assert.equal(document.querySelector('a[href^="/hero/"]'), null)
     const location = document.querySelector("[data-location]")?.textContent
     await click(document.querySelector('button[aria-label="Xem trang phục Mặc định"]'))
     await waitFor(() => !!document.querySelector('[role="dialog"]'))
     assert.equal(document.querySelector("[data-location]")?.textContent, location)
     await waitFor(
       () =>
-        !!document.querySelector(
-          `a[href="/publishing/${fixtureRevision.heroId}?revision=${fixtureRevision.id}&tab=skins"]`,
-        ),
+        !!document.querySelector(`a[href="/hero/${fixtureRevision.heroId}?revision=${fixtureRevision.id}&tab=skins"]`),
     )
     await render(<BadgesPage request={request} />, "/hero/media?tab=badges&q=AIC")
     await waitFor(() => !!document.querySelector('[aria-label="Xem trang phục dùng nhãn aic"]'))
