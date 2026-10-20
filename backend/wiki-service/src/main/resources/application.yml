@@ -5,6 +5,18 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  data:
+    redis:
+      repositories:
+        enabled: false
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      username: ${REDIS_USERNAME:}
+      password: ${REDIS_PASSWORD:}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:200ms}
+      timeout: ${REDIS_TIMEOUT:200ms}
+      ssl:
+        enabled: ${REDIS_SSL:false}
   jpa:
     open-in-view: false
     hibernate:
@@ -33,6 +45,10 @@ server:
   port: ${PORT:8080}
 
 management:
+  health:
+    # The cache is optional; losing Redis must not make the database-backed API unready.
+    redis:
+      enabled: false
   endpoints:
     web:
       exposure:
@@ -40,6 +56,13 @@ management:
 
 
 wiki:
+  read-model-cache:
+    enabled: ${READ_MODEL_CACHE_ENABLED:false}
+    prefix: ${READ_MODEL_CACHE_PREFIX:wiki:read-model:v1}
+    public-ttl: ${READ_MODEL_CACHE_PUBLIC_TTL:2m}
+    admin-ttl: ${READ_MODEL_CACHE_ADMIN_TTL:30s}
+    retry-delay: ${READ_MODEL_CACHE_RETRY_DELAY:5s}
+    max-value-bytes: ${READ_MODEL_CACHE_MAX_VALUE_BYTES:8388608}
   user:
     profile-defaults:
       locale: ${USER_DEFAULT_LOCALE:vi-VN}

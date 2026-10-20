@@ -1,6 +1,8 @@
 package com.wikiaov.terminology.internal.web;
 import com.wikiaov.platform.*;
+import com.wikiaov.terminology.internal.application.response.AdminReferenceCatalogView;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
+import com.wikiaov.terminology.internal.application.service.AdminReferenceCatalog;
 import com.wikiaov.terminology.internal.application.service.PublicReferenceCatalog;
 import com.wikiaov.terminology.internal.application.service.ReferenceCatalog;
 import com.wikiaov.terminology.internal.web.request.SaveReferenceSettings;
@@ -10,6 +12,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
@@ -20,11 +23,22 @@ import tools.jackson.databind.json.JsonMapper;
 public class ReferenceController {
     private final ReferenceCatalog catalog;
     private final PublicReferenceCatalog references;
+    private final AdminReferenceCatalog adminReferences;
     private final JsonMapper json;
-    public ReferenceController(ReferenceCatalog catalog, PublicReferenceCatalog references, JsonMapper json) {
+    private final ReadModelCache cache;
+    public ReferenceController(ReferenceCatalog catalog, PublicReferenceCatalog references,
+            AdminReferenceCatalog adminReferences, JsonMapper json, ReadModelCache cache) {
         this.catalog = catalog;
         this.references = references;
+        this.adminReferences = adminReferences;
         this.json = json;
+        this.cache = cache;
+    }
+    @GetMapping(path = "/admin/reference-catalog", version = "1")
+    AdminReferenceCatalogView adminReferences(@RequestParam(required = false) UUID rulesetId,
+            HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("rulesetId"));
+        return adminReferences.read(rulesetId);
     }
     @GetMapping(path = "/reference-catalog", version = "1")
     ResponseEntity<ReferenceSettingsView> references(@RequestParam(defaultValue = "VN") String region,
@@ -35,7 +49,8 @@ public class ReferenceController {
     @GetMapping(path = "/reference-settings", version = "1")
     ResponseEntity<ReferenceSettingsView> publicSettings(HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of());
-        return cached(catalog.readPublic(), web);
+        return cached(cache.read(ReadModelCache.Area.PUBLIC_TERMS, "all", ReferenceSettingsView.class,
+                catalog::readPublic), web);
     }
     @GetMapping(path = "/admin/reference-settings", version = "1")
     ReferenceSettingsView adminSettings(HttpServletRequest request) {

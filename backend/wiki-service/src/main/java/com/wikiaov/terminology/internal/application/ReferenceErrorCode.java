@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 
 public enum ReferenceErrorCode implements ApiErrorCode {
     REFERENCE_INVALID_SETTINGS(HttpStatus.UNPROCESSABLE_ENTITY),
+    REFERENCE_INVALID_LOCALE(HttpStatus.UNPROCESSABLE_ENTITY),
     REFERENCE_VERSION_CONFLICT(HttpStatus.CONFLICT);
 
     private final HttpStatus status;

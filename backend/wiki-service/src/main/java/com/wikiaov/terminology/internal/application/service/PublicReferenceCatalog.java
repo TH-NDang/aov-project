@@ -1,58 +1,45 @@
 package com.wikiaov.terminology.internal.application.service;
-import com.wikiaov.terminology.PublicReferenceProvider;
+import com.wikiaov.patch.GameplayContexts;
+import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.ReadModelCache;
+import com.wikiaov.terminology.internal.application.ReferenceErrorCode;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
-import com.wikiaov.terminology.internal.domain.ReferenceSettings;
-import com.wikiaov.terminology.internal.domain.ReferenceSettings.*;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.time.Clock;
+import java.util.IllformedLocaleException;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PublicReferenceCatalog {
-    private final ReferenceCatalog settings;
-    private final List<PublicReferenceProvider> providers;
-    public PublicReferenceCatalog(ReferenceCatalog settings, List<PublicReferenceProvider> providers) {
-        this.settings = settings;
-        this.providers = providers;
+    private final PublicReferenceCatalogLoader loader;
+    private final GameplayContexts contexts;
+    private final ReadModelCache cache;
+    private final Clock clock;
+    public PublicReferenceCatalog(PublicReferenceCatalogLoader loader, GameplayContexts contexts,
+            ReadModelCache cache, Clock clock) {
+        this.loader = loader;
+        this.contexts = contexts;
+        this.cache = cache;
+        this.clock = clock;
     }
     public ReferenceSettingsView read(String region, String locale) {
-        var document = settings.readCatalogConfiguration();
-        var config = document.settings();
-        var entries = new LinkedHashMap<String, Entry>();
-        for (var e : config.entities())
-            if (e.kind().equals("term"))
-                entries.put("term:" + e.id(), e);
-        for (var provider : providers)
-            for (var candidate : provider.references(region, locale)) {
-                String id = candidate.id().toString();
-                entries.put(candidate.kind() + ":" + id, new Entry(id, candidate.kind(),
-                        List.of(new Translation(candidate.locale(), candidate.name(), List.of(),
-                                candidate.description())),
-                        candidate.icon(), candidate.kind().equals("hero") || candidate.kind().equals("term"), null,
-                        destination(candidate.kind(), id, region, locale)));
-            }
-        for (var custom : config.entities()) {
-            String key = custom.kind() + ":" + custom.id();
-            var original = entries.get(key);
-            if (original == null || custom.kind().equals("term"))
-                continue;
-            var copies = new LinkedHashMap<String, Translation>();
-            original.translations().forEach(t -> copies.put(t.locale().toLowerCase(Locale.ROOT), t));
-            custom.translations().forEach(t -> copies.put(t.locale().toLowerCase(Locale.ROOT), t));
-            entries.put(key, new Entry(custom.id(), custom.kind(), List.copyOf(copies.values()),
-                    custom.icon() == null ? original.icon() : custom.icon(),
-                    custom.autoMatch() == null ? original.autoMatch() : custom.autoMatch(), custom.display(),
-                    custom.destinations() != null && custom.destinations().wiki() != null
-                            ? custom.destinations()
-                            : original.destinations()));
-        }
-        return new ReferenceSettingsView(document.version(), new ReferenceSettings(1, config.autoRecognize(),
-                config.fallbackLocale(), List.copyOf(entries.values())));
+        validateLocale(locale);
+        var at = clock.instant();
+        var gameplay = contexts.resolve(region, at);
+        String key = region + ":" + locale + ":" + gameplay.rulesetId() + ":" + gameplay.patchVariantId();
+        return cache.read(ReadModelCache.Area.PUBLIC_REFERENCES, key, ReferenceSettingsView.class,
+                () -> loader.read(gameplay, at, region, locale));
     }
-    private Destinations destination(String kind, String id, String region, String locale) {
-        return new Destinations(null, "/?" + kind + "=" + id + "&region="
-                + URLEncoder.encode(region, StandardCharsets.UTF_8) + "&locale="
-                + URLEncoder.encode(locale, StandardCharsets.UTF_8));
+
+    private static void validateLocale(String value) {
+        try {
+            if (value == null || value.length() > 64)
+                throw new IllformedLocaleException();
+            var locale = new Locale.Builder().setLanguageTag(value).build();
+            if (locale.getLanguage().isEmpty() || !locale.toLanguageTag().equals(value))
+                throw new IllformedLocaleException();
+        } catch (IllformedLocaleException error) {
+            throw new ApiException(ReferenceErrorCode.REFERENCE_INVALID_LOCALE, "Use a canonical BCP 47 locale.");
+        }
     }
 }

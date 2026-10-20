@@ -2,6 +2,8 @@ package com.wikiaov.media.internal.persistence;
 
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.internal.persistence.entity.MediaAsset;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -14,6 +16,8 @@ import org.springframework.data.repository.Repository;
 public interface MediaAssetRepository extends Repository<MediaAsset, UUID> {
 
     Optional<MediaAsset> findById(UUID id);
+
+    List<MediaAsset> findByIdIn(Collection<UUID> ids);
 
     MediaAsset save(MediaAsset asset);
 

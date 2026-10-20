@@ -3,6 +3,7 @@ package com.wikiaov.patch.internal.application.service;
 import com.wikiaov.patch.*;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.application.RegionErrorCode;
+import com.wikiaov.patch.internal.persistence.GameplayRulesetRepository;
 import com.wikiaov.patch.internal.persistence.PatchStore;
 import com.wikiaov.patch.internal.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.persistence.RankedSeasonRepository;
@@ -22,10 +23,13 @@ public class ResolveGameplayContext implements GameplayContexts {
     private final PatchStore store;
     private final PatchVariantRepository variants;
     private final RankedSeasonRepository seasons;
-    public ResolveGameplayContext(PatchStore store, PatchVariantRepository variants, RankedSeasonRepository seasons) {
+    private final GameplayRulesetRepository rulesets;
+    public ResolveGameplayContext(PatchStore store, PatchVariantRepository variants, RankedSeasonRepository seasons,
+            GameplayRulesetRepository rulesets) {
         this.store = store;
         this.variants = variants;
         this.seasons = seasons;
+        this.rulesets = rulesets;
     }
 
     public GameplayContext resolve(String region, Instant at) {
@@ -81,6 +85,14 @@ public class ResolveGameplayContext implements GameplayContexts {
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The season does not exist.");
         return (seasonId == null ? variants.findAll() : variants.findBySeasonId(seasonId)).stream()
                 .map(this::variantView).toList();
+    }
+
+    public List<RulesetReference> rulesets() {
+        return rulesets.activeReferences();
+    }
+
+    public List<PatchVariantReference> rulesetVariants(UUID rulesetId) {
+        return variants.referencesByRuleset(rulesetId);
     }
 
     private PatchVariantReference variantView(PatchVariant variant) {

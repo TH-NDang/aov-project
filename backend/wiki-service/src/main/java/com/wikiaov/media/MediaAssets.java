@@ -1,5 +1,7 @@
 package com.wikiaov.media;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -8,4 +10,10 @@ public interface MediaAssets {
 
     /** Returns the asset, or empty if it does not exist. */
     Optional<MediaAssetReference> find(UUID assetId);
+
+    /**
+     * Returns all existing assets by ID in a bounded number of queries. Missing IDs are omitted; lifecycle
+     * and current-version semantics match {@link #find(UUID)}. Callers must still check usability.
+     */
+    Map<UUID, MediaAssetReference> findAll(Collection<UUID> assetIds);
 }
