@@ -39,6 +39,7 @@ export interface HeroComparison {
 export const heroPreviewKey = (heroId: string, revisionId: string) =>
   ["publishing-preview", heroId, revisionId] as const
 export interface HeroCatalogQuery {
+  includeUnchanged?: string
   q?: string
   seasonId?: string
   patchVariantId?: string
@@ -57,6 +58,7 @@ export const heroCatalogKey = (query: HeroCatalogQuery) =>
       rulesetId: query.rulesetId ?? "",
       locale: query.locale ?? "vi-VN",
       sort: query.sort ?? "code",
+      includeUnchanged: query.includeUnchanged ?? "false",
     },
   ] as const
 /** Translate the API's camelCase section keys at the boundary, keeping editor keys internal. */

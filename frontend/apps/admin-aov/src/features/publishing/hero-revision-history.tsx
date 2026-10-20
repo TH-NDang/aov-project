@@ -1,3 +1,4 @@
+import { HeroOverallAssessment, type HeroAssessment } from "./hero-overall-assessment"
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowRight, ArrowUpRight, ChevronDown, GitCompareArrows, History, Info, RotateCw } from "lucide-react"
@@ -29,7 +30,7 @@ const causeNames: Record<string, string> = {
   OTHER: "Khác",
 }
 const stateNames = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
-interface ChangeSet {
+interface ChangeSet extends HeroAssessment {
   heroId: string
   fromHeroRevisionId: string | null
   toHeroRevisionId: string
@@ -204,6 +205,9 @@ function RevisionHistoryContent({
           </div>
         ) : (
           <section className="space-y-4" aria-label="Thay đổi đã gom theo kỹ năng">
+            {recorded && (
+              <HeroOverallAssessment key={`${recorded.id}-${recorded.assessmentVersion}`} change={recorded} />
+            )}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 {skills.length > 0 && <Badge variant="secondary">{skills.length} kỹ năng</Badge>}

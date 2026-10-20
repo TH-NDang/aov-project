@@ -76,7 +76,7 @@ export function ImportUploadRecovery({
         updateTask({
           id: "hero-import",
           title: "Import tướng",
-          path: "/publishing/import",
+          path: "/hero/import",
           status: "running",
           completed,
           total,
@@ -89,7 +89,7 @@ export function ImportUploadRecovery({
       updateTask({
         id: "hero-import",
         title: "Import tướng",
-        path: "/publishing/import",
+        path: "/hero/import",
         status: "completed",
         completed: 1,
         total: 1,
@@ -101,7 +101,7 @@ export function ImportUploadRecovery({
       updateTask({
         id: "hero-import",
         title: "Import tướng",
-        path: "/publishing/import",
+        path: "/hero/import",
         status: "error",
         completed: 0,
         total: 1,

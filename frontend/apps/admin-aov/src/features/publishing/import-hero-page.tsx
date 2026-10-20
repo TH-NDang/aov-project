@@ -30,7 +30,7 @@ export function ImportHeroWorkspace() {
         status: activity.status,
         id: "hero-import",
         title: "Import tướng",
-        path: "/publishing/import",
+        path: "/hero/import",
       })
     },
     [updateTask],
@@ -41,7 +41,7 @@ export function ImportHeroWorkspace() {
         title="Import tướng"
         actions={
           <Button asChild variant="outline">
-            <Link to="/publishing">
+            <Link to="/hero">
               <ArrowLeft className="size-4" />
               Danh sách tướng
             </Link>

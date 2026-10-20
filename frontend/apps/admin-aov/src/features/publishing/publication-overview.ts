@@ -10,11 +10,12 @@ export type Variant = components["schemas"]["PublicationVariant"]
 export type Release = components["schemas"]["PublicationRelease"]
 export type PublicationOverview = components["schemas"]["PublicationOverview"]
 export const overviewKey = ["publication-overview"] as const
-export function usePublicationOverview() {
+export function usePublicationOverview(enabled = true) {
   return useQuery({
     queryKey: overviewKey,
     queryFn: () => backendRequest<PublicationOverview>("/admin/publication-overview"),
     refetchInterval: 60000,
+    enabled,
   })
 }
 function useContentProfile() {

@@ -47,12 +47,28 @@ function dateDraft(initial?: string | null): DateDraft {
   }
 }
 
-export function SharedPatchSetup({ onDone }: { onDone: () => void }) {
+export function SharedPatchSetup({
+  onDone,
+  initialSeasonId = "",
+  initialRulesetId = "",
+}: {
+  onDone: () => void
+  initialSeasonId?: string
+  initialRulesetId?: string
+}) {
   const overview = usePublicationOverview()
   const cache = useQueryClient()
   const { form, draft } = useDraftForm({
     form: "patch:create",
-    initialValue: { seasonId: "", rulesetId: "", locale: "vi-VN", before: "", code: "", title: "", summary: "" },
+    initialValue: {
+      seasonId: initialSeasonId,
+      rulesetId: initialRulesetId,
+      locale: "vi-VN",
+      before: "",
+      code: "",
+      title: "",
+      summary: "",
+    },
     schema: patchDraftSchema,
   })
   const seasonId = form.watch("seasonId")

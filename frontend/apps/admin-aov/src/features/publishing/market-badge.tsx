@@ -6,23 +6,30 @@ export function MarketBadge({
   name,
   detail,
   onOpen,
+  showName = false,
 }: {
   code: string
   name: string
   detail?: string
   onOpen?: () => void
+  showName?: boolean
 }) {
+  const displayCode = code.trim().toUpperCase()
   return (
     <span className="group inline-flex items-center gap-2" title={[name, detail].filter(Boolean).join(" · ")}>
       <span className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-xs">
-        {flags.has(code) ? (
-          <img src={`/images/flags/${code.toLowerCase()}.svg`} alt="" className="h-3.5 w-5 rounded-sm object-cover" />
+        {flags.has(displayCode) ? (
+          <img
+            src={`/images/flags/${displayCode.toLowerCase()}.svg`}
+            alt=""
+            className="h-3.5 w-5 rounded-sm object-cover"
+          />
         ) : (
           <Globe className="size-3.5" />
         )}{" "}
-        {code}
+        {displayCode}
       </span>
-      {onOpen && <span className="text-sm">{name}</span>}
+      {(onOpen || showName) && <span className="text-sm">{name}</span>}
       {onOpen && (
         <Button
           type="button"

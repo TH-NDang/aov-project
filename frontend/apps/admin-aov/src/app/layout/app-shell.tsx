@@ -15,7 +15,7 @@ function readSidebarCookie(): boolean {
 /** Content on the left, navigation sidebar docked on the right edge. */
 export function AppShell() {
   const { enabled } = useHotkeys()
-  const importing = useLocation().pathname === "/publishing/import"
+  const importing = useLocation().pathname === "/hero/import"
   return (
     <BackgroundTasksProvider>
       <PageTabsProvider>

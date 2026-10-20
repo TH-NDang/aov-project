@@ -10,10 +10,18 @@ export function CatalogContext({
   data,
   value,
   onChange,
+  filteredDescription,
+  unfilteredDescription,
+  seasonLabel = "Mùa có thay đổi",
+  patchLabel = "Patch có thay đổi",
 }: {
   data: PublicationOverview
   value: CatalogFilter
   onChange: (filter: CatalogFilter) => void
+  filteredDescription?: string
+  unfilteredDescription?: string
+  seasonLabel?: string
+  patchLabel?: string
 }) {
   const allowed = value.seasonId
     ? new Set(data.variants.filter((v) => v.seasonId === value.seasonId).map((v) => v.id))
@@ -27,10 +35,10 @@ export function CatalogContext({
       <label className="grid gap-2 text-sm">
         <span className="flex items-center gap-2">
           <CalendarDays className="size-4 text-muted-foreground" />
-          Mùa có thay đổi
+          {seasonLabel}
         </span>
         <select
-          aria-label="Mùa có thay đổi"
+          aria-label={seasonLabel}
           className={control}
           value={value.seasonId}
           onChange={(e) => onChange({ seasonId: e.target.value, variantId: "" })}
@@ -46,10 +54,10 @@ export function CatalogContext({
       <label className="grid gap-2 text-sm">
         <span className="flex items-center gap-2">
           <GitCompareArrows className="size-4 text-muted-foreground" />
-          Patch có thay đổi
+          {patchLabel}
         </span>
         <select
-          aria-label="Patch có thay đổi"
+          aria-label={patchLabel}
           className={control}
           value={value.variantId}
           onChange={(e) => onChange({ ...value, variantId: e.target.value })}
@@ -81,8 +89,9 @@ export function CatalogContext({
       </Button>
       <p role="status" className="text-xs leading-5 text-muted-foreground sm:col-span-3">
         {filtered
-          ? "Chỉ hiển thị tướng có thay đổi gameplay đã ghi nhận trong mùa hoặc patch đang chọn."
-          : "Hiển thị toàn bộ tướng và lần cập nhật gameplay gần nhất đã ghi nhận."}
+          ? (filteredDescription ??
+            "Chỉ hiển thị tướng có thay đổi gameplay đã ghi nhận trong mùa hoặc patch đang chọn.")
+          : (unfilteredDescription ?? "Hiển thị toàn bộ tướng và lần cập nhật gameplay gần nhất đã ghi nhận.")}
       </p>
     </section>
   )

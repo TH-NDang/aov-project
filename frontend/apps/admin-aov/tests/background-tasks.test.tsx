@@ -104,7 +104,7 @@ test("server dismissals survive fresh clients and reconcile failures without hid
         </MemoryRouter>,
       ),
     )
-  const count = () => dom!.window.document.querySelectorAll('li > a[href="/publishing/import"]').length
+  const count = () => dom!.window.document.querySelectorAll('li > a[href="/hero/import"]').length
   const button = () => dom!.window.document.querySelector<HTMLButtonElement>("li > button[aria-label]")
   const waitFor = async (condition: () => boolean) => {
     for (let attempt = 0; attempt < 100 && !condition(); attempt++) {
@@ -255,7 +255,7 @@ test("background work survives route exit and returns with progress and result i
           const task = {
             id: "import",
             title: "Import",
-            path: "/publishing/import",
+            path: "/hero/import",
             description: "Saving",
             completed: 0,
             total: 2,
@@ -278,7 +278,7 @@ test("background work survives route exit and returns with progress and result i
         <button id="leave" onClick={() => navigate("/profile")}>
           Leave
         </button>
-        <button id="return" onClick={() => navigate("/publishing/import")}>
+        <button id="return" onClick={() => navigate("/hero/import")}>
           Return
         </button>
         <output>{tasks.map((task) => `${task.status}:${task.completed}/${task.total}`).join()}</output>
@@ -294,10 +294,10 @@ test("background work survives route exit and returns with progress and result i
   try {
     await act(async () => {
       root.render(
-        <MemoryRouter initialEntries={["/publishing/import"]}>
+        <MemoryRouter initialEntries={["/hero/import"]}>
           <BackgroundTasksProvider>
             <Controls />
-            <PersistentWorkspace path="/publishing/import">
+            <PersistentWorkspace path="/hero/import">
               <Runner />
             </PersistentWorkspace>
           </BackgroundTasksProvider>

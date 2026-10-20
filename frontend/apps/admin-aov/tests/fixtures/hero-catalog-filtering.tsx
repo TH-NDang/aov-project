@@ -45,7 +45,7 @@ document.documentElement.classList.toggle("dark", new URLSearchParams(location.s
 const { verifySession } = await import("../../src/app/auth/session")
 await verifySession()
 const { PublishingPage } = await import("../../src/features/publishing/publishing-page")
-const seasonPath = `/publishing?season=${id("season-new")}`
+const seasonPath = `/hero?season=${id("season-new")}`
 const patchPath = `${seasonPath}&patch=${id("patch-current")}`
 
 createRoot(document.getElementById("root")!).render(
@@ -57,7 +57,7 @@ createRoot(document.getElementById("root")!).render(
           className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-3 text-xs"
         >
           <strong>Dữ liệu kiểm thử · không ghi dữ liệu thật</strong>
-          <Link className="underline underline-offset-4" to="/publishing">
+          <Link className="underline underline-offset-4" to="/hero">
             Tất cả tướng
           </Link>
           <Link className="underline underline-offset-4" to={seasonPath}>
@@ -69,9 +69,9 @@ createRoot(document.getElementById("root")!).render(
         </div>
         <div className="mx-auto max-w-7xl">
           <Routes>
-            <Route path="/publishing" element={<PublishingPage />} />
-            <Route path="/publishing/:heroId" element={<PublishingPage />} />
-            <Route path="/publishing/:heroId/translations" element={<PublishingPage translationMode />} />
+            <Route path="/hero" element={<PublishingPage />} />
+            <Route path="/hero/:heroId" element={<PublishingPage />} />
+            <Route path="/hero/:heroId/translations" element={<PublishingPage translationMode />} />
           </Routes>
         </div>
       </main>

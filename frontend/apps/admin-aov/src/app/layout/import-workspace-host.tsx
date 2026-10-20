@@ -6,7 +6,7 @@ const ImportWorkspace = lazy(() =>
 /** The import runner stays outside route tabs and Activity so navigation never tears it down. */
 export function ImportWorkspaceHost() {
   return (
-    <PersistentWorkspace path="/publishing/import">
+    <PersistentWorkspace path="/hero/import">
       <Suspense
         fallback={
           <p className="p-6" role="status">

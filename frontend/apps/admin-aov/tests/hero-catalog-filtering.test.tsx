@@ -81,7 +81,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
   const mount = async (filter = emptyFilter, ruleset = "", locale = "vi-VN") =>
     act(async () => {
       root.render(
-        <MemoryRouter initialEntries={["/publishing"]}>
+        <MemoryRouter initialEntries={["/hero"]}>
           <QueryClientProvider client={cache}>
             <HeroCatalog ruleset={ruleset} locale={locale} overview={catalogOverview} filter={filter} />
           </QueryClientProvider>
@@ -150,9 +150,9 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
         timeZone: "Asia/Tokyo",
       }).format(new Date("2026-10-15T01:02:03Z")),
     )
-    assert.match(cell("ad-current-change", /thay đổi/i).textContent ?? "", /current-patch/)
+    assert.match(cell("ad-current-change", /đánh giá/i).textContent ?? "", /current-patch/)
     assert.ok(
-      !/early-season-patch|unconfirmed-future-patch/.test(cell("ad-current-change", /thay đổi/i).textContent ?? ""),
+      !/early-season-patch|unconfirmed-future-patch/.test(cell("ad-current-change", /đánh giá/i).textContent ?? ""),
       "The all-heroes view labels the latest curated change instead of an unconfirmed draft",
     )
 

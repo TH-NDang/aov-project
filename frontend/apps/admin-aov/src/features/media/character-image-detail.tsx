@@ -33,7 +33,7 @@ import {
 
 export const imageRoleLabels: Record<MediaRole, string> = { HEAD: "Head", PORTRAIT: "Portrait", SPLASH: "Cover" }
 export function imageHeroHref(group: CharacterImageGroup, entry?: CharacterImageEntry) {
-  return `/publishing/${group.heroId}?revision=${group.revision.id}&tab=${entry?.ownerType === "SKIN" ? "skins" : "media"}`
+  return `/hero/${group.heroId}?revision=${group.revision.id}&tab=${entry?.ownerType === "SKIN" ? "skins" : "media"}`
 }
 export function CharacterImageDetail({
   selected,
@@ -224,7 +224,7 @@ export function CharacterMediaViewer({
             </Badge>
             <Button variant="outline" size="sm" asChild>
               <Link
-                to={`/publishing/${heroId}?revision=${revisionId}&tab=${fullPageTab ?? (entry.ownerType === "SKIN" ? "skins" : "media")}`}
+                to={`/hero/${heroId}?revision=${revisionId}&tab=${fullPageTab ?? (entry.ownerType === "SKIN" ? "skins" : "media")}`}
                 aria-disabled={busy}
                 onClick={(event) => {
                   if (busy || (dirty && !window.confirm("Ảnh vừa chọn chưa lưu. Mở trang tướng và bỏ lựa chọn này?"))) {

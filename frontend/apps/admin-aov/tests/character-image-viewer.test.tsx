@@ -255,13 +255,13 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
     await click(nav("Xem ảnh chính Cover của Trang phục A"))
     await waitFor(() => currentImage() === "/skin-cover.webp")
     assert.equal(reads, 1, "Owner and role switches reuse the same revision preview")
-    assert.equal(document.querySelectorAll('a[href^="/publishing/"]').length, 1)
+    assert.equal(document.querySelectorAll('a[href^="/hero/"]').length, 1)
     await click(button("Chọn / tải ảnh"))
     await waitFor(() => nav("Chọn ảnh fresh") !== null)
     await click(nav("Chọn ảnh fresh"))
     const fullPageClick = new dom.window.MouseEvent("click", { bubbles: true, cancelable: true, button: 0 })
     await act(async () => {
-      document.querySelector('a[href^="/publishing/"]')!.dispatchEvent(fullPageClick)
+      document.querySelector('a[href^="/hero/"]')!.dispatchEvent(fullPageClick)
     })
     assert.equal(
       fullPageClick.defaultPrevented,
@@ -312,9 +312,7 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
     assert.ok(document.querySelector('[role="dialog"]')?.classList.contains("bottom-0"))
     assert.equal(button("Lưu vào bản nháp"), undefined)
     assert.ok(
-      document.querySelector(
-        `a[href="/publishing/${fixtureRevision.heroId}?revision=${fixtureRevision.id}&tab=skins"]`,
-      ),
+      document.querySelector(`a[href="/hero/${fixtureRevision.heroId}?revision=${fixtureRevision.id}&tab=skins"]`),
     )
     await render(<SkinBadgeLabel code="ss" locale="en-US" request={request} />)
     await waitFor(() => document.body.textContent!.includes("Limited English"))

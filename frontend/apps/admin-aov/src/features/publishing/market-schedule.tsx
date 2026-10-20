@@ -7,6 +7,7 @@ import { Button } from "@aov/ui/components/button"
 import { errorMessage } from "@/lib/api/errors"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Badge } from "@aov/ui/components/badge"
+import { MarketBadge } from "./market-badge"
 import { useIsWide } from "@/hooks/use-media-query"
 import { dateLabel, phaseLabels, type PublicationOverview } from "./publication-overview"
 
@@ -34,26 +35,31 @@ export function PatchMarketSchedule({
           </tr>
         </thead>
         <tbody>
-          {releases.map((r) => (
-            <tr key={r.id} className="border-t">
-              <td className="px-4 py-3">{data.markets.find((m) => m.id === r.regionId)?.displayName}</td>
-              <td className="px-4 py-3">{dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}</td>
-              <td className="px-4 py-3">
-                {releaseEnd(r, data) ? dateLabel(releaseEnd(r, data), locale) : "Chưa có mốc kết thúc"}
-              </td>
-              <td className="px-4 py-3">
-                {phaseLabels[r.phase] ?? r.phase}
-                {r.phase === "AWAITING_CONFIRMATION" && <ConfirmRelease id={r.id} />}
-              </td>
-            </tr>
-          ))}
+          {releases.map((r) => {
+            const market = data.markets.find((m) => m.id === r.regionId)
+            return (
+              <tr key={r.id} className="border-t">
+                <td className="px-4 py-3">
+                  {market ? <MarketBadge code={market.code} name={market.displayName} showName /> : "—"}
+                </td>
+                <td className="px-4 py-3">{dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}</td>
+                <td className="px-4 py-3">
+                  {releaseEnd(r, data) ? dateLabel(releaseEnd(r, data), locale) : "Chưa có mốc kết thúc"}
+                </td>
+                <td className="px-4 py-3">
+                  {phaseLabels[r.phase] ?? r.phase}
+                  {r.phase === "AWAITING_CONFIRMATION" && <ConfirmRelease id={r.id} />}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
       {!releases.length && <p className="px-4 pb-4 text-sm text-muted-foreground">Chưa có lịch phát hành.</p>}
     </div>
   )
 }
-function ConfirmRelease({ id }: { id: string }) {
+export function ConfirmRelease({ id }: { id: string }) {
   const cache = useQueryClient()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -113,7 +119,7 @@ export function MarketSchedule({
         className={wide ? "w-[680px] sm:max-w-[680px]" : "max-h-[90dvh] rounded-t-2xl"}
       >
         <SheetHeader>
-          <SheetTitle>{market?.displayName}</SheetTitle>
+          <SheetTitle>{market && <MarketBadge code={market.code} name={market.displayName} showName />}</SheetTitle>
           <SheetDescription>
             Lịch mùa và patch tại thị trường này. Nội dung gameplay dùng chung với các thị trường cùng ruleset.
           </SheetDescription>

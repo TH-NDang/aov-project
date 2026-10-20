@@ -2,7 +2,8 @@ import { foldEntitySearch, type EntityReference } from "./entity-rich-text"
 
 export type TextSelection = { start: number; end: number }
 export type EditorSnapshot = TextSelection & { value: string }
-const tag = /<\/?(?:b|i|noauto|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|item|term):[a-zA-Z0-9._-]+)?)>/gi
+const tag =
+  /<\/?(?:b|i|noauto|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|item|enchantment|arcana|spell|term):[a-zA-Z0-9._-]+)?)>/gi
 
 export function safeSelection(value: string, selection: TextSelection) {
   const { start, end } = selection
@@ -64,7 +65,7 @@ export function insertReference(
   if (
     !safeSelection(value, selection) ||
     !/^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/.test(entity.id) ||
-    !["hero", "item", "term"].includes(entity.kind)
+    !["hero", "item", "enchantment", "arcana", "spell", "term"].includes(entity.kind)
   )
     return null
   const selected = value.slice(selection.start, selection.end)
@@ -78,10 +79,24 @@ export function insertReference(
 
 export function referenceChoices(entities: EntityReference[], locale: string, fallbackLocale: string, query: string) {
   const fold = (text: string) => foldEntitySearch(text).trim()
-  const needle = fold(query)
+  const source = fold(query).replace(/^@/, "")
+  const groups = [
+    ["thuật ngữ", "term"],
+    ["trang bị", "item"],
+    ["phù hiệu", "enchantment"],
+    ["ngọc bổ trợ", "arcana"],
+    ["bảng ngọc", "arcana"],
+    ["ngọc", "arcana"],
+    ["phụ trợ", "spell"],
+    ["bổ trợ", "spell"],
+    ["tướng", "hero"],
+  ] as const
+  const group = groups.find(([name]) => source === fold(name) || source.startsWith(fold(name) + " "))
+  const needle = group ? source.slice(fold(group[0]).length).trim() : source
   return entities
     .slice(0, 2000)
     .flatMap((entity) => {
+      if (group && entity.kind !== group[1]) return []
       const translation =
         entity.translations.find((text) => text.locale.toLowerCase() === locale.toLowerCase()) ??
         entity.translations.find((text) => text.locale.toLowerCase() === fallbackLocale.toLowerCase())

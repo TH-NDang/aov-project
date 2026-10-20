@@ -7,17 +7,42 @@ import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
 
-test("catalog lists backend heroes, resource items and glossary; filters, mentions and server round-trip work", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology" })
+test("catalog lists backend heroes, warehouse items and glossary; filters, mentions and server round-trip work", async () => {
+  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
+  Object.defineProperty(dom.window, "matchMedia", {
+    value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
+  })
   const fixture = createHeroFixture(true)
   const requests: string[] = []
   const fetcher: typeof fetch = async (input, init) => {
     const url = String(input)
     requests.push(url)
+    if (url.includes("/admin/items?"))
+      return Response.json({
+        items: [
+          {
+            id: "7c407f1b-cb6a-47ca-aeb8-7cc72753074d",
+            code: "qa-sword",
+            revision: { id: "item-draft", rulesetId: "fixture-rules" },
+            content: {
+              iconAssetId: null,
+              notes: null,
+              translations: [
+                { locale: "vi-VN", name: "Kiếm QA", description: "Trang bị tổng hợp cho QA." },
+                { locale: "en-US", name: "QA Sword", description: "Test equipment" },
+              ],
+            },
+          },
+        ],
+        page: 0,
+        size: 100,
+        totalElements: 1,
+      })
     if (url.endsWith("/admin/media/assets/fixture-head"))
       return Response.json({
         id: "fixture-head",
         currentVersionId: "head-v1",
+        currentUrl: "http://localhost:9000/head.png",
         versions: [{ id: "head-v1", url: "http://localhost:9000/head.png" }],
       })
     const response = await fixture.fetcher(input, init)
@@ -41,8 +66,18 @@ test("catalog lists backend heroes, resource items and glossary; filters, mentio
     document: dom.window.document,
     navigator: dom.window.navigator,
     HTMLElement: dom.window.HTMLElement,
+    Node: dom.window.Node,
+    NodeFilter: dom.window.NodeFilter,
+    Element: dom.window.Element,
+    HTMLInputElement: dom.window.HTMLInputElement,
+    MutationObserver: dom.window.MutationObserver,
+    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
+    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
     HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
     Event: dom.window.Event,
+    CustomEvent: dom.window.CustomEvent,
+    MouseEvent: dom.window.MouseEvent,
     fetch: fetcher,
     BroadcastChannel: undefined,
     IS_REACT_ACT_ENVIRONMENT: true,
@@ -93,20 +128,25 @@ test("catalog lists backend heroes, resource items and glossary; filters, mentio
         </QueryClientProvider>,
       ),
     )
-    await waitFor(() => document.querySelectorAll("tbody tr").length === 3)
+    await waitFor(() => document.querySelectorAll("tbody tr").length === 1)
+    await act(async () =>
+      button("Tham chiếu danh mục").dispatchEvent(new dom.window.MouseEvent("mousedown", { bubbles: true, button: 0 })),
+    )
     await waitFor(() => !!document.querySelector('img[src="http://localhost:9000/head.png"]'))
     assert.match(document.querySelector("table")!.textContent!, /Airi/)
     assert.match(document.querySelector("table")!.textContent!, /Kiếm QA/)
-    assert.match(document.querySelector("table")!.textContent!, /Sát thương chuẩn/)
+    assert.equal(document.querySelector("table")!.textContent!.includes("Sát thương chuẩn"), false)
+    assert.ok(requests.some((url) => url.includes("/admin/items?") && url.includes("rulesetId=fixture-rules")))
+    assert.equal(
+      requests.some((url) => url.includes("/data/trang-bi.json")),
+      false,
+    )
     const search = document.querySelector<HTMLInputElement>('[aria-label="Tìm danh mục"]')!
-    await fill(search, "sat thuong")
+    await fill(search, "kiem")
     assert.equal(document.querySelectorAll("tbody tr").length, 1)
     await fill(search, "")
-    const filter = document.querySelector<HTMLSelectElement>('[aria-label="Lọc loại tham chiếu"]')!
-    await act(async () => {
-      filter.value = "item"
-      filter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-    })
+    assert.equal(document.querySelector('[aria-label="Lọc trạng thái tham chiếu"]'), null)
+    await act(async () => button("Trang bị").click())
     assert.equal(document.querySelectorAll("tbody tr").length, 1)
     assert.match(document.querySelector("table")!.textContent!, /Kiếm QA/)
     await act(async () => document.querySelector<HTMLButtonElement>("tbody button")!.click())
@@ -115,10 +155,10 @@ test("catalog lists backend heroes, resource items and glossary; filters, mentio
       .querySelector<HTMLInputElement>('input[type="checkbox"]')!
     assert.equal(autoItem.checked, false)
     assert.ok(document.body.textContent?.includes("Trang bị mặc định chỉ liên kết khi chọn @"))
-    await act(async () => {
-      filter.value = "term"
-      filter.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-    })
+    await act(async () => button("Close").click())
+    await act(async () =>
+      button("Thuật ngữ").dispatchEvent(new dom.window.MouseEvent("mousedown", { bubbles: true, button: 0 })),
+    )
     await act(async () => document.querySelector<HTMLButtonElement>("tbody button")!.click())
     const area = document.querySelector<HTMLTextAreaElement>('[data-slot="entity-rich-text-editor"] textarea')!
     await fill(area, "@Airi")
@@ -127,13 +167,25 @@ test("catalog lists backend heroes, resource items and glossary; filters, mentio
       area.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })),
     )
     assert.equal(area.value, "<ref=hero:fixture-hero>Airi</ref>")
-    await act(async () => button("Lưu thiết lập").click())
-    await waitFor(() => !!document.body.textContent?.includes("Đã lưu trên máy chủ Vite."))
-    await act(async () => button("Tải lại").click())
+    await act(async () => button("Lưu thay đổi").click())
+    await waitFor(() => !!document.body.textContent?.includes("Đã lưu. Admin và wiki dùng chung thiết lập này."))
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tải lại thiết lập"]')!.click())
     assert.equal(area.value, "<ref=hero:fixture-hero>Airi</ref>")
-    const stored = await (await fixture.fetcher("/__storage/00000000-0000-4000-8000-000000000001")).json()
+    const stored = await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()
     assert.equal(stored.version, 2)
-    assert.equal(stored.rows[0].settings.entities[0].translations[0].description, area.value)
+    assert.equal(stored.settings.entities[0].translations[0].description, area.value)
+    await act(async () => button("Close").click())
+    await act(async () =>
+      button("Thử hiển thị").dispatchEvent(new dom.window.MouseEvent("mousedown", { bubbles: true, button: 0 })),
+    )
+    assert.ok(document.querySelector('[role="toolbar"][aria-label="Định dạng Nội dung thử"]'))
+    await act(async () => button("Ví dụ").click())
+    assert.match(
+      document.querySelector<HTMLTextAreaElement>('[data-slot="entity-rich-text-editor"] textarea')!.value,
+      /sát thương phép/,
+    )
+    assert.ok(document.body.textContent?.includes("Kết quả hiển thị"))
+    assert.equal(document.querySelector('[aria-label="Nguồn xem trước"]'), null)
   } finally {
     await act(async () => root.unmount())
     client.clear()

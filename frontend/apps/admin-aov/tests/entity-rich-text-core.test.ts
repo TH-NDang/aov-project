@@ -276,15 +276,12 @@ test("safe URLs reject script, credentials, protocol-relative and encoded bypass
 })
 
 test("route resolution separates application contexts and validates custom destinations", () => {
-  assert.equal(resolveEntityRoute(hero, "admin"), "/publishing/hero-1")
+  assert.equal(resolveEntityRoute(hero, "admin"), "/hero/hero-1")
   assert.equal(resolveEntityRoute(hero, "wiki", "vi-VN"), "/?hero=hero-1&locale=vi-VN")
   assert.equal(resolveEntityRoute({ ...hero, kind: "item" }, "admin"), "/items?item=hero-1")
   assert.equal(resolveEntityRoute(term, "admin"), "/terminology?term=term-1")
   assert.equal(resolveEntityRoute({ ...hero, destinations: { admin: "/safe" } }, "admin"), "/safe")
-  assert.equal(
-    resolveEntityRoute({ ...hero, destinations: { admin: "javascript:alert(1)" } }, "admin"),
-    "/publishing/hero-1",
-  )
+  assert.equal(resolveEntityRoute({ ...hero, destinations: { admin: "javascript:alert(1)" } }, "admin"), "/hero/hero-1")
   assert.equal(resolveEntityRoute({ ...hero, id: "../../secrets" }, "admin"), undefined)
 })
 

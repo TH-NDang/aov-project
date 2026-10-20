@@ -13,6 +13,7 @@ import {
   Shield,
   ShieldAlert,
   Swords,
+  Zap,
   type LucideIcon,
 } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
@@ -32,12 +33,15 @@ import {
 import { Progress } from "@aov/ui/components/progress"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Page, PageHeader } from "@/components/page-header"
-import { useArcanaStatus, useAudit, useEnchantments, useItemCatalog, useItemIssues } from "@/lib/queries"
+import { useAudit } from "@/lib/queries"
 import { formatNumber, formatRelative } from "@/lib/text"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { createPublishingApi } from "../publishing/publishing-api"
 import type { PageSlice } from "../publishing/types"
+import { useContentLocale } from "../publishing/publication-overview"
+import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/warehouse-api"
+import { warehouseText } from "../warehouse/warehouse-types"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -88,35 +92,60 @@ export function DashboardPage() {
     enabled: canReadHeroes,
     staleTime: 30000,
   })
-  const catalog = useItemCatalog()
-  const issues = useItemIssues()
-  const enchantments = useEnchantments()
-  const arcana = useArcanaStatus()
+  const locale = useContentLocale()
+  const rulesets = useQuery({
+    queryKey: ["publishing-rulesets"],
+    queryFn: publishing.rulesets,
+    enabled: canReadHeroes,
+    staleTime: 60000,
+  })
+  const ruleset = rulesets.data?.find((entry) => entry.code === "aov-standard") ?? rulesets.data?.[0]
+  const rulesetId = canReadHeroes ? (ruleset?.id ?? "") : ""
+  const catalog = useWarehouseCatalog("items", rulesetId, locale)
+  const enchantments = useWarehouseCatalog("enchantments", rulesetId, locale)
+  const arcana = useWarehouseCatalog("arcana", rulesetId, locale)
+  const spells = useWarehouseCatalog("spells", rulesetId, locale)
+  const categories = useQuery({
+    queryKey: warehouseKeys.metadata("items"),
+    queryFn: () => warehouseApi.metadata("items"),
+    enabled: canReadHeroes,
+    staleTime: 60000,
+  })
+  const branches = useQuery({
+    queryKey: warehouseKeys.metadata("enchantments"),
+    queryFn: () => warehouseApi.metadata("enchantments"),
+    enabled: canReadHeroes,
+    staleTime: 60000,
+  })
   const audit = useAudit()
 
   const itemStats = useMemo(() => {
-    const items = catalog.data?.items
+    const items = catalog.data
     if (!items) return undefined
-    const byCategory = (catalog.data?.categories ?? []).map((category) => {
-      const inCategory = items.filter((item) => item.category === category.name)
+    const byCategory = (categories.data ?? []).map((category) => {
+      const inCategory = items.filter((item) => item.content.categoryCode === category.code)
       return {
-        category: category.name,
+        category: warehouseText(category.translations, locale)?.name ?? category.code,
         count: inCategory.length,
-        tier1: inCategory.filter((item) => item.tier === 1).length,
-        tier2: inCategory.filter((item) => item.tier === 2).length,
-        tier3: inCategory.filter((item) => item.tier === 3).length,
+        tier1: inCategory.filter((item) => item.content.tier === 1).length,
+        tier2: inCategory.filter((item) => item.content.tier === 2).length,
+        tier3: inCategory.filter((item) => item.content.tier === 3).length,
       }
     })
     return {
       total: items.length,
-      settled: items.filter((item) => item.recipe.status !== "unverified").length,
-      unverified: items.filter((item) => item.recipe.status === "unverified").length,
-      placed: items.filter((item) =>
-        item.shopPositions.every((position) => position.row !== null && position.column !== null),
+      settled: items.filter((item) => item.content.recipeStatus !== "UNKNOWN").length,
+      unverified: items.filter((item) => item.content.recipeStatus === "UNKNOWN").length,
+      firstUnverified: items.find((item) => item.content.recipeStatus === "UNKNOWN"),
+      incomplete: items.filter((item) => item.missingFields?.length),
+      placed: items.filter(
+        (item) =>
+          item.content.shopPositions.length > 0 &&
+          item.content.shopPositions.every((position) => position.row !== null && position.column !== null),
       ).length,
       byCategory,
     }
-  }, [catalog.data])
+  }, [catalog.data, categories.data, locale])
 
   const stats: StatTile[] = [
     ...(canReadHeroes
@@ -126,7 +155,7 @@ export function DashboardPage() {
             value: heroes.data?.totalElements,
             hint: "Danh mục backend",
             icon: Swords,
-            to: "/publishing",
+            to: "/hero",
           },
           {
             label: "Ảnh đã lưu",
@@ -147,11 +176,19 @@ export function DashboardPage() {
     {
       label: "Trang bị",
       value: itemStats?.total,
-      hint: `Thu thập ${catalog.data?.collectedOn ?? "…"}`,
+      hint: ruleset?.code ?? "Danh mục backend",
       icon: Shield,
       to: "/items",
     },
-    { label: "Phù hiệu", value: enchantments.data?.length, hint: "4 hệ", icon: Hexagon, to: "/enchantments" },
+    {
+      label: "Phù hiệu",
+      value: enchantments.data?.length,
+      hint: `${branches.data?.length ?? "…"} hệ`,
+      icon: Hexagon,
+      to: "/enchantments",
+    },
+    { label: "Bảng ngọc", value: arcana.data?.length, hint: "Ngọc theo màu và cấp", icon: Gem, to: "/arcana" },
+    { label: "Phụ trợ", value: spells.data?.length, hint: "Khả dụng và trạng thái", icon: Zap, to: "/spells" },
   ]
 
   const coverage: CoverageRow[] = [
@@ -165,29 +202,48 @@ export function DashboardPage() {
 
   const todos: TodoRow[] = [
     {
-      title: "Trang bị cần kiểm tra",
-      description: "Lệch cấp, trùng hoặc thiếu vị trí so với Excel",
-      count: issues.data?.length ?? 0,
+      title: "Trang bị chưa hoàn thiện",
+      description: "Còn thiếu dữ liệu bắt buộc để xuất bản",
+      count: itemStats?.incomplete.length ?? 0,
       icon: ShieldAlert,
-      to: "/items?tab=review",
+      to: itemStats?.incomplete[0] ? `/items?tab=list&item=${itemStats.incomplete[0].id}` : "/items?tab=list",
     },
     {
       title: "Công thức chưa xác nhận",
       description: "Chưa đủ dữ liệu để chốt nguyên liệu",
       count: itemStats?.unverified ?? 0,
       icon: ScrollText,
-      to: "/items?recipe=unverified",
+      to: itemStats?.firstUnverified ? `/items?tab=list&item=${itemStats.firstUnverified.id}` : "/items?tab=list",
     },
-    ...(arcana.data && arcana.data.count === 0
-      ? [{ title: "Bảng ngọc chưa thu thập", description: arcana.data.note, count: 1, icon: Gem, to: "/arcana" }]
+    ...(arcana.data && arcana.data.length === 0
+      ? [
+          {
+            title: "Chưa có dữ liệu ngọc",
+            description: "Bộ quy tắc này chưa có ngọc trong backend",
+            count: 1,
+            icon: Gem,
+            to: "/arcana",
+          },
+        ]
       : []),
   ].filter((todo) => todo.count > 0)
 
   return (
     <Page>
       <PageHeader title="Bảng điều khiển" description="Tình trạng dữ liệu AOV Wiki và những việc cần xử lý." />
+      {(rulesets.isError ||
+        catalog.isError ||
+        enchantments.isError ||
+        arcana.isError ||
+        spells.isError ||
+        categories.isError ||
+        branches.isError) && (
+        <p role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
+          Chưa tải đầy đủ số liệu kho trang bị từ backend.
+        </p>
+      )}
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
         {stats.map((stat) => (
           <Link
             key={stat.label}
@@ -214,7 +270,7 @@ export function DashboardPage() {
         <Card className="xl:col-span-3">
           <CardHeader>
             <CardTitle>Việc cần xử lý</CardTitle>
-            <CardDescription>Bấm để mở đúng danh sách đã lọc.</CardDescription>
+            <CardDescription>Ưu tiên các mục thiếu dữ liệu và công thức chưa xác nhận.</CardDescription>
           </CardHeader>
           <CardContent>
             {todos.length ? (
@@ -242,8 +298,20 @@ export function DashboardPage() {
                   </div>
                 ))}
               </ItemGroup>
-            ) : (
+            ) : catalog.isPending ? (
               <Skeleton className="h-64 w-full" />
+            ) : catalog.isError ? (
+              <p className="py-6 text-sm text-muted-foreground">Chưa kiểm tra được dữ liệu trang bị.</p>
+            ) : (
+              <Empty className="p-6">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Shield />
+                  </EmptyMedia>
+                  <EmptyTitle>Không có mục cần xử lý</EmptyTitle>
+                  <EmptyDescription>Dữ liệu trang bị hiện có đã đủ các mục đang kiểm tra.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             )}
           </CardContent>
         </Card>

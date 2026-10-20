@@ -1,4 +1,5 @@
 import { createBrowserRouter, createMemoryRouter, Navigate, type RouteObject } from "react-router"
+import { LegacyHeroRedirect } from "./legacy-hero-redirect"
 import { AppShell } from "./layout/app-shell"
 import type { RouteHandle } from "./layout/site-header"
 import { AppLoading, RouteError } from "./route-error"
@@ -62,22 +63,27 @@ const routes: RouteObject[] = [
             }),
           },
           {
-            path: "publishing",
+            path: "publishing/*",
+            handle: { pageTab: false } satisfies RouteHandle,
+            element: <LegacyHeroRedirect />,
+          },
+          {
+            path: "hero",
             handle: title("Tướng"),
             lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
           },
           {
-            path: "publishing/import",
+            path: "hero/import",
             handle: title("Import tướng"),
             element: null,
           },
           {
-            path: "publishing/new",
+            path: "hero/new",
             handle: title("Tạo tướng"),
             lazy: async () => ({ Component: (await import("@/features/publishing/create-hero-page")).CreateHeroPage }),
           },
           {
-            path: "publishing/:heroId/translations",
+            path: "hero/:heroId/translations",
             handle: title("Biên dịch tướng"),
             lazy: async () => {
               const { PublishingPage } = await import("@/features/publishing/publishing-page")
@@ -85,24 +91,24 @@ const routes: RouteObject[] = [
             },
           },
           {
-            path: "publishing/:heroId",
+            path: "hero/:heroId",
             handle: title("Phiên bản tướng"),
             lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
           },
           {
             path: "heroes/*",
             handle: { pageTab: false } satisfies RouteHandle,
-            element: <Navigate to="/publishing" replace />,
+            element: <Navigate to="/hero" replace />,
           },
           {
             path: "reference/skins/*",
             handle: { pageTab: false } satisfies RouteHandle,
-            element: <Navigate to="/publishing" replace />,
+            element: <Navigate to="/hero" replace />,
           },
           {
             path: "skins/*",
             handle: { pageTab: false } satisfies RouteHandle,
-            element: <Navigate to="/publishing" replace />,
+            element: <Navigate to="/hero" replace />,
           },
           {
             path: "storage",
@@ -112,24 +118,26 @@ const routes: RouteObject[] = [
           {
             path: "items",
             handle: title("Trang bị"),
-            lazy: async () => ({ Component: (await import("@/features/items/items-page")).ItemsPage }),
+            lazy: async () => ({
+              Component: (await import("@/features/warehouse/backend-items-page")).BackendItemsPage,
+            }),
           },
           {
             path: "enchantments",
             handle: title("Phù hiệu"),
             lazy: async () => ({
-              Component: (await import("@/features/enchantments/enchantments-page")).EnchantmentsPage,
+              Component: (await import("@/features/warehouse/secondary-pages")).BackendEnchantmentsPage,
             }),
           },
           {
             path: "arcana",
             handle: title("Bảng ngọc"),
-            lazy: async () => ({ Component: (await import("@/features/placeholders/arcana-page")).ArcanaPage }),
+            lazy: async () => ({ Component: (await import("@/features/warehouse/secondary-pages")).BackendArcanaPage }),
           },
           {
             path: "spells",
             handle: title("Phụ trợ"),
-            lazy: async () => ({ Component: (await import("@/features/placeholders/spells-page")).SpellsPage }),
+            lazy: async () => ({ Component: (await import("@/features/warehouse/secondary-pages")).BackendSpellsPage }),
           },
           { path: "hero/media", handle: title("Không gian ảnh"), element: <MediaWorkspace /> },
           { path: "portraits", handle: { pageTab: false } satisfies RouteHandle, element: <LegacyMediaRedirect /> },

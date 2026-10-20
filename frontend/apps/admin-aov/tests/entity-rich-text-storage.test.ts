@@ -1,47 +1,32 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { defaultSettings, loadSettings, saveSettings } from "../src/features/terminology/settings-api"
-import type { StorageTable } from "../src/features/storage/storage-model"
+import type { ReferenceSettingsDocument } from "@aov/ui/lib/reference-settings"
 
-test("settings persist through versioned server storage; failures never report saved", async () => {
-  const original = globalThis.fetch
-  let stored: StorageTable | null = null
-  let writes = 0
-  globalThis.fetch = async (input, init) => {
-    if (init?.method === "POST") {
-      stored = {
-        id: "fixture-table",
-        name: "AOV rich text settings v1",
-        version: 1,
-        columns: [],
-        idColumn: null,
-        rows: [],
-        archived: false,
-      }
-      return Response.json(stored)
-    }
+test("shared backend settings preserve translations and reject stale saves or failed responses", async () => {
+  const channel = globalThis.BroadcastChannel
+  Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
+  const { createReferenceSettingsApi, defaultSettings } = await import("../src/features/terminology/settings-api")
+  Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: channel })
+  let stored: ReferenceSettingsDocument = { version: 1, settings: structuredClone(defaultSettings) }
+  const requests: string[] = []
+  const api = createReferenceSettingsApi(async <T>(path: string, init?: RequestInit): Promise<T> => {
+    requests.push(path)
     if (init?.method === "PUT") {
-      const value = JSON.parse(String(init.body)) as StorageTable
-      writes++
-      if (value.version !== stored?.version) return Response.json({ message: "Version conflict" }, { status: 409 })
-      stored = { ...value, version: value.version + 1 }
-      return Response.json(stored)
+      const input = JSON.parse(String(init.body))
+      if (input.expectedVersion !== stored.version) throw new Error("Version conflict")
+      stored = { version: stored.version + 1, settings: input.settings }
     }
-    return Response.json(String(input).endsWith("/__storage/") ? (stored ? [stored] : []) : stored)
-  }
-  try {
-    const empty = await loadSettings()
-    assert.equal(empty.table, null)
-    assert.equal(writes, 0)
-    const table = await saveSettings({ ...defaultSettings, autoRecognize: false }, null)
-    assert.equal(table.version, 2)
-    const loaded = await loadSettings()
-    assert.equal(loaded.settings.autoRecognize, false)
-    await saveSettings(defaultSettings, table)
-    await assert.rejects(saveSettings(defaultSettings, table), /Version conflict/)
-    globalThis.fetch = async () => new Response("unavailable", { status: 503 })
-    await assert.rejects(loadSettings(), /local dev or preview server/)
-  } finally {
-    globalThis.fetch = original
-  }
+    return structuredClone(stored) as T
+  })
+  const initial = await api.load()
+  const saved = await api.save({ ...initial.settings, autoRecognize: false }, initial.version)
+  assert.equal(saved.version, 2)
+  assert.equal((await api.load()).settings.autoRecognize, false)
+  assert.deepEqual(saved.settings.entities, defaultSettings.entities)
+  await assert.rejects(api.save(defaultSettings, initial.version), /Version conflict/)
+  assert.ok(requests.every((path) => path === "/admin/reference-settings"))
+  const broken = createReferenceSettingsApi(async () => {
+    throw new Error("unavailable")
+  })
+  await assert.rejects(broken.save(defaultSettings, 2), /unavailable/)
 })

@@ -75,10 +75,7 @@ test("curated change badges retain mixed categories and open an accessible summa
       ),
     )
     const trigger = document.querySelector<HTMLButtonElement>('button[aria-label^="Xem thay đổi gameplay"]')!
-    assert.match(
-      trigger.getAttribute("aria-label")!,
-      /Tăng sức mạnh, Giảm sức mạnh, Điều chỉnh, Làm lại, Sửa lỗi, Khác/,
-    )
+    assert.match(trigger.getAttribute("aria-label")!, /Tăng sức mạnh, Giảm sức mạnh, Cân bằng, Làm lại, Sửa lỗi, Khác/)
     assert.equal(trigger.querySelectorAll("[data-change-kind]").length, 3)
     assert.match(trigger.textContent!, /\+3/)
     assert.ok(!document.body.textContent!.includes("Tăng khả năng hồi phục"))

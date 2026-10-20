@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import type { Hero, Skin } from "@/lib/api/types"
 import { buildOwnerIndex } from "@/lib/domain/portraits"
-import { useHeroes, useItemIssues } from "@/lib/queries"
+import { useHeroes } from "@/lib/queries"
 
 export interface HeroIndex {
   heroes: Hero[]
@@ -39,13 +39,9 @@ export function useHeroIndex() {
   return { ...query, index }
 }
 
-/** Counts surfaced as badges in the navigation and on the dashboard. */
+const attentionCounts: { itemIssues?: number } = {}
+
+/** Keep optional navigation badge slots without loading retired resource reports. */
 export function useAttentionCounts() {
-  const issues = useItemIssues()
-  return useMemo(
-    () => ({
-      itemIssues: issues.data?.length,
-    }),
-    [issues.data],
-  )
+  return attentionCounts
 }

@@ -1,3 +1,4 @@
+import { CatalogChangeBadges } from "../warehouse/catalog-changes"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
@@ -56,6 +57,12 @@ export function HeroCatalog({
   const [search, setSearch] = useState(q)
   const searchRef = useRef<HTMLInputElement>(null)
   const timeZone = useContentTimeZone()
+  const showAll = params.get("show") === "all"
+  const reviewedVariants =
+    overview?.variants.filter(
+      (v) => (!filter.seasonId || v.seasonId === filter.seasonId) && (!filter.variantId || v.id === filter.variantId),
+    ) ?? []
+  const reviewed = reviewedVariants.length > 0 && reviewedVariants.every((v) => v.dataReviewState === "COMPLETE")
   const scoped = !!(filter.seasonId || filter.variantId)
   useEffect(() => setSearch(q), [q])
   useEffect(() => {
@@ -93,6 +100,7 @@ export function HeroCatalog({
   const sentinel = useRef<HTMLDivElement>(null)
   const query: HeroCatalogQuery = {
     q,
+    includeUnchanged: showAll ? "true" : "false",
     sort,
     locale,
     seasonId: filter.seasonId,
@@ -106,8 +114,8 @@ export function HeroCatalog({
     getNextPageParam: (last) => ((last.page + 1) * last.size < last.totalElements ? last.page + 1 : undefined),
   })
   const data = useMemo(
-    () => heroCatalogRows(heroes.data?.pages.flatMap((page) => page.items) ?? [], overview, filter, ruleset),
-    [heroes.data, overview, filter, ruleset],
+    () => heroCatalogRows(heroes.data?.pages.flatMap((page) => page.items) ?? [], overview, filter, ruleset, showAll),
+    [heroes.data, overview, filter, ruleset, showAll],
   )
   const columns = useMemo(
     () =>
@@ -140,7 +148,7 @@ export function HeroCatalog({
           id: "changes",
           header: () => (
             <span className="inline-flex items-center gap-1.5">
-              {scoped ? "Thay đổi trong phạm vi" : "Thay đổi gần nhất"}
+              {scoped ? "Đánh giá trong phạm vi" : "Đánh giá patch gần nhất"}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="size-6" aria-label="Xem chú giải loại thay đổi">
@@ -151,15 +159,38 @@ export function HeroCatalog({
                   <h3 className="font-semibold">Loại thay đổi gameplay</h3>
                   <ChangeKindBadges kinds={["BUFF", "NERF", "ADJUSTMENT", "REWORK", "FIX", "OTHER"]} maxVisible={6} />
                   <p className="text-xs leading-5 text-muted-foreground">
-                    Phân loại theo lịch sử đã biên tập. Một tướng có thể mang nhiều loại thay đổi trong cùng mùa.
+                    Đánh giá tổng thể được chọn riêng cho mỗi patch. Từng kỹ năng/chỉ số vẫn có nhãn tăng, giảm hoặc
+                    điều chỉnh độc lập.
                   </p>
                 </PopoverContent>
               </Popover>
             </span>
           ),
-          cell: ({ row }) => (
-            <HeroGameplayChanges hero={row.original} overview={overview} locale={locale} onOpen={openGameplayChange} />
-          ),
+          cell: ({ row }) =>
+            scoped && showAll && !row.original.changes.length ? (
+              <CatalogChangeBadges
+                kinds={[
+                  row.original.selectedRevision?.cause === "DATA_BASELINE" &&
+                  overview?.variants.some(
+                    (v) =>
+                      v.id === row.original.selectedRevision?.effectiveFromPatchVariantId &&
+                      (!filter.variantId || v.id === filter.variantId) &&
+                      (!filter.seasonId || v.seasonId === filter.seasonId),
+                  )
+                    ? "DATA_BASELINE"
+                    : reviewed
+                      ? "UNCHANGED"
+                      : "INHERITED",
+                ]}
+              />
+            ) : (
+              <HeroGameplayChanges
+                hero={row.original}
+                overview={overview}
+                locale={locale}
+                onOpen={openGameplayChange}
+              />
+            ),
         }),
         helper.display({
           id: "revision",
@@ -231,7 +262,19 @@ export function HeroCatalog({
           },
         }),
       ]),
-    [ruleset, overview, locale, openHero, openGameplayChange, scoped, timeZone],
+    [
+      ruleset,
+      overview,
+      locale,
+      openHero,
+      openGameplayChange,
+      scoped,
+      timeZone,
+      showAll,
+      reviewed,
+      filter.seasonId,
+      filter.variantId,
+    ],
   )
   const table = useTable({ features, columns, data, getRowId: (row) => row.rowKey })
   useEffect(() => {
@@ -430,8 +473,8 @@ function HeroGameplayChanges({
     const change = hero.changes[0]
     return (
       <HeroChangeSummary
-        kinds={change.changeKinds}
-        summary={change.summary}
+        kinds={change.overallKind ? [change.overallKind] : []}
+        summary={change.summary ?? "Chưa đánh giá tổng thể tướng. Mở chi tiết để xem từng kỹ năng/chỉ số."}
         patchLabel={patchName(change)}
         actualLocale={change.actualLocale}
         locale={locale}
@@ -447,7 +490,12 @@ function HeroGameplayChanges({
           className="flex max-w-72 flex-wrap items-center gap-2 rounded-lg p-1 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
           aria-label={`Xem thay đổi gameplay của ${hero.code} tại ${hero.changes.length} patch`}
         >
-          <ChangeKindBadges kinds={hero.changes.flatMap((change) => change.changeKinds)} compact maxVisible={6} />
+          <ChangeKindBadges
+            emptyLabel="Chưa đánh giá tổng thể"
+            kinds={hero.changes.flatMap((change) => (change.overallKind ? [change.overallKind] : []))}
+            compact
+            maxVisible={6}
+          />
           <span className="text-xs text-muted-foreground">{hero.changes.length} patch</span>
         </button>
       </PopoverTrigger>
@@ -461,7 +509,12 @@ function HeroGameplayChanges({
             <li key={change.id} className="space-y-3 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-medium">{patchName(change)}</span>
-                <ChangeKindBadges kinds={change.changeKinds} compact maxVisible={6} />
+                <ChangeKindBadges
+                  emptyLabel="Chưa đánh giá tổng thể"
+                  kinds={change.overallKind ? [change.overallKind] : []}
+                  compact
+                  maxVisible={6}
+                />
               </div>
               <p className="whitespace-pre-wrap break-words text-sm leading-6">
                 {change.summary || "Đã ghi nhận thay đổi gameplay."}
@@ -713,7 +766,7 @@ function HeroTranslations({ hero }: { hero: CatalogRow }) {
                 <Link
                   key={c.locale}
                   className="block rounded-lg p-2 text-sm hover:bg-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-ring"
-                  to={`/publishing/${hero.id}/translations?revision=${hero.selectedRevision!.id}&locale=${encodeURIComponent(c.locale)}`}
+                  to={`/hero/${hero.id}/translations?revision=${hero.selectedRevision!.id}&locale=${encodeURIComponent(c.locale)}`}
                 >
                   <span className="flex justify-between gap-2">
                     <span>{languageOptions.find((o) => o.value === c.locale)?.label ?? c.locale}</span>
@@ -740,7 +793,7 @@ function HeroTranslations({ hero }: { hero: CatalogRow }) {
             <TooltipTrigger asChild>
               <Button asChild variant="ghost" size="icon" className="size-10">
                 <Link
-                  to={`/publishing/${hero.id}/translations?revision=${hero.selectedRevision!.id}&locale=${encodeURIComponent(target)}`}
+                  to={`/hero/${hero.id}/translations?revision=${hero.selectedRevision!.id}&locale=${encodeURIComponent(target)}`}
                   aria-label={`Thêm bản dịch ${hero.code}`}
                   title="Thêm bản dịch"
                 >

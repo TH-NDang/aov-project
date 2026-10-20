@@ -71,5 +71,5 @@ export function heroPageLocation(heroId: string, params: URLSearchParams, revisi
   }
   if (revisionId) next.set("revision", revisionId)
   const query = next.toString()
-  return `/publishing/${encodeURIComponent(heroId)}${query ? `?${query}` : ""}`
+  return `/hero/${encodeURIComponent(heroId)}${query ? `?${query}` : ""}`
 }

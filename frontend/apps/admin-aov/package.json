@@ -8,6 +8,7 @@
     "test:rich-text": "tsx --tsconfig tests/tsconfig.json --test --test-concurrency=1 tests/entity-rich-text-core.test.ts tests/entity-rich-text-renderer.test.tsx tests/entity-rich-text-editor.test.tsx tests/entity-rich-text-catalog.test.tsx tests/entity-rich-text-storage.test.ts",
     "test:users": "tsx --test tests/avatar-upload.test.ts tests/profile-preferences.test.ts",
     "test:auth": "tsx --test tests/auth.test.ts",
+    "test:warehouse": "tsx --tsconfig tests/tsconfig.json --test --test-concurrency=1 tests/warehouse.test.ts tests/warehouse-translations.test.tsx tests/item-shop-layout.test.ts",
     "dev": "vite --port 5175 --strictPort",
     "dev:lan": "vite --host 0.0.0.0 --port 5175 --strictPort",
     "build": "tsc -p tsconfig.json && vite build",

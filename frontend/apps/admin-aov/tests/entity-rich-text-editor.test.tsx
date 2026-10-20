@@ -61,7 +61,7 @@ test("editor serialization preserves source, Unicode, selection boundaries and s
 })
 
 test("editor mention keyboard, IME, selection, paste, undo/redo and reopening retain exact text", async () => {
-  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/" })
+  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
   const originals = new Map<string, PropertyDescriptor | undefined>()
   for (const [key, value] of Object.entries({
     React,
@@ -69,6 +69,15 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     document: dom.window.document,
     navigator: dom.window.navigator,
     HTMLElement: dom.window.HTMLElement,
+    Element: dom.window.Element,
+    Node: dom.window.Node,
+    NodeFilter: dom.window.NodeFilter,
+    MutationObserver: dom.window.MutationObserver,
+    HTMLInputElement: dom.window.HTMLInputElement,
+    CustomEvent: dom.window.CustomEvent,
+    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
+    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
     HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
     Event: dom.window.Event,
     IS_REACT_ACT_ENVIRONMENT: true,
@@ -79,7 +88,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
   const { createRoot } = await import("react-dom/client")
   const { EntityRichTextEditor } = await import("@aov/ui/components/entity-rich-text-editor")
   let saved = ""
-  function Harness({ initial = "" }: { initial?: string }) {
+  function Harness({ initial = "", catalog = entities }: { initial?: string; catalog?: EntityReference[] }) {
     const [value, setValue] = React.useState(initial)
     return (
       <EntityRichTextEditor
@@ -89,7 +98,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
           saved = value
           setValue(value)
         }}
-        entities={entities}
+        entities={catalog}
         locale="vi-VN"
       />
     )
@@ -120,6 +129,11 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.equal(document.querySelector('[role="listbox"]'), null)
     await type("Xin @Lữ")
     assert.ok(document.querySelector('[role="listbox"]'))
+    const popup = document.querySelector<HTMLElement>('[data-slot="entity-reference-suggestions"]')!
+    assert.ok(popup)
+    assert.equal(document.querySelector('[data-slot="entity-rich-text-editor"]')!.contains(popup), false)
+    assert.ok(popup.style.maxHeight.includes("--radix-popover-content-available-height"))
+    assert.ok(document.querySelector('[role="listbox"]')!.classList.contains("overflow-y-auto"))
     await key("Escape")
     assert.equal(area().value, "Xin @Lữ")
     await type("Xin @Lu")
@@ -165,6 +179,18 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.ok(document.querySelector('[role="listbox"]'))
     await act(async () => document.querySelector<HTMLButtonElement>('[role="option"]')!.click())
     assert.equal(saved, "<ref=hero:hero-1>Lữ Bố</ref>")
+    const catalog: EntityReference[] = Array.from({ length: 12 }, (_, index) => ({
+      id: `item-${index + 1}`,
+      kind: "item",
+      translations: [{ locale: "vi-VN", name: `Mục ${String(index + 1).padStart(2, "0")}`, aliases: [] }],
+    }))
+    await act(async () => root.render(<Harness key="all-results" catalog={catalog} />))
+    await type("@Mục")
+    assert.equal(document.querySelectorAll('[role="option"]').length, 12)
+    await key("ArrowUp")
+    assert.ok(document.querySelector('[role="option"][aria-selected="true"]')!.textContent?.includes("Mục 12"))
+    await key("Enter")
+    assert.equal(saved, "<ref=item:item-12>Mục 12</ref>")
   } finally {
     await act(async () => root.unmount())
     await new Promise((resolve) => setTimeout(resolve, 30))
@@ -173,5 +199,34 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
       if (descriptor) Object.defineProperty(globalThis, key, descriptor)
       else Reflect.deleteProperty(globalThis, key)
     }
+  }
+})
+
+test("Vietnamese mention groups narrow names across all warehouse kinds and preserve stable references", () => {
+  const rows: EntityReference[] = (
+    [
+      ["item", "Kiếm phép"],
+      ["enchantment", "Cứu viện"],
+      ["arcana", "Xanh III Giáp phép"],
+      ["spell", "Tốc biến"],
+    ] as const
+  ).map(([kind, name]) => ({
+    id: kind + "-1",
+    kind,
+    translations: [{ locale: "vi-VN", name, aliases: [], description: "" }],
+  }))
+  for (const [query, kind] of [
+    ["@Trang bị", "item"],
+    ["phu hieu cuu", "enchantment"],
+    ["@Bảng ngọc xanh", "arcana"],
+    ["Ngọc xanh", "arcana"],
+    ["Phụ trợ", "spell"],
+    ["Cứu viện", "enchantment"],
+  ]) {
+    const choices = referenceChoices(rows, "vi-VN", "vi-VN", query!)
+    assert.equal(choices.length, 1, query)
+    assert.equal(choices[0]!.entity.kind, kind)
+    const inserted = insertReference("", { start: 0, end: 0 }, choices[0]!.entity, choices[0]!.translation.name)!
+    assert.equal(parseRichText(inserted.value, createEntityIndex(rows, "vi-VN", "vi-VN"))[0]!.type, "reference")
   }
 })

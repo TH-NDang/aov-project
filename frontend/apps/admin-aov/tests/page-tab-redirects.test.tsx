@@ -53,11 +53,11 @@ test("redirect-only routes execute without opening ghost tabs or remounting exis
       {
         element: <Shell />,
         children: [
-          { path: "/publishing", element: <input aria-label="Hero draft" defaultValue="Saved session" /> },
+          { path: "/hero", element: <input aria-label="Hero draft" defaultValue="Saved session" /> },
           { path: "/other", element: <p>Another page</p> },
-          { path: "/heroes/*", handle: transientHandle, element: <Navigate to="/publishing" replace /> },
-          { path: "/skins/*", handle: transientHandle, element: <Navigate to="/publishing" replace /> },
-          { path: "/reference/skins/*", handle: transientHandle, element: <Navigate to="/publishing" replace /> },
+          { path: "/heroes/*", handle: transientHandle, element: <Navigate to="/hero" replace /> },
+          { path: "/skins/*", handle: transientHandle, element: <Navigate to="/hero" replace /> },
+          { path: "/reference/skins/*", handle: transientHandle, element: <Navigate to="/hero" replace /> },
         ],
       },
     ],
@@ -86,26 +86,26 @@ test("redirect-only routes execute without opening ghost tabs or remounting exis
       ),
     )
     await flush()
-    assert.equal(router.state.location.pathname, "/publishing")
+    assert.equal(router.state.location.pathname, "/hero")
     assert.equal(router.state.location.search, "")
-    assert.deepEqual(tabs(), ["/publishing"])
+    assert.deepEqual(tabs(), ["/hero"])
     assert.equal(document.querySelectorAll("[data-page-tab]").length, 1)
     const draft = document.querySelector<HTMLInputElement>('[aria-label="Hero draft"]')!
     draft.value = "Unfinished edit"
     const publishingPanel = draft.closest("[data-page-tab]")
 
     await navigate("/other")
-    assert.deepEqual(tabs(), ["/publishing", "/other"])
+    assert.deepEqual(tabs(), ["/hero", "/other"])
     for (const legacy of ["/skins?q=limited", "/reference/skins?portrait=missing", "/heroes/unknown?tab=skills"]) {
       await navigate(legacy)
-      assert.equal(router.state.location.pathname, "/publishing")
-      assert.deepEqual(tabs(), ["/publishing", "/other"])
+      assert.equal(router.state.location.pathname, "/hero")
+      assert.deepEqual(tabs(), ["/hero", "/other"])
       assert.equal(document.querySelectorAll("[data-page-tab]").length, 2)
       assert.equal(document.querySelector('[aria-label="Hero draft"]'), draft)
       assert.equal(draft.value, "Unfinished edit")
       assert.equal(draft.closest("[data-page-tab]"), publishingPanel)
     }
-    assert.ok(observedTabs.every((paths) => paths.every((path) => ["/publishing", "/other"].includes(path))))
+    assert.ok(observedTabs.every((paths) => paths.every((path) => ["/hero", "/other"].includes(path))))
   } finally {
     await act(async () => root.unmount())
     router.dispose()

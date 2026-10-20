@@ -44,7 +44,7 @@ function TaskStatus({ storageKey }: { storageKey: string }) {
       id: job.id,
       serverJob: true,
       title: "Import tướng",
-      path: "/publishing/import",
+      path: "/hero/import",
       status: job.status === "RUNNING" ? "running" : job.status === "COMPLETED" ? "completed" : "error",
       description: jobs.error ? "Mất kết nối · đang thử tải lại tiến trình" : jobDescription(job),
       completed: job.completed,

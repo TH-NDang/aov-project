@@ -52,14 +52,11 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
   let root = createRoot(dom.window.document.getElementById("root")!)
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   const routes = [
-    { path: "/publishing", element: <PublishingPage /> },
-    { path: "/publishing/:heroId", element: <PublishingPage /> },
+    { path: "/hero", element: <PublishingPage /> },
+    { path: "/hero/:heroId", element: <PublishingPage /> },
   ]
   let router = createMemoryRouter(routes, {
-    initialEntries: [
-      "/publishing?search=all",
-      "/publishing?search=all&hero=fixture-hero&revision=fixture-draft&tab=media",
-    ],
+    initialEntries: ["/hero?search=all", "/hero?search=all&hero=fixture-hero&revision=fixture-draft&tab=media"],
   })
   const document = dom.window.document
   const mount = () =>
@@ -116,7 +113,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu bản dịch"]'))
     assert.ok(document.querySelector('[aria-controls="workspace-translations"][aria-selected="true"]'))
     await click('[aria-label="Mở trang tướng đầy đủ"]')
-    await waitFor(() => router.state.location.pathname === "/publishing/fixture-hero")
+    await waitFor(() => router.state.location.pathname === "/hero/fixture-hero")
     const params = new URLSearchParams(router.state.location.search)
     assert.equal(params.get("hero"), null)
     assert.equal(params.get("view"), "translations")
@@ -143,7 +140,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await act(async () => {
       await router.navigate(-1)
     })
-    await waitFor(() => router.state.location.pathname === "/publishing")
+    await waitFor(() => router.state.location.pathname === "/hero")
     assert.equal(confirmations, 0, "A recoverable draft should not block internal navigation")
     await waitFor(() => [...document.querySelectorAll("input")].some((input) => input.value === "Unsaved translation"))
     await act(async () => {
@@ -154,7 +151,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await act(async () => {
       await router.navigate(-1)
     })
-    await waitFor(() => router.state.location.pathname === "/publishing")
+    await waitFor(() => router.state.location.pathname === "/hero")
     assert.equal(new URLSearchParams(router.state.location.search).get("hero"), "fixture-hero")
     await act(async () => root.unmount())
     router.dispose()
@@ -164,7 +161,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     })
     root = createRoot(document.getElementById("root")!)
     router = createMemoryRouter(routes, {
-      initialEntries: ["/publishing/fixture-hero?revision=fixture-previous&tab=media"],
+      initialEntries: ["/hero/fixture-hero?revision=fixture-previous&tab=media"],
     })
     await mount()
     await waitFor(() => !!document.querySelector("#hero-content-media"))

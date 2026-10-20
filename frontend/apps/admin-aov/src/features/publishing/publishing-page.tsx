@@ -1,3 +1,4 @@
+import { HeroTimeline } from "./hero-timeline"
 import { useEffect, useRef, useState } from "react"
 import { Link, useBeforeUnload, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -43,7 +44,7 @@ import { Box, Field, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
 import { ImportContextPicker, type ImportContext } from "./import-context"
-import { CatalogContext, type CatalogFilter } from "./catalog-context"
+import { type CatalogFilter } from "./catalog-context"
 import { usePublicationOverview, useContentLocale } from "./publication-overview"
 import { resourceContent } from "./resource-import"
 import { SECTIONS, publishIssues, type Cause, type Content, type Preview, type Revision, type Section } from "./types"
@@ -276,13 +277,13 @@ export function PublishingWorkspace({
             canWrite ? (
               <>
                 <Button variant="outline" asChild>
-                  <Link to="/publishing/import">
+                  <Link to="/hero/import">
                     <FileUp className="size-4" />
                     Import
                   </Link>
                 </Button>
                 <Button asChild>
-                  <Link to="/publishing/new">
+                  <Link to="/hero/new">
                     <Plus className="size-4" />
                     Tạo tướng
                   </Link>
@@ -298,7 +299,7 @@ export function PublishingWorkspace({
               {!onUnsavedChange && (
                 <Button variant="ghost" size="icon" asChild>
                   <Link
-                    to="/publishing"
+                    to="/hero"
                     aria-label="Danh sách tướng"
                     onClick={(event) => {
                       if (!canLeave()) event.preventDefault()
@@ -411,7 +412,9 @@ export function PublishingWorkspace({
       {!heroId ? (
         <>
           {overview.data ? (
-            <CatalogContext data={overview.data} value={filter} onChange={setFilter} />
+            <>
+              <HeroTimeline data={overview.data} rulesetId="" value={filter} onChange={setFilter} />
+            </>
           ) : (
             <p role={overview.error ? "alert" : "status"}>
               {overview.error ? errorMessage(overview.error) : "Đang tải mùa và patch…"}

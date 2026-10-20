@@ -200,7 +200,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
     await verifySession()
     await render(<CharacterImagesPage role="PORTRAIT" request={request} />)
     await waitFor(() => !!document.querySelector('[aria-label="Mở nhóm ảnh Airi"]'))
-    assert.equal(document.querySelectorAll('a[href^="/publishing/"]').length, 0)
+    assert.equal(document.querySelectorAll('a[href^="/hero/"]').length, 0)
     assert.equal(document.querySelector('[aria-label="Mở trang tướng"]'), null)
     assert.equal(document.querySelector('table[aria-label="Nhóm tướng · Portrait"]'), null)
     assert.ok(document.querySelector('section[aria-label="Nhóm ảnh Airi"]'))
@@ -222,7 +222,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
     await waitFor(() => document.body.textContent?.includes("Bản đã xuất bản được giữ nguyên") ?? false)
     assert.equal(button("Dùng ảnh này làm ảnh chính"), undefined)
     assert.equal(button("Lưu vào bản nháp"), undefined)
-    assert.ok(document.querySelector(`a[href="/publishing/${group.heroId}?revision=${group.revision.id}&tab=media"]`))
+    assert.ok(document.querySelector(`a[href="/hero/${group.heroId}?revision=${group.revision.id}&tab=media"]`))
     await render(<BadgesPage request={request} />)
     await waitFor(() => !!document.querySelector('[aria-label="Xem trang phục dùng nhãn ss"]'))
     assert.equal(relatedCalls, 0)
@@ -230,7 +230,7 @@ test("backend media groups retain missing main rows, select alternatives with ex
     await waitFor(() => relatedCalls === 1 && document.body.textContent?.includes("Mặc định") === true)
     assert.ok(document.querySelector('button[aria-label="Xem trang phục Mặc định"]'))
     assert.equal(
-      document.querySelector(`a[href="/publishing/${group.heroId}?revision=${group.revision.id}&tab=skins"]`),
+      document.querySelector(`a[href="/hero/${group.heroId}?revision=${group.revision.id}&tab=skins"]`),
       null,
     )
     await render(<SkinBadgeEditor badge={badge} locale="en-US" request={request} onClose={() => {}} />)

@@ -48,7 +48,7 @@ export function CreateHeroPage() {
         title="Tạo tướng"
         actions={
           <Button variant="ghost" asChild>
-            <Link to="/publishing">
+            <Link to="/hero">
               <ArrowLeft className="size-4" />
               Danh sách tướng
             </Link>
@@ -92,7 +92,7 @@ export function CreateHeroPage() {
                 )
                 await draft.discard()
                 await cache.invalidateQueries({ queryKey: ["publishing-heroes"] })
-                navigate(`/publishing/${revision.heroId}`, { replace: true })
+                navigate(`/hero/${revision.heroId}`, { replace: true })
               } catch (cause) {
                 setError(errorMessage(cause))
               } finally {

@@ -77,7 +77,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
                 {actor?.capabilities.includes("catalog:read") && (
                   <CommandItem
                     value={`tim tuong ${search}`}
-                    onSelect={() => run(() => navigate(`/publishing?q=${encodeURIComponent(search.trim())}`))}
+                    onSelect={() => run(() => navigate(`/hero?q=${encodeURIComponent(search.trim())}`))}
                   >
                     <Search />
                     Tìm tướng “{search.trim()}”

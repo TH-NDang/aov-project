@@ -130,6 +130,7 @@ export interface HeroGameplayChange {
   fromHeroRevisionId: string | null
   toHeroRevisionId: string
   changeKinds: string[]
+  overallKind?: string | null
   recordedAt: string
   summary: string | null
   actualLocale: string | null
