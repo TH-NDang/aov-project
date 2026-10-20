@@ -1605,3 +1605,79 @@ nhật đồng bộ khi migration đổi khóa chính. Trigger bảo vệ nội 
 
 hero.identifier_namespace giữ hàng khóa skin-badge để tuần tự hóa cấp mã nhãn tự động qua JPA.
 Tên ảnh nhập lại bằng đường dẫn/mã cũ vẫn nối asset đã có; không di chuyển object key assets/.
+
+## Kho trang bị — migration V024
+
+Mỗi schema `item`, `arcana`, `spell`, `enchantment` có ba bảng riêng: identity cùng tên module,
+`<module>_revision` và `<module>_translation`. Không có bảng entity đa hình dùng chung.
+
+- Identity: UUID, code duy nhất, thời điểm và actor tạo.
+- Revision: owner_id, ruleset_id, revision_no, state, version, publication_sequence, published_at,
+  cause, effective_from_patch_variant_id, source_revision_id, icon_asset_id, gameplay JSONB có
+  kiểu riêng của module, thời điểm và actor tạo/sửa. Chỉ một DRAFT cho mỗi owner/ruleset.
+- Translation: UUID, revision_id, locale, name, summary, description, stat_labels, variant_labels
+  và effects. Các trường effects là nội dung được dịch, không phải thông số gameplay.
+- Spell translation có thêm target_key: chuỗi rỗng cho phụ trợ, key trạng thái cho bản dịch biến
+  thể. Gameplay của phụ trợ không chứa nội dung dịch của các trạng thái.
+
+JSONB gameplay chứa cấu trúc nhỏ của từng catalog và danh sách chỉ số/tọa độ/thành phần đã định
+nghĩa bằng DTO Java có kiểu; mảng translations luôn rỗng trong cột này. Chúng không dùng như kho
+trường tự tạo. API không cho tạo cột mới. Trigger chặn sửa/xóa revision PUBLISHED và chặn ghi
+bản dịch thuộc revision PUBLISHED; publication bắt buộc có patch context và sequence.
+
+Danh mục `item.item_category` và `enchantment.enchantment_branch` có code, version, display_order,
+icon_asset_id, background_asset_id, color; bảng `_translation` tương ứng chứa locale/name/
+description/suitability. `item.recipe_graph_lock` có đúng một hàng khóa JPA để kiểm tra và ghi
+đồ thị ghép đồ nguyên tử giữa nhiều người biên tập. Media UUID không dùng khóa ngoại liên schema;
+kiểm tra semantic type/trạng thái qua hợp đồng Media.
+
+### Phụ trợ lưu trữ và sự kiện loại bỏ (V025)
+
+Ngoại lệ kiểm tra publication của spell_revision: effective_from_patch_variant_id được
+null khi gameplay.legacy=true, availability=REMOVED và cause khác GAME_PATCH. Published
+revision/bản dịch vẫn bất biến; publication_sequence và published_at vẫn bắt buộc.
+
+spell.spell_removal: UUID id, spell_id, ruleset_id, revision_id, patch_variant_id, source_url
+(max 2048), notes (max 4000), recorded_at và actor. Unique (spell_id,patch_variant_id).
+FK nội bộ tới identity/revision và context patch; service kiểm tra published và cùng
+ruleset. Sự kiện được bổ sung riêng, không đổi applicability của snapshot lưu trữ.
+
+### Changelog kho trang bị và đánh giá tổng thể tướng
+
+V026 tạo `<module>.<module>_patch_change_set` riêng cho item, arcana, spell, enchantment.
+Bảng chứa owner_id, ruleset_id, patch_variant_id, from_revision_id nullable, to_revision_id,
+kinds JSONB, translations JSONB (locale/text, tách khỏi gameplay), source_url và actor/thời điểm.
+Unique(owner_id,patch_variant_id); trigger từ chối UPDATE/DELETE. Projection đọc bổ sung các mốc nền
+và GAME_PATCH chưa phân loại từ revision; không ghi bản sao cho patch không thay đổi.
+REMOVED giữ snapshot quá khứ nhưng loại khỏi phân giải public từ patch đó; ADDED sau đó có thể khôi phục.
+Query tổng hợp chỉ qua public contract CatalogChangeProvider; không truy cập bảng của module khác.
+V027 tạo hero.hero_patch_assessment, PK change_set_id, kind, version và actor/thời điểm cập nhật.
+Đánh giá tổng thể là metadata biên tập có optimistic version và audit, độc lập các typed immutable events.
+Không backfill đánh giá tổng thể bằng hợp các nhãn con.
+
+### V028 — Rà soát nhập liệu patch
+
+`patch.patch_data_review`: một dòng cho mỗi patch variant, trạng thái `IN_PROGRESS` / `COMPLETE`, phiên bản để chống ghi đè, thời điểm hoàn tất và người cập nhật. Không tạo snapshot giả cho các mục giữ nguyên. Thay đổi gameplay mới tự chuyển trạng thái về đang rà soát trong cùng giao dịch.
+
+
+## Thuật ngữ dùng chung — V029 (2026-10-20)
+
+Schema `terminology` gồm:
+
+- `configuration`: UUID cố định của cấu hình chung, `version`, `auto_recognize`, `fallback_locale`, `updated_at`.
+- `entry`: UUID nội bộ, `kind`, `reference_key`, `icon`, `auto_match`, `display_order`, JSONB `display` và
+  `destinations`. Unique `(kind, reference_key)`; `reference_key` giữ nguyên ID/slug trong thẻ `<ref>` cũ.
+- `translation`: UUID, `entry_id` (FK nội bộ), `locale`, `name`, `description`, JSONB `aliases`.
+  Unique `(entry_id, locale)`; bản dịch tách khỏi tùy chỉnh hiển thị dùng chung.
+
+V029 tạo 16 thuật ngữ tiếng Việt từ danh mục khởi đầu hiện có. Không thay migration đã áp dụng.
+Cập nhật toàn bộ cấu hình trong một transaction, khóa cấu hình chung và kiểm tra version. Audit không
+lưu toàn văn nội dung; lưu phiên bản trước/sau và số mục. Dữ liệu tướng/trang bị và ảnh gốc vẫn do
+module tương ứng sở hữu; tham chiếu không sao chép revision hoặc thay khóa của các module đó.
+
+
+### V030 — Mở rộng nhóm tham chiếu
+
+Ràng buộc kind của `terminology.entry` cho phép thêm `enchantment`, `arcana`, `spell`.
+Bản dịch/cách hiển thị dùng lại các bảng hiện có, không sao chép dữ liệu gameplay hoặc ảnh của
+module gốc. Không sửa migration V029 đã áp dụng.

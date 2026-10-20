@@ -197,3 +197,15 @@ Wiki dùng public API theo region/locale, có trạng thái thiếu context và 
 Xem [hướng dẫn admin](../../frontend/apps/admin-aov/README.md#biên-tập-hero-với-backend).
 Integration test Media kiểm chứng presigned upload thật qua SeaweedFS rồi publish Hero, đọc public,
 ETag, nâng version ảnh và reverse usage. Cần Docker; không seed dữ liệu tổng hợp vào môi trường thực.
+
+### Xuất bản dữ liệu nền bảng ngọc
+
+Script `scripts/publish-arcana-baseline.ps1` sử dụng access token sẵn có từ biến
+`WIKI_API_TOKEN`, cần arcana:write và arcana:publish. Mặc định chỉ kiểm tra; thêm
+`-Apply` để đặt mốc quan sát rồi xuất bản. Dùng `-PatchCode s3-2026-observed` cho bộ
+nguồn thu thập ngày 23/09/2026. Mốc này không tuyên bố ngọc đã thay đổi tại patch đó.
+
+Chỉ xử lý nháp DATA_BASELINE độc lập, giữ nguyên content/bản dịch/ảnh, kiểm tra version
+và không thay mốc đã gán khác. Bản đã xuất bản được bỏ qua. Mục thiếu mô tả/chỉ số
+được giữ nháp; không tự đoán số liệu và không bỏ qua validation. Kết quả lưu trong
+`.local-state/arcana-publication-result.json`; sao lưu DB trước lần chạy có `-Apply`.

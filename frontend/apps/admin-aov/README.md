@@ -356,7 +356,7 @@ URL giữ bộ lọc `season`/`patch` của danh sách, trạng thái mở khung
 
 Trang `/terminology` quản lý tên/alias theo locale, mô tả ngắn, icon, màu HEX, gạch dưới và đường dẫn admin/wiki; có preview trước khi lưu. Tướng được đọc từ bản dữ liệu mới nhất chưa hủy của backend để biên tập trong admin (chỉ lấy thông tin giới thiệu), trang bị từ adapter bộ tài nguyên hiện có. Đây không phải catalog công khai của Wiki. Alias trùng giữa các thực thể sẽ không tự nhận diện. Bản dịch thiếu dùng locale dự phòng và thẻ thông tin ghi rõ locale thực tế.
 
-Tham chiếu tướng dùng ảnh head đã gắn qua media; trang bị dùng ảnh tài nguyên thật. Chỉ phân giải ảnh khi tham chiếu hoặc dòng danh mục hiển thị. Trang bị mặc định chèn bằng `@`/`<ref>` để tránh nhận nhầm từ thường trong mô tả như “ném phi tiêu”; có thể bật tự nhận diện riêng từng trang bị. Tướng và thuật ngữ tiếp tục tự nhận diện. Khi chưa có cấu hình đã lưu, admin cung cấp bộ thuật ngữ cơ bản để xem thử; không tự ghi glossary vào backend.
+Tham chiếu tướng dùng ảnh head đã gắn qua media; trang bị dùng ảnh Media trong backend. Chỉ phân giải ảnh khi tham chiếu hoặc dòng danh mục hiển thị. Trang bị mặc định chèn bằng `@`/`<ref>` để tránh nhận nhầm từ thường trong mô tả như “ném phi tiêu”; có thể bật tự nhận diện riêng từng trang bị. Tướng và thuật ngữ tiếp tục tự nhận diện. Backend tạo bộ thuật ngữ khởi đầu qua V029; các chỉnh sửa được lưu có phân quyền và kiểm tra phiên bản.
 
 Mô tả tướng dùng parser và renderer chung trong `@aov/ui`, giữ nguyên chuỗi nguồn:
 
@@ -374,53 +374,36 @@ Editor dùng chung `EntityRichTextEditor` hiện tích hợp vào giới thiệu
 
 Gõ `@` ở đầu nội dung/sau khoảng trắng hoặc dấu phân cách sẽ mở gợi ý từ danh mục thật và alias theo locale/dự phòng (tìm kiếm có thể không dấu). Email không kích hoạt; Esc đóng và giữ nguyên text, nội dung không tự biến thành ref nếu chưa chọn. Mũi tên/Enter chọn, click/chạm có cùng hành vi. Tạm dừng gợi ý và phím chọn khi IME đang composition. Bộ chọn toolbar cho phép chèn vào vị trí caret hoặc dùng nhãn văn bản đang bôi chọn. Danh sách tối đa 8 gợi ý cùng số kết quả; không có kết quả thì Enter vẫn là xuống dòng. Undo/redo lưu tối đa 100 trạng thái trong phiên của mỗi ô, gom phiên IME, có nút thao tác và hỗ trợ beforeinput history trên mobile; không lưu lịch sử qua reload. Paste lấy text/plain, giữ nguyên nguồn; không chạy HTML/script. Khi mở lại/switch locale, chuỗi nguồn không bị parse rồi serialize lại. Giới hạn nội dung chung 100.000 ký tự, mô tả glossary 4.000 ký tự; backend vẫn kiểm tra giới hạn trường riêng khi lưu.
 
-Bảng danh mục luôn hiện ở `/terminology`: tìm tên/alias/ID, lọc loại/locale/trạng thái, đếm kết quả, phân trang 25 dòng, chọn tên để chỉnh sửa; có nguồn backend/resource/glossary, alias, locale, ID ổn định và đích resolver. Mục mất nguồn được ghi rõ, không coi đó là target backend hợp lệ. Mô tả hover hiển thị b/i/color; ref hợp lệ trong mô tả hover được đổi thành nhãn thuần và không tự nhận diện để tránh card lồng/đệ quy. Ref tại phần nội dung chính vẫn tương tác bình thường. Fixture `tests/fixtures/hero-workspace.html?annotations=1` chỉ dùng dữ liệu tổng hợp riêng cùng fetch in-memory, không gọi API tài khoản/storage thật.
+Bảng danh mục luôn hiện ở `/terminology`: tìm tên/alias/ID, lọc loại tham chiếu và thiếu bản dịch theo ngôn ngữ đang xem, đếm kết quả, phân trang 25 dòng, chọn tên để chỉnh sửa; có nguồn backend/thuật ngữ chung, alias, locale, ID ổn định và đích resolver. Mục mất nguồn được ghi rõ, không coi đó là target backend hợp lệ. Mô tả hover hiển thị b/i/color; ref hợp lệ trong mô tả hover được đổi thành nhãn thuần và không tự nhận diện để tránh card lồng/đệ quy. Ref tại phần nội dung chính vẫn tương tác bình thường. Fixture `tests/fixtures/hero-workspace.html?annotations=1` chỉ dùng dữ liệu tổng hợp riêng cùng fetch in-memory, không gọi API tài khoản/storage thật.
 
 Tham chiếu thủ công ưu tiên hơn tự nhận diện; không lồng liên kết. Parser không chạy HTML, kiểm tra URL/màu, giới hạn 100.000 ký tự, độ sâu 8 và 500 tham chiếu mỗi nội dung. Danh mục được cache dùng chung, tải tối đa 4 hồ sơ tướng đồng thời; không gọi API theo từ. Chạy `pnpm --filter @aov/admin-aov test:rich-text` để kiểm tra lõi, renderer và lưu thiết lập.
 
-Thiết lập được lưu thật qua JSON storage `/__storage` của Vite dev/preview, vào bảng riêng `AOV rich text settings v1`, có kiểm tra phiên bản để tránh ghi đè. Chưa có API glossary production hoặc cơ chế phân quyền cho JSON storage này; UI ghi rõ phạm vi, lỗi lưu giữ lại bản nháp. Trước khi dùng production/wiki cần thiết kế hợp đồng đọc catalog gọn theo locale, API CRUD có quyền `catalog:read`/quyền sửa riêng và optimistic version, bảng glossary/translation/alias cùng cấu hình hiển thị tham chiếu; tướng/trang bị giữ ID từ module sở hữu, không truy cập bảng chéo module. Chưa thêm migration hay backend mới cho đề xuất này. Wiki sau này truyền catalog, locale và `context="wiki"` vào renderer chung, ánh xạ đích phù hợp router thực tế. Chưa thêm module bình luận.
+Thiết lập dùng chung lưu trong PostgreSQL qua `/admin/reference-settings`, đọc công khai qua `/reference-settings`
+và `/reference-catalog?region&locale`. Bản dịch thuật ngữ tách bảng; quyền `hero:write` cho biên tập,
+`catalog:read` cho truy cập admin. `expectedVersion` ngăn ghi đè; bản lưu được dùng ngay bởi admin và wiki.
+JSON Vite chỉ còn là nguồn chuyển đổi tùy chọn trong tab Thiết lập. Tab **Thử hiển thị** có thanh công cụ,
+chọn tham chiếu `@`, chọn ngôn ngữ, thử đích liên kết admin/wiki; nội dung thử không lưu vào dữ liệu game.
 
-## Persistence hiện tại: phạm vi và giới hạn
+## Lưu trữ thuật ngữ dùng chung
 
-- Plugin `server/json-storage.ts` được đăng ký trong `vite.config.ts` bằng `jsonStorage(new URL("./storage", import.meta.url))`; chỉ chạy trong dev và preview. File được lưu ở `frontend/apps/admin-aov/storage/<UUID-do-server-tao>.json` (trên máy hiện tại: `C:\Users\ndang\Projects\aov-project\frontend\apps\admin-aov\storage\`). Không ghi vào `resources/`, DB, localStorage hay file build `dist/` để lưu glossary.
-- Adapter tìm bảng có tên `AOV rich text settings v1`. Chưa tồn tại thì GET chỉ trả cấu hình mặc định trong bộ nhớ, không tự tạo file. Khi người dùng lưu lần đầu, POST tạo bảng rồi PUT một hàng `{id:"settings", settings:...}`, với `columns=["id","settings"]`, `idColumn="id"`. QA hiện dùng fetch fixture và test stub, chưa tạo file glossary thật trong thư mục storage.
-- API: `GET /__storage/` liệt kê metadata không gồm rows; `GET /__storage/{uuid}` đọc bảng; `POST /__storage/` với `{name}` tạo bảng; `PUT /__storage/{uuid}` gửi cả bảng cùng `version`. Không có DELETE; bảng có thể archive bằng thuộc tính `archived` qua PUT.
-- **Không có JWT, session hay capability check trên middleware này**. Đăng nhập UI không bảo vệ API storage. Middleware kiểm tra Origin nếu có (host phải khớp Host) và từ chối `Sec-Fetch-Site: cross-site`; client ngoài trình duyệt không gửi các header này vẫn có thể gọi. Đây không phải cơ chế phân quyền production, và dev server đang expose qua LAN thì các bên truy cập được server cũng có thể truy cập API. Không mở thêm host, CORS hay quyền để triển khai annotation.
-- Đường dẫn: ID chỉ nhận UUID chữ thường theo regex cố định; tên file được server ghép từ UUID, client không gửi đường dẫn. Khi PUT server dùng ID trên URL thay vì `input.id`, nên không cho tên file traversal. Body và file tối đa 20 MiB; yêu cầu Content-Type JSON, kiểm tra cấu trúc bảng/cột/ID và tên bảng không trùng. Cấu hình rich text còn được adapter validate giới hạn catalog, HEX, URL và locale trước lưu/sau đọc; middleware storage tổng quát không tự validate schema rich text nên backend tương lai phải kiểm tra lại phía server.
-- Concurrency: mutation đi qua hàng đợi trong một tiến trình Vite; PUT yêu cầu `input.version === current.version`, trả 409 nếu lệch và tăng version khi thành công. Ghi file tạm rồi rename trong cùng thư mục. Không có khóa liên tiến trình: không vận hành nhiều Vite instance ghi cùng thư mục. Nếu mất phản hồi sau POST/PUT, UI không khẳng định đã lưu, giữ bản nháp và yêu cầu tải lại để đối chiếu; không tự ghi đè. Test có kiểm tra version conflict và storage unavailable.
+- Nguồn chính là schema `terminology` trong PostgreSQL, qua Spring Data JPA. V029 tạo cấu hình và
+  16 thuật ngữ tiếng Việt khởi đầu; bản dịch và tên gọi khác lưu riêng từng locale.
+- GET admin cần `catalog:read`; PUT cần thêm `hero:write`. Các quyền biên tập hiện có được dùng lại,
+  không tự mở rộng realm hoặc cấp quyền tài khoản. API công khai không trả đích admin hoặc nội dung
+  tùy chỉnh của tướng/trang bị chưa được công khai trong thị trường đang chọn.
+- Mỗi lần lưu gửi `expectedVersion`; backend khóa cấu hình, lưu nguyên tử, tăng version và ghi audit.
+  Nếu xung đột hoặc mất kết nối, bản nháp được giữ để kiểm tra/tải lại; không báo lưu thành công giả.
+- Backend cấp API công khai để wiki tích hợp cùng renderer `EntityRichText`, chỉ có dữ liệu đã
+  xuất bản theo thị trường. Frontend wiki chỉ được dùng kiểm tra kết nối trong đợt này và đã gỡ
+  phần thử nghiệm theo yêu cầu; chưa tích hợp cố định vào trang wiki.
+- JSON Vite cũ không còn là nơi lưu thuật ngữ. Trong Thiết lập có thao tác đọc cấu hình cũ vào bản nháp,
+  hợp nhất theo `(kind,id)`, kiểm tra rồi lưu lên backend. File cũ không bị xóa hoặc sửa tự động.
+- Bộ lọc gồm tìm kiếm, loại Tướng/Trang bị/Phù hiệu/Ngọc/Phụ trợ cho tab tham chiếu và Thiếu bản dịch theo ngôn ngữ đang xem.
+  Tab Thuật ngữ bỏ lọc loại/trạng thái không phù hợp và link lặp tới chính định nghĩa.
 
-Lý do dùng adapter này ở giai đoạn đầu: repo đã có hạ tầng lưu JSON server có version, trong khi chưa có glossary API, quyền ghi glossary hay catalog trang bị backend. Nó giúp kiểm tra luồng quản lý/renderer với persistence thật mà chưa tự quyết schema và quyền mới. Đây là bản triển khai dev/preview; **chưa hoàn thành persistence dùng chung admin/wiki production**. Static hosting không có `/__storage`: UI báo không đọc/lưu được; không giả lập lưu thành công.
-
-## Đề xuất backend tối thiểu cần chốt trước khi triển khai
-
-Phần này là phương án, chưa có migration, endpoint hay quyền nào dưới đây được thêm/cấp. Đề xuất một module `reference` trong **wiki-service hiện tại**, không thêm service. `query` tiếp tục ghép read model; không đặt logic ghi glossary trong module query chỉ vì có sẵn controller tổng hợp. Cần ADR và cập nhật đặc tả 01/02/03 được duyệt vì danh sách module hiện tại chưa có `reference`.
-
-| Bảng đề xuất | Dữ liệu và ràng buộc chính |
-|---|---|
-| `reference.settings` | Một cấu hình site: UUID, `auto_recognize`, `fallback_locale`, `version`; giá trị mặc định không kèm glossary mẫu. |
-| `reference.entry` | UUID, `code` slug, `kind` TERM/HERO/ITEM, `target_id` UUID đối với hero/item; term dùng chính UUID entry. HEX, underline/show_icon, `icon_asset_id` tùy chọn, đích admin/wiki nội bộ, `archived`, version và actor issuer/subject/thời gian cập nhật. Unique `(kind,target_id)` khi có target; không tạo FK hay truy cập repository sang module khác. |
-| `reference.translation` | PK `(entry_id,locale)`, tên và mô tả ngắn; FK nội bộ tới entry, giới hạn độ dài và locale tương đương parser. |
-| `reference.alias` | `(entry_id,locale,normalized_alias)` cùng alias gốc, FK nội bộ tới translation; NFC + lower, giữ dấu tiếng Việt. Không đặt unique alias xuyên thực thể vì cần nhận biết/loại bỏ alias mơ hồ khi tạo index. |
-
-Tạo một Flyway migration mới, dùng số phiên bản tiếp theo còn trống khi triển khai (V017 đã dành cho không gian ảnh); không sửa V000–V016. Cấu hình JPA giữ validate. Mutation dùng optimistic version, transaction ngắn ghi entry/translation/alias cùng audit qua `AuditLog` và `CurrentActor`; cập nhật revision cấu hình/catalog để invalidation và ETag nhất quán. Không nhận actor từ request. Nếu dùng icon asset thì đọc qua `MediaAssets`, triển khai `MediaUsageProvider`; không đọc bảng media hoặc gọi object storage trong transaction. Lỗi dùng enum của module triển khai `ApiErrorCode` và `ApiException`.
-
-| Endpoint đề xuất (đường dẫn ngoài) | Quyền/ứng xử đề xuất |
-|---|---|
-| `GET /api/wiki/v1/admin/references/settings` và `GET /api/wiki/v1/admin/reference-entries` | Dùng lại `catalog:read`; whitelist query, trả `PageSlice` cho danh sách. |
-| `PUT /api/wiki/v1/admin/references/settings` | `expectedVersion`; cần quyền ghi glossary riêng bên dưới. |
-| `POST /api/wiki/v1/admin/reference-entries`, `PUT /api/wiki/v1/admin/reference-entries/{id}` | Tạo/sửa entry và các bản dịch/alias được validate phía server; sửa cần expectedVersion, xung đột 409. |
-| `POST /api/wiki/v1/admin/reference-entries/{id}/archive` | expectedVersion, archive có thể phục hồi; không xóa cứng identity đã được chèn vào nội dung. |
-| `GET /api/wiki/v1/references?region=VN&locale=vi-VN` | Snapshot công khai đã lọc entry archive và target chưa công bố; metadata nguồn, actualLocale/fallback, stable IDs, version/ETag, giới hạn catalog/payload. Không lộ actor hoặc bản nháp. Cache có revalidation; không gọi API theo từng từ. |
-
-Trong Java vẫn map `ApiPaths.ROOT`/`ApiPaths.ADMIN` với `version="1"`, không hard-code phiên bản. Các admin endpoint dùng JWT gateway hiện có; lớp URL đã yêu cầu `catalog:read`, use case ghi thêm `@PreAuthorize`. **Đề xuất mới `reference:write`, không dùng `hero:write` để sửa thuật ngữ/trang bị/global settings** vì đó là mở rộng quyền của editor tướng sang nội dung khác. Chưa thêm constant, realm role hay composite role; cần chủ dự án chốt ai được cấp quyền này. Phương án tối thiểu là thay đổi có hiệu lực ngay sau lưu bởi người có quyền đó; nếu cần duyệt trước khi công khai thì phải chốt thêm lifecycle và `reference:publish`, không tự thêm mặc định.
-
-Nguồn catalog hiện tại và đường chuyển đổi:
-
-1. Tướng hiện đã dùng thật: `GET /admin/heroes?page=...&size=20`, chọn revision chưa hủy mới nhất theo revisionNo rồi `GET /admin/heroes/{heroId}/revisions/{revisionId}` lấy PROFILE translations/summary. Admin nhận diện cả bản nháp để biên tập; đây không phải catalog công khai cho Wiki. ID là UUID backend. Tải song song tối đa 4, dùng chung cache preview; ảnh head chỉ phân giải khi tham chiếu thực sự hiển thị. Đây là giới thiệu chung; chưa phân giải đầy đủ region/patch giữa nhiều ruleset. Backend production cần hợp đồng public mới như `HeroReferenceQueries` tại package gốc `hero`, trả snapshot tên/mô tả theo `GameplayContexts` và published visibility cho region; query/reference chỉ gọi hợp đồng đó, không import `hero.internal`.
-2. Trang bị hiện đã dùng dữ liệu thật nhưng **qua adapter tài nguyên**, `api.getItemCatalog()` đọc `resources/Lien-Quan-v3/data/trang-bi.json` và file review qua `/__resources/`, có lớp thay đổi local của admin mock adapter. Tên và summary là vi-VN, không bịa bản dịch. Module `item` wiki-service hiện chỉ có package/placeholder, chưa có entity/repository/catalog API; không thể tuyên bố trang bị đã có persistence backend. Không đưa resource ID vào cột UUID hoặc tạo UUID giả. Giai đoạn production đầu có thể bật HERO+TERM và ghi rõ ITEM chưa sẵn sàng; để bật ITEM cần triển khai/import theo đặc tả item, mapping resource ID sang UUID bền vững và hợp đồng `ItemReferenceQueries`, là phạm vi riêng cần chốt.
-3. Alias/display overrides chỉ áp dụng cho hero/item tìm thấy trong catalog thật; entry kiểu term do người dùng tạo. ID target đã mất hoặc chưa tải không được tự giả lập. Renderer chung chỉ nhận snapshot đã resolve, không fetch và không phụ thuộc admin. Wiki cần nối endpoint public và map route thật; resolver wiki mặc định hiện là điểm mở rộng, chưa đồng nghĩa đã có trang glossary/item wiki.
-
-Chuyển dữ liệu JSON sang backend phải là bước import có preview và xác nhận target thật, validate phía server và version, audit actor; không seed mặc định file JSON của từng máy vào migration. Sau khi chuyển adapter admin sang API mới mới bỏ đường lưu Vite cho tính năng này. Các kiểm tra cần bổ sung khi được duyệt: JWT 401/403, quyền ghi mới chưa được cấp mặc định, conflict 409, rollback audit, không lộ draft, lọc region/locale, media usage, archive tham chiếu cũ, import không nhân đôi, và dữ liệu đọc đồng nhất giữa hai app.
+Đặc tả chi tiết nằm trong backend/docs 01/02/03 và ADR-011. Kiểm tra renderer/editor/lưu thiết lập:
+`pnpm --filter @aov/admin-aov test:rich-text`; API đọc công khai được kiểm tra bằng kiểm thử tích hợp backend; renderer kiểm tra cả ngữ cảnh admin/wiki. Kiểm tra backend: `ReferenceSettingsTest`, `ReferenceSettingsIntegrationTest`,
+`HeroPublicReferencesTest` và `ModuleArchitectureTests`.
 
 ## Luồng quản lý tướng, mốc dữ liệu và bản dịch
 
@@ -496,3 +479,76 @@ trang phục chỉ hiện tên/icon; tạo nhãn nhập tên và thị trường
 
 Mã tướng quốc tế và khóa trang phục đã chuẩn hóa cùng file tài nguyên theo ADR-010. Importer
 nhận alias cũ trước khi ghép dữ liệu; không đổi UUID hoặc upload lại chỉ vì đổi tên file.
+
+## Kho trang bị dùng backend
+
+Các route `/items`, `/enchantments`, `/arcana`, `/spells` quản lý revision từ backend qua
+TanStack Query, không ghi catalog JSON tài nguyên. Nội dung gameplay dùng ruleset; tên, mô tả,
+hiệu ứng dạng chữ, nhãn chỉ số và biến thể shop nằm trong từng bản dịch. Trang bị có hai cách xem:
+bảng và sơ đồ shop theo nhóm/cột. Công thức chỉ lấy quan hệ đã xác nhận; đường nối tránh các ô,
+có hướng từ nguyên liệu đến món đích. Nối hai chấm hoặc kéo chấm để thêm nguyên liệu, kéo tay
+nắm để đổi vị trí; form chi tiết cho nhập vị trí/số lượng trên màn hình nhỏ. Các thay đổi này
+được lưu sau khi bấm **Lưu thay đổi**, có hoàn tác và cảnh báo rời trang khi còn dữ liệu chưa lưu.
+
+Phù hiệu có bốn hệ, ba tầng I–III và công cụ sửa hệ/bản dịch. Ngọc lọc theo màu/cấp/chỉ số;
+phụ trợ giữ khả dụng, hồi chiêu, điều kiện mở khóa, trạng thái và ảnh riêng. Form chi tiết mở
+bên phải trên desktop hoặc từ dưới trên mobile; bản dịch và ảnh có khu vực riêng. Mục đã xuất
+bản chỉ đọc, muốn sửa phải tạo bản nháp. Thiếu dữ liệu vẫn lưu nháp; chọn patch ghi nhận dữ liệu
+trước khi xuất bản bản nền không đồng nghĩa mọi mục thay đổi từ patch trước.
+
+Importer `research/warehouse/import-warehouse.py` nhập tài nguyên hiện có và ảnh qua Media
+presigned upload, giữ nguồn và checkpoint cục bộ. Bộ nguồn gồm 112 trang bị, 31 phù hiệu,
+88 ngọc, 14 phụ trợ, 255 ảnh và 192 quan hệ nguyên liệu. Hai công thức chưa xác nhận và hai
+viên ngọc thiếu chỉ số không được điền giả. Lần nhập đầu giữ tất cả ở DRAFT trong aov-standard,
+chưa tự gán patch theo ngày thu thập. Chạy lại không upload lại ảnh đã hoàn tất hoặc ghi đè
+bản nháp đã được chỉnh ngoài importer. Xem README cùng thư mục để kiểm chứng bằng `--verify`.
+
+### Ngọc cấp thấp và phụ trợ lưu trữ
+
+- Bảng ngọc hiển thị theo thứ tự III → II → I; bậc II/I có nhóm thu gọn riêng. Tìm kiếm hoặc
+  lọc bậc I/II tự mở nhóm phù hợp. Icon ngọc dùng khung tròn cả danh sách và chi tiết.
+- Phụ trợ có “Phụ trợ cũ” và “Đã gỡ” được xuất bản không rõ patch khi đủ các nội dung
+  bắt buộc khác. Mốc này là hồ sơ lưu trữ, không được coi là gameplay hiện hành.
+- Tab Lịch sử cho người có quyền xuất bản ghi patch loại bỏ cùng link nguồn xác nhận.
+  Sự kiện hiển thị ở patch tương ứng, không sửa lại snapshot đã xuất bản.
+
+### Thao tác trên sơ đồ trang bị và phù hiệu
+
+- Chọn thẻ trang bị để chỉ hiện nhánh ghép liên quan; nút mở chi tiết nằm bên phải.
+  Nguyên liệu trực tiếp dùng nét liền đậm, nguyên liệu gián tiếp/nâng cấp dùng nét đứt và
+  có mũi tên. Cột đầu chỉ có cổng ra, cột cuối chỉ có cổng vào. Thẻ giữ chiều rộng tối
+  thiểu 220 px; màn hình hẹp cuộn ngang sơ đồ. Bỏ chọn hoặc Esc để ẩn đường nối.
+- Phù hiệu dùng trục liên tục từ icon hệ qua I–II–III, chia các hàng bằng đường ngang.
+  Không bao từng hệ/node bằng khung; icon chi tiết và kho chọn ảnh dùng khung tròn.
+- Bộ lọc bậc ngọc hiển thị các nút Tất cả bậc/III/II/I, đồng bộ query `tier`.
+- Thứ tự hệ và thứ tự phù hiệu trong cùng cấp được chỉnh bằng popup kéo thả có ảnh/tên
+  để đối chiếu, có nút lên/xuống và hỗ trợ bàn phím. Chỉ lưu khi bấm Lưu thứ tự; backend
+  kiểm tra version và ghi cả nhóm trong một transaction. Phù hiệu đã xuất bản cần tạo
+  nháp nội dung trước, bản dịch không dùng để đổi bố cục. Lưu nội dung đang sửa trước
+  khi mở sắp xếp; mục mới được thêm cuối nhóm. Vai trò phù hợp không còn hiển thị/nhập.
+- Phù hiệu có bộ lọc mùa/patch đồng bộ query `season`/`patch`, dùng TanStack Query với
+  cache riêng từng scope. Backend lọc lịch sử trước khi chọn snapshot và phân trang.
+  Bỏ lọc trả toàn bộ danh mục; S3 là mốc nền, S4/29-09-2026 hiện hai mục mới. Khi đổi
+  mùa/patch, bỏ giới hạn hệ trước đó để hiện các hệ có kết quả; các cấp trống được ẩn.
+
+### Timeline và đường dẫn tướng
+
+Các trang kho dùng bộ lọc mùa/patch và timeline kéo ngang; scope lưu ở query.
+Dữ liệu nền tách Thêm mới; patch trống không tạo lịch sử giả. Chi tiết có lịch sử, tạo nháp GAME_PATCH
+và xác nhận phân loại/nguồn sau xuất bản. Tóm tắt lịch sử theo locale riêng với gameplay.
+Đánh giá tổng thể tướng được lưu riêng, không suy từ nhãn của kỹ năng/chỉ số.
+URL chuẩn: /hero, /hero/new, /hero/import, /hero/:id, /hero/:id/translations; /hero/media giữ nguyên.
+/publishing/* chuyển tiếp giữ query/hash. Trang phiên bản tách xem thay đổi khỏi form lịch thị trường.
+Thuật ngữ và tham chiếu có tab và biên tập bên phải/bottom. Cấu hình tooltip dùng backend chung; JSON cũ chỉ dùng để chuyển đổi
+của môi trường phát triển, không thay thế snapshot gameplay trong backend.
+
+Timeline danh mục gộp bộ chọn mùa và nút tạo mùa ở hàng đầu, các patch và nút tạo patch bên dưới. `show=all` giữ chế độ toàn bộ dữ liệu tại mốc trong URL; bỏ tham số để chỉ xem thay đổi. Mục kế thừa có nhãn riêng, chỉ ghi không thay đổi khi patch đã hoàn tất rà soát.
+
+
+### Chèn tham chiếu theo nhóm (tiếng Việt)
+
+Bộ chọn `@` gồm Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ và Thuật ngữ, dùng ảnh Media và
+bản dịch từ backend. Có thể tìm tên trực tiếp, hoặc nhập `@Trang bị kiếm`, `@Phù hiệu cứu`,
+`@Ngọc xanh`; tìm không dấu cũng được. Bộ chọn từ toolbar có nút nhóm để chọn nhanh.
+Thẻ nguồn lưu kind và khóa ổn định thay vì tên dịch. Backend V030 cho phép lưu tùy chỉnh của
+các nhóm này; frontend wiki không được tích hợp cố định trong đợt này theo yêu cầu.

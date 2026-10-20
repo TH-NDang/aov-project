@@ -2071,3 +2071,157 @@ Metadata tên file Media và nhãn ứng viên được đổi đồng bộ vớ
 object key và bytes lưu trữ bất biến. Bảng ảnh hiển thị thumbnail chính trong cột tướng được ghim,
 không có cột Ảnh chính riêng. Ảnh trang phục chính có dấu kiểm nhỏ trên thumbnail; nhãn bậc chỉ
 hiển thị tên và icon, vẫn mở preview tại chỗ được.
+
+## Kho trang bị — API quản trị đầu tiên
+
+Bốn prefix `/admin/items`, `/admin/arcana`, `/admin/spells`, `/admin/enchantments` dùng cùng
+vòng đời, nhưng content có kiểu riêng. Mọi đường dẫn dưới đây nằm dưới `/api/wiki/v1`.
+
+| Thao tác | Đường dẫn / body |
+|---|---|
+| Danh sách | GET prefix?rulesetId&locale&q&page=0&size=20; size 1–100, PageSlice |
+| Chi tiết mới nhất | GET prefix/{id}?rulesetId |
+| Lịch sử | GET prefix/{id}/revisions; array revision |
+| Snapshot | GET prefix/{id}/revisions/{revisionId}, alias drafts/{revisionId} |
+| Tạo identity/nháp | POST prefix: code,rulesetId,effectiveFromPatchVariantId?,initialLocale,name,content? |
+| Fork | POST prefix/{id}/drafts: rulesetId,sourceRevisionId,cause,effectiveFromPatchVariantId?,changeNote? |
+| Sửa nháp | PUT prefix/{id}/drafts/{revisionId}: expectedVersion,content,changeNote?,effectiveFromPatchVariantId? |
+| Xuất bản / hủy | POST prefix/{id}/drafts/{revisionId}/publish hoặc discard: expectedVersion,changeNote? |
+
+Đọc cần catalog:read; ghi cần item:write/arcana:write/spell:write/enchantment:write; xuất bản cần
+quyền `:publish` tương ứng. Lỗi optimistic version hoặc sửa bản đã xuất bản trả 409; nội dung,
+ảnh sai semantic type và dữ liệu bắt buộc khi publish trả 422.
+
+Các mutation và chi tiết trả `{id,code,revision,content,missingFields}`. Revision gồm id,ownerId,
+code,rulesetId,revisionNo,state,version,publicationSequence,publishedAt,cause,
+effectiveFromPatchVariantId,sourceRevisionId,createdAt,updatedAt. Cause được fork là GAME_PATCH,
+CONTENT_CORRECTION hoặc TRANSLATION_UPDATE; tạo mới dùng DATA_BASELINE. Content correction và
+bản dịch giữ applicability của nguồn. Không cho dùng nguồn tương lai để tạo snapshot quá khứ.
+Nháp DATA_BASELINE độc lập cho phép bổ sung/đổi patch quan sát đã xuất bản cùng ruleset khi sửa;
+không gửi hoặc gửi null giữ mốc đang có. Chỉ đổi mốc cũng tăng version, không tự tạo changelog.
+
+Content chung có iconAssetId,translations,notes. Translation gồm locale,name,summary?,description?,
+statLabels?,variantLabels?,effects?; effect gồm key,name,description,type. `notes` là ghi chú
+biên tập/nguồn, tối đa 32768 ký tự; public không trả ghi chú này. Các danh sách tùy chọn mặc định rỗng.
+
+- Item: tier,price,categoryCode,shopPositions[{categoryCode,row,column,variant}],recipeStatus
+  UNKNOWN/NONE/VERIFIED,components[{itemId,quantity}],stats[{key,value,unit}]. Chỉ VERIFIED nhận
+  thành phần đã xác nhận; không cho tự ghép chính nó, chu trình hoặc UUID không tồn tại.
+- Arcana: color RED/PURPLE/GREEN,tier,stats. Chỉ số chưa biết được để rỗng trong nháp.
+- Enchantment: branchCode,tier,position. Tier 1–3, position có thể null khi chưa biết.
+- Spell: cooldownSeconds,unlockLevel,unlockType ACCOUNT_CREATION/LEVEL/UNKNOWN,availability
+  AVAILABLE/REMOVED/UNKNOWN,legacy,displayOrder,chargeRechargeSeconds,maxCharges,defaultStateKey,
+  states[{key,iconAssetId,translations}],referenceImages[{assetId,notes}].
+
+GET `/admin/item-categories` và `/admin/enchantment-branches` trả array metadata gồm code,version,
+displayOrder,iconAssetId,backgroundAssetId,color,translations[{locale,name,description,suitability}].
+PUT `/{code}` nhận expectedVersion=0 để tạo; sửa phải mang version hiện tại, thay toàn bộ danh sách
+bản dịch nên client phải giữ các locale không sửa. Nhánh dùng ENCHANTMENT_ICON, nhóm trang bị dùng
+ITEM_ICON; ảnh nền dùng OTHER. Metadata có audit và báo tham chiếu Media.
+
+GET `/admin/enchantments` hỗ trợ thêm `seasonId`, `patchVariantId`. Không truyền cả hai
+thì trả snapshot mới nhất như cũ. Có bộ lọc thì chỉ chọn identity có snapshot
+DATA_BASELINE hoặc GAME_PATCH trong đúng mùa/patch; trả snapshot mới nhất tại mốc
+phù hợp, gồm nội dung sửa/bản dịch tại cùng mốc. Bản sửa nội dung/bản dịch không tự
+tạo một lần thay đổi gameplay mới. Áp dụng scope và tìm kiếm trước phân trang;
+không lấy snapshot mùa sau để hiển thị cho mùa trước. Mốc nền được hiển thị như
+dữ liệu đã ghi nhận, không suy diễn toàn bộ mục đã đổi gameplay. Nếu truyền cả
+mùa/patch/ruleset không tương ứng thì trả 400 INVALID_QUERY_PARAMETER.
+
+PUT `/admin/enchantment-branches/order` (`enchantment:write`) nhận
+`{entries:[{code,expectedVersion}]}` theo thứ tự mong muốn, phải gồm toàn bộ hệ hiện có.
+PUT `/admin/enchantments/order` cùng quyền nhận
+`{rulesetId,branchCode,tier,entries:[{id,revisionId,expectedVersion}]}`; danh sách phải gồm
+đủ các snapshot hiện tại trong cùng hệ/cấp/ruleset, đều là nháp nội dung (không phải
+TRANSLATION_UPDATE). Không sửa snapshot đã xuất bản; cần tạo nháp trước. Cả hai API kiểm
+tra trùng lặp, thành viên và version trước khi ghi trong một transaction, gán vị trí
+liên tiếp từ 0, chỉ tăng version và ghi audit cho mục đổi vị trí. Trả array đã sắp xếp;
+không đổi ảnh, nội dung/bản dịch, ghi chú hay patch. Lỗi version/thành viên trả 409.
+
+Public GET `/items`, `/arcana`, `/spells`, `/enchantments` và `/{id}` chỉ trả snapshot PUBLISHED
+được phân giải theo region/patch hiện hành. Locale chọn bản dịch riêng và không thay revision;
+ưu tiên locale yêu cầu, vi-VN, en-US, rồi locale đầu tiên. Nháp không bị công khai.
+
+### Phụ trợ cũ và patch loại bỏ
+
+POST publish của phụ trợ chấp nhận patch null khi legacy=true, availability=REMOVED và
+cause khác GAME_PATCH. missingFields không báo thiếu patch trong trường hợp này; nội
+dung khác vẫn bắt buộc. GET /spells và /spells/{id} loại snapshot patch null khỏi phân
+giải gameplay. GET /spells/archived?region&locale&page&size trả PageSlice các hồ sơ
+lưu trữ đã xuất bản (legacy/REMOVED, patch null) theo ruleset thị trường.
+
+GET /admin/spells/{id}/removals?rulesetId trả các sự kiện loại bỏ đã xác nhận.
+POST cùng đường dẫn (spell:publish) nhận revisionId,patchVariantId,sourceUrl,notes?.
+Revision phải đã xuất bản và là phụ trợ cũ REMOVED; patch phải đã xuất bản cùng ruleset.
+Trả 201 với id,revisionId,rulesetId,patchVariantId,sourceUrl,notes,recordedAt; trùng cùng
+phụ trợ/patch trả SPELL_CONFLICT 409, nguồn/context sai trả SPELL_INVALID_CONTENT 422.
+GET /admin/spell-removals?patchVariantId trả sự kiện của patch (catalog:read).
+Public /patches/{id}/changes thêm domain=SPELL, chỉ gồm sự kiện xác nhận có nguồn;
+không tự sinh sự kiện từ import hoặc xuất bản hồ sơ lưu trữ.
+
+PUT nháp phụ trợ nhận thêm clearPatchContext=true để xóa mốc đã chọn nhầm, chỉ khi
+DATA_BASELINE độc lập, legacy=true và REMOVED. Không được đồng thời gửi patch mới.
+GAME_PATCH không được dùng hồ sơ không rõ patch làm baseline gameplay; hiệu chỉnh nội
+dung/bản dịch vẫn được fork và giữ patch null.
+
+### Timeline kho trang bị và đánh giá tổng thể
+
+Cả GET /admin/items, /admin/arcana, /admin/spells, /admin/enchantments hỗ trợ seasonId/patchVariantId
+như phần phù hiệu ở trên. Scope gồm cả hồ sơ được ghi nhận loại bỏ ở patch, kể cả snapshot ở patch trước.
+GET /admin/catalog-changes?rulesetId&domain=ITEM|ARCANA|SPELL|ENCHANTMENT&locale cần catalog:read,
+trả array {id,domain,ownerId,code,name,iconAssetId,rulesetId,patchVariantId,fromRevisionId,toRevisionId,
+kinds,summary,actualLocale,sourceUrl,confirmed,recordedAt}. Mỗi owner/patch tối đa một dòng.
+DATA_BASELINE không được tự coi ADDED; GAME_PATCH chưa xác nhận dùng UPDATED/confirmed=false.
+
+POST /admin/{items|arcana|spells|enchantments}/{id}/changes cần :publish tương ứng và patch:write.
+Body {patchVariantId,toRevisionId,fromRevisionId?,kinds,translations:[{locale,text}],sourceUrl}.
+Patch/snapshot phải đã xuất bản, cùng owner/ruleset. Target là DATA_BASELINE hoặc GAME_PATCH.
+Ngoại trừ REMOVED, target nằm đúng patch. From là snapshot đã xuất bản ở patch trước trong ruleset.
+UPDATED/BUFF/NERF/BALANCE/REWORK/FIX cần GAME_PATCH và from; ADDED và DATA_BASELINE là nhãn độc lập.
+REMOVED chỉ một kind, cho phép target ở patch trước để bổ sung lịch sử khi đã có nguồn.
+Tóm tắt theo locale và nguồn HTTP bắt buộc. Trả 201 {id}; trùng owner/patch 409, sai nội dung 422.
+Không cung cấp API kéo đổi/xóa lịch sử đã xác nhận.
+
+PUT /admin/hero-changes/{changeSetId}/assessment cần patch:write, nhận {kind,expectedVersion}.
+Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng); tạo đầu version=0, lưu tăng version, xung đột 409.
+API hero changes thêm overallKind,assessmentVersion; gameplayChanges của /admin/heroes thêm overallKind nullable,
+giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay sự kiện kỹ năng/chỉ số.
+
+### Xem toàn bộ dữ liệu tại mốc và rà soát patch
+
+- `GET /admin/{heroes|items|enchantments|arcana|spells}` thêm `includeUnchanged=true` khi lọc `seasonId` / `patchVariantId`: kế thừa dữ liệu đã xuất bản đến mốc đích. Mặc định giữ chế độ chỉ thay đổi.
+- `PUT /admin/patch-variants/{id}/data-review`: quyền `patch:write`, body `{ state: "COMPLETE" | "IN_PROGRESS", expectedVersion: number }`. Mốc phải đã xuất bản; phiên bản ban đầu 0, trả 409 nếu bị thay đổi đồng thời.
+- Publication overview bổ sung `dataReviewState`, `dataReviewVersion`, `dataReviewedAt` trên variant. Trạng thái này tách khỏi trạng thái xuất bản và trạng thái đang áp dụng của thị trường.
+
+
+## Thuật ngữ và tham chiếu dùng chung (2026-10-20)
+
+Các đường dẫn dưới đây nằm dưới `/api/wiki/v1`:
+
+| Endpoint | Quyền | Kết quả |
+|---|---|---|
+| `GET /reference-settings` | Công khai | `{version, settings}` gồm thiết lập và thuật ngữ chung; không có đường dẫn admin |
+| `GET /reference-catalog?region=VN&locale=vi-VN` | Công khai | Cấu hình kết hợp tướng/trang bị đã xuất bản, có hiệu lực theo thị trường |
+| `GET /admin/reference-settings` | `catalog:read` | Toàn bộ cấu hình tùy chỉnh phục vụ biên tập |
+| `PUT /admin/reference-settings` | `catalog:read`, `hero:write` | Body `{expectedVersion, settings}`, trả cấu hình đã lưu và version mới |
+
+`settings`: `{schemaVersion:1, autoRecognize, fallbackLocale, entities}`. Mỗi entity có `id` là khóa
+tham chiếu, `kind` (`term`, `hero`, `item`, `enchantment`, `arcana`, `spell`), `translations:[{locale,name,aliases,description}]`, tùy chọn
+`icon`, `autoMatch`, `display:{color,underline,showIcon}`, `destinations:{admin,wiki}`. Đích đến phải
+là đường dẫn nội bộ. Tối đa 2.000 mục, 30 bản dịch/mục, 20 tên gọi khác/bản dịch, 4.000 ký tự mô tả.
+Không đưa audit, token hoặc revision nháp vào API công khai. Tùy chỉnh tướng/trang bị chỉ xuất hiện
+trong catalog công khai nếu đối tượng gốc được công khai tại context tương ứng.
+
+Version cũ: `409 REFERENCE_VERSION_CONFLICT`; nội dung không hợp lệ:
+`422 REFERENCE_INVALID_SETTINGS`. GET kiểm tra whitelist query. Admin trả `Cache-Control: no-store`;
+public yêu cầu revalidate. Không tự ghi dữ liệu khi GET hoặc khi mở tab thử hiển thị.
+
+
+### Bổ sung nhóm tham chiếu — V030
+
+Catalog công khai còn ghép Phù hiệu, Bảng ngọc và Phụ trợ từ read model đã xuất bản của từng module.
+Mỗi module triển khai `PublicReferenceProvider`, không chia sẻ entity/repository. V030 mở rộng ràng
+buộc kind của entry; không sửa V029 đã áp dụng. Mặc định các mục kho trang bị chỉ chèn bằng `@`,
+không tự nhận diện tên dễ lẫn với lời mô tả. Có thể bật nhận diện riêng trong thiết lập tham chiếu.
+Bộ chọn admin hỗ trợ lệnh nhóm tiếng Việt trước: `@Trang bị`, `@Phù hiệu`, `@Bảng ngọc`/`@Ngọc`,
+`@Phụ trợ`, `@Tướng`, `@Thuật ngữ`; thêm tên sau nhóm để lọc, hỗ trợ tìm không dấu.
