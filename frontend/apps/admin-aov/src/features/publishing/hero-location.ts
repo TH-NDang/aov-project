@@ -69,6 +69,7 @@ export function heroPageLocation(heroId: string, params: URLSearchParams, revisi
   for (const key of heroKeys) {
     if (key !== "hero" && params.has(key)) next.set(key, params.get(key)!)
   }
+  if (params.has("ruleset")) next.set("ruleset", params.get("ruleset")!)
   if (revisionId) next.set("revision", revisionId)
   const query = next.toString()
   return `/hero/${encodeURIComponent(heroId)}${query ? `?${query}` : ""}`

@@ -55,7 +55,7 @@ test("hero URL restores both tab levels and independent reading and translation 
 
 test("full-page links carry hero navigation and comparison state without list-only parameters", () => {
   const params = new URLSearchParams(
-    "hero=hero-42&season=s3&patch=baseline&view=history&tab=media&revision=revision-1&compare=revision-0&diff=split&changes=skills&unrelated=value",
+    "hero=hero-42&season=s3&patch=baseline&ruleset=regional&view=history&tab=media&revision=revision-1&compare=revision-0&diff=split&changes=skills&unrelated=value",
   )
   const url = new URL(heroPageLocation("hero-42", params, "revision-2"), "http://localhost")
   assert.equal(url.pathname, "/hero/hero-42")
@@ -63,6 +63,7 @@ test("full-page links carry hero navigation and comparison state without list-on
   assert.equal(url.searchParams.get("view"), "history")
   assert.equal(url.searchParams.get("compare"), "revision-0")
   assert.equal(url.searchParams.get("diff"), "split")
+  assert.equal(url.searchParams.get("ruleset"), "regional")
   assert.equal(url.searchParams.get("hero"), null)
   assert.equal(url.searchParams.get("season"), null)
   assert.equal(url.searchParams.get("unrelated"), null)
