@@ -250,11 +250,9 @@ Giao diện import có ba bước: chọn mục đích/file, ánh xạ trường
 
 Khởi động lại backend để áp dụng V010 sau V009. Tạo/import không còn cho bỏ trống patch. Patch phải có lịch release trong một mùa đã khai báo; ngày tương lai vẫn có thể chọn để chuẩn bị draft. Bổ sung patch quá khứ bằng tùy chọn **Chèn patch lịch sử trước** trong cấu hình game.
 
-
 ### Import chạy nền ở backend
 
 Trang Import chuẩn bị dữ liệu/ảnh rồi gửi một tác vụ có UUID chống gửi trùng. Sau khi máy chủ xác nhận, có thể đóng hoặc tải lại trang. Sidebar và lịch sử Import đọc tiến trình từ backend, tự làm mới mỗi 3 giây. Lỗi mạng lúc gửi cho phép gửi lại cùng UUID. Chưa gửi tác vụ thì cần giữ trình duyệt mở. Khởi động lại backend để áp dụng migration V011 trước khi dùng.
-
 
 ### Import từ thư mục và ánh xạ kỹ năng/trang phục
 
@@ -312,7 +310,6 @@ Keycloak và callback riêng, chưa được hỗ trợ bởi thiết lập LAN 
 Khi IP thay đổi, cập nhật các biến và URL. Quay lại localhost: bỏ ba biến môi trường trên,
 chạy lại backend và dùng lệnh frontend `dev`.
 
-
 ## Mùa và patch dùng chung
 
 Tạo mùa không chọn thị trường hay ngày. Chọn vị trí chèn trước mùa đã có hoặc nối cuối.
@@ -338,11 +335,13 @@ nhập liệu và thuộc bản ghi được chọn mới upload. Bước xem tr
 upload qua Media, thay đường dẫn bằng asset ID rồi gửi tác vụ backend. Giữ trang mở trong khi
 chuẩn bị/upload; sau khi backend nhận tác vụ mới có thể đóng trang. Git LFS pointer không phải
 ảnh thật và sẽ báo lỗi, cần tải tài nguyên thực trước khi import.
+
 ### Tiếp tục upload import sau khi đóng trang
 
 Sau khi xác nhận nhập, backend lưu phiên upload và tiến trình từng ảnh. Mở lại `/publishing/import`, mục **Upload đang dở** hiển thị các phiên của tài khoản hiện tại. Chọn **Tiếp tục upload**, chọn lại folder/ZIP ban đầu nếu thiếu ảnh rồi bấm **Tiếp tục phiên đã lưu**. Không cần chọn lại mùa/patch hay ánh xạ; chúng đã nằm trong phiên. Ảnh hoàn tất được bỏ qua, file thay thế được kiểm tra SHA-256. Có thể tiếp tục bằng máy khác khi đăng nhập cùng tài khoản và chọn đúng gói nguồn.
 
 Upload dừng khi trình duyệt đóng; tác vụ nhập chỉ chạy tự động trên máy chủ sau khi nhận đủ dữ liệu. Ảnh đang tải dở có thể phải tải lại toàn bộ file đó, không hỗ trợ tiếp tục theo byte. **Bỏ phiên** xóa checkpoint, không xóa ảnh đã lưu. Các lượt upload trước tính năng này không có checkpoint để khôi phục. Backend cần migration V015; không lưu token, presigned URL hay file bytes trong phiên.
+
 ## Liên kết tới vị trí đang xem của tướng
 
 - Xem bên cạnh bảng: `/publishing?hero=<hero-id>&revision=<revision-id>&tab=skills`.
@@ -544,7 +543,6 @@ của môi trường phát triển, không thay thế snapshot gameplay trong ba
 
 Timeline danh mục gộp bộ chọn mùa và nút tạo mùa ở hàng đầu, các patch và nút tạo patch bên dưới. `show=all` giữ chế độ toàn bộ dữ liệu tại mốc trong URL; bỏ tham số để chỉ xem thay đổi. Mục kế thừa có nhãn riêng, chỉ ghi không thay đổi khi patch đã hoàn tất rà soát.
 
-
 ### Chèn tham chiếu theo nhóm (tiếng Việt)
 
 Bộ chọn `@` gồm Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ và Thuật ngữ, dùng ảnh Media và
@@ -552,3 +550,9 @@ bản dịch từ backend. Có thể tìm tên trực tiếp, hoặc nhập `@Tr
 `@Ngọc xanh`; tìm không dấu cũng được. Bộ chọn từ toolbar có nút nhóm để chọn nhanh.
 Thẻ nguồn lưu kind và khóa ổn định thay vì tên dịch. Backend V030 cho phép lưu tùy chỉnh của
 các nhóm này; frontend wiki không được tích hợp cố định trong đợt này theo yêu cầu.
+
+Danh mục biên tập lấy từ một request `GET /admin/reference-catalog?rulesetId=...`, giữ toàn bộ bản
+dịch và asset ID, không tải preview đầy đủ từng tướng. Query key tách theo người đăng nhập và ruleset;
+các thao tác tạo/sửa/xuất bản/import làm mới danh mục. Metadata icon dùng chung TanStack Query với
+kho ảnh, tải khi hàng trong popup `@` sắp xuất hiện và cập nhật khi thay phiên bản ảnh. Popup giới hạn
+chiều cao, cuộn trong toàn bộ kết quả; không đẩy phần nội dung bên dưới.

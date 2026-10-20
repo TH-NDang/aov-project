@@ -2225,3 +2225,24 @@ buộc kind của entry; không sửa V029 đã áp dụng. Mặc định các m
 không tự nhận diện tên dễ lẫn với lời mô tả. Có thể bật nhận diện riêng trong thiết lập tham chiếu.
 Bộ chọn admin hỗ trợ lệnh nhóm tiếng Việt trước: `@Trang bị`, `@Phù hiệu`, `@Bảng ngọc`/`@Ngọc`,
 `@Phụ trợ`, `@Tướng`, `@Thuật ngữ`; thêm tên sau nhóm để lọc, hỗ trợ tìm không dấu.
+
+### Danh mục biên tập gọn và Redis — ADR-012
+
+`GET /admin/reference-catalog?rulesetId=<UUID>` cần `catalog:read`, trả
+`{rulesetId, items}`. `items` có cùng dạng entity tham chiếu ở trên, gồm toàn bộ bản dịch của snapshot
+được chọn và đường dẫn biên tập. `rulesetId` là tùy chọn; mặc định chọn ruleset đang hoạt động có mã
+`aov-standard`, nếu không có thì ruleset hoạt động đầu tiên. Query lạ bị từ chối. Không có ruleset
+hoạt động thì trả danh mục rỗng. Không trả chiêu/chỉ số/công thức đầy đủ chỉ để dựng bộ chọn `@`.
+
+Admin dùng revision chưa bị discard trong ruleset; kho trang bị ưu tiên thứ tự patch rồi revision.
+Public giữ quy tắc chỉ lấy bản xuất bản tại gameplay context hiện hành và loại mục đã bị gỡ.
+Locale public phải là BCP 47 chuẩn hóa, tối đa 64 ký tự; sai trả `422 REFERENCE_INVALID_LOCALE`
+trước khi tra cache. Thời điểm và patch context được dùng chung cho các provider trong một snapshot đọc.
+Các tên/mô tả/asset ID được đọc theo projection, Media đọc theo lô. Giao diện admin gọi một API này
+thay vì gọi preview từng tướng, còn metadata icon chỉ tải khi kết quả sắp đi vào vùng nhìn thấy.
+
+HTTP cache không đổi: admin `no-store`, public có ETag và yêu cầu revalidate. Redis chỉ cache read model
+phía server: admin 30 giây, public catalog/thuật ngữ 2 phút mặc định; khóa tách admin/public, ruleset,
+region/locale và patch hiện hành. Quyền được kiểm tra trước lookup. Epoch DB đổi trong cùng transaction
+với audit để dữ liệu sửa/xuất bản/nâng phiên bản ảnh có hiệu lực cho request tiếp theo. Redis lỗi thì
+đọc DB, có timeout ngắn và backoff; không cache lỗi, token, phiên đăng nhập hoặc bytes ảnh.

@@ -1681,3 +1681,16 @@ module tương ứng sở hữu; tham chiếu không sao chép revision hoặc t
 Ràng buộc kind của `terminology.entry` cho phép thêm `enchantment`, `arcana`, `spell`.
 Bản dịch/cách hiển thị dùng lại các bảng hiện có, không sao chép dữ liệu gameplay hoặc ảnh của
 module gốc. Không sửa migration V029 đã áp dụng.
+
+### V031–V032 — Cache và projection danh mục tham chiếu
+
+`platform.catalog_cache_epoch` có đúng một dòng (`id = 1`), `epoch BIGINT > 0`. Mỗi transaction
+ghi catalog có audit tăng epoch một lần trước commit, sau khi flush JPA. Epoch thuộc cùng transaction
+với thay đổi; rollback không làm tăng epoch. Không lưu dữ liệu gameplay hoặc JSON cache trong bảng này.
+Mỗi lookup cache đọc epoch từ DB chính; Redis key chứa epoch để request cũ hoặc Redis phục hồi không
+làm sống lại dữ liệu đã hết hiệu lực. Xem ADR-012.
+
+V032 thêm index có điều kiện `state <> 'DISCARDED'` trên revision của Hero, Item, Arcana, Enchantment,
+Spell: `(ruleset_id, owner_id/hero_id, revision_no DESC)`. Truy vấn tham chiếu giới hạn theo ruleset
+và lấy scalar projection tên/bản dịch/asset ID; không hydrate toàn bộ section hoặc gameplay JSON.
+Media lấy asset và current version theo lô, tối đa hai truy vấn cho một tập ID không rỗng.
