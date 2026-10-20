@@ -28,9 +28,9 @@ có thể publish trước thời điểm rollout. Content correction giữ appl
 phát sinh change set. Change set được ghi riêng, cần `patch:write`; STAT/ROLE/VISUAL được đối chiếu
 snapshot, SKILL kiểm tra stable key và giá trị thay đổi; mô tả mechanic vẫn cần biên tập viên xác minh.
 
-Item/Spell/Arcana/Enchantment/GameMode vẫn là các phase mở rộng, chưa có catalog authoring/API.
-Chưa có Redis, projection materialized, full-text search hoặc tự sinh game data. Public Hero query
-hiện dựng read model trực tiếp; cần đo query và tối ưu theo batch trước khi tải dữ liệu/quy mô tăng lớn.
+Item/Spell/Arcana/Enchantment đã có catalog authoring/API theo các phần bổ sung bên dưới; GameMode
+vẫn là phase mở rộng. Danh mục tham chiếu dùng scalar projection, đọc Media theo lô và Redis tùy chọn
+theo ADR-012. Chưa có projection materialized, full-text search hoặc tự sinh game data.
 
 ---
 
@@ -89,6 +89,7 @@ Spring Data JPA · Flyway · PostgreSQL
 Spring Security OAuth2 Resource Server · Spring Modulith
 Lombok · MapStruct · Testcontainers
 AWS SDK for Java 2.x (S3) — truy cập object storage
+Spring Data Redis — cache read model tùy chọn, ADR-012
 ```
 
 Chi tiết cấu hình thư viện (annotation processing của Lombok/MapStruct, quy ước Flyway) xem `NOTE-SPRING-BOOT-4.md`. Nếu NOTE mâu thuẫn với bộ 01/02/03 (tên package, kiểu ID, API base path, cấu trúc package), bộ 01/02/03 được ưu tiên.
@@ -102,7 +103,7 @@ Các thành phần sau không phải điều kiện để backend đầu tiên h
 - Eureka/service registry;
 - Config Server;
 - Kafka;
-- Redis;
+- Redis (hiện đã có tích hợp tùy chọn theo ADR-012, không bắt buộc để phục vụ API);
 - nhiều deployable microservice;
 - distributed transaction;
 - event sourcing toàn hệ thống.

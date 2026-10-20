@@ -151,7 +151,8 @@ Item/Spell/Arcana/Enchantment/GameMode vẫn là các catalog thuộc giai đo�
 ## Domain core: Patch và Hero
 
 Migrations V005–V008 bổ sung gameplay context, Hero section revisions và patch history.
-Giữ PostgreSQL + Keycloak + SeaweedFS như cấu hình foundation. Không cần đổi storage hoặc thêm Redis.
+Giữ PostgreSQL + Keycloak + SeaweedFS như cấu hình foundation. Redis cache tùy chọn được bổ sung
+theo ADR-012; không thay đổi storage hoặc nguồn dữ liệu chính.
 
 Luồng nhập dữ liệu thật:
 
@@ -209,3 +210,39 @@ Chỉ xử lý nháp DATA_BASELINE độc lập, giữ nguyên content/bản d�
 và không thay mốc đã gán khác. Bản đã xuất bản được bỏ qua. Mục thiếu mô tả/chỉ số
 được giữ nháp; không tự đoán số liệu và không bỏ qua validation. Kết quả lưu trong
 `.local-state/arcana-publication-result.json`; sao lưu DB trước lần chạy có `-Apply`.
+
+### Cache danh mục tham chiếu
+
+Admin dùng `GET /admin/reference-catalog` để lấy tên/bản dịch/asset ID theo ruleset trong một request;
+không gọi preview từng tướng. Public vẫn chỉ đọc dữ liệu xuất bản tại context hiện hành. Các module
+lấy projection gọn và Media đọc theo lô. Popup `@` chỉ tải metadata icon khi cuộn tới.
+
+Compose local có Redis 8.2, chỉ mở `127.0.0.1:6379`, giới hạn 128 MB và không lưu bền. Profile `local`
+bật cache mặc định; các profile khác mặc định tắt. Có thể khởi động Redis riêng:
+
+```powershell
+docker compose up -d redis
+```
+
+| Biến môi trường | Mặc định |
+|---|---|
+| `READ_MODEL_CACHE_ENABLED` | `true` ở local, `false` ở profile khác |
+| `READ_MODEL_CACHE_PREFIX` | `wiki:read-model:v1` |
+| `READ_MODEL_CACHE_PUBLIC_TTL` / `READ_MODEL_CACHE_ADMIN_TTL` | `2m` / `30s` |
+| `READ_MODEL_CACHE_RETRY_DELAY` / `READ_MODEL_CACHE_MAX_VALUE_BYTES` | `5s` / `8388608` |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_SSL` | `localhost` / `6379` / `false` |
+| `REDIS_USERNAME` / `REDIS_PASSWORD` | Rỗng; production cấp qua môi trường |
+| `REDIS_TIMEOUT` / `REDIS_CONNECT_TIMEOUT` | `200ms` / `200ms` |
+
+Cache JSON danh mục admin/public và thuật ngữ public. Không cache bytes ảnh, token, phiên đăng nhập
+hoặc hồ sơ cá nhân. Thay đổi catalog tăng epoch PostgreSQL trong cùng transaction; cache cũ hết TTL
+mà không cần xóa toàn bộ Redis. Patch theo lịch được xác định lại trước lookup. Redis ngắt thì API
+đọc DB và tạm ngừng thử Redis 5 giây; không làm health check của ứng dụng thất bại chỉ vì cache ngắt.
+Micrometer counter `wiki.read.model.cache` có tag `result=hit|miss|bypass|error`. Xem
+[ADR-012](../docs/adr/ADR-012-reference-read-model-cache.md) cho giới hạn và thiết kế invalidation.
+
+Kiểm tra tập trung (các integration test cần Docker, database test tách biệt):
+
+```powershell
+./mvnw.cmd "-Dtest=RedisReadModelCacheTest,CatalogCacheEpochTest,CatalogCacheEpochIntegrationTest,MediaAssetLookupTest,AdminReferenceCatalogTest,PublicReferenceCatalogTest,AdminReferenceCatalogIntegrationTest,HeroPublicReferencesTest,ReferenceSettingsIntegrationTest" test
+```
