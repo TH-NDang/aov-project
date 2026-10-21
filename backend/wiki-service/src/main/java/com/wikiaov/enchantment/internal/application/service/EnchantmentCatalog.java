@@ -69,63 +69,30 @@ public class EnchantmentCatalog {
         if (rulesetId != null)
             contexts.requireRuleset(rulesetId);
         String needle = q.strip().toLowerCase(Locale.ROOT);
-        Map<UUID, Long> ordinals = new HashMap<>();
         var candidates = revisions.findByStateNot("DISCARDED").stream()
-                .filter(r -> rulesetId == null || r.getRulesetId().equals(rulesetId)).toList();
+                .filter(r -> rulesetId == null || r.getRulesetId().equals(rulesetId))
+                .map(r -> new CatalogSnapshots.Snapshot<>(r.getId(), r.getOwnerId(),
+                        r.getEffectiveFromPatchVariantId(), r.getRevisionNo(), r.getState(), r.getCause(), r))
+                .toList();
         if (seasonId != null || patchVariantId != null) {
-            var variants = contexts.catalogVariants(seasonId);
-            if (patchVariantId != null) {
-                var target = contexts.variant(patchVariantId);
-                if (rulesetId != null && !rulesetId.equals(target.rulesetId())
-                        || seasonId != null && !seasonId.equals(target.seasonId()))
-                    throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
-                            "The patch must belong to the selected season and ruleset.");
-            }
-            var allowed = variants.stream()
-                    .filter(v -> (rulesetId == null || rulesetId.equals(v.rulesetId()))
-                            && (patchVariantId == null || patchVariantId.equals(v.id())))
-                    .map(PatchVariantReference::id).collect(java.util.stream.Collectors.toSet());
+            var scope = CatalogPatchScope.resolve(contexts, rulesetId, seasonId, patchVariantId, includeUnchanged);
+            var allowed = scope.selectedPatchIds();
             if (includeUnchanged) {
-                Map<UUID, Long> cutoffs = new HashMap<>();
-                variants.stream().filter(v -> allowed.contains(v.id()))
-                        .forEach(v -> cutoffs.merge(v.rulesetId(), v.rulesetOrdinal(), Math::max));
-                var applicable = contexts.catalogVariants(null).stream()
-                        .filter(v -> v.published() && v.rulesetOrdinal() <= cutoffs.getOrDefault(v.rulesetId(), -1L))
-                        .map(PatchVariantReference::id).collect(java.util.stream.Collectors.toSet());
-                candidates = candidates.stream().filter(r -> r.getState().equals("PUBLISHED")
-                        && applicable.contains(r.getEffectiveFromPatchVariantId())).toList();
-                var removed = patchChanges.findAll().stream()
-                        .filter(f -> applicable.contains(f.getPatchVariantId()))
-                        .collect(java.util.stream.Collectors.toMap(f -> f.getOwnerId(), f -> f,
-                                (a, b) -> ordinal(a.getPatchVariantId()) >= ordinal(b.getPatchVariantId()) ? a : b));
-                candidates = candidates.stream().filter(r -> {
-                    var fact = removed.get(r.getOwnerId());
-                    return fact == null || !fact.getKinds().contains(CatalogChanges.Kind.REMOVED)
-                            || allowed.contains(fact.getPatchVariantId())
-                            || ordinal(r.getEffectiveFromPatchVariantId()) > ordinal(fact.getPatchVariantId());
-                }).toList();
+                var applicable = scope.applicablePatchIds();
+                var changes = patchChanges.findAll().stream()
+                        .map(f -> new CatalogSnapshots.Change(f.getOwnerId(), f.getPatchVariantId(),
+                                f.getKinds().contains(CatalogChanges.Kind.REMOVED)))
+                        .toList();
+                candidates = CatalogSnapshots.carriedForward(candidates, allowed, applicable, changes, this::ordinal);
             } else {
-                var recorded = new HashMap<UUID, Set<UUID>>();
-                for (var r : candidates)
-                    if (allowed.contains(r.getEffectiveFromPatchVariantId())
-                            && Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.getCause()))
-                        recorded.computeIfAbsent(r.getOwnerId(), ignored -> new HashSet<>())
-                                .add(r.getEffectiveFromPatchVariantId());
                 var explicitTargets = patchChanges.findAll().stream()
                         .filter(f -> (rulesetId == null || rulesetId.equals(f.getRulesetId()))
                                 && allowed.contains(f.getPatchVariantId()))
                         .map(f -> f.getToRevisionId()).collect(java.util.stream.Collectors.toSet());
-                candidates = candidates.stream()
-                        .filter(r -> explicitTargets.contains(r.getId()) || r.getEffectiveFromPatchVariantId() != null
-                                && recorded.getOrDefault(r.getOwnerId(), Set.of())
-                                        .contains(r.getEffectiveFromPatchVariantId()))
-                        .toList();
+                candidates = CatalogSnapshots.changedAt(candidates, allowed, explicitTargets);
             }
         }
-        var selected = candidates.stream()
-                .collect(java.util.stream.Collectors.toMap(EnchantmentRevision::getOwnerId,
-                        java.util.function.Function.identity(),
-                        (a, b) -> compareSnapshots(a, b, ordinals) >= 0 ? a : b));
+        var selected = CatalogSnapshots.latestByOwner(candidates, this::ordinal);
         var copies = translations
                 .findByRevisionIdIn(selected.values().stream().map(EnchantmentRevision::getId).toList()).stream()
                 .collect(java.util.stream.Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
@@ -352,16 +319,6 @@ public class EnchantmentCatalog {
                 && r.getRulesetId().equals(ctx.rulesetId()) && ordinal(r) <= ctx.rulesetOrdinal())
                 .max(Comparator.<EnchantmentRevision>comparingLong(this::ordinal)
                         .thenComparingLong(r -> r.getPublicationSequence() == null ? 0 : r.getPublicationSequence()));
-    }
-    private int compareSnapshots(EnchantmentRevision a, EnchantmentRevision b, Map<UUID, Long> ordinals) {
-        long first = a.getEffectiveFromPatchVariantId() == null
-                ? 0
-                : ordinals.computeIfAbsent(a.getEffectiveFromPatchVariantId(), this::ordinal);
-        long second = b.getEffectiveFromPatchVariantId() == null
-                ? 0
-                : ordinals.computeIfAbsent(b.getEffectiveFromPatchVariantId(), this::ordinal);
-        int difference = Long.compare(first, second);
-        return difference != 0 ? difference : Long.compare(a.getRevisionNo(), b.getRevisionNo());
     }
     private EnchantmentView latest(EnchantmentIdentity owner, UUID rulesetId) {
         return revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
