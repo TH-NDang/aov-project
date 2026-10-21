@@ -126,6 +126,9 @@ export function createHeroFixture(annotations = false, history = false) {
   const writes: { section: string; body: Record<string, unknown> }[] = []
   const fetcher: typeof fetch = async (input, init) => {
     const path = String(input).replace("/api/wiki/v1", "")
+    if (/^\/admin\/heroes\/[^/]+\/skill-images$/.test(path)) return Response.json({ items: [] })
+    if (path.startsWith("/admin/reference-skills?"))
+      return Response.json({ items: [], page: 0, size: 20, totalElements: 0 })
     if (path.startsWith("/admin/reference-catalog"))
       return Response.json({
         rulesetId: revision.rulesetId,
