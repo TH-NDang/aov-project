@@ -2,6 +2,9 @@ package com.wikiaov.platform.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -10,17 +13,25 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.wikiaov.hero.HeroChangeQueries;
+import com.wikiaov.patch.PatchCatalog;
+import com.wikiaov.query.internal.web.PatchPageController;
+import com.wikiaov.spell.SpellChangeQueries;
 import io.swagger.v3.oas.annotations.Operation;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -208,6 +219,46 @@ abstract class OpenApiContractChecks {
         assertThat(media.path("properties").path("semanticType").path("enum").toString()).contains("HERO_PORTRAIT");
         assertThat(resolve(spec, media.path("properties").path("source")).path("required").toString())
                 .contains("label");
+    }
+
+    @Test
+    void changeDomainFiltersDescribeEachEndpointRatherThanAssumingHeroOnly() throws Exception {
+        JsonNode spec = json.readTree(mvc.perform(get(DOCS).with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(domainValues(spec, "/api/wiki/v1/patches/{id}/changes"))
+                .containsExactlyInAnyOrder("HERO", "SPELL");
+        assertThat(domainValues(spec, "/api/wiki/v1/admin/catalog-changes"))
+                .containsExactlyInAnyOrder("ARCANA", "ENCHANTMENT", "ITEM", "SPELL");
+        mvc.perform(get("/api/wiki/v1/patches/00000000-0000-0000-0000-000000000001/changes")
+                .param("domain", "ITEM"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+    }
+
+    @Test
+    void documentedPublicDomainsDispatchToTheirExistingChangeProviders() {
+        var patches = mock(PatchCatalog.class);
+        var heroes = mock(HeroChangeQueries.class);
+        var spells = mock(SpellChangeQueries.class);
+        var patchId = UUID.randomUUID();
+        var variantId = UUID.randomUUID();
+        when(patches.published(patchId, "VN", "vi-VN")).thenReturn(Map.of("variantId", variantId));
+        when(heroes.forVariant(variantId, "vi-VN")).thenReturn(List.of());
+        when(spells.forVariant(variantId, "vi-VN")).thenReturn(List.of());
+        var controller = new PatchPageController(patches, heroes, spells);
+        for (String domain : List.of("HERO", "SPELL")) {
+            assertThat(controller.changes(patchId, "VN", "vi-VN", domain, 0, 50,
+                    new MockHttpServletRequest()).getStatusCode().value()).isEqualTo(200);
+        }
+        verify(heroes).forVariant(variantId, "vi-VN");
+        verify(spells).forVariant(variantId, "vi-VN");
+    }
+
+    Set<String> domainValues(JsonNode spec, String path) {
+        Set<String> values = new HashSet<>();
+        findParameter(spec.path("paths").path(path).path("get"), "domain")
+                .path("schema").path("enum").forEach(value -> values.add(value.asText()));
+        return values;
     }
 
     private JsonNode contentSchema(JsonNode message) {
