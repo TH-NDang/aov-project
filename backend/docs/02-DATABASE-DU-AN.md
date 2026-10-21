@@ -1694,3 +1694,22 @@ V032 thêm index có điều kiện `state <> 'DISCARDED'` trên revision của 
 Spell: `(ruleset_id, owner_id/hero_id, revision_no DESC)`. Truy vấn tham chiếu giới hạn theo ruleset
 và lấy scalar projection tên/bản dịch/asset ID; không hydrate toàn bộ section hoặc gameplay JSON.
 Media lấy asset và current version theo lô, tối đa hai truy vấn cho một tập ID không rỗng.
+
+
+### Thư viện ảnh kỹ năng — V033 (2026-10-20)
+
+`hero.hero_skill_image` giữ UUID `id`, `hero_id`, `skill_key` nullable, `source_slot` 0–99,
+`variant_no` 1–100, `asset_id`, `source_filename`, `label` nullable, `version`, `created_at`, `updated_at`.
+Unique `(hero_id,source_slot,variant_no)` giữ vị trí nguồn ổn định. FK `(hero_id,skill_key)` chỉ cho
+liên kết với identity kỹ năng đã có. Không FK vào bảng Media; kiểm tra qua `MediaAssets` và báo
+`MediaUsageProvider` với revisionId=null, role `SKILL_LIBRARY:<slot>:<variant>`. Không giữ file bytes
+hoặc URL storage trong bảng. Slot/biến thể là vị trí nguồn, không xác nhận dạng gameplay hay lịch sử.
+
+### Tham chiếu kỹ năng (2026-10-20)
+
+Identity tham chiếu dùng khóa ghép đã có: `<heroUUID>.<skillKey>`; không tạo UUID mới cho kỹ năng,
+không đổi lịch sử hay nhân bản gameplay. Token lưu trong mô tả bằng cú pháp tham chiếu hiện có;
+không thêm kind vào `terminology.entry` hoặc thay đổi schema cho tính năng này. Owner, revision,
+bản dịch và icon là projection từ các bảng Hero, không lưu metadata runtime này trong entry.
+Danh mục tìm kiếm phân trang trước khi lấy hai lô bản dịch và một lô thư viện icon theo
+các tướng thuộc trang kết quả; không truy vấn chi tiết theo từng kỹ năng.

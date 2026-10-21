@@ -38,3 +38,12 @@ số dòng; tham chiếu Media được đọc theo lô. Redis giảm tải dự
 Epoch chung là invalidation bảo thủ; nhập liệu liên tục sẽ giảm cache hit và có thêm một thao tác
 ghi nhỏ mỗi transaction. Chỉ tách epoch theo domain khi số liệu thực tế chứng minh cần thiết.
 Redis không thay HTTP cache/CDN. Việc nâng phiên bản ảnh vẫn dùng URL bất biến và làm mới metadata.
+
+## Mở rộng kỹ năng (2026-10-20)
+
+Kỹ năng dùng endpoint tìm kiếm phân trang và lookup tối đa 50 khóa ghép tướng/kỹ năng; không đổ
+toàn bộ kỹ năng vào catalog. Cache giá trị page có kiểu JSON cụ thể, tiền tố `skills:v1`, tách khóa
+q/IDs, ruleset, locale, heroId, page/size; public thêm region và patch đang áp dụng. Chính sách epoch,
+quyền trước cache và bypass lỗi giữ nguyên. Đọc projection theo lô trong transaction REPEATABLE_READ,
+đóng transaction trước khi ghi Redis. Không cache lịch sử chưa đủ quyền hoặc ảnh thư viện như dữ
+liệu gameplay công khai.

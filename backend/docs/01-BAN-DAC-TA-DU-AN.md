@@ -2302,3 +2302,28 @@ công khai. Thiếu lịch gameplay không ngăn đọc các thuật ngữ chung
 Tab **Thử hiển thị** dùng chung trình soạn mô tả, có thanh định dạng và chọn tham chiếu, chọn ngôn ngữ
 và ngữ cảnh admin/wiki. Nội dung thử không lưu vào dữ liệu game. JSON Vite cũ chỉ còn nguồn chuyển
 đổi tùy chọn: đọc vào nháp, kiểm tra rồi lưu backend, không tự ghi đè hoặc xóa file cũ.
+
+
+### Thư viện icon kỹ năng chưa đủ thông tin (2026-10-20)
+
+Hero có thư viện ảnh kỹ năng độc lập với snapshot gameplay. Có thể nhập tất cả icon và biến thể từ tài nguyên
+ngay khi chưa thu thập tên/mô tả hoặc dạng kỹ năng. Mỗi ảnh giữ tướng, slot nguồn, số biến thể, tên file
+và asset Media; skillKey chỉ gán khi identity kỹ năng đã tồn tại. Không tạo chiêu, chỉ số, bản dịch hoặc
+lịch sử patch giả để chứa ảnh. Snapshot đã xuất bản không bị đổi bởi thao tác nhập thư viện.
+
+Khi đọc ở admin, icon đã gán trong snapshot được ưu tiên; ảnh thư viện chỉ là gợi ý/fallback có nhãn
+phân biệt, không được xem là bằng chứng ảnh đã áp dụng trong patch lịch sử. Những ảnh chưa ghép vẫn
+hiện trong thư viện tướng và được báo tham chiếu Media để không bị xem là asset bỏ trống.
+
+### Tham chiếu trực tiếp kỹ năng (2026-10-20)
+
+Bộ chọn `@` tìm kỹ năng trực tiếp trên nhiều tướng, không cần chọn tướng trước. Có thể gõ
+`chiêu 1 airi`, `airi chiêu 1`, `edras chiêu 2 1` hoặc `edras chiêu 1 2`; số sau slot là biến thể nguồn.
+Tên tướng/kỹ năng được tìm không dấu. Lệnh nhóm `Kỹ năng`, `Chiêu`, `Chiêu thức`, `Skill` mở danh sách
+có phân trang. Không tải toàn bộ snapshot hoặc mọi kỹ năng vào danh mục chung.
+
+Identity tham chiếu là `<heroUUID>.<skillKey>`; tên, mô tả, icon và tướng sở hữu lấy từ cùng revision.
+Tìm kiếm chỉ gợi ý kỹ năng trong revision hiện hành của ngữ cảnh. Khi đọc token đã lưu, có thể tìm
+revision hợp lệ gần nhất còn chứa skillKey đó; không lấy bản nháp hoặc patch tương lai cho wiki.
+Ảnh thư viện chỉ fallback ở admin khi ghép duy nhất theo skillKey hoặc slot+biến thể chuẩn, có nhãn
+nguồn `LIBRARY`; public chỉ dùng ảnh gắn trong revision. Không suy đoán dạng từ tên hoặc thứ tự mảng.
