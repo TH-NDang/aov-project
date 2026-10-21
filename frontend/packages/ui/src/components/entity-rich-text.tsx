@@ -7,6 +7,8 @@ import {
   resolveEntityRoute,
   safeLinkUrl,
   safeEntityIconUrl,
+  referenceTranslation,
+  validSkillReference,
   type EntityReference,
   type RichTextNode,
 } from "../lib/entity-rich-text"
@@ -79,9 +81,15 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
     }
   }, [entity.id, entity.kind, entity.iconAssetId, resolveIcon])
   const icon = safeEntityIconUrl(entity.icon) ?? resolved
-  const Fallback = { hero: UserRound, item: Swords, enchantment: Shield, arcana: Gem, spell: Zap, term: BookOpen }[
-    entity.kind
-  ]
+  const Fallback = {
+    hero: UserRound,
+    skill: Zap,
+    item: Swords,
+    enchantment: Shield,
+    arcana: Gem,
+    spell: Zap,
+    term: BookOpen,
+  }[entity.kind]
   return icon && failed !== icon ? (
     <img
       src={icon}
@@ -101,6 +109,44 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
       <Fallback className="size-[70%]" />
     </span>
   )
+}
+
+export function EntityReferenceArtwork(props: ReferenceIconProps) {
+  if (props.entity.kind !== "skill" || !validSkillReference(props.entity)) return <EntityReferenceIcon {...props} />
+  return (
+    <span
+      aria-hidden="true"
+      className={`relative inline-flex shrink-0 align-text-bottom ${props.className ?? "size-5"}`}
+    >
+      <EntityReferenceIcon {...props} className="size-full overflow-hidden rounded-full" />
+      <EntityReferenceIcon
+        entity={props.entity.owner!}
+        resolveIcon={props.resolveIcon}
+        defer={props.defer}
+        className="absolute -bottom-[12%] -right-[15%] size-[55%] overflow-hidden rounded-full border-2 border-background bg-background"
+      />
+    </span>
+  )
+}
+
+export function skillReferenceContext(entity: EntityReference, locale: string, fallbackLocale = "vi-VN") {
+  if (entity.kind !== "skill" || !validSkillReference(entity)) return undefined
+  const owner = referenceTranslation(entity.owner!, locale, fallbackLocale)
+  const slot =
+    Number.isInteger(entity.sourceSlot) && entity.sourceSlot! >= 0
+      ? entity.sourceSlot === 0
+        ? "Nội tại"
+        : `Chiêu ${entity.sourceSlot}`
+      : undefined
+  const variant =
+    Number.isInteger(entity.variantNo) && entity.variantNo! > 0 ? `Biến thể ${entity.variantNo}` : undefined
+  return {
+    ownerName: owner?.name ?? entity.heroId!,
+    ownerLocale: owner?.locale,
+    detail: [slot, typeof entity.formKey === "string" && entity.formKey ? entity.formKey : variant]
+      .filter(Boolean)
+      .join(" · "),
+  }
 }
 
 function renderDescriptionNodes(nodes: RichTextNode[]): React.ReactNode {
@@ -155,6 +201,7 @@ function EntityMention({
     }, 180)
   }
   const entity = node.entity
+  const skill = skillReferenceContext(entity, locale, node.actualLocale)
   const translation = Array.isArray(entity.translations)
     ? entity.translations.find((entry) => entry.locale === node.actualLocale)
     : undefined
@@ -178,7 +225,7 @@ function EntityMention({
         <button
           ref={trigger}
           type="button"
-          aria-label={`${kind}: ${node.label}`}
+          aria-label={`${kind}: ${skill ? `${skill.ownerName} · ` : ""}${node.label}${skill?.detail ? ` · ${skill.detail}` : ""}`}
           className={`inline cursor-pointer rounded-sm decoration-dotted underline-offset-4 hover:bg-accent hover:decoration-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${entity.display?.underline === false ? "" : "underline"}`}
           style={style}
           onPointerEnter={(event) => {
@@ -202,7 +249,19 @@ function EntityMention({
           }}
         >
           {icons && entity.display?.showIcon !== false && entity.kind !== "term" && (
-            <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="mr-1 size-[1.1em]" />
+            <EntityReferenceArtwork
+              entity={entity}
+              resolveIcon={resolveIcon}
+              className={skill ? "mr-1.5 size-[1.25em]" : "mr-1 size-[1.1em]"}
+            />
+          )}
+          {skill && (
+            <>
+              <span className="opacity-75">{skill.ownerName}</span>
+              <span aria-hidden="true" className="mx-1 opacity-50">
+                ›
+              </span>
+            </>
           )}
           {node.label}
         </button>
@@ -230,12 +289,13 @@ function EntityMention({
         }}
       >
         <div className="flex items-start gap-3 border-b bg-muted/30 p-4">
-          <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-11 rounded-lg border" />
+          <EntityReferenceArtwork entity={entity} resolveIcon={resolveIcon} className="size-11 rounded-lg" />
           <div className="min-w-0 flex-1">
-            <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{kind}</div>
+            <div className="mb-1 text-xs font-medium text-muted-foreground">{skill ? skill.ownerName : kind}</div>
             <div id={titleId} className="font-semibold leading-snug">
               {name}
             </div>
+            {skill?.detail && <div className="mt-1 text-xs text-muted-foreground">{skill.detail}</div>}
           </div>
           <button
             type="button"
@@ -247,6 +307,9 @@ function EntityMention({
           </button>
         </div>
         <div className="space-y-3 p-4">
+          {skill && entity.iconSource === "LIBRARY" && (
+            <div className="text-xs text-muted-foreground">Ảnh tham khảo từ thư viện kỹ năng</div>
+          )}
           {node.actualLocale.toLowerCase() !== locale.toLowerCase() && (
             <div className="text-xs text-muted-foreground">Ngôn ngữ dự phòng: {node.actualLocale}</div>
           )}

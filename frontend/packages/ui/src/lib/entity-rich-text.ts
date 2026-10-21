@@ -1,5 +1,6 @@
 export const entityKindLabels = {
   hero: "Tướng",
+  skill: "Kỹ năng",
   item: "Trang bị",
   enchantment: "Phù hiệu",
   arcana: "Bảng ngọc",
@@ -8,15 +9,32 @@ export const entityKindLabels = {
 } as const
 export type EntityKind = keyof typeof entityKindLabels
 
+export type EntityTranslation = { locale: string; name: string; aliases: string[]; description: string }
+export type SkillReferenceOwner = {
+  id: string
+  kind: "hero"
+  translations: EntityTranslation[]
+  icon?: string | null
+  iconAssetId?: string | null
+}
+
 export type EntityReference = {
   id: string
   kind: EntityKind
-  translations: { locale: string; name: string; aliases: string[]; description: string }[]
+  translations: EntityTranslation[]
   icon?: string | null
   iconAssetId?: string | null
   autoMatch?: boolean
   display?: { color?: string; underline?: boolean; showIcon?: boolean }
   destinations?: { admin?: string; wiki?: string }
+  heroId?: string
+  skillKey?: string
+  revisionId?: string
+  sourceSlot?: number | null
+  variantNo?: number | null
+  formKey?: string | null
+  owner?: SkillReferenceOwner
+  iconSource?: "REVISION" | "LIBRARY"
 }
 
 export type RichTextSettings = {
@@ -37,6 +55,54 @@ const hex = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i
 const identifier = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$/
 const localePattern = /^[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*$/
 const word = /[\p{L}\p{N}\p{M}_]/u
+const skillIdentity = /^([a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12})\.([a-z0-9]+(?:-[a-z0-9]+)*)$/
+
+export function validSkillReference(entity: EntityReference): boolean {
+  if (typeof entity?.id !== "string") return false
+  const identity = entity.id.match(skillIdentity)
+  return !!(
+    identity &&
+    identity[2]!.length <= 64 &&
+    entity.heroId === identity[1] &&
+    entity.skillKey === identity[2] &&
+    typeof entity.revisionId === "string" &&
+    identifier.test(entity.revisionId) &&
+    entity.owner?.kind === "hero" &&
+    entity.owner.id === entity.heroId &&
+    Array.isArray(entity.owner.translations)
+  )
+}
+
+export function referenceTranslation(
+  entity: Pick<EntityReference, "translations">,
+  language: string,
+  fallbackLocale = "vi-VN",
+) {
+  if (!Array.isArray(entity.translations)) return undefined
+  return (
+    entity.translations.find(
+      (entry) =>
+        typeof entry?.locale === "string" &&
+        typeof entry.name === "string" &&
+        entry.locale.toLowerCase() === language.toLowerCase(),
+    ) ??
+    entity.translations.find(
+      (entry) =>
+        typeof entry?.locale === "string" &&
+        typeof entry.name === "string" &&
+        entry.locale.toLowerCase() === fallbackLocale.toLowerCase(),
+    )
+  )
+}
+
+export function extractSkillReferenceIds(text: string): string[] {
+  const ids = new Set<string>()
+  for (const match of text.slice(0, 100000).matchAll(/<ref=skill:([^<>]+)>([^<>]*)<\/ref>/gi)) {
+    if (match[1]!.length <= 101 && skillIdentity.test(match[1]!)) ids.add(match[1]!)
+    if (ids.size >= 500) break
+  }
+  return [...ids]
+}
 
 export function safeLinkUrl(value: unknown): string | undefined {
   if (typeof value !== "string" || !value || value.length > 2048 || value !== value.trim()) return
@@ -114,24 +180,10 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
   if (!Array.isArray(settings.entities) || settings.entities.length > 2000) throw new Error("Invalid entity catalog")
   const seen = new Set<string>()
   let catalogCharacters = 0
-  const entities = settings.entities.map((entry): EntityReference => {
-    const entity = object(entry)
-    const id = string(entity.id, 128)
-    if (
-      !identifier.test(id) ||
-      !["hero", "item", "enchantment", "arcana", "spell", "term"].includes(entity.kind as string)
-    ) {
-      throw new Error("Invalid entity identity")
-    }
-    const kind = entity.kind as EntityKind
-    const key = `${kind}:${id}`
-    if (seen.has(key)) throw new Error("Duplicate entity identity")
-    seen.add(key)
-    if (!Array.isArray(entity.translations) || !entity.translations.length || entity.translations.length > 30) {
-      throw new Error("Invalid entity translations")
-    }
+  const readTranslations = (value: unknown): EntityTranslation[] => {
+    if (!Array.isArray(value) || !value.length || value.length > 30) throw new Error("Invalid entity translations")
     const locales = new Set<string>()
-    const translations = entity.translations.map((entry) => {
+    return value.map((entry) => {
       const translation = object(entry)
       const language = locale(translation.locale)
       if (locales.has(language.toLowerCase())) throw new Error("Duplicate translation locale")
@@ -147,6 +199,19 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
       if (catalogCharacters > 4000000) throw new Error("Entity catalog exceeds the text size limit")
       return result
     })
+  }
+  const entities = settings.entities.map((entry): EntityReference => {
+    const entity = object(entry)
+    const id = string(entity.id, 128)
+    if (!identifier.test(id) || !Object.hasOwn(entityKindLabels, entity.kind as string)) {
+      throw new Error("Invalid entity identity")
+    }
+    const kind = entity.kind as EntityKind
+    if (kind === "skill") throw new Error("Skill references are managed by the server and cannot be saved in settings")
+    const key = `${kind}:${id}`
+    if (seen.has(key)) throw new Error("Duplicate entity identity")
+    seen.add(key)
+    const translations = readTranslations(entity.translations)
     const result: EntityReference = { id, kind, translations }
     if (entity.autoMatch !== undefined) result.autoMatch = boolean(entity.autoMatch)
     if (entity.icon != null) {
@@ -188,9 +253,17 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
 
 export function resolveEntityRoute(entity: EntityReference, context: "admin" | "wiki", language?: string) {
   const custom = safeLinkUrl(entity.destinations?.[context])
+  if (entity.kind === "skill" && !validSkillReference(entity)) return undefined
   if (custom?.startsWith("/")) return custom
   if (!identifier.test(entity.id)) return undefined
   const id = encodeURIComponent(entity.id)
+  if (entity.kind === "skill") {
+    const hero = encodeURIComponent(entity.heroId!)
+    const skill = encodeURIComponent(entity.skillKey!)
+    if (context === "admin")
+      return `/hero/${hero}?tab=skills&skill=${skill}&revision=${encodeURIComponent(entity.revisionId!)}`
+    return `/?hero=${hero}&skill=${skill}${language ? `&locale=${encodeURIComponent(language)}` : ""}`
+  }
   if (context === "admin") {
     if (entity.kind === "hero") return `/hero/${id}`
     if (entity.kind === "item") return `/items?item=${id}`
@@ -221,15 +294,22 @@ export function createEntityIndex(
   const root: Trie = { children: new Map() }
   const byId = new Map<string, Match>()
   const accentInsensitive = options.accentInsensitive === true
-  for (const entry of (Array.isArray(entities) ? entities : []).slice(0, 2000)) {
+  let catalogEntries = 0
+  let skillEntries = 0
+  // Explicit skill lookups have a separate budget so a full catalog does not hide saved references.
+  for (const entry of Array.isArray(entities) ? entities : []) {
     if (
       !entry ||
       typeof entry.id !== "string" ||
       !identifier.test(entry.id) ||
-      !["hero", "item", "enchantment", "arcana", "spell", "term"].includes(entry.kind) ||
+      !Object.hasOwn(entityKindLabels, entry.kind) ||
       !Array.isArray(entry.translations)
     )
       continue
+    if (entry.kind === "skill") {
+      if (skillEntries >= 500 || !validSkillReference(entry)) continue
+      skillEntries++
+    } else if (catalogEntries++ >= 2000) continue
     const translations = entry.translations
       .slice(0, 30)
       .filter(
@@ -251,7 +331,12 @@ export function createEntityIndex(
     if (!translation) continue
     const match = { entity, actualLocale: translation.locale }
     byId.set(`${entity.kind}:${entity.id}`, match)
-    if (entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)) continue
+    if (
+      entity.kind === "skill" ||
+      entity.autoMatch === false ||
+      (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)
+    )
+      continue
     for (const alias of [translation.name, ...translation.aliases.slice(0, 20)]) {
       const name = fold(alias.trim(), accentInsensitive)
       if (!name || name.length > 200) continue
@@ -293,7 +378,7 @@ export function parseRichText(
   const recognized = new Set<string>()
   const tokens = Array.from(
     source.matchAll(
-      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|item|enchantment|arcana|spell|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
+      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
     ),
   )
   const pairs = new Map<number, number>()
