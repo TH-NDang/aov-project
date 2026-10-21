@@ -816,14 +816,20 @@ export function ItemShopGraph({
                   <path d="M0 0 L10 5 L0 10 Z" fill="context-stroke" />
                 </marker>
               </defs>
+              <g aria-hidden="true" fill="none" stroke="var(--background)" strokeWidth="7" strokeLinejoin="round">
+                {paths.map((path) => (
+                  <path key={path.key} d={path.d} data-recipe-halo="" />
+                ))}
+              </g>
               {paths.map((path) => (
                 <g key={path.key} className="text-primary" opacity={path.direct ? 1 : 0.65}>
-                  <path d={path.d} fill="none" stroke="var(--background)" strokeWidth="7" />
                   <path
                     d={path.d}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={path.direct ? 3.2 : 1.6}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     strokeDasharray={path.direct ? undefined : "6 5"}
                     markerEnd={`url(#${marker})`}
                     data-recipe-line={path.direct ? "direct" : "indirect"}
