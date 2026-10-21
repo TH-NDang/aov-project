@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/u
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { useIsWide } from "@/hooks/use-media-query"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
@@ -610,30 +610,44 @@ function HeroQuickView({
       >
         <SheetContent
           side={wide ? "right" : "bottom"}
-          className={wide ? "w-[min(100vw,960px)] sm:max-w-[min(85vw,960px)]" : "h-[92dvh] rounded-t-2xl"}
+          showCloseButton={false}
+          className={`gap-0 ${wide ? "w-[min(100vw,960px)] sm:max-w-[min(85vw,960px)]" : "h-[92dvh] rounded-t-2xl"}`}
         >
-          <SheetHeader className="border-b pr-14">
+          <SheetHeader className="h-11 shrink-0 justify-center gap-0 border-b px-4 py-0">
             <div className="flex items-center justify-between gap-3">
-              <SheetTitle className="text-xs font-normal text-muted-foreground">
+              <SheetTitle className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">
                 {hero?.code ? `Tướng / ${hero.code}` : "Chi tiết tướng"}
               </SheetTitle>
-              {heroId && (
-                <Button asChild variant="outline" size="sm">
-                  <Link
-                    aria-label="Mở trang tướng đầy đủ"
-                    to={heroPageLocation(heroId, params, revisionId)}
-                    onClick={(event) => {
-                      if (!canLeave()) event.preventDefault()
-                      else {
-                        setUnsafe(false)
-                      }
-                    }}
+              <div className="flex shrink-0 items-center gap-1">
+                {heroId && (
+                  <Button asChild variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-xs">
+                    <Link
+                      aria-label="Mở trang tướng đầy đủ"
+                      to={heroPageLocation(heroId, params, revisionId)}
+                      onClick={(event) => {
+                        if (!canLeave()) event.preventDefault()
+                        else {
+                          setUnsafe(false)
+                        }
+                      }}
+                    >
+                      <ArrowUpRight className="size-3.5" />
+                      <span className="hidden sm:inline">Mở toàn trang</span>
+                    </Link>
+                  </Button>
+                )}
+                <SheetClose asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-muted-foreground"
+                    aria-label="Đóng trang tướng"
+                    disabled={saving}
                   >
-                    <ArrowUpRight className="size-4" />
-                    Mở toàn trang
-                  </Link>
-                </Button>
-              )}
+                    <X className="size-3.5" />
+                  </Button>
+                </SheetClose>
+              </div>
             </div>
             <SheetDescription className="sr-only">
               {revision ? `Phiên bản #${revision.revisionNo}` : "Chi tiết tướng"}

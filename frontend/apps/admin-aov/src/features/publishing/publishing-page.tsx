@@ -1,6 +1,6 @@
 import { HeroTimeline } from "./hero-timeline"
-import { useEffect, useRef, useState } from "react"
-import { Link, useBeforeUnload, useParams } from "react-router"
+import { useEffect, useRef, useState, type ComponentProps } from "react"
+import { Link, useBeforeUnload, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft,
@@ -34,7 +34,10 @@ import { languageOptions } from "../users/profile-preference-picker"
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
 import { invalidateHeroCatalogs } from "./publishing-cache"
 import { BaselineContextForm } from "./baseline-context-form"
-import { HeroContent, localized } from "./hero-content"
+import { HeroAsset, HeroContent, localized } from "./hero-content"
+import { HeroScrollIdentity } from "./hero-scroll-identity"
+import { HeroQuickSwitcher } from "./hero-quick-switcher"
+import { selectCatalogRevisions } from "./catalog-data"
 import { HeroCatalog } from "./hero-catalog"
 import { HeroRevisionHistory } from "./hero-revision-history"
 import { HeroTranslationStatus } from "./hero-translation-status"
@@ -47,12 +50,28 @@ import { ImportContextPicker, type ImportContext } from "./import-context"
 import { type CatalogFilter } from "./catalog-context"
 import { usePublicationOverview, useContentLocale } from "./publication-overview"
 import { resourceContent } from "./resource-import"
-import { SECTIONS, publishIssues, type Cause, type Content, type Preview, type Revision, type Section } from "./types"
-import { heroLocationId, readHeroLocation, type HeroWorkspaceView } from "./hero-location"
+import {
+  SECTIONS,
+  publishIssues,
+  type Cause,
+  type Content,
+  type HeroRow,
+  type Preview,
+  type Revision,
+  type Section,
+} from "./types"
+import {
+  heroLocationId,
+  heroPageLocation,
+  readHeroLocation,
+  switchHeroLocation,
+  type HeroWorkspaceView,
+} from "./hero-location"
 import { useHeroLocation } from "./use-hero-location"
 import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
+import { ReferenceRulesetProvider } from "../terminology/catalog"
 import {
   dirtyHeroSections,
   emptyHeroContent,
@@ -74,6 +93,14 @@ const CAUSES: Record<Cause, string> = {
 }
 const STATES = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
 
+function PublishingFrame({ rulesetId, ...props }: ComponentProps<typeof Page> & { rulesetId?: string }) {
+  return (
+    <ReferenceRulesetProvider rulesetId={rulesetId}>
+      <Page {...props} />
+    </ReferenceRulesetProvider>
+  )
+}
+
 export function PublishingPage({ translationMode = false }: { translationMode?: boolean }) {
   const { heroId = "" } = useParams()
   return <PublishingWorkspace key={`${heroId}:${translationMode}`} heroId={heroId} translationMode={translationMode} />
@@ -91,6 +118,7 @@ export function PublishingWorkspace({
   translationMode?: boolean
 }) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const capabilities = useSession().actor?.capabilities ?? []
   const canWrite = capabilities.includes("hero:write")
   const canPublish = capabilities.includes("hero:publish")
@@ -113,6 +141,7 @@ export function PublishingWorkspace({
   const setFilter = (next: CatalogFilter) => updateLocation({ season: next.seasonId, patch: next.variantId })
   const editorRef = useRef<HTMLDivElement>(null)
   const managementRef = useRef<HTMLDivElement>(null)
+  const heroHeadingRef = useRef<HTMLHeadingElement>(null)
   const overview = usePublicationOverview()
   const displayLocale = useContentLocale()
   const location = readHeroLocation(urlParams, translationMode, displayLocale)
@@ -172,6 +201,7 @@ export function PublishingWorkspace({
   const writable = canWrite && revision?.state === "DRAFT"
   const translating = view === "translations"
   const locale = translating ? targetLocale : location.readLocale
+  const heroName = localized(preview?.content.PROFILE?.translations, displayLocale)?.name || "Hồ sơ tướng"
   const issues = preview ? publishIssues(preview.content) : []
 
   useEffect(() => {
@@ -213,6 +243,28 @@ export function PublishingWorkspace({
   })
   const canLeave = () => !busy
   usePageCloseGuard(canLeave, !!heroId && !onUnsavedChange)
+
+  function switchHero(next: HeroRow) {
+    if (busy || next.id === heroId) return
+    const rulesetId = revision?.rulesetId || heroLocationId(urlParams.get("ruleset"))
+    const selected =
+      selectCatalogRevisions(next.revisions, overview.data, filter, rulesetId)[0] ??
+      [...next.revisions]
+        .filter((row) => row.state !== "DISCARDED" && (!rulesetId || row.rulesetId === rulesetId))
+        .sort((a, b) => b.revisionNo - a.revisionNo)[0]
+    const params = switchHeroLocation(urlParams, next.id, selected?.id)
+    if (onUnsavedChange) void navigate({ search: `?${params}` }, { preventScrollReset: true })
+    else void navigate(heroPageLocation(next.id, params), { preventScrollReset: false })
+  }
+  const quickSwitcher = heroId ? (
+    <HeroQuickSwitcher
+      heroId={heroId}
+      locale={displayLocale}
+      rulesetId={revision?.rulesetId}
+      disabled={busy || !preview}
+      onSelect={switchHero}
+    />
+  ) : null
 
   async function run(action: () => Promise<unknown>, success: string) {
     setBusy(true)
@@ -268,8 +320,20 @@ export function PublishingWorkspace({
   }
 
   return (
-    <Page className={`@container min-w-0 ${heroId ? "mx-auto w-full max-w-6xl" : ""}`}>
+    <PublishingFrame
+      rulesetId={revision?.rulesetId}
+      className={`@container min-w-0 ${heroId ? "mx-auto w-full max-w-6xl" : ""}`}
+    >
       {!onUnsavedChange && <HeroNavigationGuard unsafe={busy} busy={busy} />}
+      {heroId && (
+        <HeroScrollIdentity
+          headingRef={heroHeadingRef}
+          identityKey={`${heroId}:${selectedId}`}
+          assetId={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+          name={heroName}
+          actions={quickSwitcher}
+        />
+      )}
       {!heroId ? (
         <PageHeader
           title="Tướng"
@@ -293,9 +357,9 @@ export function PublishingWorkspace({
           }
         />
       ) : (
-        <header className="space-y-4">
+        <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
               {!onUnsavedChange && (
                 <Button variant="ghost" size="icon" asChild>
                   <Link
@@ -309,12 +373,21 @@ export function PublishingWorkspace({
                   </Link>
                 </Button>
               )}
+              <HeroAsset
+                id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                alt={`Ảnh tướng ${heroName}`}
+                className="size-9 shrink-0 rounded-full"
+                frameAspectRatio={1}
+              />
               <div className="min-w-0">
-                <h1 className="truncate text-lg font-semibold">
-                  {localized(preview?.content.PROFILE?.translations, displayLocale)?.name || "Hồ sơ tướng"}
+                <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
+                  {heroName}
                 </h1>
-                <p className="text-xs text-muted-foreground">{revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
+                </p>
               </div>
+              {quickSwitcher}
               {revision && (
                 <Badge variant={revision.state === "DRAFT" ? "secondary" : "outline"}>{STATES[revision.state]}</Badge>
               )}
@@ -479,6 +552,11 @@ export function PublishingWorkspace({
                     editable={!!writable}
                     busy={busy}
                     tab={location.tab}
+                    heroId={heroId}
+                    selectedSkillKey={heroLocationId(urlParams.get("skill"))}
+                    skillLayout={urlParams.get("skillLayout") === "flat" ? "flat" : "focus"}
+                    onSkillLayoutChange={(layout) => updateLocation({ skillLayout: layout === "flat" ? "flat" : null })}
+                    onSkillChange={(skill) => updateLocation({ skill })}
                     onTabChange={(tab) => updateLocation({ tab })}
                     onEdit={(next) => {
                       setSection(next)
@@ -521,7 +599,7 @@ export function PublishingWorkspace({
                   <div
                     ref={editorRef}
                     tabIndex={-1}
-                    className="scroll-mt-4 space-y-4 outline-none"
+                    className="scroll-mt-16 space-y-4 outline-none"
                     role="region"
                     aria-label="Chỉnh sửa nội dung"
                   >
@@ -635,6 +713,9 @@ export function PublishingWorkspace({
                               locale={locale}
                               onChange={update}
                               resource={resource}
+                              heroId={heroId}
+                              initialSkillKey={heroLocationId(urlParams.get("skill"))}
+                              onBusyChange={setBusy}
                             />
                           )}
                           <Field label="Ghi chú thay đổi" value={note} onChange={setNote} />
@@ -665,7 +746,7 @@ export function PublishingWorkspace({
               {managementOpen && (
                 <section
                   ref={managementRef}
-                  className="scroll-mt-4 space-y-5 rounded-2xl border bg-muted/10 p-4 @min-[650px]:p-6"
+                  className="scroll-mt-16 space-y-5 rounded-2xl border bg-muted/10 p-4 @min-[650px]:p-6"
                   aria-label="Quản lý phiên bản"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -897,6 +978,6 @@ export function PublishingWorkspace({
           )}
         </>
       )}
-    </Page>
+    </PublishingFrame>
   )
 }

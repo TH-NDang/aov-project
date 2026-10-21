@@ -1,22 +1,20 @@
 import type { ComponentType, ReactNode } from "react"
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
 import { AlertTriangle, BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { backendRequest } from "@/app/auth/session"
-import { ImagePreview } from "@/components/image-preview"
-import { createPublishingApi } from "./publishing-api"
 import { ROLES, SECTIONS, type Content, type Section, type Source } from "./types"
 import { AdminEntityText, AdminReferenceProvider } from "../terminology/catalog"
 import { comparisonFieldLabels } from "./hero-comparison"
-import { heroReviewNotes, SkillSourceDetails } from "./hero-source-details"
+import { heroReviewNotes } from "./hero-source-details"
+import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroImageSource } from "./hero-image-source"
+import { HeroAsset } from "./hero-asset"
+export { HeroAsset } from "./hero-asset"
 
-const api = createPublishingApi(backendRequest)
 const icons = {
   PROFILE: BookOpen,
   OVERVIEW_RATINGS: Shield,
@@ -70,76 +68,6 @@ export function localized<T extends { locale: string }>(translations: T[] | unde
   )
 }
 
-export function HeroAsset({
-  id,
-  alt = "",
-  className = "",
-  preview = false,
-  naturalAspectRatio,
-  frameAspectRatio,
-}: {
-  id?: string | null
-  alt?: string
-  className?: string
-  preview?: boolean
-  /** Use the intrinsic image ratio, with this fallback while loading or when missing. */
-  naturalAspectRatio?: number
-  /** Reserve a stable frame before the image loads, without cropping its contents. */
-  frameAspectRatio?: number
-}) {
-  const [failedUrl, setFailedUrl] = useState<string | null>(null)
-  const asset = useQuery({
-    queryKey: ["hero-content-asset", id],
-    queryFn: () => api.asset(id!),
-    enabled: !!id,
-    staleTime: 60000,
-  })
-  const thumbnail = (
-    <div
-      className={cn("@container overflow-hidden rounded-xl border bg-muted/40", className)}
-      style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}
-    >
-      {asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
-        <img
-          src={asset.data.currentUrl}
-          alt={alt}
-          loading="lazy"
-          className={cn(
-            "size-full object-cover",
-            frameAspectRatio && "object-contain",
-            naturalAspectRatio && "block h-auto w-full object-contain",
-          )}
-          style={naturalAspectRatio ? { aspectRatio: `auto ${naturalAspectRatio}` } : undefined}
-          onError={() => setFailedUrl(asset.data!.currentUrl)}
-        />
-      ) : (
-        <div
-          className="flex h-full items-center justify-center gap-2 p-2 text-xs text-muted-foreground"
-          style={naturalAspectRatio ? { aspectRatio: naturalAspectRatio } : undefined}
-          role="img"
-          aria-label={asset.isError || failedUrl ? "Không tải được ảnh" : id ? "Đang tải ảnh" : "Chưa có ảnh"}
-        >
-          <Image className="size-5" />
-          <span className="hidden @min-[120px]:inline">
-            {asset.isError || failedUrl ? "Không tải được ảnh" : id ? "Đang tải ảnh…" : "Chưa có ảnh"}
-          </span>
-        </div>
-      )}
-    </div>
-  )
-  return preview && asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
-    <ImagePreview
-      src={asset.data.currentUrl}
-      alt={alt || "Ảnh"}
-      className={naturalAspectRatio || frameAspectRatio ? className : undefined}
-    >
-      {thumbnail}
-    </ImagePreview>
-  ) : (
-    thumbnail
-  )
-}
-
 function Text({ children }: { children?: ReactNode }) {
   return (
     <p className="whitespace-pre-wrap break-words text-sm leading-7 text-muted-foreground">
@@ -189,6 +117,11 @@ function HeroContentBody({
   onEdit,
   tab: selectedTab,
   onTabChange,
+  heroId,
+  selectedSkillKey,
+  onSkillChange,
+  skillLayout,
+  onSkillLayoutChange,
 }: {
   content: Content
   locale: string
@@ -197,6 +130,11 @@ function HeroContentBody({
   onEdit: (section: Section) => void
   tab?: HeroContentTab
   onTabChange?: (tab: HeroContentTab) => void
+  heroId?: string
+  selectedSkillKey?: string
+  onSkillChange?: (key: string) => void
+  skillLayout?: "focus" | "flat"
+  onSkillLayoutChange?: (layout: "focus" | "flat") => void
 }) {
   const profile = localized(content.PROFILE?.translations, locale)
   const reviewNotes = heroReviewNotes(content.SKILLS?.skills ?? [])
@@ -212,44 +150,46 @@ function HeroContentBody({
           : ["MEDIA_BINDINGS"]
   return (
     <div className="space-y-5" aria-label="Nội dung tướng">
-      <section className="relative isolate overflow-hidden rounded-2xl border bg-card">
-        <HeroAsset
-          id={content.MEDIA_BINDINGS?.bindings.SPLASH}
-          className={content.MEDIA_BINDINGS?.bindings.SPLASH ? "h-36 w-full sm:h-48" : "h-20 w-full sm:h-24"}
-        />
-        <div className="relative flex items-start gap-4 p-5 sm:p-6">
+      {tab === "overview" && (
+        <section className="relative isolate overflow-hidden rounded-2xl border bg-card">
           <HeroAsset
-            id={content.MEDIA_BINDINGS?.bindings.HEAD}
-            className="-mt-14 size-24 shrink-0 border-4 border-card shadow-sm"
+            id={content.MEDIA_BINDINGS?.bindings.SPLASH}
+            className={content.MEDIA_BINDINGS?.bindings.SPLASH ? "h-36 w-full sm:h-48" : "h-20 w-full sm:h-24"}
           />
-          <div className="min-w-0 flex-1 space-y-2">
-            <h2 className="break-words text-3xl font-semibold tracking-tight">
-              {profile?.name || "Tướng chưa đặt tên"}
-            </h2>
-            {profile?.title && <p className="text-sm text-muted-foreground">{profile.title}</p>}
-            <div className="flex flex-wrap gap-2">
-              {content.PROFILE?.roles.map((role) => (
-                <Badge key={role} variant="secondary">
-                  {ROLES[role]}
-                </Badge>
-              ))}
-              {profile && profile.locale !== locale && (
-                <Badge variant="outline">
-                  Dự phòng: {profile.locale} · chưa có {locale}
-                </Badge>
-              )}
+          <div className="relative flex items-start gap-4 p-5 sm:p-6">
+            <HeroAsset
+              id={content.MEDIA_BINDINGS?.bindings.HEAD}
+              className="-mt-14 size-24 shrink-0 border-4 border-card shadow-sm"
+            />
+            <div className="min-w-0 flex-1 space-y-2">
+              <h2 className="break-words text-3xl font-semibold tracking-tight">
+                {profile?.name || "Tướng chưa đặt tên"}
+              </h2>
+              {profile?.title && <p className="text-sm text-muted-foreground">{profile.title}</p>}
+              <div className="flex flex-wrap gap-2">
+                {content.PROFILE?.roles.map((role) => (
+                  <Badge key={role} variant="secondary">
+                    {ROLES[role]}
+                  </Badge>
+                ))}
+                {profile && profile.locale !== locale && (
+                  <Badge variant="outline">
+                    Dự phòng: {profile.locale} · chưa có {locale}
+                  </Badge>
+                )}
+              </div>
             </div>
+            {editable && (
+              <IconAction label="Chỉnh sửa Thông tin" icon={Pencil} disabled={busy} onClick={() => onEdit("PROFILE")} />
+            )}
           </div>
-          {editable && (
-            <IconAction label="Chỉnh sửa Thông tin" icon={Pencil} disabled={busy} onClick={() => onEdit("PROFILE")} />
+          {profile?.summary && (
+            <div className="px-5 pb-6 sm:px-6">
+              <Text>{profile.summary}</Text>
+            </div>
           )}
-        </div>
-        {profile?.summary && (
-          <div className="px-5 pb-6 sm:px-6">
-            <Text>{profile.summary}</Text>
-          </div>
-        )}
-      </section>
+        </section>
+      )}
       {reviewNotes.length > 0 && (
         <details className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
           <summary className="flex cursor-pointer items-center gap-2 font-medium">
@@ -353,33 +293,16 @@ function HeroContentBody({
               <Text />
             )
           else if (section === "SKILLS")
-            body = content.SKILLS?.skills.length ? (
-              <div className="space-y-5">
-                {[...content.SKILLS.skills]
-                  .sort((a, b) => a.displayOrder - b.displayOrder)
-                  .map((skill) => {
-                    const text = localized(skill.translations, locale)
-                    return (
-                      <article key={skill.skillKey} className="space-y-2 border-b pb-4 last:border-0 last:pb-0">
-                        <div className="flex items-center gap-3">
-                          <HeroAsset id={skill.iconAssetId} className="size-12 shrink-0 rounded-full" />
-                          <div>
-                            <h4 className="font-medium">{text?.name || skill.skillKey}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              {skill.kind === "PASSIVE" ? "Nội tại" : "Kỹ năng"}
-                              {skill.formKey ? ` · ${skill.formKey}` : ""}
-                              {text?.locale !== locale ? ` · Dự phòng: ${text?.locale ?? "chưa có"}` : ""}
-                            </p>
-                          </div>
-                        </div>
-                        <Text>{text?.description}</Text>
-                        <SkillSourceDetails skill={skill} />
-                      </article>
-                    )
-                  })}
-              </div>
-            ) : (
-              <Text />
+            body = (
+              <HeroSkillsView
+                skills={content.SKILLS?.skills ?? []}
+                locale={locale}
+                heroId={heroId}
+                selectedSkillKey={selectedSkillKey}
+                onSkillChange={onSkillChange}
+                layout={skillLayout}
+                onLayoutChange={onSkillLayoutChange}
+              />
             )
           else if (section === "SKINS")
             body = content.SKINS?.skins.length ? (
