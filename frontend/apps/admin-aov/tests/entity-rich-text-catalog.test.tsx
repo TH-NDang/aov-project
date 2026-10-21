@@ -6,6 +6,7 @@ import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
+import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
 
 test("catalog lists backend heroes, warehouse items and glossary; filters, mentions and server round-trip work", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
@@ -89,11 +90,9 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
   }
   const button = (name: string) =>
     [...document.querySelectorAll<HTMLButtonElement>("button")].find((node) => node.textContent?.trim() === name)!
-  const fill = async (node: HTMLInputElement | HTMLTextAreaElement, value: string) =>
+  const fill = async (node: HTMLInputElement, value: string) =>
     act(async () => {
-      const prototype =
-        node.tagName === "TEXTAREA" ? dom.window.HTMLTextAreaElement.prototype : dom.window.HTMLInputElement.prototype
-      Object.getOwnPropertyDescriptor(prototype, "value")!.set!.call(node, value)
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(node, value)
       node.setSelectionRange(value.length, value.length)
       node.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
@@ -145,32 +144,52 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
       button("Thuật ngữ").dispatchEvent(new dom.window.MouseEvent("mousedown", { bubbles: true, button: 0 })),
     )
     await act(async () => document.querySelector<HTMLButtonElement>("tbody button")!.click())
-    const area = document.querySelector<HTMLTextAreaElement>('[data-slot="entity-rich-text-editor"] textarea')!
-    await fill(area, "@Airi")
+    const area = referenceInput(document)
+    await act(async () => fillReferenceInput(area, "@Airi"))
     assert.match(document.querySelector('[role="listbox"]')!.textContent!, /Airi/)
     await act(async () =>
       area.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true })),
     )
-    assert.equal(area.value, "<ref=hero:fixture-hero>Airi</ref>")
+    assert.equal(referenceInputValue(area), "<ref=hero:fixture-hero>Airi</ref>")
+    assert.ok(area.querySelector('[data-reference-kind="hero"][data-reference-id="fixture-hero"]'))
+    assert.ok(area.textContent?.includes("Airi"), "The editable input displays a chip label")
+    assert.equal(area.textContent?.includes("<ref="), false, "Raw reference syntax is hidden while editing")
     await act(async () => button("Lưu thay đổi").click())
     await waitFor(() => !!document.body.textContent?.includes("Đã lưu. Admin và wiki dùng chung thiết lập này."))
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tải lại thiết lập"]')!.click())
-    assert.equal(area.value, "<ref=hero:fixture-hero>Airi</ref>")
+    assert.equal(referenceInputValue(area), "<ref=hero:fixture-hero>Airi</ref>")
     const stored = await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()
     assert.equal(stored.version, 2)
-    assert.equal(stored.settings.entities[0].translations[0].description, area.value)
+    assert.equal(stored.settings.entities[0].translations[0].description, referenceInputValue(area))
     await act(async () => button("Close").click())
+    assert.match(document.querySelector("tbody")!.textContent!, /Airi/)
+    assert.equal(
+      document.querySelector("tbody")!.textContent!.includes("<ref="),
+      false,
+      "Definition summaries display reference labels instead of serialized markup",
+    )
     await act(async () =>
       button("Thử hiển thị").dispatchEvent(new dom.window.MouseEvent("mousedown", { bubbles: true, button: 0 })),
     )
     assert.ok(document.querySelector('[role="toolbar"][aria-label="Định dạng Nội dung thử"]'))
     await act(async () => button("Ví dụ").click())
-    assert.match(
-      document.querySelector<HTMLTextAreaElement>('[data-slot="entity-rich-text-editor"] textarea')!.value,
-      /sát thương phép/,
-    )
+    assert.match(referenceInputValue(referenceInput(document)), /sát thương phép/)
     assert.ok(document.body.textContent?.includes("Kết quả hiển thị"))
     assert.equal(document.querySelector('[aria-label="Nguồn xem trước"]'), null)
+    const previewInput = referenceInput(document)
+    const latestPreview = "Nội dung mới nhất sau khi gõ liên tục"
+    await act(async () => {
+      fillReferenceInput(previewInput, "Nội dung cũ")
+      fillReferenceInput(previewInput, "Nội dung đang gõ")
+      fillReferenceInput(previewInput, latestPreview)
+    })
+    assert.equal(referenceInputValue(previewInput), latestPreview, "Typing retains the latest editable value")
+    await waitFor(() => document.querySelector('[data-slot="entity-rich-text"]')?.textContent === latestPreview)
+    assert.equal(
+      (await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()).version,
+      2,
+      "Deferred preview updates do not save changes to the shared settings",
+    )
   } finally {
     await act(async () => root.unmount())
     client.clear()

@@ -1,6 +1,6 @@
 import { Link } from "react-router"
-import { ArrowUpRight, ChevronRight, Database, X } from "lucide-react"
-import { useMemo, useState } from "react"
+import { ArrowUpRight, ChevronRight, Languages, Search, X } from "lucide-react"
+import { useMemo, useState, type ReactNode } from "react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import {
@@ -10,9 +10,32 @@ import {
   type EntityReference,
 } from "@aov/ui/lib/entity-rich-text"
 import { EntityReferenceIcon, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
+import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 
 const kinds = entityKindLabels
 const fold = foldEntitySearch
+
+function AliasChips({ aliases }: { aliases: string[] }) {
+  return (
+    <span className="flex flex-wrap gap-1.5">
+      {aliases.slice(0, 3).map((alias) => (
+        <span
+          key={alias}
+          className="max-w-full truncate rounded-md bg-muted/70 px-1.5 py-0.5 text-xs font-normal text-muted-foreground"
+          title={alias}
+        >
+          {alias}
+        </span>
+      ))}
+      {aliases.length > 3 && (
+        <span className="text-xs text-muted-foreground" title={aliases.slice(3).join(", ")}>
+          +{aliases.length - 3}
+        </span>
+      )}
+    </span>
+  )
+}
+
 export function ReferenceCatalogTable({
   entities,
   locale,
@@ -22,6 +45,8 @@ export function ReferenceCatalogTable({
   customKeys,
   availableKeys,
   resolveIcon,
+  actions,
+  variant,
 }: {
   entities: EntityReference[]
   locale: string
@@ -31,124 +56,147 @@ export function ReferenceCatalogTable({
   customKeys: Set<string>
   availableKeys: Set<string>
   resolveIcon?: EntityIconResolver
+  actions?: ReactNode
+  variant?: "terms" | "references"
 }) {
   const [search, setSearch] = useState("")
   const [kind, setKind] = useState("all")
   const [missingTranslation, setMissingTranslation] = useState(false)
-  const termsOnly = entities.every((entity) => entity.kind === "term")
-  const availableKinds = [...new Set(entities.map((entity) => entity.kind))]
   const [page, setPage] = useState(0)
+  const termsOnly = variant ? variant === "terms" : entities.every((entity) => entity.kind === "term")
+  const availableKinds = [...new Set(entities.map((entity) => entity.kind))]
   const rows = useMemo(
     () =>
-      entities.filter((entity) => {
-        return (
+      entities.filter(
+        (entity) =>
           (kind === "all" || entity.kind === kind) &&
           (!missingTranslation ||
             !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase())) &&
           fold([entity.id, ...entity.translations.flatMap((text) => [text.name, ...text.aliases])].join(" ")).includes(
             fold(search.trim()),
-          )
-        )
-      }),
+          ),
+      ),
     [entities, kind, missingTranslation, locale, search],
   )
   const currentPage = Math.min(page, Math.max(0, Math.ceil(rows.length / 25) - 1))
+  const hasMissingTranslations = entities.some(
+    (entity) => !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase()),
+  )
+
   return (
-    <section aria-label="Danh mục thuật ngữ và đối tượng liên quan" className="min-w-0 space-y-3 rounded-xl border p-4">
-      <div className="flex flex-wrap gap-3">
-        <Input
-          className="min-w-0 flex-1 basis-56"
-          aria-label="Tìm danh mục"
-          placeholder={termsOnly ? "Tìm thuật ngữ, tên gọi khác…" : "Tìm tên hoặc tên gọi khác…"}
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(0)
-          }}
-        />
-        {!termsOnly && availableKinds.length > 1 && (
-          <div
-            role="group"
-            aria-label="Lọc loại tham chiếu"
-            className="flex items-center gap-1 rounded-lg bg-muted p-1"
-          >
-            {[["all", "Tất cả"], ...availableKinds.map((key) => [key, kinds[key]])].map(([key, label]) => (
+    <section
+      aria-label="Danh mục thuật ngữ và đối tượng liên quan"
+      className="@container/catalog min-w-0 overflow-hidden rounded-xl border bg-card"
+    >
+      <div className="space-y-3 p-3 sm:p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative min-w-0 flex-1 basis-56">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              className="h-9 bg-background pl-9 shadow-none"
+              aria-label="Tìm danh mục"
+              placeholder={termsOnly ? "Tìm thuật ngữ, tên gọi khác…" : "Tìm tên hoặc tên gọi khác…"}
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setPage(0)
+              }}
+            />
+          </div>
+          {actions}
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            {!termsOnly && availableKinds.length > 1 && (
+              <div
+                role="group"
+                aria-label="Lọc loại tham chiếu"
+                className="flex max-w-full flex-wrap items-center gap-1"
+              >
+                {[["all", "Tất cả"], ...availableKinds.map((key) => [key, kinds[key]])].map(([key, label]) => (
+                  <Button
+                    key={key}
+                    size="sm"
+                    variant={kind === key ? "secondary" : "ghost"}
+                    className="h-8 rounded-lg px-2.5 text-xs"
+                    aria-pressed={kind === key}
+                    onClick={() => {
+                      setKind(key!)
+                      setPage(0)
+                    }}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            )}
+            {(missingTranslation || hasMissingTranslations) && (
               <Button
-                key={key}
                 size="sm"
-                variant={kind === key ? "secondary" : "ghost"}
-                aria-pressed={kind === key}
+                variant={missingTranslation ? "secondary" : "outline"}
+                aria-pressed={missingTranslation}
                 onClick={() => {
-                  setKind(key!)
+                  setMissingTranslation((value) => !value)
                   setPage(0)
                 }}
               >
-                {label}
+                <Languages className="size-3.5" />
+                Thiếu bản dịch
               </Button>
-            ))}
+            )}
+            {(search || kind !== "all" || missingTranslation) && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setSearch("")
+                  setKind("all")
+                  setMissingTranslation(false)
+                  setPage(0)
+                }}
+              >
+                <X className="size-4" />
+                Bỏ lọc
+              </Button>
+            )}
           </div>
-        )}
-        {(missingTranslation ||
-          entities.some(
-            (entity) => !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase()),
-          )) && (
-          <Button
-            size="sm"
-            variant={missingTranslation ? "secondary" : "outline"}
-            aria-pressed={missingTranslation}
-            onClick={() => {
-              setMissingTranslation((value) => !value)
-              setPage(0)
-            }}
-          >
-            Thiếu bản dịch
-          </Button>
-        )}
-        {(search || kind !== "all" || missingTranslation) && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setSearch("")
-              setKind("all")
-              setMissingTranslation(false)
-              setPage(0)
-            }}
-          >
-            <X className="size-4" />
-            Bỏ lọc
-          </Button>
-        )}
+          <p role="status" className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            {rows.length} mục{rows.length !== entities.length ? ` / ${entities.length}` : ""}
+          </p>
+        </div>
       </div>
-      <p role="status" className="text-xs text-muted-foreground">
-        {rows.length} mục{rows.length !== entities.length ? ` / ${entities.length}` : ""}
-      </p>
       <div
         role="region"
-        aria-label="Bảng tham chiếu, cuộn ngang để xem đích đến"
+        aria-label={termsOnly ? "Bảng thuật ngữ" : "Bảng tham chiếu"}
         tabIndex={0}
-        className="relative isolate max-h-[560px] overflow-auto rounded-xl border"
+        className="relative isolate overflow-x-hidden border-t outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring @3xl/catalog:max-h-[65dvh] @3xl/catalog:overflow-auto"
       >
-        <table className="w-full min-w-[720px] text-left text-sm">
+        <table className="block w-full text-left text-sm @3xl/catalog:table">
           <caption className="sr-only">
-            Danh mục thật, bản dịch, alias và trạng thái tham chiếu. Chọn tên để chỉnh sửa.
+            Danh mục, định nghĩa, bản dịch và tên gọi khác. Chọn tên hoặc một dòng để chỉnh sửa.
           </caption>
-          <thead className="sticky top-0 z-20 bg-muted">
+          <thead className="sr-only bg-muted @3xl/catalog:not-sr-only @3xl/catalog:sticky @3xl/catalog:top-0 @3xl/catalog:z-20">
             <tr>
-              {["Tên", "Bản dịch / tên gọi khác", "Nhận diện", ...(!termsOnly ? ["Dữ liệu gốc"] : [])].map(
-                (heading, index) => (
-                  <th
-                    key={heading}
-                    scope="col"
-                    className={`p-3 font-medium ${index === 0 ? "sticky left-0 z-20 bg-muted" : ""}`}
-                  >
-                    {heading}
-                  </th>
-                ),
-              )}
+              {[
+                termsOnly ? "Thuật ngữ" : "Tên tham chiếu",
+                termsOnly ? "Định nghĩa" : "Tên gọi khác",
+                "Bản dịch",
+                ...(!termsOnly ? ["Dữ liệu gốc"] : []),
+              ].map((heading, index) => (
+                <th
+                  key={heading}
+                  scope="col"
+                  className={`px-4 py-2.5 text-xs font-medium text-muted-foreground ${index === 0 ? "w-[30%]" : ""}`}
+                >
+                  {heading}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="block @3xl/catalog:table-row-group">
             {rows.slice(currentPage * 25, currentPage * 25 + 25).map((entity) => {
               const key = `${entity.kind}:${entity.id}`
               const text =
@@ -156,61 +204,92 @@ export function ReferenceCatalogTable({
                 entity.translations.find((text) => text.locale === fallbackLocale) ??
                 entity.translations[0]
               const available = availableKeys.has(key)
+              const translated = text?.locale.toLowerCase() === locale.toLowerCase()
+              const manual =
+                entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)
+              const route = available ? resolveEntityRoute(entity, "admin", locale) : undefined
               return (
                 <tr
                   key={key}
-                  className={`border-t align-top ${selected === key ? "bg-accent/50" : ""}`}
                   aria-selected={selected === key}
+                  className={`group/entry block cursor-pointer border-b p-4 last:border-b-0 hover:bg-muted/25 @3xl/catalog:table-row @3xl/catalog:align-top @3xl/catalog:p-0 ${selected === key ? "bg-accent/50" : ""}`}
+                  onClick={(event) => {
+                    if (!(event.target as Element).closest("button, a")) onSelect(key)
+                  }}
                 >
-                  <td className="sticky left-0 z-10 bg-card p-3">
+                  <td className="block @3xl/catalog:table-cell @3xl/catalog:px-4 @3xl/catalog:py-4">
                     <button
                       type="button"
-                      className="group flex min-h-11 w-full min-w-44 cursor-pointer items-center gap-2 rounded-lg text-left font-medium hover:text-primary focus-visible:outline-2"
+                      className="group flex min-h-8 w-full cursor-pointer items-start gap-3 rounded-lg text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
                       onClick={() => onSelect(key)}
+                      aria-label={`Chỉnh sửa ${text?.name || kinds[entity.kind]}`}
                     >
-                      <EntityReferenceIcon entity={entity} resolveIcon={resolveIcon} className="size-9 rounded-lg" />
-                      <span>
-                        {text?.name || entity.id}
+                      {!termsOnly && (
+                        <EntityReferenceIcon
+                          entity={entity}
+                          resolveIcon={resolveIcon}
+                          className="mt-0.5 size-9 overflow-hidden rounded-lg ring-1 ring-foreground/5"
+                        />
+                      )}
+                      <span className="min-w-0 flex-1 space-y-2">
+                        <span className="block break-words font-semibold leading-5">{text?.name || entity.id}</span>
                         {!termsOnly && (
-                          <span className="block text-xs font-normal text-muted-foreground">{kinds[entity.kind]}</span>
+                          <span className="block text-xs text-muted-foreground">{kinds[entity.kind]}</span>
+                        )}
+                        {termsOnly && !!text?.aliases.length && <AliasChips aliases={text.aliases} />}
+                        {termsOnly && manual && (
+                          <span className="inline-flex rounded bg-muted px-1.5 py-0.5 text-[11px] font-normal text-muted-foreground">
+                            Chọn bằng @
+                          </span>
                         )}
                       </span>
-                      <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground group-hover:text-primary" />
+                      <span className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors group-hover:bg-muted group-hover:text-primary">
+                        <ChevronRight className="size-4" />
+                      </span>
                     </button>
+                    {!available && <p className="mt-2 text-xs text-amber-600 dark:text-amber-400">Thiếu dữ liệu gốc</p>}
+                    {entity.kind !== "term" && customKeys.has(key) && (
+                      <p className="mt-2 text-xs text-muted-foreground">Có tùy chỉnh</p>
+                    )}
                   </td>
-                  <td className="max-w-60 p-3">
-                    <span className="flex flex-wrap gap-1">
-                      {entity.translations.map((text) => (
-                        <span key={text.locale} className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                          {text.locale}
+                  <td className="mt-2 block @3xl/catalog:mt-0 @3xl/catalog:table-cell @3xl/catalog:px-4 @3xl/catalog:py-4">
+                    {termsOnly ? (
+                      <p
+                        className={`line-clamp-2 break-words text-sm leading-6 ${text?.description ? "text-foreground/80" : "text-muted-foreground"}`}
+                      >
+                        {text?.description ? referenceInputPlainText(text.description) : "Chưa có định nghĩa."}
+                      </p>
+                    ) : text?.aliases.length ? (
+                      <AliasChips aliases={text.aliases} />
+                    ) : (
+                      <span className="hidden text-xs text-muted-foreground @3xl/catalog:inline">—</span>
+                    )}
+                  </td>
+                  <td className="mt-3 block @3xl/catalog:mt-0 @3xl/catalog:table-cell @3xl/catalog:px-4 @3xl/catalog:py-4">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="mr-1 text-[11px] text-muted-foreground @3xl/catalog:hidden">Bản dịch</span>
+                      {entity.translations.map((copy) => (
+                        <span
+                          key={copy.locale}
+                          className={`rounded-md px-1.5 py-0.5 text-[11px] font-medium ${copy.locale.toLowerCase() === locale.toLowerCase() ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}
+                        >
+                          {copy.locale}
                         </span>
                       ))}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {text?.aliases.join(", ") || "Chưa có tên gọi khác"}
-                      {text && text.locale !== locale ? ` · đang xem ${text.locale}` : ""}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span className="inline-flex rounded-full bg-muted px-2 py-1 text-xs">
-                      {entity.autoMatch === false ||
-                      (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)
-                        ? "Chọn bằng @"
-                        : "Tự nhận diện"}
-                    </span>
-                    {!available && <p className="mt-1 text-xs text-amber-600">Thiếu dữ liệu gốc</p>}
-                    {entity.kind !== "term" && customKeys.has(key) && (
-                      <p className="mt-1 text-xs text-muted-foreground">Có tùy chỉnh</p>
+                    </div>
+                    {!translated && (
+                      <span className="mt-1.5 block text-xs text-amber-600 dark:text-amber-400">
+                        {text ? `Đang dùng ${text.locale}` : "Chưa có bản dịch"}
+                      </span>
                     )}
                   </td>
                   {!termsOnly && (
-                    <td className="p-3">
-                      {available && resolveEntityRoute(entity, "admin", locale) ? (
+                    <td className="mt-3 block @3xl/catalog:mt-0 @3xl/catalog:table-cell @3xl/catalog:px-4 @3xl/catalog:py-4">
+                      {route ? (
                         <Link
-                          to={resolveEntityRoute(entity, "admin", locale)!}
-                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-primary hover:bg-primary/5"
+                          to={route}
+                          className="inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-lg py-1.5 text-xs text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
                         >
-                          <Database className="size-3.5" />
                           Mở danh mục gốc
                           <ArrowUpRight className="size-3.5" />
                         </Link>
@@ -225,11 +304,23 @@ export function ReferenceCatalogTable({
           </tbody>
         </table>
         {!rows.length && (
-          <p className="p-5 text-sm text-muted-foreground">Không có mục phù hợp. Thử đổi bộ lọc hoặc tạo thuật ngữ.</p>
+          <div className="flex min-h-48 flex-col items-center justify-center gap-2 p-6 text-center">
+            <Search className="mb-1 size-6 text-muted-foreground/60" />
+            <p className="text-sm font-medium">
+              {entities.length ? "Không có mục phù hợp" : termsOnly ? "Chưa có thuật ngữ" : "Chưa có tham chiếu"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {entities.length
+                ? "Thử tìm tên khác hoặc bỏ bớt bộ lọc."
+                : termsOnly
+                  ? "Tạo thuật ngữ đầu tiên để dùng trong mô tả."
+                  : "Danh mục sẽ xuất hiện khi có dữ liệu game."}
+            </p>
+          </div>
         )}
       </div>
       {rows.length > 25 && (
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-2 border-t px-4 py-3">
           <span className="text-xs text-muted-foreground">
             Trang {currentPage + 1} / {Math.ceil(rows.length / 25)}
           </span>

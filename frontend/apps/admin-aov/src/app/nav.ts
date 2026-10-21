@@ -28,17 +28,6 @@ export interface NavGroup {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    label: "Nội dung dùng chung",
-    items: [
-      {
-        title: "Thuật ngữ & tham chiếu",
-        to: "/terminology",
-        icon: "storage",
-        description: "Alias, hiển thị và xem trước tham chiếu",
-      },
-    ],
-  },
-  {
     label: "Tổng quan",
     items: [
       {
@@ -144,6 +133,12 @@ export const NAV_GROUPS: NavGroup[] = [
         to: "/game-configuration",
         description: "Bộ quy tắc, bản cập nhật và lịch phát hành",
         capability: "catalog:read",
+      },
+      {
+        title: "Thuật ngữ & tham chiếu",
+        to: "/terminology",
+        icon: "storage",
+        description: "Alias, hiển thị và xem trước tham chiếu",
       },
     ],
   },
