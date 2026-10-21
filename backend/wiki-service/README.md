@@ -3,6 +3,8 @@
 Backend AOV Wiki: Java 21, Spring Boot 4.1.1, Maven Wrapper.
 Đặc tả hiện hành nằm ở [backend/docs](../docs/01-BAN-DAC-TA-DU-AN.md); bộ 01/02/03 ưu tiên hơn NOTE.
 
+Hướng dẫn đọc các service sau khi tách trách nhiệm: [Tái cấu trúc application services](../docs/TAI-CAU-TRUC-APPLICATION-SERVICES.md).
+
 ## Cấu trúc
 
 Một deployable JAR, package gốc `com.wikiaov`. Mỗi domain có public contract tại package gốc và phần triển khai trong `internal/{web,application,domain,persistence,infrastructure}`.
