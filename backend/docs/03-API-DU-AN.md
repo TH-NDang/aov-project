@@ -2246,3 +2246,54 @@ phía server: admin 30 giây, public catalog/thuật ngữ 2 phút mặc định
 region/locale và patch hiện hành. Quyền được kiểm tra trước lookup. Epoch DB đổi trong cùng transaction
 với audit để dữ liệu sửa/xuất bản/nâng phiên bản ảnh có hiệu lực cho request tiếp theo. Redis lỗi thì
 đọc DB, có timeout ngắn và backoff; không cache lỗi, token, phiên đăng nhập hoặc bytes ảnh.
+
+
+### Thư viện icon kỹ năng theo tướng — V033 (2026-10-20)
+
+- `GET /admin/heroes/{heroId}/skill-images`: cần `catalog:read`, không có query parameter; trả
+  `{items:[{id,heroId,skillKey,sourceSlot,variantNo,assetId,sourceFilename,label,version,createdAt,updatedAt}]}`,
+  sắp xếp slot rồi biến thể. Không tải gameplay, URL hoặc metadata Media trong endpoint này.
+- `PUT /admin/heroes/{heroId}/skill-images/{sourceSlot}/{variantNo}`: cần `hero:write` và quyền nền
+  `catalog:read`; body `{expectedVersion,assetId,skillKey?,sourceFilename,label?}`. Dùng expectedVersion=-1
+  để tạo; cập nhật dùng version hiện tại. Gửi lại cùng payload trả cùng hàng/version; payload khác với
+  version cũ trả 409 `HERO_SKILL_IMAGE_CONFLICT`. Slot/biến thể là vị trí nguồn ổn định, không phải
+  khẳng định chiêu/dạng gameplay. sourceFilename chỉ là tên file, không chứa đường dẫn.
+
+Asset phải ACTIVE, có phiên bản dùng được và semantic `HERO_SKILL_ICON`. skillKey nullable cho ảnh
+chưa thu thập thông tin; nếu gửi phải là identity kỹ năng đã tồn tại của chính tướng đó. Mỗi thay đổi
+ghi audit. API không tạo/sửa snapshot tướng hoặc mô tả chiêu. MediaUsageProvider giữ tham chiếu
+ảnh thư viện kể cả khi chưa liên kết skillKey. Upload vẫn theo Media presigned flow thông thường.
+
+### Tìm và giải quyết tham chiếu kỹ năng (2026-10-20)
+
+- `GET /admin/reference-skills`: cần `catalog:read`; query whitelist
+  `rulesetId,locale,q,heroId,ids,page,size`. Bỏ rulesetId thì chọn `aov-standard` đang hoạt động,
+  rồi ruleset hoạt động đầu tiên; gửi UUID không tồn tại/không hoạt động trả lỗi `PATCH_INVALID`,
+  không tự đổi ngữ cảnh. Admin trả tất cả bản dịch của revision chưa discard gần nhất.
+- `GET /reference-skills`: công khai; query whitelist `region,locale,q,heroId,ids,page,size`.
+  Mặc định VN/vi-VN. Luôn giải quyết gameplay context hiện tại trước cache, chỉ dùng revision đã
+  xuất bản, không vượt patch/ngày xuất bản hiện hành. Locale dùng BCP 47 chuẩn như danh mục chung.
+
+Cả hai trả `PageSlice`: `{items,page,size,totalElements}`. Tìm bằng `q` tối đa 120 ký tự, page>=0,
+size mặc định 20, tối đa 100. `heroId` tùy chọn để giới hạn tướng. Tìm không dấu theo mã/tên tướng
+và tên kỹ năng; nhận lệnh nhóm `Kỹ năng`/`Chiêu`/`Chiêu thức`/`Skill`, slot và biến thể nguồn theo
+thứ tự bất kỳ so với tên tướng. `chiêu 1 airi` và `airi chiêu 1` tương đương; `edras chiêu 2 1`
+là slot 2 biến thể 1. Không suy ra biến thể từ mảng hoặc tên dịch.
+
+`ids` là danh sách tối đa 50 `<heroUUID>.<skillKey>` ngăn bằng dấu phẩy; loại trùng, không dùng cùng
+q khác rỗng, size mặc định 50. Token cũ được giải quyết bằng revision hợp lệ gần nhất còn chứa
+skillKey, vẫn trong ruleset/context cho phép; ID thiếu không làm rò dữ liệu chưa công khai.
+Query lạ hoặc giới hạn sai trả `400 INVALID_QUERY_PARAMETER`.
+
+Mỗi item gồm `id,kind="skill",heroId,skillKey,revisionId,sourceSlot?,variantNo?,formKey?,translations,
+autoMatch=false,destinations,owner`. `owner` có `id,kind="hero",translations` và icon head từ cùng
+revision. Admin có `iconAssetId?`, `iconSource?=REVISION|LIBRARY`; ảnh gán trong revision ưu tiên,
+fallback thư viện chỉ khi match duy nhất theo skillKey hoặc khóa `skill-<slot>-<variant>` và hàng
+thư viện chưa gán skillKey. Match mơ hồ không đoán. Public chỉ trả URL `icon?` từ asset revision
+đang dùng được, không fallback thư viện. Mô tả rút gọn tối đa 4000 ký tự. Link dùng `tab=skills`
+và `skill=<skillKey>` để mở đúng kỹ năng; admin kèm revision/ruleset.
+
+Không đưa mọi kỹ năng vào `/reference-catalog`. API mới dùng read model cache riêng tiền tố `skills:v1`
+trong namespace admin/public hiện có, chứa bộ lọc/phân trang/IDs và context; invalidation theo epoch
+ADR-012. Quyền kiểm tra trước cache, cache ngoài transaction đọc; public ETag/revalidate, admin no-store.
+Metadata kỹ năng chỉ dùng khi đọc/hiển thị; không lưu thành entry tùy chỉnh trong cấu hình tham chiếu.
