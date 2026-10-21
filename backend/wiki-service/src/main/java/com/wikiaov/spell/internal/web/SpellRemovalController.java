@@ -8,13 +8,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/spell-removals")
-public class SpellRemovalController {
+public class SpellRemovalController implements SpellRemovalApi {
     private final SpellCatalog catalog;
     public SpellRemovalController(SpellCatalog catalog) {
         this.catalog = catalog;
     }
     @GetMapping(version = "1")
-    List<Map<String, Object>> forVariant(@RequestParam UUID patchVariantId,
+    public List<Map<String, Object>> forVariant(@RequestParam UUID patchVariantId,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("patchVariantId", "locale"));
         return catalog.authoringRemovals(patchVariantId, locale);

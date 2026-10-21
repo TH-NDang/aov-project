@@ -102,3 +102,14 @@ logging:
   pattern:
     # Adds the request id to every log line in the default (human-readable) format.
     level: "%5p [%X{requestId:-}]"
+
+# The existing admin URL rule protects the generated JSON/YAML specification.
+# No Swagger UI or public documentation security exception is installed.
+springdoc:
+  api-docs:
+    path: /api/wiki/v1/admin/openapi
+  paths-to-match: /api/wiki/**
+  default-produces-media-type: application/json
+  use-fqn: true
+  override-with-generic-response: false
+  writer-with-order-by-keys: true

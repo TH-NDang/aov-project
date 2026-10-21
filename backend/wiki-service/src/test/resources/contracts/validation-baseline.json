@@ -1,0 +1,944 @@
+{
+  "com.wikiaov.access.internal.web.AuthController#config": [
+    []
+  ],
+  "com.wikiaov.access.internal.web.AuthController#login": [
+    [
+      "@Valid"
+    ],
+    [],
+    []
+  ],
+  "com.wikiaov.access.internal.web.AuthController#refresh": [
+    [],
+    []
+  ],
+  "com.wikiaov.access.internal.web.AuthController#logout": [
+    [],
+    []
+  ],
+  "com.wikiaov.access.internal.web.AuthController#google": [
+    [],
+    []
+  ],
+  "com.wikiaov.access.internal.web.AuthController#callback": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.access.internal.web.CurrentActorController#me": [
+    []
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#list": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#latest": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#history": [
+    [],
+    []
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#read": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#fork": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#update": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#publish": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaAdminController#discard": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaPatchChangeController#record": [
+    [],
+    []
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaPublicController#list": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.arcana.internal.web.ArcanaPublicController#read": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#list": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#latest": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#reorder": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#history": [
+    [],
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#read": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#fork": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#update": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#publish": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#discard": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentBranchController#list": [
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentBranchController#save": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentBranchController#reorder": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentPatchChangeController#record": [
+    [],
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentPublicController#list": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.enchantment.internal.web.EnchantmentPublicController#read": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#list": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#status": [
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#fork": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#revisions": [
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#read": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#comparison": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#publish": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#baselineContext": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#discard": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#updateProfile": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#updateRatings": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#updateStats": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#updateSkills": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#updateSkins": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroAdminController#updateBindings": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroChangesController#record": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroChangesController#assess": [
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroChangesController#authoringChanges": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroChangesController#history": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroImportController#fields": [
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroImportController#preview": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroImportController#relationFields": [],
+  "com.wikiaov.hero.internal.web.HeroImportController#contexts": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroImportController#apply": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroImportJobController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroImportJobController#list": [],
+  "com.wikiaov.hero.internal.web.HeroImportJobController#get": [
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroImportJobController#dismissNotification": [
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroMediaController#gallery": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroMediaController#badges": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroMediaController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroMediaController#update": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroMediaController#assignGroup": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroMediaController#skins": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#list": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#detail": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#manifest": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#sectionPROFILE": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#sectionOVERVIEW_RATINGS": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#sectionCOMBAT_STATS": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#sectionSKILLS": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#sectionSKINS": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroPublicController#sectionMEDIA_BINDINGS": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroSkillImageController#list": [
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroSkillImageController#save": [
+    [],
+    [],
+    [],
+    [
+      "@Valid"
+    ],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.HeroUploadSessionController#list": [],
+  "com.wikiaov.hero.internal.web.HeroUploadSessionController#save": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.HeroUploadSessionController#delete": [
+    []
+  ],
+  "com.wikiaov.hero.internal.web.SkinBadgeGroupController#list": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.hero.internal.web.SkinBadgeGroupController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.hero.internal.web.SkinBadgeGroupController#update": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#list": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#latest": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#history": [
+    [],
+    []
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#read": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#fork": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#update": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#publish": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.item.internal.web.ItemAdminController#discard": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.item.internal.web.ItemCategoryController#list": [
+    []
+  ],
+  "com.wikiaov.item.internal.web.ItemCategoryController#save": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.item.internal.web.ItemPatchChangeController#record": [
+    [],
+    []
+  ],
+  "com.wikiaov.item.internal.web.ItemPublicController#list": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.item.internal.web.ItemPublicController#read": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#createAsset": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#listAssets": [
+    [],
+    [],
+    [
+      "@Min(0)"
+    ],
+    [
+      "@Max(100)",
+      "@Min(1)"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#getAsset": [
+    [],
+    []
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#requestUpload": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#getUpload": [
+    [],
+    []
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#completeUpload": [
+    []
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#activateVersion": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#registerImport": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#findUsages": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#deprecateAsset": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#catalog": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#assignments": [
+    [],
+    []
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#region": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#ruleset": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#rulesets": [
+    []
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#assignment": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#patch": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#seasonPatch": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#variant": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#publish": [
+    []
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#confirm": [
+    []
+  ],
+  "com.wikiaov.patch.internal.web.PatchAdminController#release": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.PatchDataReviewController#update": [
+    [],
+    []
+  ],
+  "com.wikiaov.patch.internal.web.PublicationOverviewController#read": [
+    []
+  ],
+  "com.wikiaov.patch.internal.web.RankedSeasonController#list": [
+    []
+  ],
+  "com.wikiaov.patch.internal.web.RankedSeasonController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.RankedSeasonController#schedule": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.patch.internal.web.RegionController#list": [
+    []
+  ],
+  "com.wikiaov.patch.internal.web.RegionController#select": [
+    [],
+    []
+  ],
+  "com.wikiaov.query.internal.web.CatalogChangesAdminController#list": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.query.internal.web.PatchPageController#list": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.query.internal.web.PatchPageController#detail": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.query.internal.web.PatchPageController#changes": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#list": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#latest": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#create": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#history": [
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#read": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#fork": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#update": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#publish": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#discard": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#removals": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellAdminController#recordRemoval": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.spell.internal.web.SpellPatchChangeController#record": [
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellPublicController#list": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellPublicController#read": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellPublicController#archived": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.spell.internal.web.SpellRemovalController#forVariant": [
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.terminology.internal.web.ReferenceController#adminReferences": [
+    [],
+    []
+  ],
+  "com.wikiaov.terminology.internal.web.ReferenceController#references": [
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.terminology.internal.web.ReferenceController#publicSettings": [
+    [],
+    []
+  ],
+  "com.wikiaov.terminology.internal.web.ReferenceController#adminSettings": [
+    []
+  ],
+  "com.wikiaov.terminology.internal.web.ReferenceController#save": [
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.terminology.internal.web.SkillReferenceController#admin": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.terminology.internal.web.SkillReferenceController#published": [
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "com.wikiaov.user.internal.web.UserController#self": [
+    []
+  ],
+  "com.wikiaov.user.internal.web.UserController#saveSelf": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.user.internal.web.UserController#list": [
+    [],
+    [
+      "@Size(max=80)"
+    ],
+    [
+      "@Max(1000000)",
+      "@Min(0)"
+    ],
+    [
+      "@Max(100)",
+      "@Min(1)"
+    ]
+  ],
+  "com.wikiaov.user.internal.web.UserController#get": [
+    [],
+    []
+  ],
+  "com.wikiaov.user.internal.web.UserController#save": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.user.internal.web.UserController#upload": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.user.internal.web.UserController#complete": [
+    [],
+    []
+  ]
+}
