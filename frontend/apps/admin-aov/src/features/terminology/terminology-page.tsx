@@ -1,9 +1,22 @@
-import { BookOpenText, Link2, Plus, Settings2, Eye, Save, RotateCcw, FlaskConical, Eraser } from "lucide-react"
+import {
+  BookOpenText,
+  Link2,
+  Plus,
+  Settings2,
+  Eye,
+  Save,
+  RotateCcw,
+  FlaskConical,
+  Eraser,
+  Languages,
+  ChevronDown,
+  Trash2,
+} from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Tabs, TabsList, TabsTrigger } from "@aov/ui/components/tabs"
 import { useIsWide } from "@/hooks/use-media-query"
 import { languageOptions } from "../users/profile-preference-picker"
-import { useEffect, useState } from "react"
+import { memo, useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { validateRichTextSettings, type EntityReference, type RichTextSettings } from "@aov/ui/lib/entity-rich-text"
@@ -16,6 +29,9 @@ import { useReferenceCatalog } from "./catalog"
 import { saveSettings, loadLegacySettings } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
 import { EntityRichTextEditor } from "@aov/ui/components/entity-rich-text-editor"
+import { useSkillReferences, useSkillReferenceSearch } from "./use-skill-references"
+
+const ReferencePreview = memo(EntityRichText)
 
 export function TerminologyPage() {
   const [params, setParams] = useSearchParams()
@@ -69,19 +85,41 @@ export function TerminologyPage() {
   useBeforeUnload((event) => {
     if (draft || saving) event.preventDefault()
   })
-  const entities = new Map(catalog.entities.map((entity) => [`${entity.kind}:${entity.id}`, entity]))
-  for (const entity of settings.entities) {
-    const key = `${entity.kind}:${entity.id}`
-    entities.set(key, { ...entity, iconAssetId: entities.get(key)?.iconAssetId })
-  }
-  const customKeys = new Set(settings.entities.map((entity) => `${entity.kind}:${entity.id}`))
-  const availableKeys = new Set([
-    ...catalog.entities.map((entity) => `${entity.kind}:${entity.id}`),
-    ...settings.entities.filter((entity) => entity.kind === "term").map((entity) => `term:${entity.id}`),
-  ])
-  const editorEntities = [...entities.values()].filter((entity) => availableKeys.has(`${entity.kind}:${entity.id}`))
+  const { entities, customKeys, availableKeys, editorEntities, terms, references } = useMemo(() => {
+    const entities = new Map(catalog.entities.map((entity) => [`${entity.kind}:${entity.id}`, entity]))
+    for (const entity of settings.entities) {
+      const key = `${entity.kind}:${entity.id}`
+      entities.set(key, { ...entity, iconAssetId: entities.get(key)?.iconAssetId })
+    }
+    const customKeys = new Set(settings.entities.map((entity) => `${entity.kind}:${entity.id}`))
+    const availableKeys = new Set([
+      ...catalog.entities.map((entity) => `${entity.kind}:${entity.id}`),
+      ...settings.entities.filter((entity) => entity.kind === "term").map((entity) => `term:${entity.id}`),
+    ])
+    const entries = [...entities.values()]
+    return {
+      entities,
+      customKeys,
+      availableKeys,
+      editorEntities: entries.filter((entity) => availableKeys.has(`${entity.kind}:${entity.id}`)),
+      terms: entries.filter((entity) => entity.kind === "term"),
+      references: entries.filter((entity) => entity.kind !== "term"),
+    }
+  }, [catalog.entities, settings.entities])
   const entity = entities.get(selected)
   const translation = entity?.translations.find((entry) => entry.locale === locale)
+  const searchPreviewReferences = useSkillReferenceSearch(catalog.rulesetId)
+  const searchDescriptionReferences = useSkillReferenceSearch(catalog.rulesetId)
+  const previewSkills = useSkillReferences(preview, locale, catalog.rulesetId)
+  const descriptionSkills = useSkillReferences(translation?.description ?? "", locale, catalog.rulesetId)
+  const previewEntities = useMemo(() => [...editorEntities, ...previewSkills], [editorEntities, previewSkills])
+  const descriptionEntities = useMemo(
+    () => [...editorEntities, ...descriptionSkills],
+    [editorEntities, descriptionSkills],
+  )
+  const previewOutput = useDeferredValue(
+    useMemo(() => ({ text: preview, entities: previewEntities }), [preview, previewEntities]),
+  )
   const update = (value: EntityReference) =>
     setDraft({
       ...settings,
@@ -112,18 +150,34 @@ export function TerminologyPage() {
       setSaving(false)
     }
   }
+  function createTerm() {
+    const id = crypto.randomUUID()
+    const next: EntityReference = {
+      id,
+      kind: "term",
+      translations: [{ locale, name: "Thuật ngữ mới", aliases: [], description: "" }],
+    }
+    setDraft({ ...settings, entities: [...settings.entities, next] })
+    setSelected(`term:${id}`)
+  }
   return (
-    <main className="mx-auto w-full min-w-0 max-w-6xl space-y-5 p-4 sm:p-6">
+    <main className="mx-auto w-full min-w-0 max-w-7xl space-y-5 p-4 sm:p-6">
       <fieldset disabled={saving || catalog.settings.isPending} className="contents">
-        <div className="space-y-3">
+        <header className="min-w-0 space-y-4 border-b pb-1">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-semibold">Thuật ngữ & tham chiếu</h1>
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <BookOpenText className="size-5" />
+              </span>
+              <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Thuật ngữ & tham chiếu</h1>
+            </div>
             {(view !== "preview" || draft) && (
               <div className="flex items-center gap-2">
                 {draft && <span className="text-xs text-amber-600">Chưa lưu</span>}
                 <Button
                   variant="ghost"
                   size="icon"
+                  className="size-8 text-muted-foreground"
                   aria-label="Tải lại thiết lập"
                   disabled={saving}
                   onClick={async () => {
@@ -135,44 +189,62 @@ export function TerminologyPage() {
                 >
                   <RotateCcw className="size-4" />
                 </Button>
-                <Button disabled={!draft || saving || !catalog.settings.data || !catalog.canEdit} onClick={saveDraft}>
+                <Button
+                  size="sm"
+                  disabled={!draft || saving || !catalog.settings.data || !catalog.canEdit}
+                  onClick={saveDraft}
+                >
                   <Save className="size-4" />
                   {saving ? "Đang lưu…" : "Lưu thay đổi"}
                 </Button>
               </div>
             )}
           </div>
-          <Tabs value={view} onValueChange={setView}>
-            <TabsList className="flex h-auto flex-wrap justify-start group-data-[orientation=horizontal]/tabs:h-auto">
-              <TabsTrigger value="terms">
+          <Tabs
+            value={view}
+            onValueChange={setView}
+            className="min-w-0 max-w-full overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            <TabsList variant="line" className="h-10! w-max justify-start gap-1 p-0">
+              <TabsTrigger value="terms" className="h-9 flex-none gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
                 <BookOpenText className="size-4" />
                 Thuật ngữ
               </TabsTrigger>
-              <TabsTrigger value="references">
+              <TabsTrigger
+                value="references"
+                aria-label="Tham chiếu danh mục"
+                className="h-9 flex-none gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm"
+              >
                 <Link2 className="size-4" />
-                Tham chiếu danh mục
+                <span>
+                  Tham chiếu<span className="hidden sm:inline"> danh mục</span>
+                </span>
               </TabsTrigger>
-              <TabsTrigger value="preview">
+              <TabsTrigger value="preview" className="h-9 flex-none gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
                 <Eye className="size-4" />
                 Thử hiển thị
               </TabsTrigger>
-              <TabsTrigger value="settings">
+              <TabsTrigger value="settings" className="h-9 flex-none gap-1.5 px-2 text-xs sm:gap-2 sm:px-3 sm:text-sm">
                 <Settings2 className="size-4" />
                 Thiết lập
               </TabsTrigger>
             </TabsList>
           </Tabs>
-        </div>
+        </header>
         {catalog.catalog.isError && (
-          <p role="alert">Không tải đủ danh mục. Các mục chưa tải sẽ không được tự nhận diện.</p>
+          <p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm">
+            Không tải đủ danh mục. Các mục chưa tải sẽ không được tự nhận diện.
+          </p>
         )}
         {catalog.settings.isError && (
-          <p role="alert">Không tải được thiết lập từ backend. Không thể lưu: {catalog.settings.error.message}</p>
+          <p role="alert" className="rounded-xl border border-destructive/25 bg-destructive/5 px-4 py-3 text-sm">
+            Không tải được thiết lập từ backend. Không thể lưu: {catalog.settings.error.message}
+          </p>
         )}
         {view === "settings" && (
           <fieldset
             disabled={!catalog.canEdit || catalog.settings.isError}
-            className="max-w-2xl space-y-5 rounded-xl border p-5"
+            className="max-w-3xl space-y-5 rounded-xl border bg-card p-4 sm:p-5"
           >
             <div>
               <h2 className="font-medium">Nhận diện trong mô tả</h2>
@@ -180,13 +252,14 @@ export function TerminologyPage() {
                 Áp dụng chung cho admin và wiki. Thay đổi có hiệu lực sau khi lưu.
               </p>
             </div>
-            <label className="flex items-center gap-3 text-sm">
+            <label className="flex cursor-pointer items-center justify-between gap-4 rounded-lg bg-muted/30 p-3 text-sm">
+              <span>Tự liên kết tên và tên gọi khác trong nội dung</span>
               <input
                 type="checkbox"
                 checked={settings.autoRecognize}
                 onChange={(e) => setDraft({ ...settings, autoRecognize: e.target.checked })}
+                className="size-4 shrink-0 accent-primary"
               />
-              Tự liên kết tên và tên gọi khác trong nội dung
             </label>
             <label className="grid gap-2 text-sm">
               Ngôn ngữ dự phòng
@@ -230,53 +303,42 @@ export function TerminologyPage() {
             </details>
           </fieldset>
         )}
-        {message && <p role="status">{message}</p>}
-        {(view === "terms" || view === "references") && (
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-sm">
-              Ngôn ngữ hiển thị
-              <select
-                aria-label="Ngôn ngữ danh mục"
-                className="h-9 rounded-lg border bg-background px-2"
-                value={locale}
-                onChange={(e) => setLocale(e.target.value)}
-              >
-                {languageOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {view === "terms" && (
-              <>
-                {" "}
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const id = crypto.randomUUID()
-                    const next: EntityReference = {
-                      id,
-                      kind: "term",
-                      translations: [{ locale, name: "Thuật ngữ mới", aliases: [], description: "" }],
-                    }
-                    setDraft({ ...settings, entities: [...settings.entities, next] })
-                    setSelected(`term:${id}`)
-                  }}
-                >
-                  <Plus className="size-4" />
-                  Thêm thuật ngữ
-                </Button>
-              </>
-            )}
-          </div>
+        {message && (
+          <p role="status" className="rounded-xl border bg-muted/30 px-4 py-3 text-sm">
+            {message}
+          </p>
         )}
         {(view === "terms" || view === "references") && (
           <ReferenceCatalogTable
             key={view}
-            entities={[...entities.values()].filter((entity) =>
-              view === "terms" ? entity.kind === "term" : entity.kind !== "term",
-            )}
+            variant={view}
+            actions={
+              <>
+                <label className="flex h-9 max-w-full items-center gap-2 rounded-lg border bg-background px-2.5 text-sm">
+                  <Languages className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="sr-only">Ngôn ngữ hiển thị</span>
+                  <select
+                    aria-label="Ngôn ngữ danh mục"
+                    className="min-w-0 max-w-44 bg-transparent text-xs outline-none"
+                    value={locale}
+                    onChange={(e) => setLocale(e.target.value)}
+                  >
+                    {languageOptions.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {view === "terms" && (
+                  <Button size="sm" disabled={!catalog.canEdit} onClick={createTerm}>
+                    <Plus className="size-4" />
+                    Thêm thuật ngữ
+                  </Button>
+                )}
+              </>
+            }
+            entities={view === "terms" ? terms : references}
             locale={locale}
             fallbackLocale={settings.fallbackLocale}
             selected={selected}
@@ -296,21 +358,23 @@ export function TerminologyPage() {
             side={wide ? "right" : "bottom"}
             className={
               wide
-                ? "flex w-[min(620px,90vw)] flex-col overflow-y-auto sm:max-w-none"
-                : "flex max-h-[92dvh] flex-col overflow-y-auto rounded-t-2xl"
+                ? "flex w-[min(660px,90vw)] flex-col gap-0 overflow-hidden sm:max-w-none"
+                : "flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-2xl"
             }
           >
-            <SheetHeader className="pr-8">
-              <SheetTitle>{entity?.kind === "term" ? "Biên tập thuật ngữ" : "Thiết lập tham chiếu"}</SheetTitle>
+            <SheetHeader className="shrink-0 border-b px-5 py-4 pr-12">
+              <SheetTitle className="truncate text-base" title={translation?.name}>
+                {translation?.name || (entity?.kind === "term" ? "Biên tập thuật ngữ" : "Thiết lập tham chiếu")}
+              </SheetTitle>
               <SheetDescription>
                 {entity?.kind === "term"
-                  ? "Định nghĩa, tên và các cách gọi theo từng ngôn ngữ."
-                  : "Tùy chỉnh cách nhận diện và phần giới thiệu. Dữ liệu gameplay vẫn thuộc danh mục gốc."}
+                  ? "Tên gọi và định nghĩa theo ngôn ngữ."
+                  : "Tên hiển thị, nhận diện và phần giới thiệu trong tham chiếu."}
               </SheetDescription>
             </SheetHeader>
             <fieldset
               disabled={saving || catalog.settings.isPending || !catalog.canEdit || catalog.settings.isError}
-              className="space-y-4 px-4 pb-6"
+              className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 [&_[data-slot=entity-reference-input]]:min-h-40"
             >
               {entity ? (
                 <>
@@ -334,12 +398,23 @@ export function TerminologyPage() {
                       ))}
                     </select>
                   </label>
-                  <p className="text-xs text-muted-foreground">
-                    Có bản dịch: {entity.translations.map((text) => text.locale).join(", ")}. Chọn ngôn ngữ khác để thêm
-                    bản dịch.
-                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Bản dịch hiện có">
+                    {entity.translations.map((text) => (
+                      <button
+                        key={text.locale}
+                        type="button"
+                        aria-pressed={text.locale === locale}
+                        onClick={() => setLocale(text.locale)}
+                        className={`rounded-md px-2 py-1 text-xs transition-colors focus-visible:outline-2 focus-visible:outline-ring ${text.locale === locale ? "bg-primary/10 font-medium text-primary" : "bg-muted/60 text-muted-foreground hover:bg-muted"}`}
+                      >
+                        {text.locale}
+                      </button>
+                    ))}
+                  </div>
                   <Button
-                    variant="outline"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-muted-foreground hover:text-destructive"
                     disabled={!translation || entity.translations.length < 2}
                     onClick={() =>
                       update({ ...entity, translations: entity.translations.filter((text) => text.locale !== locale) })
@@ -347,13 +422,19 @@ export function TerminologyPage() {
                   >
                     Xóa bản dịch {locale}
                   </Button>
-                  <label className="block">
+                  <label className="grid gap-2 text-sm font-medium">
                     {entity.kind === "term" ? "Tên thuật ngữ" : "Tên hiển thị trong tham chiếu"}{" "}
-                    <Input value={translation?.name ?? ""} onChange={(e) => textField("name", e.target.value)} />
+                    <Input
+                      className="h-10 text-base font-normal shadow-none"
+                      value={translation?.name ?? ""}
+                      onChange={(e) => textField("name", e.target.value)}
+                    />
                   </label>
-                  <label className="block">
+                  <label className="grid gap-2 text-sm font-medium">
                     Tên gọi khác (mỗi dòng một tên)
                     <Textarea
+                      rows={3}
+                      className="min-h-20 resize-y font-normal shadow-none"
                       value={translation?.aliases.join("\n") ?? ""}
                       onChange={(e) => textField("aliases", e.target.value)}
                     />
@@ -364,23 +445,27 @@ export function TerminologyPage() {
                     maxLength={4000}
                     value={translation?.description ?? ""}
                     onChange={(value) => textField("description", value)}
-                    entities={editorEntities}
+                    entities={descriptionEntities}
                     locale={locale}
                     fallbackLocale={settings.fallbackLocale}
                     autoRecognize={settings.autoRecognize}
                     resolveIcon={catalog.resolveIcon}
+                    searchReferences={searchDescriptionReferences}
                   />
-                  <details className="space-y-3 rounded-lg border p-3">
-                    <summary className="cursor-pointer text-sm font-medium">Hiển thị & nhận diện</summary>
+                  <details className="group space-y-3 border-t pt-4">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                      Hiển thị & nhận diện
+                      <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+                    </summary>
                     <label className="block">
-                      Icon (URL HTTPS hoặc đường dẫn /)
+                      Ảnh biểu tượng
                       <Input
                         value={entity.icon ?? ""}
                         onChange={(e) => update({ ...entity, icon: e.target.value || null })}
                       />
                     </label>
                     <label className="block">
-                      Màu HEX
+                      Màu chữ
                       <Input
                         placeholder="#2563eb"
                         value={entity.display?.color ?? ""}
@@ -411,7 +496,7 @@ export function TerminologyPage() {
                         Hiện icon
                       </label>
                     </div>
-                    <div className="space-y-1.5 rounded-lg border bg-muted/20 p-3">
+                    <div className="space-y-2 rounded-lg bg-muted/30 p-3">
                       <label className="flex items-center gap-2 text-sm">
                         <input
                           type="checkbox"
@@ -427,12 +512,16 @@ export function TerminologyPage() {
                       </p>
                     </div>
                   </details>
-                  <details className="space-y-3 rounded-lg border p-3">
-                    <summary className="cursor-pointer text-sm font-medium">Liên kết tham chiếu</summary>
+                  <details className="group space-y-3 border-t pt-4">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+                      Liên kết tham chiếu
+                      <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
+                    </summary>
                     {(["admin", "wiki"] as const).map((context) => (
                       <label key={context} className="block">
-                        Đích {context} (để trống dùng resolver)
+                        Trang mở trong {context === "admin" ? "Admin" : "Wiki"}
                         <Input
+                          placeholder="Tự chọn theo danh mục"
                           value={entity.destinations?.[context] ?? ""}
                           onChange={(e) =>
                             update({
@@ -445,7 +534,9 @@ export function TerminologyPage() {
                     ))}
                   </details>
                   <Button
-                    variant="outline"
+                    variant="ghost"
+                    size="sm"
+                    className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                     onClick={() => {
                       setDraft({
                         ...settings,
@@ -454,17 +545,26 @@ export function TerminologyPage() {
                       setSelected("")
                     }}
                   >
+                    <Trash2 className="size-4" />
                     {entity.kind === "term" ? "Xóa thuật ngữ" : "Xóa tùy chỉnh, dùng danh mục gốc"}
                   </Button>
                 </>
               ) : (
                 <p>Chọn tướng, trang bị hoặc tạo thuật ngữ để chỉnh sửa tên và cách hiển thị.</p>
               )}
-              <Button disabled={!draft || saving || !catalog.settings.data || !catalog.canEdit} onClick={saveDraft}>
+            </fieldset>
+            <div className="flex shrink-0 items-center justify-between gap-3 border-t bg-background px-5 py-4">
+              <span className="min-w-0 truncate text-xs text-muted-foreground">
+                {draft ? "Có thay đổi chưa lưu" : "Chưa có thay đổi"}
+              </span>
+              <Button
+                disabled={!draft || saving || !catalog.settings.data || !catalog.canEdit || catalog.settings.isError}
+                onClick={saveDraft}
+              >
                 <Save className="size-4" />
                 Lưu thay đổi
               </Button>
-            </fieldset>
+            </div>
           </SheetContent>
         </Sheet>
         {view === "preview" && (
@@ -489,14 +589,15 @@ export function TerminologyPage() {
                 </select>
               </label>
             </div>
-            <div className="grid min-w-0 gap-4 lg:grid-cols-2">
-              <div className="min-w-0 space-y-3 rounded-xl border p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="font-medium">Soạn nội dung thử</h2>
+            <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]">
+              <div className="min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5 [&_[data-slot=entity-reference-input]]:min-h-56">
+                <div className="flex items-center justify-between gap-2 border-b pb-3">
+                  <h2 className="text-sm font-semibold">Soạn nội dung thử</h2>
                   <div className="flex gap-1">
                     <Button
                       size="sm"
                       variant="ghost"
+                      className="h-8 text-xs"
                       onClick={() =>
                         setPreview(
                           "Gây <b>sát thương phép</b> và làm chậm mục tiêu. Nhận <color=#16a34a>lá chắn</color> khi sử dụng chiêu.",
@@ -509,6 +610,7 @@ export function TerminologyPage() {
                     <Button
                       size="icon"
                       variant="ghost"
+                      className="size-8 text-muted-foreground"
                       aria-label="Xóa nội dung thử"
                       disabled={!preview}
                       onClick={() => setPreview("")}
@@ -521,23 +623,25 @@ export function TerminologyPage() {
                   label="Nội dung thử"
                   value={preview}
                   onChange={setPreview}
-                  entities={editorEntities}
+                  entities={previewEntities}
                   locale={locale}
                   fallbackLocale={settings.fallbackLocale}
                   autoRecognize={settings.autoRecognize}
                   resolveIcon={catalog.resolveIcon}
+                  searchReferences={searchPreviewReferences}
                   renderPreview={false}
                   hideLabel
                 />
               </div>
-              <div className="min-w-0 rounded-xl border bg-muted/15 p-4">
+              <div className="min-w-0 rounded-xl border bg-card p-4 sm:p-5 xl:sticky xl:top-4">
                 <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b pb-3">
-                  <h2 className="font-medium">Kết quả hiển thị</h2>
-                  <div role="group" aria-label="Đích mở tham chiếu" className="flex rounded-lg bg-muted p-1">
+                  <h2 className="text-sm font-semibold">Kết quả hiển thị</h2>
+                  <div role="group" aria-label="Đích mở tham chiếu" className="flex rounded-lg bg-muted/60 p-0.5">
                     {(["wiki", "admin"] as const).map((context) => (
                       <Button
                         key={context}
                         size="sm"
+                        className="h-7 px-2.5 text-xs"
                         variant={previewContext === context ? "secondary" : "ghost"}
                         aria-pressed={previewContext === context}
                         onClick={() => setPreviewContext(context)}
@@ -547,11 +651,11 @@ export function TerminologyPage() {
                     ))}
                   </div>
                 </div>
-                {preview ? (
-                  <div className="whitespace-pre-wrap break-words text-sm leading-8">
-                    <EntityRichText
-                      text={preview}
-                      entities={editorEntities}
+                {previewOutput.text ? (
+                  <div className="min-h-56 whitespace-pre-wrap break-words text-sm leading-8">
+                    <ReferencePreview
+                      text={previewOutput.text}
+                      entities={previewOutput.entities}
                       locale={locale}
                       fallbackLocale={settings.fallbackLocale}
                       autoRecognize={settings.autoRecognize}
@@ -560,9 +664,14 @@ export function TerminologyPage() {
                     />
                   </div>
                 ) : (
-                  <p className="py-10 text-center text-sm text-muted-foreground">
-                    Nhập nội dung hoặc chọn Ví dụ để thử.
-                  </p>
+                  <div className="flex min-h-56 flex-col items-center justify-center gap-3 text-center">
+                    <span className="flex size-12 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground">
+                      <Eye className="size-5" />
+                    </span>
+                    <p className="max-w-56 text-sm leading-6 text-muted-foreground">
+                      Nhập nội dung hoặc chọn Ví dụ để thử.
+                    </p>
+                  </div>
                 )}
               </div>
             </div>
