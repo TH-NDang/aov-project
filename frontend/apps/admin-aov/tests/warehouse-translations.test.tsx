@@ -1206,7 +1206,7 @@ test("item row picker keeps cancellation local, supports physical row selection 
   })
 })
 
-test("shop skips idle geometry observers and does not rerender wires for unchanged layout during scrolling", async () => {
+test("shop paints wire underlays first and skips unchanged layout measurements during scrolling", async () => {
   await withUi(async ({ document, render }) => {
     const { ItemShopGraph } = await import("../src/features/warehouse/item-shop-graph")
     const callbacks: (() => void)[] = []
@@ -1218,7 +1218,7 @@ test("shop skips idle geometry observers and does not rerender wires for unchang
       unobserve() {}
       disconnect() {}
     } as unknown as typeof ResizeObserver
-    const items: WarehouseEntry<ItemContent>[] = ["base", "target"].map((id, column) => ({
+    const items: WarehouseEntry<ItemContent>[] = ["base", "other", "target"].map((id, column) => ({
       id,
       code: id,
       revision: fixtureRevision(id),
@@ -1231,7 +1231,13 @@ test("shop skips idle geometry observers and does not rerender wires for unchang
         categoryCode: "attack",
         shopPositions: [{ categoryCode: "attack", row: 0, column, variant: null }],
         recipeStatus: "VERIFIED",
-        components: column ? [{ itemId: "base", quantity: 1 }] : [],
+        components:
+          id === "target"
+            ? [
+                { itemId: "base", quantity: 1 },
+                { itemId: "other", quantity: 1 },
+              ]
+            : [],
         stats: [],
       },
     }))
@@ -1273,7 +1279,16 @@ test("shop skips idle geometry observers and does not rerender wires for unchang
       })
     }
     await notify()
-    assert.equal(canvas.querySelectorAll("[data-recipe-line]").length, 1)
+    const wires = [...canvas.querySelectorAll("[data-recipe-line]")]
+    const halos = [...canvas.querySelectorAll("[data-recipe-halo]")]
+    assert.equal(wires.length, 2)
+    assert.equal(halos.length, 2)
+    for (const halo of halos)
+      for (const wire of wires)
+        assert.ok(
+          halo.compareDocumentPosition(wire) & document.defaultView!.Node.DOCUMENT_POSITION_FOLLOWING,
+          "Every underlay must paint before every recipe wire so overlapping paths cannot erase earlier lines",
+        )
     const before = commits
     scrollOffset = 240
     canvas.parentElement!.dispatchEvent(new window.Event("scroll"))
