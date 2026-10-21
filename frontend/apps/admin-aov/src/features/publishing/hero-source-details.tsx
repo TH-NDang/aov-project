@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock3, Droplets, ExternalLink } from "lucide-react"
+import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../terminology/catalog"
 import type { Skill } from "./types"
@@ -23,7 +23,7 @@ export function heroReviewNotes(skills: Skill[]): string[] {
   )
 }
 
-export function SkillSourceDetails({ skill }: { skill: Skill }) {
+export function SkillSourceDetails({ skill, collapseSources = false }: { skill: Skill; collapseSources?: boolean }) {
   const source = snapshot(skill)
   if (!source) return null
   const cooldown = record(source.cooldown)
@@ -37,6 +37,31 @@ export function SkillSourceDetails({ skill }: { skill: Skill }) {
   const notes = sourceReviewNotes(source.reviewFlags)
   const sourceImageUrl = sourceHttpUrl(source.sourceImageUrl)
   const tags = strings(source.tags)
+  const provenance = (
+    <>
+      {notes.length > 0 && (
+        <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-5 text-muted-foreground">
+          {notes.map((note) => (
+            <p key={note} className="flex gap-2">
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600" />
+              {note}
+            </p>
+          ))}
+        </div>
+      )}
+      {sourceImageUrl && (
+        <a
+          href={sourceImageUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+        >
+          <ExternalLink className="size-3.5 shrink-0" />
+          Xem ảnh chụp nguồn
+        </a>
+      )}
+    </>
+  )
   return (
     <div className="space-y-4">
       {(cooldownText || energyText || tags.length > 0) && (
@@ -70,7 +95,7 @@ export function SkillSourceDetails({ skill }: { skill: Skill }) {
             <caption className="sr-only">Thông số theo cấp chiêu, giữ nguyên nhãn từ nguồn.</caption>
             <thead>
               <tr className="border-b bg-muted/40">
-                <th scope="col" className="min-w-32 px-3 py-2.5 font-medium">
+                <th scope="col" className="sticky left-0 z-10 min-w-32 bg-muted px-3 py-2.5 font-medium">
                   Thông số
                 </th>
                 {columns.map((column, index) => (
@@ -83,7 +108,7 @@ export function SkillSourceDetails({ skill }: { skill: Skill }) {
             <tbody>
               {rows.map((row, index) => (
                 <tr key={index} className="border-b last:border-0">
-                  <th scope="row" className="px-3 py-2.5 font-medium">
+                  <th scope="row" className="sticky left-0 bg-card px-3 py-2.5 font-medium">
                     <span className="flex items-center gap-2">
                       {text(row.label) || "Chưa có nhãn"}
                       {row.review_required === true && (
@@ -105,26 +130,21 @@ export function SkillSourceDetails({ skill }: { skill: Skill }) {
           </table>
         </div>
       )}
-      {notes.length > 0 && (
-        <div className="space-y-2 rounded-lg border border-amber-500/25 bg-amber-500/5 p-3 text-xs leading-5 text-muted-foreground">
-          {notes.map((note) => (
-            <p key={note} className="flex gap-2">
-              <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600" />
-              {note}
-            </p>
-          ))}
-        </div>
-      )}
-      {sourceImageUrl && (
-        <a
-          href={sourceImageUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
-        >
-          <ExternalLink className="size-3.5 shrink-0" />
-          Xem ảnh chụp nguồn
-        </a>
+      {collapseSources && (notes.length > 0 || sourceImageUrl) ? (
+        <details className="group/source border-t pt-3">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-xs text-muted-foreground [&::-webkit-details-marker]:hidden">
+            {notes.length > 0 ? (
+              <AlertTriangle className="size-3.5 text-amber-600" />
+            ) : (
+              <ExternalLink className="size-3.5" />
+            )}
+            Nguồn & đối chiếu{notes.length > 0 ? ` · ${notes.length} ghi chú` : ""}
+            <ChevronDown className="ml-auto size-3.5 transition-transform group-open/source:rotate-180" />
+          </summary>
+          <div className="mt-3 space-y-3">{provenance}</div>
+        </details>
+      ) : (
+        provenance
       )}
     </div>
   )

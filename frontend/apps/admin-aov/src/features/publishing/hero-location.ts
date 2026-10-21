@@ -7,6 +7,8 @@ const heroKeys = [
   "revision",
   "view",
   "tab",
+  "skill",
+  "skillLayout",
   "section",
   "locale",
   "readLocale",
@@ -62,6 +64,18 @@ export function closeHeroLocation(params: URLSearchParams) {
 
 export function openHeroLocation(params: URLSearchParams, heroId: string, revisionId?: string) {
   return patchHeroLocation(closeHeroLocation(params), { hero: heroId, revision: revisionId })
+}
+
+/** Keep the working context while dropping identities that belong to the previous hero. */
+export function switchHeroLocation(params: URLSearchParams, heroId: string, revisionId?: string) {
+  return patchHeroLocation(params, {
+    hero: heroId,
+    revision: revisionId,
+    compare: null,
+    diff: null,
+    changes: null,
+    skill: null,
+  })
 }
 
 export function heroPageLocation(heroId: string, params: URLSearchParams, revisionId?: string) {

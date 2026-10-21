@@ -87,6 +87,10 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.equal(document.querySelectorAll("tbody tr").length, 0)
     await click('[aria-controls="hero-content-skills"]')
     assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "skills")
+    await click('[aria-label="Chọn kỹ năng"] button')
+    assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "passive")
+    await click('[aria-label="Cách hiển thị kỹ năng"] button:nth-child(2)')
+    assert.equal(new URLSearchParams(router.state.location.search).get("skillLayout"), "flat")
     await click('[aria-controls="workspace-translations"]')
     const target = [...document.querySelectorAll("label")]
       .find((label) => label.textContent?.includes("Ngôn ngữ dữ liệu"))!
@@ -124,6 +128,8 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.equal(params.get("target"), "th-TH")
     assert.equal(params.get("section"), "SKILLS")
     assert.equal(params.get("ruleset"), "fixture-rules")
+    assert.equal(params.get("skill"), "passive")
+    assert.equal(params.get("skillLayout"), "flat")
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu bản dịch"]'))
     const nameInput = [...document.querySelectorAll("label")]
       .find((label) => label.textContent === "Tên · th-TH")!

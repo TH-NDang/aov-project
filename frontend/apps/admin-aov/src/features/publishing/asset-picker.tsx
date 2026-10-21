@@ -29,7 +29,7 @@ export function AssetPicker({
   onBusyChange?: (busy: boolean) => void
   directUpload?: boolean
 }) {
-  const thumbnailShape = ["SPELL_ICON", "ARCANA_ICON", "ENCHANTMENT_ICON"].includes(semanticType)
+  const thumbnailShape = ["HERO_SKILL_ICON", "SPELL_ICON", "ARCANA_ICON", "ENCHANTMENT_ICON"].includes(semanticType)
     ? "rounded-full"
     : "rounded-md"
   const queryClient = useQueryClient()
@@ -252,9 +252,9 @@ export function AssetPicker({
               )}
             </fieldset>
           )}
-          {busy && <p role="status">Đang tải và kiểm tra ảnh…</p>}
         </div>
       )}
+      {busy && <p role="status">Đang tải và kiểm tra ảnh…</p>}
       {value && writable && (
         <label className="grid gap-1 text-sm">
           Nâng chất lượng ảnh đã chọn

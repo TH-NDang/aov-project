@@ -1,9 +1,10 @@
+import { HeroSkillsEditor } from "./hero-skills-editor"
 import { Button } from "@aov/ui/components/button"
 import type { Hero } from "@/lib/api/types"
 import { AssetPicker } from "./asset-picker"
 import { SkinBadgePicker } from "../media/skin-badge-picker"
 import { retainImageOptions } from "./image-options"
-import { Field, SourceFields, control } from "./fields"
+import { Field, SourceFields } from "./fields"
 import {
   ROLES,
   type Content,
@@ -48,12 +49,18 @@ export function SectionEditor({
   locale,
   onChange,
   resource,
+  initialSkillKey,
+  heroId,
+  onBusyChange,
 }: {
   section: Section
   value: Content[Section]
   locale: string
   onChange: (value: NonNullable<Content[Section]>) => void
   resource?: Hero
+  initialSkillKey?: string
+  heroId?: string
+  onBusyChange?: (busy: boolean) => void
 }) {
   const data = value ?? emptySection(section, locale)
   let editor
@@ -232,182 +239,16 @@ export function SectionEditor({
       </>
     )
   } else if (section === "SKILLS") {
-    const p = data as Skills
     editor = (
-      <>
-        {p.skills.map((s, i) => (
-          <details key={i} className="rounded-lg border p-3" open={p.skills.length < 5}>
-            <summary className="cursor-pointer font-medium">
-              {s.translations[0]?.name || s.skillKey || `Kỹ năng ${i + 1}`}
-            </summary>
-            <div className="mt-3 space-y-3">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field
-                  label="Khóa kỹ năng"
-                  required
-                  value={s.skillKey}
-                  onChange={(skillKey) =>
-                    onChange({ ...p, skills: p.skills.map((v, n) => (n === i ? { ...v, skillKey } : v)) })
-                  }
-                />
-                <label className="grid gap-1 text-sm">
-                  Loại
-                  <select
-                    className={control}
-                    value={s.kind}
-                    onChange={(e) =>
-                      onChange({
-                        ...p,
-                        skills: p.skills.map((v, n) => (n === i ? { ...v, kind: e.target.value as typeof s.kind } : v)),
-                      })
-                    }
-                  >
-                    <option value="PASSIVE">Nội tại</option>
-                    <option value="ACTIVE">Chủ động</option>
-                    <option value="OTHER">Khác</option>
-                  </select>
-                </label>
-                <Field
-                  label="Dạng tướng (nếu có)"
-                  value={s.formKey ?? ""}
-                  onChange={(formKey) =>
-                    onChange({
-                      ...p,
-                      skills: p.skills.map((v, n) => (n === i ? { ...v, formKey: formKey || null } : v)),
-                    })
-                  }
-                />
-              </div>
-              {s.translations.map((t, j) => (
-                <div key={j} className="space-y-3 border-l-2 pl-3">
-                  <Field
-                    label="Ngôn ngữ"
-                    required
-                    value={t.locale}
-                    onChange={(locale) =>
-                      onChange({
-                        ...p,
-                        skills: p.skills.map((v, n) =>
-                          n === i
-                            ? { ...v, translations: v.translations.map((t, k) => (k === j ? { ...t, locale } : t)) }
-                            : v,
-                        ),
-                      })
-                    }
-                  />
-                  <Field
-                    label="Tên chiêu"
-                    required
-                    value={t.name}
-                    onChange={(name) =>
-                      onChange({
-                        ...p,
-                        skills: p.skills.map((v, n) =>
-                          n === i
-                            ? { ...v, translations: v.translations.map((t, k) => (k === j ? { ...t, name } : t)) }
-                            : v,
-                        ),
-                      })
-                    }
-                  />
-                  <Field
-                    label="Mô tả đã xác minh"
-                    multiline
-                    richTextLocale={t.locale}
-                    required
-                    value={t.description}
-                    onChange={(description) =>
-                      onChange({
-                        ...p,
-                        skills: p.skills.map((v, n) =>
-                          n === i
-                            ? {
-                                ...v,
-                                translations: v.translations.map((t, k) => (k === j ? { ...t, description } : t)),
-                              }
-                            : v,
-                        ),
-                      })
-                    }
-                  />
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  onChange({
-                    ...p,
-                    skills: p.skills.map((v, n) =>
-                      n === i
-                        ? { ...v, translations: [...v.translations, { locale: "", name: "", description: "" }] }
-                        : v,
-                    ),
-                  })
-                }
-              >
-                Thêm bản dịch chiêu
-              </Button>
-              <AssetPicker
-                semanticType="HERO_SKILL_ICON"
-                value={s.iconAssetId}
-                onChange={(iconAssetId) =>
-                  onChange({ ...p, skills: p.skills.map((v, n) => (n === i ? { ...v, iconAssetId } : v)) })
-                }
-                resourcePath={
-                  resource?.skills
-                    .flatMap((skill) =>
-                      skill.variants.map((variant) => ({
-                        key:
-                          skill.variants.length > 1
-                            ? `skill-${skill.slot}-variant-${variant.index}`
-                            : `skill-${skill.slot}`,
-                        ...variant,
-                      })),
-                    )
-                    .find((v) => v.key === s.skillKey)?.icon
-                }
-                sourceUrl={resource?.sources.skills}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  onChange({
-                    ...p,
-                    skills: p.skills.filter((_, n) => n !== i).map((s, displayOrder) => ({ ...s, displayOrder })),
-                  })
-                }
-              >
-                Bỏ kỹ năng
-              </Button>
-            </div>
-          </details>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            onChange({
-              ...p,
-              skills: [
-                ...p.skills,
-                {
-                  skillKey: `skill-${p.skills.length}`,
-                  kind: "ACTIVE",
-                  formKey: null,
-                  displayOrder: p.skills.length,
-                  iconAssetId: null,
-                  translations: [{ locale, name: "", description: "" }],
-                  effects: [],
-                },
-              ],
-            })
-          }
-        >
-          Thêm kỹ năng
-        </Button>
-      </>
+      <HeroSkillsEditor
+        value={data as Skills}
+        locale={locale}
+        onChange={onChange}
+        resource={resource}
+        initialSkillKey={initialSkillKey}
+        heroId={heroId}
+        onBusyChange={onBusyChange}
+      />
     )
   } else if (section === "SKINS") {
     const p = data as Skins
