@@ -1,20 +1,35 @@
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
-import { textareaCaretRect } from "../lib/textarea-caret"
-import { entityKindLabels, type EntityReference } from "../lib/entity-rich-text"
+import { EntityReferenceInput, type EntityReferenceInputHandle } from "./entity-reference-input"
+import { referenceFormatState, toggleReferenceFormat } from "../lib/reference-input-formatting"
+import {
+  entityKindLabels,
+  referenceTranslation,
+  validSkillReference,
+  type EntityReference,
+} from "../lib/entity-rich-text"
 import {
   insertReference,
   mentionAt,
   referenceChoices,
-  wrapSelection,
+  referenceSearchGroup,
   type EditorSnapshot,
   type TextSelection,
+  type EntityReferenceSearch,
+  type ReferenceSearchPage,
 } from "../lib/entity-rich-text-editor"
-import { EntityRichText, EntityReferenceIcon, type EntityIconResolver } from "./entity-rich-text"
+import {
+  EntityRichText,
+  EntityReferenceArtwork,
+  skillReferenceContext,
+  type EntityIconResolver,
+} from "./entity-rich-text"
 import { Button } from "./button"
 
 const empty: EntityReference[] = []
 const kinds = entityKindLabels
+const MemoizedRichText = React.memo(EntityRichText)
+const suggestionBatchSize = 32
 export interface EntityRichTextEditorProps {
   label: string
   value: string
@@ -29,6 +44,92 @@ export interface EntityRichTextEditorProps {
   resolveIcon?: EntityIconResolver
   renderPreview?: boolean
   hideLabel?: boolean
+  searchReferences?: EntityReferenceSearch
+}
+
+function useReferenceSearch(
+  searchReferences: EntityReferenceSearch | undefined,
+  query: string,
+  locale: string,
+  open: boolean,
+) {
+  const key = `${locale}\0${query}`
+  const request = React.useRef<AbortController | null>(null)
+  const generation = React.useRef(0)
+  const pending = React.useRef(false)
+  const [result, setResult] = React.useState<ReferenceSearchPage & { key: string; loading: boolean; error: boolean }>({
+    key: "",
+    items: [],
+    page: -1,
+    size: 20,
+    totalElements: 0,
+    loading: false,
+    error: false,
+  })
+  const allowed =
+    open && !!searchReferences && (!referenceSearchGroup(query).kind || referenceSearchGroup(query).kind === "skill")
+  const load = React.useCallback(
+    async (page: number, run: number) => {
+      if (!searchReferences || pending.current || run !== generation.current) return
+      const controller = new AbortController()
+      request.current = controller
+      pending.current = true
+      setResult((previous) => ({ ...previous, loading: true, error: false }))
+      try {
+        const response = await searchReferences({ query, locale, page, signal: controller.signal })
+        if (controller.signal.aborted || run !== generation.current) return
+        if (
+          !Array.isArray(response.items) ||
+          response.page !== page ||
+          !Number.isInteger(response.size) ||
+          response.size < 1 ||
+          !Number.isInteger(response.totalElements) ||
+          response.totalElements < 0
+        )
+          throw new Error("Invalid reference search page")
+        setResult((previous) => ({
+          ...response,
+          items: page === 0 ? response.items.slice(0, 100) : [...previous.items, ...response.items.slice(0, 100)],
+          key,
+          loading: false,
+          error: false,
+        }))
+      } catch {
+        if (!controller.signal.aborted && run === generation.current)
+          setResult((previous) => ({ ...previous, loading: false, error: true }))
+      } finally {
+        if (run === generation.current) pending.current = false
+      }
+    },
+    [searchReferences, query, locale, key],
+  )
+  React.useEffect(() => {
+    const run = ++generation.current
+    request.current?.abort()
+    pending.current = false
+    setResult({ key, items: [], page: -1, size: 20, totalElements: 0, loading: allowed, error: false })
+    const timer = allowed ? setTimeout(() => void load(0, run), 300) : undefined
+    return () => {
+      clearTimeout(timer)
+      request.current?.abort()
+      generation.current++
+      pending.current = false
+    }
+  }, [allowed, key, load])
+  const current = result.key === key && allowed ? result : undefined
+  const hasMore = !!current && current.page >= 0 && (current.page + 1) * current.size < current.totalElements
+  return {
+    items: current?.items ?? empty,
+    loading: current?.loading ?? false,
+    error: current?.error ?? false,
+    hasMore,
+    loadMore: () => {
+      if (hasMore && !current.loading && !current.error) void load(current.page + 1, generation.current)
+    },
+    retry: () => {
+      if (allowed) void load(Math.max(0, result.page + 1), generation.current)
+    },
+  }
 }
 
 export function EntityRichTextEditor({
@@ -45,10 +146,11 @@ export function EntityRichTextEditor({
   resolveIcon,
   renderPreview = true,
   hideLabel = false,
+  searchReferences,
 }: EntityRichTextEditorProps) {
   const limit = Math.max(0, Math.min(100000, maxLength))
   const id = React.useId()
-  const area = React.useRef<HTMLTextAreaElement>(null)
+  const area = React.useRef<EntityReferenceInputHandle>(null)
   const popup = React.useRef<HTMLDivElement>(null)
   const list = React.useRef<HTMLDivElement>(null)
   const search = React.useRef<HTMLInputElement>(null)
@@ -64,9 +166,29 @@ export function EntityRichTextEditor({
   const [picker, setPicker] = React.useState(false)
   const [query, setQuery] = React.useState("")
   const [active, setActive] = React.useState(0)
+  const [visibleSuggestions, setVisibleSuggestions] = React.useState(suggestionBatchSize)
   const [color, setColor] = React.useState("#2563eb")
   const [notice, setNotice] = React.useState("")
   const [isComposing, setComposing] = React.useState(false)
+  const [selectedReferences, setSelectedReferences] = React.useState<EntityReference[]>([])
+  const [previewOpen, setPreviewOpen] = React.useState(false)
+  const deferredPreview = React.useDeferredValue(renderPreview && previewOpen ? value : "")
+  const updateCaret = React.useCallback((next: TextSelection) => {
+    setCaret((previous) => (previous.start === next.start && previous.end === next.end ? previous : next))
+  }, [])
+  const formatting = React.useMemo(() => referenceFormatState(value, caret), [value, caret.start, caret.end])
+  React.useEffect(() => {
+    if (/^#[\da-f]{6}$/i.test(formatting.color ?? "")) setColor(formatting.color!)
+    else if (/^#[\da-f]{3}$/i.test(formatting.color ?? "")) {
+      setColor(
+        `#${formatting
+          .color!.slice(1)
+          .split("")
+          .map((part) => part + part)
+          .join("")}`,
+      )
+    }
+  }, [formatting.color])
   const [, refresh] = React.useReducer((n: number) => n + 1, 0)
   React.useLayoutEffect(() => {
     if (value !== current.current) {
@@ -74,23 +196,15 @@ export function EntityRichTextEditor({
       history.current = [{ value, start: 0, end: 0 }]
       position.current = 0
       selection.current = { start: 0, end: 0 }
-      setCaret(selection.current)
+      updateCaret(selection.current)
       setDismissed(true)
     }
   }, [value])
-  const remember = () => {
-    const input = area.current
-    if (!input) return
-    selection.current = { start: input.selectionStart, end: input.selectionEnd }
-    setCaret(selection.current)
-    const snapshot = history.current[position.current]
-    if (snapshot?.value === current.current) Object.assign(snapshot, selection.current)
-  }
   const restore = (snapshot: EditorSnapshot) => {
     current.current = snapshot.value
     onChange(snapshot.value)
     selection.current = { start: snapshot.start, end: snapshot.end }
-    setCaret(selection.current)
+    updateCaret(selection.current)
     setDismissed(true)
     setPicker(false)
     queueMicrotask(() => {
@@ -102,7 +216,7 @@ export function EntityRichTextEditor({
   const commit = (snapshot: EditorSnapshot, focus = true) => {
     if (snapshot.value.length > limit && snapshot.value.length > current.current.length) {
       setNotice(`Nội dung vượt giới hạn ${limit.toLocaleString("vi-VN")} ký tự.`)
-      return
+      return false
     }
     if (snapshot.value !== history.current[position.current]?.value) {
       history.current = history.current.slice(0, position.current + 1)
@@ -113,7 +227,7 @@ export function EntityRichTextEditor({
     current.current = snapshot.value
     onChange(snapshot.value)
     selection.current = { start: snapshot.start, end: snapshot.end }
-    setCaret(selection.current)
+    updateCaret(selection.current)
     setNotice("")
     if (focus)
       queueMicrotask(() => {
@@ -121,6 +235,7 @@ export function EntityRichTextEditor({
         area.current?.setSelectionRange(snapshot.start, snapshot.end)
       })
     refresh()
+    return true
   }
   const undo = (redo = false) => {
     const next = position.current + (redo ? 1 : -1)
@@ -129,35 +244,55 @@ export function EntityRichTextEditor({
       restore(history.current[next]!)
     }
   }
-  React.useEffect(() => {
-    const input = area.current
-    const beforeInput = (event: InputEvent) => {
-      if (composing.current || !["historyUndo", "historyRedo"].includes(event.inputType)) return
-      event.preventDefault()
-      undo(event.inputType === "historyRedo")
-    }
-    input?.addEventListener("select", remember)
-    input?.addEventListener("beforeinput", beforeInput)
-    return () => {
-      input?.removeEventListener("select", remember)
-      input?.removeEventListener("beforeinput", beforeInput)
-    }
-  })
   const mention = !isComposing && !dismissed && !picker ? mentionAt(value, caret) : null
-  const options = React.useMemo(
-    () => referenceChoices(entities, locale, fallbackLocale, picker ? query : (mention?.query ?? "")),
-    [entities, locale, fallbackLocale, picker, query, mention?.query],
+  const searchQuery = picker ? query : (mention?.query ?? "")
+  const open = (!!mention || picker) && !isComposing && !disabled
+  React.useEffect(() => setVisibleSuggestions(suggestionBatchSize), [open, searchQuery])
+  const remote = useReferenceSearch(searchReferences, searchQuery, locale, open)
+  const resolvedEntities = React.useMemo(
+    () => [
+      ...new Map(
+        [...selectedReferences, ...entities].map((entity) => [`${entity.kind}:${entity.id}`, entity]),
+      ).values(),
+    ],
+    [selectedReferences, entities],
   )
-  const open = (!!mention || picker) && !isComposing
+  const options = React.useMemo(() => {
+    if (!open) return []
+    const local = referenceChoices(resolvedEntities, locale, fallbackLocale, searchQuery)
+    const group = referenceSearchGroup(searchQuery).kind
+    const choices = new Map(local.map((choice) => [`${choice.entity.kind}:${choice.entity.id}`, choice]))
+    for (const entity of remote.items) {
+      if (
+        !entity ||
+        !Object.hasOwn(kinds, entity.kind) ||
+        !Array.isArray(entity.translations) ||
+        (group && entity.kind !== group) ||
+        (entity.kind === "skill" && !validSkillReference(entity))
+      )
+        continue
+      const translation = referenceTranslation(entity, locale, fallbackLocale)
+      if (translation?.name.trim()) choices.set(`${entity.kind}:${entity.id}`, { entity, translation })
+    }
+    return [...choices.values()]
+  }, [open, resolvedEntities, locale, fallbackLocale, searchQuery, remote.items])
+  const renderedSuggestions = Math.min(options.length, Math.max(visibleSuggestions, active + 1))
+  const loadMoreSuggestions = () => {
+    if (renderedSuggestions < options.length) setVisibleSuggestions(renderedSuggestions + suggestionBatchSize)
+    else remote.loadMore()
+  }
   const virtualAnchor = React.useMemo(
-    () => ({ current: { getBoundingClientRect: () => anchorRect ?? area.current!.getBoundingClientRect() } }),
+    () => ({ current: { getBoundingClientRect: () => anchorRect ?? area.current!.element!.getBoundingClientRect() } }),
     [anchorRect],
   )
   React.useLayoutEffect(() => {
-    if (!open || !area.current) return
-    const input = area.current
+    if (!open || !area.current?.element) return
+    const input = area.current.element
     const view = input.ownerDocument.defaultView!
-    const measure = () => setAnchorRect(textareaCaretRect(input, caret.end))
+    const measure = () => {
+      const rect = area.current?.caretRect(caret.end)
+      if (rect) setAnchorRect(rect)
+    }
     measure()
     let frame = 0
     const update = () => {
@@ -178,7 +313,7 @@ export function EntityRichTextEditor({
       view.visualViewport?.removeEventListener("resize", update)
       view.visualViewport?.removeEventListener("scroll", update)
     }
-  }, [open, value, caret.end])
+  }, [open, value, caret.end, resolvedEntities])
   React.useLayoutEffect(() => {
     if (!open) return
     const container = list.current
@@ -196,13 +331,17 @@ export function EntityRichTextEditor({
     if (mention) range = { start: mention.start, end: mention.end }
     const next = insertReference(current.current, range, choice.entity, choice.translation.name, !mention)
     if (next) {
+      if (choice.entity.kind === "skill")
+        setSelectedReferences((previous) =>
+          [...previous.filter((entity) => entity.id !== choice.entity.id), choice.entity].slice(-500),
+        )
       commit(next)
       setPicker(false)
       setDismissed(true)
     } else setNotice("Chọn văn bản thuần, bên ngoài thẻ tham chiếu để chèn.")
   }
   const format = (kind: "b" | "i" | "color") => {
-    const next = wrapSelection(current.current, selection.current, kind, color)
+    const next = toggleReferenceFormat(current.current, selection.current, kind, color)
     if (next) {
       commit(next)
       setDismissed(true)
@@ -221,6 +360,10 @@ export function EntityRichTextEditor({
     if (!options.length) return false
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       event.preventDefault()
+      if (event.key === "ArrowDown" && active >= options.length - 1 && remote.hasMore) {
+        remote.loadMore()
+        return true
+      }
       setActive((n) => (n + (event.key === "ArrowDown" ? 1 : -1) + options.length) % options.length)
       return true
     }
@@ -244,7 +387,12 @@ export function EntityRichTextEditor({
         }
       }}
     >
-      <label htmlFor={id} className={hideLabel ? "sr-only" : "block text-sm font-medium"}>
+      <label
+        id={`${id}-label`}
+        htmlFor={id}
+        onClick={() => area.current?.focus()}
+        className={hideLabel ? "sr-only" : "block text-sm font-medium"}
+      >
         {label}
       </label>
       <div
@@ -262,9 +410,10 @@ export function EntityRichTextEditor({
             <Button
               key={kind}
               type="button"
-              variant="ghost"
+              variant={(kind === "b" ? formatting.bold : formatting.italic) ? "secondary" : "ghost"}
               size="sm"
               aria-label={name}
+              aria-pressed={kind === "b" ? formatting.bold : formatting.italic}
               disabled={disabled}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => format(kind)}
@@ -339,46 +488,56 @@ export function EntityRichTextEditor({
           </Button>
         </div>
       </div>
-      <textarea
+      <EntityReferenceInput
         id={id}
         ref={area}
-        className="min-h-28 w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
+        className="min-h-28 w-full rounded-lg border bg-background px-3 py-2 text-sm leading-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:opacity-50"
         value={value}
+        entities={resolvedEntities}
+        locale={locale}
+        fallbackLocale={fallbackLocale}
+        resolveIcon={resolveIcon}
         required={required}
         disabled={disabled}
         maxLength={limit}
+        aria-labelledby={`${id}-label`}
         aria-describedby={`${id}-help`}
         aria-autocomplete="list"
         aria-controls={open ? `${id}-options` : undefined}
         aria-activedescendant={
           open && options.length ? `${id}-option-${Math.min(active, options.length - 1)}` : undefined
         }
-        onSelect={remember}
-        onClick={remember}
-        onKeyUp={remember}
+        onSelectionChange={(next) => {
+          selection.current = next
+          updateCaret(next)
+          const snapshot = history.current[position.current]
+          if (snapshot?.value === current.current) Object.assign(snapshot, next)
+        }}
+        onHistoryUndo={undo}
         onCompositionStart={() => {
           composing.current = true
           setComposing(true)
         }}
-        onCompositionEnd={(e) => {
+        onCompositionEnd={(snapshot) => {
           composing.current = false
           setComposing(false)
-          const input = e.currentTarget
-          commit({ value: input.value, start: input.selectionStart, end: input.selectionEnd }, false)
+          const accepted = commit(snapshot, false)
           setDismissed(false)
           setActive(0)
+          return accepted
         }}
-        onChange={(e) => {
-          const input = e.currentTarget
-          const snapshot = { value: input.value, start: input.selectionStart, end: input.selectionEnd }
+        onChange={(snapshot) => {
+          let accepted = true
           if (composing.current) {
-            current.current = input.value
-            onChange(input.value)
+            if (snapshot.value.length > limit && snapshot.value.length > current.current.length) return false
+            current.current = snapshot.value
+            onChange(snapshot.value)
             selection.current = snapshot
-            setCaret(snapshot)
-          } else commit(snapshot, false)
+            updateCaret(snapshot)
+          } else accepted = commit(snapshot, false)
           setDismissed(false)
           setActive(0)
+          return accepted
         }}
         onKeyDown={(e) => {
           if (composing.current || e.nativeEvent.isComposing || e.keyCode === 229) return
@@ -394,21 +553,9 @@ export function EntityRichTextEditor({
             }
           }
         }}
-        onPaste={(e) => {
-          if (composing.current) return
-          e.preventDefault()
-          const input = e.currentTarget
-          const text = e.clipboardData.getData("text/plain")
-          commit({
-            value: value.slice(0, input.selectionStart) + text + value.slice(input.selectionEnd),
-            start: input.selectionStart + text.length,
-            end: input.selectionStart + text.length,
-          })
-          setDismissed(true)
-        }}
       />
       <p id={`${id}-help`} className="text-xs text-muted-foreground">
-        Gõ @ và tên hoặc nhóm, ví dụ @Trang bị, @Phù hiệu, @Ngọc. Bôi chọn để định dạng; Ctrl/⌘ B, I, Z.
+        Gõ @ để chèn thẻ, ví dụ @Chiêu 1 Airi. Bôi chọn để định dạng; Ctrl/⌘ B, I, Z.
       </p>
       <PopoverPrimitive.Root
         open={open}
@@ -443,7 +590,10 @@ export function EntityRichTextEditor({
               {picker && (
                 <div role="group" aria-label="Nhóm tham chiếu" className="flex shrink-0 gap-1 overflow-x-auto">
                   {Object.entries(kinds)
-                    .filter(([kind]) => entities.some((entity) => entity.kind === kind))
+                    .filter(
+                      ([kind]) =>
+                        (kind === "skill" && !!searchReferences) || entities.some((entity) => entity.kind === kind),
+                    )
                     .map(([kind, name]) => (
                       <Button
                         key={kind}
@@ -475,7 +625,11 @@ export function EntityRichTextEditor({
                 />
               )}
               <p className="shrink-0 px-1 text-xs text-muted-foreground" role="status">
-                {options.length ? `${options.length} kết quả · ↑↓ chọn · Enter chèn` : "Không có tham chiếu phù hợp"}
+                {options.length
+                  ? `${options.length} kết quả · ↑↓ chọn · Enter chèn`
+                  : remote.loading
+                    ? "Đang tìm kỹ năng…"
+                    : "Không có tham chiếu phù hợp"}
               </p>
               <div
                 role="listbox"
@@ -483,26 +637,50 @@ export function EntityRichTextEditor({
                 id={`${id}-options`}
                 aria-label={`Gợi ý tham chiếu ${label}`}
                 className="min-h-0 max-h-64 overflow-y-auto overscroll-contain"
+                aria-busy={remote.loading}
+                onScroll={(event) => {
+                  const element = event.currentTarget
+                  if (element.scrollHeight - element.scrollTop - element.clientHeight < 80) loadMoreSuggestions()
+                }}
+                onWheel={(event) => {
+                  const element = event.currentTarget
+                  if (event.deltaY > 0 && element.scrollHeight - element.scrollTop - element.clientHeight < 80)
+                    loadMoreSuggestions()
+                }}
               >
-                {options.map(({ entity, translation }, n) => {
+                {options.slice(0, renderedSuggestions).map(({ entity, translation }, n) => {
+                  const skill = skillReferenceContext(entity, locale, fallbackLocale)
                   return (
                     <button
                       key={`${entity.kind}:${entity.id}`}
                       id={`${id}-option-${n}`}
                       type="button"
                       role="option"
+                      aria-posinset={n + 1}
+                      aria-setsize={options.length}
                       aria-selected={n === Math.min(active, options.length - 1)}
+                      aria-label={
+                        skill
+                          ? `${skill.ownerName} · ${translation.name}${skill.detail ? ` · ${skill.detail}` : ""}`
+                          : undefined
+                      }
                       className={`flex min-h-11 w-full items-center gap-2 rounded px-2 py-2 text-left text-sm ${n === Math.min(active, options.length - 1) ? "bg-accent text-accent-foreground" : "hover:bg-accent"}`}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => choose(n)}
                     >
-                      <EntityReferenceIcon
+                      <EntityReferenceArtwork
                         entity={entity}
                         resolveIcon={resolveIcon}
-                        className="size-8 rounded-md"
+                        className={skill ? "mr-1 size-9" : "size-8 rounded-md"}
                         defer
                       />
                       <span className="min-w-0">
+                        {skill && (
+                          <span className="block text-xs text-muted-foreground">
+                            {skill.ownerName}
+                            {skill.detail ? ` · ${skill.detail}` : ""}
+                          </span>
+                        )}
                         <span className="block break-words font-medium">{translation.name}</span>
                         <span className="text-xs text-muted-foreground">
                           {kinds[entity.kind]} · {translation.locale}
@@ -516,6 +694,19 @@ export function EntityRichTextEditor({
                   )
                 })}
               </div>
+              {options.length > 0 && remote.loading && (
+                <p role="status" className="px-1 text-xs text-muted-foreground">
+                  Đang tải thêm kỹ năng…
+                </p>
+              )}
+              {remote.error && (
+                <div className="flex items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
+                  <span>Chưa tải được kỹ năng.</span>
+                  <Button type="button" size="sm" variant="ghost" onClick={remote.retry}>
+                    Thử lại
+                  </Button>
+                </div>
+              )}
               <Button
                 type="button"
                 variant="ghost"
@@ -539,19 +730,24 @@ export function EntityRichTextEditor({
         </p>
       )}
       {renderPreview && (
-        <details className="rounded-md border p-2 text-sm">
+        <details
+          className="rounded-md border p-2 text-sm"
+          onToggle={(event) => setPreviewOpen(event.currentTarget.open)}
+        >
           <summary className="cursor-pointer">Xem trước nội dung</summary>
-          <div className="mt-2 whitespace-pre-wrap break-words leading-7">
-            <EntityRichText
-              text={value}
-              entities={entities}
-              locale={locale}
-              fallbackLocale={fallbackLocale}
-              autoRecognize={autoRecognize}
-              context="admin"
-              resolveIcon={resolveIcon}
-            />
-          </div>
+          {previewOpen && (
+            <div className="mt-2 whitespace-pre-wrap break-words leading-7">
+              <MemoizedRichText
+                text={deferredPreview}
+                entities={resolvedEntities}
+                locale={locale}
+                fallbackLocale={fallbackLocale}
+                autoRecognize={autoRecognize}
+                context="admin"
+                resolveIcon={resolveIcon}
+              />
+            </div>
+          )}
         </details>
       )}
     </div>

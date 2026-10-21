@@ -12,11 +12,19 @@ import {
 } from "@aov/ui/lib/entity-rich-text-editor"
 import { createEntityIndex, parseRichText, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { EntityIconResolver } from "@aov/ui/components/entity-rich-text"
+import {
+  referenceInput,
+  fillReferenceInput,
+  selectReferenceInput,
+  referenceInputValue,
+  referenceInputSelection,
+} from "./fixtures/reference-input"
 
 const entities: EntityReference[] = [
   {
     id: "hero-1",
     kind: "hero",
+    icon: "/images/lu-bo.png",
     translations: [{ locale: "vi-VN", name: "Lữ Bố", aliases: ["Chiến thần"], description: "Mô tả" }],
   },
   {
@@ -79,7 +87,6 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
     requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
     cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
-    HTMLTextAreaElement: dom.window.HTMLTextAreaElement,
     Event: dom.window.Event,
     IS_REACT_ACT_ENVIRONMENT: true,
   })) {
@@ -115,13 +122,10 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
   }
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
-  const area = () => document.querySelector("textarea")!
+  const area = () => referenceInput(document)
   const type = async (text: string) =>
     act(async () => {
-      const node = area()
-      Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!.call(node, text)
-      node.setSelectionRange(text.length, text.length)
-      node.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+      fillReferenceInput(area(), text)
     })
   const key = async (name: string, extras: KeyboardEventInit = {}) =>
     act(async () =>
@@ -135,6 +139,9 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     )!
   try {
     await act(async () => root.render(<Harness />))
+    assert.equal(area().getAttribute("role"), "textbox")
+    assert.equal(document.getElementById(area().getAttribute("aria-labelledby")!)?.textContent, "Mô tả QA")
+    assert.equal(document.querySelector("textarea, input[type=hidden]"), null)
     await type("mail@example.com")
     assert.equal(document.querySelector('[role="listbox"]'), null)
     await type("Xin @Lữ")
@@ -145,21 +152,28 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.ok(popup.style.maxHeight.includes("--radix-popover-content-available-height"))
     assert.ok(document.querySelector('[role="listbox"]')!.classList.contains("overflow-y-auto"))
     await key("Escape")
-    assert.equal(area().value, "Xin @Lữ")
+    assert.equal(referenceInputValue(area()), "Xin @Lữ")
     await type("Xin @Lu")
     await key("ArrowDown")
     await key("Enter")
     assert.equal(saved, "Xin <ref=hero:hero-1>Lữ Bố</ref>")
-    assert.equal(area().selectionStart, saved.length)
+    assert.equal(referenceInputValue(area()), saved)
+    assert.deepEqual(referenceInputSelection(area()), { start: saved.length, end: saved.length })
+    const heroChip = area().querySelector<HTMLElement>('[data-reference-kind="hero"]')!
+    assert.ok(heroChip)
+    assert.equal(heroChip.getAttribute("contenteditable"), "false")
+    assert.equal(heroChip.getAttribute("data-reference-id"), "hero-1")
+    assert.equal(heroChip.getAttribute("data-reference-token"), "<ref=hero:hero-1>Lữ Bố</ref>")
+    assert.ok(heroChip.textContent?.includes("Lữ Bố"))
+    assert.ok(heroChip.querySelector('img[src="/images/lu-bo.png"]'))
+    assert.ok(!area().textContent?.includes("<ref="))
     await key("z", { ctrlKey: true })
     assert.equal(saved, "Xin @Lu")
     await key("z", { ctrlKey: true, shiftKey: true })
     assert.ok(saved.includes("<ref=hero:hero-1>"))
     await type("Tiếng Việt")
     await act(async () => {
-      area().focus()
-      area().setSelectionRange(0, 5)
-      area().dispatchEvent(new dom.window.Event("select", { bubbles: true }))
+      selectReferenceInput(area(), 0, 5)
     })
     await act(async () => button("Đậm").click())
     assert.equal(saved, "<b>Tiếng</b> Việt")
@@ -168,7 +182,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     await act(async () => button("Làm lại").click())
     assert.equal(saved, "<b>Tiếng</b> Việt")
     await act(async () => {
-      area().setSelectionRange(saved.length, saved.length)
+      selectReferenceInput(area(), saved.length)
       const event = new dom.window.Event("paste", { bubbles: true, cancelable: true })
       Object.defineProperty(event, "clipboardData", { value: { getData: () => "<script>alert(1)</script>" } })
       area().dispatchEvent(event)
@@ -177,7 +191,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.equal(document.querySelector("script"), null)
     const roundTrip = saved
     await act(async () => root.render(<Harness key="reopen" initial={roundTrip} />))
-    assert.equal(area().value, roundTrip)
+    assert.equal(referenceInputValue(area()), roundTrip)
     await act(async () => area().dispatchEvent(new dom.window.CompositionEvent("compositionstart", { bubbles: true })))
     await type("@Lữ")
     assert.equal(document.querySelector('[role="listbox"]'), null)
@@ -189,6 +203,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.ok(document.querySelector('[role="listbox"]'))
     await act(async () => document.querySelector<HTMLButtonElement>('[role="option"]')!.click())
     assert.equal(saved, "<ref=hero:hero-1>Lữ Bố</ref>")
+    assert.ok(area().querySelector('[data-reference-kind="hero"][contenteditable="false"]'))
     const catalog: EntityReference[] = Array.from({ length: 12 }, (_, index) => ({
       id: `item-${index + 1}`,
       kind: "item",
@@ -201,6 +216,7 @@ test("editor mention keyboard, IME, selection, paste, undo/redo and reopening re
     assert.ok(document.querySelector('[role="option"][aria-selected="true"]')!.textContent?.includes("Mục 12"))
     await key("Enter")
     assert.equal(saved, "<ref=item:item-12>Mục 12</ref>")
+    assert.equal(area().querySelector('[data-reference-kind="item"]')?.getAttribute("data-reference-id"), "item-12")
     const observed = new Set<Element>()
     let intersections!: IntersectionObserverCallback
     let observerCount = 0

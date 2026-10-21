@@ -6,7 +6,7 @@ const watchers = new WeakMap<Element, Watcher>()
 
 /** Share one observer per suggestion list; metadata is requested only near its visible rows. */
 export function observeReferenceIcon(element: Element, visible: () => void) {
-  const root = element.closest('[role="listbox"]')
+  const root = element.closest('[role="listbox"], [data-reference-icon-scroll]')
   if (!root || typeof IntersectionObserver === "undefined") {
     visible()
     return () => {}
