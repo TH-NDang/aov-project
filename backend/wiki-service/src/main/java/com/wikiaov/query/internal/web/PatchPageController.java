@@ -9,7 +9,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/patches")
-public class PatchPageController {
+public class PatchPageController implements PatchPageApi {
     private final PatchCatalog patches;
     private final HeroChangeQueries heroes;
     private final SpellChangeQueries spells;
@@ -19,7 +19,7 @@ public class PatchPageController {
         this.spells = spells;
     }
     @GetMapping(version = "1")
-    ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size"));
@@ -27,14 +27,14 @@ public class PatchPageController {
                 .body(patches.list(region, locale, page, size));
     }
     @GetMapping(path = "/{id}", version = "1")
-    ResponseEntity<?> detail(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<?> detail(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
                 .body(patches.published(id, region, locale));
     }
     @GetMapping(path = "/{id}/changes", version = "1")
-    ResponseEntity<?> changes(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<?> changes(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "HERO") String domain,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request) {

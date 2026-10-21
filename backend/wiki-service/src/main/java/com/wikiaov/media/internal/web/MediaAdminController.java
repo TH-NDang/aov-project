@@ -26,9 +26,6 @@ import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import java.net.URI;
 import java.util.Set;
 import java.util.UUID;
@@ -43,13 +40,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-/**
- * Admin media API (03 part E). Every route needs {@code catalog:read} (URL rule); the use cases additionally
- * require {@code media:write} for changes.
- */
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/media")
-class MediaAdminController {
+class MediaAdminController implements MediaAdminApi {
 
     private final CreateMediaAsset createMediaAsset;
     private final RequestMediaUpload requestMediaUpload;
@@ -75,31 +68,31 @@ class MediaAdminController {
     }
 
     @PostMapping(path = "/assets", version = "1")
-    ResponseEntity<MediaAssetDetails> createAsset(@PathVariable String apiVersion,
-            @Valid @RequestBody CreateAssetRequest request) {
+    public ResponseEntity<MediaAssetDetails> createAsset(@PathVariable String apiVersion,
+            @RequestBody CreateAssetRequest request) {
         MediaAssetDetails asset = createMediaAsset.execute(
                 new CreateMediaAsset.Command(request.semanticType(), SourceRequest.toInput(request.source())));
         return ResponseEntity.created(assetUri(apiVersion, asset.id())).body(asset);
     }
 
     @GetMapping(path = "/assets", version = "1")
-    PageSlice<MediaAssetSummary> listAssets(HttpServletRequest http,
+    public PageSlice<MediaAssetSummary> listAssets(HttpServletRequest http,
             @RequestParam(required = false) @Nullable MediaSemanticType semanticType,
-            @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         QueryParameters.requireOnly(http, Set.of("semanticType", "page", "size"));
         return queries.list(semanticType, page, size);
     }
 
     @GetMapping(path = "/assets/{assetId}", version = "1")
-    MediaAssetDetails getAsset(HttpServletRequest http, @PathVariable UUID assetId) {
+    public MediaAssetDetails getAsset(HttpServletRequest http, @PathVariable UUID assetId) {
         QueryParameters.requireOnly(http, Set.of());
         return queries.get(assetId);
     }
 
     @PostMapping(path = "/assets/{assetId}/version-uploads", version = "1")
-    ResponseEntity<UploadTicket> requestUpload(@PathVariable String apiVersion, @PathVariable UUID assetId,
-            @Valid @RequestBody UploadRequest request) {
+    public ResponseEntity<UploadTicket> requestUpload(@PathVariable String apiVersion, @PathVariable UUID assetId,
+            @RequestBody UploadRequest request) {
         UploadTicket ticket = requestMediaUpload.execute(new RequestMediaUpload.Command(assetId, request.fileName(),
                 request.contentType(), request.sizeBytes()));
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
@@ -110,26 +103,25 @@ class MediaAdminController {
     }
 
     @GetMapping(path = "/uploads/{uploadId}", version = "1")
-    UploadStatus getUpload(HttpServletRequest http, @PathVariable UUID uploadId) {
+    public UploadStatus getUpload(HttpServletRequest http, @PathVariable UUID uploadId) {
         QueryParameters.requireOnly(http, Set.of());
         return queries.upload(uploadId);
     }
 
     @PostMapping(path = "/uploads/{uploadId}/complete", version = "1")
-    MediaVersionResult completeUpload(@PathVariable UUID uploadId) {
+    public MediaVersionResult completeUpload(@PathVariable UUID uploadId) {
         return completeMediaUpload.execute(uploadId);
     }
 
     @PostMapping(path = "/assets/{assetId}/versions/{versionId}/activate", version = "1")
-    MediaAssetDetails activateVersion(@PathVariable UUID assetId, @PathVariable UUID versionId,
-            @Valid @RequestBody ExpectedVersionRequest request) {
+    public MediaAssetDetails activateVersion(@PathVariable UUID assetId, @PathVariable UUID versionId,
+            @RequestBody ExpectedVersionRequest request) {
         return activateMediaAssetVersion.execute(assetId, versionId, request.expectedVersion());
     }
 
-    /** 201 when a version was created, 200 when the asset already had these bytes. */
     @PostMapping(path = "/imports/register", version = "1")
-    ResponseEntity<MediaVersionResult> registerImport(@PathVariable String apiVersion,
-            @Valid @RequestBody RegisterImportRequest request) {
+    public ResponseEntity<MediaVersionResult> registerImport(@PathVariable String apiVersion,
+            @RequestBody RegisterImportRequest request) {
         MediaVersionResult result = registerExistingObject.execute(new RegisterExistingObject.Command(
                 request.assetId(), request.objectKey(), SourceRequest.toInput(request.source())));
         return result.duplicate()
@@ -138,14 +130,14 @@ class MediaAdminController {
     }
 
     @GetMapping(path = "/assets/{assetId}/usages", version = "1")
-    MediaUsageReport findUsages(HttpServletRequest http, @PathVariable UUID assetId,
+    public MediaUsageReport findUsages(HttpServletRequest http, @PathVariable UUID assetId,
             @RequestParam(defaultValue = "ANY") UsageScopeParameter scope) {
         QueryParameters.requireOnly(http, Set.of("scope"));
         return findMediaUsages.execute(assetId, scope.toScope());
     }
 
     @PostMapping(path = "/assets/{assetId}/deprecate", version = "1")
-    MediaAssetDetails deprecateAsset(@PathVariable UUID assetId, @Valid @RequestBody DeprecateRequest request) {
+    public MediaAssetDetails deprecateAsset(@PathVariable UUID assetId, @RequestBody DeprecateRequest request) {
         return deprecateMediaAsset.execute(assetId, request.expectedVersion(), request.reason());
     }
 

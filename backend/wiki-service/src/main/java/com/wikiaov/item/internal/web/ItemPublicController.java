@@ -7,13 +7,13 @@ import java.util.*;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/items")
-public class ItemPublicController {
+public class ItemPublicController implements ItemPublicApi {
     private final ItemCatalog catalog;
     public ItemPublicController(ItemCatalog catalog) {
         this.catalog = catalog;
     }
     @GetMapping(version = "1")
-    PageSlice<ItemView> list(@RequestParam(defaultValue = "VN") String region,
+    public PageSlice<ItemView> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
@@ -21,7 +21,7 @@ public class ItemPublicController {
         return catalog.published(region, locale, page, size);
     }
     @GetMapping(path = "/{id}", version = "1")
-    ItemView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
+    public ItemView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return catalog.publishedOne(id, region, locale);

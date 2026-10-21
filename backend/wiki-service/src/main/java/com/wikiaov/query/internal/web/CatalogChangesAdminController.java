@@ -7,7 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/catalog-changes")
-public class CatalogChangesAdminController {
+public class CatalogChangesAdminController implements CatalogChangesAdminApi {
     private final List<CatalogChangeProvider> providers;
     private final GameplayContexts contexts;
     public CatalogChangesAdminController(List<CatalogChangeProvider> providers, GameplayContexts contexts) {
@@ -16,7 +16,7 @@ public class CatalogChangesAdminController {
     }
     @GetMapping(version = "1")
     @PreAuthorize("hasAuthority('catalog:read')")
-    List<CatalogChanges.Entry> list(@RequestParam UUID rulesetId,
+    public List<CatalogChanges.Entry> list(@RequestParam UUID rulesetId,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam String domain,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("rulesetId", "locale", "domain"));
