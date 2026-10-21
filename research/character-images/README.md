@@ -63,3 +63,22 @@ Importer đọc bảng alias đường dẫn để dùng tiếp checkpoint cũ. 
 đổi; `--verify` nhận diện các thay đổi mã được duyệt khi so với backup, nhưng vẫn kiểm tra nội
 dung, bản dịch và ảnh chính nguyên vẹn. Tên hiển thị nhãn suy ra từ mã nguồn chỉ phục vụ tổ chức
 thư viện, không làm kind UNKNOWN thành RARITY/EVENT hay đánh dấu bản dịch đã kiểm chứng.
+
+
+## Nhập icon kỹ năng vào thư viện tướng
+
+`import-skill-images.py` kiểm tra toàn bộ manifest `nguon-icon-chieu.json`, không sửa tài nguyên gốc.
+Mặc định chỉ xem trước; thêm `--apply` để upload và gắn thư viện qua API admin (cần backend có V033).
+
+```powershell
+python research/character-images/import-skill-images.py
+python research/character-images/import-skill-images.py --apply --workers 3
+python -m unittest discover -s research/character-images -p test_import_skill_images.py
+```
+
+Công cụ dùng luồng xác thực CLI local đã có; thông tin đăng nhập chỉ ở bộ nhớ, có thể cấp qua
+`WIKI_IMPORT_USERNAME`/`WIKI_IMPORT_PASSWORD`. Checkpoint và báo cáo nằm trong `.local-state/` bị Git bỏ qua.
+Tối đa ba worker, tái dùng asset ACTIVE có SHA-256 trùng; chỉ tải metadata danh sách Media một lần
+cho mỗi lượt, không dò lại toàn bộ Media theo từng file. Đóng/mở lại có thể chạy tiếp từ checkpoint.
+Slot đã có ảnh khác bytes sẽ báo để rà soát thay vì tự ghi đè. Không tạo tướng, chiêu hoặc mô tả giả;
+không sửa/xuất bản lại gameplay lịch sử. Các icon thiếu thông tin vẫn có hàng thư viện theo tướng.
