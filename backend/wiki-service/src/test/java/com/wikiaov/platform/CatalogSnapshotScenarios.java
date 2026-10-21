@@ -176,10 +176,14 @@ public final class CatalogSnapshotScenarios {
     private static Map<UUID, String> legacyLatest(List<Snapshot<String>> candidates) {
         Map<UUID, Long> ordinals = new HashMap<>();
         return candidates.stream().collect(Collectors.toMap(Snapshot::ownerId, Function.identity(), (a, b) -> {
-            long first = a.patchVariantId() == null ? 0 : ordinals.computeIfAbsent(a.patchVariantId(),
-                    CatalogSnapshotScenarios::ordinal);
-            long second = b.patchVariantId() == null ? 0 : ordinals.computeIfAbsent(b.patchVariantId(),
-                    CatalogSnapshotScenarios::ordinal);
+            long first = a.patchVariantId() == null
+                    ? 0
+                    : ordinals.computeIfAbsent(a.patchVariantId(),
+                            CatalogSnapshotScenarios::ordinal);
+            long second = b.patchVariantId() == null
+                    ? 0
+                    : ordinals.computeIfAbsent(b.patchVariantId(),
+                            CatalogSnapshotScenarios::ordinal);
             int difference = Long.compare(first, second);
             int comparison = difference != 0 ? difference : Long.compare(a.revisionNo(), b.revisionNo());
             return comparison >= 0 ? a : b;

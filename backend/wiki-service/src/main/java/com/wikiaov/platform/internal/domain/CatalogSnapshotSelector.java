@@ -40,8 +40,8 @@ public final class CatalogSnapshotSelector {
         Map<UUID, Change> latestChanges = changes.stream()
                 .filter(change -> applicablePatches.contains(change.patchVariantId()))
                 .collect(Collectors.toMap(Change::ownerId, change -> change,
-                        (first, second) -> ordinal.applyAsLong(first.patchVariantId())
-                                >= ordinal.applyAsLong(second.patchVariantId()) ? first : second));
+                        (first, second) -> ordinal.applyAsLong(first.patchVariantId()) >= ordinal
+                                .applyAsLong(second.patchVariantId()) ? first : second));
         return candidates.stream()
                 .filter(candidate -> candidate.state().equals("PUBLISHED")
                         && applicablePatches.contains(candidate.patchVariantId()))
