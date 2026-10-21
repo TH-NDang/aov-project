@@ -42,7 +42,8 @@ public interface PatchPageApi {
     ResponseEntity<?> changes(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
-            @Parameter(description = "Change provider domain accepted by the current implementation.") String domain,
+            @Parameter(description = "Public patch change domain. HERO and SPELL are supported here; other catalog domains are available through the admin catalog-changes endpoint.", schema = @Schema(allowableValues = {
+                    "HERO", "SPELL"})) String domain,
             @Parameter(description = "Zero-based page index.") int page,
             @Parameter(description = "Maximum number of entries in a page.") int size,
             @Parameter(hidden = true) HttpServletRequest request);

@@ -23,6 +23,7 @@ public interface CatalogChangesAdminApi {
     })
     List<CatalogChanges.Entry> list(@Parameter(description = "Ruleset id identifier.") UUID rulesetId,
             @Parameter(description = "Requested translation locale.") String locale,
-            @Parameter(description = "Registered catalog change provider domain. Unsupported provider names are rejected.") String domain,
+            @Parameter(description = "Registered catalog change provider: ARCANA, ENCHANTMENT, ITEM or SPELL. HERO uses its separate hero change endpoints. Unsupported provider names are rejected.", schema = @Schema(allowableValues = {
+                    "ARCANA", "ENCHANTMENT", "ITEM", "SPELL"})) String domain,
             @Parameter(hidden = true) HttpServletRequest request);
 }
