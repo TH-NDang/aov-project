@@ -6,7 +6,6 @@ import com.wikiaov.patch.internal.application.PatchErrorCode;
 import com.wikiaov.patch.internal.persistence.PatchStore;
 import com.wikiaov.patch.internal.persistence.entity.*;
 import com.wikiaov.platform.ApiException;
-import java.sql.Timestamp;
 import java.time.Clock;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +22,17 @@ public class PatchAuthoring {
     private final CurrentActor actors;
     private final AuditLog audit;
     private final Clock clock;
-    private final RankedSeasons seasons;
-    public PatchAuthoring(PatchStore store, CurrentActor actors, AuditLog audit, Clock clock, RankedSeasons seasons) {
+    private final SeasonPatchPlacement seasonPlacement;
+    private final PatchReleaseWorkflow releases;
+
+    public PatchAuthoring(PatchStore store, CurrentActor actors, AuditLog audit, Clock clock,
+            SeasonPatchPlacement seasonPlacement, PatchReleaseWorkflow releases) {
         this.store = store;
         this.actors = actors;
         this.audit = audit;
         this.clock = clock;
-        this.seasons = seasons;
+        this.seasonPlacement = seasonPlacement;
+        this.releases = releases;
     }
 
     @PreAuthorize("hasAuthority('region:admin')")
@@ -126,28 +129,10 @@ public class PatchAuthoring {
 
     @PreAuthorize("hasAuthority('patch:write')")
     public UUID seasonPatch(SeasonPatch input) {
-        store.lockRuleset(input.rulesetId());
-        var season = seasons.require(input.seasonId());
-        var ordered = store.rows("""
-            SELECT v.id,v.ruleset_ordinal,s.ordinal season_ordinal FROM patch.patch_variant v
-            LEFT JOIN patch.ranked_season s ON s.id=v.season_id
-            WHERE v.ruleset_id=? ORDER BY v.ruleset_ordinal
-            """, input.rulesetId());
-        UUID before = input.beforeVariantId();
-        if (before != null) {
-            var anchor = store.lock(PatchVariant.class, before);
-            if (!input.rulesetId().equals(anchor.getRulesetId()) || !input.seasonId().equals(anchor.getSeasonId()))
-                throw invalid("Choose an insertion anchor in the same season and ruleset.");
-        } else {
-            before = ordered.stream().filter(v -> v.get("season_ordinal") != null
-                    && ((Number) v.get("season_ordinal")).longValue() > season.getOrdinal())
-                    .map(v -> (UUID) v.get("id")).findFirst().orElse(null);
-        }
-        long ordinal = ordered.isEmpty()
-                ? 1
-                : Math.addExact(((Number) ordered.getLast().get("ruleset_ordinal")).longValue(), 1);
+        var placement = seasonPlacement.choosePlacement(input);
         UUID patchId = patch(input.patch());
-        UUID variantId = variant(patchId, new Variant(input.rulesetId(), input.patch().code(), ordinal, before));
+        UUID variantId = variant(patchId, new Variant(input.rulesetId(), input.patch().code(),
+                placement.appendOrdinal(), placement.beforeVariantId()));
         store.lock(PatchVariant.class, variantId).setSeasonId(input.seasonId());
         return variantId;
     }
@@ -167,84 +152,12 @@ public class PatchAuthoring {
 
     @PreAuthorize("hasAuthority('patch:publish')")
     public UUID release(UUID variantId, Release input) {
-        store.one("SELECT id FROM patch.region WHERE id=? AND lifecycle_state='ACTIVE' FOR UPDATE", input.regionId());
-        store.lockRuleset(
-                (UUID) store.one("SELECT ruleset_id FROM patch.patch_variant WHERE id=?", variantId).get("ruleset_id"));
-        var selectedVariant = store.lock(PatchVariant.class, variantId);
-        UUID seasonId = selectedVariant.getSeasonId() == null ? input.seasonId() : selectedVariant.getSeasonId();
-        if (input.seasonId() != null && !input.seasonId().equals(seasonId))
-            throw invalid("The release season must match its patch season.");
-        if ((input.effectiveAt() == null) == (input.effectiveOn() == null))
-            throw invalid("Provide either an exact timestamp or a calendar date.");
-        if (input.effectiveAt() != null)
-            seasons.requireRelease(seasonId, input.regionId(), input.effectiveAt());
-        else
-            seasons.requireReleaseDate(seasonId, input.regionId(), input.effectiveOn());
-        if (input.sourceUrl() != null && !input.sourceUrl().matches("https?://[^\s]+"))
-            throw invalid("Source URL must use HTTP or HTTPS.");
-        var v = store.one("SELECT * FROM patch.patch_variant WHERE id=? FOR UPDATE", variantId);
-        if (!"PUBLISHED".equals(v.get("status")))
-            throw invalid("Publish the variant before scheduling a release.");
-        if (input.effectiveAt() != null)
-            validateReleaseTime(input.regionId(), v, input.effectiveAt());
-        UUID id = UUID.randomUUID();
-        var entity = new PatchRelease();
-        entity.setId(id);
-        entity.setPatchVariantId(variantId);
-        entity.setRegionId(input.regionId());
-        entity.setEffectiveAt(input.effectiveAt());
-        entity.setAnnouncedAt(input.announcedAt());
-        entity.setEffectiveOn(input.effectiveOn());
-        entity.setStatus(input.effectiveAt() == null ? "DRAFT" : "SCHEDULED");
-        entity.setSourceUrl(input.sourceUrl());
-        entity.setCreatedAt(clock.instant());
-        entity.setSeasonId(seasonId);
-        insert(entity);
-        record("PATCH_RELEASE_SCHEDULED", id);
-        return id;
-    }
-
-    private void validateReleaseTime(UUID regionId, Map<String, Object> v, java.time.Instant effectiveAt) {
-        var time = Timestamp.from(effectiveAt);
-        if (store.rows(
-                "SELECT id FROM patch.region_ruleset_assignment WHERE region_id=? AND ruleset_id=? AND valid_from<=? AND (valid_to IS NULL OR valid_to>?)",
-                regionId, v.get("ruleset_id"), time, time).isEmpty())
-            throw invalid("The region does not use this ruleset at the release time.");
-        var conflicts = store.rows("""
-   SELECT rel.id FROM patch.patch_release rel JOIN patch.patch_variant v ON v.id=rel.patch_variant_id
-   WHERE rel.region_id=? AND rel.status='SCHEDULED' AND v.ruleset_id=?
-   AND ((rel.effective_at<=? AND v.ruleset_ordinal>=?) OR (rel.effective_at>=? AND v.ruleset_ordinal<=?))
-   """, regionId, v.get("ruleset_id"), time, v.get("ruleset_ordinal"), time, v.get("ruleset_ordinal"));
-        if (!conflicts.isEmpty())
-            throw invalid("The release would contradict the region patch timeline.");
+        return releases.schedule(variantId, input);
     }
 
     @PreAuthorize("hasAuthority('patch:publish')")
     public void confirmRelease(UUID releaseId) {
-        var row = store.one("SELECT * FROM patch.patch_release WHERE id=?", releaseId);
-        UUID regionId = (UUID) row.get("region_id");
-        var region = store.lock(Region.class, regionId);
-        if (!region.isAvailable())
-            throw invalid("The market is unavailable.");
-        var v = store.one("SELECT * FROM patch.patch_variant WHERE id=?", row.get("patch_variant_id"));
-        store.lockRuleset((UUID) v.get("ruleset_id"));
-        v = store.one("SELECT * FROM patch.patch_variant WHERE id=?", row.get("patch_variant_id"));
-        var release = store.lock(PatchRelease.class, releaseId);
-        if (release.getConfirmedAt() != null)
-            return;
-        if (release.getEffectiveOn() == null || !"DRAFT".equals(release.getStatus()))
-            throw invalid("Only a date-only release awaiting confirmation can be confirmed.");
-        var now = clock.instant();
-        if (release.getEffectiveOn().isAfter(now.atZone(java.time.ZoneId.of(region.getTimezone())).toLocalDate()))
-            throw invalid("A future release cannot be confirmed as applied.");
-        if (!"PUBLISHED".equals(v.get("status")))
-            throw invalid("Publish the variant before confirming its release.");
-        seasons.requireRelease(release.getSeasonId(), regionId, now);
-        validateReleaseTime(regionId, v, now);
-        release.setEffectiveAt(now);
-        release.setConfirmedAt(now);
-        release.setStatus("SCHEDULED");
-        record("PATCH_RELEASE_CONFIRMED", releaseId);
+        releases.confirm(releaseId);
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
@@ -284,10 +197,6 @@ public class PatchAuthoring {
         return store.rows(
                 "SELECT id,ruleset_id AS \"rulesetId\",valid_from AS \"validFrom\",valid_to AS \"validTo\" FROM patch.region_ruleset_assignment WHERE region_id=? ORDER BY valid_from DESC",
                 regionId);
-    }
-
-    private Timestamp now() {
-        return Timestamp.from(clock.instant());
     }
 
     private void record(String action, UUID id) {

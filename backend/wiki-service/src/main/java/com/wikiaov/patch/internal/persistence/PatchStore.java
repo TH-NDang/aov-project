@@ -76,6 +76,25 @@ public class PatchStore {
         lock(com.wikiaov.patch.internal.persistence.entity.GameplayRuleset.class, id);
     }
 
+    public record SeasonVariant(
+            UUID id,
+            long rulesetOrdinal,
+            Long seasonOrdinal
+    ) {
+    }
+
+    public List<SeasonVariant> orderedSeasonVariants(UUID rulesetId) {
+        return rows("""
+                SELECT v.id,v.ruleset_ordinal,s.ordinal season_ordinal FROM patch.patch_variant v
+                LEFT JOIN patch.ranked_season s ON s.id=v.season_id
+                WHERE v.ruleset_id=? ORDER BY v.ruleset_ordinal
+                """, rulesetId).stream().map(row -> new SeasonVariant((UUID) row.get("id"),
+                ((Number) row.get("ruleset_ordinal")).longValue(), row.get("season_ordinal") == null
+                        ? null
+                        : ((Number) row.get("season_ordinal")).longValue()))
+                .toList();
+    }
+
     public void makeOrdinalSpace(UUID rulesetId, long ordinal) {
         var later = entities.createQuery(
                 "SELECT v FROM PatchVariant v WHERE v.rulesetId=:ruleset AND v.rulesetOrdinal>=:ordinal ORDER BY v.rulesetOrdinal DESC",
