@@ -4,23 +4,22 @@ import com.wikiaov.item.internal.application.response.ItemCategoryView;
 import com.wikiaov.item.internal.application.service.ItemCategoryCatalog;
 import com.wikiaov.platform.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/item-categories")
-public class ItemCategoryController {
+public class ItemCategoryController implements ItemCategoryApi {
     private final ItemCategoryCatalog catalog;
     public ItemCategoryController(ItemCategoryCatalog catalog) {
         this.catalog = catalog;
     }
     @GetMapping(version = "1")
-    List<ItemCategoryView> list(HttpServletRequest request) {
+    public List<ItemCategoryView> list(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.list();
     }
     @PutMapping(path = "/{code}", version = "1")
-    ItemCategoryView save(@PathVariable String code, @Valid @RequestBody ItemCategoryCommand input) {
+    public ItemCategoryView save(@PathVariable String code, @RequestBody ItemCategoryCommand input) {
         return catalog.save(code, input);
     }
 }

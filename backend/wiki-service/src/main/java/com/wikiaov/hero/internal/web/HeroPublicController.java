@@ -14,7 +14,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @RestController
 @RequestMapping(ApiPaths.ROOT)
-public class HeroPublicController {
+public class HeroPublicController implements HeroPublicApi {
     private final HeroQueries queries;
     private final JsonMapper json;
     public HeroPublicController(HeroQueries queries, JsonMapper json) {
@@ -23,7 +23,7 @@ public class HeroPublicController {
     }
 
     @GetMapping(path = "/heroes", version = "1")
-    ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) String role, @RequestParam(defaultValue = "code,asc") String sort,
@@ -33,56 +33,58 @@ public class HeroPublicController {
     }
 
     @GetMapping(path = "/heroes/{heroId}", version = "1")
-    ResponseEntity<?> detail(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<?> detail(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return cached(queries.detail(heroId, region, locale, false), web, false);
     }
 
     @GetMapping(path = "/heroes/{heroId}/manifest", version = "1")
-    ResponseEntity<?> manifest(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<?> manifest(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return cached(queries.detail(heroId, region, locale, true), web, false);
     }
 
     @GetMapping(path = "/hero-profile-revisions/{id}", version = "1")
-    ResponseEntity<?> sectionPROFILE(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
+    public ResponseEntity<?> sectionPROFILE(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return cached(queries.section(HeroSection.PROFILE, id, locale), web, true);
     }
 
     @GetMapping(path = "/hero-overview-rating-revisions/{id}", version = "1")
-    ResponseEntity<?> sectionOVERVIEW_RATINGS(@PathVariable UUID id,
+    public ResponseEntity<?> sectionOVERVIEW_RATINGS(@PathVariable UUID id,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return cached(queries.section(HeroSection.OVERVIEW_RATINGS, id, locale), web, true);
     }
 
     @GetMapping(path = "/hero-stats-revisions/{id}", version = "1")
-    ResponseEntity<?> sectionCOMBAT_STATS(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
+    public ResponseEntity<?> sectionCOMBAT_STATS(@PathVariable UUID id,
+            @RequestParam(defaultValue = "vi-VN") String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return cached(queries.section(HeroSection.COMBAT_STATS, id, locale), web, true);
     }
 
     @GetMapping(path = "/hero-skills-revisions/{id}", version = "1")
-    ResponseEntity<?> sectionSKILLS(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
+    public ResponseEntity<?> sectionSKILLS(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return cached(queries.section(HeroSection.SKILLS, id, locale), web, true);
     }
 
     @GetMapping(path = "/hero-skins-revisions/{id}", version = "1")
-    ResponseEntity<?> sectionSKINS(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
+    public ResponseEntity<?> sectionSKINS(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return cached(queries.section(HeroSection.SKINS, id, locale), web, true);
     }
 
     @GetMapping(path = "/hero-media-binding-revisions/{id}", version = "1")
-    ResponseEntity<?> sectionMEDIA_BINDINGS(@PathVariable UUID id, @RequestParam(defaultValue = "vi-VN") String locale,
+    public ResponseEntity<?> sectionMEDIA_BINDINGS(@PathVariable UUID id,
+            @RequestParam(defaultValue = "vi-VN") String locale,
             HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return cached(queries.section(HeroSection.MEDIA_BINDINGS, id, locale), web, true);

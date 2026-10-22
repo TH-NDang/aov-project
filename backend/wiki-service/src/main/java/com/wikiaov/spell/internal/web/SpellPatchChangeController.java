@@ -6,14 +6,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/spells/{id}/changes")
-public class SpellPatchChangeController {
+public class SpellPatchChangeController implements SpellPatchChangeApi {
     private final SpellPatchChanges changes;
     public SpellPatchChangeController(SpellPatchChanges changes) {
         this.changes = changes;
     }
     @PostMapping(version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    Map<String, UUID> record(@PathVariable UUID id, @RequestBody CatalogChanges.Record input) {
+    public Map<String, UUID> record(@PathVariable UUID id, @RequestBody CatalogChanges.Record input) {
         return Map.of("id", changes.record(id, input));
     }
 }

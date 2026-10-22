@@ -248,3 +248,29 @@ Kiểm tra tập trung (các integration test cần Docker, database test tách 
 ```powershell
 ./mvnw.cmd "-Dtest=RedisReadModelCacheTest,CatalogCacheEpochTest,CatalogCacheEpochIntegrationTest,MediaAssetLookupTest,AdminReferenceCatalogTest,PublicReferenceCatalogTest,AdminReferenceCatalogIntegrationTest,HeroPublicReferencesTest,ReferenceSettingsIntegrationTest" test
 ```
+
+## API docs sinh từ interface
+
+OpenAPI được sinh trực tiếp từ 37 interface `*Api` cạnh controller, bao phủ 164 method HTTP đã triển khai.
+Annotation mô tả endpoint, request, response và tham số chỉ đặt ở interface, không lặp lại ở implementation.
+Mapping, binding và security của controller giữ nguyên; annotation Bean Validation của tham số nằm trên
+interface để tránh khai báo constraint mới trên method override. DTO và logic nghiệp vụ không thay đổi.
+
+- JSON: `GET /api/wiki/v1/admin/openapi`
+- YAML: `GET /api/wiki/v1/admin/openapi.yaml`
+- Cần Bearer token có `catalog:read`, theo rule admin sẵn có. Không mở thêm đường dẫn công khai hay Swagger UI.
+- Tham số, default, required, kiểu request/response và constraint được lấy từ code; response dạng map giữ
+  cấu trúc mở, không giả định DTO chưa tồn tại. `default` response mô tả lỗi `application/problem+json`.
+- `hero-authoring.openapi.json` hiện có được giữ nguyên; đây là hợp đồng authoring riêng, không phải bản sao
+  của toàn bộ API sinh tự động. Các đặc tả 01/02/03 và ADR vẫn giữ vai trò hiện hành.
+
+Chạy `./mvnw.cmd verify` với JDK 21 đầy đủ và Docker. `ApiInterfaceContractTest` kiểm tra độ phủ interface,
+annotation không bị lặp, constraint kế thừa và baseline mapping/binding/security/logic trước thay đổi docs.
+`OpenApiMvcTest` kiểm tra cùng bộ HTTP controller/security thật với use case được mock, không cần Docker.
+`OpenApiIntegrationTest` chạy lại trên toàn bộ ứng dụng và kiểm tra JSON thực tế, path/operation/parameter không trùng, reference schema hợp lệ,
+quyền truy cập, validation qua MVC, mã trạng thái và default. Test này cần PostgreSQL qua Testcontainers,
+không tự bỏ qua nếu Docker thiếu. Bản JSON đã kiểm tra nằm ở `target/openapi/wiki-v1.json`.
+
+Khi thêm endpoint, cập nhật interface cùng implementation và kiểm tra lại baseline/độ phủ một cách có chủ đích.
+Không cập nhật baseline chỉ để bỏ qua lỗi regression. Dependency docs hiện dùng springdoc 3.1.1 cho Spring Boot 4;
+xem [tài liệu chính thức](https://springdoc.org/) về hỗ trợ annotation trên interface.

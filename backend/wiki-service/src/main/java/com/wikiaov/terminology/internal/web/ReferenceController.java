@@ -7,7 +7,6 @@ import com.wikiaov.terminology.internal.application.service.PublicReferenceCatal
 import com.wikiaov.terminology.internal.application.service.ReferenceCatalog;
 import com.wikiaov.terminology.internal.web.request.SaveReferenceSettings;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
@@ -20,7 +19,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @RestController
 @RequestMapping(ApiPaths.ROOT)
-public class ReferenceController {
+public class ReferenceController implements ReferenceApi {
     private final ReferenceCatalog catalog;
     private final PublicReferenceCatalog references;
     private final AdminReferenceCatalog adminReferences;
@@ -35,30 +34,30 @@ public class ReferenceController {
         this.cache = cache;
     }
     @GetMapping(path = "/admin/reference-catalog", version = "1")
-    AdminReferenceCatalogView adminReferences(@RequestParam(required = false) UUID rulesetId,
+    public AdminReferenceCatalogView adminReferences(@RequestParam(required = false) UUID rulesetId,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("rulesetId"));
         return adminReferences.read(rulesetId);
     }
     @GetMapping(path = "/reference-catalog", version = "1")
-    ResponseEntity<ReferenceSettingsView> references(@RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<ReferenceSettingsView> references(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return cached(references.read(region, locale), web);
     }
     @GetMapping(path = "/reference-settings", version = "1")
-    ResponseEntity<ReferenceSettingsView> publicSettings(HttpServletRequest request, WebRequest web) {
+    public ResponseEntity<ReferenceSettingsView> publicSettings(HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of());
         return cached(cache.read(ReadModelCache.Area.PUBLIC_TERMS, "all", ReferenceSettingsView.class,
                 catalog::readPublic), web);
     }
     @GetMapping(path = "/admin/reference-settings", version = "1")
-    ReferenceSettingsView adminSettings(HttpServletRequest request) {
+    public ReferenceSettingsView adminSettings(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.readAdmin();
     }
     @PutMapping(path = "/admin/reference-settings", version = "1")
-    ReferenceSettingsView save(@Valid @RequestBody SaveReferenceSettings request) {
+    public ReferenceSettingsView save(@RequestBody SaveReferenceSettings request) {
         return catalog.save(request.expectedVersion(), request.settings());
     }
     private ResponseEntity<ReferenceSettingsView> cached(ReferenceSettingsView value, WebRequest request) {

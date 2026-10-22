@@ -7,13 +7,13 @@ import java.util.*;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/arcana")
-public class ArcanaPublicController {
+public class ArcanaPublicController implements ArcanaPublicApi {
     private final ArcanaCatalog catalog;
     public ArcanaPublicController(ArcanaCatalog catalog) {
         this.catalog = catalog;
     }
     @GetMapping(version = "1")
-    PageSlice<ArcanaView> list(@RequestParam(defaultValue = "VN") String region,
+    public PageSlice<ArcanaView> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
@@ -21,7 +21,7 @@ public class ArcanaPublicController {
         return catalog.published(region, locale, page, size);
     }
     @GetMapping(path = "/{id}", version = "1")
-    ArcanaView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
+    public ArcanaView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("region", "locale"));
         return catalog.publishedOne(id, region, locale);
