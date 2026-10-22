@@ -6,14 +6,13 @@ import com.wikiaov.hero.internal.application.service.*;
 import com.wikiaov.hero.internal.domain.HeroContent.MediaRole;
 import com.wikiaov.platform.*;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import java.util.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(ApiPaths.ADMIN)
-public class HeroMediaController {
+public class HeroMediaController implements HeroMediaApi {
     private final HeroMediaQueries gallery;
     private final SkinBadges badges;
 
@@ -23,7 +22,7 @@ public class HeroMediaController {
     }
 
     @GetMapping(path = "/hero-media", version = "1")
-    PageSlice<HeroMediaGroup> gallery(@RequestParam UUID rulesetId, @RequestParam MediaRole role,
+    public PageSlice<HeroMediaGroup> gallery(@RequestParam UUID rulesetId, @RequestParam MediaRole role,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request) {
@@ -32,7 +31,7 @@ public class HeroMediaController {
     }
 
     @GetMapping(path = "/skin-badges", version = "1")
-    PageSlice<SkinBadgeView> badges(@RequestParam(required = false) UUID rulesetId,
+    public PageSlice<SkinBadgeView> badges(@RequestParam(required = false) UUID rulesetId,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID groupId, @RequestParam(defaultValue = "false") boolean ungrouped,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
@@ -44,22 +43,22 @@ public class HeroMediaController {
 
     @PostMapping(path = "/skin-badges", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
-    SkinBadgeView create(@Valid @RequestBody SkinBadgeCommands.Create body) {
+    public SkinBadgeView create(@RequestBody SkinBadgeCommands.Create body) {
         return badges.create(body);
     }
 
     @PutMapping(path = "/skin-badges/{id}", version = "1")
-    SkinBadgeView update(@PathVariable UUID id, @Valid @RequestBody SkinBadgeCommands.Update body) {
+    public SkinBadgeView update(@PathVariable UUID id, @RequestBody SkinBadgeCommands.Update body) {
         return badges.update(id, body);
     }
 
     @PutMapping(path = "/skin-badges/{id}/group", version = "1")
-    SkinBadgeView assignGroup(@PathVariable UUID id, @Valid @RequestBody SkinBadgeCommands.AssignGroup body) {
+    public SkinBadgeView assignGroup(@PathVariable UUID id, @RequestBody SkinBadgeCommands.AssignGroup body) {
         return badges.assignGroup(id, body);
     }
 
     @GetMapping(path = "/skin-badges/{id}/skins", version = "1")
-    PageSlice<SkinBadgeRelation> skins(@PathVariable UUID id, @RequestParam UUID rulesetId,
+    public PageSlice<SkinBadgeRelation> skins(@PathVariable UUID id, @RequestParam UUID rulesetId,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("rulesetId", "locale", "page", "size"));

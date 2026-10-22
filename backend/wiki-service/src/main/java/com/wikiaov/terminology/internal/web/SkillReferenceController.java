@@ -14,7 +14,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @RestController
 @RequestMapping(ApiPaths.ROOT)
-public class SkillReferenceController {
+public class SkillReferenceController implements SkillReferenceApi {
     private final SkillReferenceCatalog catalog;
     private final JsonMapper json;
     public SkillReferenceController(SkillReferenceCatalog catalog, JsonMapper json) {
@@ -23,7 +23,7 @@ public class SkillReferenceController {
     }
 
     @GetMapping(path = "/admin/reference-skills", version = "1")
-    PageSlice<Candidate> admin(@RequestParam(required = false) UUID rulesetId,
+    public PageSlice<Candidate> admin(@RequestParam(required = false) UUID rulesetId,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID heroId, @RequestParam(required = false) String ids,
             @RequestParam(defaultValue = "0") int page, @RequestParam(required = false) Integer size,
@@ -33,7 +33,7 @@ public class SkillReferenceController {
     }
 
     @GetMapping(path = "/reference-skills", version = "1")
-    ResponseEntity<PageSlice<Candidate>> published(@RequestParam(defaultValue = "VN") String region,
+    public ResponseEntity<PageSlice<Candidate>> published(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID heroId, @RequestParam(required = false) String ids,
             @RequestParam(defaultValue = "0") int page, @RequestParam(required = false) Integer size,

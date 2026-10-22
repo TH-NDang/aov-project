@@ -51,3 +51,17 @@ jobs:
           name: wiki-service-test-reports
           path: backend/wiki-service/target/surefire-reports/
           retention-days: 7
+
+      - name: Validate generated OpenAPI specification
+        run: |
+          python -m pip install --disable-pip-version-check openapi-spec-validator==0.9.0
+          python -m openapi_spec_validator target/openapi/wiki-v1.json
+
+      - name: Upload verified OpenAPI specification
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wiki-api-openapi
+          path: backend/wiki-service/target/openapi/wiki-v1.json
+          if-no-files-found: error
+          retention-days: 7

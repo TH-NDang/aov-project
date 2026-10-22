@@ -6,13 +6,13 @@ import java.util.UUID;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/patch-variants")
-public class PatchDataReviewController {
+public class PatchDataReviewController implements PatchDataReviewApi {
     private final PatchDataReviewService reviews;
     public PatchDataReviewController(PatchDataReviewService reviews) {
         this.reviews = reviews;
     }
     @PutMapping(path = "/{id}/data-review", version = "1")
-    PatchDataReviewView update(@PathVariable UUID id, @RequestBody PatchDataReviewService.Update input) {
+    public PatchDataReviewView update(@PathVariable UUID id, @RequestBody PatchDataReviewService.Update input) {
         return reviews.update(id, input);
     }
 }

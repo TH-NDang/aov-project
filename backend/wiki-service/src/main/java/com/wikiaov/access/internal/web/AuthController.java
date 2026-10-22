@@ -13,7 +13,6 @@ import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Arrays;
@@ -30,10 +29,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Cookie-backed auth endpoints use an exact origin and a mandatory non-simple header for CSRF defense. */
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/auth")
-public class AuthController {
+public class AuthController implements AuthApi {
     private static final String REFRESH_COOKIE = "aov_admin_refresh";
     private static final String COOKIE_PATH = "/api/wiki/";
     private final AuthProperties properties;
@@ -52,13 +50,13 @@ public class AuthController {
     }
 
     @GetMapping(path = "/config", version = "1")
-    Map<String, Boolean> config(HttpServletRequest request) {
+    public Map<String, Boolean> config(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return Map.of("googleEnabled", properties.googleEnabled() && !properties.clientSecret().isBlank());
     }
 
     @PostMapping(path = "/login", version = "1")
-    AuthTokenResponse login(@Valid @RequestBody LoginRequest body, HttpServletRequest request,
+    public AuthTokenResponse login(@RequestBody LoginRequest body, HttpServletRequest request,
             HttpServletResponse response) {
         guard(request);
         throttle.check("login-ip:" + request.getRemoteAddr(), 30);
@@ -67,7 +65,7 @@ public class AuthController {
     }
 
     @PostMapping(path = "/refresh", version = "1")
-    AuthTokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
+    public AuthTokenResponse refresh(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
         String refreshToken = cookie(request, REFRESH_COOKIE);
         if (refreshToken == null)
@@ -84,7 +82,7 @@ public class AuthController {
     }
 
     @PostMapping(path = "/logout", version = "1")
-    ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
         String refreshToken = cookie(request, REFRESH_COOKIE);
         if (refreshToken != null)
@@ -95,7 +93,7 @@ public class AuthController {
     }
 
     @PostMapping(path = "/google", version = "1")
-    Map<String, String> google(HttpServletRequest request, HttpServletResponse response) {
+    public Map<String, String> google(HttpServletRequest request, HttpServletResponse response) {
         guard(request);
         if (!properties.googleEnabled())
             throw new ApiException(AuthErrorCode.AUTH_GOOGLE_DISABLED, "Google login is not configured.");
@@ -109,7 +107,7 @@ public class AuthController {
     }
 
     @GetMapping(path = "/google/callback", version = "1")
-    ResponseEntity<Void> callback(@RequestParam String state,
+    public ResponseEntity<Void> callback(@RequestParam String state,
             @RequestParam(required = false) String code, @RequestParam(required = false) String error,
             HttpServletRequest request, HttpServletResponse response) {
         QueryParameters.requireOnly(request,
