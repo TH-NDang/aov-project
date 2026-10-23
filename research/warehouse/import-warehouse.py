@@ -12,7 +12,6 @@ import sys
 import threading
 from urllib.error import HTTPError
 from urllib.parse import urlencode, urlparse
-from urllib.request import Request
 
 
 HERE = Path(__file__).resolve().parent
@@ -308,13 +307,8 @@ class Importer:
         with self.lock:
             entry["uploadId"] = ticket["uploadId"]
             self.checkpoint()
-        storage = urlparse(ticket["uploadUrl"])
-        if storage.scheme != "http" or storage.hostname not in {"localhost", "127.0.0.1", "::1"} or storage.username:
-            raise ValueError("This local importer only sends image bytes to loopback object storage.")
         try:
-            with image_helpers.urlopen(Request(ticket["uploadUrl"], method=ticket["method"], headers=ticket["headers"], data=data), timeout=120) as response:
-                if response.status not in {200, 201, 204}:
-                    raise RuntimeError("Object storage rejected the upload.")
+            image_helpers.upload_ticket(ticket, data, getattr(self.args, "upload_host", ()))
         except HTTPError as error:
             raise RuntimeError(f"Object storage upload failed with HTTP {error.code}: {image['path']}") from None
         completed = self.api.call("/admin/media/uploads/" + ticket["uploadId"] + "/complete", "POST")
@@ -455,6 +449,7 @@ def main():
     parser.add_argument("--keycloak", default="http://localhost:8081")
     parser.add_argument("--ruleset", default="aov-standard")
     parser.add_argument("--workers", type=int, choices=range(1, 4), default=3)
+    image_helpers.add_upload_host_argument(parser)
     args = parser.parse_args()
     plan = load_plan()
     print(json.dumps(plan["summary"], ensure_ascii=False, indent=2), flush=True)
