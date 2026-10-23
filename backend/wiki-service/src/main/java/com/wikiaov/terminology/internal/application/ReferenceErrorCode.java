@@ -9,12 +9,15 @@ public enum ReferenceErrorCode implements ApiErrorCode {
     REFERENCE_VERSION_CONFLICT(HttpStatus.CONFLICT);
 
     private final HttpStatus status;
+
     ReferenceErrorCode(HttpStatus status) {
         this.status = status;
     }
+
     public HttpStatus status() {
         return status;
     }
+
     public String title() {
         return "Reference settings request failed";
     }

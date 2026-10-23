@@ -7,6 +7,7 @@ import java.util.UUID;
 public final class PublicationOverviewView {
     private PublicationOverviewView() {
     }
+
     public record Market(
             UUID id,
             String code,
@@ -17,12 +18,14 @@ public final class PublicationOverviewView {
             UUID currentReleaseId
     ) {
     }
+
     public record RulesetView(
             UUID id,
             String code,
             String description
     ) {
     }
+
     public record AssignmentView(
             UUID id,
             UUID regionId,
@@ -31,6 +34,7 @@ public final class PublicationOverviewView {
             Instant validTo
     ) {
     }
+
     public record SeasonView(
             UUID id,
             String code,
@@ -38,6 +42,7 @@ public final class PublicationOverviewView {
             long ordinal
     ) {
     }
+
     public record SeasonScheduleView(
             UUID id,
             UUID seasonId,
@@ -49,6 +54,7 @@ public final class PublicationOverviewView {
             String phase
     ) {
     }
+
     public record VariantView(
             UUID id,
             UUID patchId,
@@ -62,6 +68,7 @@ public final class PublicationOverviewView {
             Instant dataReviewedAt
     ) {
     }
+
     public record ReleaseView(
             UUID id,
             UUID variantId,
@@ -75,6 +82,7 @@ public final class PublicationOverviewView {
             String phase
     ) {
     }
+
     public record Snapshot(
             Instant asOf,
             List<Market> markets,

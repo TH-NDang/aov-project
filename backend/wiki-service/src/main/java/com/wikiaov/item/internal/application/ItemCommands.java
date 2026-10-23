@@ -1,10 +1,13 @@
 package com.wikiaov.item.internal.application;
+
 import com.wikiaov.item.internal.domain.ItemContent;
 import jakarta.validation.constraints.*;
 import java.util.UUID;
+
 public final class ItemCommands {
     private ItemCommands() {
     }
+
     public record Create(
             @NotBlank @Size(max = 120) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
             @NotNull UUID rulesetId,
@@ -14,6 +17,7 @@ public final class ItemCommands {
             ItemContent content
     ) {
     }
+
     public record Fork(
             @NotNull UUID rulesetId,
             @NotNull UUID sourceRevisionId,
@@ -22,6 +26,7 @@ public final class ItemCommands {
             @Size(max = 4000) String changeNote
     ) {
     }
+
     public record Update(
             @NotNull @Positive Long expectedVersion,
             @NotNull ItemContent content,
@@ -29,6 +34,7 @@ public final class ItemCommands {
             UUID effectiveFromPatchVariantId
     ) {
     }
+
     public record Mutation(
             @NotNull @Positive Long expectedVersion,
             @Size(max = 4000) String changeNote

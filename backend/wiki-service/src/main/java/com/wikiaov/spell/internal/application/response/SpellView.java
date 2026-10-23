@@ -1,7 +1,9 @@
 package com.wikiaov.spell.internal.application.response;
+
 import com.wikiaov.spell.internal.domain.SpellContent;
 import java.time.Instant;
 import java.util.*;
+
 public record SpellView(
         UUID id,
         String code,

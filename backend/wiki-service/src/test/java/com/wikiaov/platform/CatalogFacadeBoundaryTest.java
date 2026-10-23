@@ -2,10 +2,10 @@ package com.wikiaov.platform;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.arcana.internal.application.service.ArcanaCatalog;
-import com.wikiaov.enchantment.internal.application.service.EnchantmentCatalog;
-import com.wikiaov.item.internal.application.service.ItemCatalog;
-import com.wikiaov.spell.internal.application.service.SpellCatalog;
+import com.wikiaov.arcana.internal.catalog.application.ArcanaCatalog;
+import com.wikiaov.enchantment.internal.catalog.application.EnchantmentCatalog;
+import com.wikiaov.item.internal.catalog.application.ItemCatalog;
+import com.wikiaov.spell.internal.catalog.application.SpellCatalog;
 import java.util.UUID;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

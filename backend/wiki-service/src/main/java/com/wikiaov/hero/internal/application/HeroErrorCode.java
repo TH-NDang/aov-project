@@ -24,7 +24,9 @@ public enum HeroErrorCode implements ApiErrorCode {
     HERO_IMPORT_DRAFT_CONFLICT(HttpStatus.CONFLICT),
     HERO_INVALID_MEDIA(HttpStatus.UNPROCESSABLE_ENTITY),
     HERO_PATCH_CHANGE_CONFLICT(HttpStatus.CONFLICT);
+
     private final HttpStatus status;
+
     HeroErrorCode(HttpStatus status) {
         this.status = status;
     }

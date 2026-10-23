@@ -3,64 +3,61 @@ package com.wikiaov.platform.internal.cache;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.wikiaov.TestcontainersConfiguration;
+import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import jakarta.persistence.EntityManager;
-import java.lang.reflect.Proxy;
-import org.flywaydb.core.Flyway;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import java.time.Instant;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIf;
-import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-/** Exercises the committed database fence without requiring Redis or the application server. */
-@EnabledIf("databaseAvailable")
+/** Exercises the committed database fence with the real JPA transaction manager and PostgreSQL. */
+@SpringBootTest
+@Import(TestcontainersConfiguration.class)
+@ActiveProfiles("test")
+@Testcontainers(disabledWithoutDocker = true)
 class CatalogCacheEpochIntegrationTest {
-    private static PostgreSQLContainer database;
-    private static CatalogCacheEpoch epochs;
-    private static DataSourceTransactionManager transactions;
+    @Autowired
+    private CatalogCacheEpoch epochs;
+    @Autowired
+    private PlatformTransactionManager transactions;
+    @Autowired
+    private EntityManager entities;
+    @Autowired
+    private JdbcTemplate sql;
 
-    static boolean databaseAvailable() {
-        return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
-    }
-
-    @BeforeAll
-    static void connect() {
-        var source = new DriverManagerDataSource();
-        String external = System.getenv("WIKI_TEST_DB_URL");
-        if (external == null) {
-            database = new PostgreSQLContainer("postgres:17.6");
-            database.start();
-            source.setUrl(database.getJdbcUrl());
-            source.setUsername(database.getUsername());
-            source.setPassword(database.getPassword());
-        } else {
-            source.setUrl(external);
-            source.setUsername("wiki_test");
-            source.setPassword("");
-        }
-        Flyway.configure().dataSource(source).locations("classpath:db/migration").load().migrate();
-        transactions = new DataSourceTransactionManager(source);
-        var entities = (EntityManager) Proxy.newProxyInstance(EntityManager.class.getClassLoader(),
-                new Class<?>[] {EntityManager.class}, (proxy, method, args) -> {
-                    if (method.getName().equals("flush"))
-                        return null;
-                    throw new UnsupportedOperationException(method.getName());
-                });
-        epochs = new CatalogCacheEpoch(JdbcClient.create(source), entities);
-    }
-
-    @AfterAll
-    static void stop() {
-        if (database != null)
-            database.stop();
+    @Test
+    void flushesPendingDomainChangesBeforeTheFenceIsAdvanced() {
+        var id = UUID.randomUUID();
+        long before = epochs.current();
+        new TransactionTemplate(transactions).executeWithoutResult(status -> {
+            var hero = new HeroIdentity();
+            hero.setId(id);
+            hero.setCode("epoch-flush-" + id);
+            hero.setCreatedAt(Instant.now());
+            hero.setCreatedByIssuer("https://issuer.test");
+            hero.setCreatedBySubject("editor");
+            entities.persist(hero);
+            epochs.changed("HERO");
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void beforeCommit(boolean readOnly) {
+                    assertThat(sql.queryForObject("select count(*) from hero.hero where id=?", Long.class, id))
+                            .isEqualTo(1);
+                    assertThat(epochs.current()).isEqualTo(before + 1);
+                }
+            });
+        });
     }
 
     @Test

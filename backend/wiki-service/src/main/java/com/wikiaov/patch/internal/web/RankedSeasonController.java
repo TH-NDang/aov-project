@@ -1,6 +1,6 @@
 package com.wikiaov.patch.internal.web;
 
-import com.wikiaov.patch.internal.application.service.RankedSeasons;
+import com.wikiaov.patch.internal.season.application.RankedSeasons;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = ApiPaths.ADMIN + "/seasons", version = "1")
 public class RankedSeasonController implements RankedSeasonApi {
     private final RankedSeasons seasons;
+
     public RankedSeasonController(RankedSeasons seasons) {
         this.seasons = seasons;
     }
@@ -29,6 +30,7 @@ public class RankedSeasonController implements RankedSeasonApi {
     public RankedSeasons.View create(@RequestBody RankedSeasons.Input input) {
         return seasons.create(input);
     }
+
     @PostMapping("/{seasonId}/schedules")
     @ResponseStatus(HttpStatus.CREATED)
     public java.util.Map<String, UUID> schedule(@PathVariable UUID seasonId,

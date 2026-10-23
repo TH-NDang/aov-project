@@ -9,5 +9,6 @@ public interface ReadModelCache {
         PUBLIC_TERMS,
         ADMIN_REFERENCES
     }
+
     <T> T read(Area area, String context, Class<T> type, Supplier<T> loader);
 }

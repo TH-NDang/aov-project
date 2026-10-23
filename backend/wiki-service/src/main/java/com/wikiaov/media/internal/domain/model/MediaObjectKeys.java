@@ -1,6 +1,6 @@
 package com.wikiaov.media.internal.domain.model;
 
-import com.wikiaov.media.internal.domain.image.ImageFormat;
+import com.wikiaov.media.internal.ingestion.domain.image.ImageFormat;
 
 import java.util.UUID;
 import java.util.regex.Pattern;

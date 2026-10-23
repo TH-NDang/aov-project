@@ -1,10 +1,13 @@
 package com.wikiaov.enchantment.internal.application;
+
 import com.wikiaov.enchantment.internal.domain.EnchantmentContent;
 import jakarta.validation.constraints.*;
 import java.util.UUID;
+
 public final class EnchantmentCommands {
     private EnchantmentCommands() {
     }
+
     public record Create(
             @NotBlank @Size(max = 120) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
             @NotNull UUID rulesetId,
@@ -14,6 +17,7 @@ public final class EnchantmentCommands {
             EnchantmentContent content
     ) {
     }
+
     public record Fork(
             @NotNull UUID rulesetId,
             @NotNull UUID sourceRevisionId,
@@ -22,6 +26,7 @@ public final class EnchantmentCommands {
             @Size(max = 4000) String changeNote
     ) {
     }
+
     public record Update(
             @NotNull @Positive Long expectedVersion,
             @NotNull EnchantmentContent content,
@@ -29,6 +34,7 @@ public final class EnchantmentCommands {
             UUID effectiveFromPatchVariantId
     ) {
     }
+
     public record Mutation(
             @NotNull @Positive Long expectedVersion,
             @Size(max = 4000) String changeNote

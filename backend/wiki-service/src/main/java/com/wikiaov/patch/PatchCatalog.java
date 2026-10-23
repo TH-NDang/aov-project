@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public interface PatchCatalog {
     Map<String, Object> published(UUID patchId, String region, String locale);
+
     PageSlice<Map<String, Object>> list(String region, String locale, int page, int size);
+
     List<PatchReleaseReference> releases(String region);
 }

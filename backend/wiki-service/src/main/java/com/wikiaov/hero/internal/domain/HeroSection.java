@@ -1,4 +1,5 @@
 package com.wikiaov.hero.internal.domain;
+
 public enum HeroSection {
     PROFILE("profile", "profile"),
     OVERVIEW_RATINGS("overview_rating", "overview_rating"),
@@ -6,8 +7,10 @@ public enum HeroSection {
     SKILLS("skill_set", "skills"),
     SKINS("skin_set", "skins"),
     MEDIA_BINDINGS("media_binding", "media_binding");
+
     private final String table;
     private final String column;
+
     HeroSection(String table, String column) {
         this.table = "hero.hero_" + table + "_revision";
         this.column = column + "_revision_id";

@@ -1,6 +1,6 @@
 package com.wikiaov.media.internal.application;
 
-import com.wikiaov.media.internal.domain.image.ImageLimits;
+import com.wikiaov.media.internal.ingestion.domain.image.ImageLimits;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;

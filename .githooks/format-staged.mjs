@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Formats staged files before each commit so every editor produces the same layout.
 //
-//   Java under backend/wiki-service/src  -> Spotless (backend/wiki-service/eclipse-formatter.xml)
+//   Java under backend/wiki-service/src  -> Spotless (backend/wiki-service/config/format/eclipse-formatter.xml)
 //   Code under frontend/                 -> Prettier (frontend/.prettierrc.json), when installed
 //
 // A fully staged file is formatted and staged again. A partially staged file is formatted in the

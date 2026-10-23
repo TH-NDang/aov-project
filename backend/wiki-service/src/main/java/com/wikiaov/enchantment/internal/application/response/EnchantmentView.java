@@ -1,7 +1,9 @@
 package com.wikiaov.enchantment.internal.application.response;
+
 import com.wikiaov.enchantment.internal.domain.EnchantmentContent;
 import java.time.Instant;
 import java.util.*;
+
 public record EnchantmentView(
         UUID id,
         String code,

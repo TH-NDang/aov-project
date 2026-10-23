@@ -6,7 +6,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.wikiaov.hero.internal.infrastructure.HeroSkillImageUsages;
+import com.wikiaov.hero.internal.skills.infrastructure.HeroSkillImageUsages;
 import com.wikiaov.media.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
@@ -51,6 +51,7 @@ class HeroSkillImageIntegrationTest {
     static boolean databaseAvailable() {
         return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
     }
+
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry properties) {
         String external = System.getenv("WIKI_TEST_DB_URL");
@@ -66,11 +67,13 @@ class HeroSkillImageIntegrationTest {
             properties.add("spring.datasource.password", database::getPassword);
         }
     }
+
     @AfterAll
     static void stop() {
         if (database != null)
             database.stop();
     }
+
     @BeforeEach
     void fixture() {
         sql.update("insert into hero.hero values (?,?,now(),'test','editor')", hero, "test-" + hero);
@@ -79,6 +82,7 @@ class HeroSkillImageIntegrationTest {
                 MediaAssetState.ACTIVE, new MediaAssetReference.CurrentVersion(UUID.randomUUID(), "image/png", 128, 128,
                         "/skill.png"))));
     }
+
     @Test
     void preservesUnmatchedIconsWithoutInventingSkillMetadataOrGameplayHistory() throws Exception {
         var editor = jwt().jwt(t -> t.issuer("https://issuer.test").subject("editor"))
@@ -119,6 +123,7 @@ class HeroSkillImageIntegrationTest {
             assertThat(usage.propertyRole()).isEqualTo("SKILL_LIBRARY:4:3");
         });
     }
+
     @Test
     void validatesExistingSkillIdentityAssetTypeAndSourceBounds() throws Exception {
         var editor = jwt().jwt(t -> t.issuer("https://issuer.test").subject("editor"))

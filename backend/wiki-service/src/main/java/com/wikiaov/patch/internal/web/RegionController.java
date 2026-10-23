@@ -1,7 +1,7 @@
 package com.wikiaov.patch.internal.web;
 
 import com.wikiaov.patch.internal.application.response.RegionView;
-import com.wikiaov.patch.internal.application.service.Regions;
+import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping(ApiPaths.ROOT + "/regions")
 public class RegionController implements RegionApi {
     private final Regions regions;
+
     public RegionController(Regions regions) {
         this.regions = regions;
     }

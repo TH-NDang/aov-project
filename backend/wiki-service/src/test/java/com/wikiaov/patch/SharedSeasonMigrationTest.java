@@ -15,6 +15,7 @@ class SharedSeasonMigrationTest {
     static boolean dockerAvailable() {
         return DockerClientFactory.instance().isDockerAvailable();
     }
+
     @Test
     void preservesExistingSeasonScheduleAndRulesetIdentity() throws Exception {
         try (var database = new PostgreSQLContainer("postgres:17.6")) {

@@ -1,4 +1,5 @@
 package com.wikiaov.query.internal.web;
+
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.platform.*;
@@ -7,17 +8,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping(ApiPaths.ROOT + "/patches")
 public class PatchPageController implements PatchPageApi {
     private final PatchCatalog patches;
     private final HeroChangeQueries heroes;
     private final SpellChangeQueries spells;
+
     public PatchPageController(PatchCatalog patches, HeroChangeQueries heroes, SpellChangeQueries spells) {
         this.patches = patches;
         this.heroes = heroes;
         this.spells = spells;
     }
+
     @GetMapping(version = "1")
     public ResponseEntity<?> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
@@ -26,6 +30,7 @@ public class PatchPageController implements PatchPageApi {
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
                 .body(patches.list(region, locale, page, size));
     }
+
     @GetMapping(path = "/{id}", version = "1")
     public ResponseEntity<?> detail(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
@@ -33,6 +38,7 @@ public class PatchPageController implements PatchPageApi {
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
                 .body(patches.published(id, region, locale));
     }
+
     @GetMapping(path = "/{id}/changes", version = "1")
     public ResponseEntity<?> changes(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "HERO") String domain,

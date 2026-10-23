@@ -8,15 +8,18 @@ import java.util.UUID;
 public final class EnchantmentOrdering {
     private EnchantmentOrdering() {
     }
+
     public record Branches(
             @NotEmpty @Size(max = 100) List<@NotNull @Valid Branch> entries
     ) {
     }
+
     public record Branch(
             @NotBlank String code,
             @NotNull @Positive Long expectedVersion
     ) {
     }
+
     public record Nodes(
             @NotNull UUID rulesetId,
             @NotBlank String branchCode,
@@ -24,6 +27,7 @@ public final class EnchantmentOrdering {
             @NotEmpty @Size(max = 100) List<@NotNull @Valid Node> entries
     ) {
     }
+
     public record Node(
             @NotNull UUID id,
             @NotNull UUID revisionId,

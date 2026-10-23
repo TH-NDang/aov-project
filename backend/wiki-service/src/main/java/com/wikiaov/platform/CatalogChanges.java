@@ -7,6 +7,7 @@ import java.util.*;
 public final class CatalogChanges {
     private CatalogChanges() {
     }
+
     public enum Kind {
         DATA_BASELINE,
         ADDED,
@@ -18,11 +19,13 @@ public final class CatalogChanges {
         REWORK,
         FIX
     }
+
     public record Summary(
             String locale,
             String text
     ) {
     }
+
     public record Record(
             UUID patchVariantId,
             UUID toRevisionId,
@@ -32,6 +35,7 @@ public final class CatalogChanges {
             String sourceUrl
     ) {
     }
+
     public record Entry(
             UUID id,
             String domain,
@@ -51,6 +55,7 @@ public final class CatalogChanges {
             Instant recordedAt
     ) {
     }
+
     public static Summary summary(List<Summary> copy, String locale) {
         for (String candidate : List.of(locale, "vi-VN", "en-US"))
             for (var text : copy)

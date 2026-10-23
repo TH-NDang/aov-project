@@ -16,6 +16,7 @@ class SkillReferenceSearchTest {
         assertThat(SkillReferenceSearch.parse("Ngộ Không nội tại").sourceSlot()).isZero();
         assertThat(SkillReferenceSearch.parse("passive Airi").sourceSlot()).isZero();
     }
+
     @Test
     void neverInventsVariantFromCaptureNamesOrListOrder() {
         assertThat(SkillReferenceSearch.sourceSlot("skill-2-3")).isEqualTo(2);
@@ -25,6 +26,7 @@ class SkillReferenceSearchTest {
         assertThat(SkillReferenceSearch.sourceSlot("some-named-skill")).isNull();
         assertThat(SkillReferenceSearch.sourceSlot("skill-9999999999999999-1")).isNull();
     }
+
     @Test
     void recognizesSkillCategoryCommandsWithoutTreatingThemAsNames() {
         for (var q : java.util.List.of("@Kỹ năng", "Kỹ năng", "chiêu thức", "chiêu", "skills"))

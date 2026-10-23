@@ -1,7 +1,7 @@
 {
   "java.compile.nullAnalysis.mode": "automatic",
   "cSpell.words": ["assertj", "Configurer", "wikiaov"],
-  "java.format.settings.url": "backend/wiki-service/eclipse-formatter.xml",
+  "java.format.settings.url": "backend/wiki-service/config/format/eclipse-formatter.xml",
   "java.format.settings.profile": "wikiaov",
   "java.format.comments.enabled": false,
   "java.completion.importOrder": ["#", ""],

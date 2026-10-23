@@ -1,4 +1,5 @@
 package com.wikiaov.hero.internal.web;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -28,6 +29,7 @@ import org.springframework.test.web.servlet.request.*;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -38,9 +40,11 @@ class DomainCoreIntegrationTest {
     private static final UUID VN = UUID.fromString("5d5dcd5e-15b9-4d43-884d-111111111111");
     private static final UUID TH = UUID.fromString("5d5dcd5e-15b9-4d43-884d-222222222222");
     private static PostgreSQLContainer database;
+
     static boolean databaseAvailable() {
         return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
     }
+
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry props) {
         String external = System.getenv("WIKI_TEST_DB_URL");
@@ -56,11 +60,13 @@ class DomainCoreIntegrationTest {
             props.add("spring.datasource.password", database::getPassword);
         }
     }
+
     @AfterAll
     static void stop() {
         if (database != null)
             database.stop();
     }
+
     @TestConfiguration
     static class Beans {
         @Bean
@@ -69,6 +75,7 @@ class DomainCoreIntegrationTest {
             return new MutableClock(Instant.parse("2026-10-15T00:00:00Z"));
         }
     }
+
     @Autowired
     MockMvc mvc;
     @Autowired
@@ -76,10 +83,12 @@ class DomainCoreIntegrationTest {
     @Autowired
     JdbcClient jdbc;
     final GameplayContexts contexts;
+
     @Autowired
     DomainCoreIntegrationTest(GameplayContexts contexts) {
         this.contexts = contexts;
     }
+
     @Autowired
     MutableClock clock;
     @MockitoBean
@@ -87,9 +96,10 @@ class DomainCoreIntegrationTest {
     @Autowired
     List<MediaUsageProvider> usageProviders;
     @Autowired
-    com.wikiaov.hero.internal.application.service.HeroImportJobs importJobs;
+    com.wikiaov.hero.internal.importing.application.HeroImportJobs importJobs;
     private UUID ruleset, variant, patch;
     private final Map<MediaSemanticType, UUID> assets = new EnumMap<>(MediaSemanticType.class);
+
     @BeforeEach
     void setup() throws Exception {
         clock.set(Instant.parse("2026-10-15T00:00:00Z"));
@@ -119,6 +129,7 @@ class DomainCoreIntegrationTest {
         send(post(ROOT + "/admin/patch-variants/" + variant + "/publish"), null, 204);
         release(variant, VN, "2026-01-02T00:00:00Z", 201);
     }
+
     @Test
     void overviewUsesServerTimeAndKeepsFutureRolloutsSeparate() throws Exception {
         seedImportSeason();
@@ -166,6 +177,7 @@ class DomainCoreIntegrationTest {
                 Map.of("expectedVersion", 1), 422);
         send(get(ROOT + "/admin/patches?size=101"), null, 422);
     }
+
     @Test
     void regionalTimelineIsIndependentOfLocaleAndRejectsOverlap() throws Exception {
         assertThat(contexts.resolve("VN", clock.instant()).patchVariantId()).isEqualTo(variant);
@@ -180,6 +192,7 @@ class DomainCoreIntegrationTest {
         assertThat(contexts.resolve("TH", Instant.parse("2026-01-03T00:00:00Z")).rulesetId()).isEqualTo(ruleset);
         assertThatThrownBy(() -> contexts.resolve("ID", clock.instant())).hasMessageContaining("unavailable");
     }
+
     @Test
     void completeHeroLifecycleReusesSectionsAndKeepsImmutableResourcesStable() throws Exception {
         var draft = create();
@@ -239,6 +252,7 @@ class DomainCoreIntegrationTest {
         assertThat(usages).anyMatch(u -> u.scope() == MediaUsageScope.CURRENT && u.revisionId().equals(c));
         assertThat(usages).anyMatch(u -> u.scope() == MediaUsageScope.HISTORICAL && u.revisionId().equals(draftId));
     }
+
     @Test
     void draftVisibilityDiscardValidationAndPermissions() throws Exception {
         var d = create();
@@ -262,6 +276,7 @@ class DomainCoreIntegrationTest {
                 .andExpect(status().isNotFound());
         mvc.perform(get(ROOT + "/heroes?regoin=VN")).andExpect(status().isBadRequest());
     }
+
     @Test
     void patchChangesAreExplicitAndQueryableInBothDirections() throws Exception {
         var baseline = create();
@@ -278,18 +293,32 @@ class DomainCoreIntegrationTest {
         UUID id = uuid(fork, "id");
         fork = send(put(path(hero, id) + "/combat-stats"), Map.of("expectedDraftVersion", 1, "values",
                 List.of(Map.of("statKey", "HP", "baseValue", 3600, "unit", "POINT"))), 200);
+        fork = send(put(path(hero, id) + "/skills"), Map.of("expectedDraftVersion", number(fork, "version"), "skills",
+                List.of(Map.of("skillKey", "skill-1", "kind", "ACTIVE", "displayOrder", 0, "iconAssetId",
+                        assets.get(MediaSemanticType.HERO_SKILL_ICON), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Chiêu 1", "description", "Mô tả mới đã kiểm chứng")),
+                        "effects", List.of()))),
+                200);
         send(post(path(hero, id) + "/publish"), Map.of("expectedVersion", number(fork, "version")), 200);
         mvc.perform(get(ROOT + "/heroes/" + hero)).andExpect(jsonPath("$.revisionId").value(original.toString()));
         var change = Map.of("heroId", hero, "fromHeroRevisionId", original, "toHeroRevisionId", id,
                 "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Tăng máu")), "changes",
                 List.of(Map.of("type", "STAT", "statKey", "HP", "oldValue", 3500, "newValue", 3600, "unit", "POINT",
-                        "changeKind", "BUFF")));
+                        "changeKind", "BUFF"),
+                        Map.of("type", "SKILL", "skillKey", "skill-1", "fieldKey", "description", "oldValue",
+                                "Mô tả đã kiểm chứng", "newValue", "Mô tả mới đã kiểm chứng", "changeKind", "BUFF")));
         send(post(ROOT + "/admin/patch-variants/" + v2 + "/hero-changes"), change, 201);
         send(post(ROOT + "/admin/patch-variants/" + v2 + "/hero-changes"), change, 409);
         release(v2, VN, "2026-10-16T00:00:00Z", 201);
         clock.set(Instant.parse("2026-10-16T00:00:01Z"));
         mvc.perform(get(ROOT + "/heroes/" + hero + "/changes")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.items[0].changes[0].type").value("HERO_STAT_CHANGE"));
+                .andExpect(jsonPath("$.items[0].changes[0].type").value("HERO_STAT_CHANGE"))
+                .andExpect(jsonPath("$.items[0].changes[0].oldValue").value(3500))
+                .andExpect(jsonPath("$.items[0].changes[0].newValue").value(3600))
+                .andExpect(jsonPath("$.items[0].changes[1].type").value("HERO_SKILL_CHANGE"))
+                .andExpect(jsonPath("$.items[0].changes[1].skillKey").value("skill-1"))
+                .andExpect(jsonPath("$.items[0].changes[1].oldValue").value("Mô tả đã kiểm chứng"))
+                .andExpect(jsonPath("$.items[0].changes[1].newValue").value("Mô tả mới đã kiểm chứng"));
         mvc.perform(get(ROOT + "/patches/" + patch2 + "/changes")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].heroId").value(hero.toString()));
 
@@ -452,6 +481,7 @@ class DomainCoreIntegrationTest {
                 200);
         return send(post(path(hero, id(draft)) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
     }
+
     @Test
     void concurrentEditorsCannotOverwriteEachOther() throws Exception {
         var draft = create();
@@ -486,6 +516,7 @@ class DomainCoreIntegrationTest {
             executor.shutdownNow();
         }
     }
+
     @Test
     void rejectsCrossHeroCompositionAndDuplicateDrafts() throws Exception {
         var draft = create();
@@ -502,6 +533,7 @@ class DomainCoreIntegrationTest {
         mvc.perform(get(ROOT + "/heroes?region=VN&region=TH")).andExpect(status().isBadRequest());
         mvc.perform(get(ROOT + "/heroes?size=101")).andExpect(status().isUnprocessableEntity());
     }
+
     private Map<String, Object> create() throws Exception {
         seedImportSeason();
         return send(post(ROOT + "/admin/heroes"),
@@ -509,6 +541,7 @@ class DomainCoreIntegrationTest {
                         "releaseId", releaseId(variant)),
                 201);
     }
+
     private Map<String, Object> complete(UUID hero, UUID id, Map<String, Object> draft) throws Exception {
         String p = path(hero, id);
         long version = number(draft, "version");
@@ -538,6 +571,7 @@ class DomainCoreIntegrationTest {
                                 assets.get(MediaSemanticType.HERO_SPLASH))),
                 200);
     }
+
     @Test
     void importsPreviewWithoutWritesAndRejectStaleConfirmation() throws Exception {
         seedImportSeason();
@@ -864,10 +898,12 @@ class DomainCoreIntegrationTest {
             body.put("validTo", to);
         send(post(ROOT + "/admin/regions/" + region + "/ruleset-assignments"), body, status);
     }
+
     private void release(UUID variant, UUID region, String at, int status) throws Exception {
         send(post(ROOT + "/admin/patch-variants/" + variant + "/releases"),
                 Map.of("regionId", region, "effectiveAt", at), status);
     }
+
     @Test
     void createsRegionsWithPermissionValidationAndLockedState() throws Exception {
         var body = new HashMap<String, Object>();
@@ -929,7 +965,7 @@ class DomainCoreIntegrationTest {
         assertThatThrownBy(() -> importJobs.execute(remaining)).isInstanceOf(RuntimeException.class);
         assertThat(jdbc.sql("SELECT count(*) FROM hero.hero WHERE code='broken-hero'").query(Long.class).single())
                 .isZero();
-        var worker = new com.wikiaov.hero.internal.infrastructure.HeroImportWorker(importJobs);
+        var worker = new com.wikiaov.hero.internal.importing.infrastructure.HeroImportWorker(importJobs);
         worker.tick();
         worker.tick();
         assertThat(send(get(endpoint + "/" + jobId), null, 200))
@@ -1037,15 +1073,19 @@ class DomainCoreIntegrationTest {
                 ? Map.of()
                 : json.readValue(response.getContentAsString(), Map.class);
     }
+
     private static UUID id(Map<String, Object> row) {
         return uuid(row, "id");
     }
+
     private static UUID uuid(Map<String, Object> row, String key) {
         return UUID.fromString((String) row.get(key));
     }
+
     private static long number(Map<String, Object> row, String key) {
         return ((Number) row.get(key)).longValue();
     }
+
     private static String path(UUID hero, UUID draft) {
         return ROOT + "/admin/heroes/" + hero + "/drafts/" + draft;
     }

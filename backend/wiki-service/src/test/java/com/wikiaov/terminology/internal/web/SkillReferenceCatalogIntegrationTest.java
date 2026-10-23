@@ -64,6 +64,7 @@ class SkillReferenceCatalogIntegrationTest {
     static boolean databaseAvailable() {
         return System.getenv("WIKI_TEST_DB_URL") != null || DockerClientFactory.instance().isDockerAvailable();
     }
+
     @DynamicPropertySource
     static void database(DynamicPropertyRegistry properties) {
         String external = System.getenv("WIKI_TEST_DB_URL");
@@ -79,6 +80,7 @@ class SkillReferenceCatalogIntegrationTest {
             properties.add("spring.datasource.password", database::getPassword);
         }
     }
+
     @AfterAll
     static void stop() {
         if (database != null)
@@ -251,23 +253,29 @@ class SkillReferenceCatalogIntegrationTest {
         return json.readTree(
                 mvc.perform(request).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
     }
+
     private static String path() {
         return "/api/wiki/v1/admin/reference-skills";
     }
+
     private static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor reader() {
         return jwt().authorities(new SimpleGrantedAuthority("catalog:read"));
     }
+
     private GameplayContext context(long ordinal) {
         return new GameplayContext(UUID.randomUUID(), "VN", ruleset, "aov-standard", UUID.randomUUID(), "current",
                 ordinal == 1 ? firstPatch : secondPatch, ordinal, Instant.now());
     }
+
     private void hero(UUID id, String code) {
         sql.update("insert into hero.hero values (?,?,now(),'test','editor')", id, code);
     }
+
     private void image(UUID owner, int slot, int variant, String key, UUID asset) {
         sql.update("insert into hero.hero_skill_image values (?,?,?,?,?,?,?,null,1,now(),now())",
                 UUID.randomUUID(), owner, key, slot, variant, asset, "source-" + slot + "-" + variant + ".png");
     }
+
     private UUID revision(UUID owner, UUID scope, int number, String state, UUID patch, String name,
             Map<String, String> names) {
         var sections = new ArrayList<UUID>();

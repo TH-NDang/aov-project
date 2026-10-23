@@ -1,4 +1,5 @@
 package com.wikiaov.spell.internal.domain;
+
 import com.wikiaov.platform.CatalogText.*;
 import java.math.BigDecimal;
 import java.util.*;
@@ -28,6 +29,7 @@ public record SpellContent(
         availability = availability == null ? "UNKNOWN" : availability;
         unlockType = unlockType == null ? "UNKNOWN" : unlockType;
     }
+
     public SpellContent mechanics() {
         var cleanStates = states.stream().map(state -> new SpellState(state.key(), state.iconAssetId(), List.of()))
                 .toList();
@@ -36,6 +38,7 @@ public record SpellContent(
                 displayOrder, chargeRechargeSeconds, maxCharges, defaultStateKey, cleanStates, cleanReferences,
                 List.of(), null);
     }
+
     public SpellContent publicCopy(String locale) {
         var localizedStates = states.stream().map(state -> new SpellState(state.key(), state.iconAssetId(),
                 com.wikiaov.platform.CatalogText.select(state.translations(), locale))).toList();
@@ -43,10 +46,12 @@ public record SpellContent(
                 displayOrder, chargeRechargeSeconds, maxCharges, defaultStateKey, localizedStates, referenceImages,
                 com.wikiaov.platform.CatalogText.select(translations, locale), null);
     }
+
     public SpellContent withTranslations(List<Translation> copy) {
         return new SpellContent(iconAssetId, cooldownSeconds, unlockLevel, unlockType, availability, legacy,
                 displayOrder, chargeRechargeSeconds, maxCharges, defaultStateKey, states, referenceImages, copy, notes);
     }
+
     public record SpellState(
             String key,
             UUID iconAssetId,
@@ -56,6 +61,7 @@ public record SpellContent(
             translations = translations == null ? List.of() : List.copyOf(translations);
         }
     }
+
     public record ReferenceImage(
             UUID assetId,
             String notes

@@ -17,6 +17,7 @@ public final class CatalogText {
         return translations.stream().sorted(Comparator.comparing(Translation::locale)).findFirst()
                 .map(List::of).orElseGet(List::of);
     }
+
     public record Effect(
             String key,
             String name,
@@ -24,6 +25,7 @@ public final class CatalogText {
             String type
     ) {
     }
+
     public record Translation(
             String locale,
             String name,
@@ -38,17 +40,20 @@ public final class CatalogText {
             effects = effects == null ? List.of() : List.copyOf(effects);
             variantLabels = variantLabels == null ? Map.of() : Map.copyOf(variantLabels);
         }
+
         public Translation(String locale, String name, String summary, String description,
                 Map<String, String> statLabels, List<Effect> effects) {
             this(locale, name, summary, description, statLabels, effects, Map.of());
         }
     }
+
     public record Stat(
             String key,
             BigDecimal value,
             String unit
     ) {
     }
+
     public record MetadataTranslation(
             String locale,
             String name,

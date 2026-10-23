@@ -5,14 +5,16 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.wikiaov.arcana.internal.persistence.ArcanaReferenceRepository;
-import com.wikiaov.enchantment.internal.persistence.EnchantmentReferenceRepository;
-import com.wikiaov.hero.internal.persistence.HeroReferenceRepository;
-import com.wikiaov.item.internal.persistence.ItemReferenceRepository;
+import com.wikiaov.arcana.internal.reference.persistence.ArcanaReferenceRepository;
+import com.wikiaov.enchantment.internal.reference.persistence.EnchantmentReferenceRepository;
+import com.wikiaov.hero.internal.reference.persistence.HeroReferenceRepository;
+import com.wikiaov.item.internal.reference.persistence.ItemReferenceRepository;
 import com.wikiaov.patch.GameplayContext;
-import com.wikiaov.spell.internal.persistence.SpellReferenceRepository;
+import com.wikiaov.spell.internal.reference.persistence.SpellReferenceRepository;
 import jakarta.persistence.EntityManagerFactory;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
@@ -207,6 +209,50 @@ class AdminReferenceCatalogIntegrationTest {
         assertThat(items.published(context(2), ordinals)).isEmpty();
         assertThat(heroes.published(context(2), ordinals, Instant.now())).extracting(r -> r.name())
                 .containsExactly("Hero current EN", "Hero current");
+    }
+
+    @Test
+    void emptyPatchOrderUsesSequenceTiesWithoutLoadingEntities() {
+        for (String domain : List.of("item", "arcana", "enchantment", "spell"))
+            warehouse(domain, 0);
+        var statistics = statistics();
+        statistics.clear();
+        assertThat(items.authoring(ruleset, Map.of())).extracting(r -> r.name())
+                .containsExactly("Earlier draft EN", "Earlier draft");
+        assertThat(arcana.authoring(ruleset, Map.of())).extracting(r -> r.name())
+                .containsExactly("Earlier draft EN", "Earlier draft");
+        assertThat(enchantments.authoring(ruleset, Map.of())).extracting(r -> r.name())
+                .containsExactly("Earlier draft EN", "Earlier draft");
+        assertThat(spells.authoring(ruleset, Map.of())).extracting(r -> r.name())
+                .containsExactly("Earlier draft EN", "Earlier draft");
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(4);
+        assertThat(statistics.getEntityLoadCount()).isZero();
+        statistics.clear();
+        assertThat(items.published(context(1), Map.of())).extracting(r -> r.name())
+                .containsExactly("Current item EN", "Current item");
+        assertThat(heroes.published(context(1), Map.of(), Instant.now())).extracting(r -> r.name())
+                .containsExactly("Hero current EN", "Hero current");
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(3);
+        assertThat(statistics.getEntityLoadCount()).isZero();
+    }
+
+    @Test
+    void publicHeroIgnoresPublishedSnapshotsAfterTheRequestedInstant() {
+        var publishedAt = sql.query("select published_at from hero.hero_revision where hero_id=? and ruleset_id=? "
+                + "and revision_no in (1,2) order by revision_no",
+                (row, index) -> row.getTimestamp("published_at").toInstant(), hero, ruleset);
+        assertThat(publishedAt).hasSize(2);
+        var first = publishedAt.getFirst();
+        var second = publishedAt.getLast();
+        assertThat(second).isAfter(first);
+        var asOf = first.plus(Duration.between(first, second).dividedBy(2)).truncatedTo(ChronoUnit.MICROS);
+
+        var statistics = statistics();
+        statistics.clear();
+        assertThat(heroes.published(context(2), ordinals, asOf)).extracting(r -> r.name())
+                .containsExactly("Hero old EN", "Hero old");
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
+        assertThat(statistics.getEntityLoadCount()).isZero();
     }
 
     private Statistics statistics() {

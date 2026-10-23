@@ -2,7 +2,7 @@ package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.HeroImportRequest;
 import com.wikiaov.hero.internal.application.response.HeroImportPlan;
-import com.wikiaov.hero.internal.application.service.HeroImports;
+import com.wikiaov.hero.internal.importing.application.HeroImports;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;

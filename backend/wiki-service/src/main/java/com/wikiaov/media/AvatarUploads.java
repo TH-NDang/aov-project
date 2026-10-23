@@ -9,8 +9,11 @@ import java.util.UUID;
 /** Restricted avatar upload contract: callers can complete only their own avatar uploads. */
 public interface AvatarUploads {
     Ticket begin(String fileName, String contentType, long sizeBytes);
+
     Result complete(UUID uploadId);
+
     boolean canBind(UUID assetId);
+
     Optional<String> previewUrl(UUID assetId);
 
     record Ticket(
@@ -22,6 +25,7 @@ public interface AvatarUploads {
             Instant expiresAt
     ) {
     }
+
     record Result(
             UUID assetId,
             String avatarUrl

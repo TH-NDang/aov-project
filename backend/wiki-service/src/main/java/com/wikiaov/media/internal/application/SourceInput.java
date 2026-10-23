@@ -1,7 +1,7 @@
 package com.wikiaov.media.internal.application;
 
 import com.wikiaov.media.internal.domain.model.ProvenanceSourceType;
-import com.wikiaov.media.internal.persistence.entity.MediaProvenance;
+import com.wikiaov.media.internal.provenance.persistence.entity.MediaProvenance;
 
 import java.time.Instant;
 import java.util.UUID;

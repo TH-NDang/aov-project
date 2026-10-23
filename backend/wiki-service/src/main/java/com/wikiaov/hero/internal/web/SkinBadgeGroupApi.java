@@ -1,7 +1,9 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands;
+import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands.*;
 import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView;
+import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView.*;
 import com.wikiaov.platform.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

@@ -8,7 +8,9 @@ public enum PatchErrorCode implements ApiErrorCode {
     PATCH_CONTEXT_UNAVAILABLE(HttpStatus.UNPROCESSABLE_ENTITY),
     PATCH_INVALID(HttpStatus.UNPROCESSABLE_ENTITY),
     PATCH_CONFLICT(HttpStatus.CONFLICT);
+
     private final HttpStatus status;
+
     PatchErrorCode(HttpStatus status) {
         this.status = status;
     }

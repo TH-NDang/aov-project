@@ -9,6 +9,7 @@ import java.util.*;
 public final class HeroContent {
     public interface Publication {
     }
+
     private HeroContent() {
     }
 

@@ -1,7 +1,9 @@
 package com.wikiaov.enchantment.internal.application;
+
 import com.wikiaov.platform.CatalogText.MetadataTranslation;
 import jakarta.validation.constraints.*;
 import java.util.*;
+
 public record EnchantmentBranchCommand(
         @NotNull @PositiveOrZero Long expectedVersion,
         @PositiveOrZero int displayOrder,
