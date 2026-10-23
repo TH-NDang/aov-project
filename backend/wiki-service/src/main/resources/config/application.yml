@@ -83,6 +83,7 @@ wiki:
     endpoint: ${STORAGE_ENDPOINT:}
     region: ${STORAGE_REGION:us-east-1}
     bucket: ${STORAGE_BUCKET:wiki-media}
+    assets-bucket: ${STORAGE_ASSETS_BUCKET:}
     path-style-access: ${STORAGE_PATH_STYLE:true}
     access-key: ${STORAGE_ACCESS_KEY:}
     secret-key: ${STORAGE_SECRET_KEY:}

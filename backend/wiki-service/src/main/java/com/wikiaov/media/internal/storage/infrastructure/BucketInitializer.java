@@ -1,5 +1,7 @@
 package com.wikiaov.media.internal.storage.infrastructure;
 
+import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,25 +25,29 @@ class BucketInitializer implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(BucketInitializer.class);
 
     private final S3Client s3;
-    private final String bucket;
+    private final Set<String> buckets;
     private final String adminOrigin;
 
     BucketInitializer(S3Client s3, StorageProperties properties,
             @Value("${wiki.auth.admin-origin:http://localhost:5175}") String adminOrigin) {
         this.s3 = s3;
-        this.bucket = properties.bucket();
+        this.buckets = Set.copyOf(List.of(properties.bucket(), properties.effectiveAssetsBucket()));
         this.adminOrigin = adminOrigin;
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        buckets.forEach(this::initialize);
+    }
+
+    private void initialize(String bucket) {
         try {
             s3.headBucket(request -> request.bucket(bucket));
         } catch (NoSuchBucketException ex) {
-            createBucket();
+            createBucket(bucket);
         } catch (S3Exception ex) {
             if (ex.statusCode() == 404) {
-                createBucket();
+                createBucket(bucket);
             } else {
                 log.warn("Could not check object storage bucket '{}': {}", bucket, ex.getMessage());
             }
@@ -58,7 +64,7 @@ class BucketInitializer implements ApplicationRunner {
         }
     }
 
-    private void createBucket() {
+    private void createBucket(String bucket) {
         s3.createBucket(request -> request.bucket(bucket));
         log.info("Created object storage bucket '{}'", bucket);
     }

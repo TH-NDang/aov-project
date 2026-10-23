@@ -152,6 +152,50 @@ class S3ObjectStorageIntegrationTest {
     }
 
     @Test
+    void separateBucketsKeepStagingPrivateAndCopyImmutableAssets() throws Exception {
+        String publicBucket = "wiki-media-assets-test";
+        s3.createBucket(request -> request.bucket(publicBucket));
+        var properties = new StorageProperties(endpoint, "us-east-1", "wiki-media-test", publicBucket,
+                true, ACCESS_KEY, SECRET_KEY, false);
+        var splitStorage = new S3ObjectStorage(s3, presigner, properties);
+        byte[] bytes = "split-bucket-image".getBytes(StandardCharsets.UTF_8);
+        String source = "incoming/split-upload";
+        String target = "assets/split/version.png";
+        String cacheControl = "public, max-age=31536000, immutable";
+
+        try (HttpClient http = HttpClient.newHttpClient()) {
+            PresignedRequest upload = splitStorage.presignPut(source, "image/png", Duration.ofMinutes(5));
+            HttpRequest.Builder put = HttpRequest.newBuilder(upload.url())
+                    .method(upload.method(), HttpRequest.BodyPublishers.ofByteArray(bytes));
+            upload.headers().forEach(put::header);
+            assertThat(http.send(put.build(), HttpResponse.BodyHandlers.discarding()).statusCode()).isEqualTo(200);
+
+            splitStorage.copy(source, target, "image/png", cacheControl);
+            var head = s3.headObject(request -> request.bucket(publicBucket).key(target));
+            assertThat(head.cacheControl()).isEqualTo(cacheControl);
+            assertThat(head.contentType()).isEqualTo("image/png");
+            assertThatThrownBy(() -> s3.headObject(request -> request.bucket(publicBucket).key(source)))
+                    .isInstanceOf(S3Exception.class);
+            assertThatThrownBy(() -> s3.headObject(request -> request.bucket(properties.bucket()).key(target)))
+                    .isInstanceOf(S3Exception.class);
+
+            PresignedRequest download = splitStorage.presignGet(target, Duration.ofMinutes(5));
+            var response = http.send(HttpRequest.newBuilder(download.url()).GET().build(),
+                    HttpResponse.BodyHandlers.ofByteArray());
+            assertThat(response.statusCode()).isEqualTo(200);
+            assertThat(response.body()).isEqualTo(bytes);
+        }
+
+        assertThat(splitStorage.stat(source)).isPresent();
+        try (InputStream stream = splitStorage.open(target)) {
+            assertThat(stream.readAllBytes()).isEqualTo(bytes);
+        }
+        splitStorage.delete(target);
+        assertThat(splitStorage.stat(target)).isEmpty();
+        assertThat(splitStorage.stat(source)).isPresent();
+    }
+
+    @Test
     void wrongSecretKeyIsRejected() {
         try (S3Client wrongKey = new S3StorageConfiguration().s3Client(properties("wrong-secret"))) {
             assertThatThrownBy(wrongKey::listBuckets).isInstanceOf(S3Exception.class);
@@ -159,6 +203,7 @@ class S3ObjectStorageIntegrationTest {
     }
 
     private static StorageProperties properties(String secretKey) {
-        return new StorageProperties(endpoint, "us-east-1", "wiki-media-test", true, ACCESS_KEY, secretKey, false);
+        return new StorageProperties(endpoint, "us-east-1", "wiki-media-test", null, true, ACCESS_KEY, secretKey,
+                false);
     }
 }

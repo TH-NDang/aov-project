@@ -25,7 +25,10 @@ class S3StorageConfiguration {
         S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(properties.region()))
                 .credentialsProvider(credentials(properties))
-                .forcePathStyle(properties.pathStyleAccess())
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(properties.pathStyleAccess())
+                        .chunkedEncodingEnabled(false)
+                        .build())
                 // Newer SDK versions add checksums by default, which some S3-compatible services reject.
                 .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
                 .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);

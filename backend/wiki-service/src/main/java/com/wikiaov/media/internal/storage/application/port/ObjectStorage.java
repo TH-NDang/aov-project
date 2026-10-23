@@ -30,7 +30,7 @@ public interface ObjectStorage {
     InputStream open(String key);
 
     /**
-     * Copies an object inside the bucket, e.g. from {@code incoming/} to {@code assets/}, replacing its metadata
+     * Copies an object inside the configured storage, e.g. from {@code incoming/} to {@code assets/}, replacing its metadata
      * with the verified {@code contentType} and the given {@code cacheControl} (may be {@code null}).
      */
     void copy(String sourceKey, String targetKey, String contentType, @Nullable String cacheControl);
