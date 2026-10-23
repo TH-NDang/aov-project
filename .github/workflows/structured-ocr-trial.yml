@@ -1,0 +1,97 @@
+name: Structured OCR CPU trial
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/ocr-structured-actions-trial]
+    paths:
+      - .github/workflows/structured-ocr-trial.yml
+      - experiments/structured-ocr/**
+permissions:
+  contents: read
+concurrency:
+  group: structured-ocr-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-trial:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PYTHONPATH: experiments/structured-ocr
+      TORCH_DEVICE: cpu
+      SURYA_INFERENCE_BACKEND: llamacpp
+      SURYA_INFERENCE_PARALLEL: '1'
+      SURYA_INFERENCE_CTX_SIZE: '16384'
+      SURYA_INFERENCE_TIMEOUT_SECONDS: '600'
+      SURYA_INFERENCE_STARTUP_TIMEOUT: '120'
+      LLAMA_CPP_NGL: '0'
+      LLAMA_CPP_NO_MMPROJ_OFFLOAD: 'true'
+      LLAMA_CPP_EXTRA_ARGS: '--threads 4'
+      OMP_NUM_THREADS: '4'
+      TOKENIZERS_PARALLELISM: 'false'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      # Fail closed if an unexpected legacy predictor attempts a download.
+      S3_BASE_URL: http://127.0.0.1:9/legacy-models-disabled
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          lfs: false
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Prepare output and check resources
+        run: |
+          mkdir -p trial-output
+          python - <<'PY'
+          import json, shutil
+          from pathlib import Path
+          memory = int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:'))) * 1024
+          disk = shutil.disk_usage('.').free
+          Path('trial-output/resources.json').write_text(json.dumps({'available_memory_bytes': memory, 'free_disk_bytes': disk}))
+          assert memory >= 6 * 1024**3, 'At least 6 GiB available RAM required'
+          assert disk >= 6 * 1024**3, 'At least 6 GiB free disk required'
+          PY
+      - name: Install pinned CPU dependencies
+        timeout-minutes: 8
+        run: |
+          python -m pip install --no-cache-dir torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --no-cache-dir -r experiments/structured-ocr/requirements.txt
+          python -m pip check
+          python -m pip freeze > trial-output/installed-packages.txt
+      - name: Test native-output preservation and safe export
+        run: python -m unittest discover -s experiments/structured-ocr/tests -v
+      - name: Download pinned official runtime and models
+        timeout-minutes: 6
+        run: |
+          mkdir -p "$RUNNER_TEMP/ocr-runtime" "$RUNNER_TEMP/ocr-models"
+          curl --fail --location --max-time 120 https://github.com/ggml-org/llama.cpp/releases/download/b11838/llama-b11838-bin-ubuntu-x64.tar.gz -o "$RUNNER_TEMP/ocr-runtime/llama.tar.gz"
+          echo "507e2f4fe3553499b518efe74a4244e35d709154a4e51c67e3affeef228ceb30  $RUNNER_TEMP/ocr-runtime/llama.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/ocr-runtime/llama.tar.gz" -C "$RUNNER_TEMP/ocr-runtime"
+          binary=$(find "$RUNNER_TEMP/ocr-runtime" -type f -name llama-server -print -quit)
+          test -n "$binary"
+          echo "LLAMA_CPP_BINARY=$binary" >> "$GITHUB_ENV"
+          base=https://huggingface.co/datalab-to/surya-ocr-2-gguf/resolve/6a3a4c30e5e74446d4f8b6afd05b2f2da970f470
+          curl --fail --location --max-time 240 "$base/surya-2.gguf" -o "$RUNNER_TEMP/ocr-models/surya-2.gguf"
+          curl --fail --location --max-time 120 "$base/surya-2-mmproj.gguf" -o "$RUNNER_TEMP/ocr-models/surya-2-mmproj.gguf"
+          echo "1f18abe17b1ed8b4e47ee9b1ad0e274c93daf5efbb6b29a04ff1712e37051e05  $RUNNER_TEMP/ocr-models/surya-2.gguf" | sha256sum --check
+          echo "98c0563673b1657ff6d021d1e5f04af06cbf61bb40c63ac613e8bb71b42fb2c0  $RUNNER_TEMP/ocr-models/surya-2-mmproj.gguf" | sha256sum --check
+          echo "SURYA_GGUF_LOCAL_MODEL_PATH=$RUNNER_TEMP/ocr-models/surya-2.gguf" >> "$GITHUB_ENV"
+          echo "SURYA_GGUF_LOCAL_MMPROJ_PATH=$RUNNER_TEMP/ocr-models/surya-2-mmproj.gguf" >> "$GITHUB_ENV"
+      - name: Extract one synthetic image
+        timeout-minutes: 12
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+        run: timeout --signal=TERM --kill-after=15s 660s python experiments/structured-ocr/run_trial.py --output trial-output
+      - name: Preserve server diagnostics and stop this trial server
+        if: always()
+        run: |
+          python experiments/structured-ocr/cleanup_trial.py --output trial-output
+      - name: Upload results or failure diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: structured-ocr-synthetic-${{ github.run_id }}
+          path: trial-output/
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,4 @@
+surya-ocr==0.22.1
+transformers==5.12.1
+pillow==10.4.0
+huggingface-hub==1.5.0
