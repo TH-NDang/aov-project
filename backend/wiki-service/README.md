@@ -259,3 +259,7 @@ sửa bản published; báo cáo ở `.local-state/arcana-publication-result.jso
 Công cụ thu thập/import tái lập nằm ở [`research/`](../../research/), gồm thư viện ảnh nhân vật/kỹ
 năng và kho trang bị. Chỉ upload ảnh đã ánh xạ, giữ checkpoint cục bộ được Git bỏ qua. Migrations
 không chứa gameplay giả để làm đẹp giao diện. Không commit log, checkpoint, PID hoặc `.env`.
+
+## Lưu ảnh trên Cloudflare R2
+
+Cấu hình hai kho ảnh công khai/vùng tạm riêng tư, CORS và quy trình chuyển dữ liệu có trong [hướng dẫn R2](infra/cloudflare/README.md). Quyết định kiến trúc: [ADR-014](../docs/adr/ADR-014-public-assets-private-staging.md).
