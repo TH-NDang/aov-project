@@ -29,6 +29,7 @@ aov-project/
 ## Source of truth
 
 - Backend behavior is specified by `backend/docs/01-BAN-DAC-TA-DU-AN.md`, `02-DATABASE-DU-AN.md`, `03-API-DU-AN.md`.
+- Backend layout and engineering boundaries are described in `backend/AGENTS.md` and ADR-013; business/API/data contracts remain in 01/02/03.
 - If `NOTE-SPRING-BOOT-4.md` conflicts with 01/02/03, follow 01/02/03.
 - Architecture decisions live in `backend/docs/adr/`. Read them before changing what they cover.
 - When code and spec disagree, stop and ask instead of silently picking one.
@@ -36,11 +37,18 @@ aov-project/
 ## Backend conventions (`backend/wiki-service`)
 
 - Root package `com.wikiaov`. One deployable, modular monolith (Spring Modulith).
-- Modules: `hero`, `media`, `patch`, `item`, `arcana`, `spell`, `enchantment`, `gamemode`, `query`, `access`, `platform`.
-- Each module exposes public contracts at its package root; implementation goes in `internal/{web,application,domain,persistence,infrastructure}`.
-  Inside them (see `media`): `web/request` (request bodies), `application/response` (records returned by use cases and
-  sent as JSON), `domain/...` (plain Java rules, no JPA/Spring MVC/AWS), `persistence/entity` (JPA entities),
-  `persistence` (Spring Data repositories), `application/port` (interfaces implemented in `infrastructure`).
+- Modules: `hero`, `media`, `patch`, `item`, `arcana`, `spell`, `enchantment`, `gamemode`, `query`, `access`, `platform`, `user`, `terminology`.
+- Each module exposes public contracts at its package root. Large modules group implementation by function first:
+  `internal/<capability>/{application,domain,persistence/entity,infrastructure}`. Examples: Hero `skills`, `skins`,
+  `importing`; Patch `season`, `ruleset`, `release`; Media `asset`, `upload`, `storage`.
+  Do not create every layer for every capability. Small cohesive modules may retain their existing layered layout.
+- Module-level `internal/web`, HTTP commands/response DTOs in `internal/application`, and serialized content records
+  in `internal/domain` may remain deliberately stable to preserve API/OpenAPI/JSON contracts. Do not treat these
+  compatibility locations as a general shared bucket. See `backend/AGENTS.md` and ADR-013 for ownership details.
+- Application facades own authorization and transactions and delegate coherent work to capabilities. Use focused Spring
+  Data repositories, typed projections, `@Query`, `@Lock` and Specifications for ordinary persistence. Keep dynamic
+  Criteria fragments or database-specific lock adapters narrowly scoped; do not hide generic SQL/arbitrary-entity APIs
+  behind a store or collect every module repository in one facade.
 - Never use another module's entity, repository or `internal` package. Call its public contract.
 - IDs are `UUID`; human-readable identifiers are `code` slugs.
 - API paths: map `ApiPaths.ROOT + "/..."` (or `ApiPaths.ADMIN`) and declare `version = "1"` on the mapping.
@@ -55,7 +63,10 @@ aov-project/
   `MediaUsageProvider`; they never touch media tables.
 - Lombok + MapStruct are allowed. Avoid `@Data` on JPA entities.
 - Do not hold a DB transaction open during object storage or external HTTP calls.
-- Formatting is owned by Spotless with `eclipse-formatter.xml` (4 spaces, 120 columns, comments untouched).
+- Formatting is owned by Spotless with `config/format/eclipse-formatter.xml` (4 spaces, 120 columns, comments untouched).
+  Leave one blank line between methods/constructors, including abstract repository methods. Within a method, separate
+  meaningful phases (validation, reads/locks, decisions, writes/audit, result) with one blank line; keep related statements
+  together. These rules also apply to AI-generated code: a formatter cannot infer semantic phases.
   Run `./mvnw.cmd spotless:apply` before building; `verify` fails on unformatted code.
 
 Commands (run inside `backend/wiki-service`):
@@ -65,6 +76,19 @@ Commands (run inside `backend/wiki-service`):
 ./mvnw.cmd spotless:apply                                     # format all Java files
 ./mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local" # run locally (Docker required)
 ```
+
+Build output defaults to `target/`. If the IDE/JDT writes there during verification, isolate Maven output with an
+absolute directory instead of stopping the user's IDE:
+
+```powershell
+$verificationDirectory = Join-Path $PWD.Path ".local-state/verification/target"
+./mvnw.cmd "-Dwiki.build.directory=$verificationDirectory" clean verify
+```
+
+Keep `target` as the last directory segment so ArchUnit identifies `target/test-classes` as test output.
+Surefire reports are under the selected build directory's `surefire-reports/`. The OpenAPI test artifact intentionally
+remains `target/openapi/wiki-v1.json` (the MVC-only artifact is under `target/openapi-mvc/`); default CI paths are unchanged.
+Do not run concurrent builds against the same output directory or edit shared sources while a verification is running.
 
 ## Frontend conventions (`frontend`)
 

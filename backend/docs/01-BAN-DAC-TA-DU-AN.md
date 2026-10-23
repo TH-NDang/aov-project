@@ -1157,7 +1157,7 @@ Mọi môi trường dùng cùng adapter qua API chuẩn S3; chỉ khác cấu h
 
 | Môi trường | Storage | Ghi chú |
 |---|---|---|
-| `local` | SeaweedFS (`compose.yaml`) | `http://localhost:8333`, path-style; credential trong `seaweedfs/s3.json` |
+| `local` | SeaweedFS (`compose.yaml`) | `http://localhost:8333`, path-style; credential trong `infra/local/seaweedfs/s3.json` |
 | `test` | SeaweedFS (Testcontainers) | Image pin version |
 | `prod` | Dịch vụ S3-compatible, dự kiến Cloudflare R2 | Chốt khi deploy |
 
@@ -1378,12 +1378,14 @@ backend/wiki-service/
 ├── .mvn/
 ├── .gitignore
 ├── .env.example
-├── compose.yaml            dependency local: postgres, seaweedfs, keycloak
+├── compose.yaml            dependency local: postgres, seaweedfs, redis, keycloak
+├── config/format/          eclipse-formatter.xml dùng chung Maven và hook
+├── infra/local/            realm Keycloak và cấu hình SeaweedFS
 │
 ├── scripts/
-│   ├── dev/
-│   ├── import/
-│   └── maintenance/
+│   ├── dev/                launcher local và kiểm tra môi trường
+│   ├── sync-user-roles.ps1
+│   └── publish-arcana-baseline.ps1
 │
 └── src/
     ├── main/
@@ -1403,9 +1405,11 @@ backend/wiki-service/
     │   │   └── platform/
     │   │
     │   └── resources/
-    │       ├── application.yml
-    │       ├── application-local.yml
-    │       ├── application-test.yml
+    │       ├── config/
+    │       │   ├── application.yml
+    │       │   ├── application-local.yml
+    │       │   ├── application-prod.yml
+    │       │   └── application-test.yml
     │       └── db/migration/
     │
     └── test/
@@ -1612,7 +1616,7 @@ Backend chỉ kiểm tra **capability**. Vai trò là role tổng hợp (composi
 | `patch:write`, `patch:publish` | | | ✓ | ✓ | |
 | `region:admin` | | | | ✓ | |
 
-Realm local: `backend/wiki-service/keycloak/wikiaov-realm.json`. Danh sách capability trong code: `com.wikiaov.access.Capabilities`.
+Realm local: `backend/wiki-service/infra/local/keycloak/wikiaov-realm.json`. Danh sách capability trong code: `com.wikiaov.access.Capabilities`.
 
 Kiểm tra quyền theo ba lớp:
 
@@ -1765,11 +1769,12 @@ Keycloak   (khi bật admin API)
 
 `compose.yaml` trong `backend/wiki-service/` chạy dependency local (Spring Boot Docker Compose support tự khởi động khi chạy app ở local). Topology đầy đủ xem mục 3.4 và 3.10.
 
-Application config chia theo environment:
+Application config trong `src/main/resources/config/` chia theo environment:
 
 ```text
 application.yml
 application-local.yml
+application-prod.yml
 application-test.yml
 ```
 
