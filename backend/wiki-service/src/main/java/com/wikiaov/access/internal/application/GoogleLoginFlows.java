@@ -21,6 +21,7 @@ public class GoogleLoginFlows {
     public GoogleLoginFlows() {
         this(Clock.systemUTC());
     }
+
     GoogleLoginFlows(Clock clock) {
         this.clock = clock;
     }
@@ -65,6 +66,7 @@ public class GoogleLoginFlows {
                 throw new IllegalStateException(exception);
             }
         }
+
         @Override
         public String toString() {
             return "Flow[redacted]";

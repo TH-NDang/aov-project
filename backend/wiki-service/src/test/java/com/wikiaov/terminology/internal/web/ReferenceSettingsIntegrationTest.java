@@ -1,4 +1,5 @@
 package com.wikiaov.terminology.internal.web;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -24,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -75,6 +77,7 @@ class ReferenceSettingsIntegrationTest {
     PublicReferenceProvider enchantments;
     @MockitoBean(name = "spellPublicReferences")
     PublicReferenceProvider spells;
+
     @Test
     void persistsTranslationsChecksVersionsAndSharesOnlyPublishedReferences() throws Exception {
         when(contexts.resolve(eq("VN"), any(Instant.class))).thenReturn(new GameplayContext(UUID.randomUUID(),

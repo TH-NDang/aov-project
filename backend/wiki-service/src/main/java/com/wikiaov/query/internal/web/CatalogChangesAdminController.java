@@ -1,19 +1,23 @@
 package com.wikiaov.query.internal.web;
+
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 @RestController
 @RequestMapping(ApiPaths.ADMIN + "/catalog-changes")
 public class CatalogChangesAdminController implements CatalogChangesAdminApi {
     private final List<CatalogChangeProvider> providers;
     private final GameplayContexts contexts;
+
     public CatalogChangesAdminController(List<CatalogChangeProvider> providers, GameplayContexts contexts) {
         this.providers = providers;
         this.contexts = contexts;
     }
+
     @GetMapping(version = "1")
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<CatalogChanges.Entry> list(@RequestParam UUID rulesetId,

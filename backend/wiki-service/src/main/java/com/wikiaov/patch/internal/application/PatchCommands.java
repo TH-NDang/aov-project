@@ -54,6 +54,7 @@ public final class PatchCommands {
             UUID beforeVariantId
     ) {
     }
+
     public record SeasonPatch(
             @NotNull UUID seasonId,
             @NotNull UUID rulesetId,

@@ -1,5 +1,7 @@
 package com.wikiaov.hero.internal.application.response;
 
+import com.wikiaov.hero.internal.domain.HeroChanges.*;
+
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
 import java.time.Instant;
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.wikiaov.patch.internal.web;
 
 import com.wikiaov.patch.internal.application.response.PatchDataReviewView;
-import com.wikiaov.patch.internal.application.service.PatchDataReviewService;
+import com.wikiaov.patch.internal.review.application.PatchDataReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

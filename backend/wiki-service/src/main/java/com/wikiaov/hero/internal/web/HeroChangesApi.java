@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
-import com.wikiaov.hero.internal.application.service.HeroPatchChanges;
+import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
+import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.platform.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

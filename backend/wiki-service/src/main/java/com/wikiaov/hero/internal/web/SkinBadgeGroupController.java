@@ -1,8 +1,9 @@
 package com.wikiaov.hero.internal.web;
 
 import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands;
+import com.wikiaov.hero.internal.application.SkinBadgeGroupCommands.*;
 import com.wikiaov.hero.internal.application.response.SkinBadgeGroupView;
-import com.wikiaov.hero.internal.application.service.SkinBadgeGroups;
+import com.wikiaov.hero.internal.badges.application.SkinBadgeGroups;
 import com.wikiaov.platform.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;

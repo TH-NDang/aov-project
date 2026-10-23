@@ -1,14 +1,18 @@
 package com.wikiaov.terminology.internal.domain;
+
 import static org.assertj.core.api.Assertions.*;
 
 import com.wikiaov.terminology.internal.domain.ReferenceSettings.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+
 class ReferenceSettingsTest {
     private Entry term(String icon, List<Translation> translations) {
         return new Entry("slow", "term", translations, icon, true, null, null);
     }
+
     private final Translation text = new Translation("vi-VN", "Slow", List.of("Chậm"), "Description");
+
     @Test
     void rejectsDuplicateKeysLocalesAndUnsafeUrls() {
         assertThatThrownBy(() -> new ReferenceSettings(1, true, "vi-VN",

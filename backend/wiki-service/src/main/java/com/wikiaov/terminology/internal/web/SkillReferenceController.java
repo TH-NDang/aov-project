@@ -2,7 +2,7 @@ package com.wikiaov.terminology.internal.web;
 
 import com.wikiaov.platform.*;
 import com.wikiaov.terminology.SkillReferenceProvider.Candidate;
-import com.wikiaov.terminology.internal.application.service.SkillReferenceCatalog;
+import com.wikiaov.terminology.internal.reference.application.SkillReferenceCatalog;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -17,6 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class SkillReferenceController implements SkillReferenceApi {
     private final SkillReferenceCatalog catalog;
     private final JsonMapper json;
+
     public SkillReferenceController(SkillReferenceCatalog catalog, JsonMapper json) {
         this.catalog = catalog;
         this.json = json;

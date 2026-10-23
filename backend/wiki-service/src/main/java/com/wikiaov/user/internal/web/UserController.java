@@ -5,7 +5,7 @@ import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import com.wikiaov.user.internal.application.response.UserProfile;
-import com.wikiaov.user.internal.application.service.UserProfiles;
+import com.wikiaov.user.internal.profile.application.UserProfiles;
 import com.wikiaov.user.internal.web.request.ProfileRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.*;
@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController implements UserApi {
     private final UserProfiles profiles;
     private final AvatarUploads avatars;
+
     public UserController(UserProfiles profiles, AvatarUploads avatars) {
         this.profiles = profiles;
         this.avatars = avatars;

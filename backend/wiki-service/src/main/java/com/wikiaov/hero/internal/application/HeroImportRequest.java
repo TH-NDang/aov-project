@@ -20,6 +20,7 @@ public record HeroImportRequest(
         PATCH_UPDATE,
         CORRECTION
     }
+
     public enum Policy {
         FILL_EMPTY,
         OVERWRITE,

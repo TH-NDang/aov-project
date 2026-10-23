@@ -1,10 +1,13 @@
 package com.wikiaov.arcana.internal.application;
+
 import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import jakarta.validation.constraints.*;
 import java.util.UUID;
+
 public final class ArcanaCommands {
     private ArcanaCommands() {
     }
+
     public record Create(
             @NotBlank @Size(max = 120) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String code,
             @NotNull UUID rulesetId,
@@ -14,6 +17,7 @@ public final class ArcanaCommands {
             ArcanaContent content
     ) {
     }
+
     public record Fork(
             @NotNull UUID rulesetId,
             @NotNull UUID sourceRevisionId,
@@ -22,6 +26,7 @@ public final class ArcanaCommands {
             @Size(max = 4000) String changeNote
     ) {
     }
+
     public record Update(
             @NotNull @Positive Long expectedVersion,
             @NotNull ArcanaContent content,
@@ -29,6 +34,7 @@ public final class ArcanaCommands {
             UUID effectiveFromPatchVariantId
     ) {
     }
+
     public record Mutation(
             @NotNull @Positive Long expectedVersion,
             @Size(max = 4000) String changeNote

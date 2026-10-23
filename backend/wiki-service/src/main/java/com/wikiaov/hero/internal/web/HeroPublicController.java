@@ -1,6 +1,6 @@
 package com.wikiaov.hero.internal.web;
 
-import com.wikiaov.hero.internal.application.service.HeroQueries;
+import com.wikiaov.hero.internal.catalog.application.HeroQueries;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.platform.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +17,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class HeroPublicController implements HeroPublicApi {
     private final HeroQueries queries;
     private final JsonMapper json;
+
     public HeroPublicController(HeroQueries queries, JsonMapper json) {
         this.queries = queries;
         this.json = json;

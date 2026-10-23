@@ -26,7 +26,7 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageProvider;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.media.TestImages;
-import com.wikiaov.media.internal.application.port.ObjectStorage;
+import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.net.http.HttpClient;

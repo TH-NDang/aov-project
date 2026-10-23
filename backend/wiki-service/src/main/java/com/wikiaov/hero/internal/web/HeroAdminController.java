@@ -4,9 +4,9 @@ import com.wikiaov.hero.internal.application.HeroCommands.*;
 import com.wikiaov.hero.internal.application.response.HeroCatalogView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
-import com.wikiaov.hero.internal.application.service.HeroAuthoring;
-import com.wikiaov.hero.internal.application.service.HeroCatalog;
-import com.wikiaov.hero.internal.application.service.HeroComparisons;
+import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
+import com.wikiaov.hero.internal.catalog.application.HeroCatalog;
+import com.wikiaov.hero.internal.comparison.application.HeroComparisons;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.web.request.HeroSectionRequests.*;
 import com.wikiaov.platform.*;
@@ -21,6 +21,7 @@ public class HeroAdminController implements HeroAdminApi {
     private final HeroAuthoring authoring;
     private final HeroComparisons comparisons;
     private final HeroCatalog catalog;
+
     public HeroAdminController(HeroAuthoring authoring, HeroComparisons comparisons, HeroCatalog catalog) {
         this.authoring = authoring;
         this.comparisons = comparisons;

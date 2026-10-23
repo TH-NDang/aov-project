@@ -1,6 +1,6 @@
 package com.wikiaov.patch.internal.web;
 
-import com.wikiaov.patch.internal.application.service.PublicationOverview;
+import com.wikiaov.patch.internal.context.application.PublicationOverview;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(ApiPaths.ADMIN + "/publication-overview")
 public class PublicationOverviewController implements PublicationOverviewApi {
     private final PublicationOverview overview;
+
     public PublicationOverviewController(PublicationOverview overview) {
         this.overview = overview;
     }

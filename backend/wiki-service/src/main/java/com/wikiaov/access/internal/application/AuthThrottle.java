@@ -15,6 +15,7 @@ public class AuthThrottle {
     public AuthThrottle() {
         this(Clock.systemUTC());
     }
+
     AuthThrottle(Clock clock) {
         this.clock = clock;
     }
@@ -40,6 +41,7 @@ public class AuthThrottle {
     private static class Window {
         private final long until;
         private int count;
+
         Window(long until) {
             this.until = until;
         }

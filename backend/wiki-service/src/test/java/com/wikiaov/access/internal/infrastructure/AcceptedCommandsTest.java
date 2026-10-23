@@ -2,7 +2,8 @@ package com.wikiaov.access.internal.infrastructure;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.wikiaov.access.*;
+import com.wikiaov.access.Actor;
+import com.wikiaov.access.ActorType;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.context.SecurityContextHolder;

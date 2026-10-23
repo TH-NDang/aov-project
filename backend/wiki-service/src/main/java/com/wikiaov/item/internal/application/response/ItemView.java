@@ -1,7 +1,9 @@
 package com.wikiaov.item.internal.application.response;
+
 import com.wikiaov.item.internal.domain.ItemContent;
 import java.time.Instant;
 import java.util.*;
+
 public record ItemView(
         UUID id,
         String code,

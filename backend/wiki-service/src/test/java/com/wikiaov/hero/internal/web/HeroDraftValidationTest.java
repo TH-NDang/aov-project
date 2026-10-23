@@ -2,7 +2,7 @@ package com.wikiaov.hero.internal.web;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.wikiaov.hero.internal.application.service.HeroValidation;
+import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.platform.ApiException;

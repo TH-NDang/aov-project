@@ -38,10 +38,12 @@ public record SkillReferenceSearch(
         return new SkillReferenceSearch(Arrays.stream(value.strip().split("\\s+")).filter(s -> !s.isEmpty()).toList(),
                 slot, variant);
     }
+
     public static String normalize(String value) {
         return Normalizer.normalize(value.toLowerCase(Locale.ROOT), Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "").replace('đ', 'd');
     }
+
     public static Integer sourceSlot(String skillKey) {
         var source = SOURCE_KEY.matcher(skillKey);
         if (source.matches())
@@ -51,10 +53,12 @@ public record SkillReferenceSearch(
         var capture = CAPTURE_KEY.matcher(skillKey);
         return capture.matches() ? number(capture.group(1)) : null;
     }
+
     public static Integer variantNo(String skillKey) {
         var source = SOURCE_KEY.matcher(skillKey);
         return source.matches() ? number(source.group(2)) : null;
     }
+
     private static Integer number(String value) {
         try {
             return Integer.valueOf(value);

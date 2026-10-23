@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
-import com.wikiaov.hero.internal.application.service.HeroComparisons;
+import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
+import com.wikiaov.hero.internal.comparison.application.HeroComparisons;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
-import com.wikiaov.hero.internal.persistence.HeroSections;
-import com.wikiaov.hero.internal.persistence.HeroStore;
+import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.platform.ApiException;
 import java.math.BigDecimal;
 import java.util.*;

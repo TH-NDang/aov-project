@@ -183,9 +183,11 @@ class RedisReadModelCacheTest {
     private static class FakeEpoch extends CatalogCacheEpoch {
         long value = 1;
         int reads;
+
         FakeEpoch() {
-            super(null, null);
+            super(null);
         }
+
         @Override
         long current() {
             reads++;
@@ -206,6 +208,7 @@ class RedisReadModelCacheTest {
         boolean failReads;
         boolean failWrites;
         int reads;
+
         @Override
         @SuppressWarnings("unchecked")
         public ValueOperations<String, String> opsForValue() {

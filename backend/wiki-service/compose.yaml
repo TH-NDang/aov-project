@@ -26,7 +26,7 @@ services:
       retries: 10
   # S3-compatible object storage for local development (ADR-006).
   # MinIO images were removed from Docker Hub in 09/2026; SeaweedFS speaks the same S3 API.
-  # Credentials live in seaweedfs/s3.json (local only).
+  # Credentials live in infra/local/seaweedfs/s3.json (local only).
   seaweedfs:
     image: chrislusf/seaweedfs:4.48
     command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
@@ -35,11 +35,11 @@ services:
       - '127.0.0.1:8888:8888' # filer UI: browse stored files
     volumes:
       - seaweedfs-data:/data
-      - ./seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
+      - ./infra/local/seaweedfs/s3.json:/etc/seaweedfs/s3.json:ro
   keycloak:
     image: quay.io/keycloak/keycloak:26.4.0
     profiles: [identity]
-    # Imports keycloak/wikiaov-realm.json on first start (skipped when the realm already exists).
+    # Imports infra/local/keycloak/wikiaov-realm.json on first start (skipped when the realm already exists).
     command: start-dev --import-realm
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
@@ -49,7 +49,7 @@ services:
       - '127.0.0.1:8081:8080'
     volumes:
       - keycloak-data:/opt/keycloak/data
-      - ./keycloak:/opt/keycloak/data/import:ro
+      - ./infra/local/keycloak:/opt/keycloak/data/import:ro
 volumes:
   postgres-data:
   seaweedfs-data:

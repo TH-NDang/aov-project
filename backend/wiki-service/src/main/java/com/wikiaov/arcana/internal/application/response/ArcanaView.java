@@ -1,7 +1,9 @@
 package com.wikiaov.arcana.internal.application.response;
+
 import com.wikiaov.arcana.internal.domain.ArcanaContent;
 import java.time.Instant;
 import java.util.*;
+
 public record ArcanaView(
         UUID id,
         String code,

@@ -1,9 +1,8 @@
 package com.wikiaov.platform.internal.cache;
 
 import com.wikiaov.platform.CatalogCacheChanges;
-import jakarta.persistence.EntityManager;
+import com.wikiaov.platform.internal.persistence.cache.CatalogCacheEpochRepository;
 import java.util.Set;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -16,16 +15,14 @@ class CatalogCacheEpoch implements CatalogCacheChanges {
             "PATCH", "REGION", "RANKED_SEASON", "REFERENCE_SETTINGS", "MEDIA_ASSET", "MEDIA_ASSET_VERSION",
             "SKIN_BADGE", "SKIN_BADGE_GROUP", "ITEM_CATEGORY", "ENCHANTMENT_BRANCH", "ITEM_METADATA",
             "ENCHANTMENT_METADATA");
-    private final JdbcClient jdbc;
-    private final EntityManager entities;
+    private final CatalogCacheEpochRepository epochs;
 
-    CatalogCacheEpoch(JdbcClient jdbc, EntityManager entities) {
-        this.jdbc = jdbc;
-        this.entities = entities;
+    CatalogCacheEpoch(CatalogCacheEpochRepository epochs) {
+        this.epochs = epochs;
     }
 
     long current() {
-        return jdbc.sql("SELECT epoch FROM platform.catalog_cache_epoch WHERE id=1").query(Long.class).single();
+        return epochs.current();
     }
 
     @Override
@@ -37,29 +34,43 @@ class CatalogCacheEpoch implements CatalogCacheChanges {
             throw new IllegalStateException("Catalog changes require an active transaction.");
         if (TransactionSynchronizationManager.hasResource(RESOURCE))
             return;
+        registerAdvance();
+    }
+
+    private void registerAdvance() {
         Object marker = new Object();
         TransactionSynchronizationManager.bindResource(RESOURCE, marker);
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void suspend() {
+        TransactionSynchronizationManager.registerSynchronization(new EpochAdvance(marker));
+    }
+
+    private final class EpochAdvance implements TransactionSynchronization {
+        private final Object marker;
+
+        private EpochAdvance(Object marker) {
+            this.marker = marker;
+        }
+
+        @Override
+        public void suspend() {
+            TransactionSynchronizationManager.unbindResource(RESOURCE);
+        }
+
+        @Override
+        public void resume() {
+            TransactionSynchronizationManager.bindResource(RESOURCE, marker);
+        }
+
+        @Override
+        public void beforeCommit(boolean readOnly) {
+            if (readOnly)
+                throw new IllegalStateException("Catalog changes cannot commit in a read-only transaction.");
+            epochs.advance();
+        }
+
+        @Override
+        public void afterCompletion(int status) {
+            if (TransactionSynchronizationManager.getResource(RESOURCE) == marker)
                 TransactionSynchronizationManager.unbindResource(RESOURCE);
-            }
-            @Override
-            public void resume() {
-                TransactionSynchronizationManager.bindResource(RESOURCE, marker);
-            }
-            @Override
-            public void beforeCommit(boolean readOnly) {
-                if (readOnly)
-                    throw new IllegalStateException("Catalog changes cannot commit in a read-only transaction.");
-                entities.flush();
-                jdbc.sql("UPDATE platform.catalog_cache_epoch SET epoch=epoch+1 WHERE id=1").update();
-            }
-            @Override
-            public void afterCompletion(int status) {
-                if (TransactionSynchronizationManager.getResource(RESOURCE) == marker)
-                    TransactionSynchronizationManager.unbindResource(RESOURCE);
-            }
-        });
+        }
     }
 }

@@ -33,9 +33,11 @@ public record AuthProperties(
     public String callbackUri() {
         return adminOrigin + googleCallbackPath;
     }
+
     public String completionUri() {
         return adminOrigin + adminBasePath + "auth/google-complete.html";
     }
+
     @Override
     public String toString() {
         return "AuthProperties[redacted]";

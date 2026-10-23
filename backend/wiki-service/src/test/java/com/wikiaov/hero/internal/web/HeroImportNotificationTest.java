@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.*;
 
 import com.wikiaov.access.*;
 import com.wikiaov.hero.internal.application.HeroErrorCode;
-import com.wikiaov.hero.internal.application.service.HeroImportJobs;
-import com.wikiaov.hero.internal.persistence.HeroImportJobRepository;
-import com.wikiaov.hero.internal.persistence.entity.HeroImportJob;
+import com.wikiaov.hero.internal.importing.application.HeroImportJobs;
+import com.wikiaov.hero.internal.importing.persistence.HeroImportJobRepository;
+import com.wikiaov.hero.internal.importing.persistence.entity.HeroImportJob;
 import com.wikiaov.platform.ApiException;
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -38,6 +38,7 @@ class HeroImportNotificationTest {
         public Optional<Actor> find() {
             return Optional.of(actor);
         }
+
         public Actor require() {
             return actor;
         }

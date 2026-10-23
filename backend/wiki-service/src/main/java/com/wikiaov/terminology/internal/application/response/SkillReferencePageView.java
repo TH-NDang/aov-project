@@ -14,6 +14,7 @@ public record SkillReferencePageView(
     public SkillReferencePageView(PageSlice<Candidate> page) {
         this(page.items(), page.page(), page.size(), page.totalElements());
     }
+
     public PageSlice<Candidate> slice() {
         return new PageSlice<>(items, page, size, totalElements);
     }

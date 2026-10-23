@@ -1,4 +1,5 @@
 package com.wikiaov.item.internal.domain;
+
 import com.wikiaov.platform.CatalogText.*;
 import java.util.*;
 
@@ -21,18 +22,22 @@ public record ItemContent(
         stats = stats == null ? List.of() : List.copyOf(stats);
         recipeStatus = recipeStatus == null ? "UNKNOWN" : recipeStatus;
     }
+
     public ItemContent mechanics() {
         return new ItemContent(iconAssetId, tier, price, categoryCode, shopPositions, recipeStatus, components, stats,
                 List.of(), null);
     }
+
     public ItemContent publicCopy(String locale) {
         return new ItemContent(iconAssetId, tier, price, categoryCode, shopPositions, recipeStatus, components, stats,
                 com.wikiaov.platform.CatalogText.select(translations, locale), null);
     }
+
     public ItemContent withTranslations(List<Translation> copy) {
         return new ItemContent(iconAssetId, tier, price, categoryCode, shopPositions, recipeStatus, components, stats,
                 copy, notes);
     }
+
     public record ShopPosition(
             String categoryCode,
             Integer row,
@@ -40,6 +45,7 @@ public record ItemContent(
             String variant
     ) {
     }
+
     public record Component(
             UUID itemId,
             int quantity

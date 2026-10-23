@@ -119,6 +119,25 @@ abstract class OpenApiContractChecks {
     }
 
     @Test
+    void capabilityMovesPreservePublishedSchemaIdentifiers() throws Exception {
+        JsonNode spec = json.readTree(mvc.perform(get(DOCS).with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        var schemas = spec.path("components").path("schemas");
+
+        for (String name : List.of(
+                "com.wikiaov.hero.internal.application.service.HeroImports.Field",
+                "com.wikiaov.hero.internal.application.service.HeroPatchChanges.AssessmentInput",
+                "com.wikiaov.patch.internal.application.service.PatchDataReviewService.Update",
+                "com.wikiaov.patch.internal.application.service.RankedSeasons.Input",
+                "com.wikiaov.patch.internal.application.service.RankedSeasons.ScheduleInput",
+                "com.wikiaov.patch.internal.application.service.RankedSeasons.View")) {
+            assertThat(schemas.has(name)).as("Stable published schema identifier: %s", name).isTrue();
+            assertThat(spec.toString()).as("Operations continue to reference %s", name)
+                    .contains("#/components/schemas/" + name);
+        }
+    }
+
+    @Test
     void docsUseExistingAdminSecurityAndDoNotOpenTheDefaultDocsPath() throws Exception {
         for (String path : new String[] {DOCS, DOCS + ".yaml"}) {
             mvc.perform(get(path)).andExpect(status().isUnauthorized());

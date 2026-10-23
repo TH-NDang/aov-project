@@ -659,9 +659,11 @@ class WarehouseCatalogIntegrationTest {
         iconTypes.put(id, type);
         return id;
     }
+
     private static String draftPath(String path, Map<String, Object> entry) {
         return ROOT + "/" + path + "/" + entry.get("id") + "/drafts/" + map(entry.get("revision")).get("id");
     }
+
     private static Map<String, Object> text(String locale, String name, String description) {
         return Map.of("locale", locale, "name", name, "description", description);
     }
@@ -678,9 +680,11 @@ class WarehouseCatalogIntegrationTest {
                 .getContentAsString();
         return response.isEmpty() ? Map.of() : json.readValue(response, Map.class);
     }
+
     private static long number(Map<String, Object> row, String key) {
         return ((Number) row.get(key)).longValue();
     }
+
     @SuppressWarnings("unchecked")
     private static Map<String, Object> map(Object value) {
         return (Map<String, Object>) value;

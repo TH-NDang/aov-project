@@ -2,42 +2,27 @@ package com.wikiaov.platform.internal.cache;
 
 import static org.assertj.core.api.Assertions.*;
 
-import jakarta.persistence.EntityManager;
+import com.wikiaov.platform.internal.persistence.cache.CatalogCacheEpochRepository;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 class CatalogCacheEpochTest {
     private final List<String> calls = new ArrayList<>();
-    private final EntityManager entities = (EntityManager) Proxy.newProxyInstance(EntityManager.class.getClassLoader(),
-            new Class<?>[] {EntityManager.class}, (proxy, method, args) -> {
-                if (method.getName().equals("flush")) {
-                    calls.add("flush");
-                    return null;
-                }
-                throw new UnsupportedOperationException(method.getName());
-            });
-    private final JdbcClient.StatementSpec statement = (JdbcClient.StatementSpec) Proxy.newProxyInstance(
-            JdbcClient.StatementSpec.class.getClassLoader(), new Class<?>[] {JdbcClient.StatementSpec.class},
+    private final CatalogCacheEpochRepository repository = (CatalogCacheEpochRepository) Proxy.newProxyInstance(
+            CatalogCacheEpochRepository.class.getClassLoader(), new Class<?>[] {CatalogCacheEpochRepository.class},
             (proxy, method, args) -> {
-                if (method.getName().equals("update")) {
+                if (method.getName().equals("advance")) {
                     calls.add("epoch-update");
                     return 1;
                 }
                 throw new UnsupportedOperationException(method.getName());
             });
-    private final JdbcClient jdbc = (JdbcClient) Proxy.newProxyInstance(JdbcClient.class.getClassLoader(),
-            new Class<?>[] {JdbcClient.class}, (proxy, method, args) -> {
-                if (method.getName().equals("sql"))
-                    return statement;
-                throw new UnsupportedOperationException(method.getName());
-            });
-    private final CatalogCacheEpoch epochs = new CatalogCacheEpoch(jdbc, entities);
+    private final CatalogCacheEpoch epochs = new CatalogCacheEpoch(repository);
 
     @AfterEach
     void cleanThreadResources() {
@@ -57,7 +42,7 @@ class CatalogCacheEpochTest {
     }
 
     @Test
-    void coalescesMutationsAndFlushesOrmBeforeAcquiringTheEpochLock() {
+    void coalescesMutationsIntoOneDatabaseAdvanceAtCommit() {
         begin();
         epochs.changed("HERO");
         epochs.changed("ITEM");
@@ -67,7 +52,7 @@ class CatalogCacheEpochTest {
 
         var synchronization = TransactionSynchronizationManager.getSynchronizations().getFirst();
         synchronization.beforeCommit(false);
-        assertThat(calls).containsExactly("flush", "epoch-update");
+        assertThat(calls).containsExactly("epoch-update");
         synchronization.afterCompletion(TransactionSynchronization.STATUS_COMMITTED);
         assertThat(TransactionSynchronizationManager.getResourceMap()).isEmpty();
     }
@@ -112,7 +97,7 @@ class CatalogCacheEpochTest {
         outer.beforeCommit(false);
         outer.afterCompletion(TransactionSynchronization.STATUS_COMMITTED);
 
-        assertThat(calls).containsExactly("flush", "epoch-update", "flush", "epoch-update");
+        assertThat(calls).containsExactly("epoch-update", "epoch-update");
         assertThat(TransactionSynchronizationManager.getResourceMap()).isEmpty();
     }
 

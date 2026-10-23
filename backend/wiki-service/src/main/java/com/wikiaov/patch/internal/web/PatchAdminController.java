@@ -1,7 +1,7 @@
 package com.wikiaov.patch.internal.web;
 
 import com.wikiaov.patch.internal.application.PatchCommands.*;
-import com.wikiaov.patch.internal.application.service.PatchAuthoring;
+import com.wikiaov.patch.internal.authoring.application.PatchAuthoring;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(ApiPaths.ADMIN)
 public class PatchAdminController implements PatchAdminApi {
     private final PatchAuthoring authoring;
+
     public PatchAdminController(PatchAuthoring authoring) {
         this.authoring = authoring;
     }
@@ -59,6 +60,7 @@ public class PatchAdminController implements PatchAdminApi {
     public Map<String, UUID> patch(@RequestBody Patch body) {
         return Map.of("id", authoring.patch(body));
     }
+
     @PostMapping(path = "/season-patches", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, UUID> seasonPatch(@RequestBody SeasonPatch body) {
@@ -76,6 +78,7 @@ public class PatchAdminController implements PatchAdminApi {
     public void publish(@PathVariable UUID id) {
         authoring.publish(id);
     }
+
     @PostMapping(path = "/patch-releases/{id}/confirm", version = "1")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void confirm(@PathVariable UUID id) {

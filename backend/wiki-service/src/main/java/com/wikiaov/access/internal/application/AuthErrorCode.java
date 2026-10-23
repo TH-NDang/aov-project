@@ -23,6 +23,7 @@ public enum AuthErrorCode implements ApiErrorCode {
     public HttpStatus status() {
         return status;
     }
+
     public String title() {
         return title;
     }

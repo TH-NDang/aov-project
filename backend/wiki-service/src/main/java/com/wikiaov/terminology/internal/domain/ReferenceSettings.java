@@ -19,6 +19,7 @@ public record ReferenceSettings(
             String description
     ) {
     }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Display(
             String color,
@@ -26,12 +27,14 @@ public record ReferenceSettings(
             Boolean showIcon
     ) {
     }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Destinations(
             String admin,
             String wiki
     ) {
     }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Entry(
             String id,
@@ -89,9 +92,11 @@ public record ReferenceSettings(
     private static boolean locale(String value) {
         return text(value, 64, false) && value.matches("[a-zA-Z]{2,8}(?:-[a-zA-Z0-9]{1,8})*");
     }
+
     private static boolean text(String value, int max, boolean empty) {
         return value != null && value.length() <= max && (empty || !value.isBlank());
     }
+
     private static boolean safeUrl(String value, boolean localOnly) {
         if (!text(value, 2048, false) || !value.equals(value.strip()))
             return false;
@@ -112,6 +117,7 @@ public record ReferenceSettings(
             return false;
         }
     }
+
     private static void require(boolean valid, String detail) {
         if (!valid)
             throw new IllegalArgumentException(detail);

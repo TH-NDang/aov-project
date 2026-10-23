@@ -2,7 +2,7 @@ package com.wikiaov.media.internal.domain.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.wikiaov.media.internal.domain.image.ImageFormat;
+import com.wikiaov.media.internal.ingestion.domain.image.ImageFormat;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

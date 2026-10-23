@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.web;
 
-import com.wikiaov.hero.internal.application.service.HeroPatchChanges;
+import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
+import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.platform.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(ApiPaths.ROOT)
 public class HeroChangesController implements HeroChangesApi {
     private final HeroPatchChanges changes;
+
     public HeroChangesController(HeroPatchChanges changes) {
         this.changes = changes;
     }

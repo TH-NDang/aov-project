@@ -9,6 +9,7 @@ import java.util.*;
 /** Lazy, bounded skill references; no gameplay sections or draft data cross into public reads. */
 public interface SkillReferenceProvider {
     PageSlice<Candidate> admin(UUID rulesetId, String q, UUID heroId, List<String> ids, int page, int size);
+
     PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
             List<String> ids, int page, int size);
 
@@ -19,6 +20,7 @@ public interface SkillReferenceProvider {
             String description
     ) {
     }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Owner(
             UUID id,
@@ -28,12 +30,14 @@ public interface SkillReferenceProvider {
             String icon
     ) {
     }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Destinations(
             String admin,
             String wiki
     ) {
     }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     record Candidate(
             String id,

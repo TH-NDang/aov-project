@@ -1,6 +1,6 @@
 package com.wikiaov.spell.internal.application.response;
 
-import com.wikiaov.spell.internal.persistence.entity.SpellRemoval;
+import com.wikiaov.spell.internal.change.persistence.entity.SpellRemoval;
 import java.time.Instant;
 import java.util.UUID;
 
