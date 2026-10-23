@@ -1,5 +1,6 @@
 package com.wikiaov.media.internal.storage.infrastructure;
 
+import com.wikiaov.media.internal.domain.model.MediaObjectKeys;
 import jakarta.validation.constraints.NotBlank;
 import java.net.URI;
 import org.jspecify.annotations.Nullable;
@@ -12,7 +13,8 @@ import org.springframework.validation.annotation.Validated;
  *
  * @param endpoint              custom endpoint (SeaweedFS, R2); empty means the AWS S3 default
  * @param region                signing region; SeaweedFS accepts any value, R2 uses {@code auto}
- * @param bucket                bucket that holds media objects
+ * @param bucket                private bucket for incoming uploads and imports
+ * @param assetsBucket          optional bucket for validated public assets; empty uses the private bucket
  * @param pathStyleAccess       {@code true} for SeaweedFS/MinIO ({@code http://host/bucket/key})
  * @param accessKey             access key; empty falls back to the AWS default credentials chain
  * @param secretKey             secret key paired with {@code accessKey}
@@ -24,11 +26,22 @@ record StorageProperties(
         @Nullable URI endpoint,
         @DefaultValue("us-east-1") @NotBlank String region,
         @DefaultValue("wiki-media") @NotBlank String bucket,
+        @Nullable String assetsBucket,
         @DefaultValue("true") boolean pathStyleAccess,
         @Nullable String accessKey,
         @Nullable String secretKey,
         @DefaultValue("false") boolean createBucketIfMissing
 ) {
+
+    String bucketFor(String key) {
+        return key.startsWith(MediaObjectKeys.ASSETS_PREFIX)
+                ? effectiveAssetsBucket()
+                : bucket;
+    }
+
+    String effectiveAssetsBucket() {
+        return assetsBucket == null || assetsBucket.isBlank() ? bucket : assetsBucket;
+    }
 
     boolean hasStaticCredentials() {
         return accessKey != null && !accessKey.isBlank() && secretKey != null && !secretKey.isBlank();

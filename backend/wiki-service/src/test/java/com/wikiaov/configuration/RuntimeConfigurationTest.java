@@ -42,6 +42,16 @@ class RuntimeConfigurationTest {
     }
 
     @Test
+    void localCloudStorageCanDisableBucketProvisioning() {
+        withProfile("local", Map.of("STORAGE_CREATE_BUCKET_IF_MISSING", "false",
+                "STORAGE_ASSETS_BUCKET", "public-assets"), environment -> {
+                    assertThat(environment.getProperty("wiki.storage.create-bucket-if-missing", Boolean.class))
+                            .isFalse();
+                    assertThat(environment.getProperty("wiki.storage.assets-bucket")).isEqualTo("public-assets");
+                });
+    }
+
+    @Test
     void productionDoesNotInheritLocalInfrastructureOrCookieOverrides() {
         withProfile("prod", environment -> {
             assertThat(environment.getProperty("logging.structured.format.console")).isEqualTo("ecs");
@@ -53,6 +63,11 @@ class RuntimeConfigurationTest {
     }
 
     private static void withProfile(String profile, Consumer<ConfigurableEnvironment> assertions) {
+        withProfile(profile, Map.of(), assertions);
+    }
+
+    private static void withProfile(String profile, Map<String, Object> overrides,
+            Consumer<ConfigurableEnvironment> assertions) {
         try (var context = new GenericApplicationContext()) {
             var environment = context.getEnvironment();
             environment.getPropertySources().addFirst(new MapPropertySource("configuration-test", Map.of(
@@ -62,6 +77,7 @@ class RuntimeConfigurationTest {
                     "DB_PASSWORD", "test-only",
                     "JWT_ISSUER_URI", "https://identity.example.test/realms/wiki",
                     "STORAGE_ENDPOINT", "http://storage.example.test:8333")));
+            environment.getPropertySources().addFirst(new MapPropertySource("cloud-overrides", overrides));
             new ConfigDataApplicationContextInitializer().initialize(context);
             assertions.accept(environment);
         }

@@ -35,18 +35,19 @@ class S3ObjectStorage implements ObjectStorage {
 
     private final S3Client s3;
     private final S3Presigner presigner;
-    private final String bucket;
+    private final StorageProperties properties;
 
     S3ObjectStorage(S3Client s3, S3Presigner presigner, StorageProperties properties) {
         this.s3 = s3;
         this.presigner = presigner;
-        this.bucket = properties.bucket();
+        this.properties = properties;
     }
 
     @Override
     public void put(String key, InputStream content, long contentLength, String contentType) {
         call("put", key, () -> s3.putObject(
-                request -> request.bucket(bucket).key(key).contentType(contentType).contentLength(contentLength),
+                request -> request.bucket(properties.bucketFor(key)).key(key).contentType(contentType)
+                        .contentLength(contentLength),
                 RequestBody.fromInputStream(content, contentLength)));
     }
 
@@ -54,7 +55,7 @@ class S3ObjectStorage implements ObjectStorage {
     public Optional<StoredObject> stat(String key) {
         try {
             HeadObjectResponse head = call("stat", key,
-                    () -> s3.headObject(request -> request.bucket(bucket).key(key)));
+                    () -> s3.headObject(request -> request.bucket(properties.bucketFor(key)).key(key)));
             return Optional.of(new StoredObject(key, head.contentLength(), head.contentType(), head.eTag(),
                     head.lastModified()));
         } catch (ApiException ex) {
@@ -67,15 +68,16 @@ class S3ObjectStorage implements ObjectStorage {
 
     @Override
     public InputStream open(String key) {
-        InputStream stream = call("open", key, () -> s3.getObject(request -> request.bucket(bucket).key(key)));
+        InputStream stream = call("open", key,
+                () -> s3.getObject(request -> request.bucket(properties.bucketFor(key)).key(key)));
         return new SdkExceptionTranslatingStream(stream);
     }
 
     @Override
     public void copy(String sourceKey, String targetKey, String contentType, @Nullable String cacheControl) {
         call("copy", sourceKey, () -> s3.copyObject(request -> request
-                .sourceBucket(bucket).sourceKey(sourceKey)
-                .destinationBucket(bucket).destinationKey(targetKey)
+                .sourceBucket(properties.bucketFor(sourceKey)).sourceKey(sourceKey)
+                .destinationBucket(properties.bucketFor(targetKey)).destinationKey(targetKey)
                 .metadataDirective(MetadataDirective.REPLACE)
                 .contentType(contentType)
                 .cacheControl(cacheControl)));
@@ -83,14 +85,14 @@ class S3ObjectStorage implements ObjectStorage {
 
     @Override
     public void delete(String key) {
-        call("delete", key, () -> s3.deleteObject(request -> request.bucket(bucket).key(key)));
+        call("delete", key, () -> s3.deleteObject(request -> request.bucket(properties.bucketFor(key)).key(key)));
     }
 
     @Override
     public PresignedRequest presignPut(String key, String contentType, Duration validity) {
         PresignedPutObjectRequest presigned = presigner.presignPutObject(request -> request
                 .signatureDuration(validity)
-                .putObjectRequest(put -> put.bucket(bucket).key(key).contentType(contentType)));
+                .putObjectRequest(put -> put.bucket(properties.bucketFor(key)).key(key).contentType(contentType)));
         return toPresignedRequest(presigned);
     }
 
@@ -98,7 +100,7 @@ class S3ObjectStorage implements ObjectStorage {
     public PresignedRequest presignGet(String key, Duration validity) {
         PresignedGetObjectRequest presigned = presigner.presignGetObject(request -> request
                 .signatureDuration(validity)
-                .getObjectRequest(get -> get.bucket(bucket).key(key)));
+                .getObjectRequest(get -> get.bucket(properties.bucketFor(key)).key(key)));
         return toPresignedRequest(presigned);
     }
 

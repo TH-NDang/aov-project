@@ -26,4 +26,4 @@ wiki:
     endpoint: ${STORAGE_ENDPOINT:http://localhost:8333}
     access-key: ${STORAGE_ACCESS_KEY:wiki-local}
     secret-key: ${STORAGE_SECRET_KEY:wiki-local-storage}
-    create-bucket-if-missing: true
+    create-bucket-if-missing: ${STORAGE_CREATE_BUCKET_IF_MISSING:true}
