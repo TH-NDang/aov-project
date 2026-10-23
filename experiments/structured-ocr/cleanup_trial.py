@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import signal
 import time
+from export_result import save_checksums
 
 
 def is_trial_process(directory, binary):
@@ -22,6 +23,7 @@ def cleanup(output):
         shutil.copyfile(log, output / "llamacpp-server.log")
     configured = os.environ.get("LLAMA_CPP_BINARY")
     if not configured:
+        save_checksums(output)
         return
     binary = Path(configured).resolve()
     for directory in Path("/proc").iterdir():
@@ -35,6 +37,8 @@ def cleanup(output):
                 os.kill(pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
+
+    save_checksums(output)
 
 
 if __name__ == "__main__":

@@ -27,11 +27,11 @@ PYTHONPATH=experiments/structured-ocr python -m unittest discover -s experiments
 - `generation-NNN.txt`: chuỗi model trả về qua backend, không sửa nội dung.
 - `generation-NNN.json`: metadata và chuỗi raw cho từng lời gọi, gồm fallback nếu có. Đây là output public API trả về sau retry nội bộ, không ghi lại từng lần thử nội bộ.
 - `native.json`: output schema của thư viện Surya sau parser nguyên bản. Thư viện có thể chuẩn hóa nhãn/lọc block; file này không phải chuỗi token raw. Không sửa lỗi OCR.
-- `viewer.html`: trang xem được ghép từ HTML của block, tách biệt với raw output và không phải HTML do Playground xuất. Nội dung nằm trong iframe sandbox, có CSP.
+- `viewer.html`: trang xem được ghép từ HTML của block, tách biệt với raw output và không phải HTML do Playground xuất. Nội dung nằm trong iframe sandbox, có CSP; ảnh Picture được nhúng để mở offline một file.
 - `picture-NNN.png`: chỉ cắt vùng được model gán nhãn `Picture`; không biến vùng Text thành ảnh minh họa. Có thể không có ảnh nếu model không phát hiện Picture.
 - `picture-crops.json`: ánh xạ block và tọa độ crop đã chặn trong biên ảnh.
 - `status.json`: thành công/thất bại, số block, phiên bản, thời gian, hash input.
-- `checksums.json`: kiểm tra các file tại thời điểm xuất. Các file chẩn đoán tạo sau đó có thể không nằm trong danh sách.
+- `checksums.json`: kiểm tra toàn bộ file sau khi lưu status và log chẩn đoán cuối lượt (không tự hash chính manifest).
 
 Job lỗi hoặc timeout không chứng minh OCR thành công. Kiểm tra kết luận CI và `status.json`; timeout có thể không tạo được status cuối. Màu chữ HEX không được trích riêng trong thử nghiệm này. Model có thể đọc sai hoặc bỏ sót block; không sửa đầu ra bằng tay.
 

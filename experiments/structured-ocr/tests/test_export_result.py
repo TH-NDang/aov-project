@@ -1,10 +1,11 @@
 import copy
+import hashlib
 import json
 import tempfile
 import unittest
 from pathlib import Path
 from PIL import Image
-from export_result import export_result, picture_bounds
+from export_result import export_result, picture_bounds, save_checksums
 
 
 class ExportTests(unittest.TestCase):
@@ -37,7 +38,20 @@ class ExportTests(unittest.TestCase):
             self.assertIn('sandbox=""', viewer)
             self.assertIn('&lt;script&gt;', viewer)
             self.assertNotIn('<script>', viewer)
+            self.assertIn("data:image/png;base64,", viewer)
+            save_checksums(folder)
             self.assertIn("native.json", json.loads((folder / "checksums.json").read_text()))
+
+    def test_manifest_uses_final_status(self):
+        with tempfile.TemporaryDirectory() as directory:
+            folder = Path(directory)
+            (folder / "status.json").write_text('{"state":"started"}')
+            save_checksums(folder)
+            (folder / "status.json").write_text('{"state":"completed"}')
+            save_checksums(folder)
+            manifest = json.loads((folder / "checksums.json").read_text())
+            self.assertEqual(manifest["status.json"], hashlib.sha256((folder / "status.json").read_bytes()).hexdigest())
+            self.assertNotIn("checksums.json", manifest)
 
 
 if __name__ == "__main__":

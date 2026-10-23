@@ -1,4 +1,5 @@
 """Export a native Surya result without editing recognized content."""
+import base64
 import hashlib
 import html
 import json
@@ -37,7 +38,8 @@ def export_result(image, native, directory):
             filename = f"picture-{index:03}.png"
             image.crop(bounds).save(directory / filename)
             crops.append({"block_index": index, "file": filename, "crop_bounds": bounds})
-            fragments.append(f'<img src="{filename}" alt="Picture block {index}">')
+            encoded = base64.b64encode((directory / filename).read_bytes()).decode("ascii")
+            fragments.append(f'<img src="data:image/png;base64,{encoded}" alt="Picture block {index}">')
         fragments.append(block.get("html", ""))
     save_json(directory / "picture-crops.json", crops)
     content = "\n".join(fragments)
@@ -53,7 +55,11 @@ def export_result(image, native, directory):
             'Nội dung OCR không được sửa. Xem native.json để kiểm tra đầu ra thư viện.</p>'
             '<iframe sandbox="" srcdoc="' + html.escape(content, quote=True) + '"></iframe></html>')
     (directory / "viewer.html").write_text(page, encoding="utf-8")
-    files = sorted(path for path in directory.iterdir() if path.is_file())
+
+
+def save_checksums(directory):
+    directory = Path(directory)
+    files = sorted(path for path in directory.iterdir() if path.is_file() and path.name != "checksums.json")
     save_json(directory / "checksums.json", {
         path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in files
     })
