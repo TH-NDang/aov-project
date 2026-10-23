@@ -49,10 +49,10 @@ Binding giúp MapStruct làm việc với getter/setter do Lombok sinh ra. Bật
 Tổ chức theo tính năng, mỗi tính năng tách controller, service, repository, entity, DTO và mapper khi cần:
 
 ```text
-backend/
+backend/wiki-service/
   pom.xml
-  src/main/java/com/aov/
-    AovApplication.java
+  src/main/java/com/wikiaov/
+    WikiAovApplication.java
     config/
     common/exception/
     hero/
@@ -66,10 +66,11 @@ backend/
     build/
     patch/
   src/main/resources/
-    application.yml
-    application-local.yml
+    config/
+      application.yml
+      application-local.yml
     db/migration/
-  src/test/java/com/aov/
+  src/test/java/com/wikiaov/
 ```
 
 Luồng xử lý: Controller → Service → Repository → Database. Controller nhận/trả DTO; service xử lý nghiệp vụ và transaction; repository truy vấn dữ liệu. Mapper chỉ chuyển đổi dữ liệu.
@@ -128,7 +129,7 @@ V3__create_builds_and_build_items.sql
 - Không bật `baseline-on-migrate` theo mặc định; chỉ dùng khi có kế hoạch đưa database hiện hữu vào Flyway.
 - Khi triển khai, sao lưu và kiểm tra migration với dữ liệu đại diện trước các thay đổi có thể mất dữ liệu.
 
-Ví dụ `application.yml` khi chọn PostgreSQL + JPA:
+Ví dụ `src/main/resources/config/application.yml` khi chọn PostgreSQL + JPA:
 
 ```yaml
 spring:

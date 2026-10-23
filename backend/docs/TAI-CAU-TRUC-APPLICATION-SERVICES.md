@@ -1,187 +1,302 @@
-# Tái cấu trúc application services
+# Tổ chức application services theo chức năng
 
-## Mục tiêu và phạm vi
+## Mục tiêu và cách sử dụng
 
-Đợt chỉnh sửa này tách các trách nhiệm đang trộn trong `ItemCatalog`, `ArcanaCatalog`,
-`EnchantmentCatalog`, `SpellCatalog`, `HeroImports` và một phần `PatchAuthoring`, để đọc luồng
-nghiệp vụ trước rồi mới đi vào chi tiết dữ liệu. Mục tiêu là giữ hành vi hiện có, không thiết kế lại API.
-Tài liệu mô tả cấu trúc triển khai; không thay thế đặc tả [01](01-BAN-DAC-TA-DU-AN.md),
-[02](02-DATABASE-DU-AN.md), [03](03-API-DU-AN.md) hoặc các ADR.
+Backend giữ một ứng dụng Spring Boot và các module sở hữu dữ liệu riêng. Bên trong mỗi module,
+các nhóm nhỏ phản ánh chức năng cần đọc hoặc sửa: biên tập, danh mục, import, ảnh, lịch phát hành,
+tham chiếu. Tên thư mục không phải lý do để tạo thêm lớp; mỗi cộng tác viên phải có trách nhiệm cụ thể.
 
-Đây **không phải viết lại toàn bộ backend**. Không đổi controller, request/response, schema/Flyway,
-public contract giữa các module hay cấu hình hạ tầng. Các luồng Hero authoring, durable import job,
-media, cache và phần Patch authoring còn lại không được tái cấu trúc trong đợt này. Việc gom truy vấn
-để dễ đọc cũng chưa thay thế các thao tác `findAll`/lọc trong bộ nhớ bằng truy vấn phân trang ở DB.
+Tài liệu này mô tả cách đi qua mã nguồn hiện tại, không thay thế đặc tả
+[01](01-BAN-DAC-TA-DU-AN.md), [02](02-DATABASE-DU-AN.md), [03](03-API-DU-AN.md) hoặc
+[ADR-013](adr/ADR-013-backend-organization.md). Hướng dẫn chạy và cấu hình nằm tại
+[README của service](../wiki-service/README.md).
 
-## Bản đồ trách nhiệm trước và sau
+## Các ranh giới được giữ
 
-Các lớp mới nằm trong `internal` của chính module, không mở thêm API liên module.
+| Nơi sở hữu | Trách nhiệm |
+|---|---|
+| Public contract ở gốc module | Giao tiếp giữa các module, không lộ entity hoặc repository nội bộ |
+| `internal/web` | HTTP contract `*Api`, binding và controller gọi application facade |
+| `internal/<chức năng>/application` | Điều phối use case, quyền, transaction và cộng tác viên theo chức năng |
+| `internal/<chức năng>/domain` | Quy tắc thuần, không phụ thuộc Spring, JPA, JDBC, HTTP hoặc SDK lưu trữ |
+| `internal/<chức năng>/persistence/entity` và repository kế bên | Entity, projection và truy vấn có chức năng sở hữu |
+| `internal/<chức năng>/infrastructure` | Adapter hệ thống ngoài, tích hợp qua port hoặc public contract phù hợp |
+| `internal/application`, `internal/domain` cấp module | HTTP commands/DTOs, lỗi và content record serialize giữ tên tương thích có chủ đích |
 
-| Khu vực | Trước | Sau |
-|---|---|---|
-| Bốn `*Catalog` | Trộn điều phối ghi, chọn snapshot, tìm kiếm, dựng response, lưu bản dịch và kiểm tra nội dung | Facade giữ quyền, transaction, khóa, vòng đời draft, version, audit và đánh dấu patch cần rà soát; giao phần đọc/nội dung cho ba cộng tác viên |
-| `*CatalogQueries` | Nằm trong facade | Chọn snapshot theo ruleset/season/patch, tìm kiếm, phân trang, lịch sử, public reads và media usages; Spell còn có archive/removal reads |
-| `*RevisionContent` | Nằm trong facade | Lưu gameplay và thay thế bản dịch; ghép lại content, revision view, admin/public view |
-| `*ContentRules` | Nằm trong facade | Validation, danh sách trường còn thiếu, mức sẵn sàng xuất bản và asset references; giữ quy tắc riêng từng loại |
-| `HeroImports` | Một lớp vừa lập kế hoạch, chọn lịch sử, chuẩn hóa, cảnh báo và ghi sáu section | Facade kiểm tra context/field, điều phối preview/apply và kiểm tra preview còn hiệu lực; tách bốn phần bên dưới |
-| `HeroImportRevisions` | Nằm trong `HeroImports` | Chọn snapshot đúng chế độ nhập và mở/tái sử dụng draft |
-| `HeroImportContent` | Nằm trong `HeroImports` | Áp dụng chính sách field, chuẩn hóa kiểu, alias skin, giữ ảnh/bản dịch/nguồn, gọi validation |
-| `HeroImportWarnings` | Nằm trong `HeroImports` | Tách cảnh báo thiếu nội dung xuất bản khỏi cảnh báo ý nghĩa lịch sử của lần nhập |
-| `HeroImportDraftWriter` | Nằm trong `HeroImports.apply` | Ghi các section thay đổi, truyền version mới nhất và đọc lại draft trước khi ghi media |
-| `PatchAuthoring` | Chứa cả SQL timeline, quy tắc release và chọn vị trí patch trong mùa | Giữ entry point bảo vệ quyền/transaction và các thao tác authoring khác; ủy quyền release và season placement |
-| `PatchReleaseWorkflow` / `PatchReleaseStore` | Cùng nằm trong `PatchAuthoring` | Workflow diễn đạt quy tắc schedule/confirm; store đóng gói SQL, khóa và snapshot có kiểu |
-| `SeasonPatchPlacement` | Nằm trong `PatchAuthoring.seasonPatch` | Giữ khóa ruleset rồi chọn ordinal/điểm chèn; đọc danh sách có kiểu qua `PatchStore.orderedSeasonVariants` |
+Application có thể dùng repository và entity của chính module. Không bắt buộc tạo một interface cho
+mỗi lớp, một tầng CRUD chung hoặc một bộ `Interface`/`Impl` chỉ chuyển tiếp lời gọi. Các phép CRUD,
+truy vấn có kiểu và khóa bản ghi thông thường dùng Spring Data JPA. SQL đặc thù hoặc Criteria phức
+tạp được cô lập theo nhiệm vụ; không mở lại API tổng quát kiểu `rows(sql)`, `write(sql)` cho application.
 
-### Vì sao chia ở các ranh giới này?
+Module lớn dùng chức năng trước tầng; module nhỏ còn gắn kết có thể giữ cấu trúc tầng hiện tại.
+Không tạo đủ mọi tầng cho mọi chức năng. Các HTTP DTO giữ FQN vì tên schema dùng `springdoc.use-fqn`;
+content record đã serialize và contract `*Api` cũng không bị chuyển chỉ để cây thư mục đều nhau.
 
-- **Theo việc cần thay đổi**, không chỉ theo độ dài file: sửa tìm kiếm ở Queries, sửa định dạng lưu/bản
-  dịch ở RevisionContent, sửa điều kiện nội dung ở ContentRules. Luồng chuyển trạng thái vẫn nhìn thấy
-  trực tiếp trong facade.
-- Không tạo một superclass catalog dùng chung: công thức trang bị, nhánh phù hiệu, màu/cấp ngọc và
-  phép bổ trợ lưu trữ có quy tắc khác nhau. Các thuật toán chung đã có như `CatalogSnapshots` và
-  `CatalogPatchScope` vẫn được dùng, nhưng quyết định của từng domain không bị giấu sau generic hooks.
-- ContentRules là cộng tác viên tầng application, **không phải domain thuần**: vẫn có thể đọc metadata
-  hoặc `MediaAssets` để xác thực. RevisionContent không sở hữu quyền hay tự mở transaction.
-- Cộng tác viên Catalog/Patch là Spring component nội bộ; bốn cộng tác viên Hero import là lớp
-  package-private được `HeroImports` tạo. Chúng không phải entry point mới và không cần proxy riêng
-  để kế thừa transaction đang chạy ở facade.
+## Bốn danh mục kho trang bị
 
-## Đọc code theo luồng nghiệp vụ
+Item, Arcana, Enchantment và Spell có cách bố trí tương tự, nhưng giữ nghiệp vụ riêng:
 
-### 1. Tìm catalog trong một mùa hoặc patch
-
-Bắt đầu ở [`ItemCatalog.list`](../wiki-service/src/main/java/com/wikiaov/item/internal/application/service/ItemCatalog.java)
-(cấu trúc tương tự cho Arcana, Enchantment, Spell), rồi theo
-[`ItemCatalogQueries`](../wiki-service/src/main/java/com/wikiaov/item/internal/application/service/ItemCatalogQueries.java):
-
-1. Kiểm tra page/size và ruleset trước khi tải dữ liệu.
-2. Lấy snapshot chưa bị discard, giới hạn scope bằng `CatalogPatchScope`.
-3. Với `includeUnchanged=false`, chọn thay đổi tại patch, kể cả revision đích từ change facts.
-   Với `true`, dùng phép carry-forward hiện có, có xét mốc thêm/xóa; không lấy snapshot tương lai
-   để suy ngược trạng thái quá khứ.
-4. Chọn snapshot mới nhất theo owner, đọc bản dịch theo lô, tìm code/tên trên các bản dịch của
-   snapshot được chọn, giữ thứ tự identity theo code rồi cắt trang.
-5. `RevisionContent` dựng response; `ContentRules` giải thích trường còn thiếu để xuất bản.
-
-Public reads là nhánh khác: resolve context theo region/thời gian, chỉ chọn bản đã xuất bản áp dụng
-ở ordinal đó, xét lifecycle removal và áp dụng locale qua `publicCopy`. Không dùng kết quả admin list
-làm kết quả public. Spell tiếp tục phân biệt catalog hiện hành với archive legacy/removal evidence.
-
-### 2. Sửa và xuất bản draft catalog
-
-Đọc `update` rồi `publish` ở facade:
-
-1. Khóa owner; riêng cập nhật Item khóa đồ thị công thức **trước** owner.
-2. Xác nhận revision thuộc owner, là draft và khớp expected version trước khi kiểm tra nội dung.
-3. Gọi ContentRules; kiểm tra giới hạn cause/context và quy tắc riêng như vòng lặp công thức Item.
-   `TRANSLATION_UPDATE` không được đổi mechanics; chỉ baseline độc lập được đổi mốc quan sát.
-4. Nếu nội dung và context không đổi, trả lại view mà không tăng version hay ghi audit cập nhật.
-5. RevisionContent lưu gameplay, xóa/flush bản dịch cũ rồi lưu/flush bản dịch mới; facade tăng
-   version và ghi audit trong cùng transaction.
-6. Publish kiểm tra context và trường bắt buộc trước khi đổi trạng thái, tăng publication sequence,
-   ghi thời điểm/actor và đánh dấu data review cho `DATA_BASELINE`/`GAME_PATCH` như trước.
-
-Điểm đặc thù không bị ép vào helper chung: kiểm tra đồ thị công thức ở `ItemCatalog`; ghi bằng chứng
-xóa phép bổ trợ, chống trùng và audit vẫn ở `SpellCatalog.recordRemoval`.
-
-### 3. Preview rồi áp dụng một hàng import Hero
-
-Đọc [`HeroImports`](../wiki-service/src/main/java/com/wikiaov/hero/internal/application/service/HeroImports.java)
-trước, sau đó mở cộng tác viên theo bước cần hiểu:
-
-1. Kiểm tra ruleset/context và field được hỗ trợ. `HeroImportRevisions` ưu tiên draft khớp
-   context/cause; correction cần snapshot tại đúng patch, patch update cần snapshot trước patch.
-   Không có baseline thì trả kế hoạch không thể áp dụng, không lấy dữ liệu tương lai bù vào.
-2. `HeroImportContent` tạo `before`, áp dụng `SKIP`/`FILL_EMPTY`/`OVERWRITE`, chuẩn hóa JSON và thứ
-   tự combat stats trước khi so sánh. Giá trị nhập rỗng không xóa dữ liệu hiện có. Alias skin được
-   chuẩn hóa trước khi giữ artwork. Profile giữ bản dịch của locale khác; profile, skills, skins và
-   media bindings giữ sources hiện có khi cập nhật.
-3. Facade phân loại kế hoạch; `HeroImportWarnings` giữ cảnh báo thiếu nội dung và lưu ý rằng
-   baseline không có nghĩa “mới ra mắt”, khác biệt snapshot không tự chứng minh changelog.
-4. Khi apply, khóa Hero hiện có rồi **preview lại**. Kiểm tra `canApply`, revision ID và version
-   trước khi xử lý no-op: một preview đã cũ vẫn bị từ chối dù nội dung gửi lên không đổi.
-5. `HeroImportDraftWriter` mở/tái sử dụng draft; lần lượt xử lý profile, statistics, skills, skins,
-   media. Section không đổi không bị ghi; mỗi lần ghi dùng version từ lần trước. Media đọc lại
-   draft trước khi cập nhật. Cuối cùng facade preview lại để trả trạng thái sau ghi.
-
-Import chỉ chuẩn bị/cập nhật draft, không tự publish hay tự ghi changelog. Quyền `hero:write`,
-transaction apply và đường xử lý ngoại lệ hiện có vẫn ở facade; không mở rộng việc bọc ngoại lệ
-chuyển đổi JSON thành `ApiException` trong đợt tách lớp này.
-
-### 4. Lập lịch release, xác nhận ngày áp dụng và chèn patch trong mùa
-
-Bắt đầu ở [`PatchAuthoring`](../wiki-service/src/main/java/com/wikiaov/patch/internal/application/service/PatchAuthoring.java),
-rồi đọc [`PatchReleaseWorkflow`](../wiki-service/src/main/java/com/wikiaov/patch/internal/application/service/PatchReleaseWorkflow.java):
-
-- Schedule khóa region rồi ruleset/variant; xác định season, yêu cầu đúng một trong timestamp/ngày,
-  kiểm tra mùa và URL, variant đã publish, rồi mới kiểm tra assignment/timeline nếu có timestamp.
-  Ngày chưa có giờ tạo release `DRAFT`; timestamp tạo `SCHEDULED`.
-- Confirm đọc mục tiêu, khóa region rồi ruleset, **đọc lại variant sau khi có khóa ruleset**, sau đó
-  khóa release. Việc đọc lại tránh dùng ordinal cũ nếu một lần chèn patch vừa đánh lại thứ tự.
-  Release đã xác nhận không bị ghi/audit lần nữa, nhưng kiểm tra region vẫn diễn ra trước no-op.
-- Ngày đủ điều kiện xác nhận được tính theo timezone của region. Khi xác nhận thành công,
-  `effectiveAt` và `confirmedAt` nhận thời điểm thực tế; workflow kiểm tra publication, season,
-  assignment và timeline trước khi đổi trạng thái.
-- [`PatchReleaseStore`](../wiki-service/src/main/java/com/wikiaov/patch/internal/persistence/PatchReleaseStore.java)
-  giữ SQL và mapping riêng: assignment vẫn bao gồm đầu khoảng/loại trừ cuối khoảng; timeline vẫn
-  từ chối xung đột cả hai chiều, kể cả bằng thời điểm/ordinal. Lỗi insert do ràng buộc dữ liệu vẫn
-  được đổi thành `PATCH_CONFLICT`.
-- [`SeasonPatchPlacement.choosePlacement`](../wiki-service/src/main/java/com/wikiaov/patch/internal/application/service/SeasonPatchPlacement.java)
-  giữ khóa ruleset trước khi đọc thứ tự. Anchor chỉ hợp lệ trong cùng ruleset và season; nếu không
-  chỉ định thì chèn trước patch đầu tiên của mùa sau. Append ordinal vẫn dùng `Math.addExact` để
-  không bỏ qua overflow; `PatchAuthoring` tiếp tục tạo patch/variant và gán season.
-
-## Các bất biến cần giữ khi sửa tiếp
-
-- Không chuyển `@PreAuthorize` hoặc `@Transactional` từ facade sang helper và không gọi helper trực
-  tiếp từ controller. Admin read/write/publish giữ capability cũ; public read không thành admin read.
-  Catalog/Patch giữ transaction ở class; các read method đã khai báo read-only giữ nguyên khai báo đó.
-- Giữ thứ tự validation và loại lỗi, không chỉ nội dung cuối cùng. Ví dụ: version conflict có trước
-  content validation; import thiếu baseline có trước stale preview; lỗi mùa release có trước lỗi URL.
-- Giữ thứ tự khóa Item **recipe graph → identity**, Patch release **region → ruleset**, và đọc lại
-  variant sau khóa ruleset khi confirm. Không đưa transaction riêng vào các helper làm mất tính
-  nguyên tử giữa cập nhật trạng thái, audit và data review.
-- Giữ ownership check, một draft/ruleset, optimistic version, no-op, snapshot đã publish bất biến,
-  locale fallback và cách chọn publication sequence. Không coi việc tách lớp là cho phép đổi nghiệp vụ.
-- Không phát sinh gọi HTTP/object storage hoặc truyền bytes ảnh trong transaction. Media tiếp tục
-  đi qua public contract `MediaAssets`; không tham chiếu entity/repository nội bộ module khác.
-
-## Kiểm chứng và bàn giao
-
-**Kiểm chứng local ngày 21/10/2026, JDK 21:** `clean verify` kết thúc **BUILD SUCCESS**, bao gồm
-đóng gói JAR và Spotless check. Tổng cộng **369 test: 268 chạy thành công, 0 failure/error,
-101 bị bỏ qua do không có Docker**. Mã nguồn/test tương ứng [commit `6b8b8f2`](https://github.com/TH-NDang/aov-project/commit/6b8b8f2dcb541e13b2ce633d12acfc03430faf00); cây mã nguồn trên remote đã được đối chiếu trùng với bản kiểm chứng local.
-Kết quả local chưa kiểm chứng các integration test phụ thuộc Docker; CI có Docker vẫn là cửa
-kiểm chứng tích hợp cần vượt qua cho commit được đưa lên remote.
-
-Từ `backend/wiki-service`, dùng JDK 21:
-
-```bash
-# Kiểm tra định dạng; nếu cần sửa, chạy sh mvnw spotless:apply rồi kiểm tra lại.
-sh mvnw spotless:check
-
-# Hồi quy tập trung cho các ranh giới vừa tách, không cần Docker.
-sh mvnw '-Dtest=*CatalogQueriesTest,*ContentRulesTest,ItemCatalogWorkflowTest,CatalogFacadeBoundaryTest,HeroImportsTest,HeroImportDraftWriterTest,PatchReleaseWorkflowTests,SeasonPatchPlacementTests,PatchReleaseStoreTests' test
-
-# Kiểm chứng toàn bộ, bao gồm build, format và integration tests.
-# Cần Docker để các bộ Testcontainers thực sự chạy.
-sh mvnw --batch-mode --no-transfer-progress clean verify
+```text
+internal/
+├── catalog/
+│   ├── application/     facade catalog, truy vấn, validation và nội dung revision
+│   └── persistence/     identity, revision, bản dịch, projection và Specifications
+├── change/              application/persistence cho thay đổi theo patch
+├── reference/           tìm tham chiếu và adapter public-reference
+└── metadata/            nhóm trang bị hoặc hệ phù hiệu khi cần
 ```
 
-Trên Windows dùng `./mvnw.cmd` với cùng tham số. Xem kết quả tại `target/surefire-reports/`, không
-coi integration test bị skip vì thiếu Docker là đã được kiểm chứng.
+| Lớp | Việc cần tìm ở đây |
+|---|---|
+| `*Catalog` | Tạo, fork, cập nhật, xuất bản, bỏ draft; quyền, transaction, khóa, version, audit và data review |
+| `*CatalogQueries` | Chọn snapshot, lọc ruleset/mùa/patch, tìm kiếm, lịch sử, public reads và media usages |
+| `*ContentRules` | Kiểm tra nội dung, asset hợp lệ, trường còn thiếu và điều kiện xuất bản |
+| `*RevisionContent` | Ghi gameplay/bản dịch và dựng view từ revision |
+| `*PatchChanges` | Ghi và đọc thay đổi của một đối tượng tại patch, tách khỏi bản thân snapshot |
+| `ItemCategoryCatalog`, `EnchantmentBranchCatalog` | Nhóm trang bị và hệ phù hiệu, bao gồm metadata và thứ tự |
 
-Các test mới tập trung vào:
+Điểm bắt đầu để đọc là [`ItemCatalog`](../wiki-service/src/main/java/com/wikiaov/item/internal/catalog/application/ItemCatalog.java),
+rồi mở cộng tác viên trong cùng thư mục. Không có một superclass dùng hooks để ép cả bốn catalog
+vào chung quy trình. Đồ thị công thức Item, nhánh Enchantment, màu/cấp Arcana và archive/removal
+của Spell tiếp tục do module tương ứng kiểm soát.
 
-- Catalog: phân trang, thứ tự kiểm tra lỗi, tìm tên qua bản dịch, thứ tự kết quả, content readiness,
-  annotation quyền/transaction trên facade và khóa công thức trước identity.
-- Hero import: chính sách field, chuẩn hóa/no-op, alias và giữ ảnh, cảnh báo, stale preview, lựa chọn
-  snapshot/draft, giữ sources/bản dịch và truyền version qua các section.
-- Patch: thứ tự khóa/validation, placement trong mùa, lịch theo timezone, idempotency, đọc lại ordinal,
-  biên assignment/timeline và ánh xạ lỗi insert.
+`*ContentRules` là lớp application vì có thể đọc metadata hoặc gọi `MediaAssets`. Chính sách
+[`CatalogTranslations`](../wiki-service/src/main/java/com/wikiaov/platform/CatalogTranslations.java)
+chỉ gom validation bản dịch thực sự giống nhau; module vẫn chọn error code và giữ thứ tự kiểm tra.
 
-Đây là hồi quy đơn vị có mock và kiểm tra annotation, không thay thế kiểm chứng transaction/khóa
-trên PostgreSQL hoặc kiểm tra Spring wiring. Workflow
-[`backend`](https://github.com/TH-NDang/aov-project/actions/workflows/backend.yml) chạy `verify`
-(theo [cấu hình trong repo](../../.github/workflows/backend.yml)) trên runner có Docker khi thay đổi
-`backend/wiki-service`; cần đối chiếu kết quả CI với đúng commit trước khi kết luận đã hoàn tất.
+### Tìm và sửa một catalog
+
+1. Facade đọc giao cho Queries kiểm tra page/size, ruleset và scope mùa/patch. `CatalogPatchScope`
+   xác định phạm vi; `CatalogSnapshots` chọn snapshot phù hợp. `includeUnchanged` điều khiển việc
+   mang trạng thái đã xuất bản từ patch trước sang, không suy ngược quá khứ bằng snapshot tương lai.
+2. Queries đọc bản dịch, tìm code/tên, giữ thứ tự danh mục và dựng view qua RevisionContent.
+   Việc tách lớp không có nghĩa mọi đường đọc đã chuyển thành phân trang tại database.
+3. Khi cập nhật, khóa identity trước khi đọc draft; riêng Item khóa đồ thị công thức trước identity.
+   Kiểm tra draft và expected version có trước validation nội dung.
+4. Translation revision không được đổi mechanics. Baseline độc lập mới được đổi mốc quan sát.
+   Nếu content và context không đổi thì không tăng version hoặc ghi audit cập nhật.
+5. Publish kiểm tra context, trường bắt buộc và nội dung trước khi chuyển trạng thái. Publication
+   sequence, audit và việc đánh dấu patch cần rà soát thuộc cùng transaction.
+
+Public reads dùng gameplay context theo thị trường/thời gian, chỉ chọn bản đã xuất bản và áp dụng
+locale fallback. Kết quả admin không được dùng thay cho kết quả public. Spell vẫn hỗ trợ dữ liệu cũ
+chưa biết patch và bổ sung bằng chứng loại bỏ sau; không tự suy ra patch lịch sử.
+
+## Hero: biên tập, import và snapshot theo từng phần
+
+Các chức năng Hero được tìm từ [thư mục nội bộ Hero](../wiki-service/src/main/java/com/wikiaov/hero/internal/).
+Những lớp `HeroAuthoring`, `HeroCatalog`, `HeroComparisons`, `HeroImports`, `HeroImportJobs`,
+`HeroMediaQueries`, `HeroSkillImages`, `SkinBadges` và `HeroPatchChanges` diễn đạt các use case riêng;
+không gộp thêm chúng vào một service giữ toàn bộ repository Hero.
+
+| Nhóm | Nơi sửa theo chức năng |
+|---|---|
+| `authoring`, `catalog`, `comparison` | Biên tập/vòng đời Hero, tra cứu danh mục và so sánh revision |
+| `importing` | Preview/apply, job bền vững, phiên upload và worker import |
+| `skills`, `skins`, `media` | Kỹ năng/ảnh kỹ năng, snapshot trang phục và ảnh/binding |
+| `badges`, `reference`, `change`, `alias` | Nhãn trang phục, tìm tham chiếu, lịch sử thay đổi và mã bí danh |
+| `profile`, `ratings`, `stats`, `sections` | Các phần snapshot và lifecycle/source có phạm vi dùng chung |
+
+### Sáu loại snapshot
+
+[`HeroSections`](../wiki-service/src/main/java/com/wikiaov/hero/internal/sections/persistence/HeroSections.java)
+điều phối theo `HeroSection` qua contract nội bộ `HeroSectionSnapshots`. Mỗi loại có repository và
+cách đọc/ghi của mình tại `hero/internal/<phần>/persistence`:
+
+| Nhóm | Capability | Nội dung |
+|---|---|---|
+| `profile` | `HeroProfileSnapshots` | Tên, mô tả, vai trò và bản dịch hồ sơ |
+| `ratings` | `HeroRatingSnapshots` | Đánh giá tổng quan và thang đánh giá |
+| `stats` | `HeroStatSnapshots` | Thông số chiến đấu |
+| `skills` | `HeroSkillSnapshots` | Kỹ năng, trạng thái, hiệu ứng và bản dịch |
+| `skins` | `HeroSkinSnapshots` | Trang phục, bản dịch và quan hệ ảnh/nhãn |
+| `media` | `HeroMediaSnapshots` | Các binding ảnh của snapshot |
+
+`HeroSectionLifecycle` dùng chung thao tác tạo/publish phần snapshot, kiểm tra quyền sở hữu và vòng
+đời. `HeroSectionSources` quản lý nguồn tham khảo có thứ tự. Chúng làm việc qua Spring Data
+repository; không dùng một chuỗi SQL hoặc switch CRUD tổng quát để ghi mọi loại section.
+
+`authoring/persistence/HeroStore` phục vụ identity/revision qua repository JPA. Các nhóm `catalog`,
+`reference`, `change` và `alias` sở hữu persistence cho truy vấn đọc, tìm tham chiếu, lịch sử thay đổi
+và mã bí danh. Một adapter Criteria có nhiều điều kiện tìm kiếm không phải lý do để chuyển CRUD
+thông thường trở lại `EntityManager`.
+
+### Lịch sử thay đổi tướng
+
+`change/persistence/HeroPatchHistory` giữ việc ghi append-only và đọc lịch sử theo lô. Sáu loại
+chi tiết thay đổi dùng sáu entity/repository cụ thể; lớp cha chỉ chia sẻ mapping trường chung qua
+`@MappedSuperclass`. Không gộp toàn bộ entity bằng `TABLE_PER_CLASS`: cột `old_value`/`new_value`
+của chỉ số là số, còn của kỹ năng là text, nên UNION toàn bộ hàng không có cùng kiểu dữ liệu.
+
+Khi có change set, đọc chi tiết dùng tối đa chín truy vấn: header, assessment, bản dịch và sáu bảng
+chi tiết. Số truy vấn không tăng theo số change set; mỗi bảng được đọc một lần cho toàn bộ ID.
+Danh mục chỉ cần loại thay đổi vẫn dùng một UNION projection hẹp gồm UUID và mã loại, không lấy
+các cột giá trị khác kiểu. Bản dịch ưu tiên locale yêu cầu, rồi `vi-VN`, rồi locale theo thứ tự chữ.
+Chi tiết giữ thứ tự `sortOrder`, loại bảng và ID; assessment tổng thể tiếp tục tách khỏi từng thay đổi.
+
+Các entity cụ thể là `@Immutable`, dùng ID được gán sẵn với ngữ nghĩa persist cho bản ghi mới;
+trigger PostgreSQL vẫn bảo vệ append-only. Assessment là dữ liệu riêng có version và không biến
+thao tác đánh giá tổng thể thành sửa lịch sử đã ghi.
+
+### Preview rồi áp dụng import
+
+1. `HeroImports` kiểm tra context/field và lập preview. `HeroImportRevisions` chọn baseline/draft
+   đúng chế độ: correction ở đúng patch, gameplay update dựa trên snapshot trước patch. Không có
+   dữ liệu nền thì kế hoạch không thể áp dụng; không lấy bản tương lai bù vào.
+2. `HeroImportContent` áp dụng `SKIP`/`FILL_EMPTY`/`OVERWRITE`, chuẩn hóa JSON và alias, giữ ảnh,
+   bản dịch của locale khác và nguồn hiện có. `HeroImportWarnings` phân biệt thiếu nội dung xuất
+   bản với cảnh báo về ý nghĩa lịch sử của lần nhập.
+3. Apply khóa Hero rồi preview lại. Kiểm tra revision ID/version và khả năng áp dụng có trước no-op,
+   nên một preview đã cũ không được chấp nhận chỉ vì nội dung gửi lên trùng nhau.
+4. `HeroImportDraftWriter` ghi các phần thay đổi với version mới nhất sau từng bước; media đọc lại
+   draft trước khi cập nhật. Import chuẩn bị draft, không tự xuất bản hoặc biến mọi khác biệt thành
+   changelog đã xác minh.
+
+Các job import và phiên upload có trạng thái bền vững riêng. Tách package không thay đổi chính sách
+khôi phục, checkpoint, quyền hoặc transaction của các job này.
+
+## Patch: thứ tự chung, lịch thị trường và phát hành
+
+[`PatchAuthoring`](../wiki-service/src/main/java/com/wikiaov/patch/internal/authoring/application/PatchAuthoring.java)
+giữ quyền và transaction, không giữ repository. Facade giao việc cho các nhóm:
+
+| Nhóm/lớp | Trách nhiệm |
+|---|---|
+| `ruleset/application/RulesetAdministration` | Tạo thị trường, ruleset và khoảng gán ruleset cho thị trường |
+| `authoring/application/PatchDrafts` | Tạo patch/variant, gán mùa, xuất bản và audit tương ứng |
+| `authoring/application/SeasonPatchPlacement` | Chọn điểm chèn patch trong thứ tự chung sau khi giữ khóa ruleset |
+| `context/application/PatchAdminCatalog` | Các bảng ruleset, patch/variant/release và assignment của admin |
+| `release/application/PatchReleaseWorkflow` | Quy tắc schedule/confirm release trong transaction của facade |
+| `season/application/RankedSeasons` | Thứ tự mùa dùng chung và lịch mùa riêng của từng thị trường |
+| `context/application/ResolveGameplayContext`, `PatchQueries` | Context biên tập, context gameplay có hiệu lực và public catalog |
+| `review/application/PatchDataReviewService` | Hoàn tất/mở lại rà soát nhập liệu, độc lập trạng thái publish/release |
+
+Các repository JPA sở hữu CRUD, query có kiểu và khóa bản ghi. `GameplayContextRepository` trả về
+projection `GameplayContext`, `AuthoringContext`, `PatchReleaseReference`; application không tự
+chuyển `Map<String,Object>` từ SQL thành context.
+
+`SeasonCalendarRules` trong `season/domain` kiểm tra độ chính xác ngày/giờ, thứ tự, khoảng chồng lấn
+và việc lịch mùa còn chứa các release đã ghi. Application ánh xạ vi phạm sang lỗi Patch hiện hành.
+Ngày kết thúc bao gồm cả ngày theo timezone thị trường; ranh giới timestamp vẫn loại trừ cuối khoảng.
+
+Ba chi tiết persistence cần được giữ:
+
+- `SeasonOrderLock` là adapter nhỏ cho `LOCK TABLE`: vẫn khóa được thứ tự mùa khi bảng chưa có bản
+  ghi. Đây là phần `EntityManager` còn lại có mục đích đặc thù, không phải wrapper CRUD.
+- `PatchReleaseStore` phối hợp **region → ruleset → variant/release** qua repository. Sau khi chờ
+  khóa ruleset phải đọc scalar projection mới; một entity đã managed có thể còn ordinal/status cũ.
+  Truy vấn assignment bao gồm đầu khoảng, loại trừ cuối; timeline từ chối cả thời điểm/ordinal bằng nhau.
+- Chèn ordinal dịch chuyển từ lớn xuống nhỏ và flush từng bước để không va chạm unique constraint.
+  Bản dịch patch dùng entity khóa ghép với ngữ nghĩa insert-only, nên locale trùng vẫn báo conflict.
+
+Release có ngày nhưng chưa có giờ ở trạng thái `DRAFT`. Khi confirm, kiểm tra thị trường và ngày
+địa phương, publication, mùa, assignment và timeline trước khi ghi thời điểm áp dụng thực tế. Release
+đã confirm là no-op sau các kiểm tra/khóa hiện có. Không dùng ngày tạo nội dung thay ngày game áp dụng.
+
+`context/application/PublicationOverview` kết hợp ba read component: `MarketPublicationOverview`
+đọc ruleset/assignment và trạng thái thị trường, `SeasonPublicationOverview` dựng lịch mùa,
+`PatchPublicationOverview` dựng review/variant/release timeline. Facade giữ quyền/transaction và
+thời điểm đọc; không chuyển chín repository sang một `OverviewStore` tổng quát khác.
+
+`context/application/AdminTimestamp` giữ định dạng UTC với đúng ba chữ số millisecond cho các field map admin
+vốn trả về JDBC timestamp. Public DTO dùng `Instant` không bị đổi serializer toàn cục.
+
+## Media: quản lý asset, upload và dựng view
+
+```text
+media/internal/
+├── asset/        application/persistence cho asset identity và version
+├── upload/       application/persistence cho vé, phiên upload và avatar
+├── ingestion/    application/domain cho kiểm tra ảnh, deduplicate và nhận object
+├── query/        application cho lookup, usage, URL và response view
+├── provenance/   persistence cho nguồn ảnh
+├── storage/      application/port và infrastructure cho object storage
+└── shared/       application cho guard ghi và metadata audit có phạm vi rõ ràng
+```
+
+`MediaSupport` đã được chia thành ba trách nhiệm: `MediaAssetAccess` tải/flush identity và chuyển
+lỗi optimistic locking; `MediaAssetViews` đọc version/provenance để dựng response khi được yêu
+cầu; `MediaWritePolicy` là các guard/helper tĩnh không thực hiện IO. Lookup đơn thuần không cần
+kéo theo toàn bộ dựng chi tiết asset.
+
+Đọc [`MediaIngestion`](../wiki-service/src/main/java/com/wikiaov/media/internal/ingestion/application/MediaIngestion.java)
+để hiểu stat/inspect/deduplicate/copy và transaction ghi version. Object storage được gọi ngoài
+transaction DB; version thành công được gắn key bất biến. Upload thông thường vẫn là presigned
+upload tới `incoming/`, sau đó complete xác thực và tạo object `assets/`; bytes không đi qua controller.
+Module khác dùng `MediaAssets` và báo usage qua public contract, không đọc bảng Media trực tiếp.
+
+## Thuật ngữ, tham chiếu và hồ sơ người dùng
+
+| Chức năng | Nơi sở hữu và cách đọc |
+|---|---|
+| Danh mục gợi ý và resolve tham chiếu | `terminology/internal/reference/application`: admin/public catalog, loader và tìm chiêu; public chỉ lấy nội dung phù hợp gameplay context |
+| Cấu hình thuật ngữ/tham chiếu | `terminology/internal/settings/application`: `ReferenceCatalog` giữ quyền, version, khóa cấu hình, transaction và audit; `ReferenceSettingsContent` thay/đọc nội dung có thứ tự và bản dịch |
+| Hồ sơ người dùng | `user/internal/profile/application/UserProfiles`: self/admin reads, quyền, kiểm tra avatar, optimistic version và audit; entity `Profile` sở hữu thay đổi nội dung |
+
+Tham chiếu cấu hình được đọc theo snapshot `REPEATABLE_READ`. Khi lưu, validation có trước khóa/
+version check; xóa và ghi lại entry/bản dịch, tăng version cấu hình và audit thuộc cùng transaction.
+Không để helper dựng nội dung tự mở transaction hoặc bỏ qua kiểm tra version của facade.
+
+Hồ sơ chưa lưu dùng `ProfileDefaults` đã được kiểm tra qua `ProfileInput`. Đăng nhập vẫn do Access/
+Keycloak quản lý; hồ sơ không nhận identity hoặc quyền từ dữ liệu người dùng nhập. Avatar mới phải
+là upload hoàn tất thuộc người gọi; kiểm tra avatar có trước tạo/cập nhật hồ sơ.
+
+## Cache và cấu hình triển khai
+
+`CatalogCacheEpochRepository` dùng scalar query đọc epoch và phép tăng nguyên tử ở DB. Cache key
+vẫn dựa trên epoch có thẩm quyền ở database, kể cả khi Redis mất kết nối. `CatalogCacheEpoch` đăng
+ký tối đa một lần tăng trong transaction và xử lý suspend/resume; flush thay đổi domain trước khi
+khóa epoch giúp giữ thứ tự khóa. Không dùng entity cache làm nguồn đọc giá trị fence hiện tại.
+
+Cấu hình Spring nằm trong `src/main/resources/config/`; formatter ở `config/format/`, tài nguyên
+container local ở `infra/local/`, script phát triển ở `scripts/dev/`. Maven Wrapper và `compose.yaml`
+giữ tại gốc service. Chi tiết đường dẫn, biến môi trường và cách chạy theo README/ADR-013; không di
+chuyển Flyway đã áp dụng hoặc đổi volume chỉ để sắp xếp thư mục.
+
+## Bất biến và kiểm chứng khi sửa tiếp
+
+- Controller đi qua facade giữ quyền/transaction. Helper kế thừa transaction đang chạy, không tự
+  tạo một transaction làm tách rời thay đổi dữ liệu, audit hoặc data review.
+- Giữ thứ tự kiểm tra lỗi, khóa, ownership, expected version và no-op. Đổi tên helper không cho
+  phép đảo version conflict/content validation hay bỏ lần đọc mới sau khi chờ khóa.
+- Giữ snapshot đã publish bất biến, locale fallback, một draft/ruleset và chính sách chọn publication
+  sequence. Snapshot khác nhau chưa tự chứng minh một thay đổi trong game.
+- Không giữ transaction DB trong lúc gọi HTTP/object storage. Domain tiếp tục độc lập framework;
+  module khác chỉ đi qua public contract.
+- Đặt một dòng trống giữa khối field với constructor và giữa các phương thức/constructor, kể cả
+  abstract method. Trong hàm, nhóm các pha
+  validation, đọc/khóa, quyết định, ghi/audit và trả kết quả bằng một dòng trống. Mã AI tạo cũng phải
+  được người viết rà các nhóm có ý nghĩa; formatter không tự suy ra chúng.
+
+Từ `backend/wiki-service`, dùng JDK 21 và Docker cho các bài tích hợp:
+
+```powershell
+./mvnw.cmd spotless:apply
+./mvnw.cmd clean verify
+```
+
+`wiki.build.directory` mặc định là đường dẫn `target` tuyệt đối của service. Nếu JDT/IDE cũng ghi
+vào đó trong lúc test, chọn output Maven riêng thay vì dùng chung class đang bị biên dịch lại:
+
+```powershell
+$verificationDirectory = Join-Path $PWD.Path ".local-state/verification/target"
+./mvnw.cmd "-Dwiki.build.directory=$verificationDirectory" clean verify
+```
+
+Thư mục cuối cần giữ tên `target` để ArchUnit 1.4.2 nhận diện đúng `target/test-classes/` khi dùng
+`DoNotIncludeTests`. Báo cáo ở `.local-state/verification/target/surefire-reports/`; không cần sửa hoặc
+nới lỏng kiểm tra kiến trúc để tách output Maven khỏi IDE.
+
+Trên Unix dùng `sh mvnw`. Các kiểm tra kiến trúc gồm `ModuleArchitectureTests` và
+`LayerArchitectureTests`; kiểm tra HTTP/OpenAPI tiếp tục bảo vệ đường dẫn, quyền và validation.
+Các nhóm hồi quy đáng đọc gồm catalog workflow/content, Hero import và section lifecycle, Patch
+workflow/repository/calendar, Media API, ReferenceSettings, UserProfile và CatalogCacheEpoch.
+`AdminTimestampTests` đối chiếu định dạng map admin với serializer timestamp cũ.
+
+Hướng dẫn này không gán kết quả của một lần chạy cũ cho cây mã nguồn hiện tại. Khi bàn giao, đối
+chiếu đúng lần chạy và commit, xem số failure/error/skipped trong `<build directory>/surefire-reports/`
+của lần chạy đó; mặc định là `target/surefire-reports/`. OpenAPI artifact hiện vẫn ở
+`target/openapi/wiki-v1.json` và `target/openapi-mvc/` kể cả khi override build directory; CI giữ
+đường dẫn mặc định. Giữ source/configuration ổn định và không chạy hai build cùng ghi một output.
+Unit test có mock không thay thế kiểm tra JPA mapping, Spring wiring, transaction và khóa trên
+PostgreSQL. Một integration test bị bỏ qua vì thiếu Docker chưa được kiểm chứng.
