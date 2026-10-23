@@ -4,6 +4,7 @@ import argparse
 import copy
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -95,11 +96,39 @@ class WarehouseImportTest(unittest.TestCase):
         importer.uploaded, importer.reused = 0, 0
         importer.api = Mock()
         importer.api.call.return_value = {"semanticType": image["semantic"], "state": "ACTIVE", "currentVersionId": "version"}
-        with patch.object(module.image_helpers, "urlopen") as upload:
+        with patch.object(module.image_helpers, "upload_ticket") as upload:
             self.assertEqual(importer.upload(image), "existing")
         upload.assert_not_called()
         importer.api.call.assert_called_once_with("/admin/media/assets/existing")
         self.assertEqual(importer.reused, 1)
+
+    def test_warehouse_import_uses_the_shared_upload_allowlist(self):
+        importer = module.Importer.__new__(module.Importer)
+        importer.args = SimpleNamespace(upload_host=["account.r2.cloudflarestorage.com"])
+        importer.lock = module.threading.RLock()
+        importer.state = {"assets": {}}
+        importer.uploaded = importer.reused = 0
+        importer.checkpoint = Mock()
+        importer.api = Mock()
+        ticket = {"uploadId": "upload", "uploadUrl": "https://account.r2.cloudflarestorage.com/private/x",
+                  "method": "PUT", "headers": {}}
+        importer.api.call.side_effect = [{"id": "asset"}, ticket, {"current": True}]
+        image = copy.deepcopy(self.plan["media"][0])
+        image["sha256"] = module.hashlib.sha256(b"image").hexdigest()
+        file = Mock(name="source-file")
+        file.name = "test.png"
+        file.read_bytes.return_value = b"image"
+        with patch.object(module, "resource_file", return_value=file), patch.object(module.image_helpers, "upload_ticket") as upload:
+            self.assertEqual(importer.upload(image), "asset")
+        upload.assert_called_once_with(ticket, b"image", importer.args.upload_host)
+
+    def test_warehouse_cli_wires_repeatable_upload_hosts(self):
+        with patch.object(module.sys, "argv", ["import-warehouse.py", "--verify", "--upload-host", "a.example.com",
+                                               "--upload-host", "b.example.com"]), patch.object(module, "Importer") as importer, \
+                patch.object(module, "load_plan", return_value={"summary": {}}), patch.object(module, "write"):
+            importer.return_value.verify.return_value = {}
+            module.main()
+        self.assertEqual(importer.call_args.args[0].upload_host, ["a.example.com", "b.example.com"])
 
     def test_external_draft_edits_are_not_overwritten_but_saved_put_can_resume(self):
         row = copy.deepcopy(self.row("arcana", "xanh-1-giap-phep"))

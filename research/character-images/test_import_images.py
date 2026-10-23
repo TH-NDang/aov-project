@@ -2,8 +2,9 @@
 
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 spec = importlib.util.spec_from_file_location("character_images", Path(__file__).with_name("import-images.py"))
@@ -15,6 +16,89 @@ rename_spec.loader.exec_module(rename)
 
 
 class ImageImportTest(unittest.TestCase):
+    def test_upload_hosts_require_explicit_exact_https_authorization(self):
+        host = "account.r2.cloudflarestorage.com"
+        remote = "https://" + host + "/private/incoming/image.png?X-Amz-Signature=keep-exact"
+        for url in ["http://localhost:8333/bucket/incoming/image.png", "http://127.0.0.1:8333/incoming/x",
+                    "http://[::1]:8333/incoming/x"]:
+            self.assertEqual(module.validate_upload_url(url), url)
+        with self.assertRaises(ValueError):
+            module.validate_upload_url(remote)
+        self.assertEqual(module.validate_upload_url(remote, [host]), remote)
+
+        invalid = [remote.replace("https:", "http:"), remote.replace(host, host + ".evil.example"),
+                   remote.replace(host, "sub." + host), remote.replace(host, "user@" + host),
+                   remote.replace(host, ":password@" + host), remote.replace(host, host + ":443"),
+                   remote.replace(host, host + ":8443"), remote.replace(host, host + ":"), remote + "#fragment", remote + "#",
+                   remote.replace("/private", "\\private"), remote + "\n", "file:///incoming/image.png",
+                   "http://user@localhost:8333/incoming/x", "http://localhost:invalid/incoming/x"]
+        for url in invalid:
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                module.validate_upload_url(url, [host])
+
+    def test_host_option_rejects_wildcards_urls_paths_and_ports(self):
+        self.assertEqual(module.upload_host("ACCOUNT.r2.cloudflarestorage.com"), "account.r2.cloudflarestorage.com")
+        for host in ["https://storage.example.com", "*.example.com", "storage.example.com:443", "user@storage.example.com",
+                     "storage.example.com/path", "example.com.", "storage..example.com", "-storage.example.com"]:
+            with self.subTest(host=host), self.assertRaises(module.argparse.ArgumentTypeError):
+                module.upload_host(host)
+
+    def test_upload_preserves_signed_url_headers_and_bytes_without_following_redirects(self):
+        host = "account.r2.cloudflarestorage.com"
+        ticket = {"uploadUrl": "https://" + host + "/bucket/incoming/x?X-Amz-Signature=original",
+                  "method": "PUT", "headers": {"Content-Type": "image/png", "Host": host}}
+        response = Mock()
+        response.status = 200
+        response.__enter__ = Mock(return_value=response)
+        response.__exit__ = Mock(return_value=False)
+        with patch.object(module, "upload_urlopen", return_value=response) as send:
+            module.upload_ticket(ticket, b"image-bytes", [host])
+        request = send.call_args.args[0]
+        self.assertEqual(request.full_url, ticket["uploadUrl"])
+        self.assertEqual(request.data, b"image-bytes")
+        self.assertEqual(request.get_header("Content-type"), "image/png")
+        self.assertEqual(request.get_header("Host"), host)
+        self.assertEqual(request.get_method(), "PUT")
+        self.assertTrue(any(isinstance(handler, module.NoUploadRedirect)
+                            for handler in module.upload_urlopen.__self__.handlers))
+        for code in [301, 302, 303, 307, 308]:
+            with self.subTest(code=code), self.assertRaises(ValueError):
+                module.NoUploadRedirect().redirect_request(request, None, code, "redirect", {}, "http://unexpected.example.com")
+
+    def test_unauthorized_ticket_never_sends_bytes(self):
+        ticket = {"uploadUrl": "https://unexpected.example.com/incoming/x", "method": "PUT", "headers": {}}
+        with patch.object(module, "upload_urlopen") as send:
+            with self.assertRaises(ValueError):
+                module.upload_ticket(ticket, b"private-image")
+            with self.assertRaises(ValueError):
+                module.upload_ticket({**ticket, "uploadUrl": "http://localhost:8333/x", "method": "POST"}, b"image")
+        send.assert_not_called()
+
+    def test_character_import_passes_allowlist_to_shared_upload(self):
+        importer = module.Importer.__new__(module.Importer)
+        importer.args = SimpleNamespace(upload_host=["account.r2.cloudflarestorage.com"])
+        importer.state = {"assets": {}}
+        importer.state_lock = module.threading.RLock()
+        importer.uploaded = importer.reused = 0
+        importer.checkpoint = Mock()
+        importer.matching_asset = Mock(return_value=None)
+        importer.api = Mock()
+        ticket = {"uploadId": "upload", "uploadUrl": "https://account.r2.cloudflarestorage.com/private/x",
+                  "method": "PUT", "headers": {}}
+        importer.api.call.side_effect = [{"id": "asset"}, ticket, {"current": True}]
+        file = Mock(name="source-file")
+        file.name = "test.png"
+        file.read_bytes.return_value = b"image"
+        with patch.object(module, "local_file", return_value=file), patch.object(module, "upload_ticket") as upload:
+            self.assertEqual(importer.upload_one("assets/test.png", "HERO_HEAD"), "asset")
+        upload.assert_called_once_with(ticket, b"image", importer.args.upload_host)
+
+    def test_character_cli_wires_repeatable_upload_hosts(self):
+        with patch.object(module.sys, "argv", ["import-images.py", "--upload-host", "a.example.com",
+                                               "--upload-host", "b.example.com"]), patch.object(module, "Importer") as importer:
+            module.main()
+        self.assertEqual(importer.call_args.args[0].upload_host, ["a.example.com", "b.example.com"])
+
     def test_badge_names_retain_source_rank_prefix_only_where_present(self):
         self.assertEqual(rename.badge_name("bac-s-plus-mau-02"), "Bậc S+")
         self.assertEqual(rename.badge_name("bac-ss-mau-01"), "Bậc SS")

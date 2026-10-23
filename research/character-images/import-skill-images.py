@@ -9,8 +9,6 @@ import mimetypes
 from pathlib import Path
 import sys
 import threading
-from urllib.parse import urlparse
-from urllib.request import Request
 
 HERE = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location("skill_media_helpers", HERE / "import-images.py")
@@ -136,12 +134,7 @@ class Importer:
             with self.lock:
                 entry["uploadId"] = ticket["uploadId"]
                 self.checkpoint()
-            storage = urlparse(ticket["uploadUrl"])
-            if storage.scheme != "http" or storage.hostname not in {"localhost", "127.0.0.1", "::1"} or storage.username:
-                raise ValueError("This importer only uploads bytes to loopback object storage.")
-            with helpers.urlopen(Request(ticket["uploadUrl"], method=ticket["method"], headers=ticket["headers"], data=data), timeout=120) as response:
-                if response.status not in {200, 201, 204}:
-                    raise RuntimeError("Object storage rejected the skill icon upload.")
+            helpers.upload_ticket(ticket, data, getattr(self.args, "upload_host", ()))
             complete = self.api.call("/admin/media/uploads/" + ticket["uploadId"] + "/complete", "POST")
             if not complete["current"]:
                 raise RuntimeError("The skill icon upload did not create the current asset version.")
@@ -206,6 +199,7 @@ def main():
     parser.add_argument("--keycloak", default="http://localhost:8081")
     parser.add_argument("--workers", type=int, choices=range(1, 4), default=3)
     parser.add_argument("--apply", action="store_true")
+    helpers.add_upload_host_argument(parser)
     args = parser.parse_args()
     args.backend = helpers.helpers.loopback(args.backend)
     args.keycloak = helpers.helpers.loopback(args.keycloak)

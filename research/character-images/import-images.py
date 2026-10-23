@@ -9,13 +9,14 @@ import importlib.util
 import json
 import mimetypes
 from pathlib import Path
+import re
 import sys
 import socket
 import threading
 import time
 from urllib.error import HTTPError
 from urllib.parse import urlencode, urlparse
-from urllib.request import HTTPHandler, Request, build_opener
+from urllib.request import HTTPHandler, HTTPRedirectHandler, Request, build_opener
 
 
 HERE = Path(__file__).resolve().parent
@@ -47,6 +48,58 @@ class LoopbackHandler(HTTPHandler):
 
 urlopen = build_opener(LoopbackHandler()).open
 helpers.urlopen = urlopen
+
+
+class NoUploadRedirect(HTTPRedirectHandler):
+    def redirect_request(self, request, response, code, message, headers, new_url):
+        raise ValueError("Object storage upload redirects are not allowed.")
+
+
+upload_urlopen = build_opener(LoopbackHandler(), NoUploadRedirect()).open
+
+
+def upload_host(value):
+    host = value.lower()
+    if (len(host) > 253 or not re.fullmatch(r"[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?", host)
+            or "." not in host or any(not part or len(part) > 63 or part.startswith("-") or part.endswith("-")
+                                      for part in host.split("."))):
+        raise argparse.ArgumentTypeError("Upload host must be an exact DNS hostname without scheme, port, path or wildcard.")
+    return host
+
+
+def add_upload_host_argument(parser):
+    parser.add_argument("--upload-host", action="append", type=upload_host, default=[], metavar="HOST",
+                        help="Allow HTTPS upload tickets only on this exact hostname; repeat for additional hosts.")
+
+
+def validate_upload_url(value, allowed_hosts=()):
+    if not isinstance(value, str) or any(character.isspace() for character in value) or "\\" in value or "#" in value:
+        raise ValueError("Object storage upload URL contains unsafe characters.")
+    try:
+        storage = urlparse(value)
+        host, port = storage.hostname, storage.port
+        if host is None or storage.username is not None or storage.password is not None:
+            raise ValueError()
+        if storage.scheme == "http" and host in {"localhost", "127.0.0.1", "::1"}:
+            if port is not None and not 1 <= port <= 65535:
+                raise ValueError()
+            return value
+        approved = {upload_host(item) for item in allowed_hosts}
+        if storage.scheme == "https" and host in approved and port is None and storage.netloc.lower() == host:
+            return value
+    except (ValueError, argparse.ArgumentTypeError):
+        pass
+    raise ValueError("Upload target must be loopback storage or an explicitly allowed HTTPS hostname without a port.")
+
+
+def upload_ticket(ticket, data, allowed_hosts=()):
+    url = validate_upload_url(ticket["uploadUrl"], allowed_hosts)
+    if ticket["method"] != "PUT":
+        raise ValueError("Media upload tickets must use PUT.")
+    request = Request(url, method="PUT", headers=ticket["headers"], data=data)
+    with upload_urlopen(request, timeout=120) as response:
+        if response.status not in {200, 201, 204}:
+            raise RuntimeError("Object storage rejected the upload.")
 
 
 def read(path):
@@ -232,13 +285,8 @@ class Importer:
         with self.state_lock:
             entry["uploadId"] = ticket["uploadId"]
             self.checkpoint()
-        storage = urlparse(ticket["uploadUrl"])
-        if storage.scheme != "http" or storage.hostname not in {"localhost", "127.0.0.1", "::1"} or storage.username:
-            raise ValueError("This local importer only uploads bytes to loopback object storage.")
         try:
-            with urlopen(Request(ticket["uploadUrl"], method=ticket["method"], headers=ticket["headers"], data=data), timeout=120) as response:
-                if response.status not in {200, 201, 204}:
-                    raise RuntimeError("Object storage rejected the upload.")
+            upload_ticket(ticket, data, getattr(self.args, "upload_host", ()))
         except HTTPError as error:
             raise RuntimeError(f"Object storage upload failed with HTTP {error.code}: {source_path}") from None
         result = self.api.call("/admin/media/uploads/" + ticket["uploadId"] + "/complete", "POST")
@@ -497,6 +545,7 @@ def main():
     parser.add_argument("--workers", type=int, choices=range(1, 9), default=3)
     parser.add_argument("--hero", action="append")
     parser.add_argument("--limit", type=int)
+    add_upload_host_argument(parser)
     args = parser.parse_args()
     try:
         Importer(args).run()

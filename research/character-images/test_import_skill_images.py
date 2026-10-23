@@ -6,6 +6,8 @@ import tempfile
 import unittest
 import json
 import hashlib
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 spec = importlib.util.spec_from_file_location("skill_images", Path(__file__).with_name("import-skill-images.py"))
 module = importlib.util.module_from_spec(spec)
@@ -26,6 +28,34 @@ class SkillImageImportTest(unittest.TestCase):
     def row(self):
         return {"status": "ok", "heroId": "test", "slot": 4, "variant": 3,
                 "file": "assets/skill/test.png", "sha256": hashlib.sha256(b"image").hexdigest()}
+
+    def test_skill_import_uses_the_shared_upload_allowlist(self):
+        importer = module.Importer.__new__(module.Importer)
+        importer.args = SimpleNamespace(upload_host=["account.r2.cloudflarestorage.com"])
+        importer.lock = module.threading.RLock()
+        importer.hash_locks, importer.hash_assets = {}, {}
+        importer.state = {"assets": {}}
+        importer.uploaded = importer.reused = 0
+        importer.checkpoint = Mock()
+        importer.api = Mock()
+        ticket = {"uploadId": "upload", "uploadUrl": "https://account.r2.cloudflarestorage.com/private/x",
+                  "method": "PUT", "headers": {}}
+        importer.api.call.side_effect = [{"id": "asset"}, ticket, {"current": True}]
+        file = Mock(name="source-file")
+        file.name = "test.png"
+        file.read_bytes.return_value = b"image"
+        source = {**self.row(), "path": file}
+        with patch.object(module.helpers, "upload_ticket") as upload:
+            self.assertEqual(importer.upload(source), "asset")
+        upload.assert_called_once_with(ticket, b"image", importer.args.upload_host)
+
+    def test_skill_cli_passes_upload_hosts_and_retains_loopback_api(self):
+        with patch.object(module.sys, "argv", ["import-skill-images.py", "--upload-host", "a.example.com",
+                                               "--upload-host", "b.example.com"]), patch.object(module, "Importer") as importer:
+            module.main()
+        args = importer.call_args.args[0]
+        self.assertEqual(args.upload_host, ["a.example.com", "b.example.com"])
+        self.assertEqual(args.backend, "http://localhost:8080")
 
     def test_keeps_uncollected_skill_slots_and_all_variants(self):
         with tempfile.TemporaryDirectory(dir=module.STATE.parent) as directory:
