@@ -4,6 +4,7 @@
 # =====================================================================
 
 # ---- resources/ IS committed: images go through Git LFS (see .gitattributes) ----
+/resources/Lien-Quan-v3/program/trang-bi/editor-server.pid
 
 # ---- Secrets / local configuration ----
 .env
