@@ -116,6 +116,29 @@ try {
     if ('ADMIN_AUTH_CLIENT_SECRET' -notin $plan.EnvironmentKeys) { throw 'Dry-run must describe configured key names.' }
     if (($plan | ConvertTo-Json -Depth 5) -match 'must-stay-private') { throw 'Dry-run exposed a credential value.' }
     if (Test-Path -LiteralPath $probe) { throw 'Dry-run executed file contents.' }
+
+    $launcherPath = Join-Path $PSScriptRoot 'start-local.ps1'
+    $originalProcessDirectory = [Environment]::CurrentDirectory
+    Push-Location -LiteralPath $fixtureDirectory
+    try {
+        # PowerShell location can differ from the process directory used by .NET file APIs.
+        [Environment]::CurrentDirectory = $temporaryRoot
+        $relativeValues = Read-LocalEnvironmentFile -Path '.\.env'
+        Assert-Equal $relativeValues['ADMIN_AUTH_CLIENT_SECRET'] 'must-stay-private' 'Relative files must resolve from the PowerShell location.'
+        $relativePlan = & $launcherPath -EnvironmentFile '.\.env' -DryRun
+        if ('ADMIN_AUTH_CLIENT_SECRET' -notin $relativePlan.EnvironmentKeys) {
+            throw 'The launcher must load relative environment files from the caller location.'
+        }
+
+        $ErrorActionPreference = 'Continue'
+        Assert-Throws { Read-LocalEnvironmentFile -Path '.\missing.env' } 'Missing environment files must terminate even when the caller continues on errors.'
+        Assert-Throws { & $launcherPath -EnvironmentFile '.\missing.env' -DryRun } 'The launcher must stop when its explicit configuration file is missing.'
+    } finally {
+        $ErrorActionPreference = 'Stop'
+        [Environment]::CurrentDirectory = $originalProcessDirectory
+        Pop-Location
+    }
+
     Write-Output 'Local environment checks passed.'
 } finally {
     $resolvedFixture = [IO.Path]::GetFullPath($fixtureDirectory)

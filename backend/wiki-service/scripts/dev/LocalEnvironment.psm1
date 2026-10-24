@@ -4,9 +4,12 @@ function Read-LocalEnvironmentFile {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Path)
 
+    $ErrorActionPreference = 'Stop'
+    $resolvedPath = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).ProviderPath
+
     $values = [ordered]@{}
     $lineNumber = 0
-    foreach ($line in [IO.File]::ReadAllLines([IO.Path]::GetFullPath($Path))) {
+    foreach ($line in [IO.File]::ReadAllLines($resolvedPath)) {
         $lineNumber++
         if ([string]::IsNullOrWhiteSpace($line) -or $line.TrimStart().StartsWith('#')) { continue }
         if ($line -notmatch '^\s*(?:export\s+)?(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?<value>.*)$') {
