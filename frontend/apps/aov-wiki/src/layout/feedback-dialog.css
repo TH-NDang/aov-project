@@ -1,0 +1,208 @@
+.wiki-feedback-trigger {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--header-muted);
+}
+
+.wiki-feedback-trigger svg {
+  width: 19px;
+  height: 19px;
+}
+.wiki-feedback-trigger:hover {
+  color: var(--gold);
+  background: #ffffff09;
+}
+
+.wiki-feedback-dialog[data-slot="dialog-content"] {
+  display: block;
+  width: min(560px, calc(100vw - 32px));
+  max-width: 560px;
+  max-height: calc(100svh - 32px);
+  overflow-y: auto;
+  border: 1px solid #ffffff12;
+  border-radius: 14px;
+  padding: 24px;
+  background: #292e37;
+  color: #e6e0d4;
+}
+
+.wiki-feedback-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid #ffffff10;
+}
+.wiki-feedback-heading [data-slot="dialog-title"] {
+  color: var(--gold);
+  font-family: Cambria, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 700;
+}
+.wiki-feedback-close {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: #a5acb7;
+}
+.wiki-feedback-close:hover {
+  background: #ffffff09;
+  color: #fff;
+}
+.wiki-feedback-note[data-slot="dialog-description"] {
+  margin-top: 16px;
+  color: #aab2c0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.wiki-feedback-form {
+  display: grid;
+  gap: 22px;
+  margin-top: 22px;
+}
+.wiki-feedback-label {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 12px;
+  color: #d8d4ca;
+}
+.wiki-feedback-label > span {
+  color: #d6a37d;
+}
+.wiki-feedback-description {
+  position: relative;
+}
+.wiki-feedback-description textarea {
+  display: block;
+  width: 100%;
+  min-height: 108px;
+  max-height: 240px;
+  resize: vertical;
+  border: 1px solid #ffffff15;
+  border-radius: 8px;
+  padding: 12px 12px 26px;
+  background: #222730;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #ece8e1;
+}
+.wiki-feedback-description textarea::placeholder {
+  color: #7f8999;
+}
+.wiki-feedback-counter {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  color: #8390a3;
+  font-size: 10px;
+  pointer-events: none;
+}
+.wiki-feedback-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.wiki-feedback-images figure {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+  border: 1px solid #ffffff14;
+  border-radius: 8px;
+  background: #202631;
+}
+.wiki-feedback-images figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wiki-feedback-images figure button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  place-items: center;
+  background: #10141dcc;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+}
+.wiki-feedback-upload {
+  display: flex;
+  width: 82px;
+  height: 82px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px dashed #a9b1be50;
+  border-radius: 8px;
+  color: #b8bfca;
+  cursor: pointer;
+}
+.wiki-feedback-upload svg {
+  width: 24px;
+  height: 24px;
+}
+.wiki-feedback-upload > span {
+  font-size: 10px;
+}
+.wiki-feedback-upload:hover {
+  color: var(--gold);
+  border-color: #e4c88e70;
+}
+.wiki-feedback-upload:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.wiki-feedback-image-note {
+  margin-top: 10px;
+  color: #8e99aa;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.wiki-feedback-error {
+  margin-top: 8px;
+  color: #efbba4;
+  font-size: 12px;
+}
+.wiki-feedback-status {
+  color: #e3cca0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.wiki-feedback-save {
+  min-height: 40px;
+  border: 1px solid #ddc28d70;
+  border-radius: 22px;
+  background: #e4c88e0c;
+  color: #ebd6a8;
+  font-family: Cambria, "Times New Roman", serif;
+  font-size: 14px;
+  font-weight: 700;
+}
+.wiki-feedback-save:hover {
+  background: #e4c88e18;
+}
+.wiki-feedback-save:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (max-width: 640px) {
+  .wiki-feedback-trigger {
+    display: none;
+  }
+  .wiki-feedback-dialog[data-slot="dialog-content"] {
+    padding: 20px;
+  }
+}

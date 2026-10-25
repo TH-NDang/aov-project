@@ -1,13 +1,36 @@
 import { PageBackdrop } from "./components/page-backdrop"
 import { WikiHeader } from "./components/wiki-header"
 import { WikiHome } from "./features/home/wiki-home"
+import { Link, Route, Routes, useLocation } from "react-router"
+import { lazy, Suspense, useEffect } from "react"
+import { HeroRouteLoading } from "./features/hero/hero-loading"
+
+const HeroRoutes = lazy(() => import("./features/hero/hero-routes"))
 
 const HOME_BACKGROUND = {
   image: "/images/airi-thu-nguyen-ve-than-1-cover.jpg",
   color: "#27283f",
 }
 
+function HomePage() {
+  return (
+    <>
+      <title>AOV WiKi — Khai mở tri thức</title>
+      <PageBackdrop {...HOME_BACKGROUND} />
+      <WikiHeader />
+      <main id="main" tabIndex={-1} className="flex-1 outline-none" aria-label="Nội dung wiki">
+        <WikiHome />
+      </main>
+    </>
+  )
+}
+
 export default function App() {
+  const { pathname } = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
+
   return (
     <>
       <a
@@ -16,11 +39,29 @@ export default function App() {
       >
         Đến nội dung chính
       </a>
-      <PageBackdrop {...HOME_BACKGROUND} />
-      <WikiHeader />
-      <main id="main" tabIndex={-1} className="flex-1 outline-none" aria-label="Nội dung wiki">
-        <WikiHome />
-      </main>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route
+          path="/hero/*"
+          element={
+            <Suspense fallback={<HeroRouteLoading pathname={pathname} />}>
+              <HeroRoutes />
+            </Suspense>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <>
+              <WikiHeader />
+              <main id="main" className="mx-auto grid flex-1 content-center gap-4 p-8 text-center">
+                <h1 className="text-xl text-gold">Không tìm thấy trang</h1>
+                <Link to="/">Về trang chủ</Link>
+              </main>
+            </>
+          }
+        />
+      </Routes>
     </>
   )
 }

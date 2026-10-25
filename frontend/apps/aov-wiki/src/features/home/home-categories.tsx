@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from "react"
+import { Link } from "react-router"
 import "./home-categories.css"
 
 const CATEGORIES: { name: string; icon: ReactNode }[] = [
@@ -74,7 +75,7 @@ export function HomeCategories() {
     <section className="wiki-categories" aria-label="Danh mục wiki">
       <ul className="wiki-categories-list">
         {CATEGORIES.map(({ name, icon }, index) => (
-          <li className="wiki-categories-item" key={name}>
+          <li className={`wiki-categories-item${name === "Tướng" ? " wiki-categories-item-linked" : ""}`} key={name}>
             <span className="wiki-categories-icon" aria-hidden="true">
               <svg viewBox="0 0 48 48" fill={`url(#${gradientId}-${index})`}>
                 <defs>
@@ -94,7 +95,13 @@ export function HomeCategories() {
                 {icon}
               </svg>
             </span>
-            <span className="wiki-categories-name">{name}</span>
+            {name === "Tướng" ? (
+              <Link to="/hero" className="wiki-categories-name wiki-categories-link">
+                {name}
+              </Link>
+            ) : (
+              <span className="wiki-categories-name">{name}</span>
+            )}
           </li>
         ))}
       </ul>

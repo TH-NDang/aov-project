@@ -1,0 +1,44 @@
+.wiki-header[data-variant="hero"] {
+  background: rgba(var(--hero-surface-rgb, 20, 25, 32), calc(var(--header-solid, 0) * 0.96));
+  border-bottom-color: rgb(255 255 255 / calc(var(--header-solid, 0) * 0.08));
+  backdrop-filter: blur(calc(var(--header-solid, 0) * 20px)) saturate(calc(1 + var(--header-solid, 0) * 0.4));
+  -webkit-backdrop-filter: blur(calc(var(--header-solid, 0) * 20px)) saturate(calc(1 + var(--header-solid, 0) * 0.4));
+}
+
+@media (max-width: 640px) {
+  .wiki-header[data-variant="hero"] > div {
+    padding-inline: 8px;
+  }
+
+  .wiki-header[data-variant="hero"] > div > nav {
+    gap: 0;
+  }
+
+  .wiki-header[data-variant="hero"] .wiki-header-mobile-control {
+    position: relative;
+    isolation: isolate;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    background: transparent;
+    color: var(--hero-accent, #e4c88e);
+    touch-action: manipulation;
+  }
+
+  .wiki-header[data-variant="hero"] .wiki-header-mobile-control::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    z-index: -1;
+    border: 1px solid color-mix(in srgb, var(--hero-accent, #e4c88e) 40%, transparent);
+    border-radius: 50%;
+    background: #080b0f2e;
+    backdrop-filter: blur(4px);
+  }
+
+  .wiki-header[data-variant="hero"] .wiki-header-mobile-control:hover::before,
+  .wiki-header[data-variant="hero"] .wiki-header-mobile-control[data-state="open"]::before {
+    border-color: var(--hero-accent, #e4c88e);
+    background: #080b0f66;
+  }
+}
