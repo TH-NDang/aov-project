@@ -120,9 +120,6 @@ Admin có khu vực `/publishing` kết nối wiki-service và `/publishing-medi
 Hướng dẫn cấu hình và nhập từ `resources` nằm trong [README admin](apps/admin-aov/README.md#biên-tập-hero-với-backend).
 Công cụ tài nguyên cũ tiếp tục hoạt động độc lập, không tự đồng bộ thay đổi mock lên backend.
 
-Wiki đọc danh sách và chi tiết Hero đã publish từ `/api/wiki/v1`, theo `region` và `locale`.
-Ví dụ `http://localhost:5173/?region=VN&locale=vi-VN` hoặc thêm `hero=<UUID>` để mở chi tiết.
-Có tìm kiếm, lọc vai trò, phân trang, chỉ số, kỹ năng, trang phục và lịch sử patch theo vùng.
-Khi chưa có ruleset/release có hiệu lực, wiki hiển thị trạng thái thiếu context; không thay bằng dữ liệu mock.
-API dùng ETag/revalidation qua HTTP; ảnh dùng URL version immutable.
+Wiki đang triển khai lại trang chủ: header, ảnh nền, câu chào, banner tự chuyển và cập nhật mùa hiện tại từ API public `/api/wiki/v1/seasons/current/updates` (TanStack Query). Bên dưới có 5 ô danh mục; chưa triển khai điều hướng và nội dung danh mục trong đợt này.
+Trang wiki chưa khôi phục phần tra cứu Hero; dữ liệu và chức năng biên tập trong admin/backend vẫn giữ nguyên.
 Cả hai frontend cần reverse proxy `/api/wiki` và `/media` khi deploy production.

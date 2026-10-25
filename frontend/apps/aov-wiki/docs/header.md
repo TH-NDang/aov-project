@@ -46,10 +46,10 @@ Edit this mole mascot app icon. Preserve the original brown/cream mole identity,
 
 Bám theo thanh điều hướng của https://wiki.hoyolab.com/pc/hsr/home (giống bản Genshin):
 
-- Cao 56px, nền `#000000a6` + blur, viền dưới trắng 8%, padding ngang 24px.
-- Trái: logo 32px, wordmark AOVWiKi (không có vạch ngăn) + **nút thả xuống** ngay cạnh (tương đương bộ chọn game, không hiện tên mục trên header). Danh sách (`SECTIONS` trong `wiki-header.tsx`): AOV WiKi (logo + mô tả nhỏ bên dưới) và Stream (ô icon giữ chỗ, đánh dấu "Sắp ra mắt"). Thêm icon Stream bằng cách đặt `image` cho mục đó.
-- Giữa: ô tìm kiếm cao 32px, tối đa 540px, bo 23px, căn giữa màn hình bằng lưới 3 cột (`minmax(max-content, 1fr) | minmax(0, 540px) | minmax(max-content, 1fr)`).
-- Phải: chọn ngôn ngữ (viền 25%, bo 8px), avatar (không có chuông thông báo) — đều 32px, cách nhau 24px.
+- Cao 48px, nền `#000000a6` + blur, viền dưới trắng 8%, padding ngang 24px.
+- Trái: logo 28px, wordmark AOVWiKi 20px (không có vạch ngăn) + **nút thả xuống** ngay cạnh (tương đương bộ chọn game, không hiện tên mục trên header). Danh sách (`SECTIONS` trong `wiki-header.tsx`): AOV WiKi (logo + mô tả nhỏ bên dưới) và Stream (ô icon giữ chỗ, đánh dấu "Sắp ra mắt"). Thêm icon Stream bằng cách đặt `image` cho mục đó.
+- Giữa: ô tìm kiếm cao 28px, tối đa 540px, bo 23px, căn giữa màn hình bằng lưới 3 cột (`minmax(max-content, 1fr) | minmax(0, 540px) | minmax(max-content, 1fr)`).
+- Phải: chọn ngôn ngữ (viền 25%, bo 8px), avatar (không có chuông thông báo) — đều 28px, cách nhau 24px.
 - Dropdown/popover dùng chung hằng `PANEL_SURFACE` trong `wiki-header.tsx` (nền tối trong mờ, bo 12px).
 - Responsive: ≤1100px ẩn chữ "Sắp ra mắt"; ≤860px ô tìm kiếm thành nút kính lúp; ≤640px chuyển sang bố cục điện thoại (xem dưới). Đã kiểm tra ở 320, 375, 1024, 1440px — không tràn ngang, không lỗi console.
 
@@ -70,8 +70,8 @@ Lưu ý khi sửa:
 
 Theo bản mobile của HoYoWiki (https://wiki.hoyolab.com/m/hsr/home):
 
-- Cao 52px, lề ngang 15px. Ban đầu trong suốt trên ảnh nền; trong 100px cuộn đầu tiên nền đặc `#202329` và viền dưới hiện dần (`useScrollProgressVar` ghi biến CSS `--header-solid` thẳng lên thẻ header, không render lại React).
+- Cao 44px, lề ngang 15px. Ban đầu trong suốt trên ảnh nền; trong 100px cuộn đầu tiên nền đặc `#202329` và viền dưới hiện dần (`useScrollProgressVar` ghi biến CSS `--header-solid` thẳng lên thẻ header, không render lại React).
 - Trái: nút tròn 28px viền trắng 25% về **Trang chủ** (`/`), như nút home của HoYoWiki mobile. Mũi tên chọn khu vực cạnh AOVWiKi bị ẩn trên điện thoại.
-- Giữa: logo 28px + chữ AOVWiKi, căn giữa tuyệt đối.
+- Giữa: logo 24px + chữ AOVWiKi 18px, căn giữa tuyệt đối.
 - Phải: nút tròn tìm kiếm và nút "⋯", cách nhau 12px.
 - Nút "⋯" mở tấm trượt từ dưới lên (`MoreMenu`, Drawer của `@aov/ui`), theo thứ tự: danh sách khu vực (AOV WiKi / Stream — cùng dữ liệu `SECTIONS` và component `SectionItemBody` với dropdown desktop), khối tài khoản (sắp ra mắt), dòng Ngôn ngữ. Nút tài khoản và ngôn ngữ bị ẩn khỏi header trên điện thoại.
