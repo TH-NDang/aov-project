@@ -35,15 +35,24 @@ function LibraryContents({ open, onOpenChange }: { open: boolean; onOpenChange: 
   )
 }
 
-export function WikiLibraryLayout({ children }: { children?: ReactNode }) {
+export function WikiLibraryLayout({
+  children,
+  title = "Thư viện Tướng",
+  searchScope = "heroes",
+}: {
+  children?: ReactNode
+  title?: string
+  searchScope?: "heroes" | "skins"
+}) {
   const [contentsOpen, setContentsOpen] = useState(false)
 
   return (
     <div className="wiki-library-shell">
-      <title>Thư viện Tướng | AOV WiKi</title>
+      <title>{`${title} | AOV WiKi`}</title>
       <WikiHeader
         variant="library"
-        pageTitle="Thư viện Tướng"
+        pageTitle={title}
+        searchScope={searchScope}
         onOpenContents={() => setContentsOpen(true)}
         feedback={<FeedbackDialog />}
       />

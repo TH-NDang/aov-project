@@ -74,16 +74,16 @@ export function LibraryNavigation({ onNavigate }: { onNavigate?: () => void }) {
             ⌃
           </span>
         </summary>
-        <NavLink className="wiki-library-nav-hero wiki-library-nav-child" to="/hero" onClick={onNavigate}>
+        <NavLink className="wiki-library-nav-link wiki-library-nav-child" to="/hero" onClick={onNavigate}>
           <LibraryNavIcon name="hero" />
           <span>Danh sách tướng</span>
           <span className="wiki-library-nav-art" aria-hidden="true" />
         </NavLink>
-        <div className="wiki-library-nav-unavailable wiki-library-nav-child" aria-disabled="true">
+        <NavLink className="wiki-library-nav-link wiki-library-nav-child" to="/skins" onClick={onNavigate}>
           <LibraryNavIcon name="skin" />
           <span>Trang phục</span>
-          <span className="wiki-library-nav-soon">Sắp có</span>
-        </div>
+          <span className="wiki-library-nav-art" aria-hidden="true" />
+        </NavLink>
       </details>
       <div className="wiki-library-nav-upcoming">
         {UPCOMING.map((item) => (

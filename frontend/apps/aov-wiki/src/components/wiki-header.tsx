@@ -376,16 +376,22 @@ function PanelText({ children }: { children: ReactNode }) {
   return <p className="text-[13px] leading-[1.7] text-[#b2b4bc]">{children}</p>
 }
 
-function HeroSearch({ mobile = false }: { mobile?: boolean }) {
+const SEARCH_SCOPES = {
+  heroes: { path: "/hero", title: "Tìm tướng", placeholder: "Tìm tướng…" },
+  skins: { path: "/skins", title: "Tìm trang phục", placeholder: "Tìm trang phục…" },
+} as const
+
+function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: keyof typeof SEARCH_SCOPES }) {
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [open, setOpen] = useState(false)
+  const target = SEARCH_SCOPES[scope]
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const query = new URLSearchParams()
     if (search.trim()) query.set("q", search.trim())
-    navigate(`/hero${query.size ? `?${query}` : ""}`)
+    navigate(`${target.path}${query.size ? `?${query}` : ""}`)
     setOpen(false)
   }
 
@@ -402,8 +408,8 @@ function HeroSearch({ mobile = false }: { mobile?: boolean }) {
       <input
         type="search"
         enterKeyHint="search"
-        aria-label="Tìm tướng trong wiki"
-        placeholder="Tìm tướng…"
+        aria-label={`${target.title} trong wiki`}
+        placeholder={target.placeholder}
         maxLength={120}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
@@ -426,7 +432,7 @@ function HeroSearch({ mobile = false }: { mobile?: boolean }) {
         <Icon name="search" className="max-[640px]:size-4" />
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={12} className={cn(PANEL_SURFACE, "w-[min(320px,calc(100vw-24px))] p-4")}>
-        <PanelTitle>Tìm tướng</PanelTitle>
+        <PanelTitle>{target.title}</PanelTitle>
         {form}
       </PopoverContent>
     </Popover>
@@ -438,9 +444,16 @@ interface WikiHeaderProps {
   pageTitle?: string
   onOpenContents?: () => void
   feedback?: ReactNode
+  searchScope?: keyof typeof SEARCH_SCOPES
 }
 
-export function WikiHeader({ variant = "home", pageTitle, onOpenContents, feedback }: WikiHeaderProps) {
+export function WikiHeader({
+  variant = "home",
+  pageTitle,
+  onOpenContents,
+  feedback,
+  searchScope = "heroes",
+}: WikiHeaderProps) {
   // Hero headers on every viewport and the home phone header darken over the first 100px of scroll.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)
@@ -507,7 +520,7 @@ export function WikiHeader({ variant = "home", pageTitle, onOpenContents, feedba
         )}
 
         {variant !== "home" ? (
-          <HeroSearch />
+          <LibrarySearch scope={searchScope} />
         ) : (
           <div
             className="col-start-2 flex h-7 w-full items-center gap-2 rounded-[23px] border border-header-line bg-black/25 pr-3 pl-2.5 text-white/45 transition-colors hover:border-white/15 max-[860px]:hidden"
@@ -530,7 +543,7 @@ export function WikiHeader({ variant = "home", pageTitle, onOpenContents, feedba
           aria-label="Tiện ích"
         >
           {variant !== "home" ? (
-            <HeroSearch mobile />
+            <LibrarySearch mobile scope={searchScope} />
           ) : (
             <HeaderPanel
               label="Tìm kiếm"

@@ -34,7 +34,7 @@
   transform: rotate(180deg);
 }
 
-.wiki-library-nav-hero {
+.wiki-library-nav-link {
   position: relative;
   display: flex;
   min-height: 54px;
@@ -42,15 +42,23 @@
   gap: 9px;
   overflow: hidden;
   padding: 12px 16px 12px 23px;
-  border-left: 2px solid var(--gold);
-  color: #f2e6cb;
+  border-left: 2px solid transparent;
+  color: #acb5c3;
   text-decoration: none;
+}
+.wiki-library-nav-link:hover {
+  background: #ffffff05;
+  color: #e8d9b8;
+}
+.wiki-library-nav-link[aria-current="page"] {
+  border-left-color: var(--gold);
+  color: #f2e6cb;
   font-weight: 700;
   background: linear-gradient(90deg, #d8bd8026, #d8bd8004);
 }
 
-.wiki-library-nav-hero > svg,
-.wiki-library-nav-hero > span:not(.wiki-library-nav-art) {
+.wiki-library-nav-link > svg,
+.wiki-library-nav-link > span:not(.wiki-library-nav-art) {
   position: relative;
   z-index: 1;
 }
@@ -60,10 +68,13 @@
   width: 78px;
   height: 100%;
   inset: 0 0 auto auto;
-  opacity: 0.16;
+  opacity: 0;
   background: url("https://img.athahub.com/assets/6bd9e53a-97f0-49b1-a138-5d33bd2851c7/77f2495e-6bd4-446a-8fb8-beb226430adf.jpg")
     64% 26% / auto 160% no-repeat;
   mask-image: linear-gradient(90deg, transparent, black);
+}
+.wiki-library-nav-link[aria-current="page"] .wiki-library-nav-art {
+  opacity: 0.16;
 }
 
 .wiki-library-nav-unavailable {
@@ -116,7 +127,7 @@
     min-height: 60px;
     padding-inline: 20px;
   }
-  .wiki-library-nav-hero {
+  .wiki-library-nav-link {
     min-height: 64px;
     padding-left: 27px;
   }
