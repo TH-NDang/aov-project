@@ -154,7 +154,7 @@ public class HeroQueries {
             }
         Instant at = clock.instant();
         var ctx = contexts.resolve(region, at);
-        List<Map<String, Object>> all = new ArrayList<>();
+        List<ListEntry> all = new ArrayList<>();
         for (var hero : store.heroes(sort.endsWith("desc"))) {
             var selected = current(hero.getId(), ctx, at);
             if (selected.isEmpty())
@@ -181,21 +181,53 @@ public class HeroQueries {
             item.put("actualLocale", actual);
             item.put("roles", profile.roles());
 
-            var bindings = (Bindings) sections.content(HeroSection.MEDIA_BINDINGS,
-                    rev.sections().get(HeroSection.MEDIA_BINDINGS));
-            UUID head = bindings.bindings().get(MediaRole.HEAD);
-            if (head != null)
-                media.find(head).filter(a -> a.usable()).ifPresent(a -> item.put("head", a));
-            all.add(item);
+            all.add(new ListEntry(item, rev.sections().get(HeroSection.MEDIA_BINDINGS)));
         }
 
         long offset = (long) page * size;
-        var items = offset >= all.size()
-                ? List.<Map<String, Object>>of()
+        var selected = offset >= all.size()
+                ? List.<ListEntry>of()
                 : all.subList((int) offset, (int) Math.min(offset + size, all.size()));
+        var items = listMedia(selected);
 
         return Map.of("context", context(ctx, locale), "items", items, "page", page, "size", size, "totalElements",
                 all.size(), "totalPages", all.isEmpty() ? 0 : (all.size() + size - 1) / size);
+    }
+
+    private List<Map<String, Object>> listMedia(List<ListEntry> entries) {
+        if (entries.isEmpty())
+            return List.of();
+
+        Map<UUID, Bindings> bindings = new HashMap<>();
+        Set<UUID> assetIds = new HashSet<>();
+        for (var entry : entries) {
+            var value = bindings.computeIfAbsent(entry.mediaBindingRevisionId(),
+                    id -> (Bindings) sections.content(HeroSection.MEDIA_BINDINGS, id));
+            for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
+                UUID assetId = value.bindings().get(role);
+                if (assetId != null)
+                    assetIds.add(assetId);
+            }
+        }
+
+        var assets = media.findAll(assetIds);
+        return entries.stream().map(entry -> {
+            Map<String, Object> item = new LinkedHashMap<>(entry.item());
+            var selected = bindings.get(entry.mediaBindingRevisionId()).bindings();
+            for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
+                UUID assetId = selected.get(role);
+                var asset = assetId == null ? null : assets.get(assetId);
+                if (asset != null && asset.usable())
+                    item.put(role.name().toLowerCase(Locale.ROOT), asset);
+            }
+            return item;
+        }).toList();
+    }
+
+    private record ListEntry(
+            Map<String, Object> item,
+            UUID mediaBindingRevisionId
+    ) {
     }
 
     public Map<String, Object> section(HeroSection section, UUID id, String locale) {
