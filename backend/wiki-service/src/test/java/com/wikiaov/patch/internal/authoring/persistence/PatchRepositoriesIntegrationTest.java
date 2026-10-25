@@ -7,6 +7,7 @@ import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslation;
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
+import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore;
 import com.wikiaov.patch.internal.ruleset.persistence.RulesetAssignmentRepository;
@@ -47,6 +48,8 @@ class PatchRepositoriesIntegrationTest {
     GamePatchTranslationRepository translations;
     @Autowired
     PatchReleaseStore releaseStore;
+    @Autowired
+    SeasonUpdatesRepository seasonUpdates;
 
     private final UUID region = UUID.randomUUID();
     private final UUID ruleset = UUID.randomUUID();
@@ -178,6 +181,72 @@ class PatchRepositoriesIntegrationTest {
         assertThatThrownBy(() -> translations.saveAndFlush(
                 new GamePatchTranslation(patch, "vi-VN", "Replacement", "", null)))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void seasonUpdatesOnlyIncludeEffectivePublishedReleasesOfTheSelectedMarketRulesetAndSeason() {
+        var now = effective.plusSeconds(60);
+        var futureVariant = createRelease(3, season, effective.plusSeconds(100), "SCHEDULED");
+        var draftVariant = createRelease(4, season, effective.plusSeconds(1), "SCHEDULED");
+        write("update patch.patch_variant set status='DRAFT',published_at=null where id=?", draftVariant);
+        var unpublishedPatchVariant = createRelease(5, season, effective.plusSeconds(2), "SCHEDULED");
+        write("update patch.game_patch set status='DRAFT' where id=(select patch_id from patch.patch_variant where id=?)",
+                unpublishedPatchVariant);
+        createRelease(6, season, effective.plusSeconds(3), "CANCELLED");
+        write("""
+                insert into patch.patch_release(id,patch_variant_id,region_id,effective_at,status,created_at,season_id)
+                select ?,?,id,?,'SCHEDULED',?,? from patch.region where code='VN'
+                """, UUID.randomUUID(), variant, Timestamp.from(effective.plusSeconds(4)), Timestamp.from(start),
+                season);
+        var otherRuleset = UUID.randomUUID();
+        write("insert into patch.gameplay_ruleset(id,code,description,lifecycle_state,created_at) values(?,?,'','ACTIVE',?)",
+                otherRuleset, "other-rules-" + suffix, Timestamp.from(start));
+        var otherRulesetVariant = createRelease(7, season, effective.plusSeconds(5), "SCHEDULED");
+        write("update patch.patch_variant set ruleset_id=? where id=?", otherRuleset, otherRulesetVariant);
+        var otherSeason = UUID.randomUUID();
+        write("""
+                insert into patch.ranked_season(id,code,display_name,ordinal)
+                select ?,?,'Other season',coalesce(max(ordinal),0)+1 from patch.ranked_season
+                """, otherSeason, "other-season-" + suffix);
+        createRelease(8, otherSeason, effective.plusSeconds(6), "SCHEDULED");
+
+        assertThat(seasonUpdates.publishedReleases(region, ruleset, season, now, PageRequest.of(0, 10)))
+                .singleElement().satisfies(value -> assertThat(value.getId()).isEqualTo(patch));
+        assertThat(seasonUpdates.currentSeason(region, variant, now, PageRequest.of(0, 1))).singleElement()
+                .satisfies(value -> assertThat(value.getId()).isEqualTo(season));
+        assertThat(seasonUpdates.currentSeason(region, futureVariant, now, PageRequest.of(0, 1))).isEmpty();
+
+        write("update patch.patch_release set season_id=null where id=?", release);
+        assertThat(seasonUpdates.currentSeason(region, variant, now, PageRequest.of(0, 1))).singleElement()
+                .satisfies(value -> assertThat(value.getId()).isEqualTo(season));
+        write("update patch.patch_variant set season_id=? where id=?", otherSeason, variant);
+        write("update patch.patch_release set season_id=? where id=?", season, release);
+        assertThat(seasonUpdates.currentSeason(region, variant, now, PageRequest.of(0, 1))).singleElement()
+                .satisfies(value -> assertThat(value.getId()).isEqualTo(season));
+    }
+
+    @Test
+    void seasonUpdatesReadTranslationCandidatesInOneDeterministicBatch() {
+        write("insert into patch.game_patch_translation(patch_id,locale,title,summary) values(?,'vi-VN','Local','')",
+                patch);
+        write("insert into patch.game_patch_translation(patch_id,locale,title,summary) values(?,'en-US','English','')",
+                patch);
+
+        assertThat(seasonUpdates.preferredTexts(java.util.List.of(patch), "en-US"))
+                .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("en-US", "vi-VN");
+        assertThat(seasonUpdates.preferredTexts(java.util.List.of(patch), "fr-FR"))
+                .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("vi-VN", "en-US");
+    }
+
+    private UUID createRelease(long ordinal, UUID seasonId, Instant at, String status) {
+        var patchId = UUID.randomUUID();
+        var variantId = UUID.randomUUID();
+        createPatch(patchId, variantId, ordinal, seasonId);
+        write("""
+                insert into patch.patch_release(id,patch_variant_id,region_id,effective_at,status,created_at,season_id)
+                values(?,?,?,?,?,?,?)
+                """, UUID.randomUUID(), variantId, region, Timestamp.from(at), status, Timestamp.from(start), seasonId);
+        return variantId;
     }
 
     private void createPatch(UUID patchId, UUID variantId, long ordinal, UUID seasonId) {
