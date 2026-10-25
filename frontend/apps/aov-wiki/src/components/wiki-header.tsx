@@ -80,9 +80,9 @@ function Icon({ name, className }: { name: IconName; className?: string }) {
 const PANEL_SURFACE =
   "rounded-[12px] border border-white/10 bg-[#0b0d11e6] text-header-text shadow-[0_12px_40px_#0006] backdrop-blur-xl"
 
-/** Round 32px icon button on the right of the header. */
+/** Compact round icon button on the right of the header. */
 const UTILITY_BUTTON =
-  "grid size-8 place-items-center rounded-full text-header-muted transition-colors hover:bg-white/7 hover:text-gold data-[state=open]:bg-white/7 data-[state=open]:text-gold"
+  "grid size-7 place-items-center rounded-full text-header-muted transition-colors hover:bg-white/7 hover:text-gold data-[state=open]:bg-white/7 data-[state=open]:text-gold"
 
 /** Row of the area list, shared by the desktop dropdown and the phone "more" sheet. */
 const SECTION_ROW =
@@ -95,7 +95,9 @@ const MOBILE_ROUND =
 /** AOVWiKi logotype. Plain strings, not cn(): tailwind-merge would treat the font family and weight as conflicting. */
 function Wordmark({ size = "lg" }: { size?: "lg" | "sm" }) {
   const lg = size === "lg"
-  const box = lg ? "gap-0.5 text-[22px] tracking-[-1.2px]" : "gap-px text-[15px] tracking-[-0.6px]"
+  const box = lg
+    ? "gap-0.5 text-[20px] tracking-[-1.2px] max-[640px]:text-[18px]"
+    : "gap-px text-[15px] tracking-[-0.6px]"
   const underline = lg
     ? "relative after:absolute after:-bottom-[5px] after:inset-x-0 after:h-[3px] after:-skew-x-[25deg] after:bg-amber-accent after:content-['']"
     : undefined
@@ -342,7 +344,7 @@ export function WikiHeader() {
   return (
     <header
       ref={headerRef}
-      className="sticky top-0 z-40 h-14 border-b border-header-line bg-header backdrop-blur-[20px] backdrop-saturate-[1.4] max-[640px]:h-[52px] max-[640px]:border-transparent max-[640px]:bg-transparent max-[640px]:backdrop-blur-none max-[640px]:backdrop-saturate-100"
+      className="sticky top-0 z-40 h-12 border-b border-header-line bg-header backdrop-blur-[20px] backdrop-saturate-[1.4] max-[640px]:h-11 max-[640px]:border-transparent max-[640px]:bg-transparent max-[640px]:backdrop-blur-none max-[640px]:backdrop-saturate-100"
     >
       <span
         aria-hidden="true"
@@ -363,11 +365,11 @@ export function WikiHeader() {
         <div className="flex min-w-0 shrink-0 items-center gap-2.5 max-[640px]:absolute max-[640px]:left-1/2 max-[640px]:-translate-x-1/2 max-[640px]:gap-2">
           <a className="group shrink-0 rounded-[9px]" href="/" aria-label="AOV Wiki — Trang chủ">
             <img
-              className="block size-8 rounded-[9px] border border-[#efc78480] bg-[#bd843f] object-cover transition-transform duration-200 group-hover:-translate-y-px group-hover:-rotate-4 max-[640px]:size-7 max-[640px]:rounded-[8px]"
+              className="block size-7 rounded-[8px] border border-[#efc78480] bg-[#bd843f] object-cover transition-transform duration-200 group-hover:-translate-y-px group-hover:-rotate-4 max-[640px]:size-6 max-[640px]:rounded-[7px]"
               src="/images/mole-logo-v4.png"
               alt=""
-              width="32"
-              height="32"
+              width="28"
+              height="28"
               fetchPriority="high"
             />
           </a>
@@ -385,7 +387,7 @@ export function WikiHeader() {
         </div>
 
         <div
-          className="col-start-2 flex h-8 w-full items-center gap-2 rounded-[23px] border border-header-line bg-black/25 pr-3 pl-2.5 text-white/45 transition-colors hover:border-white/15 max-[860px]:hidden"
+          className="col-start-2 flex h-7 w-full items-center gap-2 rounded-[23px] border border-header-line bg-black/25 pr-3 pl-2.5 text-white/45 transition-colors hover:border-white/15 max-[860px]:hidden"
           role="search"
         >
           <Icon name="search" className="size-4" />
@@ -413,7 +415,7 @@ export function WikiHeader() {
           </HeaderPanel>
           <HeaderPanel
             label="Ngôn ngữ: Tiếng Việt"
-            className="flex h-8 items-center gap-1.5 rounded-[8px] border border-white/25 pr-1 pl-1.5 text-xs text-header-muted transition-colors hover:border-white/40 hover:text-header-text data-[state=open]:border-white/40 data-[state=open]:text-header-text max-[640px]:hidden"
+            className="flex h-7 items-center gap-1.5 rounded-[8px] border border-white/25 pr-1 pl-1.5 text-xs text-header-muted transition-colors hover:border-white/40 hover:text-header-text data-[state=open]:border-white/40 data-[state=open]:text-header-text max-[640px]:hidden"
             trigger={
               <>
                 <Icon name="globe" className="size-[18px]" />
