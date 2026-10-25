@@ -306,8 +306,27 @@ Response conceptual:
       "roles": ["ASSASSIN"],
       "head": {
         "assetId": "...",
-        "assetVersionId": "...",
-        "url": "https://..."
+        "semanticType": "HERO_HEAD",
+        "state": "ACTIVE",
+        "currentVersion": {
+          "versionId": "...",
+          "mimeType": "image/png",
+          "width": 120,
+          "height": 120,
+          "url": "https://..."
+        }
+      },
+      "portrait": {
+        "assetId": "...",
+        "semanticType": "HERO_PORTRAIT",
+        "state": "ACTIVE",
+        "currentVersion": {
+          "versionId": "...",
+          "mimeType": "image/png",
+          "width": 278,
+          "height": 436,
+          "url": "https://..."
+        }
       }
     }
   ],
@@ -319,6 +338,10 @@ Response conceptual:
 ```
 
 Không trả toàn bộ skills/skins trong list.
+`head` và `portrait` là các trường tùy chọn theo binding của bản tướng được chọn, cùng cấu trúc
+`MediaAssetReference`. Không trả trường ảnh khi chưa có binding, asset không còn hoạt động hoặc
+chưa có phiên bản hiện hành; không thay `portrait` bằng ảnh `head`. Chỉ tải metadata ảnh cho trang
+kết quả đang trả, gộp HEAD/PORTRAIT qua một lần đọc Media theo lô; không tải detail cho từng tướng.
 
 ---
 
@@ -2297,3 +2320,21 @@ Không đưa mọi kỹ năng vào `/reference-catalog`. API mới dùng read mo
 trong namespace admin/public hiện có, chứa bộ lọc/phân trang/IDs và context; invalidation theo epoch
 ADR-012. Quyền kiểm tra trước cache, cache ngoài transaction đọc; public ETag/revalidate, admin no-store.
 Metadata kỹ năng chỉ dùng khi đọc/hiển thị; không lưu thành entry tùy chỉnh trong cấu hình tham chiếu.
+
+## Cập nhật mùa hiện tại trên trang chủ wiki
+
+`GET /api/wiki/v1/seasons/current/updates?region=VN&locale=vi-VN&limit=4` là API public chỉ đọc,
+query chỉ nhận `region`, `locale`, `limit`; `limit` từ 1 đến 10. Locale là BCP 47 chuẩn.
+Trả `{region, requestedLocale, asOf, season, currentPatchId, patches}`. `season` gồm
+`{id, code, displayName}`; mỗi patch gồm `{id, code, title, summary, actualLocale, effectiveAt,
+effectiveOn, sourceUrl, isCurrent}`. Chọn bản dịch theo locale yêu cầu, rồi `vi-VN`, rồi thứ tự locale.
+
+Mùa được xác định từ gameplay context đang có hiệu lực của thị trường, ưu tiên mùa gắn trực tiếp
+vào release rồi mùa của variant. Chỉ trả release `SCHEDULED` đã có hiệu lực, patch/variant
+`PUBLISHED`, cùng thị trường, ruleset và mùa; mới nhất trước. Không dùng ngày trong mã patch
+hoặc dữ liệu admin để đoán mùa. Nếu chưa có context hoặc mùa, trả `season: null` và `patches: []`;
+thị trường không hỗ trợ vẫn trả lỗi hiện hành. Patch tương lai, bản nháp và release đã hủy không xuất hiện.
+
+Release có ngày công bố `effectiveOn` thì giữ ngày đó, không trả giờ xác nhận thành giờ phát hành:
+`effectiveAt` trong kết quả là null. Response dùng `Cache-Control: no-cache, public` để trình duyệt
+kiểm tra lại thay đổi mùa khi tải trang. API không sửa dữ liệu, không cần migration hay quyền admin.
