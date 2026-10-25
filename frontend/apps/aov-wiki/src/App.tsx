@@ -4,8 +4,13 @@ import { WikiHome } from "./features/home/wiki-home"
 import { Link, Route, Routes, useLocation } from "react-router"
 import { lazy, Suspense, useEffect } from "react"
 import { HeroRouteLoading } from "./features/hero/hero-loading"
+import { WikiLibraryLayout } from "./layout/wiki-library-layout"
+import { SkinDirectoryLoading } from "./features/skins/skin-loading"
 
 const HeroRoutes = lazy(() => import("./features/hero/hero-routes"))
+const SkinDirectory = lazy(() =>
+  import("./features/skins/skin-directory").then((module) => ({ default: module.SkinDirectory })),
+)
 
 const HOME_BACKGROUND = {
   image: "/images/airi-thu-nguyen-ve-than-1-cover.jpg",
@@ -47,6 +52,16 @@ export default function App() {
             <Suspense fallback={<HeroRouteLoading pathname={pathname} />}>
               <HeroRoutes />
             </Suspense>
+          }
+        />
+        <Route
+          path="/skins"
+          element={
+            <WikiLibraryLayout title="Trang phục" searchScope="skins">
+              <Suspense fallback={<SkinDirectoryLoading />}>
+                <SkinDirectory />
+              </Suspense>
+            </WikiLibraryLayout>
           }
         />
         <Route

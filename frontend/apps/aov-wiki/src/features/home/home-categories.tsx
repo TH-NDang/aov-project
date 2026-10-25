@@ -2,9 +2,10 @@ import { useId, type ReactNode } from "react"
 import { Link } from "react-router"
 import "./home-categories.css"
 
-const CATEGORIES: { name: string; icon: ReactNode }[] = [
+const CATEGORIES: { name: string; icon: ReactNode; path?: string }[] = [
   {
     name: "Tướng",
+    path: "/hero",
     icon: (
       <>
         <path d="m24 3 11 10 3 16-7 12-7 4-7-4-7-12 3-16Z" />
@@ -17,6 +18,7 @@ const CATEGORIES: { name: string; icon: ReactNode }[] = [
   },
   {
     name: "Trang phục",
+    path: "/skins",
     icon: (
       <>
         <path className="wiki-category-shade" d="m29 15 7-12 2 10 7-2-7 13ZM8 23l-5-7 8 2Z" />
@@ -74,8 +76,8 @@ export function HomeCategories() {
   return (
     <section className="wiki-categories" aria-label="Danh mục wiki">
       <ul className="wiki-categories-list">
-        {CATEGORIES.map(({ name, icon }, index) => (
-          <li className={`wiki-categories-item${name === "Tướng" ? " wiki-categories-item-linked" : ""}`} key={name}>
+        {CATEGORIES.map(({ name, icon, path }, index) => (
+          <li className={`wiki-categories-item${path ? " wiki-categories-item-linked" : ""}`} key={name}>
             <span className="wiki-categories-icon" aria-hidden="true">
               <svg viewBox="0 0 48 48" fill={`url(#${gradientId}-${index})`}>
                 <defs>
@@ -95,8 +97,8 @@ export function HomeCategories() {
                 {icon}
               </svg>
             </span>
-            {name === "Tướng" ? (
-              <Link to="/hero" className="wiki-categories-name wiki-categories-link">
+            {path ? (
+              <Link to={path} className="wiki-categories-name wiki-categories-link">
                 {name}
               </Link>
             ) : (
