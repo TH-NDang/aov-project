@@ -343,6 +343,55 @@ Không trả toàn bộ skills/skins trong list.
 chưa có phiên bản hiện hành; không thay `portrait` bằng ảnh `head`. Chỉ tải metadata ảnh cho trang
 kết quả đang trả, gộp HEAD/PORTRAIT qua một lần đọc Media theo lô; không tải detail cho từng tướng.
 
+### Danh mục trang phục công khai
+
+```http
+GET /api/wiki/v1/skins?region=VN&locale=vi-VN&page=0&size=24
+```
+
+Danh mục này dành cho thư viện Trang phục của wiki, không dùng API quản trị và không yêu cầu frontend
+tải chi tiết từng tướng. Tham số được cho phép: `region` (mặc định `VN`), `locale` (mặc định `vi-VN`),
+`q` (tối đa 120 ký tự), `hero` (mã tướng), `rarity` (mã nhãn bậc/chủ đề), `page` (từ 0), `size`
+(1–60, mặc định 24). Tham số lạ bị từ chối. Tìm kiếm không phân biệt dấu và hoa/thường, ghép các từ
+trong tên/mã tướng và tên/khóa trang phục; các từ tìm kiếm có thể xuất hiện theo thứ tự khác nhau.
+
+Response có cấu trúc:
+
+```text
+{
+  page: {items: [Entry], page, size, totalElements},
+  heroes: [{code, name}],
+  rarities: [{code, name}]
+}
+
+Entry = {
+  heroId, heroCode, heroName, heroHead?, skinKey, name, actualLocale?, rarityCode?,
+  badge?: {code, name, actualLocale, icon?}, portrait?, head?, art?
+}
+```
+
+Các trường ảnh dùng `MediaAssetReference`; ảnh thiếu, chưa có phiên bản hoặc không còn dùng được trả
+`null`. Ảnh bậc được chọn từ đúng bản dịch của nhãn, không thay bằng icon của ngôn ngữ khác nếu nhãn
+đã có bản dịch nhưng bản dịch đó thiếu ảnh. Tên tướng, tên trang phục và tên/ảnh nhãn chọn locale được
+yêu cầu, rồi `vi-VN`, sau đó locale đầu tiên theo thứ tự chữ cái. `rarityCode` nối với `SkinBadge.code`;
+không suy ra bậc từ tên trang phục hoặc tên file. Dữ liệu cũ thiếu bản dịch giữ mã làm tên dự phòng.
+
+Backend chỉ lấy skin snapshot thuộc bản tướng `PUBLISHED`, đã công bố tại thời điểm hiện tại và không
+vượt ordinal của gameplay context đang có hiệu lực. Cùng một tướng chọn ordinal cao nhất, rồi
+`publicationSequence` cao nhất, thống nhất với hero detail. Không lộ bản nháp hoặc bản có hiệu lực ở
+patch tương lai. Danh mục không bao gồm ảnh tướng gốc được lưu như trang phục mặc định: loại khóa
+chuẩn `<heroCode>-mac-dinh-1` theo ADR-010 và các khóa cũ tương đương `<heroCode>-heroskin-1`,
+`<heroCode>-default-1`, `default` trước khi tính bộ lọc, tổng số và phân trang. Quy tắc không phụ
+thuộc ngôn ngữ hiển thị; trang phục thật thiếu nhãn bậc vẫn xuất hiện. Dữ liệu ảnh gốc trong bản
+tướng và danh mục quản trị được giữ nguyên.
+
+Danh sách sắp theo mã tướng, `displayOrder`, rồi `skinKey`; phân trang sau khi lọc. `heroes` và
+`rarities` là các lựa chọn của toàn bộ danh mục công khai trong context, không bị cắt theo trang
+hoặc điều kiện lọc hiện tại. Phần trang dùng `PageSlice`, client tính số trang từ `totalElements/size`.
+Các phép chiếu revision, tên và binding được đọc theo lô bằng JPA; chỉ đọc metadata Media cho trang
+đang trả, gộp ảnh trang phục, ảnh tướng và icon nhãn trong một lần `MediaAssets.findAll`.
+Response dùng `Cache-Control: no-cache, public`; URL byte ảnh vẫn là URL phiên bản Media bất biến.
+
 ---
 
 ## 5. Hero detail aggregate
@@ -2338,3 +2387,27 @@ thị trường không hỗ trợ vẫn trả lỗi hiện hành. Patch tương 
 Release có ngày công bố `effectiveOn` thì giữ ngày đó, không trả giờ xác nhận thành giờ phát hành:
 `effectiveAt` trong kết quả là null. Response dùng `Cache-Control: no-cache, public` để trình duyệt
 kiểm tra lại thay đổi mùa khi tải trang. API không sửa dữ liệu, không cần migration hay quyền admin.
+
+## Xuất bản riêng ảnh trang phục
+
+`POST /api/wiki/v1/admin/heroes/{heroId}/skin-images/publish` nhận
+`{sourceRevisionId, imageSourceRevisionId, expectedImageSourceVersion, region, changeNote?}`.
+`sourceRevisionId` phải vẫn là bản đã xuất bản hiện hành tại thị trường `region`;
+`imageSourceRevisionId` là bản nháp của cùng tướng, cùng ruleset, có version đúng như request.
+API cần đồng thời `catalog:read`, `hero:write` và `hero:publish`, không nhận query bổ sung.
+
+Tác vụ khóa tướng, chép chỉ các trường `artAssetId`, `headAssetId`, `portraitAssetId`, `images`
+của từng trang phục có cùng `skinKey`, rồi tạo một revision `PUBLISHED` mới có cause `VISUAL_UPDATE`.
+Khóa, thứ tự, tên, mô tả, bậc, cách sở hữu, nguồn và danh sách trang phục của bản đã xuất bản
+được giữ nguyên; không thêm trang phục chỉ có trong nháp. Ảnh nháp còn thiếu không xóa ảnh đang dùng,
+ảnh ứng viên cũ được giữ theo chính sách Media hiện có. Asset mới phải qua kiểm tra semantic type,
+trạng thái và phiên bản dùng được như các thao tác xuất bản thông thường.
+
+Các section khác và `effectiveFromPatchVariantId` giữ nguyên bản nguồn. Bản nháp dùng làm nguồn ảnh
+không bị sửa, xuất bản hoặc hủy, nên có thể tiếp tục biên tập nội dung riêng. Tác vụ không tạo thêm
+nháp và không thay đổi ràng buộc một nháp mỗi tướng/ruleset. Mọi ghi diễn ra trong một transaction,
+có actor và audit `HERO_SKIN_IMAGES_PUBLISHED`; snapshot cũ không bị sửa.
+
+Response là `HeroRevisionView` mới; nếu các ảnh đã giống hệt thì trả bản nguồn hiện hành và không tạo
+revision thừa. Nguồn đã xuất bản hoặc version nháp thay đổi trả `409 HERO_REVISION_VERSION_CONFLICT`;
+client cần đọc lại trước khi thử. Tác vụ không đổi lịch patch hoặc trạng thái hoàn tất nhập liệu gameplay.

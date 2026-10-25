@@ -1,8 +1,8 @@
 # Header wiki
 
 - Tham khảo bố cục: https://wiki.hoyolab.com/pc/hsr/home (xem mục "Bố cục theo HoYoWiki")
-- Phạm vi: header, logo, theme tối cố định và responsive; dùng chung cho trang chủ, thư viện Tướng và chi tiết Tướng qua các biến thể `home`, `library`, `hero`.
-- Trên thư viện và chi tiết Tướng, tìm kiếm điều hướng đến `/hero?q=...` để lọc danh sách thật. Tìm kiếm chung trên trang chủ và tài khoản vẫn ghi rõ trạng thái sắp ra mắt.
+- Phạm vi: header, logo, theme tối cố định và responsive; dùng chung cho trang chủ, thư viện Tướng/Trang phục và chi tiết Tướng qua các biến thể `home`, `library`, `hero`.
+- Trên thư viện và chi tiết Tướng, tìm kiếm điều hướng đến `/hero?q=...` để lọc danh sách thật. Thư viện Trang phục dùng `/skins?q=...`, cùng form và popup với nhãn tương ứng. Tìm kiếm chung trên trang chủ và tài khoản vẫn ghi rõ trạng thái sắp ra mắt.
 - Logo hiện tại: `public/images/mole-logo-v4.png`, tạo bằng công cụ imagegen tích hợp; các phiên bản trước và prompt được lưu lại bên dưới.
 - Đã kiểm tra trên trình duyệt ở chiều rộng 320, 390, 768 và 1440 px; không tràn ngang. Popup tài khoản đóng bằng Escape.
 
@@ -72,7 +72,7 @@ Lưu ý khi sửa:
 - Trong 100px cuộn đầu tiên, nền, viền dưới và độ blur của header chi tiết tăng dần. `useScrollProgressVar` chỉ ghi `--header-solid` trực tiếp lên thẻ header, không cập nhật state hoặc render lại React theo mỗi lần cuộn. Màu nền đọc từ `--hero-surface-rgb` của bố cục chi tiết, cùng bảng màu ảnh trong `hero-appearance.ts`; thiếu cấu hình thì dùng nền tối dự phòng.
 - Ô tìm kiếm trên hai biến thể Tướng hoạt động bằng form: nhập tên rồi nhấn Enter để mở `/hero?q=...`; gửi rỗng sẽ về `/hero`. Không có nút mũi tên điều hướng trong ô nhập. Từ 860px trở xuống, icon kính lúp mở popup chứa cùng form; chữ nhập 16px và gợi ý phím tìm kiếm cho bàn phím điện thoại. Bộ lọc danh sách và tìm kiếm không phân biệt dấu được mô tả trong `layout.md`.
 - Trên điện thoại, thư viện hiện “Tướng” ở giữa thay cho logo và wordmark; chi tiết không hiện cả tên tướng lẫn logo/wordmark trên header. Header chi tiết chỉ có Trang chủ bên trái, Tìm kiếm và “⋯” bên phải; Mục lục nằm trong “⋯”. Menu đóng trước khi mở **Mục lục** từ phải qua bằng `Sheet` để không chồng lớp khóa focus. Thư viện vẫn giữ nút mục lục riêng. Nút “⋯” còn phụ trách tài khoản, khu vực và ngôn ngữ. Desktop vẫn có logo và wordmark trên cả hai biến thể.
-- Mục lục thư viện trên desktop nằm ở cột bên trái dưới header. Nhóm **Sổ tay nhân vật** chứa **Danh sách tướng** và **Trang phục**; mục Trang phục ghi “Sắp có”. Kho trang bị, Bản đồ và Chế độ chơi nằm ngoài nhóm. Chi tiết dùng ảnh rộng nên không hiện cột này; mục lục trên điện thoại vẫn dùng cùng nội dung điều hướng.
+- Mục lục thư viện trên desktop nằm ở cột bên trái dưới header. Nhóm **Sổ tay nhân vật** chứa **Danh sách tướng** (`/hero`) và **Trang phục** (`/skins`), chỉ mục đang xem được đánh dấu. Kho trang bị, Bản đồ và Chế độ chơi nằm ngoài nhóm. Chi tiết dùng ảnh rộng nên không hiện cột này; mục lục trên điện thoại vẫn dùng cùng nội dung điều hướng.
 
 - Riêng header chi tiết trên mobile dùng vùng chạm 40px, vòng tròn nhìn thấy 28px và icon 16px. Nền trong nhẹ, viền theo màu điểm nhấn của tướng. Mép trên ảnh có gradient tối cao 140–200px, đậm nhẹ ở đầu rồi tan dần để nút dễ nhìn mà ảnh vẫn liền mạch. Icon đổi tướng nằm cạnh tên trong thân trang, mở bảng chọn bên trái; mục lục vẫn mở bên phải.
 
