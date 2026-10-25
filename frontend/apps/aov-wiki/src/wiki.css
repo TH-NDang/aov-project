@@ -83,7 +83,7 @@
   position: fixed;
   inset: 0 0 auto;
   z-index: -10;
-  height: 540px;
+  height: min(540px, 50svh);
   pointer-events: none;
   background: radial-gradient(ellipse 1440px 650px at 50% 0%, var(--backdrop-color) 25%, var(--background) 100%);
 }
@@ -107,7 +107,7 @@
 @media (max-width: 640px) {
   .page-backdrop {
     position: absolute;
-    height: 66.667vw;
+    height: min(66.667vw, 25svh);
   }
   .page-backdrop-art {
     opacity: 0.45;
