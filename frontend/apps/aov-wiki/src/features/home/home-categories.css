@@ -13,12 +13,33 @@
 }
 
 .wiki-categories-item {
+  position: relative;
   display: flex;
   min-width: 0;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   text-align: center;
+}
+
+.wiki-categories-link {
+  text-decoration: none;
+}
+.wiki-categories-link::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 10px;
+}
+.wiki-categories-item-linked:hover .wiki-categories-icon {
+  border-color: #e4c88e80;
+}
+.wiki-categories-link:focus-visible {
+  outline: none;
+}
+.wiki-categories-link:focus-visible::after {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
 }
 
 .wiki-categories-icon {

@@ -1,0 +1,59 @@
+:where(.wiki-image) {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: inherit;
+}
+
+:where(.wiki-image) > .wiki-image-content {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: inherit;
+  object-position: inherit;
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+
+.wiki-image-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  background: linear-gradient(110deg, #c3d0e108 20%, #d9e4f217 42%, #c3d0e108 64%);
+  background-size: 240% 100%;
+  pointer-events: none;
+  opacity: 1;
+  animation: wiki-image-shimmer 1.6s linear infinite;
+  transition: opacity 180ms ease-out;
+}
+
+.wiki-image[data-state="ready"] > .wiki-image-content {
+  opacity: 1;
+}
+
+.wiki-image[data-state="ready"] > .wiki-image-placeholder,
+.wiki-image[data-state="error"] > .wiki-image-placeholder {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes wiki-image-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -140% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.wiki-image) > .wiki-image-content,
+  .wiki-image-placeholder {
+    animation: none;
+    transition: none;
+  }
+}

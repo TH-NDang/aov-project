@@ -1,0 +1,52 @@
+.wiki-skeleton {
+  background: #dce4f10d;
+  animation: wiki-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes wiki-skeleton-pulse {
+  50% {
+    background-color: #dce4f11a;
+  }
+}
+
+.wiki-hero-skeleton-name,
+.wiki-hero-skeleton-role {
+  display: block;
+  height: 14px;
+  width: 65%;
+  border-radius: 4px;
+}
+.wiki-hero-skeleton-role {
+  height: 11px;
+  width: 45%;
+}
+.wiki-hero-title-skeleton {
+  width: 180px;
+  max-width: 50vw;
+  height: 44px;
+  border-radius: 5px;
+}
+.wiki-hero-art-skeleton {
+  background: linear-gradient(125deg, transparent 20%, #dce4f10d, transparent 85%);
+}
+
+@media (max-width: 640px) {
+  .wiki-hero-skeleton-name {
+    height: 28px;
+    width: 85%;
+  }
+  .wiki-hero-skeleton-role {
+    height: 13px;
+    width: 35%;
+    margin-top: auto;
+  }
+  .wiki-hero-title-skeleton {
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wiki-skeleton {
+    animation: none;
+  }
+}
