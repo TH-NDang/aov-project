@@ -492,8 +492,14 @@ nắm để đổi vị trí; form chi tiết cho nhập vị trí/số lượng
 Phù hiệu có bốn hệ, ba tầng I–III và công cụ sửa hệ/bản dịch. Ngọc lọc theo màu/cấp/chỉ số;
 phụ trợ giữ khả dụng, hồi chiêu, điều kiện mở khóa, trạng thái và ảnh riêng. Form chi tiết mở
 bên phải trên desktop hoặc từ dưới trên mobile; bản dịch và ảnh có khu vực riêng. Mục đã xuất
-bản chỉ đọc, muốn sửa phải tạo bản nháp. Thiếu dữ liệu vẫn lưu nháp; chọn patch ghi nhận dữ liệu
-trước khi xuất bản bản nền không đồng nghĩa mọi mục thay đổi từ patch trước.
+bản chỉ đọc, muốn sửa phải tạo bản nháp. Thiếu dữ liệu vẫn lưu nháp.
+
+Trang bị và phụ trợ có thể xuất bản **Dữ liệu nền · chưa xác định patch** khi đủ nội dung còn lại;
+không tự coi ngày nhập dữ liệu là ngày cập nhật hoặc coi các mục vừa được thêm ở mùa hiện tại.
+Bản sửa nội dung/bản dịch kế thừa nền chưa rõ patch vẫn giữ ngữ cảnh này. Khi có nguồn xác nhận,
+tạo nháp `GAME_PATCH` tại patch phù hợp rồi chọn bản nền đã xuất bản trong **Bản trước để đối chiếu**.
+Danh sách đối chiếu loại bản nháp, snapshot tương lai, chính bản đang ghi nhận và phụ trợ lưu trữ.
+Thay đổi `GAME_PATCH` luôn cần patch cụ thể; phù hiệu và ngọc vẫn dùng quy tắc patch hiện có.
 
 Importer `research/warehouse/import-warehouse.py` nhập tài nguyên hiện có và ảnh qua Media
 presigned upload, giữ nguồn và checkpoint cục bộ. Bộ nguồn gồm 112 trang bị, 31 phù hiệu,
