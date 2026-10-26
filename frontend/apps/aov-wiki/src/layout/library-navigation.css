@@ -1,6 +1,6 @@
 .wiki-library-navigation {
   color: #c0c6d0;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -13,10 +13,10 @@
 
 .wiki-library-nav-group summary {
   display: flex;
-  min-height: 54px;
+  min-height: 44px;
   align-items: center;
   gap: 9px;
-  padding: 14px 16px;
+  padding: 10px 14px;
   color: #e8d2a4;
   cursor: pointer;
   font-weight: 700;
@@ -28,20 +28,20 @@
 }
 .wiki-library-nav-chevron {
   margin-left: auto;
-  font-size: 15px;
+  transform: rotate(180deg);
 }
 .wiki-library-nav-group:not([open]) .wiki-library-nav-chevron {
-  transform: rotate(180deg);
+  transform: none;
 }
 
 .wiki-library-nav-link {
   position: relative;
   display: flex;
-  min-height: 54px;
+  min-height: 42px;
   align-items: center;
   gap: 9px;
   overflow: hidden;
-  padding: 12px 16px 12px 23px;
+  padding: 9px 14px 9px 22px;
   border-left: 2px solid transparent;
   color: #acb5c3;
   text-decoration: none;
@@ -58,31 +58,17 @@
 }
 
 .wiki-library-nav-link > svg,
-.wiki-library-nav-link > span:not(.wiki-library-nav-art) {
+.wiki-library-nav-link > span {
   position: relative;
   z-index: 1;
 }
 
-.wiki-library-nav-art {
-  position: absolute;
-  width: 78px;
-  height: 100%;
-  inset: 0 0 auto auto;
-  opacity: 0;
-  background: url("https://img.athahub.com/assets/6bd9e53a-97f0-49b1-a138-5d33bd2851c7/77f2495e-6bd4-446a-8fb8-beb226430adf.jpg")
-    64% 26% / auto 160% no-repeat;
-  mask-image: linear-gradient(90deg, transparent, black);
-}
-.wiki-library-nav-link[aria-current="page"] .wiki-library-nav-art {
-  opacity: 0.16;
-}
-
 .wiki-library-nav-unavailable {
   display: flex;
-  min-height: 58px;
+  min-height: 44px;
   align-items: center;
   gap: 9px;
-  padding: 14px 16px;
+  padding: 10px 14px;
   color: #8f98a8;
 }
 
@@ -93,7 +79,7 @@
   padding-left: 23px;
 }
 .wiki-library-nav-unavailable.wiki-library-nav-child {
-  min-height: 50px;
+  min-height: 40px;
   color: #929baa;
   font-size: 12px;
 }
@@ -110,8 +96,8 @@
 .wiki-library-nav-home {
   display: flex;
   justify-content: space-between;
-  margin: 20px 16px 0;
-  padding-block: 16px;
+  margin: 12px 14px 0;
+  padding-block: 12px;
   border-top: 1px solid #ffffff0a;
   color: #9aa5b7;
   font-size: 11px;
@@ -124,26 +110,22 @@
 
 @media (max-width: 640px) {
   .wiki-library-nav-group summary {
-    min-height: 60px;
+    min-height: 48px;
     padding-inline: 20px;
   }
   .wiki-library-nav-link {
-    min-height: 64px;
+    min-height: 46px;
     padding-left: 27px;
   }
   .wiki-library-nav-unavailable {
-    min-height: 64px;
+    min-height: 46px;
     padding-inline: 20px;
   }
   .wiki-library-nav-child {
     padding-left: 27px;
   }
   .wiki-library-nav-unavailable.wiki-library-nav-child {
-    min-height: 56px;
-    font-size: 13px;
-  }
-  .wiki-library-nav-art {
-    width: 110px;
-    opacity: 0.24;
+    min-height: 44px;
+    font-size: 12px;
   }
 }

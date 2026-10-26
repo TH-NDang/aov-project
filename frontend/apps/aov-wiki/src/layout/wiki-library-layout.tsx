@@ -5,15 +5,22 @@ import { WikiHeader } from "../components/wiki-header"
 import { LibraryNavigation } from "./library-navigation"
 import { FeedbackDialog } from "./feedback-dialog"
 import "./wiki-library-layout.css"
+import { useWikiContext, wikiText } from "../context/wiki-context"
 
 function LibraryContents({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t, locale } = useWikiContext()
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="wiki-library-sheet" showCloseButton={false}>
         <div className="wiki-library-sheet-heading">
-          <SheetTitle>Mục lục</SheetTitle>
-          <SheetDescription className="sr-only">Các danh mục của AOV WiKi</SheetDescription>
-          <SheetClose className="wiki-library-sheet-close" aria-label="Đóng mục lục">
+          <SheetTitle>{t("contents")}</SheetTitle>
+          <SheetDescription className="sr-only">
+            {wikiText(locale, "Các danh mục của AOV WiKi", "AOV WiKi categories")}
+          </SheetDescription>
+          <SheetClose
+            className="wiki-library-sheet-close"
+            aria-label={wikiText(locale, "Đóng mục lục", "Close contents")}
+          >
             <svg
               viewBox="0 0 24 24"
               width="20"
@@ -37,28 +44,30 @@ function LibraryContents({ open, onOpenChange }: { open: boolean; onOpenChange: 
 
 export function WikiLibraryLayout({
   children,
-  title = "Thư viện Tướng",
+  title,
   searchScope = "heroes",
 }: {
   children?: ReactNode
   title?: string
-  searchScope?: "heroes" | "skins"
+  searchScope?: "heroes" | "skins" | "warehouse"
 }) {
+  const { t } = useWikiContext()
+  const pageTitle = title ?? t("heroes")
   const [contentsOpen, setContentsOpen] = useState(false)
 
   return (
     <div className="wiki-library-shell">
-      <title>{`${title} | AOV WiKi`}</title>
+      <title>{`${pageTitle} | AOV WiKi`}</title>
       <WikiHeader
         variant="library"
-        pageTitle={title}
+        pageTitle={pageTitle}
         searchScope={searchScope}
         onOpenContents={() => setContentsOpen(true)}
         feedback={<FeedbackDialog />}
       />
       <div className="wiki-library-body">
-        <aside className="wiki-library-sidebar" aria-label="Mục lục">
-          <h2>Mục lục</h2>
+        <aside className="wiki-library-sidebar" aria-label={t("contents")}>
+          <h2>{t("contents")}</h2>
           <LibraryNavigation />
         </aside>
         <main id="main" className="wiki-library-main" tabIndex={-1}>

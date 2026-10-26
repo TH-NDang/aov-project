@@ -1,0 +1,389 @@
+.wiki-warehouse-shop-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.wiki-warehouse-shop-controls > .wiki-warehouse-catalog-filters {
+  min-width: 0;
+  flex: 1;
+}
+.wiki-warehouse-shop-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  padding: 3px;
+  background: #0b182a88;
+}
+.wiki-warehouse-shop-view button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 8px;
+  color: #90a3b9;
+  font-size: 10px;
+  cursor: pointer;
+}
+.wiki-warehouse-shop-view button[aria-pressed="true"] {
+  background: #d1b47718;
+  color: #dfc796;
+}
+.wiki-warehouse-shop-guide {
+  display: flex;
+  min-height: 36px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  padding: 0 0 9px;
+  color: #b0bfcc;
+  font-size: 11px;
+}
+.wiki-warehouse-shop-guide > svg {
+  color: #d8bd89;
+}
+.wiki-warehouse-shop-guide > button {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  color: #a6b2bf;
+  cursor: pointer;
+}
+.wiki-warehouse-shop-guide > button:hover {
+  background: #c3d0e011;
+  color: #e9ddc2;
+}
+.wiki-warehouse-shop-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-left: auto;
+  color: #7f94a8;
+  font-size: 9px;
+}
+.wiki-warehouse-shop-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.wiki-warehouse-shop-legend i {
+  width: 18px;
+  border-top: 2px solid #d8bd89;
+}
+.wiki-warehouse-shop-legend > span + span i {
+  border-top: 1px dashed #b0ad9f;
+}
+.wiki-warehouse-shop-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  border: 1px solid #9eb5cf12;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #121f3080, #0d1b2b4d);
+  scrollbar-width: thin;
+  scrollbar-color: #c6af7859 transparent;
+}
+.wiki-warehouse-shop-canvas {
+  position: relative;
+  min-width: max(780px, calc(var(--shop-columns) * 212px + (var(--shop-columns) - 1) * 44px + 48px));
+  padding: 16px 24px 22px;
+}
+.wiki-warehouse-shop-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--shop-columns), minmax(212px, 1fr));
+  align-items: start;
+  gap: 44px;
+}
+.wiki-warehouse-shop-column {
+  min-width: 0;
+}
+.wiki-warehouse-shop-column > h2 {
+  margin: 0 0 13px;
+  color: #8d9faf;
+  font-size: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+.wiki-warehouse-shop-region {
+  margin-bottom: 8px;
+}
+.wiki-warehouse-shop-cell {
+  display: flex;
+  min-height: 88px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+.wiki-warehouse-shop-region[data-terminal="true"] {
+  border: 1px solid #ceb77a29;
+  border-radius: 11px;
+  padding: 5px;
+  background: #ba9c5a06;
+}
+.wiki-warehouse-shop-region > h3 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 2px 2px 4px;
+  color: #c3b28d;
+  font-size: 9px;
+  font-weight: 400;
+  cursor: help;
+}
+.wiki-warehouse-shop-card {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+  min-height: 76px;
+  align-items: center;
+  border: 1px solid #99adc41c;
+  border-radius: 10px;
+  background: #1a2b3b;
+  transition:
+    background 140ms,
+    border-color 140ms,
+    box-shadow 140ms;
+}
+.wiki-warehouse-shop-card:hover {
+  border-color: #c4b38c40;
+  background: #1f3245;
+}
+.wiki-warehouse-shop-card[data-related="true"] {
+  border-color: #c9b17c66;
+}
+.wiki-warehouse-shop-card[data-selected="true"] {
+  border-color: #e1bf7b;
+  background: #263547;
+  box-shadow: 0 0 0 2px #d8bd891c;
+}
+.wiki-warehouse-shop-card[data-search-match="false"]:not([data-related]):not([data-selected]) {
+  opacity: 0.38;
+}
+.wiki-warehouse-shop-card[data-search-match="true"]:not([data-selected]) {
+  border-color: #d8bd897a;
+}
+.wiki-warehouse-shop-select {
+  display: flex;
+  min-width: 0;
+  min-height: 74px;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+  border: 0;
+  border-radius: 9px 0 0 9px;
+  padding: 8px 3px 8px 9px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.wiki-warehouse-shop-select > .wiki-warehouse-art {
+  width: 37px;
+  height: 37px;
+  flex-shrink: 0;
+  border-radius: 8px;
+}
+.wiki-warehouse-shop-caption {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+.wiki-warehouse-shop-caption strong {
+  color: #e1e6ec;
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.wiki-warehouse-shop-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px 7px;
+}
+.wiki-warehouse-shop-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #d9bb7b;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-warehouse-shop-price > i {
+  width: 6px;
+  height: 6px;
+  border: 1px solid #d9bb7b;
+  border-radius: 50%;
+}
+.wiki-warehouse-shop-price small {
+  color: #8c9cad;
+  font-size: 9px;
+}
+.wiki-warehouse-shop-tier {
+  border-radius: 3px;
+  padding: 1px 4px;
+  background: #b1c3d10a;
+  color: #8d9fb0;
+  font-size: 8px;
+}
+.wiki-warehouse-shop-undated {
+  color: #a49c8b;
+  font-size: 8px;
+}
+.wiki-warehouse-shop-open {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  margin-right: 3px;
+  border: 0;
+  border-radius: 7px;
+  color: #a5b6c6;
+  cursor: pointer;
+}
+.wiki-warehouse-shop-open:hover,
+.wiki-warehouse-shop-open:focus-visible {
+  background: #d2ba7c1a;
+  color: #e4c887;
+}
+.wiki-warehouse-shop-select:focus-visible,
+.wiki-warehouse-shop-view button:focus-visible,
+.wiki-warehouse-shop-scroll:focus-visible {
+  outline: 2px solid #d5b978;
+  outline-offset: 2px;
+}
+.wiki-warehouse-shop-external {
+  display: grid;
+  gap: 9px;
+  margin-top: 15px;
+  border-top: 1px dashed #9eb5cf29;
+  padding-top: 12px;
+}
+.wiki-warehouse-shop-external > h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 7px;
+  margin: 0 0 2px;
+  font-size: 10px;
+}
+.wiki-warehouse-shop-external > h3 strong {
+  color: #c9b68e;
+  font-weight: 500;
+}
+.wiki-warehouse-shop-external > h3 span {
+  color: #7d91a5;
+  font-size: 9px;
+}
+.wiki-warehouse-shop-wires {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.wiki-warehouse-shop-wire,
+.wiki-warehouse-shop-wire-halo {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wiki-warehouse-shop-wire-halo {
+  stroke: #112032;
+  stroke-width: 5px;
+}
+.wiki-warehouse-shop-wire {
+  stroke: #b9b194;
+  stroke-width: 1.4px;
+  stroke-dasharray: 5 4;
+}
+[data-direct="true"] > .wiki-warehouse-shop-wire {
+  stroke: #e2bf79;
+  stroke-width: 2.6px;
+  stroke-dasharray: none;
+}
+.wiki-warehouse-shop-note {
+  margin: 10px 2px 0;
+  color: #8d9eaf;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.wiki-warehouse-shop-unplaced {
+  margin-top: 20px;
+}
+.wiki-warehouse-shop-unplaced > h2 {
+  color: #a7b4c2;
+  font-size: 11px;
+  font-weight: 400;
+}
+.wiki-warehouse-shop-unplaced > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
+  gap: 9px;
+  margin-top: 9px;
+}
+@media (max-width: 640px) {
+  .wiki-warehouse-shop-controls {
+    flex-wrap: nowrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .wiki-warehouse-shop-controls > .wiki-warehouse-catalog-filters {
+    flex: 1 1 0;
+    padding-block: 0;
+  }
+  .wiki-warehouse-shop-view {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    padding: 2px;
+  }
+  .wiki-warehouse-shop-view button {
+    width: 36px;
+    justify-content: center;
+    padding: 0;
+  }
+  .wiki-warehouse-shop-view-label {
+    display: none;
+  }
+  .wiki-warehouse-shop-guide {
+    min-height: 0;
+    flex-wrap: nowrap;
+    gap: 5px;
+    padding: 5px 1px 6px;
+    font-size: 9px;
+    line-height: 15px;
+  }
+  .wiki-warehouse-shop-guide > svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+  }
+  .wiki-warehouse-shop-guide > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .wiki-warehouse-shop-guide[data-selected] {
+    min-height: 36px;
+    flex-wrap: wrap;
+    padding-block: 3px;
+  }
+  .wiki-warehouse-shop-legend {
+    flex-basis: 100%;
+    gap: 12px;
+    padding-bottom: 2px;
+  }
+  .wiki-warehouse-shop-canvas {
+    padding-top: 10px;
+  }
+}

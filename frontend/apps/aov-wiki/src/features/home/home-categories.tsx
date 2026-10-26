@@ -1,10 +1,12 @@
 import { useId, type ReactNode } from "react"
 import { Link } from "react-router"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 import "./home-categories.css"
 
-const CATEGORIES: { name: string; icon: ReactNode; path?: string }[] = [
+const CATEGORIES: { name: string; englishName: string; icon: ReactNode; path?: string }[] = [
   {
     name: "Tướng",
+    englishName: "Heroes",
     path: "/hero",
     icon: (
       <>
@@ -18,6 +20,7 @@ const CATEGORIES: { name: string; icon: ReactNode; path?: string }[] = [
   },
   {
     name: "Trang phục",
+    englishName: "Skins",
     path: "/skins",
     icon: (
       <>
@@ -31,6 +34,8 @@ const CATEGORIES: { name: string; icon: ReactNode; path?: string }[] = [
   },
   {
     name: "Kho trang bị",
+    englishName: "Armory",
+    path: "/warehouse?tab=items",
     icon: (
       <>
         <path d="M4 4h7l20 23-5 5L4 11Zm40 0v7L22 32l-5-5L37 4Z" />
@@ -44,6 +49,7 @@ const CATEGORIES: { name: string; icon: ReactNode; path?: string }[] = [
   },
   {
     name: "Bản đồ",
+    englishName: "Maps",
     icon: (
       <>
         <path className="wiki-category-shade" d="m4 10 13-5 14 5 13-5v33l-13 5-14-5-13 5Z" />
@@ -57,6 +63,7 @@ const CATEGORIES: { name: string; icon: ReactNode; path?: string }[] = [
   },
   {
     name: "Chế độ chơi",
+    englishName: "Game modes",
     icon: (
       <>
         <path className="wiki-category-shade" d="M10 42V7h4v35Zm-4 2h17v-4H6Z" />
@@ -71,12 +78,13 @@ const CATEGORIES: { name: string; icon: ReactNode; path?: string }[] = [
 ]
 
 export function HomeCategories() {
+  const { locale, href } = useWikiContext()
   const gradientId = useId()
 
   return (
-    <section className="wiki-categories" aria-label="Danh mục wiki">
+    <section className="wiki-categories" aria-label={wikiText(locale, "Danh mục wiki", "Wiki categories")}>
       <ul className="wiki-categories-list">
-        {CATEGORIES.map(({ name, icon, path }, index) => (
+        {CATEGORIES.map(({ name, englishName, icon, path }, index) => (
           <li className={`wiki-categories-item${path ? " wiki-categories-item-linked" : ""}`} key={name}>
             <span className="wiki-categories-icon" aria-hidden="true">
               <svg viewBox="0 0 48 48" fill={`url(#${gradientId}-${index})`}>
@@ -98,11 +106,11 @@ export function HomeCategories() {
               </svg>
             </span>
             {path ? (
-              <Link to={path} className="wiki-categories-name wiki-categories-link">
-                {name}
+              <Link to={href(path)} className="wiki-categories-name wiki-categories-link">
+                {wikiText(locale, name, englishName)}
               </Link>
             ) : (
-              <span className="wiki-categories-name">{name}</span>
+              <span className="wiki-categories-name">{wikiText(locale, name, englishName)}</span>
             )}
           </li>
         ))}

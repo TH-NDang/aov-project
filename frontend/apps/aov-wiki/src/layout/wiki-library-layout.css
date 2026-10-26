@@ -46,17 +46,17 @@
 }
 
 .wiki-library-sidebar > h2 {
-  padding: 21px 16px 17px;
+  padding: 14px 16px 12px;
   border-bottom: 1px solid #ffffff06;
   color: #c5c6ce;
   font-family: Cambria, "Times New Roman", serif;
-  font-size: 25px;
+  font-size: 20px;
   font-weight: 700;
 }
 
 .wiki-library-main {
   min-width: 0;
-  padding: 28px 0 60px 42px;
+  padding: 16px 0 48px 28px;
   outline: none;
 }
 
@@ -71,24 +71,24 @@
 
 .wiki-library-sheet-heading {
   display: flex;
-  min-height: 82px;
+  min-height: 62px;
   align-items: center;
   justify-content: space-between;
-  padding: 24px 20px 15px;
+  padding: 14px 18px 12px;
   border-bottom: 1px solid #ffffff09;
 }
 
 .wiki-library-sheet-heading [data-slot="sheet-title"] {
   color: #ddd5c3;
   font-family: Cambria, "Times New Roman", serif;
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
 }
 
 .wiki-library-sheet-close {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border-radius: 50%;
   color: var(--gold);
@@ -144,6 +144,6 @@
     display: none;
   }
   .wiki-library-main {
-    padding: 12px 0 36px;
+    padding: 8px 0 32px;
   }
 }

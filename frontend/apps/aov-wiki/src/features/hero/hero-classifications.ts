@@ -26,6 +26,29 @@ export const HERO_POSITIONS: readonly HeroFilterOption<HeroPosition>[] = [
   { value: "ROAM", label: "Hỗ trợ", glyph: "roam" },
 ]
 
+const ENGLISH_LABELS: Record<HeroRole | HeroPosition, string> = {
+  TANK: "Tank",
+  WARRIOR: "Warrior",
+  ASSASSIN: "Assassin",
+  MAGE: "Mage",
+  MARKSMAN: "Marksman",
+  SUPPORT: "Support",
+  TOP: "Caesar lane",
+  JUNGLE: "Jungle",
+  MID: "Middle lane",
+  DRAGON: "Dragon lane",
+  ROAM: "Roam",
+}
+
+export function localizedHeroOptions<Value extends HeroRole | HeroPosition>(
+  options: readonly HeroFilterOption<Value>[],
+  locale: string,
+): readonly HeroFilterOption<Value>[] {
+  return locale.startsWith("en")
+    ? options.map((option) => ({ ...option, label: ENGLISH_LABELS[option.value] }))
+    : options
+}
+
 // These provisional assignments demonstrate position filters until editors provide the catalog data.
 const REFERENCE_POSITIONS: Readonly<Record<string, readonly HeroPosition[]>> = {
   aleister: ["MID"],

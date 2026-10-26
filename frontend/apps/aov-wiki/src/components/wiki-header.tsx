@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
-import { useNavigate } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import {
@@ -17,69 +17,15 @@ import {
   DrawerTrigger,
 } from "@aov/ui/components/drawer"
 import "./wiki-header.css"
+import { useWikiContext, wikiText } from "../context/wiki-context"
+import { WikiPreferenceControls } from "../context/wiki-preferences"
+import { WikiIcon } from "./wiki-icon"
 
 type IconName =
   "search" | "globe" | "user" | "chevron" | "check" | "home" | "more" | "close" | "chevronRight" | "contents"
 
-const ICON_PATHS: Record<IconName, ReactNode> = {
-  search: (
-    <>
-      <circle cx="10.5" cy="10.5" r="6.5" />
-      <path d="m16 16 4.5 4.5" />
-    </>
-  ),
-  globe: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <ellipse cx="12" cy="12" rx="4" ry="9" />
-      <path d="M3 12h18" />
-    </>
-  ),
-  user: (
-    <>
-      <circle cx="12" cy="8" r="3.5" />
-      <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
-    </>
-  ),
-  chevron: <path d="m8 10 4 4 4-4" />,
-  check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
-  home: (
-    <>
-      <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5.5h-5V20H5a1 1 0 0 1-1-1z" />
-    </>
-  ),
-  more: (
-    <>
-      <circle cx="6" cy="12" r="1" fill="currentColor" />
-      <circle cx="12" cy="12" r="1" fill="currentColor" />
-      <circle cx="18" cy="12" r="1" fill="currentColor" />
-    </>
-  ),
-  close: <path d="m6 6 12 12M18 6 6 18" />,
-  chevronRight: <path d="m10 8 4 4-4 4" />,
-  contents: (
-    <>
-      <path d="M9 6h12M9 12h12M9 18h12" />
-      <path d="M3 6h1M3 12h1M3 18h1" />
-    </>
-  ),
-}
-
 function Icon({ name, className }: { name: IconName; className?: string }) {
-  return (
-    <svg
-      className={cn("size-5 shrink-0", className)}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {ICON_PATHS[name]}
-    </svg>
-  )
+  return <WikiIcon name={name} className={cn("size-5 shrink-0", className)} />
 }
 
 /**
@@ -91,7 +37,7 @@ const PANEL_SURFACE =
 
 /** Compact round icon button on the right of the header. */
 const UTILITY_BUTTON =
-  "grid size-7 place-items-center rounded-full text-header-muted transition-colors hover:bg-white/7 hover:text-gold data-[state=open]:bg-white/7 data-[state=open]:text-gold"
+  "wiki-header-utility grid size-9 place-items-center rounded-full text-header-muted transition-colors hover:bg-white/7 hover:text-gold data-[state=open]:bg-white/7 data-[state=open]:text-gold"
 
 /** Row of the area list, shared by the desktop dropdown and the phone "more" sheet. */
 const SECTION_ROW =
@@ -173,6 +119,7 @@ function SectionIcon({ section }: { section: Section }) {
 
 /** One area row: icon, name (+ coming-soon badge), description and a check when current. */
 function SectionItemBody({ section }: { section: Section }) {
+  const { locale, t } = useWikiContext()
   return (
     <>
       <SectionIcon section={section} />
@@ -181,11 +128,17 @@ function SectionItemBody({ section }: { section: Section }) {
           {section.name}
           {section.soon && (
             <span className="rounded-full border border-white/15 px-[7px] py-px text-[10px] font-medium text-header-muted">
-              Sắp ra mắt
+              {t("comingSoon")}
             </span>
           )}
         </span>
-        <span className="text-xs leading-[1.35] text-white/50">{section.description}</span>
+        <span className="text-xs leading-[1.35] text-white/50">
+          {wikiText(
+            locale,
+            section.description,
+            section.id === "wiki" ? "Explore the Arena of Valor wiki" : "Watch live matches",
+          )}
+        </span>
       </span>
       {section.id === CURRENT_SECTION && <Icon name="check" className="size-4 text-gold" />}
     </>
@@ -194,12 +147,13 @@ function SectionItemBody({ section }: { section: Section }) {
 
 /** Desktop area switcher: chevron next to the wordmark. On phones the list lives in the "more" sheet. */
 function SectionSelector() {
+  const { t, href } = useWikiContext()
   const current = SECTIONS.find((s) => s.id === CURRENT_SECTION)!
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
         className="group grid h-8 w-6 place-items-center rounded-[6px] text-header-muted transition-colors hover:bg-white/7 hover:text-gold data-[state=open]:bg-white/7 data-[state=open]:text-gold max-[640px]:hidden"
-        aria-label={`Chọn khu vực — đang ở ${current.label}`}
+        aria-label={`${t("application")} — ${current.label}`}
       >
         <Icon
           name="chevron"
@@ -223,7 +177,7 @@ function SectionSelector() {
               asChild={!!s.href}
             >
               {s.href ? (
-                <a href={s.href} aria-current={selected ? "page" : undefined}>
+                <a href={href(s.href)} aria-current={selected ? "page" : undefined}>
                   <SectionItemBody section={s} />
                 </a>
               ) : (
@@ -279,13 +233,14 @@ function useScrollProgressVar(ref: RefObject<HTMLElement | null>, distance: numb
 
 /** Phone-only "more" sheet: area switcher, account and language, like the HoYoWiki mobile menu. */
 function MoreMenu({ onOpenContents }: { onOpenContents?: () => void }) {
+  const { t, href } = useWikiContext()
   const openContentsAfterClose = useRef(false)
 
   return (
     <Drawer>
       <DrawerTrigger
         className={cn(UTILITY_BUTTON, "wiki-header-mobile-control hidden max-[640px]:grid", MOBILE_ROUND)}
-        aria-label="Thêm"
+        aria-label={t("more")}
       >
         <Icon name="more" className="size-4" />
       </DrawerTrigger>
@@ -300,11 +255,15 @@ function MoreMenu({ onOpenContents }: { onOpenContents?: () => void }) {
         }}
       >
         <div className="relative px-4 pt-3 pb-4">
-          <DrawerTitle className="text-center font-heading text-base font-bold text-header-text">Thêm</DrawerTitle>
-          <DrawerDescription className="sr-only">Khu vực, tài khoản và ngôn ngữ</DrawerDescription>
+          <DrawerTitle className="text-center font-heading text-base font-bold text-header-text">
+            {t("more")}
+          </DrawerTitle>
+          <DrawerDescription className="sr-only">
+            {t("application")}, {t("market")}, {t("language")}
+          </DrawerDescription>
           <DrawerClose
             className="absolute top-2 right-3 grid size-8 place-items-center rounded-full text-header-muted hover:text-white"
-            aria-label="Đóng"
+            aria-label={t("close")}
           >
             <Icon name="close" className="size-[18px]" />
           </DrawerClose>
@@ -320,18 +279,18 @@ function MoreMenu({ onOpenContents }: { onOpenContents?: () => void }) {
                 }}
               >
                 <Icon name="contents" className="size-[18px]" />
-                <span className="flex-1">Mục lục</span>
+                <span className="flex-1">{t("contents")}</span>
                 <Icon name="chevronRight" className="size-4" />
               </button>
             </DrawerClose>
           )}
-          <nav aria-label="Khu vực" className="flex flex-col gap-1">
+          <nav aria-label={t("application")} className="flex flex-col gap-1">
             {SECTIONS.map((s) => {
               const selected = s.id === CURRENT_SECTION
               return s.href ? (
                 <a
                   key={s.id}
-                  href={s.href}
+                  href={href(s.href)}
                   className={SECTION_ROW + " hover:bg-white/8"}
                   data-selected={selected || undefined}
                   aria-current={selected ? "page" : undefined}
@@ -349,19 +308,12 @@ function MoreMenu({ onOpenContents }: { onOpenContents?: () => void }) {
             <span className="grid size-11 shrink-0 place-items-center rounded-full border border-white/10 bg-[#2a2e37] text-header-muted">
               <Icon name="user" className="size-5" />
             </span>
-            <span className="min-w-0 flex-1 text-[13px] leading-snug text-[#b2b4bc]">
-              Đăng nhập để lưu nội dung yêu thích
-            </span>
+            <span className="min-w-0 flex-1 text-[13px] leading-snug text-[#b2b4bc]">{t("signInNote")}</span>
             <span className="rounded-full border border-white/25 px-3 py-1.5 text-xs text-header-muted">
-              Sắp ra mắt
+              {t("comingSoon")}
             </span>
           </div>
-          <div className="flex h-12 items-center gap-3 border-b border-white/8 px-1 text-sm">
-            <Icon name="globe" className="size-[18px] text-header-muted" />
-            <span className="flex-1">Ngôn ngữ</span>
-            <span className="text-xs text-header-muted">Tiếng Việt</span>
-            <Icon name="chevronRight" className="size-4 text-header-muted" />
-          </div>
+          <WikiPreferenceControls mobile />
         </div>
       </DrawerContent>
     </Drawer>
@@ -377,12 +329,15 @@ function PanelText({ children }: { children: ReactNode }) {
 }
 
 const SEARCH_SCOPES = {
-  heroes: { path: "/hero", title: "Tìm tướng", placeholder: "Tìm tướng…" },
-  skins: { path: "/skins", title: "Tìm trang phục", placeholder: "Tìm trang phục…" },
+  heroes: { path: "/hero", titleKey: "searchHeroes" },
+  skins: { path: "/skins", titleKey: "searchSkins" },
+  warehouse: { path: "/warehouse", titleKey: "searchWarehouse" },
 } as const
 
 function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: keyof typeof SEARCH_SCOPES }) {
   const navigate = useNavigate()
+  const { t, href, locale } = useWikiContext()
+  const [params] = useSearchParams()
   const [search, setSearch] = useState("")
   const [open, setOpen] = useState(false)
   const target = SEARCH_SCOPES[scope]
@@ -390,8 +345,9 @@ function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: key
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const query = new URLSearchParams()
+    if (scope === "warehouse" && params.get("tab")) query.set("tab", params.get("tab")!)
     if (search.trim()) query.set("q", search.trim())
-    navigate(`${target.path}${query.size ? `?${query}` : ""}`)
+    navigate(href(`${target.path}${query.size ? `?${query}` : ""}`))
     setOpen(false)
   }
 
@@ -408,8 +364,8 @@ function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: key
       <input
         type="search"
         enterKeyHint="search"
-        aria-label={`${target.title} trong wiki`}
-        placeholder={target.placeholder}
+        aria-label={`${t(target.titleKey)} ${wikiText(locale, "trong wiki", "in the wiki")}`}
+        placeholder={`${t(target.titleKey)}…`}
         maxLength={120}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
@@ -427,12 +383,12 @@ function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: key
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         className={cn(UTILITY_BUTTON, "wiki-header-mobile-control hidden max-[860px]:grid", MOBILE_ROUND)}
-        aria-label="Tìm kiếm"
+        aria-label={t("search")}
       >
         <Icon name="search" className="max-[640px]:size-4" />
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={12} className={cn(PANEL_SURFACE, "w-[min(320px,calc(100vw-24px))] p-4")}>
-        <PanelTitle>{target.title}</PanelTitle>
+        <PanelTitle>{t(target.titleKey)}</PanelTitle>
         {form}
       </PopoverContent>
     </Popover>
@@ -454,6 +410,7 @@ export function WikiHeader({
   feedback,
   searchScope = "heroes",
 }: WikiHeaderProps) {
+  const { t, href, locale } = useWikiContext()
   // Hero headers on every viewport and the home phone header darken over the first 100px of scroll.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)
@@ -478,8 +435,8 @@ export function WikiHeader({
           Below 640px the brand is centered absolutely between the round buttons. */}
       <div className="relative grid h-full grid-cols-[minmax(max-content,1fr)_minmax(0,540px)_minmax(max-content,1fr)] items-center gap-9 px-6 max-[1100px]:gap-6 max-[1100px]:px-5 max-[860px]:flex max-[860px]:justify-between max-[640px]:px-[15px]">
         <a
-          href="/"
-          aria-label="Trang chủ"
+          href={href("/")}
+          aria-label={t("home")}
           className="wiki-header-mobile-control hidden size-7 place-items-center rounded-full border border-white/25 text-white transition-colors hover:border-gold/60 hover:text-gold max-[640px]:grid"
         >
           <Icon name="home" className="size-4" />
@@ -490,7 +447,7 @@ export function WikiHeader({
             (pageTitle || variant === "hero") && "max-[640px]:hidden",
           )}
         >
-          <a className="group shrink-0 rounded-[9px]" href="/" aria-label="AOV Wiki — Trang chủ">
+          <a className="group shrink-0 rounded-[9px]" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
             <img
               className="block size-7 rounded-[8px] border border-[#efc78480] bg-[#bd843f] object-cover transition-transform duration-200 group-hover:-translate-y-px group-hover:-rotate-4 max-[640px]:size-6 max-[640px]:rounded-[7px]"
               src="/images/mole-logo-v4.png"
@@ -503,7 +460,7 @@ export function WikiHeader({
           <div className="flex items-center gap-0.5">
             <a
               className="inline-flex shrink-0 pt-0.5 pr-1 pb-1.5 no-underline"
-              href="/"
+              href={href("/")}
               tabIndex={-1}
               aria-hidden="true"
             >
@@ -514,7 +471,7 @@ export function WikiHeader({
         </div>
 
         {pageTitle && variant !== "hero" && (
-          <span className="absolute left-1/2 hidden max-w-[calc(100%-240px)] -translate-x-1/2 truncate font-[Cambria,serif] text-base font-bold text-gold max-[640px]:block">
+          <span className="wiki-header-page-title absolute left-1/2 hidden max-w-[calc(100%-240px)] -translate-x-1/2 truncate font-[Cambria,serif] text-base font-bold text-gold max-[640px]:block">
             {pageTitle.replace(/^Thư viện\s+/u, "")}
           </span>
         )}
@@ -530,65 +487,64 @@ export function WikiHeader({
             <input
               type="search"
               className="h-full min-w-0 flex-1 border-0 bg-transparent text-sm text-white/85 outline-none placeholder:text-white/45 disabled:cursor-not-allowed"
-              aria-label="Tìm kiếm wiki — sắp ra mắt"
-              placeholder="Tìm kiếm"
+              aria-label={`${t("search")} — ${t("comingSoon")}`}
+              placeholder={t("search")}
               disabled
             />
-            <span className="text-[10px] whitespace-nowrap text-white/35 max-[1100px]:hidden">Sắp ra mắt</span>
+            <span className="text-[10px] whitespace-nowrap text-white/35 max-[1100px]:hidden">{t("comingSoon")}</span>
           </div>
         )}
 
         <nav
-          className="col-start-3 flex items-center gap-6 justify-self-end max-[1100px]:gap-4 max-[640px]:gap-3"
-          aria-label="Tiện ích"
+          className="col-start-3 flex items-center gap-3 justify-self-end max-[640px]:gap-1"
+          aria-label={t("utilities")}
         >
           {variant !== "home" ? (
             <LibrarySearch mobile scope={searchScope} />
           ) : (
             <HeaderPanel
-              label="Tìm kiếm"
+              label={t("search")}
               className={cn(UTILITY_BUTTON, "hidden max-[860px]:grid", MOBILE_ROUND)}
               trigger={<Icon name="search" className="max-[640px]:size-4" />}
             >
-              <PanelTitle>Tìm kiếm wiki</PanelTitle>
-              <PanelText>Tìm kiếm tướng, trang phục và trang bị sẽ sớm có mặt.</PanelText>
+              <PanelTitle>{t("search")}</PanelTitle>
+              <PanelText>
+                {wikiText(
+                  locale,
+                  "Tìm kiếm tướng, trang phục và trang bị sẽ sớm có mặt.",
+                  "Global search is coming soon.",
+                )}
+              </PanelText>
             </HeaderPanel>
           )}
           {onOpenContents && variant !== "hero" && (
             <button
               type="button"
               className={cn(UTILITY_BUTTON, "hidden max-[640px]:grid", MOBILE_ROUND)}
-              aria-label="Mở mục lục"
+              aria-label={t("openContents")}
               onClick={onOpenContents}
             >
               <Icon name="contents" className="size-4" />
             </button>
           )}
           {feedback && <span className="inline-flex max-[640px]:hidden">{feedback}</span>}
+          <WikiPreferenceControls />
           <HeaderPanel
-            label="Ngôn ngữ: Tiếng Việt"
-            className="flex h-7 items-center gap-1.5 rounded-[8px] border border-white/25 pr-1 pl-1.5 text-xs text-header-muted transition-colors hover:border-white/40 hover:text-header-text data-[state=open]:border-white/40 data-[state=open]:text-header-text max-[640px]:hidden"
-            trigger={
-              <>
-                <Icon name="globe" className="size-[18px]" />
-                <span className="min-w-[15px]">VI</span>
-                <Icon name="chevron" className="size-[18px]" />
-              </>
-            }
-          >
-            <PanelTitle>Ngôn ngữ</PanelTitle>
-            <p className="flex items-center justify-between rounded-[6px] bg-primary/8 p-2.5 text-[13px]">
-              Tiếng Việt <Icon name="check" className="size-4 text-primary" />
-            </p>
-          </HeaderPanel>
-          <HeaderPanel
-            label="Tài khoản"
+            label={t("account")}
             className={cn(UTILITY_BUTTON, "border border-white/10 bg-[#2a2e37] max-[640px]:hidden")}
             trigger={<Icon name="user" className="size-[18px]" />}
           >
-            <p className="mb-2 text-[9px] tracking-[1px] text-primary">CHÀO NHÀ THÁM HIỂM</p>
-            <PanelTitle>Góc của bạn</PanelTitle>
-            <PanelText>Đăng nhập và lưu nội dung yêu thích sẽ sớm có mặt.</PanelText>
+            <p className="mb-2 text-[9px] tracking-[1px] text-primary">
+              {wikiText(locale, "CHÀO NHÀ THÁM HIỂM", "WELCOME, EXPLORER")}
+            </p>
+            <PanelTitle>{wikiText(locale, "Góc của bạn", "Your corner")}</PanelTitle>
+            <PanelText>
+              {wikiText(
+                locale,
+                "Đăng nhập và lưu nội dung yêu thích sẽ sớm có mặt.",
+                "Sign-in and saved favorites are coming soon.",
+              )}
+            </PanelText>
           </HeaderPanel>
           <MoreMenu onOpenContents={variant === "hero" ? onOpenContents : undefined} />
         </nav>

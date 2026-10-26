@@ -11,7 +11,7 @@
   align-items: center;
   gap: 6px;
   color: #7f8d9f;
-  font-size: 11px;
+  font-size: 10px;
 }
 .wiki-skin-breadcrumb a {
   color: #aab6c4;
@@ -24,27 +24,27 @@
   position: relative;
   isolation: isolate;
   display: flex;
-  min-height: 88px;
+  min-height: 62px;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 10px;
   overflow: hidden;
 }
 .wiki-skin-collection-identity {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
 }
 .wiki-skin-collection-mark {
   position: relative;
   display: grid;
-  width: 46px;
-  height: 46px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   place-items: center;
   border: 1px solid #e3c88e33;
-  border-radius: 13px 5px 13px 5px;
+  border-radius: 10px 4px 10px 4px;
   background: linear-gradient(135deg, #e4c88e14, #e4c88e03);
   color: #e4c88e;
 }
@@ -59,24 +59,24 @@
   margin: 0;
   color: #f0dfb9;
   font:
-    700 clamp(28px, 3vw, 36px)/1.2 Cambria,
+    700 clamp(23px, 2.5vw, 28px)/1.2 Cambria,
     "Times New Roman",
     serif;
   letter-spacing: 0.01em;
 }
 .wiki-skin-collection-count {
   display: flex;
-  min-width: 114px;
-  min-height: 30px;
+  min-width: 96px;
+  min-height: 26px;
   align-items: center;
   justify-content: center;
   gap: 7px;
   border: 1px solid #b4c3d114;
   border-radius: 20px;
-  padding: 6px 11px;
+  padding: 5px 9px;
   background: #111d2b52;
   color: #8e9eb2;
-  font-size: 11px;
+  font-size: 10px;
   white-space: nowrap;
 }
 .wiki-skin-collection-count > svg {
@@ -106,17 +106,17 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 7px;
   border: 1px solid #bdcbd00d;
   border-radius: 12px;
-  padding: 8px;
+  padding: 5px;
   background: linear-gradient(100deg, #111c2a66, #1421322e);
   box-shadow: inset 0 1px #ffffff03;
 }
 .wiki-skin-search {
   display: flex;
   min-width: 170px;
-  height: 38px;
+  height: 36px;
   flex: 1;
   align-items: center;
   gap: 9px;
@@ -153,7 +153,7 @@
   min-width: 0;
   max-width: 100%;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   overflow-x: auto;
   scrollbar-width: none;
   touch-action: pan-x;
@@ -163,7 +163,7 @@
 }
 .wiki-skin-select[data-slot="select-trigger"],
 span.wiki-skin-select {
-  width: 146px;
+  width: 130px;
   height: 36px;
   flex-shrink: 0;
   gap: 8px;
@@ -173,7 +173,7 @@ span.wiki-skin-select {
   background: #26344875;
   color: #b7c3d0;
   box-shadow: none;
-  font-size: 12px;
+  font-size: 11px;
 }
 .wiki-skin-select[data-slot="select-trigger"] > svg:first-child {
   flex-shrink: 0;
@@ -208,8 +208,8 @@ span.wiki-skin-select {
 }
 .wiki-skin-clear {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   place-items: center;
   border-radius: 8px;
@@ -222,7 +222,7 @@ span.wiki-skin-select {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px 12px;
-  margin-top: 20px;
+  margin-top: 14px;
 }
 .wiki-skin-card {
   position: relative;
@@ -631,16 +631,16 @@ span.wiki-skin-select {
     white-space: nowrap;
   }
   .wiki-skin-collection-heading {
-    min-height: 48px;
+    min-height: 40px;
     gap: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
   }
   .wiki-skin-collection-identity {
     gap: 8px;
   }
   .wiki-skin-collection-mark {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border-radius: 9px 3px 9px 3px;
   }
   .wiki-skin-collection-mark > svg {
@@ -648,7 +648,7 @@ span.wiki-skin-select {
     height: 18px;
   }
   .wiki-skin-title {
-    font-size: 23px;
+    font-size: 20px;
   }
   .wiki-skin-collection-count {
     min-width: 0;
@@ -669,13 +669,13 @@ span.wiki-skin-select {
     right: 27px;
   }
   .wiki-skin-toolbar {
-    gap: 8px;
-    padding: 7px;
+    gap: 5px;
+    padding: 5px;
     border-radius: 10px;
   }
   .wiki-skin-search {
     min-width: 0;
-    height: 34px;
+    height: 36px;
     flex-basis: 100%;
   }
   .wiki-skin-search input {
@@ -686,14 +686,14 @@ span.wiki-skin-select {
   }
   .wiki-skin-select[data-slot="select-trigger"],
   span.wiki-skin-select {
-    width: 134px;
-    height: 32px;
+    width: 124px;
+    height: 36px;
     font-size: 11px;
   }
   .wiki-skin-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 12px 9px;
-    margin-top: 18px;
+    margin-top: 12px;
   }
   .wiki-skin-card {
     border-radius: 4px 18px 4px 4px;

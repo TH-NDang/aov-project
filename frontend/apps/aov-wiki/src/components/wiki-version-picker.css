@@ -1,0 +1,122 @@
+.wiki-version-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+.wiki-version-select[data-slot="select-trigger"] {
+  min-width: 0;
+  width: 200px;
+  height: 36px;
+  gap: 7px;
+  border: 1px solid #b4c6d518;
+  border-radius: 7px;
+  padding: 0 9px;
+  background: #13203370;
+  color: #bdc9d5;
+  box-shadow: none;
+  font-size: 11px;
+}
+.wiki-version-select[data-slot="select-trigger"] > svg:first-child {
+  flex-shrink: 0;
+  color: #cbb68c;
+}
+.wiki-version-select [data-slot="select-value"] {
+  display: block;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.wiki-version-select [data-slot="select-value"] small {
+  display: none;
+}
+.wiki-version-menu[data-slot="select-content"] {
+  max-height: min(320px, var(--radix-select-content-available-height));
+  max-width: calc(100vw - 24px);
+  border: 1px solid #ceb88140;
+  border-radius: 9px;
+  background: #233245;
+  color: #ccd5df;
+}
+.wiki-version-menu [data-slot="select-item"] {
+  min-height: 36px;
+  font-size: 12px;
+}
+.wiki-version-menu small {
+  display: block;
+  color: #91a4b8;
+  font-size: 10px;
+}
+.wiki-version-action {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 7px;
+  color: #a6b6c7;
+}
+.wiki-version-action:hover,
+.wiki-version-action:focus-visible {
+  background: #d9c18c12;
+  color: #dfc690;
+}
+.wiki-version-action[data-attention] {
+  color: #dfc690;
+  background: #d9c18c10;
+}
+.wiki-version-info[data-slot="popover-content"] {
+  width: min(300px, calc(100vw - 24px));
+  border-color: #ceb88130;
+  border-radius: 10px;
+  background: #233245;
+  color: #b5c4d2;
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.wiki-version-info h2 {
+  margin: 0 0 8px;
+  color: #dfc690;
+  font-size: 13px;
+  font-weight: 600;
+}
+.wiki-version-info p + p,
+.wiki-version-info label + p {
+  margin-top: 9px;
+  color: #92a6b8;
+  font-size: 11px;
+}
+.wiki-version-info label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  min-height: 36px;
+  cursor: pointer;
+}
+.wiki-version-info input {
+  width: 15px;
+  height: 15px;
+  accent-color: #d9c18c;
+}
+.wiki-version-info button {
+  color: #dfc690;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 640px) {
+  .wiki-version-select[data-slot="select-trigger"] {
+    width: 0;
+    flex: 1;
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+  .wiki-version-picker {
+    gap: 4px;
+    margin: 6px 0 8px;
+  }
+}

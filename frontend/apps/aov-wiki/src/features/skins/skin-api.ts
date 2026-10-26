@@ -1,5 +1,6 @@
 import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query"
 import type { HeroMedia } from "../hero/hero-api"
+import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
 
 export interface SkinBadge {
   code: string
@@ -9,6 +10,7 @@ export interface SkinBadge {
 }
 
 export interface SkinEntry {
+  unscopedBaseline?: boolean
   heroId: string
   heroCode: string
   heroName: string
@@ -40,12 +42,14 @@ export interface SkinFilters {
   rarity: string
 }
 
-export function skinCatalogQuery(filters: SkinFilters) {
+export function skinCatalogQuery(filters: SkinFilters, scope: WikiCatalogScope) {
   return infiniteQueryOptions({
-    queryKey: ["wiki", "skins", "VN", "vi-VN", filters] as const,
+    queryKey: ["wiki", "skins", ...wikiScopeKey(scope), filters] as const,
     initialPageParam: 0,
     queryFn: async ({ pageParam, signal }): Promise<SkinCatalog> => {
-      const query = new URLSearchParams({ region: "VN", locale: "vi-VN", page: String(pageParam), size: "24" })
+      const query = wikiCatalogParameters(scope)
+      query.set("page", String(pageParam))
+      query.set("size", "24")
       for (const [key, value] of Object.entries(filters)) if (value) query.set(key, value)
 
       const response = await fetch(`/api/wiki/v1/skins?${query}`, { signal, credentials: "omit" })

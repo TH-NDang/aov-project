@@ -1,4 +1,5 @@
 import { queryOptions } from "@tanstack/react-query"
+import { wikiCatalogParameters, type WikiCatalogScope } from "../../lib/wiki-catalog"
 
 export interface SeasonPatch {
   id: string
@@ -21,20 +22,24 @@ export interface SeasonUpdates {
   patches: SeasonPatch[]
 }
 
-export const seasonUpdatesQuery = queryOptions({
-  queryKey: ["wiki", "season-updates", "VN", "vi-VN"],
-  queryFn: async ({ signal }): Promise<SeasonUpdates> => {
-    const response = await fetch("/api/wiki/v1/seasons/current/updates?region=VN&locale=vi-VN&limit=4", {
-      signal,
-      credentials: "omit",
-    })
-    if (!response.ok) throw new Error("Season updates are unavailable.")
-    return response.json()
-  },
-  staleTime: 60_000,
-  refetchInterval: 5 * 60_000,
-  retry: 1,
-})
+export const seasonUpdatesQuery = (scope: WikiCatalogScope) =>
+  queryOptions({
+    queryKey: ["wiki", "season-updates", scope.region, scope.locale],
+    queryFn: async ({ signal }): Promise<SeasonUpdates> => {
+      const response = await fetch(
+        `/api/wiki/v1/seasons/current/updates?${wikiCatalogParameters(scope, false)}&limit=4`,
+        {
+          signal,
+          credentials: "omit",
+        },
+      )
+      if (!response.ok) throw new Error("Season updates are unavailable.")
+      return response.json()
+    },
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+    retry: 1,
+  })
 
 const patchDate = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", timeZone: "Asia/Ho_Chi_Minh" })
 

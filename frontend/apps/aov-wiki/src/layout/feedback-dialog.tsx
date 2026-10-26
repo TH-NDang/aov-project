@@ -8,6 +8,8 @@ import {
   DialogTrigger,
 } from "@aov/ui/components/dialog"
 import "./feedback-dialog.css"
+import { useWikiContext, wikiText } from "../context/wiki-context"
+import { WikiIcon } from "../components/wiki-icon"
 
 const DRAFT_KEY = "aov-wiki:feedback-draft:v1"
 const MAX_IMAGES = 3
@@ -31,33 +33,12 @@ function savedDescription() {
 }
 
 function FeedbackIcon({ upload = false }: { upload?: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {upload ? (
-        <>
-          <rect x="3" y="4" width="18" height="16" rx="3" />
-          <circle cx="8" cy="9" r="1.5" />
-          <path d="m4 17 5-5 4 4 3-3 5 5M16 7h4m-2-2v4" />
-        </>
-      ) : (
-        <>
-          <path d="M14 4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-9" />
-          <path d="m11 12 1-4 7-7 4 4-7 7-5 1Zm6-9 4 4M7 17h7" />
-        </>
-      )}
-    </svg>
-  )
+  return <WikiIcon name={upload ? "imagePlus" : "feedback"} />
 }
 
 export function FeedbackDialog() {
+  const { locale, t } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [description, setDescription] = useState(savedDescription)
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [attachmentError, setAttachmentError] = useState("")
@@ -79,15 +60,15 @@ export function FeedbackDialog() {
     setAttachmentError("")
 
     if (attachments.length + files.length > MAX_IMAGES) {
-      setAttachmentError("Bạn có thể chọn tối đa 3 ảnh.")
+      setAttachmentError(text("Bạn có thể chọn tối đa 3 ảnh.", "Choose up to 3 images."))
       return
     }
     if (files.some((file) => !["image/png", "image/jpeg"].includes(file.type))) {
-      setAttachmentError("Vui lòng chọn ảnh PNG hoặc JPG.")
+      setAttachmentError(text("Vui lòng chọn ảnh PNG hoặc JPG.", "Choose PNG or JPG images."))
       return
     }
     if (files.some((file) => file.size > MAX_IMAGE_BYTES)) {
-      setAttachmentError("Mỗi ảnh cần nhỏ hơn hoặc bằng 5 MB.")
+      setAttachmentError(text("Mỗi ảnh cần nhỏ hơn hoặc bằng 5 MB.", "Each image must be 5 MB or smaller."))
       return
     }
 
@@ -117,43 +98,41 @@ export function FeedbackDialog() {
         DRAFT_KEY,
         JSON.stringify({ description, page: window.location.pathname, savedAt: new Date().toISOString() }),
       )
-      setStatus("Đã lưu bản nháp trên thiết bị này.")
+      setStatus(text("Đã lưu bản nháp trên thiết bị này.", "Draft saved on this device."))
     } catch {
-      setStatus("Trình duyệt chưa cho phép lưu bản nháp. Nội dung vẫn được giữ khi bạn còn ở trang này.")
+      setStatus(
+        text(
+          "Trình duyệt chưa cho phép lưu bản nháp. Nội dung vẫn được giữ khi bạn còn ở trang này.",
+          "Draft storage is unavailable. Your text is kept while this page stays open.",
+        ),
+      )
     }
   }
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button type="button" className="wiki-feedback-trigger" aria-label="Phản hồi vấn đề" title="Phản hồi vấn đề">
+        <button type="button" className="wiki-feedback-trigger" aria-label={t("feedback")} title={t("feedback")}>
           <FeedbackIcon />
         </button>
       </DialogTrigger>
       <DialogContent className="wiki-feedback-dialog" showCloseButton={false}>
         <div className="wiki-feedback-heading">
-          <DialogTitle>Phản hồi vấn đề</DialogTitle>
-          <DialogClose className="wiki-feedback-close" aria-label="Đóng phản hồi">
-            <svg
-              viewBox="0 0 24 24"
-              width="18"
-              height="18"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              aria-hidden="true"
-            >
-              <path d="m6 6 12 12M18 6 6 18" />
-            </svg>
+          <DialogTitle>{t("feedback")}</DialogTitle>
+          <DialogClose className="wiki-feedback-close" aria-label={t("close")}>
+            <WikiIcon name="close" size={18} />
           </DialogClose>
         </div>
         <DialogDescription className="wiki-feedback-note">
-          Bản nháp được lưu trên thiết bị này, chưa gửi đến quản trị viên.
+          {text(
+            "Bản nháp được lưu trên thiết bị này, chưa gửi đến quản trị viên.",
+            "Drafts stay on this device and are not sent to an administrator.",
+          )}
         </DialogDescription>
         <form className="wiki-feedback-form" onSubmit={saveDraft}>
           <div>
             <label className="wiki-feedback-label" htmlFor={`${fieldId}-description`}>
-              Mô tả vấn đề <span aria-hidden="true">*</span>
+              {text("Mô tả vấn đề", "Describe the issue")} <span aria-hidden="true">*</span>
             </label>
             <div className="wiki-feedback-description">
               <textarea
@@ -163,7 +142,10 @@ export function FeedbackDialog() {
                   setDescription(event.target.value)
                   setStatus("")
                 }}
-                placeholder="Bạn gặp vấn đề ở đâu? Hãy mô tả để chúng tôi có thể kiểm tra."
+                placeholder={text(
+                  "Bạn gặp vấn đề ở đâu? Hãy mô tả để chúng tôi có thể kiểm tra.",
+                  "Where did you encounter the issue? Describe it here.",
+                )}
                 required
                 maxLength={1000}
               />
@@ -174,21 +156,25 @@ export function FeedbackDialog() {
           </div>
           <div>
             <label className="wiki-feedback-label" htmlFor={`${fieldId}-images`}>
-              Ảnh minh họa
+              {text("Ảnh minh họa", "Screenshots")}
             </label>
             <div className="wiki-feedback-images">
               {attachments.map((image) => (
                 <figure key={image.id}>
                   <img src={image.preview} alt={image.name} />
-                  <button type="button" aria-label={`Xóa ảnh ${image.name}`} onClick={() => removeAttachment(image.id)}>
-                    ×
+                  <button
+                    type="button"
+                    aria-label={text(`Xóa ảnh ${image.name}`, `Remove image ${image.name}`)}
+                    onClick={() => removeAttachment(image.id)}
+                  >
+                    <WikiIcon name="close" size={12} />
                   </button>
                 </figure>
               ))}
               {attachments.length < MAX_IMAGES && (
                 <label className="wiki-feedback-upload" htmlFor={`${fieldId}-images`}>
                   <FeedbackIcon upload />
-                  <span>Thêm ảnh</span>
+                  <span>{text("Thêm ảnh", "Add image")}</span>
                   <input
                     id={`${fieldId}-images`}
                     className="sr-only"
@@ -201,7 +187,10 @@ export function FeedbackDialog() {
               )}
             </div>
             <p className="wiki-feedback-image-note">
-              Tối đa 3 ảnh PNG/JPG, 5 MB mỗi ảnh. Ảnh chỉ giữ khi bạn còn ở trang này.
+              {text(
+                "Tối đa 3 ảnh PNG/JPG, 5 MB mỗi ảnh. Ảnh chỉ giữ khi bạn còn ở trang này.",
+                "Up to 3 PNG/JPG images, 5 MB each. Images are kept only while this page stays open.",
+              )}
             </p>
             {attachmentError && (
               <p className="wiki-feedback-error" role="alert">
@@ -215,7 +204,7 @@ export function FeedbackDialog() {
             </p>
           )}
           <button className="wiki-feedback-save" type="submit" disabled={!description.trim()}>
-            Lưu bản nháp
+            {text("Lưu bản nháp", "Save draft")}
           </button>
         </form>
       </DialogContent>
