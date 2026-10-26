@@ -343,6 +343,33 @@ Không trả toàn bộ skills/skins trong list.
 chưa có phiên bản hiện hành; không thay `portrait` bằng ảnh `head`. Chỉ tải metadata ảnh cho trang
 kết quả đang trả, gộp HEAD/PORTRAIT qua một lần đọc Media theo lô; không tải detail cho từng tướng.
 
+### Thị trường, ngôn ngữ và mốc xem danh mục wiki
+
+`GET /api/wiki/v1/catalog-context?region=VN&locale=vi-VN` là API công khai dành cho bộ chọn của wiki.
+Chỉ chấp nhận hai tham số `region`, `locale`; locale UI hiện hỗ trợ `vi-VN`, `en-US`.
+Response gồm `regions` (cùng hợp đồng `/regions`), `locales:[{code,name,nativeName}]`,
+`seasons:[{id,code,name,ordinal,current,patches}]` và `current:{rulesetId,seasonId?,patchVariantId}`.
+Mỗi patch có `{id,code,title,rulesetId,ordinal,published,regionalDate?,unknownDate}`;
+`id` là UUID patch variant. Chỉ trả patch và variant đã công bố trong ruleset hiện tại của thị trường,
+đã đến thời điểm công bố và không vượt ordinal đang có hiệu lực. Không suy ra ngày phát hành từ
+thời điểm nhập liệu: `regionalDate` lấy từ lịch thị trường đã xác nhận; mốc quan sát chưa rõ ngày
+(ví dụ dữ liệu nền S3) giữ `null` và `unknownDate=true`. Phạm vi này chưa cam kết lịch sử các ruleset cũ.
+
+Các API public `/heroes`, `/heroes/{id}`, `/heroes/{id}/manifest`, `/skins`,
+`/{items|arcana|enchantments|spells}` và chi tiết tương ứng, `/spells/archived`,
+`/reference-catalog`, `/reference-skills` nhận thêm `seasonId?`, `patchVariantId?`, `includeUnscoped=false`.
+Chọn mùa không bắt buộc chọn patch: backend lấy patch công bố cuối cùng đủ điều kiện trong mùa đó.
+Nếu gửi cả hai, patch phải thuộc mùa; patch ngoài ruleset/thị trường, chưa công bố hoặc ở tương lai bị từ chối.
+Bản ghi không thay đổi được kế thừa đến ordinal đã chọn, không chỉ trả các mục thay đổi trong patch.
+
+Không chọn mùa/patch giữ cách xem hiện tại, bao gồm dữ liệu nền chưa xác định patch. Khi chọn mốc lịch sử,
+backend mặc định loại các quan sát có patch `null` để không trình bày chúng như sự kiện lịch sử đã được xác minh.
+`includeUnscoped=true` là lựa chọn rõ ràng để xem thêm các quan sát đó; frontend phải ghi rõ chưa xác định patch,
+không coi là khớp mùa. Tướng list/detail và trang phục có `unscopedBaseline`; kho trang bị dùng
+`revision.effectiveFromPatchVariantId == null`. Tham chiếu và kỹ năng dùng cùng scope; khóa cache tách theo
+thị trường, locale, ruleset, patch variant và việc cho phép quan sát chưa xác định patch.
+Các section tướng bất biến vẫn đọc theo UUID đã được manifest chọn, không cần áp dụng lại bộ lọc thời gian.
+
 ### Danh mục trang phục công khai
 
 ```http
@@ -2172,6 +2199,18 @@ bản dịch giữ applicability của nguồn. Không cho dùng nguồn tương
 Nháp DATA_BASELINE độc lập cho phép bổ sung/đổi patch quan sát đã xuất bản cùng ruleset khi sửa;
 không gửi hoặc gửi null giữ mốc đang có. Chỉ đổi mốc cũng tăng version, không tự tạo changelog.
 
+Riêng Trang bị và Phụ trợ, `DATA_BASELINE` được xuất bản khi đủ nội dung nhưng chưa xác định
+patch quan sát. `missingFields` không yêu cầu patch cho dữ liệu nền này; không tự gán mùa, ngày
+hay tạo sự kiện thêm mới. Correction/translation có nguồn đã xuất bản trong cùng ruleset được
+kế thừa ngữ cảnh chưa rõ; không cho tạo correction độc lập để bỏ qua kiểm tra. `GAME_PATCH`
+luôn phải có patch cụ thể, kể cả lúc fork từ dữ liệu nền chưa rõ mốc. Khi xuất bản patch đó phải
+đã công bố. Bảng ngọc và Phù hiệu vẫn giữ yêu cầu mốc quan sát trước khi xuất bản.
+
+Body Update của Trang bị và Phụ trợ có thêm `clearPatchContext?:boolean`. Chỉ nháp DATA_BASELINE
+độc lập (sourceRevisionId null) mới được xóa mốc đã chọn; không được vừa gửi patch vừa yêu cầu xóa.
+Không gửi cờ này giữ hành vi cũ: patch null trong body nghĩa là giữ mốc hiện tại. Correction,
+translation và GAME_PATCH không được thay hoặc xóa mốc kế thừa. Bản đã xuất bản vẫn bất biến.
+
 Content chung có iconAssetId,translations,notes. Translation gồm locale,name,summary?,description?,
 statLabels?,variantLabels?,effects?; effect gồm key,name,description,type. `notes` là ghi chú
 biên tập/nguồn, tối đa 32768 ký tự; public không trả ghi chú này. Các danh sách tùy chọn mặc định rỗng.
@@ -2211,16 +2250,44 @@ liên tiếp từ 0, chỉ tăng version và ghi audit cho mục đổi vị tr�
 không đổi ảnh, nội dung/bản dịch, ghi chú hay patch. Lỗi version/thành viên trả 409.
 
 Public GET `/items`, `/arcana`, `/spells`, `/enchantments` và `/{id}` chỉ trả snapshot PUBLISHED
-được phân giải theo region/patch hiện hành. Locale chọn bản dịch riêng và không thay revision;
-ưu tiên locale yêu cầu, vi-VN, en-US, rồi locale đầu tiên. Nháp không bị công khai.
+được phân giải theo region/patch hiện hành. Danh sách nhận `region=VN`, `locale=vi-VN`, `page=0`,
+`size=20` (1–100); chi tiết chỉ nhận region và locale. Tham số ngoài danh mục bị từ chối.
+Locale chọn bản dịch riêng và không thay revision; ưu tiên locale yêu cầu, vi-VN, en-US, rồi
+locale đầu tiên. Nháp không bị công khai.
+
+Trang bị/Phụ trợ nền chưa rõ patch và các correction/translation kế thừa có ordinal dự phòng 0
+trong danh mục hiện hành, gồm cả tham chiếu thuật ngữ `@`. Snapshot có patch đã biết trong
+context được ưu tiên hơn; patch tương lai chưa thay thế dữ liệu hiện hành. Việc quan sát dữ liệu
+nền không được coi là bằng chứng rằng mục đó đã có từ một mùa trong quá khứ. Sau này có nguồn,
+biên tập viên tạo GAME_PATCH ở mốc phù hợp từ baseline và ghi change set với baseline làm nguồn;
+hoặc ghi nhận loại bỏ có nguồn tại patch thật. Không sửa patch của snapshot nền đã xuất bản.
+
+Các View thêm trường `media`, map theo UUID asset tới `MediaAssetReference` gồm
+`assetId,semanticType,state,currentVersion{versionId,mimeType,width,height,url}`. Map chỉ có ảnh
+ACTIVE và đã có phiên bản, thuộc các mục thực sự trả về trong trang; metadata ảnh được đọc theo
+lô bằng `MediaAssets.findAll` sau khi phân trang. Phụ trợ gồm cả ảnh của trạng thái và ảnh tham
+khảo. UUID thiếu, bị khóa hoặc chưa upload xong không xuất hiện trong map; nội dung vẫn giữ
+UUID tham chiếu để client có thể hiển thị chỗ giữ chỗ. Chi tiết áp dụng cùng quy tắc, View quản
+trị/mutation giữ map rỗng. Không có public API đọc metadata ảnh tùy ý theo UUID.
+
+Public GET `/item-categories?locale=vi-VN` và `/enchantment-branches?locale=vi-VN` trả array:
+`{code,displayOrder,color,translations:[{locale,name,description,suitability}],icon?,background?}`.
+Chỉ nhận tham số locale, sắp theo displayOrder rồi code. Danh sách translations chứa tối đa một
+bản dịch được chọn theo cùng thứ tự dự phòng với content; trường locale cho biết ngôn ngữ thực
+tế. Icon/background dùng `MediaAssetReference` và chỉ trả khi dùng được; tên và metadata ảnh
+được đọc theo lô. Đây là metadata danh mục dùng chung với admin, không chứa nháp gameplay hay
+ghi chú nội bộ và không cấp quyền sửa cho người dùng wiki.
 
 ### Phụ trợ cũ và patch loại bỏ
 
-POST publish của phụ trợ chấp nhận patch null khi legacy=true, availability=REMOVED và
-cause khác GAME_PATCH. missingFields không báo thiếu patch trong trường hợp này; nội
-dung khác vẫn bắt buộc. GET /spells và /spells/{id} loại snapshot patch null khỏi phân
-giải gameplay. GET /spells/archived?region&locale&page&size trả PageSlice các hồ sơ
-lưu trữ đã xuất bản (legacy/REMOVED, patch null) theo ruleset thị trường.
+POST publish của phụ trợ cũ chấp nhận patch null khi legacy=true, availability=REMOVED và
+cause khác GAME_PATCH; nội dung khác vẫn bắt buộc. Các hồ sơ này vẫn chỉ thuộc lưu trữ,
+không vào GET /spells, /spells/{id} hoặc tham chiếu hiện hành. Dữ liệu nền AVAILABLE chưa rõ
+patch tuân theo quy tắc quan sát ở trên. GET /spells/archived?region&locale&page&size trả
+PageSlice các hồ sơ lưu trữ đã xuất bản (legacy/REMOVED, patch null) theo ruleset thị trường.
+Revision của Phụ trợ có `archived:boolean` trong chi tiết và danh sách lịch sử, giúp client
+phân biệt hồ sơ cũ với baseline hiện hành chưa rõ patch mà không tải thêm content từng bản.
+Hồ sơ archived không được dùng làm nguồn gameplay mới; bổ sung nguồn loại bỏ qua API removals.
 
 GET /admin/spells/{id}/removals?rulesetId trả các sự kiện loại bỏ đã xác nhận.
 POST cùng đường dẫn (spell:publish) nhận revisionId,patchVariantId,sourceUrl,notes?.
