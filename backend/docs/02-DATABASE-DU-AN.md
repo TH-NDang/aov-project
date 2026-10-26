@@ -1623,7 +1623,20 @@ Mỗi schema `item`, `arcana`, `spell`, `enchantment` có ba bảng riêng: iden
 JSONB gameplay chứa cấu trúc nhỏ của từng catalog và danh sách chỉ số/tọa độ/thành phần đã định
 nghĩa bằng DTO Java có kiểu; mảng translations luôn rỗng trong cột này. Chúng không dùng như kho
 trường tự tạo. API không cho tạo cột mới. Trigger chặn sửa/xóa revision PUBLISHED và chặn ghi
-bản dịch thuộc revision PUBLISHED; publication bắt buộc có patch context và sequence.
+bản dịch thuộc revision PUBLISHED; publication luôn có published_at và sequence. Yêu cầu patch
+context áp dụng như dưới đây, không thay đổi các migration đã triển khai.
+
+### Dữ liệu nền Kho trang bị chưa rõ patch (V034)
+
+V034 đổi CHECK publication của `item.item_revision` và `spell.spell_revision`: cho phép patch
+null với cause DATA_BASELINE, hoặc CONTENT_CORRECTION/TRANSLATION_UPDATE có source_revision_id.
+Source vẫn dùng FK; application kiểm tra source đã PUBLISHED trong cùng ruleset và kế thừa đúng
+ngữ cảnh. GAME_PATCH không được PUBLISHED nếu thiếu patch. Arcana và Enchantment giữ CHECK cũ.
+Không sửa dữ liệu hoặc đoán mùa/ngày cho các bản ghi đang có; trigger bất biến vẫn giữ nguyên.
+
+Baseline chưa rõ mốc có ordinal dự phòng 0 trong read model hiện hành, không tạo change set,
+không thay đổi trạng thái rà soát của bất kỳ patch nào. Khi biết lịch sử, tạo snapshot gameplay
+có patch thật và ghi change set dùng baseline làm nguồn; snapshot nguồn vẫn giữ patch null.
 
 Danh mục `item.item_category` và `enchantment.enchantment_branch` có code, version, display_order,
 icon_asset_id, background_asset_id, color; bảng `_translation` tương ứng chứa locale/name/

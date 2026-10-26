@@ -2247,8 +2247,17 @@ mô tả, tên chỉ số, tên biến thể và nội dung nội tại/kích ho
 công thức ghép và số liệu không được thay đổi theo ngôn ngữ hiển thị.
 
 Tạo mới cho phép lưu nháp thiếu dữ liệu và trả `missingFields`. Xuất bản kiểm tra ảnh đã upload,
-trường bắt buộc và patch quan sát cùng ruleset đã xuất bản. Bản đã xuất bản bất biến; sửa tiếp
+trường bắt buộc và patch quan sát cùng ruleset đã xuất bản nếu đã biết mốc. Riêng Trang bị và
+Phụ trợ đang có, dữ liệu nền DATA_BASELINE đủ nội dung được xuất bản với patch chưa xác định;
+không buộc gán vào một mùa hoặc ngày giả định. Bảng ngọc/Phù hiệu vẫn cần mốc quan sát trước
+khi xuất bản. Bản đã xuất bản bất biến; sửa tiếp
 phải fork bản nháp với nguyên nhân rõ ràng. Dữ liệu nền không tự tạo thay đổi gameplay quá khứ.
+
+Correction/bản dịch kế thừa mốc chưa rõ từ baseline đã xuất bản. GAME_PATCH luôn cần patch cụ
+thể. Danh mục hiện hành và tham chiếu dùng baseline chưa rõ làm dự phòng ordinal 0; snapshot
+có patch hiệu lực được ưu tiên hơn, bản của patch tương lai chưa thay thế hiện hành. Có nguồn
+lịch sử sau này thì tạo snapshot ở patch thật và ghi change set với baseline làm nguồn, không
+đổi ngữ cảnh snapshot đã xuất bản. Hồ sơ phụ trợ lưu trữ REMOVED/legacy không thuộc dự phòng này.
 
 Trang bị có danh mục nhóm được dịch, vị trí hàng/cột bắt đầu từ 0 và công thức ghép bằng UUID
 trang bị thành phần cùng số lượng. Chưa xác minh giữ UNKNOWN, không suy diễn từ mô tả hoặc
