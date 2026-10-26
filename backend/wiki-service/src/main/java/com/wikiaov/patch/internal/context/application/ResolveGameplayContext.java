@@ -43,6 +43,25 @@ public class ResolveGameplayContext implements GameplayContexts {
                         "No verified gameplay context is available for this region and time."));
     }
 
+    public GameplayContext resolveCatalog(String region, Instant at, UUID seasonId, UUID patchVariantId) {
+        var current = resolve(region, at);
+        if (seasonId == null && patchVariantId == null)
+            return current;
+
+        var selected = contexts.catalogPatches(current.rulesetId(), at, current.rulesetOrdinal(), seasonId,
+                patchVariantId, PageRequest.of(0, 1)).stream().findFirst().orElseThrow(
+                        () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
+                                "The requested season or patch is unavailable for this catalog."));
+        if (selected.getId().equals(current.patchVariantId()))
+            return current;
+
+        var date = contexts.catalogDates(current.regionId(), List.of(selected.getId()), at).stream().findFirst()
+                .orElse(null);
+        return new GameplayContext(current.regionId(), current.regionCode(), current.rulesetId(), current.rulesetCode(),
+                selected.getPatchId(), selected.getCode(), selected.getId(), selected.getOrdinal(),
+                date == null ? null : date.getEffectiveAt());
+    }
+
     public List<GameplayContext> active(Instant at) {
         return regions.findByLifecycleState("ACTIVE").stream().map(region -> {
             try {

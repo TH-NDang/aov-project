@@ -28,23 +28,39 @@ public class HeroPublicController implements HeroPublicApi {
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) String role, @RequestParam(defaultValue = "code,asc") String sort,
+            @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "false") boolean includeUnscoped,
             HttpServletRequest request, WebRequest web) {
-        QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size", "q", "role", "sort"));
-        return cached(queries.list(region, locale, page, size, q, role, sort), web, false);
+        QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size", "q", "role", "sort", "seasonId",
+                "patchVariantId", "includeUnscoped"));
+        return cached(seasonId == null && patchVariantId == null
+                ? queries.list(region, locale, page, size, q, role, sort)
+                : queries.list(region, locale, page, size, q, role, sort, seasonId, patchVariantId, includeUnscoped),
+                web, false);
     }
 
     @GetMapping(path = "/heroes/{heroId}", version = "1")
     public ResponseEntity<?> detail(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request, WebRequest web) {
-        QueryParameters.requireOnly(request, Set.of("region", "locale"));
-        return cached(queries.detail(heroId, region, locale, false), web, false);
+            @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request, WebRequest web) {
+        QueryParameters.requireOnly(request,
+                Set.of("region", "locale", "seasonId", "patchVariantId", "includeUnscoped"));
+        return cached(seasonId == null && patchVariantId == null
+                ? queries.detail(heroId, region, locale, false)
+                : queries.detail(heroId, region, locale, false, seasonId, patchVariantId, includeUnscoped), web, false);
     }
 
     @GetMapping(path = "/heroes/{heroId}/manifest", version = "1")
     public ResponseEntity<?> manifest(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request, WebRequest web) {
-        QueryParameters.requireOnly(request, Set.of("region", "locale"));
-        return cached(queries.detail(heroId, region, locale, true), web, false);
+            @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request, WebRequest web) {
+        QueryParameters.requireOnly(request,
+                Set.of("region", "locale", "seasonId", "patchVariantId", "includeUnscoped"));
+        return cached(seasonId == null && patchVariantId == null
+                ? queries.detail(heroId, region, locale, true)
+                : queries.detail(heroId, region, locale, true, seasonId, patchVariantId, includeUnscoped), web, false);
     }
 
     @GetMapping(path = "/hero-profile-revisions/{id}", version = "1")

@@ -7,6 +7,7 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.spell.SpellChangeQueries;
@@ -165,7 +166,7 @@ public class SpellCatalog implements SpellChangeQueries {
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
         var content = revisionContent.content(revision);
         requireObservationContext(revision.getRulesetId(), revision.getEffectiveFromPatchVariantId(),
-                !contentRules.archived(revision, content));
+                !contentRules.archived(revision, content) && !hasUnscopedBaseline(revision));
         var missing = contentRules.readiness(revision, content);
         if (!missing.isEmpty())
             throw new ApiException(SpellErrorCode.SPELL_INVALID_CONTENT,
@@ -200,8 +201,20 @@ public class SpellCatalog implements SpellChangeQueries {
     }
 
     @Transactional(readOnly = true)
+    public PageSlice<SpellView> published(String region, String locale, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return queries.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
+    }
+
+    @Transactional(readOnly = true)
     public SpellView publishedOne(UUID id, String region, String locale) {
         return queries.publishedOne(id, region, locale);
+    }
+
+    @Transactional(readOnly = true)
+    public SpellView publishedOne(UUID id, String region, String locale,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return queries.publishedOne(id, region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 
     private SpellContent initialContent(Create input) {
@@ -217,7 +230,7 @@ public class SpellCatalog implements SpellChangeQueries {
             fail("The source must be published in the selected ruleset.");
         if (!Set.of("GAME_PATCH", "CONTENT_CORRECTION", "TRANSLATION_UPDATE").contains(input.cause()))
             fail("Invalid revision cause.");
-        if (source.getEffectiveFromPatchVariantId() == null && input.cause().equals("GAME_PATCH"))
+        if (contentRules.archived(source, source.getGameplay()) && input.cause().equals("GAME_PATCH"))
             fail("An archive without a known patch cannot be used as a gameplay baseline. Record removal evidence separately.");
     }
 
@@ -225,6 +238,10 @@ public class SpellCatalog implements SpellChangeQueries {
         UUID effective = input.effectiveFromPatchVariantId() == null
                 ? source.getEffectiveFromPatchVariantId()
                 : input.effectiveFromPatchVariantId();
+        if (effective == null && input.cause().equals("GAME_PATCH"))
+            fail("A gameplay change requires a patch context.");
+        if (effective == null && !hasUnscopedBaseline(source) && !contentRules.archived(source, source.getGameplay()))
+            fail("The source does not define a published baseline observation.");
         requireObservationContext(input.rulesetId(), effective, false);
         if (patchOrdinal(source) > patchOrdinal(effective))
             fail("A future snapshot cannot reconstruct an earlier patch.");
@@ -244,9 +261,8 @@ public class SpellCatalog implements SpellChangeQueries {
         boolean contextChanged = input.effectiveFromPatchVariantId() != null
                 && !Objects.equals(input.effectiveFromPatchVariantId(), revision.getEffectiveFromPatchVariantId());
         boolean clearContext = Boolean.TRUE.equals(input.clearPatchContext());
-        if (clearContext && (input.effectiveFromPatchVariantId() != null || !input.content().legacy()
-                || !input.content().availability().equals("REMOVED")))
-            fail("Only a removed legacy baseline can clear its patch context.");
+        if (clearContext && input.effectiveFromPatchVariantId() != null)
+            fail("A patch context cannot be set and cleared together.");
         if (contextChanged || clearContext) {
             if (!revision.getCause().equals("DATA_BASELINE") || revision.getSourceRevisionId() != null)
                 fail("Only an independent baseline draft can change its observation context.");
@@ -298,6 +314,19 @@ public class SpellCatalog implements SpellChangeQueries {
         return revision;
     }
 
+    private boolean hasUnscopedBaseline(SpellRevision revision) {
+        boolean baseline = CatalogObservation.isUnscopedBaseline(revision.getCause(), revision.getSourceRevisionId(),
+                revision.getEffectiveFromPatchVariantId());
+        if (baseline && !revision.getCause().equals("DATA_BASELINE")) {
+            var source = queries.revision(revision.getOwnerId(), revision.getSourceRevisionId());
+            if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(revision.getRulesetId())
+                    || !CatalogObservation.isUnscopedBaseline(source.getCause(), source.getSourceRevisionId(),
+                            source.getEffectiveFromPatchVariantId()))
+                fail("The source must be a published baseline in the selected ruleset.");
+        }
+        return baseline;
+    }
+
     private void requireObservationContext(UUID ruleset, UUID effective, boolean publication) {
         contexts.requireRuleset(ruleset);
         if (effective == null) {
@@ -334,6 +363,12 @@ public class SpellCatalog implements SpellChangeQueries {
     @Transactional(readOnly = true)
     public PageSlice<SpellView> archives(String region, String locale, int page, int size) {
         return queries.archives(region, locale, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public PageSlice<SpellView> archives(String region, String locale, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return queries.archives(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
@@ -400,7 +435,8 @@ public class SpellCatalog implements SpellChangeQueries {
         revision.setState("PUBLISHED");
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
-        if (Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))
+        if (revision.getEffectiveFromPatchVariantId() != null
+                && Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))
             dataReviews.markDirty(revision.getEffectiveFromPatchVariantId());
     }
 

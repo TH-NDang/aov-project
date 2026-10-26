@@ -7,6 +7,7 @@ import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
+import com.wikiaov.patch.CatalogReadScope;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.PageSlice;
@@ -36,10 +37,16 @@ public class PublicSkinCatalog {
 
     public PublicSkinCatalogView read(String region, String locale, String q, String hero, String rarity, int page,
             int size) {
+        return read(region, locale, q, hero, rarity, page, size, null, null, false);
+    }
+
+    public PublicSkinCatalogView read(String region, String locale, String q, String hero, String rarity, int page,
+            int size, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         validate(locale, q, hero, rarity, page, size);
         var at = clock.instant();
-        var context = contexts.resolve(region, at);
-        var selected = selectCurrent(repository.candidates(context.rulesetId(), at), context);
+        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
+        var context = scope.gameplay();
+        var selected = selectCurrent(repository.candidates(context.rulesetId(), at), context, scope.allowUnscoped());
         if (selected.isEmpty())
             return new PublicSkinCatalogView(new PageSlice<>(List.of(), page, size, 0), List.of(), List.of());
 
@@ -69,7 +76,7 @@ public class PublicSkinCatalog {
         return new PublicSkinCatalogView(new PageSlice<>(items, page, size, matching.size()), heroes, rarities);
     }
 
-    private List<Candidate> selectCurrent(List<Candidate> candidates, GameplayContext context) {
+    private List<Candidate> selectCurrent(List<Candidate> candidates, GameplayContext context, boolean allowUnscoped) {
         Map<UUID, Long> ordinals = new HashMap<>();
         Function<Candidate, Long> ordinal = candidate -> candidate.getVariantId() == null
                 ? 0
@@ -77,6 +84,8 @@ public class PublicSkinCatalog {
         var order = Comparator.comparing(ordinal).thenComparing(Candidate::getPublicationSequence);
         Map<UUID, Candidate> selected = new HashMap<>();
         for (var candidate : candidates) {
+            if (!allowUnscoped && candidate.getVariantId() == null)
+                continue;
             if (ordinal.apply(candidate) <= context.rulesetOrdinal())
                 selected.merge(candidate.getHeroId(), candidate, (left, right) -> order.compare(left, right) >= 0
                         ? left
@@ -152,7 +161,7 @@ public class PublicSkinCatalog {
                 usable(assets, heads.get(row.hero().getBindingsId())), row.skin().getSkinKey(), row.skinName(),
                 row.actualLocale(), row.skin().getRarityCode(), badge(row.badge(), assets),
                 usable(assets, row.skin().getPortraitId()), usable(assets, row.skin().getHeadId()),
-                usable(assets, row.skin().getArtId()))).toList();
+                usable(assets, row.skin().getArtId()), row.hero().getVariantId() == null)).toList();
     }
 
     private static Badge badge(BadgeText text, Map<UUID, MediaAssetReference> assets) {

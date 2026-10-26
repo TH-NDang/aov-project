@@ -7,5 +7,10 @@ import java.util.UUID;
 
 /** Selects one patch-ranked snapshot per catalog identity. */
 public interface EnchantmentReferenceSelections {
-    List<Row> selectReferenceRows(UUID rulesetId, Map<UUID, Long> ordinals, boolean published, long cutoff);
+    default List<Row> selectReferenceRows(UUID rulesetId, Map<UUID, Long> ordinals, boolean published, long cutoff) {
+        return selectReferenceRows(rulesetId, ordinals, published, cutoff, true);
+    }
+
+    List<Row> selectReferenceRows(UUID rulesetId, Map<UUID, Long> ordinals, boolean published, long cutoff,
+            boolean allowUnscoped);
 }

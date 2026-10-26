@@ -1,5 +1,6 @@
 package com.wikiaov.terminology.internal.reference.application;
 
+import com.wikiaov.patch.CatalogReadScope;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.ReadModelCache;
@@ -8,6 +9,7 @@ import com.wikiaov.terminology.internal.application.response.ReferenceSettingsVi
 import java.time.Clock;
 import java.util.IllformedLocaleException;
 import java.util.Locale;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,12 +28,21 @@ public class PublicReferenceCatalog {
     }
 
     public ReferenceSettingsView read(String region, String locale) {
+        return read(region, locale, null, null, false);
+    }
+
+    public ReferenceSettingsView read(String region, String locale, UUID seasonId, UUID patchVariantId,
+            boolean includeUnscoped) {
         validateLocale(locale);
         var at = clock.instant();
-        var gameplay = contexts.resolve(region, at);
-        String key = region + ":" + locale + ":" + gameplay.rulesetId() + ":" + gameplay.patchVariantId();
+        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
+        var gameplay = scope.gameplay();
+        String key = region + ":" + locale + ":" + gameplay.rulesetId() + ":" + gameplay.patchVariantId()
+                + ":unscoped=" + scope.allowUnscoped();
         return cache.read(ReadModelCache.Area.PUBLIC_REFERENCES, key, ReferenceSettingsView.class,
-                () -> loader.read(gameplay, at, region, locale));
+                () -> scope.allowUnscoped()
+                        ? loader.read(gameplay, at, region, locale)
+                        : loader.read(gameplay, at, region, locale, false));
     }
 
     private static void validateLocale(String value) {

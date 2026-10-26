@@ -107,6 +107,20 @@ class HeroQueriesTest {
         verifyNoInteractions(media);
     }
 
+    @Test
+    void historicalSeasonDoesNotClaimAnUnscopedHeroWasPresentUnlessOptedIn() {
+        var hero = hero("airi", Map.of());
+        var season = UUID.randomUUID();
+        when(contexts.resolveCatalog("VN", at, season, null)).thenReturn(context);
+        when(store.heroes(false)).thenReturn(List.of(hero.identity()));
+
+        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, null, false)))
+                .isEmpty();
+        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, null, true)))
+                .singleElement().satisfies(item -> assertThat(item).containsEntry("unscopedBaseline", true));
+        verify(contexts, never()).resolve("VN", at);
+    }
+
     private CatalogHero hero(String code, Map<MediaRole, UUID> assets) {
         var identity = new HeroIdentity();
         identity.setId(UUID.randomUUID());

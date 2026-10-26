@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "hero")
@@ -24,5 +25,8 @@ public interface PublicSkinCatalogApi {
             @Parameter(description = "Exact skin badge code.") String rarity,
             @Parameter(description = "Zero-based page.") int page,
             @Parameter(description = "Page size, from 1 to 60; default 24.") int size,
+            @Parameter(description = "Optional season; selects its latest eligible published patch.") UUID seasonId,
+            @Parameter(description = "Optional published patch variant, consistent with the season.") UUID patchVariantId,
+            @Parameter(description = "Include unscoped baseline observations in a historical view.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request);
 }

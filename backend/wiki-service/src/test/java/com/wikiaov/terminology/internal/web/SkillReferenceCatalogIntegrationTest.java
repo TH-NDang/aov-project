@@ -7,6 +7,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.wikiaov.hero.internal.domain.SkillReferenceSearch;
+import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository;
 import com.wikiaov.media.*;
 import com.wikiaov.patch.*;
 import com.wikiaov.patch.internal.application.PatchErrorCode;
@@ -52,6 +54,8 @@ class SkillReferenceCatalogIntegrationTest {
     JsonMapper json;
     @Autowired
     SkillReferenceProvider skills;
+    @Autowired
+    HeroSkillReferenceRepository skillRows;
     @Autowired
     EntityManagerFactory entityManagerFactory;
     @MockitoBean
@@ -180,6 +184,46 @@ class SkillReferenceCatalogIntegrationTest {
         mvc.perform(get("/api/wiki/v1/reference-skills").param("q", "edras chiêu 2 1"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].translations[0].name").value("Form two one"))
                 .andExpect(jsonPath("$.items[0].icon").doesNotExist());
+    }
+
+    @Test
+    void publicHistoricalSkillLookupHonorsTheUnscopedChoiceWithoutChangingCurrentReads() throws Exception {
+        UUID owner = UUID.randomUUID();
+        UUID season = UUID.randomUUID();
+        hero(owner, "observed-" + owner);
+        revision(owner, ruleset, 1, "PUBLISHED", null, "Observed hero", Map.of("skill-1-1", "Observed skill"));
+        when(contexts.resolveCatalog(eq("VN"), any(), eq(season), eq(firstPatch))).thenReturn(context(1));
+
+        mvc.perform(get("/api/wiki/v1/reference-skills").param("heroId", owner.toString())
+                .param("seasonId", season.toString()).param("patchVariantId", firstPatch.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get("/api/wiki/v1/reference-skills").param("heroId", owner.toString())
+                .param("seasonId", season.toString()).param("patchVariantId", firstPatch.toString())
+                .param("includeUnscoped", "true"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].translations[0].name").value("Observed skill"));
+        mvc.perform(get("/api/wiki/v1/reference-skills").param("heroId", owner.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get("/api/wiki/v1/reference-skills").param("heroId", owner.toString())
+                .param("seasonId", season.toString()).param("patchVariantId", firstPatch.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void unscopedNewerSkillSnapshotsCannotHideScopedCandidatesWhenPatchRanksAreUnavailable() {
+        UUID owner = UUID.randomUUID();
+        hero(owner, "rank-fixture-" + owner);
+        UUID scoped = revision(owner, ruleset, 1, "PUBLISHED", firstPatch, "Scoped hero",
+                Map.of("skill-1-1", "Scoped skill"));
+        UUID unscoped = revision(owner, ruleset, 2, "PUBLISHED", null, "Unscoped hero",
+                Map.of("skill-1-1", "Unscoped skill"));
+
+        assertThat(skillRows.search(ruleset, Map.of(), Instant.now(), 2L, SkillReferenceSearch.parse(""), owner,
+                List.of(), 0, 20).items()).singleElement()
+                .satisfies(row -> assertThat(row.revisionId()).isEqualTo(unscoped));
+        assertThat(skillRows.search(ruleset, Map.of(), Instant.now(), 2L, SkillReferenceSearch.parse(""), owner,
+                List.of(), 0, 20, false).items()).singleElement()
+                .satisfies(row -> assertThat(row.revisionId()).isEqualTo(scoped));
     }
 
     @Test

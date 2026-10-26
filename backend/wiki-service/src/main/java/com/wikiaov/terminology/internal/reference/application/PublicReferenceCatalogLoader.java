@@ -32,9 +32,15 @@ public class PublicReferenceCatalogLoader {
 
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
     public ReferenceSettingsView read(GameplayContext gameplay, Instant at, String region, String locale) {
+        return read(gameplay, at, region, locale, true);
+    }
+
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public ReferenceSettingsView read(GameplayContext gameplay, Instant at, String region, String locale,
+            boolean allowUnscoped) {
         var ordinals = contexts.rulesetVariants(gameplay.rulesetId()).stream()
                 .collect(Collectors.toMap(v -> v.id(), v -> v.rulesetOrdinal()));
-        var scope = new PublicReferenceProvider.Scope(gameplay, ordinals, at);
+        var scope = new PublicReferenceProvider.Scope(gameplay, ordinals, at, allowUnscoped);
         var document = settings.readCatalogConfiguration();
         var config = document.settings();
         var entries = new LinkedHashMap<String, Entry>();

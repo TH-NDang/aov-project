@@ -94,6 +94,10 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
             predicates.add(builder.le(rank, criteria.cutoff()));
             newerPredicates.add(builder.lessThanOrEqualTo(candidate.get("publishedAt"), criteria.at()));
             newerPredicates.add(builder.le(newerRank, criteria.cutoff()));
+            if (!criteria.allowUnscoped()) {
+                predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+                newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            }
             newerPredicates.add(builder.or(builder.gt(newerRank, rank), builder.and(builder.equal(newerRank, rank),
                     builder.gt(candidate.<Long>get("publicationSequence"), revision.get("publicationSequence")))));
         } else {

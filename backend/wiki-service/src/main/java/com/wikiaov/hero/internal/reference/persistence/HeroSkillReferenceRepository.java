@@ -47,8 +47,13 @@ public class HeroSkillReferenceRepository {
 
     public Result search(UUID rulesetId, Map<UUID, Long> ordinals, Instant at, Long cutoff,
             SkillReferenceSearch search, UUID heroId, List<String> ids, int page, int size) {
+        return search(rulesetId, ordinals, at, cutoff, search, heroId, ids, page, size, true);
+    }
+
+    public Result search(UUID rulesetId, Map<UUID, Long> ordinals, Instant at, Long cutoff,
+            SkillReferenceSearch search, UUID heroId, List<String> ids, int page, int size, boolean allowUnscoped) {
         return queries.selectSkills(new SkillReferenceCriteria(rulesetId, ordinals, at, cutoff, search, heroId, ids,
-                page, size));
+                page, size, allowUnscoped));
     }
 
     public List<Copy> skills(List<Row> rows) {

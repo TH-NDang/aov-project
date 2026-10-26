@@ -19,7 +19,11 @@ public interface ArcanaReferenceRepository extends Repository<ArcanaRevision, UU
     }
 
     default List<Row> published(GameplayContext context, Map<UUID, Long> ordinals) {
-        var rows = selectReferenceRows(context.rulesetId(), ordinals, true, context.rulesetOrdinal());
+        return published(context, ordinals, true);
+    }
+
+    default List<Row> published(GameplayContext context, Map<UUID, Long> ordinals, boolean allowUnscoped) {
+        var rows = selectReferenceRows(context.rulesetId(), ordinals, true, context.rulesetOrdinal(), allowUnscoped);
 
         var lifecycle = new HashMap<UUID, Lifecycle>();
         for (var fact : findLifecycle(context.rulesetId())) {

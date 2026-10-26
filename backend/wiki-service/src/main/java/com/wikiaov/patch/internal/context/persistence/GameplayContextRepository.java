@@ -5,6 +5,8 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.PatchReleaseReference;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +27,30 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
             order by rel.effectiveAt desc
             """)
     List<GameplayContext> effective(String region, Instant at, Pageable page);
+
+    @Query("""
+            select v.id as id,p.id as patchId,p.code as code,v.rulesetId as rulesetId,
+                v.rulesetOrdinal as ordinal,v.seasonId as seasonId,s.code as seasonCode,
+                s.displayName as seasonName,s.ordinal as seasonOrdinal
+            from PatchVariant v join GamePatch p on p.id=v.patchId
+            left join RankedSeason s on s.id=v.seasonId
+            where v.rulesetId=:rulesetId and v.status='PUBLISHED' and p.status='PUBLISHED'
+                and v.publishedAt<=:at and v.rulesetOrdinal<=:cutoff
+                and (:seasonId is null or v.seasonId=:seasonId)
+                and (:patchVariantId is null or v.id=:patchVariantId)
+            order by v.rulesetOrdinal desc,v.id
+            """)
+    List<CatalogPatch> catalogPatches(UUID rulesetId, Instant at, long cutoff, UUID seasonId, UUID patchVariantId,
+            Pageable page);
+
+    @Query("""
+            select rel.patchVariantId as patchVariantId,rel.effectiveAt as effectiveAt,rel.effectiveOn as effectiveOn
+            from PatchRelease rel
+            where rel.regionId=:regionId and rel.patchVariantId in :variantIds
+                and rel.status='SCHEDULED' and rel.effectiveAt<=:at
+            order by rel.effectiveAt desc,rel.id
+            """)
+    List<CatalogDate> catalogDates(UUID regionId, Collection<UUID> variantIds, Instant at);
 
     @Query("""
             select new com.wikiaov.patch.PatchReleaseReference(p.id,v.id,v.rulesetId,rel.effectiveAt)
@@ -69,4 +95,32 @@ public interface GameplayContextRepository extends Repository<PatchRelease, UUID
 
     @Query(MARKET_AUTHORING + " and rel.id=:contextId")
     List<AuthoringContext> legacyAuthoringContext(UUID contextId);
+
+    interface CatalogPatch {
+        UUID getId();
+
+        UUID getPatchId();
+
+        String getCode();
+
+        UUID getRulesetId();
+
+        long getOrdinal();
+
+        UUID getSeasonId();
+
+        String getSeasonCode();
+
+        String getSeasonName();
+
+        Long getSeasonOrdinal();
+    }
+
+    interface CatalogDate {
+        UUID getPatchVariantId();
+
+        Instant getEffectiveAt();
+
+        LocalDate getEffectiveOn();
+    }
 }

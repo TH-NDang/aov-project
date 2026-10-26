@@ -25,7 +25,7 @@ public class PublishedHeroReferenceSelectionsImpl implements PublishedHeroRefere
 
     @Override
     public List<HeroReferenceProjection> selectPublishedReferences(GameplayContext context, Map<UUID, Long> ordinals,
-            Instant at) {
+            Instant at, boolean allowUnscoped) {
         var builder = entities.getCriteriaBuilder();
         var query = builder.createQuery(HeroReferenceProjection.class);
         var hero = query.from(HeroIdentity.class);
@@ -42,6 +42,7 @@ public class PublishedHeroReferenceSelectionsImpl implements PublishedHeroRefere
                 builder.equal(candidate.get("state"), "PUBLISHED"),
                 builder.lessThanOrEqualTo(candidate.get("publishedAt"), at),
                 builder.le(newerRank, context.rulesetOrdinal()),
+                allowUnscoped ? builder.conjunction() : builder.isNotNull(candidate.get("effectiveFromPatchVariantId")),
                 builder.or(builder.gt(newerRank, rank), builder.and(builder.equal(newerRank, rank),
                         builder.gt(candidate.<Long>get("publicationSequence"), revision.get("publicationSequence")))));
 
@@ -59,7 +60,11 @@ public class PublishedHeroReferenceSelectionsImpl implements PublishedHeroRefere
                         builder.equal(revision.get("rulesetId"), context.rulesetId()),
                         builder.equal(revision.get("state"), "PUBLISHED"),
                         builder.lessThanOrEqualTo(revision.get("publishedAt"), at),
-                        builder.le(rank, context.rulesetOrdinal()), builder.not(builder.exists(newer)))
+                        builder.le(rank, context.rulesetOrdinal()),
+                        allowUnscoped
+                                ? builder.conjunction()
+                                : builder.isNotNull(revision.get("effectiveFromPatchVariantId")),
+                        builder.not(builder.exists(newer)))
                 .orderBy(builder.asc(hero.get("code")), builder.asc(translation.get("locale")));
 
         return entities.createQuery(query).getResultList();

@@ -24,7 +24,8 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
     }
 
     @Override
-    public List<Row> selectReferenceRows(UUID rulesetId, Map<UUID, Long> ordinals, boolean published, long cutoff) {
+    public List<Row> selectReferenceRows(UUID rulesetId, Map<UUID, Long> ordinals, boolean published, long cutoff,
+            boolean allowUnscoped) {
         var builder = entities.getCriteriaBuilder();
         var query = builder.createQuery(Row.class);
         var identity = query.from(SpellIdentity.class);
@@ -41,7 +42,9 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
         predicates.add(builder.equal(translation.get("targetKey"), ""));
         if (published) {
             predicates.add(builder.le(rank, cutoff));
-            predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+            if (!allowUnscoped)
+                predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
+            predicates.add(publishedObservation(builder, revision));
         }
 
         var newer = query.subquery(UUID.class);
@@ -61,7 +64,9 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
                 : builder.notEqual(candidate.get("state"), "DISCARDED"));
         if (published) {
             newerPredicates.add(builder.le(newerRank, cutoff));
-            newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            if (!allowUnscoped)
+                newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
+            newerPredicates.add(publishedObservation(builder, candidate));
         }
         newerPredicates.add(builder.or(builder.gt(newerRank, rank),
                 builder.and(builder.equal(newerRank, rank), builder.gt(newerSequence, sequence))));
@@ -77,6 +82,21 @@ public class SpellReferenceSelectionsImpl implements SpellReferenceSelections {
                 .orderBy(builder.asc(identity.get("code")), builder.asc(translation.get("locale")));
 
         return entities.createQuery(query).getResultList();
+    }
+
+    private static Predicate publishedObservation(CriteriaBuilder builder, Path<?> revision) {
+        var scoped = builder.or(builder.isNotNull(revision.get("effectiveFromPatchVariantId")),
+                builder.equal(revision.get("cause"), "DATA_BASELINE"),
+                builder.and(revision.get("cause").in("CONTENT_CORRECTION", "TRANSLATION_UPDATE"),
+                        builder.isNotNull(revision.get("sourceRevisionId"))));
+        var legacy = builder.coalesce(builder.function("jsonb_extract_path_text", String.class,
+                revision.get("gameplay"), builder.literal("legacy")), "false");
+        var availability = builder.coalesce(builder.function("jsonb_extract_path_text", String.class,
+                revision.get("gameplay"), builder.literal("availability")), "UNKNOWN");
+        var archived = builder.and(builder.isNull(revision.get("effectiveFromPatchVariantId")),
+                builder.equal(legacy, "true"), builder.equal(availability, "REMOVED"));
+
+        return builder.and(scoped, builder.not(archived));
     }
 
     private static Expression<Long> ordinal(CriteriaBuilder builder, Path<UUID> patch, Map<UUID, Long> ordinals) {

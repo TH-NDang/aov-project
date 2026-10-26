@@ -52,6 +52,9 @@ public interface SkillReferenceApi {
             @Parameter(description = "Ids.") String ids,
             @Parameter(description = "Zero-based page index.") int page,
             @Parameter(description = "Maximum number of entries in a page.") Integer size,
+            @Parameter(description = "Optional published season in the market's current ruleset.") UUID seasonId,
+            @Parameter(description = "Optional published patch variant; must belong to the selected season when supplied.") UUID patchVariantId,
+            @Parameter(description = "Include observations without a known patch in an explicit historical scope; current reads always include them.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 }

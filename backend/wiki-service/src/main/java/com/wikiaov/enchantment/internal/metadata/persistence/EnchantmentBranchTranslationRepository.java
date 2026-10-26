@@ -5,6 +5,8 @@ import java.util.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EnchantmentBranchTranslationRepository extends JpaRepository<EnchantmentBranchTranslation, UUID> {
+    List<EnchantmentBranchTranslation> findByOwnerCodeInOrderByLocale(Collection<String> codes);
+
     List<EnchantmentBranchTranslation> findByOwnerCodeOrderByLocale(String code);
 
     void deleteByOwnerCode(String code);

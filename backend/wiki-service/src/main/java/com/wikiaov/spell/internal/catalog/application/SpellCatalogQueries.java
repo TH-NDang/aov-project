@@ -3,10 +3,12 @@ package com.wikiaov.spell.internal.catalog.application;
 import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.patch.CatalogPatchScope;
+import com.wikiaov.patch.CatalogReadScope;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
@@ -46,11 +48,12 @@ class SpellCatalogQueries {
     private final Clock clock;
     private final SpellRevisionContent revisionContent;
     private final SpellContentRules contentRules;
+    private final SpellPublicMedia publicMedia;
 
     SpellCatalogQueries(SpellPatchChangeRepository patchChanges, SpellIdentityRepository identities,
             SpellRevisionRepository revisions, SpellTranslationRepository translations, SpellRemovalRepository removals,
             GameplayContexts contexts, Clock clock, SpellRevisionContent revisionContent,
-            SpellContentRules contentRules) {
+            SpellContentRules contentRules, SpellPublicMedia publicMedia) {
         this.patchChanges = patchChanges;
         this.identities = identities;
         this.revisions = revisions;
@@ -60,6 +63,7 @@ class SpellCatalogQueries {
         this.clock = clock;
         this.revisionContent = revisionContent;
         this.contentRules = contentRules;
+        this.publicMedia = publicMedia;
     }
 
     PageSlice<SpellView> list(UUID rulesetId, String locale, String q, int page, int size) {
@@ -198,22 +202,41 @@ class SpellCatalogQueries {
     }
 
     PageSlice<SpellView> published(String region, String locale, int page, int size) {
+        return published(region, locale, page, size, null, null, false);
+    }
+
+    PageSlice<SpellView> published(String region, String locale, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         if (page < 0 || size < 1 || size > 100)
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
-        var context = contexts.resolve(region, clock.instant());
+        var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
+                includeUnscoped);
+        var context = scope.gameplay();
         var rows = identities.findAll(Sort.by("code")).stream()
                 .map(owner -> current(owner.getId(), context)
+                        .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
                         .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
                 .filter(Objects::nonNull).toList();
         int start = (int) Math.min((long) page * size, rows.size());
-        return new PageSlice<>(rows.subList(start, Math.min(start + size, rows.size())), page, size, rows.size());
+        return new PageSlice<>(publicMedia.hydrate(rows.subList(start, Math.min(start + size, rows.size()))), page,
+                size, rows.size());
     }
 
     SpellView publishedOne(UUID id, String region, String locale) {
+        return publishedOne(id, region, locale, null, null, false);
+    }
+
+    SpellView publishedOne(UUID id, String region, String locale,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         var owner = identity(id);
-        var context = contexts.resolve(region, clock.instant());
-        return current(id, context).map(revision -> revisionContent.publicView(owner, revision, locale)).orElseThrow(
-                () -> new ApiException(SpellErrorCode.SPELL_NOT_FOUND, "No published snapshot is available."));
+        var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
+                includeUnscoped);
+        var context = scope.gameplay();
+        return current(id, context)
+                .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
+                .map(revision -> revisionContent.publicView(owner, revision, locale))
+                .map(publicMedia::hydrate).orElseThrow(
+                        () -> new ApiException(SpellErrorCode.SPELL_NOT_FOUND, "No published snapshot is available."));
     }
 
     Optional<SpellRevision> current(UUID id, GameplayContext context) {
@@ -226,7 +249,10 @@ class SpellCatalogQueries {
             return Optional.empty();
         return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
                 .filter(revision -> revision.getState().equals("PUBLISHED")
-                        && revision.getEffectiveFromPatchVariantId() != null
+                        && (revision.getEffectiveFromPatchVariantId() != null
+                                || CatalogObservation.isUnscopedBaseline(revision.getCause(),
+                                        revision.getSourceRevisionId(), null)
+                                        && !contentRules.archived(revision, revision.getGameplay()))
                         && revision.getRulesetId().equals(context.rulesetId())
                         && patchOrdinal(revision) <= context.rulesetOrdinal())
                 .max(Comparator.<SpellRevision>comparingLong(this::patchOrdinal)
@@ -263,9 +289,18 @@ class SpellCatalogQueries {
     }
 
     PageSlice<SpellView> archives(String region, String locale, int page, int size) {
+        return archives(region, locale, page, size, null, null, false);
+    }
+
+    PageSlice<SpellView> archives(String region, String locale, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         if (page < 0 || size < 1 || size > 100)
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
-        var context = contexts.resolve(region, clock.instant());
+        var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
+                includeUnscoped);
+        var context = scope.gameplay();
+        if (!scope.allowUnscoped())
+            return new PageSlice<>(List.of(), page, size, 0);
         var rows = identities.findAll(Sort.by("code")).stream()
                 .map(owner -> revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId()).stream()
                         .filter(revision -> revision.getState().equals("PUBLISHED")
@@ -275,7 +310,8 @@ class SpellCatalogQueries {
                         .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
                 .filter(Objects::nonNull).toList();
         int start = (int) Math.min((long) page * size, rows.size());
-        return new PageSlice<>(rows.subList(start, Math.min(start + size, rows.size())), page, size, rows.size());
+        return new PageSlice<>(publicMedia.hydrate(rows.subList(start, Math.min(start + size, rows.size()))), page,
+                size, rows.size());
     }
 
     List<SpellRemovalView> removals(UUID id, UUID rulesetId) {

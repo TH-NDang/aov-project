@@ -24,6 +24,9 @@ public interface ArcanaPublicApi {
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(description = "Zero-based page index.") int page,
             @Parameter(description = "Maximum number of entries in a page.") int size,
+            @Parameter(description = "Optional published season; selects its latest eligible patch.") UUID seasonId,
+            @Parameter(description = "Optional eligible published patch variant, consistent with the season.") UUID patchVariantId,
+            @Parameter(description = "Include baseline observations without a verified historical patch.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "arcanaPublicApi_read", summary = "Read - arcana public", description = "Read for arcana public. Public read endpoint. Unrecognized query parameters are rejected.", responses = {
@@ -33,5 +36,8 @@ public interface ArcanaPublicApi {
     ArcanaView read(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
+            @Parameter(description = "Optional published season; selects its latest eligible patch.") UUID seasonId,
+            @Parameter(description = "Optional eligible published patch variant, consistent with the season.") UUID patchVariantId,
+            @Parameter(description = "Include baseline observations without a verified historical patch.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request);
 }

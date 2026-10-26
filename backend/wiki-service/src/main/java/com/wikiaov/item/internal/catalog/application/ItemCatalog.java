@@ -19,6 +19,7 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Translation;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
@@ -161,7 +162,8 @@ public class ItemCatalog {
     public ItemView publish(UUID id, UUID revisionId, Mutation input) {
         var owner = lockIdentity(id);
         var revision = requireEditableDraft(id, revisionId, input.expectedVersion());
-        requireObservationContext(revision.getRulesetId(), revision.getEffectiveFromPatchVariantId(), true);
+        requireObservationContext(revision.getRulesetId(), revision.getEffectiveFromPatchVariantId(),
+                !hasUnscopedBaseline(revision));
         var content = revisionContent.content(revision);
         var missing = contentRules.missing(content);
         if (!missing.isEmpty())
@@ -197,8 +199,20 @@ public class ItemCatalog {
     }
 
     @Transactional(readOnly = true)
+    public PageSlice<ItemView> published(String region, String locale, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return queries.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
+    }
+
+    @Transactional(readOnly = true)
     public ItemView publishedOne(UUID id, String region, String locale) {
         return queries.publishedOne(id, region, locale);
+    }
+
+    @Transactional(readOnly = true)
+    public ItemView publishedOne(UUID id, String region, String locale,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return queries.publishedOne(id, region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 
     private ItemContent initialContent(Create input) {
@@ -219,6 +233,10 @@ public class ItemCatalog {
         UUID effective = input.effectiveFromPatchVariantId() == null
                 ? source.getEffectiveFromPatchVariantId()
                 : input.effectiveFromPatchVariantId();
+        if (effective == null && input.cause().equals("GAME_PATCH"))
+            fail("A gameplay change requires a patch context.");
+        if (effective == null && !hasUnscopedBaseline(source))
+            fail("The source does not define a published baseline observation.");
         requireObservationContext(input.rulesetId(), effective, false);
         if (patchOrdinal(source) > patchOrdinal(effective))
             fail("A future snapshot cannot reconstruct an earlier patch.");
@@ -237,13 +255,16 @@ public class ItemCatalog {
     private boolean updateObservationContext(ItemRevision revision, Update input) {
         boolean contextChanged = input.effectiveFromPatchVariantId() != null
                 && !Objects.equals(input.effectiveFromPatchVariantId(), revision.getEffectiveFromPatchVariantId());
-        if (contextChanged) {
+        boolean clearContext = Boolean.TRUE.equals(input.clearPatchContext());
+        if (clearContext && input.effectiveFromPatchVariantId() != null)
+            fail("A patch context cannot be set and cleared together.");
+        if (contextChanged || clearContext) {
             if (!revision.getCause().equals("DATA_BASELINE") || revision.getSourceRevisionId() != null)
                 fail("Only an independent baseline draft can change its observation context.");
-            requireObservationContext(revision.getRulesetId(), input.effectiveFromPatchVariantId(), true);
+            requireObservationContext(revision.getRulesetId(), input.effectiveFromPatchVariantId(), !clearContext);
             revision.setEffectiveFromPatchVariantId(input.effectiveFromPatchVariantId());
         }
-        return contextChanged;
+        return contextChanged || clearContext;
     }
 
     private ItemIdentity lockIdentity(UUID id) {
@@ -286,6 +307,19 @@ public class ItemCatalog {
         revision.setUpdatedByIssuer(actor.issuer());
         revision.setUpdatedBySubject(actor.subject());
         return revision;
+    }
+
+    private boolean hasUnscopedBaseline(ItemRevision revision) {
+        boolean baseline = CatalogObservation.isUnscopedBaseline(revision.getCause(), revision.getSourceRevisionId(),
+                revision.getEffectiveFromPatchVariantId());
+        if (baseline && !revision.getCause().equals("DATA_BASELINE")) {
+            var source = queries.revision(revision.getOwnerId(), revision.getSourceRevisionId());
+            if (!source.getState().equals("PUBLISHED") || !source.getRulesetId().equals(revision.getRulesetId())
+                    || !CatalogObservation.isUnscopedBaseline(source.getCause(), source.getSourceRevisionId(),
+                            source.getEffectiveFromPatchVariantId()))
+                fail("The source must be a published baseline in the selected ruleset.");
+        }
+        return baseline;
     }
 
     private void requireObservationContext(UUID ruleset, UUID effective, boolean publication) {
@@ -361,7 +395,8 @@ public class ItemCatalog {
         revision.setState("PUBLISHED");
         revision.setPublishedAt(clock.instant());
         advanceVersion(revision);
-        if (Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))
+        if (revision.getEffectiveFromPatchVariantId() != null
+                && Set.of("DATA_BASELINE", "GAME_PATCH").contains(revision.getCause()))
             dataReviews.markDirty(revision.getEffectiveFromPatchVariantId());
     }
 }

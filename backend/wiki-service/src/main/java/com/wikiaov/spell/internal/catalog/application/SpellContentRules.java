@@ -3,10 +3,12 @@ package com.wikiaov.spell.internal.catalog.application;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogTranslations;
 import com.wikiaov.spell.internal.application.SpellErrorCode;
 import com.wikiaov.spell.internal.catalog.persistence.entity.SpellRevision;
 import com.wikiaov.spell.internal.domain.SpellContent;
+import com.wikiaov.spell.internal.domain.SpellObservation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -85,14 +87,15 @@ class SpellContentRules {
 
     List<String> readiness(SpellRevision revision, SpellContent content) {
         var result = new ArrayList<>(missing(content));
-        if (revision.getEffectiveFromPatchVariantId() == null && !archived(revision, content))
+        if (revision.getEffectiveFromPatchVariantId() == null && !archived(revision, content)
+                && !CatalogObservation.isUnscopedBaseline(revision.getCause(), revision.getSourceRevisionId(),
+                        revision.getEffectiveFromPatchVariantId()))
             result.add("effectiveFromPatchVariantId");
         return result;
     }
 
     boolean archived(SpellRevision revision, SpellContent content) {
-        return revision.getEffectiveFromPatchVariantId() == null && !revision.getCause().equals("GAME_PATCH")
-                && content.legacy() && content.availability().equals("REMOVED");
+        return SpellObservation.archived(revision.getCause(), revision.getEffectiveFromPatchVariantId(), content);
     }
 
     List<String> missing(SpellContent content) {

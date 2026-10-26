@@ -22,7 +22,11 @@ public class HeroReferenceRepository {
     }
 
     public List<Row> published(GameplayContext context, Map<UUID, Long> ordinals, Instant at) {
-        return queries.selectPublishedReferences(context, ordinals, at).stream()
+        return published(context, ordinals, at, true);
+    }
+
+    public List<Row> published(GameplayContext context, Map<UUID, Long> ordinals, Instant at, boolean allowUnscoped) {
+        return queries.selectPublishedReferences(context, ordinals, at, allowUnscoped).stream()
                 .map(HeroReferenceProjection::reference).toList();
     }
 }

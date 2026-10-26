@@ -3,9 +3,11 @@ package com.wikiaov.spell.internal.catalog.application;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PlatformErrorCode;
+import com.wikiaov.spell.internal.application.response.SpellView;
 import com.wikiaov.spell.internal.catalog.persistence.SpellIdentityRepository;
 import com.wikiaov.spell.internal.catalog.persistence.SpellRevisionRepository;
 import com.wikiaov.spell.internal.catalog.persistence.SpellTranslationRepository;
@@ -29,8 +31,10 @@ class SpellCatalogQueriesTest {
     private final GameplayContexts contexts = mock(GameplayContexts.class);
     private final SpellRevisionContent content = mock(SpellRevisionContent.class);
     private final SpellContentRules rules = mock(SpellContentRules.class);
+    private final SpellPublicMedia publicMedia = mock(SpellPublicMedia.class);
     private final SpellCatalogQueries queries = new SpellCatalogQueries(patchChanges, identities, revisions,
-            translations, mock(SpellRemovalRepository.class), contexts, Clock.systemUTC(), content, rules);
+            translations, mock(SpellRemovalRepository.class), contexts, Clock.systemUTC(), content, rules,
+            publicMedia);
     private final UUID rulesetId = UUID.randomUUID();
 
     @Test
@@ -86,6 +90,33 @@ class SpellCatalogQueriesTest {
         assertThatThrownBy(() -> queries.read(id, UUID.randomUUID())).isInstanceOf(ApiException.class)
                 .hasMessage("The catalog entry was not found.");
         verifyNoInteractions(revisions, content);
+    }
+
+    @Test
+    void historicalScopeOmitsUnknownPatchObservationsUntilExplicitlyRequested() {
+        var owner = owner("baseline");
+        var revision = revision(owner, 1);
+        revision.setState("PUBLISHED");
+        var season = UUID.randomUUID();
+        var context = mock(GameplayContext.class);
+        when(context.rulesetId()).thenReturn(rulesetId);
+        when(contexts.resolveCatalog(eq("VN"), any(), eq(season), isNull())).thenReturn(context);
+        when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
+        when(identities.findById(owner.getId())).thenReturn(java.util.Optional.of(owner));
+        when(revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId())).thenReturn(List.of(revision));
+        when(publicMedia.hydrate(anyList())).thenAnswer(call -> call.getArgument(0));
+
+        var hidden = queries.published("VN", "vi-VN", 0, 20, season, null, false);
+        assertThat(hidden.items()).isEmpty();
+        assertThat(hidden.totalElements()).isZero();
+        assertThatThrownBy(() -> queries.publishedOne(owner.getId(), "VN", "vi-VN", season, null, false))
+                .isInstanceOf(ApiException.class).hasMessage("No published snapshot is available.");
+        verifyNoInteractions(content);
+
+        var view = new SpellView(owner.getId(), owner.getCode(), null, null, List.of());
+        when(content.publicView(owner, revision, "vi-VN")).thenReturn(view);
+        assertThat(queries.published("VN", "vi-VN", 0, 20, season, null, true).items()).containsExactly(view);
+        verify(contexts, never()).resolve(anyString(), any());
     }
 
     private SpellIdentity owner(String code) {

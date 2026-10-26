@@ -1,5 +1,6 @@
 package com.wikiaov.terminology.internal.reference.application;
 
+import com.wikiaov.patch.CatalogReadScope;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.RulesetReference;
 import com.wikiaov.platform.*;
@@ -52,14 +53,22 @@ public class SkillReferenceCatalog {
 
     public PageSlice<SkillReferenceProvider.Candidate> published(String region, String locale, String q, UUID heroId,
             String ids, int page, Integer size) {
+        return published(region, locale, q, heroId, ids, page, size, null, null, false);
+    }
+
+    public PageSlice<SkillReferenceProvider.Candidate> published(String region, String locale, String q, UUID heroId,
+            String ids, int page, Integer size, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         var input = input(locale, q, ids, page, size);
         var at = clock.instant();
-        var gameplay = contexts.resolve(region, at);
+        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
+        var gameplay = scope.gameplay();
         String key = "skills:v1:" + gameplay.regionId() + ":" + gameplay.rulesetId() + ":" + gameplay.patchVariantId()
-                + ":" + heroId + ":" + input.key();
+                + ":" + heroId + ":unscoped=" + scope.allowUnscoped() + ":" + input.key();
         return cache.read(ReadModelCache.Area.PUBLIC_REFERENCES, key, SkillReferencePageView.class,
-                () -> new SkillReferencePageView(skills.published(gameplay, at, locale, input.q(), heroId,
-                        input.ids(), page, input.size())))
+                () -> new SkillReferencePageView(scope.allowUnscoped()
+                        ? skills.published(gameplay, at, locale, input.q(), heroId, input.ids(), page, input.size())
+                        : skills.published(gameplay, at, locale, input.q(), heroId, input.ids(), page, input.size(),
+                                false)))
                 .slice();
     }
 

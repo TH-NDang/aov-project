@@ -280,6 +280,7 @@ class WarehouseCatalogIntegrationTest {
         var publishedRevision = map(send(get(ROOT + "/spells/" + created.get("id")), null, 200).get("revision"));
         assertThat(publishedRevision.get("effectiveFromPatchVariantId")).isNull();
         assertThat(publishedRevision.get("state")).isEqualTo("PUBLISHED");
+        assertThat(publishedRevision.get("archived")).isEqualTo(true);
         send(post(ROOT + "/spells/" + created.get("id") + "/drafts"), Map.of("rulesetId", RULESET,
                 "sourceRevisionId", publishedRevision.get("id"), "cause", "GAME_PATCH", "effectiveFromPatchVariantId",
                 VARIANT), 422);
@@ -324,7 +325,7 @@ class WarehouseCatalogIntegrationTest {
     }
 
     @Test
-    void onlyRemovedLegacySpellsCanPublishWithoutPatchAndAnIndependentDraftCanClearAWrongContext() throws Exception {
+    void availableAndArchivedBaselineSpellsCanPublishWithoutPatchAndClearAnIncorrectContext() throws Exception {
         var content = new HashMap<String, Object>();
         content.put("iconAssetId", icon(MediaSemanticType.SPELL_ICON));
         content.put("cooldownSeconds", 90);
@@ -334,7 +335,7 @@ class WarehouseCatalogIntegrationTest {
         content.put("translations", List.of(text("vi-VN", "Phụ trợ", "Mô tả")));
         var created = send(post(ROOT + "/spells"), Map.of("code", "available-unplaced", "rulesetId", RULESET,
                 "initialLocale", "vi-VN", "name", "Phụ trợ", "content", content), 201);
-        send(post(draftPath("spells", created) + "/publish"), Map.of("expectedVersion", 1), 422);
+        send(post(draftPath("spells", created) + "/publish"), Map.of("expectedVersion", 1), 200);
         content.put("availability", "REMOVED");
         var placed = create("spells", "legacy-placed", content);
         var cleared = send(put(draftPath("spells", placed)),
@@ -346,9 +347,124 @@ class WarehouseCatalogIntegrationTest {
                 () -> jdbc.sql("UPDATE spell.spell_revision SET effective_from_patch_variant_id=? WHERE id=?")
                         .params(VARIANT, revision).update())
                 .hasMessageContaining("immutable");
-        content.put("legacy", false);
-        send(put(draftPath("spells", created)), Map.of("expectedVersion", 1, "content", content), 200);
-        send(post(draftPath("spells", created) + "/publish"), Map.of("expectedVersion", 2), 422);
+        send(put(draftPath("spells", created)), Map.of("expectedVersion", 2, "content", content), 409);
+    }
+
+    @Test
+    void unknownItemAndSpellBaselinesPublishWithoutInventingHistoryAndEditsInheritTheirContext() throws Exception {
+        category();
+        currentWarehouseContext();
+        for (var path : List.of("items", "spells")) {
+            var content = path.equals("items") ? itemContent(null) : availableSpellContent();
+            var created = create(path, "unknown-" + path, content);
+            send(put(draftPath(path, created)), Map.of("expectedVersion", 1, "content", content,
+                    "effectiveFromPatchVariantId", VARIANT, "clearPatchContext", true), 422);
+            var cleared = send(put(draftPath(path, created)), Map.of("expectedVersion", 1, "content", content,
+                    "clearPatchContext", true), 200);
+            assertThat(map(cleared.get("revision")).get("effectiveFromPatchVariantId")).isNull();
+            assertThat((List<?>) cleared.get("missingFields")).isEmpty();
+            send(post(ROOT + "/" + path + "/" + created.get("id") + "/drafts"), Map.of("rulesetId", RULESET,
+                    "sourceRevisionId", map(cleared.get("revision")).get("id"), "cause", "CONTENT_CORRECTION"), 422);
+            var published = send(post(draftPath(path, cleared) + "/publish"), Map.of("expectedVersion", 2), 200);
+            var revision = map(published.get("revision"));
+            assertThat(revision).containsEntry("cause", "DATA_BASELINE");
+            assertThat(revision.get("effectiveFromPatchVariantId")).isNull();
+            var publicView = send(get("/api/wiki/v1/" + path + "/" + created.get("id")), null, 200);
+            assertThat(map(publicView.get("revision")).get("id")).isEqualTo(revision.get("id"));
+            if (path.equals("spells"))
+                assertThat(map(publicView.get("revision")).get("archived")).isEqualTo(false);
+
+            String forks = ROOT + "/" + path + "/" + created.get("id") + "/drafts";
+            send(post(forks), Map.of("rulesetId", RULESET, "sourceRevisionId", revision.get("id"),
+                    "cause", "GAME_PATCH"), 422);
+            send(post(forks), Map.of("rulesetId", RULESET, "cause", "CONTENT_CORRECTION"), 400);
+            for (var cause : List.of("CONTENT_CORRECTION", "TRANSLATION_UPDATE")) {
+                var edit = send(post(forks), Map.of("rulesetId", RULESET, "sourceRevisionId", revision.get("id"),
+                        "cause", cause), 201);
+                send(put(draftPath(path, edit)), Map.of("expectedVersion", 1, "content", edit.get("content"),
+                        "clearPatchContext", true), 422);
+                published = send(post(draftPath(path, edit) + "/publish"), Map.of("expectedVersion", 1), 200);
+                revision = map(published.get("revision"));
+                assertThat(revision).containsEntry("cause", cause);
+                assertThat(revision.get("effectiveFromPatchVariantId")).isNull();
+            }
+            assertThat(catalogChanges(path.equals("items") ? "ITEM" : "SPELL")).isEmpty();
+        }
+    }
+
+    @Test
+    void knownPatchesOutrankUnknownBaselinesAndFutureChangesWaitForTheirPatch() throws Exception {
+        category();
+        currentWarehouseContext();
+        UUID futurePatch = UUID.randomUUID(), futureVariant = UUID.randomUUID();
+        jdbc.sql(
+                "INSERT INTO patch.game_patch(id,code,created_at,created_by_issuer,created_by_subject) VALUES(?,?,now(),'test','editor')")
+                .params(futurePatch, "future-" + futurePatch).update();
+        jdbc.sql(
+                "INSERT INTO patch.patch_variant(id,patch_id,ruleset_id,variant_code,ruleset_ordinal,status,published_at,created_at) VALUES(?,?,?,'future',20,'PUBLISHED',now(),now())")
+                .params(futureVariant, futurePatch, RULESET).update();
+        when(contexts.variant(futureVariant))
+                .thenReturn(new PatchVariantReference(futureVariant, futurePatch, RULESET, null, 20, true));
+        for (var path : List.of("items", "spells")) {
+            var body = Map.of("code", "precedence-" + path, "rulesetId", RULESET, "initialLocale", "vi-VN",
+                    "name", "Baseline", "content", path.equals("items") ? itemContent(null) : availableSpellContent());
+            var created = send(post(ROOT + "/" + path), body, 201);
+            var baseline = send(post(draftPath(path, created) + "/publish"), Map.of("expectedVersion", 1), 200);
+            var baselineRevision = map(baseline.get("revision"));
+            String forks = ROOT + "/" + path + "/" + created.get("id") + "/drafts";
+            var changed = send(post(forks), Map.of("rulesetId", RULESET, "sourceRevisionId", baselineRevision.get("id"),
+                    "cause", "GAME_PATCH", "effectiveFromPatchVariantId", VARIANT), 201);
+            send(put(draftPath(path, changed)), Map.of("expectedVersion", 1, "content", changed.get("content"),
+                    "clearPatchContext", true), 422);
+            String table = path.equals("items") ? "item.item_revision" : "spell.spell_revision";
+            UUID draft = UUID.fromString(map(changed.get("revision")).get("id").toString());
+            jdbc.sql("UPDATE " + table + " SET effective_from_patch_variant_id=NULL WHERE id=?").param(draft).update();
+            send(post(draftPath(path, changed) + "/publish"), Map.of("expectedVersion", 1), 422);
+            jdbc.sql("UPDATE " + table + " SET effective_from_patch_variant_id=? WHERE id=?").params(VARIANT, draft)
+                    .update();
+            var patched = send(post(draftPath(path, changed) + "/publish"), Map.of("expectedVersion", 1), 200);
+            var selected = send(get("/api/wiki/v1/" + path + "/" + created.get("id")), null, 200);
+            assertThat(map(selected.get("revision")).get("id")).isEqualTo(map(patched.get("revision")).get("id"));
+
+            var future = send(post(forks),
+                    Map.of("rulesetId", RULESET, "sourceRevisionId", map(patched.get("revision")).get("id"),
+                            "cause", "GAME_PATCH", "effectiveFromPatchVariantId", futureVariant),
+                    201);
+            send(post(draftPath(path, future) + "/publish"), Map.of("expectedVersion", 1), 200);
+            selected = send(get("/api/wiki/v1/" + path + "/" + created.get("id")), null, 200);
+            assertThat(map(selected.get("revision")).get("id")).isEqualTo(map(patched.get("revision")).get("id"));
+            send(post(ROOT + "/" + path + "/" + created.get("id") + "/changes"), Map.of("patchVariantId", VARIANT,
+                    "fromRevisionId", baselineRevision.get("id"), "toRevisionId",
+                    map(patched.get("revision")).get("id"),
+                    "kinds", List.of("UPDATED"), "translations",
+                    List.of(Map.of("locale", "vi-VN", "text", "Đã xác minh")),
+                    "sourceUrl", "https://example.com/verified-patch"), 201);
+            assertThat(catalogChanges(path.equals("items") ? "ITEM" : "SPELL")).isNotEmpty();
+            assertThat(map(
+                    send(get(ROOT + "/" + path + "/" + created.get("id") + "/revisions/" + baselineRevision.get("id")),
+                            null, 200)
+                            .get("revision"))
+                    .get("effectiveFromPatchVariantId")).isNull();
+        }
+    }
+
+    private void currentWarehouseContext() {
+        when(contexts.resolve(eq("VN"), any())).thenReturn(new GameplayContext(UUID.randomUUID(), "VN", RULESET,
+                "warehouse-tests", PATCH, "warehouse-tests", VARIANT, 1, java.time.Instant.now()));
+    }
+
+    private Map<String, Object> availableSpellContent() {
+        return Map.of("iconAssetId", icon(MediaSemanticType.SPELL_ICON), "cooldownSeconds", 30,
+                "unlockType", "ACCOUNT_CREATION", "availability", "AVAILABLE", "legacy", false,
+                "translations", List.of(text("vi-VN", "Phụ trợ", "Mô tả đã xác minh")));
+    }
+
+    private List<?> catalogChanges(String domain) throws Exception {
+        var response = mvc
+                .perform(get(ROOT + "/catalog-changes").param("rulesetId", RULESET.toString()).param("domain", domain)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        return json.readValue(response, List.class);
     }
 
     @Test

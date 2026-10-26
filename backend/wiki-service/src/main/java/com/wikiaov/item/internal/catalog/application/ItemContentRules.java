@@ -8,6 +8,7 @@ import com.wikiaov.item.internal.metadata.persistence.ItemCategoryRepository;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.platform.ApiException;
+import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogText.Stat;
 import com.wikiaov.platform.CatalogTranslations;
 import java.util.ArrayList;
@@ -100,7 +101,8 @@ class ItemContentRules {
 
     List<String> readiness(ItemRevision revision, ItemContent content) {
         var result = new ArrayList<>(missing(content));
-        if (revision.getEffectiveFromPatchVariantId() == null)
+        if (revision.getEffectiveFromPatchVariantId() == null && !CatalogObservation.isUnscopedBaseline(
+                revision.getCause(), revision.getSourceRevisionId(), revision.getEffectiveFromPatchVariantId()))
             result.add("effectiveFromPatchVariantId");
         return result;
     }

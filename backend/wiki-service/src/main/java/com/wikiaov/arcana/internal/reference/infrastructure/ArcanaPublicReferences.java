@@ -40,7 +40,7 @@ public class ArcanaPublicReferences implements PublicReferenceProvider, AdminRef
     }
 
     public List<PublicReferenceProvider.Candidate> references(PublicReferenceProvider.Scope scope, String locale) {
-        var rows = references.published(scope.gameplay(), scope.patchOrdinals());
+        var rows = references.published(scope.gameplay(), scope.patchOrdinals(), scope.allowUnscoped());
         var grouped = rows.stream().collect(Collectors.groupingBy(AdminReferenceProvider.Row::id,
                 LinkedHashMap::new, Collectors.toList()));
         var assets = media.findAll(rows.stream().map(AdminReferenceProvider.Row::iconAssetId)

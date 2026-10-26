@@ -16,8 +16,13 @@ public interface PublicReferenceProvider {
     record Scope(
             GameplayContext gameplay,
             Map<UUID, Long> patchOrdinals,
-            Instant at
+            Instant at,
+            boolean allowUnscoped
     ) {
+        public Scope(GameplayContext gameplay, Map<UUID, Long> patchOrdinals, Instant at) {
+            this(gameplay, patchOrdinals, at, true);
+        }
+
         public Scope {
             patchOrdinals = Map.copyOf(patchOrdinals);
         }

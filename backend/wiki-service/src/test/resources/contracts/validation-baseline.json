@@ -97,9 +97,15 @@
     [],
     [],
     [],
+    [],
+    [],
+    [],
     []
   ],
   "com.wikiaov.arcana.internal.web.ArcanaPublicController#read": [
+    [],
+    [],
+    [],
     [],
     [],
     [],
@@ -190,9 +196,15 @@
     [],
     [],
     [],
+    [],
+    [],
+    [],
     []
   ],
   "com.wikiaov.enchantment.internal.web.EnchantmentPublicController#read": [
+    [],
+    [],
+    [],
     [],
     [],
     [],
@@ -410,6 +422,9 @@
     [],
     [],
     [],
+    [],
+    [],
+    [],
     []
   ],
   "com.wikiaov.hero.internal.web.HeroPublicController#detail": [
@@ -417,9 +432,15 @@
     [],
     [],
     [],
+    [],
+    [],
+    [],
     []
   ],
   "com.wikiaov.hero.internal.web.HeroPublicController#manifest": [
+    [],
+    [],
+    [],
     [],
     [],
     [],
@@ -578,9 +599,15 @@
     [],
     [],
     [],
+    [],
+    [],
+    [],
     []
   ],
   "com.wikiaov.item.internal.web.ItemPublicController#read": [
+    [],
+    [],
+    [],
     [],
     [],
     [],
@@ -834,15 +861,24 @@
     [],
     [],
     [],
+    [],
+    [],
+    [],
     []
   ],
   "com.wikiaov.spell.internal.web.SpellPublicController#read": [
     [],
     [],
     [],
+    [],
+    [],
+    [],
     []
   ],
   "com.wikiaov.spell.internal.web.SpellPublicController#archived": [
+    [],
+    [],
+    [],
     [],
     [],
     [],
@@ -859,6 +895,9 @@
     []
   ],
   "com.wikiaov.terminology.internal.web.ReferenceController#references": [
+    [],
+    [],
+    [],
     [],
     [],
     [],
@@ -887,6 +926,9 @@
     []
   ],
   "com.wikiaov.terminology.internal.web.SkillReferenceController#published": [
+    [],
+    [],
+    [],
     [],
     [],
     [],

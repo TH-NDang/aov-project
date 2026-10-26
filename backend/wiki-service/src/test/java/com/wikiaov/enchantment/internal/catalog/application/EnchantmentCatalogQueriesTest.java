@@ -3,6 +3,7 @@ package com.wikiaov.enchantment.internal.catalog.application;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.wikiaov.enchantment.internal.application.response.EnchantmentView;
 import com.wikiaov.enchantment.internal.catalog.persistence.EnchantmentIdentityRepository;
 import com.wikiaov.enchantment.internal.catalog.persistence.EnchantmentRevisionRepository;
 import com.wikiaov.enchantment.internal.catalog.persistence.EnchantmentTranslationRepository;
@@ -11,6 +12,7 @@ import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentRe
 import com.wikiaov.enchantment.internal.catalog.persistence.entity.EnchantmentTranslation;
 import com.wikiaov.enchantment.internal.change.persistence.EnchantmentPatchChangeRepository;
 import com.wikiaov.enchantment.internal.domain.EnchantmentContent;
+import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PlatformErrorCode;
@@ -28,8 +30,9 @@ class EnchantmentCatalogQueriesTest {
     private final GameplayContexts contexts = mock(GameplayContexts.class);
     private final EnchantmentRevisionContent content = mock(EnchantmentRevisionContent.class);
     private final EnchantmentContentRules rules = mock(EnchantmentContentRules.class);
+    private final EnchantmentPublicMedia publicMedia = mock(EnchantmentPublicMedia.class);
     private final EnchantmentCatalogQueries queries = new EnchantmentCatalogQueries(translations, patchChanges,
-            identities, revisions, contexts, Clock.systemUTC(), content, rules);
+            identities, revisions, contexts, Clock.systemUTC(), content, rules, publicMedia);
     private final UUID rulesetId = UUID.randomUUID();
 
     @Test
@@ -85,6 +88,33 @@ class EnchantmentCatalogQueriesTest {
         assertThatThrownBy(() -> queries.read(id, UUID.randomUUID())).isInstanceOf(ApiException.class)
                 .hasMessage("The catalog entry was not found.");
         verifyNoInteractions(revisions, content);
+    }
+
+    @Test
+    void historicalScopeOmitsUnknownPatchObservationsUntilExplicitlyRequested() {
+        var owner = owner("baseline");
+        var revision = revision(owner, 1);
+        revision.setState("PUBLISHED");
+        var season = UUID.randomUUID();
+        var context = mock(GameplayContext.class);
+        when(context.rulesetId()).thenReturn(rulesetId);
+        when(contexts.resolveCatalog(eq("VN"), any(), eq(season), isNull())).thenReturn(context);
+        when(identities.findAll(Sort.by("code"))).thenReturn(List.of(owner));
+        when(identities.findById(owner.getId())).thenReturn(java.util.Optional.of(owner));
+        when(revisions.findByOwnerIdOrderByRevisionNoDesc(owner.getId())).thenReturn(List.of(revision));
+        when(publicMedia.hydrate(anyList())).thenAnswer(call -> call.getArgument(0));
+
+        var hidden = queries.published("VN", "vi-VN", 0, 20, season, null, false);
+        assertThat(hidden.items()).isEmpty();
+        assertThat(hidden.totalElements()).isZero();
+        assertThatThrownBy(() -> queries.publishedOne(owner.getId(), "VN", "vi-VN", season, null, false))
+                .isInstanceOf(ApiException.class).hasMessage("No published snapshot is available.");
+        verifyNoInteractions(content);
+
+        var view = new EnchantmentView(owner.getId(), owner.getCode(), null, null, List.of());
+        when(content.publicView(owner, revision, "vi-VN")).thenReturn(view);
+        assertThat(queries.published("VN", "vi-VN", 0, 20, season, null, true).items()).containsExactly(view);
+        verify(contexts, never()).resolve(anyString(), any());
     }
 
     private EnchantmentIdentity owner(String code) {

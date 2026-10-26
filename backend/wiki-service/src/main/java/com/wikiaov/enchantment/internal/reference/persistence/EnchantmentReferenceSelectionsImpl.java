@@ -24,7 +24,8 @@ public class EnchantmentReferenceSelectionsImpl implements EnchantmentReferenceS
     }
 
     @Override
-    public List<Row> selectReferenceRows(UUID rulesetId, Map<UUID, Long> ordinals, boolean published, long cutoff) {
+    public List<Row> selectReferenceRows(UUID rulesetId, Map<UUID, Long> ordinals, boolean published, long cutoff,
+            boolean allowUnscoped) {
         var builder = entities.getCriteriaBuilder();
         var query = builder.createQuery(Row.class);
         var identity = query.from(EnchantmentIdentity.class);
@@ -40,6 +41,8 @@ public class EnchantmentReferenceSelectionsImpl implements EnchantmentReferenceS
                 : builder.notEqual(revision.get("state"), "DISCARDED"));
         if (published) {
             predicates.add(builder.le(rank, cutoff));
+            if (!allowUnscoped)
+                predicates.add(builder.isNotNull(revision.get("effectiveFromPatchVariantId")));
         }
 
         var newer = query.subquery(UUID.class);
@@ -59,6 +62,8 @@ public class EnchantmentReferenceSelectionsImpl implements EnchantmentReferenceS
                 : builder.notEqual(candidate.get("state"), "DISCARDED"));
         if (published) {
             newerPredicates.add(builder.le(newerRank, cutoff));
+            if (!allowUnscoped)
+                newerPredicates.add(builder.isNotNull(candidate.get("effectiveFromPatchVariantId")));
         }
         newerPredicates.add(builder.or(builder.gt(newerRank, rank),
                 builder.and(builder.equal(newerRank, rank), builder.gt(newerSequence, sequence))));

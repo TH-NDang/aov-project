@@ -36,7 +36,8 @@ public record PublicSkinCatalogView(
             Badge badge,
             MediaAssetReference portrait,
             MediaAssetReference head,
-            MediaAssetReference art
+            MediaAssetReference art,
+            boolean unscopedBaseline
     ) {
     }
 }
