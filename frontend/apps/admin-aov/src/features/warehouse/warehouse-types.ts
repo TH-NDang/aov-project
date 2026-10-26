@@ -71,6 +71,7 @@ export interface WarehouseRevision {
   sourceRevisionId: string | null
   createdAt: string
   updatedAt: string
+  archived?: boolean
 }
 export interface WarehouseEntry<C extends WarehouseContent = WarehouseContent> {
   id: string
@@ -81,6 +82,24 @@ export interface WarehouseEntry<C extends WarehouseContent = WarehouseContent> {
   changeKinds?: import("./catalog-changes").CatalogBadgeKind[]
   missingFields?: string[]
 }
+
+export type WarehouseBaselineMode = "initial" | "inherited"
+
+export function warehouseBaselineMode(
+  revision: Pick<WarehouseRevision, "cause" | "effectiveFromPatchVariantId" | "sourceRevisionId">,
+  missingFields: string[] = [],
+): WarehouseBaselineMode | undefined {
+  if (revision.cause === "DATA_BASELINE" && !revision.sourceRevisionId) return "initial"
+  if (
+    !revision.effectiveFromPatchVariantId &&
+    revision.sourceRevisionId &&
+    ["CONTENT_CORRECTION", "TRANSLATION_UPDATE"].includes(revision.cause) &&
+    !missingFields.includes("effectiveFromPatchVariantId")
+  )
+    return "inherited"
+  return undefined
+}
+
 export interface WarehouseMetadata {
   code: string
   version: number

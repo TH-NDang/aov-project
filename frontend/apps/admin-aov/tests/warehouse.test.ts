@@ -8,7 +8,12 @@ import {
   selectedItemEdges,
   routeItemWire,
 } from "../src/features/warehouse/item-graph"
-import type { ItemContent, WarehouseEntry } from "../src/features/warehouse/warehouse-types"
+import {
+  warehouseBaselineMode,
+  type ItemContent,
+  type SpellContent,
+  type WarehouseEntry,
+} from "../src/features/warehouse/warehouse-types"
 
 function item(
   id: string,
@@ -181,6 +186,62 @@ test("backend warehouse adapter loads all pages and preserves optimistic version
     assert.equal(parameters.get("patchVariantId"), "september")
     assert.equal(call.init?.signal, signal)
   }
+})
+
+test("unscoped baselines remain distinct from gameplay changes and inherit only validated baseline context", () => {
+  const baseline = item("baseline").revision
+  assert.equal(warehouseBaselineMode(baseline), "initial")
+  assert.equal(
+    warehouseBaselineMode({ ...baseline, cause: "CONTENT_CORRECTION", sourceRevisionId: "published-baseline" }),
+    "inherited",
+  )
+  assert.equal(
+    warehouseBaselineMode({ ...baseline, cause: "TRANSLATION_UPDATE", sourceRevisionId: "published-baseline" }, [
+      "effectiveFromPatchVariantId",
+    ]),
+    undefined,
+  )
+  assert.equal(warehouseBaselineMode({ ...baseline, cause: "GAME_PATCH", sourceRevisionId: "previous" }), undefined)
+})
+
+test("clearing a baseline patch is explicit and never changes a derived revision context", async () => {
+  const { createWarehouseApi } = await import("../src/features/warehouse/warehouse-api")
+  const payloads: Record<string, unknown>[] = []
+  const entry = item("sword")
+  entry.revision.effectiveFromPatchVariantId = "observed-patch"
+  const api = createWarehouseApi(async <T>(_path: string, init?: RequestInit): Promise<T> => {
+    payloads.push(JSON.parse(String(init?.body)))
+    return entry as T
+  })
+
+  await api.save("items", entry, entry.content)
+  await api.save("items", entry, entry.content, null)
+  await api.save("items", entry, entry.content, "confirmed-patch")
+  const derived = { ...entry, revision: { ...entry.revision, sourceRevisionId: "published-source" } }
+  await api.save("items", derived, derived.content, null)
+  const spell: WarehouseEntry<SpellContent> = {
+    ...entry,
+    content: {
+      iconAssetId: null,
+      translations: [{ locale: "vi-VN", name: "Tốc hành" }],
+      notes: null,
+      cooldownSeconds: 90,
+      unlockLevel: 1,
+      availability: "AVAILABLE",
+      legacy: false,
+      displayOrder: 0,
+      states: [],
+    },
+  }
+  await api.save("spells", spell, spell.content, null)
+
+  assert.equal(payloads[0].clearPatchContext, undefined)
+  assert.equal(payloads[1].clearPatchContext, true)
+  assert.equal(payloads[1].effectiveFromPatchVariantId, undefined)
+  assert.equal(payloads[2].clearPatchContext, undefined)
+  assert.equal(payloads[2].effectiveFromPatchVariantId, "confirmed-patch")
+  assert.equal(payloads[3].clearPatchContext, undefined)
+  assert.equal(payloads[4].clearPatchContext, true)
 })
 
 test("shop positioning preserves legacy columns, physical gaps, variants and other placements", async () => {

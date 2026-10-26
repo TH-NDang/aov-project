@@ -42,7 +42,7 @@ import { ItemEditor } from "./item-editor"
 import { WarehouseCardHint } from "./warehouse-card-hint"
 
 type Entry = WarehouseEntry<ItemContent>
-type PendingItem = { content: ItemContent; patchId?: string }
+type PendingItem = { content: ItemContent; patchId?: string | null }
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, Entry>()
 const empty: Entry[] = []
@@ -195,16 +195,18 @@ export function BackendItemsPage() {
     () =>
       (scope.scoped ? (scope.query.data ?? empty) : (catalog.data ?? empty)).map((base) => {
         const item = { ...base, changeKinds: scope.badgeKinds(base.id) }
-        return edits.has(item.id)
-          ? {
-              ...item,
-              content: edits.get(item.id)!.content,
-              revision: {
-                ...item.revision,
-                effectiveFromPatchVariantId: edits.get(item.id)!.patchId ?? item.revision.effectiveFromPatchVariantId,
-              },
-            }
-          : item
+        const pendingItem = edits.get(item.id)
+        if (!pendingItem) return item
+
+        return {
+          ...item,
+          content: pendingItem.content,
+          revision: {
+            ...item.revision,
+            effectiveFromPatchVariantId:
+              pendingItem.patchId === undefined ? item.revision.effectiveFromPatchVariantId : pendingItem.patchId,
+          },
+        }
       }),
     [catalog.data, edits, scope.query.data, scope.scoped, scope.latest, scope.showAll],
   )
@@ -231,9 +233,11 @@ export function BackendItemsPage() {
     setFocusId(id)
     setSelectedId(id)
   }
-  function update(id: string, content: ItemContent, patchId?: string) {
+  function update(id: string, content: ItemContent, patchId?: string | null) {
     setUndo((history) => [...history.slice(-19), new Map(edits)])
-    setEdits((previous) => new Map(previous).set(id, { content, patchId: patchId ?? previous.get(id)?.patchId }))
+    setEdits((previous) =>
+      new Map(previous).set(id, { content, patchId: patchId === undefined ? previous.get(id)?.patchId : patchId }),
+    )
   }
   async function refresh() {
     await invalidateWarehouseCatalogs(client)
@@ -499,7 +503,7 @@ export function BackendItemsPage() {
               toast.error(problem)
               return
             }
-            update(selected.id, content, patchId ?? undefined)
+            update(selected.id, content, patchId)
             setSelectedId(null)
           }}
           onFork={() => void fork(selected)}

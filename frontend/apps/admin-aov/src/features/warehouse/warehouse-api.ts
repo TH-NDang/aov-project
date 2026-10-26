@@ -70,19 +70,17 @@ export function createWarehouseApi(request: Request = backendRequest) {
       kind: K,
       entry: WarehouseEntry<WarehouseContents[K]>,
       content: WarehouseContents[K],
-      effectiveFromPatchVariantId?: string,
+      effectiveFromPatchVariantId?: string | null,
     ) =>
       send<WarehouseEntry<WarehouseContents[K]>>(`/admin/${kind}/${entry.id}/drafts/${entry.revision.id}`, "PUT", {
         expectedVersion: entry.revision.version,
         content,
         ...(effectiveFromPatchVariantId ? { effectiveFromPatchVariantId } : {}),
-        ...(kind === "spells" &&
+        ...((kind === "items" || kind === "spells") &&
         entry.revision.effectiveFromPatchVariantId &&
-        !effectiveFromPatchVariantId &&
-        "legacy" in content &&
-        content.legacy &&
-        "availability" in content &&
-        content.availability === "REMOVED"
+        effectiveFromPatchVariantId === null &&
+        entry.revision.cause === "DATA_BASELINE" &&
+        !entry.revision.sourceRevisionId
           ? { clearPatchContext: true }
           : {}),
         changeNote: "Update catalog content",

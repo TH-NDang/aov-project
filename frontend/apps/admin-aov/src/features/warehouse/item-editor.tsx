@@ -17,6 +17,7 @@ import { WarehouseNotes } from "./warehouse-notes"
 import {
   warehouseName,
   warehouseText,
+  warehouseBaselineMode,
   type ItemContent,
   type WarehouseEntry,
   type WarehouseMetadata,
@@ -52,6 +53,10 @@ export function ItemEditor({
   const [tab, setTab] = useState("gameplay")
   const [dirty, setDirty] = useState(false)
   const name = warehouseName(entry, locale)
+  const baselineMode = warehouseBaselineMode(entry.revision, entry.missingFields)
+  const visibleMissing = (entry.missingFields ?? []).filter(
+    (field) => field !== "effectiveFromPatchVariantId" || !!patchId || !baselineMode,
+  )
   const change = (patch: Partial<ItemContent>) => {
     setValue((old) => ({ ...old, ...patch }))
     setDirty(true)
@@ -88,11 +93,11 @@ export function ItemEditor({
           </SheetDescription>
         </SheetHeader>
         <div className="space-y-4 px-4 pb-6">
-          {entry.missingFields?.length ? (
+          {visibleMissing.length ? (
             <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
               <p className="font-medium">Cần hoàn thiện trước khi xuất bản</p>
               <ul className="mt-1 list-disc pl-4">
-                {entry.missingFields.map((field) => (
+                {visibleMissing.map((field) => (
                   <li key={field}>{warehouseMissingFieldLabel(field)}</li>
                 ))}
               </ul>
@@ -117,11 +122,14 @@ export function ItemEditor({
               <WarehousePatchContext
                 rulesetId={entry.revision.rulesetId}
                 value={patchId}
+                baselineMode={baselineMode}
                 onChange={(id) => {
                   setPatchId(id)
                   setDirty(true)
                 }}
-                disabled={!editable || busy || entry.revision.cause !== "DATA_BASELINE"}
+                disabled={
+                  !editable || busy || entry.revision.cause !== "DATA_BASELINE" || !!entry.revision.sourceRevisionId
+                }
               />
               {editable ? (
                 <AssetPicker
@@ -472,7 +480,7 @@ export function ItemEditor({
             {onPublish && (
               <Button
                 variant="outline"
-                disabled={busy || uploading || dirty || !!entry.missingFields?.length}
+                disabled={busy || uploading || dirty || visibleMissing.length > 0}
                 onClick={onPublish}
               >
                 Xuất bản

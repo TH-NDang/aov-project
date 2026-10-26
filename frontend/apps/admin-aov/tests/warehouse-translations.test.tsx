@@ -17,6 +17,8 @@ import type {
 
 let activeRequests: string[] = []
 let removalEvents: Record<string, unknown>[] = []
+let activeFetcher: typeof fetch
+const fixtureFetch: typeof fetch = (...args) => activeFetcher(...args)
 
 test("timeline keeps baseline separate, selects a patch, and suppresses selection after horizontal dragging", async () => {
   await withUi(async ({ document, render }) => {
@@ -137,6 +139,7 @@ async function withUi(
     name: (value: string) => Promise<void>
     upload: (file: File) => Promise<void>
   }) => Promise<void>,
+  capabilities = ["spell:write", "spell:publish", "media:write"],
 ) {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/spells", pretendToBeVisual: true })
   Object.defineProperty(dom.window, "matchMedia", {
@@ -158,7 +161,7 @@ async function withUi(
         subject: "editor",
         type: "HUMAN",
         displayName: "Editor",
-        capabilities: ["spell:write", "spell:publish", "media:write"],
+        capabilities,
       })
     if (path === "/admin/media/assets" && init?.method === "POST") {
       assert.equal(JSON.parse(String(init.body)).semanticType, "SPELL_ICON")
@@ -272,6 +275,8 @@ async function withUi(
       })
     throw new Error(`Unexpected fixture request: ${path}`)
   }
+  // Session clients retain their fetch dependency, so route it to the active fixture between tests.
+  activeFetcher = fetcher
   for (const [key, value] of Object.entries({
     React,
     window: dom.window,
@@ -295,7 +300,7 @@ async function withUi(
       disconnect() {}
     },
     BroadcastChannel: undefined,
-    fetch: fetcher,
+    fetch: fixtureFetch,
     IS_REACT_ACT_ENVIRONMENT: true,
   })) {
     originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
@@ -886,7 +891,7 @@ test("arcana keeps tier III visible, collapses lower tiers and reveals filtered 
   })
 })
 
-test("only removed legacy spells can publish without a patch, and later history requires an explicit patch and source", async () => {
+test("archived spells stay separate, gameplay revisions require a patch, and later removal history needs a source", async () => {
   await withUi(async ({ document, render, click }) => {
     const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
     const content = newSecondaryContent("spells", "vi-VN")
@@ -919,7 +924,14 @@ test("only removed legacy spells can publish without a patch, and later history 
     assert.ok(document.body.textContent?.includes("Có thể xuất bản hồ sơ lưu trữ"))
     await click("Xuất bản")
     assert.equal(published, 1)
-    await render(<SecondaryEditor key="active" {...props} content={{ ...content, availability: "AVAILABLE" }} />)
+    await render(
+      <SecondaryEditor
+        key="active"
+        {...props}
+        revisionCause="GAME_PATCH"
+        content={{ ...content, availability: "AVAILABLE" }}
+      />,
+    )
     const publishButton = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
       (button) => button.textContent?.trim() === "Xuất bản",
     )!
@@ -956,6 +968,133 @@ test("only removed legacy spells can publish without a patch, and later history 
     assert.ok(document.body.textContent?.includes("Đã loại bỏ · 2026-10-15"))
     assert.equal(document.querySelector('a[href="https://example.com/evidence"]')?.getAttribute("rel"), "noreferrer")
   })
+})
+
+test("baseline spell publication needs no invented patch and corrections retain their unscoped baseline", async () => {
+  await withUi(async ({ document, render, click }) => {
+    const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
+    const content = newSecondaryContent("spells", "vi-VN")
+    content.translations[0] = { locale: "vi-VN", name: "Tốc hành", description: "Tăng tốc chạy" }
+    Object.assign(content, {
+      availability: "AVAILABLE",
+      cooldownSeconds: 90,
+      unlockType: "ACCOUNT_CREATION",
+      iconAssetId: "spell-icon",
+    })
+    let published = 0
+    const props = {
+      kind: "spells" as const,
+      code: "sprint",
+      content,
+      branches: [],
+      locale: "vi-VN",
+      isNew: false,
+      rulesetId: "standard",
+      canPublish: true,
+      onClose() {},
+      onSave: async () => {},
+      onPublish: async () => {
+        published++
+      },
+    }
+    await render(<SecondaryEditor {...props} missingFields={["effectiveFromPatchVariantId"]} allowPatchChange />)
+    assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /Dữ liệu nền · chưa xác định patch/)
+    assert.match(document.body.textContent ?? "", /không phải xác nhận mục được thêm ở mùa hiện tại/)
+    await click("Xuất bản")
+    assert.equal(published, 1)
+
+    await render(
+      <SecondaryEditor
+        key="correction"
+        {...props}
+        revisionCause="CONTENT_CORRECTION"
+        sourceRevisionId="published-baseline"
+      />,
+    )
+    assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /Dữ liệu nền kế thừa/)
+    assert.equal(document.querySelector<HTMLSelectElement>('[aria-label="Ngữ cảnh dữ liệu"]')?.disabled, true)
+    await click("Xuất bản")
+    assert.equal(published, 2)
+
+    await render(
+      <SecondaryEditor
+        key="gameplay"
+        {...props}
+        revisionCause="GAME_PATCH"
+        missingFields={["effectiveFromPatchVariantId"]}
+      />,
+    )
+    const publishButton = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+      (button) => button.textContent?.trim() === "Xuất bản",
+    )!
+    assert.equal(publishButton.disabled, true)
+  })
+})
+
+test("patch history can compare published unscoped baselines without offering drafts, future or archived spells", async () => {
+  await withUi(
+    async ({ document, client, render, click }) => {
+      const { WarehouseChangeHistory } = await import("../src/features/warehouse/warehouse-change-history")
+      const baseline = {
+        ...fixtureRevision("baseline"),
+        id: "baseline",
+        ownerId: "spell",
+        code: "spell",
+        state: "PUBLISHED" as const,
+        archived: false,
+      }
+      const revisions: WarehouseRevision[] = [
+        baseline,
+        { ...baseline, id: "correction", cause: "CONTENT_CORRECTION", sourceRevisionId: "baseline", revisionNo: 2 },
+        { ...baseline, id: "draft", state: "DRAFT" },
+        { ...baseline, id: "archived", archived: true },
+        { ...baseline, id: "another-ruleset", rulesetId: "regional" },
+        { ...baseline, id: "earlier", cause: "GAME_PATCH", effectiveFromPatchVariantId: "earlier-patch" },
+        { ...baseline, id: "target", cause: "GAME_PATCH", effectiveFromPatchVariantId: "patch-fixture" },
+        { ...baseline, id: "future", cause: "GAME_PATCH", effectiveFromPatchVariantId: "future-patch" },
+      ]
+      client.setQueryDefaults(["warehouse", "history"], { staleTime: Infinity })
+      client.setQueryDefaults(["publication-overview"], { staleTime: Infinity })
+      client.setQueryData(["warehouse", "history", "spells", "spell"], revisions)
+      client.setQueryData(["warehouse", "changes", "spells", "standard", "vi-VN"], [])
+      client.setQueryData(["publication-overview"], {
+        seasons: [],
+        variants: [
+          { id: "earlier-patch", patchCode: "Trước", rulesetId: "standard", rulesetOrdinal: 1, status: "PUBLISHED" },
+          { id: "patch-fixture", patchCode: "Hiện tại", rulesetId: "standard", rulesetOrdinal: 2, status: "PUBLISHED" },
+          { id: "future-patch", patchCode: "Sau", rulesetId: "standard", rulesetOrdinal: 3, status: "PUBLISHED" },
+        ],
+      })
+      await render(<WarehouseChangeHistory kind="spells" entryId="spell" rulesetId="standard" locale="vi-VN" />)
+      await click("Ghi nhận thay đổi / tạo bản cập nhật")
+      const choose = async (label: string, value: string) =>
+        act(async () => {
+          const select = document.querySelector<HTMLSelectElement>(`[aria-label="${label}"]`)!
+          select.value = value
+          select.dispatchEvent(new window.Event("change", { bubbles: true }))
+        })
+      await choose("Snapshot đã xuất bản", "target")
+      const options = () => [
+        ...document.querySelectorAll<HTMLOptionElement>('[aria-label="Bản trước để đối chiếu"] option'),
+      ]
+      assert.deepEqual(
+        options().map((option) => option.value),
+        ["", "baseline", "correction", "earlier"],
+      )
+      assert.match(
+        options().find((option) => option.value === "baseline")?.textContent ?? "",
+        /v1 · Dữ liệu nền chưa rõ patch/,
+      )
+
+      await choose("Snapshot đã xuất bản", "baseline")
+      await choose("Patch ghi nhận thay đổi", "patch-fixture")
+      assert.equal(
+        options().some((option) => option.value === "baseline"),
+        false,
+      )
+    },
+    ["spell:write", "spell:publish", "patch:write"],
+  )
 })
 
 test("item cards separate recipe selection from opening details and hide ports on outer columns", async () => {
