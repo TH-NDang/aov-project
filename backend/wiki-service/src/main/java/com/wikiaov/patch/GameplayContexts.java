@@ -7,6 +7,8 @@ import java.util.UUID;
 public interface GameplayContexts {
     GameplayContext resolve(String region, Instant at);
 
+    GameplayContext resolveCatalog(String region, Instant at, UUID seasonId, UUID patchVariantId);
+
     List<GameplayContext> active(Instant at);
 
     void requireRuleset(UUID rulesetId);

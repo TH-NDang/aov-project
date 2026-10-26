@@ -6,6 +6,7 @@ import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,9 +28,15 @@ public class PublicSkinCatalogController implements PublicSkinCatalogApi {
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) String hero, @RequestParam(required = false) String rarity,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size,
+            @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "false") boolean includeUnscoped,
             HttpServletRequest request) {
-        QueryParameters.requireOnly(request, Set.of("region", "locale", "q", "hero", "rarity", "page", "size"));
+        QueryParameters.requireOnly(request, Set.of("region", "locale", "q", "hero", "rarity", "page", "size",
+                "seasonId", "patchVariantId", "includeUnscoped"));
         return ResponseEntity.ok().cacheControl(CacheControl.noCache().cachePublic())
-                .body(catalog.read(region, locale, q, hero, rarity, page, size));
+                .body(seasonId == null && patchVariantId == null
+                        ? catalog.read(region, locale, q, hero, rarity, page, size)
+                        : catalog.read(region, locale, q, hero, rarity, page, size, seasonId, patchVariantId,
+                                includeUnscoped));
     }
 }

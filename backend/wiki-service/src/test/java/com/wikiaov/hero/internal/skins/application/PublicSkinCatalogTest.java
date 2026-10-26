@@ -157,6 +157,24 @@ class PublicSkinCatalogTest {
     }
 
     @Test
+    void historicalSeasonExcludesUnknownPatchSkinObservationsUntilOptedIn() {
+        var hero = candidate("airi", UUID.randomUUID(), null, 1);
+        var season = UUID.randomUUID();
+        when(contexts.resolveCatalog("VN", now, season, null)).thenReturn(context);
+        when(repository.candidates(context.rulesetId(), now)).thenReturn(List.of(hero));
+        when(repository.skins(List.of(hero.getSkinsId())))
+                .thenReturn(List.of(skin(hero.getSkinsId(), "airi-special-1", 1, null)));
+        when(repository.skinTexts(List.of(hero.getSkinsId())))
+                .thenReturn(List.of(text(hero.getSkinsId(), "airi-special-1", "vi-VN", "Special")));
+        when(media.findAll(anySet())).thenReturn(Map.of());
+
+        assertThat(catalog.read("VN", "vi-VN", "", null, null, 0, 24, season, null, false).page().items()).isEmpty();
+        assertThat(catalog.read("VN", "vi-VN", "", null, null, 0, 24, season, null, true).page().items())
+                .singleElement().satisfies(entry -> assertThat(entry.unscopedBaseline()).isTrue());
+        verify(contexts, never()).resolve("VN", now);
+    }
+
+    @Test
     void validatesBoundsBeforeReadingPersistenceOrMedia() {
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", null, null, -1, 24)).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> catalog.read("VN", "vi-VN", "", null, null, 0, 61)).isInstanceOf(ApiException.class);

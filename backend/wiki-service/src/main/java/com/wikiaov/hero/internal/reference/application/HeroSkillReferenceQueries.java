@@ -44,10 +44,15 @@ public class HeroSkillReferenceQueries implements SkillReferenceProvider {
 
     public PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
             List<String> ids, int page, int size) {
+        return published(context, at, locale, q, heroId, ids, page, size, true);
+    }
+
+    public PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
+            List<String> ids, int page, int size, boolean allowUnscoped) {
         var ordinals = contexts.rulesetVariants(context.rulesetId()).stream()
                 .collect(Collectors.toMap(v -> v.id(), v -> v.rulesetOrdinal()));
         var result = references.search(context.rulesetId(), ordinals, at, context.rulesetOrdinal(),
-                SkillReferenceSearch.parse(q), heroId, ids, page, size);
+                SkillReferenceSearch.parse(q), heroId, ids, page, size, allowUnscoped);
         return hydrate(result, context.rulesetId(), context.regionCode(), locale, page, size);
     }
 

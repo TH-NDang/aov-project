@@ -20,15 +20,25 @@ public class ArcanaPublicController implements ArcanaPublicApi {
     public PageSlice<ArcanaView> list(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "false") boolean includeUnscoped,
             HttpServletRequest request) {
-        QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size"));
-        return catalog.published(region, locale, page, size);
+        QueryParameters.requireOnly(request,
+                Set.of("region", "locale", "page", "size", "seasonId", "patchVariantId", "includeUnscoped"));
+        if (seasonId == null && patchVariantId == null)
+            return catalog.published(region, locale, page, size);
+        return catalog.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
     }
 
     @GetMapping(path = "/{id}", version = "1")
     public ArcanaView read(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
-            @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
-        QueryParameters.requireOnly(request, Set.of("region", "locale"));
-        return catalog.publishedOne(id, region, locale);
+            @RequestParam(defaultValue = "vi-VN") String locale,
+            @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
+            @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request) {
+        QueryParameters.requireOnly(request,
+                Set.of("region", "locale", "seasonId", "patchVariantId", "includeUnscoped"));
+        if (seasonId == null && patchVariantId == null)
+            return catalog.publishedOne(id, region, locale);
+        return catalog.publishedOne(id, region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 }

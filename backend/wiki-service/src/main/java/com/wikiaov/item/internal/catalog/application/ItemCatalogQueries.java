@@ -12,10 +12,12 @@ import com.wikiaov.item.internal.change.persistence.ItemPatchChangeRepository;
 import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.patch.CatalogPatchScope;
+import com.wikiaov.patch.CatalogReadScope;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.CatalogChanges;
+import com.wikiaov.platform.CatalogObservation;
 import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
@@ -42,10 +44,12 @@ class ItemCatalogQueries {
     private final Clock clock;
     private final ItemRevisionContent revisionContent;
     private final ItemContentRules contentRules;
+    private final ItemPublicMedia publicMedia;
 
     ItemCatalogQueries(ItemPatchChangeRepository patchChanges, ItemIdentityRepository identities,
             ItemRevisionRepository revisions, ItemTranslationRepository translations, GameplayContexts contexts,
-            Clock clock, ItemRevisionContent revisionContent, ItemContentRules contentRules) {
+            Clock clock, ItemRevisionContent revisionContent, ItemContentRules contentRules,
+            ItemPublicMedia publicMedia) {
         this.patchChanges = patchChanges;
         this.identities = identities;
         this.revisions = revisions;
@@ -54,6 +58,7 @@ class ItemCatalogQueries {
         this.clock = clock;
         this.revisionContent = revisionContent;
         this.contentRules = contentRules;
+        this.publicMedia = publicMedia;
     }
 
     PageSlice<ItemView> list(UUID rulesetId, String locale, String q, int page, int size) {
@@ -189,22 +194,41 @@ class ItemCatalogQueries {
     }
 
     PageSlice<ItemView> published(String region, String locale, int page, int size) {
+        return published(region, locale, page, size, null, null, false);
+    }
+
+    PageSlice<ItemView> published(String region, String locale, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         if (page < 0 || size < 1 || size > 100)
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
-        var context = contexts.resolve(region, clock.instant());
+        var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
+                includeUnscoped);
+        var context = scope.gameplay();
         var rows = identities.findAll(Sort.by("code")).stream()
                 .map(owner -> current(owner.getId(), context)
+                        .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
                         .map(revision -> revisionContent.publicView(owner, revision, locale)).orElse(null))
                 .filter(Objects::nonNull).toList();
         int start = (int) Math.min((long) page * size, rows.size());
-        return new PageSlice<>(rows.subList(start, Math.min(start + size, rows.size())), page, size, rows.size());
+        return new PageSlice<>(publicMedia.hydrate(rows.subList(start, Math.min(start + size, rows.size()))), page,
+                size, rows.size());
     }
 
     ItemView publishedOne(UUID id, String region, String locale) {
+        return publishedOne(id, region, locale, null, null, false);
+    }
+
+    ItemView publishedOne(UUID id, String region, String locale,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         var owner = identity(id);
-        var context = contexts.resolve(region, clock.instant());
-        return current(id, context).map(revision -> revisionContent.publicView(owner, revision, locale)).orElseThrow(
-                () -> new ApiException(ItemErrorCode.ITEM_NOT_FOUND, "No published snapshot is available."));
+        var scope = CatalogReadScope.resolve(contexts, region, clock.instant(), seasonId, patchVariantId,
+                includeUnscoped);
+        var context = scope.gameplay();
+        return current(id, context)
+                .filter(revision -> scope.allowUnscoped() || revision.getEffectiveFromPatchVariantId() != null)
+                .map(revision -> revisionContent.publicView(owner, revision, locale))
+                .map(publicMedia::hydrate).orElseThrow(
+                        () -> new ApiException(ItemErrorCode.ITEM_NOT_FOUND, "No published snapshot is available."));
     }
 
     Optional<ItemRevision> current(UUID id, GameplayContext context) {
@@ -217,6 +241,8 @@ class ItemCatalogQueries {
             return Optional.empty();
         return revisions.findByOwnerIdOrderByRevisionNoDesc(id).stream()
                 .filter(revision -> revision.getState().equals("PUBLISHED")
+                        && (revision.getEffectiveFromPatchVariantId() != null || CatalogObservation.isUnscopedBaseline(
+                                revision.getCause(), revision.getSourceRevisionId(), null))
                         && revision.getRulesetId().equals(context.rulesetId())
                         && patchOrdinal(revision) <= context.rulesetOrdinal())
                 .max(Comparator.<ItemRevision>comparingLong(this::patchOrdinal)

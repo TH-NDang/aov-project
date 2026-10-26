@@ -116,6 +116,6 @@ class SpellRevisionContent {
                 revision.getState(), revision.getVersion(), revision.getPublicationSequence(),
                 revision.getPublishedAt(), revision.getCause(),
                 revision.getEffectiveFromPatchVariantId(), revision.getSourceRevisionId(), revision.getCreatedAt(),
-                revision.getUpdatedAt());
+                revision.getUpdatedAt(), contentRules.archived(revision, revision.getGameplay()));
     }
 }

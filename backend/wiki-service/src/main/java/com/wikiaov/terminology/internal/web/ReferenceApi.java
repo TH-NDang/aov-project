@@ -44,6 +44,9 @@ public interface ReferenceApi {
     ResponseEntity<ReferenceSettingsView> references(
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
+            @Parameter(description = "Optional published season; selects its latest eligible patch.") UUID seasonId,
+            @Parameter(description = "Optional published patch variant within the selected season.") UUID patchVariantId,
+            @Parameter(description = "Include observations with an unknown patch in a historical view.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 

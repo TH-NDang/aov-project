@@ -1,5 +1,6 @@
 package com.wikiaov.spell.internal.application.response;
 
+import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.spell.internal.domain.SpellContent;
 import java.time.Instant;
 import java.util.*;
@@ -9,8 +10,17 @@ public record SpellView(
         String code,
         Revision revision,
         SpellContent content,
-        List<String> missingFields
+        List<String> missingFields,
+        Map<UUID, MediaAssetReference> media
 ) {
+    public SpellView {
+        media = media == null ? Map.of() : Map.copyOf(media);
+    }
+
+    public SpellView(UUID id, String code, Revision revision, SpellContent content, List<String> missingFields) {
+        this(id, code, revision, content, missingFields, Map.of());
+    }
+
     public record Revision(
             UUID id,
             UUID ownerId,
@@ -25,7 +35,8 @@ public record SpellView(
             UUID effectiveFromPatchVariantId,
             UUID sourceRevisionId,
             Instant createdAt,
-            Instant updatedAt
+            Instant updatedAt,
+            boolean archived
     ) {
     }
 }

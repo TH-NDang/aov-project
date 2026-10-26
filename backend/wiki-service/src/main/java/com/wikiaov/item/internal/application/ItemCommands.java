@@ -31,8 +31,12 @@ public final class ItemCommands {
             @NotNull @Positive Long expectedVersion,
             @NotNull ItemContent content,
             @Size(max = 4000) String changeNote,
-            UUID effectiveFromPatchVariantId
+            UUID effectiveFromPatchVariantId,
+            Boolean clearPatchContext
     ) {
+        public Update(Long expectedVersion, ItemContent content, String changeNote, UUID effectiveFromPatchVariantId) {
+            this(expectedVersion, content, changeNote, effectiveFromPatchVariantId, null);
+        }
     }
 
     public record Mutation(

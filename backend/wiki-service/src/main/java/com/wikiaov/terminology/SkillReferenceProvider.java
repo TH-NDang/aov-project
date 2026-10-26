@@ -13,6 +13,11 @@ public interface SkillReferenceProvider {
     PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
             List<String> ids, int page, int size);
 
+    default PageSlice<Candidate> published(GameplayContext context, Instant at, String locale, String q, UUID heroId,
+            List<String> ids, int page, int size, boolean allowUnscoped) {
+        return published(context, at, locale, q, heroId, ids, page, size);
+    }
+
     record Translation(
             String locale,
             String name,

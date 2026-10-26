@@ -37,10 +37,15 @@ public class HeroQueries {
     }
 
     public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at) {
+        return current(heroId, context, at, true);
+    }
+
+    public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at, boolean allowUnscoped) {
         Map<UUID, Long> ordinals = new HashMap<>();
         return store.revisions(heroId).stream()
                 .filter(r -> r.state().equals("PUBLISHED") && r.rulesetId().equals(context.rulesetId())
                         && !r.publishedAt().isAfter(at))
+                .filter(r -> allowUnscoped || r.effectiveFromPatchVariantId() != null)
                 .filter(r -> ordinal(r, ordinals) <= context.rulesetOrdinal())
                 .max(Comparator.<HeroRevisionView>comparingLong(r -> ordinal(r, ordinals))
                         .thenComparingLong(HeroRevisionView::publicationSequence));
@@ -53,12 +58,19 @@ public class HeroQueries {
     }
 
     public Map<String, Object> detail(UUID heroId, String region, String locale, boolean manifest) {
+        return detail(heroId, region, locale, manifest, null, null, false);
+    }
+
+    public Map<String, Object> detail(UUID heroId, String region, String locale, boolean manifest,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         HeroValidation.locale(locale);
 
         Instant at = clock.instant();
-        var context = contexts.resolve(region, at);
-        var rev = current(heroId, context, at).orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND,
-                "No published hero is available in this context."));
+        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
+        var context = scope.gameplay();
+        var rev = current(heroId, context, at, scope.allowUnscoped())
+                .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND,
+                        "No published hero is available in this context."));
 
         return detail(rev, context, locale, manifest);
     }
@@ -69,6 +81,7 @@ public class HeroQueries {
         result.put("id", rev.heroId());
         result.put("revisionId", rev.id());
         result.put("code", store.hero(rev.heroId()).getCode());
+        result.put("unscopedBaseline", rev.effectiveFromPatchVariantId() == null);
 
         Map<String, Object> refs = new LinkedHashMap<>();
         rev.sections().forEach((s, id) -> refs.put(sectionKey(s), id));
@@ -139,6 +152,11 @@ public class HeroQueries {
 
     public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
             String sort) {
+        return list(region, locale, page, size, q, role, sort, null, null, false);
+    }
+
+    public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
+            String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         HeroValidation.locale(locale);
         if (page < 0 || size < 1 || size > 100)
             throw HeroValidation.invalid("Page must be nonnegative and size between 1 and 100.");
@@ -153,10 +171,11 @@ public class HeroQueries {
                 throw HeroValidation.invalid("Unknown hero role.");
             }
         Instant at = clock.instant();
-        var ctx = contexts.resolve(region, at);
+        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
+        var ctx = scope.gameplay();
         List<ListEntry> all = new ArrayList<>();
         for (var hero : store.heroes(sort.endsWith("desc"))) {
-            var selected = current(hero.getId(), ctx, at);
+            var selected = current(hero.getId(), ctx, at, scope.allowUnscoped());
             if (selected.isEmpty())
                 continue;
 
@@ -177,6 +196,7 @@ public class HeroQueries {
             item.put("id", rev.heroId());
             item.put("code", hero.getCode());
             item.put("revisionId", rev.id());
+            item.put("unscopedBaseline", rev.effectiveFromPatchVariantId() == null);
             item.put("name", translated.name());
             item.put("actualLocale", actual);
             item.put("roles", profile.roles());

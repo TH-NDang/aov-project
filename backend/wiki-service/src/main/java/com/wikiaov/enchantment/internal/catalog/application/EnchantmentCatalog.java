@@ -264,8 +264,20 @@ public class EnchantmentCatalog {
     }
 
     @Transactional(readOnly = true)
+    public PageSlice<EnchantmentView> published(String region, String locale, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return queries.published(region, locale, page, size, seasonId, patchVariantId, includeUnscoped);
+    }
+
+    @Transactional(readOnly = true)
     public EnchantmentView publishedOne(UUID id, String region, String locale) {
         return queries.publishedOne(id, region, locale);
+    }
+
+    @Transactional(readOnly = true)
+    public EnchantmentView publishedOne(UUID id, String region, String locale,
+            UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return queries.publishedOne(id, region, locale, seasonId, patchVariantId, includeUnscoped);
     }
 
     private EnchantmentContent initialContent(Create input) {

@@ -12,6 +12,7 @@ import com.wikiaov.item.internal.reference.persistence.ItemReferenceRepository;
 import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.spell.internal.reference.persistence.SpellReferenceRepository;
 import jakarta.persistence.EntityManagerFactory;
+import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -253,6 +255,149 @@ class AdminReferenceCatalogIntegrationTest {
                 .containsExactly("Hero old EN", "Hero old");
         assertThat(statistics.getPrepareStatementCount()).isEqualTo(1);
         assertThat(statistics.getEntityLoadCount()).isZero();
+    }
+
+    @Test
+    void publicReferencesIncludeUnknownBaselinesWhileInvalidUnscopedDraftsCannotBePublished() {
+        for (String domain : List.of("item", "spell")) {
+            UUID owner = referenceOwner(domain);
+            UUID baseline = referenceRevision(domain, owner, 1, "DATA_BASELINE", null, null,
+                    "Baseline " + domain);
+            var gamePatch = referenceDraft(domain, owner, 2, "GAME_PATCH", null, baseline,
+                    "Unscoped game patch " + domain);
+            assertPublicationRejected(domain, gamePatch);
+            sql.update("update " + domain + "." + domain + "_revision set state='DISCARDED' where id=?", gamePatch);
+
+            var correction = referenceDraft(domain, owner, 3, "CONTENT_CORRECTION", null, null,
+                    "Independent correction " + domain);
+            assertPublicationRejected(domain, correction);
+            sql.update("update " + domain + "." + domain + "_revision set state='DISCARDED' where id=?", correction);
+
+            var translation = referenceDraft(domain, owner, 4, "TRANSLATION_UPDATE", null, null,
+                    "Independent translation " + domain);
+            assertPublicationRejected(domain, translation);
+        }
+
+        var statistics = statistics();
+        statistics.clear();
+        assertThat(items.published(context(0), ordinals)).extracting(row -> row.name())
+                .containsExactly("Baseline item");
+        assertThat(spells.published(context(0), ordinals)).extracting(row -> row.name())
+                .containsExactly("Baseline spell");
+        assertThat(statistics.getEntityLoadCount()).isZero();
+        assertThat(items.authoring(ruleset, ordinals)).extracting(row -> row.name())
+                .containsExactly("Independent translation item");
+        assertThat(spells.authoring(ruleset, ordinals)).extracting(row -> row.name())
+                .containsExactly("Independent translation spell");
+    }
+
+    @Test
+    void publicReferencesAllowInheritedUnscopedEditsButPreferAnEffectiveKnownPatch() {
+        for (String domain : List.of("item", "spell")) {
+            UUID owner = referenceOwner(domain);
+            UUID baseline = referenceRevision(domain, owner, 1, "DATA_BASELINE", null, null,
+                    "Baseline " + domain);
+            UUID correction = referenceRevision(domain, owner, 2, "CONTENT_CORRECTION", null, baseline,
+                    "Corrected " + domain);
+            var correctedRows = domain.equals("item")
+                    ? items.published(context(0), ordinals)
+                    : spells.published(context(0), ordinals);
+            assertThat(correctedRows).extracting(row -> row.name()).containsExactly("Corrected " + domain);
+
+            referenceRevision(domain, owner, 3, "TRANSLATION_UPDATE", null, correction,
+                    "Translated " + domain);
+            var translatedRows = domain.equals("item")
+                    ? items.published(context(0), ordinals)
+                    : spells.published(context(0), ordinals);
+            assertThat(translatedRows).extracting(row -> row.name()).containsExactly("Translated " + domain);
+
+            referenceRevision(domain, owner, 4, "GAME_PATCH", firstPatch, baseline,
+                    "Known patch " + domain);
+            referenceRevision(domain, owner, 5, "CONTENT_CORRECTION", null, baseline,
+                    "Latest baseline correction " + domain);
+        }
+
+        assertThat(items.published(context(0), ordinals)).extracting(row -> row.name())
+                .containsExactly("Latest baseline correction item");
+        assertThat(spells.published(context(0), ordinals)).extracting(row -> row.name())
+                .containsExactly("Latest baseline correction spell");
+        assertThat(items.published(context(1), ordinals)).extracting(row -> row.name())
+                .containsExactly("Known patch item");
+        assertThat(spells.published(context(1), ordinals)).extracting(row -> row.name())
+                .containsExactly("Known patch spell");
+    }
+
+    @Test
+    void historicalReferenceSelectionExcludesUnknownBaselinesAndKeepsKnownPatchSnapshots() {
+        for (String domain : List.of("item", "spell")) {
+            UUID owner = referenceOwner(domain);
+            UUID baseline = referenceRevision(domain, owner, 1, "DATA_BASELINE", null, null,
+                    "Baseline " + domain);
+            assertThat(domain.equals("item")
+                    ? items.published(context(0), ordinals, false)
+                    : spells.published(context(0), ordinals, false)).isEmpty();
+            referenceRevision(domain, owner, 2, "GAME_PATCH", firstPatch, baseline,
+                    "Scoped " + domain);
+            referenceRevision(domain, owner, 3, "CONTENT_CORRECTION", null, baseline,
+                    "Later observation " + domain);
+        }
+
+        assertThat(items.published(context(1), ordinals, false)).extracting(row -> row.name())
+                .containsExactly("Scoped item");
+        assertThat(spells.published(context(1), ordinals, false)).extracting(row -> row.name())
+                .containsExactly("Scoped spell");
+        assertThat(heroes.published(context(1), ordinals, Instant.now(), false)).extracting(row -> row.name())
+                .containsExactly("Hero old EN", "Hero old");
+    }
+
+    private UUID referenceOwner(String domain) {
+        UUID owner = UUID.randomUUID();
+        sql.update("insert into " + domain + "." + domain + " values (?,?,now(),'test','editor')", owner,
+                "baseline-" + owner);
+        return owner;
+    }
+
+    private UUID referenceRevision(String domain, UUID owner, int number, String cause, UUID patch, UUID source,
+            String name) {
+        UUID revision = referenceDraft(domain, owner, number, cause, patch, source, name);
+        sql.update("update " + domain + "." + domain + "_revision set state='PUBLISHED',publication_sequence=?,"
+                + "published_at=now() where id=?", number, revision);
+
+        return revision;
+    }
+
+    private UUID referenceDraft(String domain, UUID owner, int number, String cause, UUID patch, UUID source,
+            String name) {
+        UUID revision = UUID.randomUUID();
+        sql.update("insert into " + domain + "." + domain + "_revision(id,owner_id,ruleset_id,revision_no,state,"
+                + "version,publication_sequence,published_at,cause,effective_from_patch_variant_id,source_revision_id,"
+                + "gameplay,created_at,updated_at,created_by_issuer,created_by_subject,updated_by_issuer,"
+                + "updated_by_subject) values (?,?,?,?,'DRAFT',1,null,null,?,?,?,cast(? as jsonb),now(),now(),"
+                + "'test','editor','test','editor')", revision, owner, ruleset, number, cause, patch, source, "{}");
+        String targetColumn = domain.equals("spell") ? "target_key," : "";
+        String targetValue = domain.equals("spell") ? "''," : "";
+        sql.update("insert into " + domain + "." + domain + "_translation(id,revision_id,locale," + targetColumn
+                + "name,description) values (?,?,'vi-VN'," + targetValue + "?,?)", UUID.randomUUID(), revision,
+                name, "Reference description");
+
+        return revision;
+    }
+
+    private void assertPublicationRejected(String domain, UUID revision) {
+        sql.execute((ConnectionCallback<Void>) connection -> {
+            var savepoint = connection.setSavepoint();
+            try (var update = connection.prepareStatement("update " + domain + "." + domain
+                    + "_revision set state='PUBLISHED',publication_sequence=revision_no,published_at=now() where id=?")) {
+                update.setObject(1, revision);
+                assertThatThrownBy(update::executeUpdate).isInstanceOf(SQLException.class)
+                        .satisfies(error -> assertThat(((SQLException) error).getSQLState()).isEqualTo("23514"));
+            } finally {
+                connection.rollback(savepoint);
+                connection.releaseSavepoint(savepoint);
+            }
+
+            return null;
+        });
     }
 
     private Statistics statistics() {

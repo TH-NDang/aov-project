@@ -36,6 +36,9 @@ public interface HeroPublicApi {
             @Parameter(description = "Search text.") String q,
             @Parameter(description = "Hero role filter.") String role,
             @Parameter(description = "Sort expression accepted by this endpoint.") String sort,
+            @Parameter(description = "Optional season; selects its latest eligible published patch.") UUID seasonId,
+            @Parameter(description = "Optional published patch variant, consistent with the season.") UUID patchVariantId,
+            @Parameter(description = "Include unscoped baseline observations in a historical view.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
@@ -51,6 +54,9 @@ public interface HeroPublicApi {
     ResponseEntity<?> detail(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
+            @Parameter(description = "Optional season; selects its latest eligible published patch.") UUID seasonId,
+            @Parameter(description = "Optional published patch variant, consistent with the season.") UUID patchVariantId,
+            @Parameter(description = "Include unscoped baseline observations in a historical view.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 
@@ -66,6 +72,9 @@ public interface HeroPublicApi {
     ResponseEntity<?> manifest(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Region code used to resolve the published gameplay context.") String region,
             @Parameter(description = "Requested translation locale.") String locale,
+            @Parameter(description = "Optional season; selects its latest eligible published patch.") UUID seasonId,
+            @Parameter(description = "Optional published patch variant, consistent with the season.") UUID patchVariantId,
+            @Parameter(description = "Include unscoped baseline observations in a historical view.") boolean includeUnscoped,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 

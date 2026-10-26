@@ -21,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -236,6 +237,74 @@ class PatchRepositoriesIntegrationTest {
                 .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("en-US", "vi-VN");
         assertThat(seasonUpdates.preferredTexts(java.util.List.of(patch), "fr-FR"))
                 .extracting(SeasonUpdatesRepository.Text::getLocale).containsExactly("vi-VN", "en-US");
+    }
+
+    @Test
+    void catalogScopesOnlyOfferPublishedPastVariantsInTheVerifiedRulesetAndSeason() {
+        var now = effective.plusSeconds(10);
+        var oldSeason = UUID.randomUUID();
+        write("""
+                insert into patch.ranked_season(id,code,display_name,ordinal)
+                select ?,?,'Observed season',coalesce(max(ordinal),0)+1 from patch.ranked_season
+                """, oldSeason, "observed-" + suffix);
+        var observedPatch = UUID.randomUUID();
+        var observedVariant = UUID.randomUUID();
+        createPatch(observedPatch, observedVariant, 1, oldSeason);
+        var laterOrdinal = UUID.randomUUID();
+        createPatch(UUID.randomUUID(), laterOrdinal, 3, season);
+        var draft = UUID.randomUUID();
+        createPatch(UUID.randomUUID(), draft, 4, season);
+        write("update patch.patch_variant set status='DRAFT',published_at=null where id=?", draft);
+        var futurePublication = UUID.randomUUID();
+        createPatch(UUID.randomUUID(), futurePublication, 5, season);
+        write("update patch.patch_variant set published_at=? where id=?", Timestamp.from(now.plusSeconds(60)),
+                futurePublication);
+        var draftPatch = UUID.randomUUID();
+        createPatch(draftPatch, UUID.randomUUID(), 6, season);
+        write("update patch.game_patch set status='DRAFT' where id=?", draftPatch);
+        var otherRuleset = UUID.randomUUID();
+        write("insert into patch.gameplay_ruleset(id,code,description,lifecycle_state,created_at) values(?,?,'','ACTIVE',?)",
+                otherRuleset, "other-catalog-" + suffix, Timestamp.from(start));
+        var foreignVariant = UUID.randomUUID();
+        createPatch(UUID.randomUUID(), foreignVariant, 7, season);
+        write("update patch.patch_variant set ruleset_id=? where id=?", otherRuleset, foreignVariant);
+
+        assertThat(contexts.catalogPatches(ruleset, now, 2, null, null, Pageable.unpaged()))
+                .extracting(GameplayContextRepository.CatalogPatch::getId).containsExactly(variant, observedVariant);
+        assertThat(contexts.catalogPatches(ruleset, now, 7, null, null, Pageable.unpaged()))
+                .extracting(GameplayContextRepository.CatalogPatch::getId)
+                .containsExactly(laterOrdinal, variant, observedVariant);
+        assertThat(contexts.catalogPatches(ruleset, now, 2, oldSeason, null, PageRequest.of(0, 1)))
+                .singleElement().satisfies(value -> {
+                    assertThat(value.getId()).isEqualTo(observedVariant);
+                    assertThat(value.getSeasonCode()).isEqualTo("observed-" + suffix);
+                    assertThat(value.getSeasonName()).isEqualTo("Observed season");
+                });
+        assertThat(contexts.catalogPatches(ruleset, now, 2, season, observedVariant, Pageable.unpaged())).isEmpty();
+        assertThat(contexts.catalogPatches(ruleset, now, 2, oldSeason, observedVariant, Pageable.unpaged()))
+                .singleElement().satisfies(value -> assertThat(value.getPatchId()).isEqualTo(observedPatch));
+    }
+
+    @Test
+    void catalogDatesKeepOnlyVerifiedPastReleasesForTheRequestedMarket() {
+        var now = effective.plusSeconds(10);
+        var cancelled = createRelease(3, season, effective.plusSeconds(1), "CANCELLED");
+        var future = createRelease(4, season, now.plusSeconds(60), "SCHEDULED");
+        var undated = UUID.randomUUID();
+        createPatch(UUID.randomUUID(), undated, 1, season);
+        var day = java.time.LocalDate.of(2026, 1, 2);
+        write("update patch.patch_release set effective_on=?,confirmed_at=effective_at where id=?", day, release);
+        write("""
+                insert into patch.patch_release(id,patch_variant_id,region_id,effective_at,status,created_at,season_id)
+                select ?,?,id,?,'SCHEDULED',?,? from patch.region where code='VN'
+                """, UUID.randomUUID(), variant, Timestamp.from(now), Timestamp.from(start), season);
+
+        assertThat(contexts.catalogDates(region, java.util.List.of(variant, cancelled, future, undated), now))
+                .singleElement().satisfies(value -> {
+                    assertThat(value.getPatchVariantId()).isEqualTo(variant);
+                    assertThat(value.getEffectiveOn()).isEqualTo(day);
+                    assertThat(value.getEffectiveAt()).isEqualTo(effective);
+                });
     }
 
     private UUID createRelease(long ordinal, UUID seasonId, Instant at, String status) {

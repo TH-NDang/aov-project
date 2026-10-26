@@ -134,6 +134,25 @@ class PublicReferenceCatalogTest {
         verifyNoInteractions(contexts, loader);
     }
 
+    @Test
+    void historicalCacheCannotReuseTheCurrentCatalogWithUnscopedObservations() {
+        UUID season = UUID.randomUUID();
+        var gameplay = gameplay("VN", UUID.randomUUID(), 3, BEFORE.minusSeconds(100));
+        when(contexts.resolve("VN", BEFORE)).thenReturn(gameplay);
+        when(contexts.resolveCatalog("VN", BEFORE, season, null)).thenReturn(gameplay);
+        var current = view(1);
+        var scoped = view(2);
+        when(loader.read(gameplay, BEFORE, "VN", "vi-VN")).thenReturn(current);
+        when(loader.read(gameplay, BEFORE, "VN", "vi-VN", false)).thenReturn(scoped);
+
+        assertThat(catalog.read("VN", "vi-VN")).isSameAs(current);
+        assertThat(catalog.read("VN", "vi-VN", season, null, false)).isSameAs(scoped);
+        assertThat(catalog.read("VN", "vi-VN", season, null, true)).isSameAs(current);
+        assertThat(cache.values).hasSize(2);
+        assertThat(cache.keys.getFirst().context()).contains("unscoped=true");
+        assertThat(cache.keys.get(1).context()).contains("unscoped=false");
+    }
+
     private static GameplayContext gameplay(String region, UUID ruleset, long ordinal, Instant effectiveAt) {
         return new GameplayContext(UUID.randomUUID(), region, ruleset, "aov-standard", UUID.randomUUID(),
                 "patch-" + ordinal, UUID.randomUUID(), ordinal, effectiveAt);
