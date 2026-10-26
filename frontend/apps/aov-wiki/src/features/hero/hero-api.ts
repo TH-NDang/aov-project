@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import type { HeroRole } from "./hero-classifications"
+import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
 
 export interface HeroMedia {
   assetId: string
@@ -8,6 +9,7 @@ export interface HeroMedia {
 }
 
 export interface HeroListItem {
+  unscopedBaseline?: boolean
   id: string
   code: string
   revisionId: string
@@ -32,6 +34,7 @@ interface HeroPage {
 }
 
 export interface HeroDetail {
+  unscopedBaseline?: boolean
   id: string
   code: string
   revisionId: string
@@ -46,26 +49,31 @@ async function readHeroApi<T>(path: string, signal: AbortSignal): Promise<T> {
   return response.json()
 }
 
-export const heroCatalogQuery = queryOptions({
-  queryKey: ["wiki", "heroes", "VN", "vi-VN"],
-  queryFn: async ({ signal }) => {
-    const first = await readHeroApi<HeroPage>("/heroes?region=VN&locale=vi-VN&size=100&page=0", signal)
-    const items = [...first.items]
-    for (let page = 1; page < first.totalPages; page++) {
-      const next = await readHeroApi<HeroPage>(`/heroes?region=VN&locale=vi-VN&size=100&page=${page}`, signal)
-      items.push(...next.items)
-    }
-    return { context: first.context, items }
-  },
-  staleTime: 60_000,
-  retry: 1,
-})
+export const heroCatalogQuery = (scope: WikiCatalogScope) =>
+  queryOptions({
+    queryKey: ["wiki", "heroes", ...wikiScopeKey(scope)],
+    queryFn: async ({ signal }) => {
+      const params = wikiCatalogParameters(scope)
+      params.set("size", "100")
+      params.set("page", "0")
+      const first = await readHeroApi<HeroPage>(`/heroes?${params}`, signal)
+      const items = [...first.items]
+      for (let page = 1; page < first.totalPages; page++) {
+        params.set("page", String(page))
+        const next = await readHeroApi<HeroPage>(`/heroes?${params}`, signal)
+        items.push(...next.items)
+      }
+      return { context: first.context, items }
+    },
+    staleTime: 60_000,
+    retry: 1,
+  })
 
-export function heroDetailQuery(heroId: string) {
+export function heroDetailQuery(heroId: string, scope: WikiCatalogScope) {
   return queryOptions({
-    queryKey: ["wiki", "hero", heroId, "VN", "vi-VN"],
+    queryKey: ["wiki", "hero", heroId, ...wikiScopeKey(scope)],
     queryFn: ({ signal }) =>
-      readHeroApi<HeroDetail>(`/heroes/${encodeURIComponent(heroId)}?region=VN&locale=vi-VN`, signal),
+      readHeroApi<HeroDetail>(`/heroes/${encodeURIComponent(heroId)}?${wikiCatalogParameters(scope)}`, signal),
     staleTime: 60_000,
     retry: 1,
   })

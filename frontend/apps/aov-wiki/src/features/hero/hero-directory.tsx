@@ -6,6 +6,7 @@ import { heroCatalogQuery, type HeroListItem } from "./hero-api"
 import {
   HERO_POSITIONS,
   HERO_ROLES,
+  localizedHeroOptions,
   normalizedHeroSearch,
   referencePositions,
   selectedHeroFilters,
@@ -14,7 +15,10 @@ import {
 import { HeroGlyph } from "./hero-glyph"
 import { HeroGridSkeleton } from "./hero-loading"
 import { WikiImage } from "../../components/wiki-image"
+import { WikiIcon } from "../../components/wiki-icon"
 import "./hero-directory.css"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { WikiVersionPicker } from "../../components/wiki-version-picker"
 
 function FilterChoices<Value extends string>({
   label,
@@ -29,17 +33,27 @@ function FilterChoices<Value extends string>({
   onToggle: (value: Value) => void
   reference?: boolean
 }) {
+  const { locale } = useWikiContext()
   return (
     <div className="wiki-hero-filter-row">
       <div className="wiki-hero-filter-label">
         <span>{label}</span>
         {reference && (
           <Tooltip>
-            <TooltipTrigger className="wiki-hero-reference-note" type="button" aria-label="Thông tin phân loại vị trí">
-              Tham khảo<span aria-hidden="true">ⓘ</span>
+            <TooltipTrigger
+              className="wiki-hero-reference-note"
+              type="button"
+              aria-label={wikiText(locale, "Thông tin phân loại vị trí", "About lane classifications")}
+            >
+              {wikiText(locale, "Tham khảo", "Reference")}
+              <span aria-hidden="true">ⓘ</span>
             </TooltipTrigger>
             <TooltipContent side="bottom" sideOffset={6}>
-              Phân loại minh họa, chờ biên tập.
+              {wikiText(
+                locale,
+                "Phân loại minh họa, chờ biên tập.",
+                "Illustrative classifications, pending editorial review.",
+              )}
             </TooltipContent>
           </Tooltip>
         )}
@@ -47,7 +61,7 @@ function FilterChoices<Value extends string>({
       <div
         className="wiki-hero-filter-choices"
         role="group"
-        aria-label={`Lọc theo ${label.toLocaleLowerCase("vi-VN")}`}
+        aria-label={wikiText(locale, `Lọc theo ${label.toLowerCase()}`, `Filter by ${label.toLowerCase()}`)}
       >
         {options.map((option) => (
           <Tooltip key={option.value}>
@@ -73,35 +87,18 @@ function FilterChoices<Value extends string>({
   )
 }
 
-function SearchIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="18"
-      height="18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      aria-hidden="true"
-    >
-      <circle cx="10.5" cy="10.5" r="6.5" />
-      <path d="m16 16 5 5" />
-    </svg>
-  )
-}
-
 function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
+  const { href, locale } = useWikiContext()
   const [failedUrls, setFailedUrls] = useState<string[]>([])
   const portraitUrl = hero.portrait?.currentVersion?.url
   const imageUrl = [portraitUrl, hero.head?.currentVersion?.url].find((url) => url && !failedUrls.includes(url))
-  const roles = HERO_ROLES.filter((role) => hero.roles.includes(role.value))
+  const roles = localizedHeroOptions(HERO_ROLES, locale).filter((role) => hero.roles.includes(role.value))
 
   return (
     <Link
       className="wiki-hero-card"
       data-role={hero.roles[0]}
-      to={`/hero/${hero.code}`}
+      to={href(`/hero/${hero.code}`)}
       state={{ from }}
       aria-label={`${hero.name}${roles.length ? ` — ${roles.map((role) => role.label).join(", ")}` : ""}`}
     >
@@ -123,7 +120,14 @@ function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
         )}
       </div>
       <div className="wiki-hero-card-body">
-        <span className="wiki-hero-card-name">{hero.name}</span>
+        <span className="wiki-hero-card-name">
+          {hero.name}
+          {hero.unscopedBaseline && (
+            <span className="block text-[10px] leading-4 font-normal text-[#b6ad9b]">
+              {wikiText(locale, "Chưa rõ mốc", "Undated baseline")}
+            </span>
+          )}
+        </span>
         {!!roles.length && (
           <span className="wiki-hero-card-roles" aria-hidden="true">
             {roles.slice(0, 2).map((role) => (
@@ -144,7 +148,9 @@ function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
 }
 
 export function HeroDirectory() {
-  const query = useQuery(heroCatalogQuery)
+  const scope = useWikiContext()
+  const query = useQuery(heroCatalogQuery(scope))
+  const { locale, t } = scope
   const [searchParams, setSearchParams] = useSearchParams()
   const search = (searchParams.get("q") || "").slice(0, 120)
   const roles = selectedHeroFilters(searchParams.get("role"), HERO_ROLES)
@@ -185,48 +191,55 @@ export function HeroDirectory() {
 
   return (
     <div className="wiki-hero-directory">
-      <nav className="wiki-hero-breadcrumb" aria-label="Đường dẫn">
-        <Link to="/">Trang chủ</Link>
+      <nav className="wiki-hero-breadcrumb" aria-label={wikiText(locale, "Đường dẫn", "Breadcrumb")}>
+        <Link to={scope.href("/")}>{t("home")}</Link>
         <span aria-hidden="true">/</span>
-        <span>Thư viện Tướng</span>
+        <span>{wikiText(locale, "Thư viện Tướng", "Hero library")}</span>
       </nav>
-      <h1 className="wiki-hero-directory-title">Thư viện Tướng</h1>
-      <section className="wiki-hero-filters" aria-label="Bộ lọc tướng">
+      <h1 className="wiki-hero-directory-title">{wikiText(locale, "Thư viện Tướng", "Hero library")}</h1>
+      <WikiVersionPicker />
+      <section className="wiki-hero-filters" aria-label={wikiText(locale, "Bộ lọc tướng", "Hero filters")}>
         <TooltipProvider delayDuration={180}>
           <FilterChoices
-            label="Vị trí"
-            options={HERO_POSITIONS}
+            label={wikiText(locale, "Vị trí", "Lane")}
+            options={localizedHeroOptions(HERO_POSITIONS, locale)}
             selected={positions}
             reference
             onToggle={(value) => toggleFilter("position", value, positions)}
           />
           <FilterChoices
-            label="Vai trò"
-            options={HERO_ROLES}
+            label={wikiText(locale, "Vai trò", "Role")}
+            options={localizedHeroOptions(HERO_ROLES, locale)}
             selected={roles}
             onToggle={(value) => toggleFilter("role", value, roles)}
           />
         </TooltipProvider>
         <div className="wiki-hero-filter-tools">
           <label className="wiki-hero-search">
-            <SearchIcon />
-            <span className="sr-only">Tìm tướng</span>
+            <WikiIcon name="search" size={18} />
+            <span className="sr-only">{t("searchHeroes")}</span>
             <input
               type="search"
               value={search}
               onChange={(event) => updateSearch(event.target.value)}
               maxLength={120}
-              placeholder="Tìm tên tướng…"
+              placeholder={wikiText(locale, "Tìm tên tướng…", "Search hero names…")}
             />
           </label>
           {hasFilters && (
-            <button className="wiki-hero-clear" type="button" onClick={clearFilters}>
-              <span aria-hidden="true">×</span> Xóa lọc
+            <button
+              className="wiki-hero-clear"
+              type="button"
+              onClick={clearFilters}
+              aria-label={wikiText(locale, "Xóa bộ lọc", "Clear filters")}
+              title={wikiText(locale, "Xóa bộ lọc", "Clear filters")}
+            >
+              <WikiIcon name="close" size={14} /> {wikiText(locale, "Xóa lọc", "Clear filters")}
             </button>
           )}
           {query.data && (
             <span className="wiki-hero-result-count" role="status" aria-live="polite">
-              {visibleHeroes.length} tướng
+              {visibleHeroes.length} {wikiText(locale, "tướng", visibleHeroes.length === 1 ? "hero" : "heroes")}
             </span>
           )}
         </div>
@@ -236,21 +249,27 @@ export function HeroDirectory() {
         <HeroGridSkeleton />
       ) : query.isError && !query.data ? (
         <div className="wiki-hero-list-state" role="status">
-          <h2>Chưa thể tải thư viện Tướng</h2>
-          <p>Vui lòng kiểm tra kết nối và thử lại.</p>
+          <h2>{wikiText(locale, "Chưa thể tải thư viện Tướng", "Could not load the hero library")}</h2>
+          <p>{wikiText(locale, "Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
           <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
-            Thử lại
+            {t("retry")}
           </button>
         </div>
       ) : !visibleHeroes.length ? (
         <div className="wiki-hero-list-state" role="status">
-          <h2>{hasFilters ? "Không tìm thấy tướng phù hợp" : "Thư viện đang được bổ sung"}</h2>
+          <h2>
+            {hasFilters
+              ? wikiText(locale, "Không tìm thấy tướng phù hợp", "No matching heroes")
+              : wikiText(locale, "Thư viện đang được bổ sung", "More heroes are on the way")}
+          </h2>
           <p>
-            {hasFilters ? "Thử tên khác hoặc bỏ bớt điều kiện lọc." : "Các tướng được công bố sẽ xuất hiện tại đây."}
+            {hasFilters
+              ? wikiText(locale, "Thử tên khác hoặc bỏ bớt điều kiện lọc.", "Try another name or remove a filter.")
+              : wikiText(locale, "Các tướng được công bố sẽ xuất hiện tại đây.", "Published heroes will appear here.")}
           </p>
           {hasFilters && (
             <button type="button" onClick={clearFilters}>
-              Xóa bộ lọc
+              {wikiText(locale, "Xóa bộ lọc", "Clear filters")}
             </button>
           )}
         </div>

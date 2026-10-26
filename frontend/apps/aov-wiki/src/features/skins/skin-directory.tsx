@@ -9,6 +9,8 @@ import { SkinGridSkeleton } from "./skin-loading"
 import { SkinCollectionHeading } from "./skin-collection-heading"
 import { SkinIcon } from "./skin-icon"
 import "./skin-directory.css"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { WikiVersionPicker } from "../../components/wiki-version-picker"
 
 function SkinBadgeImage({ badge }: { badge?: SkinBadge }) {
   const [failed, setFailed] = useState(false)
@@ -29,6 +31,7 @@ function SkinBadgeImage({ badge }: { badge?: SkinBadge }) {
 }
 
 function SkinArtwork({ skin, preview = false }: { skin: SkinEntry; preview?: boolean }) {
+  const { locale } = useWikiContext()
   const [failed, setFailed] = useState<string[]>([])
   const portrait = { kind: "portrait", url: skin.portrait?.currentVersion?.url }
   const head = { kind: "head", url: skin.head?.currentVersion?.url }
@@ -44,16 +47,19 @@ function SkinArtwork({ skin, preview = false }: { skin: SkinEntry; preview?: boo
           : `wiki-skin-art wiki-skin-art-${artwork.kind}`
       }
       src={artwork.url}
-      alt={preview ? `Trang phục ${skin.name} của ${skin.heroName}` : ""}
+      alt={preview ? `${skin.name} — ${skin.heroName}` : ""}
       width="278"
       height="436"
       loading={preview ? "eager" : "lazy"}
       onError={() => setFailed((current) => [...current, artwork.url!])}
     />
   ) : (
-    <span className="wiki-skin-missing" aria-label="Chưa có ảnh trang phục">
+    <span
+      className="wiki-skin-missing"
+      aria-label={wikiText(locale, "Chưa có ảnh trang phục", "Skin artwork unavailable")}
+    >
       <span aria-hidden="true">{skin.name.charAt(0)}</span>
-      {preview && <span>Chưa có ảnh</span>}
+      {preview && <span>{wikiText(locale, "Chưa có ảnh", "No artwork")}</span>}
     </span>
   )
 }
@@ -76,11 +82,12 @@ function HeroHead({ skin }: { skin: SkinEntry }) {
 }
 
 function SkinCard({ skin, onOpen }: { skin: SkinEntry; onOpen: (skin: SkinEntry, button: HTMLButtonElement) => void }) {
+  const { locale } = useWikiContext()
   return (
     <button
       type="button"
       className="wiki-skin-card"
-      aria-label={`Xem ${skin.name} — ${skin.heroName}`}
+      aria-label={`${wikiText(locale, "Xem", "View")} ${skin.name} — ${skin.heroName}`}
       onClick={(event) => onOpen(skin, event.currentTarget)}
     >
       <span className="wiki-skin-frame">
@@ -90,6 +97,7 @@ function SkinCard({ skin, onOpen }: { skin: SkinEntry; onOpen: (skin: SkinEntry,
       <SkinBadgeImage key={skin.badge?.icon?.currentVersion?.url} badge={skin.badge} />
       <span className="wiki-skin-card-caption">
         <span className="wiki-skin-card-name">{skin.name}</span>
+        {skin.unscopedBaseline && <small>{wikiText(locale, "Chưa rõ mốc", "Undated baseline")}</small>}
         <span className="wiki-skin-card-bottom">
           <span className="wiki-skin-card-hero">
             <HeroHead skin={skin} />
@@ -115,6 +123,8 @@ function SkinPreview({
   onClose: () => void
   returnFocus: RefObject<HTMLButtonElement | null>
 }) {
+  const scope = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
   return (
     <Dialog
       open={open}
@@ -135,26 +145,33 @@ function SkinPreview({
       >
         {skin && (
           <>
-            <DialogClose className="wiki-skin-preview-close" aria-label="Đóng ảnh trang phục">
+            <DialogClose
+              className="wiki-skin-preview-close"
+              aria-label={text("Đóng ảnh trang phục", "Close skin preview")}
+            >
               <SkinIcon name="close" size={18} />
             </DialogClose>
             <div className="wiki-skin-preview-image">
               <SkinArtwork key={`${skin.heroId}:${skin.skinKey}`} skin={skin} preview />
             </div>
             <div className="wiki-skin-preview-info">
-              <span className="wiki-skin-preview-eyebrow">TRANG PHỤC</span>
+              <span className="wiki-skin-preview-eyebrow">{scope.t("skins").toLocaleUpperCase(scope.locale)}</span>
               <DialogTitle>{skin.name}</DialogTitle>
-              <DialogDescription>Trang phục của {skin.heroName}</DialogDescription>
+              <DialogDescription>
+                {text("Trang phục của", "Skin for")} {skin.heroName}
+              </DialogDescription>
               {skin.badge && (
                 <div className="wiki-skin-preview-badge">
                   <SkinBadgeImage key={skin.badge.icon?.currentVersion?.url} badge={skin.badge} />
                   <span>{skin.badge.name}</span>
                 </div>
               )}
-              <Link className="wiki-skin-preview-hero" to={`/hero/${skin.heroCode}`}>
+              <Link className="wiki-skin-preview-hero" to={scope.href(`/hero/${skin.heroCode}`)}>
                 <HeroHead skin={skin} />
-                <span>Xem tướng {skin.heroName}</span>
-                <span aria-hidden="true">↗</span>
+                <span>
+                  {text("Xem tướng", "View hero")} {skin.heroName}
+                </span>
+                <SkinIcon name="open" size={14} />
               </Link>
             </div>
           </>
@@ -177,6 +194,7 @@ function FilterSelect({
   options: SkinFilterOption[]
   onChange: (value: string) => void
 }) {
+  const { locale } = useWikiContext()
   const known = options.some((option) => option.code === value)
   const counts = new Map<string, number>()
   const occurrences = new Map<string, number>()
@@ -191,19 +209,25 @@ function FilterSelect({
       <SelectTrigger
         className="wiki-skin-select"
         data-active={!!value || undefined}
-        aria-label={`Lọc ${label.toLocaleLowerCase("vi-VN")}`}
+        aria-label={`${wikiText(locale, "Lọc", "Filter")} ${label.toLocaleLowerCase(locale)}`}
         size="sm"
       >
         <SkinIcon name={icon} size={16} />
         <SelectValue placeholder={label}>{value ? undefined : label}</SelectValue>
       </SelectTrigger>
       <SelectContent className="wiki-skin-select-menu" position="popper" align="start">
-        <SelectItem value="__all">{label}: Tất cả</SelectItem>
+        <SelectItem value="__all">
+          {label}: {wikiText(locale, "Tất cả", "All")}
+        </SelectItem>
         {!!value && !known && <SelectItem value={value}>{value}</SelectItem>}
         {choices.map((option) => (
           <SelectItem value={option.code} key={option.code}>
             {option.name}
-            {option.variant && <span className="wiki-skin-select-variant">Mẫu {option.variant}</span>}
+            {option.variant && (
+              <span className="wiki-skin-select-variant">
+                {wikiText(locale, "Mẫu", "Variant")} {option.variant}
+              </span>
+            )}
           </SelectItem>
         ))}
       </SelectContent>
@@ -221,12 +245,14 @@ function useDebouncedSearch(value: string) {
 }
 
 export function SkinDirectory() {
+  const scope = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
   const [parameters, setParameters] = useSearchParams()
   const search = (parameters.get("q") || "").slice(0, 120)
   const hero = parameters.get("hero") || ""
   const rarity = parameters.get("rarity") || ""
   const debouncedSearch = useDebouncedSearch(search)
-  const query = useInfiniteQuery(skinCatalogQuery({ q: debouncedSearch.trim(), hero, rarity }))
+  const query = useInfiniteQuery(skinCatalogQuery({ q: debouncedSearch.trim(), hero, rarity }, scope))
   const sentinel = useRef<HTMLDivElement>(null)
   const returnFocus = useRef<HTMLButtonElement | null>(null)
   const [selected, setSelected] = useState<SkinEntry | null>(null)
@@ -265,14 +291,15 @@ export function SkinDirectory() {
   return (
     <div className="wiki-skin-directory" aria-busy={query.isPending || filtering}>
       <SkinCollectionHeading count={first?.page.totalElements} updating={filtering} />
-      <section className="wiki-skin-toolbar" aria-label="Bộ lọc trang phục">
+      <WikiVersionPicker />
+      <section className="wiki-skin-toolbar" aria-label={text("Bộ lọc trang phục", "Skin filters")}>
         <label className="wiki-skin-search">
           <SkinIcon name="search" size={18} />
-          <span className="sr-only">Tìm trang phục hoặc tướng</span>
+          <span className="sr-only">{text("Tìm trang phục hoặc tướng", "Search skins or heroes")}</span>
           <input
             type="search"
             enterKeyHint="search"
-            placeholder="Tìm trang phục, tướng…"
+            placeholder={text("Tìm trang phục, tướng…", "Search skins, heroes…")}
             maxLength={120}
             value={search}
             onChange={(event) => updateFilter("q", event.target.value)}
@@ -280,21 +307,26 @@ export function SkinDirectory() {
         </label>
         <div className="wiki-skin-filter-strip">
           <FilterSelect
-            label="Tướng"
+            label={text("Tướng", "Hero")}
             icon="hero"
             value={hero}
             options={first?.heroes || []}
             onChange={(value) => updateFilter("hero", value)}
           />
           <FilterSelect
-            label="Bậc"
+            label={text("Bậc", "Tier")}
             icon="badge"
             value={rarity}
             options={first?.rarities || []}
             onChange={(value) => updateFilter("rarity", value)}
           />
           {hasFilters && (
-            <button className="wiki-skin-clear" type="button" onClick={clearFilters} aria-label="Xóa bộ lọc">
+            <button
+              className="wiki-skin-clear"
+              type="button"
+              onClick={clearFilters}
+              aria-label={text("Xóa bộ lọc", "Clear filters")}
+            >
               <SkinIcon name="reset" size={16} />
             </button>
           )}
@@ -303,9 +335,9 @@ export function SkinDirectory() {
 
       {query.isError && !!query.data && !query.isFetchNextPageError && (
         <div className="wiki-skin-refresh-error" role="status">
-          Chưa cập nhật được danh sách.
+          {text("Chưa cập nhật được danh sách.", "The collection could not be refreshed.")}
           <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
-            Thử lại
+            {scope.t("retry")}
           </button>
         </div>
       )}
@@ -313,21 +345,27 @@ export function SkinDirectory() {
         <SkinGridSkeleton />
       ) : query.isError && !query.data ? (
         <div className="wiki-skin-state" role="status">
-          <h2>Chưa tải được trang phục</h2>
-          <p>Vui lòng kiểm tra kết nối và thử lại.</p>
+          <h2>{text("Chưa tải được trang phục", "Skins could not be loaded")}</h2>
+          <p>{text("Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
           <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
-            Thử lại
+            {scope.t("retry")}
           </button>
         </div>
       ) : !skins.length ? (
         <div className="wiki-skin-state" role="status">
-          <h2>{hasFilters ? "Không tìm thấy trang phục phù hợp" : "Trang phục đang được bổ sung"}</h2>
+          <h2>
+            {hasFilters
+              ? text("Không tìm thấy trang phục phù hợp", "No matching skins")
+              : text("Chưa có trang phục tại mốc này", "No skins for this scope")}
+          </h2>
           <p>
-            {hasFilters ? "Thử tên khác hoặc bỏ bớt điều kiện lọc." : "Các trang phục đã công bố sẽ xuất hiện tại đây."}
+            {hasFilters
+              ? text("Thử tên khác hoặc bỏ bớt điều kiện lọc.", "Try another name or fewer filters.")
+              : text("Các trang phục đã công bố sẽ xuất hiện tại đây.", "Published skins will appear here.")}
           </p>
           {hasFilters && (
             <button type="button" onClick={clearFilters}>
-              Xóa bộ lọc
+              {text("Xóa bộ lọc", "Clear filters")}
             </button>
           )}
         </div>
@@ -348,12 +386,12 @@ export function SkinDirectory() {
           </div>
           <div className="wiki-skin-load-more" ref={sentinel} aria-live="polite">
             {query.isFetchingNextPage ? (
-              <span className="wiki-skin-loading-dot">Đang tải thêm trang phục…</span>
+              <span className="wiki-skin-loading-dot">{text("Đang tải thêm trang phục…", "Loading more skins…")}</span>
             ) : query.isFetchNextPageError ? (
               <>
-                <span>Chưa tải được phần tiếp theo.</span>
+                <span>{text("Chưa tải được phần tiếp theo.", "The next page could not be loaded.")}</span>
                 <button type="button" onClick={() => void query.fetchNextPage()}>
-                  Thử lại
+                  {scope.t("retry")}
                 </button>
               </>
             ) : null}

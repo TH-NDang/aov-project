@@ -6,11 +6,14 @@ import { lazy, Suspense, useEffect } from "react"
 import { HeroRouteLoading } from "./features/hero/hero-loading"
 import { WikiLibraryLayout } from "./layout/wiki-library-layout"
 import { SkinDirectoryLoading } from "./features/skins/skin-loading"
+import { WarehouseRouteLoading } from "./features/warehouse/warehouse-loading"
+import { useWikiContext, wikiText } from "./context/wiki-context"
 
 const HeroRoutes = lazy(() => import("./features/hero/hero-routes"))
 const SkinDirectory = lazy(() =>
   import("./features/skins/skin-directory").then((module) => ({ default: module.SkinDirectory })),
 )
+const WarehousePage = lazy(() => import("./features/warehouse/warehouse-page"))
 
 const HOME_BACKGROUND = {
   image: "/images/airi-thu-nguyen-ve-than-1-cover.jpg",
@@ -18,9 +21,10 @@ const HOME_BACKGROUND = {
 }
 
 function HomePage() {
+  const { locale } = useWikiContext()
   return (
     <>
-      <title>AOV WiKi — Khai mở tri thức</title>
+      <title>{wikiText(locale, "AOV WiKi — Khai mở tri thức", "AOV WiKi — Knowledge uncovered")}</title>
       <PageBackdrop {...HOME_BACKGROUND} />
       <WikiHeader />
       <main id="main" tabIndex={-1} className="flex-1 outline-none" aria-label="Nội dung wiki">
@@ -31,6 +35,7 @@ function HomePage() {
 }
 
 export default function App() {
+  const { t, href, locale } = useWikiContext()
   const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
@@ -42,7 +47,7 @@ export default function App() {
         className="fixed -top-25 left-4 z-100 rounded-[4px] bg-primary px-4 py-2.5 text-primary-foreground focus:top-2.5"
         href="#main"
       >
-        Đến nội dung chính
+        {wikiText(locale, "Đến nội dung chính", "Skip to content")}
       </a>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -57,11 +62,19 @@ export default function App() {
         <Route
           path="/skins"
           element={
-            <WikiLibraryLayout title="Trang phục" searchScope="skins">
+            <WikiLibraryLayout title={t("skins")} searchScope="skins">
               <Suspense fallback={<SkinDirectoryLoading />}>
                 <SkinDirectory />
               </Suspense>
             </WikiLibraryLayout>
+          }
+        />
+        <Route
+          path="/warehouse"
+          element={
+            <Suspense fallback={<WarehouseRouteLoading />}>
+              <WarehousePage />
+            </Suspense>
           }
         />
         <Route
@@ -70,8 +83,8 @@ export default function App() {
             <>
               <WikiHeader />
               <main id="main" className="mx-auto grid flex-1 content-center gap-4 p-8 text-center">
-                <h1 className="text-xl text-gold">Không tìm thấy trang</h1>
-                <Link to="/">Về trang chủ</Link>
+                <h1 className="text-xl text-gold">{wikiText(locale, "Không tìm thấy trang", "Page not found")}</h1>
+                <Link to={href("/")}>{t("backHome")}</Link>
               </main>
             </>
           }

@@ -1,10 +1,14 @@
 import { SkinCollectionHeading } from "./skin-collection-heading"
 import "./skin-directory.css"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { WikiVersionPicker } from "../../components/wiki-version-picker"
 
 export function SkinGridSkeleton() {
+  const { locale } = useWikiContext()
+  const message = wikiText(locale, "Đang tải trang phục…", "Loading skins…")
   return (
-    <div className="wiki-skin-grid" role="status" aria-label="Đang tải trang phục" aria-busy="true">
-      <span className="sr-only">Đang tải trang phục…</span>
+    <div className="wiki-skin-grid" role="status" aria-label={message} aria-busy="true">
+      <span className="sr-only">{message}</span>
       {Array.from({ length: 12 }, (_, index) => (
         <div className="wiki-skin-card wiki-skin-skeleton" aria-hidden="true" key={index}>
           <span className="wiki-skin-frame wiki-skeleton" />
@@ -24,6 +28,7 @@ export function SkinDirectoryLoading() {
   return (
     <div className="wiki-skin-directory" aria-busy="true">
       <SkinCollectionHeading />
+      <WikiVersionPicker />
       <div className="wiki-skin-toolbar" aria-hidden="true">
         <span className="wiki-skin-search wiki-skeleton" />
         <div className="wiki-skin-filter-strip">

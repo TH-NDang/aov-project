@@ -8,9 +8,12 @@ import { HeroQuickSwitch } from "./hero-quick-switch"
 import { HeroDetailLoading } from "./hero-loading"
 import { WikiImage } from "../../components/wiki-image"
 import "./hero-detail.css"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
 
 function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string }) {
-  const query = useQuery(heroDetailQuery(hero.id))
+  const scope = useWikiContext()
+  const { locale, t } = scope
+  const query = useQuery(heroDetailQuery(hero.id, scope))
   const [failedUrls, setFailedUrls] = useState<string[]>([])
   const portrait = query.data?.media.PORTRAIT?.currentVersion?.url
   const splash = query.data?.media.SPLASH?.currentVersion?.url
@@ -42,7 +45,7 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
             key={artwork}
             className="wiki-hero-profile-art"
             src={artwork}
-            alt={`Ảnh tướng ${hero.name}`}
+            alt={wikiText(locale, `Ảnh tướng ${hero.name}`, `${hero.name} artwork`)}
             fetchPriority="high"
             loading="eager"
             onError={() => setFailedUrls((current) => [...current, artwork])}
@@ -51,29 +54,31 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
           <>
             <div className="wiki-hero-profile-art wiki-hero-art-skeleton wiki-skeleton" aria-hidden="true" />
             <span className="sr-only" role="status">
-              Đang tải ảnh tướng…
+              {wikiText(locale, "Đang tải ảnh tướng…", "Loading hero artwork…")}
             </span>
           </>
         ) : (
           <div className="wiki-hero-profile-placeholder">
             {query.isError && (
               <button type="button" onClick={() => void query.refetch()}>
-                Tải lại ảnh
+                {wikiText(locale, "Tải lại ảnh", "Retry artwork")}
               </button>
             )}
-            {query.isSuccess && !artwork && <span>Chưa có ảnh lớn</span>}
+            {query.isSuccess && !artwork && (
+              <span>{wikiText(locale, "Chưa có ảnh lớn", "Artwork is not available yet")}</span>
+            )}
           </div>
         )}
 
         <div className="wiki-hero-profile-content">
-          <nav className="wiki-hero-profile-breadcrumb" aria-label="Đường dẫn">
-            <Link to="/">Trang chủ</Link>
+          <nav className="wiki-hero-profile-breadcrumb" aria-label={wikiText(locale, "Đường dẫn", "Breadcrumb")}>
+            <Link to={scope.href("/")}>{t("home")}</Link>
             <span>/</span>
-            <Link to={returnTo}>Thư viện Tướng</Link>
+            <Link to={scope.href(returnTo)}>{wikiText(locale, "Thư viện Tướng", "Hero library")}</Link>
             <span>/</span>
             <span aria-current="page">{hero.name}</span>
           </nav>
-          <Link className="wiki-hero-profile-back" to={returnTo}>
+          <Link className="wiki-hero-profile-back" to={scope.href(returnTo)}>
             <svg
               width="16"
               height="16"
@@ -85,7 +90,7 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
             >
               <path d="m14 5-7 7 7 7" />
             </svg>
-            Thư viện Tướng
+            {wikiText(locale, "Thư viện Tướng", "Hero library")}
           </Link>
           <div className="wiki-hero-profile-identity">
             <span className="wiki-hero-profile-head" aria-hidden="true">
@@ -108,6 +113,11 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
               <HeroQuickSwitch currentHeroId={hero.id} returnTo={returnTo} />
             </div>
           </div>
+          {(query.data?.unscopedBaseline ?? hero.unscopedBaseline) && (
+            <span className="mt-2 inline-flex rounded-full bg-black/20 px-2 py-1 text-xs text-white/70">
+              {wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}
+            </span>
+          )}
           <div className="wiki-hero-profile-ornament" aria-hidden="true">
             <span>◆</span>
           </div>
@@ -118,9 +128,11 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
 }
 
 export function HeroDetailPage() {
+  const scope = useWikiContext()
+  const { locale, t } = scope
   const { heroCode } = useParams()
   const location = useLocation()
-  const catalog = useQuery(heroCatalogQuery)
+  const catalog = useQuery(heroCatalogQuery(scope))
   const hero = catalog.data?.items.find((item) => item.code === heroCode || item.id === heroCode)
   const previous = (location.state as { from?: unknown } | null)?.from
   const returnTo = typeof previous === "string" && /^\/hero(?:\?|$)/u.test(previous) ? previous : "/hero"
@@ -129,15 +141,19 @@ export function HeroDetailPage() {
   if (catalog.isPending) return <HeroDetailLoading heroCode={heroCode} />
 
   return (
-    <HeroDetailLayout title="Tướng">
+    <HeroDetailLayout title={t("heroes")}>
       <div className="wiki-hero-profile-state" style={{ "--hero-accent": "#d6bd8e" } as CSSProperties}>
-        <h1>{catalog.isError ? "Chưa tải được tướng" : "Không tìm thấy tướng"}</h1>
+        <h1>
+          {catalog.isError
+            ? wikiText(locale, "Chưa tải được tướng", "Could not load this hero")
+            : wikiText(locale, "Không tìm thấy tướng", "Hero not found")}
+        </h1>
         {catalog.isError && (
           <button type="button" onClick={() => void catalog.refetch()}>
-            Thử lại
+            {t("retry")}
           </button>
         )}
-        <Link to={returnTo}>Về thư viện Tướng</Link>
+        <Link to={scope.href(returnTo)}>{wikiText(locale, "Về thư viện Tướng", "Back to the hero library")}</Link>
       </div>
     </HeroDetailLayout>
   )
