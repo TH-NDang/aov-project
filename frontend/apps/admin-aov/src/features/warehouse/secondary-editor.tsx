@@ -21,12 +21,14 @@ import { enchantmentBranchColor } from "./enchantment-colors"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
 import {
   warehouseText,
+  warehouseBaselineMode,
   type WarehouseContent,
   type WarehouseMetadata,
   type WarehouseStat,
   type SpellContent,
   type EnchantmentContent,
   type WarehouseEntry,
+  type WarehouseRevision,
 } from "./warehouse-types"
 
 export type SecondaryKind = "arcana" | "spells" | "enchantments"
@@ -90,6 +92,8 @@ export function SecondaryEditor({
   entryId,
   revisionId,
   revisionPublished = false,
+  revisionCause = "DATA_BASELINE",
+  sourceRevisionId = null,
   code: initialCode = "",
   content: initialContent,
   locale,
@@ -116,6 +120,8 @@ export function SecondaryEditor({
   entryId?: string
   revisionId?: string
   revisionPublished?: boolean
+  revisionCause?: WarehouseRevision["cause"]
+  sourceRevisionId?: string | null
   code?: string
   content: SecondaryContent
   locale: string
@@ -145,10 +151,19 @@ export function SecondaryEditor({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
   const disabled = readOnly || busy || uploading
-  const archiveEligible = kind === "spells" && !!content.legacy && content.availability === "REMOVED"
+  const archiveEligible =
+    kind === "spells" && revisionCause !== "GAME_PATCH" && !!content.legacy && content.availability === "REMOVED"
   const archivedWithoutPatch = archiveEligible && !patchId
+  const baselineMode =
+    kind === "spells"
+      ? warehouseBaselineMode(
+          { cause: revisionCause, effectiveFromPatchVariantId: initialPatchId, sourceRevisionId },
+          missingFields,
+        )
+      : undefined
+  const baselineWithoutPatch = !!baselineMode && !patchId
   const visibleMissing = missingFields.filter(
-    (field) => field !== "effectiveFromPatchVariantId" || !archivedWithoutPatch,
+    (field) => field !== "effectiveFromPatchVariantId" || (!archivedWithoutPatch && !baselineWithoutPatch),
   )
   const hasHistory = !!entryId && !!revisionId
   function update(patch: Partial<SecondaryContent>) {
@@ -270,8 +285,9 @@ export function SecondaryEditor({
               <WarehousePatchContext
                 rulesetId={rulesetId}
                 allowUnknownPatch={archiveEligible}
+                baselineMode={baselineMode}
                 value={patchId}
-                disabled={disabled || !allowPatchChange}
+                disabled={disabled || !allowPatchChange || !!sourceRevisionId}
                 onChange={(value) => {
                   setPatchId(value)
                   setDirty(true)
@@ -607,7 +623,12 @@ export function SecondaryEditor({
             {canPublish && onPublish && (
               <Button
                 variant="outline"
-                disabled={disabled || dirty || (!patchId && !archivedWithoutPatch) || visibleMissing.length > 0}
+                disabled={
+                  disabled ||
+                  dirty ||
+                  (!patchId && !archivedWithoutPatch && !baselineWithoutPatch) ||
+                  visibleMissing.length > 0
+                }
                 onClick={() => void act(onPublish)}
               >
                 Xuất bản

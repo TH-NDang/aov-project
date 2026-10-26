@@ -153,7 +153,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
             content: value,
             effectiveFromPatchVariantId: patchId,
           })
-        : await warehouseApi.save(kind, selected!, value, patchId ?? undefined)
+        : await warehouseApi.save(kind, selected!, value, patchId)
       await refresh()
       if (creating) close()
       else setSelectedEntry(saved)
@@ -428,6 +428,8 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
           entryId={selected?.id}
           revisionId={selected?.revision.id}
           revisionPublished={selected?.revision.state === "PUBLISHED"}
+          revisionCause={selected?.revision.cause}
+          sourceRevisionId={selected?.revision.sourceRevisionId}
           code={selected?.code}
           content={creating ? newSecondaryContent(kind, context.locale, activeBranch?.code) : selected!.content}
           branches={sortedBranches}

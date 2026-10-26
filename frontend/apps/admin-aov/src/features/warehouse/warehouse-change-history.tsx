@@ -15,7 +15,7 @@ import {
   type CatalogChangeKind,
 } from "./catalog-changes"
 import { warehouseApi, invalidateWarehouseCatalogs } from "./warehouse-api"
-import type { WarehouseKind, WarehouseEntry } from "./warehouse-types"
+import { warehouseBaselineMode, type WarehouseKind, type WarehouseEntry } from "./warehouse-types"
 
 export function WarehouseChangeHistory({
   kind,
@@ -50,13 +50,25 @@ export function WarehouseChangeHistory({
   const [message, setMessage] = useState("")
   const [editing, setEditing] = useState(false)
   const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action() })
-  const revisions = (history.data ?? []).filter((r) => r.rulesetId === rulesetId && r.state === "PUBLISHED")
+  const revisions = (history.data ?? []).filter(
+    (revision) =>
+      revision.rulesetId === rulesetId && revision.state === "PUBLISHED" && !(kind === "spells" && revision.archived),
+  )
   const variants =
     overview.data?.variants
       .filter((v) => v.rulesetId === rulesetId && v.status === "PUBLISHED")
       .sort((a, b) => a.rulesetOrdinal - b.rulesetOrdinal) ?? []
   const ordinal = (id: string | null) => variants.find((v) => v.id === id)?.rulesetOrdinal ?? -1
   const targetRevision = revisions.find((r) => r.id === target)
+  const comparisonRevisions = revisions.filter((revision) => {
+    if (revision.id === target || ordinal(patch) < 0) return false
+    if (!revision.effectiveFromPatchVariantId)
+      return (kind === "items" || kind === "spells") && !!warehouseBaselineMode(revision) && ordinal(patch) > 0
+    return (
+      ordinal(revision.effectiveFromPatchVariantId) >= 0 &&
+      ordinal(revision.effectiveFromPatchVariantId) < ordinal(patch)
+    )
+  })
   const confirmed = changes.data?.some((c) => c.ownerId === entryId && c.patchVariantId === patch && c.confirmed)
   const rows = (changes.data ?? [])
     .filter((c) => c.ownerId === entryId)
@@ -207,17 +219,14 @@ export function WarehouseChangeHistory({
                   onChange={(e) => setFrom(e.target.value)}
                 >
                   <option value="">Chưa có / không áp dụng</option>
-                  {revisions
-                    .filter(
-                      (r) =>
-                        ordinal(r.effectiveFromPatchVariantId) >= 0 &&
-                        ordinal(r.effectiveFromPatchVariantId) < ordinal(patch),
-                    )
-                    .map((r) => (
-                      <option key={r.id} value={r.id}>
-                        v{r.revisionNo} · {variants.find((v) => v.id === r.effectiveFromPatchVariantId)?.patchCode}
-                      </option>
-                    ))}
+                  {comparisonRevisions.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      v{r.revisionNo} ·{" "}
+                      {r.effectiveFromPatchVariantId
+                        ? variants.find((v) => v.id === r.effectiveFromPatchVariantId)?.patchCode
+                        : "Dữ liệu nền chưa rõ patch"}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="grid gap-1.5 text-sm">
@@ -248,7 +257,7 @@ export function WarehouseChangeHistory({
               {confirmed && <p className="text-xs text-muted-foreground">Patch này đã có lịch sử được xác nhận.</p>}
               <Button
                 size="sm"
-                disabled={!target || !patch || !summary.trim() || !source || confirmed || mutation.isPending}
+                disabled={!targetRevision || !patch || !summary.trim() || !source || confirmed || mutation.isPending}
                 onClick={() =>
                   void mutation
                     .mutateAsync(async () => {
