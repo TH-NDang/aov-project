@@ -136,23 +136,24 @@ public class HeroPatchDerivation {
 
         void start(Stats anchorStats, Profile anchorProfile) {
             anchorStats.values().forEach(stat -> stats.put(stat.statKey(), new StatValue(stat.statKey(), stat.unit(),
-                    stat.baseValue(), stat.growthPerLevel(), carried, null)));
-            anchorProfile.roles().forEach(role -> roles.put(role, new RoleValue(role, carried, null)));
+                    stat.baseValue(), stat.growthPerLevel(), carried, null, null)));
+            anchorProfile.roles().forEach(role -> roles.put(role, new RoleValue(role, carried, null, null)));
         }
 
         void apply(Entry entry) {
             UUID changeSetId = entry.header().getId();
+            UUID patchVariantId = entry.header().getPatchVariantId();
             var changes = entry.changes().stream()
                     .sorted(Comparator.comparingInt(HeroChangeClassification::getSortOrder)).toList();
             for (var change : changes) {
                 switch (change) {
-                    case StatChangeClassification stat -> stat(stat, changeSetId);
-                    case RoleChangeClassification role -> role(role, changeSetId);
+                    case StatChangeClassification stat -> stat(stat, changeSetId, patchVariantId);
+                    case RoleChangeClassification role -> role(role, changeSetId, patchVariantId);
                     case SkillChangeClassification skill -> skillFields.put(
                             skill.getSkillKey() + "\u0000" + skill.getFieldKey(),
                             new SkillFieldValue(skill.getSkillKey(), skill.getFieldKey(),
                                     forward ? skill.getNewValue() : skill.getOldValue(), Provenance.DERIVED,
-                                    changeSetId));
+                                    changeSetId, patchVariantId));
                     default -> {
                         // Visual, mechanic and other lines describe the patch but carry no gameplay value to apply.
                     }
@@ -161,20 +162,21 @@ public class HeroPatchDerivation {
             applied.add(changeSetId);
         }
 
-        private void stat(StatChangeClassification stat, UUID changeSetId) {
+        private void stat(StatChangeClassification stat, UUID changeSetId, UUID patchVariantId) {
             var value = forward ? stat.getNewValue() : stat.getOldValue();
             var previous = stats.get(stat.getStatKey());
             if (value == null)
                 stats.remove(stat.getStatKey());
             else
                 stats.put(stat.getStatKey(), new StatValue(stat.getStatKey(), stat.getUnitCode(), value,
-                        previous == null ? null : previous.growthPerLevel(), Provenance.DERIVED, changeSetId));
+                        previous == null ? null : previous.growthPerLevel(), Provenance.DERIVED, changeSetId,
+                        patchVariantId));
         }
 
-        private void role(RoleChangeClassification role, UUID changeSetId) {
+        private void role(RoleChangeClassification role, UUID changeSetId, UUID patchVariantId) {
             var code = Role.valueOf(role.getRoleCode());
             if (role.isAdded() == forward)
-                roles.put(code, new RoleValue(code, Provenance.DERIVED, changeSetId));
+                roles.put(code, new RoleValue(code, Provenance.DERIVED, changeSetId, patchVariantId));
             else
                 roles.remove(code);
         }

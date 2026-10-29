@@ -540,7 +540,7 @@ class DomainCoreIntegrationTest {
         assertThat(forward.get("appliedChangeSetIds")).isEqualTo(List.of(pastChange.toString()));
         assertThat(((List<Map<String, Object>>) forward.get("stats")).getFirst()).containsEntry("statKey", "HP")
                 .containsEntry("baseValue", 3600).containsEntry("provenance", "DERIVED")
-                .containsEntry("changeSetId", pastChange.toString());
+                .containsEntry("changeSetId", pastChange.toString()).containsEntry("patchVariantId", past.toString());
         assertThat(((List<Map<String, Object>>) forward.get("roles")).getFirst()).containsEntry("roleCode", "ASSASSIN")
                 .containsEntry("provenance", "CARRIED");
         assertThat(((List<Map<String, Object>>) forward.get("skillFields")).getFirst())

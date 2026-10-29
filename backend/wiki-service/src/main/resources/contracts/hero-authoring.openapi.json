@@ -2658,6 +2658,7 @@
           "patchVariantId",
           "fromHeroRevisionId",
           "toHeroRevisionId",
+          "sourceKind",
           "changeKinds",
           "recordedAt",
           "summary",
@@ -2688,7 +2689,16 @@
           },
           "toHeroRevisionId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true,
+            "description": "Null when the change set was recorded from patch notes without a target snapshot."
+          },
+          "sourceKind": {
+            "type": "string",
+            "enum": [
+              "SNAPSHOT",
+              "PATCH_NOTES"
+            ]
           },
           "changeKinds": {
             "type": "array",
