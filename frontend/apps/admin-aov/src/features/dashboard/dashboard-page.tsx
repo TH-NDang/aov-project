@@ -6,16 +6,9 @@ import {
   ArrowUpRight,
   CalendarClock,
   ChevronRight,
-  Gem,
-  Hexagon,
   History,
-  ImageIcon,
-  Medal,
   ScrollText,
-  Shield,
   ShieldAlert,
-  Swords,
-  Zap,
   type LucideIcon,
 } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
@@ -35,6 +28,7 @@ import {
 import { Progress } from "@aov/ui/components/progress"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Page, PageHeader } from "@/components/page-header"
+import { NAV_ICONS } from "@/app/aov-nav-icon"
 import { useAudit } from "@/lib/queries"
 import { formatNumber, formatRelative } from "@/lib/text"
 import { useSession } from "@/app/auth/auth-gate"
@@ -157,21 +151,21 @@ export function DashboardPage() {
             label: "Tướng",
             value: heroes.data?.totalElements,
             hint: "Trong danh mục wiki",
-            icon: Swords,
+            icon: NAV_ICONS.heroes,
             to: "/hero",
           },
           {
             label: "Ảnh đã lưu",
             value: images.data?.totalElements,
             hint: "Trong thư viện ảnh",
-            icon: ImageIcon,
+            icon: NAV_ICONS.imageLibrary,
             to: "/image-management",
           },
           {
             label: "Bậc trang phục",
             value: badges.data?.totalElements,
             hint: "Tên và biểu tượng",
-            icon: Medal,
+            icon: NAV_ICONS.badges,
             to: "/hero/media?tab=badges",
           },
         ]
@@ -180,18 +174,18 @@ export function DashboardPage() {
       label: "Trang bị",
       value: itemStats?.total,
       hint: "Trong kho trang bị",
-      icon: Shield,
+      icon: NAV_ICONS.items,
       to: "/items",
     },
     {
       label: "Phù hiệu",
       value: enchantments.data?.length,
       hint: `${branches.data?.length ?? "…"} hệ`,
-      icon: Hexagon,
+      icon: NAV_ICONS.enchantments,
       to: "/enchantments",
     },
-    { label: "Bảng ngọc", value: arcana.data?.length, hint: "Theo màu và cấp", icon: Gem, to: "/arcana" },
-    { label: "Phụ trợ", value: spells.data?.length, hint: "Phép bổ trợ", icon: Zap, to: "/spells" },
+    { label: "Bảng ngọc", value: arcana.data?.length, hint: "Theo màu và cấp", icon: NAV_ICONS.arcana, to: "/arcana" },
+    { label: "Phụ trợ", value: spells.data?.length, hint: "Phép bổ trợ", icon: NAV_ICONS.spells, to: "/spells" },
   ]
 
   const coverage: CoverageRow[] = [
@@ -224,7 +218,7 @@ export function DashboardPage() {
             title: "Chưa có dữ liệu ngọc",
             description: "Kho chưa có ngọc nào",
             count: 1,
-            icon: Gem,
+            icon: NAV_ICONS.arcana,
             to: "/arcana",
           },
         ]
@@ -310,7 +304,7 @@ export function DashboardPage() {
               <Empty className="p-6">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
-                    <Shield />
+                    <NAV_ICONS.items />
                   </EmptyMedia>
                   <EmptyTitle>Không có mục cần xử lý</EmptyTitle>
                   <EmptyDescription>Dữ liệu trang bị hiện có đã đủ các mục đang kiểm tra.</EmptyDescription>
