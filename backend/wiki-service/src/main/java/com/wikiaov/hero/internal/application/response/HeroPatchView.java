@@ -45,21 +45,26 @@ public record HeroPatchView(
     ) {
     }
 
-    /** Change sets record base values only, so the provenance describes {@code baseValue}. */
+    /**
+     * Change sets record base values only, so the provenance describes {@code baseValue}. A derived value names the change
+     * set and the patch that set it.
+     */
     public record StatValue(
             String statKey,
             String unit,
             BigDecimal baseValue,
             BigDecimal growthPerLevel,
             Provenance provenance,
-            UUID changeSetId
+            UUID changeSetId,
+            UUID patchVariantId
     ) {
     }
 
     public record RoleValue(
             Role roleCode,
             Provenance provenance,
-            UUID changeSetId
+            UUID changeSetId,
+            UUID patchVariantId
     ) {
     }
 
@@ -69,7 +74,8 @@ public record HeroPatchView(
             String fieldKey,
             String value,
             Provenance provenance,
-            UUID changeSetId
+            UUID changeSetId,
+            UUID patchVariantId
     ) {
     }
 }
