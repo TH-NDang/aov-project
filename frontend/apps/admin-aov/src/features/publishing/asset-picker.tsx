@@ -6,9 +6,13 @@ import { backendRequest, getSession } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, uploadHeroImage, upgradeHeroImage } from "./publishing-api"
 import { resourceImage } from "./resource-import"
+import { importMediaSources } from "./import-media-sources"
+import { findResourceMediaSource } from "@aov/ui/lib/resource-media-sources"
 import { imageFromUrl } from "./image-url"
 import { control, Field } from "./fields"
 import { invalidateMediaAsset } from "../media/media-cache"
+import { MediaSourceFields } from "../media/media-source-fields"
+import { creditHttpUrl, type MediaSourceInput } from "@aov/ui/lib/media-credit"
 const api = createPublishingApi(backendRequest)
 export function AssetPicker({
   semanticType,
@@ -54,8 +58,17 @@ export function AssetPicker({
   }, [busy, onBusyChange])
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
-  const [label, setLabel] = useState("Ảnh do biên tập viên cung cấp")
-  const [url, setUrl] = useState(sourceUrl ?? "")
+  const [source, setSource] = useState<MediaSourceInput>({
+    type: "OTHER",
+    label: "Ảnh do biên tập viên cung cấp",
+    url: sourceUrl ?? null,
+  })
+  const [downloadUrl, setDownloadUrl] = useState("")
+  const [sourceEdited, setSourceEdited] = useState(false)
+  const validSource =
+    !!source.label.trim() &&
+    (!source.url || !!creditHttpUrl(source.url)) &&
+    (!source.contactUrl || !!creditHttpUrl(source.contactUrl))
   const writable = getSession().actor?.capabilities.includes("media:write")
   const assets = useQuery({
     queryKey: ["publishing-assets", semanticType, page],
@@ -76,7 +89,8 @@ export function AssetPicker({
     setError("")
     setMessage("")
     try {
-      await upgradeHeroImage(backendRequest, value, file)
+      if (!validSource) throw new Error("Điền tên nguồn và URL HTTP(S) hợp lệ trước khi tải ảnh.")
+      await upgradeHeroImage(backendRequest, value, file, fetch, source)
       await invalidateMediaAsset(queryClient, value)
       if (!alive.current) return
       setMessage("Đã nâng chất lượng trên cùng asset. Không cần sửa hoặc publish lại tướng.")
@@ -86,15 +100,23 @@ export function AssetPicker({
       setBusy(false)
     }
   }
-  async function upload(file: File | Promise<File>) {
+  async function upload(file: File | Promise<File>, fromResources = false) {
     setBusy(true)
     setError("")
     try {
+      if (!validSource) throw new Error("Điền tên nguồn và URL HTTP(S) hợp lệ trước khi tải ảnh.")
       const selectedFile = await file
+      let credit = source
+      if (fromResources && resourcePath && !sourceEdited) {
+        const index = await importMediaSources(new Map(), "", true)
+        const hash = await crypto.subtle.digest("SHA-256", await selectedFile.arrayBuffer())
+        const digest = [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
+        credit = findResourceMediaSource(index, resourcePath, digest)
+        setSource(credit)
+      }
       const id = await uploadHeroImage(backendRequest, selectedFile, semanticType, {
-        label,
-        url: url || null,
-        note: resourcePath ?? null,
+        ...credit,
+        note: credit.note ?? (fromResources ? resourcePath : null),
       })
       await invalidateMediaAsset(queryClient, id)
       if (!alive.current) return
@@ -108,6 +130,16 @@ export function AssetPicker({
   }
   return (
     <div className="space-y-2 rounded-lg border p-3">
+      {writable && (
+        <MediaSourceFields
+          value={source}
+          onChange={(value) => {
+            setSource(value)
+            setSourceEdited(true)
+          }}
+          disabled={busy}
+        />
+      )}
       {value && (
         <div className="flex min-h-16 items-center gap-3">
           {selectedAsset.data?.currentUrl && !imageFailed ? (
@@ -219,13 +251,12 @@ export function AssetPicker({
           </div>
           {writable && (
             <fieldset disabled={busy} className="space-y-3 border-t pt-3">
-              <Field label="Nguồn ảnh" value={label} onChange={setLabel} />
-              <Field label="URL nguồn ảnh" type="url" value={url} onChange={setUrl} />
+              <Field label="Link file ảnh để tải" type="url" value={downloadUrl} onChange={setDownloadUrl} />
               <Button
                 type="button"
                 variant="outline"
-                disabled={!url || busy}
-                onClick={() => void upload(imageFromUrl(url))}
+                disabled={!downloadUrl || busy || !validSource}
+                onClick={() => void upload(imageFromUrl(downloadUrl))}
               >
                 Tải ảnh từ link và chọn
               </Button>
@@ -246,7 +277,7 @@ export function AssetPicker({
                 />
               </label>
               {resourcePath && (
-                <Button type="button" variant="outline" onClick={() => void upload(resourceImage(resourcePath))}>
+                <Button type="button" variant="outline" onClick={() => void upload(resourceImage(resourcePath), true)}>
                   Nhập ảnh từ tài nguyên
                 </Button>
               )}

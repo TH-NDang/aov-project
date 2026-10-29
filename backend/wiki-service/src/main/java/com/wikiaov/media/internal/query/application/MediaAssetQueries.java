@@ -11,6 +11,9 @@ import com.wikiaov.media.internal.asset.persistence.MediaAssetVersionRepository;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAsset;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAssetVersion;
 import com.wikiaov.media.internal.domain.model.UploadState;
+import com.wikiaov.media.internal.provenance.application.MediaCredits;
+import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
+import com.wikiaov.media.internal.provenance.persistence.entity.MediaProvenance;
 import com.wikiaov.media.internal.upload.persistence.MediaUploadSessionRepository;
 import com.wikiaov.media.internal.upload.persistence.entity.MediaUploadSession;
 import com.wikiaov.platform.ApiException;
@@ -43,10 +46,11 @@ public class MediaAssetQueries {
     private final MediaAssetViews assetViews;
     private final MediaUrls urls;
     private final Clock clock;
+    private final MediaProvenanceRepository provenance;
 
     MediaAssetQueries(MediaAssetRepository assets, MediaAssetVersionRepository versions,
             MediaUploadSessionRepository sessions, MediaAssetAccess assetAccess, MediaAssetViews assetViews,
-            MediaUrls urls, Clock clock) {
+            MediaUrls urls, Clock clock, MediaProvenanceRepository provenance) {
         this.assets = assets;
         this.versions = versions;
         this.sessions = sessions;
@@ -54,17 +58,22 @@ public class MediaAssetQueries {
         this.assetViews = assetViews;
         this.urls = urls;
         this.clock = clock;
+        this.provenance = provenance;
     }
 
     public MediaAssetDetails get(UUID assetId) {
         return assetViews.details(assetAccess.requireAsset(assetId));
     }
 
-    public PageSlice<MediaAssetSummary> list(@Nullable MediaSemanticType semanticType, int page, int size) {
+    public PageSlice<MediaAssetSummary> list(@Nullable MediaSemanticType semanticType, boolean needsCredit, int page,
+            int size) {
         PageRequest request = PageRequest.of(page, size, NEWEST_FIRST);
-        Page<MediaAsset> result = semanticType == null
-                ? assets.findAll(request)
-                : assets.findBySemanticType(semanticType, request);
+        Page<MediaAsset> result;
+        if (needsCredit) {
+            result = assets.findNeedingCredit(semanticType, request);
+        } else {
+            result = semanticType == null ? assets.findAll(request) : assets.findBySemanticType(semanticType, request);
+        }
         List<UUID> currentIds = result.getContent().stream()
                 .map(MediaAsset::getCurrentVersionId)
                 .filter(Objects::nonNull)
@@ -73,6 +82,12 @@ public class MediaAssetQueries {
                 ? Map.of()
                 : versions.findByIdIn(currentIds).stream()
                         .collect(Collectors.toMap(MediaAssetVersion::getId, Function.identity()));
+        var assetIds = result.getContent().stream().map(MediaAsset::getId).toList();
+        var credits = assetIds.isEmpty()
+                ? Map.<UUID, List<MediaProvenance>>of()
+                : provenance.findByAssetIdInOrderByCreatedAtAscIdAsc(assetIds).stream()
+                        .collect(Collectors.groupingBy(MediaProvenance::getAssetId));
+
         List<MediaAssetSummary> items = result.getContent().stream()
                 .map(asset -> {
                     MediaAssetVersion version = asset.getCurrentVersionId() == null
@@ -81,7 +96,10 @@ public class MediaAssetQueries {
                     return new MediaAssetSummary(asset.getId(), asset.getSemanticType(), asset.getLifecycleState(),
                             asset.getLockVersion(), asset.getCurrentVersionId(),
                             version == null ? null : urls.publicUrl(version), asset.getCreatedAt(),
-                            asset.getUpdatedAt());
+                            asset.getUpdatedAt(), version == null
+                                    ? List.of()
+                                    : MediaCredits.forVersion(credits.getOrDefault(asset.getId(), List.of()),
+                                            version.getId()));
                 })
                 .toList();
         return new PageSlice<>(items, page, size, result.getTotalElements());

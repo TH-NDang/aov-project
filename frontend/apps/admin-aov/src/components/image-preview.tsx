@@ -9,10 +9,11 @@ interface ImagePreviewProps {
   children: ReactNode
   className?: string
   showHint?: boolean
+  overlay?: ReactNode
 }
 
 /** Add a keyboard-accessible preview trigger over a non-interactive image thumbnail. */
-export function ImagePreview({ src, alt, children, className, showHint = true }: ImagePreviewProps) {
+export function ImagePreview({ src, alt, children, className, showHint = true, overlay }: ImagePreviewProps) {
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLButtonElement>(null)
   return (
@@ -32,6 +33,7 @@ export function ImagePreview({ src, alt, children, className, showHint = true }:
           </span>
         )}
       </button>
+      {overlay}
       <ImageLightbox
         images={[{ path: src, title: alt }]}
         index={open ? 0 : null}

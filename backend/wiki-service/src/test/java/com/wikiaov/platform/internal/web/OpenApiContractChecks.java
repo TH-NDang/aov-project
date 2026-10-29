@@ -86,7 +86,7 @@ abstract class OpenApiContractChecks {
                 }
             }
         }
-        assertThat(methods).isEqualTo(164);
+        assertThat(methods).isEqualTo(expectedHandlerCount());
         Set<String> actual = new HashSet<>();
         Set<String> ids = new HashSet<>();
         for (var path : spec.path("paths").properties()) {
@@ -116,6 +116,10 @@ abstract class OpenApiContractChecks {
         Files.createDirectories(directory);
         Files.writeString(directory.resolve("wiki-v1.json"),
                 json.writerWithDefaultPrettyPrinter().writeValueAsString(spec));
+    }
+
+    int expectedHandlerCount() {
+        return 168;
     }
 
     @Test

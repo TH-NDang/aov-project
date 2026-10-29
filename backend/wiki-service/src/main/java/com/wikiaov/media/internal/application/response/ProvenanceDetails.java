@@ -13,6 +13,8 @@ public record ProvenanceDetails(
         String label,
         @Nullable String url,
         @Nullable Instant observedAt,
-        @Nullable String note
+        @Nullable String note,
+        @Nullable String ownerName,
+        @Nullable String contactUrl
 ) {
 }

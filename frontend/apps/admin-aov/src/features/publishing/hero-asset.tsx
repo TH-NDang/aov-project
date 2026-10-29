@@ -5,6 +5,8 @@ import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { ImagePreview } from "@/components/image-preview"
 import { createPublishingApi } from "./publishing-api"
+import { ImageCredit } from "@aov/ui/components/image-credit"
+import { currentMediaSources } from "@aov/ui/lib/media-credit"
 
 const api = createPublishingApi(backendRequest)
 
@@ -65,11 +67,15 @@ export function HeroAsset({
       )}
     </div>
   )
+  const credit = asset.data?.currentUrl ? (
+    <ImageCredit sources={currentMediaSources(asset.data.provenance, asset.data.currentVersionId)} />
+  ) : null
   return preview && asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
     <ImagePreview
       src={asset.data.currentUrl}
       alt={alt || "Ảnh"}
       className={naturalAspectRatio || frameAspectRatio ? className : undefined}
+      overlay={credit}
     >
       {thumbnail}
     </ImagePreview>

@@ -107,12 +107,8 @@ class Importer:
             if entry and entry["sha256"] != digest:
                 raise ValueError("Source bytes changed after checkpoint: " + row["file"])
             if not entry:
-                asset = self.api.call("/admin/media/assets", "POST", {"semanticType": "HERO_SKILL_ICON", "source": {
-                    "type": "OTHER", "label": "Icon kỹ năng từ tài nguyên Liên Quân", "url": row.get("url"),
-                    "note": json.dumps({"importer": "hero-skill-library-v1", "heroCode": row["heroId"],
-                                        "sourceSlot": row["slot"], "variantNo": row["variant"], "file": row["file"],
-                                        "sourcePage": row.get("page"), "collectedOn": row.get("collectedOn")},
-                                       ensure_ascii=False, separators=(",", ":"))}})
+                asset = self.api.call("/admin/media/assets", "POST", {"semanticType": "HERO_SKILL_ICON",
+                    "source": helpers.source_credit(row["file"], digest)})
                 entry = {"assetId": asset["id"], "sha256": digest, "complete": False}
                 with self.lock:
                     self.state["assets"][row["file"]] = entry
@@ -130,7 +126,8 @@ class Importer:
                 except RuntimeError:
                     pass
             ticket = self.api.call("/admin/media/assets/" + entry["assetId"] + "/version-uploads", "POST", {
-                "fileName": row["path"].name, "contentType": content_type, "sizeBytes": len(data)})
+                "fileName": row["path"].name, "contentType": content_type, "sizeBytes": len(data),
+                "source": helpers.source_credit(row["file"], digest)})
             with self.lock:
                 entry["uploadId"] = ticket["uploadId"]
                 self.checkpoint()

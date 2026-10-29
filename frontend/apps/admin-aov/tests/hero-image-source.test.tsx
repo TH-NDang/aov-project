@@ -92,7 +92,7 @@ test("hero image sources share the image request and retain current provenance, 
   try {
     assert.deepEqual(
       currentImageSources(asset as AssetDetail).map((item) => item.id),
-      ["common", "current", "unsafe", "credentials"],
+      ["current"],
     )
     await verifySession()
     await render()
@@ -102,13 +102,13 @@ test("hero image sources share the image request and retain current provenance, 
     await waitFor(() => document.body.textContent!.includes("Đã đối chiếu ảnh head."))
     assert.equal(requests.length, 1)
     assert.equal(document.querySelector("img")!.getAttribute("src"), "/media/head.webp")
-    assert.equal(document.querySelectorAll("li").length, 4)
+    assert.equal(document.querySelectorAll("li").length, 1)
     assert.doesNotMatch(document.body.textContent!, /Nguồn phiên bản cũ/)
-    assert.equal(document.querySelectorAll("a").length, 2)
+    assert.equal(document.querySelectorAll("a").length, 1)
     assert.ok(
       [...document.querySelectorAll("a")].every((link) => link.getAttribute("href") === "https://source.test/hero"),
     )
-    assert.match(document.body.textContent!, /Tệp gốc trong bộ dữ liệu\.\nGiữ nguyên ảnh\./)
+    assert.doesNotMatch(document.body.textContent!, /Tệp gốc trong bộ dữ liệu/)
     await render("empty")
     await waitFor(() => document.body.textContent!.includes("Chưa ghi nhận nguồn cho ảnh này."))
     await render("broken")

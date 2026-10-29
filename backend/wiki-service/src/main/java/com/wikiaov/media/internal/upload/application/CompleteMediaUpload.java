@@ -6,12 +6,14 @@ import com.wikiaov.access.AuditLog;
 import com.wikiaov.access.CurrentActor;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.MediaProperties;
+import com.wikiaov.media.internal.application.SourceInput;
 import com.wikiaov.media.internal.application.response.MediaVersionResult;
 import com.wikiaov.media.internal.asset.application.MediaAssetAccess;
 import com.wikiaov.media.internal.asset.persistence.MediaAssetVersionRepository;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAssetVersion;
 import com.wikiaov.media.internal.ingestion.application.MediaIngestion;
 import com.wikiaov.media.internal.ingestion.domain.image.InvalidMediaException;
+import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
 import com.wikiaov.media.internal.query.application.MediaAssetViews;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
@@ -52,11 +54,13 @@ public class CompleteMediaUpload {
     private final AuditLog auditLog;
     private final TransactionTemplate transaction;
     private final Clock clock;
+    private final MediaProvenanceRepository provenance;
 
     CompleteMediaUpload(MediaUploadSessionRepository sessions, MediaAssetVersionRepository versions,
             MediaIngestion ingestion, ObjectStorage storage, MediaAssetAccess assetAccess, MediaAssetViews assetViews,
             MediaProperties properties,
-            CurrentActor currentActor, AuditLog auditLog, TransactionTemplate transaction, Clock clock) {
+            CurrentActor currentActor, AuditLog auditLog, TransactionTemplate transaction, Clock clock,
+            MediaProvenanceRepository provenance) {
         this.sessions = sessions;
         this.versions = versions;
         this.ingestion = ingestion;
@@ -68,6 +72,7 @@ public class CompleteMediaUpload {
         this.auditLog = auditLog;
         this.transaction = transaction;
         this.clock = clock;
+        this.provenance = provenance;
     }
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
@@ -103,7 +108,24 @@ public class CompleteMediaUpload {
         MediaIngestion.Outcome outcome;
         try {
             outcome = ingestion.ingest(claim.assetId(), claim.objectKey(), actor, "UPLOAD",
-                    (version, duplicate) -> requireSession(uploadId).complete(version.getId(), clock.instant()));
+                    (version, duplicate) -> {
+                        var session = requireSession(uploadId);
+                        if (session.getSourceLabel() != null && session.getSourceType() != null) {
+                            var source = new SourceInput(session.getSourceType(), session.getSourceLabel(),
+                                    session.getSourceUrl(), session.getSourceObservedAt(), session.getSourceNote(),
+                                    session.getSourceOwnerName(), session.getSourceContactUrl());
+                            provenance
+                                    .save(source.toProvenance(session.getAssetId(), version.getId(), clock.instant()));
+                        }
+                        if (session.getSourceLabel() == null && !duplicate && version.getVersionNo() > 1) {
+                            var source = new SourceInput(
+                                    com.wikiaov.media.internal.domain.model.ProvenanceSourceType.OTHER,
+                                    "Chưa xác minh nguồn", null, null, session.getFileName());
+                            provenance
+                                    .save(source.toProvenance(session.getAssetId(), version.getId(), clock.instant()));
+                        }
+                        session.complete(version.getId(), clock.instant());
+                    });
         } catch (InvalidMediaException ex) {
             transaction.executeWithoutResult(status -> {
                 requireSession(uploadId).reject(ex.reason().name(), clock.instant());

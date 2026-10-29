@@ -4,6 +4,7 @@ import com.wikiaov.access.Actor;
 import com.wikiaov.access.CurrentActor;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.application.MediaProperties;
+import com.wikiaov.media.internal.application.SourceInput;
 import com.wikiaov.media.internal.application.response.UploadTicket;
 import com.wikiaov.media.internal.asset.application.MediaAssetAccess;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAsset;
@@ -57,8 +58,12 @@ public class RequestMediaUpload {
             UUID assetId,
             @Nullable String fileName,
             String contentType,
-            long sizeBytes
+            long sizeBytes,
+            @Nullable SourceInput source
     ) {
+        public Command(UUID assetId, @Nullable String fileName, String contentType, long sizeBytes) {
+            this(assetId, fileName, contentType, sizeBytes, null);
+        }
     }
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
@@ -97,8 +102,14 @@ public class RequestMediaUpload {
         UUID uploadId = UUID.randomUUID();
         String objectKey = MediaObjectKeys.incoming(uploadId);
         Instant completeBefore = now.plus(properties.completionWindow());
-        sessions.save(MediaUploadSession.request(uploadId, asset.getId(), objectKey, fileName(command.fileName()),
-                format, command.sizeBytes(), completeBefore, MediaWritePolicy.ref(actor), now));
+        var session = MediaUploadSession.request(uploadId, asset.getId(), objectKey, fileName(command.fileName()),
+                format, command.sizeBytes(), completeBefore, MediaWritePolicy.ref(actor), now);
+        if (command.source() != null) {
+            var source = command.source();
+            session.recordSource(source.type(), source.label(), source.url(), source.ownerName(), source.contactUrl(),
+                    source.observedAt(), source.note());
+        }
+        sessions.save(session);
         // Signing is a local computation; no network call happens inside the transaction.
         PresignedRequest put = storage.presignPut(objectKey, format.mimeType(), properties.uploadUrlValidity());
         return new UploadTicket(uploadId, asset.getId(), objectKey, put.method(), put.url(), put.headers(),

@@ -8,6 +8,7 @@ import { WikiLibraryLayout } from "./layout/wiki-library-layout"
 import { SkinDirectoryLoading } from "./features/skins/skin-loading"
 import { WarehouseRouteLoading } from "./features/warehouse/warehouse-loading"
 import { useWikiContext, wikiText } from "./context/wiki-context"
+import { ContactPage } from "./features/contact/contact-page"
 
 const HeroRoutes = lazy(() => import("./features/hero/hero-routes"))
 const SkinDirectory = lazy(() =>
@@ -51,6 +52,7 @@ export default function App() {
       </a>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route
           path="/hero/*"
           element={
@@ -90,6 +92,11 @@ export default function App() {
           }
         />
       </Routes>
+      <footer className="border-t border-white/10 px-5 py-4 text-center text-xs text-white/55">
+        <Link to="/contact" className="underline underline-offset-4">
+          Liên hệ · Nguồn & hình ảnh
+        </Link>
+      </footer>
     </>
   )
 }

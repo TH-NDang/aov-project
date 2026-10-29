@@ -35,6 +35,11 @@ class OpenApiIntegrationTest extends OpenApiContractChecks {
     }
 
     @Override
+    int expectedHandlerCount() {
+        return 174;
+    }
+
+    @Override
     boolean persistArtifact() {
         return true;
     }

@@ -11,6 +11,7 @@ import com.wikiaov.media.internal.asset.application.ActivateMediaAssetVersion;
 import com.wikiaov.media.internal.asset.application.CreateMediaAsset;
 import com.wikiaov.media.internal.asset.application.DeprecateMediaAsset;
 import com.wikiaov.media.internal.ingestion.application.RegisterExistingObject;
+import com.wikiaov.media.internal.provenance.application.AddMediaSource;
 import com.wikiaov.media.internal.query.application.FindMediaUsages;
 import com.wikiaov.media.internal.query.application.MediaAssetQueries;
 import com.wikiaov.media.internal.upload.application.CompleteMediaUpload;
@@ -52,11 +53,12 @@ class MediaAdminController implements MediaAdminApi {
     private final DeprecateMediaAsset deprecateMediaAsset;
     private final FindMediaUsages findMediaUsages;
     private final MediaAssetQueries queries;
+    private final AddMediaSource addMediaSource;
 
     MediaAdminController(CreateMediaAsset createMediaAsset, RequestMediaUpload requestMediaUpload,
             CompleteMediaUpload completeMediaUpload, RegisterExistingObject registerExistingObject,
             ActivateMediaAssetVersion activateMediaAssetVersion, DeprecateMediaAsset deprecateMediaAsset,
-            FindMediaUsages findMediaUsages, MediaAssetQueries queries) {
+            FindMediaUsages findMediaUsages, MediaAssetQueries queries, AddMediaSource addMediaSource) {
         this.createMediaAsset = createMediaAsset;
         this.requestMediaUpload = requestMediaUpload;
         this.completeMediaUpload = completeMediaUpload;
@@ -65,6 +67,13 @@ class MediaAdminController implements MediaAdminApi {
         this.deprecateMediaAsset = deprecateMediaAsset;
         this.findMediaUsages = findMediaUsages;
         this.queries = queries;
+        this.addMediaSource = addMediaSource;
+    }
+
+    @PostMapping(path = "/assets/{assetId}/versions/{versionId}/sources", version = "1")
+    public MediaAssetDetails addSource(@PathVariable UUID assetId, @PathVariable UUID versionId,
+            @RequestBody SourceRequest source) {
+        return addMediaSource.execute(assetId, versionId, source.toInput());
     }
 
     @PostMapping(path = "/assets", version = "1")
@@ -78,10 +87,11 @@ class MediaAdminController implements MediaAdminApi {
     @GetMapping(path = "/assets", version = "1")
     public PageSlice<MediaAssetSummary> listAssets(HttpServletRequest http,
             @RequestParam(required = false) @Nullable MediaSemanticType semanticType,
+            @RequestParam(defaultValue = "false") boolean needsCredit,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        QueryParameters.requireOnly(http, Set.of("semanticType", "page", "size"));
-        return queries.list(semanticType, page, size);
+        QueryParameters.requireOnly(http, Set.of("semanticType", "needsCredit", "page", "size"));
+        return queries.list(semanticType, needsCredit, page, size);
     }
 
     @GetMapping(path = "/assets/{assetId}", version = "1")
@@ -94,7 +104,7 @@ class MediaAdminController implements MediaAdminApi {
     public ResponseEntity<UploadTicket> requestUpload(@PathVariable String apiVersion, @PathVariable UUID assetId,
             @RequestBody UploadRequest request) {
         UploadTicket ticket = requestMediaUpload.execute(new RequestMediaUpload.Command(assetId, request.fileName(),
-                request.contentType(), request.sizeBytes()));
+                request.contentType(), request.sizeBytes(), SourceRequest.toInput(request.source())));
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path(ApiPaths.ADMIN + "/media/uploads/{uploadId}")
                 .buildAndExpand(apiVersion, ticket.uploadId())

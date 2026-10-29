@@ -101,7 +101,8 @@ def loopback(url):
 
 class Api:
     def __init__(self, base, keycloak):
-        self.base = loopback(base) + "/api/wiki/v1"
+        backend = loopback(base)
+        self.base = backend if backend.endswith("/api/wiki/v1") else backend + "/api/wiki/v1"
         self.keycloak = loopback(keycloak)
         self.token = None
         self.expires = 0
@@ -110,7 +111,7 @@ class Api:
         username = os.getenv("WIKI_IMPORT_USERNAME", "admin")
         password = os.getenv("WIKI_IMPORT_PASSWORD")
         if password is None:
-            realm = read(SERVICE / "keycloak" / "wikiaov-realm.json")
+            realm = read(SERVICE / "infra" / "local" / "keycloak" / "wikiaov-realm.json")
             user = next(user for user in realm["users"] if user.get("username") == username)
             password = next(item["value"] for item in user["credentials"] if item["type"] == "password")
         body = urlencode({

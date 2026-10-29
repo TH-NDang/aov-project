@@ -281,12 +281,8 @@ class Importer:
                 self.reused += 1
             return entry["assetId"]
         if not entry:
-            provenance = image["provenance"]
-            note = json.dumps({"path": image["path"], "sha256": image["sha256"], "source": provenance}, ensure_ascii=False)
-            official = urlparse(provenance.get("sourceUrl") or "").hostname == "lienquan.garena.vn" and not provenance.get("derived")
-            created = self.api.call("/admin/media/assets", "POST", {"semanticType": image["semantic"], "source": {
-                "type": "OFFICIAL" if official else "OTHER", "label": "Tài nguyên Kho trang bị",
-                "url": provenance.get("sourceUrl"), "note": note}})
+            created = self.api.call("/admin/media/assets", "POST", {"semanticType": image["semantic"],
+                "source": image_helpers.source_credit(image["path"], image["sha256"])})
             entry = {"assetId": created["id"], "sha256": image["sha256"], "complete": False}
             with self.lock:
                 self.state["assets"][key] = entry
@@ -303,7 +299,8 @@ class Importer:
             except RuntimeError:
                 pass
         ticket = self.api.call("/admin/media/assets/" + entry["assetId"] + "/version-uploads", "POST", {
-            "fileName": file.name, "contentType": content_type, "sizeBytes": len(data)})
+            "fileName": file.name, "contentType": content_type, "sizeBytes": len(data),
+            "source": image_helpers.source_credit(image["path"], image["sha256"])})
         with self.lock:
             entry["uploadId"] = ticket["uploadId"]
             self.checkpoint()

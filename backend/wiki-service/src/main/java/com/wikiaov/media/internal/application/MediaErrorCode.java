@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum MediaErrorCode implements ApiErrorCode {
 
+    MEDIA_CONTACT_NOT_FOUND(HttpStatus.NOT_FOUND, "Contact request not found"),
+    MEDIA_CONTACT_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many contact requests"),
+
     MEDIA_ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "Media asset not found"),
     /** The asset is DEPRECATED or BLOCKED; context: {@code state}. */
     MEDIA_ASSET_NOT_ACTIVE(HttpStatus.CONFLICT, "Media asset not active"),

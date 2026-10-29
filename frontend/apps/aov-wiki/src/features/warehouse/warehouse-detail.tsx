@@ -175,7 +175,12 @@ function DetailContent({
   return (
     <>
       <div className="wiki-warehouse-detail-identity">
-        <WarehouseArtwork entry={entry} kind={kind} assetId={state?.iconAssetId ?? entry.content.iconAssetId} />
+        <WarehouseArtwork
+          entry={entry}
+          kind={kind}
+          assetId={state?.iconAssetId ?? entry.content.iconAssetId}
+          showCredit
+        />
         <div>
           <span className="wiki-warehouse-detail-eyebrow">{scope.t(kind).toLocaleUpperCase(scope.locale)}</span>
           <SheetTitle>{warehouseName(entry)}</SheetTitle>

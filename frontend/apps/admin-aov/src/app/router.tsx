@@ -56,6 +56,11 @@ const routes: RouteObject[] = [
             element: <Navigate to="/image-management" replace />,
           },
           {
+            path: "media-contact-requests",
+            handle: title("Liên hệ về hình ảnh"),
+            lazy: async () => ({ Component: (await import("@/features/media/media-contact-page")).MediaContactPage }),
+          },
+          {
             path: "image-management",
             handle: title("Quản lý ảnh"),
             lazy: async () => ({

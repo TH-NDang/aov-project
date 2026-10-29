@@ -3,17 +3,33 @@ import type { EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 import type { AssetDetail } from "../publishing/types"
 
 // Existing screens cache different projections; refresh them without mixing their payload shapes.
-const details = new Set(["publishing-asset", "hero-content-asset", "managed-image", "profile-draft-avatar"])
+const details = new Set([
+  "publishing-asset",
+  "hero-content-asset",
+  "managed-image",
+  "profile-draft-avatar",
+  "media-contact-asset",
+])
 const lists = new Set(["publishing-assets", "managed-images"])
 
 /** Cancel older reads before refreshing every view of the changed asset. */
 export async function invalidateMediaAsset(client: QueryClient, assetId: string) {
+  await invalidateMediaAssets(client, [assetId])
+}
+
+/** Refresh shared lists once after a batch, together with every affected detail. */
+export async function invalidateMediaAssets(client: QueryClient, assetIds: readonly string[]) {
+  const ids = new Set(assetIds)
+  if (!ids.size) return
   const filters = {
     predicate: ({ queryKey, state }: { queryKey: readonly unknown[]; state: { data: unknown } }) => {
-      if (lists.has(String(queryKey[0])) || (details.has(String(queryKey[0])) && queryKey[1] === assetId)) return true
+      if (lists.has(String(queryKey[0])) || (details.has(String(queryKey[0])) && ids.has(String(queryKey[1]))))
+        return true
       if (queryKey[0] !== "user-profile") return false
       const data = state.data as { avatarAssetId?: string; items?: { avatarAssetId?: string }[] } | undefined
-      return data?.avatarAssetId === assetId || !!data?.items?.some((profile) => profile.avatarAssetId === assetId)
+      return (
+        ids.has(data?.avatarAssetId ?? "") || !!data?.items?.some((profile) => ids.has(profile.avatarAssetId ?? ""))
+      )
     },
   }
   await client.cancelQueries(filters)

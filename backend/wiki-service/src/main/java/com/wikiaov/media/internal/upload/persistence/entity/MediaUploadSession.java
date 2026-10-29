@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.upload.persistence.entity;
 
 import com.wikiaov.media.internal.domain.model.ActorRef;
+import com.wikiaov.media.internal.domain.model.ProvenanceSourceType;
 import com.wikiaov.media.internal.domain.model.UploadState;
 import com.wikiaov.media.internal.ingestion.domain.image.ImageFormat;
 import com.wikiaov.media.internal.shared.persistence.entity.AssignedIdEntity;
@@ -44,6 +45,28 @@ public class MediaUploadSession extends AssignedIdEntity {
 
     @Column(name = "file_name", length = 255, updatable = false)
     private @Nullable String fileName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "source_type", length = 32, updatable = false)
+    private @Nullable ProvenanceSourceType sourceType;
+
+    @Column(name = "source_label", length = 200, updatable = false)
+    private @Nullable String sourceLabel;
+
+    @Column(name = "source_url", length = 2048, updatable = false)
+    private @Nullable String sourceUrl;
+
+    @Column(name = "source_owner_name", length = 200, updatable = false)
+    private @Nullable String sourceOwnerName;
+
+    @Column(name = "source_contact_url", length = 2048, updatable = false)
+    private @Nullable String sourceContactUrl;
+
+    @Column(name = "source_observed_at", updatable = false)
+    private @Nullable Instant sourceObservedAt;
+
+    @Column(name = "source_note", length = 2000, updatable = false)
+    private @Nullable String sourceNote;
 
     /** What the client said it would upload; the verified type is stored on the version. */
     @Column(name = "declared_mime_type", nullable = false, length = 64, updatable = false)
@@ -97,6 +120,18 @@ public class MediaUploadSession extends AssignedIdEntity {
         session.createdByIssuer = createdBy.issuer();
         session.createdBySubject = createdBy.subject();
         return session;
+    }
+
+    public void recordSource(ProvenanceSourceType type, String label, @Nullable String url,
+            @Nullable String ownerName, @Nullable String contactUrl, @Nullable Instant observedAt,
+            @Nullable String note) {
+        sourceType = type;
+        sourceLabel = label;
+        sourceUrl = url;
+        sourceOwnerName = ownerName;
+        sourceContactUrl = contactUrl;
+        sourceObservedAt = observedAt;
+        sourceNote = note;
     }
 
     /** Still waiting for (or in the middle of) completion. */
