@@ -68,7 +68,7 @@ export function HeroAsset({
     </div>
   )
   const credit = asset.data?.currentUrl ? (
-    <ImageCredit sources={currentMediaSources(asset.data.provenance, asset.data.currentVersionId)} />
+    <ImageCredit sources={currentMediaSources(asset.data.provenance ?? [], asset.data.currentVersionId)} />
   ) : null
   return preview && asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
     <ImagePreview

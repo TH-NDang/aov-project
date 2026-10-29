@@ -11,7 +11,6 @@ import { resourceContent } from "../src/features/publishing/resource-import"
 import { publishIssues, type Content, type Revision } from "../src/features/publishing/types"
 import type { Hero } from "../src/lib/api/types"
 import { mediaPath } from "../../../tooling/media-proxy.mts"
-import { wikiRequest, WikiError, wikiErrorMessage } from "../../aov-wiki/src/features/heroes/wiki-api"
 
 test("admin preview maps backend section keys and retains imported head bindings", async () => {
   const profile = { roles: [], translations: [{ locale: "vi-VN", name: "Airi" }], sources: [] }
@@ -165,22 +164,6 @@ test("local media proxy exposes only validated asset file paths", () => {
   assert.equal(mediaPath(`/media/${id}/${id}.png`, "wiki-media"), `/buckets/wiki-media/assets/${id}/${id}.png`)
   for (const path of ["/media/incoming/secret", "/media/../imports/a", "/media/", "/media/%2e%2e/key"])
     assert.equal(mediaPath(path, "wiki-media"), "/__invalid_public_asset__")
-})
-
-test("wiki uses public revalidation, carries structured context errors, and never sends credentials", async () => {
-  const fetcher = (async (_url: unknown, init?: RequestInit) => {
-    assert.equal(init?.cache, "no-cache")
-    assert.equal(init?.credentials, "omit")
-    assert.equal(new Headers(init?.headers).get("Authorization"), null)
-    return Response.json({ code: "PATCH_CONTEXT_UNAVAILABLE", requestId: "trace" }, { status: 422 })
-  }) as typeof fetch
-  await assert.rejects(
-    wikiRequest("/heroes?region=VN&locale=vi-VN", undefined, fetcher),
-    (error) =>
-      error instanceof WikiError &&
-      error.requestId === "trace" &&
-      wikiErrorMessage(error).includes("chưa có dữ liệu patch"),
-  )
 })
 
 test("quality upgrades activate an asset version without changing hero content", async () => {

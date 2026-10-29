@@ -125,6 +125,9 @@ export function createHeroFixture(annotations = false, history = false) {
     : null
   const writes: { section: string; body: Record<string, unknown> }[] = []
   const fetcher: typeof fetch = async (input, init) => {
+    // Community references (teams, players) live in another service; the hero fixtures have none.
+    if (String(input).startsWith("/api/community/v1/admin/reference-catalog"))
+      return Response.json({ items: [], page: 0, size: 100, totalElements: 0 })
     const path = String(input).replace("/api/wiki/v1", "")
     if (/^\/admin\/heroes\/[^/]+\/skill-images$/.test(path)) return Response.json({ items: [] })
     if (path.startsWith("/admin/reference-skills?"))

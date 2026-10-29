@@ -123,12 +123,18 @@ test("publication overview shows flags and hero heads, and only tabs with change
   const warehouseKey = (kind: string) => ["warehouse", "changes", kind, "rules", "vi-VN"]
   for (const kind of ["items", "enchantments", "arcana", "spells"]) cache.setQueryData(warehouseKey(kind), [])
   cache.setQueryData(warehouseKey("items"), [{ id: "other-change", ownerId: "item", patchVariantId: "other-patch" }])
-  cache.setQueryData(["publishing-preview", "hero", "revision"], {
-    content: {
-      PROFILE: { translations: [{ locale: "vi-VN", name: "Airi" }] },
-      MEDIA_BINDINGS: { bindings: { HEAD: "head" } },
-    },
-  })
+  // Patch change rows name heroes from the reference catalog instead of reading each revision.
+  cache.setQueryData(
+    ["reference-catalog", undefined, undefined, ""],
+    [
+      {
+        id: "hero",
+        kind: "hero",
+        translations: [{ locale: "vi-VN", name: "Airi", aliases: [], description: "" }],
+        iconAssetId: "head",
+      },
+    ],
+  )
   cache.setQueryData(["hero-content-asset", "head"], { currentUrl: "/fixture-head.png" })
   const updateCache = async (key: readonly unknown[], value: unknown) => {
     await act(async () => {
@@ -149,12 +155,12 @@ test("publication overview shows flags and hero heads, and only tabs with change
     const document = dom.window.document
     assert.match(document.body.textContent ?? "", /Shared gameplay/)
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
-    assert.equal(document.querySelector('button[aria-label="Xem thay đổi airi"]'), null)
+    assert.equal(document.querySelector('button[aria-label="Xem thay đổi Airi"]'), null)
     const patch = [...document.querySelectorAll<HTMLButtonElement>("button[aria-expanded]")].find((b) =>
       b.textContent?.includes("patch-october"),
     )!
     await act(async () => patch.click())
-    assert.ok(document.querySelector('button[aria-label="Xem thay đổi airi"]'))
+    assert.ok(document.querySelector('button[aria-label="Xem thay đổi Airi"]'))
     assert.ok(document.querySelector("td.sticky"))
     assert.match(document.body.textContent ?? "", /Tăng sức mạnh/)
     const tabs = () => [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
@@ -223,7 +229,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.equal(tabs().length, 0)
     assert.match(document.body.textContent ?? "", /Chưa ghi nhận thay đổi trong patch này/)
     await act(async () => patch.click())
-    assert.equal(document.querySelector('button[aria-label="Xem thay đổi airi"]'), null)
+    assert.equal(document.querySelector('button[aria-label="Xem thay đổi Airi"]'), null)
   } finally {
     await act(async () => root.unmount())
     cache.clear()
