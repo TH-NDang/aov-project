@@ -182,6 +182,22 @@ Import chỉ điền thông tin đã có: không suy đoán vai trò, chỉ số
 Khi mở phần ảnh, có thể chọn asset đã có, upload file, hoặc nhập ảnh đúng vai trò từ resources.
 HEAD/PORTRAIT/SPLASH là ba asset riêng; icon chiêu và artwork trang phục có semantic type riêng.
 Trong tab **Ảnh tướng** của tướng, **Nguồn ảnh** dưới mỗi ảnh hiển thị link và ghi chú từ Media provenance.
+
+Trong **Quản lý ảnh**, cột **Nguồn ảnh** đánh dấu **Cần bổ sung nguồn / credit** nếu phiên bản
+đang dùng chưa có nguồn kèm tên chủ sở hữu / credit. Bấm nhãn để mở chi tiết và bổ sung sau khi
+xác minh. Nguồn và URL đã biết vẫn được giữ lại; ảnh chụp game đã xác nhận không bắt buộc có URL.
+Sau khi bổ sung một nguồn đầy đủ, nhãn chuyển thành **Đã có nguồn & credit**.
+Bật **Chỉ ảnh thiếu nguồn hoặc credit** để lọc toàn bộ kho, kết hợp được với loại ảnh. Danh sách
+tự tải thêm khi cuộn gần cuối, hiển thị số ảnh đã tải / tổng ảnh khớp. Nếu tải thêm lỗi, các ảnh
+đã xem vẫn giữ trên màn hình và có nút thử lại. Ảnh vừa bổ sung đủ credit tự rời danh sách đang lọc.
+
+Người có quyền `media:write` có thể đánh dấu nhiều ảnh rồi chọn **Bổ sung nguồn / credit hàng loạt**.
+Ô chọn ở đầu bảng chỉ chọn các ảnh đang hoạt động, đã hoàn tất upload và đã tải trong danh sách;
+cuộn thêm giữ lựa chọn cũ, đổi bộ lọc bỏ lựa chọn. Biểu mẫu hiển thị danh sách ảnh và áp dụng cùng
+thông tin nguồn/credit, giữ lại nguồn đã có. Mỗi ảnh có kết quả riêng; có thể thử lại các ảnh lỗi
+hoặc tiếp tục sau khi dừng, không gửi lại ảnh đã thành công. Ảnh đổi phiên bản hoặc ngừng hoạt động
+trước lúc ghi được bỏ qua để chọn lại. Khi đang lưu, giữ trang mở; **Dừng xử lý** cho phép các ảnh
+đang ghi hoàn tất rồi ngừng phần còn lại.
 Chỉ nguồn gắn với toàn bộ asset hoặc phiên bản ảnh hiện tại được hiển thị; nguồn của phiên bản ảnh cũ
 không được trộn vào ảnh đang xem. Đây là nguồn của ảnh đã upload, không phải danh sách ảnh từ tài nguyên.
 Ảnh LFS pointer phải tải bằng `git lfs pull` trước khi import.

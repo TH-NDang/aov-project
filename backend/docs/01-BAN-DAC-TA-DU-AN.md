@@ -2341,3 +2341,32 @@ Tìm kiếm chỉ gợi ý kỹ năng trong revision hiện hành của ngữ c�
 revision hợp lệ gần nhất còn chứa skillKey đó; không lấy bản nháp hoặc patch tương lai cho wiki.
 Ảnh thư viện chỉ fallback ở admin khi ghép duy nhất theo skillKey hoặc slot+biến thể chuẩn, có nhãn
 nguồn `LIBRARY`; public chỉ dùng ảnh gắn trong revision. Không suy đoán dạng từ tên hoặc thứ tự mảng.
+
+
+### Nguồn ảnh, credit và liên hệ (28/10/2026)
+
+Media lưu nguồn độc lập với bytes và các revision nội dung. Nguồn gồm loại, tên nơi cung cấp,
+URL đối chiếu, chủ sở hữu/tên cần credit (`ownerName`), trang liên hệ công khai của bên cung cấp
+(`contactUrl`), thời điểm quan sát nếu biết và ghi chú nội bộ. Tên website cung cấp không tự đồng
+nghĩa với chủ sở hữu. Nguồn ở phiên bản ảnh được ưu tiên; chỉ dùng nguồn cấp asset khi phiên bản
+chưa có nguồn riêng. Public chỉ nhận các trường credit, không nhận ghi chú/path nội bộ.
+
+Import đọc các manifest được dẫn từ `resources/Lien-Quan-v3/note/`; đối chiếu SHA-256 để giữ nguồn
+qua đổi tên file. Ảnh đã xử lý/tái tạo giữ nhãn riêng. Portrait qua Figma là ảnh chụp Liên Quân do
+người dùng cung cấp, chủ sở hữu/credit Garena / Liên Quân Mobile theo xác nhận của người dùng;
+Figma giữ vai trò nguồn gói file. Năm ảnh phụ trợ từ `phu-tro.zip` cũng là ảnh Liên Quân theo
+xác nhận của người dùng, giữ credit Garena và không tự suy ra ngày chụp.
+Nguồn chưa rõ giữ trạng thái bằng nhãn “Chưa xác minh nguồn”,
+không tự tạo URL hoặc ngày thu thập. Ngày chỉ biết đến ngày được giữ trong ghi chú import, không
+chuyển thành thời điểm quan sát chính xác giả định.
+
+Upload mới nhận nguồn ngay ở phiên cấp ticket, lưu bền cùng session và gắn vào version trong
+transaction complete. Retry complete không thêm nguồn lặp. Admin có `media:write` được bổ sung
+nguồn cho version đã tồn tại mà không upload lại bytes hoặc xuất bản lại nội dung.
+
+Wiki có biểu tượng “Nguồn ảnh” tại các khung ảnh có tương tác nguồn, hoạt động bằng click/touch
+và bàn phím. Từ khung này mở `/contact` cùng asset/version của ảnh. Trang Liên hệ nhận tên,
+email, loại yêu cầu và nội dung; lưu cho quản trị viên xử lý, không tự gửi email. Thông tin liên
+hệ của người gửi không được đưa vào credit công khai. Chỉ người có `media:write` xem/đánh dấu
+đã xử lý yêu cầu. Chặn quá 5 lần gửi/10 phút theo địa chỉ kết nối trên mỗi instance; không tin
+header proxy do client tự cung cấp.

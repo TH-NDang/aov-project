@@ -1127,6 +1127,13 @@ Detail:
 
 Danh sách trả `PageSlice` (mục 46), mỗi item có `currentUrl`, sắp xếp mới nhất trước.
 
+Query `needsCredit=true` lọc ảnh đã có phiên bản hiện hành nhưng chưa có nguồn đầy đủ gồm tên
+nguồn và chủ sở hữu / credit. Bỏ qua hoặc `false` trả mọi ảnh. Kết hợp được với `semanticType`;
+lọc trước phân trang nên `totalElements` là tổng ảnh khớp trong toàn kho. Ưu tiên nguồn riêng
+của phiên bản đang dùng; chỉ dùng nguồn cấp asset nếu phiên bản chưa có nguồn riêng. Nguồn
+ghi “Chưa xác minh” chưa được tính đầy đủ. Chỉ cần một nguồn đầy đủ, không bắt buộc URL cho
+ảnh chụp game; nguồn của phiên bản cũ và ảnh chưa hoàn tất upload không làm sai bộ lọc.
+
 ---
 
 ## 31. Yêu cầu upload MediaAssetVersion
@@ -2478,3 +2485,31 @@ có actor và audit `HERO_SKIN_IMAGES_PUBLISHED`; snapshot cũ không bị sửa
 Response là `HeroRevisionView` mới; nếu các ảnh đã giống hệt thì trả bản nguồn hiện hành và không tạo
 revision thừa. Nguồn đã xuất bản hoặc version nháp thay đổi trả `409 HERO_REVISION_VERSION_CONFLICT`;
 client cần đọc lại trước khi thử. Tác vụ không đổi lịch patch hoặc trạng thái hoàn tất nhập liệu gameplay.
+
+
+### Nguồn ảnh và liên hệ Media (28/10/2026)
+
+`SourceRequest` bổ sung `ownerName` (nullable, tối đa 200) và `contactUrl` (nullable, HTTP(S),
+tối đa 2048). `version-uploads` nhận thêm `source` cùng schema; nguồn được lưu trong session
+và gắn đúng version khi complete, kể cả khi bytes trùng. Không ghi thêm nguồn khi retry một
+session đã READY. Client cũ vẫn được phép bỏ source.
+
+`MediaAssetReference.currentVersion.sources` trả danh sách `{type,label,url,ownerName,contactUrl,
+observedAt}`. Khi có provenance riêng cho version, dùng danh sách này; nếu chưa có thì dùng nguồn
+cấp asset. Không lẫn nguồn phiên bản khác; không trả note hoặc đường dẫn import nội bộ.
+
+`GET /admin/media/assets` bổ sung `sources` cùng schema trên cho phiên bản hiện hành của từng ảnh;
+ảnh chưa có phiên bản trả mảng rỗng. Truy vấn nguồn theo lô cho cả trang. Admin dùng thông tin này
+để đánh dấu ảnh cần bổ sung nguồn / credit; không tự suy ra chủ sở hữu từ URL hoặc tên đội.
+
+- POST `/api/wiki/v1/admin/media/assets/{assetId}/versions/{versionId}/sources`: body là SourceRequest,
+  cần `catalog:read` và `media:write`; trả 200 asset detail. Bổ sung cùng toàn bộ nội dung nguồn đã có
+  là no-op. Version khác asset trả MEDIA_VERSION_NOT_FOUND; asset không active giữ lỗi hiện hành.
+- POST `/api/wiki/v1/media/contact-requests`: công khai, không nhận query; body
+  `{assetId?,versionId?,name,email,topic,message}`. Asset/version phải đi cùng nhau và thuộc nhau.
+  Trả 201 `{id}`, Cache-Control no-store; không echo email/nội dung. Giới hạn name 200, email 254,
+  message 4000; topic SOURCE/RIGHTS/OTHER. Vượt giới hạn gửi trả 429 MEDIA_CONTACT_RATE_LIMITED.
+- GET `/api/wiki/v1/admin/media/contact-requests?page=0&size=20`: cần thêm `media:write`, trả PageSlice,
+  tối đa 100, chỉ nhận page/size. Bao gồm thông tin riêng của người gửi để xử lý yêu cầu.
+- POST `/api/wiki/v1/admin/media/contact-requests/{id}/resolve`: cần `media:write`, trả bản ghi RESOLVED;
+  gọi lặp giữ resolvedAt cũ. Không tồn tại trả 404 MEDIA_CONTACT_NOT_FOUND; có audit, không gửi email.

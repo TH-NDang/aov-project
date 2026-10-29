@@ -1726,3 +1726,17 @@ không thêm kind vào `terminology.entry` hoặc thay đổi schema cho tính n
 bản dịch và icon là projection từ các bảng Hero, không lưu metadata runtime này trong entry.
 Danh mục tìm kiếm phân trang trước khi lấy hai lô bản dịch và một lô thư viện icon theo
 các tướng thuộc trang kết quả; không truy vấn chi tiết theo từng kỹ năng.
+
+
+### Bổ sung nguồn và yêu cầu liên hệ Media (V035–V036)
+
+`media_provenance` bổ sung `owner_name VARCHAR(200) NULL`, `contact_url VARCHAR(2048) NULL`.
+`media_upload_session` bổ sung các trường nullable `source_type`, `source_label`, `source_url`,
+`source_owner_name`, `source_contact_url`, `source_observed_at`, `source_note` để giữ nguồn qua
+retry. Session cũ không có nguồn tiếp tục tương thích; provenance cấp asset vẫn là fallback.
+
+`media_contact_request` lưu UUID, asset_id/version_id nullable cùng nhau, name (200), email (254),
+topic SOURCE/RIGHTS/OTHER, message (4000), status OPEN/RESOLVED, created_at và resolved_at nullable.
+FK ghép bảo đảm version thuộc đúng asset. Email/nội dung chỉ được đọc qua API quản trị có quyền
+`media:write`. Nguồn bổ sung không sửa bytes, không sửa snapshot Hero/Item và không ghi ngược vào
+`resources/`. Công cụ backfill ghép phiên bản cloud bằng SHA-256, mặc định chỉ lập báo cáo.
