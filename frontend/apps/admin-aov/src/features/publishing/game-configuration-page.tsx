@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router"
 import { CatalogTimeline } from "./catalog-timeline"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronDown, RefreshCw, MoreHorizontal, Plus } from "lucide-react"
+import { ChevronDown, Link2, RefreshCw, MoreHorizontal, Plus } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -69,12 +69,47 @@ export function GameConfigurationPage() {
     <Page>
       <PageHeader
         title="Phiên bản và thị trường"
+        description="Mùa, patch và lịch phát hành theo từng thị trường."
         actions={
-          <div className="flex gap-2">
-            <Button variant="ghost" size="icon" aria-label="Làm mới tổng quan" onClick={() => void overview.refetch()}>
-              <RefreshCw className="size-4" />
-            </Button>
-          </div>
+          <>
+            {capabilities.includes("patch:write") && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setSetup("season")}>
+                  <Plus className="size-4" />
+                  Tạo mùa
+                </Button>
+                <Button size="sm" onClick={() => setSetup("patch")}>
+                  <Plus className="size-4" />
+                  Tạo patch
+                </Button>
+              </>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8" aria-label="Tùy chọn phiên bản và thị trường">
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => void overview.refetch()}>
+                  <RefreshCw />
+                  Làm mới
+                </DropdownMenuItem>
+                {capabilities.includes("region:admin") && (
+                  <>
+                    <DropdownMenuItem onSelect={() => setSetup("assignment")}>
+                      <Link2 />
+                      Gán thị trường vào bộ quy tắc
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => setSetup("ruleset")}>
+                      <Plus />
+                      Tạo bộ quy tắc mới
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         }
       />
       <Sheet
@@ -90,17 +125,19 @@ export function GameConfigurationPage() {
           <SheetHeader>
             <SheetTitle>
               {setup === "ruleset"
-                ? "Tạo ruleset"
+                ? "Tạo bộ quy tắc mới"
                 : setup === "season"
                   ? "Tạo mùa"
                   : setup === "assignment"
-                    ? "Liên kết thị trường với gameplay"
-                    : "Tạo patch và lịch phát hành"}
+                    ? "Gán thị trường vào bộ quy tắc"
+                    : "Tạo patch"}
             </SheetTitle>
             <SheetDescription>
               {setup === "season"
                 ? "Tạo mùa dùng chung; thiết lập lịch thị trường sau."
-                : "Dùng chung nội dung gameplay; khai báo lịch phát hành riêng cho mỗi thị trường."}
+                : setup === "ruleset"
+                  ? "Chỉ cần khi một thị trường dùng gameplay khác bộ quy tắc mặc định."
+                  : "Dùng chung nội dung gameplay; khai báo lịch phát hành riêng cho mỗi thị trường."}
             </SheetDescription>
           </SheetHeader>
           <div className="overflow-y-auto px-4 pb-6">
@@ -131,121 +168,13 @@ export function GameConfigurationPage() {
       )}
       {data && (
         <>
-          <section className="overflow-hidden rounded-xl border bg-card">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b p-4">
-              <h2 className="font-semibold">Gameplay và thị trường</h2>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" aria-label="Tùy chọn phiên bản và thị trường">
-                    <MoreHorizontal className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {capabilities.includes("region:admin") && (
-                    <DropdownMenuItem onSelect={() => setSetup("ruleset")}>
-                      <Plus />
-                      Tạo ruleset
-                    </DropdownMenuItem>
-                  )}
-                  {capabilities.includes("patch:write") && (
-                    <>
-                      <DropdownMenuItem onSelect={() => setSetup("season")}>
-                        <Plus />
-                        Tạo mùa
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => setSetup("patch")}>
-                        <Plus />
-                        Tạo patch
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  {capabilities.includes("region:admin") && (
-                    <DropdownMenuItem onSelect={() => setSetup("assignment")}>
-                      Liên kết thị trường với ruleset
-                    </DropdownMenuItem>
-                  )}
-                  {!capabilities.includes("region:admin") && !capabilities.includes("patch:write") && (
-                    <DropdownMenuItem disabled>Chỉ có quyền xem</DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-sm">
-                <thead className="bg-muted/50">
-                  <tr>
-                    {["Ruleset", "Thị trường", "Mùa hiện tại", "Patch hiện tại"].map((t) => (
-                      <th key={t} className="px-4 py-3 text-left font-medium">
-                        {t}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {[...data.rulesets, { id: "", code: "Chưa gán ruleset", description: null }].map((rule) => {
-                    const markets = data.markets.filter((m) => (m.currentRulesetId ?? "") === rule.id)
-                    if (!markets.length)
-                      return rule.id ? (
-                        <tr key={rule.id}>
-                          <td className="p-4 font-medium">{rule.code}</td>
-                          <td colSpan={3} className="p-4 text-muted-foreground">
-                            Chưa có thị trường áp dụng hiện tại
-                          </td>
-                        </tr>
-                      ) : null
-                    return markets.map((m, index) => {
-                      const season = data.seasons.find((s) => s.id === m.currentSeasonId)
-                      const release = data.releases.find((r) => r.id === m.currentReleaseId)
-                      const pending = data.releases.find(
-                        (r) => r.regionId === m.id && r.phase === "AWAITING_CONFIRMATION",
-                      )
-                      const variant = data.variants.find((v) => v.id === release?.variantId)
-                      return (
-                        <tr key={m.id}>
-                          {index === 0 && (
-                            <td rowSpan={markets.length} className="border-r p-4 align-top font-medium">
-                              {rule.code}
-                            </td>
-                          )}
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <MarketBadge code={m.code} name={m.displayName} onOpen={() => setMarketId(m.id)} />
-                              {!m.available && <Badge variant="outline">Chưa hỗ trợ</Badge>}
-                            </div>
-                          </td>
-                          <td className="p-4">{season?.displayName ?? "Chưa có mùa hiện tại"}</td>
-                          <td className="p-4">
-                            <div className="space-y-1">
-                              {variant ? (
-                                <>
-                                  <span>{variant.patchCode}</span>
-                                  <Badge className="ml-2">Đang áp dụng</Badge>
-                                </>
-                              ) : (
-                                <span>Chưa xác nhận patch hiện tại</span>
-                              )}
-                              {pending && (
-                                <div className="text-xs text-muted-foreground">
-                                  {data.variants.find((v) => v.id === pending.variantId)?.patchCode} · Chờ xác nhận
-                                  <ConfirmRelease id={pending.id} />
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <MarketOverview data={data} onOpenMarket={setMarketId} />
           <section className="min-w-0 space-y-3">
             <h2 className="font-semibold">Mùa và bản cập nhật</h2>
             <CatalogTimeline data={data} value={timelineScope} onChange={changeScope} showCounts={false} />
             {!data.seasons.length && (
               <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">
-                Chưa có mùa. Chọn “Tạo mùa” trong menu dấu ba chấm của bảng.
+                Chưa có mùa. Bấm “Tạo mùa” ở đầu trang.
               </p>
             )}
             {[...data.seasons]
@@ -347,6 +276,81 @@ export function GameConfigurationPage() {
     </Page>
   )
 }
+/** Markets that publish the wiki, grouped by ruleset only when more than one ruleset exists. */
+function MarketOverview({ data, onOpenMarket }: { data: PublicationOverview; onOpenMarket: (id: string) => void }) {
+  const grouped = data.rulesets.length > 1
+  const groups = [...data.rulesets, { id: "", code: "Chưa gán bộ quy tắc", description: null }]
+    .map((rule) => ({
+      rule,
+      markets: data.markets.filter((m) => m.available && (m.currentRulesetId ?? "") === rule.id),
+    }))
+    .filter((group) => group.markets.length || (grouped && group.rule.id))
+  const unsupported = data.markets.filter((m) => !m.available)
+  const row = (m: PublicationOverview["markets"][number]) => {
+    const season = data.seasons.find((s) => s.id === m.currentSeasonId)
+    const release = data.releases.find((r) => r.id === m.currentReleaseId)
+    const pending = data.releases.find((r) => r.regionId === m.id && r.phase === "AWAITING_CONFIRMATION")
+    const variant = data.variants.find((v) => v.id === release?.variantId)
+    return (
+      <li
+        key={m.id}
+        className="grid items-center gap-x-4 gap-y-1 px-4 py-3 text-sm sm:grid-cols-[minmax(10rem,1fr)_1fr_1.4fr]"
+      >
+        <MarketBadge code={m.code} name={m.displayName} showName onOpen={() => onOpenMarket(m.id)} />
+        <span>
+          <span className="block text-[11px] text-muted-foreground">Mùa hiện tại</span>
+          {season?.displayName ?? <span className="text-muted-foreground">Chưa có</span>}
+        </span>
+        <span>
+          <span className="block text-[11px] text-muted-foreground">Patch hiện tại</span>
+          {variant ? (
+            <span className="inline-flex items-center gap-2">
+              {variant.patchCode}
+              <Badge>Đang áp dụng</Badge>
+            </span>
+          ) : (
+            <span className="text-muted-foreground">Chưa xác nhận</span>
+          )}
+          {pending && (
+            <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              {data.variants.find((v) => v.id === pending.variantId)?.patchCode} · Chờ xác nhận
+              <ConfirmRelease id={pending.id} />
+            </span>
+          )}
+        </span>
+      </li>
+    )
+  }
+  return (
+    <section className="overflow-hidden rounded-xl border bg-card" aria-label="Thị trường">
+      <div className="border-b px-4 py-3">
+        <h2 className="text-sm font-semibold">Thị trường đang phát hành</h2>
+      </div>
+      {groups.map(({ rule, markets }) => (
+        <div key={rule.id || "none"}>
+          {grouped && (
+            <p className="border-b bg-muted/30 px-4 py-1.5 text-xs font-medium text-muted-foreground">{rule.code}</p>
+          )}
+          {markets.length ? (
+            <ul className="divide-y">{markets.map(row)}</ul>
+          ) : (
+            <p className="px-4 py-3 text-sm text-muted-foreground">Chưa có thị trường áp dụng.</p>
+          )}
+        </div>
+      ))}
+      {!groups.length && <p className="px-4 py-3 text-sm text-muted-foreground">Chưa có thị trường đang phát hành.</p>}
+      {unsupported.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-t bg-muted/20 px-4 py-2.5 text-xs text-muted-foreground">
+          Chưa hỗ trợ:
+          {unsupported.map((m) => (
+            <MarketBadge key={m.id} code={m.code} name={m.displayName} onOpen={() => onOpenMarket(m.id)} />
+          ))}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function PatchDisclosure({
   variant,
   data,
@@ -383,9 +387,11 @@ function PatchDisclosure({
         ) && <Badge>Đang áp dụng</Badge>}
         {variant.dataReviewState === "COMPLETE" && <Badge variant="secondary">Đã hoàn tất nhập liệu</Badge>}
         <Badge variant={phase === "CURRENT" ? "default" : "outline"}>{phaseLabels[phase] ?? phase}</Badge>
-        <span className="text-xs text-muted-foreground">
-          {data.rulesets.find((r) => r.id === variant.rulesetId)?.code}
-        </span>
+        {data.rulesets.length > 1 && (
+          <span className="text-xs text-muted-foreground">
+            {data.rulesets.find((r) => r.id === variant.rulesetId)?.code}
+          </span>
+        )}
         {time && <span className="ml-auto text-xs text-muted-foreground">{dateLabel(time, locale)}</span>}
       </button>
       {open && (
