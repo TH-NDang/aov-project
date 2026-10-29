@@ -231,12 +231,16 @@ public final class TournamentContent {
     ) {
     }
 
+    /** An omitted {@code primary} flag means a secondary branch. */
     public record EnchantmentAllocation(
             Selection selection,
-            boolean primary,
+            Boolean primary,
             Integer tier,
             String branchCode
     ) {
+        public EnchantmentAllocation {
+            primary = Boolean.TRUE.equals(primary);
+        }
     }
 
     /** An observed loadout; {@code observedAtSeconds} is the game second the source showed it. */
@@ -256,11 +260,15 @@ public final class TournamentContent {
         }
     }
 
+    /** An omitted {@code known} flag means the slot was not readable in the source. */
     public record InventorySlot(
             Integer slot,
-            boolean known,
+            Boolean known,
             Selection item
     ) {
+        public InventorySlot {
+            known = Boolean.TRUE.equals(known);
+        }
     }
 
     public record EquipmentSnapshot(
@@ -431,11 +439,13 @@ public final class TournamentContent {
             Integer sourceTimestampSeconds,
             String note,
             List<GameSide> sides,
-            boolean includeUnscoped,
+            Boolean includeUnscoped,
             GameTimeline timeline,
             GameDraft draft
     ) {
+        /** Clients may omit {@code includeUnscoped}; it then keeps the catalog to the game's season and patch. */
         public Game {
+            includeUnscoped = Boolean.TRUE.equals(includeUnscoped);
             sides = sides == null ? List.of() : List.copyOf(sides);
             timeline = timeline == null ? GameTimeline.EMPTY : timeline;
             draft = draft == null ? GameDraft.EMPTY : draft;
