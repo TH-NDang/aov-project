@@ -1,0 +1,60 @@
+# Verifies the independent manual tournament backend with Docker available for integration tests.
+name: community-backend
+
+on:
+  push:
+    paths:
+      - "backend/community-service/**"
+      - "backend/wiki-service/scripts/dev/initialize-community-database.ps1"
+      - "backend/wiki-service/scripts/sync-community-roles.ps1"
+      - "backend/wiki-service/scripts/dev/test-community-setup.ps1"
+      - "backend/wiki-service/infra/local/keycloak/wikiaov-realm.json"
+      - ".github/workflows/community-backend.yml"
+  pull_request:
+    paths:
+      - "backend/community-service/**"
+      - "backend/wiki-service/scripts/dev/initialize-community-database.ps1"
+      - "backend/wiki-service/scripts/sync-community-roles.ps1"
+      - "backend/wiki-service/scripts/dev/test-community-setup.ps1"
+      - "backend/wiki-service/infra/local/keycloak/wikiaov-realm.json"
+      - ".github/workflows/community-backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: community-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend/community-service
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/community-service/pom.xml
+      - name: Maven verify
+        run: sh mvnw --batch-mode --no-transfer-progress verify
+      - name: Validate local setup scripts
+        shell: pwsh
+        run: ../wiki-service/scripts/dev/test-community-setup.ps1
+      - name: Verify metadata import safety
+        run: python3 scripts/test_import_collected_metadata.py
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: community-service-test-reports
+          path: backend/community-service/target/surefire-reports/
+          retention-days: 7
