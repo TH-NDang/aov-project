@@ -12,6 +12,7 @@ import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { errorMessage } from "@/lib/api/errors"
 import { control } from "./fields"
+import { defaultRulesetId, hasRulesetChoice } from "./default-ruleset"
 import { DataLanguage } from "./data-language"
 import { usePublicationOverview, type PublicationOverview, type Variant } from "./publication-overview"
 import { z } from "zod"
@@ -72,7 +73,8 @@ export function SharedPatchSetup({
     schema: patchDraftSchema,
   })
   const seasonId = form.watch("seasonId")
-  const rulesetId = form.watch("rulesetId")
+  // With one ruleset the form never asks; the default ruleset is used.
+  const rulesetId = form.watch("rulesetId") || defaultRulesetId(overview.data?.rulesets)
   const locale = form.watch("locale")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -129,25 +131,26 @@ export function SharedPatchSetup({
             ))}
           </select>
         </label>
-        <label className="grid gap-1 text-sm">
-          Gameplay dùng chung
-          <select
-            className={control}
-            required
-            value={rulesetId}
-            onChange={(e) => {
-              form.setValue("rulesetId", e.target.value)
-              form.setValue("before", "")
-            }}
-          >
-            <option value="">Chọn ruleset</option>
-            {overview.data?.rulesets.map((r) => (
-              <option key={r.id} value={r.id}>
-                {r.code}
-              </option>
-            ))}
-          </select>
-        </label>
+        {hasRulesetChoice(overview.data?.rulesets) && (
+          <label className="grid gap-1 text-sm">
+            Bộ quy tắc
+            <select
+              className={control}
+              required
+              value={rulesetId}
+              onChange={(e) => {
+                form.setValue("rulesetId", e.target.value)
+                form.setValue("before", "")
+              }}
+            >
+              {overview.data?.rulesets.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.code}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="grid gap-1 text-sm">
           Vị trí
           <select {...form.register("before")} className={control}>

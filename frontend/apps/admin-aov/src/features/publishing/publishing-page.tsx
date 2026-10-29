@@ -518,8 +518,10 @@ export function PublishingWorkspace({
             <>
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
                 <span>
-                  {rulesets.data?.find((row) => row.id === revision.rulesetId)?.code || "Bộ quy tắc gameplay"} · Bản #
-                  {revision.revisionNo}
+                  {(rulesets.data?.length ?? 0) > 1
+                    ? `${rulesets.data?.find((row) => row.id === revision.rulesetId)?.code ?? "Bộ quy tắc khác"} · `
+                    : ""}
+                  Bản #{revision.revisionNo}
                   {dirty.size ? ` · ${dirty.size} nhóm chưa lưu` : ""}
                 </span>
                 {!translating && !editing && (
