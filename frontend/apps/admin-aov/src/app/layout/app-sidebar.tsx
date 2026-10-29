@@ -38,7 +38,7 @@ function NavLink({ item, counts, nested = false }: { item: NavItem; counts: Atte
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
-        className="h-8 gap-2 group-data-[collapsible=icon]:h-8! group-data-[collapsible=icon]:p-1! [&>svg]:size-5"
+        className="h-8 gap-2 group-data-[collapsible=icon]:h-8! group-data-[collapsible=icon]:p-1! [&>svg]:size-5 data-[active=true]:[&>svg]:text-[var(--aov-icon-accent,#b28b44)]"
         isActive={activeNavItem(pathname)?.to === item.to}
         tooltip={item.title}
       >

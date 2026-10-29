@@ -43,7 +43,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         title: "Quản lý ảnh",
-        icon: "gallery",
+        icon: "imageLibrary",
         to: "/image-management",
         description: "Ảnh, phiên bản và nơi sử dụng",
         capability: "catalog:read",
@@ -80,7 +80,7 @@ export const NAV_GROUPS: NavGroup[] = [
           },
           {
             title: "Không gian ảnh",
-            icon: "gallery",
+            icon: "heroMedia",
             to: "/hero/media",
             description: "Portrait, head, cover và bậc trang phục",
             activePaths: ["/hero/media", "/media"],
@@ -129,15 +129,15 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         title: "Phiên bản và thị trường",
-        icon: "storage",
+        icon: "releases",
         to: "/game-configuration",
-        description: "Bộ quy tắc, bản cập nhật và lịch phát hành",
+        description: "Mùa, patch và lịch phát hành",
         capability: "catalog:read",
       },
       {
         title: "Thuật ngữ & tham chiếu",
         to: "/terminology",
-        icon: "storage",
+        icon: "glossary",
         description: "Alias, hiển thị và xem trước tham chiếu",
       },
     ],
