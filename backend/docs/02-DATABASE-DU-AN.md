@@ -553,7 +553,9 @@ note NULL
 | patch_variant_id | UUID | logical ref |
 | hero_id | UUID |
 | from_hero_revision_id | UUID NULL |
-| to_hero_revision_id | UUID |
+| to_hero_revision_id | UUID NULL — bắt buộc khi `source_kind = SNAPSHOT` |
+| source_kind | VARCHAR(16): `SNAPSHOT`, `PATCH_NOTES`; mặc định `SNAPSHOT` |
+| source_url | TEXT NULL — bắt buộc khi `source_kind = PATCH_NOTES` |
 | changed_sections | TEXT[] hoặc join table |
 | created_at | TIMESTAMPTZ |
 | created_by_* | TEXT |

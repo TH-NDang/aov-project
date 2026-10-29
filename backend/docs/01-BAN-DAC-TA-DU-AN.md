@@ -900,11 +900,15 @@ Một hero change set nên biết tối thiểu:
 
 - patchVariant;
 - hero;
-- fromRevision;
-- toRevision;
+- nguồn: `SNAPSHOT` (đối chiếu hai snapshot) hoặc `PATCH_NOTES` (ghi chú cập nhật chính thức, có URL);
+- fromRevision, toRevision (bắt buộc toRevision với `SNAPSHOT`, không bắt buộc với `PATCH_NOTES`);
 - summary;
 - categories;
 - các change item chi tiết.
+
+Change set từ ghi chú cập nhật cho phép ghi thay đổi của patch đã qua khi chưa thu thập snapshot của
+patch đó ([ADR-016](adr/ADR-016-patch-note-changes.md)). Dòng STAT/SKILL của nguồn này bắt buộc giá trị
+cũ và mới; dòng ảnh chỉ ghi qua nguồn `SNAPSHOT`.
 
 ### 10.5 Change item
 
@@ -2085,6 +2089,15 @@ Luồng admin: thị trường → mùa → patch/release → chọn loại nh�
 - Khi cần chèn patch quá khứ vào chuỗi đã có, chọn beforeVariantId cùng ruleset. Backend khóa ruleset và dịch thứ tự các variant sau, giữ nguyên ID và thứ tự tương đối; lịch release vẫn phải phù hợp thời gian. Không tự sửa lịch đã khai báo.
 
 
+### Dữ liệu tướng tại một patch
+
+Admin xem được dữ liệu gameplay của tướng tại một patch bất kỳ. Có revision đã xuất bản đúng patch thì
+dùng revision đó. Không có thì suy ra từ revision đã xuất bản gần nhất: có mốc trước thì áp xuôi giá
+trị mới của các change set đến patch đích; chỉ có mốc sau thì áp ngược giá trị cũ. Chỉ số và vai trò bị
+thay đổi được đánh dấu suy ra kèm change set; phần còn lại giữ như bản neo và ghi rõ chưa xác minh.
+Kỹ năng chỉ trả giá trị theo từng trường đã ghi. Kết quả suy ra không được lưu thành snapshot và không
+được trình bày như dữ liệu quan sát.
+
 ### Import tướng chạy nền
 
 Tác vụ import được lưu ở backend sau bước xác nhận. Người dùng có thể đóng hoặc tải lại web và xem lại tiến trình bằng cùng tài khoản. Mỗi tướng có kết quả riêng; lỗi một tướng không hủy các tướng đã lưu. Backend tiếp tục tác vụ chưa hoàn tất sau khi khởi động lại. Chuẩn bị file và upload ảnh vẫn diễn ra trước khi gửi tác vụ. Xem ADR-009-DURABLE-HERO-IMPORT.md.
@@ -2095,7 +2108,7 @@ Trang phiên bản hiển thị ruleset theo thị trường, mùa hiện tại 
 
 Mùa mở rộng thành các release; patch mở bảng thay đổi được ghi nhận rõ ràng. Giai đoạn này provider thay đổi chỉ có Hero; chưa giả lập dữ liệu Item hoặc quái. Import DATA_BASELINE không tạo changelog.
 
-Danh mục tướng dùng mùa/patch để lọc các thay đổi gameplay đã được biên tập trong hero_patch_change_set. Chọn mùa chỉ trả các tướng có change set thuộc patch của mùa đó; chọn thêm patch thu hẹp đúng patch, không kéo các tướng không đổi từ mốc trước vào kết quả. Một mùa có thể vừa tăng sức mạnh ở patch trước vừa giảm ở patch sau: giữ tất cả change set trong phạm vi để giao diện tổng hợp đúng loại thay đổi. Không chọn mùa/patch thì trả toàn bộ tướng, kèm change set gần nhất theo thứ tự gameplay cho từng ruleset nếu có. DATA_BASELINE, import, bản dịch, hiệu chỉnh hoặc draft GAME_PATCH không tự trở thành gameplay change; không suy đoán BUFF/NERF từ số liệu. Các phiên bản ruleset khác nhau hiển thị riêng. Icon thị trường chỉ biểu thị bản đã xuất bản đang được áp dụng thực tế; bản nháp không được gắn nhãn đang áp dụng.
+Danh mục tướng dùng mùa/patch để lọc các thay đổi gameplay đã được biên tập trong hero_patch_change_set, gồm cả change set từ ghi chú cập nhật; tướng chỉ có change set từ ghi chú lấy tên từ snapshot chưa hủy mới nhất. Chọn mùa chỉ trả các tướng có change set thuộc patch của mùa đó; chọn thêm patch thu hẹp đúng patch, không kéo các tướng không đổi từ mốc trước vào kết quả. Một mùa có thể vừa tăng sức mạnh ở patch trước vừa giảm ở patch sau: giữ tất cả change set trong phạm vi để giao diện tổng hợp đúng loại thay đổi. Không chọn mùa/patch thì trả toàn bộ tướng, kèm change set gần nhất theo thứ tự gameplay cho từng ruleset nếu có. DATA_BASELINE, import, bản dịch, hiệu chỉnh hoặc draft GAME_PATCH không tự trở thành gameplay change; không suy đoán BUFF/NERF từ số liệu. Các phiên bản ruleset khác nhau hiển thị riêng. Icon thị trường chỉ biểu thị bản đã xuất bản đang được áp dụng thực tế; bản nháp không được gắn nhãn đang áp dụng.
 
 Tìm mã hoặc tên được thực hiện ở backend trước phân trang; khi không lọc mùa/patch, tên lấy từ snapshot chưa bị hủy mới nhất của từng ruleset theo thứ tự gameplay rồi số revision, nhận cả các bản dịch đã có. Khi lọc mùa/patch, tên lấy từ đích của change set mới nhất trong phạm vi, không dùng tên của patch khác. Tạo bổ sung snapshot lịch sử sau này không làm tên cũ thay tên ở patch mới hơn. Tìm mã cho phép khoảng trắng thay dấu gạch nối, không thêm cơ chế suy đoán ngôn ngữ hoặc bỏ dấu. Lần sửa gần nhất lấy từ timestamp thực lưu: lớn nhất của hero.created_at và hero_revision.updated_at của tướng, gồm tạo, import, bản dịch và hủy nháp. Không dùng ngày patch, published_at hay thời điểm đọc để giả làm ngày sửa. Có thể sắp xếp theo mã hoặc ngày sửa giảm dần, giữ thứ tự mã/UUID khi bằng nhau.
 
