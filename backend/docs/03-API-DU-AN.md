@@ -1404,6 +1404,7 @@ Request:
 ```json
 {
   "heroId": "...",
+  "sourceKind": "SNAPSHOT",
   "fromHeroRevisionId": "HR20",
   "toHeroRevisionId": "HR21",
   "summaryTranslations": [
@@ -1426,6 +1427,24 @@ Request:
 ```
 
 Auto diff có thể gợi ý payload nhưng không tự public mà không review.
+
+`sourceKind` mặc định `SNAPSHOT`: bắt buộc `toHeroRevisionId` là revision GAME_PATCH đã xuất bản đúng
+variant. `PATCH_NOTES` ghi từ ghi chú cập nhật chính thức: bắt buộc `sourceUrl` HTTP(S), không bắt buộc
+revision nguồn/đích, dòng STAT/SKILL bắt buộc `oldValue` và `newValue`, không nhận dòng VISUAL; khóa chỉ
+số và kỹ năng phải thuộc snapshot đã xuất bản mới nhất của tướng khi có. Lỗi kiểm tra trả
+`HERO_INVALID_CONTENT`.
+
+### 39a. Dữ liệu tướng tại một patch
+
+```http
+GET /api/wiki/v1/admin/heroes/{heroId}/patch-view?patchVariantId=...
+```
+
+Quyền `catalog:read`. Trả `anchor` (revision dùng làm mốc, `direction`: `EXACT`, `FORWARD`,
+`BACKWARD` hoặc `NONE`), `stats` (statKey, unit, baseValue, growthPerLevel, `provenance`:
+`OBSERVED`, `DERIVED`, `CARRIED`, changeSetId), `roles` (roleCode, provenance), `skillFields`
+(skillKey, fieldKey, value, provenance, changeSetId) và `appliedChangeSetIds`. Suy ra theo
+[ADR-016](adr/ADR-016-patch-note-changes.md); không lưu kết quả.
 
 ---
 
