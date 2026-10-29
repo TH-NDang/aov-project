@@ -19,18 +19,12 @@ import {
   SidebarRail,
   useSidebar,
 } from "@aov/ui/components/sidebar"
-import { NAV_GROUPS, type NavItem, type NavSection } from "@/app/nav"
+import { NAV_GROUPS, activeNavItem, isNavActive, type NavItem, type NavSection } from "@/app/nav"
 import { NavIcon } from "@/app/nav-icon"
 import { useAttentionCounts } from "@/lib/use-wiki-index"
 import { UserMenu } from "./user-menu"
 import { HotkeyHelp } from "./hotkey-help"
 import { useSession } from "@/app/auth/auth-gate"
-
-export function isNavActive(item: Pick<NavItem, "to" | "activePaths">, pathname: string) {
-  return (item.activePaths ?? [item.to]).some((path) =>
-    path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(path + "/"),
-  )
-}
 
 type AttentionCounts = ReturnType<typeof useAttentionCounts>
 
@@ -45,7 +39,7 @@ function NavLink({ item, counts, nested = false }: { item: NavItem; counts: Atte
       <SidebarMenuButton
         asChild
         className="h-8 gap-2 group-data-[collapsible=icon]:h-8! group-data-[collapsible=icon]:p-1! [&>svg]:size-5"
-        isActive={isNavActive(item, pathname)}
+        isActive={activeNavItem(pathname)?.to === item.to}
         tooltip={item.title}
       >
         <Link to={item.to} className={nested ? "pl-5" : undefined} onClick={() => isMobile && setOpenMobile(false)}>
