@@ -44,19 +44,19 @@ function NavLink({ item, counts, nested = false }: { item: NavItem; counts: Atte
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
-        className="h-10 gap-2.5 group-data-[collapsible=icon]:h-10! group-data-[collapsible=icon]:p-1! [&>svg]:size-6"
+        className="h-8 gap-2 group-data-[collapsible=icon]:h-8! group-data-[collapsible=icon]:p-1! [&>svg]:size-5"
         isActive={isNavActive(item, pathname)}
         tooltip={item.title}
       >
-        <Link to={item.to} className={nested ? "pl-6" : undefined} onClick={() => isMobile && setOpenMobile(false)}>
+        <Link to={item.to} className={nested ? "pl-5" : undefined} onClick={() => isMobile && setOpenMobile(false)}>
           <NavIcon item={item} />
           <span>{item.title}</span>
         </Link>
       </SidebarMenuButton>
       {item.soon ? (
-        <SidebarMenuBadge className="top-2.5! text-muted-foreground">Sắp có</SidebarMenuBadge>
+        <SidebarMenuBadge className="top-1.5! text-muted-foreground">Sắp có</SidebarMenuBadge>
       ) : count ? (
-        <SidebarMenuBadge className="top-2.5! rounded-full bg-sidebar-accent px-1.5 text-sidebar-accent-foreground">
+        <SidebarMenuBadge className="top-1.5! rounded-full bg-sidebar-accent px-1.5 text-sidebar-accent-foreground">
           {count}
         </SidebarMenuBadge>
       ) : null}
@@ -87,14 +87,14 @@ function WikiSection({ section, counts }: { section: NavSection; counts: Attenti
     <Collapsible asChild open={open} onOpenChange={setOpen} className="group/wiki-section">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="h-10 gap-2.5 font-medium [&>svg:first-child]:size-6" tooltip={section.title}>
+          <SidebarMenuButton className="h-8 gap-2 font-medium [&>svg:first-child]:size-5" tooltip={section.title}>
             <NavIcon item={section} />
             <span>{section.title}</span>
             <ChevronRight className="ml-auto transition-transform duration-200 ease-out group-data-[state=open]/wiki-section:rotate-90 motion-reduce:transition-none" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down motion-reduce:animate-none">
-          <SidebarMenu className="pt-1">
+          <SidebarMenu className="pt-0.5">
             {section.items.map((item) => (
               <NavLink key={item.to} item={item} counts={counts} nested />
             ))}
@@ -162,8 +162,8 @@ export function AppSidebar() {
 
       <SidebarContent className="[overflow-anchor:none] [scrollbar-gutter:stable] group-data-[collapsible=icon]:[scrollbar-gutter:auto]">
         {NAV_GROUPS.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+          <SidebarGroup key={group.label} className="px-2 py-1">
+            <SidebarGroupLabel className="h-6 text-[11px] tracking-wide uppercase">{group.label}</SidebarGroupLabel>
             <SidebarMenu>
               {group.items.map((item) => (
                 <NavLink key={item.to} item={item} counts={counts} />

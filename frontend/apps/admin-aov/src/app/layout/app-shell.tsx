@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import { useLocation } from "react-router"
 import { BackgroundTasksProvider } from "../background-tasks"
 import { ImportWorkspaceHost } from "./import-workspace-host"
@@ -19,7 +20,11 @@ export function AppShell() {
   return (
     <BackgroundTasksProvider>
       <PageTabsProvider>
-        <SidebarProvider defaultOpen={readSidebarCookie()} keyboardShortcutEnabled={enabled}>
+        <SidebarProvider
+          defaultOpen={readSidebarCookie()}
+          keyboardShortcutEnabled={enabled}
+          style={{ "--sidebar-width": "15rem" } as CSSProperties}
+        >
           <SidebarInset className="h-svh min-w-0 overflow-hidden">
             <SiteHeader />
             <div className={`${importing ? "hidden" : "flex"} min-h-0 flex-1 flex-col`}>

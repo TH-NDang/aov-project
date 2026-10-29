@@ -11,10 +11,10 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, actions, className, children }: PageHeaderProps) {
   return (
-    <div className={cn("flex flex-col gap-4", className)}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+    <div className={cn("flex flex-col gap-3", className)}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0 space-y-0.5">
+          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -27,7 +27,7 @@ export function PageHeader({ title, description, actions, className, children }:
 /** Standard padded page body. */
 export function Page({ className, children, ...props }: ComponentProps<"div">) {
   return (
-    <div className={cn("flex flex-1 flex-col gap-6 p-4 md:p-6", className)} {...props}>
+    <div className={cn("flex flex-1 flex-col gap-4 p-4 md:px-6 md:py-5", className)} {...props}>
       {children}
     </div>
   )
