@@ -1,6 +1,8 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
+import com.wikiaov.hero.internal.change.application.HeroPatchDerivation;
 import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.platform.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(ApiPaths.ROOT)
 public class HeroChangesController implements HeroChangesApi {
     private final HeroPatchChanges changes;
+    private final HeroPatchDerivation derivation;
 
-    public HeroChangesController(HeroPatchChanges changes) {
+    public HeroChangesController(HeroPatchChanges changes, HeroPatchDerivation derivation) {
         this.changes = changes;
+        this.derivation = derivation;
     }
 
     @PostMapping(path = "/admin/patch-variants/{id}/hero-changes", version = "1")
@@ -34,6 +38,13 @@ public class HeroChangesController implements HeroChangesApi {
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return changes.forAuthoringVariant(id, locale);
+    }
+
+    @GetMapping(path = "/admin/heroes/{heroId}/patch-view", version = "1")
+    public HeroPatchView patchView(@PathVariable UUID heroId, @RequestParam UUID patchVariantId,
+            HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("patchVariantId"));
+        return derivation.at(heroId, patchVariantId);
     }
 
     @GetMapping(path = "/heroes/{heroId}/changes", version = "1")

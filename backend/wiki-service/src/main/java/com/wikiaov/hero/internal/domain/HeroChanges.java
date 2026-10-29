@@ -20,6 +20,14 @@ public final class HeroChanges {
         OTHER
     }
 
+    /** Where the recorded values come from (ADR-016). */
+    public enum ChangeSource {
+        /** Values are compared with the source and target snapshots. */
+        SNAPSHOT,
+        /** Values are transcribed from official patch notes; no snapshot of the patch is required. */
+        PATCH_NOTES
+    }
+
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
     @JsonSubTypes({@JsonSubTypes.Type(value = StatChange.class, name = "STAT"),
             @JsonSubTypes.Type(value = SkillChange.class, name = "SKILL"),
@@ -84,12 +92,18 @@ public final class HeroChanges {
     ) {
     }
 
+    /** A missing {@code sourceKind} means {@link ChangeSource#SNAPSHOT}, which requires {@code toHeroRevisionId}. */
     public record Record(
             @NotNull UUID heroId,
+            ChangeSource sourceKind,
+            @Size(max = 2048) String sourceUrl,
             UUID fromHeroRevisionId,
-            @NotNull UUID toHeroRevisionId,
+            UUID toHeroRevisionId,
             @NotEmpty @Size(max = 30) List<@Valid Summary> summaryTranslations,
             @NotEmpty @Size(max = 200) List<@Valid Change> changes
     ) {
+        public ChangeSource source() {
+            return sourceKind == null ? ChangeSource.SNAPSHOT : sourceKind;
+        }
     }
 }

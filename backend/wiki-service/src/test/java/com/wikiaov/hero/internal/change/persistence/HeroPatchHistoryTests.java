@@ -80,7 +80,8 @@ class HeroPatchHistoryTests {
         UUID asset = UUID.randomUUID();
         var actor = new Actor("issuer", "editor", ActorType.HUMAN, "Editor", Set.of());
         var at = Instant.parse("2026-10-20T03:00:00Z");
-        var source = new com.wikiaov.hero.internal.domain.HeroChanges.Record(UUID.randomUUID(), null, target,
+        var source = new com.wikiaov.hero.internal.domain.HeroChanges.Record(UUID.randomUUID(), null, null, null,
+                target,
                 List.of(new Summary("vi-VN", "Summary")), List.of(new OtherChange(Kind.OTHER, "Note")));
         history.create(changeSet, variant, source, at, actor);
         history.appendTranslation(changeSet, source.summaryTranslations().getFirst());
@@ -101,6 +102,7 @@ class HeroPatchHistoryTests {
         assertThat(savedSet.getValue().getCreatedByIssuer()).isEqualTo("issuer");
         assertThat(savedSet.getValue().getCreatedBySubject()).isEqualTo("editor");
         assertThat(savedSet.getValue().isNew()).isTrue();
+        assertThat(savedSet.getValue().getSourceKind()).isEqualTo(ChangeSource.SNAPSHOT);
         var savedCopy = ArgumentCaptor.forClass(HeroPatchChangeTranslation.class);
         verify(translations).save(savedCopy.capture());
         assertThat(savedCopy.getValue().getId()).isEqualTo(new HeroPatchChangeTranslation.Key(changeSet, "vi-VN"));
