@@ -1,0 +1,67 @@
+{
+  "code": "qog-2026-winter",
+  "name": "Queens of Glory mùa Đông 2026",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "VN"
+  ],
+  "competitionType": "WOMENS_MAIN_EVENT",
+  "legacyResearchId": "tournament-988d7b4fb083",
+  "dates": {
+    "start": "2026-10-19",
+    "end": "2026-11-01",
+    "precision": "DATE",
+    "timezone": "Asia/Bangkok"
+  },
+  "sourceIds": [
+    "garena-vn-qog"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "IN_PROGRESS",
+  "teamCodes": [
+    "saigon-phantom-ladies-vn-women",
+    "one-star-esports-vn-women",
+    "boom-esports-vn-women",
+    "team-secret-dino-vn-women",
+    "gam-esports-vn-women",
+    "alg-queen-vn-women",
+    "five-dragon-princesses-vn-women",
+    "wvhs-vn-women"
+  ],
+  "assets": [
+    "tournaments/qog-2026-winter/awards.jpg",
+    "tournaments/qog-2026-winter/key-visual.jpg",
+    "tournaments/qog-2026-winter/participating-teams.jpg",
+    "tournaments/qog-2026-winter/prize-pool.jpg",
+    "tournaments/qog-2026-winter/schedule.jpg"
+  ],
+  "rosters": [],
+  "broadcastLinks": [
+    "https://www.youtube.com/@LienQuanMobileSportsGarena"
+  ],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "VERIFIED",
+  "phases": [
+    {
+      "name": "Group stage",
+      "start": "2026-10-19",
+      "end": "2026-10-22"
+    },
+    {
+      "name": "Playoffs",
+      "start": "2026-10-30",
+      "end": "2026-10-31"
+    },
+    {
+      "name": "Grand final",
+      "start": "2026-11-01",
+      "end": "2026-11-01"
+    }
+  ],
+  "discoverySourceUrl": "https://liquipedia.net/honorofkings/Queens_of_Glory/2026/Winter",
+  "participantVerification": "PRIMARY_NAMES_WITH_SECONDARY_IDENTIFIERS"
+}

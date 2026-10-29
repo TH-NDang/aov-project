@@ -1,0 +1,19 @@
+{
+  "code": "boom-esports-vn-women",
+  "name": "BOOM Esports",
+  "displayNameAtEvent": "BOOM Esports Queens",
+  "legacyResearchId": "team-d8e99ae5af7b",
+  "region": "VN",
+  "division": "WOMEN",
+  "eventCodes": [
+    "qog-2026-winter"
+  ],
+  "logo": "teams/boom-esports-vn-women/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=BOOM_Esports_(Women_Team)&action=edit&redlink=1",
+  "officialLogoEvidence": {
+    "graphicPath": "tournaments/qog-2026-winter/participating-teams.jpg",
+    "sourceId": "garena-vn-qog",
+    "note": "Team logos are visible together in the official entrant graphic. This is not an individually cropped or transparent team logo."
+  }
+}

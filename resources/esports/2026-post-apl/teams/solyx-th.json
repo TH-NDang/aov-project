@@ -1,0 +1,14 @@
+{
+  "code": "solyx-th",
+  "name": "SOLYX",
+  "displayNameAtEvent": "SOLYX",
+  "legacyResearchId": "team-bd8767134fec",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/solyx-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/SOLYX"
+}

@@ -1,0 +1,14 @@
+{
+  "code": "full-sense-th",
+  "name": "FULL SENSE",
+  "displayNameAtEvent": "FULL SENSE",
+  "legacyResearchId": "team-c6ceecd1f5ad",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/full-sense-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/FULL_SENSE"
+}

@@ -1,0 +1,19 @@
+{
+  "code": "one-star-esports-vn-women",
+  "name": "One Star Esports",
+  "displayNameAtEvent": "One Star Queens",
+  "legacyResearchId": "team-6b89d8dd6679",
+  "region": "VN",
+  "division": "WOMEN",
+  "eventCodes": [
+    "qog-2026-winter"
+  ],
+  "logo": "teams/one-star-esports-vn-women/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=One_Star_Esports_(Women_Team)&action=edit&redlink=1",
+  "officialLogoEvidence": {
+    "graphicPath": "tournaments/qog-2026-winter/participating-teams.jpg",
+    "sourceId": "garena-vn-qog",
+    "note": "Team logos are visible together in the official entrant graphic. This is not an individually cropped or transparent team logo."
+  }
+}

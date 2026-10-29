@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "captures": [
+    {
+      "path": "evidence/liquipedia-first-leg-dom.txt",
+      "sha256": "00a72245da567e4518131bde210efcb5d68e8642346e2585b6a4bbd629aefd99",
+      "bytes": 32507,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-groupstage-dom.txt",
+      "sha256": "8a11301bdf7410d2c2c6a780923d085f54aea66c4ad51f81fb0f53fbe8f05c16",
+      "bytes": 17886,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-overview-dom.txt",
+      "sha256": "eec7ff9eb4203ddb671a25c5fb84d37724002ab749713098f8cccce98d80de71",
+      "bytes": 79193,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-overview-former-dom.txt",
+      "sha256": "2249aa4fd6fd89d5de7f0e7b89badcf6e5fc990565d57a0e7778c84b4b76c89b",
+      "bytes": 87443,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-overview-moves-dom.txt",
+      "sha256": "ae54bd1e2c7f91e1f8630cc32ff16da04dafccd8787096e1f7f37da3e982fafd",
+      "bytes": 123234,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-overview-subs-dom.txt",
+      "sha256": "cf28d05e43cc821afb18be7101f9869800d576f851becce8b558c248693dc2d6",
+      "bytes": 87437,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-player-rows.json",
+      "sha256": "e0a80e07e99604b1c70421a28c350ec5c452c7707e66000d91780941c212962f",
+      "bytes": 32027,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "sha256": "ffcb8674fd940ed29d8384e9c0259a7faa04028b44c95279f53455cf88856f44",
+      "bytes": 12931,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-playoffs-dom.txt",
+      "sha256": "de5edf789a6ec6873e3190402b9632f73266a0cb2fe28d2c09a8ea4f2132ebaf",
+      "bytes": 7473,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-playoffs-schedule-dom.txt",
+      "sha256": "6f6ab0d3558133dfca9a05ceaf06a1fcf89f7b7a38302055ae46b8cba342229f",
+      "bytes": 12907,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-second-leg-dom.txt",
+      "sha256": "982f1da348645f5a3a34b0c3bea92a59b180d481eff47dfd279186a066b4a60a",
+      "bytes": 31856,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "capturedAsOf": "2026-10-27",
+      "access": "User-visible browser content captured by parent agent; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-fixture-popups.json",
+      "sha256": "35f53fdce6095eb55fbc67fac281b4f94d1646505d67c848214ac09b37907aba",
+      "bytes": 21649,
+      "sourceUrls": [
+        "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg"
+      ],
+      "capturedAsOf": "2026-10-27",
+      "access": "Parent agent opened all 72 visible fixture info popups in the user browser; no access restriction bypass."
+    },
+    {
+      "path": "evidence/liquipedia-logo-assets.json",
+      "sha256": "12937e53fe45108b49f5110930b952a2f26b54b50f42972b8282fc25c1f71b48",
+      "bytes": 197821,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "capturedAsOf": "2026-10-27",
+      "access": "Team-linked visible image DOM src/srcset captured by parent agent from the event page; no guessed URLs."
+    },
+    {
+      "path": "evidence/uploaded-liquipedia-logos.json",
+      "sha256": "b214cc4afce397645156b30557abbfc1e4b66d5eb180de0b069d123b5fdff279",
+      "bytes": 5473,
+      "capturedAsOf": "2026-10-27",
+      "source": "Parent-confirmed authenticated project admin UI upload receipt; contains public CDN URLs and source-image checksums only.",
+      "access": "No credentials, tokens or presigned URLs."
+    }
+  ]
+}

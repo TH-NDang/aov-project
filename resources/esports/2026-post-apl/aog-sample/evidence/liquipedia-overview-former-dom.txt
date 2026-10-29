@@ -1,0 +1,2201 @@
+- navigation:
+  - link "Logo":
+    - /url: /honorofkings/Main_Page
+    - img "Logo"
+  - list:
+    - link "liquipedia Honor of Kings":
+      - /url: "#"
+      - text: liquipedia
+      - generic: Honor of Kings
+    - text:                                                                                                   
+  - list:
+    - button " Trending":
+      - generic: 
+      - text: Trending
+    - button " Tournaments":
+      - generic: 
+      - text: Tournaments
+    - button " Contribute":
+      - generic: 
+      - text: Contribute
+    - text:  
+  - search:
+    - searchbox "Search"
+    - button "":
+      - generic: 
+  - list:
+    - link "":
+      - /url: https://tl.net/mytlnet/register
+      - generic: 
+    - link "":
+      - /url: /honorofkings/index.php?title=Special:UserLogin&returnto=Arena+of+Glory%2F2026%2FWinter
+      - generic: 
+- list:
+  - link "":
+    - /url: /honorofkings/Arena_of_Glory/2026/Winter
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Talk:Arena_of_Glory/2026/Winter&action=edit&redlink=1
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=history
+    - generic: 
+  - text: 
+- list:
+  - link "Auto selected":
+    - /url: "#"
+    - generic: 
+  - text:   
+  - link "":
+    - /url: "#"
+    - generic: 
+  - text:         
+  - link "":
+    - /url: "#"
+    - generic: 
+  - text:             
+- text:  ,  ,  ,  , , 
+- generic: 
+- main:
+  - heading "Arena of Glory Winter 2026" [level=1]
+  - text: 
+  - list:
+    - generic: Overview
+    - link "Group Stage":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage
+    - link "Playoffs":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Playoffs
+    - link "Statistics":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Statistics
+    - link "Prize Money":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Prize_Money
+  - text: 
+  - text: 
+  - text: "["
+  - link "e":
+    - /url: https://liquipedia.net/honorofkings/index.php?title=Arena_of_Glory%2F2026%2FWinter&action=edit&section=0
+  - text: "]["
+  - link "h":
+    - /url: /honorofkings/Template:Infobox_league
+  - text: "]"
+  - text: Arena of Glory Winter 2026
+  - link:
+    - /url: /honorofkings/File:AOG_New_allmode.png
+  - generic: "Slogan: ERA OF G10RY"
+  - generic: League Information
+  - generic: "Series:"
+  - link "AOG":
+    - /url: /honorofkings/AOG
+    - img "AOG"
+  - link "AOG":
+    - /url: /honorofkings/AOG
+  - generic: "Organizer:"
+  - link "Garena Vietnam":
+    - /url: https://www.garena.vn
+  - generic: "Game version:"
+  - generic: Arena of Valor
+  - generic: "Type:"
+  - generic: Offline
+  - generic: "Location:"
+  - link "Vietnam":
+    - /url: /honorofkings/Category:Vietnam
+    - img "Vietnam"
+  - text: Ho Chi Minh City
+  - link "Vietnam":
+    - /url: /honorofkings/Category:Vietnam
+    - img "Vietnam"
+  - text: Hanoi
+  - generic: "Venue:"
+  - text: Liên Quân Studio TP HCM
+  - generic: (Group Stage and Playoffs 1-6)
+  - text: Mỹ Đình National Stadium
+  - generic: (Lower Bracket Finals and Grand Finals)
+  - generic: "Prize Pool:"
+  - text: 6,650,000,000₫ VND
+  - text: (≃ $257,328 USD)
+  - generic: "Start Date:"
+  - generic: 2026-08-29
+  - generic: "End Date:"
+  - generic: 2026-11-07
+  - generic: "Liquipedia Tier:"
+  - link "A-Tier":
+    - /url: /honorofkings/A-Tier_Tournaments
+  - generic: Links
+  - link:
+    - /url: https://lienquan.garena.vn/
+  - link:
+    - /url: https://facebook.com/caothuLQM
+  - link:
+    - /url: https://www.youtube.com/channel/UCpnQwjzvDm1MOMtZV2zkVpA/videos
+  - generic: Teams
+  - generic: "Number of teams:"
+  - generic: "9"
+  - generic: Chronology
+  - generic: 
+  - link "Spring 2026":
+    - /url: /honorofkings/Arena_of_Glory/2026/Spring
+  - link "Spring 2027":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2027/Spring&action=edit&redlink=1
+  - generic: 
+  - heading "Upcoming Matches" [level=2]
+  - generic: Show countdown
+  - text:  
+  - generic: 1w 3d
+  - generic: Lower Bracket Final
+  - link "Saigon Phantom":
+    - /url: /honorofkings/Saigon_Phantom
+  - link "SGP":
+    - /url: /honorofkings/Saigon_Phantom
+  - link "BOOM Esports VN":
+    - /url: /honorofkings/BOOM_Esports_VN
+  - link "BME":
+    - /url: /honorofkings/BOOM_Esports_VN
+  - generic: 1w 4d
+  - generic: Grand Final
+  - link "FPT Polytechnic":
+    - /url: /honorofkings/FPT_Polytechnic
+  - link "FPL":
+    - /url: /honorofkings/FPT_Polytechnic
+  - generic: 
+  - generic: TBD
+  - navigation "Contents":
+    - button "Hide the table of contents"
+    - heading "Contents" [level=2]
+    - text: "["
+    - generic: hide
+    - text: "]"
+    - list:
+      - link "1 Upcoming Matches":
+        - /url: "#Upcoming_Matches"
+        - generic: "1"
+        - generic: Upcoming Matches
+      - link "2 Prize Pool":
+        - /url: "#Prize_Pool"
+        - generic: "2"
+        - generic: Prize Pool
+      - list:
+        - link "2.1 Weekly Awards":
+          - /url: "#Weekly_Awards"
+          - generic: "2.1"
+          - generic: Weekly Awards
+        - link "2.2 New Bounty Prize Pool":
+          - /url: "#New_Bounty_Prize_Pool"
+          - generic: "2.2"
+          - generic: New Bounty Prize Pool
+      - link "3 Roster Moves":
+        - /url: "#Roster_Moves"
+        - generic: "3"
+        - generic: Roster Moves
+      - link "4 Participants":
+        - /url: "#Participants"
+        - generic: "4"
+        - generic: Participants
+      - link "5 Result":
+        - /url: "#Result"
+        - generic: "5"
+        - generic: Result
+      - list:
+        - link "5.1 Group Stage":
+          - /url: "#Group_Stage"
+          - generic: "5.1"
+          - generic: Group Stage
+        - link "5.2 Playoffs":
+          - /url: "#Playoffs"
+          - generic: "5.2"
+          - generic: Playoffs
+      - link "6 Format":
+        - /url: "#Format"
+        - generic: "6"
+        - generic: Format
+      - link "7 Broadcast":
+        - /url: "#Broadcast"
+        - generic: "7"
+        - generic: Broadcast
+      - link "8 Statistics":
+        - /url: "#Statistics"
+        - generic: "8"
+        - generic: Statistics
+      - list:
+        - link "8.1 Hero Statistics":
+          - /url: "#Hero_Statistics"
+          - generic: "8.1"
+          - generic: Hero Statistics
+        - link "8.2 Game Statistics":
+          - /url: "#Game_Statistics"
+          - generic: "8.2"
+          - generic: Game Statistics
+      - link "9 Patch Information":
+        - /url: "#Patch_Information"
+        - generic: "9"
+        - generic: Patch Information
+      - link "10 Additional Content":
+        - /url: "#Additional_Content"
+        - generic: "10"
+        - generic: Additional Content
+      - list:
+        - link "10.1 Official Trailer":
+          - /url: "#Official_Trailer"
+          - generic: "10.1"
+          - generic: Official Trailer
+        - link "10.2 Mega Kills":
+          - /url: "#Mega_Kills"
+          - generic: "10.2"
+          - generic: Mega Kills
+        - link "10.3 Trivia":
+          - /url: "#Trivia"
+          - generic: "10.3"
+          - generic: Trivia
+      - link "11 References":
+        - /url: "#References"
+        - generic: "11"
+        - generic: References
+      - link "12 Navboxes":
+        - /url: "#Navboxes"
+        - generic: "12"
+        - generic: Navboxes
+  - paragraph: Arena of Glory Winter 2026 will be the 21st season of the Arena of Glory, the Vietnamese professional league of Arena of Valor.
+  - paragraph:
+    - text: For the Winter 2026 season,
+    - link "Super Nova":
+      - /url: /honorofkings/Super_Nova
+    - text: exits the league after the disbandment, while
+    - link "Rex Regum Qeon":
+      - /url: /honorofkings/Rex_Regum_Qeon_VN
+    - text: and
+    - link "BOOM Esports":
+      - /url: /honorofkings/BOOM_Esports_VN
+    - text: will be the new entrants for the Winter season.
+  - paragraph: Due to the expansion of teams, the Group Stage 2 will be abolished. In addition, the Playoffs will feature 6 teams for the first time ever in the history of a major AoV pro league.
+  - paragraph:
+    - text: The Grand Final will be held in Mỹ Đình National Stadium, Hanoi - the largest venue in the history of the league, with an expected attendance of 20,000, in conjunction with the two-day 10th anniversary celebrations for
+    - link "Arena of Valor":
+      - /url: /honorofkings/Arena_of_Valor
+    - text: in Vietnam.
+  - heading "Prize Pool" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=1
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:       
+  - generic: "6,650,000,000₫ VND (≃ $257,328.04 USD) are spread among the participants as seen below:"
+  - text: $
+  - generic "United States Dollar": USD
+  - text: ₫
+  - generic "Vietnamese Dong": VND
+  - table:
+    - rowgroup:
+      - row "Place Participant ₫ VND Qualifies To":
+        - columnheader "Place"
+        - columnheader "Participant"
+        - columnheader "₫ VND"
+        - columnheader "Qualifies To"
+      - row "1  TBD 1,000,000,000₫ AIC 2026 AIC 2026":
+        - cell "1":
+          - generic: "1"
+        - cell " TBD":
+          - generic: 
+          - generic: TBD
+        - cell "1,000,000,000₫"
+        - cell "AIC 2026 AIC 2026":
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+            - img "AIC 2026"
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+      - row "2  TBD 500,000,000₫ AIC 2026 AIC 2026":
+        - cell "2":
+          - generic: "2"
+        - cell " TBD":
+          - generic: 
+          - generic: TBD
+        - cell "500,000,000₫"
+        - cell "AIC 2026 AIC 2026":
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+            - img "AIC 2026"
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+      - row "3  TBD 200,000,000₫ AIC 2026 AIC 2026":
+        - cell "3":
+          - generic: "3"
+        - cell " TBD":
+          - generic: 
+          - generic: TBD
+        - cell "200,000,000₫"
+        - cell "AIC 2026 AIC 2026":
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+            - img "AIC 2026"
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+      - row "4 Box Gaming Box Gaming 610,000,000₫ AIC 2026 AIC 2026":
+        - cell "4"
+        - cell "Box Gaming Box Gaming":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+        - cell "610,000,000₫"
+        - cell "AIC 2026 AIC 2026":
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+            - img "AIC 2026"
+          - link "AIC 2026":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026
+      - row "5-6 GAM Esports GAM Esports 595,000,000₫ Wildcard Wildcard":
+        - cell "5-6"
+        - cell "GAM Esports GAM Esports":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+        - cell "595,000,000₫"
+        - cell "Wildcard Wildcard":
+          - link "Wildcard":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026/Wildcard
+            - img "Wildcard"
+          - link "Wildcard":
+            - /url: /honorofkings/Arena_of_Valor_International_Championship/2026/Wildcard
+      - row "Team Flash Team Flash 570,000,000₫":
+        - cell "Team Flash Team Flash":
+          - link "Team Flash":
+            - /url: /honorofkings/Team_Flash
+          - link "Team Flash":
+            - /url: /honorofkings/Team_Flash
+        - cell "570,000,000₫"
+      - row "7 One Star Esports One Star Esports 420,000,000₫ -":
+        - cell "7"
+        - cell "One Star Esports One Star Esports":
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+        - cell "420,000,000₫"
+        - cell "-"
+      - row "8 Team Secret Team Secret 260,000,000₫ -":
+        - cell "8"
+        - cell "Team Secret Team Secret":
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+        - cell "260,000,000₫"
+        - cell "-"
+      - row "9 Rex Regum Qeon VN Rex Regum Qeon VN 160,000,000₫ -":
+        - cell "9"
+        - cell "Rex Regum Qeon VN Rex Regum Qeon VN":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+        - cell "160,000,000₫"
+        - cell "-"
+  - generic: "(Converted $ USD prizes are based on the exchange rate on Oct 27, 2026: 1₫ VND ≃ $0.00004 USD)"
+  - paragraph
+  - generic: Group Stage MVP
+  - table:
+    - rowgroup:
+      - 'row "Player #MVPs"':
+        - columnheader "Player"
+        - columnheader "#MVPs"
+      - row "Vietnam Fish Saigon Phantom 14":
+        - cell "Vietnam Fish Saigon Phantom":
+          - img "Vietnam"
+          - link "Fish":
+            - /url: /honorofkings/Fish_(C%C3%A1)
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+        - cell "14"
+      - row "Vietnam Vịt FPT Polytechnic 14":
+        - cell "Vietnam Vịt FPT Polytechnic":
+          - img "Vietnam"
+          - link "Vịt":
+            - /url: /honorofkings/V%E1%BB%8Bt
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - cell "14"
+      - row "Vietnam ĐứcTiệp BOOM Esports VN 13":
+        - cell "Vietnam ĐứcTiệp BOOM Esports VN":
+          - img "Vietnam"
+          - link "ĐứcTiệp":
+            - /url: /honorofkings/index.php?title=%C4%90%E1%BB%A9cTi%E1%BB%87p&action=edit&redlink=1
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+            - img "BOOM Esports VN"
+        - cell "13"
+      - row "Vietnam 23xJuly Saigon Phantom 12":
+        - cell "Vietnam 23xJuly Saigon Phantom":
+          - img "Vietnam"
+          - link "23xJuly":
+            - /url: /honorofkings/23xJuly
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+        - cell "12"
+      - row "Vietnam Sleepy FPT Polytechnic 12":
+        - cell "Vietnam Sleepy FPT Polytechnic":
+          - img "Vietnam"
+          - link "Sleepy":
+            - /url: /honorofkings/Sleepy_(Vietnamese_Player)
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - cell "12"
+      - row "place 6 to 52 ":
+        - cell "place 6 to 52 ":
+          - text: place 6 to 52
+          - generic: 
+          - text: 
+  - generic: Playoffs MVP
+  - table:
+    - rowgroup:
+      - 'row "Player #MVPs"':
+        - columnheader "Player"
+        - columnheader "#MVPs"
+      - row "Vietnam Failure BOOM Esports VN 5":
+        - cell "Vietnam Failure BOOM Esports VN":
+          - img "Vietnam"
+          - link "Failure":
+            - /url: /honorofkings/index.php?title=Failure&action=edit&redlink=1
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+            - img "BOOM Esports VN"
+        - cell "5"
+      - row "Vietnam 23xJuly Saigon Phantom 4":
+        - cell "Vietnam 23xJuly Saigon Phantom":
+          - img "Vietnam"
+          - link "23xJuly":
+            - /url: /honorofkings/23xJuly
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+        - cell "4"
+      - row "Vietnam Sleepy FPT Polytechnic 4":
+        - cell "Vietnam Sleepy FPT Polytechnic":
+          - img "Vietnam"
+          - link "Sleepy":
+            - /url: /honorofkings/Sleepy_(Vietnamese_Player)
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - cell "4"
+      - row "Vietnam TriNguyen Box Gaming 4":
+        - cell "Vietnam TriNguyen Box Gaming":
+          - img "Vietnam"
+          - link "TriNguyen":
+            - /url: /honorofkings/TriNguyen
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+            - img "Box Gaming"
+        - cell "4"
+      - row "Vietnam Sindhu FPT Polytechnic 3":
+        - cell "Vietnam Sindhu FPT Polytechnic":
+          - img "Vietnam"
+          - link "Sindhu":
+            - /url: /honorofkings/index.php?title=Sindhu&action=edit&redlink=1
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - cell "3"
+      - row "place 6 to 17 ":
+        - cell "place 6 to 17 ":
+          - text: place 6 to 17
+          - generic: 
+          - text: 
+  - heading "Weekly Awards" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=2
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - table:
+    - rowgroup:
+      - row "Award Participant":
+        - columnheader "Award"
+        - columnheader "Participant"
+      - row "MVP of the Week 6 Vietnam Fish Saigon Phantom":
+        - cell "MVP of the Week 6"
+        - cell "Vietnam Fish Saigon Phantom":
+          - img "Vietnam"
+          - link "Fish":
+            - /url: /honorofkings/Fish_(C%C3%A1)
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+      - row "Best Line-up of the Week 6 Vietnam Libr4 One Star Esports":
+        - cell "Best Line-up of the Week 6"
+        - cell "Vietnam Libr4 One Star Esports":
+          - img "Vietnam"
+          - link "Libr4":
+            - /url: /honorofkings/index.php?title=Penguin_(Vietnamese_player)&action=edit&redlink=1
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+            - img "One Star Esports"
+      - row "Vietnam Kaisa Team Secret":
+        - cell "Vietnam Kaisa Team Secret":
+          - img "Vietnam"
+          - link "Kaisa":
+            - /url: /honorofkings/Kaisa
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+            - img "Team Secret"
+      - row "Vietnam Fish Saigon Phantom":
+        - cell "Vietnam Fish Saigon Phantom":
+          - img "Vietnam"
+          - link "Fish":
+            - /url: /honorofkings/Fish_(C%C3%A1)
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+      - row "Vietnam Shin Saigon Phantom":
+        - cell "Vietnam Shin Saigon Phantom":
+          - img "Vietnam"
+          - link "Shin":
+            - /url: /honorofkings/Shin
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+      - row "Vietnam Khoa Saigon Phantom":
+        - cell "Vietnam Khoa Saigon Phantom":
+          - img "Vietnam"
+          - link "Khoa":
+            - /url: /honorofkings/Khoa
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+  - button "Show more Awards ":
+    - text: Show more Awards
+    - generic: 
+  - text: 
+  - heading "New Bounty Prize Pool" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=3
+  - text: "]"
+  - table:
+    - rowgroup:
+      - row "Group Stage 1st Leg Prize Pool":
+        - columnheader "Group Stage 1st Leg Prize Pool"
+      - row "Result ₫ VND":
+        - columnheader "Result"
+        - columnheader "₫ VND"
+    - rowgroup:
+      - row "3-0 ₫50,000,000":
+        - cell "3-0"
+        - cell "₫50,000,000"
+      - row "3-1 ₫40,000,000":
+        - cell "3-1"
+        - cell "₫40,000,000"
+      - row "3-2 ₫30,000,000":
+        - cell "3-2"
+        - cell "₫30,000,000"
+      - row "2-3 ₫20,000,000":
+        - cell "2-3"
+        - cell "₫20,000,000"
+      - row "1-3 ₫10,000,000":
+        - cell "1-3"
+        - cell "₫10,000,000"
+      - row "0-3 ₫0":
+        - cell "0-3"
+        - cell "₫0"
+    - rowgroup:
+      - row "Total ₫1,800,000,000":
+        - columnheader "Total"
+        - columnheader "₫1,800,000,000"
+  - table:
+    - rowgroup:
+      - row "Group Stage 2nd Leg Prize Pool":
+        - columnheader "Group Stage 2nd Leg Prize Pool"
+      - row "Result ₫ VND":
+        - columnheader "Result"
+        - columnheader "₫ VND"
+    - rowgroup:
+      - row "3-0 ₫80,000,000":
+        - cell "3-0"
+        - cell "₫80,000,000"
+      - row "3-1 ₫65,000,000":
+        - cell "3-1"
+        - cell "₫65,000,000"
+      - row "3-2 ₫50,000,000":
+        - cell "3-2"
+        - cell "₫50,000,000"
+      - row "2-3 ₫30,000,000":
+        - cell "2-3"
+        - cell "₫30,000,000"
+      - row "1-3 ₫15,000,000":
+        - cell "1-3"
+        - cell "₫15,000,000"
+      - row "0-3 ₫0":
+        - cell "0-3"
+        - cell "₫0"
+    - rowgroup:
+      - row "Total ₫2,880,000,000":
+        - columnheader "Total"
+        - columnheader "₫2,880,000,000"
+  - generic: Base Prize Distribution
+  - table:
+    - rowgroup:
+      - row "Place ₫ VND":
+        - columnheader "Place"
+        - columnheader "₫ VND"
+    - rowgroup:
+      - row "1st 1,000,000,000₫":
+        - cell "1st":
+          - generic: 1st
+        - cell "1,000,000,000₫"
+      - row "2nd 500,000,000₫":
+        - cell "2nd":
+          - generic: 2nd
+        - cell "500,000,000₫"
+      - row "3rd 200,000,000₫":
+        - cell "3rd":
+          - generic: 3rd
+        - cell "200,000,000₫"
+      - row "4th 150,000,000₫":
+        - cell "4th":
+          - generic: 4th
+        - cell "150,000,000₫"
+      - row "5th - 6th 60,000,000₫":
+        - cell "5th - 6th":
+          - generic: 5th - 6th
+        - cell "60,000,000₫"
+    - rowgroup
+  - heading "Roster Moves" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=4
+  - text: "]"
+  - list:
+    - listitem: Off-season transfer windows May 10th - Aug 29th, 2026
+  - generic: Roster moves during the off-season
+  - button " Show":
+    - generic: 
+    - text: Show
+  - text: 
+  - text:  􏔈   􏔈  􏍝  􏔈   􏔈  􏍝   􏙃  􏍝     􏍝   􏍝   􏍝   􏍝   􏍝     􏍝  􏍝  􏍝    􏍝  􏍝   􏍝    􏍝  􏍝   􏍝  􏙃   􏙃  􏍝   􏍝   􏍝  􏍝   􏍝   􏍝  􏍝    􏍝   􏍝  􏙃   􏙃   􏍝  􏍝   􏔈   􏔈   􏍝   􏍝    􏍝    􏍝   􏍝   􏍝   􏍝
+  - list:
+    - listitem: Post-APL transfer windows July 19th - Aug 29th, 2026
+  - generic: Roster moves after the APL
+  - button " Show":
+    - generic: 
+    - text: Show
+  - text: 
+  - text:   􏍝   􏍝   􏍝   􏍝    􏍝  􏍝   􏍝   􏍝   􏍝   􏍝  􏔈   􏔈  􏍝  􏍝    􏍝   􏍝   􏍝  􏍝   􏍝   􏍝  􏍝     􏍝  􏔈   􏔈   􏍝  􏍝
+  - list:
+    - listitem: Mid-Group Stage transfer windows Sep 21st - Sep 30th, 2026
+  - generic: Roster moves after the Group Stage First Leg
+  - button " Show":
+    - generic: 
+    - text: Show
+  - text: 
+  - text:  􏔈   􏙃  􏍝   􏍝   􏍝   􏍝   􏍝   􏍝   􏍝   􏍝   􏍝   􏍝   􏍝    􏍝  􏍝     􏍝   􏍝    􏍝  􏍝
+  - heading "Participants" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=5
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - link "Click for additional player information":
+    - /url: https://liquipedia.net/honorofkings/index.php?title=Special%3ARunQuery%2FTournament_player_information&pfRunQueryFormName=Tournament+player+information&wpRunQuery=Run+query&TPI%5Bpage%5D=Arena+of+Glory%2F2026%2FWinter
+    - button "Click for additional player information":
+      - generic: 
+      - text: Player Info
+  - generic: Show rosters
+  - generic: Compact view
+  - generic: Enable hover
+  - link "Team Flash":
+    - /url: /honorofkings/Team_Flash
+  - link "Team Flash":
+    - /url: /honorofkings/Team_Flash
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Former
+  - generic: Staff
+  - img "Top Lane"
+  - img "Vietnam"
+  - link "Nắng":
+    - /url: /honorofkings/index.php?title=N%E1%BA%AFng&action=edit&redlink=1
+  - generic: Left
+  - img "Middle"
+  - img "Vietnam"
+  - link "Maris":
+    - /url: /honorofkings/Maris
+  - generic: Left
+  - link "Saigon Phantom":
+    - /url: /honorofkings/Saigon_Phantom
+  - link "Saigon Phantom":
+    - /url: /honorofkings/Saigon_Phantom
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Staff
+  - img "Top Lane"
+  - img "Vietnam"
+  - link "Soul":
+    - /url: /honorofkings/index.php?title=Soul&action=edit&redlink=1
+  - generic: DNP
+  - img "Jungler"
+  - img "Vietnam"
+  - link "Yuu":
+    - /url: /honorofkings/Yuu
+  - link "One Star Esports":
+    - /url: /honorofkings/One_Star_Esports
+  - link "One Star Esports":
+    - /url: /honorofkings/One_Star_Esports
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Former
+  - generic: Staff
+  - img "Roamer"
+  - img "Vietnam"
+  - link "Spiris":
+    - /url: /honorofkings/index.php?title=Spiris&action=edit&redlink=1
+  - generic: Left
+  - link "Box Gaming":
+    - /url: /honorofkings/Box_Gaming
+  - link "Box Gaming":
+    - /url: /honorofkings/Box_Gaming
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Former
+  - generic: Staff
+  - img "Middle"
+  - img "Vietnam"
+  - link "Peak":
+    - /url: /honorofkings/index.php?title=SonKhac&action=edit&redlink=1
+  - generic: Left
+  - link "FPT Polytechnic":
+    - /url: /honorofkings/FPT_Polytechnic
+  - link "FPT Polytechnic":
+    - /url: /honorofkings/FPT_Polytechnic
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Staff
+  - img "Middle"
+  - img "Vietnam"
+  - link "Chu":
+    - /url: /honorofkings/Pikachu_(Vietnamese_player)
+  - generic: DNP
+  - img "Bottom Lane"
+  - img "Vietnam"
+  - link "TH":
+    - /url: /honorofkings/index.php?title=Sonic&action=edit&redlink=1
+  - link "GAM Esports":
+    - /url: /honorofkings/GAM_Esports
+  - link "GAM Esports":
+    - /url: /honorofkings/GAM_Esports
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Staff
+  - img "Top Lane"
+  - img "Vietnam"
+  - link "Adonis":
+    - /url: /honorofkings/Adonis
+  - img "Jungler"
+  - img "Vietnam"
+  - link "Owen":
+    - /url: /honorofkings/index.php?title=Owen&action=edit&redlink=1
+  - link "Team Secret":
+    - /url: /honorofkings/Team_Secret
+  - link "Team Secret":
+    - /url: /honorofkings/Team_Secret
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Staff
+  - img "Jungler"
+  - img "Vietnam"
+  - link "Ducky":
+    - /url: /honorofkings/Ducky
+  - img "Roamer"
+  - img "Vietnam"
+  - link "TrPhuoc":
+    - /url: /honorofkings/index.php?title=TrPhuoc&action=edit&redlink=1
+  - link "Rex Regum Qeon VN":
+    - /url: /honorofkings/Rex_Regum_Qeon_VN
+  - link "Rex Regum Qeon":
+    - /url: /honorofkings/Rex_Regum_Qeon_VN
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Former
+  - generic: Staff
+  - img "Jungler"
+  - img "Vietnam"
+  - link "Yang":
+    - /url: /honorofkings/index.php?title=Eira&action=edit&redlink=1
+  - generic: Left
+  - img "Jungler"
+  - img "Vietnam"
+  - link "LittleQ":
+    - /url: /honorofkings/index.php?title=LittleQ&action=edit&redlink=1
+  - generic: Left
+  - img "Middle"
+  - img "Vietnam"
+  - link "Tắck4":
+    - /url: /honorofkings/T%E1%BA%AFck4
+  - generic: Left
+  - link "BOOM Esports VN":
+    - /url: /honorofkings/BOOM_Esports_VN
+  - link "BOOM Esports":
+    - /url: /honorofkings/BOOM_Esports_VN
+  - generic: Invited
+  - text: 
+  - button "":
+    - generic: 
+  - generic: Selection
+  - generic: Main
+  - generic: Subs
+  - generic: Former
+  - generic: Staff
+  - img "Top Lane"
+  - img "Vietnam"
+  - link "Emper":
+    - /url: /honorofkings/Emper
+  - generic: Left
+  - heading "Result" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=6
+  - text: "]"
+  - heading "Group Stage" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=7
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:     
+  - generic: Round 18
+  - generic: Arena of Glory Winter 2026
+  - generic: August 29, 2026 - 13:00 ICT
+  - text:                                               
+  - generic: "1."
+  - generic "Saigon Phantom":
+    - link "Saigon Phantom":
+      - /url: /honorofkings/Saigon_Phantom
+    - link "Saigon Phantom":
+      - /url: /honorofkings/Saigon_Phantom
+  - generic: 15–1
+  - generic: 47–13
+  - generic: "+34"
+  - generic: 15p
+  - generic: "2."
+  - generic "FPT Polytechnic":
+    - link "FPT Polytechnic":
+      - /url: /honorofkings/FPT_Polytechnic
+    - link "FPT Polytechnic":
+      - /url: /honorofkings/FPT_Polytechnic
+  - generic: 14–2
+  - generic: 46–15
+  - generic: "+31"
+  - generic: 14p
+  - generic: "3."
+  - generic "BOOM Esports VN":
+    - link "BOOM Esports VN":
+      - /url: /honorofkings/BOOM_Esports_VN
+    - link "BOOM Esports VN":
+      - /url: /honorofkings/BOOM_Esports_VN
+  - generic: 9–7
+  - generic: 35–27
+  - generic: "+8"
+  - generic: 9p
+  - generic: "4."
+  - generic "Team Flash":
+    - link "Team Flash":
+      - /url: /honorofkings/Team_Flash
+    - link "Team Flash":
+      - /url: /honorofkings/Team_Flash
+    - generic: 
+    - generic: "1"
+  - generic: 8–8
+  - generic: 32–31
+  - generic: "+1"
+  - generic: 8p
+  - generic: "5."
+  - generic "GAM Esports":
+    - link "GAM Esports":
+      - /url: /honorofkings/GAM_Esports
+    - link "GAM Esports":
+      - /url: /honorofkings/GAM_Esports
+    - generic: 
+    - generic: "1"
+  - generic: 7–9
+  - generic: 31–32
+  - generic: "-1"
+  - generic: 7p
+  - generic: "6."
+  - generic "Box Gaming":
+    - link "Box Gaming":
+      - /url: /honorofkings/Box_Gaming
+    - link "Box Gaming":
+      - /url: /honorofkings/Box_Gaming
+  - generic: 7–9
+  - generic: 28–34
+  - generic: "-6"
+  - generic: 7p
+  - generic: "7."
+  - generic "One Star Esports":
+    - link "One Star Esports":
+      - /url: /honorofkings/One_Star_Esports
+    - link "One Star Esports":
+      - /url: /honorofkings/One_Star_Esports
+  - generic: 7–9
+  - generic: 27–35
+  - generic: "-8"
+  - generic: 7p
+  - generic: "8."
+  - generic "Team Secret":
+    - link "Team Secret":
+      - /url: /honorofkings/Team_Secret
+    - link "Team Secret":
+      - /url: /honorofkings/Team_Secret
+  - generic: 4–12
+  - generic: 20–44
+  - generic: "-24"
+  - generic: 4p
+  - generic: "9."
+  - generic "Rex Regum Qeon VN":
+    - link "Rex Regum Qeon VN":
+      - /url: /honorofkings/Rex_Regum_Qeon_VN
+    - link "Rex Regum Qeon VN":
+      - /url: /honorofkings/Rex_Regum_Qeon_VN
+  - generic: 1–15
+  - generic: 12–47
+  - generic: "-35"
+  - generic: 1p
+  - generic: Show Aggregate
+  - table:
+    - rowgroup:
+      - row "BOOM Esports VN 3-2 Oct 16 2-3 Sep 10 3-1 Sep 05 3-0 Oct 15 3-0 Oct 11 1-3 Aug 29 2-3 Oct 17 3-0 Sep 12":
+        - columnheader "BOOM Esports VN":
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+            - img "BOOM Esports VN"
+        - cell
+        - cell "3-2 Oct 16":
+          - text: 3-2
+          - text: Oct 16
+        - cell "2-3 Sep 10":
+          - text: 2-3
+          - text: Sep 10
+        - cell "3-1 Sep 05":
+          - text: 3-1
+          - text: Sep 05
+        - cell "3-0 Oct 15":
+          - text: 3-0
+          - text: Oct 15
+        - cell "3-0 Oct 11":
+          - text: 3-0
+          - text: Oct 11
+        - cell "1-3 Aug 29":
+          - text: 1-3
+          - text: Aug 29
+        - cell "2-3 Oct 17":
+          - text: 2-3
+          - text: Oct 17
+        - cell "3-0 Sep 12":
+          - text: 3-0
+          - text: Sep 12
+      - row "Box Gaming 0-3 Sep 03 2-3 Oct 10 0-3 Oct 03 3-1 Sep 13 3-1 Oct 02 0-3 Sep 19 2-3 Oct 15 3-2 Sep 11":
+        - rowheader "Box Gaming":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+            - img "Box Gaming"
+        - cell "0-3 Sep 03":
+          - text: 0-3
+          - text: Sep 03
+        - cell
+        - cell "2-3 Oct 10":
+          - text: 2-3
+          - text: Oct 10
+        - cell "0-3 Oct 03":
+          - text: 0-3
+          - text: Oct 03
+        - cell "3-1 Sep 13":
+          - text: 3-1
+          - text: Sep 13
+        - cell "3-1 Oct 02":
+          - text: 3-1
+          - text: Oct 02
+        - cell "0-3 Sep 19":
+          - text: 0-3
+          - text: Sep 19
+        - cell "2-3 Oct 15":
+          - text: 2-3
+          - text: Oct 15
+        - cell "3-2 Sep 11":
+          - text: 3-2
+          - text: Sep 11
+      - row "FPT Polytechnic 3-0 Oct 03 3-1 Sep 06 3-0 Oct 01 3-0 Oct 08 3-0 Aug 29 3-2 Oct 18 3-0 Sep 20 3-0 Sep 19":
+        - rowheader "FPT Polytechnic":
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - cell "3-0 Oct 03":
+          - text: 3-0
+          - text: Oct 03
+        - cell "3-1 Sep 06":
+          - text: 3-1
+          - text: Sep 06
+        - cell
+        - cell "3-0 Oct 01":
+          - text: 3-0
+          - text: Oct 01
+        - cell "3-0 Oct 08":
+          - text: 3-0
+          - text: Oct 08
+        - cell "3-0 Aug 29":
+          - text: 3-0
+          - text: Aug 29
+        - cell "3-2 Oct 18":
+          - text: 3-2
+          - text: Oct 18
+        - cell "3-0 Sep 20":
+          - text: 3-0
+          - text: Sep 20
+        - cell "3-0 Sep 19":
+          - text: 3-0
+          - text: Sep 19
+      - row "GAM Esports 2-3 Oct 08 1-3 Aug 29 3-2 Sep 12 3-1 Sep 18 3-0 Oct 10 1-3 Oct 15 3-0 Oct 16 2-3 Sep 03":
+        - rowheader "GAM Esports":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+            - img "GAM Esports"
+        - cell "2-3 Oct 08":
+          - text: 2-3
+          - text: Oct 08
+        - cell "1-3 Aug 29":
+          - text: 1-3
+          - text: Aug 29
+        - cell "3-2 Sep 12":
+          - text: 3-2
+          - text: Sep 12
+        - cell
+        - cell "3-1 Sep 18":
+          - text: 3-1
+          - text: Sep 18
+        - cell "3-0 Oct 10":
+          - text: 3-0
+          - text: Oct 10
+        - cell "1-3 Oct 15":
+          - text: 1-3
+          - text: Oct 15
+        - cell "3-0 Oct 16":
+          - text: 3-0
+          - text: Oct 16
+        - cell "2-3 Sep 03":
+          - text: 2-3
+          - text: Sep 03
+      - row "One Star Esports 3-1 Sep 19 0-3 Oct 09 0-3 Sep 11 3-1 Oct 18 3-1 Aug 30 1-3 Oct 04 3-2 Sep 05 3-1 Oct 11":
+        - rowheader "One Star Esports":
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+            - img "One Star Esports"
+        - cell "3-1 Sep 19":
+          - text: 3-1
+          - text: Sep 19
+        - cell "0-3 Oct 09":
+          - text: 0-3
+          - text: Oct 09
+        - cell "0-3 Sep 11":
+          - text: 0-3
+          - text: Sep 11
+        - cell "3-1 Oct 18":
+          - text: 3-1
+          - text: Oct 18
+        - cell
+        - cell "3-1 Aug 30":
+          - text: 3-1
+          - text: Aug 30
+        - cell "1-3 Oct 04":
+          - text: 1-3
+          - text: Oct 04
+        - cell "3-2 Sep 05":
+          - text: 3-2
+          - text: Sep 05
+        - cell "3-1 Oct 11":
+          - text: 3-1
+          - text: Oct 11
+      - row "Rex Regum Qeon VN 0-3 Sep 06 1-3 Sep 18 0-3 Oct 16 1-3 Sep 20 3-2 Oct 03 0-3 Sep 04 0-3 Oct 04 2-3 Oct 09":
+        - rowheader "Rex Regum Qeon VN":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+            - img "Rex Regum Qeon VN"
+        - cell "0-3 Sep 06":
+          - text: 0-3
+          - text: Sep 06
+        - cell "1-3 Sep 18":
+          - text: 1-3
+          - text: Sep 18
+        - cell "0-3 Oct 16":
+          - text: 0-3
+          - text: Oct 16
+        - cell "1-3 Sep 20":
+          - text: 1-3
+          - text: Sep 20
+        - cell "3-2 Oct 03":
+          - text: 3-2
+          - text: Oct 03
+        - cell
+        - cell "0-3 Sep 04":
+          - text: 0-3
+          - text: Sep 04
+        - cell "0-3 Oct 04":
+          - text: 0-3
+          - text: Oct 04
+        - cell "2-3 Oct 09":
+          - text: 2-3
+          - text: Oct 09
+      - row "Saigon Phantom 3-2 Oct 09 3-0 Oct 08 3-2 Aug 30 3-0 Sep 11 3-1 Sep 06 3-1 Oct 17 3-0 Sep 13 3-0 Oct 01":
+        - rowheader "Saigon Phantom":
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+        - cell "3-2 Oct 09":
+          - text: 3-2
+          - text: Oct 09
+        - cell "3-0 Oct 08":
+          - text: 3-0
+          - text: Oct 08
+        - cell "3-2 Aug 30":
+          - text: 3-2
+          - text: Aug 30
+        - cell "3-0 Sep 11":
+          - text: 3-0
+          - text: Sep 11
+        - cell "3-1 Sep 06":
+          - text: 3-1
+          - text: Sep 06
+        - cell "3-1 Oct 17":
+          - text: 3-1
+          - text: Oct 17
+        - cell
+        - cell "3-0 Sep 13":
+          - text: 3-0
+          - text: Sep 13
+        - cell "3-0 Oct 01":
+          - text: 3-0
+          - text: Oct 01
+      - row "Team Flash 3-0 Sep 18 3-0 Sep 04 2-3 Oct 02 3-2 Sep 10 1-3 Oct 01 3-0 Sep 12 1-3 Oct 11 2-3 Oct 10":
+        - rowheader "Team Flash":
+          - link "Team Flash":
+            - /url: /honorofkings/Team_Flash
+            - img "Team Flash"
+        - cell "3-0 Sep 18":
+          - text: 3-0
+          - text: Sep 18
+        - cell "3-0 Sep 04":
+          - text: 3-0
+          - text: Sep 04
+        - cell "2-3 Oct 02":
+          - text: 2-3
+          - text: Oct 02
+        - cell "3-2 Sep 10":
+          - text: 3-2
+          - text: Sep 10
+        - cell "1-3 Oct 01":
+          - text: 1-3
+          - text: Oct 01
+        - cell "3-0 Sep 12":
+          - text: 3-0
+          - text: Sep 12
+        - cell "1-3 Oct 11":
+          - text: 1-3
+          - text: Oct 11
+        - cell
+        - cell "2-3 Oct 10":
+          - text: 2-3
+          - text: Oct 10
+      - row "Team Secret 1-3 Oct 02 1-3 Oct 18 0-3 Oct 17 1-3 Oct 04 1-3 Sep 04 3-2 Sep 13 0-3 Sep 05 1-3 Aug 30":
+        - rowheader "Team Secret":
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+            - img "Team Secret"
+        - cell "1-3 Oct 02":
+          - text: 1-3
+          - text: Oct 02
+        - cell "1-3 Oct 18":
+          - text: 1-3
+          - text: Oct 18
+        - cell "0-3 Oct 17":
+          - text: 0-3
+          - text: Oct 17
+        - cell "1-3 Oct 04":
+          - text: 1-3
+          - text: Oct 04
+        - cell "1-3 Sep 04":
+          - text: 1-3
+          - text: Sep 04
+        - cell "3-2 Sep 13":
+          - text: 3-2
+          - text: Sep 13
+        - cell "0-3 Sep 05":
+          - text: 0-3
+          - text: Sep 05
+        - cell "1-3 Aug 30":
+          - text: 1-3
+          - text: Aug 30
+        - cell
+      - row "BOOM Esports VN Box Gaming FPT Polytechnic GAM Esports One Star Esports Rex Regum Qeon VN Saigon Phantom Team Flash Team Secret":
+        - columnheader
+        - columnheader "BOOM Esports VN":
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+            - img "BOOM Esports VN"
+        - columnheader "Box Gaming":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+            - img "Box Gaming"
+        - columnheader "FPT Polytechnic":
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - columnheader "GAM Esports":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+            - img "GAM Esports"
+        - columnheader "One Star Esports":
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+            - img "One Star Esports"
+        - columnheader "Rex Regum Qeon VN":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+            - img "Rex Regum Qeon VN"
+        - columnheader "Saigon Phantom":
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+        - columnheader "Team Flash":
+          - link "Team Flash":
+            - /url: /honorofkings/Team_Flash
+            - img "Team Flash"
+        - columnheader "Team Secret":
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+            - img "Team Secret"
+  - table:
+    - rowgroup:
+      - row "Qualification":
+        - columnheader "Qualification"
+      - row "Playoffs Upper Bracket and the right to select opponent":
+        - cell "Playoffs Upper Bracket and the right to select opponent"
+      - row "Playoffs Upper Bracket and exempt from selection by the first place team":
+        - cell "Playoffs Upper Bracket and exempt from selection by the first place team"
+      - row "Playoffs Upper Bracket":
+        - cell "Playoffs Upper Bracket"
+      - row "Playoffs Lower Bracket":
+        - cell "Playoffs Lower Bracket"
+      - row "Eliminated from title contention":
+        - cell "Eliminated from title contention"
+  - paragraph:
+    - link "Click here for detailed results of the Group Stage matches":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage
+  - heading "Playoffs" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=8
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Upper Bracket Semifinals
+  - generic: Upper Bracket Final
+  - generic: Grand Final
+  - generic "Saigon Phantom":
+    - generic: Saigon Phantom
+    - generic: "4"
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+    - generic: "2"
+  - text:   W L L W W L W L L W W L  
+  - generic "FPT Polytechnic":
+    - generic: FPT Polytechnic
+    - generic: "4"
+  - generic "Team Flash":
+    - generic: Team Flash
+    - generic: "1"
+  - text:   L W W L W L W L W L  
+  - generic "Saigon Phantom":
+    - generic: Saigon Phantom
+    - generic: "3"
+  - generic "FPT Polytechnic":
+    - generic: FPT Polytechnic
+    - generic: "4"
+  - text:   L W W L W L L W L W W L L W  
+  - generic: Lower Bracket Quarterfinals
+  - generic: Lower Bracket Semifinals
+  - generic: Lower Bracket Final
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+    - generic: "4"
+  - generic "GAM Esports":
+    - generic: GAM Esports
+    - generic: "1"
+  - text:   W L W L W L L W W L  
+  - generic "Team Flash":
+    - generic: Team Flash
+    - generic: "3"
+  - generic "Box Gaming":
+    - generic: Box Gaming
+    - generic: "4"
+  - text:   W L L W W L L W L W W L L W  
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+    - generic: "4"
+  - generic "Box Gaming":
+    - generic: Box Gaming
+    - generic: "3"
+  - text:   L W W L L W W L L W W L W L  
+  - generic "Saigon Phantom":
+    - generic: Saigon Phantom
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+  - text:   
+  - generic "FPT Polytechnic":
+    - generic: FPT Polytechnic
+  - text:    
+  - paragraph
+  - heading "Format" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=9
+  - text: "]"
+  - list:
+    - text: Group Stage - August 29 - October 18, 2026
+    - list:
+      - listitem: Double Round-Robin
+      - listitem: All matches are played in a Bo5
+      - listitem: Each match win grants 1 point
+      - listitem: Top 6 teams will be advanced to the Playoffs
+      - generic: Click here for information about Tie-Breaker Rules in Group Stage
+  - list:
+    - text: Playoffs - October 23-25 and November 7, 2026
+    - list:
+      - listitem: Double Elimination Bracket
+      - text: Top 4 teams will play in the Upper Bracket, with the 1
+      - superscript: st
+      - text: placed team have the rights to pick their first opponent between the teams ranked 3
+      - superscript: rd
+      - text: and 4
+      - superscript: th
+      - text: Teams ranked 5
+      - superscript: th
+      - text: and 6
+      - superscript: th
+      - text: will play in the Lower Bracket, and will face the 2 losing teams from the Upper Bracket Semifinals first
+      - listitem: All matches are played in a Bo7
+    - listitem: All matches in the tournament are played with Global Ban/Pick
+    - text: Side Selection Privilege
+    - list:
+      - listitem: The teams on the left side of the match listing (also known as the administrative "home" team) have a privilege to pick the side in the first game.
+      - listitem: In the other games, the loser team of the last game will have a privilege to pick the side.
+  - heading "Broadcast" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=10
+  - text: "]"
+  - list:
+    - text: "Hosts:"
+    - list:
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Phương Thảo":
+        - /url: /honorofkings/Ph%C6%B0%C6%A1ng_Th%E1%BA%A3o
+      - text: (Vũ Phương Thảo)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Tú Linh":
+        - /url: /honorofkings/index.php?title=T%C3%BA_Linh&action=edit&redlink=1
+      - text: (Nguyễn Tú Linh)
+  - list:
+    - text: "Interviewers:"
+    - list:
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Như Bình":
+        - /url: /honorofkings/Nh%C6%B0_B%C3%ACnh
+      - text: (Võ Phan Như Bình)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Phương Nghi":
+        - /url: /honorofkings/index.php?title=Ph%C6%B0%C6%A1ng_Nghi&action=edit&redlink=1
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Phương Uyên":
+        - /url: /honorofkings/index.php?title=Ph%C6%B0%C6%A1ng_Uy%C3%AAn&action=edit&redlink=1
+      - text: (Thái Phương Uyên)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Thu Sương":
+        - /url: /honorofkings/index.php?title=Thu_S%C6%B0%C6%A1ng&action=edit&redlink=1
+      - text: (Nguyễn Thu Sương)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Uyên Nie":
+        - /url: /honorofkings/index.php?title=Uy%C3%AAn_Nie&action=edit&redlink=1
+      - text: (H'Uyên Niê)
+  - list:
+    - text: "Casters:"
+    - list:
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Hoàng Sơn":
+        - /url: /honorofkings/Ho%C3%A0ng_S%C6%A1n
+      - text: (Tạ Hoàng Sơn)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Huy Popper":
+        - /url: /honorofkings/Huy_Popper
+      - text: (Nguyễn Đức Huy)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Hải Phong":
+        - /url: /honorofkings/H%E1%BA%A3i_Phong
+      - text: (Nguyễn Hải Phong)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Hồng Quân":
+        - /url: /honorofkings/H%E1%BB%93ng_Qu%C3%A2n
+      - text: (Nguyễn Hồng Quân)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Quốc Khánh":
+        - /url: /honorofkings/Qu%E1%BB%91c_Kh%C3%A1nh
+      - text: (Lê Quốc Khánh)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Sơn Tùng":
+        - /url: /honorofkings/S%C6%A1n_T%C3%B9ng
+      - text: (Nguyễn Như Sơn Tùng)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Trần Nam":
+        - /url: /honorofkings/Tr%E1%BA%A7n_Nam
+      - text: (Trần Văn Nam)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "Tùng Họa Mi":
+        - /url: /honorofkings/T%C3%B9ng_H%E1%BB%8Da_Mi
+      - text: (Nguyễn Thanh Tùng)
+  - list:
+    - text: "Guest Analysts:"
+    - list:
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "ADC":
+        - /url: /honorofkings/ADC
+      - text: (Trần Đức Chiến)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "BirdLB":
+        - /url: /honorofkings/BirdLB
+      - text: (Nguyễn Văn Hiếu)
+      - link "Vietnam":
+        - /url: /honorofkings/Category:Vietnam
+        - img "Vietnam"
+      - link "XB":
+        - /url: /honorofkings/XB
+      - text: (Trần Xuân Bách)
+  - heading "Statistics" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=11
+  - text: "]"
+  - heading "Hero Statistics" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=12
+  - text: "]"
+  - table:
+    - rowgroup:
+      - row "Picks Blue Side Red Side Bans Picks & Bans":
+        - columnheader
+        - columnheader "Picks"
+        - columnheader "Blue Side"
+        - columnheader "Red Side"
+        - columnheader "Bans"
+        - columnheader "Picks & Bans"
+        - columnheader
+      - row "Sort ascending Hero ∑ W L WR %T ∑ W L WR ∑ W L WR ∑ %T ∑ %T Details":
+        - columnheader "Sort ascending"
+        - columnheader "Hero"
+        - columnheader "∑"
+        - columnheader "W"
+        - columnheader "L"
+        - columnheader "WR"
+        - columnheader "%T"
+        - columnheader "∑"
+        - columnheader "W"
+        - columnheader "L"
+        - columnheader "WR"
+        - columnheader "∑"
+        - columnheader "W"
+        - columnheader "L"
+        - columnheader "WR"
+        - columnheader "∑"
+        - columnheader "%T"
+        - columnheader "∑"
+        - columnheader "%T"
+        - columnheader "Details"
+    - rowgroup:
+      - row "1 Eland'orr Eland'orr 107 55 52 51.40% 33.97% 54 31 23 57.41% 53 24 29 45.28% 107 33.97% 214 67.94% Show":
+        - cell "1"
+        - cell "Eland'orr Eland'orr":
+          - link "Eland'orr":
+            - /url: /honorofkings/Eland%27orr
+            - img "Eland'orr"
+          - link "Eland'orr":
+            - /url: /honorofkings/Eland%27orr
+        - cell "107":
+          - link "107":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bpicks%5D=Eland%27orr&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "55"
+        - cell "52"
+        - cell "51.40%"
+        - cell "33.97%"
+        - cell "54"
+        - cell "31"
+        - cell "23"
+        - cell "57.41%"
+        - cell "53"
+        - cell "24"
+        - cell "29"
+        - cell "45.28%"
+        - cell "107":
+          - link "107":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bbans%5D=Eland%27orr&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "33.97%"
+        - cell "214"
+        - cell "67.94%"
+        - cell "Show":
+          - button "Show"
+      - row "2 Y'bneth Y'bneth 104 66 38 63.46% 33.02% 58 39 19 67.24% 46 27 19 58.70% 108 34.29% 212 67.30% Show":
+        - cell "2"
+        - cell "Y'bneth Y'bneth":
+          - link "Y'bneth":
+            - /url: /honorofkings/Y%27bneth
+            - img "Y'bneth"
+          - link "Y'bneth":
+            - /url: /honorofkings/Y%27bneth
+        - cell "104":
+          - link "104":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bpicks%5D=Y%27bneth&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "66"
+        - cell "38"
+        - cell "63.46%"
+        - cell "33.02%"
+        - cell "58"
+        - cell "39"
+        - cell "19"
+        - cell "67.24%"
+        - cell "46"
+        - cell "27"
+        - cell "19"
+        - cell "58.70%"
+        - cell "108":
+          - link "108":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bbans%5D=Y%27bneth&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "34.29%"
+        - cell "212"
+        - cell "67.30%"
+        - cell "Show":
+          - button "Show"
+      - row "3 Marja Marja 102 48 54 47.06% 32.38% 73 34 39 46.58% 29 14 15 48.28% 132 41.90% 234 74.29% Show":
+        - cell "3"
+        - cell "Marja Marja":
+          - link "Marja":
+            - /url: /honorofkings/Marja
+            - img "Marja"
+          - link "Marja":
+            - /url: /honorofkings/Marja
+        - cell "102":
+          - link "102":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bpicks%5D=Marja&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "48"
+        - cell "54"
+        - cell "47.06%"
+        - cell "32.38%"
+        - cell "73"
+        - cell "34"
+        - cell "39"
+        - cell "46.58%"
+        - cell "29"
+        - cell "14"
+        - cell "15"
+        - cell "48.28%"
+        - cell "132":
+          - link "132":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bbans%5D=Marja&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "41.90%"
+        - cell "234"
+        - cell "74.29%"
+        - cell "Show":
+          - button "Show"
+      - row "4 Violet Violet 98 56 42 57.14% 31.11% 48 26 22 54.17% 50 30 20 60.00% 16 5.08% 114 36.19% Show":
+        - cell "4"
+        - cell "Violet Violet":
+          - link "Violet":
+            - /url: /honorofkings/Violet
+            - img "Violet"
+          - link "Violet":
+            - /url: /honorofkings/Violet
+        - cell "98":
+          - link "98":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bpicks%5D=Violet&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "56"
+        - cell "42"
+        - cell "57.14%"
+        - cell "31.11%"
+        - cell "48"
+        - cell "26"
+        - cell "22"
+        - cell "54.17%"
+        - cell "50"
+        - cell "30"
+        - cell "20"
+        - cell "60.00%"
+        - cell "16":
+          - link "16":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bbans%5D=Violet&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "5.08%"
+        - cell "114"
+        - cell "36.19%"
+        - cell "Show":
+          - button "Show"
+      - row "5 Astrid Astrid 98 41 57 41.84% 31.11% 63 24 39 38.10% 35 17 18 48.57% 72 22.86% 170 53.97% Show":
+        - cell "5"
+        - cell "Astrid Astrid":
+          - link "Astrid":
+            - /url: /honorofkings/Astrid
+            - img "Astrid"
+          - link "Astrid":
+            - /url: /honorofkings/Astrid
+        - cell "98":
+          - link "98":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bpicks%5D=Astrid&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "41"
+        - cell "57"
+        - cell "41.84%"
+        - cell "31.11%"
+        - cell "63"
+        - cell "24"
+        - cell "39"
+        - cell "38.10%"
+        - cell "35"
+        - cell "17"
+        - cell "18"
+        - cell "48.57%"
+        - cell "72":
+          - link "72":
+            - /url: https://liquipedia.net/honorofkings/Special:RunQuery/Game_history?pfRunQueryFormName=Game+history&Gh%5Bbans%5D=Astrid&Gh%5Btournaments%5D=Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FSecond_Leg%2C+Arena_of_Glory%2F2026%2FWinter%2FPlayoffs%2C+Arena_of_Glory%2F2026%2FWinter%2FGroup_Stage%2FFirst_Leg&wpRunQuery=Run+query
+        - cell "22.86%"
+        - cell "170"
+        - cell "53.97%"
+        - cell "Show":
+          - button "Show"
+    - rowgroup:
+      - row "315 games played 167W - 148L (53.02%) 148W - 167L (46.98%)":
+        - columnheader
+        - columnheader "315 games played"
+        - columnheader "167W - 148L (53.02%)"
+        - columnheader "148W - 167L (46.98%)"
+        - columnheader
+      - row "Click here for complete statistics table":
+        - columnheader "Click here for complete statistics table":
+          - link "Click here for complete statistics table":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Statistics
+  - paragraph
+  - heading "Game Statistics" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=13
+  - text: "]"
+  - generic: Shortest Games
+  - table:
+    - rowgroup:
+      - 'row "Date Stage Game # Winner Loser Duration"':
+        - columnheader "Date"
+        - columnheader "Stage"
+        - 'columnheader "Game #"'
+        - columnheader "Winner"
+        - columnheader "Loser"
+        - columnheader "Duration"
+    - rowgroup:
+      - row "2026-10-17 Round 17 3 Saigon Phantom SGP Rex Regum Qeon VN RRQ 06:11":
+        - cell "2026-10-17"
+        - cell "Round 17":
+          - link "Round 17":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg
+        - cell "3"
+        - cell "Saigon Phantom SGP":
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+          - link "SGP":
+            - /url: /honorofkings/Saigon_Phantom
+        - cell "Rex Regum Qeon VN RRQ":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+          - link "RRQ":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+        - cell "06:11"
+      - row "2026-08-29 Round 1 2 GAM Esports GAM Box Gaming BOX 06:53":
+        - cell "2026-08-29"
+        - cell "Round 1":
+          - link "Round 1":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg
+        - cell "2"
+        - cell "GAM Esports GAM":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+          - link "GAM":
+            - /url: /honorofkings/GAM_Esports
+        - cell "Box Gaming BOX":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+          - link "BOX":
+            - /url: /honorofkings/Box_Gaming
+        - cell "06:53"
+      - row "2026-10-08 Round 13 2 BOOM Esports VN BME GAM Esports GAM 06:59":
+        - cell "2026-10-08"
+        - cell "Round 13":
+          - link "Round 13":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg
+        - cell "2"
+        - cell "BOOM Esports VN BME":
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+          - link "BME":
+            - /url: /honorofkings/BOOM_Esports_VN
+        - cell "GAM Esports GAM":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+          - link "GAM":
+            - /url: /honorofkings/GAM_Esports
+        - cell "06:59"
+      - row "2026-10-17 Round 17 4 Saigon Phantom SGP Rex Regum Qeon VN RRQ 08:27":
+        - cell "2026-10-17"
+        - cell "Round 17":
+          - link "Round 17":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg
+        - cell "4"
+        - cell "Saigon Phantom SGP":
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+          - link "SGP":
+            - /url: /honorofkings/Saigon_Phantom
+        - cell "Rex Regum Qeon VN RRQ":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+          - link "RRQ":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+        - cell "08:27"
+      - row "2026-10-08 Round 13 1 Saigon Phantom SGP Box Gaming BOX 08:49":
+        - cell "2026-10-08"
+        - cell "Round 13":
+          - link "Round 13":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg
+        - cell "1"
+        - cell "Saigon Phantom SGP":
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+          - link "SGP":
+            - /url: /honorofkings/Saigon_Phantom
+        - cell "Box Gaming BOX":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+          - link "BOX":
+            - /url: /honorofkings/Box_Gaming
+        - cell "08:49"
+    - rowgroup
+  - paragraph
+  - generic: Longest Games
+  - table:
+    - rowgroup:
+      - 'row "Date Stage Game # Winner Loser Duration"':
+        - columnheader "Date"
+        - columnheader "Stage"
+        - 'columnheader "Game #"'
+        - columnheader "Winner"
+        - columnheader "Loser"
+        - columnheader "Duration"
+    - rowgroup:
+      - row "2026-10-08 Round 13 3 GAM Esports GAM BOOM Esports VN BME 34:55":
+        - cell "2026-10-08"
+        - cell "Round 13":
+          - link "Round 13":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg
+        - cell "3"
+        - cell "GAM Esports GAM":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+          - link "GAM":
+            - /url: /honorofkings/GAM_Esports
+        - cell "BOOM Esports VN BME":
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+          - link "BME":
+            - /url: /honorofkings/BOOM_Esports_VN
+        - cell "34:55"
+      - row "2026-08-30 Round 1 1 Team Flash FL Team Secret TS 33:15":
+        - cell "2026-08-30"
+        - cell "Round 1":
+          - link "Round 1":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg
+        - cell "1"
+        - cell "Team Flash FL":
+          - link "Team Flash":
+            - /url: /honorofkings/Team_Flash
+          - link "FL":
+            - /url: /honorofkings/Team_Flash
+        - cell "Team Secret TS":
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+          - link "TS":
+            - /url: /honorofkings/Team_Secret
+        - cell "33:15"
+      - row "2026-10-03 Round 11 2 Rex Regum Qeon VN RRQ One Star Esports 1S 32:25":
+        - cell "2026-10-03"
+        - cell "Round 11":
+          - link "Round 11":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg
+        - cell "2"
+        - cell "Rex Regum Qeon VN RRQ":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+          - link "RRQ":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+        - cell "One Star Esports 1S":
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+          - link "1S":
+            - /url: /honorofkings/One_Star_Esports
+        - cell "32:25"
+      - row "2026-08-29 Round 1 3 Box Gaming BOX GAM Esports GAM 31:51":
+        - cell "2026-08-29"
+        - cell "Round 1":
+          - link "Round 1":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg
+        - cell "3"
+        - cell "Box Gaming BOX":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+          - link "BOX":
+            - /url: /honorofkings/Box_Gaming
+        - cell "GAM Esports GAM":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+          - link "GAM":
+            - /url: /honorofkings/GAM_Esports
+        - cell "31:51"
+      - row "2026-09-19 Round 9 1 One Star Esports 1S BOOM Esports VN BME 28:46":
+        - cell "2026-09-19"
+        - cell "Round 9":
+          - link "Round 9":
+            - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg
+        - cell "1"
+        - cell "One Star Esports 1S":
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+          - link "1S":
+            - /url: /honorofkings/One_Star_Esports
+        - cell "BOOM Esports VN BME":
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+          - link "BME":
+            - /url: /honorofkings/BOOM_Esports_VN
+        - cell "28:46"
+    - rowgroup
+  - heading "Patch Information" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=14
+  - text: "]"
+  - list:
+    - text: Group Stage Week 1 are played in
+    - link "Aug 13 patch":
+      - /url: https://main.aov.garena.co.id/post/patch-notes13aug26-en
+    - text: .
+    - text: Group Stage Week 2-4 are played in
+    - link "Aug 27 patch":
+      - /url: https://main.aov.garena.co.id/post/patch-notes26aug26-en
+    - text: .
+    - text: Group Stage Week 5-7 are played in
+    - link "Sep 29 (S4 2026) patch":
+      - /url: https://main.aov.garena.co.id/post/patch-notes18sep26-en
+    - text: .
+    - text: Playoffs are played in
+    - link "Oct 15 patch":
+      - /url: https://main.aov.garena.co.id/post/patch-notes14oct26-id
+    - text: . Hero
+    - link "Evita":
+      - /url: /honorofkings/Evita
+      - img "Evita"
+    - link "Evita":
+      - /url: /honorofkings/Evita
+    - text: is allowed to use.
+  - heading "Additional Content" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=15
+  - text: "]"
+  - heading "Official Trailer" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=16
+  - text: "]"
+  - figure:
+    - button "ERA OF G10RY - KỶ NGUYÊN DANH VỌNG | OFFICIAL TRAILER ĐẤU TRƯỜNG DANH VỌNG MÙA ĐÔNG 2026 Load video YouTube":
+      - generic: ERA OF G10RY - KỶ NGUYÊN DANH VỌNG | OFFICIAL TRAILER ĐẤU TRƯỜNG DANH VỌNG MÙA ĐÔNG 2026
+      - generic: Load video
+      - generic: YouTube
+  - heading "Mega Kills" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=17
+  - text: "]"
+  - heading "Trivia" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=18
+  - text: "]"
+  - heading "References" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=19
+  - text: "]"
+  - heading "Navboxes" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter&action=edit&section=20
+  - text: "]"
+  - navigation:
+    - text: "["
+    - link "e":
+      - /url: /honorofkings/Special:EditPage/Template:AoV_Vietnam_Navbox
+    - text: "]"
+    - link "Vietnam":
+      - /url: /honorofkings/Category:Vietnam
+      - img "Vietnam"
+    - text: Garena Vietnam Events
+    - text: 
+    - button " Hide":
+      - generic: 
+      - text: Hide
+    - table:
+      - rowgroup:
+        - row "2026 Arena of Glory Spring · Winter Tứ Phương Đại Chiến Spring · Winter Queens of Glory Spring · Winter":
+          - rowheader "2026"
+          - cell "Arena of Glory Spring · Winter Tứ Phương Đại Chiến Spring · Winter Queens of Glory Spring · Winter":
+            - table:
+              - rowgroup:
+                - row "Arena of Glory Spring · Winter":
+                  - rowheader "Arena of Glory":
+                    - link "Arena of Glory":
+                      - /url: /honorofkings/Arena_of_Glory
+                  - cell "Spring · Winter":
+                    - list:
+                      - link "Spring":
+                        - /url: /honorofkings/Arena_of_Glory/2026/Spring
+                      - text: ·
+                      - listitem: Winter
+                - row "Tứ Phương Đại Chiến Spring · Winter":
+                  - rowheader "Tứ Phương Đại Chiến":
+                    - link "Tứ Phương Đại Chiến":
+                      - /url: /honorofkings/T%E1%BB%A9_Ph%C6%B0%C6%A1ng_%C4%90%E1%BA%A1i_Chi%E1%BA%BFn
+                  - cell "Spring · Winter":
+                    - list:
+                      - link "Spring":
+                        - /url: /honorofkings/T%E1%BB%A9_Ph%C6%B0%C6%A1ng_%C4%90%E1%BA%A1i_Chi%E1%BA%BFn/2026/Spring
+                      - text: ·
+                      - link "Winter":
+                        - /url: /honorofkings/T%E1%BB%A9_Ph%C6%B0%C6%A1ng_%C4%90%E1%BA%A1i_Chi%E1%BA%BFn/2026/Winter
+                - row "Queens of Glory Spring · Winter":
+                  - rowheader "Queens of Glory":
+                    - link "Queens of Glory":
+                      - /url: /honorofkings/index.php?title=Queens_of_Glory&action=edit&redlink=1
+                  - cell "Spring · Winter":
+                    - list:
+                      - link "Spring":
+                        - /url: /honorofkings/Queens_of_Glory/2026/Spring
+                      - text: ·
+                      - link "Winter":
+                        - /url: /honorofkings/Queens_of_Glory/2026/Winter
+        - row "Show Previous years":
+          - cell "Show Previous years":
+            - table:
+              - rowgroup:
+                - row "Show Previous years":
+                  - columnheader "Show Previous years":
+                    - text: 
+                    - button "Show":
+                      - generic: 
+                      - text: Show
+                    - text: Previous years
+                - text: · · · · · · · · · · · · · · · · · · · · · · · · · · ·
+  - link "Categories":
+    - /url: /honorofkings/Special:Categories
+  - text: ":"
+  - list:
+    - link "A-Tier Tournaments":
+      - /url: /honorofkings/Category:A-Tier_Tournaments
+    - link "Live Tournaments":
+      - /url: /honorofkings/index.php?title=Category:Live_Tournaments&action=edit&redlink=1
+    - link "Vietnamese Tournaments":
+      - /url: /honorofkings/Category:Vietnamese_Tournaments
+    - link "Offline Tournaments":
+      - /url: /honorofkings/Category:Offline_Tournaments
+    - link "Pages using duplicate arguments in template calls":
+      - /url: /honorofkings/Category:Pages_using_duplicate_arguments_in_template_calls
+- contentinfo:
+  - link "Liquipedia Portal":
+    - /url: https://liquipedia.net
+  - list:
+    - link "Send an email":
+      - /url: mailto:contact@liquipedia.net
+    - link "Chat with us":
+      - /url: https://discord.gg/liquipedia
+    - link "Contact":
+      - /url: /commons/Contact
+  - list:
+    - link "Discord":
+      - /url: https://discord.gg/liquipedia
+      - generic: 
+    - link "Twitter":
+      - /url: https://twitter.com/LiquipediaNet
+      - generic: 
+    - link "Facebook":
+      - /url: https://www.facebook.com/Liquipedia
+      - generic: 
+    - link "YouTube":
+      - /url: https://www.youtube.com/user/Liquipedia
+      - generic: 
+    - link "Twitch":
+      - /url: https://www.twitch.tv/liquipedia
+      - generic: 
+    - link "GitHub":
+      - /url: https://github.com/Liquipedia
+      - generic: 
+  - tabpanel:
+    - heading "About" [level=4]
+    - list:
+      - link "Privacy policy":
+        - /url: /honorofkings/Liquipedia:Privacy_policy
+      - link "About Liquipedia Honor of Kings Wiki":
+        - /url: /honorofkings/Liquipedia:About
+      - link "Disclaimers":
+        - /url: /honorofkings/Liquipedia:General_disclaimer
+      - link "API":
+        - /url: https://liquipedia.net/api
+      - link:
+        - /url: "#"
+      - link:
+        - /url: "#"
+  - tabpanel:
+    - heading "Affiliated Sites" [level=4]
+    - list:
+      - link "TL.net":
+        - /url: https://tl.net
+  - list:
+    - listitem: This page was last edited on 25 October 2026, at 11:09.
+    - text: Text/code is available under
+    - link "CC-BY-SA":
+      - /url: /honorofkings/Liquipedia:Copyrights
+    - text: . Licenses for other media varies.
+- iframe:
+  - iframe [id="google_ads_iframe_/308365556,23616703/nitro-banner/nitro-banner-90_2"] [name="google_ads_iframe_/308365556,23616703/nitro-banner/nitro-banner-90_2"]:
+    - link "EVE EVE LF105 105Ah Battery GET QUOTE":
+      - /url: https://www.googleadservices.com/pagead/aclk?sa=L&ai=CBJuRcVvgavXCHtHMz7sPh-G_8AKY_tjXfr7WnvCUE9rZHhABIMK67WdgwQWgAbLQu4IpyAEBqQIWRx5X2iCEPuACAKgDAcgDCqoEuQJP0LF-gwl2X9-Kw9m39hmCX7zwafhyPTj2IgCsi5--H2QPX3FJMu9F-20cGu6flq3Y7cw02iFdY5i8yMd221QZ2K4zD3fvqnyAX84FPRPFINeqq3yF1fsRq5z15phUv1L3vDJ1bIxmZgelANwTCS6E6oM29Q9i0srfo3FmbEftpxTDoGZ2WtLfcT6U0AFxQr31vZlPuq1dSiA3gxzS--SSFZJ6cKZ8vzqlPHuhRE6nGkDE5KZDbTvB2og6mx5jpwQtZf8r_z6q6YSzYaa46-B1zi_QgDnsPGN_X5Xop8-MmQTXe7KQFqB8Yr6mb_P8mCY8ST_I4rd6lX124IncpqETrQ3vpSuMHvDFw_y1IWNHa2MaguzBK2g4ypFAkBkWo7PfcYjKtxSJzN7k2sIaka57VM6uUKauHQ5SwATro5Ka-QTgBAGIBZLX1bdRgAeyiIziA6gHqeuxAqgHp8yxAqgHpr4bqAfMzrECqAfz0RuoB5bYG6gHqpuxAqgH_uixAqgHjs4bqAeT2BuoB_DgG6gH7paxAqgH_p6xAqgHr76xAqgHn-GxAqgHpuuxAqgH1ckbqAfZtrECqAeaBqgH_56xAqgH35-xAqgH-MKxAqgH-8KxAtgHAdIIOQiE4YBAEAEYHTIIi8KAjoCAgAg6FJrQgICAgASAwICAgKCogAKogYAYSL39wTpYsarA2t7ZlwNgAfIIG2FkeC1zdWJzeW4tNjY5NDE3OTcwMDMyMzYwNbEJfkYORqSfBM2ACgOYCwHICwGiDAgqBgoE9vKxAqoNAlZOyA0B4g0TCMyawdre2ZcDFVHmcwEdh_APLuoNEwjN8cHa3tmXAxVR5nMBHYfwDy7wDQKIDv___________wHYEw2IFBPQFQHKFgIKAPgWAYAXAbIXEBgBKgo3OTg3NDQyMTMwUAa6FwI4AaoYFwkAAAAAAG78QBIKNzk4NzQ0MjEzMBgBshgJEgK3UBgBIgEA0BgB6BgBwhkCCAE&ae=1&gclid=EAIaIQobChMItb_C2t7ZlwMVUeZzAR2H8A8uEAEYASAAEgL1GPD_BwE&num=1&cid=CAQS0AEAQM4h3KcaHLseDX06fZbI_n8UrkedXl9carvLqKg4Vcnifua8_ZPnhohvnSUAP-lIHChQ4kDvuadkmMol3mWdU9Z57MC9FlQLiuy6A5_747ZHttZZOaj8K4Nad8ijudGgzi0pO_Y0QowyrMRXmkXCLAXOsPOtf1dvOxwD_ppzWK_CKcOfYDaYef2nUs7FysnMseSj3lQ2P0q5aOWhGjEHrI_G6mJC1ZIxmFzjfyXg--88KVzOCj6wmdUfX8AirA7ytfOpq95fkeF3oLDu1e4kGAE&sig=AOD64_0ubWs6ihj8FJ9AyRwGOuCGtWFI0w&rf=4&nb=2&adurl=https://www.evemall.eu/power-battery/prismatic-lfp-cell/lf105%3Fgad_source%3D5%26gad_campaignid%3D21860019090%26gclid%3DEAIaIQobChMItb_C2t7ZlwMVUeZzAR2H8A8uEAEYASAAEgL1GPD_BwE
+      - generic "EVE":
+        - link "EVE"
+      - generic "EVE": EVE LF105 105Ah Battery
+      - link "GET QUOTE":
+        - generic: GET QUOTE
+    - link:
+      - /url: https://adssettings.google.com/whythisad?source=display&reasons=AQSQ1KPTC7cEuDrP5NqShJL6GfX8LoP8Nr1polaihVPunlb_g1y7XL8vOlOrVIT_ydVsQEHoz9YHaguN80CVOi1CsWpCXCkJsSJva_hfuNPK_wmKIgQxaAGKgqYiDDJunOGTmoQ8tbAFpTolZ_joQCIvqx9auJlcUY2eHfojGMxM427X7vip2lhpGN3DJRZafx0d89N_kewscmLd98Zwig8OcJTnPWwZMUMvwORWGZuK48NmhA1GP4rG-nhwQa6RcZb5TM7c86zwOk6Y6kVoNL34O9LHm7QmLrZoGELp8wN7HUv-9b44wg1HCKR_uiOUYYI162h9vMenJMuQEAQR4d8Q04Xb1qM1DftLmS0HViWOrfCGsNZfnoZdZy7Vn4O8jftgoPNODkfvx4YndfwXWiZgq_kRaLiisp6clkLAZhLg_XiN5uQ-rpxA_2VJTYy4EZbm_doN9QciuR01TYsdnIUz05X904DI9QhvzD_Jtr9ErdEtfs-Wxr12Qva5acULFl3b_Xle5U81Akxsn0XQtfa90wV-9O9E6ei1oGTOXOUaeJb_eS4YOVRa_vPwpxUJ-2XIDHfSUv7ci1Mme0yA4cz1AoAEyAIwxZh56mAKGrmPo1k4HRzJNZD_OPHuNHFnNrNVwIZob5PVixtYORX9cHZuPbJLWqH67cy20ux7M8GJz-CPztBS1-0wY-ZQ52v0p5GXNrck86u0Dh-4QvQ33l33Ol-95za6s-PPR9Uq7KVGgy7YlIL1Uu65xILlV_WYUAMVfDu-QMo0LuDbMDY50GFiL_W9MO3adczd-WGz9YKyyR2NZ0yHYw7ccc6rUj0sjcuwLJFVT-2MStQEg8SnjSFlAhKKVfoAr9zHnr5b_g4jA0SI1__jDe-x3w7TsJxDn33_OMQKAk4eqjJgwrNaYYICJNGrDDidsMw4_OQB-dP5MBhOK2MaCnA4lNl4foUbZoVpPwooR8PyI9z-RzcpaQxrKU7JeUuWwp51Upb-DttfAEfOoUiv1zD6CNFyjNozftagn8FHV_i5skbaYogVxQoEkx7AuLKaocjcbhpccsLg3sQTd6ICvoWlbcUIkyZYCSX5RLFDcfq-qrqf_u4kGAN0XTAm8ddEOqygNZ4ZHhjI9DlAJoTlLt44tHFhLxmbjkB_5Qzb7cgFvSBmJfuwlVIyWv7y-Q3RWa49RizH1JqtcoAJTr5n0wqTrBa7O9_SNSjfc2XfMC1aX7foHduVRqaA1ZuJFlKu8zDR3cLsVG-OGGlXWigyIsQ1UACnofc0GTMtufwWiTFaqvPlEOW6cTrDWey4k3VSpaBwCF4YLYurBd9tbZHd4cwcqBDA88-tw05SREKfnUENIjQ2TF5TkLauJymRfH4zTjx1Lwdl5TykXeLqvZD63MCaAhtQlJvMT5lmNeeGjQ0t96gY61o05XHOF9uSN0C0MlxuBXKHi0v0rdKXGG8cTpvk76nfJR-FxQsW8aehYtGotv0g4-zpmpAVoJp6aRDpgG2jRLqdNK0pr_0H2hK3ZEqzUgNY1QdQwAEgFi0DtEbSY63cOfqJE5UHxoK3YilPivuxQVetxhl3VSveaWjxzWnpEOmugiY6ujVDVEQ93ctpJB1ZZP3GWzpTXFHtFfW34QcRQvRvQDSAr1DjjHWlM2lCoG7YzTqUSNo4SeJvxZLkIi7L3WS8x5T8Cp9UwD8l-AEBMbY1c7Qm69J-OCMytOUNOXYeRjGlqOZP_3GDMrIEhJ3IeopK1nL10PG4yuxMclR7iLO2FBugENgNgYilz8gAvGa6iFGVkUKjVzfVIXbr7kA4A2XUAcCCmQ2biSalEkNSegoY8wR-yQbfyk0LzgsS4BfnRk0ewO7ahQ-czTxmvCP-8D9mGdQ1z3Rlf0KaLYZm7rxLZjJcOMfIej0ihkxiY3AC8Rw-XSNoZ8ds-fPNh1REvo_fxKxi8kkRe5FCvust3ZXVrLT-VQcY8c1ARV3YLUW8o-0lCsg6Vxj_zYequul7phHGVBicE53cLE84dsuBemrjv2DS1PqNEQFR7x6xcPLUb9cNIQrxMnBIJ1dBNRS_MQOU8n1XHotQBB-_nOE-pF_AHjTu8ESjMFoq-qng8XuWtQxfs88uWFZdg4nKUosmX_vqVeExQdczDfE1GRrxocM9gfcPOwg66xREO8tPFQWS-PrwFXwul-64qOWaqyyaJ-vmf55dL2YCVKWqH-YU2o4Bakx3UWiO3X5pc2soADupEXNGRqh_td52NyTfOsAsq1xNxz3JIwwbXk7RD1BDZheKXiUDydd_LqqKJBfkw74l_2z3G5pGut1qakpstH-yfd76cHF6XIW1PKIry9JbWdp7Urq735VCwoCN6CbhxpoJ4I6M07_r3EhAGj-dUEBA_83v5bLBK7dLSDa3dvakZgfsH2UdWA6yxflE2gBaS64qE6airanMiowQx-FWgsFGpWCB9Z5-J6Dz4-94p9KT7s60E6JAvvbwWAwLVRfnnU682wUc27G6vEoTYRoki2yJG_T7L1bYGKp1tQvqLd0rMaZtkPMVGi90KOkL2AsfXzXgyFz7XIwF9ahVCnALf_7MUyHngvidIJ_Wkqk8CO8qY72b27xtoALyc-yL6mEKYOQPdSo32xqXvHQ5a3mMYNSZlg12T6n17ZheZh8bQ0VK0w2IJimbx09JPIoBwdHGTpJyg_kyDuFRFr8hNfQOPWYOqZ-8RGen-8jCcaM2wtQpnTXG8-LTlkW8GDfP7LNFDwpY3RteLO82NQ0IUgFeRcA5kDetxpU&opi=122715837
+    - link:
+      - /url: https://adssettings.google.com/whythisad?source=display&reasons=AQSQ1KPTC7cEuDrP5NqShJL6GfX8LoP8Nr1polaihVPunlb_g1y7XL8vOlOrVIT_ydVsQEHoz9YHaguN80CVOi1CsWpCXCkJsSJva_hfuNPK_wmKIgQxaAGKgqYiDDJunOGTmoQ8tbAFpTolZ_joQCIvqx9auJlcUY2eHfojGMxM427X7vip2lhpGN3DJRZafx0d89N_kewscmLd98Zwig8OcJTnPWwZMUMvwORWGZuK48NmhA1GP4rG-nhwQa6RcZb5TM7c86zwOk6Y6kVoNL34O9LHm7QmLrZoGELp8wN7HUv-9b44wg1HCKR_uiOUYYI162h9vMenJMuQEAQR4d8Q04Xb1qM1DftLmS0HViWOrfCGsNZfnoZdZy7Vn4O8jftgoPNODkfvx4YndfwXWiZgq_kRaLiisp6clkLAZhLg_XiN5uQ-rpxA_2VJTYy4EZbm_doN9QciuR01TYsdnIUz05X904DI9QhvzD_Jtr9ErdEtfs-Wxr12Qva5acULFl3b_Xle5U81Akxsn0XQtfa90wV-9O9E6ei1oGTOXOUaeJb_eS4YOVRa_vPwpxUJ-2XIDHfSUv7ci1Mme0yA4cz1AoAEyAIwxZh56mAKGrmPo1k4HRzJNZD_OPHuNHFnNrNVwIZob5PVixtYORX9cHZuPbJLWqH67cy20ux7M8GJz-CPztBS1-0wY-ZQ52v0p5GXNrck86u0Dh-4QvQ33l33Ol-95za6s-PPR9Uq7KVGgy7YlIL1Uu65xILlV_WYUAMVfDu-QMo0LuDbMDY50GFiL_W9MO3adczd-WGz9YKyyR2NZ0yHYw7ccc6rUj0sjcuwLJFVT-2MStQEg8SnjSFlAhKKVfoAr9zHnr5b_g4jA0SI1__jDe-x3w7TsJxDn33_OMQKAk4eqjJgwrNaYYICJNGrDDidsMw4_OQB-dP5MBhOK2MaCnA4lNl4foUbZoVpPwooR8PyI9z-RzcpaQxrKU7JeUuWwp51Upb-DttfAEfOoUiv1zD6CNFyjNozftagn8FHV_i5skbaYogVxQoEkx7AuLKaocjcbhpccsLg3sQTd6ICvoWlbcUIkyZYCSX5RLFDcfq-qrqf_u4kGAN0XTAm8ddEOqygNZ4ZHhjI9DlAJoTlLt44tHFhLxmbjkB_5Qzb7cgFvSBmJfuwlVIyWv7y-Q3RWa49RizH1JqtcoAJTr5n0wqTrBa7O9_SNSjfc2XfMC1aX7foHduVRqaA1ZuJFlKu8zDR3cLsVG-OGGlXWigyIsQ1UACnofc0GTMtufwWiTFaqvPlEOW6cTrDWey4k3VSpaBwCF4YLYurBd9tbZHd4cwcqBDA88-tw05SREKfnUENIjQ2TF5TkLauJymRfH4zTjx1Lwdl5TykXeLqvZD63MCaAhtQlJvMT5lmNeeGjQ0t96gY61o05XHOF9uSN0C0MlxuBXKHi0v0rdKXGG8cTpvk76nfJR-FxQsW8aehYtGotv0g4-zpmpAVoJp6aRDpgG2jRLqdNK0pr_0H2hK3ZEqzUgNY1QdQwAEgFi0DtEbSY63cOfqJE5UHxoK3YilPivuxQVetxhl3VSveaWjxzWnpEOmugiY6ujVDVEQ93ctpJB1ZZP3GWzpTXFHtFfW34QcRQvRvQDSAr1DjjHWlM2lCoG7YzTqUSNo4SeJvxZLkIi7L3WS8x5T8Cp9UwD8l-AEBMbY1c7Qm69J-OCMytOUNOXYeRjGlqOZP_3GDMrIEhJ3IeopK1nL10PG4yuxMclR7iLO2FBugENgNgYilz8gAvGa6iFGVkUKjVzfVIXbr7kA4A2XUAcCCmQ2biSalEkNSegoY8wR-yQbfyk0LzgsS4BfnRk0ewO7ahQ-czTxmvCP-8D9mGdQ1z3Rlf0KaLYZm7rxLZjJcOMfIej0ihkxiY3AC8Rw-XSNoZ8ds-fPNh1REvo_fxKxi8kkRe5FCvust3ZXVrLT-VQcY8c1ARV3YLUW8o-0lCsg6Vxj_zYequul7phHGVBicE53cLE84dsuBemrjv2DS1PqNEQFR7x6xcPLUb9cNIQrxMnBIJ1dBNRS_MQOU8n1XHotQBB-_nOE-pF_AHjTu8ESjMFoq-qng8XuWtQxfs88uWFZdg4nKUosmX_vqVeExQdczDfE1GRrxocM9gfcPOwg66xREO8tPFQWS-PrwFXwul-64qOWaqyyaJ-vmf55dL2YCVKWqH-YU2o4Bakx3UWiO3X5pc2soADupEXNGRqh_td52NyTfOsAsq1xNxz3JIwwbXk7RD1BDZheKXiUDydd_LqqKJBfkw74l_2z3G5pGut1qakpstH-yfd76cHF6XIW1PKIry9JbWdp7Urq735VCwoCN6CbhxpoJ4I6M07_r3EhAGj-dUEBA_83v5bLBK7dLSDa3dvakZgfsH2UdWA6yxflE2gBaS64qE6airanMiowQx-FWgsFGpWCB9Z5-J6Dz4-94p9KT7s60E6JAvvbwWAwLVRfnnU682wUc27G6vEoTYRoki2yJG_T7L1bYGKp1tQvqLd0rMaZtkPMVGi90KOkL2AsfXzXgyFz7XIwF9ahVCnALf_7MUyHngvidIJ_Wkqk8CO8qY72b27xtoALyc-yL6mEKYOQPdSo32xqXvHQ5a3mMYNSZlg12T6n17ZheZh8bQ0VK0w2IJimbx09JPIoBwdHGTpJyg_kyDuFRFr8hNfQOPWYOqZ-8RGen-8jCcaM2wtQpnTXG8-LTlkW8GDfP7LNFDwpY3RteLO82NQ0IUgFeRcA5kDetxpU&opi=122715837
+    - text: Ads by
+    - generic: Send feedback
+    - link:
+      - /url: https://adssettings.google.com/whythisad?source=display&reasons=AQSQ1KPTC7cEuDrP5NqShJL6GfX8LoP8Nr1polaihVPunlb_g1y7XL8vOlOrVIT_ydVsQEHoz9YHaguN80CVOi1CsWpCXCkJsSJva_hfuNPK_wmKIgQxaAGKgqYiDDJunOGTmoQ8tbAFpTolZ_joQCIvqx9auJlcUY2eHfojGMxM427X7vip2lhpGN3DJRZafx0d89N_kewscmLd98Zwig8OcJTnPWwZMUMvwORWGZuK48NmhA1GP4rG-nhwQa6RcZb5TM7c86zwOk6Y6kVoNL34O9LHm7QmLrZoGELp8wN7HUv-9b44wg1HCKR_uiOUYYI162h9vMenJMuQEAQR4d8Q04Xb1qM1DftLmS0HViWOrfCGsNZfnoZdZy7Vn4O8jftgoPNODkfvx4YndfwXWiZgq_kRaLiisp6clkLAZhLg_XiN5uQ-rpxA_2VJTYy4EZbm_doN9QciuR01TYsdnIUz05X904DI9QhvzD_Jtr9ErdEtfs-Wxr12Qva5acULFl3b_Xle5U81Akxsn0XQtfa90wV-9O9E6ei1oGTOXOUaeJb_eS4YOVRa_vPwpxUJ-2XIDHfSUv7ci1Mme0yA4cz1AoAEyAIwxZh56mAKGrmPo1k4HRzJNZD_OPHuNHFnNrNVwIZob5PVixtYORX9cHZuPbJLWqH67cy20ux7M8GJz-CPztBS1-0wY-ZQ52v0p5GXNrck86u0Dh-4QvQ33l33Ol-95za6s-PPR9Uq7KVGgy7YlIL1Uu65xILlV_WYUAMVfDu-QMo0LuDbMDY50GFiL_W9MO3adczd-WGz9YKyyR2NZ0yHYw7ccc6rUj0sjcuwLJFVT-2MStQEg8SnjSFlAhKKVfoAr9zHnr5b_g4jA0SI1__jDe-x3w7TsJxDn33_OMQKAk4eqjJgwrNaYYICJNGrDDidsMw4_OQB-dP5MBhOK2MaCnA4lNl4foUbZoVpPwooR8PyI9z-RzcpaQxrKU7JeUuWwp51Upb-DttfAEfOoUiv1zD6CNFyjNozftagn8FHV_i5skbaYogVxQoEkx7AuLKaocjcbhpccsLg3sQTd6ICvoWlbcUIkyZYCSX5RLFDcfq-qrqf_u4kGAN0XTAm8ddEOqygNZ4ZHhjI9DlAJoTlLt44tHFhLxmbjkB_5Qzb7cgFvSBmJfuwlVIyWv7y-Q3RWa49RizH1JqtcoAJTr5n0wqTrBa7O9_SNSjfc2XfMC1aX7foHduVRqaA1ZuJFlKu8zDR3cLsVG-OGGlXWigyIsQ1UACnofc0GTMtufwWiTFaqvPlEOW6cTrDWey4k3VSpaBwCF4YLYurBd9tbZHd4cwcqBDA88-tw05SREKfnUENIjQ2TF5TkLauJymRfH4zTjx1Lwdl5TykXeLqvZD63MCaAhtQlJvMT5lmNeeGjQ0t96gY61o05XHOF9uSN0C0MlxuBXKHi0v0rdKXGG8cTpvk76nfJR-FxQsW8aehYtGotv0g4-zpmpAVoJp6aRDpgG2jRLqdNK0pr_0H2hK3ZEqzUgNY1QdQwAEgFi0DtEbSY63cOfqJE5UHxoK3YilPivuxQVetxhl3VSveaWjxzWnpEOmugiY6ujVDVEQ93ctpJB1ZZP3GWzpTXFHtFfW34QcRQvRvQDSAr1DjjHWlM2lCoG7YzTqUSNo4SeJvxZLkIi7L3WS8x5T8Cp9UwD8l-AEBMbY1c7Qm69J-OCMytOUNOXYeRjGlqOZP_3GDMrIEhJ3IeopK1nL10PG4yuxMclR7iLO2FBugENgNgYilz8gAvGa6iFGVkUKjVzfVIXbr7kA4A2XUAcCCmQ2biSalEkNSegoY8wR-yQbfyk0LzgsS4BfnRk0ewO7ahQ-czTxmvCP-8D9mGdQ1z3Rlf0KaLYZm7rxLZjJcOMfIej0ihkxiY3AC8Rw-XSNoZ8ds-fPNh1REvo_fxKxi8kkRe5FCvust3ZXVrLT-VQcY8c1ARV3YLUW8o-0lCsg6Vxj_zYequul7phHGVBicE53cLE84dsuBemrjv2DS1PqNEQFR7x6xcPLUb9cNIQrxMnBIJ1dBNRS_MQOU8n1XHotQBB-_nOE-pF_AHjTu8ESjMFoq-qng8XuWtQxfs88uWFZdg4nKUosmX_vqVeExQdczDfE1GRrxocM9gfcPOwg66xREO8tPFQWS-PrwFXwul-64qOWaqyyaJ-vmf55dL2YCVKWqH-YU2o4Bakx3UWiO3X5pc2soADupEXNGRqh_td52NyTfOsAsq1xNxz3JIwwbXk7RD1BDZheKXiUDydd_LqqKJBfkw74l_2z3G5pGut1qakpstH-yfd76cHF6XIW1PKIry9JbWdp7Urq735VCwoCN6CbhxpoJ4I6M07_r3EhAGj-dUEBA_83v5bLBK7dLSDa3dvakZgfsH2UdWA6yxflE2gBaS64qE6airanMiowQx-FWgsFGpWCB9Z5-J6Dz4-94p9KT7s60E6JAvvbwWAwLVRfnnU682wUc27G6vEoTYRoki2yJG_T7L1bYGKp1tQvqLd0rMaZtkPMVGi90KOkL2AsfXzXgyFz7XIwF9ahVCnALf_7MUyHngvidIJ_Wkqk8CO8qY72b27xtoALyc-yL6mEKYOQPdSo32xqXvHQ5a3mMYNSZlg12T6n17ZheZh8bQ0VK0w2IJimbx09JPIoBwdHGTpJyg_kyDuFRFr8hNfQOPWYOqZ-8RGen-8jCcaM2wtQpnTXG8-LTlkW8GDfP7LNFDwpY3RteLO82NQ0IUgFeRcA5kDetxpU&opi=122715837
+      - text: Why this ad?
+    - generic: Ad was inappropriate
+    - generic: Ad covered content
+    - generic: Seen this ad multiple times
+    - generic: Not interested in this ad
+    - generic: Thanks. Feedback improves Google ads
+    - text: Ad closed by
+- link:
+  - /url: javascript:;

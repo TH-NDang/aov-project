@@ -1,0 +1,41 @@
+{
+  "code": "qog-2026-winter-qualifier",
+  "name": "Queens of Glory mùa Đông 2026 — Vòng tuyển chọn",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "VN"
+  ],
+  "competitionType": "OFFICIAL_QUALIFIER",
+  "legacyResearchId": null,
+  "dates": {
+    "start": null,
+    "end": null,
+    "precision": "UNKNOWN",
+    "timezone": "Asia/Bangkok"
+  },
+  "sourceIds": [
+    "garena-vn-qog"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "OCCURRED_DATES_UNVERIFIED",
+  "teamCodes": [],
+  "assets": [],
+  "rosters": [],
+  "broadcastLinks": [],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "UNVERIFIED",
+  "qualifiesFor": "qog-2026-winter",
+  "qualifiedTeamNames": [
+    "ALG Queen",
+    "Five Dragon Princesses",
+    "WESC.VHS"
+  ],
+  "gaps": [
+    "Exact qualifier dates and full entrant list not established; only the three qualifying teams are confirmed.",
+    "Inclusion after the August date boundary remains unverified. Do not invent a date to import this candidate."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "code": "gam-esports-vn-women",
+  "name": "GAM Esports",
+  "displayNameAtEvent": "GAM Esports Women",
+  "legacyResearchId": "team-7adff87c2def",
+  "region": "VN",
+  "division": "WOMEN",
+  "eventCodes": [
+    "qog-2026-winter"
+  ],
+  "logo": "teams/gam-esports-vn-women/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=GAM_Esports_(Women_Team)&action=edit&redlink=1",
+  "officialLogoEvidence": {
+    "graphicPath": "tournaments/qog-2026-winter/participating-teams.jpg",
+    "sourceId": "garena-vn-qog",
+    "note": "Team logos are visible together in the official entrant graphic. This is not an individually cropped or transparent team logo."
+  }
+}

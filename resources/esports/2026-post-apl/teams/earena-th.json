@@ -1,0 +1,14 @@
+{
+  "code": "earena-th",
+  "name": "eArena",
+  "displayNameAtEvent": "eArena",
+  "legacyResearchId": "team-3d479de3f18a",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/earena-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/EArena"
+}

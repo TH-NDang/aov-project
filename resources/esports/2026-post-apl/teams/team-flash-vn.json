@@ -1,0 +1,14 @@
+{
+  "code": "team-flash-vn",
+  "name": "Team Flash",
+  "displayNameAtEvent": "FPT x Flash",
+  "legacyResearchId": "team-f66a543da907",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/team-flash-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Team_Flash"
+}

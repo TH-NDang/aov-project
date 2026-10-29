@@ -1,0 +1,716 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-27",
+  "planSha256": "edf36f272211a0e3d32045bf50b6c383b2abdafaae78c63fa5c009dcc0afdcc4",
+  "frozenRegistriesSha256": "4f3d08eef0b933b5acc039a491d938fa79a6d38e139285f11cf8fd5cf3a3e480",
+  "frozenSeriesImportSha256": "70058ff22da89e045f210e47c475641a8e47890a88c1b5ce242b2797f659e020",
+  "gameOutcomesSha256": "b86efb20bfcbab66520db07dcf439aa42757b1fb669a57c891746450586baff3",
+  "counts": {
+    "teams": 9,
+    "players": 68,
+    "rosters": 69,
+    "rostersByStatus": {
+      "ACTIVE": 45,
+      "SUBSTITUTE": 16,
+      "INACTIVE": 8
+    },
+    "dnp": 5,
+    "regularSeries": 72,
+    "completedPlayoffSeries": 6,
+    "futureKnownSeries": 1,
+    "futureBlockedTbdSeries": 1,
+    "importReadySeries": 79,
+    "sourceGamesFromSeriesScores": 315,
+    "gameOutcomeEvidenceCount": 315,
+    "regularFixturesWithExplicitTimes": 72,
+    "importFixturesWithExplicitTimes": 79,
+    "dateOnlyImportFixtures": 0,
+    "replacementTeamLogos": 9,
+    "replacementTeamLogosUploaded": 9
+  },
+  "checks": [
+    "Unique stable codes and roster identities",
+    "Exactly five different main lanes per team",
+    "Team logo bytes match verified checksums",
+    "All nine standings match all 72regular-series scores",
+    "All 78 completed series are before as-of date and valid BO5/BO7 scores",
+    "Explicit Detailed Results orientation replaces all matrix-only ordering",
+    "78 completed SeriesResult payloads match the new API fields",
+    "315 W/L game outcomes complement per slot and match all series scores",
+    "Unknown final opponent blocked; no final winner or final score",
+    "Frozen player/team/roster payloads have not drifted",
+    "All 72 regular fixture popup dates, team order and scores match Detailed Results; ICT times convert to UTC",
+    "All 79 import fixtures have explicit source timestamps; no midnight inference or actual game start inference",
+    "Nine replacement PNG team logos match observed event srcsets, dimensions and checksums; all visually reviewed unchanged",
+    "Nine parent-confirmed project Media upload URLs match local logo checksums and preserve original source URLs"
+  ],
+  "errors": [],
+  "passed": true,
+  "pending": [
+    "Per-game hero drafts, blue/red assignments and loadout observations require separate visible game sources; no Game records generated."
+  ],
+  "regularFixtureTimestampChecks": [
+    {
+      "seriesCode": "aogw26-0829-boom-esports-vn-saigon-phantom",
+      "collection": "firstLeg",
+      "index": 0,
+      "sourceDate": "2026-08-29",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-08-29T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0829-gam-esports-box-gaming",
+      "collection": "firstLeg",
+      "index": 1,
+      "sourceDate": "2026-08-29",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-08-29T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0829-fpt-polytechnic-rex-regum-qeon-vn",
+      "collection": "firstLeg",
+      "index": 2,
+      "sourceDate": "2026-08-29",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-08-29T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0830-team-secret-team-flash",
+      "collection": "firstLeg",
+      "index": 3,
+      "sourceDate": "2026-08-30",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-08-30T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0830-one-star-esports-rex-regum-qeon-vn",
+      "collection": "firstLeg",
+      "index": 4,
+      "sourceDate": "2026-08-30",
+      "sourceLocalTime": "16:30",
+      "scheduledAt": "2026-08-30T09:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0830-saigon-phantom-fpt-polytechnic",
+      "collection": "firstLeg",
+      "index": 5,
+      "sourceDate": "2026-08-30",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-08-30T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0903-box-gaming-boom-esports-vn",
+      "collection": "firstLeg",
+      "index": 6,
+      "sourceDate": "2026-09-03",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-03T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0903-gam-esports-team-secret",
+      "collection": "firstLeg",
+      "index": 7,
+      "sourceDate": "2026-09-03",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-03T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0904-rex-regum-qeon-vn-saigon-phantom",
+      "collection": "firstLeg",
+      "index": 8,
+      "sourceDate": "2026-09-04",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-04T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0904-team-secret-one-star-esports",
+      "collection": "firstLeg",
+      "index": 9,
+      "sourceDate": "2026-09-04",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-04T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0904-team-flash-box-gaming",
+      "collection": "firstLeg",
+      "index": 10,
+      "sourceDate": "2026-09-04",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-04T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0905-boom-esports-vn-gam-esports",
+      "collection": "firstLeg",
+      "index": 11,
+      "sourceDate": "2026-09-05",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-05T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0905-team-secret-saigon-phantom",
+      "collection": "firstLeg",
+      "index": 12,
+      "sourceDate": "2026-09-05",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-05T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0905-one-star-esports-team-flash",
+      "collection": "firstLeg",
+      "index": 13,
+      "sourceDate": "2026-09-05",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-05T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0906-rex-regum-qeon-vn-boom-esports-vn",
+      "collection": "firstLeg",
+      "index": 14,
+      "sourceDate": "2026-09-06",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-06T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0906-fpt-polytechnic-box-gaming",
+      "collection": "firstLeg",
+      "index": 15,
+      "sourceDate": "2026-09-06",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-06T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0906-saigon-phantom-one-star-esports",
+      "collection": "firstLeg",
+      "index": 16,
+      "sourceDate": "2026-09-06",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-06T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0910-boom-esports-vn-fpt-polytechnic",
+      "collection": "firstLeg",
+      "index": 17,
+      "sourceDate": "2026-09-10",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-10T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0910-team-flash-gam-esports",
+      "collection": "firstLeg",
+      "index": 18,
+      "sourceDate": "2026-09-10",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-10T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0911-box-gaming-team-secret",
+      "collection": "firstLeg",
+      "index": 19,
+      "sourceDate": "2026-09-11",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-11T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0911-one-star-esports-fpt-polytechnic",
+      "collection": "firstLeg",
+      "index": 20,
+      "sourceDate": "2026-09-11",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-11T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0911-saigon-phantom-gam-esports",
+      "collection": "firstLeg",
+      "index": 21,
+      "sourceDate": "2026-09-11",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-11T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0912-boom-esports-vn-team-secret",
+      "collection": "firstLeg",
+      "index": 22,
+      "sourceDate": "2026-09-12",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-12T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0912-team-flash-rex-regum-qeon-vn",
+      "collection": "firstLeg",
+      "index": 23,
+      "sourceDate": "2026-09-12",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-12T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0912-gam-esports-fpt-polytechnic",
+      "collection": "firstLeg",
+      "index": 24,
+      "sourceDate": "2026-09-12",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-12T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0913-box-gaming-one-star-esports",
+      "collection": "firstLeg",
+      "index": 25,
+      "sourceDate": "2026-09-13",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-13T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0913-team-secret-rex-regum-qeon-vn",
+      "collection": "firstLeg",
+      "index": 26,
+      "sourceDate": "2026-09-13",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-13T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0913-saigon-phantom-team-flash",
+      "collection": "firstLeg",
+      "index": 27,
+      "sourceDate": "2026-09-13",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-13T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0918-gam-esports-one-star-esports",
+      "collection": "firstLeg",
+      "index": 28,
+      "sourceDate": "2026-09-18",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-18T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0918-rex-regum-qeon-vn-box-gaming",
+      "collection": "firstLeg",
+      "index": 29,
+      "sourceDate": "2026-09-18",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-18T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0918-team-flash-boom-esports-vn",
+      "collection": "firstLeg",
+      "index": 30,
+      "sourceDate": "2026-09-18",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-18T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0919-fpt-polytechnic-team-secret",
+      "collection": "firstLeg",
+      "index": 31,
+      "sourceDate": "2026-09-19",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-09-19T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0919-one-star-esports-boom-esports-vn",
+      "collection": "firstLeg",
+      "index": 32,
+      "sourceDate": "2026-09-19",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-19T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0919-box-gaming-saigon-phantom",
+      "collection": "firstLeg",
+      "index": 33,
+      "sourceDate": "2026-09-19",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-19T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0920-rex-regum-qeon-vn-gam-esports",
+      "collection": "firstLeg",
+      "index": 34,
+      "sourceDate": "2026-09-20",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-09-20T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-0920-fpt-polytechnic-team-flash",
+      "collection": "firstLeg",
+      "index": 35,
+      "sourceDate": "2026-09-20",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-09-20T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1001-fpt-polytechnic-gam-esports",
+      "collection": "secondLeg",
+      "index": 0,
+      "sourceDate": "2026-10-01",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-01T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1001-team-flash-one-star-esports",
+      "collection": "secondLeg",
+      "index": 1,
+      "sourceDate": "2026-10-01",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-01T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1001-saigon-phantom-team-secret",
+      "collection": "secondLeg",
+      "index": 2,
+      "sourceDate": "2026-10-01",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-01T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1002-box-gaming-rex-regum-qeon-vn",
+      "collection": "secondLeg",
+      "index": 3,
+      "sourceDate": "2026-10-02",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-02T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1002-team-secret-boom-esports-vn",
+      "collection": "secondLeg",
+      "index": 4,
+      "sourceDate": "2026-10-02",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-02T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1002-team-flash-fpt-polytechnic",
+      "collection": "secondLeg",
+      "index": 5,
+      "sourceDate": "2026-10-02",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-02T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1003-rex-regum-qeon-vn-one-star-esports",
+      "collection": "secondLeg",
+      "index": 6,
+      "sourceDate": "2026-10-03",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-03T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1003-box-gaming-gam-esports",
+      "collection": "secondLeg",
+      "index": 7,
+      "sourceDate": "2026-10-03",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-03T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1003-fpt-polytechnic-boom-esports-vn",
+      "collection": "secondLeg",
+      "index": 8,
+      "sourceDate": "2026-10-03",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-03T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1004-team-secret-gam-esports",
+      "collection": "secondLeg",
+      "index": 9,
+      "sourceDate": "2026-10-04",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-04T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1004-one-star-esports-saigon-phantom",
+      "collection": "secondLeg",
+      "index": 10,
+      "sourceDate": "2026-10-04",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-04T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1004-rex-regum-qeon-vn-team-flash",
+      "collection": "secondLeg",
+      "index": 11,
+      "sourceDate": "2026-10-04",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-04T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1008-gam-esports-boom-esports-vn",
+      "collection": "secondLeg",
+      "index": 12,
+      "sourceDate": "2026-10-08",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-08T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1008-saigon-phantom-box-gaming",
+      "collection": "secondLeg",
+      "index": 13,
+      "sourceDate": "2026-10-08",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-08T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1008-fpt-polytechnic-one-star-esports",
+      "collection": "secondLeg",
+      "index": 14,
+      "sourceDate": "2026-10-08",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-08T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1009-rex-regum-qeon-vn-team-secret",
+      "collection": "secondLeg",
+      "index": 15,
+      "sourceDate": "2026-10-09",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-09T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1009-one-star-esports-box-gaming",
+      "collection": "secondLeg",
+      "index": 16,
+      "sourceDate": "2026-10-09",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-09T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1009-saigon-phantom-boom-esports-vn",
+      "collection": "secondLeg",
+      "index": 17,
+      "sourceDate": "2026-10-09",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-09T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1010-gam-esports-rex-regum-qeon-vn",
+      "collection": "secondLeg",
+      "index": 18,
+      "sourceDate": "2026-10-10",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-10T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1010-team-flash-team-secret",
+      "collection": "secondLeg",
+      "index": 19,
+      "sourceDate": "2026-10-10",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-10T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1010-box-gaming-fpt-polytechnic",
+      "collection": "secondLeg",
+      "index": 20,
+      "sourceDate": "2026-10-10",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-10T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1011-one-star-esports-team-secret",
+      "collection": "secondLeg",
+      "index": 21,
+      "sourceDate": "2026-10-11",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-11T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1011-boom-esports-vn-rex-regum-qeon-vn",
+      "collection": "secondLeg",
+      "index": 22,
+      "sourceDate": "2026-10-11",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-11T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1011-team-flash-saigon-phantom",
+      "collection": "secondLeg",
+      "index": 23,
+      "sourceDate": "2026-10-11",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-11T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1015-box-gaming-team-flash",
+      "collection": "secondLeg",
+      "index": 24,
+      "sourceDate": "2026-10-15",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-15T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1015-boom-esports-vn-one-star-esports",
+      "collection": "secondLeg",
+      "index": 25,
+      "sourceDate": "2026-10-15",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-15T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1015-gam-esports-saigon-phantom",
+      "collection": "secondLeg",
+      "index": 26,
+      "sourceDate": "2026-10-15",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-15T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1016-rex-regum-qeon-vn-fpt-polytechnic",
+      "collection": "secondLeg",
+      "index": 27,
+      "sourceDate": "2026-10-16",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-16T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1016-gam-esports-team-flash",
+      "collection": "secondLeg",
+      "index": 28,
+      "sourceDate": "2026-10-16",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-16T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1016-boom-esports-vn-box-gaming",
+      "collection": "secondLeg",
+      "index": 29,
+      "sourceDate": "2026-10-16",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-16T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1017-team-secret-fpt-polytechnic",
+      "collection": "secondLeg",
+      "index": 30,
+      "sourceDate": "2026-10-17",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-17T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1017-saigon-phantom-rex-regum-qeon-vn",
+      "collection": "secondLeg",
+      "index": 31,
+      "sourceDate": "2026-10-17",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-17T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1017-boom-esports-vn-team-flash",
+      "collection": "secondLeg",
+      "index": 32,
+      "sourceDate": "2026-10-17",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-17T12:30:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1018-team-secret-box-gaming",
+      "collection": "secondLeg",
+      "index": 33,
+      "sourceDate": "2026-10-18",
+      "sourceLocalTime": "13:00",
+      "scheduledAt": "2026-10-18T06:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1018-one-star-esports-gam-esports",
+      "collection": "secondLeg",
+      "index": 34,
+      "sourceDate": "2026-10-18",
+      "sourceLocalTime": "16:00",
+      "scheduledAt": "2026-10-18T09:00:00Z",
+      "teamAndScoreMatch": true
+    },
+    {
+      "seriesCode": "aogw26-1018-fpt-polytechnic-saigon-phantom",
+      "collection": "secondLeg",
+      "index": 35,
+      "sourceDate": "2026-10-18",
+      "sourceLocalTime": "19:30",
+      "scheduledAt": "2026-10-18T12:30:00Z",
+      "teamAndScoreMatch": true
+    }
+  ],
+  "logoReplacements": {
+    "manifest": "logo-replacements.json",
+    "manifestSha256": "34b485ab8d4646cd92b2f781ca089a44030ffd936d454286de8f4e1074a7f58c",
+    "count": 9,
+    "totalBytes": 57195,
+    "allPngSignaturesValid": true,
+    "allObservedWidthsMatch": true,
+    "allVisuallyReviewed": true,
+    "noImageTransformations": true,
+    "uploadedPublicUrlCount": 9,
+    "uploadReceipt": "evidence/uploaded-liquipedia-logos.json",
+    "overlay": "team-media-overlay.json",
+    "overlaySha256": "62f03da9d66abb62e276c662a33ec725d4e22c6144569605e082556b338187e9"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "code": "alg-queen-vn-women",
+  "name": "ALG Queen",
+  "displayNameAtEvent": "ALG Queen",
+  "legacyResearchId": "team-50860271b11f",
+  "region": "VN",
+  "division": "WOMEN",
+  "eventCodes": [
+    "qog-2026-winter"
+  ],
+  "logo": null,
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=ALG_Queen&action=edit&redlink=1",
+  "logoGap": "No verified team-specific logo; generic game placeholder was deliberately excluded.",
+  "officialLogoEvidence": {
+    "graphicPath": "tournaments/qog-2026-winter/participating-teams.jpg",
+    "sourceId": "garena-vn-qog",
+    "note": "Team logos are visible together in the official entrant graphic. This is not an individually cropped or transparent team logo."
+  }
+}

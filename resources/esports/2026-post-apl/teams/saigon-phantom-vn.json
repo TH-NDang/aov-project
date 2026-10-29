@@ -1,0 +1,14 @@
+{
+  "code": "saigon-phantom-vn",
+  "name": "Saigon Phantom",
+  "displayNameAtEvent": "Saigon Phantom",
+  "legacyResearchId": "team-70d3baae8e2b",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/saigon-phantom-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Saigon_Phantom"
+}

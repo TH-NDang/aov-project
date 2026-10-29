@@ -1,0 +1,14 @@
+{
+  "code": "banmei-gaming-tw",
+  "name": "BanMei Gaming",
+  "displayNameAtEvent": "BanMei Gaming",
+  "legacyResearchId": "team-279b7944fb0e",
+  "region": "TW",
+  "division": "OPEN",
+  "eventCodes": [
+    "gcs-2026-summer"
+  ],
+  "logo": "teams/banmei-gaming-tw/logo.png",
+  "logoReviewRequired": false,
+  "sourceUrl": "https://liquipedia.net/honorofkings/BanMei_Gaming"
+}

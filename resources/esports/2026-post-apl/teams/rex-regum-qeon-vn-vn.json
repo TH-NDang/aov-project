@@ -1,0 +1,14 @@
+{
+  "code": "rex-regum-qeon-vn-vn",
+  "name": "Rex Regum Qeon VN",
+  "displayNameAtEvent": "Rex Regum Qeon VN",
+  "legacyResearchId": "team-fa5aeb330366",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/rex-regum-qeon-vn-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Rex_Regum_Qeon_VN"
+}

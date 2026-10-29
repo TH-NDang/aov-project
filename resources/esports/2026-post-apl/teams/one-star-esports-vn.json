@@ -1,0 +1,14 @@
+{
+  "code": "one-star-esports-vn",
+  "name": "One Star Esports",
+  "displayNameAtEvent": "One Star Esports",
+  "legacyResearchId": "team-339176b859d4",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/one-star-esports-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/One_Star_Esports"
+}

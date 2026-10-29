@@ -1,0 +1,14 @@
+{
+  "code": "box-gaming-vn",
+  "name": "Box Gaming",
+  "displayNameAtEvent": "Box Gaming",
+  "legacyResearchId": "team-f793c17d6a55",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/box-gaming-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Box_Gaming"
+}

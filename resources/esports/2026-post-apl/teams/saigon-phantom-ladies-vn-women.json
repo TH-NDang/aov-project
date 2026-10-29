@@ -1,0 +1,19 @@
+{
+  "code": "saigon-phantom-ladies-vn-women",
+  "name": "Saigon Phantom Ladies",
+  "displayNameAtEvent": "Saigon Phantom Queens",
+  "legacyResearchId": "team-14c21cb2d04f",
+  "region": "VN",
+  "division": "WOMEN",
+  "eventCodes": [
+    "qog-2026-winter"
+  ],
+  "logo": "teams/saigon-phantom-ladies-vn-women/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Saigon_Phantom_Ladies&action=edit&redlink=1",
+  "officialLogoEvidence": {
+    "graphicPath": "tournaments/qog-2026-winter/participating-teams.jpg",
+    "sourceId": "garena-vn-qog",
+    "note": "Team logos are visible together in the official entrant graphic. This is not an individually cropped or transparent team logo."
+  }
+}

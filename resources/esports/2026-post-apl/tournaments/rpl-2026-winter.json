@@ -1,0 +1,518 @@
+{
+  "code": "rpl-2026-winter",
+  "name": "RoV Pro League 2026 Winter",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "TH"
+  ],
+  "competitionType": "MAIN_EVENT",
+  "legacyResearchId": "tournament-8737f2431773",
+  "dates": {
+    "start": "2026-08-22",
+    "end": "2026-10-25",
+    "precision": "DATE",
+    "timezone": "Asia/Bangkok"
+  },
+  "sourceIds": [
+    "garena-rpl-opening",
+    "impact-rpl-finals"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+  "teamCodes": [
+    "buriram-united-esports-th",
+    "full-sense-th",
+    "king-of-gamers-club-th",
+    "solyx-th",
+    "tenacity-th",
+    "bacon-time-th",
+    "earena-th",
+    "hydra-esports-th",
+    "godji-check-th"
+  ],
+  "assets": [
+    "tournaments/rpl-2026-winter/opening-broadcast-thumbnail.jpg"
+  ],
+  "rosters": [
+    {
+      "teamCode": "buriram-united-esports-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Littleboyz",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "AlmondP",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "NuNu",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Ligky",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Deawwy",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Summer",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "TaoX",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "MistGunz",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "full-sense-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "AshEarth",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Overone",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Agetsive",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Sharkz",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "NOARje",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Givemeakiss",
+          "role": "Middle",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Lycan",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "VanExcel",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "king-of-gamers-club-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "BASKUNG",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Cinderella",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "PuPu",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Nightza",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "JDust",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Pmons",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Gimpo",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Ohm",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "solyx-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "FarookLP",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Myra",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Psocute",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "1S1K",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Pichu",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Ch1lly",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Joelong",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Pichu",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Skye",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    },
+    {
+      "teamCode": "tenacity-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "SRY",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Erez",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Fakeplayz",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "MOOP",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Difoxn",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "PogPog",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Goru",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "larmlee",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "bacon-time-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "MarkKy",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Bonus",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Kimsensei",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Opar",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Alawin",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Pixzy",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Headhawk",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "ThisKen",
+          "role": null,
+          "rosterGroup": "unspecified"
+        },
+        {
+          "handle": "Sarann",
+          "role": null,
+          "rosterGroup": "unspecified"
+        },
+        {
+          "handle": "MICE",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    },
+    {
+      "teamCode": "earena-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Jakkapat",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "NBank",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "JDai",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Negan",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "PJ",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Exolar",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Ohmmy",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "TNK",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "hydra-esports-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "RNK",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Happybibi",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Beamnp",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Prathan",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Acapae",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "A BlueGem",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Possu",
+          "role": "Top Lane",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Commiw",
+          "role": "Jungler",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Barely",
+          "role": "Middle",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "PPKAZ",
+          "role": "Bottom Lane",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Wonderwall",
+          "role": "Bottom Lane",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "A BlueGem",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "TNP",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    },
+    {
+      "teamCode": "godji-check-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "NTNz",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Faye",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "TNTX",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Larminq",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Artie",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Lisnyp",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Rika",
+          "role": "Middle",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Buffet",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "PLA2",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    }
+  ],
+  "broadcastLinks": [
+    "https://www.youtube.com/watch?v=Xq19Mkao8DA",
+    "https://www.youtube.com/watch?v=QEonYygWrRU"
+  ],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "VERIFIED",
+  "discoverySourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+  "participantVerification": "SECONDARY_RESEARCH_REVIEW_REQUIRED"
+}

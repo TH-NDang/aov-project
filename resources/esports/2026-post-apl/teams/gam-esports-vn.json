@@ -1,0 +1,14 @@
+{
+  "code": "gam-esports-vn",
+  "name": "GAM Esports",
+  "displayNameAtEvent": "GAM Esports",
+  "legacyResearchId": "team-583e940b0581",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/gam-esports-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/GAM_Esports"
+}

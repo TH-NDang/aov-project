@@ -1,0 +1,394 @@
+{
+  "code": "tepl-2026",
+  "name": "RoV Thailand Esports Premier League 2026",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "TH"
+  ],
+  "competitionType": "PRO_LEAGUE_QUALIFIER",
+  "legacyResearchId": "tournament-5cd6f4415b06",
+  "dates": {
+    "start": "2026-06-27",
+    "end": "2026-08-09",
+    "precision": "DATE",
+    "timezone": "Asia/Bangkok",
+    "startEvidence": "SECONDARY_RESEARCH"
+  },
+  "sourceIds": [
+    "sat-tepl-finals",
+    "garena-tepl-finals"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+  "teamCodes": [
+    "rockstar-dream-th",
+    "gangrocket-th",
+    "redkid7-th",
+    "satoshi-x-ibitzz-th",
+    "superjong-th",
+    "ibitzz-168-th",
+    "lunyx-x-radiant-th",
+    "1stesan-th"
+  ],
+  "assets": [
+    "tournaments/tepl-2026/finals-broadcast-thumbnail.jpg"
+  ],
+  "rosters": [
+    {
+      "teamCode": "rockstar-dream-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "PuppYz",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Laplaz",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Koko",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "ZoKrosZ",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Pasta",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "OshiOshi",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Hanzo",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "gangrocket-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Yewx",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Theo",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Portor",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Cryingz",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "ShankDes",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Davyz",
+          "role": null,
+          "rosterGroup": "substitute"
+        }
+      ]
+    },
+    {
+      "teamCode": "redkid7-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Negan",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Lisnyp",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Jdai",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Danunai",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "PJ",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Seji",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Jinwoo",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "satoshi-x-ibitzz-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "TRNP",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Nunewzzzzzzz",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "TNTX",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Diablo",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "iZK",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "ChweG",
+          "role": "Top Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Bankyoi",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "superjong-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Schwepp",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Pungi",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Rainny",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Kaisa",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "iBEARZy",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "YukiRhodes",
+          "role": null,
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "DoMeMeoWS6",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "ibitzz-168-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Tennz",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "sharif",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Qwerty",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Klao_x",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Racha",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Hgg",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Reddog",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "lunyx-x-radiant-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "JETPED",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Happybibi",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Beamnp",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Kimiko",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "FilmAAR",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Fatmanz",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Skye",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "1stesan-th",
+      "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Zeeeeeeu",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "mycueq",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Pieckzhe",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Senju",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Momo",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Doscotichz",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Itashi",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    }
+  ],
+  "broadcastLinks": [
+    "https://www.youtube.com/watch?v=e_n8Y46BP0s",
+    "https://www.youtube.com/watch?v=FX2XWQOq17I"
+  ],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "VERIFIED",
+  "qualifiesFor": "rpl-2027",
+  "overlapsDateBoundary": true,
+  "phases": [
+    {
+      "name": "Championship",
+      "start": "2026-08-08",
+      "end": "2026-08-09",
+      "sourceIds": [
+        "sat-tepl-finals",
+        "garena-tepl-finals"
+      ]
+    }
+  ],
+  "discoverySourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+  "participantVerification": "SECONDARY_RESEARCH_REVIEW_REQUIRED"
+}

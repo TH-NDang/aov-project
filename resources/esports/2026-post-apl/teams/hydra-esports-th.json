@@ -1,0 +1,14 @@
+{
+  "code": "hydra-esports-th",
+  "name": "Hydra Esports",
+  "displayNameAtEvent": "Hydra Esports",
+  "legacyResearchId": "team-b24b00ae2ffd",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/hydra-esports-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Hydra_Esports"
+}

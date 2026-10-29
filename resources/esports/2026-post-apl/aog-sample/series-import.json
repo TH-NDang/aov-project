@@ -1,0 +1,2808 @@
+{
+  "schemaVersion": 1,
+  "phase": "FROZEN_READY_FOR_IMPORT_WITH_72_POPUP_TIMESTAMPS",
+  "asOf": "2026-10-27",
+  "importPolicy": "DRAFT_ONLY_NO_AUTOMATIC_PUBLICATION_NO_SYNTHETIC_GAME_RECORDS",
+  "idResolution": "Resolve tournamentCode/teamACode/teamBCode to restored stable UUIDs; add tournamentId/teamAId/teamBId to content before API submission.",
+  "datePolicy": "All 79 included fixtures have an explicitly visible ICT timestamp converted to UTC. The 72 regular fixtures were checked individually against their info popup teams, score orientation and date; do not infer actual game start times from scheduledAt.",
+  "series": [
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-0829-boom-esports-vn-saigon-phantom",
+        "name": "Vòng 1 · BME – SGP",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-08-29T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 29/08/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-08-29",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 1",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 0,
+        "header": "August 29, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-0829-gam-esports-box-gaming",
+        "name": "Vòng 1 · GAM – BOX",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-08-29T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 29/08/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-08-29",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 1",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 1,
+        "header": "August 29, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-0829-fpt-polytechnic-rex-regum-qeon-vn",
+        "name": "Vòng 1 · FPL – RRQ",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-08-29T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 29/08/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-08-29",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 1",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 2,
+        "header": "August 29, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-0830-team-secret-team-flash",
+        "name": "Vòng 1 · TS – FPT",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-08-30T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 30/08/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-08-30",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 1",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 3,
+        "header": "August 30, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-0830-one-star-esports-rex-regum-qeon-vn",
+        "name": "Vòng 2 · 1S – RRQ",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-08-30T09:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 30/08/2026 16:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-08-30",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 2",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 4,
+        "header": "August 30, 2026 - 16:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-0830-saigon-phantom-fpt-polytechnic",
+        "name": "Vòng 2 · SGP – FPL",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-08-30T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 30/08/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-08-30",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 2",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 5,
+        "header": "August 30, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-0903-box-gaming-boom-esports-vn",
+        "name": "Vòng 2 · BOX – BME",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-03T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 03/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-03",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 2",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 6,
+        "header": "September 3, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-0903-gam-esports-team-secret",
+        "name": "Vòng 2 · GAM – TS",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-03T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 03/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-03",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 2",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 7,
+        "header": "September 3, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-0904-rex-regum-qeon-vn-saigon-phantom",
+        "name": "Vòng 3 · RRQ – SGP",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-04T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 04/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-04",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 3",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 8,
+        "header": "September 4, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-0904-team-secret-one-star-esports",
+        "name": "Vòng 3 · TS – 1S",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-04T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 04/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-04",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 3",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 9,
+        "header": "September 4, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-0904-team-flash-box-gaming",
+        "name": "Vòng 3 · FPT – BOX",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-04T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 04/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-04",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 3",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 10,
+        "header": "September 4, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-0905-boom-esports-vn-gam-esports",
+        "name": "Vòng 3 · BME – GAM",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-05T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 05/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-05",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 3",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 11,
+        "header": "September 5, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-0905-team-secret-saigon-phantom",
+        "name": "Vòng 4 · TS – SGP",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-05T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 05/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-05",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 4",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 12,
+        "header": "September 5, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-0905-one-star-esports-team-flash",
+        "name": "Vòng 4 · 1S – FPT",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-05T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 05/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-05",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 4",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 13,
+        "header": "September 5, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-0906-rex-regum-qeon-vn-boom-esports-vn",
+        "name": "Vòng 4 · RRQ – BME",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-06T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 06/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-06",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 4",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 14,
+        "header": "September 6, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-0906-fpt-polytechnic-box-gaming",
+        "name": "Vòng 4 · FPL – BOX",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-06T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 06/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-06",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 4",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 15,
+        "header": "September 6, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-0906-saigon-phantom-one-star-esports",
+        "name": "Vòng 5 · SGP – 1S",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-06T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 06/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-06",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 5",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 16,
+        "header": "September 6, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-0910-boom-esports-vn-fpt-polytechnic",
+        "name": "Vòng 5 · BME – FPL",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-10T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 10/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-10",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 5",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 17,
+        "header": "September 10, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-0910-team-flash-gam-esports",
+        "name": "Vòng 5 · FPT – GAM",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-10T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 10/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-10",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 5",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 18,
+        "header": "September 10, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-0911-box-gaming-team-secret",
+        "name": "Vòng 5 · BOX – TS",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-11T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 11/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-11",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 5",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 19,
+        "header": "September 11, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-0911-one-star-esports-fpt-polytechnic",
+        "name": "Vòng 6 · 1S – FPL",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-11T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 11/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-11",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 6",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 20,
+        "header": "September 11, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-0911-saigon-phantom-gam-esports",
+        "name": "Vòng 6 · SGP – GAM",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-11T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 11/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-11",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 6",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 21,
+        "header": "September 11, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-0912-boom-esports-vn-team-secret",
+        "name": "Vòng 6 · BME – TS",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-12T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 12/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-12",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 6",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 22,
+        "header": "September 12, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-0912-team-flash-rex-regum-qeon-vn",
+        "name": "Vòng 6 · FPT – RRQ",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-12T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 12/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-12",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 6",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 23,
+        "header": "September 12, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-0912-gam-esports-fpt-polytechnic",
+        "name": "Vòng 7 · GAM – FPL",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-12T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 12/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-12",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 7",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 24,
+        "header": "September 12, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-0913-box-gaming-one-star-esports",
+        "name": "Vòng 7 · BOX – 1S",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-13T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 13/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-13",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 7",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 25,
+        "header": "September 13, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-0913-team-secret-rex-regum-qeon-vn",
+        "name": "Vòng 7 · TS – RRQ",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-13T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 13/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-13",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 7",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 26,
+        "header": "September 13, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-0913-saigon-phantom-team-flash",
+        "name": "Vòng 7 · SGP – FPT",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-13T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 13/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-13",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 7",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 27,
+        "header": "September 13, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-0918-gam-esports-one-star-esports",
+        "name": "Vòng 8 · GAM – 1S",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-18T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 18/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-18",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 8",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 28,
+        "header": "September 18, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-0918-rex-regum-qeon-vn-box-gaming",
+        "name": "Vòng 8 · RRQ – BOX",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-18T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 18/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-18",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 8",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 29,
+        "header": "September 18, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-0918-team-flash-boom-esports-vn",
+        "name": "Vòng 8 · FPT – BME",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-18T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 18/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-18",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 8",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 30,
+        "header": "September 18, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-0919-fpt-polytechnic-team-secret",
+        "name": "Vòng 8 · FPL – TS",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-19T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 19/09/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-19",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 8",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 31,
+        "header": "September 19, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-0919-one-star-esports-boom-esports-vn",
+        "name": "Vòng 9 · 1S – BME",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-19T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 19/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-19",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 9",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 32,
+        "header": "September 19, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-0919-box-gaming-saigon-phantom",
+        "name": "Vòng 9 · BOX – SGP",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-19T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 19/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-19",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 9",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 33,
+        "header": "September 19, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-0920-rex-regum-qeon-vn-gam-esports",
+        "name": "Vòng 9 · RRQ – GAM",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-20T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 20/09/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-20",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 9",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 34,
+        "header": "September 20, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-0920-fpt-polytechnic-team-flash",
+        "name": "Vòng 9 · FPL – FPT",
+        "stage": "REGULAR_SEASON_FIRST_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-09-20T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+        "note": "Vòng bảng · Lượt đi. Lịch nguồn: 20/09/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-09-20",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 9",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "firstLeg",
+        "index": 35,
+        "header": "September 20, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-1001-fpt-polytechnic-gam-esports",
+        "name": "Vòng 10 · FPL – GAM",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-01T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 01/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-01",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 10",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 0,
+        "header": "October 1, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-1001-team-flash-one-star-esports",
+        "name": "Vòng 10 · FPT – 1S",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-01T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 01/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-01",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 10",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 1,
+        "header": "October 1, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-1001-saigon-phantom-team-secret",
+        "name": "Vòng 10 · SGP – TS",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-01T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 01/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-01",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 10",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 2,
+        "header": "October 1, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-1002-box-gaming-rex-regum-qeon-vn",
+        "name": "Vòng 10 · BOX – RRQ",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-02T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 02/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-02",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 10",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 3,
+        "header": "October 2, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-1002-team-secret-boom-esports-vn",
+        "name": "Vòng 11 · TS – BME",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-02T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 02/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-02",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 11",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 4,
+        "header": "October 2, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-1002-team-flash-fpt-polytechnic",
+        "name": "Vòng 11 · FPT – FPL",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-02T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 02/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-02",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 11",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 5,
+        "header": "October 2, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-1003-rex-regum-qeon-vn-one-star-esports",
+        "name": "Vòng 11 · RRQ – 1S",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-03T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 03/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-03",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 11",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 6,
+        "header": "October 3, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-1003-box-gaming-gam-esports",
+        "name": "Vòng 11 · BOX – GAM",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-03T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 03/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-03",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 11",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 7,
+        "header": "October 3, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-1003-fpt-polytechnic-boom-esports-vn",
+        "name": "Vòng 12 · FPL – BME",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-03T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 03/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-03",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 12",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 8,
+        "header": "October 3, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-1004-team-secret-gam-esports",
+        "name": "Vòng 12 · TS – GAM",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-04T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 04/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-04",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 12",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 9,
+        "header": "October 4, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-1004-one-star-esports-saigon-phantom",
+        "name": "Vòng 12 · 1S – SGP",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-04T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 04/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-04",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 12",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 10,
+        "header": "October 4, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-1004-rex-regum-qeon-vn-team-flash",
+        "name": "Vòng 12 · RRQ – FPT",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-04T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 04/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-04",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 12",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 11,
+        "header": "October 4, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-1008-gam-esports-boom-esports-vn",
+        "name": "Vòng 13 · GAM – BME",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-08T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 08/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-08",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 13",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 12,
+        "header": "October 8, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-1008-saigon-phantom-box-gaming",
+        "name": "Vòng 13 · SGP – BOX",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-08T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 08/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-08",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 13",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 13,
+        "header": "October 8, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-1008-fpt-polytechnic-one-star-esports",
+        "name": "Vòng 13 · FPL – 1S",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-08T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 08/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-08",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 13",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 14,
+        "header": "October 8, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-1009-rex-regum-qeon-vn-team-secret",
+        "name": "Vòng 13 · RRQ – TS",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-09T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 09/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-09",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 13",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 15,
+        "header": "October 9, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-1009-one-star-esports-box-gaming",
+        "name": "Vòng 14 · 1S – BOX",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-09T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 09/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-09",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 14",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 16,
+        "header": "October 9, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-1009-saigon-phantom-boom-esports-vn",
+        "name": "Vòng 14 · SGP – BME",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-09T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 09/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-09",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 14",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 17,
+        "header": "October 9, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-1010-gam-esports-rex-regum-qeon-vn",
+        "name": "Vòng 14 · GAM – RRQ",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-10T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 10/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-10",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 14",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 18,
+        "header": "October 10, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-1010-team-flash-team-secret",
+        "name": "Vòng 14 · FPT – TS",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-10T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 10/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-10",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 14",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 19,
+        "header": "October 10, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-1010-box-gaming-fpt-polytechnic",
+        "name": "Vòng 15 · BOX – FPL",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-10T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 10/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-10",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 15",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 20,
+        "header": "October 10, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "team-secret-vn",
+      "content": {
+        "code": "aogw26-1011-one-star-esports-team-secret",
+        "name": "Vòng 15 · 1S – TS",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-11T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 11/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-11",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 15",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 21,
+        "header": "October 11, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-1011-boom-esports-vn-rex-regum-qeon-vn",
+        "name": "Vòng 15 · BME – RRQ",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-11T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 11/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-11",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 15",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 22,
+        "header": "October 11, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-1011-team-flash-saigon-phantom",
+        "name": "Vòng 15 · FPT – SGP",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-11T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 11/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-11",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 15",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 23,
+        "header": "October 11, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-1015-box-gaming-team-flash",
+        "name": "Vòng 16 · BOX – FPT",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-15T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 15/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-15",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 16",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 24,
+        "header": "October 15, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "one-star-esports-vn",
+      "content": {
+        "code": "aogw26-1015-boom-esports-vn-one-star-esports",
+        "name": "Vòng 16 · BME – 1S",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-15T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 15/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-15",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 16",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 25,
+        "header": "October 15, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-1015-gam-esports-saigon-phantom",
+        "name": "Vòng 16 · GAM – SGP",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-15T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 15/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-15",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 16",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 26,
+        "header": "October 15, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-1016-rex-regum-qeon-vn-fpt-polytechnic",
+        "name": "Vòng 16 · RRQ – FPL",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-16T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 16/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-16",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 16",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 27,
+        "header": "October 16, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-1016-gam-esports-team-flash",
+        "name": "Vòng 17 · GAM – FPT",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-16T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 16/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 0,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-16",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 17",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 28,
+        "header": "October 16, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-1016-boom-esports-vn-box-gaming",
+        "name": "Vòng 17 · BME – BOX",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-16T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 16/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-16",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 17",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 29,
+        "header": "October 16, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-1017-team-secret-fpt-polytechnic",
+        "name": "Vòng 17 · TS – FPL",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-17T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 17/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 0,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-17",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 17",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 30,
+        "header": "October 17, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "aogw26-1017-saigon-phantom-rex-regum-qeon-vn",
+        "name": "Vòng 17 · SGP – RRQ",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-17T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 17/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-17",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 17",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 31,
+        "header": "October 17, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-1017-boom-esports-vn-team-flash",
+        "name": "Vòng 18 · BME – FPT",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-17T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 17/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 2,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-17",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 18",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 32,
+        "header": "October 17, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-1018-team-secret-box-gaming",
+        "name": "Vòng 18 · TS – BOX",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-18T06:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 18/10/2026 13:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 1,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-18",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 18",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "13:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 33,
+        "header": "October 18, 2026 - 13:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-1018-one-star-esports-gam-esports",
+        "name": "Vòng 18 · 1S – GAM",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-18T09:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 18/10/2026 16:00 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-18",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 18",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "16:00",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 34,
+        "header": "October 18, 2026 - 16:00 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "content": {
+        "code": "aogw26-1018-fpt-polytechnic-saigon-phantom",
+        "name": "Vòng 18 · FPL – SGP",
+        "stage": "REGULAR_SEASON_SECOND_LEG",
+        "bestOf": 5,
+        "scheduledAt": "2026-10-18T12:30:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+        "note": "Vòng bảng · Lượt về. Lịch nguồn: 18/10/2026 19:30 ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-18",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Detailed Results > Round 18",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true,
+      "sourceLocalTime": "19:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "timeEvidence": {
+        "sourceCapture": "evidence/liquipedia-fixture-popups.json",
+        "collection": "secondLeg",
+        "index": 35,
+        "header": "October 18, 2026 - 19:30 ICT",
+        "verification": "SECONDARY_CAPTURE"
+      }
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "team-flash-vn",
+      "content": {
+        "code": "aogw26-playoffs-01",
+        "name": "Bán kết nhánh thắng · FPL – FPT",
+        "stage": "UPPER_BRACKET_SEMIFINAL",
+        "bestOf": 7,
+        "scheduledAt": "2026-10-23T07:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+        "note": "Lịch nguồn ghi giờ ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 4,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-23",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Playoffs > Schedule table",
+      "sourceCapture": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-playoffs-02",
+        "name": "Bán kết nhánh thắng · SGP – BME",
+        "stage": "UPPER_BRACKET_SEMIFINAL",
+        "bestOf": 7,
+        "scheduledAt": "2026-10-23T11:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+        "note": "Lịch nguồn ghi giờ ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 4,
+          "scoreB": 2,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-23",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Playoffs > Schedule table",
+      "sourceCapture": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-playoffs-03",
+        "name": "Tứ kết nhánh thua · FPT – BOX",
+        "stage": "LOWER_BRACKET_QUARTERFINAL",
+        "bestOf": 7,
+        "scheduledAt": "2026-10-24T07:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+        "note": "Lịch nguồn ghi giờ ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 4,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-24",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Playoffs > Schedule table",
+      "sourceCapture": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "gam-esports-vn",
+      "content": {
+        "code": "aogw26-playoffs-04",
+        "name": "Tứ kết nhánh thua · BME – GAM",
+        "stage": "LOWER_BRACKET_QUARTERFINAL",
+        "bestOf": 7,
+        "scheduledAt": "2026-10-24T11:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+        "note": "Lịch nguồn ghi giờ ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 4,
+          "scoreB": 1,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-24",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Playoffs > Schedule table",
+      "sourceCapture": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "box-gaming-vn",
+      "content": {
+        "code": "aogw26-playoffs-05",
+        "name": "Bán kết nhánh thua · BME – BOX",
+        "stage": "LOWER_BRACKET_SEMIFINAL",
+        "bestOf": 7,
+        "scheduledAt": "2026-10-25T07:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+        "note": "Lịch nguồn ghi giờ ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 4,
+          "scoreB": 3,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-25",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Playoffs > Schedule table",
+      "sourceCapture": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "aogw26-playoffs-06",
+        "name": "Chung kết nhánh thắng · SGP – FPL",
+        "stage": "UPPER_BRACKET_FINAL",
+        "bestOf": 7,
+        "scheduledAt": "2026-10-25T11:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+        "note": "Lịch nguồn ghi giờ ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": {
+          "scoreA": 3,
+          "scoreB": 4,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+          "verification": "SECONDARY_CAPTURE",
+          "verifiedOn": "2026-10-27"
+        }
+      },
+      "sourceDate": "2026-10-25",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Playoffs > Schedule table",
+      "sourceCapture": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true
+    },
+    {
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "aogw26-playoffs-07",
+        "name": "Chung kết nhánh thua · SGP – BME",
+        "stage": "LOWER_BRACKET_FINAL",
+        "bestOf": 7,
+        "scheduledAt": "2026-11-07T05:00:00Z",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+        "note": "Lịch nguồn ghi giờ ICT (UTC+07:00). Thứ tự hai đội theo lịch nguồn; không biểu thị bên xanh/đỏ.",
+        "result": null
+      },
+      "sourceDate": "2026-11-07",
+      "datePrecision": "MINUTE",
+      "sourceSection": "Upcoming Matches > absolute date display",
+      "sourceCapture": "evidence/liquipedia-playoffs-absolute-dom.txt",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": true
+    }
+  ],
+  "blocked": [
+    {
+      "code": "aogw26-playoffs-08",
+      "tournamentCode": "aog-2026-winter",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": null,
+      "stage": "GRAND_FINAL",
+      "bestOf": 7,
+      "scheduledOn": "2026-11-07",
+      "scheduledAt": "2026-11-07T11:30:00Z",
+      "sourceLocalTime": "18:30",
+      "sourceTimeZone": "ICT (UTC+07:00)",
+      "datePrecision": "MINUTE",
+      "result": null,
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "sourceSection": "Upcoming Matches > absolute date display",
+      "verification": "SECONDARY_CAPTURE",
+      "importReady": false,
+      "blockedBy": [
+        "Opponent is TBD. The API requires two existing teams; do not create a fake TBD team."
+      ]
+    }
+  ]
+}

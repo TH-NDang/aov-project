@@ -1,0 +1,15 @@
+{
+  "code": "gangrocket-th",
+  "name": "Gangrocket",
+  "displayNameAtEvent": "Gangrocket",
+  "legacyResearchId": "team-93a7cf724e8e",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "tepl-2026"
+  ],
+  "logo": null,
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Gangrocket&action=edit&redlink=1",
+  "logoGap": "No verified team-specific logo; generic game placeholder was deliberately excluded."
+}

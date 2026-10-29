@@ -1,0 +1,14 @@
+{
+  "code": "hong-kong-attitude-hk",
+  "name": "Hong Kong Attitude",
+  "displayNameAtEvent": "Hong Kong Attitude",
+  "legacyResearchId": "team-8d1aa9cd3a2f",
+  "region": "HK",
+  "division": "OPEN",
+  "eventCodes": [
+    "gcs-2026-summer"
+  ],
+  "logo": "teams/hong-kong-attitude-hk/logo.png",
+  "logoReviewRequired": false,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Hong_Kong_Attitude"
+}

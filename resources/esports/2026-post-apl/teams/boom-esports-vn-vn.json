@@ -1,0 +1,14 @@
+{
+  "code": "boom-esports-vn-vn",
+  "name": "BOOM Esports VN",
+  "displayNameAtEvent": "BOOM Esports VN",
+  "legacyResearchId": "team-8d27602fc6e5",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/boom-esports-vn-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/BOOM_Esports_VN"
+}

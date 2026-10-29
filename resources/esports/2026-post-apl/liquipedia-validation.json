@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "reviewedAsOf": "2026-10-27",
+  "events": 11,
+  "newEventCandidates": 2,
+  "copiedTournamentLogos": 4,
+  "existingTeamLogos": 24,
+  "bytesCopied": 900368,
+  "checks": [
+    "Copied image checksums match existing collected bytes",
+    "No primary manifest or original research changed",
+    "No champion inferred from a scheduled end date",
+    "Standings retain historical capture timestamps",
+    "No unknown date expanded to an invented day"
+  ]
+}

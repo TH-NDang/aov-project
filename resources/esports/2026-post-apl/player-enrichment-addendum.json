@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "phase": "PHASE_1_POST_FREEZE_REVIEW_ADDENDUM",
+  "reviewedAsOf": "2026-10-27",
+  "frozenPlanSha256": "9d3ccc0d742fab1888985398d0c220bd2fe436caf0b30d1c8eca4fac11f21753",
+  "fieldOmissions": [
+    {
+      "playerCode": "phuhoang",
+      "teamCode": "gam-esports-vn",
+      "omitFields": [
+        "fullName"
+      ],
+      "reason": "The live official roster and an older search-engine copy of the same official page disagree on the order of the public full name. Nickname, team and lane agree. Do not overwrite an existing full name.",
+      "sourceUrl": "https://gam.gg/teams"
+    }
+  ],
+  "correctedPlanSha256": "92432dc404dbd2cc9a2de31f4a20e5edf9002e9b0d68b24b0afadc3b58beb4ad",
+  "correctionAppliedToPlan": true
+}

@@ -1,0 +1,14 @@
+{
+  "code": "ank-gaming-tw",
+  "name": "ANK Gaming",
+  "displayNameAtEvent": "ANK Gaming",
+  "legacyResearchId": "team-6353aa96abab",
+  "region": "TW",
+  "division": "OPEN",
+  "eventCodes": [
+    "gcs-2026-summer"
+  ],
+  "logo": "teams/ank-gaming-tw/logo.png",
+  "logoReviewRequired": false,
+  "sourceUrl": "https://liquipedia.net/honorofkings/ANK_Gaming"
+}

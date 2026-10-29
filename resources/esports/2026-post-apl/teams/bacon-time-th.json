@@ -1,0 +1,14 @@
+{
+  "code": "bacon-time-th",
+  "name": "Bacon Time",
+  "displayNameAtEvent": "Bacon Time",
+  "legacyResearchId": "team-e67fadb61450",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/bacon-time-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Bacon_Time"
+}

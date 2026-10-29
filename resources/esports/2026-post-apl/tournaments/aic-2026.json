@@ -1,0 +1,35 @@
+{
+  "code": "aic-2026",
+  "name": "Arena of Valor International Championship 2026",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "GLOBAL"
+  ],
+  "competitionType": "INTERNATIONAL_MAIN_EVENT",
+  "legacyResearchId": null,
+  "dates": {
+    "start": null,
+    "end": null,
+    "precision": "UNKNOWN",
+    "timezone": "Asia/Bangkok"
+  },
+  "sourceIds": [
+    "garena-2026-roadmap"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "ANNOUNCED_DETAILS_PENDING",
+  "teamCodes": [],
+  "assets": [],
+  "rosters": [],
+  "broadcastLinks": [],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "YEAR_END_ANNOUNCEMENT_ONLY",
+  "hostCountry": "TH",
+  "gaps": [
+    "Exact dates, qualifier structure and participants not verified from a primary announcement."
+  ]
+}

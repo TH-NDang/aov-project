@@ -1,0 +1,14 @@
+{
+  "code": "king-of-gamers-club-th",
+  "name": "King of Gamers Club",
+  "displayNameAtEvent": "King of Gamers Club",
+  "legacyResearchId": "team-ea751136fb95",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/king-of-gamers-club-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/King_of_Gamers_Club"
+}

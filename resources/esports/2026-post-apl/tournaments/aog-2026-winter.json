@@ -1,0 +1,532 @@
+{
+  "code": "aog-2026-winter",
+  "name": "Đấu Trường Danh Vọng mùa Đông 2026",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "VN"
+  ],
+  "competitionType": "MAIN_EVENT",
+  "legacyResearchId": "tournament-1c4f5f049d9c",
+  "dates": {
+    "start": "2026-08-29",
+    "end": "2026-11-07",
+    "precision": "DATE",
+    "timezone": "Asia/Bangkok"
+  },
+  "sourceIds": [
+    "garena-vn-league",
+    "garena-vn-finals"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "IN_PROGRESS",
+  "teamCodes": [
+    "team-flash-vn",
+    "saigon-phantom-vn",
+    "one-star-esports-vn",
+    "box-gaming-vn",
+    "fpt-polytechnic-vn",
+    "gam-esports-vn",
+    "team-secret-vn",
+    "rex-regum-qeon-vn-vn",
+    "boom-esports-vn-vn"
+  ],
+  "assets": [
+    "tournaments/aog-2026-winter/official-announcement-1.png",
+    "tournaments/aog-2026-winter/official-announcement-2.png",
+    "tournaments/aog-2026-winter/official-announcement-3.png",
+    "tournaments/aog-2026-winter/official-announcement-4.png",
+    "tournaments/aog-2026-winter/official-announcement-5.png",
+    "tournaments/aog-2026-winter/official-announcement-6.png"
+  ],
+  "rosters": [
+    {
+      "teamCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "HuyHoàng",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Julius",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Bridget",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "BéTrọc",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Yutan",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "JangOne",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Delios",
+          "role": "Middle",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "HieuDuc",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Nắng",
+          "role": "Top Lane",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Maris",
+          "role": "Middle",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Tony",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    },
+    {
+      "teamCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Nolan",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Yuu",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Fish",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Shin",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Khoa",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Soul",
+          "role": "Top Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "23xJuly",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "FirstOne",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Libr4",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Stark",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Zet",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Sea",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Csr",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "NamMilk",
+          "role": "Top Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Spiris",
+          "role": "Roamer",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "NoFear",
+          "role": null,
+          "rosterGroup": "unspecified"
+        },
+        {
+          "handle": "John",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    },
+    {
+      "teamCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "TriNguyen",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "08QT",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Chip",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Ciara",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Mapu",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Entidi",
+          "role": "Middle",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Peak",
+          "role": "Middle",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Oppa",
+          "role": null,
+          "rosterGroup": "unspecified"
+        },
+        {
+          "handle": "MajinBuu",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    },
+    {
+      "teamCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Vịt",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "ThànhDuy",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Sleepy",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Sindhu",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "ThếKhang",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Chu",
+          "role": "Middle",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "TH",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Han",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Kuga",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Yiuling",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Aliyah",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "TiếnPhát",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "PhúHoàng",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Adonis",
+          "role": "Top Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Owen",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "PS Man",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Ueki",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Acacia",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Kaisa",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Boka",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "TNhan",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Tlinhhh",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Ducky",
+          "role": "Jungler",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "TrPhuoc",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Elly",
+          "role": null,
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Turtle",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "TKien",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Gray",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Maris",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Triết",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Karl",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Sinwon",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Veritas",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Yang",
+          "role": "Jungler",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "LittleQ",
+          "role": "Jungler",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Tắck4",
+          "role": "Middle",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "JINWOO",
+          "role": null,
+          "rosterGroup": "unspecified"
+        },
+        {
+          "handle": "Finn",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    },
+    {
+      "teamCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "VinhHoang",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Anne",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Failure",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "ĐứcTiệp",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Tama",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "SEED",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Emper",
+          "role": "Top Lane",
+          "rosterGroup": "staff"
+        },
+        {
+          "handle": "Davi",
+          "role": null,
+          "rosterGroup": "unspecified"
+        }
+      ]
+    }
+  ],
+  "broadcastLinks": [
+    "https://www.youtube.com/@LienQuanMobileSportsGarena"
+  ],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "VERIFIED",
+  "discoverySourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+  "participantVerification": "PRIMARY_NAMES_WITH_SECONDARY_IDENTIFIERS"
+}

@@ -1,0 +1,14 @@
+{
+  "code": "fpt-polytechnic-vn",
+  "name": "FPT Polytechnic",
+  "displayNameAtEvent": "FPT Polytechnic",
+  "legacyResearchId": "team-e58a05f55f46",
+  "region": "VN",
+  "division": "OPEN",
+  "eventCodes": [
+    "aog-2026-winter"
+  ],
+  "logo": "teams/fpt-polytechnic-vn/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/FPT_Polytechnic"
+}

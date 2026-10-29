@@ -1,0 +1,1416 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-27",
+  "policy": "EVIDENCE_ONLY_NOT_GAME_API_PAYLOAD_NO_SYNTHETIC_DRAFT_OR_LOADOUTS",
+  "interpretation": "Each adjacent W/L pair shown by the source represents the two teams in one displayed game slot. Preserve source display order; team A/B is not blue/red side.",
+  "series": [
+    {
+      "seriesCode": "aogw26-0829-boom-esports-vn-saigon-phantom",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 1",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0829-gam-esports-box-gaming",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 1",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "gam-esports-vn",
+        "box-gaming-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0829-fpt-polytechnic-rex-regum-qeon-vn",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 1",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0830-team-secret-team-flash",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 1",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "team-flash-vn",
+        "team-secret-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0830-one-star-esports-rex-regum-qeon-vn",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 2",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "one-star-esports-vn",
+        "rex-regum-qeon-vn-vn",
+        "one-star-esports-vn",
+        "one-star-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0830-saigon-phantom-fpt-polytechnic",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 2",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0903-box-gaming-boom-esports-vn",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 2",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0903-gam-esports-team-secret",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 2",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "team-secret-vn",
+        "team-secret-vn",
+        "gam-esports-vn",
+        "team-secret-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0904-rex-regum-qeon-vn-saigon-phantom",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 3",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0904-team-secret-one-star-esports",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 3",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "one-star-esports-vn",
+        "one-star-esports-vn",
+        "team-secret-vn",
+        "one-star-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0904-team-flash-box-gaming",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 3",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "team-flash-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0905-boom-esports-vn-gam-esports",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 3",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "gam-esports-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0905-team-secret-saigon-phantom",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 4",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0905-one-star-esports-team-flash",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 4",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "one-star-esports-vn",
+        "one-star-esports-vn",
+        "team-flash-vn",
+        "team-flash-vn",
+        "one-star-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0906-rex-regum-qeon-vn-boom-esports-vn",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 4",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0906-fpt-polytechnic-box-gaming",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 4",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "box-gaming-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0906-saigon-phantom-one-star-esports",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 5",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "one-star-esports-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0910-boom-esports-vn-fpt-polytechnic",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 5",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "boom-esports-vn-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0910-team-flash-gam-esports",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 5",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "team-flash-vn",
+        "team-flash-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0911-box-gaming-team-secret",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 5",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "team-secret-vn",
+        "box-gaming-vn",
+        "team-secret-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0911-one-star-esports-fpt-polytechnic",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 6",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0911-saigon-phantom-gam-esports",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 6",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0912-boom-esports-vn-team-secret",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 6",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0912-team-flash-rex-regum-qeon-vn",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 6",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "team-flash-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0912-gam-esports-fpt-polytechnic",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 7",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "gam-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0913-box-gaming-one-star-esports",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 7",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "one-star-esports-vn",
+        "box-gaming-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0913-team-secret-rex-regum-qeon-vn",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 7",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "rex-regum-qeon-vn-vn",
+        "team-secret-vn",
+        "rex-regum-qeon-vn-vn",
+        "team-secret-vn",
+        "team-secret-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0913-saigon-phantom-team-flash",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 7",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0918-gam-esports-one-star-esports",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 8",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "one-star-esports-vn",
+        "gam-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0918-rex-regum-qeon-vn-box-gaming",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 8",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "box-gaming-vn",
+        "rex-regum-qeon-vn-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0918-team-flash-boom-esports-vn",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 8",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "team-flash-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0919-fpt-polytechnic-team-secret",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 8",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0919-one-star-esports-boom-esports-vn",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 9",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "one-star-esports-vn",
+        "one-star-esports-vn",
+        "boom-esports-vn-vn",
+        "one-star-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0919-box-gaming-saigon-phantom",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 9",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0920-rex-regum-qeon-vn-gam-esports",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 9",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "rex-regum-qeon-vn-vn",
+        "gam-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-0920-fpt-polytechnic-team-flash",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg",
+      "sourceCapture": "evidence/liquipedia-first-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 9",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1001-fpt-polytechnic-gam-esports",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 10",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1001-team-flash-one-star-esports",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 10",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "one-star-esports-vn",
+        "one-star-esports-vn",
+        "team-flash-vn",
+        "one-star-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1001-saigon-phantom-team-secret",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 10",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1002-box-gaming-rex-regum-qeon-vn",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 10",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "box-gaming-vn",
+        "rex-regum-qeon-vn-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1002-team-secret-boom-esports-vn",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 11",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "team-secret-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1002-team-flash-fpt-polytechnic",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 11",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "team-flash-vn",
+        "fpt-polytechnic-vn",
+        "team-flash-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1003-rex-regum-qeon-vn-one-star-esports",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 11",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "one-star-esports-vn",
+        "rex-regum-qeon-vn-vn",
+        "rex-regum-qeon-vn-vn",
+        "one-star-esports-vn",
+        "rex-regum-qeon-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1003-box-gaming-gam-esports",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 11",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "gam-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1003-fpt-polytechnic-boom-esports-vn",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 12",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1004-team-secret-gam-esports",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 12",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "team-secret-vn",
+        "gam-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1004-one-star-esports-saigon-phantom",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 12",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "one-star-esports-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1004-rex-regum-qeon-vn-team-flash",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 12",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "team-flash-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1008-gam-esports-boom-esports-vn",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 13",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "boom-esports-vn-vn",
+        "gam-esports-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1008-saigon-phantom-box-gaming",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 13",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1008-fpt-polytechnic-one-star-esports",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 13",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1009-rex-regum-qeon-vn-team-secret",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 13",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-secret-vn",
+        "rex-regum-qeon-vn-vn",
+        "rex-regum-qeon-vn-vn",
+        "team-secret-vn",
+        "team-secret-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1009-one-star-esports-box-gaming",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 14",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "box-gaming-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1009-saigon-phantom-boom-esports-vn",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 14",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1010-gam-esports-rex-regum-qeon-vn",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 14",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "gam-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1010-team-flash-team-secret",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 14",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-secret-vn",
+        "team-flash-vn",
+        "team-flash-vn",
+        "team-secret-vn",
+        "team-secret-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1010-box-gaming-fpt-polytechnic",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 15",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "box-gaming-vn",
+        "box-gaming-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1011-one-star-esports-team-secret",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "team-secret-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 15",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "one-star-esports-vn",
+        "team-secret-vn",
+        "one-star-esports-vn",
+        "one-star-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1011-boom-esports-vn-rex-regum-qeon-vn",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 15",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1011-team-flash-saigon-phantom",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 15",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1015-box-gaming-team-flash",
+      "teamACode": "box-gaming-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 16",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "team-flash-vn",
+        "box-gaming-vn",
+        "team-flash-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1015-boom-esports-vn-one-star-esports",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "one-star-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 16",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1015-gam-esports-saigon-phantom",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 16",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "gam-esports-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1016-rex-regum-qeon-vn-fpt-polytechnic",
+      "teamACode": "rex-regum-qeon-vn-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 16",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1016-gam-esports-team-flash",
+      "teamACode": "gam-esports-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 17",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "gam-esports-vn",
+        "gam-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1016-boom-esports-vn-box-gaming",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 17",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "box-gaming-vn",
+        "boom-esports-vn-vn",
+        "box-gaming-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1017-team-secret-fpt-polytechnic",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 17",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1017-saigon-phantom-rex-regum-qeon-vn",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "rex-regum-qeon-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 17",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "rex-regum-qeon-vn-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1017-boom-esports-vn-team-flash",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 18",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "team-flash-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "team-flash-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1018-team-secret-box-gaming",
+      "teamACode": "team-secret-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 18",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-secret-vn",
+        "box-gaming-vn",
+        "box-gaming-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1018-one-star-esports-gam-esports",
+      "teamACode": "one-star-esports-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 18",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "gam-esports-vn",
+        "one-star-esports-vn",
+        "one-star-esports-vn",
+        "one-star-esports-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-1018-fpt-polytechnic-saigon-phantom",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "saigon-phantom-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg",
+      "sourceCapture": "evidence/liquipedia-second-leg-dom.txt",
+      "sourceSection": "Detailed Results > Round 18",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-playoffs-02",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "boom-esports-vn-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "sourceCapture": "evidence/liquipedia-playoffs-dom.txt",
+      "sourceSection": "Playoffs > Bracket",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "saigon-phantom-vn",
+        "boom-esports-vn-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "boom-esports-vn-vn",
+        "saigon-phantom-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-playoffs-01",
+      "teamACode": "fpt-polytechnic-vn",
+      "teamBCode": "team-flash-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "sourceCapture": "evidence/liquipedia-playoffs-dom.txt",
+      "sourceSection": "Playoffs > Bracket",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-playoffs-06",
+      "teamACode": "saigon-phantom-vn",
+      "teamBCode": "fpt-polytechnic-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "sourceCapture": "evidence/liquipedia-playoffs-dom.txt",
+      "sourceSection": "Playoffs > Bracket",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "fpt-polytechnic-vn",
+        "saigon-phantom-vn",
+        "saigon-phantom-vn",
+        "fpt-polytechnic-vn",
+        "fpt-polytechnic-vn",
+        "saigon-phantom-vn",
+        "fpt-polytechnic-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-playoffs-04",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "gam-esports-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "sourceCapture": "evidence/liquipedia-playoffs-dom.txt",
+      "sourceSection": "Playoffs > Bracket",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn",
+        "gam-esports-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-playoffs-03",
+      "teamACode": "team-flash-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "sourceCapture": "evidence/liquipedia-playoffs-dom.txt",
+      "sourceSection": "Playoffs > Bracket",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "team-flash-vn",
+        "box-gaming-vn",
+        "team-flash-vn",
+        "box-gaming-vn",
+        "box-gaming-vn",
+        "team-flash-vn",
+        "box-gaming-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    },
+    {
+      "seriesCode": "aogw26-playoffs-05",
+      "teamACode": "boom-esports-vn-vn",
+      "teamBCode": "box-gaming-vn",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter/Playoffs",
+      "sourceCapture": "evidence/liquipedia-playoffs-dom.txt",
+      "sourceSection": "Playoffs > Bracket",
+      "verification": "SECONDARY_CAPTURE",
+      "gameWinnersInSourceDisplayOrder": [
+        "box-gaming-vn",
+        "boom-esports-vn-vn",
+        "box-gaming-vn",
+        "boom-esports-vn-vn",
+        "box-gaming-vn",
+        "boom-esports-vn-vn",
+        "boom-esports-vn-vn"
+      ],
+      "sideAssignmentKnown": false,
+      "heroDraftsKnown": false,
+      "loadoutsKnown": false
+    }
+  ],
+  "gameCount": 315
+}

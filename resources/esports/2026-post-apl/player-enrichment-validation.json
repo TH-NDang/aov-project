@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "phase": "PHASE_1_FROZEN",
+  "reviewedAsOf": "2026-10-27",
+  "planSha256": "92432dc404dbd2cc9a2de31f4a20e5edf9002e9b0d68b24b0afadc3b58beb4ad",
+  "verifiedPlayers": 59,
+  "verifiedByEvent": {
+    "gcs-2026-summer": 46,
+    "aog-2026-winter": 7,
+    "qog-2026-winter": 6
+  },
+  "verifiedByTeam": {
+    "deep-cross-gaming-tw": 6,
+    "wanin-flash-wolves-tw": 6,
+    "ank-gaming-tw": 6,
+    "banmei-gaming-tw": 7,
+    "one-team-tw": 6,
+    "hong-kong-attitude-hk": 6,
+    "lit-team-tw": 9,
+    "gam-esports-vn": 7,
+    "gam-esports-vn-women": 6
+  },
+  "unknownLane": 8,
+  "unknownCountry": 59,
+  "provisionalPlayers": 85,
+  "excludedPersonnel": 27,
+  "logoRows": 17,
+  "importReadyLogos": 14,
+  "pendingLogos": [
+    "alg-queen-vn-women",
+    "five-dragon-princesses-vn-women",
+    "wvhs-vn-women"
+  ],
+  "errors": [],
+  "passed": true
+}

@@ -1,0 +1,14 @@
+{
+  "code": "lit-team-tw",
+  "name": "LIT Team",
+  "displayNameAtEvent": "LIT Esports",
+  "legacyResearchId": "team-fcae72653913",
+  "region": "TW",
+  "division": "OPEN",
+  "eventCodes": [
+    "gcs-2026-summer"
+  ],
+  "logo": "teams/lit-team-tw/logo.png",
+  "logoReviewRequired": false,
+  "sourceUrl": "https://liquipedia.net/honorofkings/LIT_Team"
+}

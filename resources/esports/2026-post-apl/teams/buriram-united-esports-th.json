@@ -1,0 +1,14 @@
+{
+  "code": "buriram-united-esports-th",
+  "name": "Buriram United Esports",
+  "displayNameAtEvent": "Buriram United Esports",
+  "legacyResearchId": "team-164451e3e373",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/buriram-united-esports-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Buriram_United_Esports"
+}

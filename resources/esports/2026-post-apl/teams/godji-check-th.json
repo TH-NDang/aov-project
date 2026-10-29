@@ -1,0 +1,14 @@
+{
+  "code": "godji-check-th",
+  "name": "Godji Check",
+  "displayNameAtEvent": "Godji Check",
+  "legacyResearchId": "team-6c8ef647b0a7",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/godji-check-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Godji_Check&action=edit&redlink=1"
+}

@@ -1,0 +1,14 @@
+{
+  "code": "wanin-flash-wolves-tw",
+  "name": "WANIN Flash Wolves",
+  "displayNameAtEvent": "WANIN Flash Wolves",
+  "legacyResearchId": "team-b8665aaea34f",
+  "region": "TW",
+  "division": "OPEN",
+  "eventCodes": [
+    "gcs-2026-summer"
+  ],
+  "logo": "teams/wanin-flash-wolves-tw/logo.png",
+  "logoReviewRequired": false,
+  "sourceUrl": "https://liquipedia.net/honorofkings/WANIN_Flash_Wolves"
+}

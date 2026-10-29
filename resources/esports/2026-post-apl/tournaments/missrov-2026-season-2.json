@@ -1,0 +1,41 @@
+{
+  "code": "missrov-2026-season-2",
+  "name": "Miss RoV Tournament 2026 Season 2",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "TH"
+  ],
+  "competitionType": "WOMENS_MAIN_EVENT",
+  "legacyResearchId": null,
+  "dates": {
+    "start": "2026-10-12",
+    "end": "2026-10-25",
+    "precision": "DATE",
+    "timezone": "Asia/Bangkok"
+  },
+  "sourceIds": [
+    "garena-missrov-rules",
+    "garena-missrov-trailer"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+  "teamCodes": [],
+  "assets": [
+    "tournaments/missrov-2026-season-2/official-trailer-thumbnail.jpg"
+  ],
+  "rosters": [],
+  "broadcastLinks": [
+    "https://www.youtube.com/watch?v=_GBmiiRTAyY"
+  ],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "VERIFIED",
+  "qualifiesFor": null,
+  "gaps": [
+    "Full participating team and roster list not yet verified. No men's roster or logo is substituted for the women's team.",
+    "Final results require a primary post-event source; scheduled finish alone is not a verified result."
+  ]
+}

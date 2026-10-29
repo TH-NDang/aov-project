@@ -1,0 +1,14 @@
+{
+  "code": "one-team-tw",
+  "name": "ONE Team",
+  "displayNameAtEvent": "Cathay ONE Team",
+  "legacyResearchId": "team-b09b7f26a9dc",
+  "region": "TW",
+  "division": "OPEN",
+  "eventCodes": [
+    "gcs-2026-summer"
+  ],
+  "logo": "teams/one-team-tw/logo.png",
+  "logoReviewRequired": false,
+  "sourceUrl": "https://liquipedia.net/honorofkings/ONE_Team"
+}

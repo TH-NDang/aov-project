@@ -1,0 +1,14 @@
+{
+  "code": "deep-cross-gaming-tw",
+  "name": "Deep Cross Gaming",
+  "displayNameAtEvent": "Relove Deep Cross Gaming",
+  "legacyResearchId": "team-071aa0409544",
+  "region": "TW",
+  "division": "OPEN",
+  "eventCodes": [
+    "gcs-2026-summer"
+  ],
+  "logo": "teams/deep-cross-gaming-tw/logo.png",
+  "logoReviewRequired": false,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Deep_Cross_Gaming"
+}

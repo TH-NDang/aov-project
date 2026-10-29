@@ -1,0 +1,1420 @@
+{
+  "schemaVersion": 1,
+  "reviewedAsOf": "2026-10-27",
+  "primaryManifestUnchanged": true,
+  "scope": "Standard Arena of Valor professional/official events and their qualifiers after July, including overlapping and announced events.",
+  "access": {
+    "livePages": "HTTP_403",
+    "fallback": [
+      "Existing Liquipedia collection captured 14-15 October 2026",
+      "Search engine's indexed Liquipedia documents"
+    ],
+    "note": "No login challenge or access restriction was bypassed. Indexed content may be stale or differ by page."
+  },
+  "events": [
+    {
+      "code": "aog-2026-winter",
+      "primaryName": "Đấu Trường Danh Vọng mùa Đông 2026",
+      "regions": [
+        "VN"
+      ],
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "liquipediaName": "Arena of Glory Winter 2026",
+      "tier": "A-Tier",
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "LEAGUE",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": "Offline",
+      "dateClaim": {
+        "start": "2026-08-29",
+        "end": "2026-11-07"
+      },
+      "primarySourceIds": [
+        "garena-vn-league",
+        "garena-vn-finals"
+      ],
+      "result": null,
+      "knownPlacements": [],
+      "standingsSnapshots": [
+        {
+          "phase": "REGULAR_SEASON",
+          "capturedAt": "2026-10-14T19:33:41.392Z",
+          "currentAsOfReview": false,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "rows": [
+            {
+              "rank": 1,
+              "status": "RANKED",
+              "teamName": "Saigon Phantom",
+              "seriesWon": 13,
+              "seriesLost": 0,
+              "gamesWon": 39,
+              "gamesLost": 8,
+              "gameDifference": 31,
+              "points": 13
+            },
+            {
+              "rank": 2,
+              "status": "RANKED",
+              "teamName": "FPT Polytechnic",
+              "seriesWon": 11,
+              "seriesLost": 2,
+              "gamesWon": 37,
+              "gamesLost": 13,
+              "gameDifference": 24,
+              "points": 11
+            },
+            {
+              "rank": 3,
+              "status": "RANKED",
+              "teamName": "BOOM Esports VN",
+              "seriesWon": 7,
+              "seriesLost": 6,
+              "gamesWon": 27,
+              "gamesLost": 22,
+              "gameDifference": 5,
+              "points": 7
+            },
+            {
+              "rank": 4,
+              "status": "RANKED",
+              "teamName": "Team Flash",
+              "seriesWon": 6,
+              "seriesLost": 7,
+              "gamesWon": 26,
+              "gamesLost": 24,
+              "gameDifference": 2,
+              "points": 6
+            },
+            {
+              "rank": 5,
+              "status": "RANKED",
+              "teamName": "GAM Esports",
+              "seriesWon": 6,
+              "seriesLost": 7,
+              "gamesWon": 26,
+              "gamesLost": 26,
+              "gameDifference": 0,
+              "points": 6
+            },
+            {
+              "rank": 6,
+              "status": "RANKED",
+              "teamName": "Box Gaming",
+              "seriesWon": 6,
+              "seriesLost": 7,
+              "gamesWon": 21,
+              "gamesLost": 27,
+              "gameDifference": -6,
+              "points": 6
+            },
+            {
+              "rank": 7,
+              "status": "RANKED",
+              "teamName": "One Star Esports",
+              "seriesWon": 6,
+              "seriesLost": 8,
+              "gamesWon": 24,
+              "gamesLost": 31,
+              "gameDifference": -7,
+              "points": 6
+            },
+            {
+              "rank": 8,
+              "status": "RANKED",
+              "teamName": "Team Secret",
+              "seriesWon": 4,
+              "seriesLost": 10,
+              "gamesWon": 19,
+              "gamesLost": 38,
+              "gameDifference": -19,
+              "points": 4
+            },
+            {
+              "rank": 9,
+              "status": "RANKED",
+              "teamName": "Rex Regum Qeon VN",
+              "seriesWon": 1,
+              "seriesLost": 13,
+              "gamesWon": 11,
+              "gamesLost": 41,
+              "gameDifference": -30,
+              "points": 1
+            }
+          ]
+        }
+      ],
+      "assets": [
+        "liquipedia/tournaments/aog-2026-winter/logo.png"
+      ],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "capturedAt": "2026-10-14T19:33:41.392Z",
+      "sourceAccess": "LIVE_HTTP_403; EXISTING_CAPTURE_AND_SEARCH_INDEX_USED",
+      "state": "ONGOING",
+      "stateBasis": "Verified current competition dates plus unfinished bracket; no winner inferred."
+    },
+    {
+      "code": "gcs-2026-summer",
+      "primaryName": "Garena Challenger Series Summer 2026",
+      "regions": [
+        "TW",
+        "HK",
+        "MO"
+      ],
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "liquipediaName": "Garena Challenger Series Summer 2026",
+      "tier": "A-Tier",
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "LEAGUE",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": "Offline",
+      "dateClaim": {
+        "start": "2026-08-22",
+        "end": "2026-10-31"
+      },
+      "primarySourceIds": [
+        "garena-gcs-announcement",
+        "garena-gcs-schedule"
+      ],
+      "result": null,
+      "knownPlacements": [
+        {
+          "place": "5",
+          "teamName": "BanMei Gaming",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+          "capturedAt": "2026-10-14T19:38:05.130Z"
+        },
+        {
+          "place": "6",
+          "teamName": "ONE Team",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+          "capturedAt": "2026-10-14T19:38:05.130Z"
+        },
+        {
+          "place": "7",
+          "teamName": "LIT Team",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+          "capturedAt": "2026-10-14T19:38:05.130Z"
+        }
+      ],
+      "standingsSnapshots": [
+        {
+          "phase": "REGULAR_SEASON",
+          "capturedAt": "2026-10-14T19:38:05.130Z",
+          "currentAsOfReview": false,
+          "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+          "rows": [
+            {
+              "rank": 1,
+              "status": "RANKED",
+              "teamName": "ANK Gaming",
+              "seriesWon": 9,
+              "seriesLost": 3,
+              "gamesWon": 32,
+              "gamesLost": 19,
+              "gameDifference": 13,
+              "points": 9
+            },
+            {
+              "rank": 2,
+              "status": "RANKED",
+              "teamName": "Deep Cross Gaming",
+              "seriesWon": 9,
+              "seriesLost": 3,
+              "gamesWon": 30,
+              "gamesLost": 19,
+              "gameDifference": 11,
+              "points": 9
+            },
+            {
+              "rank": 3,
+              "status": "RANKED",
+              "teamName": "Hong Kong Attitude",
+              "seriesWon": 8,
+              "seriesLost": 4,
+              "gamesWon": 28,
+              "gamesLost": 18,
+              "gameDifference": 10,
+              "points": 8
+            },
+            {
+              "rank": 4,
+              "status": "RANKED",
+              "teamName": "WANIN Flash Wolves",
+              "seriesWon": 7,
+              "seriesLost": 5,
+              "gamesWon": 29,
+              "gamesLost": 23,
+              "gameDifference": 6,
+              "points": 7
+            },
+            {
+              "rank": 5,
+              "status": "RANKED",
+              "teamName": "BanMei Gaming",
+              "seriesWon": 5,
+              "seriesLost": 7,
+              "gamesWon": 20,
+              "gamesLost": 25,
+              "gameDifference": -5,
+              "points": 5
+            },
+            {
+              "rank": 6,
+              "status": "RANKED",
+              "teamName": "ONE Team",
+              "seriesWon": 4,
+              "seriesLost": 8,
+              "gamesWon": 25,
+              "gamesLost": 26,
+              "gameDifference": -1,
+              "points": 4
+            },
+            {
+              "rank": 7,
+              "status": "RANKED",
+              "teamName": "LIT Team",
+              "seriesWon": 0,
+              "seriesLost": 12,
+              "gamesWon": 2,
+              "gamesLost": 36,
+              "gameDifference": -34,
+              "points": 0
+            }
+          ]
+        }
+      ],
+      "assets": [
+        "liquipedia/tournaments/gcs-2026-summer/logo.png"
+      ],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "capturedAt": "2026-10-14T19:38:05.130Z",
+      "sourceAccess": "LIVE_HTTP_403; EXISTING_CAPTURE_AND_SEARCH_INDEX_USED",
+      "state": "ONGOING",
+      "stateBasis": "Verified current competition dates plus unfinished bracket; no winner inferred.",
+      "scheduledFinal": {
+        "playedOn": "2026-10-31",
+        "teamNames": [
+          "ANK",
+          "Relove DCG"
+        ],
+        "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5750",
+        "authority": "PRIMARY_ORGANIZER",
+        "scores": null
+      }
+    },
+    {
+      "code": "rpl-2026-winter",
+      "primaryName": "RoV Pro League 2026 Winter",
+      "regions": [
+        "TH"
+      ],
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+      "liquipediaName": "RoV Pro League 2026 Winter",
+      "tier": "A-Tier",
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "LEAGUE",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": "Offline",
+      "dateClaim": {
+        "start": "2026-08-22",
+        "end": "2026-10-25"
+      },
+      "primarySourceIds": [
+        "garena-rpl-opening",
+        "impact-rpl-finals"
+      ],
+      "result": {
+        "winner": "Buriram United Esports",
+        "runnerUp": "FULL SENSE",
+        "winnerScore": 4,
+        "runnerUpScore": 2,
+        "playedOn": "2026-10-25",
+        "round": "Grand Final",
+        "confidence": "SECONDARY_CORROBORATED",
+        "sourceUrls": [
+          "https://liquipedia.net/honorofkings/Buriram_United_Esports",
+          "https://mgronline.com/game/detail/9690000103059"
+        ],
+        "retrievedAsOf": "2026-10-27"
+      },
+      "knownPlacements": [
+        {
+          "place": "5",
+          "teamName": "King of Gamers Club",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+          "capturedAt": "2026-10-14T19:42:37.731Z"
+        },
+        {
+          "place": "6",
+          "teamName": "SOLYX",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+          "capturedAt": "2026-10-14T19:42:37.731Z"
+        },
+        {
+          "place": "7",
+          "teamName": "Bacon Time",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+          "capturedAt": "2026-10-14T19:42:37.731Z"
+        },
+        {
+          "place": "8",
+          "teamName": "Godji Check",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+          "capturedAt": "2026-10-14T19:42:37.731Z"
+        },
+        {
+          "place": "9",
+          "teamName": "Hydra Esports",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+          "capturedAt": "2026-10-14T19:42:37.731Z"
+        }
+      ],
+      "standingsSnapshots": [
+        {
+          "phase": "REGULAR_SEASON",
+          "capturedAt": "2026-10-14T19:42:37.731Z",
+          "currentAsOfReview": false,
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2026/Winter",
+          "rows": [
+            {
+              "rank": 1,
+              "status": "RANKED",
+              "teamName": "FULL SENSE",
+              "seriesWon": 14,
+              "seriesLost": 2,
+              "gamesWon": 42,
+              "gamesLost": 21,
+              "gameDifference": 21,
+              "points": 14
+            },
+            {
+              "rank": 2,
+              "status": "RANKED",
+              "teamName": "Buriram United Esports",
+              "seriesWon": 12,
+              "seriesLost": 4,
+              "gamesWon": 39,
+              "gamesLost": 22,
+              "gameDifference": 17,
+              "points": 12
+            },
+            {
+              "rank": 3,
+              "status": "RANKED",
+              "teamName": "eArena",
+              "seriesWon": 11,
+              "seriesLost": 5,
+              "gamesWon": 40,
+              "gamesLost": 23,
+              "gameDifference": 17,
+              "points": 11
+            },
+            {
+              "rank": 4,
+              "status": "RANKED",
+              "teamName": "Tenacity",
+              "seriesWon": 9,
+              "seriesLost": 7,
+              "gamesWon": 34,
+              "gamesLost": 27,
+              "gameDifference": 7,
+              "points": 9
+            },
+            {
+              "rank": 5,
+              "status": "RANKED",
+              "teamName": "King of Gamers Club",
+              "seriesWon": 9,
+              "seriesLost": 7,
+              "gamesWon": 35,
+              "gamesLost": 30,
+              "gameDifference": 5,
+              "points": 9
+            },
+            {
+              "rank": 6,
+              "status": "RANKED",
+              "teamName": "SOLYX",
+              "seriesWon": 7,
+              "seriesLost": 9,
+              "gamesWon": 31,
+              "gamesLost": 34,
+              "gameDifference": -3,
+              "points": 7
+            },
+            {
+              "rank": 7,
+              "status": "RANKED",
+              "teamName": "Bacon Time",
+              "seriesWon": 6,
+              "seriesLost": 10,
+              "gamesWon": 29,
+              "gamesLost": 37,
+              "gameDifference": -8,
+              "points": 6
+            },
+            {
+              "rank": 8,
+              "status": "RANKED",
+              "teamName": "Godji Check",
+              "seriesWon": 4,
+              "seriesLost": 12,
+              "gamesWon": 21,
+              "gamesLost": 43,
+              "gameDifference": -22,
+              "points": 4
+            },
+            {
+              "rank": 9,
+              "status": "RANKED",
+              "teamName": "Hydra Esports",
+              "seriesWon": 0,
+              "seriesLost": 16,
+              "gamesWon": 14,
+              "gamesLost": 48,
+              "gameDifference": -34,
+              "points": 0
+            }
+          ]
+        }
+      ],
+      "assets": [
+        "liquipedia/tournaments/rpl-2026-winter/logo.png"
+      ],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "capturedAt": "2026-10-14T19:42:37.731Z",
+      "sourceAccess": "LIVE_HTTP_403; EXISTING_CAPTURE_AND_SEARCH_INDEX_USED",
+      "state": "COMPLETED_RESULT_SOURCED",
+      "freshnessWarning": "Liquipedia event and series search snapshots still show TBD, while the team's achievement table and 27 October press report give 4:2. Preserve source-specific timestamps."
+    },
+    {
+      "code": "tepl-2026",
+      "primaryName": "RoV Thailand Esports Premier League 2026",
+      "regions": [
+        "TH"
+      ],
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+      "liquipediaName": "RoV Thailand Esports Premier League 2026",
+      "tier": "B-Tier",
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "LEAGUE",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": "Offline",
+      "dateClaim": {
+        "start": "2026-06-27",
+        "end": "2026-08-09"
+      },
+      "primarySourceIds": [
+        "sat-tepl-finals",
+        "garena-tepl-finals"
+      ],
+      "result": {
+        "winner": "Gangrocket",
+        "runnerUp": "Satoshi x iBitzz",
+        "winnerScore": 4,
+        "runnerUpScore": 0,
+        "playedOn": "2026-08-09",
+        "round": "Grand Final",
+        "confidence": "LIQUIPEDIA_CAPTURE",
+        "sourceUrls": [
+          "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026"
+        ],
+        "capturedAt": "2026-10-14T19:52:46.513Z"
+      },
+      "knownPlacements": [
+        {
+          "place": "1",
+          "teamName": "Gangrocket",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        },
+        {
+          "place": "2",
+          "teamName": "Satoshi x iBitzz",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        },
+        {
+          "place": "3",
+          "teamName": "LUNYX X RADIANT",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        },
+        {
+          "place": "4",
+          "teamName": "Rockstar Dream",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        },
+        {
+          "place": "5",
+          "teamName": "1stEsan",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        },
+        {
+          "place": "6",
+          "teamName": "SuperJong",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        },
+        {
+          "place": "7",
+          "teamName": "iBitzz 168",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        },
+        {
+          "place": "DNF",
+          "teamName": "RedKid7",
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "capturedAt": "2026-10-14T19:52:46.513Z"
+        }
+      ],
+      "standingsSnapshots": [
+        {
+          "phase": "REGULAR_SEASON",
+          "capturedAt": "2026-10-14T19:52:46.513Z",
+          "currentAsOfReview": false,
+          "sourceUrl": "https://liquipedia.net/honorofkings/RoV_Thailand_Esports_Premier_League/2026",
+          "rows": [
+            {
+              "rank": 1,
+              "status": "RANKED",
+              "teamName": "Gangrocket",
+              "seriesWon": 7,
+              "seriesLost": 0,
+              "gamesWon": 21,
+              "gamesLost": 3,
+              "gameDifference": 18,
+              "points": 7
+            },
+            {
+              "rank": 2,
+              "status": "RANKED",
+              "teamName": "LUNYX X RADIANT",
+              "seriesWon": 6,
+              "seriesLost": 1,
+              "gamesWon": 19,
+              "gamesLost": 8,
+              "gameDifference": 11,
+              "points": 6
+            },
+            {
+              "rank": 3,
+              "status": "RANKED",
+              "teamName": "Satoshi x iBitzz",
+              "seriesWon": 5,
+              "seriesLost": 2,
+              "gamesWon": 19,
+              "gamesLost": 7,
+              "gameDifference": 12,
+              "points": 5
+            },
+            {
+              "rank": 4,
+              "status": "RANKED",
+              "teamName": "Rockstar Dream",
+              "seriesWon": 3,
+              "seriesLost": 4,
+              "gamesWon": 12,
+              "gamesLost": 12,
+              "gameDifference": 0,
+              "points": 3
+            },
+            {
+              "rank": 5,
+              "status": "RANKED",
+              "teamName": "1stEsan",
+              "seriesWon": 3,
+              "seriesLost": 4,
+              "gamesWon": 10,
+              "gamesLost": 14,
+              "gameDifference": -4,
+              "points": 3
+            },
+            {
+              "rank": 6,
+              "status": "RANKED",
+              "teamName": "SuperJong",
+              "seriesWon": 3,
+              "seriesLost": 4,
+              "gamesWon": 10,
+              "gamesLost": 15,
+              "gameDifference": -5,
+              "points": 3
+            },
+            {
+              "rank": 7,
+              "status": "RANKED",
+              "teamName": "iBitzz 168",
+              "seriesWon": 1,
+              "seriesLost": 6,
+              "gamesWon": 7,
+              "gamesLost": 18,
+              "gameDifference": -11,
+              "points": 1
+            },
+            {
+              "rank": null,
+              "status": "DISQUALIFIED",
+              "teamName": "RedKid7",
+              "seriesWon": 0,
+              "seriesLost": 7,
+              "gamesWon": 0,
+              "gamesLost": 21,
+              "gameDifference": -21,
+              "points": 0
+            }
+          ]
+        }
+      ],
+      "assets": [
+        "liquipedia/tournaments/tepl-2026/logo.png"
+      ],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "capturedAt": "2026-10-14T19:52:46.513Z",
+      "sourceAccess": "LIVE_HTTP_403; EXISTING_CAPTURE_AND_SEARCH_INDEX_USED",
+      "state": "COMPLETED_RESULT_SOURCED",
+      "qualificationNote": "Liquipedia lists a promotion playoff against Godji Check for an RPL 2027 seat; do not treat the TEPL championship alone as an automatically awarded RPL main-league slot."
+    },
+    {
+      "code": "qog-2026-winter",
+      "primaryName": "Queens of Glory mùa Đông 2026",
+      "regions": [
+        "VN"
+      ],
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/Queens_of_Glory/2026/Winter",
+      "liquipediaName": "Queens of Glory Winter 2026",
+      "tier": "C-Tier",
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "CUP",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": "Online/Offline",
+      "dateClaim": {
+        "start": "2026-10-19",
+        "end": "2026-11-01"
+      },
+      "primarySourceIds": [
+        "garena-vn-qog"
+      ],
+      "result": null,
+      "knownPlacements": [],
+      "standingsSnapshots": [],
+      "assets": [],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "capturedAt": "2026-10-14T20:27:42.468Z",
+      "sourceAccess": "LIVE_HTTP_403; EXISTING_CAPTURE_AND_SEARCH_INDEX_USED",
+      "state": "ONGOING",
+      "stateBasis": "Verified current competition dates plus unfinished bracket; no winner inferred.",
+      "indexedVenueClaim": {
+        "mode": "Offline",
+        "venue": "VPS Arena",
+        "city": "Ho Chi Minh City",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Queens_of_Glory/2026/Winter",
+        "reviewedAsOf": "2026-10-27",
+        "note": "Newer indexed claim differs from legacy Online/Offline; preserve both until organizer venue cross-check."
+      },
+      "groupStageResults": {
+        "sourceUrl": "https://liquipedia.net/honorofkings/Queens_of_Glory/2026/Winter",
+        "authority": "LIQUIPEDIA_SEARCH_INDEX_SECONDARY",
+        "reviewedAsOf": "2026-10-27",
+        "groups": {
+          "A": [
+            {
+              "rank": 1,
+              "team": "One Star Esports Women",
+              "won": 2,
+              "lost": 0
+            },
+            {
+              "rank": 2,
+              "team": "GAM Esports Women",
+              "won": 2,
+              "lost": 1
+            },
+            {
+              "rank": 3,
+              "team": "Team Secret Dino",
+              "won": 1,
+              "lost": 2
+            },
+            {
+              "rank": 4,
+              "team": "WESC.VHS",
+              "won": 0,
+              "lost": 2
+            }
+          ],
+          "B": [
+            {
+              "rank": 1,
+              "team": "Five Dragon Princesses",
+              "won": 2,
+              "lost": 0
+            },
+            {
+              "rank": 2,
+              "team": "Saigon Phantom Ladies",
+              "won": 2,
+              "lost": 1
+            },
+            {
+              "rank": 3,
+              "team": "ALG Queen",
+              "won": 1,
+              "lost": 2
+            },
+            {
+              "rank": 4,
+              "team": "BOOM Esports Women",
+              "won": 0,
+              "lost": 2
+            }
+          ]
+        },
+        "matches": [
+          {
+            "playedOn": "2026-10-19",
+            "group": "A",
+            "teamA": "One Star Esports Women",
+            "scoreA": 2,
+            "scoreB": 0,
+            "teamB": "WESC.VHS",
+            "bestOf": 3
+          },
+          {
+            "playedOn": "2026-10-19",
+            "group": "A",
+            "teamA": "GAM Esports Women",
+            "scoreA": 2,
+            "scoreB": 0,
+            "teamB": "Team Secret Dino",
+            "bestOf": 3
+          },
+          {
+            "playedOn": "2026-10-20",
+            "group": "A",
+            "teamA": "WESC.VHS",
+            "scoreA": 0,
+            "scoreB": 3,
+            "teamB": "Team Secret Dino",
+            "bestOf": 5
+          },
+          {
+            "playedOn": "2026-10-20",
+            "group": "A",
+            "teamA": "One Star Esports Women",
+            "scoreA": 3,
+            "scoreB": 0,
+            "teamB": "GAM Esports Women",
+            "bestOf": 5
+          },
+          {
+            "playedOn": "2026-10-22",
+            "group": "A",
+            "teamA": "GAM Esports Women",
+            "scoreA": 3,
+            "scoreB": 1,
+            "teamB": "Team Secret Dino",
+            "bestOf": 5
+          },
+          {
+            "playedOn": "2026-10-19",
+            "group": "B",
+            "teamA": "Saigon Phantom Ladies",
+            "scoreA": 1,
+            "scoreB": 2,
+            "teamB": "ALG Queen",
+            "bestOf": 3
+          },
+          {
+            "playedOn": "2026-10-19",
+            "group": "B",
+            "teamA": "BOOM Esports Women",
+            "scoreA": 0,
+            "scoreB": 2,
+            "teamB": "Five Dragon Princesses",
+            "bestOf": 3
+          },
+          {
+            "playedOn": "2026-10-21",
+            "group": "B",
+            "teamA": "Saigon Phantom Ladies",
+            "scoreA": 3,
+            "scoreB": 0,
+            "teamB": "BOOM Esports Women",
+            "bestOf": 5
+          },
+          {
+            "playedOn": "2026-10-21",
+            "group": "B",
+            "teamA": "ALG Queen",
+            "scoreA": 1,
+            "scoreB": 3,
+            "teamB": "Five Dragon Princesses",
+            "bestOf": 5
+          },
+          {
+            "playedOn": "2026-10-22",
+            "group": "B",
+            "teamA": "ALG Queen",
+            "scoreA": 1,
+            "scoreB": 3,
+            "teamB": "Saigon Phantom Ladies",
+            "bestOf": 5
+          }
+        ]
+      }
+    },
+    {
+      "code": "qog-2026-winter-qualifier",
+      "primaryName": "Queens of Glory mùa Đông 2026 — Vòng tuyển chọn",
+      "regions": [
+        "VN"
+      ],
+      "liquipediaUrl": null,
+      "liquipediaName": null,
+      "tier": null,
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "QUALIFIER",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": null,
+      "dateClaim": null,
+      "primarySourceIds": [
+        "garena-vn-qog"
+      ],
+      "result": null,
+      "knownPlacements": [],
+      "standingsSnapshots": [],
+      "assets": [],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "sourceAccess": "NO_MATCHING_LIQUIPEDIA_EVENT_PAGE_VERIFIED",
+      "state": "OCCURRED_DATES_UNKNOWN"
+    },
+    {
+      "code": "missrov-2026-season-2",
+      "primaryName": "Miss RoV Tournament 2026 Season 2",
+      "regions": [
+        "TH"
+      ],
+      "liquipediaUrl": null,
+      "liquipediaName": null,
+      "tier": null,
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "CUP",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": null,
+      "dateClaim": null,
+      "primarySourceIds": [
+        "garena-missrov-rules",
+        "garena-missrov-trailer"
+      ],
+      "result": {
+        "winner": "eArena Women",
+        "runnerUp": "Hydra Women",
+        "winnerScore": 4,
+        "runnerUpScore": 2,
+        "playedOn": "2026-10-25",
+        "confidence": "SECONDARY_PRESS_ONLY",
+        "sourceUrls": [
+          "https://mgronline.com/game/detail/9690000103059"
+        ],
+        "retrievedAsOf": "2026-10-27",
+        "note": "Women's division; do not link these names to men's team records."
+      },
+      "knownPlacements": [],
+      "standingsSnapshots": [],
+      "assets": [],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "sourceAccess": "NO_MATCHING_LIQUIPEDIA_EVENT_PAGE_VERIFIED",
+      "state": "COMPLETED_SECONDARY_PRESS_RESULT"
+    },
+    {
+      "code": "missrov-2026-season-2-qualifier",
+      "primaryName": "Miss RoV Tournament 2026 Season 2 — Online Qualifier",
+      "regions": [
+        "TH"
+      ],
+      "liquipediaUrl": null,
+      "liquipediaName": null,
+      "tier": null,
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "QUALIFIER",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": null,
+      "dateClaim": null,
+      "primarySourceIds": [
+        "garena-missrov-rules"
+      ],
+      "result": null,
+      "knownPlacements": [],
+      "standingsSnapshots": [],
+      "assets": [],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "sourceAccess": "NO_MATCHING_LIQUIPEDIA_EVENT_PAGE_VERIFIED",
+      "state": "SCHEDULE_ENDED_RESULTS_UNVERIFIED"
+    },
+    {
+      "code": "aic-2026",
+      "primaryName": "Arena of Valor International Championship 2026",
+      "regions": [
+        "GLOBAL"
+      ],
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/Arena_of_Valor_International_Championship/2026",
+      "liquipediaName": null,
+      "tier": null,
+      "tierAuthority": "LIQUIPEDIA_CLASSIFICATION_NOT_GARENA_RANK",
+      "competitionKind": "CUP",
+      "competitionKindBasis": "INFERRED_FROM_DOCUMENTED_FORMAT_OR_EVENT_PURPOSE",
+      "venueMode": null,
+      "dateClaim": null,
+      "primarySourceIds": [
+        "garena-2026-roadmap"
+      ],
+      "result": null,
+      "knownPlacements": [],
+      "standingsSnapshots": [],
+      "assets": [],
+      "reviewedAsOf": "2026-10-27",
+      "sourcePolicy": "Additive research only; never silently overwrite existing primary metadata.",
+      "sourceAccess": "LIVE_HTTP_403; MAIN_EVENT_METADATA_NOT_RETRIEVED",
+      "state": "ANNOUNCED_EXACT_DATES_UNKNOWN",
+      "note": "Do not copy the tier, dates, roster or venue from AIC 2025, HoK KIC 2026 or the AIC wildcard into the main event."
+    },
+    {
+      "code": "aic-2026-wildcard",
+      "primaryName": null,
+      "liquipediaName": "Arena of Valor International Championship 2026 - Wildcard",
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/Arena_of_Valor_International_Championship/2026/Wildcard",
+      "regions": [
+        "TH",
+        "TW",
+        "ID",
+        "VN"
+      ],
+      "tier": "Qualifier",
+      "targetTier": "A-Tier",
+      "competitionKind": "QUALIFIER",
+      "competitionKindBasis": "EXPLICIT_LIQUIPEDIA_EVENT_DESCRIPTION",
+      "venueMode": "Online",
+      "dateClaim": {
+        "start": "2026-11-16",
+        "end": "2026-11-17",
+        "precision": "DATE",
+        "authority": "LIQUIPEDIA_SEARCH_INDEX_SECONDARY"
+      },
+      "state": "SCHEDULED_SECONDARY",
+      "participantCount": 8,
+      "qualificationSlots": 4,
+      "qualifiesFor": "aic-2026",
+      "result": null,
+      "sourceAccess": "SEARCH_INDEX",
+      "reviewedAsOf": "2026-10-27",
+      "gaps": [
+        "Garena date cross-check not established",
+        "Complete confirmed team list missing; do not fill TBD roster slots",
+        "Indonesia listed as a circuit location does not prove a separate post-July Indonesian domestic league"
+      ]
+    },
+    {
+      "code": "rpl-2027-promotion",
+      "primaryName": null,
+      "liquipediaName": "RoV Pro League 2027 - Promotion",
+      "liquipediaUrl": "https://liquipedia.net/honorofkings/RoV_Pro_League/2027/Promotion",
+      "regions": [
+        "TH"
+      ],
+      "tier": "Qualifier",
+      "targetTier": "A-Tier",
+      "competitionKind": "QUALIFIER",
+      "competitionKindBasis": "EXPLICIT_LIQUIPEDIA_CLASSIFICATION",
+      "venueMode": "Offline",
+      "dateClaim": {
+        "start": null,
+        "end": null,
+        "year": 2026,
+        "month": 11,
+        "precision": "MONTH",
+        "authority": "LIQUIPEDIA_CAPTURE"
+      },
+      "state": "SCHEDULED_MONTH_PRECISION",
+      "participantCount": 2,
+      "participants": [
+        "Godji Check",
+        "Gangrocket"
+      ],
+      "qualificationSlots": 1,
+      "result": null,
+      "reviewedAsOf": "2026-10-27",
+      "gaps": [
+        "Exact day and primary organizer confirmation not retrieved",
+        "Event title refers to 2027 season but event month is November 2026"
+      ]
+    }
+  ],
+  "newEventCandidates": [
+    "aic-2026-wildcard",
+    "rpl-2027-promotion"
+  ],
+  "tournamentLogoAssets": [
+    {
+      "path": "liquipedia/tournaments/aog-2026-winter/logo.png",
+      "ownerCode": "aog-2026-winter",
+      "role": "EVENT_PAGE_SERIES_LOGO",
+      "bytes": 467782,
+      "sha256": "d3342fd1e0346f130be79314994710d792e7b30a084d4acc0a78128a5ba4f45c",
+      "sourceUrl": "https://liquipedia.net/commons/images/2/26/AOG_New_allmode.png",
+      "provenance": "LIQUIPEDIA_PREVIOUSLY_COLLECTED_BYTES",
+      "legacyAssetId": "ae015ad06da29d4e",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/ae015ad06da29d4e-AOG_New_allmode.png",
+      "mediaLicense": "Varies by file; attribution is not a blanket reuse license.",
+      "seasonBranding": "Series branding used by the event page, not an invented 2026-specific logo."
+    },
+    {
+      "path": "liquipedia/tournaments/gcs-2026-summer/logo.png",
+      "ownerCode": "gcs-2026-summer",
+      "role": "EVENT_PAGE_SERIES_LOGO",
+      "bytes": 205393,
+      "sha256": "8408d8e301407d0d67247e859d035edfe0c931fe3c37809cd3b2cb5e77756f39",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/7/71/GCS2020.png/600px-GCS2020.png",
+      "provenance": "LIQUIPEDIA_PREVIOUSLY_COLLECTED_BYTES",
+      "legacyAssetId": "79021be5a331f45e",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/79021be5a331f45e-600px-GCS2020.png",
+      "mediaLicense": "Varies by file; attribution is not a blanket reuse license.",
+      "seasonBranding": "Series branding used by the event page, not an invented 2026-specific logo."
+    },
+    {
+      "path": "liquipedia/tournaments/rpl-2026-winter/logo.png",
+      "ownerCode": "rpl-2026-winter",
+      "role": "EVENT_PAGE_SERIES_LOGO",
+      "bytes": 15170,
+      "sha256": "5b29d7dfb1341cef82cf83cff8729eae832bc564b80bc22f7facaa2b367f4498",
+      "sourceUrl": "https://liquipedia.net/commons/images/c/ca/ROV_Pro_League_2020.png",
+      "provenance": "LIQUIPEDIA_PREVIOUSLY_COLLECTED_BYTES",
+      "legacyAssetId": "ebb4d222048e7893",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/ebb4d222048e7893-ROV_Pro_League_2020.png",
+      "mediaLicense": "Varies by file; attribution is not a blanket reuse license.",
+      "seasonBranding": "Series branding used by the event page, not an invented 2026-specific logo."
+    },
+    {
+      "path": "liquipedia/tournaments/tepl-2026/logo.png",
+      "ownerCode": "tepl-2026",
+      "role": "EVENT_PAGE_SERIES_LOGO",
+      "bytes": 212023,
+      "sha256": "738cb794e5a7b45b3820e027011ee4d333b9b68e2d9ec32afc1bf233896b394f",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/0/02/ROV_THAILAND_ESPORTS_PREMIER_LEAGUE_2026_lightmode.png/600px-ROV_THAILAND_ESPORTS_PREMIER_LEAGUE_2026_lightmode.png",
+      "provenance": "LIQUIPEDIA_PREVIOUSLY_COLLECTED_BYTES",
+      "legacyAssetId": "c0d0fd5a9e9ce78e",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/c0d0fd5a9e9ce78e-600px-ROV_THAILAND_ESPORTS_PREMIER_LEAGUE_2026_lightmode.png",
+      "mediaLicense": "Varies by file; attribution is not a blanket reuse license.",
+      "seasonBranding": "Series branding used by the event page, not an invented 2026-specific logo."
+    }
+  ],
+  "existingLiquipediaTeamLogoAssets": [
+    {
+      "teamCode": "bacon-time-th",
+      "teamName": "Bacon Time",
+      "path": "teams/bacon-time-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/0/07/TH_Bacon_Time.png/100px-TH_Bacon_Time.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Bacon_Time",
+      "sha256": "3322308c1a1d0089c77c42e1e89fd616cc813227bdf805cedbed20e38472af5d",
+      "bytes": 11588,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "boom-esports-vn-vn",
+      "teamName": "BOOM Esports VN",
+      "path": "teams/boom-esports-vn-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d0/Boom_Esports_allmode.png/37px-Boom_Esports_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/BOOM_Esports_VN",
+      "sha256": "1a39b5f71a962107bce4ec07c0513888a69d2fce1c12b47ab51cc5e76b11e233",
+      "bytes": 4252,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "boom-esports-vn-women",
+      "teamName": "BOOM Esports Queens",
+      "path": "teams/boom-esports-vn-women/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d0/Boom_Esports_allmode.png/37px-Boom_Esports_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/index.php?title=BOOM_Esports_(Women_Team)&action=edit&redlink=1",
+      "sha256": "1a39b5f71a962107bce4ec07c0513888a69d2fce1c12b47ab51cc5e76b11e233",
+      "bytes": 4252,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "box-gaming-vn",
+      "teamName": "Box Gaming",
+      "path": "teams/box-gaming-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/a/a9/Box_Gaming_2020_allmode.png/32px-Box_Gaming_2020_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Box_Gaming",
+      "sha256": "425e885437dffb22419c321058858b7b50412cb5b22d1494106ffc55ed7a1373",
+      "bytes": 2961,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "buriram-united-esports-th",
+      "teamName": "Buriram United Esports",
+      "path": "teams/buriram-united-esports-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/c/cc/TH_Buriram_United_Esports.png/96px-TH_Buriram_United_Esports.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Buriram_United_Esports",
+      "sha256": "d51de1ce55613f0eade99ad42645f1a1627f0e9dbc863e8f9cebc7562a8b71af",
+      "bytes": 10646,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "earena-th",
+      "teamName": "eArena",
+      "path": "teams/earena-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/5/5a/EArena_2020_allmode.png/40px-EArena_2020_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/EArena",
+      "sha256": "9507d2489f268b1b350aa85a4b4a6b6e940c21597b244ff9bde5c8afd810217c",
+      "bytes": 2931,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "fpt-polytechnic-vn",
+      "teamName": "FPT Polytechnic",
+      "path": "teams/fpt-polytechnic-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/2/20/FPT_Polytechnic.png/100px-FPT_Polytechnic.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/FPT_Polytechnic",
+      "sha256": "31dd44706436897b00c484ddfa8f85b8395afbecc4e49f2c46f6e1ecd0ad5ae5",
+      "bytes": 3543,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "full-sense-th",
+      "teamName": "FULL SENSE",
+      "path": "teams/full-sense-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/b/b7/FULL_SENSE_2023_allmode.png/59px-FULL_SENSE_2023_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/FULL_SENSE",
+      "sha256": "bb0aef74d56cf8ac3ca1b9785e5aa65175439824fa80ace740b07318aebdc14e",
+      "bytes": 1990,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "gam-esports-vn",
+      "teamName": "GAM Esports",
+      "path": "teams/gam-esports-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/b/ba/GAM_Esports_2021_allmode.png/54px-GAM_Esports_2021_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/GAM_Esports",
+      "sha256": "b6e33749538ec5a6bcdca5307d26f801944ab468c33cc6b136782b177345a2ce",
+      "bytes": 1679,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "gam-esports-vn-women",
+      "teamName": "GAM Esports Women",
+      "path": "teams/gam-esports-vn-women/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/b/ba/GAM_Esports_2021_allmode.png/54px-GAM_Esports_2021_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/index.php?title=GAM_Esports_(Women_Team)&action=edit&redlink=1",
+      "sha256": "b6e33749538ec5a6bcdca5307d26f801944ab468c33cc6b136782b177345a2ce",
+      "bytes": 1679,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "godji-check-th",
+      "teamName": "Godji Check",
+      "path": "teams/godji-check-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/6/6c/Godji_Check_allmode.png/71px-Godji_Check_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/index.php?title=Godji_Check&action=edit&redlink=1",
+      "sha256": "af798914c770115d3a74eef59a02719b97a8b9016871ccb5bef29479872cb628",
+      "bytes": 7697,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "hydra-esports-th",
+      "teamName": "Hydra Esports",
+      "path": "teams/hydra-esports-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/a/a4/Hydra_Esports_Allmode.png/57px-Hydra_Esports_Allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Hydra_Esports",
+      "sha256": "8b5e8f7681b12b1b69b19b2b510a871affe2dc7f5e78c300712bbd9422be0bcd",
+      "bytes": 5786,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "king-of-gamers-club-th",
+      "teamName": "King of Gamers Club",
+      "path": "teams/king-of-gamers-club-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/e/ee/King_of_Gamers_darkmode.png/87px-King_of_Gamers_darkmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/King_of_Gamers_Club",
+      "sha256": "984cc6aaf3ab0e98ee93aa689c22a2a31b92a10e0bed6784e276e9b00e2061ed",
+      "bytes": 2689,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "one-star-esports-vn",
+      "teamName": "One Star Esports",
+      "path": "teams/one-star-esports-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/5/5a/One_Star_Esports_no_text_allmode.png/53px-One_Star_Esports_no_text_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/One_Star_Esports",
+      "sha256": "9ca333a8629fa56fccd9741ef474e5c9d516dba4d614b4753eac548c7b40f474",
+      "bytes": 2829,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "one-star-esports-vn-women",
+      "teamName": "One Star Queens",
+      "path": "teams/one-star-esports-vn-women/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/5/5a/One_Star_Esports_no_text_allmode.png/53px-One_Star_Esports_no_text_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/index.php?title=One_Star_Esports_(Women_Team)&action=edit&redlink=1",
+      "sha256": "9ca333a8629fa56fccd9741ef474e5c9d516dba4d614b4753eac548c7b40f474",
+      "bytes": 2829,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "redkid7-th",
+      "teamName": "RedKid7",
+      "path": "teams/redkid7-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/c/c4/RedKid7.png/50px-RedKid7.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/index.php?title=RedKid7&action=edit&redlink=1",
+      "sha256": "6281efcbb244b0e2449606aa44ff3de8f8b2b346eef2d937d8a714e1c0d33a0d",
+      "bytes": 4596,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "teamName": "Rex Regum Qeon VN",
+      "path": "teams/rex-regum-qeon-vn-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/1/1e/Rex_Regum_Qeon_allmode.png/70px-Rex_Regum_Qeon_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Rex_Regum_Qeon_VN",
+      "sha256": "2b580afc8299ca96575200d1dd1e2e518f05a0a38df632e64af10760bcfaf830",
+      "bytes": 1859,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "saigon-phantom-ladies-vn-women",
+      "teamName": "Saigon Phantom Queens",
+      "path": "teams/saigon-phantom-ladies-vn-women/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/a/af/Saigon_Phantom_2020_allmode.png/55px-Saigon_Phantom_2020_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/index.php?title=Saigon_Phantom_Ladies&action=edit&redlink=1",
+      "sha256": "046fc4e2145021b6d823a5d94016fe3f30bf37d5b443c22d0963f84f2018b346",
+      "bytes": 3453,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "saigon-phantom-vn",
+      "teamName": "Saigon Phantom",
+      "path": "teams/saigon-phantom-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/e/e5/VN_Saigon_Phantom.png/100px-VN_Saigon_Phantom.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Saigon_Phantom",
+      "sha256": "e4dea5bf1368462a5274724a1dbcd2adb38ea92869857209d572fd6a8a09ce87",
+      "bytes": 9636,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "solyx-th",
+      "teamName": "SOLYX",
+      "path": "teams/solyx-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/8/83/Solyx_allmode.png/100px-Solyx_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/SOLYX",
+      "sha256": "44e6278a80538c52736f98e2a8e96a58830c6d3d9e6e4184af7840de1c5905b7",
+      "bytes": 9448,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "team-flash-vn",
+      "teamName": "FPT x Flash",
+      "path": "teams/team-flash-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/3/3d/Team_Flash_full_darkmode.png/600px-Team_Flash_full_darkmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Team_Flash",
+      "sha256": "1561f57c1b65279faf6578803b19da7b57cad4ca63ac0e40acc41007d91a9195",
+      "bytes": 27608,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "team-secret-dino-vn-women",
+      "teamName": "Team Secret Dino",
+      "path": "teams/team-secret-dino-vn-women/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d2/Team_Secret_darkmode.png/100px-Team_Secret_darkmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/index.php?title=Team_Secret_Dino&action=edit&redlink=1",
+      "sha256": "b85bcb1b49559e4efe9410531a94bb51bf86b0a578e5c33f1a60f1ee3c850f0b",
+      "bytes": 1725,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "team-secret-vn",
+      "teamName": "Team Secret",
+      "path": "teams/team-secret-vn/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d2/Team_Secret_darkmode.png/100px-Team_Secret_darkmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Team_Secret",
+      "sha256": "b85bcb1b49559e4efe9410531a94bb51bf86b0a578e5c33f1a60f1ee3c850f0b",
+      "bytes": 1725,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    },
+    {
+      "teamCode": "tenacity-th",
+      "teamName": "Tenacity",
+      "path": "teams/tenacity-th/logo.png",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/c/c3/Tenacity_allmode.png/78px-Tenacity_allmode.png",
+      "sourcePage": "https://liquipedia.net/honorofkings/Tenacity",
+      "sha256": "f8fee679bf89ec0ed434af2b5e446d6ddad36a300e9cae25ac04eef5fa78c112",
+      "bytes": 6562,
+      "provenance": "LIQUIPEDIA_CAPTURE",
+      "reviewRequired": "Check branding and small-image quality; keep provenance when uploaded into project Media."
+    }
+  ],
+  "coverageGaps": [
+    "No verified post-July Indonesian domestic AoV event; April ACS is outside scope and Indonesia Kings Laga is HoK, not AoV.",
+    "No matching Liquipedia page verified for Miss RoV Season 2 or QOG Winter qualifier; do not reuse Spring 2026 pages.",
+    "AIC main-event exact dates, tier, full entrants and 2026-specific logo remain unverified.",
+    "Team-specific logos remain unavailable for ten collected teams; generic game placeholders were not promoted to team logos.",
+    "Historical standings are explicitly timestamped; old ongoing flags are not current event states."
+  ],
+  "crossSourceIssues": [
+    "RPL winner updated on the Buriram achievements page while event/series caches still say TBD.",
+    "TEPL winner qualifies for a promotion playoff according to Liquipedia; the public-authority announcement describes a route into RPL 2027 less precisely.",
+    "QOG legacy venue mode Online/Offline differs from the newer indexed Offline/VPS Arena claim.",
+    "Do not interpret tier as league/cup type, venue mode, professional eligibility or publication state."
+  ],
+  "suggestedMetadataFields": [
+    "logoAssetId",
+    "competitionKind",
+    "tier",
+    "tierSourceUrl",
+    "venueMode",
+    "status",
+    "datePrecision",
+    "sourceRetrievedAt",
+    "resultSourceUrl",
+    "winnerTeamId",
+    "runnerUpTeamId",
+    "finalScore",
+    "standingsSnapshots",
+    "sources"
+  ],
+  "databaseActions": 0,
+  "uploads": 0
+}

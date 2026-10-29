@@ -1,0 +1,3211 @@
+{
+  "schemaVersion": 1,
+  "asOf": "2026-10-27",
+  "importPolicy": "DRAFT_ONLY_NO_AUTOMATIC_PUBLICATION",
+  "scope": {
+    "eventCode": "aog-2026-winter",
+    "game": "ARENA_OF_VALOR",
+    "division": "OPEN",
+    "region": "VN",
+    "teamCount": 9,
+    "otherEventsExcluded": true
+  },
+  "tournament": {
+    "existingCode": "aog-2026-winter",
+    "content": {
+      "code": "aog-2026-winter",
+      "name": "Đấu Trường Danh Vọng mùa Đông 2026",
+      "region": "VN",
+      "year": 2026,
+      "startsOn": "2026-08-29",
+      "endsOn": "2026-11-07",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "note": "Giải gồm 9 đội, vòng bảng BO5 và Playoffs BO7. Chung kết ngày 07/11/2026 tại Sân vận động Quốc gia Mỹ Đình, Hà Nội. Chưa xác định nhà vô địch tính đến 27/10/2026.",
+      "logoUrl": null,
+      "tier": "A",
+      "competitionType": "LEAGUE",
+      "venueMode": "OFFLINE",
+      "status": "ONGOING",
+      "result": null
+    },
+    "tierSource": "LIQUIPEDIA_CURRENT_VISIBLE_CLASSIFICATION",
+    "metadataSourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+    "grandFinalSourceUrl": "https://lienquan.garena.vn/cong-bo-thong-tin-mo-ban-ve-lien-quan-10fest/",
+    "importReady": true,
+    "venues": [
+      {
+        "name": "Liên Quân Studio TP HCM",
+        "city": "Ho Chi Minh City",
+        "scope": "Group Stage and Playoffs 1–6"
+      },
+      {
+        "name": "Mỹ Đình National Stadium",
+        "city": "Hanoi",
+        "scope": "Lower Bracket Final and Grand Final"
+      }
+    ]
+  },
+  "teams": [
+    {
+      "existingCode": "team-flash-vn",
+      "content": {
+        "code": "team-flash-vn",
+        "name": "FPT x Flash",
+        "shortName": "FPT",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": [
+          "Team Flash",
+          "FPT Flash"
+        ]
+      },
+      "logo": {
+        "path": "../teams/team-flash-vn/official-logo.png",
+        "sourceUrl": "https://theme.hstatic.net/200000671183/1001160473/14/logo.png?v=694",
+        "primaryEvidenceUrl": "https://teamflash.gg/",
+        "sha256": "7390693e3b1c638ac377f5886aa82861d3a13cbb18a7d056fd471b0185980b5e",
+        "width": 248,
+        "height": 53,
+        "note": "Current official team website header co-brand downloaded unchanged. Very wide transparent mark; render with contain, not a square crop."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "saigon-phantom-vn",
+      "content": {
+        "code": "saigon-phantom-vn",
+        "name": "Saigon Phantom",
+        "shortName": "SGP",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": []
+      },
+      "logo": {
+        "path": "../teams/saigon-phantom-vn/current-wordmark.png",
+        "sourceUrl": "https://liquipedia.net/commons/images/thumb/e/e5/VN_Saigon_Phantom.png/100px-VN_Saigon_Phantom.png",
+        "primaryEvidenceUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+        "sha256": "046fc4e2145021b6d823a5d94016fe3f30bf37d5b443c22d0963f84f2018b346",
+        "width": 55,
+        "height": 50,
+        "note": "Clean SGP organization wordmark independently matched against the current main-team AOG entrant graphic. Bytes reused unchanged from a legacy standalone wordmark; no assumption that the women roster is the main roster."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "one-star-esports-vn",
+      "content": {
+        "code": "one-star-esports-vn",
+        "name": "One Star Esports",
+        "shortName": "1S",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": [
+          "One Star"
+        ]
+      },
+      "logo": {
+        "path": "../teams/one-star-esports-vn/logo.png",
+        "sourceUrl": "https://liquipedia.net/commons/images/thumb/5/5a/One_Star_Esports_no_text_allmode.png/53px-One_Star_Esports_no_text_allmode.png",
+        "primaryEvidenceUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+        "sha256": "9ca333a8629fa56fccd9741ef474e5c9d516dba4d614b4753eac548c7b40f474",
+        "width": 53,
+        "height": 50,
+        "note": "Existing standalone emblem matches current event organizer graphic; color variant retained, not recolored or redrawn."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "box-gaming-vn",
+      "content": {
+        "code": "box-gaming-vn",
+        "name": "BOX Gaming",
+        "shortName": "BOX",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": []
+      },
+      "logo": {
+        "path": "../teams/box-gaming-vn/logo.png",
+        "sourceUrl": "https://liquipedia.net/commons/images/thumb/a/a9/Box_Gaming_2020_allmode.png/32px-Box_Gaming_2020_allmode.png",
+        "primaryEvidenceUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+        "sha256": "425e885437dffb22419c321058858b7b50412cb5b22d1494106ffc55ed7a1373",
+        "width": 32,
+        "height": 50,
+        "note": "Existing standalone emblem matches current event organizer graphic; color variant retained, not recolored or redrawn."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "fpt-polytechnic-vn",
+      "content": {
+        "code": "fpt-polytechnic-vn",
+        "name": "FPT Polytechnic",
+        "shortName": "FPL",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": []
+      },
+      "logo": {
+        "path": "../teams/fpt-polytechnic-vn/logo.png",
+        "sourceUrl": "https://liquipedia.net/commons/images/thumb/2/20/FPT_Polytechnic.png/100px-FPT_Polytechnic.png",
+        "primaryEvidenceUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+        "sha256": "31dd44706436897b00c484ddfa8f85b8395afbecc4e49f2c46f6e1ecd0ad5ae5",
+        "width": 100,
+        "height": 34,
+        "note": "Matching FPT Polytechnic wordmark, but only 100x34 pixels; suitable as interim asset and visibly soft at larger sizes."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "gam-esports-vn",
+      "content": {
+        "code": "gam-esports-vn",
+        "name": "GAM Esports",
+        "shortName": "GAM",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": []
+      },
+      "logo": {
+        "path": "../teams/gam-esports-vn/official-crest.png",
+        "sourceUrl": "https://gam.gg/brand/crest-gold-drum.png",
+        "primaryEvidenceUrl": "https://gam.gg/teams",
+        "sha256": "a05ce47c358cfee440a84647b1572cf7f680e1fe07fadc2965eef7c215ce9bc8",
+        "width": 800,
+        "height": 800,
+        "note": "Official club crest downloaded unchanged; matches current AOG entrant crest."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "team-secret-vn",
+      "content": {
+        "code": "team-secret-vn",
+        "name": "Team Secret",
+        "shortName": "TS",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": []
+      },
+      "logo": {
+        "path": "../teams/team-secret-vn/logo.png",
+        "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d2/Team_Secret_darkmode.png/100px-Team_Secret_darkmode.png",
+        "primaryEvidenceUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+        "sha256": "b85bcb1b49559e4efe9410531a94bb51bf86b0a578e5c33f1a60f1ee3c850f0b",
+        "width": 100,
+        "height": 50,
+        "note": "Existing standalone emblem matches current event organizer graphic; color variant retained, not recolored or redrawn."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "code": "rex-regum-qeon-vn-vn",
+        "name": "Rex Regum Qeon",
+        "shortName": "RRQ",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": [
+          "RRQ Vietnam"
+        ]
+      },
+      "logo": {
+        "path": "../teams/rex-regum-qeon-vn-vn/logo.png",
+        "sourceUrl": "https://liquipedia.net/commons/images/thumb/1/1e/Rex_Regum_Qeon_allmode.png/70px-Rex_Regum_Qeon_allmode.png",
+        "primaryEvidenceUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+        "sha256": "2b580afc8299ca96575200d1dd1e2e518f05a0a38df632e64af10760bcfaf830",
+        "width": 70,
+        "height": 50,
+        "note": "Existing standalone emblem matches current event organizer graphic; color variant retained, not recolored or redrawn."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    },
+    {
+      "existingCode": "boom-esports-vn-vn",
+      "content": {
+        "code": "boom-esports-vn-vn",
+        "name": "BOOM Esports",
+        "shortName": "BME",
+        "country": "VN",
+        "logoUrl": null,
+        "aliases": [
+          "BOOM Esports VN"
+        ]
+      },
+      "logo": {
+        "path": "../teams/boom-esports-vn-vn/logo.png",
+        "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d0/Boom_Esports_allmode.png/37px-Boom_Esports_allmode.png",
+        "primaryEvidenceUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+        "sha256": "1a39b5f71a962107bce4ec07c0513888a69d2fce1c12b47ab51cc5e76b11e233",
+        "width": 37,
+        "height": 49,
+        "note": "Existing standalone emblem matches current event organizer graphic; color variant retained, not recolored or redrawn."
+      },
+      "verification": "PRIMARY",
+      "sourceUrl": "https://lienquan.garena.vn/dau-truong-danh-vong-mua-dong-2026-chinh-thuc-khoi-tranh-tu-29-08-mo-ra-ky-nguyen-danh-vong-era-of-g10ry/",
+      "importReady": true
+    }
+  ],
+  "players": [
+    {
+      "existingCode": "huyhoang",
+      "content": {
+        "code": "huyhoang",
+        "nickname": "HuyHoàng",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/HuyHo%C3%A0ng",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "julius",
+      "content": {
+        "code": "julius",
+        "nickname": "Julius",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Julius",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "bridget",
+      "content": {
+        "code": "bridget",
+        "nickname": "Bridget",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Bridget",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "betroc",
+      "content": {
+        "code": "betroc",
+        "nickname": "BéTrọc",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/B%C3%A9Tr%E1%BB%8Dc",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "yutan",
+      "content": {
+        "code": "yutan",
+        "nickname": "Yutan",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Yutan",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "nolan",
+      "content": {
+        "code": "nolan",
+        "nickname": "Nolan",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Nolan",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "23xjuly",
+      "content": {
+        "code": "23xjuly",
+        "nickname": "23xJuly",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/23xJuly",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "fish",
+      "content": {
+        "code": "fish",
+        "nickname": "Fish",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Fish_(C%C3%A1)",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "shin",
+      "content": {
+        "code": "shin",
+        "nickname": "Shin",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Shin",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "khoa",
+      "content": {
+        "code": "khoa",
+        "nickname": "Khoa",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Khoa",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "libr4",
+      "content": {
+        "code": "libr4",
+        "nickname": "Libr4",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Penguin_(Vietnamese_player)&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "stark",
+      "content": {
+        "code": "stark",
+        "nickname": "Stark",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Starkk",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "zet",
+      "content": {
+        "code": "zet",
+        "nickname": "Zet",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Zet",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "sea",
+      "content": {
+        "code": "sea",
+        "nickname": "Sea",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Sea",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "csr",
+      "content": {
+        "code": "csr",
+        "nickname": "Csr",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Csr&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "tringuyen",
+      "content": {
+        "code": "tringuyen",
+        "nickname": "TriNguyen",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/TriNguyen",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "08qt",
+      "content": {
+        "code": "08qt",
+        "nickname": "08QT",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=08QT&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "chip",
+      "content": {
+        "code": "chip",
+        "nickname": "Chip",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Chip",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "ciara",
+      "content": {
+        "code": "ciara",
+        "nickname": "Ciara",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Ciara",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "mapu",
+      "content": {
+        "code": "mapu",
+        "nickname": "Mapu",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Mapu&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "vit",
+      "content": {
+        "code": "vit",
+        "nickname": "Vịt",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/V%E1%BB%8Bt",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "thanhduy",
+      "content": {
+        "code": "thanhduy",
+        "nickname": "ThànhDuy",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Th%C3%A0nhDuy",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "sleepy",
+      "content": {
+        "code": "sleepy",
+        "nickname": "Sleepy",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Sleepy_(Vietnamese_Player)",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "sindhu",
+      "content": {
+        "code": "sindhu",
+        "nickname": "Sindhu",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Sindhu&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "thekhang",
+      "content": {
+        "code": "thekhang",
+        "nickname": "ThếKhang",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Th%E1%BA%BFKhang",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "kuga",
+      "content": {
+        "code": "kuga",
+        "nickname": "Kuga",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Kuga",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true,
+      "photo": {
+        "playerCode": "kuga",
+        "teamCode": "gam-esports-vn",
+        "sourceUrl": "https://gam.gg/brand/players/kuga.webp",
+        "pageUrl": "https://gam.gg/teams",
+        "provenance": "PRIMARY_TEAM",
+        "status": "VERIFIED_OFFICIAL_ASSET",
+        "importReady": true,
+        "path": "../players/gam-esports-vn/kuga.webp",
+        "bytes": 49634,
+        "sha256": "ec13ada4bc2d7d0df7e018282c9476cee364e2eec3cb1faac208f65defbb3680",
+        "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+      }
+    },
+    {
+      "existingCode": "yiuling",
+      "content": {
+        "code": "yiuling",
+        "nickname": "Yiuling",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Washi",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true,
+      "photo": {
+        "playerCode": "yiuling",
+        "teamCode": "gam-esports-vn",
+        "sourceUrl": "https://gam.gg/brand/players/yiuling.webp",
+        "pageUrl": "https://gam.gg/teams",
+        "provenance": "PRIMARY_TEAM",
+        "status": "VERIFIED_OFFICIAL_ASSET",
+        "importReady": true,
+        "path": "../players/gam-esports-vn/yiuling.webp",
+        "bytes": 46978,
+        "sha256": "75e5af98a1461777a36747b76fd15e0ffaf662bbdbcd4e1410874e902bb9dc5b",
+        "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+      }
+    },
+    {
+      "existingCode": "aliyah",
+      "content": {
+        "code": "aliyah",
+        "nickname": "Aliyah",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Aliyah",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true,
+      "photo": {
+        "playerCode": "aliyah",
+        "teamCode": "gam-esports-vn",
+        "sourceUrl": "https://gam.gg/brand/players/aliyah.webp",
+        "pageUrl": "https://gam.gg/teams",
+        "provenance": "PRIMARY_TEAM",
+        "status": "VERIFIED_OFFICIAL_ASSET",
+        "importReady": true,
+        "path": "../players/gam-esports-vn/aliyah.webp",
+        "bytes": 46066,
+        "sha256": "a0f597b0795cddbf773256803b830115e8d3613d2657ccd51134f96237af70d2",
+        "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+      }
+    },
+    {
+      "existingCode": "tienphat",
+      "content": {
+        "code": "tienphat",
+        "nickname": "TiếnPhát",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Ti%E1%BA%BFnPh%C3%A1t",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true,
+      "photo": {
+        "playerCode": "tienphat",
+        "teamCode": "gam-esports-vn",
+        "sourceUrl": "https://gam.gg/brand/players/tienphat.webp",
+        "pageUrl": "https://gam.gg/teams",
+        "provenance": "PRIMARY_TEAM",
+        "status": "VERIFIED_OFFICIAL_ASSET",
+        "importReady": true,
+        "path": "../players/gam-esports-vn/tienphat.webp",
+        "bytes": 46808,
+        "sha256": "672904599ae499d17a3922863b378d7b05ca24d814ddb6545aee87e1a1e10aa1",
+        "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+      }
+    },
+    {
+      "existingCode": "phuhoang",
+      "content": {
+        "code": "phuhoang",
+        "nickname": "PhúHoàng",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Ph%C3%BAHo%C3%A0ng",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true,
+      "photo": {
+        "playerCode": "phuhoang",
+        "teamCode": "gam-esports-vn",
+        "sourceUrl": "https://gam.gg/brand/players/phuhoang.webp",
+        "pageUrl": "https://gam.gg/teams",
+        "provenance": "PRIMARY_TEAM",
+        "status": "VERIFIED_OFFICIAL_ASSET",
+        "importReady": true,
+        "path": "../players/gam-esports-vn/phuhoang.webp",
+        "bytes": 46432,
+        "sha256": "bcc31c9edd61e7c1271c9e1372adb0156a538bb9efd4c95350e65c01c61b8310",
+        "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+      }
+    },
+    {
+      "existingCode": "acacia",
+      "content": {
+        "code": "acacia",
+        "nickname": "Acacia",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Acacia",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "kaisa",
+      "content": {
+        "code": "kaisa",
+        "nickname": "Kaisa",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Kaisa",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "boka",
+      "content": {
+        "code": "boka",
+        "nickname": "Boka",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Boka",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "tnhan",
+      "content": {
+        "code": "tnhan",
+        "nickname": "TNhan",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/TNhan",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "tlinhhh",
+      "content": {
+        "code": "tlinhhh",
+        "nickname": "Tlinhhh",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Tlinhhh",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "tkien",
+      "content": {
+        "code": "tkien",
+        "nickname": "TKien",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=CiaraK8&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "gray",
+      "content": {
+        "code": "gray",
+        "nickname": "Gray",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Gray",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "maris",
+      "content": {
+        "code": "maris",
+        "nickname": "Maris",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Maris",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "triet",
+      "content": {
+        "code": "triet",
+        "nickname": "Triết",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Tri%E1%BA%BFt",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "karl",
+      "content": {
+        "code": "karl",
+        "nickname": "Karl",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Karl",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "vinhhoang",
+      "content": {
+        "code": "vinhhoang",
+        "nickname": "VinhHoang",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=TinSr&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "anne",
+      "content": {
+        "code": "anne",
+        "nickname": "Anne",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Anne",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "failure",
+      "content": {
+        "code": "failure",
+        "nickname": "Failure",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Failure&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "ductiep",
+      "content": {
+        "code": "ductiep",
+        "nickname": "ĐứcTiệp",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=%C4%90%E1%BB%A9cTi%E1%BB%87p&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "tama",
+      "content": {
+        "code": "tama",
+        "nickname": "Tama",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Tama",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "jangone",
+      "content": {
+        "code": "jangone",
+        "nickname": "JangOne",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=JangOne&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "delios",
+      "content": {
+        "code": "delios",
+        "nickname": "Delios",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Delios&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "hieuduc",
+      "content": {
+        "code": "hieuduc",
+        "nickname": "HieuDuc",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/HieuDuc",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "soul",
+      "content": {
+        "code": "soul",
+        "nickname": "Soul",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Soul&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "yuu",
+      "content": {
+        "code": "yuu",
+        "nickname": "Yuu",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Yuu",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "nammilk",
+      "content": {
+        "code": "nammilk",
+        "nickname": "NamMilk",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=NamMilk&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "entidi",
+      "content": {
+        "code": "entidi",
+        "nickname": "Entidi",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Entidi&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "chu",
+      "content": {
+        "code": "chu",
+        "nickname": "Chu",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Pikachu_(Vietnamese_player)",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "th",
+      "content": {
+        "code": "th",
+        "nickname": "TH",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Sonic&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "adonis",
+      "content": {
+        "code": "adonis",
+        "nickname": "Adonis",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Adonis",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true,
+      "photo": {
+        "playerCode": "adonis",
+        "teamCode": "gam-esports-vn",
+        "sourceUrl": "https://gam.gg/brand/players/adonis.webp",
+        "pageUrl": "https://gam.gg/teams",
+        "provenance": "PRIMARY_TEAM",
+        "status": "VERIFIED_OFFICIAL_ASSET",
+        "importReady": true,
+        "path": "../players/gam-esports-vn/adonis.webp",
+        "bytes": 49750,
+        "sha256": "9ce9a3a834d61275f2abd862a63493eaa7d74b6f317b95d8ccc89ac89c4b6bab",
+        "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+      }
+    },
+    {
+      "existingCode": "owen",
+      "content": {
+        "code": "owen",
+        "nickname": "Owen",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Owen&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true,
+      "photo": {
+        "playerCode": "owen",
+        "teamCode": "gam-esports-vn",
+        "sourceUrl": "https://gam.gg/brand/players/owen.webp",
+        "pageUrl": "https://gam.gg/teams",
+        "provenance": "PRIMARY_TEAM",
+        "status": "VERIFIED_OFFICIAL_ASSET",
+        "importReady": true,
+        "path": "../players/gam-esports-vn/owen.webp",
+        "bytes": 48814,
+        "sha256": "f947d73ba8561a3776972c99f29b626276322fff018d82840b9ac32422e7dc6f",
+        "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+      }
+    },
+    {
+      "existingCode": "ducky",
+      "content": {
+        "code": "ducky",
+        "nickname": "Ducky",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Ducky",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "trphuoc",
+      "content": {
+        "code": "trphuoc",
+        "nickname": "TrPhuoc",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=TrPhuoc&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "sinwon",
+      "content": {
+        "code": "sinwon",
+        "nickname": "Sinwon",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Chann&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "veritas",
+      "content": {
+        "code": "veritas",
+        "nickname": "Veritas",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Veritas&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "seed",
+      "content": {
+        "code": "seed",
+        "nickname": "SEED",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=JissooT&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "nang",
+      "content": {
+        "code": "nang",
+        "nickname": "Nắng",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=N%E1%BA%AFng&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "spiris",
+      "content": {
+        "code": "spiris",
+        "nickname": "Spiris",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Spiris&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "peak",
+      "content": {
+        "code": "peak",
+        "nickname": "Peak",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=SonKhac&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "yang",
+      "content": {
+        "code": "yang",
+        "nickname": "Yang",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Eira&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "littleq",
+      "content": {
+        "code": "littleq",
+        "nickname": "LittleQ",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/index.php?title=LittleQ&action=edit&redlink=1",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "tack4",
+      "content": {
+        "code": "tack4",
+        "nickname": "Tắck4",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/T%E1%BA%AFck4",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    },
+    {
+      "existingCode": "emper",
+      "content": {
+        "code": "emper",
+        "nickname": "Emper",
+        "fullName": null,
+        "country": "VN",
+        "photoUrl": null,
+        "aliases": []
+      },
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "playerSourceUrl": "https://liquipedia.net/honorofkings/Emper",
+      "verification": "SECONDARY_CAPTURE",
+      "countryEvidence": "Explicit Vietnam flag next to this player in visible event roster DOM.",
+      "importReady": true
+    }
+  ],
+  "rosters": [
+    {
+      "playerCode": "huyhoang",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "julius",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "bridget",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": "2026-09-24",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "bridget",
+          "teamCode": "team-flash-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-24",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.instagram.com/p/DdqF_AAmF2l/",
+            "https://www.instagram.com/p/Ddq1d1lDLX8/"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "betroc",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "yutan",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "nolan",
+      "teamCode": "saigon-phantom-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "23xjuly",
+      "teamCode": "saigon-phantom-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "fish",
+      "teamCode": "saigon-phantom-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "shin",
+      "teamCode": "saigon-phantom-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "khoa",
+      "teamCode": "saigon-phantom-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "libr4",
+      "teamCode": "one-star-esports-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "stark",
+      "teamCode": "one-star-esports-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "zet",
+      "teamCode": "one-star-esports-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "sea",
+      "teamCode": "one-star-esports-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "csr",
+      "teamCode": "one-star-esports-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": "2026-09-25",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "csr",
+          "teamCode": "one-star-esports-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-25",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/OneStarEsports/posts/pfbid0U2nnNoJGowRCSUZ3BtFTpqef4zdEZRVCNp8AKSU9EFuqABx2U3n7DdtARNvLjALNl"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "tringuyen",
+      "teamCode": "box-gaming-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "08qt",
+      "teamCode": "box-gaming-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "chip",
+      "teamCode": "box-gaming-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "ciara",
+      "teamCode": "box-gaming-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "mapu",
+      "teamCode": "box-gaming-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "vit",
+      "teamCode": "fpt-polytechnic-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "thanhduy",
+      "teamCode": "fpt-polytechnic-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "sleepy",
+      "teamCode": "fpt-polytechnic-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "sindhu",
+      "teamCode": "fpt-polytechnic-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "thekhang",
+      "teamCode": "fpt-polytechnic-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "kuga",
+      "teamCode": "gam-esports-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "yiuling",
+      "teamCode": "gam-esports-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "aliyah",
+      "teamCode": "gam-esports-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "tienphat",
+      "teamCode": "gam-esports-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "phuhoang",
+      "teamCode": "gam-esports-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "acacia",
+      "teamCode": "team-secret-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "kaisa",
+      "teamCode": "team-secret-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "boka",
+      "teamCode": "team-secret-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "tnhan",
+      "teamCode": "team-secret-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "tlinhhh",
+      "teamCode": "team-secret-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "tkien",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "gray",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": "2026-09-27",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "gray",
+          "teamCode": "rex-regum-qeon-vn-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-27",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/teamrrq.aov/posts/pfbid02fQra1jf4HQ26SrCFwpuDNXPt6fzG2nAfneV2Q6gWfTxFC3DWjkEHUGeyUbEsJx3Ul"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "maris",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": "2026-09-27",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "maris",
+          "teamCode": "rex-regum-qeon-vn-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-27",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/teamrrq.aov/posts/pfbid0ZKzse91QA2muGwCr8skmBRUcoS6tJPzuB7qDwMrsXjr1vJHs7sb6dABkAf99uJYBl"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "triet",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "karl",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "vinhhoang",
+      "teamCode": "boom-esports-vn-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": "2026-09-25",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "vinhhoang",
+          "teamCode": "boom-esports-vn-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-25",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/boomesportsvn/posts/pfbid0gHRHR65a2tEW6gVHu4eF3jhVZo6T7jNFYvWzwAo1w5gX5HneVEhDpsBeFUrz4qWal"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "anne",
+      "teamCode": "boom-esports-vn-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [
+        "Captain"
+      ],
+      "importReady": true,
+      "captain": true
+    },
+    {
+      "playerCode": "failure",
+      "teamCode": "boom-esports-vn-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "ductiep",
+      "teamCode": "boom-esports-vn-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "tama",
+      "teamCode": "boom-esports-vn-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "ACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Main của giải tại lần kiểm tra 27/10/2026; không suy ra đội hình từng trận."
+      },
+      "sourceSection": "Participants > Main",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "jangone",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": "2026-09-24",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "jangone",
+          "teamCode": "team-flash-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-24",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.instagram.com/p/DdqF_AAmF2l/",
+            "https://www.instagram.com/p/Ddq1d1lDLX8/"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "delios",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": "2026-09-23",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026. Nguồn ghi DNP: có đăng ký nhưng không được suy ra đã thi đấu."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [
+        "DNP"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "delios",
+          "teamCode": "team-flash-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-23",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/TeamFlashVNAOV/posts/pfbid0fHknRcJNBDX7D3BwY27HGXXJBXhZ4pajgEYEceW6r1773TBNtAxnGczUaq7cMzdul"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "hieuduc",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "soul",
+      "teamCode": "saigon-phantom-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026. Nguồn ghi DNP: có đăng ký nhưng không được suy ra đã thi đấu."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [
+        "DNP"
+      ],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "yuu",
+      "teamCode": "saigon-phantom-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "nammilk",
+      "teamCode": "one-star-esports-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "entidi",
+      "teamCode": "box-gaming-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": "2026-09-25",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "entidi",
+          "teamCode": "box-gaming-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-25",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/caothuLQM/posts/pfbid02XXNe1XS3WKEH7wiyRghPYK7EzP4R1dFj4eJXGP3WBr4njWYJPiiuhX6twapUHkdwl?locale=vi_VN"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "chu",
+      "teamCode": "fpt-polytechnic-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026. Nguồn ghi DNP: có đăng ký nhưng không được suy ra đã thi đấu."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [
+        "DNP"
+      ],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "th",
+      "teamCode": "fpt-polytechnic-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": "2026-09-25",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "th",
+          "teamCode": "fpt-polytechnic-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-25",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/fptpolytechnicaov/posts/pfbid02vAJE5zrcN6o6tZSuFby7fm8hJJpHBi848ZpVUi1TAJe7bRxsoYA8Qy2NMsYPTN1nl?locale=vi_VN"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "adonis",
+      "teamCode": "gam-esports-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "owen",
+      "teamCode": "gam-esports-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "ducky",
+      "teamCode": "team-secret-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "trphuoc",
+      "teamCode": "team-secret-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "sinwon",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": "2026-09-25",
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "sinwon",
+          "teamCode": "rex-regum-qeon-vn-vn",
+          "action": "JOIN",
+          "announcedOn": "2026-09-25",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/teamrrq.aov/posts/pfbid02UycV5KGyRSdcDEgsTCLSYbfhNComV7mJWH2rHnB7FtEorH3Bq335EDb9XJyZSXb9l"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "veritas",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026. Nguồn ghi DNP: có đăng ký nhưng không được suy ra đã thi đấu."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [
+        "DNP"
+      ],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "seed",
+      "teamCode": "boom-esports-vn-vn",
+      "content": {
+        "lane": "DRAGON",
+        "jerseyNumber": null,
+        "status": "SUBSTITUTE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Subs của giải tại lần kiểm tra 27/10/2026. Nguồn ghi DNP: có đăng ký nhưng không được suy ra đã thi đấu."
+      },
+      "sourceSection": "Participants > Subs",
+      "sourceFlags": [
+        "DNP"
+      ],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "nang",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": "2026-09-22",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "nang",
+          "teamCode": "team-flash-vn",
+          "action": "LEAVE",
+          "announcedOn": "2026-09-22",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/photo/?fbid=1416915430647451",
+            "https://www.facebook.com/photo?fbid=1416624787343182"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "maris",
+      "teamCode": "team-flash-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": "2026-09-22",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "maris",
+          "teamCode": "team-flash-vn",
+          "action": "LEAVE",
+          "announcedOn": "2026-09-22",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/photo/?fbid=1416915430647451",
+            "https://www.facebook.com/photo?fbid=1416624787343182"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "spiris",
+      "teamCode": "one-star-esports-vn",
+      "content": {
+        "lane": "SUPPORT",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": "2026-09-25",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "spiris",
+          "teamCode": "one-star-esports-vn",
+          "action": "LEAVE",
+          "announcedOn": "2026-09-25",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/OneStarEsports/posts/pfbid0GiKzLZazP7FHNgjVCaPTnDWX2ZD4FXHm22qMxbQyLFB1EyUgfNXSZt4HsKJSmB2xl"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "peak",
+      "teamCode": "box-gaming-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": null,
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false
+    },
+    {
+      "playerCode": "yang",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": "2026-09-23",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "yang",
+          "teamCode": "rex-regum-qeon-vn-vn",
+          "action": "LEAVE",
+          "announcedOn": "2026-09-23",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/teamrrq.aov/posts/pfbid02nU4eCxT5goB9H7r8n8TnkSroiZanmQPZgF83izpQkBwzfjwkxCcWeCd4EAwHQWM8l"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "littleq",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "JUNGLE",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": "2026-09-23",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "littleq",
+          "teamCode": "rex-regum-qeon-vn-vn",
+          "action": "LEAVE",
+          "announcedOn": "2026-09-23",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/teamrrq.aov/posts/pfbid02nU4eCxT5goB9H7r8n8TnkSroiZanmQPZgF83izpQkBwzfjwkxCcWeCd4EAwHQWM8l"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "tack4",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "content": {
+        "lane": "MID",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": "2026-09-23",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "tack4",
+          "teamCode": "rex-regum-qeon-vn-vn",
+          "action": "LEAVE",
+          "announcedOn": "2026-09-23",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/teamrrq.aov/posts/pfbid02nU4eCxT5goB9H7r8n8TnkSroiZanmQPZgF83izpQkBwzfjwkxCcWeCd4EAwHQWM8l"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    },
+    {
+      "playerCode": "emper",
+      "teamCode": "boom-esports-vn-vn",
+      "content": {
+        "lane": "TOP",
+        "jerseyNumber": null,
+        "status": "INACTIVE",
+        "startsOn": null,
+        "endsOn": "2026-09-24",
+        "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+        "verification": "SECONDARY_CAPTURE",
+        "note": "Tab Former ghi Left; chỉ ghi ngày rời đội nếu có mốc nguồn rõ."
+      },
+      "sourceSection": "Participants > Former",
+      "sourceFlags": [
+        "Left"
+      ],
+      "importReady": true,
+      "captain": false,
+      "dateEvidence": [
+        {
+          "playerCode": "emper",
+          "teamCode": "boom-esports-vn-vn",
+          "action": "LEAVE",
+          "announcedOn": "2026-09-24",
+          "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+          "citedSourceUrls": [
+            "https://www.facebook.com/photo/?fbid=122120867703378344"
+          ],
+          "verification": "SECONDARY_CAPTURE",
+          "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+        }
+      ]
+    }
+  ],
+  "rosterMoves": [
+    {
+      "playerCode": "maris",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-27",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/teamrrq.aov/posts/pfbid0ZKzse91QA2muGwCr8skmBRUcoS6tJPzuB7qDwMrsXjr1vJHs7sb6dABkAf99uJYBl"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "gray",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-27",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/teamrrq.aov/posts/pfbid02fQra1jf4HQ26SrCFwpuDNXPt6fzG2nAfneV2Q6gWfTxFC3DWjkEHUGeyUbEsJx3Ul"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "th",
+      "teamCode": "fpt-polytechnic-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-25",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/fptpolytechnicaov/posts/pfbid02vAJE5zrcN6o6tZSuFby7fm8hJJpHBi848ZpVUi1TAJe7bRxsoYA8Qy2NMsYPTN1nl?locale=vi_VN"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "entidi",
+      "teamCode": "box-gaming-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-25",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/caothuLQM/posts/pfbid02XXNe1XS3WKEH7wiyRghPYK7EzP4R1dFj4eJXGP3WBr4njWYJPiiuhX6twapUHkdwl?locale=vi_VN"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "sinwon",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-25",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/teamrrq.aov/posts/pfbid02UycV5KGyRSdcDEgsTCLSYbfhNComV7mJWH2rHnB7FtEorH3Bq335EDb9XJyZSXb9l"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "csr",
+      "teamCode": "one-star-esports-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-25",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/OneStarEsports/posts/pfbid0U2nnNoJGowRCSUZ3BtFTpqef4zdEZRVCNp8AKSU9EFuqABx2U3n7DdtARNvLjALNl"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "spiris",
+      "teamCode": "one-star-esports-vn",
+      "action": "LEAVE",
+      "announcedOn": "2026-09-25",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/OneStarEsports/posts/pfbid0GiKzLZazP7FHNgjVCaPTnDWX2ZD4FXHm22qMxbQyLFB1EyUgfNXSZt4HsKJSmB2xl"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "vinhhoang",
+      "teamCode": "boom-esports-vn-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-25",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/boomesportsvn/posts/pfbid0gHRHR65a2tEW6gVHu4eF3jhVZo6T7jNFYvWzwAo1w5gX5HneVEhDpsBeFUrz4qWal"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "emper",
+      "teamCode": "boom-esports-vn-vn",
+      "action": "LEAVE",
+      "announcedOn": "2026-09-24",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/photo/?fbid=122120867703378344"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "jangone",
+      "teamCode": "team-flash-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-24",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.instagram.com/p/DdqF_AAmF2l/",
+        "https://www.instagram.com/p/Ddq1d1lDLX8/"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "bridget",
+      "teamCode": "team-flash-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-24",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.instagram.com/p/DdqF_AAmF2l/",
+        "https://www.instagram.com/p/Ddq1d1lDLX8/"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "littleq",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "action": "LEAVE",
+      "announcedOn": "2026-09-23",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/teamrrq.aov/posts/pfbid02nU4eCxT5goB9H7r8n8TnkSroiZanmQPZgF83izpQkBwzfjwkxCcWeCd4EAwHQWM8l"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "yang",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "action": "LEAVE",
+      "announcedOn": "2026-09-23",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/teamrrq.aov/posts/pfbid02nU4eCxT5goB9H7r8n8TnkSroiZanmQPZgF83izpQkBwzfjwkxCcWeCd4EAwHQWM8l"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "tack4",
+      "teamCode": "rex-regum-qeon-vn-vn",
+      "action": "LEAVE",
+      "announcedOn": "2026-09-23",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/teamrrq.aov/posts/pfbid02nU4eCxT5goB9H7r8n8TnkSroiZanmQPZgF83izpQkBwzfjwkxCcWeCd4EAwHQWM8l"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "delios",
+      "teamCode": "team-flash-vn",
+      "action": "JOIN",
+      "announcedOn": "2026-09-23",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/TeamFlashVNAOV/posts/pfbid0fHknRcJNBDX7D3BwY27HGXXJBXhZ4pajgEYEceW6r1773TBNtAxnGczUaq7cMzdul"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "maris",
+      "teamCode": "team-flash-vn",
+      "action": "LEAVE",
+      "announcedOn": "2026-09-22",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/photo/?fbid=1416915430647451",
+        "https://www.facebook.com/photo?fbid=1416624787343182"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    },
+    {
+      "playerCode": "nang",
+      "teamCode": "team-flash-vn",
+      "action": "LEAVE",
+      "announcedOn": "2026-09-22",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Arena_of_Glory/2026/Winter",
+      "citedSourceUrls": [
+        "https://www.facebook.com/photo/?fbid=1416915430647451",
+        "https://www.facebook.com/photo?fbid=1416624787343182"
+      ],
+      "verification": "SECONDARY_CAPTURE",
+      "dateMeaning": "Explicit transfer announcement date in event source; not an inferred first/last match."
+    }
+  ],
+  "mediaImportPolicy": "Preserve existing project Media URLs when restoring an identity; use verified local source assets only when replacing or uploading. Null URL placeholders do not request clearing existing media.",
+  "sourceConflicts": [
+    {
+      "field": "tournament.prizePoolVnd",
+      "primaryPressClaim": 6750000000,
+      "currentLiquipediaClaim": 6650000000,
+      "resolution": "EVIDENCE_ONLY_DO_NOT_SET_UNSUPPORTED_TOTAL"
+    },
+    {
+      "field": "gam-esports-vn.mainTop",
+      "liquipediaEventRoster": "Kuga",
+      "clubCurrentRosterPage": "Adonis",
+      "resolution": "Use the event-specific visible roster for this event; retain the club page only as a separate context."
+    }
+  ],
+  "warnings": [
+    "Do not infer game patch from match dates or the current Wiki patch.",
+    "Do not import standings/results from the 14 October legacy capture as current.",
+    "The final is in the future as of 2026-10-27; do not set a winner or final score.",
+    "Player nationality and unreported roster dates/lanes remain unknown.",
+    "Series score/standings are evidence only until an API contract supports them; do not invent per-game observations to manufacture a series result.",
+    "The organizer prize-pool press claim (6.75 billion VND) and current Liquipedia infobox (6.65 billion VND) conflict; keep both as evidence, do not silently choose a total."
+  ],
+  "phase": "REGISTRIES_AND_ROSTERS_FROZEN"
+}

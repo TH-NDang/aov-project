@@ -1,0 +1,14 @@
+{
+  "code": "tenacity-th",
+  "name": "Tenacity",
+  "displayNameAtEvent": "Tenacity",
+  "legacyResearchId": "team-f64db89210dc",
+  "region": "TH",
+  "division": "OPEN",
+  "eventCodes": [
+    "rpl-2026-winter"
+  ],
+  "logo": "teams/tenacity-th/logo.png",
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/Tenacity"
+}

@@ -1,0 +1,36 @@
+{
+  "code": "missrov-2026-season-2-qualifier",
+  "name": "Miss RoV Tournament 2026 Season 2 — Online Qualifier",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "TH"
+  ],
+  "competitionType": "OFFICIAL_QUALIFIER",
+  "legacyResearchId": null,
+  "dates": {
+    "start": "2026-09-22",
+    "end": "2026-10-07",
+    "precision": "DATE",
+    "timezone": "Asia/Bangkok"
+  },
+  "sourceIds": [
+    "garena-missrov-rules"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+  "teamCodes": [],
+  "assets": [],
+  "rosters": [],
+  "broadcastLinks": [],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "VERIFIED",
+  "qualifiesFor": "missrov-2026-season-2",
+  "gaps": [
+    "Full participating team and roster list not yet verified. No men's roster or logo is substituted for the women's team.",
+    "Final results require a primary post-event source; scheduled finish alone is not a verified result."
+  ]
+}

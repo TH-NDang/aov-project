@@ -1,0 +1,20 @@
+{
+  "code": "five-dragon-princesses-vn-women",
+  "name": "Five Dragon Princesses",
+  "displayNameAtEvent": "Five Dragon Princesses",
+  "legacyResearchId": "team-bae1e63ac0fa",
+  "region": "VN",
+  "division": "WOMEN",
+  "eventCodes": [
+    "qog-2026-winter"
+  ],
+  "logo": null,
+  "logoReviewRequired": true,
+  "sourceUrl": "https://liquipedia.net/honorofkings/index.php?title=Five_Dragon_Princesses&action=edit&redlink=1",
+  "logoGap": "No verified team-specific logo; generic game placeholder was deliberately excluded.",
+  "officialLogoEvidence": {
+    "graphicPath": "tournaments/qog-2026-winter/participating-teams.jpg",
+    "sourceId": "garena-vn-qog",
+    "note": "Team logos are visible together in the official entrant graphic. This is not an individually cropped or transparent team logo."
+  }
+}

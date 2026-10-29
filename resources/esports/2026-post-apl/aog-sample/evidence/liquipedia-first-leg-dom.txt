@@ -1,0 +1,1112 @@
+- navigation:
+  - link "Logo":
+    - /url: /honorofkings/Main_Page
+    - img "Logo"
+  - list:
+    - link "liquipedia Honor of Kings":
+      - /url: "#"
+      - text: liquipedia
+      - generic: Honor of Kings
+    - text:                                                                                                   
+  - list:
+    - button " Trending":
+      - generic: 
+      - text: Trending
+    - button " Tournaments":
+      - generic: 
+      - text: Tournaments
+    - button " Contribute":
+      - generic: 
+      - text: Contribute
+    - text:  
+  - search:
+    - searchbox "Search"
+    - button "":
+      - generic: 
+  - list:
+    - link "":
+      - /url: https://tl.net/mytlnet/register
+      - generic: 
+    - link "":
+      - /url: /honorofkings/index.php?title=Special:UserLogin&returnto=Arena+of+Glory%2F2026%2FWinter%2FGroup+Stage%2FFirst+Leg
+      - generic: 
+- list:
+  - link "":
+    - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/First_Leg
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Talk:Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&redlink=1
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=history
+    - generic: 
+  - text: 
+- list:
+  - link "Auto selected":
+    - /url: "#"
+    - generic: 
+  - text:   
+  - link "":
+    - /url: "#"
+    - generic: 
+  - text:         
+  - link "":
+    - /url: "#"
+    - generic: 
+  - text:             
+- text:  , 
+- generic: 
+- main:
+  - heading "Arena of Glory Winter 2026 - Group Stage First Leg" [level=1]
+  - text: 
+  - list:
+    - link "Overview":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter
+    - link "Group Stage":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage
+    - link "Playoffs":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Playoffs
+    - link "Statistics":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Statistics
+    - link "Prize Money":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Prize_Money
+  - text: 
+  - text:     
+  - text: 
+  - list:
+    - link "Overview":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage
+    - generic: First Leg
+    - link "Second Leg":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage/Second_Leg
+  - text: 
+  - navigation "Contents":
+    - button "Hide the table of contents"
+    - heading "Contents" [level=2]
+    - text: "["
+    - generic: hide
+    - text: "]"
+    - list:
+      - link "1 Results":
+        - /url: "#Results"
+        - generic: "1"
+        - generic: Results
+      - list:
+        - link "1.1 Standings":
+          - /url: "#Standings"
+          - generic: "1.1"
+          - generic: Standings
+        - link "1.2 Detailed Results":
+          - /url: "#Detailed_Results"
+          - generic: "1.2"
+          - generic: Detailed Results
+        - list:
+          - link "1.2.1 Round 1":
+            - /url: "#Round_1"
+            - generic: 1.2.1
+            - generic: Round 1
+          - link "1.2.2 Round 2":
+            - /url: "#Round_2"
+            - generic: 1.2.2
+            - generic: Round 2
+          - link "1.2.3 Round 3":
+            - /url: "#Round_3"
+            - generic: 1.2.3
+            - generic: Round 3
+          - link "1.2.4 Round 4":
+            - /url: "#Round_4"
+            - generic: 1.2.4
+            - generic: Round 4
+          - link "1.2.5 Round 5":
+            - /url: "#Round_5"
+            - generic: 1.2.5
+            - generic: Round 5
+          - link "1.2.6 Round 6":
+            - /url: "#Round_6"
+            - generic: 1.2.6
+            - generic: Round 6
+          - link "1.2.7 Round 7":
+            - /url: "#Round_7"
+            - generic: 1.2.7
+            - generic: Round 7
+          - link "1.2.8 Round 8":
+            - /url: "#Round_8"
+            - generic: 1.2.8
+            - generic: Round 8
+          - link "1.2.9 Round 9":
+            - /url: "#Round_9"
+            - generic: 1.2.9
+            - generic: Round 9
+  - heading "Results" [level=2]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=1
+  - text: "]"
+  - heading "Standings" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=2
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:     
+  - generic: Round 18
+  - generic: Arena of Glory Winter 2026
+  - generic: August 29, 2026 - 13:00 ICT
+  - text:                                               
+  - generic: "1."
+  - generic "Saigon Phantom":
+    - link "Saigon Phantom":
+      - /url: /honorofkings/Saigon_Phantom
+    - link "Saigon Phantom":
+      - /url: /honorofkings/Saigon_Phantom
+  - generic: 15–1
+  - generic: 47–13
+  - generic: "+34"
+  - generic: 15p
+  - generic: "2."
+  - generic "FPT Polytechnic":
+    - link "FPT Polytechnic":
+      - /url: /honorofkings/FPT_Polytechnic
+    - link "FPT Polytechnic":
+      - /url: /honorofkings/FPT_Polytechnic
+  - generic: 14–2
+  - generic: 46–15
+  - generic: "+31"
+  - generic: 14p
+  - generic: "3."
+  - generic "BOOM Esports VN":
+    - link "BOOM Esports VN":
+      - /url: /honorofkings/BOOM_Esports_VN
+    - link "BOOM Esports VN":
+      - /url: /honorofkings/BOOM_Esports_VN
+  - generic: 9–7
+  - generic: 35–27
+  - generic: "+8"
+  - generic: 9p
+  - generic: "4."
+  - generic "Team Flash":
+    - link "Team Flash":
+      - /url: /honorofkings/Team_Flash
+    - link "Team Flash":
+      - /url: /honorofkings/Team_Flash
+    - generic: 
+    - generic: "1"
+  - generic: 8–8
+  - generic: 32–31
+  - generic: "+1"
+  - generic: 8p
+  - generic: "5."
+  - generic "GAM Esports":
+    - link "GAM Esports":
+      - /url: /honorofkings/GAM_Esports
+    - link "GAM Esports":
+      - /url: /honorofkings/GAM_Esports
+    - generic: 
+    - generic: "1"
+  - generic: 7–9
+  - generic: 31–32
+  - generic: "-1"
+  - generic: 7p
+  - generic: "6."
+  - generic "Box Gaming":
+    - link "Box Gaming":
+      - /url: /honorofkings/Box_Gaming
+    - link "Box Gaming":
+      - /url: /honorofkings/Box_Gaming
+  - generic: 7–9
+  - generic: 28–34
+  - generic: "-6"
+  - generic: 7p
+  - generic: "7."
+  - generic "One Star Esports":
+    - link "One Star Esports":
+      - /url: /honorofkings/One_Star_Esports
+    - link "One Star Esports":
+      - /url: /honorofkings/One_Star_Esports
+  - generic: 7–9
+  - generic: 27–35
+  - generic: "-8"
+  - generic: 7p
+  - generic: "8."
+  - generic "Team Secret":
+    - link "Team Secret":
+      - /url: /honorofkings/Team_Secret
+    - link "Team Secret":
+      - /url: /honorofkings/Team_Secret
+  - generic: 4–12
+  - generic: 20–44
+  - generic: "-24"
+  - generic: 4p
+  - generic: "9."
+  - generic "Rex Regum Qeon VN":
+    - link "Rex Regum Qeon VN":
+      - /url: /honorofkings/Rex_Regum_Qeon_VN
+    - link "Rex Regum Qeon VN":
+      - /url: /honorofkings/Rex_Regum_Qeon_VN
+  - generic: 1–15
+  - generic: 12–47
+  - generic: "-35"
+  - generic: 1p
+  - generic: Show Aggregate
+  - table:
+    - rowgroup:
+      - row "BOOM Esports VN 3-2 Oct 16 2-3 Sep 10 3-1 Sep 05 3-0 Oct 15 3-0 Oct 11 1-3 Aug 29 2-3 Oct 17 3-0 Sep 12":
+        - columnheader "BOOM Esports VN":
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+            - img "BOOM Esports VN"
+        - cell
+        - cell "3-2 Oct 16":
+          - text: 3-2
+          - text: Oct 16
+        - cell "2-3 Sep 10":
+          - text: 2-3
+          - text: Sep 10
+        - cell "3-1 Sep 05":
+          - text: 3-1
+          - text: Sep 05
+        - cell "3-0 Oct 15":
+          - text: 3-0
+          - text: Oct 15
+        - cell "3-0 Oct 11":
+          - text: 3-0
+          - text: Oct 11
+        - cell "1-3 Aug 29":
+          - text: 1-3
+          - text: Aug 29
+        - cell "2-3 Oct 17":
+          - text: 2-3
+          - text: Oct 17
+        - cell "3-0 Sep 12":
+          - text: 3-0
+          - text: Sep 12
+      - row "Box Gaming 0-3 Sep 03 2-3 Oct 10 0-3 Oct 03 3-1 Sep 13 3-1 Oct 02 0-3 Sep 19 2-3 Oct 15 3-2 Sep 11":
+        - rowheader "Box Gaming":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+            - img "Box Gaming"
+        - cell "0-3 Sep 03":
+          - text: 0-3
+          - text: Sep 03
+        - cell
+        - cell "2-3 Oct 10":
+          - text: 2-3
+          - text: Oct 10
+        - cell "0-3 Oct 03":
+          - text: 0-3
+          - text: Oct 03
+        - cell "3-1 Sep 13":
+          - text: 3-1
+          - text: Sep 13
+        - cell "3-1 Oct 02":
+          - text: 3-1
+          - text: Oct 02
+        - cell "0-3 Sep 19":
+          - text: 0-3
+          - text: Sep 19
+        - cell "2-3 Oct 15":
+          - text: 2-3
+          - text: Oct 15
+        - cell "3-2 Sep 11":
+          - text: 3-2
+          - text: Sep 11
+      - row "FPT Polytechnic 3-0 Oct 03 3-1 Sep 06 3-0 Oct 01 3-0 Oct 08 3-0 Aug 29 3-2 Oct 18 3-0 Sep 20 3-0 Sep 19":
+        - rowheader "FPT Polytechnic":
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - cell "3-0 Oct 03":
+          - text: 3-0
+          - text: Oct 03
+        - cell "3-1 Sep 06":
+          - text: 3-1
+          - text: Sep 06
+        - cell
+        - cell "3-0 Oct 01":
+          - text: 3-0
+          - text: Oct 01
+        - cell "3-0 Oct 08":
+          - text: 3-0
+          - text: Oct 08
+        - cell "3-0 Aug 29":
+          - text: 3-0
+          - text: Aug 29
+        - cell "3-2 Oct 18":
+          - text: 3-2
+          - text: Oct 18
+        - cell "3-0 Sep 20":
+          - text: 3-0
+          - text: Sep 20
+        - cell "3-0 Sep 19":
+          - text: 3-0
+          - text: Sep 19
+      - row "GAM Esports 2-3 Oct 08 1-3 Aug 29 3-2 Sep 12 3-1 Sep 18 3-0 Oct 10 1-3 Oct 15 3-0 Oct 16 2-3 Sep 03":
+        - rowheader "GAM Esports":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+            - img "GAM Esports"
+        - cell "2-3 Oct 08":
+          - text: 2-3
+          - text: Oct 08
+        - cell "1-3 Aug 29":
+          - text: 1-3
+          - text: Aug 29
+        - cell "3-2 Sep 12":
+          - text: 3-2
+          - text: Sep 12
+        - cell
+        - cell "3-1 Sep 18":
+          - text: 3-1
+          - text: Sep 18
+        - cell "3-0 Oct 10":
+          - text: 3-0
+          - text: Oct 10
+        - cell "1-3 Oct 15":
+          - text: 1-3
+          - text: Oct 15
+        - cell "3-0 Oct 16":
+          - text: 3-0
+          - text: Oct 16
+        - cell "2-3 Sep 03":
+          - text: 2-3
+          - text: Sep 03
+      - row "One Star Esports 3-1 Sep 19 0-3 Oct 09 0-3 Sep 11 3-1 Oct 18 3-1 Aug 30 1-3 Oct 04 3-2 Sep 05 3-1 Oct 11":
+        - rowheader "One Star Esports":
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+            - img "One Star Esports"
+        - cell "3-1 Sep 19":
+          - text: 3-1
+          - text: Sep 19
+        - cell "0-3 Oct 09":
+          - text: 0-3
+          - text: Oct 09
+        - cell "0-3 Sep 11":
+          - text: 0-3
+          - text: Sep 11
+        - cell "3-1 Oct 18":
+          - text: 3-1
+          - text: Oct 18
+        - cell
+        - cell "3-1 Aug 30":
+          - text: 3-1
+          - text: Aug 30
+        - cell "1-3 Oct 04":
+          - text: 1-3
+          - text: Oct 04
+        - cell "3-2 Sep 05":
+          - text: 3-2
+          - text: Sep 05
+        - cell "3-1 Oct 11":
+          - text: 3-1
+          - text: Oct 11
+      - row "Rex Regum Qeon VN 0-3 Sep 06 1-3 Sep 18 0-3 Oct 16 1-3 Sep 20 3-2 Oct 03 0-3 Sep 04 0-3 Oct 04 2-3 Oct 09":
+        - rowheader "Rex Regum Qeon VN":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+            - img "Rex Regum Qeon VN"
+        - cell "0-3 Sep 06":
+          - text: 0-3
+          - text: Sep 06
+        - cell "1-3 Sep 18":
+          - text: 1-3
+          - text: Sep 18
+        - cell "0-3 Oct 16":
+          - text: 0-3
+          - text: Oct 16
+        - cell "1-3 Sep 20":
+          - text: 1-3
+          - text: Sep 20
+        - cell "3-2 Oct 03":
+          - text: 3-2
+          - text: Oct 03
+        - cell
+        - cell "0-3 Sep 04":
+          - text: 0-3
+          - text: Sep 04
+        - cell "0-3 Oct 04":
+          - text: 0-3
+          - text: Oct 04
+        - cell "2-3 Oct 09":
+          - text: 2-3
+          - text: Oct 09
+      - row "Saigon Phantom 3-2 Oct 09 3-0 Oct 08 3-2 Aug 30 3-0 Sep 11 3-1 Sep 06 3-1 Oct 17 3-0 Sep 13 3-0 Oct 01":
+        - rowheader "Saigon Phantom":
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+        - cell "3-2 Oct 09":
+          - text: 3-2
+          - text: Oct 09
+        - cell "3-0 Oct 08":
+          - text: 3-0
+          - text: Oct 08
+        - cell "3-2 Aug 30":
+          - text: 3-2
+          - text: Aug 30
+        - cell "3-0 Sep 11":
+          - text: 3-0
+          - text: Sep 11
+        - cell "3-1 Sep 06":
+          - text: 3-1
+          - text: Sep 06
+        - cell "3-1 Oct 17":
+          - text: 3-1
+          - text: Oct 17
+        - cell
+        - cell "3-0 Sep 13":
+          - text: 3-0
+          - text: Sep 13
+        - cell "3-0 Oct 01":
+          - text: 3-0
+          - text: Oct 01
+      - row "Team Flash 3-0 Sep 18 3-0 Sep 04 2-3 Oct 02 3-2 Sep 10 1-3 Oct 01 3-0 Sep 12 1-3 Oct 11 2-3 Oct 10":
+        - rowheader "Team Flash":
+          - link "Team Flash":
+            - /url: /honorofkings/Team_Flash
+            - img "Team Flash"
+        - cell "3-0 Sep 18":
+          - text: 3-0
+          - text: Sep 18
+        - cell "3-0 Sep 04":
+          - text: 3-0
+          - text: Sep 04
+        - cell "2-3 Oct 02":
+          - text: 2-3
+          - text: Oct 02
+        - cell "3-2 Sep 10":
+          - text: 3-2
+          - text: Sep 10
+        - cell "1-3 Oct 01":
+          - text: 1-3
+          - text: Oct 01
+        - cell "3-0 Sep 12":
+          - text: 3-0
+          - text: Sep 12
+        - cell "1-3 Oct 11":
+          - text: 1-3
+          - text: Oct 11
+        - cell
+        - cell "2-3 Oct 10":
+          - text: 2-3
+          - text: Oct 10
+      - row "Team Secret 1-3 Oct 02 1-3 Oct 18 0-3 Oct 17 1-3 Oct 04 1-3 Sep 04 3-2 Sep 13 0-3 Sep 05 1-3 Aug 30":
+        - rowheader "Team Secret":
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+            - img "Team Secret"
+        - cell "1-3 Oct 02":
+          - text: 1-3
+          - text: Oct 02
+        - cell "1-3 Oct 18":
+          - text: 1-3
+          - text: Oct 18
+        - cell "0-3 Oct 17":
+          - text: 0-3
+          - text: Oct 17
+        - cell "1-3 Oct 04":
+          - text: 1-3
+          - text: Oct 04
+        - cell "1-3 Sep 04":
+          - text: 1-3
+          - text: Sep 04
+        - cell "3-2 Sep 13":
+          - text: 3-2
+          - text: Sep 13
+        - cell "0-3 Sep 05":
+          - text: 0-3
+          - text: Sep 05
+        - cell "1-3 Aug 30":
+          - text: 1-3
+          - text: Aug 30
+        - cell
+      - row "BOOM Esports VN Box Gaming FPT Polytechnic GAM Esports One Star Esports Rex Regum Qeon VN Saigon Phantom Team Flash Team Secret":
+        - columnheader
+        - columnheader "BOOM Esports VN":
+          - link "BOOM Esports VN":
+            - /url: /honorofkings/BOOM_Esports_VN
+            - img "BOOM Esports VN"
+        - columnheader "Box Gaming":
+          - link "Box Gaming":
+            - /url: /honorofkings/Box_Gaming
+            - img "Box Gaming"
+        - columnheader "FPT Polytechnic":
+          - link "FPT Polytechnic":
+            - /url: /honorofkings/FPT_Polytechnic
+            - img "FPT Polytechnic"
+        - columnheader "GAM Esports":
+          - link "GAM Esports":
+            - /url: /honorofkings/GAM_Esports
+            - img "GAM Esports"
+        - columnheader "One Star Esports":
+          - link "One Star Esports":
+            - /url: /honorofkings/One_Star_Esports
+            - img "One Star Esports"
+        - columnheader "Rex Regum Qeon VN":
+          - link "Rex Regum Qeon VN":
+            - /url: /honorofkings/Rex_Regum_Qeon_VN
+            - img "Rex Regum Qeon VN"
+        - columnheader "Saigon Phantom":
+          - link "Saigon Phantom":
+            - /url: /honorofkings/Saigon_Phantom
+            - img "Saigon Phantom"
+        - columnheader "Team Flash":
+          - link "Team Flash":
+            - /url: /honorofkings/Team_Flash
+            - img "Team Flash"
+        - columnheader "Team Secret":
+          - link "Team Secret":
+            - /url: /honorofkings/Team_Secret
+            - img "Team Secret"
+  - table:
+    - rowgroup:
+      - row "Qualification":
+        - columnheader "Qualification"
+      - row "Playoffs Upper Bracket and the right to select opponent":
+        - cell "Playoffs Upper Bracket and the right to select opponent"
+      - row "Playoffs Upper Bracket and exempt from selection by the first place team":
+        - cell "Playoffs Upper Bracket and exempt from selection by the first place team"
+      - row "Playoffs Upper Bracket":
+        - cell "Playoffs Upper Bracket"
+      - row "Playoffs Lower Bracket":
+        - cell "Playoffs Lower Bracket"
+      - row "Eliminated from title contention":
+        - cell "Eliminated from title contention"
+  - paragraph
+  - heading "Detailed Results" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=3
+  - text: "]"
+  - button " Hide all":
+    - generic: 
+    - text: Hide all
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=4
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 1
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: August 29, 2026
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - generic "BOOM Esports VN":
+    - generic: "1"
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - text:   W L L W L W L W  
+  - generic "GAM Esports":
+    - generic: GAM
+  - generic "GAM Esports":
+    - generic: "1"
+  - generic "Box Gaming":
+    - generic: "3"
+  - generic "Box Gaming":
+    - generic: BOX
+  - text:   L W W L L W L W  
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - generic "FPT Polytechnic":
+    - generic: "3"
+  - generic "Rex Regum Qeon VN":
+    - generic: "0"
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - text:   W L W L W L  
+  - generic: August 30, 2026
+  - generic "Team Secret":
+    - generic: TS
+  - generic "Team Secret":
+    - generic: "1"
+  - generic "Team Flash":
+    - generic: "3"
+  - generic "Team Flash":
+    - generic: FL
+  - text:   L W L W W L L W  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=5
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 2
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: August 30, 2026
+  - generic "One Star Esports":
+    - generic: 1S
+  - generic "One Star Esports":
+    - generic: "3"
+  - generic "Rex Regum Qeon VN":
+    - generic: "1"
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - text:   W L L W W L W L  
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "FPT Polytechnic":
+    - generic: "2"
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - text:   W L L W L W W L W L  
+  - generic: September 3, 2026
+  - generic "Box Gaming":
+    - generic: BOX
+  - generic "Box Gaming":
+    - generic: "0"
+  - generic "BOOM Esports VN":
+    - generic: "3"
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - text:   L W L W L W  
+  - generic "GAM Esports":
+    - generic: GAM
+  - generic "GAM Esports":
+    - generic: "2"
+  - generic "Team Secret":
+    - generic: "3"
+  - generic "Team Secret":
+    - generic: TS
+  - text:   W L L W L W W L L W  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=6
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 3
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: September 4, 2026
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - generic "Rex Regum Qeon VN":
+    - generic: "0"
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - text:   L W L W L W  
+  - generic "Team Secret":
+    - generic: TS
+  - generic "Team Secret":
+    - generic: "1"
+  - generic "One Star Esports":
+    - generic: "3"
+  - generic "One Star Esports":
+    - generic: 1S
+  - text:   L W L W W L L W  
+  - generic "Team Flash":
+    - generic: FL
+  - generic "Team Flash":
+    - generic: "3"
+  - generic "Box Gaming":
+    - generic: "0"
+  - generic "Box Gaming":
+    - generic: BOX
+  - text:   W L W L W L  
+  - generic: September 5, 2026
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - generic "BOOM Esports VN":
+    - generic: "3"
+  - generic "GAM Esports":
+    - generic: "1"
+  - generic "GAM Esports":
+    - generic: GAM
+  - text:   W L W L L W W L  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=7
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 4
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: September 5, 2026
+  - generic "Team Secret":
+    - generic: TS
+  - generic "Team Secret":
+    - generic: "0"
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - text:   L W L W L W  
+  - generic "One Star Esports":
+    - generic: 1S
+  - generic "One Star Esports":
+    - generic: "3"
+  - generic "Team Flash":
+    - generic: "2"
+  - generic "Team Flash":
+    - generic: FL
+  - text:   W L W L L W L W W L  
+  - generic: September 6, 2026
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - generic "Rex Regum Qeon VN":
+    - generic: "0"
+  - generic "BOOM Esports VN":
+    - generic: "3"
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - text:   L W L W L W  
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - generic "FPT Polytechnic":
+    - generic: "3"
+  - generic "Box Gaming":
+    - generic: "1"
+  - generic "Box Gaming":
+    - generic: BOX
+  - text:   W L W L L W W L  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=8
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 5
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: September 6, 2026
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "One Star Esports":
+    - generic: "1"
+  - generic "One Star Esports":
+    - generic: 1S
+  - text:   W L W L L W W L  
+  - generic: September 10, 2026
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - generic "BOOM Esports VN":
+    - generic: "2"
+  - generic "FPT Polytechnic":
+    - generic: "3"
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - text:   W L L W L W W L L W  
+  - generic "Team Flash":
+    - generic: FL
+  - generic "Team Flash":
+    - generic: "3"
+  - generic "GAM Esports":
+    - generic: "2"
+  - generic "GAM Esports":
+    - generic: GAM
+  - text:   L W L W W L W L W L  
+  - generic: September 11, 2026
+  - generic "Box Gaming":
+    - generic: BOX
+  - generic "Box Gaming":
+    - generic: "3"
+  - generic "Team Secret":
+    - generic: "2"
+  - generic "Team Secret":
+    - generic: TS
+  - text:   W L L W W L L W W L  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=9
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 6
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: September 11, 2026
+  - generic "One Star Esports":
+    - generic: 1S
+  - generic "One Star Esports":
+    - generic: "0"
+  - generic "FPT Polytechnic":
+    - generic: "3"
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - text:   L W L W L W  
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "GAM Esports":
+    - generic: "0"
+  - generic "GAM Esports":
+    - generic: GAM
+  - text:   W L W L W L  
+  - generic: September 12, 2026
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - generic "BOOM Esports VN":
+    - generic: "3"
+  - generic "Team Secret":
+    - generic: "0"
+  - generic "Team Secret":
+    - generic: TS
+  - text:   W L W L W L  
+  - generic "Team Flash":
+    - generic: FL
+  - generic "Team Flash":
+    - generic: "3"
+  - generic "Rex Regum Qeon VN":
+    - generic: "0"
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - text:   W L W L W L  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=10
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 7
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: September 12, 2026
+  - generic "GAM Esports":
+    - generic: GAM
+  - generic "GAM Esports":
+    - generic: "3"
+  - generic "FPT Polytechnic":
+    - generic: "2"
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - text:   W L W L L W L W W L  
+  - generic: September 13, 2026
+  - generic "Box Gaming":
+    - generic: BOX
+  - generic "Box Gaming":
+    - generic: "3"
+  - generic "One Star Esports":
+    - generic: "1"
+  - generic "One Star Esports":
+    - generic: 1S
+  - text:   W L L W W L W L  
+  - generic "Team Secret":
+    - generic: TS
+  - generic "Team Secret":
+    - generic: "3"
+  - generic "Rex Regum Qeon VN":
+    - generic: "2"
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - text:   L W W L L W W L W L  
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "Team Flash":
+    - generic: "0"
+  - generic "Team Flash":
+    - generic: FL
+  - text:   W L W L W L  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=11
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 8
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: September 18, 2026
+  - generic "GAM Esports":
+    - generic: GAM
+  - generic "GAM Esports":
+    - generic: "3"
+  - generic "One Star Esports":
+    - generic: "1"
+  - generic "One Star Esports":
+    - generic: 1S
+  - text:   W L W L L W W L  
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - generic "Rex Regum Qeon VN":
+    - generic: "1"
+  - generic "Box Gaming":
+    - generic: "3"
+  - generic "Box Gaming":
+    - generic: BOX
+  - text:   L W L W W L L W  
+  - generic "Team Flash":
+    - generic: FL
+  - generic "Team Flash":
+    - generic: "3"
+  - generic "BOOM Esports VN":
+    - generic: "0"
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - text:   W L W L W L  
+  - generic: September 19, 2026
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - generic "FPT Polytechnic":
+    - generic: "3"
+  - generic "Team Secret":
+    - generic: "0"
+  - generic "Team Secret":
+    - generic: TS
+  - text:   W L W L W L  
+  - heading [level=5]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Group_Stage/First_Leg&action=edit&section=12
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - generic: Round 9
+  - text: 
+  - button " Hide":
+    - generic: 
+    - text: Hide
+  - generic: September 19, 2026
+  - generic "One Star Esports":
+    - generic: 1S
+  - generic "One Star Esports":
+    - generic: "3"
+  - generic "BOOM Esports VN":
+    - generic: "1"
+  - generic "BOOM Esports VN":
+    - generic: BME
+  - text:   W L W L L W W L  
+  - generic "Box Gaming":
+    - generic: BOX
+  - generic "Box Gaming":
+    - generic: "0"
+  - generic "Saigon Phantom":
+    - generic: "3"
+  - generic "Saigon Phantom":
+    - generic: SGP
+  - text:   L W L W L W  
+  - generic: September 20, 2026
+  - generic "Rex Regum Qeon VN":
+    - generic: RRQ
+  - generic "Rex Regum Qeon VN":
+    - generic: "1"
+  - generic "GAM Esports":
+    - generic: "3"
+  - generic "GAM Esports":
+    - generic: GAM
+  - text:   L W L W W L L W  
+  - generic "FPT Polytechnic":
+    - generic: FPL
+  - generic "FPT Polytechnic":
+    - generic: "3"
+  - generic "Team Flash":
+    - generic: "0"
+  - generic "Team Flash":
+    - generic: FL
+  - text:   W L W L W L  
+- contentinfo:
+  - link "Liquipedia Portal":
+    - /url: https://liquipedia.net
+  - list:
+    - link "Send an email":
+      - /url: mailto:contact@liquipedia.net
+    - link "Chat with us":
+      - /url: https://discord.gg/liquipedia
+    - link "Contact":
+      - /url: /commons/Contact
+  - list:
+    - link "Discord":
+      - /url: https://discord.gg/liquipedia
+      - generic: 
+    - link "Twitter":
+      - /url: https://twitter.com/LiquipediaNet
+      - generic: 
+    - link "Facebook":
+      - /url: https://www.facebook.com/Liquipedia
+      - generic: 
+    - link "YouTube":
+      - /url: https://www.youtube.com/user/Liquipedia
+      - generic: 
+    - link "Twitch":
+      - /url: https://www.twitch.tv/liquipedia
+      - generic: 
+    - link "GitHub":
+      - /url: https://github.com/Liquipedia
+      - generic: 
+  - tabpanel:
+    - heading "About" [level=4]
+    - list:
+      - link "Privacy policy":
+        - /url: /honorofkings/Liquipedia:Privacy_policy
+      - link "About Liquipedia Honor of Kings Wiki":
+        - /url: /honorofkings/Liquipedia:About
+      - link "Disclaimers":
+        - /url: /honorofkings/Liquipedia:General_disclaimer
+      - link "API":
+        - /url: https://liquipedia.net/api
+      - link:
+        - /url: "#"
+      - link:
+        - /url: "#"
+  - tabpanel:
+    - heading "Affiliated Sites" [level=4]
+    - list:
+      - link "TL.net":
+        - /url: https://tl.net
+  - list:
+    - listitem: This page was last edited on 23 October 2026, at 01:44.
+    - text: Text/code is available under
+    - link "CC-BY-SA":
+      - /url: /honorofkings/Liquipedia:Copyrights
+    - text: . Licenses for other media varies.

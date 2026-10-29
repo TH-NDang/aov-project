@@ -1,0 +1,1481 @@
+{
+  "schemaVersion": 1,
+  "collectedAsOf": "2026-10-26",
+  "purpose": "Manual tournament research and asset preparation; not automatically published to the product database.",
+  "scope": {
+    "game": "ARENA_OF_VALOR",
+    "dateBoundary": "2026-08-01",
+    "afterApl2026": "2026-07-19",
+    "includesEventsOverlappingBoundary": true,
+    "competitions": [
+      "Professional leagues",
+      "Official women's competitions",
+      "Official qualifiers for those competitions"
+    ],
+    "excludes": [
+      "Community, campus and amateur-only events",
+      "Celebrity showmatches",
+      "Honor of Kings and hybrid game formats"
+    ]
+  },
+  "rights": {
+    "license": "NOT_ASSUMED",
+    "note": "Logos and official graphics remain property of their respective owners. Source attribution is not a blanket reuse license. Do not label these assets as project-owned or Creative Commons by default."
+  },
+  "sources": [
+    {
+      "id": "garena-vn-league",
+      "url": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+      "kind": "PRIMARY_ORGANIZER",
+      "supports": [
+        "AOG Winter start and nine teams",
+        "Official announcements and roster graphics"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-vn-finals",
+      "url": "https://lienquan.garena.vn/cong-bo-thong-tin-mo-ban-ve-lien-quan-10fest/",
+      "kind": "PRIMARY_ORGANIZER",
+      "supports": [
+        "AOG Winter grand final 7 November 2026 at My Dinh"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-vn-qog",
+      "url": "https://lienquan.garena.vn/queens-of-glory-mua-dong-2026-chinh-thuc-khoi-tranh-tu-ngay-19-10-voi-dien-mao-moi/",
+      "kind": "PRIMARY_ORGANIZER",
+      "supports": [
+        "QOG dates, format, eight teams and three qualifier winners"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-gcs-announcement",
+      "url": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "kind": "PRIMARY_ORGANIZER",
+      "supports": [
+        "GCS dates, seven teams, initial rosters and team graphics"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-gcs-schedule",
+      "url": "https://esports.moba.garena.tw/gcs/schedule",
+      "kind": "PRIMARY_ORGANIZER",
+      "supports": [
+        "Current schedule and official team logos"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-rpl-opening",
+      "url": "https://www.youtube.com/watch?v=Xq19Mkao8DA",
+      "kind": "PRIMARY_BROADCAST",
+      "supports": [
+        "RPL Winter opening broadcast 22 August"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "impact-rpl-finals",
+      "url": "https://www.impact.co.th/en/visitors/event-calendar/special-event/rov-pro-league-2026-winter",
+      "kind": "PRIMARY_VENUE",
+      "supports": [
+        "RPL finals 23-25 October, Garena organizer, Hall 11-12"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "sat-tepl-finals",
+      "url": "https://www.sat.or.th/พิธีเปิดการแข่งขันกีฬา-2/",
+      "kind": "PRIMARY_PUBLIC_AUTHORITY",
+      "supports": [
+        "TEPL finals 8-9 August, winner qualifies for RPL 2027"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-tepl-finals",
+      "url": "https://www.youtube.com/watch?v=e_n8Y46BP0s",
+      "kind": "PRIMARY_BROADCAST",
+      "supports": [
+        "TEPL championship day two"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-missrov-rules",
+      "url": "https://www.missrov.com/web/",
+      "kind": "PRIMARY_TOURNAMENT",
+      "supports": [
+        "Qualifiers 22 September-7 October, playoffs 12-18 October, final 25 October"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-missrov-trailer",
+      "url": "https://www.youtube.com/watch?v=_GBmiiRTAyY",
+      "kind": "PRIMARY_BROADCAST",
+      "supports": [
+        "Official women's national competition, Season 2, 2026"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-2026-roadmap",
+      "url": "https://www.garena.sg/news/2M54DC",
+      "kind": "PRIMARY_ORGANIZER",
+      "supports": [
+        "AIC 2026 announced for year-end in Thailand; detailed dates not established here",
+        "HoK EWC collaboration is a separate game format"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-apl-boundary",
+      "url": "https://moba.garena.tw/news/show/5604",
+      "kind": "PRIMARY_ORGANIZER",
+      "supports": [
+        "APL match dates include 18-19 July; corroborates research APL end boundary"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "garena-indonesia-channel",
+      "url": "https://www.youtube.com/watch?v=ZBrYTSnbYgk",
+      "kind": "PRIMARY_BROADCAST",
+      "supports": [
+        "ACS Indonesia 2026 event found was in April, outside requested range"
+      ],
+      "verifiedAsOf": "2026-10-26"
+    },
+    {
+      "id": "legacy-research",
+      "path": "research/aov-esports-2020-2026",
+      "kind": "SECONDARY_RESEARCH",
+      "supports": [
+        "Liquipedia event IDs, roster handles, participant discovery and fallback logos captured 15 October 2026"
+      ],
+      "reviewRequired": true,
+      "verifiedAsOf": "2026-10-26"
+    }
+  ],
+  "tournaments": [
+    {
+      "code": "aog-2026-winter",
+      "path": "tournaments/aog-2026-winter.json",
+      "status": "IN_PROGRESS",
+      "regions": [
+        "VN"
+      ]
+    },
+    {
+      "code": "gcs-2026-summer",
+      "path": "tournaments/gcs-2026-summer.json",
+      "status": "IN_PROGRESS",
+      "regions": [
+        "TW",
+        "HK",
+        "MO"
+      ]
+    },
+    {
+      "code": "rpl-2026-winter",
+      "path": "tournaments/rpl-2026-winter.json",
+      "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+      "regions": [
+        "TH"
+      ]
+    },
+    {
+      "code": "tepl-2026",
+      "path": "tournaments/tepl-2026.json",
+      "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+      "regions": [
+        "TH"
+      ]
+    },
+    {
+      "code": "qog-2026-winter",
+      "path": "tournaments/qog-2026-winter.json",
+      "status": "IN_PROGRESS",
+      "regions": [
+        "VN"
+      ]
+    },
+    {
+      "code": "qog-2026-winter-qualifier",
+      "path": "tournaments/qog-2026-winter-qualifier.json",
+      "status": "OCCURRED_DATES_UNVERIFIED",
+      "regions": [
+        "VN"
+      ]
+    },
+    {
+      "code": "missrov-2026-season-2",
+      "path": "tournaments/missrov-2026-season-2.json",
+      "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+      "regions": [
+        "TH"
+      ]
+    },
+    {
+      "code": "missrov-2026-season-2-qualifier",
+      "path": "tournaments/missrov-2026-season-2-qualifier.json",
+      "status": "SCHEDULE_ENDED_RESULT_REVIEW_REQUIRED",
+      "regions": [
+        "TH"
+      ]
+    },
+    {
+      "code": "aic-2026",
+      "path": "tournaments/aic-2026.json",
+      "status": "ANNOUNCED_DETAILS_PENDING",
+      "regions": [
+        "GLOBAL"
+      ]
+    }
+  ],
+  "teams": [
+    {
+      "code": "1stesan-th",
+      "path": "teams/1stesan-th.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "alg-queen-vn-women",
+      "path": "teams/alg-queen-vn-women.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "ank-gaming-tw",
+      "path": "teams/ank-gaming-tw.json",
+      "logo": "teams/ank-gaming-tw/logo.png",
+      "logoReviewRequired": false
+    },
+    {
+      "code": "bacon-time-th",
+      "path": "teams/bacon-time-th.json",
+      "logo": "teams/bacon-time-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "banmei-gaming-tw",
+      "path": "teams/banmei-gaming-tw.json",
+      "logo": "teams/banmei-gaming-tw/logo.png",
+      "logoReviewRequired": false
+    },
+    {
+      "code": "boom-esports-vn-vn",
+      "path": "teams/boom-esports-vn-vn.json",
+      "logo": "teams/boom-esports-vn-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "boom-esports-vn-women",
+      "path": "teams/boom-esports-vn-women.json",
+      "logo": "teams/boom-esports-vn-women/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "box-gaming-vn",
+      "path": "teams/box-gaming-vn.json",
+      "logo": "teams/box-gaming-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "buriram-united-esports-th",
+      "path": "teams/buriram-united-esports-th.json",
+      "logo": "teams/buriram-united-esports-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "deep-cross-gaming-tw",
+      "path": "teams/deep-cross-gaming-tw.json",
+      "logo": "teams/deep-cross-gaming-tw/logo.png",
+      "logoReviewRequired": false
+    },
+    {
+      "code": "earena-th",
+      "path": "teams/earena-th.json",
+      "logo": "teams/earena-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "five-dragon-princesses-vn-women",
+      "path": "teams/five-dragon-princesses-vn-women.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "fpt-polytechnic-vn",
+      "path": "teams/fpt-polytechnic-vn.json",
+      "logo": "teams/fpt-polytechnic-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "full-sense-th",
+      "path": "teams/full-sense-th.json",
+      "logo": "teams/full-sense-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "gam-esports-vn",
+      "path": "teams/gam-esports-vn.json",
+      "logo": "teams/gam-esports-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "gam-esports-vn-women",
+      "path": "teams/gam-esports-vn-women.json",
+      "logo": "teams/gam-esports-vn-women/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "gangrocket-th",
+      "path": "teams/gangrocket-th.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "godji-check-th",
+      "path": "teams/godji-check-th.json",
+      "logo": "teams/godji-check-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "hong-kong-attitude-hk",
+      "path": "teams/hong-kong-attitude-hk.json",
+      "logo": "teams/hong-kong-attitude-hk/logo.png",
+      "logoReviewRequired": false
+    },
+    {
+      "code": "hydra-esports-th",
+      "path": "teams/hydra-esports-th.json",
+      "logo": "teams/hydra-esports-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "ibitzz-168-th",
+      "path": "teams/ibitzz-168-th.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "king-of-gamers-club-th",
+      "path": "teams/king-of-gamers-club-th.json",
+      "logo": "teams/king-of-gamers-club-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "lit-team-tw",
+      "path": "teams/lit-team-tw.json",
+      "logo": "teams/lit-team-tw/logo.png",
+      "logoReviewRequired": false
+    },
+    {
+      "code": "lunyx-x-radiant-th",
+      "path": "teams/lunyx-x-radiant-th.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "one-star-esports-vn",
+      "path": "teams/one-star-esports-vn.json",
+      "logo": "teams/one-star-esports-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "one-star-esports-vn-women",
+      "path": "teams/one-star-esports-vn-women.json",
+      "logo": "teams/one-star-esports-vn-women/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "one-team-tw",
+      "path": "teams/one-team-tw.json",
+      "logo": "teams/one-team-tw/logo.png",
+      "logoReviewRequired": false
+    },
+    {
+      "code": "redkid7-th",
+      "path": "teams/redkid7-th.json",
+      "logo": "teams/redkid7-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "rex-regum-qeon-vn-vn",
+      "path": "teams/rex-regum-qeon-vn-vn.json",
+      "logo": "teams/rex-regum-qeon-vn-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "rockstar-dream-th",
+      "path": "teams/rockstar-dream-th.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "saigon-phantom-ladies-vn-women",
+      "path": "teams/saigon-phantom-ladies-vn-women.json",
+      "logo": "teams/saigon-phantom-ladies-vn-women/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "saigon-phantom-vn",
+      "path": "teams/saigon-phantom-vn.json",
+      "logo": "teams/saigon-phantom-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "satoshi-x-ibitzz-th",
+      "path": "teams/satoshi-x-ibitzz-th.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "solyx-th",
+      "path": "teams/solyx-th.json",
+      "logo": "teams/solyx-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "superjong-th",
+      "path": "teams/superjong-th.json",
+      "logo": null,
+      "logoReviewRequired": true
+    },
+    {
+      "code": "team-flash-vn",
+      "path": "teams/team-flash-vn.json",
+      "logo": "teams/team-flash-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "team-secret-dino-vn-women",
+      "path": "teams/team-secret-dino-vn-women.json",
+      "logo": "teams/team-secret-dino-vn-women/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "team-secret-vn",
+      "path": "teams/team-secret-vn.json",
+      "logo": "teams/team-secret-vn/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "tenacity-th",
+      "path": "teams/tenacity-th.json",
+      "logo": "teams/tenacity-th/logo.png",
+      "logoReviewRequired": true
+    },
+    {
+      "code": "wanin-flash-wolves-tw",
+      "path": "teams/wanin-flash-wolves-tw.json",
+      "logo": "teams/wanin-flash-wolves-tw/logo.png",
+      "logoReviewRequired": false
+    },
+    {
+      "code": "wvhs-vn-women",
+      "path": "teams/wvhs-vn-women.json",
+      "logo": null,
+      "logoReviewRequired": true
+    }
+  ],
+  "assets": [
+    {
+      "path": "teams/ank-gaming-tw/logo.png",
+      "bytes": 3221,
+      "sha256": "fd57bf891f17f651e1dc14266ca8acffb6b8bb5543a45de535617fd1cf8a6763",
+      "width": 100,
+      "height": 100,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://kgtw.cdn.garenanow.com/mgames/kgtw/esports/2024/ANK.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/schedule",
+      "sourceId": "garena-gcs-schedule",
+      "provenance": "PRIMARY_ORGANIZER",
+      "teamId": "team-6353aa96abab"
+    },
+    {
+      "path": "teams/bacon-time-th/logo.png",
+      "bytes": 11588,
+      "sha256": "3322308c1a1d0089c77c42e1e89fd616cc813227bdf805cedbed20e38472af5d",
+      "width": 100,
+      "height": 49,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/0/07/TH_Bacon_Time.png/100px-TH_Bacon_Time.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Bacon_Time",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "11510b3ade401165",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/11510b3ade401165-100px-TH_Bacon_Time.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/banmei-gaming-tw/logo.png",
+      "bytes": 7628,
+      "sha256": "62740b9ec30723e9df5a8cf8f9b938a816ed311e8466bdf3ceaa22d277c013b1",
+      "width": 100,
+      "height": 100,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://dlgarenanow-a.akamaihd.net/mgames/kgtw/esports/2023GCS/SUMMER/BMG100X10022.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/schedule",
+      "sourceId": "garena-gcs-schedule",
+      "provenance": "PRIMARY_ORGANIZER",
+      "teamId": "team-279b7944fb0e"
+    },
+    {
+      "path": "teams/boom-esports-vn-vn/logo.png",
+      "bytes": 4252,
+      "sha256": "1a39b5f71a962107bce4ec07c0513888a69d2fce1c12b47ab51cc5e76b11e233",
+      "width": 37,
+      "height": 49,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d0/Boom_Esports_allmode.png/37px-Boom_Esports_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/BOOM_Esports_VN",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "af3d5ab286c201be",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/af3d5ab286c201be-37px-Boom_Esports_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/boom-esports-vn-women/logo.png",
+      "bytes": 4252,
+      "sha256": "1a39b5f71a962107bce4ec07c0513888a69d2fce1c12b47ab51cc5e76b11e233",
+      "width": 37,
+      "height": 49,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d0/Boom_Esports_allmode.png/37px-Boom_Esports_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/index.php?title=BOOM_Esports_(Women_Team)&action=edit&redlink=1",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "af3d5ab286c201be",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/af3d5ab286c201be-37px-Boom_Esports_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/box-gaming-vn/logo.png",
+      "bytes": 2961,
+      "sha256": "425e885437dffb22419c321058858b7b50412cb5b22d1494106ffc55ed7a1373",
+      "width": 32,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/a/a9/Box_Gaming_2020_allmode.png/32px-Box_Gaming_2020_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Box_Gaming",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "9907e841a6a1b26a",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/9907e841a6a1b26a-32px-Box_Gaming_2020_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/buriram-united-esports-th/logo.png",
+      "bytes": 10646,
+      "sha256": "d51de1ce55613f0eade99ad42645f1a1627f0e9dbc863e8f9cebc7562a8b71af",
+      "width": 96,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/c/cc/TH_Buriram_United_Esports.png/96px-TH_Buriram_United_Esports.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Buriram_United_Esports",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "ce92e9280389c27e",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/ce92e9280389c27e-96px-TH_Buriram_United_Esports.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/deep-cross-gaming-tw/logo.png",
+      "bytes": 8717,
+      "sha256": "8b8fc3cee12c143bdc770008f5a092f2b9f5f99f75ad4cbde4643577d73d3296",
+      "width": 150,
+      "height": 150,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://kgtw.cdn.garenanow.com/mgames/kgtw/esports/GCS2026Spring/DCG-new.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/schedule",
+      "sourceId": "garena-gcs-schedule",
+      "provenance": "PRIMARY_ORGANIZER",
+      "teamId": "team-071aa0409544"
+    },
+    {
+      "path": "teams/earena-th/logo.png",
+      "bytes": 2931,
+      "sha256": "9507d2489f268b1b350aa85a4b4a6b6e940c21597b244ff9bde5c8afd810217c",
+      "width": 40,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/5/5a/EArena_2020_allmode.png/40px-EArena_2020_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/EArena",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "d7c8937029b049dd",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/d7c8937029b049dd-40px-EArena_2020_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/fpt-polytechnic-vn/logo.png",
+      "bytes": 3543,
+      "sha256": "31dd44706436897b00c484ddfa8f85b8395afbecc4e49f2c46f6e1ecd0ad5ae5",
+      "width": 100,
+      "height": 34,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/2/20/FPT_Polytechnic.png/100px-FPT_Polytechnic.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/FPT_Polytechnic",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "93c3c95d5a428918",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/93c3c95d5a428918-100px-FPT_Polytechnic.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/full-sense-th/logo.png",
+      "bytes": 1990,
+      "sha256": "bb0aef74d56cf8ac3ca1b9785e5aa65175439824fa80ace740b07318aebdc14e",
+      "width": 59,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/b/b7/FULL_SENSE_2023_allmode.png/59px-FULL_SENSE_2023_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/FULL_SENSE",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "5bacdc6372e1b096",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/5bacdc6372e1b096-59px-FULL_SENSE_2023_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/gam-esports-vn-women/logo.png",
+      "bytes": 1679,
+      "sha256": "b6e33749538ec5a6bcdca5307d26f801944ab468c33cc6b136782b177345a2ce",
+      "width": 54,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/b/ba/GAM_Esports_2021_allmode.png/54px-GAM_Esports_2021_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/index.php?title=GAM_Esports_(Women_Team)&action=edit&redlink=1",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "ab0d0eba976ce01c",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/ab0d0eba976ce01c-54px-GAM_Esports_2021_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/gam-esports-vn/logo.png",
+      "bytes": 1679,
+      "sha256": "b6e33749538ec5a6bcdca5307d26f801944ab468c33cc6b136782b177345a2ce",
+      "width": 54,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/b/ba/GAM_Esports_2021_allmode.png/54px-GAM_Esports_2021_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/GAM_Esports",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "ab0d0eba976ce01c",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/ab0d0eba976ce01c-54px-GAM_Esports_2021_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/godji-check-th/logo.png",
+      "bytes": 7697,
+      "sha256": "af798914c770115d3a74eef59a02719b97a8b9016871ccb5bef29479872cb628",
+      "width": 71,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/6/6c/Godji_Check_allmode.png/71px-Godji_Check_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/index.php?title=Godji_Check&action=edit&redlink=1",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "5d5a7013713fbb41",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/5d5a7013713fbb41-71px-Godji_Check_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/hong-kong-attitude-hk/logo.png",
+      "bytes": 11101,
+      "sha256": "4420eeefb5b80028707519659c4518f98e32f2df529e9ca987c92599bc62df6c",
+      "width": 100,
+      "height": 100,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://dlgarenanow-a.akamaihd.net/mgames/kgtw/esports/2023GCS/spring/GCSTEAM/HKA_Final.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/schedule",
+      "sourceId": "garena-gcs-schedule",
+      "provenance": "PRIMARY_ORGANIZER",
+      "teamId": "team-8d1aa9cd3a2f"
+    },
+    {
+      "path": "teams/hydra-esports-th/logo.png",
+      "bytes": 5786,
+      "sha256": "8b5e8f7681b12b1b69b19b2b510a871affe2dc7f5e78c300712bbd9422be0bcd",
+      "width": 57,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/a/a4/Hydra_Esports_Allmode.png/57px-Hydra_Esports_Allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Hydra_Esports",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "6f98031d0d8a5f98",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/6f98031d0d8a5f98-57px-Hydra_Esports_Allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/king-of-gamers-club-th/logo.png",
+      "bytes": 2689,
+      "sha256": "984cc6aaf3ab0e98ee93aa689c22a2a31b92a10e0bed6784e276e9b00e2061ed",
+      "width": 87,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/e/ee/King_of_Gamers_darkmode.png/87px-King_of_Gamers_darkmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/King_of_Gamers_Club",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "94c8901834b3e516",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/94c8901834b3e516-87px-King_of_Gamers_darkmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/lit-team-tw/logo.png",
+      "bytes": 29514,
+      "sha256": "a95804395bdd8d4f51291248b78068b9cc2058b1afaaa95083787838b0dc1d8e",
+      "width": 150,
+      "height": 150,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://kgtw.cdn.garenanow.com/mgames/kgtw/esports/GCS2026Spring/LIT.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/schedule",
+      "sourceId": "garena-gcs-schedule",
+      "provenance": "PRIMARY_ORGANIZER",
+      "teamId": "team-fcae72653913"
+    },
+    {
+      "path": "teams/one-star-esports-vn-women/logo.png",
+      "bytes": 2829,
+      "sha256": "9ca333a8629fa56fccd9741ef474e5c9d516dba4d614b4753eac548c7b40f474",
+      "width": 53,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/5/5a/One_Star_Esports_no_text_allmode.png/53px-One_Star_Esports_no_text_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/index.php?title=One_Star_Esports_(Women_Team)&action=edit&redlink=1",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "4c0914c056f119e2",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/4c0914c056f119e2-53px-One_Star_Esports_no_text_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/one-star-esports-vn/logo.png",
+      "bytes": 2829,
+      "sha256": "9ca333a8629fa56fccd9741ef474e5c9d516dba4d614b4753eac548c7b40f474",
+      "width": 53,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/5/5a/One_Star_Esports_no_text_allmode.png/53px-One_Star_Esports_no_text_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/One_Star_Esports",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "4c0914c056f119e2",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/4c0914c056f119e2-53px-One_Star_Esports_no_text_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/one-team-tw/logo.png",
+      "bytes": 8173,
+      "sha256": "1836252d79c8338965cf99d2eca24e6a770d45667d61b8ddbc2b975b24c6df22",
+      "width": 150,
+      "height": 150,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://kgtw.cdn.garenanow.com/mgames/kgtw/esports/2024/ONE150.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/schedule",
+      "sourceId": "garena-gcs-schedule",
+      "provenance": "PRIMARY_ORGANIZER",
+      "teamId": "team-b09b7f26a9dc"
+    },
+    {
+      "path": "teams/redkid7-th/logo.png",
+      "bytes": 4596,
+      "sha256": "6281efcbb244b0e2449606aa44ff3de8f8b2b346eef2d937d8a714e1c0d33a0d",
+      "width": 50,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/c/c4/RedKid7.png/50px-RedKid7.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/index.php?title=RedKid7&action=edit&redlink=1",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "506cf15a8bb5cd94",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/506cf15a8bb5cd94-50px-RedKid7.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/rex-regum-qeon-vn-vn/logo.png",
+      "bytes": 1859,
+      "sha256": "2b580afc8299ca96575200d1dd1e2e518f05a0a38df632e64af10760bcfaf830",
+      "width": 70,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/1/1e/Rex_Regum_Qeon_allmode.png/70px-Rex_Regum_Qeon_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Rex_Regum_Qeon_VN",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "02080054db6c819f",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/02080054db6c819f-70px-Rex_Regum_Qeon_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/saigon-phantom-ladies-vn-women/logo.png",
+      "bytes": 3453,
+      "sha256": "046fc4e2145021b6d823a5d94016fe3f30bf37d5b443c22d0963f84f2018b346",
+      "width": 55,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/a/af/Saigon_Phantom_2020_allmode.png/55px-Saigon_Phantom_2020_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/index.php?title=Saigon_Phantom_Ladies&action=edit&redlink=1",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "c52d08487fd3c17a",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/c52d08487fd3c17a-55px-Saigon_Phantom_2020_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/saigon-phantom-vn/logo.png",
+      "bytes": 9636,
+      "sha256": "e4dea5bf1368462a5274724a1dbcd2adb38ea92869857209d572fd6a8a09ce87",
+      "width": 100,
+      "height": 49,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/e/e5/VN_Saigon_Phantom.png/100px-VN_Saigon_Phantom.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Saigon_Phantom",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "a1c150c9f04158a5",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/a1c150c9f04158a5-100px-VN_Saigon_Phantom.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/solyx-th/logo.png",
+      "bytes": 9448,
+      "sha256": "44e6278a80538c52736f98e2a8e96a58830c6d3d9e6e4184af7840de1c5905b7",
+      "width": 100,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/8/83/Solyx_allmode.png/100px-Solyx_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/SOLYX",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "adf27a2d191ec516",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/adf27a2d191ec516-100px-Solyx_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/team-flash-vn/logo.png",
+      "bytes": 27608,
+      "sha256": "1561f57c1b65279faf6578803b19da7b57cad4ca63ac0e40acc41007d91a9195",
+      "width": 600,
+      "height": 449,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/3/3d/Team_Flash_full_darkmode.png/600px-Team_Flash_full_darkmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Team_Flash",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "21ba40ce65f28559",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/21ba40ce65f28559-600px-Team_Flash_full_darkmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/team-secret-dino-vn-women/logo.png",
+      "bytes": 1725,
+      "sha256": "b85bcb1b49559e4efe9410531a94bb51bf86b0a578e5c33f1a60f1ee3c850f0b",
+      "width": 100,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d2/Team_Secret_darkmode.png/100px-Team_Secret_darkmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/index.php?title=Team_Secret_Dino&action=edit&redlink=1",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "390a79bd407d3e82",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/390a79bd407d3e82-100px-Team_Secret_darkmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/team-secret-vn/logo.png",
+      "bytes": 1725,
+      "sha256": "b85bcb1b49559e4efe9410531a94bb51bf86b0a578e5c33f1a60f1ee3c850f0b",
+      "width": 100,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/d/d2/Team_Secret_darkmode.png/100px-Team_Secret_darkmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Team_Secret",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "390a79bd407d3e82",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/390a79bd407d3e82-100px-Team_Secret_darkmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/tenacity-th/logo.png",
+      "bytes": 6562,
+      "sha256": "f8fee679bf89ec0ed434af2b5e446d6ddad36a300e9cae25ac04eef5fa78c112",
+      "width": 78,
+      "height": 50,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://liquipedia.net/commons/images/thumb/c/c3/Tenacity_allmode.png/78px-Tenacity_allmode.png",
+      "pageUrl": "https://liquipedia.net/honorofkings/Tenacity",
+      "provenance": "SECONDARY_LIQUIPEDIA_RESEARCH",
+      "sourceId": "legacy-research",
+      "legacyAssetId": "a30edd8b7653b4c2",
+      "copiedFrom": "research/aov-esports-2020-2026/assets/a30edd8b7653b4c2-78px-Tenacity_allmode.png",
+      "reviewRequired": true
+    },
+    {
+      "path": "teams/wanin-flash-wolves-tw/logo.png",
+      "bytes": 7942,
+      "sha256": "cf11ae1344cfe09f53573e5f98a1f013ea2b354e881b9644f6c5d9d0cf14b30b",
+      "width": 100,
+      "height": 100,
+      "format": "PNG",
+      "kind": "TEAM_LOGO",
+      "sourceUrl": "https://dlgarenanow-a.akamaihd.net/mgames/kgtw/esports/2023GCS/spring/GCSTEAM/FW.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/schedule",
+      "sourceId": "garena-gcs-schedule",
+      "provenance": "PRIMARY_ORGANIZER",
+      "teamId": "team-b8665aaea34f"
+    },
+    {
+      "path": "tournaments/aog-2026-winter/official-announcement-1.png",
+      "bytes": 926248,
+      "sha256": "4f590ed1158cbb770986d7b539f3ea155417773d13f0e1ba2518710cc8f443dc",
+      "width": 1920,
+      "height": 840,
+      "format": "PNG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/08/KV-mua-giai.png",
+      "pageUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+      "sourceId": "garena-vn-league",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "aog-2026-winter"
+    },
+    {
+      "path": "tournaments/aog-2026-winter/official-announcement-2.png",
+      "bytes": 1048414,
+      "sha256": "74b3e859f1eafd4eb2b9952911e05cb0c1c5efeb03731cb820105ca69b3c868c",
+      "width": 1920,
+      "height": 1080,
+      "format": "PNG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/08/Tong-doi-tuyen-tang-len-9.png",
+      "pageUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+      "sourceId": "garena-vn-league",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "aog-2026-winter"
+    },
+    {
+      "path": "tournaments/aog-2026-winter/official-announcement-3.png",
+      "bytes": 1066245,
+      "sha256": "1e3e9865eb0243f9cdbcf95a6204ef6d9c1ea3f262659551432cf92956065760",
+      "width": 1920,
+      "height": 1080,
+      "format": "PNG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/08/Thay-doi-the-thuc.png",
+      "pageUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+      "sourceId": "garena-vn-league",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "aog-2026-winter"
+    },
+    {
+      "path": "tournaments/aog-2026-winter/official-announcement-4.png",
+      "bytes": 1166697,
+      "sha256": "2e5760a288fd56c1ea70f672c7be0e00d75f380450f760da3e4ac14a279ba53d",
+      "width": 1920,
+      "height": 1080,
+      "format": "PNG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/08/Bounty-Luot-di.png",
+      "pageUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+      "sourceId": "garena-vn-league",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "aog-2026-winter"
+    },
+    {
+      "path": "tournaments/aog-2026-winter/official-announcement-5.png",
+      "bytes": 1153262,
+      "sha256": "7455f3c613d3b1beb9c69721728a1070c38a6430c9b34588163d6a6cbbc89c0a",
+      "width": 1920,
+      "height": 1080,
+      "format": "PNG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/08/Bounty-Luot-ve.png",
+      "pageUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+      "sourceId": "garena-vn-league",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "aog-2026-winter"
+    },
+    {
+      "path": "tournaments/aog-2026-winter/official-announcement-6.png",
+      "bytes": 1340506,
+      "sha256": "6563bb21ab19274c9194c4654813ef50061076716a44d71409624e599e4118b8",
+      "width": 1920,
+      "height": 1080,
+      "format": "PNG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/08/PlayOffs.png",
+      "pageUrl": "https://lienquan.garena.vn/category/giai-dau/page/2/",
+      "sourceId": "garena-vn-league",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "aog-2026-winter"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-1.png",
+      "bytes": 1012605,
+      "sha256": "2ddc77275a2a13a0e0e6410c020bdde734d1347ad33988759f760324b79f2960",
+      "width": 1200,
+      "height": 500,
+      "format": "PNG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://kgtw.cdn.garenanow.com/mgames/kgtw/esports/2026GCSSummer/Website%20resize.png",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-10.jpg",
+      "bytes": 38714,
+      "sha256": "4793758c35c5a6c55ccbbc7dc06e1232583d8e646b9a1b69511f2d0f52eba4fa",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-10",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-11.jpg",
+      "bytes": 40480,
+      "sha256": "bdacca5f61c531d983c3216f3f894fbc51cccd6d030311219900de4d79549a79",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-11",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-12.jpg",
+      "bytes": 40179,
+      "sha256": "d636738c984a6b9bb2143dfa467b3677d79b7b93ffaf826937baf53a288b9bb9",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-12",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-13.jpg",
+      "bytes": 39173,
+      "sha256": "c02d044e0893ea17e52ad5b27389d685c2f8e42ffae5c910d95c3d2c4d36bd6a",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-13",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-14.jpg",
+      "bytes": 43753,
+      "sha256": "0b8b7a8dc4efc324f65a9d0e3fe95c163aac9f3feaab99d311fbf9970e99374b",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-14",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-2.jpg",
+      "bytes": 3828865,
+      "sha256": "73a6f17b8213b153c86eeba16c311a112c4b578431534ff41868f6aed3d0b929",
+      "width": 3840,
+      "height": 2160,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://static.garena.tw/download/esports.garena.tw/2026-08-21/vYJV3hJbSzaRuxBDo_GNyQ.jpg?key=BDWWx",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-3.jpg",
+      "bytes": 26590,
+      "sha256": "9d2ca4f0f65e198edf0d7e08c306ab87817cbec9bca000e4e1665838a4706756",
+      "width": 602,
+      "height": 339,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-3",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-4.jpg",
+      "bytes": 33284,
+      "sha256": "343ed6fa5aa769993f54f0b22328317457095f1e5545de4ff917ca722e220dbd",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-4",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-5.jpg",
+      "bytes": 48378,
+      "sha256": "211d5ae6b6ec2a6455e822ed73279895162b3a51b72b3f8e3de1cb0ca71f809d",
+      "width": 671,
+      "height": 377,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-5",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-6.jpg",
+      "bytes": 32178,
+      "sha256": "a3c22f380b83593b88cc8518253885068bac23fa9b9694ea8ca99205d0d9c18e",
+      "width": 670,
+      "height": 377,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-6",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-7.jpg",
+      "bytes": 67335,
+      "sha256": "dd8d619303d38ce077144f4fb13d62853f1b03b2c8e5af71047191e492268ea5",
+      "width": 507,
+      "height": 507,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-7",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-8.jpg",
+      "bytes": 40389,
+      "sha256": "cb98e67737c6c97800a635e3c59f0b197cc9dfe89c07859c54958258713cf668",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-8",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/gcs-2026-summer/official-announcement-9.jpg",
+      "bytes": 41065,
+      "sha256": "2c708f00f350e3db89f261cb3e61130b3509fca7a454c70c9b753a98b29b8d4a",
+      "width": 601,
+      "height": 338,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://esports.moba.garena.tw/gcs/news/content/5687#embedded-image-9",
+      "pageUrl": "https://esports.moba.garena.tw/gcs/news/content/5687",
+      "sourceId": "garena-gcs-announcement",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "gcs-2026-summer"
+    },
+    {
+      "path": "tournaments/missrov-2026-season-2/official-trailer-thumbnail.jpg",
+      "bytes": 27589,
+      "sha256": "406e2e6f3b6e851fc6d8c2146d44d96406462475a918350f340ab16b392ac807",
+      "width": 480,
+      "height": 360,
+      "format": "JPEG",
+      "kind": "OFFICIAL_BROADCAST_THUMBNAIL",
+      "sourceUrl": "https://i.ytimg.com/vi/_GBmiiRTAyY/hqdefault.jpg",
+      "pageUrl": "https://www.youtube.com/watch?v=_GBmiiRTAyY",
+      "sourceId": "garena-missrov-trailer",
+      "provenance": "PRIMARY_BROADCAST",
+      "eventCode": "missrov-2026-season-2"
+    },
+    {
+      "path": "tournaments/qog-2026-winter/awards.jpg",
+      "bytes": 200407,
+      "sha256": "497f9b6b5fd1576235d340b10296c868c8294afb7dc8a98fdc3b1c28583d19aa",
+      "width": 1080,
+      "height": 1080,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/10/856568447_1774210580462843_9149475034111150989_n.jpg",
+      "pageUrl": "https://lienquan.garena.vn/queens-of-glory-mua-dong-2026-chinh-thuc-khoi-tranh-tu-ngay-19-10-voi-dien-mao-moi/",
+      "sourceId": "garena-vn-qog",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "qog-2026-winter"
+    },
+    {
+      "path": "tournaments/qog-2026-winter/key-visual.jpg",
+      "bytes": 346879,
+      "sha256": "93d0aca249795e21d659e0ad3d66d003e11eadea23b626d7abc58cc6c2bdf7c5",
+      "width": 1920,
+      "height": 1080,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/10/851720794_1583759446399261_6397783309902797620_n.jpg",
+      "pageUrl": "https://lienquan.garena.vn/queens-of-glory-mua-dong-2026-chinh-thuc-khoi-tranh-tu-ngay-19-10-voi-dien-mao-moi/",
+      "sourceId": "garena-vn-qog",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "qog-2026-winter"
+    },
+    {
+      "path": "tournaments/qog-2026-winter/participating-teams.jpg",
+      "bytes": 63635,
+      "sha256": "96652d012fee1aefb7c239b85394acf572ddf35f49a894c415d4c0b324706f73",
+      "width": 512,
+      "height": 640,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/10/828941903_1558691182611557_5594114791103367755_n.jpg",
+      "pageUrl": "https://lienquan.garena.vn/queens-of-glory-mua-dong-2026-chinh-thuc-khoi-tranh-tu-ngay-19-10-voi-dien-mao-moi/",
+      "sourceId": "garena-vn-qog",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "qog-2026-winter"
+    },
+    {
+      "path": "tournaments/qog-2026-winter/prize-pool.jpg",
+      "bytes": 156049,
+      "sha256": "5d927f98a2c251cf70e26959f0919395bca3f4fc35a34ed5e338c3371340c2f4",
+      "width": 1080,
+      "height": 1080,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/10/855519793_2502494443578238_2143105628651822361_n.jpg",
+      "pageUrl": "https://lienquan.garena.vn/queens-of-glory-mua-dong-2026-chinh-thuc-khoi-tranh-tu-ngay-19-10-voi-dien-mao-moi/",
+      "sourceId": "garena-vn-qog",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "qog-2026-winter"
+    },
+    {
+      "path": "tournaments/qog-2026-winter/schedule.jpg",
+      "bytes": 76977,
+      "sha256": "cd483dda0f35aceec3141d9b428c96133137b70f90ba0846ae761ab87589fa5d",
+      "width": 960,
+      "height": 539,
+      "format": "JPEG",
+      "kind": "TOURNAMENT_GRAPHIC",
+      "sourceUrl": "https://lienquan.garena.vn/wp-content/uploads/2026/10/835011149_1127062236524471_6326071607700914697_n.jpg",
+      "pageUrl": "https://lienquan.garena.vn/queens-of-glory-mua-dong-2026-chinh-thuc-khoi-tranh-tu-ngay-19-10-voi-dien-mao-moi/",
+      "sourceId": "garena-vn-qog",
+      "provenance": "PRIMARY_ORGANIZER",
+      "eventCode": "qog-2026-winter"
+    },
+    {
+      "path": "tournaments/rpl-2026-winter/opening-broadcast-thumbnail.jpg",
+      "bytes": 26625,
+      "sha256": "0a4d4b8278fc6b01304578e46bbc6293ecf0b5ef97701f5ebf9f850463f024be",
+      "width": 480,
+      "height": 360,
+      "format": "JPEG",
+      "kind": "OFFICIAL_BROADCAST_THUMBNAIL",
+      "sourceUrl": "https://i.ytimg.com/vi/Xq19Mkao8DA/hqdefault.jpg",
+      "pageUrl": "https://www.youtube.com/watch?v=Xq19Mkao8DA",
+      "sourceId": "garena-rpl-opening",
+      "provenance": "PRIMARY_BROADCAST",
+      "eventCode": "rpl-2026-winter"
+    },
+    {
+      "path": "tournaments/tepl-2026/finals-broadcast-thumbnail.jpg",
+      "bytes": 29699,
+      "sha256": "4b7cde5d753e323ef67bdf9d0a3ec4ea6cdead905dc4a7f4ba19484b247a8bf4",
+      "width": 480,
+      "height": 360,
+      "format": "JPEG",
+      "kind": "OFFICIAL_BROADCAST_THUMBNAIL",
+      "sourceUrl": "https://i.ytimg.com/vi/e_n8Y46BP0s/hqdefault.jpg",
+      "pageUrl": "https://www.youtube.com/watch?v=e_n8Y46BP0s",
+      "sourceId": "garena-tepl-finals",
+      "provenance": "PRIMARY_BROADCAST",
+      "eventCode": "tepl-2026"
+    }
+  ],
+  "coverage": [
+    {
+      "regions": [
+        "VN"
+      ],
+      "status": "VERIFIED_EVENTS",
+      "eventCodes": [
+        "aog-2026-winter",
+        "qog-2026-winter",
+        "qog-2026-winter-qualifier"
+      ],
+      "gaps": [
+        "QOG qualifier exact dates and complete participants",
+        "Latest AOG/QOG scores require fresh primary review"
+      ]
+    },
+    {
+      "regions": [
+        "TH"
+      ],
+      "status": "VERIFIED_EVENTS",
+      "eventCodes": [
+        "rpl-2026-winter",
+        "tepl-2026",
+        "missrov-2026-season-2",
+        "missrov-2026-season-2-qualifier"
+      ],
+      "gaps": [
+        "Miss RoV full team/roster/logo collection",
+        "Post-event results require official verification"
+      ]
+    },
+    {
+      "regions": [
+        "TW",
+        "HK",
+        "MO"
+      ],
+      "status": "VERIFIED_SHARED_CIRCUIT",
+      "eventCodes": [
+        "gcs-2026-summer"
+      ],
+      "gaps": [
+        "No separate Hong Kong/Macau event verified; shared GCS coverage is not proof of separate national events"
+      ]
+    },
+    {
+      "regions": [
+        "GLOBAL"
+      ],
+      "status": "ANNOUNCED_DETAILS_PENDING",
+      "eventCodes": [
+        "aic-2026"
+      ],
+      "gaps": [
+        "Exact dates, participants and qualifier details require a primary announcement"
+      ]
+    },
+    {
+      "regions": [
+        "ID",
+        "SG",
+        "MY",
+        "PH"
+      ],
+      "status": "NO_POST_BOUNDARY_EVENT_VERIFIED",
+      "checkedSources": [
+        "Garena Indonesia official AoV broadcast channel",
+        "Existing 2020-2026 research index",
+        "Web search for ACS/ASL 2026 after July"
+      ],
+      "note": "April 2026 ACS is outside scope. Absence of verified evidence is not a claim that no event occurred."
+    },
+    {
+      "regions": [
+        "JP",
+        "KR",
+        "EU",
+        "NA",
+        "LATAM",
+        "IN"
+      ],
+      "status": "NO_POST_BOUNDARY_EVENT_VERIFIED",
+      "checkedSources": [
+        "Existing 2020-2026 tournament index",
+        "International AoV official roadmap",
+        "Regional/event web discovery"
+      ],
+      "note": "Do not import unrelated HoK/KPL/Asian Games listings mislabeled as AoV by aggregators."
+    }
+  ],
+  "exclusions": [
+    {
+      "name": "Tứ Phương Đại Chiến Winter 2026",
+      "reason": "Community/campus event, outside confirmed professional/qualifier scope",
+      "sourceUrl": "https://lienquan.garena.vn/tu-phuong-dai-chien-mua-dong-2026/"
+    },
+    {
+      "name": "Arena of Valor Campus Series Winter 2026 and relegation",
+      "reason": "Campus competition excluded by user scope"
+    },
+    {
+      "name": "Legend of City Season 14",
+      "reason": "Amateur/city competition excluded by user scope"
+    },
+    {
+      "name": "RoV T-POP Tournament 2026",
+      "reason": "Celebrity showmatch, not professional league or qualifier"
+    },
+    {
+      "name": "2026 Honor of Kings World Cup / Asian Games Honor of Kings",
+      "reason": "Different game or special hybrid format, not standard AoV historical patch data",
+      "sourceId": "garena-2026-roadmap"
+    }
+  ],
+  "downloadFailures": []
+}

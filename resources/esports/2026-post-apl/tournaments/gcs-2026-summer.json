@@ -1,0 +1,458 @@
+{
+  "code": "gcs-2026-summer",
+  "name": "Garena Challenger Series Summer 2026",
+  "game": "ARENA_OF_VALOR",
+  "regions": [
+    "TW",
+    "HK",
+    "MO"
+  ],
+  "competitionType": "MAIN_EVENT",
+  "legacyResearchId": "tournament-78ad57cdc241",
+  "dates": {
+    "start": "2026-08-22",
+    "end": "2026-10-31",
+    "precision": "DATE",
+    "timezone": "Asia/Taipei"
+  },
+  "sourceIds": [
+    "garena-gcs-announcement",
+    "garena-gcs-schedule"
+  ],
+  "statusAsOf": "2026-10-26",
+  "status": "IN_PROGRESS",
+  "teamCodes": [
+    "deep-cross-gaming-tw",
+    "wanin-flash-wolves-tw",
+    "ank-gaming-tw",
+    "banmei-gaming-tw",
+    "one-team-tw",
+    "hong-kong-attitude-hk",
+    "lit-team-tw"
+  ],
+  "assets": [
+    "tournaments/gcs-2026-summer/official-announcement-1.png",
+    "tournaments/gcs-2026-summer/official-announcement-10.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-11.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-12.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-13.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-14.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-2.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-3.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-4.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-5.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-6.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-7.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-8.jpg",
+    "tournaments/gcs-2026-summer/official-announcement-9.jpg"
+  ],
+  "rosters": [
+    {
+      "teamCode": "deep-cross-gaming-tw",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Weiyu",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Xcen",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "XinChen",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "YouLun",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Yaooo",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Miruki",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Hanzo",
+          "role": null,
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Liang",
+          "role": null,
+          "rosterGroup": "substitute"
+        }
+      ]
+    },
+    {
+      "teamCode": "wanin-flash-wolves-tw",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "NaiLiu",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Kawhi",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "XnnX",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Zhan",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Zhenzhe",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "YuXiang",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "WeiZ",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Abao",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Linkou",
+          "role": null,
+          "rosterGroup": "substitute"
+        }
+      ]
+    },
+    {
+      "teamCode": "ank-gaming-tw",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "WeiT",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "LiTing",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Long",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "GuoGuy",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "BUU",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Tao",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Hsin",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "YouNing",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Alan",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "banmei-gaming-tw",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "XCaiii",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Yanyan",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Leduo",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Neil",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Kai",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Baini",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Junnn",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Vincent",
+          "role": null,
+          "rosterGroup": "substitute"
+        }
+      ]
+    },
+    {
+      "teamCode": "one-team-tw",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Inu",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Fong",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "XH",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Weilun",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Wuliu",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Pika",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Luky",
+          "role": "Middle",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Hong",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Shao",
+          "role": "Roamer",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "nT",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    },
+    {
+      "teamCode": "hong-kong-attitude-hk",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Takeshi",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Dwei",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Metaverse",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Afu",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Weinnn",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Yanpu",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "XianYo",
+          "role": null,
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "BaiYa",
+          "role": null,
+          "rosterGroup": "substitute"
+        }
+      ]
+    },
+    {
+      "teamCode": "lit-team-tw",
+      "sourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+      "verification": "SECONDARY_RESEARCH_REVIEW_REQUIRED",
+      "members": [
+        {
+          "handle": "Dong",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Fongli",
+          "role": "Top Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Baduck",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "WeiZzhe",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Leng",
+          "role": "Jungler",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Kajaa",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Zui",
+          "role": "Middle",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Fongliu",
+          "role": "Bottom Lane",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Yummy",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "Shao",
+          "role": "Roamer",
+          "rosterGroup": "main"
+        },
+        {
+          "handle": "XnnX",
+          "role": "Top Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "Zirui",
+          "role": "Bottom Lane",
+          "rosterGroup": "substitute"
+        },
+        {
+          "handle": "WJ",
+          "role": null,
+          "rosterGroup": "staff"
+        }
+      ]
+    }
+  ],
+  "broadcastLinks": [
+    "https://esports.moba.garena.tw/gcs/schedule"
+  ],
+  "gameplayContext": {
+    "status": "UNKNOWN",
+    "note": "Do not infer tournament game patches from dates or the current wiki patch."
+  },
+  "importPolicy": "DRAFT_ONLY_REVIEW_REQUIRED",
+  "dateScopeVerification": "VERIFIED",
+  "phases": [
+    {
+      "name": "Regular season",
+      "start": "2026-08-22",
+      "end": "2026-10-11"
+    },
+    {
+      "name": "Playoffs",
+      "start": "2026-10-17",
+      "end": "2026-10-17"
+    },
+    {
+      "name": "Semifinal",
+      "start": "2026-10-18",
+      "end": "2026-10-18"
+    },
+    {
+      "name": "Grand final",
+      "start": "2026-10-31",
+      "end": "2026-10-31"
+    }
+  ],
+  "discoverySourceUrl": "https://liquipedia.net/honorofkings/Garena_Challenger_Series/2026/Summer",
+  "participantVerification": "PRIMARY_NAMES_WITH_SECONDARY_IDENTIFIERS"
+}

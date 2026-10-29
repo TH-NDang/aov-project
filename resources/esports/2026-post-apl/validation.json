@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "checkedAsOf": "2026-10-26",
+  "tournaments": 9,
+  "teams": 41,
+  "images": 59,
+  "checks": [
+    "Unique event/team/asset codes and paths",
+    "All referenced local files exist",
+    "All image SHA-256 values match stored bytes",
+    "Positive image dimensions",
+    "No generic AoV logo substituted for a team",
+    "All event and roster team references resolve",
+    "Draft-only import policy and no invented winners",
+    "Hong Kong Attitude uses HK region"
+  ],
+  "limitations": [
+    "Image headers and checksums validated; no media rights license inferred",
+    "Roster and fallback logo secondary-source review remains required",
+    "Research coverage gaps are retained in manifest"
+  ]
+}

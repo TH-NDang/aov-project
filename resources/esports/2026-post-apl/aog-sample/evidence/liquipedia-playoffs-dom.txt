@@ -1,0 +1,244 @@
+- navigation:
+  - link "Logo":
+    - /url: /honorofkings/Main_Page
+    - img "Logo"
+  - list:
+    - link "liquipedia Honor of Kings":
+      - /url: "#"
+      - text: liquipedia
+      - generic: Honor of Kings
+    - text:                                                                                                   
+  - list:
+    - button " Trending":
+      - generic: 
+      - text: Trending
+    - button " Tournaments":
+      - generic: 
+      - text: Tournaments
+    - button " Contribute":
+      - generic: 
+      - text: Contribute
+    - text:  
+  - search:
+    - searchbox "Search"
+    - button "":
+      - generic: 
+  - list:
+    - link "":
+      - /url: https://tl.net/mytlnet/register
+      - generic: 
+    - link "":
+      - /url: /honorofkings/index.php?title=Special:UserLogin&returnto=Arena+of+Glory%2F2026%2FWinter%2FPlayoffs
+      - generic: 
+- list:
+  - link "":
+    - /url: /honorofkings/Arena_of_Glory/2026/Winter/Playoffs
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Talk:Arena_of_Glory/2026/Winter/Playoffs&action=edit&redlink=1
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Playoffs&action=edit
+    - generic: 
+  - link "":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Playoffs&action=history
+    - generic: 
+  - text: 
+- list:
+  - link "Auto selected":
+    - /url: "#"
+    - generic: 
+  - text:   
+  - link "":
+    - /url: "#"
+    - generic: 
+  - text:         
+  - link "":
+    - /url: "#"
+    - generic: 
+  - text:             
+- text:  
+- text: 
+- iframe
+- main:
+  - heading "Arena of Glory Winter 2026 - Playoffs" [level=1]
+  - text: 
+  - list:
+    - link "Overview":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter
+    - link "Group Stage":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Group_Stage
+    - generic: Playoffs
+    - link "Statistics":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Statistics
+    - link "Prize Money":
+      - /url: /honorofkings/Arena_of_Glory/2026/Winter/Prize_Money
+  - text: 
+  - text: 
+  - heading "Upcoming Matches" [level=2]
+  - generic: Show countdown
+  - text:  
+  - generic: 1w 3d
+  - generic: Lower Bracket Final
+  - link "Saigon Phantom":
+    - /url: /honorofkings/Saigon_Phantom
+  - link "SGP":
+    - /url: /honorofkings/Saigon_Phantom
+  - link "BOOM Esports VN":
+    - /url: /honorofkings/BOOM_Esports_VN
+  - link "BME":
+    - /url: /honorofkings/BOOM_Esports_VN
+  - generic: 1w 4d
+  - generic: Grand Final
+  - link "FPT Polytechnic":
+    - /url: /honorofkings/FPT_Polytechnic
+  - link "FPL":
+    - /url: /honorofkings/FPT_Polytechnic
+  - generic: 
+  - generic: TBD
+  - navigation "Contents":
+    - button "Hide the table of contents"
+    - heading "Contents" [level=2]
+    - text: "["
+    - generic: hide
+    - text: "]"
+    - list:
+      - link "1 Upcoming Matches":
+        - /url: "#Upcoming_Matches"
+        - generic: "1"
+        - generic: Upcoming Matches
+      - list:
+        - link "1.1 Playoffs":
+          - /url: "#Playoffs"
+          - generic: "1.1"
+          - generic: Playoffs
+  - heading "Playoffs" [level=3]
+  - text: "["
+  - link "edit":
+    - /url: /honorofkings/index.php?title=Arena_of_Glory/2026/Winter/Playoffs&action=edit&section=1
+  - text: "]"
+  - button "Share this content":
+    - generic: 
+    - generic: Share
+  - text:   
+  - text:  
+  - generic: 
+  - text: Show schedule
+  - generic: Upper Bracket Semifinals
+  - generic: Upper Bracket Final
+  - generic: Grand Final
+  - generic "Saigon Phantom":
+    - generic: Saigon Phantom
+    - generic: "4"
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+    - generic: "2"
+  - text:   W L L W W L W L L W W L  
+  - generic "FPT Polytechnic":
+    - generic: FPT Polytechnic
+    - generic: "4"
+  - generic "Team Flash":
+    - generic: Team Flash
+    - generic: "1"
+  - text:   L W W L W L W L W L  
+  - generic "Saigon Phantom":
+    - generic: Saigon Phantom
+    - generic: "3"
+  - generic "FPT Polytechnic":
+    - generic: FPT Polytechnic
+    - generic: "4"
+  - text:   L W W L W L L W L W W L L W  
+  - generic: Lower Bracket Quarterfinals
+  - generic: Lower Bracket Semifinals
+  - generic: Lower Bracket Final
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+    - generic: "4"
+  - generic "GAM Esports":
+    - generic: GAM Esports
+    - generic: "1"
+  - text:   W L W L W L L W W L  
+  - generic "Team Flash":
+    - generic: Team Flash
+    - generic: "3"
+  - generic "Box Gaming":
+    - generic: Box Gaming
+    - generic: "4"
+  - text:   W L L W W L L W L W W L L W  
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+    - generic: "4"
+  - generic "Box Gaming":
+    - generic: Box Gaming
+    - generic: "3"
+  - text:   L W W L L W W L L W W L W L  
+  - generic "Saigon Phantom":
+    - generic: Saigon Phantom
+  - generic "BOOM Esports VN":
+    - generic: BOOM Esports
+  - text:   
+  - generic "FPT Polytechnic":
+    - generic: FPT Polytechnic
+  - text:    
+  - link "Category":
+    - /url: /honorofkings/Special:Categories
+  - text: ":"
+  - list:
+    - link "Pages with Bracket/4U4L1D":
+      - /url: /honorofkings/index.php?title=Category:Pages_with_Bracket/4U4L1D&action=edit&redlink=1
+- contentinfo:
+  - link "Liquipedia Portal":
+    - /url: https://liquipedia.net
+  - list:
+    - link "Send an email":
+      - /url: mailto:contact@liquipedia.net
+    - link "Chat with us":
+      - /url: https://discord.gg/liquipedia
+    - link "Contact":
+      - /url: /commons/Contact
+  - list:
+    - link "Discord":
+      - /url: https://discord.gg/liquipedia
+      - generic: 
+    - link "Twitter":
+      - /url: https://twitter.com/LiquipediaNet
+      - generic: 
+    - link "Facebook":
+      - /url: https://www.facebook.com/Liquipedia
+      - generic: 
+    - link "YouTube":
+      - /url: https://www.youtube.com/user/Liquipedia
+      - generic: 
+    - link "Twitch":
+      - /url: https://www.twitch.tv/liquipedia
+      - generic: 
+    - link "GitHub":
+      - /url: https://github.com/Liquipedia
+      - generic: 
+  - tabpanel:
+    - heading "About" [level=4]
+    - list:
+      - link "Privacy policy":
+        - /url: /honorofkings/Liquipedia:Privacy_policy
+      - link "About Liquipedia Honor of Kings Wiki":
+        - /url: /honorofkings/Liquipedia:About
+      - link "Disclaimers":
+        - /url: /honorofkings/Liquipedia:General_disclaimer
+      - link "API":
+        - /url: https://liquipedia.net/api
+      - link:
+        - /url: "#"
+      - link:
+        - /url: "#"
+  - tabpanel:
+    - heading "Affiliated Sites" [level=4]
+    - list:
+      - link "TL.net":
+        - /url: https://tl.net
+  - list:
+    - listitem: This page was last edited on 25 October 2026, at 23:36.
+    - text: Text/code is available under
+    - link "CC-BY-SA":
+      - /url: /honorofkings/Liquipedia:Copyrights
+    - text: . Licenses for other media varies.
+- iframe

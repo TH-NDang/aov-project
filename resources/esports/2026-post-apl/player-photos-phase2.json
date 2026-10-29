@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "phase": "PHASE_2_PHOTOS_FROZEN",
+  "reviewedAsOf": "2026-10-27",
+  "note": "Phase1 frozen player/roster plan is unchanged. Photos are optional, no automatic DB updates.",
+  "photos": [
+    {
+      "playerCode": "adonis",
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://gam.gg/brand/players/adonis.webp",
+      "pageUrl": "https://gam.gg/teams",
+      "provenance": "PRIMARY_TEAM",
+      "status": "VERIFIED_OFFICIAL_ASSET",
+      "importReady": true,
+      "path": "players/gam-esports-vn/adonis.webp",
+      "bytes": 49750,
+      "sha256": "9ce9a3a834d61275f2abd862a63493eaa7d74b6f317b95d8ccc89ac89c4b6bab",
+      "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+    },
+    {
+      "playerCode": "yiuling",
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://gam.gg/brand/players/yiuling.webp",
+      "pageUrl": "https://gam.gg/teams",
+      "provenance": "PRIMARY_TEAM",
+      "status": "VERIFIED_OFFICIAL_ASSET",
+      "importReady": true,
+      "path": "players/gam-esports-vn/yiuling.webp",
+      "bytes": 46978,
+      "sha256": "75e5af98a1461777a36747b76fd15e0ffaf662bbdbcd4e1410874e902bb9dc5b",
+      "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+    },
+    {
+      "playerCode": "aliyah",
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://gam.gg/brand/players/aliyah.webp",
+      "pageUrl": "https://gam.gg/teams",
+      "provenance": "PRIMARY_TEAM",
+      "status": "VERIFIED_OFFICIAL_ASSET",
+      "importReady": true,
+      "path": "players/gam-esports-vn/aliyah.webp",
+      "bytes": 46066,
+      "sha256": "a0f597b0795cddbf773256803b830115e8d3613d2657ccd51134f96237af70d2",
+      "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+    },
+    {
+      "playerCode": "tienphat",
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://gam.gg/brand/players/tienphat.webp",
+      "pageUrl": "https://gam.gg/teams",
+      "provenance": "PRIMARY_TEAM",
+      "status": "VERIFIED_OFFICIAL_ASSET",
+      "importReady": true,
+      "path": "players/gam-esports-vn/tienphat.webp",
+      "bytes": 46808,
+      "sha256": "672904599ae499d17a3922863b378d7b05ca24d814ddb6545aee87e1a1e10aa1",
+      "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+    },
+    {
+      "playerCode": "phuhoang",
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://gam.gg/brand/players/phuhoang.webp",
+      "pageUrl": "https://gam.gg/teams",
+      "provenance": "PRIMARY_TEAM",
+      "status": "VERIFIED_OFFICIAL_ASSET",
+      "importReady": true,
+      "path": "players/gam-esports-vn/phuhoang.webp",
+      "bytes": 46432,
+      "sha256": "bcc31c9edd61e7c1271c9e1372adb0156a538bb9efd4c95350e65c01c61b8310",
+      "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+    },
+    {
+      "playerCode": "kuga",
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://gam.gg/brand/players/kuga.webp",
+      "pageUrl": "https://gam.gg/teams",
+      "provenance": "PRIMARY_TEAM",
+      "status": "VERIFIED_OFFICIAL_ASSET",
+      "importReady": true,
+      "path": "players/gam-esports-vn/kuga.webp",
+      "bytes": 49634,
+      "sha256": "ec13ada4bc2d7d0df7e018282c9476cee364e2eec3cb1faac208f65defbb3680",
+      "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+    },
+    {
+      "playerCode": "owen",
+      "teamCode": "gam-esports-vn",
+      "sourceUrl": "https://gam.gg/brand/players/owen.webp",
+      "pageUrl": "https://gam.gg/teams",
+      "provenance": "PRIMARY_TEAM",
+      "status": "VERIFIED_OFFICIAL_ASSET",
+      "importReady": true,
+      "path": "players/gam-esports-vn/owen.webp",
+      "bytes": 48814,
+      "sha256": "f947d73ba8561a3776972c99f29b626276322fff018d82840b9ac32422e7dc6f",
+      "visualReview": "Unmodified transparent professional team portrait; source image alt matches official roster nickname. No face-recognition inference."
+    }
+  ]
+}
