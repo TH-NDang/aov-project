@@ -2358,6 +2358,11 @@ là đường dẫn nội bộ. Tối đa 2.000 mục, 30 bản dịch/mục, 20
 Không đưa audit, token hoặc revision nháp vào API công khai. Tùy chỉnh tướng/trang bị chỉ xuất hiện
 trong catalog công khai nếu đối tượng gốc được công khai tại context tương ứng.
 
+Riêng `hero`, tùy chỉnh bản dịch chỉ bổ sung `aliases` theo locale: tên và mô tả luôn lấy từ snapshot tướng mà
+backend chọn cho catalog admin/public. Các tên/mô tả đi kèm cấu hình lưu chỉ là ảnh chụp phục vụ tương thích schema,
+không ghi đè nội dung tướng hoặc tạo bản dịch locale chưa có. Tên khác được gộp, cắt khoảng trắng và loại trùng
+không phân biệt hoa thường; các tùy chỉnh icon/hiển thị/nhận diện khác giữ quy tắc hiện có. Các kind còn lại không đổi.
+
 Version cũ: `409 REFERENCE_VERSION_CONFLICT`; nội dung không hợp lệ:
 `422 REFERENCE_INVALID_SETTINGS`. GET kiểm tra whitelist query. Admin trả `Cache-Control: no-store`;
 public yêu cầu revalidate. Không tự ghi dữ liệu khi GET hoặc khi mở tab thử hiển thị.

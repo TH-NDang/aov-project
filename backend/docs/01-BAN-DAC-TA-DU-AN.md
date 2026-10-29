@@ -124,7 +124,7 @@ Phần còn lại của tài liệu này, cùng `02-DATABASE-DU-AN.md` và `03-A
 |---|---|---|---|
 | **AOV Wiki** | Tướng (kỹ năng, trang phục), trang bị, phù hiệu, phụ trợ, bảng ngọc, chế độ chơi, lịch sử cập nhật | `wiki-service` | Triển khai ngay |
 | **Cộng đồng** | Bài viết, bình luận, thảo luận, báo cáo/kiểm duyệt | `community-service` | Sau |
-| **Giải đấu** | Giải, đội, lịch thi đấu, kết quả trận, cấm/chọn tướng | `community-service` | Sau |
+| **Giải đấu** | Nhập tay giải, đội/tuyển thủ, loạt/ván, cấm/chọn theo lượt (đội không chọn lại tướng đã dùng trong loạt, trừ ván cuối của BO), cấu hình, diễn biến trang bị và dòng thời gian ván gắn video chính thức | `community-service` | Triển khai giai đoạn nhập tay; [ADR-015](adr/ADR-015-manual-tournament-recording.md) |
 | **Livestream** | Danh sách kênh, trạng thái đang live, nhúng player | `community-service` | Sau |
 
 Frontend là monorepo React + TypeScript + Vite (pnpm workspace, Turborepo) trong thư mục `frontend/`:
@@ -132,10 +132,10 @@ Frontend là monorepo React + TypeScript + Vite (pnpm workspace, Turborepo) tron
 | App | Vai trò | Gọi tới |
 |---|---|---|
 | `aov-wiki` | Trang AOV Wiki (public) | `wiki-service` |
-| `aov-stream` | Trang livestream | `community-service` (sau); tên/ảnh tướng từ `wiki-service` |
-| `admin-aov` | Trang quản trị cho biên tập viên | Admin API của `wiki-service`; sau thêm `community-service` |
+| `aov-stream` | Trang xem giải đấu; livestream sẽ mở rộng sau | Public API của `community-service`; tham chiếu game từ `wiki-service` |
+| `admin-aov` | Trang quản trị cho biên tập viên | Admin API của `wiki-service` và `community-service` |
 
-UI dùng chung nằm ở `packages/ui` (`@aov/ui`, shadcn/ui). Trang cộng đồng và giải đấu chưa có app; khi triển khai sẽ thêm app mới hoặc mở rộng app hiện có.
+UI dùng chung nằm ở `packages/ui` (`@aov/ui`, shadcn/ui). Giải đấu mở rộng trong `aov-stream`; trang cộng đồng và khả năng livestream vẫn triển khai sau.
 
 ### 3.2 Nguyên tắc chia deployable
 
@@ -154,7 +154,7 @@ Hệ quả: hệ thống có **hai deployable backend**.
 
 ```text
 wiki-service        AOV Wiki                          — triển khai ngay
-community-service   Cộng đồng + Giải đấu + Livestream — triển khai sau
+community-service   Nhập liệu giải đấu trước; Cộng đồng + Livestream triển khai sau
 ```
 
 Ghi chú:
@@ -288,7 +288,7 @@ tournament.match_pick.hero_id          = hero.id (UUID)
 - Mặc định frontend tự ghép: `community-service` trả `heroId`, app frontend lấy tên/ảnh từ public API của `wiki-service` (đã có ETag/cache).
 - Backend-to-backend chỉ khi cần **validate** (ví dụ pick/ban phải là tướng tồn tại), gọi public API của wiki với timeout và cache ngắn.
 
-**Bối cảnh lịch sử.** Trận đấu lưu `region` và `patchVariantId`/thời điểm diễn ra. Nhờ resolver theo thời gian của wiki (`at=`), trang trận đấu về sau vẫn hiển thị đúng phiên bản tướng tại thời điểm thi đấu.
+**Bối cảnh lịch sử.** Mỗi ván đấu lưu `region`, mùa/patch và snapshot metadata game đã sử dụng; một giải có thể đi qua nhiều patch. Chọn riêng mùa sẽ giải quyết patch public phù hợp và đóng băng UUID khi xuất bản. Mốc chưa biết phải ghi rõ, không đoán từ ngày tổ chức. Không đọc lại danh mục “hiện tại” để thay dữ liệu ván đã công khai. Xem [ADR-015](adr/ADR-015-manual-tournament-recording.md).
 
 **Event.** Chưa cần message broker. Event nội bộ của `wiki-service` (Spring Modulith) không trở thành contract với service khác cho tới khi có nhu cầu thật; lúc đó dùng outbox + broker và chốt bằng ADR.
 
