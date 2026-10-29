@@ -235,7 +235,13 @@ export function PublishingWorkspace({
     }
   }, [editing])
   useEffect(() => {
-    if (managementOpen) managementRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+    if (!managementOpen) return
+    // The actions menu returns focus to its trigger when it closes; move focus after that so the panel stays in view.
+    const timer = window.setTimeout(() => {
+      managementRef.current?.focus({ preventScroll: true })
+      managementRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [managementOpen])
   useBeforeUnload((event) => {
     if (busy) {
@@ -758,7 +764,8 @@ export function PublishingWorkspace({
               {managementOpen && (
                 <section
                   ref={managementRef}
-                  className="scroll-mt-16 space-y-5 rounded-2xl border bg-muted/10 p-4 @min-[650px]:p-6"
+                  tabIndex={-1}
+                  className="scroll-mt-16 space-y-5 rounded-2xl border bg-muted/10 p-4 outline-none @min-[650px]:p-6"
                   aria-label="Quản lý phiên bản"
                 >
                   <div className="flex items-start justify-between gap-3">
