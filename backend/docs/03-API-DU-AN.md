@@ -1442,8 +1442,9 @@ GET /api/wiki/v1/admin/heroes/{heroId}/patch-view?patchVariantId=...
 
 Quyền `catalog:read`. Trả `anchor` (revision dùng làm mốc, `direction`: `EXACT`, `FORWARD`,
 `BACKWARD` hoặc `NONE`), `stats` (statKey, unit, baseValue, growthPerLevel, `provenance`:
-`OBSERVED`, `DERIVED`, `CARRIED`, changeSetId), `roles` (roleCode, provenance), `skillFields`
-(skillKey, fieldKey, value, provenance, changeSetId) và `appliedChangeSetIds`. Suy ra theo
+`OBSERVED`, `DERIVED`, `CARRIED`, changeSetId, patchVariantId), `roles` (roleCode, provenance,
+changeSetId, patchVariantId), `skillFields` (skillKey, fieldKey, value, provenance, changeSetId,
+patchVariantId) và `appliedChangeSetIds`. Giá trị suy ra ghi change set và patch đã đặt giá trị đó. Suy ra theo
 [ADR-016](adr/ADR-016-patch-note-changes.md); không lưu kết quả.
 
 ---
