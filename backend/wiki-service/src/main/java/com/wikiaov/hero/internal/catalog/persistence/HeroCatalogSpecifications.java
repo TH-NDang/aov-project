@@ -4,6 +4,7 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.catalog.persistence.HeroCatalogRepository.Filter;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
+import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import jakarta.persistence.criteria.*;
 import java.time.Instant;
@@ -75,11 +76,13 @@ public final class HeroCatalogSpecifications {
             CriteriaBuilder cb) {
         var changes = query.subquery(UUID.class);
         var change = changes.from(HeroPatchChangeSet.class);
-        var target = changes.from(HeroRevision.class);
+        var targets = changes.subquery(UUID.class);
+        var target = targets.from(HeroRevision.class);
+        targets.select(target.get("id")).where(cb.equal(target.get("id"), change.get("toHeroRevisionId")),
+                cb.equal(target.get("state"), "PUBLISHED"), cb.equal(target.get("cause"), "GAME_PATCH"));
         changes.select(change.get("id")).where(cb.equal(change.get("heroId"), hero.get("id")),
                 change.get("patchVariantId").in(filter.variants()),
-                cb.equal(target.get("id"), change.get("toHeroRevisionId")),
-                cb.equal(target.get("state"), "PUBLISHED"), cb.equal(target.get("cause"), "GAME_PATCH"));
+                cb.or(cb.equal(change.get("sourceKind"), ChangeSource.PATCH_NOTES), cb.exists(targets)));
 
         return cb.exists(changes);
     }
@@ -129,11 +132,17 @@ public final class HeroCatalogSpecifications {
             AbstractQuery<?> query, CriteriaBuilder cb) {
         List<Predicate> result = new ArrayList<>();
         if (filter.changesOnly()) {
+            // A snapshot change names the hero by its target; a patch-notes change by the latest kept revision.
             var change = query.from(HeroPatchChangeSet.class);
-            result.add(cb.equal(change.get("toHeroRevisionId"), revision.get("id")));
+            result.add(cb.equal(change.get("heroId"), revision.get("heroId")));
             result.add(change.get("patchVariantId").in(filter.variants()));
-            result.add(cb.equal(revision.get("state"), "PUBLISHED"));
-            result.add(cb.equal(revision.get("cause"), "GAME_PATCH"));
+            result.add(cb.or(
+                    cb.and(cb.equal(change.get("sourceKind"), ChangeSource.SNAPSHOT),
+                            cb.equal(change.get("toHeroRevisionId"), revision.get("id")),
+                            cb.equal(revision.get("state"), "PUBLISHED"),
+                            cb.equal(revision.get("cause"), "GAME_PATCH")),
+                    cb.and(cb.equal(change.get("sourceKind"), ChangeSource.PATCH_NOTES),
+                            cb.notEqual(revision.get("state"), "DISCARDED"))));
         } else if (!filter.snapshotVariants().isEmpty()) {
             result.add(revision.get("effectiveFromPatchVariantId").in(filter.snapshotVariants()));
             result.add(cb.equal(revision.get("state"), "PUBLISHED"));

@@ -54,6 +54,8 @@ public class HeroPatchHistory {
         value.setHeroId(input.heroId());
         value.setFromHeroRevisionId(input.fromHeroRevisionId());
         value.setToHeroRevisionId(input.toHeroRevisionId());
+        value.setSourceKind(input.source());
+        value.setSourceUrl(input.sourceUrl());
         value.setCreatedAt(createdAt);
         value.setCreatedByIssuer(actor.issuer());
         value.setCreatedBySubject(actor.subject());

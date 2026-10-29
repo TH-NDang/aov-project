@@ -1,5 +1,6 @@
 package com.wikiaov.hero.internal.web;
 
+import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.change.application.HeroPatchChanges;
 import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.platform.*;
@@ -45,6 +46,16 @@ public interface HeroChangesApi {
     })
     List<Map<String, Object>> authoringChanges(@Parameter(description = "Id identifier.") UUID id,
             @Parameter(description = "Requested translation locale.") String locale,
+            @Parameter(hidden = true) HttpServletRequest request);
+
+    @Operation(operationId = "heroChangesApi_patchView", summary = "Patch view - hero changes", description = "Hero gameplay data at a patch, derived on read from the nearest published revision and the recorded change sets; derived and carried values are marked and never stored. Requires a valid bearer token with catalog:read. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+    })
+    HeroPatchView patchView(@Parameter(description = "Hero id identifier.") UUID heroId,
+            @Parameter(description = "Patch variant whose data is derived.") UUID patchVariantId,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroChangesApi_history", summary = "History - hero changes", description = "History for hero changes. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", responses = {

@@ -465,6 +465,130 @@ class DomainCoreIntegrationTest {
                 .param("q", "Historical backfill"), null, 200).get("totalElements")).isEqualTo(0);
     }
 
+    @Test
+    void patchNotesRecordPastChangesWithoutSnapshotsAndDeriveTheDataAtEachPatch() throws Exception {
+        var baseline = create();
+        UUID hero = uuid(baseline, "heroId"), baselineId = id(baseline);
+        baseline = complete(hero, baselineId, baseline);
+        baseline = send(post(path(hero, baselineId) + "/publish"), Map.of("expectedVersion", baseline.get("version")),
+                200);
+        UUID season = id(send(post(ROOT + "/admin/seasons"),
+                Map.of("code", "notes-season", "displayName", "Notes season"), 201));
+        UUID past = seasonPatch(season, "notes-past");
+        UUID current = seasonPatch(season, "notes-current");
+        var observed = catalogPatchRevision(baseline, current, 3700, "Current patch name");
+
+        Map<String, Object> stat = Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "HP", "oldValue", 3500,
+                "newValue", 3600, "unit", "POINT");
+        Map<String, Object> skill = Map.of("type", "SKILL", "changeKind", "ADJUSTMENT", "skillKey", "skill-1",
+                "fieldKey", "cooldown", "oldValue", "10", "newValue", "8");
+        var notes = notes(hero, List.of(stat, skill));
+        var hostile = new HashMap<>(notes);
+        hostile.remove("sourceUrl");
+        send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), hostile, 422);
+        hostile.put("sourceUrl", "ftp://example.org/notes");
+        send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), hostile, 422);
+        send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), notes(hero, List.of(Map.of("type", "STAT",
+                "changeKind", "BUFF", "statKey", "HP", "newValue", 3600, "unit", "POINT"))), 422);
+        send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), notes(hero, List.of(Map.of("type", "STAT",
+                "changeKind", "BUFF", "statKey", "MANA", "oldValue", 1, "newValue", 2, "unit", "POINT"))), 422);
+        send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), notes(hero, List.of(stat, stat)), 422);
+        send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), notes(hero, List.of(Map.of("type",
+                "VISUAL", "changeKind", "OTHER", "mediaRole", "HEAD", "newAssetId",
+                assets.get(MediaSemanticType.HERO_HEAD)))), 422);
+        var snapshotWithoutTarget = new HashMap<>(notes);
+        snapshotWithoutTarget.put("sourceKind", "SNAPSHOT");
+        send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), snapshotWithoutTarget, 422);
+
+        UUID pastChange = id(send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), notes, 201));
+        send(post(ROOT + "/admin/patch-variants/" + current + "/hero-changes"),
+                notes(hero, List.of(Map.of("type", "STAT", "changeKind", "BUFF", "statKey", "HP", "oldValue", 3600,
+                        "newValue", 3700, "unit", "POINT"))),
+                201);
+        mvc.perform(get(ROOT + "/admin/patch-variants/" + past + "/hero-changes")
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].sourceKind").value("PATCH_NOTES"))
+                .andExpect(jsonPath("$[0].sourceUrl").value("https://example.org/patch-notes"))
+                .andExpect(jsonPath("$[0].toHeroRevisionId").doesNotExist());
+        assertThat(jdbc.sql("SELECT count(*) FROM access.audit_event WHERE aggregate_id=? AND "
+                + "action='HERO_PATCH_CHANGE_RECORDED' AND revision_id IS NULL").param(hero).query(Long.class)
+                .single()).isEqualTo(2L);
+
+        var scoped = send(get(ROOT + "/admin/heroes").param("patchVariantId", past.toString()), null, 200);
+        assertThat(scoped.get("totalElements")).isEqualTo(1);
+        var change = (Map<String, Object>) ((List<?>) ((Map<String, Object>) ((List<?>) scoped.get("items"))
+                .getFirst()).get("gameplayChanges")).getFirst();
+        assertThat(change).containsEntry("id", pastChange.toString()).containsEntry("sourceKind", "PATCH_NOTES");
+        assertThat(change.get("toHeroRevisionId")).isNull();
+        assertThat(send(get(ROOT + "/admin/heroes").param("patchVariantId", past.toString())
+                .param("q", "Current patch name"), null, 200).get("totalElements")).isEqualTo(1);
+        assertThat(send(get(ROOT + "/admin/heroes").param("seasonId", season.toString()), null, 200)
+                .get("totalElements")).isEqualTo(1);
+
+        var exact = send(get(ROOT + "/admin/heroes/" + hero + "/patch-view").param("patchVariantId",
+                current.toString()), null, 200);
+        assertThat((Map<String, Object>) exact.get("anchor")).containsEntry("direction", "EXACT")
+                .containsEntry("revisionId", observed.get("id"));
+        assertThat((List<?>) exact.get("appliedChangeSetIds")).isEmpty();
+        assertThat(((List<Map<String, Object>>) exact.get("stats")).getFirst()).containsEntry("baseValue", 3700)
+                .containsEntry("provenance", "OBSERVED");
+
+        var forward = send(get(ROOT + "/admin/heroes/" + hero + "/patch-view").param("patchVariantId",
+                past.toString()), null, 200);
+        assertThat((Map<String, Object>) forward.get("anchor")).containsEntry("direction", "FORWARD")
+                .containsEntry("revisionId", baselineId.toString());
+        assertThat(forward.get("appliedChangeSetIds")).isEqualTo(List.of(pastChange.toString()));
+        assertThat(((List<Map<String, Object>>) forward.get("stats")).getFirst()).containsEntry("statKey", "HP")
+                .containsEntry("baseValue", 3600).containsEntry("provenance", "DERIVED")
+                .containsEntry("changeSetId", pastChange.toString());
+        assertThat(((List<Map<String, Object>>) forward.get("roles")).getFirst()).containsEntry("roleCode", "ASSASSIN")
+                .containsEntry("provenance", "CARRIED");
+        assertThat(((List<Map<String, Object>>) forward.get("skillFields")).getFirst())
+                .containsEntry("skillKey", "skill-1").containsEntry("fieldKey", "cooldown").containsEntry("value", "8")
+                .containsEntry("provenance", "DERIVED");
+
+        var later = send(post(ROOT + "/admin/heroes"), Map.of("code", "violet", "name", "Violet", "initialLocale",
+                "vi-VN", "rulesetId", ruleset, "contextId", current), 201);
+        UUID laterHero = uuid(later, "heroId");
+        later = complete(laterHero, id(later), later);
+        send(post(path(laterHero, id(later)) + "/publish"), Map.of("expectedVersion", later.get("version")), 200);
+        UUID nerf = id(send(post(ROOT + "/admin/patch-variants/" + current + "/hero-changes"),
+                notes(laterHero, List.of(Map.of("type", "STAT", "changeKind", "NERF", "statKey", "HP", "oldValue",
+                        3600, "newValue", 3500, "unit", "POINT"))),
+                201));
+        var backward = send(get(ROOT + "/admin/heroes/" + laterHero + "/patch-view").param("patchVariantId",
+                past.toString()), null, 200);
+        assertThat((Map<String, Object>) backward.get("anchor")).containsEntry("direction", "BACKWARD")
+                .containsEntry("revisionId", id(later).toString());
+        assertThat(backward.get("appliedChangeSetIds")).isEqualTo(List.of(nerf.toString()));
+        assertThat(((List<Map<String, Object>>) backward.get("stats")).getFirst()).containsEntry("baseValue", 3600)
+                .containsEntry("provenance", "DERIVED");
+
+        var unpublished = send(post(ROOT + "/admin/heroes"), Map.of("code", "airi", "name", "Airi", "initialLocale",
+                "vi-VN", "rulesetId", ruleset, "contextId", current), 201);
+        var none = send(get(ROOT + "/admin/heroes/" + uuid(unpublished, "heroId") + "/patch-view")
+                .param("patchVariantId", past.toString()), null, 200);
+        assertThat((Map<String, Object>) none.get("anchor")).containsEntry("direction", "NONE");
+        assertThat((List<?>) none.get("stats")).isEmpty();
+        send(get(ROOT + "/admin/heroes/" + hero + "/patch-view").param("patchVariantId", past.toString())
+                .param("unknown", "1"), null, 400);
+    }
+
+    private Map<String, Object> notes(UUID hero, List<Map<String, Object>> changes) {
+        return Map.of("heroId", hero, "sourceKind", "PATCH_NOTES", "sourceUrl", "https://example.org/patch-notes",
+                "summaryTranslations", List.of(Map.of("locale", "vi-VN", "summary", "Theo ghi chú cập nhật")),
+                "changes", changes);
+    }
+
+    private UUID seasonPatch(UUID season, String code) throws Exception {
+        UUID variant = id(send(post(ROOT + "/admin/season-patches"), Map.of("seasonId", season, "rulesetId", ruleset,
+                "patch", Map.of("code", code, "translations",
+                        List.of(Map.of("locale", "vi-VN", "title", code, "summary", "")))),
+                201));
+        send(post(ROOT + "/admin/patch-variants/" + variant + "/publish"), null, 204);
+        return variant;
+    }
+
     private Map<String, Object> catalogPatchRevision(Map<String, Object> source, UUID patchVariant, int health,
             String name)
             throws Exception {

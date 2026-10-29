@@ -29,6 +29,8 @@ class HeroPatchChangeViewsTests {
         when(header.getId()).thenReturn(UUID.randomUUID());
         when(header.getHeroId()).thenReturn(hero);
         when(header.getHeroCode()).thenReturn("airi");
+        when(header.getSourceKind()).thenReturn(ChangeSource.PATCH_NOTES);
+        when(header.getSourceUrl()).thenReturn("https://example.org/patch-notes");
         var assessment = new HeroPatchAssessment();
         assessment.setKind(Kind.BUFF);
         assessment.setVersion(2);
@@ -66,7 +68,10 @@ class HeroPatchChangeViewsTests {
 
         assertThat(result).containsEntry("heroId", hero).containsEntry("heroCode", "airi")
                 .containsEntry("overallKind", "BUFF").containsEntry("assessmentVersion", 2L)
-                .containsEntry("fromHeroRevisionId", null).doesNotContainKeys("actualLocale", "summary");
+                .containsEntry("fromHeroRevisionId", null).containsEntry("toHeroRevisionId", null)
+                .containsEntry("sourceKind", "PATCH_NOTES")
+                .containsEntry("sourceUrl", "https://example.org/patch-notes")
+                .doesNotContainKeys("actualLocale", "summary");
         var facts = (List<Map<String, Object>>) result.get("changes");
         assertThat(facts).extracting(value -> value.get("type")).containsExactly("HERO_SKILL_CHANGE",
                 "HERO_STAT_CHANGE", "HERO_OTHER_CHANGE", "HERO_ROLE_CHANGE", "HERO_MECHANIC_CHANGE",

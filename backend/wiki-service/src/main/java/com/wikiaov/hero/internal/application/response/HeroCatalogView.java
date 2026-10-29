@@ -21,6 +21,7 @@ public record HeroCatalogView(
             UUID patchVariantId,
             UUID fromHeroRevisionId,
             UUID toHeroRevisionId,
+            ChangeSource sourceKind,
             List<Kind> changeKinds,
             Kind overallKind,
             Instant recordedAt,

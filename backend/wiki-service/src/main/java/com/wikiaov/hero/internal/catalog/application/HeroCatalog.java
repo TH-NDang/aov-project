@@ -120,7 +120,7 @@ public class HeroCatalog {
                             .thenComparing(HeroPatchChangeTranslation::getLocale));
             metadata.computeIfAbsent(change.getHeroId(), ignored -> new ArrayList<>())
                     .add(new GameplayChange(change.getId(), variant.rulesetId(), variant.seasonId(), variant.id(),
-                            change.getFromHeroRevisionId(), change.getToHeroRevisionId(),
+                            change.getFromHeroRevisionId(), change.getToHeroRevisionId(), change.getSourceKind(),
                             List.copyOf(classifications.getOrDefault(change.getId(), EnumSet.noneOf(Kind.class))),
                             overall.get(change.getId()), change.getCreatedAt(),
                             summary.map(HeroPatchChangeTranslation::getSummary).orElse(null),
@@ -137,6 +137,8 @@ public class HeroCatalog {
     private static List<HeroPatchChangeSet> selectChanges(List<HeroPatchChangeSet> changes,
             Map<UUID, PatchVariantReference> variants, Map<UUID, HeroRevisionView> revisions, boolean filtered) {
         var ordered = changes.stream().filter(change -> {
+            if (change.getSourceKind() == ChangeSource.PATCH_NOTES)
+                return true;
             var revision = revisions.get(change.getToHeroRevisionId());
             return revision != null && revision.state().equals("PUBLISHED")
                     && revision.cause() == com.wikiaov.hero.internal.domain.HeroContent.Cause.GAME_PATCH;

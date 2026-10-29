@@ -9,7 +9,7 @@
   "com/wikiaov/enchantment/internal/web/EnchantmentPatchChangeController.java": "110667177e72c9ce27e90d65353311bafb6b1683a760564f96480c9024474d59",
   "com/wikiaov/enchantment/internal/web/EnchantmentPublicController.java": "c17ba03bea6bd4b30ab301f8b36c80669058aea612f4418a43bc56eb02a48137",
   "com/wikiaov/hero/internal/web/HeroAdminController.java": "d9eeb2e12799ee7fae1e15bae1ad8da378b4f3aad698fe9432b952901152b210",
-  "com/wikiaov/hero/internal/web/HeroChangesController.java": "465b323f37f4295256ba235f7d9e9dcfd8dd942b6f073a27e6a8c75df90aae10",
+  "com/wikiaov/hero/internal/web/HeroChangesController.java": "61008f2613080de0a95c2cf56a32ccebb430fe3d891b5aebc1701b2561529fc8",
   "com/wikiaov/hero/internal/web/HeroImportController.java": "7419fda4dee359fda77f822e98335b83ec23a1817ec79321e92e5edc54feb58a",
   "com/wikiaov/hero/internal/web/HeroImportJobController.java": "9c4749f563169bd3c5f214a81dc0c9960330eebdb3fc45d00bd8b9d311617677",
   "com/wikiaov/hero/internal/web/HeroMediaController.java": "151c628b9b5e4c58f23cdf25482597cd9a72b15e56590de97519662a7b24fe4b",

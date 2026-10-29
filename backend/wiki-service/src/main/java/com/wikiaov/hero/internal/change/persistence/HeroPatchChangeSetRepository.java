@@ -1,6 +1,7 @@
 package com.wikiaov.hero.internal.change.persistence;
 
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
+import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
 import java.util.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +16,8 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
 
     @Query("""
             select c.id as id, c.heroId as heroId, h.code as heroCode, c.patchVariantId as patchVariantId,
-                c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId
+                c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId,
+                c.sourceKind as sourceKind, c.sourceUrl as sourceUrl
             from HeroPatchChangeSet c join HeroIdentity h on h.id = c.heroId
             where c.patchVariantId = :variantId order by c.createdAt desc, c.id
             """)
@@ -23,7 +25,8 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
 
     @Query("""
             select c.id as id, c.heroId as heroId, h.code as heroCode, c.patchVariantId as patchVariantId,
-                c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId
+                c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId,
+                c.sourceKind as sourceKind, c.sourceUrl as sourceUrl
             from HeroPatchChangeSet c join HeroIdentity h on h.id = c.heroId
             where c.heroId = :heroId order by c.createdAt desc, c.id
             """)
@@ -44,5 +47,9 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
         UUID getFromHeroRevisionId();
 
         UUID getToHeroRevisionId();
+
+        ChangeSource getSourceKind();
+
+        String getSourceUrl();
     }
 }
