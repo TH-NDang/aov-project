@@ -1,4 +1,7 @@
 import { randomId } from "@/lib/random-id"
+import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
+import { findResourceMediaSource } from "@aov/ui/lib/resource-media-sources"
+import { importMediaSources } from "./import-media-sources"
 import { ApiError } from "@/lib/api/errors"
 import { importImageFile } from "./import-files"
 import type { Request } from "./publishing-api"
@@ -14,6 +17,7 @@ export interface UploadEntry {
   relatedImages?: RelatedImage[]
 }
 interface ImageCheckpoint {
+  credit?: MediaSourceInput
   source: string
   semanticType: string
   digest?: string
@@ -48,6 +52,12 @@ export async function createUploadSession(
   label: string,
 ): Promise<UploadSession> {
   const images: UploadState["images"] = {}
+  const localResources = entries.some(
+    (entry) =>
+      Object.values(entry.imageUrls ?? {}).some((path) => path.startsWith("/__resources/")) ||
+      entry.relatedImages?.some((image) => image.source.startsWith("/__resources/")),
+  )
+  const sources = await importMediaSources(files, base, localResources)
   for (const entry of entries) {
     const targets = [
       ...Object.entries(entry.imageUrls ?? {}).map(([key, source]) => ({
@@ -62,6 +72,7 @@ export async function createUploadSession(
       images[key] = { source, semanticType }
       if (!source.startsWith("https:"))
         images[key].digest = await fingerprint(await importImageFile(source, files, base))
+      images[key].credit = findResourceMediaSource(sources, source, images[key].digest)
     }
   }
   return {
@@ -141,16 +152,13 @@ export async function resumeUploadSession(
         if (!image.assetId) {
           const asset = await send<{ id: string }>("/admin/media/assets", {
             semanticType: image.semanticType,
-            source: {
-              label: "Ảnh từ file import",
-              url: image.source.startsWith("https:") ? image.source : null,
-              note: image.source,
-            },
+            source: image.credit ?? findResourceMediaSource([], image.source),
           })
           image.assetId = asset.id
           await save()
         }
         const ticket = await send<UploadTicket>(`/admin/media/assets/${image.assetId}/version-uploads`, {
+          source: image.credit ?? findResourceMediaSource([], image.source),
           fileName: file.name,
           contentType: file.type,
           sizeBytes: file.size,

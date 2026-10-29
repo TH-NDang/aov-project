@@ -46,6 +46,7 @@ class SecurityConfiguration {
                                 "/api/wiki/*/auth/logout", "/api/wiki/*/auth/google")
                         .permitAll()
                         // Admin rules must come before the public GET rule; "*" covers every API version.
+                        .requestMatchers(HttpMethod.POST, "/api/wiki/*/media/contact-requests").permitAll()
                         .requestMatchers("/api/wiki/*/users/**").authenticated()
                         .requestMatchers(ApiPaths.ANY_VERSION_ADMIN_PATTERN).hasAuthority(Capabilities.CATALOG_READ)
                         .requestMatchers(HttpMethod.GET, ApiPaths.ANY_VERSION_PATTERN).permitAll()

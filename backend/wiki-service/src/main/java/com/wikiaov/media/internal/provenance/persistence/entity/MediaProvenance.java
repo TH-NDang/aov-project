@@ -49,12 +49,19 @@ public class MediaProvenance extends AssignedIdEntity {
     @Column(name = "note", updatable = false)
     private @Nullable String note;
 
+    @Column(name = "owner_name", length = 200, updatable = false)
+    private @Nullable String ownerName;
+
+    @Column(name = "contact_url", length = 2048, updatable = false)
+    private @Nullable String contactUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     public static MediaProvenance record(UUID id, UUID assetId, @Nullable UUID assetVersionId,
             ProvenanceSourceType sourceType, String sourceLabel, @Nullable String sourceUrl,
-            @Nullable Instant observedAt, @Nullable String note, Instant now) {
+            @Nullable Instant observedAt, @Nullable String note, @Nullable String ownerName,
+            @Nullable String contactUrl, Instant now) {
         MediaProvenance provenance = new MediaProvenance();
         provenance.id = id;
         provenance.assetId = assetId;
@@ -64,6 +71,8 @@ public class MediaProvenance extends AssignedIdEntity {
         provenance.sourceUrl = sourceUrl;
         provenance.observedAt = observedAt;
         provenance.note = note;
+        provenance.ownerName = ownerName;
+        provenance.contactUrl = contactUrl;
         provenance.createdAt = now;
         return provenance;
     }

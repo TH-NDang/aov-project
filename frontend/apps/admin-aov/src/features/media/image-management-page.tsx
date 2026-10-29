@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useEffect, useMemo, useState } from "react"
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { ArrowUpRight, ImageIcon, Plus, RefreshCw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Page, PageHeader } from "@/components/page-header"
+import { InfiniteScroll } from "@/components/infinite-scroll"
 import { useIsWide } from "@/hooks/use-media-query"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
@@ -15,6 +16,13 @@ import { upgradeHeroImage } from "../publishing/publishing-api"
 import { control } from "../publishing/fields"
 import type { Asset, PageSlice } from "../publishing/types"
 import { invalidateMediaAsset } from "./media-cache"
+import { MediaSourceEditor } from "./media-source-editor"
+import { MediaSourceFields } from "./media-source-fields"
+import { MediaSourceStatus } from "./media-source-status"
+import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
+import type { MediaSourceTarget } from "./bulk-media-sources"
+import { creditHttpUrl, currentMediaSources, needsMediaCredit, type MediaSourceInput } from "@aov/ui/lib/media-credit"
+import { Link } from "react-router"
 
 const types: Record<string, string> = {
   USER_AVATAR: "Avatar người dùng",
@@ -56,7 +64,15 @@ interface Version {
 }
 interface Details extends Omit<Row, "currentUrl"> {
   versions: Version[]
-  provenance: { id: string; label: string; url: string | null; note: string | null }[]
+  provenance: {
+    id: string
+    versionId: string | null
+    label: string
+    url: string | null
+    note: string | null
+    ownerName?: string | null
+    contactUrl?: string | null
+  }[]
 }
 interface Usage {
   counts: { current: number; draft: number; historical: number }
@@ -67,11 +83,24 @@ const helper = createColumnHelper<typeof features, Row>()
 const empty: Row[] = []
 const date = (value: string) => new Date(value).toLocaleString("vi-VN")
 const safeUrl = (url: string | null) => (url && /^https?:\/\//i.test(url) ? url : undefined)
+const canSelect = (row: Row) => row.state === "ACTIVE" && !!row.currentVersionId
+const sourceTarget = (row: Row): MediaSourceTarget => ({
+  assetId: row.id,
+  versionId: row.currentVersionId!,
+  previewUrl: row.currentUrl,
+  label: `${row.sources?.[0]?.label || types[row.semanticType] || row.semanticType} · ${row.id.slice(0, 8)}`,
+})
 
 export function ImageManagementPage() {
+  const [upgradeSource, setUpgradeSource] = useState<MediaSourceInput>({
+    type: "OTHER",
+    label: "Ảnh do biên tập viên cung cấp",
+  })
   const [type, setType] = useState("")
-  const [page, setPage] = useState(0)
+  const [needsCredit, setNeedsCredit] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
+  const [marked, setMarked] = useState<Map<string, MediaSourceTarget>>(() => new Map())
+  const [bulkTargets, setBulkTargets] = useState<MediaSourceTarget[] | null>(null)
   const [upload, setUpload] = useState(false)
   const [uploadType, setUploadType] = useState("HERO_HEAD")
   const [upgrading, setUpgrading] = useState(false)
@@ -79,11 +108,56 @@ export function ImageManagementPage() {
   const wide = useIsWide()
   const writable = useSession().actor?.capabilities.includes("media:write")
   const cache = useQueryClient()
-  const assets = useQuery({
-    queryKey: ["managed-images", type, page],
-    queryFn: () =>
-      backendRequest<PageSlice<Row>>(`/admin/media/assets?page=${page}&size=20${type ? `&semanticType=${type}` : ""}`),
+  const assets = useInfiniteQuery({
+    queryKey: ["managed-images", "infinite", type, needsCredit],
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) =>
+      backendRequest<PageSlice<Row>>(
+        `/admin/media/assets?page=${pageParam}&size=20${type ? `&semanticType=${type}` : ""}${needsCredit ? "&needsCredit=true" : ""}`,
+        { signal },
+      ),
+    getNextPageParam: (page) =>
+      page.items.length && (page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined,
   })
+  const rows = useMemo(() => {
+    if (!assets.data) return empty
+    const unique = new Map<string, Row>()
+    for (const page of assets.data.pages) for (const row of page.items) unique.set(row.id, row)
+    return [...unique.values()]
+  }, [assets.data])
+  const total = assets.data?.pages[0]?.totalElements ?? 0
+  const selectable = useMemo(() => rows.filter(canSelect), [rows])
+  const allMarked = selectable.length > 0 && selectable.every((row) => marked.has(row.id))
+  const someMarked = selectable.some((row) => marked.has(row.id))
+  useEffect(() => {
+    setMarked((current) => {
+      const next = new Map(current)
+      for (const row of rows) {
+        const target = next.get(row.id)
+        if (target && (!canSelect(row) || row.currentVersionId !== target.versionId)) next.delete(row.id)
+      }
+      return next.size === current.size ? current : next
+    })
+  }, [rows])
+  function toggleRow(row: Row) {
+    if (!canSelect(row)) return
+    setMarked((current) => {
+      const next = new Map(current)
+      if (next.has(row.id)) next.delete(row.id)
+      else next.set(row.id, sourceTarget(row))
+      return next
+    })
+  }
+  function toggleLoaded() {
+    setMarked((current) => {
+      const next = new Map(current)
+      for (const row of selectable) {
+        if (allMarked) next.delete(row.id)
+        else if (!next.has(row.id)) next.set(row.id, sourceTarget(row))
+      }
+      return next
+    })
+  }
   const details = useQuery({
     queryKey: ["managed-image", selected],
     enabled: !!selected,
@@ -140,19 +214,40 @@ export function ImageManagementPage() {
           header: "Nội dung",
           cell: ({ row }) => (row.original.currentVersionId ? "Đã có ảnh" : "Chưa hoàn tất upload"),
         }),
+        helper.display({
+          id: "source",
+          header: "Nguồn ảnh",
+          cell: ({ row }) => (
+            <button
+              type="button"
+              className="text-left"
+              onClick={() => setSelected(row.original.id)}
+              aria-label={`Nguồn và credit ảnh ${row.original.id}`}
+            >
+              <MediaSourceStatus sources={row.original.sources} versionId={row.original.currentVersionId} />
+            </button>
+          ),
+        }),
         helper.accessor("createdAt", { header: "Ngày tạo", cell: ({ getValue }) => date(getValue()) }),
         helper.accessor("updatedAt", { header: "Cập nhật", cell: ({ getValue }) => date(getValue()) }),
       ]),
     [],
   )
-  const table = useTable({ features, columns, data: assets.data?.items ?? empty, getRowId: (row) => row.id })
+  const table = useTable({ features, columns, data: rows, getRowId: (row) => row.id })
   const current = details.data?.versions.find((version) => version.current)
+  const currentSources = currentMediaSources(details.data?.provenance ?? [], details.data?.currentVersionId)
   async function upgrade(file: File) {
     if (!selected) return
     setUpgrading(true)
     setUpgradeError("")
     try {
-      await upgradeHeroImage(backendRequest, selected, file)
+      if (
+        !upgradeSource.label.trim() ||
+        (upgradeSource.url && !creditHttpUrl(upgradeSource.url)) ||
+        (upgradeSource.contactUrl && !creditHttpUrl(upgradeSource.contactUrl))
+      )
+        throw new Error("Điền tên nguồn và URL HTTP(S) hợp lệ.")
+      await upgradeHeroImage(backendRequest, selected, file, fetch, upgradeSource)
       await invalidateMediaAsset(cache, selected)
     } catch (cause) {
       setUpgradeError(errorMessage(cause))
@@ -166,6 +261,11 @@ export function ImageManagementPage() {
         title="Quản lý ảnh"
         actions={
           <div className="flex gap-2">
+            {writable && (
+              <Button variant="outline" asChild>
+                <Link to="/media-contact-requests">Liên hệ về ảnh</Link>
+              </Button>
+            )}
             <Button
               variant="outline"
               aria-label="Làm mới danh sách ảnh"
@@ -191,7 +291,7 @@ export function ImageManagementPage() {
             value={type}
             onChange={(e) => {
               setType(e.target.value)
-              setPage(0)
+              setMarked(new Map())
             }}
           >
             <option value="">Tất cả</option>
@@ -202,18 +302,77 @@ export function ImageManagementPage() {
             ))}
           </select>
         </label>
-        <span className="text-sm text-muted-foreground">{assets.data?.totalElements ?? 0} ảnh</span>
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={needsCredit}
+            onChange={(event) => {
+              setNeedsCredit(event.target.checked)
+              setMarked(new Map())
+            }}
+            className="size-4 accent-primary"
+          />
+          Chỉ ảnh thiếu nguồn hoặc credit
+        </label>
+        <span className="text-sm text-muted-foreground" role="status">
+          {assets.isPending ? "Đang tải ảnh…" : `Đã tải ${rows.length} / ${total} ảnh`}
+        </span>
       </div>
+      {writable && (
+        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-sm">
+          <div className="text-sm">
+            <p className="font-medium" role="status">
+              Đã chọn {marked.size} ảnh
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Chọn tất cả chỉ áp dụng cho ảnh đã tải. Đổi bộ lọc sẽ bỏ lựa chọn.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" disabled={!marked.size} onClick={() => setMarked(new Map())}>
+              Bỏ chọn
+            </Button>
+            <Button disabled={!marked.size} onClick={() => setBulkTargets([...marked.values()])}>
+              Bổ sung nguồn / credit hàng loạt
+            </Button>
+          </div>
+        </div>
+      )}
       {assets.error && (
-        <p role="alert" className="text-destructive">
-          {errorMessage(assets.error)}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p role="alert" className="text-destructive">
+            {assets.isFetchNextPageError ? "Chưa tải thêm được ảnh. " : ""}
+            {errorMessage(assets.error)}
+          </p>
+          <Button
+            variant="outline"
+            disabled={assets.isFetching}
+            onClick={() => void (assets.isFetchNextPageError ? assets.fetchNextPage() : assets.refetch())}
+          >
+            Thử tải lại
+          </Button>
+        </div>
       )}
       <div className="overflow-x-auto rounded-xl border bg-card">
         <table className="w-full min-w-[850px] text-left text-sm">
           <thead className="bg-muted/50">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
+                {writable && (
+                  <th className="w-12 px-4 py-3">
+                    <input
+                      type="checkbox"
+                      className="size-4 accent-primary"
+                      aria-label="Chọn tất cả ảnh đã tải"
+                      checked={allMarked}
+                      disabled={!selectable.length}
+                      onChange={toggleLoaded}
+                      ref={(node) => {
+                        if (node) node.indeterminate = someMarked && !allMarked
+                      }}
+                    />
+                  </th>
+                )}
                 {group.headers.map((header) => (
                   <th key={header.id} className="px-4 py-3 font-medium">
                     <table.FlexRender header={header} />
@@ -224,7 +383,20 @@ export function ImageManagementPage() {
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="border-t hover:bg-muted/30">
+              <tr key={row.id} className={`border-t hover:bg-muted/30 ${marked.has(row.id) ? "bg-muted/40" : ""}`}>
+                {writable && (
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      className="size-4 accent-primary"
+                      aria-label={`Chọn ảnh ${row.original.id}`}
+                      checked={marked.has(row.original.id)}
+                      disabled={!canSelect(row.original)}
+                      title={canSelect(row.original) ? undefined : "Ảnh chưa hoàn tất upload hoặc không còn hoạt động."}
+                      onChange={() => toggleRow(row.original)}
+                    />
+                  </td>
+                )}
                 {row.getAllCells().map((cell) => (
                   <td key={cell.id} className="whitespace-nowrap px-4 py-3">
                     <table.FlexRender cell={cell} />
@@ -240,24 +412,37 @@ export function ImageManagementPage() {
           </p>
         ) : (
           !assets.error &&
-          !assets.data?.items.length && (
-            <p className="p-8 text-center text-muted-foreground">Chưa có ảnh thuộc loại này.</p>
+          !rows.length && (
+            <p className="p-8 text-center text-muted-foreground">
+              {needsCredit ? "Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
+            </p>
           )
         )}
       </div>
-      <div className="flex items-center justify-end gap-3">
-        <Button variant="outline" disabled={!page || assets.isFetching} onClick={() => setPage(page - 1)}>
-          Trước
-        </Button>
-        <span className="text-sm">Trang {page + 1}</span>
-        <Button
-          variant="outline"
-          disabled={!assets.data || (page + 1) * 20 >= assets.data.totalElements || assets.isFetching}
-          onClick={() => setPage(page + 1)}
-        >
-          Sau
-        </Button>
-      </div>
+      <InfiniteScroll
+        key={`${type}:${needsCredit}`}
+        query={assets}
+        enabled={!selected && !upload && !bulkTargets}
+        label="Đang tải thêm ảnh…"
+      />
+      {!assets.isPending && !assets.isError && !assets.hasNextPage && rows.length > 0 && (
+        <p className="text-center text-xs text-muted-foreground">Đã tải hết {total} ảnh.</p>
+      )}
+      {writable && bulkTargets && (
+        <MediaBulkSourceEditor
+          targets={bulkTargets}
+          onClose={() => setBulkTargets(null)}
+          onSettled={(results) =>
+            setMarked((current) => {
+              const next = new Map(current)
+              for (const result of results) {
+                if (result.state === "success" || result.state === "changed") next.delete(result.target.assetId)
+              }
+              return next
+            })
+          }
+        />
+      )}
       <Sheet
         open={!!selected}
         onOpenChange={(open) => {
@@ -304,6 +489,9 @@ export function ImageManagementPage() {
                 </dl>
                 <section className="space-y-2">
                   <h3 className="font-semibold">Phiên bản ({details.data.versions.length})</h3>
+                  {writable && (
+                    <MediaSourceFields value={upgradeSource} onChange={setUpgradeSource} disabled={upgrading} />
+                  )}
                   {writable && details.data.state === "ACTIVE" && (
                     <label className="grid gap-2 rounded-lg bg-muted/30 p-3 text-sm">
                       Nâng chất lượng ảnh
@@ -360,12 +548,27 @@ export function ImageManagementPage() {
                 </section>
                 <section className="space-y-2">
                   <h3 className="font-semibold">Nguồn ảnh</h3>
-                  {!details.data.provenance.length && (
-                    <p className="text-sm text-muted-foreground">Chưa có thông tin nguồn.</p>
+                  <MediaSourceStatus sources={currentSources} versionId={details.data.currentVersionId} />
+                  {details.data.currentVersionId && needsMediaCredit(currentSources) && (
+                    <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+                      Nguồn hoặc chủ sở hữu / credit của phiên bản đang dùng chưa đầy đủ. Thông tin đã biết được giữ lại
+                      để đối chiếu; bạn có thể bổ sung bên dưới sau khi xác minh.
+                    </p>
                   )}
-                  {details.data.provenance.map((source) => (
+                  {details.data.currentVersionId && (
+                    <MediaSourceEditor
+                      key={details.data.currentVersionId}
+                      assetId={details.data.id}
+                      versionId={details.data.currentVersionId}
+                    />
+                  )}
+                  {!currentSources.length && <p className="text-sm text-muted-foreground">Chưa có thông tin nguồn.</p>}
+                  {currentSources.map((source) => (
                     <div key={source.id} className="break-words rounded-lg border p-3 text-sm">
                       <p>{source.label}</p>
+                      <p className="text-muted-foreground">
+                        Chủ sở hữu / credit: {source.ownerName || "Chưa xác nhận"}
+                      </p>
                       {source.note && <p className="mt-1 text-muted-foreground">{source.note}</p>}
                       {safeUrl(source.url) && (
                         <a

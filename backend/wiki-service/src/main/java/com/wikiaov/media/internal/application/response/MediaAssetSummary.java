@@ -1,8 +1,10 @@
 package com.wikiaov.media.internal.application.response;
 
 import com.wikiaov.media.MediaAssetState;
+import com.wikiaov.media.MediaCredit;
 import com.wikiaov.media.MediaSemanticType;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
@@ -15,6 +17,7 @@ public record MediaAssetSummary(
         @Nullable UUID currentVersionId,
         @Nullable String currentUrl,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        List<MediaCredit> sources
 ) {
 }

@@ -5,19 +5,14 @@ import { backendRequest } from "@/app/auth/session"
 import { createPublishingApi } from "./publishing-api"
 import { sourceHttpUrl } from "./hero-source-review"
 import type { AssetDetail } from "./types"
+import { currentMediaSources } from "@aov/ui/lib/media-credit"
+import { MediaSourceEditor } from "../media/media-source-editor"
 
 const api = createPublishingApi(backendRequest)
 
 /** Asset-wide and current-version sources describe the image being displayed. */
 export function currentImageSources(asset: AssetDetail | undefined) {
-  const seen = new Set<string>()
-  return (asset?.provenance ?? []).filter((source) => {
-    if (source.versionId && source.versionId !== asset?.currentVersionId) return false
-    const key = JSON.stringify([source.label, source.url, source.note, source.observedAt])
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
+  return currentMediaSources(asset?.provenance ?? [], asset?.currentVersionId)
 }
 
 export function HeroImageSource({ assetId }: { assetId: string | null | undefined }) {
@@ -54,6 +49,17 @@ export function HeroImageSource({ assetId }: { assetId: string | null | undefine
             return (
               <li key={source.id} className="min-w-0 space-y-1.5 break-words">
                 <p className="font-medium leading-5">{source.label.trim() || "Nguồn chưa đặt tên"}</p>
+                <p className="text-muted-foreground">Chủ sở hữu / credit: {source.ownerName || "Chưa xác nhận"}</p>
+                {sourceHttpUrl(source.contactUrl) && (
+                  <a
+                    href={sourceHttpUrl(source.contactUrl)!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline"
+                  >
+                    Liên hệ bên cung cấp
+                  </a>
+                )}
                 {url && (
                   <a
                     href={url}
@@ -76,6 +82,13 @@ export function HeroImageSource({ assetId }: { assetId: string | null | undefine
         </ul>
       ) : (
         <p className="leading-5 text-muted-foreground">Chưa ghi nhận nguồn cho ảnh này.</p>
+      )}
+      {asset.data?.currentVersionId && (
+        <MediaSourceEditor
+          key={`${assetId}:${asset.data.currentVersionId}`}
+          assetId={assetId}
+          versionId={asset.data.currentVersionId}
+        />
       )}
     </div>
   )

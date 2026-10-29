@@ -15,6 +15,7 @@ import {
 import { HeroGlyph } from "./hero-glyph"
 import { HeroGridSkeleton } from "./hero-loading"
 import { WikiImage } from "../../components/wiki-image"
+import { ImageCredit } from "@aov/ui/components/image-credit"
 import { WikiIcon } from "../../components/wiki-icon"
 import "./hero-directory.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
@@ -92,58 +93,68 @@ function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
   const [failedUrls, setFailedUrls] = useState<string[]>([])
   const portraitUrl = hero.portrait?.currentVersion?.url
   const imageUrl = [portraitUrl, hero.head?.currentVersion?.url].find((url) => url && !failedUrls.includes(url))
+  const media = imageUrl === portraitUrl ? hero.portrait : hero.head
   const roles = localizedHeroOptions(HERO_ROLES, locale).filter((role) => hero.roles.includes(role.value))
 
   return (
-    <Link
-      className="wiki-hero-card"
-      data-role={hero.roles[0]}
-      to={href(`/hero/${hero.code}`)}
-      state={{ from }}
-      aria-label={`${hero.name}${roles.length ? ` — ${roles.map((role) => role.label).join(", ")}` : ""}`}
-    >
-      <div className="wiki-hero-card-portrait" data-image-kind={imageUrl === portraitUrl ? "portrait" : "head"}>
-        {imageUrl ? (
-          <WikiImage
-            src={imageUrl}
-            alt=""
-            width="140"
-            height="160"
-            loading="lazy"
-            decoding="async"
-            onError={() => setFailedUrls((current) => [...current, imageUrl])}
-          />
-        ) : (
-          <span className="wiki-hero-card-placeholder" aria-hidden="true">
-            {hero.name.charAt(0)}
-          </span>
-        )}
-      </div>
-      <div className="wiki-hero-card-body">
-        <span className="wiki-hero-card-name">
-          {hero.name}
-          {hero.unscopedBaseline && (
-            <span className="block text-[10px] leading-4 font-normal text-[#b6ad9b]">
-              {wikiText(locale, "Chưa rõ mốc", "Undated baseline")}
+    <div className="relative">
+      <Link
+        className="wiki-hero-card"
+        data-role={hero.roles[0]}
+        to={href(`/hero/${hero.code}`)}
+        state={{ from }}
+        aria-label={`${hero.name}${roles.length ? ` — ${roles.map((role) => role.label).join(", ")}` : ""}`}
+      >
+        <div className="wiki-hero-card-portrait" data-image-kind={imageUrl === portraitUrl ? "portrait" : "head"}>
+          {imageUrl ? (
+            <WikiImage
+              src={imageUrl}
+              alt=""
+              width="140"
+              height="160"
+              loading="lazy"
+              decoding="async"
+              onError={() => setFailedUrls((current) => [...current, imageUrl])}
+            />
+          ) : (
+            <span className="wiki-hero-card-placeholder" aria-hidden="true">
+              {hero.name.charAt(0)}
             </span>
           )}
-        </span>
-        {!!roles.length && (
-          <span className="wiki-hero-card-roles" aria-hidden="true">
-            {roles.slice(0, 2).map((role) => (
-              <span key={role.value} title={role.label}>
-                <HeroGlyph name={role.glyph} />
-                <span className="wiki-hero-card-role-label">{role.label}</span>
+        </div>
+        <div className="wiki-hero-card-body">
+          <span className="wiki-hero-card-name">
+            {hero.name}
+            {hero.unscopedBaseline && (
+              <span className="block text-[10px] leading-4 font-normal text-[#b6ad9b]">
+                {wikiText(locale, "Chưa rõ mốc", "Undated baseline")}
               </span>
-            ))}
+            )}
           </span>
-        )}
-        <span className="wiki-hero-card-divider" aria-hidden="true">
-          <i />◇<i />
-        </span>
-        {roles[0] && <HeroGlyph name={roles[0].glyph} className="wiki-hero-card-watermark" />}
-      </div>
-    </Link>
+          {!!roles.length && (
+            <span className="wiki-hero-card-roles" aria-hidden="true">
+              {roles.slice(0, 2).map((role) => (
+                <span key={role.value} title={role.label}>
+                  <HeroGlyph name={role.glyph} />
+                  <span className="wiki-hero-card-role-label">{role.label}</span>
+                </span>
+              ))}
+            </span>
+          )}
+          <span className="wiki-hero-card-divider" aria-hidden="true">
+            <i />◇<i />
+          </span>
+          {roles[0] && <HeroGlyph name={roles[0].glyph} className="wiki-hero-card-watermark" />}
+        </div>
+      </Link>
+      {imageUrl && media?.currentVersion && (
+        <ImageCredit
+          className="top-2 right-2 bottom-auto"
+          sources={media.currentVersion.sources}
+          contactHref={`/contact?assetId=${media.assetId}&versionId=${media.currentVersion.versionId}`}
+        />
+      )}
+    </div>
   )
 }
 

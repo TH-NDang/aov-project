@@ -153,6 +153,7 @@ export interface Region {
   available: boolean
 }
 export interface Asset {
+  sources?: import("@aov/ui/lib/media-credit").MediaCredit[]
   id: string
   semanticType: string
   state: string
@@ -161,6 +162,8 @@ export interface Asset {
   currentUrl: string | null
 }
 export interface AssetProvenance {
+  ownerName?: string | null
+  contactUrl?: string | null
   id: string
   versionId: string | null
   type: string

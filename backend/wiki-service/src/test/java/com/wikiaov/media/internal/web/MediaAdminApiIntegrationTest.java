@@ -358,6 +358,69 @@ class MediaAdminApiIntegrationTest {
     }
 
     @Test
+    void missingCreditFilterUsesCurrentSourcesBeforePagingAndUpdatesAfterCorrection() throws Exception {
+        String pendingId = createAsset("PATCH_ART");
+        String missingId = createAsset("PATCH_ART");
+        uploadVersion(missingId, TestImages.png(24, 24), "image/png");
+        String otherId = createAsset("OTHER");
+        uploadVersion(otherId, TestImages.png(25, 25), "image/png");
+        String legacy = mvc.perform(post(BASE + "/assets").with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"semanticType":"PATCH_ART","source":{"type":"GAME_CLIENT","label":"Game capture","ownerName":"Garena"}}
+                        """))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String creditedId = JsonPath.read(legacy, "$.id");
+        String firstVersion = JsonPath.read(uploadVersion(creditedId, TestImages.png(26, 26), "image/png"),
+                "$.versionId");
+        String filter = BASE + "/assets?needsCredit=true&semanticType=PATCH_ART&size=100";
+
+        String initial = mvc.perform(get(filter).with(reader())).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        List<String> initialIds = JsonPath.read(initial, "$.items[*].id");
+        assertThat(initialIds).contains(missingId).doesNotContain(pendingId, creditedId, otherId);
+
+        String firstSources = BASE + "/assets/" + creditedId + "/versions/" + firstVersion + "/sources";
+        mvc.perform(post(firstSources).with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"label\":\"Original image\",\"url\":\"https://example.com/image.png\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(get(filter).with(reader())).andExpect(jsonPath("$.items[*].id", hasItem(creditedId)));
+
+        mvc.perform(post(firstSources).with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"type\":\"GAME_CLIENT\",\"label\":\"Verified game capture\",\"ownerName\":\"Garena\"}"))
+                .andExpect(status().isOk());
+        String corrected = mvc.perform(get(filter).with(reader())).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(JsonPath.<List<String>>read(corrected, "$.items[*].id")).doesNotContain(creditedId);
+
+        String replacement = JsonPath.read(uploadVersion(creditedId, TestImages.png(27, 27), "image/png"),
+                "$.versionId");
+        String beforeActivation = mvc.perform(get(filter).with(reader())).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        assertThat(JsonPath.<List<String>>read(beforeActivation, "$.items[*].id")).doesNotContain(creditedId);
+        String details = mvc.perform(get(BASE + "/assets/" + creditedId).with(reader()))
+                .andReturn().getResponse().getContentAsString();
+        Number lockVersion = JsonPath.read(details, "$.version");
+        activate(creditedId, replacement, lockVersion.longValue()).andExpect(status().isOk());
+
+        String filtered = mvc.perform(get(filter).with(reader())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].semanticType", everyItem(is("PATCH_ART"))))
+                .andReturn().getResponse().getContentAsString();
+        List<String> expectedIds = JsonPath.read(filtered, "$.items[*].id");
+        assertThat(expectedIds).contains(missingId, creditedId).doesNotContain(pendingId, otherId);
+        assertThat(JsonPath.<Number>read(filtered, "$.totalElements").intValue()).isEqualTo(expectedIds.size());
+        for (int page = 0; page < expectedIds.size(); page++) {
+            mvc.perform(get(BASE + "/assets").with(reader()).param("needsCredit", "true")
+                    .param("semanticType", "PATCH_ART").param("page", String.valueOf(page)).param("size", "1"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items[0].id").value(expectedIds.get(page)))
+                    .andExpect(jsonPath("$.totalElements").value(expectedIds.size()));
+        }
+        mvc.perform(get(BASE + "/assets?needsCredit=true&size=100").with(reader()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id", hasItem(otherId)));
+        mvc.perform(get(BASE + "/assets?needsCredit=invalid").with(reader())).andExpect(status().isBadRequest());
+    }
+
+    @Test
     void unknownIdsAreNotFound() throws Exception {
         String assetId = createAsset("OTHER");
 
@@ -370,6 +433,69 @@ class MediaAdminApiIntegrationTest {
         activate(assetId, UUID.randomUUID().toString(), 0)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("MEDIA_VERSION_NOT_FOUND"));
+    }
+
+    @Test
+    void sourceSurvivesUploadRetriesAndCanBeBackfilledWithoutReplacingBytes() throws Exception {
+        String assetId = createAsset("HERO_HEAD");
+        byte[] png = TestImages.png(30, 20);
+        String ticket = uploadRequest(assetId, """
+                {"fileName":"head.png","contentType":"image/png","sizeBytes":%d,
+                 "source":{"type":"GAME_CLIENT","label":"Game capture","ownerName":"Garena",
+                           "contactUrl":"https://example.com/contact","note":"private/path.png"}}
+                """.formatted(png.length)).andExpect(status().isCreated()).andReturn().getResponse()
+                .getContentAsString();
+        putBytes(ticket, png);
+        String uploadId = JsonPath.read(ticket, "$.uploadId");
+        String result = complete(uploadId).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String versionId = JsonPath.read(result, "$.versionId");
+        complete(uploadId).andExpect(status().isOk());
+        mvc.perform(get(BASE + "/assets/" + assetId).with(reader()))
+                .andExpect(jsonPath("$.provenance", hasSize(1)))
+                .andExpect(jsonPath("$.provenance[0].versionId").value(versionId))
+                .andExpect(jsonPath("$.provenance[0].ownerName").value("Garena"));
+        assertThat(mediaAssets.find(UUID.fromString(assetId)).orElseThrow().currentVersion().sources().getFirst()
+                .ownerName())
+                .isEqualTo("Garena");
+        mvc.perform(get(BASE + "/assets").param("semanticType", "HERO_HEAD").param("size", "100").with(reader()))
+                .andExpect(status().isOk())
+                .andExpect(
+                        jsonPath("$.items[?(@.id == '%s')].sources[*].ownerName".formatted(assetId), hasItem("Garena")))
+                .andExpect(jsonPath("$.items[?(@.id == '%s')].sources[*].note".formatted(assetId)).doesNotExist());
+
+        String sourcePath = BASE + "/assets/" + assetId + "/versions/" + versionId + "/sources";
+        mvc.perform(post(sourcePath).with(reader()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"label\":\"Correction\"}")).andExpect(status().isForbidden());
+        for (int i = 0; i < 2; i++) {
+            mvc.perform(post(sourcePath).with(editor()).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"label\":\"Additional evidence\",\"url\":\"https://example.com/original\"}"))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.provenance", hasSize(2)))
+                    .andExpect(jsonPath("$.currentVersionId").value(versionId));
+        }
+        mvc.perform(get(BASE + "/assets").param("semanticType", "HERO_HEAD").param("size", "100").with(reader()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.id == '%s')].sources[*].ownerName".formatted(assetId),
+                        hasItem(nullValue())));
+    }
+
+    @Test
+    void contactRequestsAreAcceptedPrivatelyAndOnlyMediaEditorsCanReadThem() throws Exception {
+        String result = mvc.perform(post("/api/wiki/v1/media/contact-requests").contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"name":"Image contributor","email":"contributor@example.com","topic":"SOURCE","message":"Please add the original source."}
+                        """))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.email").doesNotExist())
+                .andReturn().getResponse().getContentAsString();
+        String id = JsonPath.read(result, "$.id");
+        mvc.perform(get(BASE + "/contact-requests")).andExpect(status().isUnauthorized());
+        mvc.perform(get(BASE + "/contact-requests").with(reader())).andExpect(status().isForbidden());
+        mvc.perform(get(BASE + "/contact-requests").with(editor())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[*].id", hasItem(id)));
+        mvc.perform(post(BASE + "/contact-requests/" + id + "/resolve").with(editor()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("RESOLVED"));
+        mvc.perform(post("/api/wiki/v1/media/contact-requests").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"A\",\"email\":\"invalid\",\"topic\":\"SOURCE\",\"message\":\"hello\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     private String createAsset(String semanticType) throws Exception {

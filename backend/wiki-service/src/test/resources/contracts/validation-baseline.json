@@ -622,6 +622,7 @@
   "com.wikiaov.media.internal.web.MediaAdminController#listAssets": [
     [],
     [],
+    [],
     [
       "@Min(0)"
     ],
@@ -981,6 +982,32 @@
   ],
   "com.wikiaov.user.internal.web.UserController#complete": [
     [],
+    []
+  ],
+  "com.wikiaov.media.internal.web.MediaAdminController#addSource": [
+    [],
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaContactController#submit": [
+    [],
+    [
+      "@Valid"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaContactAdminController#list": [
+    [],
+    [
+      "@Min(0)"
+    ],
+    [
+      "@Max(100)",
+      "@Min(1)"
+    ]
+  ],
+  "com.wikiaov.media.internal.web.MediaContactAdminController#resolve": [
     []
   ]
 }

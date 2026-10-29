@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.provenance.persistence;
 
 import com.wikiaov.media.internal.provenance.persistence.entity.MediaProvenance;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.repository.Repository;
@@ -13,4 +14,6 @@ public interface MediaProvenanceRepository extends Repository<MediaProvenance, U
     MediaProvenance save(MediaProvenance provenance);
 
     List<MediaProvenance> findByAssetIdOrderByCreatedAtAsc(UUID assetId);
+
+    List<MediaProvenance> findByAssetIdInOrderByCreatedAtAscIdAsc(Collection<UUID> assetIds);
 }

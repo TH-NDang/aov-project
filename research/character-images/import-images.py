@@ -22,6 +22,8 @@ from urllib.request import HTTPHandler, HTTPRedirectHandler, Request, build_open
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 RESOURCES = ROOT / "resources" / "Lien-Quan-v3"
+sys.path.insert(0, str(ROOT / "research/media-sources"))
+from source_credits import source_credit, source_index
 STATE = HERE / ".local-state"
 NOTE = "Import character image candidates from resources"
 ROLES = {"HEAD": "head", "PORTRAIT": "portrait", "SPLASH": "cover"}
@@ -225,7 +227,7 @@ class Importer:
             for provenance in asset.get("provenance", []):
                 note = (provenance.get("note") or "").replace("\\", "/")
                 candidates = [source_path, *getattr(self, "path_aliases", {}).get(source_path, [])]
-                if note.removeprefix("/__resources/") in candidates:
+                if note.split("\n", 1)[0].removeprefix("/__resources/") in candidates:
                     return asset_id
         return None
 
@@ -261,9 +263,7 @@ class Importer:
                 self.reused += 1
             return existing
         if not entry:
-            created = self.api.call("/admin/media/assets", "POST", {"semanticType": semantic, "source": {
-                "label": "Ảnh từ tài nguyên Liên Quân", "url": None, "note": source_path,
-            }})
+            created = self.api.call("/admin/media/assets", "POST", {"semanticType": semantic, "source": source_credit(source_path, sha)})
             entry = {"assetId": created["id"], "sha256": sha, "complete": False}
             with self.state_lock:
                 self.state["assets"][key] = entry
@@ -280,7 +280,7 @@ class Importer:
             except RuntimeError:
                 pass
         ticket = self.api.call("/admin/media/assets/" + entry["assetId"] + "/version-uploads", "POST", {
-            "fileName": file.name, "contentType": content_type, "sizeBytes": len(data),
+            "source": source_credit(source_path, sha), "fileName": file.name, "contentType": content_type, "sizeBytes": len(data),
         })
         with self.state_lock:
             entry["uploadId"] = ticket["uploadId"]

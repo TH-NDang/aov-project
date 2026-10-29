@@ -8,11 +8,13 @@ export function WarehouseArtwork({
   kind,
   assetId,
   className = "",
+  showCredit = false,
 }: {
   entry: WarehouseEntry
   kind: WarehouseKind
   assetId?: string | null
   className?: string
+  showCredit?: boolean
 }) {
   const source = warehouseImage(entry, assetId === undefined ? entry.content.iconAssetId : assetId)
   const [failedSource, setFailedSource] = useState<string>()
@@ -21,6 +23,7 @@ export function WarehouseArtwork({
     <WikiImage
       className={`wiki-warehouse-art ${className}`}
       src={source}
+      media={showCredit ? entry.media?.[assetId ?? entry.content.iconAssetId ?? ""] : undefined}
       alt=""
       width="80"
       height="80"

@@ -11,6 +11,7 @@ import com.wikiaov.media.internal.web.request.CreateAssetRequest;
 import com.wikiaov.media.internal.web.request.DeprecateRequest;
 import com.wikiaov.media.internal.web.request.ExpectedVersionRequest;
 import com.wikiaov.media.internal.web.request.RegisterImportRequest;
+import com.wikiaov.media.internal.web.request.SourceRequest;
 import com.wikiaov.media.internal.web.request.UploadRequest;
 import com.wikiaov.media.internal.web.request.UsageScopeParameter;
 import com.wikiaov.platform.PageSlice;
@@ -36,6 +37,10 @@ import org.springframework.http.ResponseEntity;
 @Tag(name = "media admin")
 public interface MediaAdminApi {
 
+    @Operation(operationId = "mediaAdminApi_addSource", summary = "Add version attribution", security = @SecurityRequirement(name = "bearerAuth"), description = "Add attribution to the specified version. Requires catalog:read and media:write. Repeating identical attribution is a no-op.", responses = {
+            @ApiResponse(responseCode = "200", description = "Asset with recorded attribution.", useReturnTypeSchema = true)})
+    MediaAssetDetails addSource(UUID assetId, UUID versionId, @Valid SourceRequest source);
+
     @Operation(operationId = "mediaAdminApi_createAsset", summary = "Create asset - media admin", description = "Create asset for media admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
             @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
@@ -54,6 +59,7 @@ public interface MediaAdminApi {
     })
     PageSlice<MediaAssetSummary> listAssets(@Parameter(hidden = true) HttpServletRequest http,
             @Parameter(description = "Semantic type.") MediaSemanticType semanticType,
+            @Parameter(description = "Only uploaded images without a complete current source and owner credit. Defaults to false.") boolean needsCredit,
             @Parameter(description = "Zero-based page index.") @Min(0) int page,
             @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(100) int size);
 

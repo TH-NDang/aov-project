@@ -142,7 +142,7 @@ export async function uploadHeroImage(
   request: Request,
   file: File,
   semanticType: string,
-  source: { label: string; url: string | null; note: string | null },
+  source: import("@aov/ui/lib/media-credit").MediaSourceInput,
   fetcher: typeof fetch = fetch,
 ): Promise<string> {
   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || !file.size || file.size > 25 * 1024 * 1024)
@@ -150,6 +150,7 @@ export async function uploadHeroImage(
   const api = createPublishingApi(request)
   const asset = await api.send<{ id: string }>("/admin/media/assets", "POST", { semanticType, source })
   const ticket = await api.send<UploadTicket>(`/admin/media/assets/${asset.id}/version-uploads`, "POST", {
+    source,
     fileName: file.name,
     contentType: file.type,
     sizeBytes: file.size,
@@ -177,11 +178,13 @@ export async function upgradeHeroImage(
   assetId: string,
   file: File,
   fetcher: typeof fetch = fetch,
+  source?: import("@aov/ui/lib/media-credit").MediaSourceInput,
 ): Promise<void> {
   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type) || !file.size || file.size > 25 * 1024 * 1024)
     throw new Error("Chọn ảnh PNG, JPEG hoặc WebP tối đa 25 MB.")
   const api = createPublishingApi(request)
   const ticket = await api.send<UploadTicket>(`/admin/media/assets/${assetId}/version-uploads`, "POST", {
+    source,
     fileName: file.name,
     contentType: file.type,
     sizeBytes: file.size,

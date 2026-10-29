@@ -1,5 +1,6 @@
 package com.wikiaov.media;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -42,7 +43,16 @@ public record MediaAssetReference(
             String mimeType,
             int width,
             int height,
-            String url
+            String url,
+            List<MediaCredit> sources
     ) {
+
+        public CurrentVersion(UUID versionId, String mimeType, int width, int height, String url) {
+            this(versionId, mimeType, width, height, url, List.of());
+        }
+
+        public CurrentVersion {
+            sources = List.copyOf(sources);
+        }
     }
 }

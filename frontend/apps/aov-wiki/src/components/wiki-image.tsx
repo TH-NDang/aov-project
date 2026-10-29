@@ -1,7 +1,9 @@
 import { useCallback, useRef, useState, type ComponentPropsWithoutRef } from "react"
 import "./wiki-image.css"
+import { ImageCredit } from "@aov/ui/components/image-credit"
+import type { HeroMedia } from "../features/hero/hero-api"
 
-type WikiImageProps = ComponentPropsWithoutRef<"img">
+type WikiImageProps = ComponentPropsWithoutRef<"img"> & { media?: HeroMedia }
 type ImageState = "loading" | "ready" | "error"
 
 function ImageFrame({
@@ -12,6 +14,7 @@ function ImageFrame({
   onLoad,
   onError,
   alt,
+  media,
   ...imageProps
 }: WikiImageProps) {
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -66,6 +69,12 @@ function ImageFrame({
           onError?.(event)
         }}
       />
+      {media?.currentVersion && state === "ready" && (
+        <ImageCredit
+          sources={media.currentVersion.sources}
+          contactHref={`/contact?assetId=${encodeURIComponent(media.assetId)}&versionId=${encodeURIComponent(media.currentVersion.versionId)}`}
+        />
+      )}
     </span>
   )
 }

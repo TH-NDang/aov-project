@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:media-credits": "tsx --tsconfig tests/tsconfig.json --test --test-force-exit --test-concurrency=1 tests/media-source-credits.test.ts tests/hero-image-source.test.tsx tests/import-upload-session.test.ts tests/character-image-api.test.ts tests/infinite-scroll.test.tsx tests/image-management.test.tsx tests/image-management-bulk.test.tsx tests/bulk-media-sources.test.ts tests/media-cache.test.ts",
     "test:drafts": "tsx --tsconfig tests/tsconfig.json --test tests/draft-store.test.ts tests/draft-merge.test.ts tests/draft-form.test.tsx tests/hero-workspace.test.tsx",
     "test:rich-text": "tsx --tsconfig tests/tsconfig.json --test --test-concurrency=1 tests/entity-rich-text-core.test.ts tests/entity-rich-text-renderer.test.tsx tests/entity-rich-text-editor.test.tsx tests/entity-rich-text-catalog.test.tsx tests/entity-rich-text-storage.test.ts tests/media-cache.test.ts tests/reference-api.test.ts tests/entity-rich-text-skills.test.tsx tests/entity-reference-input.test.tsx tests/entity-reference-formatting.test.tsx tests/entity-reference-performance.test.tsx tests/entity-rich-text-typing.test.tsx tests/skill-references.test.tsx tests/skill-reference-authoring.test.tsx",
     "test:users": "tsx --test tests/avatar-upload.test.ts tests/profile-preferences.test.ts",

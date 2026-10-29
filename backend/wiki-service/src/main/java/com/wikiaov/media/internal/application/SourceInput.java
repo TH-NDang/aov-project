@@ -13,10 +13,18 @@ public record SourceInput(
         String label,
         @Nullable String url,
         @Nullable Instant observedAt,
-        @Nullable String note
+        @Nullable String note,
+        @Nullable String ownerName,
+        @Nullable String contactUrl
 ) {
 
+    public SourceInput(ProvenanceSourceType type, String label, @Nullable String url,
+            @Nullable Instant observedAt, @Nullable String note) {
+        this(type, label, url, observedAt, note, null, null);
+    }
+
     public MediaProvenance toProvenance(UUID assetId, @Nullable UUID versionId, Instant now) {
-        return MediaProvenance.record(UUID.randomUUID(), assetId, versionId, type, label, url, observedAt, note, now);
+        return MediaProvenance.record(UUID.randomUUID(), assetId, versionId, type, label, url, observedAt, note,
+                ownerName, contactUrl, now);
     }
 }

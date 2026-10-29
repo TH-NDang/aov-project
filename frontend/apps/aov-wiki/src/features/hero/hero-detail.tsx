@@ -7,6 +7,7 @@ import { heroAppearance } from "./hero-appearance"
 import { HeroQuickSwitch } from "./hero-quick-switch"
 import { HeroDetailLoading } from "./hero-loading"
 import { WikiImage } from "../../components/wiki-image"
+import { ImageCredit } from "@aov/ui/components/image-credit"
 import "./hero-detail.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 
@@ -33,6 +34,13 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
   return (
     <HeroDetailLayout title={hero.name} style={style}>
       <section className="wiki-hero-profile" data-artwork={kind} aria-labelledby="hero-profile-title">
+        {artwork && query.data?.media[kind]?.currentVersion && (
+          <ImageCredit
+            className="right-4 bottom-4"
+            sources={query.data.media[kind].currentVersion?.sources}
+            contactHref={`/contact?assetId=${query.data.media[kind].assetId}&versionId=${query.data.media[kind].currentVersion?.versionId}`}
+          />
+        )}
         {splash && (
           <div
             className="wiki-hero-profile-atmosphere"

@@ -47,6 +47,9 @@ function SkinArtwork({ skin, preview = false }: { skin: SkinEntry; preview?: boo
           : `wiki-skin-art wiki-skin-art-${artwork.kind}`
       }
       src={artwork.url}
+      media={
+        preview ? (artwork.kind === "art" ? skin.art : artwork.kind === "head" ? skin.head : skin.portrait) : undefined
+      }
       alt={preview ? `${skin.name} — ${skin.heroName}` : ""}
       width="278"
       height="436"

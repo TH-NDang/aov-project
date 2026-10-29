@@ -129,6 +129,36 @@ test("lost complete response recovers without another byte upload", async () => 
   assert.equal(f.jobs.length, 1)
 })
 
+test("manifest credits persist in checkpoints and accompany the version upload after reopening", async () => {
+  const f = fixture()
+  f.files.set(
+    "data/phu-tro.json",
+    new File(
+      [JSON.stringify({ items: [{ file: "a.png", sourceType: "provided-zip", collectedOn: null }] })],
+      "phu-tro.json",
+    ),
+  )
+  f.entries[0].imageUrls = { head: "a.png" }
+  const session = await createUploadSession(f.entries, f.files, "", "heroes.json")
+  const credit = Object.values(session.state.images)[0].credit!
+  assert.equal(credit.ownerName, "Garena / Liên Quân Mobile")
+  assert.equal(credit.type, "GAME_CLIENT")
+  f.loseCompletion()
+  const sent: unknown[] = []
+  const request: Request = async <T>(path: string, init?: RequestInit) => {
+    if (path.endsWith("/assets") || path.endsWith("/version-uploads")) sent.push(JSON.parse(String(init?.body)).source)
+    return f.request<T>(path, init)
+  }
+  await assert.rejects(
+    resumeUploadSession(request, session, f.files, () => {}, f.fetcher),
+    /Lost completion/,
+  )
+  assert.deepEqual(Object.values(f.saved().state.images)[0].credit, credit)
+  await resumeUploadSession(request, f.saved(), new Map(), () => {}, f.fetcher)
+  assert.deepEqual(sent, [credit, credit])
+  assert.equal(f.uploads(), 1)
+})
+
 test("changed replacement files are rejected and job retry retains the idempotency key", async () => {
   const f = fixture()
   const session = await createUploadSession(f.entries, f.files, "", "heroes.json")

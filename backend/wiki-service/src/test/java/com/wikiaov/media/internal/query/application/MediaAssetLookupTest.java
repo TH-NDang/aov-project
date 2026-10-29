@@ -13,6 +13,7 @@ import com.wikiaov.media.internal.asset.persistence.entity.MediaAssetVersion;
 import com.wikiaov.media.internal.domain.model.ActorRef;
 import com.wikiaov.media.internal.ingestion.domain.image.ImageFormat;
 import com.wikiaov.media.internal.ingestion.domain.image.ImageInspection;
+import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +29,8 @@ class MediaAssetLookupTest {
     private final MediaAssetRepository assets = mock(MediaAssetRepository.class);
     private final MediaAssetVersionRepository versions = mock(MediaAssetVersionRepository.class);
     private final MediaUrls urls = mock(MediaUrls.class);
-    private final MediaAssetLookup lookup = new MediaAssetLookup(assets, versions, urls);
+    private final MediaProvenanceRepository provenance = mock(MediaProvenanceRepository.class);
+    private final MediaAssetLookup lookup = new MediaAssetLookup(assets, versions, urls, provenance);
 
     @Test
     void batchesDistinctAssetsAndTheirCurrentVersionsWithoutIndividualQueries() {
