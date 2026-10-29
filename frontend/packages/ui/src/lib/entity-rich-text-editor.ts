@@ -17,7 +17,7 @@ export type EntityReferenceSearch = (request: {
 export type TextSelection = { start: number; end: number }
 export type EditorSnapshot = TextSelection & { value: string }
 const tag =
-  /<\/?(?:b|i|noauto|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|skill|item|enchantment|arcana|spell|term):[a-zA-Z0-9._-]+)?)>/gi
+  /<\/?(?:b|i|noauto|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|skill|item|enchantment|arcana|spell|term|team|player|country):[a-zA-Z0-9._-]+)?)>/gi
 
 export function safeSelection(value: string, selection: TextSelection) {
   const { start, end } = selection
@@ -45,6 +45,55 @@ export function mentionAt(value: string, selection: TextSelection) {
   if (!match) return null
   const start = selection.start - match[1]!.length - 1
   return { start, end: selection.start, query: match[1]! }
+}
+
+export type ReferenceSuggestion = TextSelection & { query: string; explicit: boolean }
+
+function plainReferenceCandidates(value: string, selection: TextSelection): ReferenceSuggestion[] {
+  if (selection.start !== selection.end || !safeSelection(value, selection)) return []
+  if (/[\p{L}\p{M}\p{N}_-]/u.test(value[selection.end] ?? "")) return []
+  const before = value.slice(0, selection.start)
+  const context = before.toLowerCase()
+  if (context.lastIndexOf("<noauto>") > context.lastIndexOf("</noauto>")) return []
+  const tail = before.match(/(?:^|[\s([{>])([\p{L}\p{M}\p{N}_-]+(?:[ \t]+[\p{L}\p{M}\p{N}_-]+){0,5})$/u)?.[1]
+  if (!tail) return []
+  const start = selection.start - tail.length
+  return [...tail.matchAll(/[\p{L}\p{M}\p{N}_-]+/gu)]
+    .map((word) => ({
+      start: start + word.index,
+      end: selection.start,
+      query: tail.slice(word.index),
+      explicit: false,
+    }))
+    .filter((candidate) => candidate.query.length <= 60 && safeSelection(value, candidate))
+}
+
+/** Only an explicit mention opens the picker; ordinary text is recognized passively. */
+export function referenceSuggestionAt(
+  value: string,
+  selection: TextSelection,
+  _index: ReferenceSearchIndex,
+): ReferenceSuggestion | null {
+  const mention = mentionAt(value, selection)
+  return mention ? { ...mention, explicit: true } : null
+}
+
+export function referenceReplacementRange(
+  value: string,
+  suggestion: ReferenceSuggestion,
+  entity: EntityReference,
+  locale: string,
+  fallbackLocale: string,
+): TextSelection {
+  if (suggestion.explicit) return suggestion
+  const translation = referenceTranslation(entity, locale, fallbackLocale)
+  const names = [translation?.name, ...(translation?.aliases ?? [])]
+    .filter((name): name is string => !!name)
+    .map(foldEntitySearch)
+  const phrase = plainReferenceCandidates(value, { start: suggestion.end, end: suggestion.end }).find((candidate) =>
+    names.some((name) => name.startsWith(foldEntitySearch(candidate.query))),
+  )
+  return phrase ?? suggestion
 }
 
 export function wrapSelection(
@@ -108,25 +157,45 @@ export function referenceSearchGroup(query: string) {
     ["phụ trợ", "spell"],
     ["bổ trợ", "spell"],
     ["tướng", "hero"],
+    ["đội tuyển", "team"],
+    ["đội", "team"],
+    ["tuyển thủ", "player"],
+    ["quốc gia / khu vực", "country"],
+    ["quốc gia", "country"],
+    ["khu vực", "country"],
   ] as const
   const group = groups.find(([name]) => source === fold(name) || source.startsWith(fold(name) + " "))
   const needle = group ? source.slice(fold(group[0]).length).trim() : source
   return { kind: group?.[1], needle }
 }
 
-export function referenceChoices(entities: EntityReference[], locale: string, fallbackLocale: string, query: string) {
-  const fold = (text: string) => foldEntitySearch(text).trim()
-  const { kind, needle } = referenceSearchGroup(query)
+export function createReferenceSearchIndex(entities: EntityReference[], locale: string, fallbackLocale: string) {
   return entities
-    .slice(0, 2500)
+    .slice(0, 4000)
     .flatMap((entity) => {
-      if (kind && entity.kind !== kind) return []
       if (entity.kind === "skill" && !validSkillReference(entity)) return []
       const translation = referenceTranslation(entity, locale, fallbackLocale)
       if (!translation || !translation.name.trim()) return []
-      if (needle && ![translation.name, ...translation.aliases, entity.id].some((text) => fold(text).includes(needle)))
-        return []
-      return [{ entity, translation }]
+      return [
+        {
+          entity,
+          translation,
+          search: [translation.name, ...translation.aliases, entity.id].map((text) => foldEntitySearch(text).trim()),
+        },
+      ]
     })
     .sort((a, b) => a.translation.name.localeCompare(b.translation.name))
+}
+
+export type ReferenceSearchIndex = ReturnType<typeof createReferenceSearchIndex>
+
+export function searchReferenceChoices(index: ReferenceSearchIndex, query: string) {
+  const { kind, needle } = referenceSearchGroup(query)
+  return index.filter(
+    (entry) => (!kind || entry.entity.kind === kind) && (!needle || entry.search.some((text) => text.includes(needle))),
+  )
+}
+
+export function referenceChoices(entities: EntityReference[], locale: string, fallbackLocale: string, query: string) {
+  return searchReferenceChoices(createReferenceSearchIndex(entities, locale, fallbackLocale), query)
 }

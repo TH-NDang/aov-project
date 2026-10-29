@@ -1,7 +1,13 @@
 import * as React from "react"
 import { createPortal } from "react-dom"
 import { ArrowLeftRight } from "lucide-react"
-import { entityKindLabels, referenceTranslation, type EntityReference } from "../lib/entity-rich-text"
+import {
+  defaultEntityColor,
+  createEntityIndex,
+  entityKindLabels,
+  referenceTranslation,
+  type EntityReference,
+} from "../lib/entity-rich-text"
 import type { EditorSnapshot, TextSelection } from "../lib/entity-rich-text-editor"
 import {
   getReferenceInputSelection,
@@ -15,6 +21,7 @@ import {
   type ReferenceInputPart,
   type ReferenceInputNode,
 } from "../lib/reference-input-dom"
+import { paintPassiveReferences } from "../lib/reference-input-recognition"
 import { EntityReferenceArtwork, skillReferenceContext, type EntityIconResolver } from "./entity-rich-text"
 
 export type EntityReferenceInputHandle = {
@@ -35,6 +42,7 @@ export interface EntityReferenceInputProps extends Omit<
   fallbackLocale?: string
   resolveIcon?: EntityIconResolver
   disabled?: boolean
+  autoRecognize?: boolean
   required?: boolean
   maxLength?: number
   onChange(snapshot: EditorSnapshot): boolean | void
@@ -72,6 +80,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
       fallbackLocale = "vi-VN",
       resolveIcon,
       disabled = false,
+      autoRecognize = true,
       required = false,
       maxLength = 100000,
       onChange,
@@ -86,6 +95,29 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     forwarded,
   ) {
     const element = React.useRef<HTMLDivElement>(null)
+    const highlightKey = React.useId().replace(/[^a-zA-Z0-9_-]/g, "")
+    const recognitionIndex = React.useMemo(
+      () => createEntityIndex(entities, locale, fallbackLocale),
+      [entities, locale, fallbackLocale],
+    )
+    const clearHighlights = React.useRef(() => {})
+    const [recognitionRevision, refreshRecognition] = React.useReducer((revision: number) => revision + 1, 0)
+    React.useEffect(() => {
+      const root = element.current
+      if (!root || !autoRecognize || disabled) {
+        clearHighlights.current()
+        clearHighlights.current = () => {}
+        return
+      }
+      const timer = setTimeout(() => {
+        if (!composing.current) {
+          clearHighlights.current()
+          clearHighlights.current = paintPassiveReferences(root, recognitionIndex, highlightKey)
+        }
+      }, 350)
+      return () => clearTimeout(timer)
+    }, [value, recognitionIndex, autoRecognize, disabled, highlightKey, recognitionRevision])
+    React.useEffect(() => () => clearHighlights.current(), [])
     const composing = React.useRef(false)
     const remembered = React.useRef<TextSelection>({ start: 0, end: 0 })
     const reported = React.useRef<TextSelection>({ start: 0, end: 0 })
@@ -412,7 +444,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
       () =>
         hosts.map(({ element: host, part }, index) => {
           const known = catalog.get(`${part.kind}:${part.id}`)
-          const entity = known ?? {
+          const entity: EntityReference = known ?? {
             id: part.id,
             kind: part.kind,
             translations: [{ locale, name: part.label, aliases: [], description: "" }],
@@ -422,6 +454,11 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
           return createPortal(
             <span
               className="inline-flex min-w-0 max-w-full items-center gap-1.5"
+              style={{
+                color: host.closest('[data-format-open^="<color="]')
+                  ? undefined
+                  : (entity.display?.color ?? defaultEntityColor(entity)),
+              }}
               aria-label={`${entityKindLabels[part.kind]}: ${skill ? `${skill.ownerName} · ` : ""}${name}${skill?.detail ? ` · ${skill.detail}` : ""}`}
             >
               {part.kind !== "term" && (
@@ -492,6 +529,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
           }}
           onCompositionEnd={(event) => {
             composing.current = false
+            refreshRecognition()
             const snapshot = readReferenceInputSnapshot(event.currentTarget)
             if (snapshot.value.length > maxLength && snapshot.value.length > current.current.length) {
               callbacks.current.onCompositionEnd?.({ value: current.current, ...remembered.current })

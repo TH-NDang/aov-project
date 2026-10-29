@@ -5,9 +5,50 @@ export const entityKindLabels = {
   enchantment: "Phù hiệu",
   arcana: "Bảng ngọc",
   spell: "Phụ trợ",
+  team: "Đội tuyển",
+  player: "Tuyển thủ",
+  country: "Quốc gia / khu vực",
   term: "Thuật ngữ",
 } as const
 export type EntityKind = keyof typeof entityKindLabels
+
+export function managedCommunityReference(kind: EntityKind) {
+  return kind === "team" || kind === "player" || kind === "country"
+}
+
+const termColors: Readonly<Record<string, readonly [string, string]>> = {
+  "sat-thuong-phep": ["#7e22ce", "#d8b4fe"],
+  "cong-phep": ["#7e22ce", "#d8b4fe"],
+  "giap-phep": ["#7e22ce", "#d8b4fe"],
+  "sat-thuong-vat-ly": ["#c2410c", "#fdba74"],
+  "cong-vat-ly": ["#c2410c", "#fdba74"],
+  "sat-thuong-chuan": ["#854d0e", "#fde68a"],
+  "hoi-mau": ["#15803d", "#86efac"],
+  "la-chan": ["#0369a1", "#7dd3fc"],
+  giap: ["#0e7490", "#67e8f9"],
+  "toc-chay": ["#0f766e", "#5eead4"],
+  "toc-danh": ["#b45309", "#fcd34d"],
+  "chi-mang": ["#be123c", "#fda4af"],
+  "lam-cham": ["#1d4ed8", "#93c5fd"],
+  choang: ["#1d4ed8", "#93c5fd"],
+  "giam-hoi-chieu": ["#4338ca", "#a5b4fc"],
+  "noi-tai": ["#57534e", "#d6d3d1"],
+}
+
+/** Semantic defaults adapt to the active color scheme; saved display colors remain authoritative. */
+export function defaultEntityColor(
+  entity: Pick<EntityReference, "kind" | "id"> & Partial<Pick<EntityReference, "translations">>,
+) {
+  if (entity.kind !== "term") return undefined
+  const semantic = Object.hasOwn(termColors, entity.id)
+    ? entity.id
+    : entity.translations
+        ?.flatMap((entry) => [entry.name, ...entry.aliases])
+        .map((label) => foldEntitySearch(label).replace(/\s+/g, "-").trim())
+        .find((label) => Object.hasOwn(termColors, label))
+  const colors = semantic ? termColors[semantic] : undefined
+  return colors ? `light-dark(${colors[0]}, ${colors[1]})` : undefined
+}
 
 export type EntityTranslation = { locale: string; name: string; aliases: string[]; description: string }
 export type SkillReferenceOwner = {
@@ -35,6 +76,7 @@ export type EntityReference = {
   formKey?: string | null
   owner?: SkillReferenceOwner
   iconSource?: "REVISION" | "LIBRARY"
+  unresolved?: boolean
 }
 
 export type RichTextSettings = {
@@ -208,6 +250,7 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
     }
     const kind = entity.kind as EntityKind
     if (kind === "skill") throw new Error("Skill references are managed by the server and cannot be saved in settings")
+    if (managedCommunityReference(kind)) throw new Error("Managed references cannot be saved in Wiki settings")
     const key = `${kind}:${id}`
     if (seen.has(key)) throw new Error("Duplicate entity identity")
     seen.add(key)
@@ -252,6 +295,8 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
 }
 
 export function resolveEntityRoute(entity: EntityReference, context: "admin" | "wiki", language?: string) {
+  if (entity.unresolved) return undefined
+  if (context === "wiki" && managedCommunityReference(entity.kind)) return undefined
   const custom = safeLinkUrl(entity.destinations?.[context])
   if (entity.kind === "skill" && !validSkillReference(entity)) return undefined
   if (custom?.startsWith("/")) return custom
@@ -270,6 +315,8 @@ export function resolveEntityRoute(entity: EntityReference, context: "admin" | "
     if (entity.kind === "enchantment") return `/enchantments?item=${id}`
     if (entity.kind === "arcana") return `/arcana?item=${id}`
     if (entity.kind === "spell") return `/spells?item=${id}`
+    if (entity.kind === "team") return `/tournaments?tab=teams&team=${id}`
+    if (entity.kind === "player") return `/tournaments?tab=players&player=${id}`
     if (entity.kind === "term") return `/terminology?term=${id}`
     return undefined
   }
@@ -296,6 +343,8 @@ export function createEntityIndex(
   const accentInsensitive = options.accentInsensitive === true
   let catalogEntries = 0
   let skillEntries = 0
+  let communityEntries = 0
+  let countryEntries = 0
   // Explicit skill lookups have a separate budget so a full catalog does not hide saved references.
   for (const entry of Array.isArray(entities) ? entities : []) {
     if (
@@ -309,6 +358,10 @@ export function createEntityIndex(
     if (entry.kind === "skill") {
       if (skillEntries >= 500 || !validSkillReference(entry)) continue
       skillEntries++
+    } else if (entry.kind === "country") {
+      if (countryEntries++ >= 64) continue
+    } else if (managedCommunityReference(entry.kind)) {
+      if (communityEntries++ >= 1000) continue
     } else if (catalogEntries++ >= 2000) continue
     const translations = entry.translations
       .slice(0, 30)
@@ -378,7 +431,7 @@ export function parseRichText(
   const recognized = new Set<string>()
   const tokens = Array.from(
     source.matchAll(
-      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
+      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|team|player|country|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
     ),
   )
   const pairs = new Map<number, number>()
@@ -459,6 +512,29 @@ export function parseRichText(
         const match = index.byId.get(key)
         if (match && references < maxReferences) {
           nodes.push({ type: "reference", ...match, label: source.slice(contentStart, close.index), manual: true })
+          references++
+        } else if (references < maxReferences && /^(?:team|player):/.test(key)) {
+          const [kind, id] = key.split(":") as ["team" | "player", string]
+          const label = source.slice(contentStart, close.index)
+          nodes.push({
+            type: "reference",
+            entity: {
+              id,
+              kind,
+              unresolved: true,
+              translations: [
+                {
+                  locale: "vi-VN",
+                  name: label,
+                  aliases: [],
+                  description: "Chưa có thông tin công khai cho tham chiếu này.",
+                },
+              ],
+            },
+            label,
+            actualLocale: "vi-VN",
+            manual: true,
+          })
           references++
         } else append(nodes, source.slice(token.index, end))
       } else if (tag === "<noauto>") nodes.push(...parse(contentStart, close.index, position + 1, depth + 1, false))
