@@ -31,7 +31,7 @@ class HeroPublicReferencesTest {
         when(contexts.rulesetVariants(rulesetId))
                 .thenReturn(List.of(new PatchVariantReference(patchId, context.patchId(),
                         rulesetId, null, 1, true)));
-        when(query.published(context, Map.of(patchId, 1L), at)).thenReturn(List.of(
+        when(query.published(context, Map.of(patchId, 1L), at, true)).thenReturn(List.of(
                 new Row(id, UUID.randomUUID(), assetId, "vi-VN", "Airi", "Summary")));
         when(media.findAll(Set.of(assetId))).thenReturn(Map.of(assetId, head));
         var provider = new HeroPublicReferences(query, contexts, media, Clock.fixed(at, ZoneOffset.UTC));

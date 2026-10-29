@@ -4,6 +4,7 @@ import com.wikiaov.patch.GameplayContext;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.terminology.PublicReferenceProvider;
 import com.wikiaov.terminology.internal.application.response.ReferenceSettingsView;
+import com.wikiaov.terminology.internal.domain.HeroReferenceAliases;
 import com.wikiaov.terminology.internal.domain.ReferenceSettings;
 import com.wikiaov.terminology.internal.domain.ReferenceSettings.*;
 import com.wikiaov.terminology.internal.settings.application.ReferenceCatalog;
@@ -62,8 +63,13 @@ public class PublicReferenceCatalogLoader {
             if (original == null || custom.kind().equals("term"))
                 continue;
             var copies = new LinkedHashMap<String, Translation>();
-            original.translations().forEach(t -> copies.put(t.locale().toLowerCase(Locale.ROOT), t));
-            custom.translations().forEach(t -> copies.put(t.locale().toLowerCase(Locale.ROOT), t));
+            if (original.kind().equals("hero")) {
+                HeroReferenceAliases.overlay(original.translations(), custom.translations())
+                        .forEach(t -> copies.put(t.locale().toLowerCase(Locale.ROOT), t));
+            } else {
+                original.translations().forEach(t -> copies.put(t.locale().toLowerCase(Locale.ROOT), t));
+                custom.translations().forEach(t -> copies.put(t.locale().toLowerCase(Locale.ROOT), t));
+            }
             entries.put(key, new Entry(custom.id(), custom.kind(), List.copyOf(copies.values()),
                     custom.icon() == null ? original.icon() : custom.icon(),
                     custom.autoMatch() == null ? original.autoMatch() : custom.autoMatch(), custom.display(),

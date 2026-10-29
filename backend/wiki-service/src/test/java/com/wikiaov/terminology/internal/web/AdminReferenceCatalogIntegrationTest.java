@@ -135,7 +135,7 @@ class AdminReferenceCatalogIntegrationTest {
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.rulesetId").value(ruleset.toString())).andReturn().getResponse()
                 .getContentAsString();
-        assertThat(statistics().getPrepareStatementCount()).isEqualTo(7);
+        assertThat(statistics().getPrepareStatementCount()).isEqualTo(8);
         assertThat(statistics().getEntityLoadCount()).isZero();
         assertThat(response).contains("Hero draft", "Current item", hero.toString(), item.toString(), head.toString())
                 .doesNotContain("Hero discarded", "Hero other ruleset", "OLD", "gameplay", "skills", "private-note");
@@ -144,6 +144,36 @@ class AdminReferenceCatalogIntegrationTest {
                 .findFirst().orElseThrow();
         assertThat(heroEntry.get("translations").size()).isEqualTo(2);
         assertThat(heroEntry.get("destinations").get("admin").asString()).startsWith("/hero/" + hero + "?revision=");
+    }
+
+    @Test
+    void heroAliasesAreReadWithOneProjectionWithoutReplacingCanonicalTextOrAddingLocales() throws Exception {
+        UUID entry = UUID.randomUUID();
+        sql.update("insert into terminology.entry(id,reference_key,kind,display_order) values (?,?,'hero',0)",
+                entry, hero.toString());
+        sql.update("insert into terminology.translation(id,entry_id,locale,name,description,aliases)"
+                + " values (?,?,'VI-vn','Outdated hero name','Outdated description',cast(? as jsonb))",
+                UUID.randomUUID(), entry, "[\" Draft alias \",\"draft alias\"]");
+        sql.update("insert into terminology.translation(id,entry_id,locale,name,description,aliases)"
+                + " values (?,?,'th-TH','Private translation','Private description',cast(? as jsonb))",
+                UUID.randomUUID(), entry, "[\"Hidden alias\"]");
+
+        statistics().clear();
+        var response = mvc.perform(get("/api/wiki/v1/admin/reference-catalog?rulesetId=" + ruleset)
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(statistics().getPrepareStatementCount()).isEqualTo(8);
+        assertThat(statistics().getEntityLoadCount()).isZero();
+        assertThat(response).contains("Hero draft", "Draft alias")
+                .doesNotContain("Outdated hero name", "Outdated description", "Private translation", "Hidden alias");
+        var candidate = json.readTree(response).get("items").valueStream()
+                .filter(row -> row.get("id").asString().equals(hero.toString())).findFirst().orElseThrow();
+        assertThat(candidate.get("translations").size()).isEqualTo(2);
+        var vietnamese = candidate.get("translations").valueStream()
+                .filter(row -> row.get("locale").asString().equals("vi-VN")).findFirst().orElseThrow();
+        assertThat(vietnamese.get("name").asString()).isEqualTo("Hero draft");
+        assertThat(vietnamese.get("aliases").size()).isEqualTo(1);
+        assertThat(vietnamese.get("aliases").get(0).asString()).isEqualTo("Draft alias");
     }
 
     @Test
