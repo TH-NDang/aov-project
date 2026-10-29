@@ -33,7 +33,7 @@ const stateNames = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCA
 interface ChangeSet extends HeroAssessment {
   heroId: string
   fromHeroRevisionId: string | null
-  toHeroRevisionId: string
+  toHeroRevisionId: string | null
   changes: CuratedHeroChange[]
 }
 

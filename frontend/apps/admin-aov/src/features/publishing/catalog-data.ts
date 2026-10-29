@@ -70,7 +70,12 @@ export function heroCatalogRows(
       scoped && !includeUnchanged
         ? [...new Set(changes.map((change) => change.rulesetId))].flatMap((rule) => {
             const latest = changes.find((change) => change.rulesetId === rule)!
-            const revision = hero.revisions.find((item) => item.id === latest.toHeroRevisionId)
+            // A patch-notes change has no target snapshot; the hero is shown with its latest kept revision.
+            const revision =
+              hero.revisions.find((item) => item.id === latest.toHeroRevisionId) ??
+              hero.revisions
+                .filter((item) => item.rulesetId === rule && item.state !== "DISCARDED")
+                .sort((a, b) => b.revisionNo - a.revisionNo)[0]
             return revision ? [revision] : []
           })
         : selectCatalogRevisions(hero.revisions, data, filter, ruleset)

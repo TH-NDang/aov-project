@@ -9,6 +9,7 @@ import {
   FileUp,
   GitCompareArrows,
   Languages,
+  Layers,
   MoreHorizontal,
   Plus,
   Save,
@@ -40,6 +41,7 @@ import { HeroQuickSwitcher } from "./hero-quick-switcher"
 import { selectCatalogRevisions } from "./catalog-data"
 import { HeroCatalog } from "./hero-catalog"
 import { HeroRevisionHistory } from "./hero-revision-history"
+import { HeroPatchTimeline } from "./hero-patch-view"
 import { HeroTranslationStatus } from "./hero-translation-status"
 import { TranslationEditor, type TranslatableSection } from "./translation-editor"
 import { DataLanguage } from "./data-language"
@@ -443,6 +445,7 @@ export function PublishingWorkspace({
                 ["overview", BookOpen, "Thông tin tướng"],
                 ["translations", Languages, "Bản dịch"],
                 ["history", GitCompareArrows, "Lịch sử & so sánh"],
+                ["patch", Layers, "Theo patch"],
               ] as const
             ).map(([key, Icon, label]) => (
               <Button
@@ -593,6 +596,15 @@ export function PublishingWorkspace({
                     content={preview.content}
                     disabled={busy}
                     onOpenRevision={(next) => void run(() => openRevision(next), "Đã mở phiên bản.")}
+                  />
+                )}
+                {view === "patch" && (
+                  <HeroPatchTimeline
+                    heroId={heroId}
+                    revision={revision}
+                    content={preview.content}
+                    locale={locale}
+                    canRecord={capabilities.includes("patch:write")}
                   />
                 )}
                 {(editing || translating) && (
