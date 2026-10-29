@@ -16,7 +16,7 @@ export type ReferenceInputNode =
     }
 
 const reference =
-  /<ref=(hero|skill|item|enchantment|arcana|spell|term):([a-zA-Z0-9][a-zA-Z0-9._-]{0,127})>([^<>]+)<\/ref>/g
+  /<ref=(hero|skill|item|enchantment|arcana|spell|team|player|country|term):([a-zA-Z0-9][a-zA-Z0-9._-]{0,127})>([^<>]+)<\/ref>/g
 const skillId = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}\.[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 const formatting = /<(b|i|noauto)>|<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>|<\/(b|i|color|noauto)>/gi

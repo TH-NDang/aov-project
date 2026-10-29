@@ -10,8 +10,10 @@ import {
 } from "../lib/entity-rich-text"
 import {
   insertReference,
-  mentionAt,
-  referenceChoices,
+  createReferenceSearchIndex,
+  referenceSuggestionAt,
+  referenceReplacementRange,
+  searchReferenceChoices,
   referenceSearchGroup,
   type EditorSnapshot,
   type TextSelection,
@@ -66,8 +68,8 @@ function useReferenceSearch(
     loading: false,
     error: false,
   })
-  const allowed =
-    open && !!searchReferences && (!referenceSearchGroup(query).kind || referenceSearchGroup(query).kind === "skill")
+  const group = referenceSearchGroup(query).kind
+  const allowed = open && !!searchReferences && (!group || ["skill", "team", "player"].includes(group))
   const load = React.useCallback(
     async (page: number, run: number) => {
       if (!searchReferences || pending.current || run !== generation.current) return
@@ -244,11 +246,6 @@ export function EntityRichTextEditor({
       restore(history.current[next]!)
     }
   }
-  const mention = !isComposing && !dismissed && !picker ? mentionAt(value, caret) : null
-  const searchQuery = picker ? query : (mention?.query ?? "")
-  const open = (!!mention || picker) && !isComposing && !disabled
-  React.useEffect(() => setVisibleSuggestions(suggestionBatchSize), [open, searchQuery])
-  const remote = useReferenceSearch(searchReferences, searchQuery, locale, open)
   const resolvedEntities = React.useMemo(
     () => [
       ...new Map(
@@ -257,11 +254,22 @@ export function EntityRichTextEditor({
     ],
     [selectedReferences, entities],
   )
+  const searchIndex = React.useMemo(
+    () => createReferenceSearchIndex(resolvedEntities, locale, fallbackLocale),
+    [resolvedEntities, locale, fallbackLocale],
+  )
+  const mention = !isComposing && !dismissed && !picker ? referenceSuggestionAt(value, caret, searchIndex) : null
+  const searchQuery = picker ? query : (mention?.query ?? "")
+  const open = (!!mention || picker) && !isComposing && !disabled
+  React.useEffect(() => setVisibleSuggestions(suggestionBatchSize), [open, searchQuery])
+  const remote = useReferenceSearch(searchReferences, searchQuery, locale, open)
   const options = React.useMemo(() => {
     if (!open) return []
-    const local = referenceChoices(resolvedEntities, locale, fallbackLocale, searchQuery)
+    const local = searchReferenceChoices(searchIndex, searchQuery)
     const group = referenceSearchGroup(searchQuery).kind
-    const choices = new Map(local.map((choice) => [`${choice.entity.kind}:${choice.entity.id}`, choice]))
+    const choices = new Map(
+      local.map(({ entity, translation }) => [`${entity.kind}:${entity.id}`, { entity, translation }]),
+    )
     for (const entity of remote.items) {
       if (
         !entity ||
@@ -275,7 +283,8 @@ export function EntityRichTextEditor({
       if (translation?.name.trim()) choices.set(`${entity.kind}:${entity.id}`, { entity, translation })
     }
     return [...choices.values()]
-  }, [open, resolvedEntities, locale, fallbackLocale, searchQuery, remote.items])
+  }, [open, searchIndex, locale, fallbackLocale, searchQuery, remote.items])
+  const popupOpen = open && (picker || mention?.explicit || options.length > 0)
   const renderedSuggestions = Math.min(options.length, Math.max(visibleSuggestions, active + 1))
   const loadMoreSuggestions = () => {
     if (renderedSuggestions < options.length) setVisibleSuggestions(renderedSuggestions + suggestionBatchSize)
@@ -328,13 +337,15 @@ export function EntityRichTextEditor({
     const choice = options[index]
     if (!choice) return
     let range = selection.current
-    if (mention) range = { start: mention.start, end: mention.end }
+    if (mention) range = referenceReplacementRange(current.current, mention, choice.entity, locale, fallbackLocale)
     const next = insertReference(current.current, range, choice.entity, choice.translation.name, !mention)
     if (next) {
-      if (choice.entity.kind === "skill")
-        setSelectedReferences((previous) =>
-          [...previous.filter((entity) => entity.id !== choice.entity.id), choice.entity].slice(-500),
-        )
+      setSelectedReferences((previous) =>
+        [
+          ...previous.filter((entity) => entity.kind !== choice.entity.kind || entity.id !== choice.entity.id),
+          choice.entity,
+        ].slice(-500),
+      )
       commit(next)
       setPicker(false)
       setDismissed(true)
@@ -349,7 +360,7 @@ export function EntityRichTextEditor({
     } else setNotice("Vùng chọn đang cắt qua thẻ hoặc nằm trong tham chiếu. Hãy chọn lại văn bản.")
   }
   const listKeys = (event: React.KeyboardEvent) => {
-    if (!open || composing.current || event.nativeEvent.isComposing) return false
+    if (!popupOpen || composing.current || event.nativeEvent.isComposing) return false
     if (event.key === "Escape") {
       event.preventDefault()
       setPicker(false)
@@ -494,6 +505,7 @@ export function EntityRichTextEditor({
         className="min-h-28 w-full rounded-lg border bg-background px-3 py-2 text-sm leading-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:opacity-50"
         value={value}
         entities={resolvedEntities}
+        autoRecognize={autoRecognize}
         locale={locale}
         fallbackLocale={fallbackLocale}
         resolveIcon={resolveIcon}
@@ -503,9 +515,9 @@ export function EntityRichTextEditor({
         aria-labelledby={`${id}-label`}
         aria-describedby={`${id}-help`}
         aria-autocomplete="list"
-        aria-controls={open ? `${id}-options` : undefined}
+        aria-controls={popupOpen ? `${id}-options` : undefined}
         aria-activedescendant={
-          open && options.length ? `${id}-option-${Math.min(active, options.length - 1)}` : undefined
+          popupOpen && options.length ? `${id}-option-${Math.min(active, options.length - 1)}` : undefined
         }
         onSelectionChange={(next) => {
           selection.current = next
@@ -555,10 +567,10 @@ export function EntityRichTextEditor({
         }}
       />
       <p id={`${id}-help`} className="text-xs text-muted-foreground">
-        Gõ @ để chèn thẻ, ví dụ @Chiêu 1 Airi. Bôi chọn để định dạng; Ctrl/⌘ B, I, Z.
+        Tên và thuật ngữ đầy đủ được nhận diện tự động. Gõ @ để tìm và chèn thẻ tham chiếu.
       </p>
       <PopoverPrimitive.Root
-        open={open}
+        open={popupOpen}
         onOpenChange={(next) => {
           if (!next) {
             setPicker(false)
@@ -567,7 +579,7 @@ export function EntityRichTextEditor({
         }}
       >
         <PopoverPrimitive.Anchor virtualRef={virtualAnchor} />
-        {open && (
+        {popupOpen && (
           <PopoverPrimitive.Portal>
             <PopoverPrimitive.Content
               ref={popup}
@@ -592,7 +604,8 @@ export function EntityRichTextEditor({
                   {Object.entries(kinds)
                     .filter(
                       ([kind]) =>
-                        (kind === "skill" && !!searchReferences) || entities.some((entity) => entity.kind === kind),
+                        (["skill", "team", "player"].includes(kind) && !!searchReferences) ||
+                        entities.some((entity) => entity.kind === kind),
                     )
                     .map(([kind, name]) => (
                       <Button
@@ -628,7 +641,7 @@ export function EntityRichTextEditor({
                 {options.length
                   ? `${options.length} kết quả · ↑↓ chọn · Enter chèn`
                   : remote.loading
-                    ? "Đang tìm kỹ năng…"
+                    ? "Đang tìm tham chiếu…"
                     : "Không có tham chiếu phù hợp"}
               </p>
               <div
@@ -696,12 +709,12 @@ export function EntityRichTextEditor({
               </div>
               {options.length > 0 && remote.loading && (
                 <p role="status" className="px-1 text-xs text-muted-foreground">
-                  Đang tải thêm kỹ năng…
+                  Đang tải thêm tham chiếu…
                 </p>
               )}
               {remote.error && (
                 <div className="flex items-center justify-between gap-2 px-1 text-xs text-muted-foreground">
-                  <span>Chưa tải được kỹ năng.</span>
+                  <span>Chưa tải được tham chiếu.</span>
                   <Button type="button" size="sm" variant="ghost" onClick={remote.retry}>
                     Thử lại
                   </Button>

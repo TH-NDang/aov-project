@@ -1,5 +1,5 @@
 import * as React from "react"
-import { ArrowUpRight, BookOpen, Swords, UserRound, X, Gem, Shield, Zap } from "lucide-react"
+import { ArrowUpRight, BookOpen, Swords, UserRound, Users, Globe2, X, Gem, Shield, Zap } from "lucide-react"
 import {
   createEntityIndex,
   entityKindLabels,
@@ -9,11 +9,14 @@ import {
   safeEntityIconUrl,
   referenceTranslation,
   validSkillReference,
+  defaultEntityColor,
   type EntityReference,
   type RichTextNode,
 } from "../lib/entity-rich-text"
+import { Slot } from "radix-ui"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { observeReferenceIcon } from "../lib/observe-reference-icon"
+import { countryReferenceFlag, countryReferences } from "../lib/country-references"
 
 export interface EntityRichTextProps {
   text: string
@@ -88,8 +91,32 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
     enchantment: Shield,
     arcana: Gem,
     spell: Zap,
+    team: Users,
+    player: UserRound,
+    country: Globe2,
     term: BookOpen,
   }[entity.kind]
+  if (entity.kind === "country") {
+    const flag = countryReferenceFlag(entity.id)
+    if (flag)
+      return (
+        <img
+          src={flag}
+          alt=""
+          aria-hidden="true"
+          className={`inline shrink-0 rounded-sm object-contain align-text-bottom ${className}`}
+        />
+      )
+    if (entity.id !== "GLOBAL")
+      return (
+        <span
+          aria-hidden="true"
+          className={`inline-flex shrink-0 items-center justify-center rounded-sm bg-muted text-[0.55em] font-semibold text-muted-foreground ${className}`}
+        >
+          {entity.id}
+        </span>
+      )
+  }
   return icon && failed !== icon ? (
     <img
       src={icon}
@@ -163,25 +190,41 @@ function renderDescriptionNodes(nodes: RichTextNode[]): React.ReactNode {
   })
 }
 
-function EntityMention({
-  node,
-  locale,
-  context,
-  explicitColor,
-  index,
-  icons,
-  resolveIcon,
-}: {
-  node: Extract<RichTextNode, { type: "reference" }>
+export type EntityReferencePopoverProps = {
+  entity: EntityReference
   locale: string
+  /** Locale the label was matched in; defaults to the best translation for `locale`. */
+  actualLocale?: string
+  fallbackLocale?: string
   context: "admin" | "wiki"
-  explicitColor?: string
-  index: ReturnType<typeof createEntityIndex>
-  icons: boolean
+  /** Used to render references inside the description; an empty index is used when omitted. */
+  index?: ReturnType<typeof createEntityIndex>
   resolveIcon?: EntityIconResolver
-}) {
+  /** Name shown when the entity has no translation. */
+  label?: string
+  /** The element that opens the card on hover, focus or click; must accept a ref and DOM handlers. */
+  children: React.ReactElement
+}
+
+const emptyIndex = createEntityIndex([], "vi-VN", "vi-VN")
+
+/**
+ * The wiki reference card (artwork, kind, name, description and a link to the entry) around any trigger, so other
+ * screens show heroes, items or terms exactly like rich-text mentions do.
+ */
+export function EntityReferencePopover({
+  entity,
+  locale,
+  actualLocale,
+  fallbackLocale = "vi-VN",
+  context,
+  index = emptyIndex,
+  resolveIcon,
+  label,
+  children,
+}: EntityReferencePopoverProps) {
   const [open, setOpen] = React.useState(false)
-  const trigger = React.useRef<HTMLButtonElement>(null)
+  const trigger = React.useRef<HTMLElement>(null)
   const content = React.useRef<HTMLDivElement>(null)
   const closeTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const titleId = React.useId()
@@ -200,35 +243,25 @@ function EntityMention({
       if (active !== trigger.current && !content.current?.contains(active ?? null)) setOpen(false)
     }, 180)
   }
-  const entity = node.entity
-  const skill = skillReferenceContext(entity, locale, node.actualLocale)
+  const matched = actualLocale ?? referenceTranslation(entity, locale, fallbackLocale)?.locale ?? locale
+  const skill = skillReferenceContext(entity, locale, matched)
   const translation = Array.isArray(entity.translations)
-    ? entity.translations.find((entry) => entry.locale === node.actualLocale)
+    ? entity.translations.find((entry) => entry.locale === matched)
     : undefined
   const description = translation?.description || "Chưa có mô tả cho mục này."
   const descriptionNodes = React.useMemo(
     () => (open ? parseRichText(description, index, { autoRecognize: false }) : []),
     [open, description, index],
   )
-  const name = translation?.name || node.label
+  const name = translation?.name || label || entity.id
   const kind = kindLabels[entity.kind] || kindLabels.term
   const route = safeLinkUrl(resolveEntityRoute(entity, context, locale))
-  const color = explicitColor ?? entity.display?.color
-  const style: React.CSSProperties = {
-    fontWeight: "inherit",
-    fontStyle: "inherit",
-    ...(typeof color === "string" && hexColor.test(color) ? { color } : {}),
-  }
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
+        <Slot.Root
           ref={trigger}
-          type="button"
-          aria-label={`${kind}: ${skill ? `${skill.ownerName} · ` : ""}${node.label}${skill?.detail ? ` · ${skill.detail}` : ""}`}
-          className={`inline cursor-pointer rounded-sm decoration-dotted underline-offset-4 hover:bg-accent hover:decoration-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${entity.display?.underline === false ? "" : "underline"}`}
-          style={style}
-          onPointerEnter={(event) => {
+          onPointerEnter={(event: React.PointerEvent) => {
             if (event.pointerType !== "touch") show()
           }}
           onPointerLeave={scheduleClose}
@@ -236,11 +269,11 @@ function EntityMention({
             if (!suppressFocus.current) show()
           }}
           onBlur={scheduleClose}
-          onClick={(event) => {
+          onClick={(event: React.MouseEvent) => {
             event.preventDefault()
             show()
           }}
-          onKeyDown={(event) => {
+          onKeyDown={(event: React.KeyboardEvent) => {
             if (event.key === "Escape") {
               cancelClose()
               setOpen(false)
@@ -248,23 +281,8 @@ function EntityMention({
             }
           }}
         >
-          {icons && entity.display?.showIcon !== false && entity.kind !== "term" && (
-            <EntityReferenceArtwork
-              entity={entity}
-              resolveIcon={resolveIcon}
-              className={skill ? "mr-1.5 size-[1.25em]" : "mr-1 size-[1.1em]"}
-            />
-          )}
-          {skill && (
-            <>
-              <span className="opacity-75">{skill.ownerName}</span>
-              <span aria-hidden="true" className="mx-1 opacity-50">
-                ›
-              </span>
-            </>
-          )}
-          {node.label}
-        </button>
+          {children}
+        </Slot.Root>
       </PopoverTrigger>
       <PopoverContent
         ref={content}
@@ -310,8 +328,8 @@ function EntityMention({
           {skill && entity.iconSource === "LIBRARY" && (
             <div className="text-xs text-muted-foreground">Ảnh tham khảo từ thư viện kỹ năng</div>
           )}
-          {node.actualLocale.toLowerCase() !== locale.toLowerCase() && (
-            <div className="text-xs text-muted-foreground">Ngôn ngữ dự phòng: {node.actualLocale}</div>
+          {matched.toLowerCase() !== locale.toLowerCase() && (
+            <div className="text-xs text-muted-foreground">Ngôn ngữ dự phòng: {matched}</div>
           )}
           <p
             id={descriptionId}
@@ -334,6 +352,72 @@ function EntityMention({
   )
 }
 
+function EntityMention({
+  node,
+  locale,
+  context,
+  explicitColor,
+  index,
+  icons,
+  resolveIcon,
+}: {
+  node: Extract<RichTextNode, { type: "reference" }>
+  locale: string
+  context: "admin" | "wiki"
+  explicitColor?: string
+  index: ReturnType<typeof createEntityIndex>
+  icons: boolean
+  resolveIcon?: EntityIconResolver
+}) {
+  const entity = node.entity
+  const skill = skillReferenceContext(entity, locale, node.actualLocale)
+  const kind = kindLabels[entity.kind] || kindLabels.term
+  const color = explicitColor ?? entity.display?.color
+  const validColor = typeof color === "string" && hexColor.test(color) ? color : defaultEntityColor(entity)
+  const style: React.CSSProperties = {
+    fontWeight: "inherit",
+    fontStyle: "inherit",
+    textAlign: "inherit",
+    ...(validColor ? { color: validColor } : {}),
+    ...(entity.display?.underline === false ? {} : { borderBottom: "1px dotted currentColor" }),
+  }
+  return (
+    <EntityReferencePopover
+      entity={entity}
+      locale={locale}
+      actualLocale={node.actualLocale}
+      context={context}
+      index={index}
+      resolveIcon={resolveIcon}
+      label={node.label}
+    >
+      <button
+        type="button"
+        aria-label={`${kind}: ${skill ? `${skill.ownerName} · ` : ""}${node.label}${skill?.detail ? ` · ${skill.detail}` : ""}`}
+        className="inline-block max-w-full cursor-pointer rounded-sm align-baseline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        style={style}
+      >
+        {icons && entity.display?.showIcon !== false && entity.kind !== "term" && (
+          <EntityReferenceArtwork
+            entity={entity}
+            resolveIcon={resolveIcon}
+            className={skill ? "mr-1.5 size-[1.25em]" : "mr-1 size-[1.1em]"}
+          />
+        )}
+        {skill && (
+          <>
+            <span className="opacity-75">{skill.ownerName}</span>
+            <span aria-hidden="true" className="mx-1 opacity-50">
+              ›
+            </span>
+          </>
+        )}
+        {node.label}
+      </button>
+    </EntityReferencePopover>
+  )
+}
+
 export function EntityRichText({
   text,
   entities = emptyEntities,
@@ -347,10 +431,11 @@ export function EntityRichText({
   context,
   className,
 }: EntityRichTextProps) {
-  const resolvedIndex = React.useMemo(
-    () => index ?? createEntityIndex(entities, locale, fallbackLocale),
-    [index, entities, locale, fallbackLocale],
-  )
+  const resolvedIndex = React.useMemo(() => {
+    const base = index ?? createEntityIndex(entities, locale, fallbackLocale)
+    const countries = createEntityIndex(countryReferences, locale, fallbackLocale)
+    return { ...base, byId: new Map([...countries.byId, ...base.byId]) }
+  }, [index, entities, locale, fallbackLocale])
   const nodes = React.useMemo(
     () => parseRichText(text, resolvedIndex, { autoRecognize, firstOccurrenceOnly }),
     [text, resolvedIndex, autoRecognize, firstOccurrenceOnly],

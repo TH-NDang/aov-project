@@ -1,0 +1,5 @@
+{
+  "extends": "@aov/typescript-config/react.json",
+  "compilerOptions": { "noEmit": true },
+  "include": ["src"]
+}
