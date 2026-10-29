@@ -170,8 +170,32 @@ const routes: RouteObject[] = [
             path: "tournaments",
             handle: title("Giải đấu"),
             lazy: async () => ({
-              Component: (await import("@/features/placeholders/tournaments-page")).TournamentsPage,
+              Component: (await import("@/features/esports/pages/tournament-hub-page")).TournamentHubPage,
             }),
+          },
+          {
+            path: "tournaments/registry",
+            handle: title("Đội & tuyển thủ"),
+            lazy: async () => ({
+              Component: (await import("@/features/tournaments/registry-page")).RegistryPage,
+            }),
+          },
+          {
+            path: "tournaments/:tournamentId",
+            handle: title("Chi tiết giải"),
+            lazy: async () => ({
+              Component: (await import("@/features/esports/pages/tournament-page")).TournamentPage,
+            }),
+          },
+          {
+            path: "tournaments/:tournamentId/matches/:seriesId",
+            handle: title("Trận đấu"),
+            lazy: async () => ({ Component: (await import("@/features/esports/pages/match-page")).MatchPage }),
+          },
+          {
+            path: "tournaments/:tournamentId/matches/:seriesId/games/:gameId",
+            handle: title("Diễn biến ván"),
+            lazy: async () => ({ Component: (await import("@/features/esports/pages/game-page")).GamePage }),
           },
           {
             path: "streams",

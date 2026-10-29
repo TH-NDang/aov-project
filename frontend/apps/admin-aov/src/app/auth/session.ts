@@ -108,6 +108,7 @@ async function getToken() {
   return token.value
 }
 export const backendRequest = createAuthenticatedClient(getToken, expireSession)
+export const communityRequest = createAuthenticatedClient(getToken, expireSession, fetch, "/api/community/v1")
 async function readActor() {
   const current = generation
   const actor = await backendRequest<Actor>("/admin/me")

@@ -54,6 +54,7 @@ function aovResources(): Plugin {
 export default defineConfig({
   server: {
     proxy: {
+      "/api/community": { target: process.env.COMMUNITY_API_TARGET || "http://localhost:8082", changeOrigin: true },
       "/api/wiki": { target: process.env.WIKI_API_TARGET || "http://localhost:8080", changeOrigin: true },
       "/media/": {
         target: process.env.WIKI_MEDIA_FILER_TARGET || "http://localhost:8888",
@@ -73,6 +74,7 @@ export default defineConfig({
   },
   preview: {
     proxy: {
+      "/api/community": { target: process.env.COMMUNITY_API_TARGET || "http://localhost:8082", changeOrigin: true },
       "/api/wiki": { target: process.env.WIKI_API_TARGET || "http://localhost:8080", changeOrigin: true },
       "/media/": {
         target: process.env.WIKI_MEDIA_FILER_TARGET || "http://localhost:8888",

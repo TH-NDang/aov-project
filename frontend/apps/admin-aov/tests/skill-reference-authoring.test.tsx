@@ -62,6 +62,13 @@ test("admin authors natural skill mentions and restores saved references with th
   const fetcher: typeof fetch = async (input, init) => {
     const url = new URL(String(input), "http://localhost")
     requests.push(url)
+    if (url.pathname.startsWith("/api/community/") && url.pathname.endsWith("/admin/reference-catalog"))
+      return Response.json({
+        items: [],
+        page: Number(url.searchParams.get("page") ?? 0),
+        size: Number(url.searchParams.get("size") ?? 20),
+        totalElements: 0,
+      })
     if (url.pathname.endsWith("/admin/reference-skills")) {
       assert.equal(url.searchParams.get("locale"), "vi-VN")
       assert.equal(url.searchParams.get("rulesetId"), selectedRulesetId)
@@ -270,9 +277,17 @@ test("admin authors natural skill mentions and restores saved references with th
     assertArtwork(restored)
     assert.ok(
       requests
-        .filter((url) => /\/admin\/reference-(?:catalog|skills)$/.test(url.pathname))
+        .filter(
+          (url) => url.pathname.startsWith("/api/wiki/") && /\/admin\/reference-(?:catalog|skills)$/.test(url.pathname),
+        )
         .every((url) => url.searchParams.get("rulesetId") === selectedRulesetId),
       "The selected revision context overrides the URL ruleset for catalog, editor search and saved reference lookup",
+    )
+    assert.ok(
+      requests
+        .filter((url) => url.pathname.startsWith("/api/community/"))
+        .every((url) => !url.searchParams.has("rulesetId")),
+      "Community identities remain separate from Wiki ruleset scope",
     )
     assert.equal(
       requests.some((url) => /\/admin\/heroes(?:\/|$)/.test(url.pathname)),

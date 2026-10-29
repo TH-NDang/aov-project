@@ -1,0 +1,829 @@
+/* In the components layer so Tailwind utilities on the same elements can still override. */
+@layer components {
+  /* Global so popups and hover cards rendered outside the page (portals) share the same colors. */
+  :root {
+    --esp-blue: oklch(0.62 0.17 252);
+    --esp-blue-soft: color-mix(in oklch, var(--esp-blue) 14%, transparent);
+    --esp-red: oklch(0.62 0.21 25);
+    --esp-red-soft: color-mix(in oklch, var(--esp-red) 14%, transparent);
+    /* Winner = in-game gold, loser = neutral gray. */
+    --esp-gold: oklch(0.82 0.14 84);
+    --esp-gold-deep: oklch(0.68 0.14 70);
+    --esp-gold-text: oklch(0.55 0.12 70);
+    --esp-gold-soft: color-mix(in oklch, var(--esp-gold) 18%, transparent);
+    --esp-gold-fill: linear-gradient(180deg, oklch(0.88 0.12 90), var(--esp-gold-deep));
+    --esp-win: var(--esp-gold);
+    --esp-live: oklch(0.64 0.16 152);
+    --esp-loss: oklch(0.6 0 0);
+    --esp-ink: oklch(0.17 0.03 265);
+  }
+
+  .esports {
+    container-type: inline-size;
+  }
+
+  .dark {
+    --esp-gold-text: var(--esp-gold);
+  }
+
+  [data-side="BLUE"] {
+    --side: var(--esp-blue);
+    --side-soft: var(--esp-blue-soft);
+  }
+  [data-side="RED"] {
+    --side: var(--esp-red);
+    --side-soft: var(--esp-red-soft);
+  }
+
+  /* Best-of badges: neutral Bo1, blue Bo3, violet Bo5, gold Bo7 (finals). */
+  .esp-bo {
+    --bo: var(--muted-foreground);
+    display: inline-flex;
+    align-items: center;
+    height: 20px;
+    padding-inline: 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--bo);
+    background: color-mix(in oklch, var(--bo) 13%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--bo) 38%, transparent);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .esp-bo-3 {
+    --bo: var(--esp-blue);
+  }
+  .esp-bo-5 {
+    --bo: oklch(0.6 0.2 300);
+  }
+  .esp-bo-7 {
+    --bo: oklch(0.72 0.15 75);
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--bo) 22%, transparent),
+      color-mix(in oklch, var(--bo) 8%, transparent)
+    );
+  }
+  .esp-banner .esp-bo {
+    --bo: oklch(0.85 0.02 265);
+  }
+  .esp-banner .esp-bo-3 {
+    --bo: oklch(0.78 0.12 250);
+  }
+  .esp-banner .esp-bo-5 {
+    --bo: oklch(0.78 0.14 300);
+  }
+  .esp-banner .esp-bo-7 {
+    --bo: var(--esp-gold);
+  }
+
+  .esp-pip {
+    width: 12px;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in oklch, currentColor 18%, transparent);
+  }
+  .esp-pip[data-on] {
+    background: color-mix(in oklch, currentColor 60%, transparent);
+  }
+  .esp-pip[data-on][data-won] {
+    background: var(--esp-gold-fill);
+    box-shadow: 0 0 6px color-mix(in oklch, var(--esp-gold) 60%, transparent);
+  }
+
+  .esp-result {
+    display: inline-flex;
+    align-items: center;
+    height: 18px;
+    padding-inline: 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .esp-result[data-won="true"] {
+    color: var(--esp-ink);
+    background: var(--esp-gold-fill);
+    box-shadow: 0 0 10px -2px color-mix(in oklch, var(--esp-gold) 70%, transparent);
+  }
+  .esp-result[data-won="false"] {
+    color: var(--muted-foreground);
+    background: var(--muted);
+  }
+  .esp-banner .esp-result[data-won="false"] {
+    color: oklch(1 0 0 / 0.6);
+    background: oklch(1 0 0 / 0.1);
+  }
+
+  /* Losing side: dimmed text and desaturated logo, so the winner stands out without color alone. */
+  .esp-loser {
+    opacity: 0.55;
+  }
+  .esp-loser .esp-logo {
+    filter: grayscale(1);
+  }
+  .esp-winner-row {
+    position: relative;
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--esp-gold) 22%, transparent),
+      color-mix(in oklch, var(--esp-gold) 6%, transparent)
+    );
+  }
+  .esp-winner-row::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--esp-gold-fill);
+  }
+  .esp-win-score {
+    color: var(--esp-ink);
+    background: var(--esp-gold-fill);
+  }
+
+  .esp-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Hero banner: always dark so artwork and team colors read the same in both themes. */
+  .esp-banner {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    color: white;
+    background:
+      radial-gradient(60% 120% at 0% 0%, color-mix(in oklch, var(--esp-blue) 45%, transparent), transparent 70%),
+      radial-gradient(50% 120% at 100% 100%, color-mix(in oklch, var(--esp-red) 38%, transparent), transparent 70%),
+      linear-gradient(135deg, oklch(0.2 0.04 265), var(--esp-ink));
+  }
+  .esp-banner::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--esp-banner-image, none);
+    background-size: cover;
+    background-position: center right;
+    opacity: 0.85;
+  }
+  .esp-banner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(90deg, oklch(0.14 0.03 265 / 0.92) 0%, oklch(0.14 0.03 265 / 0.55) 55%, transparent);
+  }
+  .esp-glass {
+    background: oklch(1 0 0 / 0.08);
+    border: 1px solid oklch(1 0 0 / 0.14);
+    backdrop-filter: blur(8px);
+  }
+
+  .esp-tabs {
+    scrollbar-width: none;
+  }
+  .esp-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Logos and portraits keep their aspect and fall back to a monogram. */
+  .esp-logo {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    overflow: hidden;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .esp-logo > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .esp-portrait > img {
+    object-fit: cover;
+  }
+  .esp-logo[data-empty] {
+    color: var(--muted-foreground);
+    background-color: var(--muted);
+  }
+  .esp-banner .esp-logo[data-empty] {
+    color: oklch(1 0 0 / 0.8);
+    background-color: oklch(1 0 0 / 0.08);
+  }
+
+  .esp-slot {
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 6px;
+    background: var(--muted);
+    box-shadow: inset 0 0 0 1px var(--border);
+  }
+  .esp-slot > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .esp-slot[data-state="unknown"] {
+    background: repeating-linear-gradient(135deg, var(--muted), var(--muted) 4px, transparent 4px, transparent 8px);
+  }
+  .esp-slot[data-changed="true"] {
+    box-shadow:
+      inset 0 0 0 1px var(--esp-gold),
+      0 0 0 2px var(--esp-gold-soft);
+  }
+
+  /* VOD timeline */
+  /* Rows (px): blue markers 8–20, axis 38–62, red markers 80–92, ticks 108–124. */
+  .esp-track {
+    position: relative;
+    height: 124px;
+    margin-inline: 14px;
+    touch-action: none;
+    user-select: none;
+    cursor: pointer;
+  }
+  .esp-track:focus-visible {
+    outline: 2px solid var(--esp-gold);
+    outline-offset: 4px;
+    border-radius: 8px;
+  }
+  .esp-track-lane {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 36px;
+  }
+  .esp-track-lane[data-side="BLUE"] {
+    top: 2px;
+  }
+  .esp-track-lane[data-side="RED"] {
+    top: 68px;
+  }
+  .esp-track-axis {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 38px;
+    height: 24px;
+    border-radius: 999px;
+    background: var(--muted);
+    overflow: hidden;
+  }
+  .esp-track-played {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: linear-gradient(90deg, var(--esp-gold-soft), color-mix(in oklch, var(--esp-gold) 32%, transparent));
+  }
+  .esp-track-momentum {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .esp-marker {
+    position: absolute;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin-left: -13px;
+    margin-top: -13px;
+    border-radius: 999px;
+    color: white;
+    background: var(--side, var(--esp-gold));
+    box-shadow: 0 0 0 2px var(--background);
+    transition:
+      transform 120ms ease,
+      opacity 120ms ease;
+  }
+  .esp-marker[data-kind="ITEM"] {
+    width: 20px;
+    height: 20px;
+    margin-left: -10px;
+    margin-top: -10px;
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--side, var(--foreground));
+    box-shadow:
+      inset 0 0 0 1.5px var(--side, var(--border)),
+      0 0 0 2px var(--background);
+  }
+  .esp-marker[data-kind="NOTE"] {
+    background: var(--esp-gold);
+    color: var(--esp-ink);
+  }
+  .esp-marker[data-face="portrait"] {
+    background: var(--side, var(--card));
+    box-shadow:
+      0 0 0 2px var(--side, var(--border)),
+      0 0 0 4px var(--background);
+  }
+  .esp-marker[data-kind="OBJECTIVE"] {
+    width: 30px;
+    height: 30px;
+    margin-left: -15px;
+    margin-top: -15px;
+    background: transparent;
+    box-shadow: 0 0 0 2px var(--side, var(--esp-gold));
+  }
+  /* Match viewer: one grid so the player stays mounted while the per-game panels change. */
+  .esp-viewer {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "chips" "video" "timeline" "side" "board";
+  }
+  .esp-area-chips {
+    grid-area: chips;
+  }
+  .esp-area-video {
+    grid-area: video;
+  }
+  .esp-area-timeline {
+    grid-area: timeline;
+  }
+  .esp-area-side {
+    grid-area: side;
+  }
+  .esp-area-board {
+    grid-area: board;
+  }
+  @container (min-width: 64rem) {
+    .esp-viewer {
+      grid-template-columns: minmax(0, 1fr) 400px;
+      grid-template-areas:
+        "chips chips"
+        "video side"
+        "timeline timeline"
+        "board board";
+    }
+  }
+
+  /* Broadcast timeline: overview of the whole video plus a zoomable detail track. */
+  .esp-bt-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 28px;
+    padding-inline: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .esp-bt-button:hover {
+    background: var(--muted);
+  }
+  .esp-bt-overview {
+    position: relative;
+    height: 30px;
+    margin-inline: 14px;
+    border-radius: 8px;
+    background: var(--muted);
+    cursor: pointer;
+    overflow: hidden;
+  }
+  .esp-bt-overview-chapter {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    display: flex;
+    align-items: center;
+    padding-left: 5px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted-foreground);
+    background: color-mix(in oklch, var(--foreground) 9%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--foreground) 14%, transparent);
+    overflow: hidden;
+  }
+  .esp-bt-overview-chapter:not([data-synced]) {
+    background: repeating-linear-gradient(
+      135deg,
+      transparent 0 4px,
+      color-mix(in oklch, var(--foreground) 8%, transparent) 4px 8px
+    );
+  }
+  .esp-bt-overview-chapter[data-focused] {
+    color: var(--esp-ink);
+    background: color-mix(in oklch, var(--esp-gold) 55%, transparent);
+    box-shadow: inset 0 0 0 1px var(--esp-gold);
+  }
+  .esp-bt-overview-tick {
+    position: absolute;
+    bottom: 3px;
+    width: 2px;
+    height: 7px;
+    margin-left: -1px;
+    border-radius: 1px;
+    background: var(--side, var(--esp-gold));
+    pointer-events: none;
+  }
+  .esp-bt-overview-tick[data-kind="OBJECTIVE"] {
+    top: 3px;
+    bottom: auto;
+    height: 6px;
+    width: 6px;
+    margin-left: -3px;
+    border-radius: 999px;
+  }
+  .esp-bt-overview-window {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 6px;
+    background: color-mix(in oklch, var(--foreground) 8%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--foreground) 45%, transparent);
+    pointer-events: none;
+  }
+  .esp-bt-overview-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--esp-gold);
+    pointer-events: none;
+  }
+
+  /* Rows (px): chapter labels 0–26, blue 32–64, objectives 68–100, red 104–136, ticks 142–158. */
+  .esp-bt-track {
+    position: relative;
+    height: 158px;
+    margin-inline: 14px;
+    user-select: none;
+    cursor: pointer;
+  }
+  .esp-bt-track:focus-visible {
+    outline: 2px solid var(--esp-gold);
+    outline-offset: 4px;
+    border-radius: 8px;
+  }
+  .esp-bt-row {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--side-soft, color-mix(in oklch, var(--esp-gold) 8%, transparent));
+  }
+  .esp-bt-row[data-side="BLUE"] {
+    top: 32px;
+  }
+  .esp-bt-row[data-row="MID"] {
+    top: 68px;
+  }
+  .esp-bt-row[data-side="RED"] {
+    top: 104px;
+  }
+  .esp-bt-grid {
+    position: absolute;
+    top: 28px;
+    bottom: 18px;
+    width: 1px;
+    background: color-mix(in oklch, var(--foreground) 7%, transparent);
+    pointer-events: none;
+  }
+  .esp-bt-band {
+    position: absolute;
+    top: 0;
+    bottom: 18px;
+    border-radius: 8px;
+    border-left: 2px solid color-mix(in oklch, var(--foreground) 30%, transparent);
+    background: color-mix(in oklch, var(--foreground) 3%, transparent);
+    pointer-events: none;
+  }
+  .esp-bt-band[data-focused] {
+    border-left-color: var(--esp-gold);
+    background: color-mix(in oklch, var(--esp-gold) 7%, transparent);
+  }
+  .esp-bt-band:not([data-synced]) {
+    border-left-style: dashed;
+  }
+  .esp-bt-band-label {
+    position: absolute;
+    top: 2px;
+    left: 6px;
+    right: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .esp-bt-band-team {
+    position: absolute;
+    left: 4px;
+    transform: translateY(-50%);
+    opacity: 0.85;
+  }
+  .esp-bt-overview-draft {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    border-radius: 5px;
+    background: repeating-linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--esp-gold) 22%, transparent) 0 3px,
+      transparent 3px 6px
+    );
+  }
+  /* Ban/pick phase before a game: hatched so it never reads as game time. */
+  .esp-bt-draft {
+    position: absolute;
+    top: 26px;
+    bottom: 18px;
+    border-left: 2px dotted var(--esp-gold);
+    background: repeating-linear-gradient(
+      135deg,
+      color-mix(in oklch, var(--esp-gold) 9%, transparent) 0 6px,
+      transparent 6px 12px
+    );
+    pointer-events: none;
+  }
+  .esp-bt-draft-label {
+    position: absolute;
+    top: -20px;
+    left: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--esp-gold-text);
+    white-space: nowrap;
+  }
+  .esp-bt-turn {
+    position: absolute;
+    z-index: 2;
+    display: inline-flex;
+    transform: translate(-50%, -50%);
+    border-radius: 7px;
+    box-shadow:
+      0 0 0 2px var(--side, var(--border)),
+      0 0 0 3px var(--background);
+  }
+  .esp-bt-turn[data-kind="BAN"] img,
+  .esp-bt-turn[data-kind="BAN"] [data-monogram] {
+    opacity: 0.55;
+    filter: grayscale(0.6);
+  }
+  .esp-bt-turn-ban {
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    display: grid;
+    place-items: center;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    color: var(--background);
+    background: var(--muted-foreground);
+    box-shadow: 0 0 0 1px var(--card);
+  }
+  .esp-bt-lock {
+    position: absolute;
+    top: 6px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin-left: -9px;
+    border-radius: 999px;
+    color: var(--esp-gold-text);
+    background: var(--card);
+    box-shadow:
+      0 0 0 1.5px var(--esp-gold),
+      0 0 0 3px var(--background);
+  }
+  .esp-bt-flag {
+    position: absolute;
+    top: 6px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin-left: -9px;
+    border-radius: 5px;
+    color: var(--esp-ink);
+    background: var(--esp-gold);
+    box-shadow: 0 0 0 2px var(--background);
+  }
+  .esp-bt-playhead {
+    position: absolute;
+    top: 26px;
+    bottom: 18px;
+    z-index: 4;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--esp-gold);
+    pointer-events: none;
+  }
+  .esp-bt-playhead > span {
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--esp-ink);
+    background: var(--esp-gold);
+  }
+  .esp-bt-scrub {
+    position: absolute;
+    top: -20px;
+    z-index: 5;
+    transform: translateX(-50%);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--background);
+    background: var(--foreground);
+    pointer-events: none;
+  }
+
+  /* Timeline pills: killer ⚔ victim, hero › item, finisher › objective. */
+  .esp-pill {
+    position: absolute;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 30px;
+    padding: 3px;
+    border-radius: 9px;
+    transform: translate(-50%, -50%);
+    background: var(--card);
+    box-shadow:
+      0 0 0 1.5px var(--side, var(--esp-gold)),
+      0 2px 8px oklch(0 0 0 / 0.18);
+    transition:
+      transform 120ms ease,
+      opacity 120ms ease,
+      filter 120ms ease;
+  }
+  .esp-pill[data-past="false"] {
+    opacity: 0.6;
+    filter: saturate(0.4);
+  }
+  .esp-pill[data-dim="true"] {
+    opacity: 0.2;
+  }
+  .esp-pill:hover,
+  .esp-pill:focus-visible,
+  .esp-pill[data-active="true"] {
+    z-index: 3;
+    opacity: 1;
+    filter: none;
+    transform: translate(-50%, -50%) scale(1.12);
+    outline: none;
+  }
+  .esp-pill[data-active="true"] {
+    box-shadow:
+      0 0 0 2px var(--esp-gold),
+      0 0 14px -2px var(--esp-gold);
+  }
+  .esp-pill .esp-marker-count {
+    top: -8px;
+    right: -8px;
+  }
+  .esp-marker-count {
+    position: absolute;
+    top: -7px;
+    right: -9px;
+    display: grid;
+    place-items: center;
+    min-width: 16px;
+    height: 16px;
+    padding-inline: 3px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--esp-ink);
+    background: var(--esp-gold);
+    box-shadow: 0 0 0 2px var(--background);
+  }
+  .esp-marker[data-dim="true"] {
+    opacity: 0.25;
+  }
+  .esp-marker[data-past="false"] {
+    filter: saturate(0.5);
+    opacity: 0.7;
+  }
+  .esp-marker:hover,
+  .esp-marker:focus-visible,
+  .esp-marker[data-active="true"] {
+    z-index: 3;
+    transform: scale(1.22);
+    outline: none;
+  }
+  .esp-playhead {
+    position: absolute;
+    top: 0;
+    bottom: 18px;
+    width: 2px;
+    margin-left: -1px;
+    background: var(--esp-gold);
+    pointer-events: none;
+    z-index: 4;
+  }
+  .esp-playhead::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 38px;
+    width: 16px;
+    height: 24px;
+    transform: translateX(-50%);
+    border-radius: 6px;
+    background: var(--esp-gold);
+    box-shadow: 0 2px 10px oklch(0 0 0 / 0.3);
+  }
+  .esp-track-ticks {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16px;
+  }
+  .esp-track-ticks > span {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: var(--muted-foreground);
+  }
+  .esp-track-ticks > span:first-child {
+    transform: none;
+  }
+  .esp-track-ticks > span:last-child {
+    transform: translateX(-100%);
+  }
+
+  .esp-feed-item[data-current="true"] {
+    background: var(--esp-gold-soft);
+  }
+  .esp-feed-item[data-future="true"] {
+    opacity: 0.55;
+  }
+
+  /* Bracket */
+  .esp-bracket-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 16px;
+    min-width: 220px;
+  }
+  .esp-bracket-slot {
+    position: relative;
+  }
+  div:not(:first-child) > .esp-bracket-round .esp-bracket-slot::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -20px;
+    width: 20px;
+    border-top: 1px solid var(--border);
+  }
+
+  @keyframes esp-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+  .esp-live-dot {
+    animation: esp-pulse 1.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .esp-live-dot {
+      animation: none;
+    }
+    .esp-marker,
+    .esp-pill {
+      transition: none;
+    }
+  }
+}

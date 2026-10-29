@@ -18,7 +18,15 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
   const fetcher: typeof fetch = async (input, init) => {
     const url = String(input)
     requests.push(url)
-    if (url.includes("/admin/reference-catalog"))
+    const parsed = new URL(url, "http://localhost")
+    if (parsed.pathname === "/api/community/v1/admin/reference-catalog")
+      return Response.json({
+        items: [],
+        totalElements: 0,
+        page: Number(parsed.searchParams.get("page") ?? 0),
+        size: Number(parsed.searchParams.get("size") ?? 20),
+      })
+    if (parsed.pathname === "/api/wiki/v1/admin/reference-catalog")
       return Response.json({
         items: [
           {
@@ -27,6 +35,13 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
             iconAssetId: "fixture-head",
             translations: [{ locale: "vi-VN", name: "Airi", aliases: [], description: "Ninja rồng" }],
             destinations: { admin: "/hero/fixture-hero?revision=fixture-draft" },
+          },
+          {
+            id: "fixture-florentino",
+            kind: "hero",
+            translations: [
+              { locale: "vi-VN", name: "Florentino", aliases: [], description: "Canonical hero description" },
+            ],
           },
           {
             id: "7c407f1b-cb6a-47ca-aeb8-7cc72753074d",
@@ -115,9 +130,25 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     assert.match(document.querySelector("table")!.textContent!, /Airi/)
     assert.match(document.querySelector("table")!.textContent!, /Kiếm QA/)
     assert.equal(document.querySelector("table")!.textContent!.includes("Sát thương chuẩn"), false)
-    assert.equal(requests.filter((url) => url.includes("/admin/reference-catalog")).length, 1)
     assert.equal(
-      requests.some((url) => /\/admin\/(?:heroes|items|enchantments|arcana|spells)[/?]/.test(url)),
+      requests.filter((url) => new URL(url, "http://localhost").pathname === "/api/wiki/v1/admin/reference-catalog")
+        .length,
+      1,
+      "Wiki domains share one compact catalog read",
+    )
+    assert.equal(
+      requests.filter(
+        (url) => new URL(url, "http://localhost").pathname === "/api/community/v1/admin/reference-catalog",
+      ).length,
+      1,
+      "The separate community catalog stays bounded and shared between consumers",
+    )
+    assert.equal(
+      requests.some((url) =>
+        /\/admin\/(?:heroes|items|enchantments|arcana|spells|teams|players|tournaments|series|games)(?:\/|$)/.test(
+          new URL(url, "http://localhost").pathname,
+        ),
+      ),
       false,
       "Reference loading does not download full catalogs or individual hero revisions",
     )
@@ -125,6 +156,60 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
       requests.some((url) => url.includes("/data/trang-bi.json")),
       false,
     )
+    const aliasAction = document.querySelector<HTMLButtonElement>('[aria-label="Sửa tên gọi khác của Florentino"]')!
+    assert.ok(aliasAction)
+    await act(async () => aliasAction.click())
+    const aliases = document.querySelector<HTMLTextAreaElement>('[aria-label="Tên gọi khác của tướng"]')!
+    assert.ok(aliases)
+    await act(async () => aliases.click())
+    assert.equal(
+      document.querySelector('[data-slot="sheet-content"]'),
+      null,
+      "Clicking the alias popup must not open the underlying reference row",
+    )
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!.call(aliases, "flo")
+      aliases.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
+    await act(async () => button("Lưu tên gọi khác").click())
+    await waitFor(() => !document.querySelector('[aria-label="Tên gọi khác của tướng"]'))
+    const aliasSettings = await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()
+    const florentino = aliasSettings.settings.entities.find(
+      (entity: { id: string }) => entity.id === "fixture-florentino",
+    )
+    assert.deepEqual(florentino.translations[0], {
+      locale: "vi-VN",
+      name: "Florentino",
+      aliases: ["flo"],
+      description: "Canonical hero description",
+    })
+    assert.match(document.querySelector("table")!.textContent!, /flo/)
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Chỉnh sửa Florentino"]')!.click())
+    const heroSheet = document.querySelector('[data-slot="sheet-content"]')!
+    assert.ok(heroSheet)
+    assert.equal(
+      heroSheet.querySelector("textarea"),
+      null,
+      "The full hero Sheet must not expose a second merged alias editor",
+    )
+    await act(async () =>
+      heroSheet.querySelector<HTMLButtonElement>('[aria-label="Sửa tên gọi khác của Florentino"]')!.click(),
+    )
+    const clearingAliases = document.querySelector<HTMLTextAreaElement>('[aria-label="Tên gọi khác của tướng"]')!
+    assert.equal(clearingAliases.value, "flo")
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!.call(clearingAliases, "")
+      clearingAliases.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
+    await act(async () => button("Lưu tên gọi khác").click())
+    await waitFor(() => !document.querySelector('[aria-label="Tên gọi khác của tướng"]'))
+    const clearedSettings = await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()
+    assert.equal(
+      clearedSettings.settings.entities.some((entity: { id: string }) => entity.id === "fixture-florentino"),
+      false,
+    )
+    await act(async () => button("Close").click())
+    assert.equal(document.querySelector("table")!.textContent!.includes("flo"), false)
     const search = document.querySelector<HTMLInputElement>('[aria-label="Tìm danh mục"]')!
     await fill(search, "kiem")
     assert.equal(document.querySelectorAll("tbody tr").length, 1)
@@ -159,8 +244,11 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tải lại thiết lập"]')!.click())
     assert.equal(referenceInputValue(area), "<ref=hero:fixture-hero>Airi</ref>")
     const stored = await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()
-    assert.equal(stored.version, 2)
-    assert.equal(stored.settings.entities[0].translations[0].description, referenceInputValue(area))
+    assert.equal(stored.version, 4)
+    assert.equal(
+      stored.settings.entities.find((entity: { kind: string }) => entity.kind === "term").translations[0].description,
+      referenceInputValue(area),
+    )
     await act(async () => button("Close").click())
     assert.match(document.querySelector("tbody")!.textContent!, /Airi/)
     assert.equal(
@@ -187,7 +275,7 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     await waitFor(() => document.querySelector('[data-slot="entity-rich-text"]')?.textContent === latestPreview)
     assert.equal(
       (await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()).version,
-      2,
+      4,
       "Deferred preview updates do not save changes to the shared settings",
     )
   } finally {

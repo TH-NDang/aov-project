@@ -1,0 +1,125 @@
+.registry-import-sheet {
+  width: min(100%, 760px) !important;
+  max-width: none !important;
+  padding: 24px;
+  overflow-y: auto;
+}
+.registry-import-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 13px;
+}
+.registry-import-file > span {
+  display: grid;
+  flex: 1;
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+.registry-import-file input {
+  max-width: 100%;
+  font-size: 12px;
+}
+.registry-import-file small,
+.registry-import-policy,
+.registry-import-preview small,
+.registry-import-progress small {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.registry-import-counts,
+.registry-import-operation-counts,
+.registry-import-filters,
+.registry-import-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.registry-import-counts > span,
+.registry-import-operation-counts > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: var(--muted);
+}
+.registry-import-policy {
+  line-height: 1.6;
+}
+.registry-import-filters {
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+.registry-import-filters button {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 7px;
+  color: var(--muted-foreground);
+}
+.registry-import-filters button[aria-pressed="true"] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+.registry-import-preview {
+  min-height: 120px;
+  max-height: 360px;
+  flex: 1 0 180px;
+  overflow-y: auto;
+  border-block: 1px solid var(--border);
+}
+.registry-import-preview li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 3px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.registry-import-preview li > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+.registry-import-preview li > span {
+  flex-shrink: 0;
+  max-width: 130px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.registry-import-progress {
+  display: grid;
+  gap: 7px;
+  font-size: 12px;
+}
+.registry-import-progress > div {
+  display: flex;
+  justify-content: space-between;
+}
+.registry-import-progress progress {
+  width: 100%;
+  height: 7px;
+  accent-color: var(--primary);
+}
+.registry-import-footer {
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+}
+@media (max-width: 600px) {
+  .registry-import-sheet {
+    inset: auto 0 0;
+    height: 94svh;
+    border-radius: 18px 18px 0 0;
+    padding: 20px 16px;
+  }
+}

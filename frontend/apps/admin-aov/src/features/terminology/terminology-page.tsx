@@ -19,7 +19,13 @@ import { languageOptions } from "../users/profile-preference-picker"
 import { memo, useDeferredValue, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
-import { validateRichTextSettings, type EntityReference, type RichTextSettings } from "@aov/ui/lib/entity-rich-text"
+import {
+  managedCommunityReference,
+  resolveEntityRoute,
+  validateRichTextSettings,
+  type EntityReference,
+  type RichTextSettings,
+} from "@aov/ui/lib/entity-rich-text"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
@@ -29,7 +35,12 @@ import { useReferenceCatalog } from "./catalog"
 import { saveSettings, loadLegacySettings } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
 import { EntityRichTextEditor } from "@aov/ui/components/entity-rich-text-editor"
-import { useSkillReferences, useSkillReferenceSearch } from "./use-skill-references"
+import { useSkillReferences } from "./use-skill-references"
+import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
+import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
+import { mergeReferenceCatalog, updateHeroAliases } from "./hero-aliases"
+import { HeroAliasEditor } from "./hero-alias-editor"
+import { invalidateReferenceCatalog } from "./reference-api"
 
 const ReferencePreview = memo(EntityRichText)
 
@@ -86,11 +97,12 @@ export function TerminologyPage() {
     if (draft || saving) event.preventDefault()
   })
   const { entities, customKeys, availableKeys, editorEntities, terms, references } = useMemo(() => {
-    const entities = new Map(catalog.entities.map((entity) => [`${entity.kind}:${entity.id}`, entity]))
-    for (const entity of settings.entities) {
-      const key = `${entity.kind}:${entity.id}`
-      entities.set(key, { ...entity, iconAssetId: entities.get(key)?.iconAssetId })
-    }
+    const entities = new Map(
+      mergeReferenceCatalog(catalog.entities, settings.entities, true).map((entity) => [
+        `${entity.kind}:${entity.id}`,
+        entity,
+      ]),
+    )
     const customKeys = new Set(settings.entities.map((entity) => `${entity.kind}:${entity.id}`))
     const availableKeys = new Set([
       ...catalog.entities.map((entity) => `${entity.kind}:${entity.id}`),
@@ -108,14 +120,19 @@ export function TerminologyPage() {
   }, [catalog.entities, settings.entities])
   const entity = entities.get(selected)
   const translation = entity?.translations.find((entry) => entry.locale === locale)
-  const searchPreviewReferences = useSkillReferenceSearch(catalog.rulesetId)
-  const searchDescriptionReferences = useSkillReferenceSearch(catalog.rulesetId)
+  const searchPreviewReferences = useReferenceSearch(catalog.rulesetId)
+  const searchDescriptionReferences = useReferenceSearch(catalog.rulesetId)
   const previewSkills = useSkillReferences(preview, locale, catalog.rulesetId)
   const descriptionSkills = useSkillReferences(translation?.description ?? "", locale, catalog.rulesetId)
-  const previewEntities = useMemo(() => [...editorEntities, ...previewSkills], [editorEntities, previewSkills])
+  const previewCommunity = useCommunityReferences(preview, locale)
+  const descriptionCommunity = useCommunityReferences(translation?.description ?? "", locale)
+  const previewEntities = useMemo(
+    () => [...editorEntities, ...previewSkills, ...previewCommunity],
+    [editorEntities, previewSkills, previewCommunity],
+  )
   const descriptionEntities = useMemo(
-    () => [...editorEntities, ...descriptionSkills],
-    [editorEntities, descriptionSkills],
+    () => [...editorEntities, ...descriptionSkills, ...descriptionCommunity],
+    [editorEntities, descriptionSkills, descriptionCommunity],
   )
   const previewOutput = useDeferredValue(
     useMemo(() => ({ text: preview, entities: previewEntities }), [preview, previewEntities]),
@@ -133,22 +150,44 @@ export function TerminologyPage() {
     }
     update({ ...entity, translations: [...entity.translations.filter((entry) => entry.locale !== locale), next] })
   }
-  async function saveDraft() {
+  async function persistSettings(value: RichTextSettings) {
     setSaving(true)
     setMessage("")
     try {
-      const valid = validateRichTextSettings(settings)
+      const valid = validateRichTextSettings(value)
       const document = await saveSettings(valid, catalog.settings.data!.version)
       client.setQueryData(["rich-text-settings"], document)
       setDraft(null)
+      await invalidateReferenceCatalog(client)
       setMessage("Đã lưu. Admin và wiki dùng chung thiết lập này.")
+    } finally {
+      setSaving(false)
+    }
+  }
+  async function saveDraft() {
+    try {
+      await persistSettings(settings)
     } catch (error) {
       setMessage(
         `Chưa lưu: ${error instanceof Error ? error.message : "Request failed"}. Nếu xung đột, tải lại thiết lập trước khi thử lại.`,
       )
-    } finally {
-      setSaving(false)
     }
+  }
+  function renderHeroAliasEditor(entity: EntityReference) {
+    const canonical =
+      entity.kind === "hero"
+        ? catalog.catalog.data?.find((candidate) => candidate.kind === "hero" && candidate.id === entity.id)
+        : undefined
+    return canonical ? (
+      <HeroAliasEditor
+        canonical={canonical}
+        custom={settings.entities.find((candidate) => candidate.kind === "hero" && candidate.id === canonical.id)}
+        locale={locale}
+        disabled={saving || !catalog.canEdit || !catalog.settings.data || catalog.settings.isError}
+        resolveIcon={catalog.resolveIcon}
+        onSave={(updates) => persistSettings(updateHeroAliases(settings, canonical, updates))}
+      />
+    ) : null
   }
   function createTerm() {
     const id = crypto.randomUUID()
@@ -346,6 +385,7 @@ export function TerminologyPage() {
             customKeys={customKeys}
             availableKeys={availableKeys}
             resolveIcon={catalog.resolveIcon}
+            renderAliasAction={renderHeroAliasEditor}
           />
         )}
         <Sheet
@@ -376,7 +416,29 @@ export function TerminologyPage() {
               disabled={saving || catalog.settings.isPending || !catalog.canEdit || catalog.settings.isError}
               className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 [&_[data-slot=entity-reference-input]]:min-h-40"
             >
-              {entity ? (
+              {entity && managedCommunityReference(entity.kind) ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <EntityReferenceArtwork entity={entity} className="size-12" />
+                    <div>
+                      <h3 className="font-semibold">{translation?.name ?? entity.id}</h3>
+                      <p className="text-sm text-muted-foreground">{translation?.description}</p>
+                    </div>
+                  </div>
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    Mục này lấy từ danh mục {entity.kind === "country" ? "quốc gia / khu vực" : "giải đấu"}. Bạn có thể
+                    chọn để gắn tham chiếu trong mô tả; tên và logo được quản lý tại dữ liệu gốc.
+                  </p>
+                  {entity.kind !== "country" && (
+                    <a
+                      className="inline-flex items-center gap-2 text-sm underline underline-offset-4"
+                      href={resolveEntityRoute(entity, "admin", locale)}
+                    >
+                      Mở dữ liệu gốc
+                    </a>
+                  )}
+                </div>
+              ) : entity ? (
                 <>
                   <label className="grid gap-1.5 text-sm">
                     Ngôn ngữ bản dịch
@@ -415,7 +477,7 @@ export function TerminologyPage() {
                     variant="ghost"
                     size="sm"
                     className="h-8 text-xs text-muted-foreground hover:text-destructive"
-                    disabled={!translation || entity.translations.length < 2}
+                    disabled={entity.kind === "hero" || !translation || entity.translations.length < 2}
                     onClick={() =>
                       update({ ...entity, translations: entity.translations.filter((text) => text.locale !== locale) })
                     }
@@ -427,31 +489,53 @@ export function TerminologyPage() {
                     <Input
                       className="h-10 text-base font-normal shadow-none"
                       value={translation?.name ?? ""}
+                      readOnly={entity.kind === "hero"}
                       onChange={(e) => textField("name", e.target.value)}
                     />
                   </label>
-                  <label className="grid gap-2 text-sm font-medium">
-                    Tên gọi khác (mỗi dòng một tên)
-                    <Textarea
-                      rows={3}
-                      className="min-h-20 resize-y font-normal shadow-none"
-                      value={translation?.aliases.join("\n") ?? ""}
-                      onChange={(e) => textField("aliases", e.target.value)}
+                  {entity.kind === "hero" ? (
+                    renderHeroAliasEditor(entity)
+                  ) : (
+                    <label className="grid gap-2 text-sm font-medium">
+                      Tên gọi khác (mỗi dòng một tên)
+                      <Textarea
+                        rows={3}
+                        className="min-h-20 resize-y font-normal shadow-none"
+                        value={translation?.aliases.join("\n") ?? ""}
+                        onChange={(e) => textField("aliases", e.target.value)}
+                      />
+                    </label>
+                  )}
+                  {entity.kind === "hero" ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Tên và giới thiệu lấy từ dữ liệu tướng gốc.</p>
+                      <div className="max-h-40 overflow-auto rounded-lg border p-3 text-sm">
+                        <ReferencePreview
+                          text={translation?.description ?? ""}
+                          entities={descriptionEntities}
+                          locale={locale}
+                          fallbackLocale={settings.fallbackLocale}
+                          autoRecognize={settings.autoRecognize}
+                          context="admin"
+                          resolveIcon={catalog.resolveIcon}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <EntityRichTextEditor
+                      key={`${selected}:${locale}`}
+                      label={entity.kind === "term" ? "Định nghĩa thuật ngữ" : "Giới thiệu ngắn khi xem tham chiếu"}
+                      maxLength={4000}
+                      value={translation?.description ?? ""}
+                      onChange={(value) => textField("description", value)}
+                      entities={descriptionEntities}
+                      locale={locale}
+                      fallbackLocale={settings.fallbackLocale}
+                      autoRecognize={settings.autoRecognize}
+                      resolveIcon={catalog.resolveIcon}
+                      searchReferences={searchDescriptionReferences}
                     />
-                  </label>
-                  <EntityRichTextEditor
-                    key={`${selected}:${locale}`}
-                    label={entity.kind === "term" ? "Định nghĩa thuật ngữ" : "Giới thiệu ngắn khi xem tham chiếu"}
-                    maxLength={4000}
-                    value={translation?.description ?? ""}
-                    onChange={(value) => textField("description", value)}
-                    entities={descriptionEntities}
-                    locale={locale}
-                    fallbackLocale={settings.fallbackLocale}
-                    autoRecognize={settings.autoRecognize}
-                    resolveIcon={catalog.resolveIcon}
-                    searchReferences={searchDescriptionReferences}
-                  />
+                  )}
                   <details className="group space-y-3 border-t pt-4">
                     <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
                       Hiển thị & nhận diện
