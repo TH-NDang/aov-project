@@ -21,7 +21,8 @@ The pre-commit hook rejects Vietnamese text in comments of newly added lines (se
 aov-project/
 ├── backend/
 │   ├── docs/           Specs (Vietnamese): 01 project, 02 database, 03 API, adr/
-│   └── wiki-service/   Spring Boot 4.1.1, Java 21, Maven Wrapper — AOV Wiki backend
+│   ├── wiki-service/   Spring Boot 4.1.1, Java 21, Maven Wrapper — AOV Wiki backend
+│   └── community-service/ Java 21, Maven Wrapper — manual tournament backend; separate DB/API
 ├── frontend/           pnpm + Turborepo: apps/aov-wiki, apps/aov-stream, apps/admin-aov, packages/ui
 └── resources/          Raw data and images (images via Git LFS).
 ```

@@ -35,6 +35,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [012](adr/ADR-012-reference-read-model-cache.md) | Projection danh mục và Redis cache có thể bỏ qua |
 | [013](adr/ADR-013-backend-organization.md) | Tổ chức backend, cấu hình local và cổng kiểm tra kiến trúc |
 | [014](adr/ADR-014-public-assets-private-staging.md) | Bucket assets công khai và vùng upload/import riêng tư trên R2 |
+| [015](adr/ADR-015-manual-tournament-recording.md) | Backend giải đấu độc lập, dữ liệu quan sát và snapshot theo mùa/patch của từng ván |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
 đã hoàn thành một tính năng hoặc một lượt kiểm thử chưa thực hiện.
