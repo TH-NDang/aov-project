@@ -80,6 +80,20 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
   const { EntityReferenceInput } = await import("@aov/ui/components/entity-reference-input")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const handle = React.createRef<EntityReferenceInputHandle>()
+  const highlights = new Map<string, unknown>()
+  Object.defineProperty(dom.window, "CSS", { value: { highlights }, configurable: true })
+  Object.defineProperty(dom.window, "Highlight", {
+    value: class {
+      constructor(..._ranges: Range[]) {}
+    },
+  })
+  const recognitionEntities: EntityReference[] = [
+    {
+      id: "hero-ime",
+      kind: "hero",
+      translations: [{ locale: "vi-VN", name: "abcđ", aliases: [], description: "" }],
+    },
+  ]
   let saved = "abc",
     changes = 0,
     ends = 0
@@ -91,6 +105,7 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
           ref={handle}
           value={value}
           locale="vi-VN"
+          entities={recognitionEntities}
           maxLength={5}
           onChange={(snapshot) => {
             changes++
@@ -128,8 +143,13 @@ test("IME changes remain undecorated until commit, overflow rolls back, and disa
     await act(async () => input().dispatchEvent(new dom.window.CompositionEvent("compositionstart", { bubbles: true })))
     await type("abcđ")
     assert.equal(saved, "abcđ")
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 400)))
+    assert.equal(highlights.size, 0, "Composition pauses do not decorate unfinished input")
     await act(async () => input().dispatchEvent(new dom.window.CompositionEvent("compositionend", { bubbles: true })))
     assert.equal(saved, "abcđ")
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 400)))
+    assert.equal(highlights.size, 1, "Finishing composition schedules recognition even when the value is unchanged")
+    assert.equal(input().textContent, "abcđ")
     const before = changes
     await act(async () => root.render(<Harness disabled />))
     assert.equal(input().getAttribute("contenteditable"), "false")

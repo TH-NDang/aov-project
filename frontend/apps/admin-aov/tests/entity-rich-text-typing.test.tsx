@@ -94,7 +94,7 @@ async function editorHarness(initial: string, catalog: EntityReference[] = []) {
   }
 }
 
-test("plain typing with a large catalog does not scan translations until reference suggestions open", async () => {
+test("ordinary typing and explicit suggestions reuse prepared indexes without rescanning translations", async () => {
   let translationReads = 0
   const targetName = "Vật phẩm 987 · Kiếm thánh thử nghiệm"
   const catalog = Array.from({ length: 1600 }, (_, index): EntityReference => {
@@ -119,7 +119,8 @@ test("plain typing with a large catalog does not scan translations until referen
   try {
     assert.equal(editor.document.querySelector('[role="listbox"]'), null)
     assert.equal(editor.document.querySelector('[data-slot="entity-rich-text"]'), null)
-    assert.equal(translationReads, 0, "Closed suggestions and preview do not need localized catalog entries")
+    assert.ok(translationReads >= catalog.length, "The localized indexes are prepared once")
+    translationReads = 0
     for (const suffix of [" đ", " đang", " đang gõ", " đang gõ bình", " đang gõ bình thường"])
       await editor.type(`Mô tả${suffix}`)
     assert.equal(editor.saved(), "Mô tả đang gõ bình thường")
@@ -152,7 +153,7 @@ test("plain typing with a large catalog does not scan translations until referen
     const options = [...editor.document.querySelectorAll('[role="listbox"] [role="option"]')]
     assert.equal(options.length, 1)
     assert.ok(options[0]!.textContent?.includes("Kiếm thánh thử nghiệm"))
-    assert.ok(translationReads >= catalog.length, "An open query actually searches the localized catalog")
+    assert.equal(translationReads, 0, "An open query reuses the same localized search index")
     await editor.key("Enter")
     assert.equal(editor.saved(), `Xin <ref=item:item-987>${targetName}</ref>`)
     assert.equal(editor.input().querySelector("[data-reference-id]")?.getAttribute("data-reference-id"), "item-987")
@@ -163,6 +164,32 @@ test("plain typing with a large catalog does not scan translations until referen
     await editor.type("Mô tả mới tiếp tục")
     assert.equal(translationReads, 0, "Closing suggestions restores the cheap typing path")
     assert.equal(editor.saved(), "Mô tả mới tiếp tục")
+  } finally {
+    await editor.close()
+  }
+})
+
+test("ordinary full or partial names never open a picker and explicit mentions still insert chips", async () => {
+  const hero: EntityReference = {
+    id: "florentino",
+    kind: "hero",
+    translations: [{ locale: "vi-VN", name: "Florentino", aliases: [], description: "" }],
+  }
+  const editor = await editorHarness("", [hero])
+  try {
+    await editor.type("Chọn flo")
+    assert.equal(editor.document.querySelector('[role="listbox"]'), null)
+    assert.equal(editor.saved(), "Chọn flo")
+    await editor.type("Chọn Florentino")
+    assert.equal(editor.document.querySelector('[role="listbox"]'), null)
+    assert.equal(editor.saved(), "Chọn Florentino")
+    await editor.type("Chọn @flor")
+    assert.ok(editor.document.querySelector('[role="option"]')?.textContent?.includes("Florentino"))
+    await editor.key("Enter")
+    assert.equal(editor.saved(), "Chọn <ref=hero:florentino>Florentino</ref>")
+    assert.ok(editor.input().querySelector('[data-reference-kind="hero"]'))
+    await editor.key("z", { ctrlKey: true })
+    assert.equal(editor.saved(), "Chọn @flor")
   } finally {
     await editor.close()
   }

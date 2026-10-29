@@ -1,11 +1,13 @@
 import { ApiError } from "./errors"
 
-/** Only relative wiki API paths are accepted so credentials cannot leak to another origin. */
+/** Fixed same-origin API prefixes prevent credentials from leaking to another origin. */
 export function createAuthenticatedClient(
   getToken: () => Promise<string>,
   onUnauthorized: () => void,
   fetcher: typeof fetch = fetch,
+  apiBase: "/api/wiki/v1" | "/api/community/v1" = "/api/wiki/v1",
 ) {
+  if (!["/api/wiki/v1", "/api/community/v1"].includes(apiBase)) throw new Error("Invalid API base")
   return async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     if (!/^\/[a-zA-Z0-9/_-]*(?:\?[^#]*)?$/.test(path)) throw new Error("Invalid API path")
     const token = await getToken()
@@ -14,7 +16,7 @@ export function createAuthenticatedClient(
     headers.set("Accept", "application/json")
     if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json")
     const timeout = AbortSignal.timeout(15000)
-    const response = await fetcher(`/api/wiki/v1${path}`, {
+    const response = await fetcher(`${apiBase}${path}`, {
       ...init,
       headers,
       credentials: "omit",

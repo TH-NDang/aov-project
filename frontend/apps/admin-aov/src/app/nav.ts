@@ -143,14 +143,13 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Sắp triển khai",
+    label: "Giải đấu & trực tiếp",
     items: [
       {
         title: "Giải đấu",
         icon: "tournaments",
         to: "/tournaments",
         description: "Giải, đội, lịch thi đấu",
-        soon: true,
       },
       {
         title: "Livestream",

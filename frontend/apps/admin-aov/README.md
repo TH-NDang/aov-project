@@ -578,3 +578,136 @@ dịch và asset ID, không tải preview đầy đủ từng tướng. Query ke
 các thao tác tạo/sửa/xuất bản/import làm mới danh mục. Metadata icon dùng chung TanStack Query với
 kho ảnh, tải khi hàng trong popup `@` sắp xuất hiện và cập nhật khi thay phiên bản ảnh. Popup giới hạn
 chiều cao, cuộn trong toàn bộ kết quả; không đẩy phần nội dung bên dưới.
+
+Văn bản thường không mở popup hoặc gọi API tìm theo từng từ. Tên tướng và thuật ngữ đầy đủ được
+nhận diện thụ động theo danh mục, không tự đổi đoạn viết tắt như `flo` thành Florentino. Ô nhập
+dùng CSS Custom Highlight sau khoảng nghỉ 350 ms để giữ nguyên văn bản, caret, undo và định dạng;
+trình duyệt chưa hỗ trợ vẫn cho soạn văn bản bình thường. Gõ `@` hoặc bấm nút Tham chiếu mới mở
+bộ chọn và chèn thẻ có danh tính cố định. Chỉ mục tên được chuẩn bị một lần cho mỗi danh mục/ngôn
+ngữ; IME không bị ngắt để nhận diện giữa quá trình ghép chữ.
+
+Đội tuyển và tuyển thủ lấy từ API Community có quyền `tournament:read`; tên đầy đủ pháp lý của
+tuyển thủ không nằm trong danh mục này. Có tìm theo tên viết tắt/tên khác của đội và tra lại các
+UUID đã chèn ngoài trang kết quả đầu tiên. Quốc gia dùng danh mục cờ đóng gói trong UI; chọn
+tham chiếu sẽ chèn cả cờ và tên. Các mục này do nguồn sở hữu quản lý, không lưu vào thiết lập Wiki.
+Khi xem công khai, tham chiếu Community chưa có danh mục công khai giữ nhãn và icon dự phòng,
+không mở trang quản trị hoặc truy vấn hồ sơ nháp.
+
+Các thuật ngữ cơ bản có màu mặc định thích ứng sáng/tối, như sát thương phép màu tím, vật lý màu
+cam và hồi máu màu xanh. Màu tùy chỉnh được ưu tiên. Gạch chấm hiển thị dưới cả cụm từ, không
+tách theo từng khoảng trắng.
+
+### Nhập liệu giải đấu
+
+`/tournaments` dùng API thật `/api/community/v1`, độc lập dữ liệu và quyền của Wiki. Proxy dev/preview
+trỏ `COMMUNITY_API_TARGET` (mặc định `http://localhost:8082`). Phiên đăng nhập hiện tại cấp access token
+qua Wiki BFF; token cần audience `community-service`. UI đọc quyền từ `/admin/me` của dịch vụ cộng đồng,
+không suy quyền giải đấu từ quyền biên tập Wiki. Ba quyền là `tournament:read`, `tournament:write`,
+`tournament:publish`; sau khi thêm quyền cần làm mới phiên đăng nhập.
+
+Tạo hồ sơ đội/tuyển thủ, tạo giải rồi tạo trận BO. Mỗi ván có hai đội, bốn ô cấm mỗi đội và năm vị trí
+Caesar, Rừng, Giữa, Rồng, Hỗ trợ; mỗi tuyển thủ có đúng một tướng và một phụ trợ. Có thể lưu nháp khi
+chưa đủ, danh sách phần thiếu được hiển thị trước khi xuất bản. Mùa/patch được chọn riêng trên từng
+ván, không gán một patch cố định cho cả giải. Đổi phạm vi giữ các lựa chọn đang có; backend kiểm tra
+lại tham chiếu khi xuất bản. Tham chiếu chưa có trong Wiki được ghi bằng tên thủ công và đánh dấu
+chưa liên kết, không tự xuất bản dữ liệu Wiki để tạo ảnh.
+
+Đội tuyển dùng trường quốc gia/khu vực hiện có để chọn, nhóm và lọc; bộ lọc nằm trong query `country`.
+Logo có thể tải trực tiếp bằng quyền `media:write`: Media cấp URL ký, trình duyệt tải byte thẳng lên kho,
+hoàn tất kiểm tra rồi lưu URL CDN bất biến vào hồ sơ đội. URL nguồn trước đó được giữ trong nguồn gốc ảnh.
+Giải đấu dùng cùng luồng tải logo. Tên khác của đội được nhập cách nhau bằng dấu phẩy, tìm kiếm chung
+với tên và mã nhưng không thay tên chính. Liên kết tham chiếu mở hồ sơ đội/tuyển thủ có sẵn ngay trong trang.
+Hồ sơ tuyển thủ có tên khác, quốc gia và ảnh tùy chọn; ảnh dùng cùng luồng Media, không thay ảnh đại diện
+của tài khoản quản trị. Tìm kiếm hỗ trợ tên thi đấu, họ tên, tên cũ và cách nhập không dấu.
+
+Mỗi thẻ đội có nút Đội hình, mở ngay tại trang qua query `roster=<teamId>`. Chọn giải để xem hoặc sửa
+thành viên; dữ liệu thuộc bộ ba giải/đội/tuyển thủ, không có trường đội hiện tại toàn cục. Vị trí chưa
+có nguồn giữ `null`, trạng thái chưa rõ giữ `UNKNOWN`; dự bị và không tham dự được ghi riêng. Nguồn và
+mức kiểm chứng tách khỏi vị trí, ngày tham gia có thể chưa biết. Đổi phạm vi hoặc đóng phần chỉnh sửa
+khi còn thay đổi chưa lưu có cảnh báo; nội dung được ghi qua `/admin/roster-memberships`.
+Danh sách giải có thẻ tổng quan ngay cả khi chưa ghi trận. Giải đa thị trường không tự suy ra thị trường
+gameplay của ván: khởi tạo ở Quốc tế và hiển thị nhắc chọn đúng thị trường theo nguồn; mùa/patch vẫn để trống.
+
+Nút Xóa trong hồ sơ và trên từng dòng đội hình kiểm tra số liên kết trước khi xác nhận chuyển vào thùng rác.
+Mục còn được sử dụng không thể xóa; các liên kết Mở đưa tới dữ liệu cần xử lý. Không xóa dây chuyền đội,
+tuyển thủ hoặc trận liên quan. Menu ba chấm trên trang chọn Thùng rác (`state=deleted`), đổi loại mục và
+tìm tên/mã để khôi phục. Cần khôi phục các mục cha trước thành viên/trận/ván. Mã vẫn được giữ sau khi xóa.
+Ván đã từng xuất bản giữ lịch sử và chỉ có thể gỡ công khai, không được xóa. Mỗi thao tác dùng đúng phiên
+bản đã kiểm tra; thay đổi đồng thời yêu cầu tải lại thay vì ghi đè.
+
+Phân hạng, loại giải, hình thức, trạng thái và kết quả là thông tin bổ sung. Không tự xác định trạng thái
+hoặc đội vô địch theo ngày. Kết quả cần tên vô địch/á quân và link nguồn; tỷ số nhập đủ hai vế hoặc để trống.
+Mức kiểm chứng tách nguồn chính, nguồn phụ đã đối chiếu, bản lưu, báo chí và chưa xác minh; không tự coi
+phân hạng hoặc kết quả từ nguồn phụ là thông tin chính thức.
+Trận BO có thể ghi kết quả cuối cùng kèm nguồn ngay cả khi chưa thu thập từng ván; không tự tạo ván từ
+tỷ số. Kết quả hoàn tất cần một đội đạt số ván thắng của thể thức, đội còn lại ít hơn.
+
+Danh sách trận nhóm Playoffs và các lượt vòng bảng, sắp theo lịch thi đấu mới nhất. Mỗi thẻ có logo
+hai đội, tỷ số, biểu tượng đội thắng và nút nguồn riêng. Bộ lọc `result=recorded|missing` phân biệt
+đã có hoặc chưa có kết quả; không suy ra đang trực tiếp, đã xuất bản hay đã kết thúc từ ngày thi đấu.
+Tìm kiếm hỗ trợ tên đội đầy đủ, viết tắt, tên khác và tiếng Việt không dấu. Những vòng tự đặt tên hoặc
+chưa có lịch vẫn được giữ trong danh sách.
+
+Mục Nhập dữ liệu nhận JSON `schemaVersion: 1`, tối đa 1 MB, có bước xem trước tên và thao tác của
+từng mục trước khi ghi. Gói hồ sơ chứa `teams`, `players`, `tournament` và `rosters`; gói trận chứa
+`series`. Mỗi mục có `content`; liên kết dùng `tournamentCode`, `teamCode`, `playerCode`, `teamACode`
+và `teamBCode` thay vì UUID của máy khác. Đội hình có thể lấy mã giải chung từ `scope.eventCode`.
+Nhập gói hồ sơ trước gói trận nếu các danh tính cha chưa có. Gói mẫu và bằng chứng nằm trong
+`resources/esports/2026-post-apl/aog-sample/` tại gốc repository.
+
+Chương trình đối chiếu cả dữ liệu đang dùng và thùng rác theo mã; riêng đội hình đối chiếu bộ ba
+giải/đội/tuyển thủ. Chỉ khôi phục những mục có trong file, giữ UUID và giữ ảnh hiện có nếu URL ảnh
+đầu vào là `null`. Mục không đổi được bỏ qua. Quá trình chạy tuần tự trong trình duyệt và dừng
+khi gặp lỗi; các mục đã lưu vẫn được giữ, có thể nhập lại cùng file để tiếp tục. Không tự xuất bản,
+không xóa mục ngoài file và không tạo ván đấu từ tỷ số tổng. Giữ trang mở trong lúc nhập.
+
+Ngọc/phù hiệu phân biệt “Chưa thu thập”, “Nguồn không hiển thị”, “Đã quan sát rõ”. Hai trạng thái đầu
+không phải cấu hình trống. Khi biết đầy đủ, nhập số viên từng loại ngọc và nhánh/cấp của phù hiệu.
+Trang bị được ghi thành các mốc thời gian `phút:giây`, mỗi mốc có sáu ô từ 1 đến 6. Mỗi ô phân biệt
+không rõ, đã xác nhận trống và có trang bị. Các sự kiện mua, bán, ghép hoặc đổi ô được ghi riêng khi
+nguồn xác nhận; chương trình không tự suy ra giao dịch từ khác biệt giữa hai ảnh.
+
+Nút Lưu nháp ghi lên máy chủ; đổi trang hoặc đóng trình duyệt khi chưa lưu có cảnh báo. Xuất bản
+chốt nội dung, tên/ảnh tham chiếu và mốc gameplay để người xem Stream không bị thay đổi theo các
+lần chỉnh Wiki sau đó. Sửa nháp không tác động bản công khai; nút Gỡ công khai giữ bản nháp và lịch sử
+để sửa rồi xuất bản lại. Kiểm tra luồng này bằng `pnpm --filter @aov/admin-aov test:tournaments` và
+`pnpm --filter @aov/admin-aov test:auth` trong thư mục `frontend`.
+
+## Giải đấu và dòng thời gian ván
+
+- `/tournaments`: danh sách giải (lọc trạng thái/hạng, tìm kiếm). `/tournaments/:id`: trang giải kiểu Liquipedia gồm
+  Tổng quan, Lịch thi đấu, Bảng xếp hạng (tạm tính từ tỉ số trận vòng bảng), Nhánh đấu (dựng từ mã vòng
+  `UPPER_BRACKET_*`, `LOWER_BRACKET_*`, `GRAND_FINAL`), Đội tham dự và Thống kê tướng. `/tournaments/registry`: đội và
+  tuyển thủ dùng chung.
+- `/tournaments/:id/matches/:seriesId`: trình xem cả trận trên **một video YouTube chính thức** (IFrame API, không sao
+  chép video). Mỗi ván là một chương trên trục thời gian video, đặt theo `sourceUrl` + `sourceTimestampSeconds` của
+  ván; ván chưa căn video được xếp nối tiếp (viền đứt). Bảng điểm, diễn biến và bộ ghi luôn theo ván mà video đang phát.
+  Link cũ `/games/:gameId` chuyển về trang trận với `?game=`. `?edit=1` (cần `tournament:write`) mở chế độ ghi.
+- Thanh thời gian gồm bản đồ thu nhỏ toàn video (chương V1, V2…, khung đang phóng) và làn chi tiết phóng 1–32×:
+  hàng Xanh/Đỏ cho hạ gục và trang bị cấp 3, hàng giữa cho mục tiêu lớn, cờ "Bắt đầu trận"/"Bắt đầu ván N".
+- Tướng cấm hiện ở đầu bảng điểm của đội cấm. Tướng, trang bị, phụ trợ, phù hiệu có thẻ tham chiếu khi hover (bấm để
+  ghim). Icon vị trí dùng lại glyph đơn sắc của Wiki nên đổi màu theo đội.
+- Mọi thay đổi lưu thẳng qua `PUT /admin/games/{id}` của community-service: hạ gục, mục tiêu, khoảnh khắc và đoạn
+  tạm dừng vào `timeline`; mua/bán trang bị vào `equipmentEvents` của tuyển thủ; link video, giây bắt đầu và thời
+  lượng vào các trường của ván. Các lần lưu được xếp hàng theo phiên bản; xung đột với người sửa khác hiện lỗi kèm
+  nút tải bản mới. Ván đã xuất bản chỉ thay đổi bản nháp cho tới khi xuất bản lại.
+- Thanh tiến trình hiện mốc dạng viên: người hạ ⚔ người bị hạ, tướng › trang bị cấp 3, người kết liễu/phá › mục
+  tiêu lớn (hàng giữa trục). Mốc quá gần nhau gộp thành cụm có số đếm; hover mở thẻ tham chiếu, "Xem chi tiết" mở
+  hộp thoại với link YouTube và link chia sẻ `?t=giây`. Trang bị cấp 1–2 chỉ hiện khi bật trong danh sách diễn biến.
+- Timeline dùng thời gian tuyệt đối và toàn bộ thời lượng do YouTube cung cấp; bấm mốc nào sẽ tua đến đúng giây
+  đó trong video. Diễn biến được quy đổi từ đồng hồ ván, gồm phần mở đầu và các đoạn tạm dừng; dữ liệu ghi sự kiện
+  vẫn dùng thời gian trong ván. Mốc bắt đầu trận lấy từ timestamp trong link trận, hoặc bắt đầu ván 1; các ván
+  cùng video có mốc riêng. Thanh hỗ trợ phóng 1×–32×, cuộn ngang, xem toàn video và quay về vị trí đang xem.
+- Vị trí video đang xem được nhớ theo trình duyệt cho từng ván. Trình phát tải thông tin thời lượng nhưng không
+  tự phát; yêu cầu tua lúc đang tải được giữ đến khi sẵn sàng. Sau khi tua, giá trị cũ YouTube trả về trong
+  khoảng 2,5 giây bị bỏ qua để mốc không nhảy ngược. Đồng hồ riêng trong banner vẫn là thời gian ván.
+- Khi cuộn qua khung video, cùng trình phát thu nhỏ nổi ở góc dưới; có nút quay về video lớn hoặc đóng khung nổi,
+  không tải lại video. Điện thoại (≤ 639px) chia nội dung thành tab, form ghi dạng bottom sheet. Máy tính dùng
+  popup nổi kéo được để không che video.
+- Icon mục tiêu lớn trong `src/features/esports/assets/objectives` là ảnh thiết kế riêng tạo bằng ChatGPT cho dự án,
+  không lấy từ tài nguyên game.
+- Cần chạy community-service bản có trường `timeline`; bản cũ bỏ qua trường lạ và UI sẽ báo cần khởi động lại.
+- Thành phần trong `src/features/esports/components` và `model` không phụ thuộc API/phiên admin để dùng lại cho trang
+  công khai; trang chỉ đọc chỉ cần bỏ quyền ghi.
+- Xem nhanh bằng dữ liệu giả lập khi Vite dev đang chạy: `/tests/fixtures/esports.html` (thêm `?view` để xem chế độ chỉ
+  đọc). Kiểm thử: `pnpm --filter @aov/admin-aov test:tournaments`.

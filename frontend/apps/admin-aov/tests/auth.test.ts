@@ -72,6 +72,32 @@ test("refreshes credentials before sending a same-origin API request", async () 
   assert.deepEqual(events, ["token", "fetch"])
 })
 
+test("community requests reuse refreshed credentials only under their fixed same-origin API prefix", async () => {
+  const request = createAuthenticatedClient(
+    async () => "community-token",
+    () => {},
+    async (url, init) => {
+      assert.equal(url, "/api/community/v1/admin/me")
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer community-token")
+      assert.equal(init?.redirect, "error")
+      return Response.json({ capabilities: ["tournament:read"] })
+    },
+    "/api/community/v1",
+  )
+  assert.deepEqual(await request("/admin/me"), { capabilities: ["tournament:read"] })
+  await assert.rejects(request("https://example.com/admin/me"), /Invalid API path/)
+  assert.throws(
+    () =>
+      createAuthenticatedClient(
+        async () => "token",
+        () => {},
+        fetch,
+        "https://example.com" as "/api/wiki/v1",
+      ),
+    /Invalid API base/,
+  )
+})
+
 test("does not forward credentials outside wiki API", async () => {
   const request = createAuthenticatedClient(
     async () => {

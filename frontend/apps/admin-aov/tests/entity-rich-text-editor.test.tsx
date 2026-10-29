@@ -6,12 +6,16 @@ import { JSDOM } from "jsdom"
 import {
   insertReference,
   mentionAt,
+  createReferenceSearchIndex,
+  referenceSuggestionAt,
+  referenceReplacementRange,
   referenceChoices,
   safeSelection,
   wrapSelection,
 } from "@aov/ui/lib/entity-rich-text-editor"
 import { createEntityIndex, parseRichText, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { EntityIconResolver } from "@aov/ui/components/entity-rich-text"
+import { passiveReferenceHighlights, paintPassiveReferences } from "@aov/ui/lib/reference-input-recognition"
 import {
   referenceInput,
   fillReferenceInput,
@@ -33,6 +37,103 @@ const entities: EntityReference[] = [
     translations: [{ locale: "en-US", name: "True damage", aliases: [], description: "" }],
   },
 ]
+
+test("ordinary names remain passive and only an at sign opens suggestions", () => {
+  const hero: EntityReference = {
+    id: "florentino",
+    kind: "hero",
+    translations: [{ locale: "vi-VN", name: "Florentino", aliases: [], description: "" }],
+  }
+  const damage: EntityReference = {
+    id: "sat-thuong-phep",
+    kind: "term",
+    translations: [{ locale: "vi-VN", name: "Sát thương phép", aliases: ["ST phép"], description: "" }],
+  }
+  const index = createReferenceSearchIndex([hero, damage], "vi-VN", "vi-VN")
+  const suggest = (text: string) => referenceSuggestionAt(text, { start: text.length, end: text.length }, index)
+  assert.equal(suggest("Chọn flo"), null)
+  assert.equal(suggest("Chọn Florentino"), null)
+  assert.equal(suggest("Sát thương phép"), null)
+  assert.equal(suggest("Trang bị"), null)
+  assert.equal(suggest("Chiêu 1 Airi"), null)
+  const text = "Gây sát thương ph"
+  const suggestion = { start: 4, end: text.length, query: "sát thương ph", explicit: false }
+  const range = referenceReplacementRange(text, suggestion, damage, "vi-VN", "vi-VN")
+  assert.equal(
+    insertReference(text, range, damage, "Sát thương phép", false)?.value,
+    "Gây <ref=term:sat-thuong-phep>Sát thương phép</ref>",
+  )
+  assert.equal(suggest("mail@example.com"), null)
+  assert.equal(suggest("https://example.com/flo"), null)
+  assert.equal(suggest("<noauto>flo"), null)
+  assert.equal(suggest("<NOAUTO>flo"), null)
+  assert.equal(suggest("<ref=hero:florentino>flo"), null)
+  assert.equal(referenceSuggestionAt("florentino", { start: 3, end: 3 }, index), null)
+  assert.equal(referenceSuggestionAt("flo", { start: 0, end: 3 }, index), null)
+  assert.equal(suggest("flo "), null)
+  assert.equal(suggest("@flo")?.explicit, true)
+})
+
+test("passive input recognition preserves text, formatting and caret without creating reference tokens", () => {
+  const dom = new JSDOM(
+    '<div contenteditable="true">Lữ Bố gây sát thương phép. flo. <span data-format-open="<noauto>">Lữ Bố</span> <span data-reference-token="token">Lữ Bố</span></div>',
+  )
+  const root = dom.window.document.querySelector<HTMLElement>("div")!
+  const damage: EntityReference = {
+    id: "sat-thuong-phep",
+    kind: "term",
+    translations: [{ locale: "vi-VN", name: "Sát thương phép", aliases: [], description: "" }],
+  }
+  const index = createEntityIndex([...entities, damage], "vi-VN", "en-US")
+  const original = root.innerHTML
+  const selection = dom.window.document.getSelection()!
+  selection.collapse(root.firstChild, 3)
+  const matches = passiveReferenceHighlights(root, index)
+  assert.deepEqual(
+    matches.map((match) => match.range.toString()),
+    ["Lữ Bố", "sát thương phép"],
+  )
+  assert.equal(matches[1]?.color, "light-dark(#7e22ce, #d8b4fe)")
+  const highlights = new Map<string, unknown>()
+  Object.defineProperty(dom.window, "CSS", { value: { highlights }, configurable: true })
+  Object.defineProperty(dom.window, "Highlight", {
+    value: class {
+      constructor(...ranges: Range[]) {
+        assert.ok(ranges.length)
+      }
+    },
+  })
+  const clear = paintPassiveReferences(root, index, "test")
+  assert.equal(highlights.size, 2)
+  assert.equal(root.innerHTML, original)
+  assert.equal(selection.anchorOffset, 3)
+  clear()
+  assert.equal(highlights.size, 0)
+  assert.equal(dom.window.document.querySelector("style"), null)
+  root.textContent = "<b>Lữ Bố</b> Lữ Bố"
+  assert.deepEqual(passiveReferenceHighlights(root, index), [])
+  const aliasIndex = createEntityIndex(
+    [
+      {
+        id: "florentino",
+        kind: "hero",
+        translations: [{ locale: "vi-VN", name: "Florentino", aliases: ["flo"], description: "" }],
+      },
+    ],
+    "vi-VN",
+    "vi-VN",
+  )
+  for (const text of ["<b>over</b>flo", "flo<b>wer</b>", "<b>flo</b>rentina"]) {
+    root.innerHTML = text
+    assert.deepEqual(passiveReferenceHighlights(root, aliasIndex), [], text)
+  }
+  root.innerHTML = "<b>flo</b> gây sát thương"
+  assert.deepEqual(
+    passiveReferenceHighlights(root, aliasIndex).map((entry) => entry.range.toString()),
+    ["flo"],
+  )
+  dom.window.close()
+})
 test("editor serialization preserves source, Unicode, selection boundaries and stable identities", () => {
   assert.equal(mentionAt("mail@example.com", { start: 16, end: 16 }), null)
   assert.equal(mentionAt("@example.com", { start: 12, end: 12 }), null)

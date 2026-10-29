@@ -1,0 +1,200 @@
+.tournament-roster-sheet[data-slot="sheet-content"] {
+  width: min(620px, 100vw);
+  max-width: none;
+  padding: 24px;
+  overflow-y: auto;
+}
+.tournament-roster-sheet label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+.tournament-roster-sheet select,
+.tournament-roster-sheet input,
+.tournament-roster-sheet textarea {
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--background);
+  padding: 7px 9px;
+  color: var(--foreground);
+  font-size: 12px;
+}
+.tournament-roster-sheet textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+.tournament-roster-team-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 20px;
+}
+.tournament-roster-team-heading > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+.tournament-roster-scope {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+.tournament-roster-scope > label {
+  flex: 1;
+}
+.tournament-roster-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.tournament-roster-list-heading small {
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+.tournament-membership-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.tournament-membership-list > article {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 3px 6px 3px 3px;
+}
+.tournament-member-body {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+  border-radius: 7px;
+  padding: 7px;
+  text-align: left;
+}
+button.tournament-member-body {
+  cursor: pointer;
+}
+button.tournament-member-body:hover {
+  background: var(--muted);
+}
+.tournament-member-body > div {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+}
+.tournament-member-body strong {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tournament-member-body small {
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+.tournament-member-lane {
+  flex-shrink: 0;
+  border-radius: 5px;
+  background: var(--muted);
+  padding: 4px 6px;
+  color: var(--muted-foreground);
+  font-size: 10px;
+}
+.tournament-roster-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 14px;
+}
+.tournament-roster-form-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.tournament-roster-form fieldset,
+.tournament-roster-extra > div {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.tournament-roster-player-field,
+.tournament-roster-extra {
+  grid-column: 1 / -1;
+}
+.tournament-roster-extra > summary {
+  cursor: pointer;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.tournament-roster-extra > div {
+  padding-top: 12px;
+}
+.tournament-roster-extra label:has(textarea) {
+  grid-column: 1 / -1;
+}
+.tournament-roster-form > button {
+  align-self: flex-start;
+}
+.tournament-roster-source-note {
+  max-height: 160px;
+  overflow-y: auto;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+@media (max-width: 640px) {
+  .tournament-roster-sheet[data-slot="sheet-content"] {
+    inset: 50px 0 0;
+    width: 100%;
+    height: calc(100dvh - 50px);
+    padding: 19px 15px;
+    border-top-left-radius: 17px;
+    border-top-right-radius: 17px;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+  }
+  .tournament-roster-sheet[data-state="open"] {
+    animation-name: enter;
+    --tw-enter-translate-x: 0;
+    --tw-enter-translate-y: 100%;
+  }
+  .tournament-roster-sheet[data-state="closed"] {
+    animation-name: exit;
+    --tw-exit-translate-x: 0;
+    --tw-exit-translate-y: 100%;
+  }
+  .tournament-roster-sheet input,
+  .tournament-roster-sheet textarea {
+    font-size: 16px;
+  }
+  .tournament-roster-scope {
+    flex-wrap: wrap;
+  }
+  .tournament-roster-scope > label {
+    flex-basis: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tournament-roster-sheet {
+    transition: none !important;
+    animation: none !important;
+  }
+}

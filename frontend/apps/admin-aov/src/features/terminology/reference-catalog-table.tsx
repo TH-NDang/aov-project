@@ -47,6 +47,7 @@ export function ReferenceCatalogTable({
   resolveIcon,
   actions,
   variant,
+  renderAliasAction,
 }: {
   entities: EntityReference[]
   locale: string
@@ -58,6 +59,7 @@ export function ReferenceCatalogTable({
   resolveIcon?: EntityIconResolver
   actions?: ReactNode
   variant?: "terms" | "references"
+  renderAliasAction?: (entity: EntityReference) => ReactNode
 }) {
   const [search, setSearch] = useState("")
   const [kind, setKind] = useState("all")
@@ -264,6 +266,7 @@ export function ReferenceCatalogTable({
                     ) : (
                       <span className="hidden text-xs text-muted-foreground @3xl/catalog:inline">—</span>
                     )}
+                    {!termsOnly && renderAliasAction?.(entity)}
                   </td>
                   <td className="mt-3 block @3xl/catalog:mt-0 @3xl/catalog:table-cell @3xl/catalog:px-4 @3xl/catalog:py-4">
                     <div className="flex flex-wrap items-center gap-1.5">

@@ -9,6 +9,10 @@ import { defaultSettings, loadSettings } from "./settings-api"
 import { createMediaIconResolver } from "../media/media-cache"
 import { referenceCatalogApi, referenceCatalogKeys } from "./reference-api"
 import { useSkillReferences } from "./use-skill-references"
+import { countryReferences } from "@aov/ui/lib/country-references"
+import { communityReferenceApi, communityReferenceKeys } from "./community-reference-api"
+import { useCommunityReferences } from "./use-community-references"
+import { mergeReferenceCatalog } from "./hero-aliases"
 
 const publishing = createPublishingApi(backendRequest)
 const ReferenceRulesetContext = createContext<string | undefined>(undefined)
@@ -31,23 +35,23 @@ export function useReferenceCatalog() {
     staleTime: 300000,
     retry: false,
   })
+  const communityCatalog = useQuery({
+    queryKey: communityReferenceKeys.catalog(session.actor?.issuer, session.actor?.subject),
+    queryFn: ({ signal }) => communityReferenceApi.catalog(signal),
+    enabled: !!session.actor,
+    staleTime: 60000,
+    retry: false,
+  })
   const config = settings.data?.settings ?? defaultSettings
   const entities = useMemo(() => {
-    const entries = catalog.data ?? []
-    const merged = new Map(entries.map((entity) => [`${entity.kind}:${entity.id}`, entity]))
-    for (const entity of config.entities) {
-      const key = `${entity.kind}:${entity.id}`
-      if (entity.kind === "term" || merged.has(key)) {
-        const original = merged.get(key)
-        merged.set(key, { ...original, ...entity, iconAssetId: original?.iconAssetId })
-      }
-    }
-    return [...merged.values()]
-  }, [catalog.data, config.entities])
+    const entries = [...countryReferences, ...(communityCatalog.data?.items ?? []), ...(catalog.data ?? [])]
+    return mergeReferenceCatalog(entries, config.entities)
+  }, [catalog.data, communityCatalog.data, config.entities])
   const resolveIcon = useMemo(() => createMediaIconResolver(client, publishing.asset), [client])
   return {
     settings,
     catalog,
+    communityCatalog,
     config,
     entities,
     resolveIcon,
@@ -108,12 +112,13 @@ export function AdminEntityText({ text }: { text: string }) {
 
 function ResolvedAdminEntityText({ text, value }: { text: string; value: ReferenceContextValue }) {
   const skills = useSkillReferences(text, value.locale, value.rulesetId)
+  const community = useCommunityReferences(text, value.locale)
   const index = useMemo(() => {
-    if (!skills.length) return value.index
-    const extra = createEntityIndex(skills, value.locale, value.fallbackLocale)
+    if (!skills.length && !community.length) return value.index
+    const extra = createEntityIndex([...skills, ...community], value.locale, value.fallbackLocale)
     // Explicit skill references do not participate in automatic text recognition.
     return { ...value.index, byId: new Map([...value.index.byId, ...extra.byId]) }
-  }, [value, skills])
+  }, [value, skills, community])
   return (
     <EntityRichText
       text={text}
