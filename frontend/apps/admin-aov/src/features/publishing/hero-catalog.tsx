@@ -88,10 +88,15 @@ export function HeroCatalog({
     (hero: CatalogRow, change: HeroGameplayChange) => {
       setParams(
         (current) =>
-          patchHeroLocation(openHeroLocation(current, hero.id, change.toHeroRevisionId), {
-            view: "history",
-            compare: change.fromHeroRevisionId ?? "",
-          }),
+          change.toHeroRevisionId
+            ? patchHeroLocation(openHeroLocation(current, hero.id, change.toHeroRevisionId), {
+                view: "history",
+                compare: change.fromHeroRevisionId ?? "",
+              })
+            : patchHeroLocation(openHeroLocation(current, hero.id, hero.selectedRevision?.id), {
+                view: "patch",
+                atPatch: change.patchVariantId,
+              }),
         { preventScrollReset: true },
       )
     },

@@ -122,13 +122,16 @@ export interface HeroRow {
   lastEditedAt?: string | null
   gameplayChanges?: HeroGameplayChange[]
 }
+export type ChangeSource = "SNAPSHOT" | "PATCH_NOTES"
 export interface HeroGameplayChange {
   id: string
   rulesetId: string
   seasonId: string | null
   patchVariantId: string
   fromHeroRevisionId: string | null
-  toHeroRevisionId: string
+  /** Null when the change set was recorded from patch notes without a target snapshot. */
+  toHeroRevisionId: string | null
+  sourceKind?: ChangeSource
   changeKinds: string[]
   overallKind?: string | null
   recordedAt: string

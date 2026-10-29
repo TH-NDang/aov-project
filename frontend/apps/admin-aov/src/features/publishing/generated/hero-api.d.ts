@@ -830,8 +830,13 @@ export interface components {
       patchVariantId: string
       /** Format: uuid */
       fromHeroRevisionId: string | null
-      /** Format: uuid */
-      toHeroRevisionId: string
+      /**
+       * Format: uuid
+       * @description Null when the change set was recorded from patch notes without a target snapshot.
+       */
+      toHeroRevisionId: string | null
+      /** @enum {string} */
+      sourceKind: "SNAPSHOT" | "PATCH_NOTES"
       changeKinds: ("BUFF" | "NERF" | "ADJUSTMENT" | "REWORK" | "FIX" | "OTHER")[]
       /** Format: date-time */
       recordedAt: string

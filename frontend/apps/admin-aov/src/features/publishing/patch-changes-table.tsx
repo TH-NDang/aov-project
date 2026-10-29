@@ -5,37 +5,23 @@ import { HeroOverallAssessment } from "./hero-overall-assessment"
 import { useMemo, useState } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, Pin } from "lucide-react"
+import { ArrowUpRight, FilePlus2, Pin } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { backendRequest } from "@/app/auth/session"
+import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
 import { errorMessage } from "@/lib/api/errors"
 import { MarketBadge } from "./market-badge"
 import { AovNavIcon } from "@/app/aov-nav-icon"
-import { createPublishingApi, heroPreviewKey } from "./publishing-api"
-import { HeroAsset, localized } from "./hero-content"
+import { HeroAsset } from "./hero-content"
 import { changeDomain, type CatalogChange } from "../warehouse/catalog-changes"
 import { dateLabel, phaseLabels, type PublicationOverview } from "./publication-overview"
-interface Change {
-  id: string
-  type: string
-  changeKind: string
-  [key: string]: unknown
-}
-interface ChangeSet {
-  id: string
-  overallKind?: string | null
-  assessmentVersion?: number
-  heroId: string
-  heroCode: string
-  toHeroRevisionId: string
-  summary?: string
-  actualLocale?: string
-  changes: Change[]
-}
-const api = createPublishingApi(backendRequest)
+import { ChangeLines, KindBadge, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
+import { RecordPatchNotesSheet, useHeroEntries } from "./patch-notes-sheet"
+
+type ChangeSet = RecordedChangeSet
 const warehouseDomains = ["items", "enchantments", "arcana", "spells"] as const
 const changeDomains = [
   { id: "heroes", label: "Tướng" },
@@ -55,26 +41,17 @@ function heroChangesOptions(variantId: string, locale: string) {
     staleTime: 60000,
   }
 }
-function PatchHeroIdentity({ change, locale, onOpen }: { change: ChangeSet; locale: string; onOpen: () => void }) {
-  const preview = useQuery({
-    queryKey: heroPreviewKey(change.heroId, change.toHeroRevisionId),
-    queryFn: () => api.read(change.heroId, change.toHeroRevisionId),
-    enabled: !!change.toHeroRevisionId,
-    staleTime: 60000,
-  })
-  const name = localized(preview.data?.content.PROFILE?.translations, locale)?.name || change.heroCode
+type HeroEntry = ReturnType<typeof useHeroEntries>[number]
+function PatchHeroIdentity({ change, hero, onOpen }: { change: ChangeSet; hero?: HeroEntry; onOpen: () => void }) {
+  const name = hero?.name ?? change.heroCode
   return (
     <button
       type="button"
       onClick={onOpen}
-      aria-label={`Xem thay đổi ${change.heroCode}`}
-      className="group flex w-full min-w-48 items-center gap-2.5 rounded-md text-left focus-visible:outline-2 focus-visible:outline-ring"
+      aria-label={`Xem thay đổi ${name}`}
+      className="group flex w-full min-w-44 items-center gap-2.5 rounded-md text-left focus-visible:outline-2 focus-visible:outline-ring"
     >
-      <HeroAsset
-        id={preview.data?.content.MEDIA_BINDINGS?.bindings.HEAD}
-        alt={name}
-        className="size-10 shrink-0 rounded-lg"
-      />
+      <HeroAsset id={hero?.iconAssetId} alt={name} className="size-9 shrink-0 rounded-lg" frameAspectRatio={1} />
       <span className="min-w-0 flex-1">
         <span className="block font-medium">{name}</span>
         <span className="block font-mono text-xs text-muted-foreground">{change.heroCode}</span>
@@ -86,33 +63,6 @@ function PatchHeroIdentity({ change, locale, onOpen }: { change: ChangeSet; loca
 const empty: ChangeSet[] = []
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, ChangeSet>()
-const kinds: Record<string, string> = {
-  BUFF: "Tăng sức mạnh",
-  NERF: "Giảm sức mạnh",
-  ADJUST: "Điều chỉnh",
-  ADJUSTMENT: "Điều chỉnh",
-  REWORK: "Làm lại",
-  FIX: "Sửa lỗi",
-  BUG_FIX: "Sửa lỗi",
-  ADD: "Bổ sung",
-  REMOVE: "Loại bỏ",
-  OTHER: "Khác",
-}
-const fields: Record<string, string> = {
-  statKey: "Chỉ số",
-  skillKey: "Kỹ năng",
-  fieldKey: "Trường",
-  oldValue: "Trước",
-  newValue: "Sau",
-  description: "Nội dung",
-  roleCode: "Vai trò",
-  added: "Bổ sung",
-  mechanicKey: "Cơ chế",
-  mediaRole: "Loại ảnh",
-  oldAssetId: "Ảnh trước",
-  newAssetId: "Ảnh sau",
-  unit: "Đơn vị",
-}
 function HeroPatchChangesTable({
   variantId,
   overview,
@@ -125,6 +75,8 @@ function HeroPatchChangesTable({
   const [selected, setSelected] = useState<ChangeSet | null>(null)
   const wide = useIsWide()
   const query = useQuery(heroChangesOptions(variantId, locale))
+  const heroes = useHeroEntries(locale)
+  const heroById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes])
   const detail = query.data?.find((row) => row.id === selected?.id) ?? selected
   const markets = overview.releases.filter(
     (r) => r.variantId === variantId && (r.status === "SCHEDULED" || r.phase === "AWAITING_CONFIRMATION"),
@@ -140,32 +92,40 @@ function HeroPatchChangesTable({
             </span>
           ),
           cell: ({ row }) => (
-            <PatchHeroIdentity change={row.original} locale={locale} onOpen={() => setSelected(row.original)} />
+            <PatchHeroIdentity
+              change={row.original}
+              hero={heroById.get(row.original.heroId)}
+              onOpen={() => setSelected(row.original)}
+            />
           ),
-        }),
-        helper.display({ id: "domain", header: "Loại", cell: () => "Tướng" }),
-        helper.display({
-          id: "overall",
-          header: "Tổng thể tướng",
-          cell: ({ row }) =>
-            row.original.overallKind ? (kinds[row.original.overallKind] ?? row.original.overallKind) : "Chưa đánh giá",
         }),
         helper.display({
           id: "kind",
-          header: "Chi tiết kỹ năng/chỉ số",
-          cell: ({ row }) =>
-            [...new Set(row.original.changes.map((c) => kinds[c.changeKind] ?? c.changeKind))].join(", "),
+          header: "Tính chất",
+          cell: ({ row }) => (
+            <div className="flex max-w-56 flex-wrap gap-1">
+              {row.original.overallKind && <KindBadge kind={row.original.overallKind} className="font-medium" />}
+              {[...new Set(row.original.changes.map((c) => c.changeKind))]
+                .filter((kind) => kind !== row.original.overallKind)
+                .map((kind) => (
+                  <KindBadge key={kind} kind={kind} />
+                ))}
+            </div>
+          ),
         }),
         helper.display({
           id: "summary",
           header: "Nội dung",
           cell: ({ row }) => (
-            <div>
-              <p className="max-w-lg whitespace-pre-wrap">
+            <div className="space-y-1">
+              <p className="line-clamp-2 max-w-lg whitespace-pre-wrap">
                 {row.original.summary || `${row.original.changes.length} mục thay đổi`}
               </p>
+              <SourceBadge change={row.original} />
               {row.original.actualLocale && row.original.actualLocale !== locale && (
-                <span className="text-xs text-muted-foreground">Ngôn ngữ dự phòng: {row.original.actualLocale}</span>
+                <span className="block text-xs text-muted-foreground">
+                  Ngôn ngữ dự phòng: {row.original.actualLocale}
+                </span>
               )}
             </div>
           ),
@@ -191,9 +151,10 @@ function HeroPatchChangesTable({
           ),
         }),
       ]),
-    [overview, variantId, locale],
+    [overview, variantId, locale, heroById],
   )
   const table = useTable({ features, columns, data: query.data ?? empty, getRowId: (row) => row.id })
+  const detailHero = detail ? heroById.get(detail.heroId) : undefined
   return (
     <div className="space-y-3">
       {query.isPending ? (
@@ -213,13 +174,13 @@ function HeroPatchChangesTable({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead className="bg-muted">
+          <table className="w-full min-w-[680px] text-sm">
+            <thead className="bg-muted/60 text-xs text-muted-foreground">
               <tr>
                 {table.getHeaderGroups()[0]?.headers.map((h) => (
                   <th
                     key={h.id}
-                    className={`px-4 py-3 text-left ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
+                    className={`px-3 py-2 text-left font-medium ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
                   >
                     <table.FlexRender header={h} />
                   </th>
@@ -228,11 +189,11 @@ function HeroPatchChangesTable({
             </thead>
             <tbody>
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-t">
+                <tr key={row.id} className="border-t align-top hover:bg-muted/20">
                   {row.getAllCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className={`px-4 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 border-r bg-card" : ""}`}
+                      className={`px-3 py-2 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 border-r bg-card" : ""}`}
                     >
                       <table.FlexRender cell={cell} />
                     </td>
@@ -254,30 +215,27 @@ function HeroPatchChangesTable({
           className={wide ? "w-[560px] sm:max-w-[560px]" : "max-h-[85dvh] rounded-t-2xl"}
         >
           <SheetHeader>
-            <SheetTitle>{detail?.heroCode}</SheetTitle>
+            <SheetTitle className="flex items-center gap-2">
+              <HeroAsset id={detailHero?.iconAssetId} alt="" className="size-8 rounded-md" frameAspectRatio={1} />
+              {detailHero?.name ?? detail?.heroCode}
+            </SheetTitle>
             <SheetDescription>{detail?.summary || "Chi tiết thay đổi gameplay đã ghi nhận"}</SheetDescription>
+            {detail && <SourceBadge change={detail} />}
           </SheetHeader>
           <div className="space-y-3 overflow-y-auto px-4 pb-6">
             {detail && <HeroOverallAssessment key={`${detail.id}-${detail.assessmentVersion}`} change={detail} />}
-            {detail?.changes.map((c) => (
-              <div key={c.id} className="space-y-2 rounded-lg border p-4">
-                <h3 className="font-medium">{kinds[c.changeKind] ?? c.changeKind}</h3>
-                <dl className="space-y-2 text-sm">
-                  {Object.entries(fields)
-                    .filter(([key]) => c[key] !== undefined && c[key] !== null)
-                    .map(([key, label]) => (
-                      <div key={key}>
-                        <dt className="text-muted-foreground">{label}</dt>
-                        <dd className="whitespace-pre-wrap break-words">{String(c[key])}</dd>
-                      </div>
-                    ))}
-                </dl>
-              </div>
-            ))}
+            {detail && <ChangeLines changes={detail.changes} locale={locale} />}
             {detail && (
-              <Button asChild>
-                <Link to={`/hero/${detail.heroId}?revision=${detail.toHeroRevisionId}`}>
-                  Mở bản tướng <ArrowUpRight className="size-4" />
+              <Button asChild variant="outline">
+                <Link
+                  to={
+                    detail.toHeroRevisionId
+                      ? `/hero/${detail.heroId}?revision=${detail.toHeroRevisionId}`
+                      : `/hero/${detail.heroId}?view=patch&atPatch=${variantId}`
+                  }
+                >
+                  {detail.toHeroRevisionId ? "Mở bản tướng" : "Xem dữ liệu tướng tại patch"}
+                  <ArrowUpRight className="size-4" />
                 </Link>
               </Button>
             )}
@@ -298,7 +256,10 @@ export function PatchChangesTable({
   locale: string
 }) {
   const [params, setParams] = useSearchParams()
-  const rulesetId = overview.variants.find((v) => v.id === variantId)?.rulesetId ?? ""
+  const [recording, setRecording] = useState(false)
+  const canRecord = useSession().actor?.capabilities.includes("patch:write") ?? false
+  const variant = overview.variants.find((v) => v.id === variantId)
+  const rulesetId = variant?.rulesetId ?? ""
   const heroes = useQuery(heroChangesOptions(variantId, locale))
   const warehouses = useQueries({
     queries: warehouseDomains.map((kind) => ({
@@ -323,63 +284,97 @@ export function PatchChangesTable({
   const domain = available.find((entry) => entry.id === params.get("domain"))?.id ?? available[0]?.id
   const queries = [heroes, ...warehouses]
   const errors = queries.filter((query) => query.isError)
+  const sourceUrl = overview.releases.find((release) => release.variantId === variantId && release.sourceUrl)?.sourceUrl
+  const recordedHeroIds = useMemo(() => new Set(heroes.data?.map((row) => row.heroId) ?? []), [heroes.data])
+
+  let body
   if (heroes.isPending || (!!rulesetId && warehouses.some((query) => query.isPending)))
-    return (
+    body = (
       <p role="status" className="p-4 text-sm text-muted-foreground">
         Đang kiểm tra các nhóm thay đổi…
       </p>
     )
-  if (!available.length && !errors.length)
-    return <p className="p-4 text-sm text-muted-foreground">Chưa ghi nhận thay đổi trong patch này.</p>
-  const warning = errors.length > 0 && (
-    <div role="alert" className="flex flex-wrap items-center gap-2 p-4 text-sm text-destructive">
-      Chưa tải được thay đổi của một số nhóm.
-      <Button size="sm" variant="outline" onClick={() => errors.forEach((query) => void query.refetch())}>
-        Thử lại
-      </Button>
-    </div>
-  )
-  if (!domain) return warning
+  else if (!available.length && !errors.length)
+    body = <p className="p-4 text-sm text-muted-foreground">Chưa ghi nhận thay đổi trong patch này.</p>
+  else {
+    const warning = errors.length > 0 && (
+      <div role="alert" className="flex flex-wrap items-center gap-2 p-4 text-sm text-destructive">
+        Chưa tải được thay đổi của một số nhóm.
+        <Button size="sm" variant="outline" onClick={() => errors.forEach((query) => void query.refetch())}>
+          Thử lại
+        </Button>
+      </div>
+    )
+    body = !domain ? (
+      warning
+    ) : (
+      <Tabs
+        value={domain}
+        onValueChange={(value) =>
+          setParams(
+            (current) => {
+              const next = new URLSearchParams(current)
+              if (value === "heroes") next.delete("domain")
+              else next.set("domain", value)
+              return next
+            },
+            { replace: true, preventScrollReset: true },
+          )
+        }
+        className="min-w-0"
+      >
+        {warning}
+        <TabsList className="flex h-auto flex-wrap justify-start" aria-label="Nhóm có thay đổi">
+          {available.map((entry) => (
+            <TabsTrigger key={entry.id} value={entry.id} className="gap-2">
+              <AovNavIcon name={entry.id} className="size-4" />
+              {entry.label}
+              <span className="text-xs tabular-nums text-muted-foreground">{counts.get(entry.id)}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value="heroes">
+          {params.get("show") === "all" ? (
+            <HeroCatalog ruleset={rulesetId} locale={locale} overview={overview} filter={{ seasonId: "", variantId }} />
+          ) : (
+            <HeroPatchChangesTable variantId={variantId} overview={overview} locale={locale} />
+          )}
+        </TabsContent>
+        {warehouseDomains
+          .filter((kind) => available.some((entry) => entry.id === kind))
+          .map((kind) => (
+            <TabsContent key={kind} value={kind}>
+              <WarehousePatchChanges kind={kind} rulesetId={rulesetId} variantId={variantId} locale={locale} />
+            </TabsContent>
+          ))}
+      </Tabs>
+    )
+  }
+
   return (
-    <Tabs
-      value={domain}
-      onValueChange={(value) =>
-        setParams(
-          (current) => {
-            const next = new URLSearchParams(current)
-            if (value === "heroes") next.delete("domain")
-            else next.set("domain", value)
-            return next
-          },
-          { replace: true, preventScrollReset: true },
-        )
-      }
-      className="min-w-0"
-    >
-      {warning}
-      <TabsList className="flex h-auto flex-wrap justify-start" aria-label="Nhóm có thay đổi">
-        {available.map((entry) => (
-          <TabsTrigger key={entry.id} value={entry.id} className="gap-2">
-            <AovNavIcon name={entry.id} className="size-4" />
-            {entry.label}
-            <span className="text-xs tabular-nums text-muted-foreground">{counts.get(entry.id)}</span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-      <TabsContent value="heroes">
-        {params.get("show") === "all" ? (
-          <HeroCatalog ruleset={rulesetId} locale={locale} overview={overview} filter={{ seasonId: "", variantId }} />
-        ) : (
-          <HeroPatchChangesTable variantId={variantId} overview={overview} locale={locale} />
+    <section className="min-w-0 border-t" aria-label="Thay đổi trong patch">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3">
+        <h4 className="text-sm font-semibold">Thay đổi trong patch</h4>
+        {canRecord && variant && (
+          <Button size="sm" variant="outline" onClick={() => setRecording(true)}>
+            <FilePlus2 className="size-4" />
+            Ghi từ ghi chú cập nhật
+          </Button>
         )}
-      </TabsContent>
-      {warehouseDomains
-        .filter((kind) => available.some((entry) => entry.id === kind))
-        .map((kind) => (
-          <TabsContent key={kind} value={kind}>
-            <WarehousePatchChanges kind={kind} rulesetId={rulesetId} variantId={variantId} locale={locale} />
-          </TabsContent>
-        ))}
-    </Tabs>
+      </div>
+      {body}
+      {canRecord && variant && (
+        <RecordPatchNotesSheet
+          open={recording}
+          onOpenChange={setRecording}
+          variantId={variantId}
+          patchLabel={variant.patchCode}
+          rulesetId={rulesetId}
+          locale={locale}
+          defaultSourceUrl={sourceUrl ?? ""}
+          recordedHeroIds={recordedHeroIds}
+        />
+      )}
+    </section>
   )
 }

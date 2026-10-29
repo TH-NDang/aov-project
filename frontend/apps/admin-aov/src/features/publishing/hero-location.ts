@@ -1,7 +1,7 @@
 import type { Section } from "./types"
 
 export type HeroContentTab = "overview" | "skills" | "skins" | "media"
-export type HeroWorkspaceView = "overview" | "translations" | "history"
+export type HeroWorkspaceView = "overview" | "translations" | "history" | "patch"
 const heroKeys = [
   "hero",
   "revision",
@@ -17,6 +17,7 @@ const heroKeys = [
   "compare",
   "diff",
   "changes",
+  "atPatch",
 ] as const
 const contentTabs: HeroContentTab[] = ["overview", "skills", "skins", "media"]
 const sections: Section[] = ["PROFILE", "OVERVIEW_RATINGS", "COMBAT_STATS", "SKILLS", "SKINS", "MEDIA_BINDINGS"]
@@ -31,7 +32,7 @@ export function readHeroLocation(params: URLSearchParams, translationMode = fals
   const tab = params.get("tab")
   const section = params.get("section")
   return {
-    view: (view === "overview" || view === "translations" || view === "history"
+    view: (view === "overview" || view === "translations" || view === "history" || view === "patch"
       ? view
       : translationMode
         ? "translations"
