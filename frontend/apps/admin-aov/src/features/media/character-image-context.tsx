@@ -4,6 +4,7 @@ import { Search } from "lucide-react"
 import { backendRequest } from "@/app/auth/session"
 import { createCharacterImageApi } from "./character-image-api"
 import { control } from "../publishing/fields"
+import { defaultRulesetId, hasRulesetChoice } from "../publishing/default-ruleset"
 import type { Request } from "../publishing/publishing-api"
 
 export function useImageContext(request: Request = backendRequest) {
@@ -13,9 +14,7 @@ export function useImageContext(request: Request = backendRequest) {
     queryFn: () => createCharacterImageApi(request).rulesets(),
   })
   const requested = params.get("ruleset") ?? ""
-  const rulesetId = rulesets.data?.some((rule) => rule.id === requested)
-    ? requested
-    : (rulesets.data?.find((rule) => rule.code === "aov-standard")?.id ?? rulesets.data?.[0]?.id ?? "")
+  const rulesetId = rulesets.data?.some((rule) => rule.id === requested) ? requested : defaultRulesetId(rulesets.data)
   const search = params.get("q") ?? ""
   return {
     rulesets,
@@ -53,23 +52,24 @@ export function ImageContextControls({
 }) {
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <label className="grid min-w-48 flex-1 gap-1.5 text-sm sm:max-w-72">
-        <span>Bộ quy tắc</span>
-        <select
-          aria-label="Bộ quy tắc"
-          className={control}
-          value={context.rulesetId}
-          disabled={context.rulesets.isPending || !context.rulesets.data?.length}
-          onChange={(event) => context.setRuleset(event.target.value)}
-        >
-          {!context.rulesets.data?.length && <option value="">Chưa có bộ quy tắc</option>}
-          {context.rulesets.data?.map((rule) => (
-            <option key={rule.id} value={rule.id}>
-              {rule.code}
-            </option>
-          ))}
-        </select>
-      </label>
+      {hasRulesetChoice(context.rulesets.data) && (
+        <label className="grid min-w-48 flex-1 gap-1.5 text-sm sm:max-w-72">
+          <span>Bộ quy tắc</span>
+          <select
+            aria-label="Bộ quy tắc"
+            className={control}
+            value={context.rulesetId}
+            disabled={context.rulesets.isPending}
+            onChange={(event) => context.setRuleset(event.target.value)}
+          >
+            {context.rulesets.data?.map((rule) => (
+              <option key={rule.id} value={rule.id}>
+                {rule.code}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="relative min-w-48 flex-[2]">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <input

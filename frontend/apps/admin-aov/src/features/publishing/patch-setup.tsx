@@ -8,6 +8,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi } from "./publishing-api"
 import { ReleaseSeasonFields } from "./season-setup"
 import { Box, control } from "./fields"
+import { defaultRulesetId, hasRulesetChoice } from "./default-ruleset"
 import type { PageSlice, Region, Ruleset } from "./types"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
@@ -102,13 +103,12 @@ export function PatchSetup({
       setBusy(false)
     }
   }
-  const selectRuleset = (
+  const choosable = hasRulesetChoice(rulesets)
+  const fallbackRuleset = defaultRulesetId(rulesets)
+  const selectRuleset = choosable ? (
     <label className="grid gap-1 text-sm">
-      Ruleset
-      <select name="rulesetId" className={control} required defaultValue="">
-        <option value="" disabled>
-          Chọn ruleset
-        </option>
+      Bộ quy tắc
+      <select name="rulesetId" className={control} required defaultValue={fallbackRuleset}>
         {rulesets.map((r) => (
           <option key={r.id} value={r.id}>
             {r.code}
@@ -116,6 +116,8 @@ export function PatchSetup({
         ))}
       </select>
     </label>
+  ) : (
+    <input type="hidden" name="rulesetId" value={fallbackRuleset} />
   )
   const selectRegion = (
     <label className="grid gap-1 text-sm">
@@ -207,7 +209,7 @@ export function PatchSetup({
                   const f = assignmentDraft.form.getValues()
                   void perform(async () => {
                     await api.send(`/admin/regions/${regionId}/ruleset-assignments`, "POST", {
-                      rulesetId: f.rulesetId,
+                      rulesetId: f.rulesetId || fallbackRuleset,
                       validFrom: new Date(f.validFrom).toISOString(),
                       validTo: f.validTo ? new Date(f.validTo).toISOString() : null,
                     })
@@ -218,22 +220,23 @@ export function PatchSetup({
                 <h3 className="font-medium">Thị trường dùng chung gameplay</h3>
                 <DraftStatus draft={assignmentDraft.draft} disabled={busy} />
                 {selectRegion}
-                <label className="grid gap-1 text-sm">
-                  Ruleset
-                  <select
-                    {...assignmentDraft.form.register("rulesetId")}
-                    className={control}
-                    disabled={assignmentLocked}
-                    required
-                  >
-                    <option value="">Chọn ruleset</option>
-                    {rulesets.map((row) => (
-                      <option key={row.id} value={row.id}>
-                        {row.code}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {choosable && (
+                  <label className="grid gap-1 text-sm">
+                    Bộ quy tắc
+                    <select
+                      {...assignmentDraft.form.register("rulesetId")}
+                      className={control}
+                      disabled={assignmentLocked}
+                    >
+                      <option value="">Mặc định ({DEFAULT_LABEL(rulesets, fallbackRuleset)})</option>
+                      {rulesets.map((row) => (
+                        <option key={row.id} value={row.id}>
+                          {row.code}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
                 <label className="grid gap-1 text-sm">
                   Bắt đầu
                   <input
@@ -336,7 +339,7 @@ export function PatchSetup({
                     <input className={control} name="variantCode" required />
                   </label>
                   <label className="grid gap-1 text-sm">
-                    Thứ tự trong ruleset
+                    Thứ tự trong bộ quy tắc
                     <input className={control} name="ordinal" type="number" min="1" defaultValue="1" required />
                   </label>
                   <label className="grid gap-1 text-sm">
@@ -361,8 +364,9 @@ export function PatchSetup({
               {patch.variants.map((v) => (
                 <div key={v.id} className="space-y-3 border-t pt-3">
                   <p className="text-sm">
-                    {v.variantCode} · {rulesets.find((r) => r.id === v.rulesetId)?.code} · #{v.rulesetOrdinal} ·{" "}
-                    {v.status}
+                    {v.variantCode}
+                    {choosable ? ` · ${rulesets.find((r) => r.id === v.rulesetId)?.code ?? ""}` : ""} · #
+                    {v.rulesetOrdinal} · {v.status}
                   </p>
                   <p className="select-all break-all font-mono text-xs text-muted-foreground">Variant ID: {v.id}</p>
                   {capabilities.includes("patch:publish") &&
@@ -441,6 +445,8 @@ export function PatchSetup({
     </Container>
   )
 }
+
+const DEFAULT_LABEL = (rulesets: Ruleset[], id: string) => rulesets.find((row) => row.id === id)?.code ?? ""
 
 function SetupPanel({ children }: { title: string; children: ReactNode }) {
   return <div className="space-y-4">{children}</div>

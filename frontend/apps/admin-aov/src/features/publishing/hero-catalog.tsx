@@ -212,9 +212,11 @@ export function HeroCatalog({
                   <Badge variant={r.state === "DRAFT" ? "outline" : "default"} className="text-[10px]">
                     {r.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"}
                   </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {overview?.rulesets.find((rule) => rule.id === r.rulesetId)?.code}
-                  </span>
+                  {(overview?.rulesets.length ?? 0) > 1 && (
+                    <span className="text-xs text-muted-foreground">
+                      {overview?.rulesets.find((rule) => rule.id === r.rulesetId)?.code}
+                    </span>
+                  )}
                 </div>
               </div>
             ) : (
