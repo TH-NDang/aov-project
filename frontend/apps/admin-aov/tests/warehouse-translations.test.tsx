@@ -123,7 +123,10 @@ test("timeline keeps baseline separate, selects a patch, and suppresses selectio
     )
     assert.equal(button("15/10"), null)
     assert.ok(button("29/09"))
-    assert.equal(document.querySelectorAll('select[aria-label="Mùa"]').length, 1)
+    assert.deepEqual(
+      [...document.querySelectorAll('[aria-label^="Lọc mùa"]')].map((season) => season.textContent),
+      ["S3", "S4"],
+    )
   })
 })
 
