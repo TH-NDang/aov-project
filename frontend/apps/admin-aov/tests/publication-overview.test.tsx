@@ -153,7 +153,9 @@ test("publication overview shows flags and hero heads, and only tabs with change
       ),
     )
     const document = dom.window.document
-    assert.match(document.body.textContent ?? "", /Shared gameplay/)
+    // With a single default ruleset the market overview does not repeat the ruleset name.
+    assert.doesNotMatch(document.body.textContent ?? "", /Shared gameplay/)
+    assert.match(document.querySelector('[aria-label="Thị trường"]')?.textContent ?? "", /S4 2026.*patch-october/)
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
     assert.equal(document.querySelector('button[aria-label="Xem thay đổi Airi"]'), null)
     const patch = [...document.querySelectorAll<HTMLButtonElement>("button[aria-expanded]")].find((b) =>

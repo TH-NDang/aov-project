@@ -3,6 +3,8 @@ import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import {
+  ArrowUpRight,
+  CalendarClock,
   ChevronRight,
   Gem,
   Hexagon,
@@ -39,7 +41,9 @@ import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { createPublishingApi } from "../publishing/publishing-api"
 import type { PageSlice } from "../publishing/types"
-import { useContentLocale } from "../publishing/publication-overview"
+import { dateLabel, useContentLocale, usePublicationOverview } from "../publishing/publication-overview"
+import { defaultRulesetId } from "../publishing/default-ruleset"
+import { Button } from "@aov/ui/components/button"
 import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/warehouse-api"
 import { warehouseText } from "../warehouse/warehouse-types"
 
@@ -99,8 +103,7 @@ export function DashboardPage() {
     enabled: canReadHeroes,
     staleTime: 60000,
   })
-  const ruleset = rulesets.data?.find((entry) => entry.code === "aov-standard") ?? rulesets.data?.[0]
-  const rulesetId = canReadHeroes ? (ruleset?.id ?? "") : ""
+  const rulesetId = canReadHeroes ? defaultRulesetId(rulesets.data) : ""
   const catalog = useWarehouseCatalog("items", rulesetId, locale)
   const enchantments = useWarehouseCatalog("enchantments", rulesetId, locale)
   const arcana = useWarehouseCatalog("arcana", rulesetId, locale)
@@ -153,21 +156,21 @@ export function DashboardPage() {
           {
             label: "Tướng",
             value: heroes.data?.totalElements,
-            hint: "Danh mục backend",
+            hint: "Trong danh mục wiki",
             icon: Swords,
             to: "/hero",
           },
           {
             label: "Ảnh đã lưu",
             value: images.data?.totalElements,
-            hint: "Thư viện Media backend",
+            hint: "Trong thư viện ảnh",
             icon: ImageIcon,
             to: "/image-management",
           },
           {
             label: "Bậc trang phục",
             value: badges.data?.totalElements,
-            hint: "Tên và icon theo ngôn ngữ",
+            hint: "Tên và biểu tượng",
             icon: Medal,
             to: "/hero/media?tab=badges",
           },
@@ -176,7 +179,7 @@ export function DashboardPage() {
     {
       label: "Trang bị",
       value: itemStats?.total,
-      hint: ruleset?.code ?? "Danh mục backend",
+      hint: "Trong kho trang bị",
       icon: Shield,
       to: "/items",
     },
@@ -187,8 +190,8 @@ export function DashboardPage() {
       icon: Hexagon,
       to: "/enchantments",
     },
-    { label: "Bảng ngọc", value: arcana.data?.length, hint: "Ngọc theo màu và cấp", icon: Gem, to: "/arcana" },
-    { label: "Phụ trợ", value: spells.data?.length, hint: "Khả dụng và trạng thái", icon: Zap, to: "/spells" },
+    { label: "Bảng ngọc", value: arcana.data?.length, hint: "Theo màu và cấp", icon: Gem, to: "/arcana" },
+    { label: "Phụ trợ", value: spells.data?.length, hint: "Phép bổ trợ", icon: Zap, to: "/spells" },
   ]
 
   const coverage: CoverageRow[] = [
@@ -219,7 +222,7 @@ export function DashboardPage() {
       ? [
           {
             title: "Chưa có dữ liệu ngọc",
-            description: "Bộ quy tắc này chưa có ngọc trong backend",
+            description: "Kho chưa có ngọc nào",
             count: 1,
             icon: Gem,
             to: "/arcana",
@@ -243,31 +246,32 @@ export function DashboardPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
         {stats.map((stat) => (
           <Link
             key={stat.label}
             to={stat.to}
             className="group rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
           >
-            <Card className="h-full gap-2 py-4 transition-colors group-hover:bg-accent/50">
-              <CardHeader className="px-4">
-                <CardDescription>{stat.label}</CardDescription>
+            <Card className="h-full gap-1 py-3 transition-colors group-hover:bg-accent/50">
+              <CardHeader className="gap-1 px-3">
+                <CardDescription className="text-xs">{stat.label}</CardDescription>
                 <CardAction>
                   <stat.icon className="size-4 text-muted-foreground" />
                 </CardAction>
-                <CardTitle className="text-2xl tabular-nums">
-                  {stat.value === undefined ? <Skeleton className="h-8 w-16" /> : formatNumber(stat.value)}
+                <CardTitle className="text-xl tabular-nums">
+                  {stat.value === undefined ? <Skeleton className="h-7 w-14" /> : formatNumber(stat.value)}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 text-xs text-muted-foreground">{stat.hint}</CardContent>
+              <CardContent className="truncate px-3 text-[11px] text-muted-foreground">{stat.hint}</CardContent>
             </Card>
           </Link>
         ))}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-5">
-        <Card className="xl:col-span-3">
+        {canReadHeroes && <CurrentPatchCard locale={locale} />}
+        <Card className={canReadHeroes ? "xl:col-span-3" : "xl:col-span-5"}>
           <CardHeader>
             <CardTitle>Việc cần xử lý</CardTitle>
             <CardDescription>Ưu tiên các mục thiếu dữ liệu và công thức chưa xác nhận.</CardDescription>
@@ -315,7 +319,9 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
+      </div>
 
+      <div className="grid gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-2">
           <CardHeader>
             <CardTitle>Độ phủ dữ liệu</CardTitle>
@@ -341,9 +347,6 @@ export function DashboardPage() {
             })}
           </CardContent>
         </Card>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-3">
           <CardHeader>
             <CardTitle>Trang bị theo nhóm shop</CardTitle>
@@ -388,43 +391,116 @@ export function DashboardPage() {
             )}
           </CardContent>
         </Card>
-
-        <Card className="xl:col-span-2">
-          <CardHeader>
-            <CardTitle>Hoạt động gần đây</CardTitle>
-            <CardDescription>Nhật ký thao tác quản trị (audit).</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {audit.data?.length ? (
-              <ol className="space-y-3">
-                {audit.data.slice(0, 8).map((entry) => (
-                  <li key={entry.id} className="flex items-start gap-3 text-sm">
-                    <History className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate">
-                        <span className="font-medium">{entry.action}</span> · {entry.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{formatRelative(entry.at)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <Empty className="p-6">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <History />
-                  </EmptyMedia>
-                  <EmptyTitle>Chưa có thao tác nào</EmptyTitle>
-                  <EmptyDescription>
-                    Mọi lần lưu tướng, trang phục, portrait, trang bị, phù hiệu sẽ hiện ở đây.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            )}
-          </CardContent>
-        </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Hoạt động gần đây</CardTitle>
+          <CardDescription>Nhật ký thao tác quản trị (audit).</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {audit.data?.length ? (
+            <ol className="grid gap-x-6 gap-y-3 md:grid-cols-2">
+              {audit.data.slice(0, 8).map((entry) => (
+                <li key={entry.id} className="flex items-start gap-3 text-sm">
+                  <History className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate">
+                      <span className="font-medium">{entry.action}</span> · {entry.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground">{formatRelative(entry.at)}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <Empty className="p-6">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <History />
+                </EmptyMedia>
+                <EmptyTitle>Chưa có thao tác nào</EmptyTitle>
+                <EmptyDescription>
+                  Mọi lần lưu tướng, trang phục, portrait, trang bị, phù hiệu sẽ hiện ở đây.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </CardContent>
+      </Card>
     </Page>
+  )
+}
+
+/** The patch markets play now, with how many hero changes are recorded for it. */
+function CurrentPatchCard({ locale }: { locale: string }) {
+  const overview = usePublicationOverview()
+  const data = overview.data
+  const market = data?.markets.find((entry) => entry.available && entry.currentReleaseId)
+  const release = data?.releases.find((entry) => entry.id === market?.currentReleaseId)
+  const variant = data?.variants.find((entry) => entry.id === release?.variantId)
+  const season = data?.seasons.find((entry) => entry.id === (variant?.seasonId ?? market?.currentSeasonId))
+  const pending = data?.releases.filter((entry) => entry.phase === "AWAITING_CONFIRMATION").length ?? 0
+  const changes = useQuery({
+    queryKey: ["patch-changes", variant?.id, locale],
+    queryFn: () =>
+      backendRequest<{ heroId: string; sourceKind?: string }[]>(
+        `/admin/patch-variants/${variant!.id}/hero-changes?locale=${encodeURIComponent(locale)}`,
+      ),
+    enabled: !!variant,
+    staleTime: 60000,
+  })
+  const fromNotes = changes.data?.filter((change) => change.sourceKind === "PATCH_NOTES").length ?? 0
+  return (
+    <Card className="xl:col-span-2">
+      <CardHeader>
+        <CardTitle>Patch hiện tại</CardTitle>
+        <CardDescription>
+          {market ? `${market.displayName} · ${season?.displayName ?? "Chưa gắn mùa"}` : "—"}
+        </CardDescription>
+        <CardAction>
+          <CalendarClock className="size-4 text-muted-foreground" />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {overview.isPending ? (
+          <Skeleton className="h-24 w-full" />
+        ) : !variant ? (
+          <p className="text-sm text-muted-foreground">Chưa có patch đang áp dụng ở thị trường nào.</p>
+        ) : (
+          <>
+            <div>
+              <p className="text-2xl font-semibold tracking-tight">{variant.patchCode}</p>
+              <p className="text-xs text-muted-foreground">
+                Áp dụng từ {dateLabel(release?.effectiveOn ?? release?.effectiveAt ?? null, locale)}
+              </p>
+            </div>
+            <dl className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-lg border p-2.5">
+                <dt className="text-xs text-muted-foreground">Tướng có thay đổi</dt>
+                <dd className="text-lg font-semibold tabular-nums">
+                  {changes.data ? formatNumber(changes.data.length) : "…"}
+                </dd>
+              </div>
+              <div className="rounded-lg border p-2.5">
+                <dt className="text-xs text-muted-foreground">Ghi từ ghi chú cập nhật</dt>
+                <dd className="text-lg font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
+              </div>
+            </dl>
+            {pending > 0 && (
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                {pending} lịch phát hành đang chờ xác nhận áp dụng.
+              </p>
+            )}
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/game-configuration?season=${variant.seasonId ?? ""}&patch=${variant.id}`}>
+                Xem và ghi thay đổi
+                <ArrowUpRight className="size-4" />
+              </Link>
+            </Button>
+          </>
+        )}
+      </CardContent>
+    </Card>
   )
 }
