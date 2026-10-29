@@ -193,3 +193,24 @@ export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => [
   ...group.items,
   ...(group.sections ?? []).flatMap((section) => section.items),
 ])
+
+function navPathMatches(path: string, pathname: string) {
+  return path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(path + "/")
+}
+
+export function isNavActive(item: Pick<NavItem, "to" | "activePaths">, pathname: string) {
+  return (item.activePaths ?? [item.to]).some((path) => navPathMatches(path, pathname))
+}
+
+/** Only the most specific match is highlighted, so "/hero/media" does not also light up "/hero". */
+export function activeNavItem(pathname: string, items: NavItem[] = NAV_ITEMS) {
+  let active: NavItem | undefined
+  let length = -1
+  for (const item of items)
+    for (const path of item.activePaths ?? [item.to])
+      if (navPathMatches(path, pathname) && path.length > length) {
+        active = item
+        length = path.length
+      }
+  return active
+}
