@@ -1,0 +1,12 @@
+ALTER TABLE tournament.team ADD COLUMN deleted_at timestamptz, ADD COLUMN deleted_by varchar(1000);
+ALTER TABLE tournament.player ADD COLUMN deleted_at timestamptz, ADD COLUMN deleted_by varchar(1000);
+ALTER TABLE tournament.tournament ADD COLUMN deleted_at timestamptz, ADD COLUMN deleted_by varchar(1000);
+ALTER TABLE tournament.series ADD COLUMN deleted_at timestamptz, ADD COLUMN deleted_by varchar(1000);
+ALTER TABLE tournament.game ADD COLUMN deleted_at timestamptz, ADD COLUMN deleted_by varchar(1000);
+ALTER TABLE tournament.roster_membership ADD COLUMN deleted_at timestamptz, ADD COLUMN deleted_by varchar(1000);
+CREATE INDEX team_deleted ON tournament.team(deleted_at,updated_at DESC);
+CREATE INDEX player_deleted ON tournament.player(deleted_at,updated_at DESC);
+CREATE INDEX tournament_deleted ON tournament.tournament(deleted_at,updated_at DESC);
+CREATE INDEX series_deleted ON tournament.series(deleted_at,updated_at DESC);
+CREATE INDEX game_deleted ON tournament.game(deleted_at,updated_at DESC);
+CREATE INDEX roster_membership_deleted ON tournament.roster_membership(deleted_at,updated_at DESC);

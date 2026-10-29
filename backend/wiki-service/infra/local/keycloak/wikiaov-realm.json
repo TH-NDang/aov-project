@@ -64,7 +64,8 @@
         "composites": {
           "realm": [
             "wiki-publisher",
-            "wiki-patch-manager"
+            "wiki-patch-manager",
+            "community-admin"
           ],
           "client": {
             "wiki-service": [
@@ -73,6 +74,47 @@
               "user:write"
             ]
           }
+        }
+      },
+      {
+        "name": "community-editor",
+        "description": "Edits tournament drafts",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wiki-service": [
+              "catalog:read"
+            ],
+            "community-service": [
+              "tournament:read",
+              "tournament:write"
+            ]
+          }
+        }
+      },
+      {
+        "name": "community-publisher",
+        "description": "Publishes tournament observations",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "community-editor"
+          ],
+          "client": {
+            "community-service": [
+              "tournament:publish"
+            ]
+          }
+        }
+      },
+      {
+        "name": "community-admin",
+        "description": "Manages community tournament data",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "community-publisher"
+          ]
         }
       }
     ],
@@ -146,6 +188,20 @@
           "name": "region:admin",
           "description": "Capability region:admin"
         }
+      ],
+      "community-service": [
+        {
+          "name": "tournament:read",
+          "description": "Capability tournament:read"
+        },
+        {
+          "name": "tournament:write",
+          "description": "Capability tournament:write"
+        },
+        {
+          "name": "tournament:publish",
+          "description": "Capability tournament:publish"
+        }
       ]
     }
   },
@@ -159,6 +215,15 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "secret": "wiki-service-local-unused"
+    },
+    {
+      "clientId": "community-service",
+      "name": "community-service (resource server)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
     },
     {
       "clientId": "admin-aov",
@@ -184,6 +249,17 @@
           "protocolMapper": "oidc-audience-mapper",
           "config": {
             "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience-community-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "community-service",
             "access.token.claim": "true",
             "id.token.claim": "false",
             "introspection.token.claim": "true"
@@ -232,6 +308,17 @@
             "id.token.claim": "false",
             "introspection.token.claim": "true"
           }
+        },
+        {
+          "name": "audience-community-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "community-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
         }
       ]
     },
@@ -259,6 +346,17 @@
           "protocolMapper": "oidc-audience-mapper",
           "config": {
             "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience-community-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "community-service",
             "access.token.claim": "true",
             "id.token.claim": "false",
             "introspection.token.claim": "true"
