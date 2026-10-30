@@ -16,6 +16,7 @@ interface Hotkey {
 const COMMON_KEYS: Hotkey[] = [
   { keys: ["Ctrl / ⌘", "/"], action: "Mở / đóng bảng phím tắt", context: "Khi không đang nhập nội dung." },
   { keys: ["Ctrl / ⌘", "K"], action: "Tìm trang và dữ liệu" },
+  { keys: ["/"], action: "Tìm trong trang đang xem", context: "Trang có ô tìm kiếm; Esc để xóa." },
   { keys: ["Ctrl / ⌘", "B"], action: "Thu gọn / mở sidebar" },
   { keys: ["Ctrl / ⌘", "1…8"], action: "Mở tab theo vị trí", context: "Đếm từ trái sang phải; có thể dùng Alt + 1…8." },
   { keys: ["Ctrl / ⌘", "9"], action: "Mở tab cuối cùng", context: "Có thể dùng Alt + 9." },

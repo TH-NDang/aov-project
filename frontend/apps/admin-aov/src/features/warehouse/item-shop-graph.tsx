@@ -96,6 +96,8 @@ interface Props {
   onConnect: (from: string, to: string) => void
   onMove: (id: string, positionIndex: number, row: number, column: number) => void
   editable: boolean
+  /** Items matching the page search; other cards are dimmed. Null when not searching. */
+  matches?: ReadonlySet<string> | null
   /** Empty rows added below the group so items can be dropped further down; the page header adds them. */
   extraRows?: number
   onExtraRowsChange?: (rows: number) => void
@@ -116,6 +118,7 @@ function GraphCard({
   terminal = false,
   reference = false,
   locked = false,
+  dimmed = false,
 }: {
   item: Entry
   index: number
@@ -133,6 +136,8 @@ function GraphCard({
   reference?: boolean
   /** Published items stay movable; the page asks to create a draft when one is changed. */
   locked?: boolean
+  /** Does not match the current search. */
+  dimmed?: boolean
 }) {
   const drag = useDraggable({
     id: `${item.id}:${index}`,
@@ -156,6 +161,7 @@ function GraphCard({
         hasOutput && "pr-7",
         selected ? "border-primary ring-2 ring-primary/20" : related ? "border-primary/40" : "",
         reference && "border-dashed bg-card/70",
+        dimmed && !selected && "opacity-35 saturate-50 hover:opacity-100 hover:saturate-100",
         drag.isDragging && "opacity-40",
       )}
     >
@@ -321,6 +327,7 @@ export function ItemShopGraph({
   onConnect,
   onMove,
   editable,
+  matches = null,
   extraRows: more = 0,
   onExtraRowsChange: setMore = () => {},
 }: Props) {
@@ -634,8 +641,10 @@ export function ItemShopGraph({
           aria-label="Nhóm trang bị"
         >
           {categories.map((group) => {
-            const count = items.filter((item) =>
-              item.content.shopPositions.some((position) => position.categoryCode === group.code),
+            const count = items.filter(
+              (item) =>
+                (!matches || matches.has(item.id)) &&
+                item.content.shopPositions.some((position) => position.categoryCode === group.code),
             ).length
             const active = category === group.code
             return (
@@ -644,7 +653,12 @@ export function ItemShopGraph({
                 variant={active ? "secondary" : "ghost"}
                 size="sm"
                 aria-pressed={active}
-                className={cn("h-8 shrink-0 gap-1.5", !active && "text-muted-foreground")}
+                title={matches ? `${count} món khớp tìm kiếm` : undefined}
+                className={cn(
+                  "h-8 shrink-0 gap-1.5",
+                  !active && "text-muted-foreground",
+                  matches && !count && !active && "opacity-50",
+                )}
                 onClick={() => {
                   onCategory(group.code)
                   onFocus(null)
@@ -654,7 +668,14 @@ export function ItemShopGraph({
               >
                 <ItemCategoryIcon category={group} />
                 {warehouseText(group.translations, locale)?.name || group.code}
-                <span className="text-xs tabular-nums text-muted-foreground">{count}</span>
+                <span
+                  className={cn(
+                    "text-xs tabular-nums text-muted-foreground",
+                    matches && count > 0 && "rounded-full bg-primary/15 px-1.5 font-medium text-primary",
+                  )}
+                >
+                  {count}
+                </span>
               </Button>
             )
           })}
@@ -688,19 +709,6 @@ export function ItemShopGraph({
             ))}
           </select>
         )}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8" aria-label="Cách dùng sơ đồ shop">
-              <CircleHelp className="size-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-72 space-y-1.5 text-xs leading-5">
-            <p className="font-medium">Cách dùng sơ đồ shop</p>
-            <p>Chọn một món để xem các đường ghép tới nguyên liệu và món nâng cấp.</p>
-            <p>Nối hai chấm ở hai bên thẻ, hoặc kéo từ chấm này sang chấm kia, để thêm nguyên liệu.</p>
-            <p>Kéo tay nắm bên trái thẻ để đổi ô. Esc để hủy nối hoặc bỏ chọn.</p>
-          </PopoverContent>
-        </Popover>
       </div>
       {armed && (
         <p
@@ -861,6 +869,7 @@ export function ItemShopGraph({
                     onPort={portClick}
                     terminal={placement.terminal}
                     reference={reference}
+                    dimmed={!!matches && !matches.has(placement.item.id)}
                   />
                 )
                 return (
@@ -1057,5 +1066,25 @@ function DragGhost({ item, locale }: { item: Entry; locale: string }) {
       <HeroAsset id={item.content.iconAssetId} alt="" className="size-9 shrink-0 rounded-lg" frameAspectRatio={1} />
       <span className="line-clamp-2 min-w-0 text-xs leading-tight font-medium">{warehouseName(item, locale)}</span>
     </div>
+  )
+}
+
+/** How to use the shop board; the items page shows it in its header. */
+export function ItemShopHelp() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="size-9" aria-label="Cách dùng sơ đồ shop">
+          <CircleHelp className="size-4" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-72 space-y-1.5 text-xs leading-5">
+        <p className="font-medium">Cách dùng sơ đồ shop</p>
+        <p>Chọn một món để xem các đường ghép tới nguyên liệu và món nâng cấp.</p>
+        <p>Nối hai chấm ở hai bên thẻ, hoặc kéo từ chấm này sang chấm kia, để thêm nguyên liệu.</p>
+        <p>Kéo tay nắm bên trái thẻ để đổi ô. Món đã xuất bản sẽ hỏi tạo bản nháp trước khi đổi.</p>
+        <p>Nhấn / để tìm trang bị. Esc để hủy nối hoặc bỏ chọn.</p>
+      </PopoverContent>
+    </Popover>
   )
 }
