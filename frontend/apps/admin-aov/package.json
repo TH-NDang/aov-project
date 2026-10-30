@@ -21,7 +21,7 @@
     "test:storage": "node --experimental-strip-types --test tests/storage.test.ts",
     "test:table": "node --experimental-strip-types --test tests/table.test.ts",
     "test:heroes": "node --experimental-strip-types --test tests/heroes.test.ts",
-    "test:tabs": "tsx --tsconfig tests/tsconfig.json --test tests/page-tabs.test.tsx tests/page-tab-redirects.test.tsx tests/nav-active.test.ts",
+    "test:tabs": "tsx --tsconfig tests/tsconfig.json --test tests/page-tabs.test.tsx tests/page-tab-redirects.test.tsx tests/page-tab-preview.test.ts tests/nav-active.test.ts",
     "test:publishing": "tsx --tsconfig tests/tsconfig.json --test --test-force-exit --test-concurrency=2 tests/publishing.test.ts tests/hero-import.test.tsx tests/hero-catalog.test.tsx tests/hero-workspace.test.tsx tests/background-tasks.test.tsx tests/import-relations.test.ts tests/import-upload-session.test.ts tests/skin-catalog.test.ts tests/catalog-data.test.ts tests/publication-overview.test.tsx tests/market-schedule.test.ts tests/schedule-date.test.ts tests/hero-comparison.test.ts tests/hero-history.test.tsx tests/import-resource-files.test.ts tests/baseline-migration.test.tsx tests/import-review-performance.test.tsx tests/hero-location.test.ts tests/hero-location-ui.test.tsx tests/hero-quick-view-body.test.tsx tests/hero-catalog-filtering.test.tsx tests/catalog-controls.test.tsx tests/draft-store.test.ts tests/draft-merge.test.ts tests/draft-form.test.tsx tests/hero-skill-comparison.test.ts tests/change-color-preferences.test.tsx tests/comparison-skill-icon.test.tsx tests/hero-skill-comparison-ui.test.tsx tests/hero-image-source.test.tsx tests/character-image-api.test.ts tests/character-image-ui.test.tsx tests/media-tabs.test.tsx tests/character-image-viewer.test.tsx tests/skin-badge-groups.test.tsx tests/character-image-nested-table.test.tsx tests/infinite-scroll.test.tsx tests/hero-skills-view.test.tsx tests/hero-skills-editor.test.tsx tests/hero-scroll-identity.test.tsx tests/hero-quick-switcher.test.tsx tests/hero-quick-navigation.test.tsx tests/patch-change-model.test.ts"
   },
   "dependencies": {
@@ -34,6 +34,7 @@
     "@tanstack/react-query": "^5.104.1",
     "@tanstack/react-table": "9.2.8",
     "fflate": "^0.8.3",
+    "html-to-image": "^1.11.13",
     "idb": "^8.0.4",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",

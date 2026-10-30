@@ -22,6 +22,8 @@ import {
 } from "react-router"
 import type { RouteHandle } from "./site-header"
 import { useHotkeys } from "../hotkeys"
+import { createPageTabPreviewStore } from "./page-tab-preview-store"
+import { PageTabPreviewContext, usePageTabCapture } from "./page-tab-preview"
 
 interface PageSession {
   path: string
@@ -81,6 +83,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
     }
   }, [location, locationContext, routerState, outlet, matches])
   const [saved, setSaved] = useState<PageSession[]>(() => (transient ? [] : [active]))
+  const [previews] = useState(createPageTabPreviewStore)
   const closeGuards = useRef(new Map<string, Set<() => boolean>>())
   const registerCloseGuard = React.useCallback((path: string, guard: () => boolean) => {
     const guards = closeGuards.current.get(path) ?? new Set<() => boolean>()
@@ -105,6 +108,8 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
     )
     if (closingPath !== null) setClosingPath(null)
   }, [active, closingPath, transient])
+
+  useEffect(() => previews.retain(sessions.map((session) => session.path)), [previews, sessions])
 
   const closeTab = (path: string) => {
     if ([...(closeGuards.current.get(path) ?? [])].some((guard) => !guard())) return
@@ -175,7 +180,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
         registerCloseGuard,
       }}
     >
-      {children}
+      <PageTabPreviewContext.Provider value={previews}>{children}</PageTabPreviewContext.Provider>
     </PageTabsContext.Provider>
   )
 }
@@ -203,6 +208,7 @@ export function usePageCloseGuard(guard: () => boolean, enabled = true) {
 
 function SessionPanel({ session, active }: { session: PageSession; active: boolean }) {
   const panel = useRef<HTMLDivElement>(null)
+  usePageTabCapture(panel, active, session.path, session.to)
   const scroll = useRef(new Map<HTMLElement, { top: number; left: number }>())
   useLayoutEffect(() => {
     if (!active || !panel.current) return
