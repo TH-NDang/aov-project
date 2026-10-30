@@ -1,6 +1,4 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react"
-import { Search } from "lucide-react"
-import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { SearchField } from "@/components/search-field"
 import { matchesQuery } from "@/lib/text"
@@ -46,133 +44,107 @@ export function ItemSearch({
   const matches = useMemo(() => itemSearchMatches(items, q, locale), [items, q, locale])
   const shown = matches.slice(0, visibleResults)
   const expanded = open && !!q
-  // Phones show only an icon; tapping it lays the field over the header row.
-  const [compactOpen, setCompactOpen] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   useEffect(() => setActive(0), [q])
-  useEffect(() => {
-    if (compactOpen) input.current?.focus()
-  }, [compactOpen])
   function pick(item: Entry) {
     setOpen(false)
-    setCompactOpen(false)
+    // Leaving the field also collapses it back to an icon on phones.
+    input.current?.blur()
     onPick(item)
   }
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="relative ml-auto size-9 sm:hidden"
-        aria-label={q ? `Tìm trang bị: ${q}` : "Tìm trang bị"}
-        onClick={() => setCompactOpen(true)}
-      >
-        <Search className="size-4" />
-        {q && <span aria-hidden className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
-      </Button>
-      <div
-        className={cn(
-          "sm:relative",
-          compactOpen ? "max-sm:absolute max-sm:inset-0 max-sm:z-30 max-sm:flex max-sm:bg-background" : "max-sm:hidden",
-          className,
-        )}
-        onBlur={(event) => {
-          if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
+    <SearchField
+      placement="header"
+      inputRef={input}
+      className={className}
+      label="Tìm trang bị"
+      placeholder="Tìm tên hoặc mã…"
+      shortcut
+      value={value}
+      onChange={(next) => {
+        onChange(next)
+        setOpen(true)
+      }}
+      role="combobox"
+      aria-expanded={expanded}
+      aria-controls={listId}
+      aria-autocomplete="list"
+      aria-activedescendant={expanded && shown.length ? `${listId}-${active}` : undefined}
+      onFocus={() => setOpen(true)}
+      onBlur={() => setOpen(false)}
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && expanded) {
+          event.preventDefault()
           setOpen(false)
-          setCompactOpen(false)
-        }}
-      >
-        <SearchField
-          inputRef={input}
-          className="max-sm:flex-1 max-sm:self-center"
-          label="Tìm trang bị"
-          placeholder="Tìm tên hoặc mã…"
-          shortcut
-          value={value}
-          onChange={(next) => {
-            onChange(next)
-            setOpen(true)
-          }}
-          role="combobox"
-          aria-expanded={expanded}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={expanded && shown.length ? `${listId}-${active}` : undefined}
-          onFocus={() => setOpen(true)}
-          onKeyDown={(event) => {
-            if (event.key === "Escape" && expanded) {
-              event.preventDefault()
-              setOpen(false)
-              return
-            }
-            if (!q || !shown.length) return
-            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-              event.preventDefault()
-              setOpen(true)
-              const step = event.key === "ArrowDown" ? 1 : -1
-              setActive((index) => (index + step + shown.length) % shown.length)
-            } else if (event.key === "Enter") {
-              event.preventDefault()
-              pick(shown[Math.min(active, shown.length - 1)])
-            }
-          }}
-        />
-        {expanded && (
-          <div
-            id={listId}
-            role="listbox"
-            aria-label="Kết quả tìm trang bị"
-            className="absolute top-full right-0 left-0 z-40 mt-1 sm:min-w-72 overflow-hidden rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg"
-          >
-            {shown.length ? (
-              shown.map((item, index) => {
-                const group = categories.find((entry) => entry.code === item.content.shopPositions[0]?.categoryCode)
-                return (
-                  <div
-                    key={item.id}
-                    id={`${listId}-${index}`}
-                    role="option"
-                    aria-selected={index === active}
-                    className={cn(
-                      "flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5",
-                      index === active && "bg-accent text-accent-foreground",
-                    )}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onMouseEnter={() => setActive(index)}
-                    onClick={() => pick(item)}
-                  >
-                    <HeroAsset
-                      id={item.content.iconAssetId}
-                      alt=""
-                      className="size-7 shrink-0 rounded-md"
-                      frameAspectRatio={1}
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">{warehouseName(item, locale)}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {group ? warehouseText(group.translations, locale)?.name || group.code : "Chưa xếp nhóm"} ·{" "}
-                        {item.code}
-                      </span>
+          return
+        }
+        if (!q || !shown.length) return
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+          event.preventDefault()
+          setOpen(true)
+          const step = event.key === "ArrowDown" ? 1 : -1
+          setActive((index) => (index + step + shown.length) % shown.length)
+        } else if (event.key === "Enter") {
+          event.preventDefault()
+          pick(shown[Math.min(active, shown.length - 1)])
+        }
+      }}
+    >
+      {expanded && (
+        <div
+          id={listId}
+          role="listbox"
+          aria-label="Kết quả tìm trang bị"
+          className="absolute top-full right-0 left-0 z-40 mt-1 sm:min-w-72 overflow-hidden rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg"
+        >
+          {shown.length ? (
+            shown.map((item, index) => {
+              const group = categories.find((entry) => entry.code === item.content.shopPositions[0]?.categoryCode)
+              return (
+                <div
+                  key={item.id}
+                  id={`${listId}-${index}`}
+                  role="option"
+                  aria-selected={index === active}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5",
+                    index === active && "bg-accent text-accent-foreground",
+                  )}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onMouseEnter={() => setActive(index)}
+                  onClick={() => pick(item)}
+                >
+                  <HeroAsset
+                    id={item.content.iconAssetId}
+                    alt=""
+                    className="size-7 shrink-0 rounded-md"
+                    frameAspectRatio={1}
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{warehouseName(item, locale)}</span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {group ? warehouseText(group.translations, locale)?.name || group.code : "Chưa xếp nhóm"} ·{" "}
+                      {item.code}
                     </span>
-                    {item.content.price !== null && (
-                      <span className="shrink-0 text-xs tabular-nums text-amber-600 dark:text-amber-400">
-                        {item.content.price.toLocaleString("vi-VN")}
-                      </span>
-                    )}
-                  </div>
-                )
-              })
-            ) : (
-              <p className="px-2 py-3 text-center text-sm text-muted-foreground">Không có trang bị khớp “{q}”.</p>
-            )}
-            {matches.length > shown.length && (
-              <p className="mt-1 border-t px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground">
-                Còn {matches.length - shown.length} kết quả · gõ thêm để thu hẹp
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </>
+                  </span>
+                  {item.content.price !== null && (
+                    <span className="shrink-0 text-xs tabular-nums text-amber-600 dark:text-amber-400">
+                      {item.content.price.toLocaleString("vi-VN")}
+                    </span>
+                  )}
+                </div>
+              )
+            })
+          ) : (
+            <p className="px-2 py-3 text-center text-sm text-muted-foreground">Không có trang bị khớp “{q}”.</p>
+          )}
+          {matches.length > shown.length && (
+            <p className="mt-1 border-t px-2 pt-1.5 pb-0.5 text-xs text-muted-foreground">
+              Còn {matches.length - shown.length} kết quả · gõ thêm để thu hẹp
+            </p>
+          )}
+        </div>
+      )}
+    </SearchField>
   )
 }

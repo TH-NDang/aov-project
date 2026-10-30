@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
-import { Plus, Search, Trophy, Upload, Users, X } from "lucide-react"
-import { Button } from "@aov/ui/components/button"
-import { Input } from "@aov/ui/components/input"
+import { Plus, Trophy, Upload, Users } from "lucide-react"
+import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
+import { PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
+import { SearchField } from "@/components/search-field"
 import { cn } from "@aov/ui/lib/utils"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { RegistryImportSheet } from "@/features/tournaments/registry-import"
@@ -78,33 +80,46 @@ function Hub({ access }: { access: Access }) {
 
   return (
     <EsportsPage>
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="flex items-center gap-2 text-2xl font-bold tracking-tight">
-            <Trophy size={24} className="text-[var(--esp-gold)]" /> Giải đấu
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Lịch, kết quả, đội hình và diễn biến từng ván gắn với video YouTube chính thức.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/tournaments/registry">
-              <Users size={14} /> Đội & tuyển thủ
-            </Link>
-          </Button>
-          {access.canWrite && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => setImporting(true)}>
-                <Upload size={14} /> Nhập dữ liệu
-              </Button>
-              <Button size="sm" onClick={() => setCreating(true)}>
-                <Plus size={14} /> Tạo giải
-              </Button>
-            </>
-          )}
-        </div>
-      </header>
+      <PageHeader
+        title={
+          <span className="inline-flex items-center gap-2">
+            <Trophy size={20} className="shrink-0 text-[var(--esp-gold)]" /> Giải đấu
+          </span>
+        }
+        search={
+          <SearchField
+            placement="header"
+            label="Tìm giải"
+            placeholder="Tìm giải…"
+            shortcut
+            value={search}
+            onChange={setSearch}
+          />
+        }
+        actions={
+          <PageActionsMenu label="Giải đấu: tạo, nhập và đội tuyển">
+            {access.canWrite && (
+              <>
+                <DropdownMenuItem onSelect={() => setCreating(true)}>
+                  <Plus />
+                  Tạo giải
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setImporting(true)}>
+                  <Upload />
+                  Nhập dữ liệu
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem asChild>
+              <Link to="/tournaments/registry">
+                <Users />
+                Đội & tuyển thủ
+              </Link>
+            </DropdownMenuItem>
+          </PageActionsMenu>
+        }
+      />
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex rounded-full border p-0.5" role="group" aria-label="Trạng thái">
@@ -138,26 +153,6 @@ function Hub({ access }: { access: Access }) {
             ))}
           </select>
         )}
-        <div className="relative ml-auto w-full @xl:w-64">
-          <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Tìm giải…"
-            aria-label="Tìm giải"
-            className="h-8 rounded-full pl-8"
-          />
-          {search && (
-            <button
-              type="button"
-              aria-label="Xóa tìm kiếm"
-              onClick={() => setSearch("")}
-              className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
       </div>
 
       {error ? (

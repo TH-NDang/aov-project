@@ -20,7 +20,8 @@ export function PlayerRegistry({
   country: string
   canWrite: boolean
   selectedId?: string
-  onSearchChange: (value: string) => void
+  /** Shows a search box in the toolbar; the registry page searches from its header instead. */
+  onSearchChange?: (value: string) => void
   onCountryChange: (value: string) => void
   onEdit: (player: DocumentView<PlayerContent>) => void
 }) {
@@ -53,12 +54,14 @@ export function PlayerRegistry({
             <option value={country}>{teamRegionName(country === "UNKNOWN" ? "" : country)}</option>
           )}
         </select>
-        <Input
-          aria-label="Tìm tuyển thủ"
-          placeholder="Tên thi đấu, tên khác…"
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-        />
+        {onSearchChange && (
+          <Input
+            aria-label="Tìm tuyển thủ"
+            placeholder="Tên thi đấu, tên khác…"
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+          />
+        )}
         <small className="tournament-filter-count" role="status">
           {shown.length}/{players.length} tuyển thủ
         </small>

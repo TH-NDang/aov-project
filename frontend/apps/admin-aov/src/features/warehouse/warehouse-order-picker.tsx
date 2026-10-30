@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import {
   arrayMove,
@@ -109,6 +109,9 @@ export function WarehouseOrderPicker({
   disabledReason,
   blockedReason,
   onSave,
+  open: openProp,
+  onOpenChange,
+  hideTrigger = false,
 }: {
   label: string
   contextLabel?: string
@@ -117,8 +120,17 @@ export function WarehouseOrderPicker({
   disabledReason?: string
   blockedReason?: string
   onSave: (ids: string[]) => Promise<void>
+  /** Opens the dialog from outside, e.g. a page menu; pair with `hideTrigger`. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  hideTrigger?: boolean
 }) {
-  const [open, setOpen] = useState(false)
+  const [ownOpen, setOwnOpen] = useState(false)
+  const open = openProp ?? ownOpen
+  function setOpen(next: boolean) {
+    if (openProp === undefined) setOwnOpen(next)
+    onOpenChange?.(next)
+  }
   const [ordered, setOrdered] = useState(items)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -126,6 +138,12 @@ export function WarehouseOrderPicker({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
+  // A dialog opened from outside starts from the current order, like one opened by the trigger.
+  useEffect(() => {
+    if (!openProp) return
+    setOrdered(items)
+    setError("")
+  }, [openProp])
   const dirty = ordered.some((item, index) => item.id !== items[index]?.id)
   function move(from: number, to: number) {
     if (busy || blockedReason || from < 0 || to < 0 || from >= ordered.length || to >= ordered.length) return
@@ -144,22 +162,24 @@ export function WarehouseOrderPicker({
     }
   }
   return (
-    <div className="space-y-1.5">
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        disabled={disabled || !items.length}
-        onClick={() => {
-          setOrdered(items)
-          setError("")
-          setOpen(true)
-        }}
-      >
-        <ListOrdered className="size-4" />
-        {label}
-      </Button>
-      {disabledReason && <p className="text-xs text-muted-foreground">{disabledReason}</p>}
+    <div className={hideTrigger ? "contents" : "space-y-1.5"}>
+      {!hideTrigger && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled || !items.length}
+          onClick={() => {
+            setOrdered(items)
+            setError("")
+            setOpen(true)
+          }}
+        >
+          <ListOrdered className="size-4" />
+          {label}
+        </Button>
+      )}
+      {!hideTrigger && disabledReason && <p className="text-xs text-muted-foreground">{disabledReason}</p>}
       <Dialog open={open} onOpenChange={(next) => !busy && setOpen(next)}>
         <DialogContent
           className="flex max-h-[85dvh] flex-col overflow-hidden sm:max-w-lg"

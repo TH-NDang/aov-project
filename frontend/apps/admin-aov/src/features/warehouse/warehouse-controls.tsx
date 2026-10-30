@@ -1,4 +1,3 @@
-import { SearchField } from "@/components/search-field"
 import { useImageContext } from "../media/character-image-context"
 import { useContentLocale } from "../publishing/publication-overview"
 import { control } from "../publishing/fields"
@@ -26,26 +25,5 @@ export function WarehouseRulesetSelect({ context }: { context: ReturnType<typeof
         </option>
       ))}
     </select>
-  )
-}
-export function WarehouseControls({
-  context,
-  placeholder = "Tìm tên hoặc mã…",
-}: {
-  context: ReturnType<typeof useWarehouseContext>
-  placeholder?: string
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <SearchField
-        className="w-full sm:w-80"
-        label={placeholder}
-        placeholder={placeholder}
-        shortcut
-        value={context.search}
-        onChange={context.setSearch}
-      />
-      <WarehouseRulesetSelect context={context} />
-    </div>
   )
 }

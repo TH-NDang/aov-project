@@ -1,17 +1,20 @@
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Gem, GitBranch, Languages, Plus, Sparkles, Zap } from "lucide-react"
+import { Gem, GitBranch, Languages, ListOrdered, Plus, Sparkles, Zap } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { cn } from "@aov/ui/lib/utils"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
+import { SearchField } from "@/components/search-field"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { matchesQuery } from "@/lib/text"
 import { control } from "../publishing/fields"
 import { useWarehouseCatalog, warehouseApi, warehouseKeys, invalidateWarehouseCatalogs } from "./warehouse-api"
-import { WarehouseControls, useWarehouseContext } from "./warehouse-controls"
+import { WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
 import { EnchantmentBranches } from "./enchantment-branches"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
 import { enchantmentBranchColor } from "./enchantment-colors"
@@ -75,6 +78,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
   const [selectedEntry, setSelectedEntry] = useState<SecondaryEntry | null>(null)
   const [creating, setCreating] = useState(false)
   const [branchEditor, setBranchEditor] = useState<WarehouseMetadata | "new" | null>(null)
+  const [ordering, setOrdering] = useState(false)
   const [branchCode, setBranchCode] = useSearchParam("group")
   const [color, setColor] = useSearchParam("color")
   const [tier, setTier] = useSearchParam("tier")
@@ -202,42 +206,65 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
     <Page className="min-h-0 min-w-0 gap-4">
       <PageHeader
         title={titles[kind]}
+        search={
+          <SearchField
+            placement="header"
+            label={`Tìm ${secondaryNames[kind]}`}
+            placeholder="Tìm tên hoặc mã…"
+            shortcut
+            value={context.search}
+            onChange={context.setSearch}
+          />
+        }
         actions={
           <>
-            {kind === "enchantments" && canWrite && (
-              <WarehouseOrderPicker
-                label="Thứ tự các hệ"
-                items={sortedBranches.map((entry) => ({
-                  id: entry.code,
-                  name: warehouseText(entry.translations, context.locale)?.name ?? entry.code,
-                  iconAssetId: entry.iconAssetId,
-                  color: enchantmentBranchColor(entry),
-                }))}
-                onSave={reorderBranches}
-              />
-            )}
-            {kind === "enchantments" && canWrite && (
-              <Button variant="outline" size="sm" onClick={() => setBranchEditor("new")}>
-                <GitBranch className="size-4" /> Tạo hệ
-              </Button>
-            )}
+            <WarehouseRulesetSelect context={context} />
             {canWrite && (
-              <Button
-                size="sm"
-                disabled={!context.rulesetId}
-                onClick={() => {
-                  setCreating(true)
-                  setSelectedEntry(null)
-                  setSelectedId(null)
-                }}
-              >
-                <Plus className="size-4" /> Tạo {secondaryNames[kind]}
-              </Button>
+              <PageActionsMenu label={`Tạo và thiết lập ${secondaryNames[kind]}`}>
+                <DropdownMenuItem
+                  disabled={!context.rulesetId}
+                  onSelect={() => {
+                    setCreating(true)
+                    setSelectedEntry(null)
+                    setSelectedId(null)
+                  }}
+                >
+                  <Plus />
+                  Tạo {secondaryNames[kind]}
+                </DropdownMenuItem>
+                {kind === "enchantments" && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => setBranchEditor("new")}>
+                      <GitBranch />
+                      Tạo hệ
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled={!sortedBranches.length} onSelect={() => setOrdering(true)}>
+                      <ListOrdered />
+                      Thứ tự các hệ
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </PageActionsMenu>
             )}
           </>
         }
       />
-      <WarehouseControls context={context} placeholder={`Tìm ${secondaryNames[kind]} theo tên hoặc mã…`} />
+      {kind === "enchantments" && canWrite && (
+        <WarehouseOrderPicker
+          hideTrigger
+          open={ordering}
+          onOpenChange={setOrdering}
+          label="Thứ tự các hệ"
+          items={sortedBranches.map((entry) => ({
+            id: entry.code,
+            name: warehouseText(entry.translations, context.locale)?.name ?? entry.code,
+            iconAssetId: entry.iconAssetId,
+            color: enchantmentBranchColor(entry),
+          }))}
+          onSave={reorderBranches}
+        />
+      )}
       <WarehouseScopeControls scope={scopeState} />
       {kind === "arcana" && (
         <div className="flex flex-wrap items-center gap-2">

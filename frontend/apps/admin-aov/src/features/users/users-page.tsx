@@ -1,10 +1,10 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
+import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
-import { Input } from "@aov/ui/components/input"
 import { ProfileForm } from "./profile-form"
 import { listProfiles, profileError, selfProfile, userKeys } from "./user-api"
 
@@ -47,6 +47,16 @@ export function UsersPage() {
   const [search, setSearch] = useState("")
   const [term, setTerm] = useState("")
   const [page, setPage] = useState(0)
+  // Searches by server query once typing pauses.
+  useEffect(() => {
+    const next = search.trim()
+    if (next === term) return
+    const timer = window.setTimeout(() => {
+      setTerm(next)
+      setPage(0)
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [search, term])
   const query = useQuery({
     queryKey: [...userKeys.all, "list", actor?.issuer, actor?.subject, term, page],
     queryFn: ({ signal }) => listProfiles(term, page, signal),
@@ -54,28 +64,26 @@ export function UsersPage() {
   })
   return (
     <Page>
-      <PageHeader title="Người dùng" description="Quản lý hồ sơ đã được người dùng tạo trong hệ thống." />
+      <PageHeader
+        title="Người dùng"
+        search={
+          canRead ? (
+            <SearchField
+              placement="header"
+              label="Tìm người dùng theo tên"
+              placeholder="Tìm theo tên hiển thị…"
+              shortcut
+              maxLength={80}
+              value={search}
+              onChange={setSearch}
+            />
+          ) : undefined
+        }
+      />
       {!canRead ? (
         <p role="alert">Bạn chưa có quyền xem danh sách người dùng.</p>
       ) : (
         <>
-          <form
-            className="flex max-w-lg gap-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              setTerm(search.trim())
-              setPage(0)
-            }}
-          >
-            <Input
-              aria-label="Tìm người dùng theo tên"
-              placeholder="Tìm theo tên hiển thị…"
-              maxLength={80}
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            <Button>Tìm kiếm</Button>
-          </form>
           {query.isPending ? (
             <p role="status">Đang tải danh sách…</p>
           ) : query.isError ? (

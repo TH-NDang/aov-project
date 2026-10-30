@@ -1,8 +1,8 @@
 import { Link } from "react-router"
 import { ArrowUpRight, ChevronRight, Languages, Search, X } from "lucide-react"
 import { useMemo, useState, type ReactNode } from "react"
+import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
-import { Input } from "@aov/ui/components/input"
 import {
   resolveEntityRoute,
   foldEntitySearch,
@@ -92,22 +92,17 @@ export function ReferenceCatalogTable({
     >
       <div className="space-y-3 p-3 sm:p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-0 flex-1 basis-56">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              className="h-9 bg-background pl-9 shadow-none"
-              aria-label="Tìm danh mục"
-              placeholder={termsOnly ? "Tìm thuật ngữ, tên gọi khác…" : "Tìm tên hoặc tên gọi khác…"}
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value)
-                setPage(0)
-              }}
-            />
-          </div>
+          <SearchField
+            className="flex-1 basis-56 sm:max-w-96"
+            label="Tìm danh mục"
+            placeholder={termsOnly ? "Tìm thuật ngữ, tên gọi khác…" : "Tìm tên hoặc tên gọi khác…"}
+            shortcut
+            value={search}
+            onChange={(value) => {
+              setSearch(value)
+              setPage(0)
+            }}
+          />
           {actions}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">

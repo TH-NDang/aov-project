@@ -22,7 +22,8 @@ export function TeamRegistry({
   search: string
   canWrite: boolean
   onCountryChange: (country: string) => void
-  onSearchChange: (search: string) => void
+  /** Shows a search box in the toolbar; the registry page searches from its header instead. */
+  onSearchChange?: (search: string) => void
   onEdit: (team: DocumentView<TeamContent>) => void
   selectedId?: string
   onRoster?: (team: DocumentView<TeamContent>) => void
@@ -62,12 +63,14 @@ export function TeamRegistry({
             <option value={country}>{teamRegionName(country === "UNKNOWN" ? "" : country)}</option>
           )}
         </select>
-        <Input
-          aria-label="Tìm đội tuyển"
-          placeholder="Tìm đội tuyển…"
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-        />
+        {onSearchChange && (
+          <Input
+            aria-label="Tìm đội tuyển"
+            placeholder="Tìm đội tuyển…"
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+          />
+        )}
         <small className="tournament-filter-count" role="status">
           {shown.length}/{teams.length} đội
         </small>

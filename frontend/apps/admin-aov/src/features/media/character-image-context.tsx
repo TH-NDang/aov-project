@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "react-router"
-import { Search } from "lucide-react"
+import { SearchField } from "@/components/search-field"
 import { backendRequest } from "@/app/auth/session"
 import { createCharacterImageApi } from "./character-image-api"
 import { control } from "../publishing/fields"
@@ -51,36 +51,30 @@ export function ImageContextControls({
   placeholder: string
 }) {
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className="flex flex-wrap items-center gap-2">
+      <SearchField
+        className="w-full sm:w-80"
+        label={placeholder}
+        placeholder={placeholder}
+        shortcut
+        value={context.search}
+        onChange={context.setSearch}
+      />
       {hasRulesetChoice(context.rulesets.data) && (
-        <label className="grid min-w-48 flex-1 gap-1.5 text-sm sm:max-w-72">
-          <span>Bộ quy tắc</span>
-          <select
-            aria-label="Bộ quy tắc"
-            className={control}
-            value={context.rulesetId}
-            disabled={context.rulesets.isPending}
-            onChange={(event) => context.setRuleset(event.target.value)}
-          >
-            {context.rulesets.data?.map((rule) => (
-              <option key={rule.id} value={rule.id}>
-                {rule.code}
-              </option>
-            ))}
-          </select>
-        </label>
+        <select
+          aria-label="Bộ quy tắc"
+          className={`${control} h-9 w-auto max-w-52 py-0`}
+          value={context.rulesetId}
+          disabled={context.rulesets.isPending}
+          onChange={(event) => context.setRuleset(event.target.value)}
+        >
+          {context.rulesets.data?.map((rule) => (
+            <option key={rule.id} value={rule.id}>
+              {rule.code}
+            </option>
+          ))}
+        </select>
       )}
-      <label className="relative min-w-48 flex-[2]">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          aria-label={placeholder}
-          className={`${control} pl-9`}
-          placeholder={placeholder}
-          value={context.search}
-          maxLength={100}
-          onChange={(event) => context.setSearch(event.target.value)}
-        />
-      </label>
     </div>
   )
 }

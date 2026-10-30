@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, ImageIcon, LayoutGrid, List, Plus, RefreshCw } from "lucide-react"
+import { ArrowUpRight, ImageIcon, LayoutGrid, List, Mail, Plus, RefreshCw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
+import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { useIsWide } from "@/hooks/use-media-query"
 import { useSession } from "@/app/auth/auth-gate"
@@ -266,27 +268,33 @@ export function ImageManagementPage() {
       <PageHeader
         title="Quản lý ảnh"
         actions={
-          <div className="flex gap-2">
-            {writable && (
-              <Button variant="outline" asChild>
-                <Link to="/media-contact-requests">Liên hệ về ảnh</Link>
-              </Button>
-            )}
+          <>
             <Button
-              variant="outline"
+              variant="ghost"
+              size="icon"
+              className="size-9"
               aria-label="Làm mới danh sách ảnh"
+              title="Làm mới"
               onClick={() => void assets.refetch()}
               disabled={assets.isFetching}
             >
-              <RefreshCw className="size-4" />
+              <RefreshCw className={assets.isFetching ? "size-4 animate-spin" : "size-4"} />
             </Button>
             {writable && (
-              <Button onClick={() => setUpload(true)}>
-                <Plus className="size-4" />
-                Thêm ảnh
-              </Button>
+              <PageActionsMenu label="Thêm ảnh và liên hệ">
+                <DropdownMenuItem onSelect={() => setUpload(true)}>
+                  <Plus />
+                  Thêm ảnh
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/media-contact-requests">
+                    <Mail />
+                    Liên hệ về ảnh
+                  </Link>
+                </DropdownMenuItem>
+              </PageActionsMenu>
             )}
-          </div>
+          </>
         }
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
