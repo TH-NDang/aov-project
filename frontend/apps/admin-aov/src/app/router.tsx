@@ -4,6 +4,7 @@ import { AppShell } from "./layout/app-shell"
 import type { RouteHandle } from "./layout/site-header"
 import { AppLoading, RouteError } from "./route-error"
 import { LegacyMediaRedirect, MediaWorkspace } from "@/features/media/media-workspace"
+import { HeroCrumb, TournamentCrumb } from "./layout/entity-crumbs"
 
 const handle = (crumb: RouteHandle["crumb"]): RouteHandle => ({ crumb })
 const title = (text: string) => handle(() => text)
@@ -97,7 +98,7 @@ const routes: RouteObject[] = [
           },
           {
             path: "hero/:heroId",
-            handle: title("Phiên bản tướng"),
+            handle: handle((match) => <HeroCrumb heroId={match.params.heroId} fallback="Tướng" />),
             lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
           },
           {
@@ -182,7 +183,9 @@ const routes: RouteObject[] = [
           },
           {
             path: "tournaments/:tournamentId",
-            handle: title("Chi tiết giải"),
+            handle: handle((match) => (
+              <TournamentCrumb tournamentId={match.params.tournamentId} fallback="Chi tiết giải" />
+            )),
             lazy: async () => ({
               Component: (await import("@/features/esports/pages/tournament-page")).TournamentPage,
             }),
