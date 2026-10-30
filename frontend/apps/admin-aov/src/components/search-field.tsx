@@ -1,33 +1,48 @@
-import { useEffect, useRef, type ComponentProps } from "react"
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react"
 import { Search, X } from "lucide-react"
+import { Button } from "@aov/ui/components/button"
 import { Kbd } from "@aov/ui/components/kbd"
 import { cn } from "@aov/ui/lib/utils"
 import { useHotkeys } from "@/app/hotkeys"
 
-type InputProps = Omit<ComponentProps<"input">, "value" | "onChange" | "type">
+type InputProps = Omit<ComponentProps<"input">, "value" | "onChange" | "type" | "children">
 
 /**
  * Compact search box shared by catalog pages: clear button, Esc to clear and "/" to focus when `shortcut` is set.
  * Only one field per page should enable the shortcut.
+ *
+ * `placement="header"` is for `PageHeader`'s search slot: a fixed width centered by the header on larger screens,
+ * and an icon on phones that lays the field over the header row. `children` render next to the input, e.g. a
+ * result list positioned below it.
  */
 export function SearchField({
   value,
   onChange,
   label,
   shortcut = false,
+  placement = "inline",
   className,
   inputRef,
   onKeyDown,
+  children,
   ...props
 }: InputProps & {
   value: string
   onChange: (value: string) => void
   label: string
   shortcut?: boolean
+  placement?: "inline" | "header"
   inputRef?: React.Ref<HTMLInputElement>
+  children?: ReactNode
 }) {
   const own = useRef<HTMLInputElement | null>(null)
   const { enabled } = useHotkeys()
+  const header = placement === "header"
+  const [expanded, setExpanded] = useState(false)
+  const active = value.trim()
+  useEffect(() => {
+    if (expanded) own.current?.focus()
+  }, [expanded])
   useEffect(() => {
     if (!shortcut || !enabled) return
     const focus = (event: KeyboardEvent) => {
@@ -37,16 +52,22 @@ export function SearchField({
         event.target.closest('input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role="textbox"]')
       )
         return
-      if (!own.current || own.current.closest("[hidden],[inert]")) return
+      const input = own.current
+      if (!input || input.closest("[hidden],[inert]")) return
       event.preventDefault()
-      own.current.focus()
-      own.current.select()
+      // A collapsed header field has no layout box until it expands.
+      if (header && !input.offsetParent) {
+        setExpanded(true)
+        return
+      }
+      input.focus()
+      input.select()
     }
     window.addEventListener("keydown", focus)
     return () => window.removeEventListener("keydown", focus)
-  }, [shortcut, enabled])
-  return (
-    <div className={cn("relative min-w-0", className)}>
+  }, [shortcut, enabled, header])
+  const field = (
+    <div className="relative w-full min-w-0">
       <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <input
         {...props}
@@ -93,5 +114,41 @@ export function SearchField({
         )
       )}
     </div>
+  )
+  if (!header)
+    return (
+      <div className={cn("relative min-w-0", className)}>
+        {field}
+        {children}
+      </div>
+    )
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="relative size-9 shrink-0 sm:hidden"
+        aria-label={active ? `${label}: ${active}` : label}
+        onClick={() => setExpanded(true)}
+      >
+        <Search className="size-4" />
+        {active && <span aria-hidden className="absolute top-1.5 right-1.5 size-2 rounded-full bg-primary" />}
+      </Button>
+      <div
+        className={cn(
+          "min-w-0 sm:relative sm:w-80 lg:w-96",
+          expanded
+            ? "max-sm:absolute max-sm:inset-0 max-sm:z-30 max-sm:flex max-sm:items-center max-sm:bg-background"
+            : "max-sm:hidden",
+          className,
+        )}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setExpanded(false)
+        }}
+      >
+        {field}
+        {children}
+      </div>
+    </>
   )
 }

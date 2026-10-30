@@ -2,16 +2,10 @@ import { useWarehouseScope, WarehouseScopeControls } from "./warehouse-scope"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useBlocker } from "react-router"
-import { FolderPlus, LoaderCircle, MoreHorizontal, PencilLine, Plus, Rows3 } from "lucide-react"
+import { FolderPlus, LoaderCircle, PencilLine, Plus, Rows3 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@aov/ui/components/dropdown-menu"
+import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@aov/ui/components/dialog"
 import {
   AlertDialog,
@@ -24,7 +18,8 @@ import {
   AlertDialogCancel,
 } from "@aov/ui/components/alert-dialog"
 import { useSession } from "@/app/auth/auth-gate"
-import { Page } from "@/components/page-header"
+import { Page, PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
 import { UnsavedBar } from "@/components/unsaved-bar"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
@@ -294,40 +289,36 @@ export function BackendItemsPage() {
   }
   return (
     <Page className="min-h-0 min-w-0 gap-4" data-item-selection-surface>
-      <div className="relative flex items-center gap-2 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-x-4">
-        <h1 className="text-xl font-semibold tracking-tight">Trang bị</h1>
-        <ItemSearch
-          className="min-w-0 flex-1 sm:w-80 sm:flex-none lg:w-96"
-          items={rows}
-          categories={categories}
-          locale={context.locale}
-          value={context.search}
-          onChange={context.setSearch}
-          onPick={jumpTo}
-        />
-        <div className="flex shrink-0 items-center gap-2 sm:justify-self-end">
-          <WarehouseRulesetSelect
-            context={{
-              ...context,
-              setRuleset: (id) => {
-                if (pending && !window.confirm("Bỏ các thay đổi chưa lưu để chuyển bộ quy tắc?")) return
-                setEdits(new Map())
-                setUndo([])
-                setSelectedId(null)
-                setFocusId(null)
-                context.setRuleset(id)
-              },
-            }}
+      <PageHeader
+        title="Trang bị"
+        search={
+          <ItemSearch
+            items={rows}
+            categories={categories}
+            locale={context.locale}
+            value={context.search}
+            onChange={context.setSearch}
+            onPick={jumpTo}
           />
-          <ItemShopHelp />
-          {canWrite && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="icon" variant="outline" className="size-9" aria-label="Tạo và thiết lập trang bị">
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+        }
+        actions={
+          <>
+            <WarehouseRulesetSelect
+              context={{
+                ...context,
+                setRuleset: (id) => {
+                  if (pending && !window.confirm("Bỏ các thay đổi chưa lưu để chuyển bộ quy tắc?")) return
+                  setEdits(new Map())
+                  setUndo([])
+                  setSelectedId(null)
+                  setFocusId(null)
+                  context.setRuleset(id)
+                },
+              }}
+            />
+            <ItemShopHelp />
+            {canWrite && (
+              <PageActionsMenu label="Tạo và thiết lập trang bị">
                 <DropdownMenuItem disabled={busy || !context.rulesetId} onSelect={() => setCreating(true)}>
                   <Plus />
                   Tạo trang bị
@@ -348,11 +339,11 @@ export function BackendItemsPage() {
                   <PencilLine />
                   Sửa nhóm đang xem
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
+              </PageActionsMenu>
+            )}
+          </>
+        }
+      />
       <WarehouseScopeControls scope={scope} />
       {(error || catalog.isError || groups.isError) && (
         <p role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">

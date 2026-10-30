@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
@@ -132,6 +133,7 @@ export function PublishingWorkspace({
   const [selectedId, setSelectedId] = useState(requestedRevision)
   const [editing, setEditing] = useState(false)
   const [managementOpen, setManagementOpen] = useState(false)
+  const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
@@ -348,22 +350,23 @@ export function PublishingWorkspace({
       {!heroId ? (
         <PageHeader
           title="Tướng"
+          search={<div ref={setSearchSlot} className="contents" />}
           actions={
             canWrite ? (
-              <>
-                <Button variant="outline" asChild>
-                  <Link to="/hero/import">
-                    <FileUp className="size-4" />
-                    Import
-                  </Link>
-                </Button>
-                <Button asChild>
+              <PageActionsMenu label="Tạo và import tướng">
+                <DropdownMenuItem asChild>
                   <Link to="/hero/new">
-                    <Plus className="size-4" />
+                    <Plus />
                     Tạo tướng
                   </Link>
-                </Button>
-              </>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/hero/import">
+                    <FileUp />
+                    Import tướng
+                  </Link>
+                </DropdownMenuItem>
+              </PageActionsMenu>
             ) : undefined
           }
         />
@@ -521,7 +524,13 @@ export function PublishingWorkspace({
               {overview.error ? errorMessage(overview.error) : "Đang tải mùa và patch…"}
             </p>
           )}
-          <HeroCatalog ruleset="" locale={displayLocale} overview={overview.data} filter={filter} />
+          <HeroCatalog
+            ruleset=""
+            locale={displayLocale}
+            overview={overview.data}
+            filter={filter}
+            searchSlot={searchSlot}
+          />
         </>
       ) : (
         <>

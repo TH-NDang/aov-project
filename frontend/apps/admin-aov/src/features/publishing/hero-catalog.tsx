@@ -1,9 +1,11 @@
 import { CatalogChangeBadges } from "../warehouse/catalog-changes"
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, UserRound, BookOpen, Languages, Plus, ChevronRight, Search, X, Clock3, Info } from "lucide-react"
+import { ArrowUpRight, UserRound, BookOpen, Languages, Plus, ChevronRight, X, Clock3, Info } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
+import { SearchField } from "@/components/search-field"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { Link, useSearchParams } from "react-router"
@@ -46,7 +48,10 @@ export function HeroCatalog({
   locale,
   overview,
   filter = defaultFilter,
+  searchSlot,
 }: {
+  /** The page header's search slot; without it the search stays in the list toolbar. */
+  searchSlot?: HTMLElement | null
   ruleset: string
   locale: string
   overview?: PublicationOverview
@@ -282,6 +287,17 @@ export function HeroCatalog({
     observer.observe(node)
     return () => observer.disconnect()
   }, [heroes.hasNextPage, heroes.isFetching, heroes.isError, heroes.fetchNextPage])
+  const searchBox = (
+    <SearchField
+      placement={searchSlot ? "header" : "inline"}
+      inputRef={searchRef}
+      label="Tìm tướng"
+      placeholder="Tìm tên hoặc mã tướng…"
+      shortcut
+      value={search}
+      onChange={setSearch}
+    />
+  )
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border bg-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-4">
@@ -291,32 +307,8 @@ export function HeroCatalog({
           {heroes.data?.pages[0]?.totalElements ?? 0} tướng{scoped ? " có thay đổi" : ""}
         </span>
       </div>
-      <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center">
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute top-3 left-3 size-4 text-muted-foreground" />
-          <input
-            ref={searchRef}
-            type="search"
-            aria-label="Tìm tướng"
-            placeholder="Tìm theo tên hoặc mã tướng…"
-            className={`${control} w-full pr-11 pl-9 [&::-webkit-search-cancel-button]:appearance-none`}
-            maxLength={100}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <Button
-            variant="ghost"
-            size="icon"
-            className={`absolute top-0 right-0 size-10 ${!search ? "invisible" : ""}`}
-            aria-label="Xóa tìm kiếm tướng"
-            onClick={() => {
-              setSearch("")
-              searchRef.current?.focus()
-            }}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
+      <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-end">
+        {searchSlot ? createPortal(searchBox, searchSlot) : <div className="min-w-0 flex-1">{searchBox}</div>}
         <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
           <span className="whitespace-nowrap">Sắp xếp</span>
           <select

@@ -46,21 +46,6 @@
 .tournament-restore-action > .tournament-error {
   flex-basis: 100%;
 }
-.tournament-trash-search {
-  position: relative;
-  flex: 1 1 180px;
-  max-width: 320px;
-}
-.tournament-trash-search svg {
-  position: absolute;
-  top: 50%;
-  left: 10px;
-  transform: translateY(-50%);
-  color: var(--muted-foreground);
-}
-.tournament-trash-search input {
-  padding-left: 30px;
-}
 .tournament-trash-list {
   display: grid;
   gap: 1px;

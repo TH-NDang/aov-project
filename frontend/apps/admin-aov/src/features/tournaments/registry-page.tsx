@@ -1,10 +1,13 @@
 import { useState } from "react"
 import { Link, useSearchParams } from "react-router"
 import type { DocumentView, PlayerContent, TeamContent } from "@aov/community-contracts"
-import { ArrowLeft, Plus, Upload, UserRound, Users } from "lucide-react"
+import { Check, List, Plus, Trash2, Trophy, Upload, UserRound, Users, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
+import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
+import { SearchField } from "@/components/search-field"
 import { AccessGate } from "@/features/esports/pages/esports-shell"
 import { useRecords } from "@/features/esports/data/use-esports-data"
 import { RegistryEditor } from "./registry-editor"
@@ -12,7 +15,6 @@ import { TeamRegistry } from "./team-registry"
 import { PlayerRegistry } from "./player-registry"
 import { TeamRosterSheet } from "./team-roster-sheet"
 import { RecordTrash } from "./record-trash"
-import { RecordStateMenu } from "./record-state-menu"
 import { RegistryImportSheet } from "./registry-import"
 import { tournamentError } from "./tournament-api"
 import "./tournament-styles"
@@ -53,25 +55,60 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
     <Page className="mx-auto w-full max-w-[1400px]">
       <PageHeader
         title="Đội & tuyển thủ"
-        description="Danh tính dùng chung cho mọi giải. Đội hình theo từng giải được ghi ở trang đội tham dự của giải."
+        search={
+          deleted ? undefined : (
+            <SearchField
+              placement="header"
+              label={tab === "teams" ? "Tìm đội tuyển" : "Tìm tuyển thủ"}
+              placeholder={tab === "teams" ? "Tìm đội tuyển…" : "Tên thi đấu, tên khác…"}
+              shortcut
+              value={search}
+              onChange={setSearch}
+            />
+          )
+        }
         actions={
           <>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/tournaments">
-                <ArrowLeft size={14} /> Giải đấu
-              </Link>
-            </Button>
-            {canWrite && (
-              <Button variant="outline" size="sm" onClick={() => setImporting(true)}>
-                <Upload size={14} /> Nhập dữ liệu
+            {deleted && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate({ state: null })}
+                title="Về danh sách đang dùng"
+              >
+                <Trash2 size={14} /> Thùng rác <X size={14} />
               </Button>
             )}
-            {canWrite && !deleted && (
-              <Button size="sm" onClick={() => setEditor({ kind: tab })}>
-                <Plus size={14} /> {tab === "teams" ? "Thêm đội" : "Thêm tuyển thủ"}
-              </Button>
-            )}
-            <RecordStateMenu deleted={deleted} onChange={(value) => navigate({ state: value ? "deleted" : null })} />
+            <PageActionsMenu label="Đội & tuyển thủ: thêm, nhập và thùng rác">
+              {canWrite && (
+                <>
+                  <DropdownMenuItem disabled={deleted} onSelect={() => setEditor({ kind: tab })}>
+                    <Plus />
+                    {tab === "teams" ? "Thêm đội" : "Thêm tuyển thủ"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setImporting(true)}>
+                    <Upload />
+                    Nhập dữ liệu
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onSelect={() => navigate({ state: null })}>
+                <List />
+                Đang dùng{!deleted && <Check className="ml-auto" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => navigate({ state: "deleted" })}>
+                <Trash2 />
+                Thùng rác{deleted && <Check className="ml-auto" />}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link to="/tournaments">
+                  <Trophy />
+                  Giải đấu
+                </Link>
+              </DropdownMenuItem>
+            </PageActionsMenu>
           </>
         }
       />
@@ -115,7 +152,6 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
           teams={teams.data ?? []}
           {...{ country, search, canWrite }}
           onCountryChange={(value) => navigate({ country: value || null })}
-          onSearchChange={setSearch}
           onEdit={(entry) => setEditor({ kind: "teams", entry })}
           onRoster={(team) => setRosterTeamId(team.id)}
         />
@@ -123,7 +159,6 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
         <PlayerRegistry
           players={players.data ?? []}
           {...{ country, search, canWrite }}
-          onSearchChange={setSearch}
           onCountryChange={(value) => navigate({ country: value || null })}
           onEdit={(entry) => setEditor({ kind: "players", entry })}
         />

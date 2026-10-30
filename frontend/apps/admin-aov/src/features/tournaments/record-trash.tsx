@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Search, Trash2 } from "lucide-react"
-import { Input } from "@aov/ui/components/input"
+import { SearchField } from "@/components/search-field"
+import { Trash2 } from "lucide-react"
 import { registrySearchText } from "./registry-form-model"
 import { RECORD_KIND_LABELS, recordLabel } from "./record-lifecycle-model"
 import { RecordLifecycleActions } from "./record-lifecycle-actions"
@@ -95,15 +95,14 @@ export function RecordTrash({
             </option>
           ))}
         </select>
-        <div className="tournament-trash-search">
-          <Search size={14} />
-          <Input
-            aria-label="Tìm trong thùng rác"
-            placeholder="Tìm tên hoặc mã…"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </div>
+        <SearchField
+          className="w-full sm:w-64"
+          label="Tìm trong thùng rác"
+          placeholder="Tìm tên hoặc mã…"
+          shortcut
+          value={search}
+          onChange={setSearch}
+        />
         <small className="tournament-filter-count">{rows.length} mục</small>
       </div>
       {records.isPending ? (
