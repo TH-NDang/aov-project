@@ -31,6 +31,7 @@ import {
   patchHeroLocation,
 } from "./hero-location"
 import { HeroNavigationGuard } from "./hero-navigation-guard"
+import { useHeroEntries } from "./patch-notes-sheet"
 const HeroWorkspace = lazy(() =>
   import("./publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
 )
@@ -56,8 +57,8 @@ export function HeroCatalog({
   const sort = params.get("sort") === "edited-desc" ? "edited-desc" : "code"
   const [search, setSearch] = useState(q)
   const searchRef = useRef<HTMLInputElement>(null)
-  const timeZone = useContentTimeZone()
   const showAll = params.get("show") === "all"
+  const timeZone = useContentTimeZone()
   const reviewedVariants =
     overview?.variants.filter(
       (v) => (!filter.seasonId || v.seasonId === filter.seasonId) && (!filter.variantId || v.id === filter.variantId),
@@ -122,6 +123,9 @@ export function HeroCatalog({
     () => heroCatalogRows(heroes.data?.pages.flatMap((page) => page.items) ?? [], overview, filter, ruleset, showAll),
     [heroes.data, overview, filter, ruleset, showAll],
   )
+  // Names and heads come from the reference catalog at once; each row's revision fills in when it loads.
+  const entries = useHeroEntries(locale)
+  const entryById = useMemo(() => new Map(entries.map((entry) => [entry.id, entry])), [entries])
   const columns = useMemo(
     () =>
       helper.columns([
@@ -135,9 +139,9 @@ export function HeroCatalog({
               aria-label={`Xem tướng ${row.original.code}`}
               title={`Mở chi tiết ${row.original.code}`}
             >
-              <HeroHead hero={row.original} />
+              <HeroHead hero={row.original} fallbackAssetId={entryById.get(row.original.id)?.iconAssetId} />
               <div className="min-w-0 flex-1">
-                <HeroText hero={row.original} locale={locale} />
+                <HeroText hero={row.original} locale={locale} fallbackName={entryById.get(row.original.id)?.name} />
                 <span className="block truncate text-xs text-muted-foreground" title={row.original.code}>
                   {row.original.code}
                 </span>
@@ -199,25 +203,32 @@ export function HeroCatalog({
         }),
         helper.display({
           id: "revision",
-          header: "Bản dữ liệu",
+          header: "Trạng thái",
           cell: ({ row }) => {
             const r = row.original.selectedRevision
             const v = overview?.variants.find((v) => v.id === r?.effectiveFromPatchVariantId)
+            const markets = r && overview ? appliedMarkets(row.original.revisions, r, overview) : []
             return r ? (
-              <div className="min-w-36 space-y-1.5">
-                <p>
-                  {v?.patchCode ?? "Chưa xác định patch"} · #{r.revisionNo}
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
+              <div className="min-w-40 space-y-1">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <Badge variant={r.state === "DRAFT" ? "outline" : "default"} className="text-[10px]">
                     {r.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"}
                   </Badge>
-                  {(overview?.rulesets.length ?? 0) > 1 && (
-                    <span className="text-xs text-muted-foreground">
-                      {overview?.rulesets.find((rule) => rule.id === r.rulesetId)?.code}
-                    </span>
-                  )}
+                  {markets.map(({ market, release, variant }) => (
+                    <MarketBadge
+                      key={market.id}
+                      code={market.code}
+                      name={market.displayName}
+                      detail={`Đang áp dụng ${variant.patchCode} · ${dateLabel(release.effectiveOn ?? release.effectiveAt, locale)}`}
+                    />
+                  ))}
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  {v?.patchCode ?? "Chưa gắn patch"} · bản #{r.revisionNo}
+                  {(overview?.rulesets.length ?? 0) > 1
+                    ? ` · ${overview?.rulesets.find((rule) => rule.id === r.rulesetId)?.code ?? ""}`
+                    : ""}
+                </p>
               </div>
             ) : (
               <span className="text-xs text-muted-foreground">Chưa có phiên bản</span>
@@ -225,48 +236,22 @@ export function HeroCatalog({
           },
         }),
         helper.display({
-          id: "edited",
-          header: () => (
-            <span
-              className="flex items-center gap-1.5"
-              title="Lần sửa hồ sơ tướng gần nhất, tách riêng với ngày phát hành patch."
-            >
-              <Clock3 className="size-3.5" />
-              Chỉnh sửa gần nhất
-            </span>
-          ),
-          cell: ({ row }) => <LastEdited value={row.original.lastEditedAt} locale={locale} timeZone={timeZone} />,
-        }),
-        helper.display({
           id: "translations",
           header: "Bản dịch",
           cell: ({ row }) => <HeroTranslations hero={row.original} />,
         }),
         helper.display({
-          id: "markets",
-          header: "Thị trường đang áp dụng",
-          cell: ({ row }) => {
-            const r = row.original.selectedRevision
-            const markets = r && overview ? appliedMarkets(row.original.revisions, r, overview) : []
-            return (
-              <div className="flex flex-wrap gap-1">
-                {markets.length ? (
-                  markets.map(({ market, release, variant }) => (
-                    <MarketBadge
-                      key={market.id}
-                      code={market.code}
-                      name={market.displayName}
-                      detail={`${variant.patchCode} · ${dateLabel(release.effectiveOn ?? release.effectiveAt, locale)}`}
-                    />
-                  ))
-                ) : (
-                  <span className="text-xs text-muted-foreground">
-                    {r?.state === "DRAFT" ? "Bản nháp chưa áp dụng" : "Chưa áp dụng / đã thay thế"}
-                  </span>
-                )}
-              </div>
-            )
-          },
+          id: "edited",
+          header: () => (
+            <span
+              className="flex items-center gap-1.5"
+              title="Lần sửa hồ sơ tướng gần nhất, khác với ngày phát hành patch."
+            >
+              <Clock3 className="size-3.5" />
+              Sửa gần nhất
+            </span>
+          ),
+          cell: ({ row }) => <LastEdited value={row.original.lastEditedAt} locale={locale} timeZone={timeZone} />,
         }),
       ]),
     [
@@ -276,8 +261,9 @@ export function HeroCatalog({
       openHero,
       openGameplayChange,
       scoped,
-      timeZone,
       showAll,
+      entryById,
+      timeZone,
       reviewed,
       filter.seasonId,
       filter.variantId,
@@ -357,7 +343,7 @@ export function HeroCatalog({
         Chạm vào ô tướng để xem chi tiết · vuốt ngang để xem thêm cột.
       </p>
       <div className="overflow-x-auto" role="region" aria-label="Bảng tướng · cuộn ngang để xem các cột" tabIndex={0}>
-        <table className="w-full min-w-[1080px] table-auto text-sm">
+        <table className="w-full min-w-[880px] table-auto text-sm">
           <caption className="sr-only">
             Danh sách tướng, thay đổi gameplay, phiên bản, thị trường, bản dịch, chỉnh sửa gần nhất và trạng thái. Chọn
             tên tướng để mở chi tiết.
@@ -696,9 +682,9 @@ function useHeroPreview(hero: CatalogRow) {
     staleTime: 30000,
   })
 }
-function HeroHead({ hero }: { hero: CatalogRow }) {
+function HeroHead({ hero, fallbackAssetId }: { hero: CatalogRow; fallbackAssetId?: string | null }) {
   const preview = useHeroPreview(hero)
-  const assetId = preview.data?.content.MEDIA_BINDINGS?.bindings.HEAD
+  const assetId = preview.data?.content.MEDIA_BINDINGS?.bindings.HEAD ?? fallbackAssetId
   const [failed, setFailed] = useState(false)
   const asset = useQuery({
     queryKey: ["publishing-asset", assetId],
@@ -718,7 +704,7 @@ function HeroHead({ hero }: { hero: CatalogRow }) {
     </span>
   )
 }
-function HeroText({ hero, locale }: { hero: CatalogRow; locale: string }) {
+function HeroText({ hero, locale, fallbackName }: { hero: CatalogRow; locale: string; fallbackName?: string }) {
   const query = useHeroPreview(hero)
   const translations = query.data?.content.PROFILE?.translations
   const text =
@@ -735,7 +721,7 @@ function HeroText({ hero, locale }: { hero: CatalogRow; locale: string }) {
   return (
     <div>
       <p className="truncate font-medium" title={text?.name}>
-        {text?.name ?? (query.isPending ? "Đang tải…" : hero.code)}
+        {text?.name ?? fallbackName ?? (query.isPending ? "Đang tải…" : hero.code)}
       </p>
       {text && text.locale !== locale && <span className="text-xs text-muted-foreground">Dự phòng: {text.locale}</span>}
     </div>
