@@ -12,9 +12,17 @@ import { draftRepository } from "../src/app/drafts/draft-store"
 test("hero links restore a side panel beyond loaded rows, survive reload, and preserve state in full view and browser history", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
   const fixture = createHeroFixture(false, true)
+  const catalogItems = Array.from({ length: 129 }, (_, index) => ({
+    id: `catalog-hero-${index}`,
+    code: `catalog-hero-${index}`,
+    revisions: [],
+    lastEditedAt: "2026-10-15T01:02:03Z",
+  }))
   const fetcher: typeof fetch = (input, init) => {
     if (String(input).split("?")[0].endsWith("/admin/heroes")) {
-      return Promise.resolve(Response.json({ items: [], page: 0, size: 20, totalElements: 0 }))
+      return Promise.resolve(
+        Response.json({ items: catalogItems, page: 0, size: catalogItems.length, totalElements: catalogItems.length }),
+      )
     }
     return fixture.fetcher(input, init)
   }
@@ -84,9 +92,16 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await mount()
     await waitFor(() => !!document.querySelector("#hero-content-media"))
     assert.ok(document.querySelector('[role="dialog"]'))
-    assert.equal(document.querySelectorAll("tbody tr").length, 0)
+    assert.equal(document.querySelectorAll("tbody tr").length, catalogItems.length)
+    const catalogButton = document.querySelector('[aria-label="Xem tướng catalog-hero-0"]')
+    assert.ok(catalogButton)
     await click('[aria-controls="hero-content-skills"]')
     assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "skills")
+    assert.equal(
+      document.querySelector('[aria-label="Xem tướng catalog-hero-0"]'),
+      catalogButton,
+      "Workspace navigation must preserve mounted catalog cells instead of rebuilding the loaded list",
+    )
     await click('[aria-label="Chọn kỹ năng"] button')
     assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "passive")
     await click('[aria-label="Cách hiển thị kỹ năng"] button:nth-child(2)')
@@ -107,6 +122,11 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
       await router.navigate(-1)
     })
     await waitFor(() => !document.querySelector('[role="dialog"]'))
+    assert.equal(
+      document.querySelector('[aria-label="Xem tướng catalog-hero-0"]'),
+      catalogButton,
+      "Closing a hero preserves the existing catalog controls",
+    )
     await act(async () => {
       await router.navigate(1)
     })

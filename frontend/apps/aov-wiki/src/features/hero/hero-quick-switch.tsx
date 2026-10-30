@@ -360,11 +360,11 @@ export function HeroQuickSwitch({ currentHeroId, returnTo }: { currentHeroId: st
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="wiki-hero-switch-panel"
+        className="wiki-hero-switch-panel ease-out data-[state=open]:duration-200 data-[state=closed]:duration-150 motion-reduce:animate-none"
         showCloseButton={false}
         onOpenAutoFocus={(event) => {
           event.preventDefault()
-          searchRef.current?.focus()
+          searchRef.current?.focus({ preventScroll: true })
         }}
       >
         <TooltipProvider delayDuration={180}>

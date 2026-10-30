@@ -6,6 +6,7 @@ import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
+import { intersectionHarness } from "./fixtures/intersection-observer"
 import type { CatalogFilter } from "../src/features/publishing/catalog-context"
 
 test("catalog transport encodes search and keeps every server filter in its cache identity", async () => {
@@ -46,6 +47,7 @@ test("catalog transport encodes search and keeps every server filter in its cach
 test("hero catalog uses server changes-only filters, global search, edited sorting and isolated query caches", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
   const fixture = createHeroCatalogFixture()
+  const intersections = intersectionHarness()
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
   })
@@ -56,13 +58,10 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
     document: dom.window.document,
     navigator: dom.window.navigator,
     HTMLElement: dom.window.HTMLElement,
+    getComputedStyle: dom.window.getComputedStyle,
     fetch: fixture.fetcher,
     BroadcastChannel: undefined,
-    IntersectionObserver: class {
-      observe() {}
-      disconnect() {}
-      unobserve() {}
-    },
+    IntersectionObserver: intersections.Observer,
     IS_REACT_ACT_ENVIRONMENT: true,
   })) {
     original.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
@@ -83,7 +82,9 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       root.render(
         <MemoryRouter initialEntries={["/hero"]}>
           <QueryClientProvider client={cache}>
-            <HeroCatalog ruleset={ruleset} locale={locale} overview={catalogOverview} filter={filter} />
+            <div id="catalog-scroll" style={{ overflowY: "auto" }}>
+              <HeroCatalog ruleset={ruleset} locale={locale} overview={catalogOverview} filter={filter} />
+            </div>
           </QueryClientProvider>
         </MemoryRouter>,
       )
@@ -143,12 +144,26 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
     const recordedEdit = cell("ad-current-change", /chỉnh sửa|sửa.*gần|biên tập/i).querySelector("time")!
     assert.equal(recordedEdit.getAttribute("datetime"), "2026-10-15T01:02:03Z")
     assert.equal(
-      recordedEdit.textContent,
+      recordedEdit.getAttribute("aria-label"),
       new Intl.DateTimeFormat("vi-VN", {
         dateStyle: "medium",
         timeStyle: "short",
         timeZone: "Asia/Tokyo",
       }).format(new Date("2026-10-15T01:02:03Z")),
+    )
+    assert.deepEqual(
+      [...recordedEdit.querySelectorAll("span")].map((part) => part.textContent),
+      [
+        new Intl.DateTimeFormat("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          timeZone: "Asia/Tokyo",
+        }).format(new Date("2026-10-15T01:02:03Z")),
+        new Intl.DateTimeFormat("vi-VN", { timeStyle: "short", timeZone: "Asia/Tokyo" }).format(
+          new Date("2026-10-15T01:02:03Z"),
+        ),
+      ],
     )
     assert.match(cell("ad-current-change", /đánh giá/i).textContent ?? "", /current-patch/)
     assert.ok(
@@ -237,13 +252,28 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
 
     await fill("")
     await waitFor(() => codes().length === 20, "Clearing search resets pagination for the current sort")
-    const more = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
-      (button) => button.textContent?.trim() === "Tải thêm",
-    )!
-    assert.ok(more)
-    await act(async () => more.click())
-    await waitFor(() => codes().length === fixture.heroes.length, "Load more appends the next server page")
-    assert.ok(fixture.requests.some((request) => request.page === 1 && !request.q && request.sort === "edited-desc"))
+    assert.ok(
+      ![...document.querySelectorAll("button")].some((button) => button.textContent?.trim() === "Tải thêm"),
+      "Scrolling loads the next page without a manual load-more control",
+    )
+    const sentinel = document.querySelector('[aria-label="Đang tải thêm tướng…"]')!
+    assert.ok(sentinel)
+    assert.equal(intersections.root(sentinel), document.getElementById("catalog-scroll"))
+    await act(async () => intersections.intersect(sentinel, false))
+    assert.ok(!fixture.requests.some((request) => request.page === 1), "Pages wait until the list end approaches")
+    await act(async () => {
+      intersections.intersect(sentinel)
+      intersections.intersect(sentinel)
+    })
+    await waitFor(() => codes().length === fixture.heroes.length, "Scrolling appends the next server page")
+    assert.equal(
+      fixture.requests.filter((request) => request.page === 1 && !request.q && request.sort === "edited-desc").length,
+      1,
+      "Repeated intersections request each page only once",
+    )
+    assert.equal(intersections.observing(sentinel), false)
+    assert.equal(document.querySelector('[aria-label="Đang tải thêm tướng…"]'), null)
+    assert.match(document.body.textContent ?? "", /Đã tải tất cả tướng/)
 
     await mount(emptyFilter, "alternate")
     await waitFor(

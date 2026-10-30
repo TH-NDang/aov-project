@@ -1,18 +1,31 @@
 import { CatalogChangeBadges } from "../warehouse/catalog-changes"
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, UserRound, BookOpen, Languages, Plus, ChevronRight, X, Clock3, Info } from "lucide-react"
+import { createColumnHelper, tableFeatures, useTable, type Cell, type ReactTable } from "@tanstack/react-table"
+import {
+  ArrowDownWideNarrow,
+  ArrowUpRight,
+  UserRound,
+  BookOpen,
+  Languages,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  ChevronsLeft,
+  Clock3,
+  Info,
+} from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { SearchField } from "@/components/search-field"
+import { InfiniteScroll } from "@/components/infinite-scroll"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
+import { cn } from "@aov/ui/lib/utils"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
-import { useIsWide } from "@/hooks/use-media-query"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, heroPreviewKey, heroCatalogKey, type HeroCatalogQuery } from "./publishing-api"
@@ -21,7 +34,6 @@ import { heroCatalogRows, appliedMarkets, translationCoverage, type HeroCatalogR
 import type { CatalogFilter } from "./catalog-context"
 import { dateLabel, useContentTimeZone, type PublicationOverview } from "./publication-overview"
 import { ChangeKindBadges, HeroChangeSummary } from "./hero-change-badges"
-import { control } from "./fields"
 import { MarketBadge } from "./market-badge"
 import { languageOptions } from "../users/profile-preference-picker"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
@@ -33,6 +45,7 @@ import {
   patchHeroLocation,
 } from "./hero-location"
 import { HeroNavigationGuard } from "./hero-navigation-guard"
+import { HeroQuickViewBody } from "./hero-quick-view-body"
 import { useHeroEntries } from "./patch-notes-sheet"
 const HeroWorkspace = lazy(() =>
   import("./publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
@@ -82,33 +95,31 @@ export function HeroCatalog({
     return () => window.clearTimeout(timer)
   }, [search, q, setParams])
   const selectedId = heroLocationId(params.get("hero"))
-  const openHero = useCallback(
-    (hero: CatalogRow) => {
-      setParams((current) => openHeroLocation(current, hero.id, hero.selectedRevision?.id), {
-        preventScrollReset: true,
-      })
-    },
-    [setParams],
-  )
-  const openGameplayChange = useCallback(
-    (hero: CatalogRow, change: HeroGameplayChange) => {
-      setParams(
-        (current) =>
-          change.toHeroRevisionId
-            ? patchHeroLocation(openHeroLocation(current, hero.id, change.toHeroRevisionId), {
-                view: "history",
-                compare: change.fromHeroRevisionId ?? "",
-              })
-            : patchHeroLocation(openHeroLocation(current, hero.id, hero.selectedRevision?.id), {
-                view: "patch",
-                atPatch: change.patchVariantId,
-              }),
-        { preventScrollReset: true },
-      )
-    },
-    [setParams],
-  )
-  const sentinel = useRef<HTMLDivElement>(null)
+  // Keep column renderers stable while navigation still reads the latest URL.
+  const updateParams = useRef(setParams)
+  useLayoutEffect(() => {
+    updateParams.current = setParams
+  }, [setParams])
+  const openHero = useCallback((hero: CatalogRow) => {
+    updateParams.current((current) => openHeroLocation(current, hero.id, hero.selectedRevision?.id), {
+      preventScrollReset: true,
+    })
+  }, [])
+  const openGameplayChange = useCallback((hero: CatalogRow, change: HeroGameplayChange) => {
+    updateParams.current(
+      (current) =>
+        change.toHeroRevisionId
+          ? patchHeroLocation(openHeroLocation(current, hero.id, change.toHeroRevisionId), {
+              view: "history",
+              compare: change.fromHeroRevisionId ?? "",
+            })
+          : patchHeroLocation(openHeroLocation(current, hero.id, hero.selectedRevision?.id), {
+              view: "patch",
+              atPatch: change.patchVariantId,
+            }),
+      { preventScrollReset: true },
+    )
+  }, [])
   const query: HeroCatalogQuery = {
     q,
     includeUnchanged: showAll ? "true" : "false",
@@ -125,8 +136,18 @@ export function HeroCatalog({
     getNextPageParam: (last) => ((last.page + 1) * last.size < last.totalElements ? last.page + 1 : undefined),
   })
   const data = useMemo(
-    () => heroCatalogRows(heroes.data?.pages.flatMap((page) => page.items) ?? [], overview, filter, ruleset, showAll),
-    [heroes.data, overview, filter, ruleset, showAll],
+    () =>
+      heroCatalogRows(
+        heroes.data?.pages.flatMap((page) => page.items) ?? [],
+        overview,
+        {
+          seasonId: filter.seasonId,
+          variantId: filter.variantId,
+        },
+        ruleset,
+        showAll,
+      ),
+    [heroes.data, overview, filter.seasonId, filter.variantId, ruleset, showAll],
   )
   // Names and heads come from the reference catalog at once; each row's revision fills in when it loads.
   const entries = useHeroEntries(locale)
@@ -139,7 +160,7 @@ export function HeroCatalog({
           cell: ({ row }) => (
             <button
               type="button"
-              className="group flex w-44 max-w-44 items-center gap-3 rounded-lg p-1 text-left transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring sm:w-48 sm:max-w-48"
+              className="group/hero-action -mx-1.5 flex w-[calc(100%+0.75rem)] min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-border/60 bg-background/60 p-1.5 text-left transition-colors hover:border-ring/50 hover:bg-accent hover:shadow-xs focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               onClick={() => openHero(row.original)}
               aria-label={`Xem tướng ${row.original.code}`}
               title={`Mở chi tiết ${row.original.code}`}
@@ -147,13 +168,16 @@ export function HeroCatalog({
               <HeroHead hero={row.original} fallbackAssetId={entryById.get(row.original.id)?.iconAssetId} />
               <div className="min-w-0 flex-1">
                 <HeroText hero={row.original} locale={locale} fallbackName={entryById.get(row.original.id)?.name} />
-                <span className="block truncate text-xs text-muted-foreground" title={row.original.code}>
+                <span
+                  className="mt-0.5 block truncate text-[11px] leading-4 text-muted-foreground"
+                  title={row.original.code}
+                >
                   {row.original.code}
                 </span>
               </div>
               <ChevronRight
                 aria-hidden="true"
-                className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/hero-row:opacity-100 group-focus-within/hero-row:opacity-100 [@media(hover:none)]:opacity-100"
+                className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover/hero-action:text-foreground group-focus-visible/hero-action:text-foreground"
               />
             </button>
           ),
@@ -161,12 +185,15 @@ export function HeroCatalog({
         helper.display({
           id: "changes",
           header: () => (
-            <span className="inline-flex items-center gap-1.5">
-              {scoped ? "Đánh giá trong phạm vi" : "Đánh giá patch gần nhất"}
+            <span
+              className="inline-flex items-center gap-1"
+              title={scoped ? "Đánh giá trong phạm vi" : "Đánh giá patch gần nhất"}
+            >
+              {scoped ? "Đánh giá phạm vi" : "Đánh giá patch"}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-6" aria-label="Xem chú giải loại thay đổi">
-                    <Info className="size-3.5" />
+                  <Button variant="ghost" size="icon" className="size-5" aria-label="Xem chú giải loại thay đổi">
+                    <Info className="size-3" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="start" className="w-80 max-w-[calc(100vw-2rem)] space-y-3">
@@ -213,10 +240,23 @@ export function HeroCatalog({
             const r = row.original.selectedRevision
             const v = overview?.variants.find((v) => v.id === r?.effectiveFromPatchVariantId)
             const markets = r && overview ? appliedMarkets(row.original.revisions, r, overview) : []
+            const rulesetCode =
+              (overview?.rulesets.length ?? 0) > 1
+                ? overview?.rulesets.find((rule) => rule.id === r?.rulesetId)?.code
+                : undefined
             return r ? (
-              <div className="min-w-40 space-y-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Badge variant={r.state === "DRAFT" ? "outline" : "default"} className="text-[10px]">
+              <div className="min-w-0 space-y-1.5">
+                <div className="flex flex-wrap items-center gap-1">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "gap-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-medium",
+                      r.state === "DRAFT"
+                        ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                        : "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                    )}
+                  >
+                    <span aria-hidden className="size-1.5 rounded-full bg-current" />
                     {r.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"}
                   </Badge>
                   {markets.map(({ market, release, variant }) => (
@@ -228,11 +268,18 @@ export function HeroCatalog({
                     />
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {v?.patchCode ?? "Chưa gắn patch"} · bản #{r.revisionNo}
-                  {(overview?.rulesets.length ?? 0) > 1
-                    ? ` · ${overview?.rulesets.find((rule) => rule.id === r.rulesetId)?.code ?? ""}`
-                    : ""}
+                <p className="flex min-w-0 items-center gap-1.5 text-[11px] leading-4 text-muted-foreground">
+                  <span className="truncate" title={v?.patchCode ?? "Chưa gắn patch"}>
+                    {v?.patchCode ?? "Chưa gắn patch"}
+                  </span>
+                  <span className="shrink-0 tabular-nums" aria-label={`Phiên bản ${r.revisionNo}`}>
+                    #{r.revisionNo}
+                  </span>
+                  {rulesetCode && (
+                    <span className="min-w-0 truncate" title={rulesetCode}>
+                      {rulesetCode}
+                    </span>
+                  )}
                 </p>
               </div>
             ) : (
@@ -249,10 +296,10 @@ export function HeroCatalog({
           id: "edited",
           header: () => (
             <span
-              className="flex items-center gap-1.5"
+              className="flex items-center justify-end gap-1.5"
               title="Lần sửa hồ sơ tướng gần nhất, khác với ngày phát hành patch."
             >
-              <Clock3 className="size-3.5" />
+              <Clock3 className="size-3" />
               Sửa gần nhất
             </span>
           ),
@@ -275,18 +322,6 @@ export function HeroCatalog({
     ],
   )
   const table = useTable({ features, columns, data, getRowId: (row) => row.rowKey })
-  useEffect(() => {
-    const node = sentinel.current
-    if (!node || !heroes.hasNextPage || heroes.isFetching || heroes.isError) return
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) void heroes.fetchNextPage()
-      },
-      { rootMargin: "200px" },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [heroes.hasNextPage, heroes.isFetching, heroes.isError, heroes.fetchNextPage])
   const searchBox = (
     <SearchField
       placement={searchSlot ? "header" : "inline"}
@@ -299,55 +334,75 @@ export function HeroCatalog({
     />
   )
   return (
-    <section className="min-w-0 overflow-hidden rounded-2xl border bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-4">
-        <h2 className="font-semibold">Danh sách tướng</h2>
-        <span className="text-sm text-muted-foreground">
-          Đã tải {heroes.data?.pages.reduce((n, p) => n + p.items.length, 0) ?? 0} /{" "}
-          {heroes.data?.pages[0]?.totalElements ?? 0} tướng{scoped ? " có thay đổi" : ""}
-        </span>
-      </div>
-      <div className="flex flex-col gap-3 border-b p-4 sm:flex-row sm:items-center sm:justify-end">
-        {searchSlot ? createPortal(searchBox, searchSlot) : <div className="min-w-0 flex-1">{searchBox}</div>}
-        <label className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
-          <span className="whitespace-nowrap">Sắp xếp</span>
-          <select
-            aria-label="Sắp xếp tướng"
-            className={`${control} min-w-44 text-foreground`}
-            value={sort}
-            onChange={(event) =>
-              setParams(
-                (current) =>
-                  patchHeroLocation(current, { sort: event.target.value === "code" ? "" : event.target.value }),
-                {
-                  replace: true,
-                  preventScrollReset: true,
-                },
-              )
-            }
-          >
-            <option value="code">Mã tướng (A–Z)</option>
-            <option value="edited-desc">Chỉnh sửa gần nhất</option>
-          </select>
-        </label>
+    <section className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-card">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+          <h2 className="text-sm font-semibold">Danh sách tướng</h2>
+          <span className="rounded-md bg-muted/70 px-2 py-1 text-[11px] text-muted-foreground tabular-nums">
+            <span className="sr-only">Đã tải </span>
+            {heroes.data?.pages.reduce((n, p) => n + p.items.length, 0) ?? 0} /{" "}
+            {heroes.data?.pages[0]?.totalElements ?? 0} tướng{scoped ? " có thay đổi" : ""}
+          </span>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
+          {searchSlot ? createPortal(searchBox, searchSlot) : <div className="min-w-40 flex-1">{searchBox}</div>}
+          <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <ArrowDownWideNarrow aria-hidden className="size-3.5" />
+            <span className="sr-only">Sắp xếp</span>
+            <select
+              aria-label="Sắp xếp tướng"
+              className="h-8 max-w-full rounded-lg border border-border/70 bg-background px-2 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              value={sort}
+              onChange={(event) =>
+                setParams(
+                  (current) =>
+                    patchHeroLocation(current, { sort: event.target.value === "code" ? "" : event.target.value }),
+                  {
+                    replace: true,
+                    preventScrollReset: true,
+                  },
+                )
+              }
+            >
+              <option value="code">Mã tướng (A–Z)</option>
+              <option value="edited-desc">Chỉnh sửa gần nhất</option>
+            </select>
+          </label>
+        </div>
       </div>
       <p className="border-b px-4 py-2 text-xs text-muted-foreground sm:hidden">
         Chạm vào ô tướng để xem chi tiết · vuốt ngang để xem thêm cột.
       </p>
-      <div className="overflow-x-auto" role="region" aria-label="Bảng tướng · cuộn ngang để xem các cột" tabIndex={0}>
-        <table className="w-full min-w-[880px] table-auto text-sm">
+      <div
+        className="overflow-x-auto outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        role="region"
+        aria-label="Bảng tướng · cuộn ngang để xem các cột"
+        tabIndex={0}
+      >
+        <table className="w-full min-w-[720px] table-fixed text-sm">
           <caption className="sr-only">
             Danh sách tướng, thay đổi gameplay, phiên bản, thị trường, bản dịch, chỉnh sửa gần nhất và trạng thái. Chọn
             tên tướng để mở chi tiết.
           </caption>
-          <thead className="border-b bg-muted/50">
+          <colgroup>
+            <col className="w-[24%]" />
+            <col className="w-[23%]" />
+            <col className="w-[23%]" />
+            <col className="w-[14%]" />
+            <col className="w-[16%]" />
+          </colgroup>
+          <thead className="border-b border-border/60 bg-muted/60">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
                 {group.headers.map((header) => (
                   <th
                     key={header.id}
                     scope="col"
-                    className={`px-3 py-3 text-left text-xs font-medium text-muted-foreground ${header.column.id === "code" ? "sticky left-0 z-10 bg-muted" : "whitespace-nowrap"}`}
+                    className={cn(
+                      "h-10 px-3 py-2 text-left text-[11px] font-semibold text-muted-foreground",
+                      header.column.id === "code" && "sticky left-0 z-10 bg-muted",
+                      header.column.id === "edited" && "text-right",
+                    )}
                   >
                     <table.FlexRender header={header} />
                   </th>
@@ -355,18 +410,14 @@ export function HeroCatalog({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-border/50">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="group/hero-row transition-colors hover:bg-muted/30 focus-within:bg-muted/30">
-                {row.getAllCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className={`px-3 py-2.5 align-middle ${cell.column.id === "code" ? "sticky left-0 z-10 border-r bg-card" : ["changes", "revision", "edited"].includes(cell.column.id) ? "whitespace-normal" : "whitespace-nowrap"}`}
-                  >
-                    <table.FlexRender cell={cell} />
-                  </td>
-                ))}
-              </tr>
+              <HeroTableRow
+                key={row.id}
+                active={row.original.id === selectedId}
+                cells={row.getAllCells()}
+                renderCell={table.FlexRender}
+              />
             ))}
           </tbody>
         </table>
@@ -401,23 +452,23 @@ export function HeroCatalog({
           )}
         </div>
       )}
-      <div ref={sentinel} className="flex justify-center p-4" aria-live="polite">
-        {heroes.isFetching ? (
-          <span className="text-sm text-muted-foreground">Đang tải tướng…</span>
-        ) : heroes.isError ? (
+      <div className="flex justify-center px-3 py-3" aria-live="polite">
+        {heroes.isError && !heroes.isFetching ? (
           <div role="alert" className="text-center">
             <p className="text-sm text-destructive">{errorMessage(heroes.error)}</p>
             <Button
               variant="ghost"
-              onClick={() => (heroes.hasNextPage ? void heroes.fetchNextPage() : void heroes.refetch())}
+              onClick={() => (heroes.isFetchNextPageError ? void heroes.fetchNextPage() : void heroes.refetch())}
             >
               Thử lại
             </Button>
           </div>
         ) : heroes.hasNextPage ? (
-          <Button variant="ghost" onClick={() => void heroes.fetchNextPage()}>
-            Tải thêm
-          </Button>
+          <InfiniteScroll query={heroes} label="Đang tải thêm tướng…" />
+        ) : heroes.isFetching ? (
+          <span role="status" className="text-xs text-muted-foreground">
+            Đang tải tướng…
+          </span>
         ) : data.length > 0 ? (
           <span className="text-xs text-muted-foreground">
             {q || scoped || ruleset ? "Đã tải tất cả kết quả" : "Đã tải tất cả tướng"}
@@ -433,6 +484,34 @@ export function HeroCatalog({
     </section>
   )
 }
+
+const HeroTableRow = memo(function HeroTableRow({
+  active,
+  cells,
+  renderCell: RenderCell,
+}: {
+  active: boolean
+  cells: Cell<typeof features, CatalogRow, unknown>[]
+  renderCell: ReactTable<typeof features, CatalogRow>["FlexRender"]
+}) {
+  return (
+    <tr data-active={active} className="group/hero-row h-16 data-[active=true]:bg-accent">
+      {cells.map((cell) => (
+        <td
+          key={cell.id}
+          className={cn(
+            "px-3 py-2 align-middle",
+            cell.column.id === "code" &&
+              "sticky left-0 z-10 border-r border-border/40 bg-card group-data-[active=true]/hero-row:bg-accent",
+            cell.column.id === "edited" && "text-right",
+          )}
+        >
+          <RenderCell cell={cell} />
+        </td>
+      ))}
+    </tr>
+  )
+})
 
 function HeroGameplayChanges({
   hero,
@@ -472,16 +551,19 @@ function HeroGameplayChanges({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="flex max-w-72 flex-wrap items-center gap-2 rounded-lg p-1 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+          className="flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border border-border/60 bg-background/60 px-2 py-1 text-left transition-colors hover:border-ring/50 hover:bg-accent hover:shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:border-ring/50 data-[state=open]:bg-accent"
           aria-label={`Xem thay đổi gameplay của ${hero.code} tại ${hero.changes.length} patch`}
         >
-          <ChangeKindBadges
-            emptyLabel="Chưa đánh giá tổng thể"
-            kinds={hero.changes.flatMap((change) => (change.overallKind ? [change.overallKind] : []))}
-            compact
-            maxVisible={6}
-          />
-          <span className="text-xs text-muted-foreground">{hero.changes.length} patch</span>
+          <span className="flex min-w-0 flex-col items-start gap-1">
+            <ChangeKindBadges
+              emptyLabel="Chưa đánh giá tổng thể"
+              kinds={hero.changes.flatMap((change) => (change.overallKind ? [change.overallKind] : []))}
+              compact
+              maxVisible={6}
+            />
+            <span className="text-xs text-muted-foreground">{hero.changes.length} patch</span>
+          </span>
+          <ChevronDown aria-hidden className="size-3 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-96 max-w-[calc(100vw-2rem)] p-0">
@@ -531,16 +613,27 @@ function LastEdited({ value, locale, timeZone }: { value?: string | null; locale
   if (!value || Number.isNaN(Date.parse(value)))
     return <span className="text-xs text-muted-foreground">Chưa ghi nhận</span>
   let label = value
+  let date = value
+  let time = ""
   try {
-    label = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone }).format(
-      new Date(value),
+    const timestamp = new Date(value)
+    label = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone }).format(timestamp)
+    date = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit", year: "numeric", timeZone }).format(
+      timestamp,
     )
+    time = new Intl.DateTimeFormat(locale, { timeStyle: "short", timeZone }).format(timestamp)
   } catch {
     // Preserve the stored timestamp if a browser cannot format the configured locale or time zone.
   }
   return (
-    <time className="text-xs tabular-nums" dateTime={value} title={timeZone ? `${label} · ${timeZone}` : label}>
-      {label}
+    <time
+      className="inline-flex max-w-full flex-col gap-0.5 text-right text-[11px] tabular-nums"
+      dateTime={value}
+      aria-label={label}
+      title={timeZone ? `${label} · ${timeZone}` : label}
+    >
+      <span className="font-medium">{date}</span>
+      {time && <span className="text-[10px] text-muted-foreground">{time}</span>}
     </time>
   )
 }
@@ -556,7 +649,6 @@ function HeroQuickView({
   ruleset: string
   onClose: () => void
 }) {
-  const wide = useIsWide()
   const [params, setParams] = useSearchParams()
   const restored = useQuery({
     queryKey: ["publishing-revisions", heroId],
@@ -594,10 +686,22 @@ function HeroQuickView({
         }}
       >
         <SheetContent
-          side={wide ? "right" : "bottom"}
+          side="left"
           showCloseButton={false}
-          className={`gap-0 ${wide ? "w-[min(100vw,960px)] sm:max-w-[min(85vw,960px)]" : "h-[92dvh] rounded-t-2xl"}`}
+          className="h-dvh w-[min(960px,calc(100vw-44px))] gap-0 overflow-visible ease-out data-[state=open]:duration-200 data-[state=closed]:duration-150 motion-reduce:animate-none sm:max-w-[min(960px,calc(100vw-44px))]"
         >
+          <SheetClose asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute top-1/2 -right-[43px] z-10 h-[68px] w-11 -translate-y-1/2 cursor-pointer touch-manipulation rounded-l-none rounded-r-xl border-border bg-background text-muted-foreground shadow-md hover:text-foreground"
+              aria-label="Đóng trang tướng"
+              title="Đóng trang tướng"
+              disabled={saving}
+            >
+              <ChevronsLeft aria-hidden className="size-5" />
+            </Button>
+          </SheetClose>
           <SheetHeader className="h-11 shrink-0 justify-center gap-0 border-b px-4 py-0">
             <div className="flex items-center justify-between gap-3">
               <SheetTitle className="min-w-0 truncate text-[11px] font-medium text-muted-foreground">
@@ -621,24 +725,13 @@ function HeroQuickView({
                     </Link>
                   </Button>
                 )}
-                <SheetClose asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7 text-muted-foreground"
-                    aria-label="Đóng trang tướng"
-                    disabled={saving}
-                  >
-                    <X className="size-3.5" />
-                  </Button>
-                </SheetClose>
               </div>
             </div>
             <SheetDescription className="sr-only">
               {revision ? `Phiên bản #${revision.revisionNo}` : "Chi tiết tướng"}
             </SheetDescription>
           </SheetHeader>
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <HeroQuickViewBody>
             {heroId && (
               <Suspense
                 fallback={
@@ -658,7 +751,7 @@ function HeroQuickView({
                 />
               </Suspense>
             )}
-          </div>
+          </HeroQuickViewBody>
         </SheetContent>
       </Sheet>
     </>
@@ -687,7 +780,7 @@ function HeroHead({ hero, fallbackAssetId }: { hero: CatalogRow; fallbackAssetId
   const url = asset.data?.currentUrl
   useEffect(() => setFailed(false), [url])
   return (
-    <span className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-muted">
+    <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted ring-1 ring-border/60">
       {url && !failed ? (
         <img src={url} alt="" className="size-full object-cover" loading="lazy" onError={() => setFailed(true)} />
       ) : (
@@ -712,7 +805,10 @@ function HeroText({ hero, locale, fallbackName }: { hero: CatalogRow; locale: st
     )
   return (
     <div>
-      <p className="truncate font-medium" title={text?.name}>
+      <p
+        className="truncate text-[13px] leading-[18px] font-semibold underline-offset-4 group-hover/hero-action:underline group-focus-visible/hero-action:underline"
+        title={text?.name ?? fallbackName}
+      >
         {text?.name ?? fallbackName ?? (query.isPending ? "Đang tải…" : hero.code)}
       </p>
       {text && text.locale !== locale && <span className="text-xs text-muted-foreground">Dự phòng: {text.locale}</span>}
@@ -742,17 +838,17 @@ function HeroTranslations({ hero }: { hero: CatalogRow }) {
   const target = coverage.find((item) => !item.completed)?.locale ?? "en-US"
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         <Popover>
           <PopoverTrigger asChild>
             <button
-              className="flex min-h-10 items-center gap-2 rounded-lg border px-3 text-sm tabular-nums transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+              className="flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border/60 bg-background/60 px-1.5 text-xs tabular-nums transition-colors hover:border-ring/50 hover:bg-accent hover:shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-[state=open]:border-ring/50 data-[state=open]:bg-accent"
               aria-label={`Bản dịch ${hero.code}: ${detail}`}
               title={detail}
             >
-              <Languages className="size-4 text-muted-foreground" />
-              <span>{present}</span>
-              <ChevronRight className="size-3 text-muted-foreground" />
+              <Languages className="size-3.5 text-muted-foreground" />
+              <span className="font-semibold">{present}</span>
+              <ChevronDown aria-hidden className="size-3 text-muted-foreground" />
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-80">
@@ -790,13 +886,18 @@ function HeroTranslations({ hero }: { hero: CatalogRow }) {
         {canWrite && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button asChild variant="ghost" size="icon" className="size-10">
+              <Button
+                asChild
+                variant="outline"
+                size="icon"
+                className="size-6 cursor-pointer border-border/60 text-muted-foreground hover:border-ring/50 hover:text-foreground"
+              >
                 <Link
                   to={`/hero/${hero.id}/translations?revision=${hero.selectedRevision!.id}&locale=${encodeURIComponent(target)}`}
                   aria-label={`Thêm bản dịch ${hero.code}`}
                   title="Thêm bản dịch"
                 >
-                  <Plus className="size-4" />
+                  <Plus className="size-3.5" />
                 </Link>
               </Button>
             </TooltipTrigger>

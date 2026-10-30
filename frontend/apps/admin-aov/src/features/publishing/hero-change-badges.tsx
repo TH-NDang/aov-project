@@ -1,5 +1,5 @@
 import { useState, type ComponentType } from "react"
-import { ArrowDown, ArrowUp, ArrowUpRight, Ellipsis, RefreshCw, Scale, Wrench } from "lucide-react"
+import { ArrowDown, ArrowUp, ArrowUpRight, ChevronDown, Ellipsis, RefreshCw, Scale, Wrench } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
@@ -137,14 +137,19 @@ export function HeroChangeSummary({
         <button
           type="button"
           aria-label={`Xem thay đổi gameplay${patchLabel ? ` tại ${patchLabel}` : ""}: ${labels}`}
-          className={`group inline-flex max-w-full items-center gap-2 rounded-lg p-1 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring ${className}`}
+          className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border border-border/60 bg-background/60 px-2 py-1 text-left outline-none transition-colors hover:border-ring/50 hover:bg-accent hover:shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=open]:border-ring/50 data-[state=open]:bg-accent ${className}`}
         >
-          {ordered.length ? (
-            <ChangeKindBadges kinds={kinds} compact />
-          ) : (
-            <span className="text-xs text-muted-foreground">Chưa đánh giá tổng thể</span>
-          )}
-          {patchLabel && <span className="max-w-40 truncate text-xs text-muted-foreground">{patchLabel}</span>}
+          <span className="flex min-w-0 flex-col items-start gap-1">
+            {ordered.length ? (
+              <ChangeKindBadges kinds={kinds} compact />
+            ) : (
+              <span className="text-xs text-muted-foreground">Chưa đánh giá</span>
+            )}
+            {patchLabel && (
+              <span className="max-w-full truncate text-[11px] text-muted-foreground tabular-nums">{patchLabel}</span>
+            )}
+          </span>
+          <ChevronDown aria-hidden className="size-3 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 max-w-[calc(100vw-2rem)] space-y-4 p-4">
