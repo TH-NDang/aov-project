@@ -8,7 +8,7 @@ import { SpellArtwork } from "./spell-artwork"
 import { warehouseName, warehouseText, type SpellContent, type WarehouseEntry } from "./warehouse-types"
 
 export const availabilityLabels = { AVAILABLE: "Đang có", REMOVED: "Đã gỡ", UNKNOWN: "Chưa xác định" }
-const gridClass = "grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+const gridClass = "grid grid-cols-3 gap-2"
 
 export function SpellCollection({
   records,
@@ -38,11 +38,11 @@ export function SpellCollection({
     ))
   }
   return (
-    <div className="space-y-5">
+    <div className="w-full max-w-2xl space-y-3">
       {current.length > 0 && <div className={gridClass}>{cards(current)}</div>}
       {legacy.length > 0 && (
         <Collapsible open={legacyOpen} onOpenChange={setLegacyOpen}>
-          <CollapsibleTrigger className="group flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-3 text-left hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring">
+          <CollapsibleTrigger className="group flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-2 text-left hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring">
             <ChevronDown
               aria-hidden
               className={cn("size-4 text-muted-foreground transition-transform", !legacyOpen && "-rotate-90")}
@@ -82,7 +82,7 @@ function SpellCard({
     <div
       data-spell-card={entry.id}
       className={cn(
-        "group relative flex min-w-0 flex-col gap-4 rounded-2xl bg-card p-4 text-left transition-colors hover:bg-accent/50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
+        "group relative flex min-w-0 flex-col items-center gap-1.5 rounded-lg border border-border/60 bg-card px-1.5 py-2 text-center transition-colors hover:border-primary/40 hover:bg-accent/50 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
         active && "bg-primary/5 ring-1 ring-primary/50",
       )}
     >
@@ -90,45 +90,65 @@ function SpellCard({
         type="button"
         onClick={onOpen}
         aria-label={`Xem ${warehouseName(entry, locale)}`}
-        className="absolute inset-0 z-10 cursor-pointer rounded-2xl focus-visible:outline-none"
+        aria-pressed={active}
+        className="absolute inset-0 z-10 cursor-pointer rounded-lg focus-visible:outline-none"
       />
-      <div className="flex items-start gap-3">
+      <div className="flex h-16 w-full items-center justify-center">
         <SpellArtwork
           iconAssetId={entry.content.iconAssetId}
           states={entry.content.states}
           defaultStateKey={entry.content.defaultStateKey}
           name={warehouseName(entry, locale)}
           locale={locale}
+          compact
         />
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="font-semibold">{text?.name || entry.code}</p>
-          <div className="flex flex-wrap gap-1">
-            <Badge
-              variant={entry.content.availability === "AVAILABLE" ? "secondary" : "outline"}
-              className="text-[10px]"
-            >
-              {availabilityLabels[entry.content.availability]}
+      </div>
+      <div className="w-full min-w-0 space-y-1">
+        <p className="truncate text-xs leading-4 font-semibold" title={text?.name || entry.code}>
+          {text?.name || entry.code}
+        </p>
+        <div className="flex flex-wrap justify-center gap-1">
+          <Badge
+            variant={entry.content.availability === "AVAILABLE" ? "secondary" : "outline"}
+            className="px-1.5 py-0 text-[9px] leading-4"
+          >
+            {availabilityLabels[entry.content.availability]}
+          </Badge>
+          {isLegacy(entry) && !entry.revision.effectiveFromPatchVariantId && (
+            <Badge variant="outline" className="px-1.5 py-0 text-[9px] leading-4">
+              Chưa rõ patch
             </Badge>
-            {isLegacy(entry) && !entry.revision.effectiveFromPatchVariantId && (
-              <Badge variant="outline" className="text-[10px]">
-                Chưa rõ patch
-              </Badge>
-            )}
-            {entry.revision.state === "DRAFT" && (
-              <Badge variant="outline" className="text-[10px]">
-                Nháp
-              </Badge>
-            )}
-          </div>
+          )}
+          {entry.revision.state === "DRAFT" && (
+            <Badge variant="outline" className="px-1.5 py-0 text-[9px] leading-4">
+              Nháp
+            </Badge>
+          )}
         </div>
       </div>
-      {text?.summary && <p className="line-clamp-2 text-sm text-muted-foreground">{text.summary}</p>}
-      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <Clock3 aria-hidden className="size-3.5" />
-          {entry.content.cooldownSeconds == null ? "Chưa rõ hồi chiêu" : `${entry.content.cooldownSeconds} giây`}
+      {text?.summary && (
+        <p className="w-full truncate text-[10px] text-muted-foreground" title={text.summary}>
+          {text.summary}
+        </p>
+      )}
+      <div className="mt-auto flex w-full min-w-0 items-center justify-center gap-1 border-t border-border/50 pt-1.5 text-[10px] leading-4 text-muted-foreground">
+        <span className="flex min-w-0 items-center gap-1">
+          <Clock3 aria-hidden className="size-3 shrink-0" />
+          <span
+            className="truncate"
+            title={
+              entry.content.cooldownSeconds == null
+                ? "Chưa rõ hồi chiêu"
+                : `${entry.content.cooldownSeconds} giây hồi chiêu`
+            }
+          >
+            {entry.content.cooldownSeconds == null ? "Chưa rõ hồi chiêu" : `${entry.content.cooldownSeconds} giây`}
+          </span>
         </span>
-        <span>
+        <span aria-hidden className="shrink-0">
+          ·
+        </span>
+        <span className="min-w-0 truncate">
           {entry.content.unlockType === "ACCOUNT_CREATION"
             ? "Khi tạo tài khoản"
             : entry.content.unlockLevel == null
@@ -137,8 +157,8 @@ function SpellCard({
         </span>
       </div>
       {entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE") && (
-        <div className="flex justify-end">
-          <CatalogChangeBadges kinds={entry.changeKinds ?? []} hideBaseline />
+        <div className="flex justify-center">
+          <CatalogChangeBadges kinds={entry.changeKinds ?? []} compact hideBaseline />
         </div>
       )}
     </div>
