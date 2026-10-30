@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/u
 import { ROLES, SECTIONS, type Content, type Section, type Source } from "./types"
 import { AdminEntityText, AdminReferenceProvider } from "../terminology/catalog"
 import { comparisonFieldLabels } from "./hero-comparison"
+import { statLabel } from "./patch-change-model"
 import { heroReviewNotes } from "./hero-source-details"
 import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
@@ -122,7 +123,10 @@ function HeroContentBody({
   onSkillChange,
   skillLayout,
   onSkillLayoutChange,
+  showTabs = true,
 }: {
+  /** The hero page shows the content sections in its own tab row. */
+  showTabs?: boolean
   content: Content
   locale: string
   editable: boolean
@@ -152,17 +156,14 @@ function HeroContentBody({
     <div className="space-y-5" aria-label="Nội dung tướng">
       {tab === "overview" && (
         <section className="relative isolate overflow-hidden rounded-2xl border bg-card">
-          <HeroAsset
-            id={content.MEDIA_BINDINGS?.bindings.SPLASH}
-            className={content.MEDIA_BINDINGS?.bindings.SPLASH ? "h-36 w-full sm:h-48" : "h-20 w-full sm:h-24"}
-          />
-          <div className="relative flex items-start gap-4 p-5 sm:p-6">
+          <div className="relative flex items-start gap-4 p-4 sm:p-5">
             <HeroAsset
               id={content.MEDIA_BINDINGS?.bindings.HEAD}
-              className="-mt-14 size-24 shrink-0 border-4 border-card shadow-sm"
+              className="size-16 shrink-0 rounded-xl"
+              frameAspectRatio={1}
             />
-            <div className="min-w-0 flex-1 space-y-2">
-              <h2 className="break-words text-3xl font-semibold tracking-tight">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <h2 className="break-words text-xl font-semibold tracking-tight">
                 {profile?.name || "Tướng chưa đặt tên"}
               </h2>
               {profile?.title && <p className="text-sm text-muted-foreground">{profile.title}</p>}
@@ -184,7 +185,7 @@ function HeroContentBody({
             )}
           </div>
           {profile?.summary && (
-            <div className="px-5 pb-6 sm:px-6">
+            <div className="px-4 pb-4 sm:px-5">
               <Text>{profile.summary}</Text>
             </div>
           )}
@@ -203,7 +204,11 @@ function HeroContentBody({
           </ul>
         </details>
       )}
-      <div className="flex gap-1 overflow-x-auto border-b pb-2" role="tablist" aria-label="Thông tin hiển thị">
+      <div
+        className={cn("flex gap-1 overflow-x-auto border-b pb-2", !showTabs && "hidden")}
+        role="tablist"
+        aria-label="Thông tin hiển thị"
+      >
         {(
           [
             ["overview", BookOpen, "Tổng quan", null],
@@ -237,7 +242,19 @@ function HeroContentBody({
           const Icon = icons[section]
           const data = content[section]
           let body: ReactNode
-          if (section === "PROFILE") body = <Text>{profile?.lore}</Text>
+          if (section === "PROFILE")
+            body = profile?.lore ? (
+              <Text>{profile.lore}</Text>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+                Chưa có cốt truyện.
+                {editable && (
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => onEdit("PROFILE")}>
+                    Thêm cốt truyện
+                  </Button>
+                )}
+              </div>
+            )
           else if (section === "OVERVIEW_RATINGS")
             body = content.OVERVIEW_RATINGS ? (
               <div className="space-y-4">
@@ -271,13 +288,13 @@ function HeroContentBody({
             )
           else if (section === "COMBAT_STATS")
             body = content.COMBAT_STATS?.values.length ? (
-              <dl className="grid grid-cols-2 gap-3">
+              <dl className="grid grid-cols-2 gap-2 @min-[600px]:grid-cols-4">
                 {content.COMBAT_STATS.values.map((stat) => (
-                  <div key={stat.statKey} className="rounded-lg bg-muted/40 p-3">
+                  <div key={stat.statKey} className="rounded-lg bg-muted/40 px-3 py-2">
                     <dt className="text-xs text-muted-foreground">
-                      {comparisonFieldLabels[stat.statKey] ?? stat.statKey}
+                      {comparisonFieldLabels[stat.statKey] ?? statLabel(stat.statKey)}
                     </dt>
-                    <dd className="mt-1 text-lg font-semibold">
+                    <dd className="text-base font-semibold tabular-nums">
                       {stat.baseValue ?? "—"}
                       <span className="ml-1 text-xs font-normal">
                         {["POINT", "UNKNOWN"].includes(stat.unit) ? "" : stat.unit === "PERCENT" ? "%" : stat.unit}
@@ -354,7 +371,10 @@ function HeroContentBody({
           return (
             <section
               key={section}
-              className="min-w-0 scroll-mt-4 rounded-2xl border bg-card p-5 sm:p-6"
+              className={cn(
+                "min-w-0 scroll-mt-4 rounded-2xl border bg-card p-4 sm:p-5",
+                section === "COMBAT_STATS" && "@min-[900px]:col-span-2",
+              )}
               id={`hero-${section}`}
             >
               <div className="mb-4 flex items-center justify-between gap-3">

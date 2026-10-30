@@ -1,6 +1,14 @@
 import { randomId } from "@/lib/random-id"
-import { localized } from "./hero-content"
 import type { ChangeSource, Content, Role } from "./types"
+
+// Kept local so this model does not import the hero content view, which imports the stat labels from here.
+function localized<T extends { locale: string }>(translations: T[] | undefined, locale: string): T | undefined {
+  return (
+    translations?.find((text) => text.locale === locale) ??
+    translations?.find((text) => text.locale === "vi-VN") ??
+    translations?.[0]
+  )
+}
 
 export type ChangeKind = "BUFF" | "NERF" | "ADJUSTMENT" | "REWORK" | "FIX" | "OTHER"
 export type ChangeRowType = "STAT" | "SKILL" | "ROLE" | "VISUAL" | "MECHANIC" | "OTHER"
