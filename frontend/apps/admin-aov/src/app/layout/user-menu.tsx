@@ -1,4 +1,5 @@
-import { ChevronsUpDown, LogOut, Monitor, Moon, Sun, UserRound } from "lucide-react"
+import { useRef, useState } from "react"
+import { ChevronsUpDown, Keyboard, LogOut, Monitor, Moon, Sun, UserRound } from "lucide-react"
 import { useNavigate } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { selfProfile, userKeys } from "@/features/users/user-api"
@@ -18,8 +19,12 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@aov/ui/components/sidebar"
+import { Kbd } from "@aov/ui/components/kbd"
+import { HotkeyHelp } from "./hotkey-help"
 
 export function UserMenu() {
+  const [hotkeyHelpOpen, setHotkeyHelpOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
   const { actor } = useSession()
   const navigate = useNavigate()
   const profile = useQuery({
@@ -29,15 +34,16 @@ export function UserMenu() {
     refetchInterval: 600000,
   })
   const displayName = profile.data?.displayName || actor?.displayName || "Tài khoản quản trị"
-  const { isMobile } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
   const { theme, setTheme } = useTheme()
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="border-t border-sidebar-border pt-2">
       <SidebarMenuItem>
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
+              ref={triggerRef}
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
@@ -56,10 +62,23 @@ export function UserMenu() {
             side={isMobile ? "top" : "left"}
             align="end"
             sideOffset={8}
+            onCloseAutoFocus={(event) => {
+              if (hotkeyHelpOpen) event.preventDefault()
+            }}
           >
-            <DropdownMenuItem onSelect={() => navigate("/profile")}>
+            <DropdownMenuItem
+              onSelect={() => {
+                navigate("/profile")
+                if (isMobile) setOpenMobile(false)
+              }}
+            >
               <UserRound />
               Hồ sơ của tôi
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setHotkeyHelpOpen(true)} aria-keyshortcuts="Control+/ Meta+/">
+              <Keyboard />
+              Phím tắt
+              <Kbd className="ml-auto">Ctrl /</Kbd>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="text-xs text-muted-foreground">Giao diện</DropdownMenuLabel>
@@ -82,6 +101,7 @@ export function UserMenu() {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+        <HotkeyHelp open={hotkeyHelpOpen} onOpenChange={setHotkeyHelpOpen} triggerRef={triggerRef} />
       </SidebarMenuItem>
     </SidebarMenu>
   )
