@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { useBlocker } from "react-router"
-import { GitBranch, Languages, List, LoaderCircle, MoreHorizontal, Plus, Save, Undo2 } from "lucide-react"
+import { GitBranch, Languages, List, LoaderCircle, MoreHorizontal, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
@@ -27,6 +27,7 @@ import {
 } from "@aov/ui/components/alert-dialog"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page } from "@/components/page-header"
+import { UnsavedBar } from "@/components/unsaved-bar"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { matchesQuery } from "@/lib/text"
 import { errorMessage } from "@/lib/api/errors"
@@ -39,7 +40,6 @@ import { EnchantmentBranchEditor } from "./secondary-editor"
 import { recipeConnectionError } from "./item-graph"
 import { ItemShopGraph } from "./item-shop-graph"
 import { ItemEditor } from "./item-editor"
-import { WarehouseCardHint } from "./warehouse-card-hint"
 
 type Entry = WarehouseEntry<ItemContent>
 type PendingItem = { content: ItemContent; patchId?: string | null }
@@ -63,10 +63,7 @@ function ItemList({ items, locale, onSelect }: { items: Entry[]; locale: string;
                 <span className="block font-medium">{warehouseName(row.original, locale)}</span>
                 <span className="font-mono text-xs text-muted-foreground">{row.original.code}</span>
               </span>
-              <CatalogChangeBadges kinds={row.original.changeKinds ?? []} compact />
-              <span className="ml-auto">
-                <WarehouseCardHint />
-              </span>
+              <CatalogChangeBadges kinds={row.original.changeKinds ?? []} compact hideBaseline />
             </button>
           ),
         }),
@@ -352,29 +349,8 @@ export function BackendItemsPage() {
           <span className="text-xs text-muted-foreground">{rows.length} trang bị</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {pending > 0 && <Badge variant="secondary">{pending} thay đổi chưa lưu</Badge>}
           {canWrite && (
             <>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-label="Hoàn tác"
-                disabled={!undo.length || busy}
-                onClick={() => {
-                  const previous = undo.at(-1)
-                  if (previous) {
-                    setEdits(previous)
-                    setUndo((history) => history.slice(0, -1))
-                  }
-                }}
-              >
-                <Undo2 className="size-4" />
-                <span className="hidden sm:inline">Hoàn tác</span>
-              </Button>
-              <Button size="sm" disabled={!pending || busy} onClick={() => void saveAll()}>
-                {busy ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}Lưu
-                <span className="hidden sm:inline"> thay đổi</span>
-              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -580,6 +556,21 @@ export function BackendItemsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {canWrite && (
+        <UnsavedBar
+          count={pending}
+          busy={busy}
+          onSave={() => void saveAll()}
+          canUndo={undo.length > 0}
+          onUndo={() => {
+            const previous = undo.at(-1)
+            if (previous) {
+              setEdits(previous)
+              setUndo((history) => history.slice(0, -1))
+            }
+          }}
+        />
+      )}
     </Page>
   )
 }

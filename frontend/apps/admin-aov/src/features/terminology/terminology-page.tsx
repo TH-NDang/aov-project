@@ -1,3 +1,4 @@
+import { UnsavedBar } from "@/components/unsaved-bar"
 import {
   BookOpenText,
   Link2,
@@ -204,15 +205,14 @@ export function TerminologyPage() {
       <fieldset disabled={saving || catalog.settings.isPending} className="contents">
         <header className="min-w-0 space-y-4 border-b pb-1">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <BookOpenText className="size-5" />
-              </span>
-              <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Thuật ngữ & tham chiếu</h1>
+            <div className="min-w-0 space-y-0.5">
+              <h1 className="text-xl font-semibold tracking-tight">Thuật ngữ & tham chiếu</h1>
+              <p className="text-sm text-muted-foreground">
+                Tên gọi, tên gọi khác và cách hiển thị tham chiếu trong nội dung.
+              </p>
             </div>
             {(view !== "preview" || draft) && (
               <div className="flex items-center gap-2">
-                {draft && <span className="text-xs text-amber-600">Chưa lưu</span>}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -227,14 +227,6 @@ export function TerminologyPage() {
                   }}
                 >
                   <RotateCcw className="size-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={!draft || saving || !catalog.settings.data || !catalog.canEdit}
-                  onClick={saveDraft}
-                >
-                  <Save className="size-4" />
-                  {saving ? "Đang lưu…" : "Lưu thay đổi"}
                 </Button>
               </div>
             )}
@@ -762,6 +754,15 @@ export function TerminologyPage() {
           </section>
         )}
       </fieldset>
+      {draft && (
+        <UnsavedBar
+          count={1}
+          message="Có thay đổi chưa lưu"
+          busy={saving}
+          saveDisabled={!catalog.settings.data || !catalog.canEdit}
+          onSave={() => void saveDraft()}
+        />
+      )}
     </main>
   )
 }
