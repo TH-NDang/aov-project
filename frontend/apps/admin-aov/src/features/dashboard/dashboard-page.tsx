@@ -193,14 +193,14 @@ export function DashboardPage() {
       description: "Còn thiếu dữ liệu bắt buộc để xuất bản",
       count: itemStats?.incomplete.length ?? 0,
       icon: ShieldAlert,
-      to: itemStats?.incomplete[0] ? `/items?tab=list&item=${itemStats.incomplete[0].id}` : "/items?tab=list",
+      to: itemStats?.incomplete[0] ? `/items?item=${itemStats.incomplete[0].id}` : "/items",
     },
     {
       title: "Công thức chưa xác nhận",
       description: "Chưa đủ dữ liệu để chốt nguyên liệu",
       count: itemStats?.unverified ?? 0,
       icon: ScrollText,
-      to: itemStats?.firstUnverified ? `/items?tab=list&item=${itemStats.firstUnverified.id}` : "/items?tab=list",
+      to: itemStats?.firstUnverified ? `/items?item=${itemStats.firstUnverified.id}` : "/items",
     },
     ...(arcana.data && arcana.data.length === 0
       ? [

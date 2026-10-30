@@ -12,7 +12,9 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core"
-import { Circle, GripVertical, Link2, PanelRightOpen, Plus } from "lucide-react"
+import { Circle, CircleHelp, GripVertical, ImageOff, Link2, PanelRightOpen, Plus } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { ItemCategoryIcon, itemCategoryFallback } from "./item-category-icon"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroAsset } from "../publishing/hero-content"
@@ -116,16 +118,19 @@ function GraphCard({
   })
   const name = warehouseName(item, locale)
   const hasOutput = column < columns - 1 && !terminal
+  const missing = item.missingFields?.length ?? 0
+  const Fallback = itemCategoryFallback(item.content.categoryCode)
   return (
     <div
       ref={drag.setNodeRef}
       data-item-node={item.id}
       data-shop-reference={reference || undefined}
       className={cn(
-        "relative flex min-h-20 min-w-[260px] items-center gap-1 rounded-xl border bg-card p-2 shadow-sm",
+        "group/card relative flex min-h-[4.5rem] min-w-[260px] items-center gap-1 rounded-xl border bg-card p-2 transition-shadow hover:shadow-sm",
         column > 0 && "pl-9",
         hasOutput && "pr-9",
         selected ? "border-primary ring-2 ring-primary/20" : related ? "border-primary/40" : "",
+        reference && "border-dashed bg-card/70",
         drag.isDragging && "opacity-40",
       )}
     >
@@ -147,9 +152,24 @@ function GraphCard({
         aria-label={`Chọn trang bị ${name}`}
         aria-pressed={selected}
       >
-        <HeroAsset id={item.content.iconAssetId} alt="" className="size-10 shrink-0 rounded-lg" />
+        {item.content.iconAssetId ? (
+          <HeroAsset
+            id={item.content.iconAssetId}
+            alt=""
+            className="size-10 shrink-0 rounded-lg"
+            frameAspectRatio={1}
+          />
+        ) : (
+          <span
+            className="relative flex size-10 shrink-0 items-center justify-center rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-amber-600"
+            title="Chưa có icon"
+          >
+            <Fallback aria-hidden className="size-5 opacity-70" />
+            <ImageOff aria-label="Chưa có icon" className="absolute -right-1 -bottom-1 size-3.5 rounded-full bg-card" />
+          </span>
+        )}
         <span className="min-w-0">
-          <span className="block text-xs font-medium leading-5 sm:text-sm">{name}</span>
+          <span className="block truncate text-xs font-medium leading-5 sm:text-sm">{name}</span>
           {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact hideBaseline />}
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span>
@@ -163,6 +183,19 @@ function GraphCard({
                 Cấp {item.content.tier}
               </span>
             )}
+            {item.content.recipeStatus === "UNKNOWN" && (
+              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px]" title="Công thức chưa xác nhận">
+                Công thức?
+              </span>
+            )}
+            {missing > 0 && (
+              <span
+                className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-700 dark:text-amber-300"
+                title={`Còn thiếu ${missing} mục bắt buộc để xuất bản`}
+              >
+                Thiếu {missing}
+              </span>
+            )}
           </span>
         </span>
       </button>
@@ -170,7 +203,7 @@ function GraphCard({
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="size-8 shrink-0"
+        className="size-8 shrink-0 opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
         aria-label={`Xem trang bị ${name}`}
         title="Mở chi tiết"
         onClick={onOpen}
@@ -215,7 +248,8 @@ function GraphCell({ row, column, children }: { row: number; column: number; chi
       ref={drop.setNodeRef}
       aria-label={`Hàng ${row + 1}, cột ${column + 1}`}
       className={cn(
-        "min-h-24 space-y-2 rounded-xl border border-dashed border-transparent px-1 py-1",
+        "min-h-20 space-y-2 rounded-xl border border-dashed border-transparent px-1 py-1",
+        !children && "border-border/60",
         drop.isOver && "border-primary bg-primary/5",
       )}
     >
@@ -261,6 +295,10 @@ export function ItemShopGraph({
     [items, selectedId, category, variant],
   )
   const { placements, external } = layout
+  const missingIcons = items.filter(
+    (item) =>
+      !item.content.iconAssetId && item.content.shopPositions.some((position) => position.categoryCode === category),
+  )
   const variants = [
     ...new Set(
       items.flatMap((item) =>
@@ -521,23 +559,45 @@ export function ItemShopGraph({
   return (
     <section className="min-w-0 space-y-3" aria-label="Sơ đồ trang bị">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex min-w-0 flex-1 flex-wrap gap-1">
-          {categories.map((group) => (
-            <Button
-              key={group.code}
-              variant={category === group.code ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => {
-                onCategory(group.code)
-                onFocus(null)
-                setVariant("")
-                setMore(0)
-              }}
-            >
-              {warehouseText(group.translations, locale)?.name || group.code}
-            </Button>
-          ))}
+        <div className="flex min-w-0 flex-1 flex-wrap gap-1" role="group" aria-label="Nhóm trang bị">
+          {categories.map((group) => {
+            const count = items.filter((item) =>
+              item.content.shopPositions.some((position) => position.categoryCode === group.code),
+            ).length
+            const active = category === group.code
+            return (
+              <Button
+                key={group.code}
+                variant={active ? "secondary" : "ghost"}
+                size="sm"
+                aria-pressed={active}
+                className={cn("h-8 gap-1.5", !active && "text-muted-foreground")}
+                onClick={() => {
+                  onCategory(group.code)
+                  onFocus(null)
+                  setVariant("")
+                  setMore(0)
+                }}
+              >
+                <ItemCategoryIcon category={group} />
+                {warehouseText(group.translations, locale)?.name || group.code}
+                <span className="text-xs tabular-nums text-muted-foreground">{count}</span>
+              </Button>
+            )
+          })}
         </div>
+        {missingIcons.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-1.5 text-amber-700 dark:text-amber-300"
+            title="Mở món đầu tiên chưa có icon"
+            onClick={() => onSelect(missingIcons[0].id)}
+          >
+            <ImageOff className="size-4" />
+            {missingIcons.length} món thiếu icon
+          </Button>
+        )}
         {!!variants.length && (
           <select
             aria-label="Nhánh trang bị"
@@ -556,18 +616,34 @@ export function ItemShopGraph({
           </select>
         )}
         {editable && (
-          <Button variant="outline" size="sm" onClick={() => setMore((count) => count + 2)}>
+          <Button variant="outline" size="sm" className="h-8" onClick={() => setMore((count) => count + 2)}>
             <Plus className="size-4" />
             Thêm hàng
           </Button>
         )}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className="size-8" aria-label="Cách dùng sơ đồ shop">
+              <CircleHelp className="size-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-72 space-y-1.5 text-xs leading-5">
+            <p className="font-medium">Cách dùng sơ đồ shop</p>
+            <p>Chọn một món để xem các đường ghép tới nguyên liệu và món nâng cấp.</p>
+            <p>Nối hai chấm ở hai bên thẻ, hoặc kéo từ chấm này sang chấm kia, để thêm nguyên liệu.</p>
+            <p>Kéo tay nắm bên trái thẻ để đổi ô. Esc để hủy nối hoặc bỏ chọn.</p>
+          </PopoverContent>
+        </Popover>
       </div>
-      <p className="flex min-h-6 items-center gap-2 text-xs text-muted-foreground">
-        <Link2 className="size-3.5 shrink-0" />
-        {armed
-          ? `Đang nối ${warehouseName(byId.get(armed.id)!, locale)} · chọn chấm ở phía đối diện. Esc để hủy.`
-          : "Chọn món để xem đường ghép. Nối hai chấm hoặc kéo giữa chúng; kéo tay nắm để đổi ô."}
-      </p>
+      {armed && (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs text-primary"
+        >
+          <Link2 className="size-3.5 shrink-0" />
+          Đang nối {warehouseName(byId.get(armed.id)!, locale)} · chọn chấm ở phía đối diện. Esc để hủy.
+        </p>
+      )}
       {selectedId && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-2">
@@ -718,7 +794,9 @@ export function ItemShopGraph({
                 )
                 return (
                   <section key={column} aria-label={`Cột ${column + 1}`} className="min-w-0 space-y-3">
-                    <h3 className="pb-2 text-center text-xs font-medium text-muted-foreground">Cột {column + 1}</h3>
+                    <h3 className="sticky top-0 z-10 mx-auto w-fit rounded-full border bg-card px-3 py-0.5 text-center text-xs font-medium text-muted-foreground">
+                      Cột {column + 1}
+                    </h3>
                     {sections.map((section) => {
                       const firstRow = section.rows[0].row
                       const lastRow = section.rows.at(-1)!.row

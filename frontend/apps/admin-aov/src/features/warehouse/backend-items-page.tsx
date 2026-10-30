@@ -1,13 +1,10 @@
 import { useWarehouseScope, WarehouseScopeControls } from "./warehouse-scope"
-import { CatalogChangeBadges } from "./catalog-changes"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { useBlocker } from "react-router"
-import { GitBranch, Languages, List, LoaderCircle, MoreHorizontal, Plus } from "lucide-react"
+import { LoaderCircle, MoreHorizontal, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
-import { Badge } from "@aov/ui/components/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,115 +40,7 @@ import { ItemEditor } from "./item-editor"
 
 type Entry = WarehouseEntry<ItemContent>
 type PendingItem = { content: ItemContent; patchId?: string | null }
-const features = tableFeatures({})
-const helper = createColumnHelper<typeof features, Entry>()
 const empty: Entry[] = []
-function ItemList({ items, locale, onSelect }: { items: Entry[]; locale: string; onSelect: (id: string) => void }) {
-  const columns = useMemo(
-    () =>
-      helper.columns([
-        helper.display({
-          id: "name",
-          header: "Trang bị",
-          cell: ({ row }) => (
-            <button
-              className="group flex w-full min-w-48 cursor-pointer items-center gap-3 py-1 text-left hover:text-primary"
-              onClick={() => onSelect(row.original.id)}
-            >
-              <HeroAsset id={row.original.content.iconAssetId} alt="" className="size-11 shrink-0 rounded-lg" />
-              <span>
-                <span className="block font-medium">{warehouseName(row.original, locale)}</span>
-                <span className="font-mono text-xs text-muted-foreground">{row.original.code}</span>
-              </span>
-              <CatalogChangeBadges kinds={row.original.changeKinds ?? []} compact hideBaseline />
-            </button>
-          ),
-        }),
-        helper.accessor((item) => item.content.price, {
-          id: "price",
-          header: "Giá",
-          cell: ({ getValue }) => (
-            <span className="whitespace-nowrap tabular-nums">{getValue()?.toLocaleString("vi-VN") ?? "—"}</span>
-          ),
-        }),
-        helper.accessor((item) => item.content.tier, {
-          id: "tier",
-          header: "Cấp",
-          cell: ({ getValue }) => getValue() ?? "—",
-        }),
-        helper.display({
-          id: "recipe",
-          header: "Công thức",
-          cell: ({ row }) => (
-            <Badge variant={row.original.content.recipeStatus === "UNKNOWN" ? "outline" : "secondary"}>
-              {row.original.content.recipeStatus === "UNKNOWN"
-                ? "Chưa xác nhận"
-                : row.original.content.recipeStatus === "NONE"
-                  ? "Không cần ghép"
-                  : `${row.original.content.components.length} nguyên liệu`}
-            </Badge>
-          ),
-        }),
-        helper.display({
-          id: "translations",
-          header: "Bản dịch",
-          cell: ({ row }) => (
-            <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-              <Languages className="size-3.5" />
-              {row.original.content.translations.length}
-            </span>
-          ),
-        }),
-        helper.display({
-          id: "state",
-          header: "Trạng thái",
-          cell: ({ row }) => (
-            <span className="whitespace-nowrap text-xs text-muted-foreground">
-              {row.original.revision.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"}
-              {!!row.original.missingFields?.length && ` · Thiếu ${row.original.missingFields.length} mục`}
-            </span>
-          ),
-        }),
-      ]),
-    [locale, onSelect],
-  )
-  const table = useTable({ features, columns, data: items, getRowId: (item) => item.id })
-  return (
-    <div className="overflow-auto rounded-xl border">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/40 text-left text-xs text-muted-foreground">
-          {table.getHeaderGroups().map((group) => (
-            <tr key={group.id}>
-              {group.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className={`px-3 py-3 font-medium ${header.column.id === "name" ? "sticky left-0 z-10 bg-card" : ""}`}
-                >
-                  <table.FlexRender header={header} />
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody className="divide-y">
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-muted/20">
-              {row.getAllCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className={`px-3 py-2 ${cell.column.id === "name" ? "sticky left-0 z-10 bg-card" : ""}`}
-                >
-                  <table.FlexRender cell={cell} />
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {!items.length && <p className="p-8 text-center text-sm text-muted-foreground">Không có trang bị phù hợp.</p>}
-    </div>
-  )
-}
 function initialItem(locale: string, name: string): ItemContent {
   return {
     iconAssetId: null,
@@ -175,7 +64,6 @@ export function BackendItemsPage() {
   const { actor } = useSession()
   const canWrite = !!actor?.capabilities.includes("item:write")
   const canPublish = !!actor?.capabilities.includes("item:publish")
-  const [tab, setTab] = useSearchParam("tab", "shop")
   const [group, setGroup] = useSearchParam("group")
   const [selectedId, setSelectedId] = useSearchParam("item")
   const [focusId, setFocusId] = useState<string | null>(selectedId || null)
@@ -339,31 +227,9 @@ export function BackendItemsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 space-y-0.5">
           <h1 className="text-xl font-semibold tracking-tight">Trang bị</h1>
-          <p className="text-sm text-muted-foreground">{rows.length} trang bị · sơ đồ shop và danh sách</p>
+          <p className="text-sm text-muted-foreground">{rows.length} trang bị · sơ đồ shop theo nhóm</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border p-0.5" role="group" aria-label="Kiểu xem trang bị">
-            <Button
-              size="sm"
-              className="h-7"
-              variant={tab === "shop" ? "secondary" : "ghost"}
-              aria-pressed={tab === "shop"}
-              onClick={() => setTab("shop")}
-            >
-              <GitBranch className="size-4" />
-              Sơ đồ shop
-            </Button>
-            <Button
-              size="sm"
-              className="h-7"
-              variant={tab === "list" ? "secondary" : "ghost"}
-              aria-pressed={tab === "list"}
-              onClick={() => setTab("list")}
-            >
-              <List className="size-4" />
-              Danh sách
-            </Button>
-          </div>
           {canWrite && (
             <>
               <Button
@@ -421,8 +287,6 @@ export function BackendItemsPage() {
           <LoaderCircle className="size-4 animate-spin" />
           Đang tải kho trang bị…
         </p>
-      ) : tab === "list" ? (
-        <ItemList items={filtered} locale={context.locale} onSelect={select} />
       ) : (
         <>
           {context.q && (
@@ -432,6 +296,7 @@ export function BackendItemsPage() {
                   key={item.id}
                   size="sm"
                   variant="outline"
+                  className="h-9 gap-2 pl-1.5"
                   onClick={() => {
                     const pos = item.content.shopPositions[0]
                     if (pos) setGroup(pos.categoryCode)
@@ -439,6 +304,7 @@ export function BackendItemsPage() {
                     setSelectedId(item.id)
                   }}
                 >
+                  <HeroAsset id={item.content.iconAssetId} alt="" className="size-6 rounded-md" frameAspectRatio={1} />
                   {warehouseName(item, context.locale)}
                 </Button>
               ))}
