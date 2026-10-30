@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Gem, GitBranch, Languages, ListOrdered, Plus, Sparkles, Zap } from "lucide-react"
+import { Archive, Gem, GitBranch, Languages, LayoutGrid, ListOrdered, Plus, Sparkles, Zap } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Skeleton } from "@aov/ui/components/skeleton"
@@ -48,6 +48,7 @@ const permissionNames: Record<SecondaryKind, string> = {
 }
 const colorLabels = { RED: "Đỏ", PURPLE: "Tím", GREEN: "Xanh" }
 const colorStyles = { RED: "bg-rose-500", PURPLE: "bg-violet-500", GREEN: "bg-emerald-500" }
+const spellAvailabilityFilters = ["REMOVED"] as const
 
 export function BackendEnchantmentsPage() {
   return <SecondaryPage kind="enchantments" />
@@ -83,7 +84,13 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
   const [color, setColor] = useSearchParam("color")
   const [tier, setTier] = useSearchParam("tier")
   const [stat, setStat] = useSearchParam("stat")
-  const [availability, setAvailability] = useSearchParam("availability")
+  const [availabilityParam, setAvailability] = useSearchParam("availability")
+  const availability = spellAvailabilityFilters.find((value) => value === availabilityParam) ?? ""
+
+  useEffect(() => {
+    if (kind === "spells" && availabilityParam && !availability) setAvailability(null)
+  }, [kind, availabilityParam, availability, setAvailability])
+
   const records = (catalog.data ?? []).map((entry) => ({
     ...entry,
     changeKinds: scopeState.badgeKinds(entry.id),
@@ -324,9 +331,10 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       {kind === "spells" && (
         <div className="flex flex-wrap gap-1" role="group" aria-label="Lọc khả dụng phụ trợ">
           <Button size="sm" variant={!availability ? "secondary" : "ghost"} onClick={() => setAvailability(null)}>
+            <LayoutGrid aria-hidden className="size-3.5" />
             Tất cả
           </Button>
-          {Object.entries(availabilityLabels).map(([value, label]) => (
+          {spellAvailabilityFilters.map((value) => (
             <Button
               key={value}
               size="sm"
@@ -334,7 +342,8 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
               aria-pressed={availability === value}
               onClick={() => setAvailability(value)}
             >
-              {label}
+              <Archive aria-hidden className="size-3.5" />
+              {availabilityLabels[value]}
             </Button>
           ))}
         </div>
