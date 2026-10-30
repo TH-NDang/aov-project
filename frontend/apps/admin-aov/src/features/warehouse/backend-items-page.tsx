@@ -40,6 +40,11 @@ import { ItemEditor } from "./item-editor"
 
 type Entry = WarehouseEntry<ItemContent>
 type PendingItem = { content: ItemContent; patchId?: string | null }
+/** A board change waiting for its published item to get a draft. */
+type DraftAction =
+  | { type: "connect"; from: string; to: string }
+  | { type: "move"; id: string; index: number; row: number; column: number }
+type DraftRequest = { id: string; action: DraftAction }
 const empty: Entry[] = []
 function initialItem(locale: string, name: string): ItemContent {
   return {
@@ -73,6 +78,10 @@ export function BackendItemsPage() {
   const [error, setError] = useState("")
   const [creating, setCreating] = useState(false)
   const [extraRows, setExtraRows] = useState(0)
+  const [draftRequest, setDraftRequest] = useState<DraftRequest | null>(null)
+  const [queuedDraft, setQueuedDraft] = useState<DraftRequest | null>(null)
+  const [autoDraft, setAutoDraft] = useState(false)
+  const [rememberDraft, setRememberDraft] = useState(false)
   const [categoryEditor, setCategoryEditor] = useState<WarehouseMetadata | "new" | null>(null)
   const [name, setName] = useState("")
   const [code, setCode] = useState("")
@@ -200,6 +209,47 @@ export function BackendItemsPage() {
       setBusy(false)
     }
   }
+  function requestDraft(request: DraftRequest) {
+    if (autoDraft) void createDraftAndApply(request)
+    else setDraftRequest(request)
+  }
+  async function createDraftAndApply(request: DraftRequest) {
+    const entry = rows.find((item) => item.id === request.id)
+    if (!entry) return
+    setBusy(true)
+    setError("")
+    try {
+      await warehouseApi.fork("items", entry)
+      await refresh()
+      setQueuedDraft(request)
+    } catch (cause) {
+      setError(errorMessage(cause))
+    } finally {
+      setBusy(false)
+    }
+  }
+  // Applies the change that asked for a draft once the refreshed catalog shows that draft.
+  useEffect(() => {
+    if (!queuedDraft) return
+    if (rows.find((item) => item.id === queuedDraft.id)?.revision.state !== "DRAFT") return
+    setQueuedDraft(null)
+    const action = queuedDraft.action
+    if (action.type === "connect") connect(action.from, action.to)
+    else move(action.id, action.index, action.row, action.column)
+  }, [queuedDraft, rows])
+  function move(id: string, index: number, row: number, column: number) {
+    const item = rows.find((entry) => entry.id === id)!
+    if (item.revision.state !== "DRAFT") {
+      requestDraft({ id, action: { type: "move", id, index, row, column } })
+      return
+    }
+    update(id, {
+      ...item.content,
+      shopPositions: item.content.shopPositions.map((position, i) =>
+        i === index ? { ...position, row, column } : position,
+      ),
+    })
+  }
   function connect(from: string, to: string) {
     const problem = recipeConnectionError(rows, from, to)
     if (problem) {
@@ -208,7 +258,7 @@ export function BackendItemsPage() {
     }
     const target = rows.find((item) => item.id === to)!
     if (target.revision.state !== "DRAFT") {
-      toast.error("Tạo bản nháp cho món đích trước khi sửa công thức.")
+      requestDraft({ id: to, action: { type: "connect", from, to } })
       return
     }
     if (target.content.components.some((part) => part.itemId === from)) {
@@ -331,15 +381,7 @@ export function BackendItemsPage() {
             extraRows={extraRows}
             onExtraRowsChange={setExtraRows}
             onConnect={connect}
-            onMove={(id, index, row, column) => {
-              const item = rows.find((item) => item.id === id)!
-              update(id, {
-                ...item.content,
-                shopPositions: item.content.shopPositions.map((position, i) =>
-                  i === index ? { ...position, row, column } : position,
-                ),
-              })
-            }}
+            onMove={move}
           />
           {!rows.length && (
             <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
@@ -425,6 +467,51 @@ export function BackendItemsPage() {
           }}
         />
       )}
+      <AlertDialog
+        open={!!draftRequest}
+        onOpenChange={(open) => {
+          if (!open) setDraftRequest(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Tạo bản nháp cho{" "}
+              {draftRequest
+                ? warehouseName(rows.find((item) => item.id === draftRequest.id) ?? rows[0], context.locale)
+                : ""}
+              ?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Món này đã xuất bản.{" "}
+              {draftRequest?.action.type === "connect" ? "Để thêm nguyên liệu" : "Để đổi vị trí trong shop"} cần một bản
+              nháp. Thay đổi chỉ hiện trên wiki sau khi bạn lưu và xuất bản lại.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="size-4 accent-primary"
+              checked={rememberDraft}
+              onChange={(event) => setRememberDraft(event.target.checked)}
+            />
+            Tự tạo bản nháp, không hỏi lại trong lần làm việc này
+          </label>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const request = draftRequest
+                setDraftRequest(null)
+                if (rememberDraft) setAutoDraft(true)
+                if (request) void createDraftAndApply(request)
+              }}
+            >
+              Tạo bản nháp và tiếp tục
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={blocker.state === "blocked"}>
         <AlertDialogContent>
           <AlertDialogHeader>
