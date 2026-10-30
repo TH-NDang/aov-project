@@ -9,7 +9,7 @@ import { HeroAsset } from "../publishing/hero-content"
 import { enchantmentBranchColor } from "./enchantment-colors"
 import { warehouseText, type EnchantmentContent, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
 
-const rowClass = "grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3 @min-[520px]/enchantments:gap-x-4"
+const rowClass = "grid grid-cols-[1.5rem_minmax(0,1fr)] gap-x-2 @min-[520px]/enchantments:gap-x-3"
 const railClass = "absolute left-1/2 w-px -translate-x-1/2 bg-[var(--branch-color)] opacity-25"
 
 export function EnchantmentBranches({
@@ -48,7 +48,7 @@ export function EnchantmentBranches({
           Tất cả hệ
         </Button>
       )}
-      <div className="flex flex-wrap gap-2" aria-label="Các hệ phù hiệu">
+      <div className="flex min-w-0 flex-nowrap gap-1" aria-label="Các hệ phù hiệu">
         {branches.map((branch) => {
           const text = warehouseText(branch.translations, locale)
           return (
@@ -61,7 +61,7 @@ export function EnchantmentBranches({
                   aria-pressed={branch.code === active}
                   style={{ "--branch-color": enchantmentBranchColor(branch) } as CSSProperties}
                   className={cn(
-                    "relative flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-xl px-2.5 text-sm transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
+                    "relative flex h-9 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-1.5 text-xs transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
                     active === branch.code && "bg-accent/40 font-medium",
                   )}
                 >
@@ -69,9 +69,9 @@ export function EnchantmentBranches({
                     id={branch.iconAssetId}
                     alt=""
                     frameAspectRatio={1}
-                    className="size-7 rounded-full border-0 bg-transparent"
+                    className="size-6 shrink-0 rounded-full border-0 bg-transparent"
                   />
-                  <span className="whitespace-nowrap">{text?.name ?? branch.code}</span>
+                  <span className="truncate">{text?.name ?? branch.code}</span>
                   {active === branch.code && (
                     <span
                       aria-hidden
@@ -112,6 +112,10 @@ export function EnchantmentBranches({
         const tiers = [1, 2, 3].filter(
           (tier) => (!scoped && !search) || entries.some((entry) => entry.content.tier === tier),
         )
+        const columns = Math.max(
+          3,
+          ...tiers.map((tier) => entries.filter((entry) => entry.content.tier === tier).length),
+        )
         return (
           <section
             key={branch.code}
@@ -147,7 +151,7 @@ export function EnchantmentBranches({
                 </Button>
               )}
             </header>
-            <div className="p-3 @min-[520px]/enchantments:p-5">
+            <div className="p-2 @min-[520px]/enchantments:p-3">
               {tiers.map((tier, tierIndex) => {
                 const nodes = entries
                   .filter((entry) => entry.content.tier === tier)
@@ -158,23 +162,24 @@ export function EnchantmentBranches({
                   <div key={tier} className={rowClass}>
                     <div className="relative">
                       {tierIndex !== tiers.length - 1 && (
-                        <span aria-hidden className={cn(railClass, "top-14 bottom-0")} />
+                        <span aria-hidden className={cn(railClass, "top-10 bottom-0")} />
                       )}
-                      {tierIndex > 0 && <span aria-hidden className={cn(railClass, "top-0 h-14")} />}
-                      <div className="relative mt-7 flex flex-col items-center gap-1 bg-card py-1">
+                      {tierIndex > 0 && <span aria-hidden className={cn(railClass, "top-0 h-10")} />}
+                      <div className="relative mt-4 flex flex-col items-center gap-1 bg-card py-1">
                         <span className="text-[9px] font-medium tracking-widest text-muted-foreground uppercase">
                           Cấp
                         </span>
-                        <span className="grid size-8 place-items-center rounded-full border border-[var(--branch-border)] bg-[var(--branch-tint)] font-serif text-sm font-semibold text-[var(--branch-color)]">
+                        <span className="grid size-6 place-items-center rounded-full border border-[var(--branch-border)] bg-[var(--branch-tint)] font-serif text-xs font-semibold text-[var(--branch-color)]">
                           {["I", "II", "III"][tier - 1]}
                         </span>
                       </div>
                     </div>
                     <div
                       className={cn(
-                        "grid min-w-0 grid-cols-2 gap-2 @min-[520px]/enchantments:grid-cols-3 @min-[820px]/enchantments:grid-cols-4",
-                        tierIndex !== tiers.length - 1 && "pb-5",
+                        "grid min-w-0 gap-1.5 @min-[520px]/enchantments:gap-2",
+                        tierIndex !== tiers.length - 1 && "pb-3",
                       )}
+                      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
                       aria-label={`Phù hiệu cấp ${["I", "II", "III"][tier - 1]}`}
                     >
                       {nodes.map((entry) => {
@@ -188,7 +193,7 @@ export function EnchantmentBranches({
                             aria-label={`Xem ${label?.name ?? entry.code}`}
                             aria-pressed={selected}
                             className={cn(
-                              "group relative flex min-w-0 cursor-pointer flex-col items-center gap-1.5 rounded-xl border bg-background/50 px-2 py-2.5 text-center transition-colors outline-none hover:border-[var(--branch-color)] hover:bg-[var(--branch-tint)] focus-visible:ring-2 focus-visible:ring-[var(--branch-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-card @min-[520px]/enchantments:px-3",
+                              "group relative flex min-w-0 cursor-pointer flex-col items-center gap-1 rounded-lg border bg-background/50 px-1.5 py-2 text-center transition-colors outline-none hover:border-[var(--branch-color)] hover:bg-[var(--branch-tint)] focus-visible:ring-2 focus-visible:ring-[var(--branch-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-card @min-[520px]/enchantments:px-2",
                               selected ? "border-[var(--branch-color)] bg-[var(--branch-tint)]" : "border-border/60",
                             )}
                           >
@@ -203,19 +208,25 @@ export function EnchantmentBranches({
                                 className="absolute top-2 right-2 size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                               />
                             )}
-                            <div className="grid size-12 place-items-center rounded-full bg-[radial-gradient(circle,var(--branch-tint),transparent_70%)]">
+                            <div className="grid size-10 max-w-full shrink-0 place-items-center rounded-full bg-[radial-gradient(circle,var(--branch-tint),transparent_70%)] @min-[520px]/enchantments:size-11">
                               <HeroAsset
                                 id={entry.content.iconAssetId}
                                 alt=""
                                 frameAspectRatio={1}
-                                className="size-11 rounded-full border-0 bg-transparent transition-transform group-hover:scale-105 motion-reduce:transform-none"
+                                className="size-9 max-w-full rounded-full border-0 bg-transparent transition-transform group-hover:scale-105 motion-reduce:transform-none @min-[520px]/enchantments:size-10"
                               />
                             </div>
-                            <span className="line-clamp-2 text-sm leading-5 font-semibold">
+                            <span
+                              className="w-full truncate text-xs leading-4 font-semibold"
+                              title={label?.name ?? entry.code}
+                            >
                               {label?.name ?? entry.code}
                             </span>
                             {label?.summary && (
-                              <span className="line-clamp-2 text-xs leading-4 text-muted-foreground">
+                              <span
+                                className="w-full truncate text-[10px] leading-4 text-muted-foreground @min-[520px]/enchantments:text-[11px]"
+                                title={label.summary}
+                              >
                                 {label.summary}
                               </span>
                             )}
