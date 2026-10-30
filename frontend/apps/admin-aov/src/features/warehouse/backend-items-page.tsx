@@ -2,13 +2,14 @@ import { useWarehouseScope, WarehouseScopeControls } from "./warehouse-scope"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useBlocker } from "react-router"
-import { LoaderCircle, MoreHorizontal, Plus } from "lucide-react"
+import { FolderPlus, LoaderCircle, MoreHorizontal, PencilLine, Plus, Rows3 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@aov/ui/components/dialog"
@@ -26,16 +27,15 @@ import { useSession } from "@/app/auth/auth-gate"
 import { Page } from "@/components/page-header"
 import { UnsavedBar } from "@/components/unsaved-bar"
 import { useSearchParam } from "@/hooks/use-search-param"
-import { matchesQuery } from "@/lib/text"
 import { errorMessage } from "@/lib/api/errors"
-import { HeroAsset } from "../publishing/hero-content"
 import { Field } from "../publishing/fields"
 import { warehouseApi, invalidateWarehouseCatalogs, useWarehouseCatalog, useWarehouseMetadata } from "./warehouse-api"
-import { WarehouseControls, useWarehouseContext } from "./warehouse-controls"
+import { WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
+import { ItemSearch, itemSearchMatches } from "./item-search"
 import { warehouseName, type ItemContent, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
 import { EnchantmentBranchEditor } from "./secondary-editor"
 import { recipeConnectionError } from "./item-graph"
-import { ItemShopGraph } from "./item-shop-graph"
+import { ItemShopGraph, ItemShopHelp } from "./item-shop-graph"
 import { ItemEditor } from "./item-editor"
 
 type Entry = WarehouseEntry<ItemContent>
@@ -78,6 +78,7 @@ export function BackendItemsPage() {
   const [error, setError] = useState("")
   const [creating, setCreating] = useState(false)
   const [extraRows, setExtraRows] = useState(0)
+  const [jump, setJump] = useState<{ id: string; group: string | null } | null>(null)
   const [draftRequest, setDraftRequest] = useState<DraftRequest | null>(null)
   const [queuedDraft, setQueuedDraft] = useState<DraftRequest | null>(null)
   const [autoDraft, setAutoDraft] = useState(false)
@@ -105,12 +106,20 @@ export function BackendItemsPage() {
       }),
     [catalog.data, edits, scope.query.data, scope.scoped, scope.latest, scope.showAll],
   )
-  const filtered = useMemo(
-    () => rows.filter((item) => matchesQuery(context.q, warehouseName(item, context.locale), item.code)),
+  const matches = useMemo(
+    () => (context.q ? new Set(itemSearchMatches(rows, context.q, context.locale).map((item) => item.id)) : null),
     [rows, context.q, context.locale],
   )
   const categories = groups.data ?? []
   const category = categories.some((c) => c.code === group) ? group : (categories[0]?.code ?? "")
+  // Scrolls to a searched item once its group is on screen.
+  useEffect(() => {
+    if (!jump || (jump.group && jump.group !== category)) return
+    setJump(null)
+    document
+      .querySelector(`[data-item-node="${CSS.escape(jump.id)}"]`)
+      ?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" })
+  }, [jump, category])
   const selected = rows.find((item) => item.id === selectedId)
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) => pending > 0 && currentLocation.pathname !== nextLocation.pathname,
@@ -127,6 +136,16 @@ export function BackendItemsPage() {
   function select(id: string) {
     setFocusId(id)
     setSelectedId(id)
+  }
+  function jumpTo(item: Entry) {
+    const position = item.content.shopPositions[0]
+    if (!position) {
+      select(item.id)
+      return
+    }
+    setGroup(position.categoryCode)
+    setFocusId(item.id)
+    setJump({ id: item.id, group: position.categoryCode })
   }
   function update(id: string, content: ItemContent, patchId?: string | null) {
     setUndo((history) => [...history.slice(-19), new Map(edits)])
@@ -275,65 +294,65 @@ export function BackendItemsPage() {
   }
   return (
     <Page className="min-h-0 min-w-0 gap-4" data-item-selection-surface>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="relative flex items-center gap-2 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-x-4">
         <h1 className="text-xl font-semibold tracking-tight">Trang bị</h1>
-        <div className="flex flex-wrap items-center gap-2">
+        <ItemSearch
+          className="min-w-0 flex-1 sm:w-80 sm:flex-none lg:w-96"
+          items={rows}
+          categories={categories}
+          locale={context.locale}
+          value={context.search}
+          onChange={context.setSearch}
+          onPick={jumpTo}
+        />
+        <div className="flex shrink-0 items-center gap-2 sm:justify-self-end">
+          <WarehouseRulesetSelect
+            context={{
+              ...context,
+              setRuleset: (id) => {
+                if (pending && !window.confirm("Bỏ các thay đổi chưa lưu để chuyển bộ quy tắc?")) return
+                setEdits(new Map())
+                setUndo([])
+                setSelectedId(null)
+                setFocusId(null)
+                context.setRuleset(id)
+              },
+            }}
+          />
+          <ItemShopHelp />
           {canWrite && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={busy}
-                title="Thêm hai hàng trống ở cuối nhóm để kéo trang bị xuống"
-                onClick={() => setExtraRows((rows) => rows + 2)}
-              >
-                <Plus className="size-4" />
-                Thêm hàng
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                aria-label="Tạo trang bị"
-                disabled={busy || !context.rulesetId}
-                onClick={() => setCreating(true)}
-              >
-                <Plus className="size-4" />
-                Tạo<span className="hidden sm:inline"> trang bị</span>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="icon" variant="ghost" aria-label="Thiết lập nhóm trang bị">
-                    <MoreHorizontal className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => setCategoryEditor("new")}>Tạo nhóm trang bị</DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={!categories.some((c) => c.code === category)}
-                    onSelect={() => setCategoryEditor(categories.find((c) => c.code === category)!)}
-                  >
-                    Sửa nhóm đang xem
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="outline" className="size-9" aria-label="Tạo và thiết lập trang bị">
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem disabled={busy || !context.rulesetId} onSelect={() => setCreating(true)}>
+                  <Plus />
+                  Tạo trang bị
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={busy} onSelect={() => setExtraRows((rows) => rows + 2)}>
+                  <Rows3 />
+                  Thêm 2 hàng trống
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setCategoryEditor("new")}>
+                  <FolderPlus />
+                  Tạo nhóm trang bị
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!categories.some((c) => c.code === category)}
+                  onSelect={() => setCategoryEditor(categories.find((c) => c.code === category)!)}
+                >
+                  <PencilLine />
+                  Sửa nhóm đang xem
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       </div>
-      <WarehouseControls
-        context={{
-          ...context,
-          setRuleset: (id) => {
-            if (pending && !window.confirm("Bỏ các thay đổi chưa lưu để chuyển bộ quy tắc?")) return
-            setEdits(new Map())
-            setUndo([])
-            setSelectedId(null)
-            setFocusId(null)
-            context.setRuleset(id)
-          },
-        }}
-        placeholder="Tìm tên hoặc mã trang bị…"
-      />
       <WarehouseScopeControls scope={scope} />
       {(error || catalog.isError || groups.isError) && (
         <p role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
@@ -347,27 +366,6 @@ export function BackendItemsPage() {
         </p>
       ) : (
         <>
-          {context.q && (
-            <div className="flex flex-wrap gap-2">
-              {filtered.map((item) => (
-                <Button
-                  key={item.id}
-                  size="sm"
-                  variant="outline"
-                  className="h-9 gap-2 pl-1.5"
-                  onClick={() => {
-                    const pos = item.content.shopPositions[0]
-                    if (pos) setGroup(pos.categoryCode)
-                    setFocusId(item.id)
-                    setSelectedId(item.id)
-                  }}
-                >
-                  <HeroAsset id={item.content.iconAssetId} alt="" className="size-6 rounded-md" frameAspectRatio={1} />
-                  {warehouseName(item, context.locale)}
-                </Button>
-              ))}
-            </div>
-          )}
           <ItemShopGraph
             items={rows}
             categories={categories}
@@ -378,6 +376,7 @@ export function BackendItemsPage() {
             onCategory={setGroup}
             onSelect={select}
             editable={canWrite && !busy}
+            matches={matches}
             extraRows={extraRows}
             onExtraRowsChange={setExtraRows}
             onConnect={connect}
