@@ -60,7 +60,7 @@ export function SiteHeader() {
   }, [enabled])
 
   return (
-    <div className="sticky top-0 z-30 flex min-w-0 shrink-0 items-end gap-2 border-b bg-background px-2 pt-2">
+    <div className="sticky top-0 z-30 flex min-w-0 shrink-0 items-end gap-2 border-b bg-background px-2 pt-1">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -91,6 +91,7 @@ export function SiteHeader() {
                 tab={tab}
                 active={tab.path === pathname}
                 canClose={tabs.length > 1 || tab.path !== "/"}
+                previewDisabled={dragging !== null}
                 onClose={() => closeTab(tab.path)}
               />
             ))}
@@ -103,13 +104,13 @@ export function SiteHeader() {
           document.body,
         )}
       </DndContext>
-      <div className="flex shrink-0 items-center gap-1 pb-1">
+      <div className="flex shrink-0 items-center gap-1 pb-0.5">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="size-8"
+              className="size-7"
               onClick={() => setCommandOpen(true)}
               aria-label="Tìm kiếm (Ctrl K)"
             >
@@ -119,7 +120,7 @@ export function SiteHeader() {
           <TooltipContent>Tìm kiếm · Ctrl K</TooltipContent>
         </Tooltip>
         {isMobile && (
-          <Button variant="ghost" size="icon" className="size-8" onClick={toggleSidebar} aria-label="Mở menu">
+          <Button variant="ghost" size="icon" className="size-7" onClick={toggleSidebar} aria-label="Mở menu">
             <PanelRight />
           </Button>
         )}
