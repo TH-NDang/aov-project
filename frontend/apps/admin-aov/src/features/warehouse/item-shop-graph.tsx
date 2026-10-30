@@ -2,8 +2,10 @@ import { itemShopLayout, itemShopSections } from "./item-shop-layout"
 import { ItemShopRegionHelp } from "./item-shop-region-help"
 import { CatalogChangeBadges } from "./catalog-changes"
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   PointerSensor,
   useDraggable,
@@ -11,8 +13,9 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragStartEvent,
 } from "@dnd-kit/core"
-import { Circle, CircleHelp, GripVertical, ImageOff, Link2, PanelRightOpen } from "lucide-react"
+import { Circle, CircleHelp, GripVertical, ImageOff, Link2, Lock, PanelRightOpen } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { ItemCategoryIcon, itemCategoryFallback } from "./item-category-icon"
 import { Button } from "@aov/ui/components/button"
@@ -53,8 +56,22 @@ type ConnectionPointer = {
   dragged: boolean
   target: PortTarget | null
 }
-const columnWidth = 272
-const portInset = 16
+/** The nearest ancestor that scrolls vertically, so dragging near the top or bottom edge can move the page. */
+function verticalScroller(element: HTMLElement | null): HTMLElement {
+  for (let node = element?.parentElement; node; node = node.parentElement) {
+    const overflow = getComputedStyle(node).overflowY
+    if ((overflow === "auto" || overflow === "scroll") && node.scrollHeight > node.clientHeight) return node
+  }
+  return (document.scrollingElement as HTMLElement | null) ?? document.documentElement
+}
+/** Speed in pixels per millisecond when the pointer is inside the edge band of a scroll viewport. */
+function edgeSpeed(position: number, start: number, end: number, band: number) {
+  if (position < start + band) return -Math.min(1, (start + band - position) / band)
+  if (position > end - band) return Math.min(1, (position - end + band) / band)
+  return 0
+}
+const columnWidth = 232
+const portInset = 12
 const portRadius = 6
 function positioned(position: ItemContent["shopPositions"][number] | null) {
   return (
@@ -98,6 +115,7 @@ function GraphCard({
   onPort,
   terminal = false,
   reference = false,
+  locked = false,
 }: {
   item: Entry
   index: number
@@ -113,6 +131,8 @@ function GraphCard({
   onPort: (port: Port) => void
   terminal?: boolean
   reference?: boolean
+  /** Published items stay movable; the page asks to create a draft when one is changed. */
+  locked?: boolean
 }) {
   const drag = useDraggable({
     id: `${item.id}:${index}`,
@@ -120,6 +140,8 @@ function GraphCard({
     disabled: !editable || reference,
   })
   const name = warehouseName(item, locale)
+  const summary = warehouseText(item.content.translations, locale)?.summary?.trim()
+  const price = item.content.price?.toLocaleString("vi-VN") ?? "—"
   const hasOutput = column < columns - 1 && !terminal
   const missing = item.missingFields?.length ?? 0
   const Fallback = itemCategoryFallback(item.content.categoryCode)
@@ -129,9 +151,9 @@ function GraphCard({
       data-item-node={item.id}
       data-shop-reference={reference || undefined}
       className={cn(
-        "group/card relative flex min-h-[4.5rem] min-w-[260px] items-center gap-1 rounded-xl border bg-card p-2 transition-shadow hover:shadow-sm",
-        column > 0 && "pl-9",
-        hasOutput && "pr-9",
+        "group/card relative flex min-h-20 w-full min-w-0 items-center gap-1 rounded-xl border bg-card p-2 transition-shadow hover:shadow-sm",
+        column > 0 && "pl-7",
+        hasOutput && "pr-7",
         selected ? "border-primary ring-2 ring-primary/20" : related ? "border-primary/40" : "",
         reference && "border-dashed bg-card/70",
         drag.isDragging && "opacity-40",
@@ -141,12 +163,21 @@ function GraphCard({
         <button
           type="button"
           aria-label={`Di chuyển ${name}`}
-          className="touch-none self-stretch text-muted-foreground hover:text-foreground"
+          title="Kéo để đổi ô"
+          className="cursor-grab touch-none self-stretch text-muted-foreground opacity-50 transition-opacity group-hover/card:opacity-100 hover:text-foreground focus-visible:opacity-100 active:cursor-grabbing [@media(hover:none)]:opacity-100"
           {...drag.listeners}
           {...drag.attributes}
         >
           <GripVertical className="size-3.5" />
         </button>
+      )}
+      {editable && locked && (
+        <Lock
+          aria-label="Đã xuất bản · kéo hoặc nối sẽ tạo bản nháp"
+          className="absolute top-1.5 right-1.5 size-3 text-muted-foreground/70 transition-opacity group-hover/card:opacity-0 [@media(hover:none)]:hidden"
+        >
+          <title>Đã xuất bản · kéo hoặc nối sẽ tạo bản nháp</title>
+        </Lock>
       )}
       <button
         type="button"
@@ -155,29 +186,47 @@ function GraphCard({
         aria-label={`Chọn trang bị ${name}`}
         aria-pressed={selected}
       >
-        {item.content.iconAssetId ? (
-          <HeroAsset
-            id={item.content.iconAssetId}
-            alt=""
-            className="size-10 shrink-0 rounded-lg"
-            frameAspectRatio={1}
-          />
-        ) : (
-          <span
-            className="relative flex size-10 shrink-0 items-center justify-center rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-amber-600"
-            title="Chưa có icon"
-          >
-            <Fallback aria-hidden className="size-5 opacity-70" />
-            <ImageOff aria-label="Chưa có icon" className="absolute -right-1 -bottom-1 size-3.5 rounded-full bg-card" />
-          </span>
-        )}
-        <span className="min-w-0">
-          <span className="block truncate text-xs font-medium leading-5 sm:text-sm">{name}</span>
-          {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact hideBaseline />}
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-            <span>
-              {item.content.price?.toLocaleString("vi-VN") ?? "—"} <span className="text-amber-600">vàng</span>
+        <span className="relative shrink-0">
+          {item.content.iconAssetId ? (
+            <HeroAsset id={item.content.iconAssetId} alt="" className="size-11 rounded-lg" frameAspectRatio={1} />
+          ) : (
+            <span
+              className="relative flex size-11 items-center justify-center rounded-lg border border-dashed border-amber-500/50 bg-amber-500/5 text-amber-600"
+              title="Chưa có icon"
+            >
+              <Fallback aria-hidden className="size-5 opacity-70" />
+              <ImageOff aria-label="Chưa có icon" className="absolute -top-1 -left-1 size-3.5 rounded-full bg-card" />
             </span>
+          )}
+          <span
+            className="absolute -right-1.5 -bottom-1.5 rounded-md bg-card px-1 text-[10px] font-semibold leading-4 tabular-nums text-amber-600 shadow-sm ring-1 ring-border dark:text-amber-400"
+            title={`Giá ${price} vàng`}
+          >
+            {price}
+          </span>
+        </span>
+        <span className="min-w-0 flex-1 space-y-0.5">
+          <span
+            className={cn(
+              "line-clamp-2 font-medium leading-tight break-words",
+              name.length > 26 ? "text-[11px]" : name.length > 16 ? "text-xs" : "text-[13px]",
+            )}
+          >
+            {name}
+          </span>
+          {summary && (
+            <span
+              className={cn(
+                "line-clamp-3 leading-snug text-muted-foreground",
+                summary.length > 60 ? "text-[10px]" : "text-[11px]",
+              )}
+              title={summary}
+            >
+              {summary}
+            </span>
+          )}
+          {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact hideBaseline />}
+          <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground empty:hidden">
             {item.content.tier !== null && item.content.tier !== column + 1 && (
               <span
                 className="rounded bg-muted px-1.5 py-0.5 text-[10px]"
@@ -206,12 +255,12 @@ function GraphCard({
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="size-8 shrink-0 opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+        className="absolute top-0.5 right-0.5 z-30 size-6 bg-card/90 opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
         aria-label={`Xem trang bị ${name}`}
         title="Mở chi tiết"
         onClick={onOpen}
       >
-        <PanelRightOpen className="size-4" />
+        <PanelRightOpen className="size-3.5" />
       </Button>
       {(["in", "out"] as const)
         .filter((side) => (side === "in" ? column > 0 : hasOutput))
@@ -227,7 +276,7 @@ function GraphCard({
             title={side === "in" ? "Ghép từ: nối với nguyên liệu" : "Nâng cấp: nối tới món đích"}
             onClick={() => onPort({ id: item.id, side })}
             className={cn(
-              "absolute top-1/2 z-20 flex h-11 w-8 -translate-y-1/2 touch-none items-center justify-center rounded-lg text-muted-foreground enabled:cursor-crosshair enabled:hover:text-primary focus-visible:outline-2 focus-visible:outline-ring data-[connection-compatible=true]:text-primary/70 data-[connection-source=true]:bg-primary/10 data-[connection-source=true]:text-primary data-[connection-target=true]:bg-primary/15 data-[connection-target=true]:text-primary data-[connection-target=true]:ring-2 data-[connection-target=true]:ring-primary/50",
+              "absolute top-1/2 z-20 flex h-11 w-6 -translate-y-1/2 touch-none items-center justify-center rounded-lg text-muted-foreground enabled:cursor-crosshair enabled:hover:text-primary focus-visible:outline-2 focus-visible:outline-ring data-[connection-compatible=true]:text-primary/70 data-[connection-source=true]:bg-primary/10 data-[connection-source=true]:text-primary data-[connection-target=true]:bg-primary/15 data-[connection-target=true]:text-primary data-[connection-target=true]:ring-2 data-[connection-target=true]:ring-primary/50",
               side === "in" ? "left-0" : "right-0",
               armed?.id === item.id && armed.side === side && "text-primary",
             )}
@@ -277,6 +326,7 @@ export function ItemShopGraph({
 }: Props) {
   const [variant, setVariant] = useState("")
   const [armed, setArmed] = useState<Port | null>(null)
+  const [dragging, setDragging] = useState<string | null>(null)
   const [paths, setPaths] = useState<{ key: string; d: string; label: string; to: string; direct: boolean }[]>([])
   const canvas = useRef<HTMLDivElement>(null)
   const scrollArea = useRef<HTMLDivElement>(null)
@@ -492,6 +542,17 @@ export function ItemShopGraph({
         scrolling = scroller.scrollLeft !== before
       }
     }
+    const page = verticalScroller(scroller ?? element)
+    const pageRect =
+      page === document.scrollingElement || page === document.documentElement
+        ? { top: 0, bottom: window.innerHeight }
+        : page.getBoundingClientRect()
+    const vertical = edgeSpeed(session.y, pageRect.top, pageRect.bottom, 72)
+    if (vertical) {
+      const before = page.scrollTop
+      page.scrollTop += vertical * elapsed * 0.9
+      scrolling ||= page.scrollTop !== before
+    }
     const bounds = element.getBoundingClientRect()
     const x = session.x - bounds.left
     const y = session.y - bounds.top
@@ -554,7 +615,11 @@ export function ItemShopGraph({
     else if (armed) connect(armed, port)
     else setArmed(port)
   }
+  function startDrag(event: DragStartEvent) {
+    setDragging((event.active.data.current as { itemId: string } | undefined)?.itemId ?? null)
+  }
   function endDrag(event: DragEndEvent) {
+    setDragging(null)
     suppressClick.current = Date.now() + 300
     const from = event.active.data.current as { itemId: string; index: number } | undefined
     const to = event.over?.data.current as { row: number; column: number } | undefined
@@ -663,8 +728,11 @@ export function ItemShopGraph({
       )}
       <DndContext
         sensors={sensors}
+        autoScroll={{ threshold: { x: 0.12, y: 0.15 }, acceleration: 18 }}
+        onDragStart={startDrag}
         onDragEnd={endDrag}
         onDragCancel={() => {
+          setDragging(null)
           suppressClick.current = Date.now() + 300
         }}
       >
@@ -767,7 +835,7 @@ export function ItemShopGraph({
           >
             <div
               className="grid items-start gap-x-12"
-              style={{ gridTemplateColumns: `repeat(${columns},minmax(${columnWidth}px,1fr))` }}
+              style={{ gridTemplateColumns: `repeat(${columns},${columnWidth}px)` }}
             >
               {Array.from({ length: columns }, (_, column) => {
                 const native = placements.filter((p) => p.position.column === column && positioned(p.position))
@@ -780,7 +848,8 @@ export function ItemShopGraph({
                     key={`${placement.item.id}:${placement.index}`}
                     item={placement.item}
                     index={placement.index}
-                    editable={editable && placement.item.revision.state === "DRAFT"}
+                    editable={editable}
+                    locked={placement.item.revision.state !== "DRAFT"}
                     selected={placement.item.id === selectedId}
                     related={related.has(placement.item.id)}
                     locale={locale}
@@ -950,6 +1019,12 @@ export function ItemShopGraph({
             </svg>
           </div>
         </div>
+        {createPortal(
+          <DragOverlay dropAnimation={null}>
+            {dragging && byId.get(dragging) ? <DragGhost item={byId.get(dragging)!} locale={locale} /> : null}
+          </DragOverlay>,
+          document.body,
+        )}
       </DndContext>
       {[...placements, ...external].some((p) => !positioned(p.position)) && (
         <div className="flex flex-wrap gap-2">
@@ -969,5 +1044,18 @@ export function ItemShopGraph({
         </p>
       )}
     </section>
+  )
+}
+
+/** Follows the pointer while a card is dragged, so the move stays visible when the page scrolls. */
+function DragGhost({ item, locale }: { item: Entry; locale: string }) {
+  return (
+    <div
+      className="flex cursor-grabbing items-center gap-2 rounded-xl border border-primary bg-card p-2 shadow-lg"
+      style={{ width: columnWidth }}
+    >
+      <HeroAsset id={item.content.iconAssetId} alt="" className="size-9 shrink-0 rounded-lg" frameAspectRatio={1} />
+      <span className="line-clamp-2 min-w-0 text-xs leading-tight font-medium">{warehouseName(item, locale)}</span>
+    </div>
   )
 }
