@@ -5,7 +5,6 @@ import { Badge } from "@aov/ui/components/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@aov/ui/components/collapsible"
 import { cn } from "@aov/ui/lib/utils"
 import { SpellArtwork } from "./spell-artwork"
-import { WarehouseCardHint } from "./warehouse-card-hint"
 import { warehouseName, warehouseText, type SpellContent, type WarehouseEntry } from "./warehouse-types"
 
 export const availabilityLabels = { AVAILABLE: "Đang có", REMOVED: "Đã gỡ", UNKNOWN: "Chưa xác định" }
@@ -137,10 +136,11 @@ function SpellCard({
               : `Lv ${entry.content.unlockLevel}`}
         </span>
       </div>
-      <div className="flex justify-end">
-        <CatalogChangeBadges kinds={entry.changeKinds ?? []} />
-        <WarehouseCardHint />
-      </div>
+      {entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE") && (
+        <div className="flex justify-end">
+          <CatalogChangeBadges kinds={entry.changeKinds ?? []} hideBaseline />
+        </div>
+      )}
     </div>
   )
 }

@@ -773,7 +773,9 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     const card = document.querySelector<HTMLElement>('[data-spell-card="punish"]')!
     const openButton = card.querySelector<HTMLButtonElement>('button[aria-label="Xem Trừng trị"]')!
     assert.ok(card)
-    assert.match(card.textContent!, /Xem chi tiết/)
+    // The whole card opens the details; the repeated open hint is gone, the accessible label remains.
+    assert.ok(openButton)
+    assert.doesNotMatch(card.textContent!, /Xem chi tiết/)
     assert.deepEqual(
       [...card.querySelectorAll("img")].map((image) => [image.alt, image.getAttribute("src")]).sort(),
       [

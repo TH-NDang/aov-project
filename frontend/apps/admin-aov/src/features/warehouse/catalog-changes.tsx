@@ -96,14 +96,19 @@ export function changeCounts(changes: CatalogChange[]) {
 export function CatalogChangeBadges({
   kinds,
   compact = false,
+  hideBaseline = false,
 }: {
   kinds: readonly CatalogBadgeKind[]
   compact?: boolean
+  /** Cards skip the baseline label, which almost every record carries and so says nothing. */
+  hideBaseline?: boolean
 }) {
   const { colors } = useChangeColors()
+  const shown = [...new Set(kinds)].filter((kind) => !hideBaseline || kind !== "DATA_BASELINE")
+  if (!shown.length) return null
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
-      {[...new Set(kinds)].map((kind) => {
+      {shown.map((kind) => {
         const config =
           kind === "UNCHANGED"
             ? { label: "Không thay đổi", icon: Check }

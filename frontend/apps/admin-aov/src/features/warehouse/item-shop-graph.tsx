@@ -150,7 +150,7 @@ function GraphCard({
         <HeroAsset id={item.content.iconAssetId} alt="" className="size-10 shrink-0 rounded-lg" />
         <span className="min-w-0">
           <span className="block text-xs font-medium leading-5 sm:text-sm">{name}</span>
-          {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact />}
+          {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact hideBaseline />}
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span>
               {item.content.price?.toLocaleString("vi-VN") ?? "—"} <span className="text-amber-600">vàng</span>
