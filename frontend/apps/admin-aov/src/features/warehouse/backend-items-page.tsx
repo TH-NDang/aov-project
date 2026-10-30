@@ -337,18 +337,33 @@ export function BackendItemsPage() {
   return (
     <Page className="min-h-0 min-w-0 gap-4" data-item-selection-surface>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button size="sm" variant={tab === "shop" ? "secondary" : "ghost"} onClick={() => setTab("shop")}>
-            <GitBranch className="size-4" />
-            Sơ đồ shop
-          </Button>
-          <Button size="sm" variant={tab === "list" ? "secondary" : "ghost"} onClick={() => setTab("list")}>
-            <List className="size-4" />
-            Danh sách
-          </Button>
-          <span className="text-xs text-muted-foreground">{rows.length} trang bị</span>
+        <div className="min-w-0 space-y-0.5">
+          <h1 className="text-xl font-semibold tracking-tight">Trang bị</h1>
+          <p className="text-sm text-muted-foreground">{rows.length} trang bị · sơ đồ shop và danh sách</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border p-0.5" role="group" aria-label="Kiểu xem trang bị">
+            <Button
+              size="sm"
+              className="h-7"
+              variant={tab === "shop" ? "secondary" : "ghost"}
+              aria-pressed={tab === "shop"}
+              onClick={() => setTab("shop")}
+            >
+              <GitBranch className="size-4" />
+              Sơ đồ shop
+            </Button>
+            <Button
+              size="sm"
+              className="h-7"
+              variant={tab === "list" ? "secondary" : "ghost"}
+              aria-pressed={tab === "list"}
+              onClick={() => setTab("list")}
+            >
+              <List className="size-4" />
+              Danh sách
+            </Button>
+          </div>
           {canWrite && (
             <>
               <Button

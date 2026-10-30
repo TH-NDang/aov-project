@@ -2,15 +2,7 @@ import { useMemo } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import {
-  ArrowUpRight,
-  CalendarClock,
-  ChevronRight,
-  History,
-  ScrollText,
-  ShieldAlert,
-  type LucideIcon,
-} from "lucide-react"
+import { ArrowUpRight, CalendarClock, ChevronRight, ScrollText, ShieldAlert, type LucideIcon } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@aov/ui/components/card"
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@aov/ui/components/chart"
@@ -29,8 +21,7 @@ import { Progress } from "@aov/ui/components/progress"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Page, PageHeader } from "@/components/page-header"
 import { NAV_ICONS } from "@/app/aov-nav-icon"
-import { useAudit } from "@/lib/queries"
-import { formatNumber, formatRelative } from "@/lib/text"
+import { formatNumber } from "@/lib/text"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { createPublishingApi } from "../publishing/publishing-api"
@@ -114,7 +105,6 @@ export function DashboardPage() {
     enabled: canReadHeroes,
     staleTime: 60000,
   })
-  const audit = useAudit()
 
   const itemStats = useMemo(() => {
     const items = catalog.data
@@ -386,42 +376,6 @@ export function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Hoạt động gần đây</CardTitle>
-          <CardDescription>Nhật ký thao tác quản trị (audit).</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {audit.data?.length ? (
-            <ol className="grid gap-x-6 gap-y-3 md:grid-cols-2">
-              {audit.data.slice(0, 8).map((entry) => (
-                <li key={entry.id} className="flex items-start gap-3 text-sm">
-                  <History className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate">
-                      <span className="font-medium">{entry.action}</span> · {entry.label}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{formatRelative(entry.at)}</p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <Empty className="p-6">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <History />
-                </EmptyMedia>
-                <EmptyTitle>Chưa có thao tác nào</EmptyTitle>
-                <EmptyDescription>
-                  Mọi lần lưu tướng, trang phục, portrait, trang bị, phù hiệu sẽ hiện ở đây.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          )}
-        </CardContent>
-      </Card>
     </Page>
   )
 }

@@ -291,7 +291,7 @@ export function ImageManagementPage() {
       />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <label className="flex items-center gap-2 text-sm">
-          Loại ảnh
+          <span className="whitespace-nowrap">Loại ảnh</span>
           <select
             className={control}
             value={type}
