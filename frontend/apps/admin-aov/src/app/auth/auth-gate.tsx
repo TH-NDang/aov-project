@@ -1,6 +1,7 @@
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
+import { AovMark, AovWordmark } from "@aov/ui/components/aov-brand"
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@aov/ui/components/dialog"
 import { ArrowUpRight, Eye, EyeOff, LoaderCircle } from "lucide-react"
 import {
@@ -60,7 +61,10 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return (
     <main className="flex min-h-svh items-center justify-center bg-background p-6 text-foreground">
       <section className="w-full max-w-md space-y-5 rounded-2xl border bg-card p-8 shadow-sm" aria-live="polite">
-        <div className="text-sm font-semibold text-muted-foreground">AOV Admin</div>
+        <div className="flex items-center gap-2.5">
+          <AovMark className="size-9" />
+          <AovWordmark product="Admin" className="text-xl" />
+        </div>
         <h1 className="text-2xl font-semibold">
           {session.status === "loading" ? "Đang xác nhận phiên đăng nhập…" : "Đăng nhập quản trị"}
         </h1>
@@ -85,8 +89,9 @@ export function AuthGate({ children }: { children: ReactNode }) {
           showCloseButton={!busy}
           className="max-h-[calc(100svh-2rem)] overflow-y-auto gap-0 rounded-3xl border-white/10 bg-[#1b1b20] px-6 py-10 text-[#eeedf2] sm:max-w-[440px] sm:px-9"
         >
-          <div className="mb-7 text-center text-3xl font-extrabold italic tracking-tighter">
-            AOV<span className="ml-1.5 font-semibold text-[#e7bd7a]">WiKi</span>
+          <div className="mb-7 flex items-center justify-center gap-3">
+            <AovMark className="size-11" />
+            <AovWordmark product="Admin" className="text-3xl" />
           </div>
           <DialogTitle className="text-center text-2xl">Đăng nhập tài khoản</DialogTitle>
           <DialogDescription className="mt-3 text-center leading-relaxed text-[#aaa6b5]">
