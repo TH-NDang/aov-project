@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Archive, Gem, GitBranch, Languages, LayoutGrid, ListOrdered, Plus, Sparkles, Zap } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Skeleton } from "@aov/ui/components/skeleton"
-import { cn } from "@aov/ui/lib/utils"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
@@ -12,7 +12,6 @@ import { SearchField } from "@/components/search-field"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { matchesQuery } from "@/lib/text"
-import { control } from "../publishing/fields"
 import { useWarehouseCatalog, warehouseApi, warehouseKeys, invalidateWarehouseCatalogs } from "./warehouse-api"
 import { WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
 import { EnchantmentBranches } from "./enchantment-branches"
@@ -21,6 +20,7 @@ import { enchantmentBranchColor } from "./enchantment-colors"
 import { useWarehouseScope, WarehouseScopeControls } from "./warehouse-scope"
 import { availabilityLabels, SpellCollection } from "./spell-cards"
 import { ArcanaCollection } from "./arcana-cards"
+import { ArcanaFilters } from "./arcana-filters"
 import {
   warehouseText,
   type ArcanaContent,
@@ -46,8 +46,6 @@ const permissionNames: Record<SecondaryKind, string> = {
   arcana: "arcana",
   spells: "spell",
 }
-const colorLabels = { RED: "Đỏ", PURPLE: "Tím", GREEN: "Xanh" }
-const colorStyles = { RED: "bg-rose-500", PURPLE: "bg-violet-500", GREEN: "bg-emerald-500" }
 const spellAvailabilityFilters = ["REMOVED"] as const
 
 export function BackendEnchantmentsPage() {
@@ -84,6 +82,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
   const [color, setColor] = useSearchParam("color")
   const [tier, setTier] = useSearchParam("tier")
   const [stat, setStat] = useSearchParam("stat")
+  const [, setSearchParams] = useSearchParams()
   const [availabilityParam, setAvailability] = useSearchParam("availability")
   const availability = spellAvailabilityFilters.find((value) => value === availabilityParam) ?? ""
 
@@ -106,17 +105,13 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       : (scopedRecords.find((entry) => entry.id === selectedId || entry.code === selectedId) ??
         records.find((entry) => entry.id === selectedId || entry.code === selectedId))
   const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action() })
-  const visible = scopedRecords
+  const candidates = scopedRecords
     .filter((entry) => {
       const text = warehouseText(entry.content.translations, context.locale)
       if (!matchesQuery(context.search, entry.code, text?.name, text?.summary, text?.description)) return false
       if (kind === "arcana") {
         const content = entry.content as ArcanaContent
-        return (
-          (!color || content.color === color) &&
-          (!tier || content.tier === Number(tier)) &&
-          (!stat || content.stats.some((entry) => entry.key === stat))
-        )
+        return (!color || content.color === color) && (!tier || content.tier === Number(tier))
       }
       if (kind === "spells") return !availability || (entry.content as SpellContent).availability === availability
       return true
@@ -127,9 +122,24 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
           a.code.localeCompare(b.code)
         : a.code.localeCompare(b.code),
     )
-  const statOptions = [
-    ...new Set(records.flatMap((entry) => (entry.content as ArcanaContent).stats?.map((entry) => entry.key) ?? [])),
-  ].sort()
+  const statOptions =
+    kind === "arcana"
+      ? [...new Set(candidates.flatMap((entry) => (entry.content as ArcanaContent).stats.map((stat) => stat.key)))]
+      : []
+  const activeStat = statOptions.includes(stat) ? stat : ""
+  const visible =
+    kind === "arcana" && activeStat
+      ? candidates.filter((entry) => (entry.content as ArcanaContent).stats.some((stat) => stat.key === activeStat))
+      : candidates
+  const statOptionsReady =
+    !!context.rulesetId &&
+    context.rulesets.isSuccess &&
+    (scoped ? scopedCatalog.isSuccess && !scopedCatalog.isFetching : catalog.isSuccess && !catalog.isFetching)
+
+  useEffect(() => {
+    if (kind === "arcana" && statOptionsReady && stat && !activeStat) setStat(null)
+  }, [kind, statOptionsReady, stat, activeStat, setStat])
+
   function open(entry: SecondaryEntry) {
     setSelectedEntry(entry)
     setSelectedId(entry.id)
@@ -274,59 +284,28 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       )}
       <WarehouseScopeControls scope={scopeState} />
       {kind === "arcana" && (
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap gap-1" role="group" aria-label="Màu ngọc">
-            <Button size="sm" variant={!color ? "secondary" : "ghost"} onClick={() => setColor(null)}>
-              Tất cả màu
-            </Button>
-            {Object.entries(colorLabels).map(([value, label]) => (
-              <Button
-                key={value}
-                size="sm"
-                variant={color === value ? "secondary" : "ghost"}
-                aria-pressed={color === value}
-                onClick={() => setColor(value)}
-              >
-                <span className={cn("size-2 rounded-full", colorStyles[value as keyof typeof colorStyles])} />
-                {label}
-              </Button>
-            ))}
-          </div>
-          <div className="flex flex-wrap gap-1" role="group" aria-label="Bậc ngọc">
-            <Button
-              size="sm"
-              variant={!tier ? "secondary" : "ghost"}
-              aria-pressed={!tier}
-              onClick={() => setTier(null)}
-            >
-              Tất cả bậc
-            </Button>
-            {[3, 2, 1].map((value) => (
-              <Button
-                key={value}
-                size="sm"
-                variant={tier === String(value) ? "secondary" : "ghost"}
-                aria-pressed={tier === String(value)}
-                onClick={() => setTier(String(value))}
-              >
-                Bậc {["I", "II", "III"][value - 1]}
-              </Button>
-            ))}
-          </div>
-          <select
-            aria-label="Lọc chỉ số ngọc"
-            className={cn(control, "w-auto max-w-full sm:max-w-60")}
-            value={stat}
-            onChange={(event) => setStat(event.target.value)}
-          >
-            <option value="">Tất cả chỉ số</option>
-            {statOptions.map((key) => (
-              <option key={key} value={key}>
-                {statLabel(records, key, context.locale)}
-              </option>
-            ))}
-          </select>
-        </div>
+        <ArcanaFilters
+          color={color}
+          tier={tier}
+          stat={activeStat}
+          statDisabled={!statOptionsReady || !statOptions.length}
+          statOptions={statOptions
+            .map((value) => ({ value, label: statLabel(candidates, value, context.locale) }))
+            .sort((a, b) => a.label.localeCompare(b.label, context.locale))}
+          onColorChange={setColor}
+          onTierChange={setTier}
+          onStatChange={setStat}
+          onReset={() =>
+            setSearchParams(
+              (current) => {
+                const next = new URLSearchParams(current)
+                for (const key of ["color", "tier", "stat"]) next.delete(key)
+                return next
+              },
+              { replace: true },
+            )
+          }
+        />
       )}
       {kind === "spells" && (
         <div className="flex flex-wrap gap-1" role="group" aria-label="Lọc khả dụng phụ trợ">
@@ -420,12 +399,12 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
             />
           ) : (
             <ArcanaCollection
-              key={JSON.stringify([context.search, tier])}
+              key={JSON.stringify([context.search, tier, activeStat])}
               records={visible as WarehouseEntry<ArcanaContent>[]}
               locale={context.locale}
               selectedId={selectedId}
               onOpen={open}
-              revealLowerTiers={!!context.search || tier === "1" || tier === "2"}
+              revealLowerTiers={!!context.search || !!activeStat || tier === "1" || tier === "2"}
             />
           )}
         </>
