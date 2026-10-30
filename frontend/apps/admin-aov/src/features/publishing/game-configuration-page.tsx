@@ -372,6 +372,8 @@ function PatchDisclosure({
   useEffect(() => {
     if (selected) setOpen(true)
   }, [selected])
+  // Recorded changes are what editors open a patch for; schedules and data review sit one click away.
+  const [section, setSection] = useState<"changes" | "schedule" | "review">("changes")
   return (
     <div className="overflow-hidden rounded-lg border">
       <button
@@ -396,25 +398,45 @@ function PatchDisclosure({
       </button>
       {open && (
         <div className="border-t">
-          {source && /^https?:\/\//.test(source) && (
-            <a
-              className="m-4 inline-block text-sm text-primary underline"
-              href={source}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Nguồn cập nhật
-            </a>
-          )}
-          <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
-          <details className="m-3 rounded-lg bg-muted/20 p-3">
-            <summary className="cursor-pointer text-sm font-medium">Thiết lập lịch patch theo thị trường</summary>
-            <div className="pt-3">
-              <PatchReleaseForm variant={variant} data={data} />
+          <div className="flex flex-wrap items-center gap-1 px-3 pt-3" aria-label="Phần của patch">
+            {(
+              [
+                ["changes", "Thay đổi"],
+                ["schedule", "Lịch phát hành"],
+                ["review", "Kiểm tra dữ liệu"],
+              ] as const
+            ).map(([key, label]) => (
+              <Button
+                key={key}
+                type="button"
+                size="sm"
+                variant={section === key ? "secondary" : "ghost"}
+                aria-pressed={section === key}
+                className="h-8"
+                onClick={() => setSection(key)}
+              >
+                {label}
+              </Button>
+            ))}
+            {source && /^https?:\/\//.test(source) && (
+              <a className="ml-auto text-sm text-primary underline" href={source} target="_blank" rel="noreferrer">
+                Nguồn cập nhật
+              </a>
+            )}
+          </div>
+          {section === "changes" && <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />}
+          {section === "schedule" && (
+            <div className="space-y-2 pb-3">
+              <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
+              <details className="mx-3 rounded-lg bg-muted/20 p-3">
+                <summary className="cursor-pointer text-sm font-medium">Thiết lập lịch patch theo thị trường</summary>
+                <div className="pt-3">
+                  <PatchReleaseForm variant={variant} data={data} />
+                </div>
+              </details>
             </div>
-          </details>
-          <PatchDataReview variant={variant} />
-          <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />
+          )}
+          {section === "review" && <PatchDataReview variant={variant} />}
         </div>
       )}
     </div>

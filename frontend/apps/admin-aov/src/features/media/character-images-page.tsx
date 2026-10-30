@@ -289,7 +289,7 @@ export function CharacterImagesPage({ role, request = backendRequest }: { role: 
                 </button>
                 <button
                   type="button"
-                  className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1 text-left hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-ring"
+                  className="flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1 text-left hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
                   aria-label={`${row.expanded ? "Thu gọn" : "Mở nhóm ảnh"} ${row.group.name}`}
                   aria-expanded={row.expanded}
                   aria-controls={`hero-images-${role}-${row.group.heroId}`}
@@ -307,13 +307,13 @@ export function CharacterImagesPage({ role, request = backendRequest }: { role: 
                     </span>
                   </span>
                   {row.expanded ? (
-                    <ChevronDown className="size-5 shrink-0 text-muted-foreground" />
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
                   ) : (
-                    <ChevronRight className="size-5 shrink-0 text-muted-foreground" />
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                   )}
                 </button>
-                <div className="hidden max-w-40 shrink-0 sm:block">
-                  <MediaCode value={row.group.code} label="Mã tướng" />
+                <div className="hidden max-w-40 shrink-0 font-mono sm:block">
+                  <MediaCode value={row.group.code} label="Mã tướng" plain />
                 </div>
               </div>
               {row.expanded && (
@@ -324,7 +324,7 @@ export function CharacterImagesPage({ role, request = backendRequest }: { role: 
                       {row.group.revision.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"}
                     </span>
                     <div className="sm:hidden">
-                      <MediaCode value={row.group.code} label="Mã tướng" />
+                      <MediaCode value={row.group.code} label="Mã tướng" plain />
                     </div>
                   </div>
                   {row.heroImages.length > 1 && (

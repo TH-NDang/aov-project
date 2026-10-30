@@ -1,8 +1,15 @@
 import { CopyButton } from "@/components/copy-button"
 
-export function MediaCode({ value, label }: { value: string; label: string }) {
+/** A copyable record code; `plain` drops the chip so it does not read as an input field. */
+export function MediaCode({ value, label, plain = false }: { value: string; label: string; plain?: boolean }) {
   return (
-    <span className="group/code inline-flex min-w-0 max-w-full items-center gap-0.5 rounded-md bg-muted/70 pl-1.5 text-muted-foreground ring-1 ring-border/50 ring-inset">
+    <span
+      className={
+        plain
+          ? "group/code inline-flex min-w-0 max-w-full items-center gap-0.5 text-muted-foreground"
+          : "group/code inline-flex min-w-0 max-w-full items-center gap-0.5 rounded-md bg-muted/70 pl-1.5 text-muted-foreground ring-1 ring-border/50 ring-inset"
+      }
+    >
       <code className="truncate text-[11px] leading-5 font-normal" title={`${label}: ${value}`}>
         <span className="sr-only">{label}: </span>
         {value}
