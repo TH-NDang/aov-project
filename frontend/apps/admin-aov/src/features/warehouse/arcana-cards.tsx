@@ -5,7 +5,6 @@ import { Badge } from "@aov/ui/components/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@aov/ui/components/collapsible"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroAsset } from "../publishing/hero-content"
-import { WarehouseCardHint } from "./warehouse-card-hint"
 import { warehouseName, warehouseText, type ArcanaContent, type WarehouseEntry } from "./warehouse-types"
 const colorStyles = { RED: "bg-rose-500", PURPLE: "bg-violet-500", GREEN: "bg-emerald-500" }
 const gridClass = "grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6"
@@ -98,6 +97,7 @@ function ArcanaCard({
       type="button"
       onClick={onOpen}
       aria-label={`Xem ${warehouseName(entry, locale)}`}
+      title={entry.code}
       className={cn(
         "group flex min-w-0 cursor-pointer flex-col gap-3 rounded-2xl border bg-card p-3 text-left transition-colors hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
         active && "border-primary bg-primary/5",
@@ -117,7 +117,6 @@ function ArcanaCard({
       </div>
       <div className="min-w-0 space-y-1">
         <p className="line-clamp-2 text-sm leading-5 font-medium">{text?.name || entry.code}</p>
-        <p className="truncate font-mono text-[10px] text-muted-foreground">{entry.code}</p>
       </div>
       <dl className="mt-auto space-y-1.5 border-t pt-2">
         {entry.content.stats.map((stat) => (
@@ -132,17 +131,18 @@ function ArcanaCard({
         ))}
         {!entry.content.stats.length && <p className="text-xs text-muted-foreground">Chưa có chỉ số</p>}
       </dl>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {entry.revision.state === "DRAFT" && (
-          <Badge variant="outline" className="w-fit text-[10px]">
-            Nháp
-          </Badge>
-        )}
-        <span className="ml-auto">
-          <CatalogChangeBadges kinds={entry.changeKinds ?? []} />
-          <WarehouseCardHint />
-        </span>
-      </div>
+      {(entry.revision.state === "DRAFT" || entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE")) && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {entry.revision.state === "DRAFT" && (
+            <Badge variant="outline" className="w-fit text-[10px]">
+              Nháp
+            </Badge>
+          )}
+          <span className="ml-auto">
+            <CatalogChangeBadges kinds={entry.changeKinds ?? []} hideBaseline />
+          </span>
+        </div>
+      )}
     </button>
   )
 }

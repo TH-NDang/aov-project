@@ -61,16 +61,17 @@ export function EnchantmentBranches({
                   aria-pressed={branch.code === active}
                   style={{ "--branch-color": enchantmentBranchColor(branch) } as CSSProperties}
                   className={cn(
-                    "relative flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
-                    active === branch.code && "bg-accent/40",
+                    "relative flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-xl px-2.5 text-sm transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
+                    active === branch.code && "bg-accent/40 font-medium",
                   )}
                 >
                   <HeroAsset
                     id={branch.iconAssetId}
                     alt=""
                     frameAspectRatio={1}
-                    className="size-8 rounded-full border-0 bg-transparent"
+                    className="size-7 rounded-full border-0 bg-transparent"
                   />
+                  <span className="whitespace-nowrap">{text?.name ?? branch.code}</span>
                   {active === branch.code && (
                     <span
                       aria-hidden
@@ -171,7 +172,7 @@ export function EnchantmentBranches({
                     </div>
                     <div
                       className={cn(
-                        "grid min-w-0 grid-cols-2 gap-2 @min-[520px]/enchantments:grid-cols-3 @min-[520px]/enchantments:gap-3",
+                        "grid min-w-0 grid-cols-2 gap-2 @min-[520px]/enchantments:grid-cols-3 @min-[820px]/enchantments:grid-cols-4",
                         tierIndex !== tiers.length - 1 && "pb-5",
                       )}
                       aria-label={`Phù hiệu cấp ${["I", "II", "III"][tier - 1]}`}
@@ -187,7 +188,7 @@ export function EnchantmentBranches({
                             aria-label={`Xem ${label?.name ?? entry.code}`}
                             aria-pressed={selected}
                             className={cn(
-                              "group relative flex min-w-0 cursor-pointer flex-col items-center gap-2 rounded-xl border bg-background/50 px-2 py-3 text-center transition-colors outline-none hover:border-[var(--branch-color)] hover:bg-[var(--branch-tint)] focus-visible:ring-2 focus-visible:ring-[var(--branch-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-card @min-[520px]/enchantments:px-3",
+                              "group relative flex min-w-0 cursor-pointer flex-col items-center gap-1.5 rounded-xl border bg-background/50 px-2 py-2.5 text-center transition-colors outline-none hover:border-[var(--branch-color)] hover:bg-[var(--branch-tint)] focus-visible:ring-2 focus-visible:ring-[var(--branch-color)] focus-visible:ring-offset-2 focus-visible:ring-offset-card @min-[520px]/enchantments:px-3",
                               selected ? "border-[var(--branch-color)] bg-[var(--branch-tint)]" : "border-border/60",
                             )}
                           >
@@ -202,12 +203,12 @@ export function EnchantmentBranches({
                                 className="absolute top-2 right-2 size-3.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
                               />
                             )}
-                            <div className="grid size-16 place-items-center rounded-full bg-[radial-gradient(circle,var(--branch-tint),transparent_70%)]">
+                            <div className="grid size-12 place-items-center rounded-full bg-[radial-gradient(circle,var(--branch-tint),transparent_70%)]">
                               <HeroAsset
                                 id={entry.content.iconAssetId}
                                 alt=""
                                 frameAspectRatio={1}
-                                className="size-14 rounded-full border-0 bg-transparent transition-transform group-hover:scale-105 motion-reduce:transform-none"
+                                className="size-11 rounded-full border-0 bg-transparent transition-transform group-hover:scale-105 motion-reduce:transform-none"
                               />
                             </div>
                             <span className="line-clamp-2 text-sm leading-5 font-semibold">
@@ -218,14 +219,15 @@ export function EnchantmentBranches({
                                 {label.summary}
                               </span>
                             )}
-                            {(entry.revision.state === "DRAFT" || !!entry.changeKinds?.length) && (
+                            {(entry.revision.state === "DRAFT" ||
+                              !!entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE")) && (
                               <div className="mt-auto flex w-full flex-wrap items-center justify-center gap-1 border-t border-border/50 pt-2">
                                 {entry.revision.state === "DRAFT" && (
                                   <Badge variant="outline" className="text-[10px]">
                                     Nháp
                                   </Badge>
                                 )}
-                                <CatalogChangeBadges kinds={entry.changeKinds ?? []} />
+                                <CatalogChangeBadges kinds={entry.changeKinds ?? []} hideBaseline />
                               </div>
                             )}
                           </button>
