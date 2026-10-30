@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, ImageIcon, Plus, RefreshCw } from "lucide-react"
+import { ArrowUpRight, ImageIcon, LayoutGrid, List, Plus, RefreshCw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -22,7 +22,7 @@ import { MediaSourceStatus } from "./media-source-status"
 import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
 import type { MediaSourceTarget } from "./bulk-media-sources"
 import { creditHttpUrl, currentMediaSources, needsMediaCredit, type MediaSourceInput } from "@aov/ui/lib/media-credit"
-import { Link } from "react-router"
+import { Link, useSearchParams } from "react-router"
 
 const types: Record<string, string> = {
   USER_AVATAR: "Avatar người dùng",
@@ -106,6 +106,8 @@ export function ImageManagementPage() {
   const [upgrading, setUpgrading] = useState(false)
   const [upgradeError, setUpgradeError] = useState("")
   const wide = useIsWide()
+  const [params, setParams] = useSearchParams()
+  const grid = params.get("view") === "grid"
   const writable = useSession().actor?.capabilities.includes("media:write")
   const cache = useQueryClient()
   const assets = useInfiniteQuery({
@@ -207,12 +209,12 @@ export function ImageManagementPage() {
         }),
         helper.accessor("state", {
           header: "Trạng thái",
-          cell: ({ getValue }) => <Badge variant="secondary">{states[getValue()] ?? getValue()}</Badge>,
-        }),
-        helper.display({
-          id: "ready",
-          header: "Nội dung",
-          cell: ({ row }) => (row.original.currentVersionId ? "Đã có ảnh" : "Chưa hoàn tất upload"),
+          cell: ({ row, getValue }) =>
+            row.original.currentVersionId ? (
+              <Badge variant="secondary">{states[getValue()] ?? getValue()}</Badge>
+            ) : (
+              <Badge variant="outline">Chưa hoàn tất upload</Badge>
+            ),
         }),
         helper.display({
           id: "source",
@@ -228,8 +230,12 @@ export function ImageManagementPage() {
             </button>
           ),
         }),
-        helper.accessor("createdAt", { header: "Ngày tạo", cell: ({ getValue }) => date(getValue()) }),
-        helper.accessor("updatedAt", { header: "Cập nhật", cell: ({ getValue }) => date(getValue()) }),
+        helper.accessor("updatedAt", {
+          header: "Cập nhật",
+          cell: ({ row, getValue }) => (
+            <span title={`Tạo lúc ${date(row.original.createdAt)}`}>{date(getValue())}</span>
+          ),
+        }),
       ]),
     [],
   )
@@ -314,11 +320,42 @@ export function ImageManagementPage() {
           />
           Chỉ ảnh thiếu nguồn hoặc credit
         </label>
-        <span className="text-sm text-muted-foreground" role="status">
+        <span className="ml-auto text-sm text-muted-foreground" role="status">
           {assets.isPending ? "Đang tải ảnh…" : `Đã tải ${rows.length} / ${total} ảnh`}
         </span>
+        <div className="inline-flex rounded-lg border p-0.5" role="group" aria-label="Kiểu xem ảnh">
+          {(
+            [
+              [false, List, "Bảng"],
+              [true, LayoutGrid, "Lưới"],
+            ] as const
+          ).map(([isGrid, Icon, label]) => (
+            <Button
+              key={label}
+              type="button"
+              size="sm"
+              variant={grid === isGrid ? "secondary" : "ghost"}
+              aria-pressed={grid === isGrid}
+              className="h-7 gap-1.5 px-2"
+              onClick={() =>
+                setParams(
+                  (current) => {
+                    const next = new URLSearchParams(current)
+                    if (isGrid) next.set("view", "grid")
+                    else next.delete("view")
+                    return next
+                  },
+                  { replace: true, preventScrollReset: true },
+                )
+              }
+            >
+              <Icon className="size-4" />
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
-      {writable && (
+      {writable && marked.size > 0 && (
         <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-sm">
           <div className="text-sm">
             <p className="font-medium" role="status">
@@ -353,8 +390,48 @@ export function ImageManagementPage() {
           </Button>
         </div>
       )}
-      <div className="overflow-x-auto rounded-xl border bg-card">
-        <table className="w-full min-w-[850px] text-left text-sm">
+      {grid && (
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6" aria-label="Lưới ảnh">
+          {rows.map((row) => (
+            <li
+              key={row.id}
+              className={`group relative overflow-hidden rounded-xl border bg-card ${marked.has(row.id) ? "ring-2 ring-primary" : ""}`}
+            >
+              <button
+                type="button"
+                className="block w-full text-left"
+                aria-label={`Xem ảnh ${row.id}`}
+                onClick={() => setSelected(row.id)}
+              >
+                <span className="flex aspect-square items-center justify-center bg-muted/40 p-2">
+                  {row.currentUrl ? (
+                    <img src={row.currentUrl} alt="" className="max-h-full max-w-full object-contain" loading="lazy" />
+                  ) : (
+                    <ImageIcon className="size-6 text-muted-foreground" />
+                  )}
+                </span>
+                <span className="block space-y-1 p-2">
+                  <span className="block truncate text-xs font-medium">
+                    {types[row.semanticType] ?? row.semanticType}
+                  </span>
+                  <MediaSourceStatus sources={row.sources} versionId={row.currentVersionId} />
+                </span>
+              </button>
+              {writable && canSelect(row) && (
+                <input
+                  type="checkbox"
+                  className="absolute top-2 left-2 size-4 accent-primary"
+                  aria-label={`Chọn ảnh ${row.id} trong lưới`}
+                  checked={marked.has(row.id)}
+                  onChange={() => toggleRow(row)}
+                />
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className={`overflow-x-auto rounded-xl border bg-card ${grid ? "hidden" : ""}`}>
+        <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-muted/50">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>

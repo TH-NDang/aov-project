@@ -153,7 +153,7 @@ test("bulk media selection survives scrolling, resets on filtering and applies s
       type.value = "OTHER"
       type.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
     })
-    await waitFor(() => document.body.textContent!.includes("Đã chọn 0 ảnh") && !!checkbox("Chọn ảnh bulk-2"))
+    await waitFor(() => !document.body.textContent!.includes("Đã chọn") && !!checkbox("Chọn ảnh bulk-2"))
     const sourceFilter = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!
     await click(sourceFilter)
     await waitFor(() => document.body.textContent!.includes("/ 21 ảnh"))
@@ -179,7 +179,8 @@ test("bulk media selection survives scrolling, resets on filtering and applies s
     assert.equal(writes.filter((write) => write.id === "bulk-3").length, 2)
     await click(button("Đóng", document.querySelector('[role="dialog"]')!))
     await waitFor(() => !document.querySelector('[role="dialog"]'))
-    assert.match(document.body.textContent!, /Đã chọn 0 ảnh/)
+    // The selection bar only shows while images are selected.
+    assert.doesNotMatch(document.body.textContent!, /Đã chọn/)
     assert.equal(checkbox("Chọn ảnh bulk-2"), null)
     assert.equal(checkbox("Chọn ảnh bulk-3"), null)
   } finally {
