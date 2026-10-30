@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
+import { aovMarkUrl } from "@aov/ui/lib/brand"
+import { AovMark, AovWordmark } from "@aov/ui/components/aov-brand"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import {
   DropdownMenu,
@@ -47,20 +49,11 @@ const SECTION_ROW =
 const MOBILE_ROUND =
   "max-[640px]:size-7 max-[640px]:border max-[640px]:border-white/25 max-[640px]:bg-transparent max-[640px]:text-white"
 
-/** AOVWiKi logotype. Plain strings, not cn(): tailwind-merge would treat the font family and weight as conflicting. */
 function Wordmark({ size = "lg" }: { size?: "lg" | "sm" }) {
-  const lg = size === "lg"
-  const box = lg
-    ? "gap-0.5 text-[20px] tracking-[-1.2px] max-[640px]:text-[18px]"
-    : "gap-px text-[15px] tracking-[-0.6px]"
-  const underline = lg
-    ? "relative after:absolute after:-bottom-[5px] after:inset-x-0 after:h-[3px] after:-skew-x-[25deg] after:bg-amber-accent after:content-['']"
-    : undefined
   return (
-    <span className={`inline-flex items-baseline font-wordmark leading-none font-black text-[#f5eee0] italic ${box}`}>
-      <span className={underline}>AOV</span>
-      <span className="font-['Segoe_UI',sans-serif] font-[650] tracking-[-1px] text-gold">WiKi</span>
-    </span>
+    <AovWordmark
+      className={cn("text-[#f5eee0]", size === "lg" ? "text-[22px] max-[640px]:text-[18px]" : "text-[16px]")}
+    />
   )
 }
 
@@ -83,7 +76,7 @@ const SECTIONS: Section[] = [
     name: <Wordmark size="sm" />,
     label: "AOV WiKi",
     description: "Tra cứu tướng, trang bị, phù hiệu",
-    image: "/images/mole-logo-v4.png",
+    image: aovMarkUrl,
     href: "/",
   },
   {
@@ -101,7 +94,7 @@ function SectionIcon({ section }: { section: Section }) {
   if (section.image) {
     return (
       <img
-        className="size-9 shrink-0 rounded-[9px] border border-[#efc78466] bg-[#bd843f] object-cover"
+        className="size-9 shrink-0 rounded-[9px] border border-[#c9a86a33] bg-[#18181b] object-contain p-1.5"
         src={section.image}
         alt=""
         width="36"
@@ -448,22 +441,13 @@ export function WikiHeader({
           )}
         >
           <a className="group shrink-0 rounded-[9px]" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
-            <img
-              className="block size-7 rounded-[8px] border border-[#efc78480] bg-[#bd843f] object-cover transition-transform duration-200 group-hover:-translate-y-px group-hover:-rotate-4 max-[640px]:size-6 max-[640px]:rounded-[7px]"
-              src="/images/mole-logo-v4.png"
-              alt=""
-              width="28"
-              height="28"
+            <AovMark
+              className="block size-8 transition-opacity group-hover:opacity-80 max-[640px]:size-7"
               fetchPriority="high"
             />
           </a>
           <div className="flex items-center gap-0.5">
-            <a
-              className="inline-flex shrink-0 pt-0.5 pr-1 pb-1.5 no-underline"
-              href={href("/")}
-              tabIndex={-1}
-              aria-hidden="true"
-            >
+            <a className="inline-flex shrink-0 pr-1 no-underline" href={href("/")} tabIndex={-1} aria-hidden="true">
               <Wordmark />
             </a>
             <SectionSelector />

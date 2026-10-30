@@ -1,8 +1,9 @@
 import { BackgroundTaskStatus } from "./background-task-status"
 import { Link, useLocation } from "react-router"
 import { useEffect, useState } from "react"
-import { BookOpenText, ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react"
+import { ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { AovMark, AovWordmark } from "@aov/ui/components/aov-brand"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@aov/ui/components/collapsible"
 import {
@@ -114,11 +115,12 @@ export function AppSidebar() {
                   <TooltipTrigger asChild>
                     <Button
                       size="icon"
-                      className="size-8 shrink-0 rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-none hover:bg-sidebar-primary/85 focus-visible:ring-sidebar-ring"
+                      className="group/brand relative size-8 shrink-0 rounded-lg bg-[#18181b] text-white shadow-none hover:bg-[#18181b]/90 focus-visible:ring-sidebar-ring"
                       onClick={toggleSidebar}
                       aria-label="Mở menu"
                     >
-                      <PanelRightOpen className="size-4" />
+                      <AovMark className="size-6 group-hover/brand:opacity-0 group-focus-visible/brand:opacity-0" />
+                      <PanelRightOpen className="absolute size-4 opacity-0 group-hover/brand:opacity-100 group-focus-visible/brand:opacity-100" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent side="left">Mở menu · Ctrl B</TooltipContent>
@@ -128,13 +130,10 @@ export function AppSidebar() {
               <div className="flex items-center gap-1">
                 <SidebarMenuButton size="lg" asChild tooltip="AOV Admin">
                   <Link to="/" onClick={() => isMobile && setOpenMobile(false)}>
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                      <BookOpenText className="size-4" />
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#18181b]">
+                      <AovMark className="size-6" />
                     </div>
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">AOV Admin</span>
-                      <span className="truncate text-xs text-muted-foreground">Liên Quân Wiki</span>
-                    </div>
+                    <AovWordmark product="Admin" className="flex-1 text-[15px]" />
                   </Link>
                 </SidebarMenuButton>
                 <Button
