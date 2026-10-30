@@ -23,7 +23,6 @@ import { NAV_GROUPS, activeNavItem, isNavActive, type NavItem, type NavSection }
 import { NavIcon } from "@/app/nav-icon"
 import { useAttentionCounts } from "@/lib/use-wiki-index"
 import { UserMenu } from "./user-menu"
-import { HotkeyHelp } from "./hotkey-help"
 import { useSession } from "@/app/auth/auth-gate"
 
 type AttentionCounts = ReturnType<typeof useAttentionCounts>
@@ -172,7 +171,6 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <BackgroundTaskStatus />
-        <HotkeyHelp />
         <UserMenu />
       </SidebarFooter>
       <SidebarRail />

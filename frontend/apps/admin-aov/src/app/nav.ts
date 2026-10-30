@@ -49,12 +49,6 @@ export const NAV_GROUPS: NavGroup[] = [
         capability: "catalog:read",
       },
       {
-        title: "Hồ sơ của tôi",
-        icon: "profile",
-        to: "/profile",
-        description: "Tên hiển thị, avatar và thông tin cá nhân",
-      },
-      {
         title: "Người dùng",
         icon: "users",
         to: "/users",
@@ -189,10 +183,15 @@ export const MEDIA_NAV: NavItem[] = [
   },
 ]
 
-export const NAV_ITEMS = NAV_GROUPS.flatMap((group) => [
-  ...group.items,
-  ...(group.sections ?? []).flatMap((section) => section.items),
-])
+export const NAV_ITEMS: NavItem[] = [
+  ...NAV_GROUPS.flatMap((group) => [...group.items, ...(group.sections ?? []).flatMap((section) => section.items)]),
+  {
+    title: "Hồ sơ của tôi",
+    icon: "profile",
+    to: "/profile",
+    description: "Tên hiển thị, avatar và thông tin cá nhân",
+  },
+]
 
 function navPathMatches(path: string, pathname: string) {
   return path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(path + "/")
