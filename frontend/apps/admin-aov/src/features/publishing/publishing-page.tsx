@@ -8,12 +8,15 @@ import {
   CheckCircle2,
   FileUp,
   GitCompareArrows,
+  ImageIcon,
   Languages,
   Layers,
   MoreHorizontal,
   Plus,
   Save,
   Settings2,
+  Sparkles,
+  Swords,
   X,
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -445,29 +448,45 @@ export function PublishingWorkspace({
               </DropdownMenu>
             </div>
           </div>
-          <div className="flex gap-1 overflow-x-auto border-b" role="tablist" aria-label="Không gian quản lý tướng">
+          {/* One tab row: the hero's content sections, then translations, history and patch data. */}
+          <div className="flex gap-0.5 overflow-x-auto border-b" role="tablist" aria-label="Không gian quản lý tướng">
             {(
               [
-                ["overview", BookOpen, "Thông tin tướng"],
-                ["translations", Languages, "Bản dịch"],
-                ["history", GitCompareArrows, "Lịch sử & so sánh"],
-                ["patch", Layers, "Theo patch"],
+                ["overview", "overview", BookOpen, "Tổng quan", null],
+                ["overview", "skills", Swords, "Kỹ năng", preview?.content.SKILLS?.skills.length ?? null],
+                ["overview", "skins", Sparkles, "Trang phục", preview?.content.SKINS?.skins.length ?? null],
+                ["overview", "media", ImageIcon, "Ảnh", null],
+                ["translations", null, Languages, "Bản dịch", null],
+                ["history", null, GitCompareArrows, "Lịch sử", null],
+                ["patch", null, Layers, "Theo patch", null],
               ] as const
-            ).map(([key, Icon, label]) => (
-              <Button
-                key={key}
-                role="tab"
-                aria-selected={view === key}
-                aria-controls={`workspace-${key}`}
-                disabled={busy}
-                variant="ghost"
-                className={`shrink-0 rounded-b-none border-b-2 ${view === key ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
-                onClick={() => switchView(key)}
-              >
-                <Icon className="size-4" />
-                {label}
-              </Button>
-            ))}
+            ).map(([key, contentTab, Icon, label, count]) => {
+              const selected = view === key && (!contentTab || location.tab === contentTab)
+              return (
+                <Button
+                  key={contentTab ?? key}
+                  role="tab"
+                  aria-selected={selected}
+                  aria-controls={
+                    contentTab && contentTab !== "overview" ? `hero-content-${contentTab}` : `workspace-${key}`
+                  }
+                  disabled={busy}
+                  variant="ghost"
+                  size="sm"
+                  className={`h-9 shrink-0 rounded-b-none border-b-2 px-2.5 ${selected ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
+                  onClick={() => {
+                    if (!contentTab) return switchView(key)
+                    if (busy) return
+                    updateLocation({ view: "overview", tab: contentTab === "overview" ? null : contentTab })
+                    setEditing(false)
+                  }}
+                >
+                  <Icon className="size-4" />
+                  {label}
+                  {count !== null && <span className="text-xs tabular-nums text-muted-foreground">{count}</span>}
+                </Button>
+              )
+            })}
           </div>
         </header>
       )}
@@ -558,6 +577,7 @@ export function PublishingWorkspace({
               <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
                 {view === "overview" && !editing && (
                   <HeroContent
+                    showTabs={false}
                     content={preview.content}
                     locale={locale}
                     editable={!!writable}
