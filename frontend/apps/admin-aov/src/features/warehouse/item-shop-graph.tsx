@@ -12,7 +12,7 @@ import {
   useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core"
-import { Circle, CircleHelp, GripVertical, ImageOff, Link2, PanelRightOpen, Plus } from "lucide-react"
+import { Circle, CircleHelp, GripVertical, ImageOff, Link2, PanelRightOpen } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { ItemCategoryIcon, itemCategoryFallback } from "./item-category-icon"
 import { Button } from "@aov/ui/components/button"
@@ -79,6 +79,9 @@ interface Props {
   onConnect: (from: string, to: string) => void
   onMove: (id: string, positionIndex: number, row: number, column: number) => void
   editable: boolean
+  /** Empty rows added below the group so items can be dropped further down; the page header adds them. */
+  extraRows?: number
+  onExtraRowsChange?: (rows: number) => void
 }
 function GraphCard({
   item,
@@ -269,9 +272,10 @@ export function ItemShopGraph({
   onConnect,
   onMove,
   editable,
+  extraRows: more = 0,
+  onExtraRowsChange: setMore = () => {},
 }: Props) {
   const [variant, setVariant] = useState("")
-  const [more, setMore] = useState(0)
   const [armed, setArmed] = useState<Port | null>(null)
   const [paths, setPaths] = useState<{ key: string; d: string; label: string; to: string; direct: boolean }[]>([])
   const canvas = useRef<HTMLDivElement>(null)
@@ -559,7 +563,11 @@ export function ItemShopGraph({
   return (
     <section className="min-w-0 space-y-3" aria-label="Sơ đồ trang bị">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex min-w-0 flex-1 flex-wrap gap-1" role="group" aria-label="Nhóm trang bị">
+        <div
+          className="flex min-w-0 flex-1 gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none]"
+          role="group"
+          aria-label="Nhóm trang bị"
+        >
           {categories.map((group) => {
             const count = items.filter((item) =>
               item.content.shopPositions.some((position) => position.categoryCode === group.code),
@@ -571,7 +579,7 @@ export function ItemShopGraph({
                 variant={active ? "secondary" : "ghost"}
                 size="sm"
                 aria-pressed={active}
-                className={cn("h-8 gap-1.5", !active && "text-muted-foreground")}
+                className={cn("h-8 shrink-0 gap-1.5", !active && "text-muted-foreground")}
                 onClick={() => {
                   onCategory(group.code)
                   onFocus(null)
@@ -614,12 +622,6 @@ export function ItemShopGraph({
               </option>
             ))}
           </select>
-        )}
-        {editable && (
-          <Button variant="outline" size="sm" className="h-8" onClick={() => setMore((count) => count + 2)}>
-            <Plus className="size-4" />
-            Thêm hàng
-          </Button>
         )}
         <Popover>
           <PopoverTrigger asChild>

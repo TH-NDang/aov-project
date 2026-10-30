@@ -72,6 +72,7 @@ export function BackendItemsPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [creating, setCreating] = useState(false)
+  const [extraRows, setExtraRows] = useState(0)
   const [categoryEditor, setCategoryEditor] = useState<WarehouseMetadata | "new" | null>(null)
   const [name, setName] = useState("")
   const [code, setCode] = useState("")
@@ -225,13 +226,20 @@ export function BackendItemsPage() {
   return (
     <Page className="min-h-0 min-w-0 gap-4" data-item-selection-surface>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0 space-y-0.5">
-          <h1 className="text-xl font-semibold tracking-tight">Trang bị</h1>
-          <p className="text-sm text-muted-foreground">{rows.length} trang bị · sơ đồ shop theo nhóm</p>
-        </div>
+        <h1 className="text-xl font-semibold tracking-tight">Trang bị</h1>
         <div className="flex flex-wrap items-center gap-2">
           {canWrite && (
             <>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                title="Thêm hai hàng trống ở cuối nhóm để kéo trang bị xuống"
+                onClick={() => setExtraRows((rows) => rows + 2)}
+              >
+                <Plus className="size-4" />
+                Thêm hàng
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -320,6 +328,8 @@ export function BackendItemsPage() {
             onCategory={setGroup}
             onSelect={select}
             editable={canWrite && !busy}
+            extraRows={extraRows}
+            onExtraRowsChange={setExtraRows}
             onConnect={connect}
             onMove={(id, index, row, column) => {
               const item = rows.find((item) => item.id === id)!
