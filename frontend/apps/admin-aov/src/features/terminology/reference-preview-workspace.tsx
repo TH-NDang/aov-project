@@ -185,7 +185,7 @@ export function ReferencePreviewWorkspace({ onLocaleChange, context, onContextCh
             className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-card"
           >
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-3 py-1 @xl/preview:min-h-12 @xl/preview:py-2">
-              <h2 className="text-base font-bold">Soạn nội dung thử</h2>
+              <h2 className="type-section-title">Soạn nội dung thử</h2>
               <div className="flex items-center gap-0.5">
                 <Button
                   type="button"
@@ -272,7 +272,7 @@ export function ReferencePreviewWorkspace({ onLocaleChange, context, onContextCh
             className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-card"
           >
             <div className="flex min-h-9 shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-3 py-1 @xl/preview:min-h-12 @xl/preview:py-2">
-              <h2 className="flex items-center gap-2 text-base font-bold">
+              <h2 className="flex items-center gap-2 type-section-title">
                 <Eye aria-hidden className="size-4 text-muted-foreground" />
                 Kết quả hiển thị
               </h2>

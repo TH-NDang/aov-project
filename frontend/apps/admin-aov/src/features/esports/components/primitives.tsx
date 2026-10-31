@@ -194,7 +194,7 @@ export function RegionFlag({ code, withName = true }: { code?: string; withName?
 export function SectionTitle({ children, action, id }: { children: ReactNode; action?: ReactNode; id?: string }) {
   return (
     <div className="flex items-end justify-between gap-3">
-      <h2 id={id} className="text-base font-bold tracking-tight">
+      <h2 id={id} className="tracking-tight type-section-title">
         {children}
       </h2>
       {action}

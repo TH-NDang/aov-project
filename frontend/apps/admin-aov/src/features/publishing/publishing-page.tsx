@@ -848,7 +848,7 @@ export function PublishingWorkspace({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h2 className="text-base font-bold">Quản lý phiên bản</h2>
+                      <h2 className="type-section-title">Quản lý phiên bản</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
                         Bản #{revision.revisionNo} · {STATES[revision.state]} · {CAUSES[revision.cause]}
                       </p>

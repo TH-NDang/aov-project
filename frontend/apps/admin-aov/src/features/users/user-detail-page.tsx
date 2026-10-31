@@ -136,13 +136,13 @@ export function UserDetailPage() {
           </section>
           <div className="min-w-0 space-y-6">
             <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
-              <h2 className="text-base font-bold">Giới thiệu</h2>
+              <h2 className="type-section-title">Giới thiệu</h2>
               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
                 {query.data.biography.trim() || "Người dùng chưa thêm giới thiệu."}
               </p>
             </section>
             <section className="space-y-5 rounded-2xl border bg-card p-5 sm:p-6">
-              <h2 className="text-base font-bold">Thông tin hồ sơ</h2>
+              <h2 className="type-section-title">Thông tin hồ sơ</h2>
               <dl className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
                   <dt className="flex items-center gap-2 text-sm text-muted-foreground">

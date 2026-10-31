@@ -99,7 +99,7 @@ export function UsersPage() {
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
                 <UsersRound aria-hidden className="size-4 text-muted-foreground" />
               </span>
-              <h2 className="truncate text-base font-bold">{term ? "Kết quả tìm kiếm" : "Danh sách hồ sơ"}</h2>
+              <h2 className="truncate type-section-title">{term ? "Kết quả tìm kiếm" : "Danh sách hồ sơ"}</h2>
               {query.data && (
                 <span role="status" className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">
                   {total.toLocaleString("vi-VN")}

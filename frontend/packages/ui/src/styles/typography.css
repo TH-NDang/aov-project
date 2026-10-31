@@ -1,0 +1,30 @@
+/*
+ * Role-based type styles on a 12/14/16/24 reading scale: nothing smaller than 12px, regular weight for reading text,
+ * bold for page and section titles. Use them for titles, labels and meta text instead of picking raw sizes, so a
+ * change to the scale happens here. tests/typography.test.ts in admin-aov rejects text under 12px.
+ */
+@utility type-page-title {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+@utility type-section-title {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  font-weight: 700;
+}
+@utility type-body {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+@utility type-label {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+}
+@utility type-meta {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--muted-foreground);
+}

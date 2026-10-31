@@ -43,7 +43,7 @@
   border-radius: 7px;
   color: var(--muted-foreground);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-icon-button:hover {
   background: var(--muted);
@@ -133,7 +133,7 @@
 .tournament-filter-count {
   margin-left: auto;
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-registry-list {
   display: grid;
@@ -155,7 +155,7 @@
 }
 .tournament-team-group h2 > small {
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
 }
 .tournament-region-badge {
@@ -163,7 +163,7 @@
   min-width: 0;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
 }
 .tournament-region-badge > img {
@@ -182,7 +182,7 @@
   background: var(--muted);
   padding: 2px 4px;
   color: var(--muted-foreground);
-  font-size: 8px;
+  font-size: 12px;
 }
 .tournament-registry-logo {
   position: relative;
@@ -233,7 +233,7 @@
   gap: 6px;
   border-radius: 7px;
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
 }
 .tournament-team-roster-action:hover {
@@ -273,7 +273,7 @@ button.tournament-registry-card:hover,
   background: var(--muted);
   padding: 2px 5px;
   color: var(--primary);
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-registry-card > .tournament-card-edit-hint {
   width: 14px;
@@ -301,7 +301,7 @@ button.tournament-registry-card:hover,
 }
 .tournament-registry-card small {
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-registry-sheet[data-slot="sheet-content"] {
   width: min(520px, 100vw);
@@ -364,7 +364,7 @@ button.tournament-registry-card:hover,
 }
 .tournament-logo-upload-row small {
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
 }
 .tournament-registry-extra {
@@ -399,7 +399,7 @@ button.tournament-registry-card:hover,
   align-items: center;
   gap: 8px;
   color: var(--primary);
-  font-size: 11px;
+  font-size: 12px;
   overflow-wrap: anywhere;
 }
 .tournament-source-popover a > svg {
@@ -407,7 +407,7 @@ button.tournament-registry-card:hover,
 }
 .tournament-source-popover small {
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-empty-context {
   display: flex;
@@ -432,7 +432,7 @@ button.tournament-registry-card:hover,
   border-radius: 5px;
   background: var(--muted);
   padding: 3px 6px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 .tournament-state[data-published="true"] {
@@ -487,7 +487,7 @@ button.tournament-registry-card:hover,
   flex: 1;
   flex-direction: column;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-game-scope > label > span {
   display: flex;
@@ -500,7 +500,7 @@ button.tournament-registry-card:hover,
 }
 .tournament-scope-note {
   flex-basis: 100%;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted-foreground);
   line-height: 1.5;
 }
@@ -509,7 +509,7 @@ button.tournament-registry-card:hover,
   flex-direction: row;
   align-items: center;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-scope-unscoped input {
   width: 14px;
@@ -537,7 +537,7 @@ button.tournament-registry-card:hover,
   min-width: 0;
   flex-direction: column;
   gap: 6px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 .tournament-game-metadata a {
@@ -569,7 +569,7 @@ button.tournament-registry-card:hover,
   margin-top: 11px;
   padding-left: 20px;
   list-style: disc;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 .tournament-game-sides {
@@ -603,7 +603,7 @@ button.tournament-registry-card:hover,
 .tournament-side-editor > header > select {
   max-width: 150px;
   margin-left: auto;
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-side-dot {
   width: 7px;
@@ -617,7 +617,7 @@ button.tournament-registry-card:hover,
   gap: 6px;
   margin-top: 14px;
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-ban-grid {
   display: grid;
@@ -630,7 +630,7 @@ button.tournament-registry-card:hover,
   gap: 5px;
   min-height: 68px;
   padding: 7px 4px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-ban-grid .tournament-catalog-trigger > svg {
   display: none;
@@ -658,12 +658,12 @@ button.tournament-registry-card:hover,
   padding-top: 9px;
 }
 .tournament-lane {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--side-color);
 }
 .tournament-roster-row > select {
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-roster-row > .tournament-icon-button {
   min-height: 38px;
@@ -671,7 +671,7 @@ button.tournament-registry-card:hover,
   gap: 3px;
 }
 .tournament-roster-row > .tournament-icon-button > span {
-  font-size: 8px;
+  font-size: 12px;
 }
 .tournament-reference-image {
   display: grid;
@@ -700,7 +700,7 @@ button.tournament-registry-card:hover,
   border-radius: 7px;
   padding: 5px 7px;
   text-align: left;
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   background: var(--background);
 }
@@ -717,7 +717,7 @@ button.tournament-registry-card:hover,
 }
 .tournament-catalog-trigger[data-compact="true"] {
   padding: 4px;
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-picker[data-slot="popover-content"] {
   width: 310px;
@@ -785,7 +785,7 @@ button.tournament-registry-card:hover,
 .tournament-picker-manual small {
   display: block;
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
   margin-top: 3px;
 }
 .tournament-picker-footer {
@@ -797,7 +797,7 @@ button.tournament-registry-card:hover,
 }
 .tournament-picker-footer small {
   flex: 1;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted-foreground);
   line-height: 1.5;
 }
@@ -849,7 +849,7 @@ button.tournament-registry-card:hover,
 }
 .tournament-loadout-section > header > select {
   max-width: 210px;
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-loadout-row {
   display: grid;
@@ -868,7 +868,7 @@ button.tournament-registry-card:hover,
   align-items: center;
   gap: 10px;
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-arcana-totals span {
   display: flex;
@@ -905,7 +905,7 @@ button.tournament-registry-card:hover,
   display: flex;
   flex-direction: column;
   gap: 7px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 .tournament-equipment-add input {
@@ -946,11 +946,11 @@ button.tournament-registry-card:hover,
   padding: 9px;
 }
 .tournament-inventory-slot > span {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 .tournament-inventory-slot > select {
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-equipment-event {
   display: flex;
@@ -972,7 +972,7 @@ button.tournament-registry-card:hover,
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted-foreground);
 }
 .tournament-equipment-event > input {
@@ -1061,7 +1061,7 @@ button.tournament-registry-card:hover,
   .tournament-catalog-trigger {
     gap: 5px;
     padding: 5px;
-    font-size: 10px;
+    font-size: 12px;
   }
   .tournament-ban-grid {
     gap: 5px;

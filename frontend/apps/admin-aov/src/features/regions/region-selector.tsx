@@ -51,7 +51,7 @@ export function RegionSelector() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 max-w-[calc(100vw-1rem)] p-2">
         <div className="px-2 py-2">
-          <h2 className="text-base font-bold">Thị trường dữ liệu</h2>
+          <h2 className="type-section-title">Thị trường dữ liệu</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Dữ liệu hiện tại dành cho Việt Nam. Các thị trường khác sẽ được mở khi sẵn sàng.
           </p>

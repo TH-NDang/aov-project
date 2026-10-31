@@ -123,7 +123,7 @@ export function Scoreboard({
                     size={22}
                     className="rounded-md opacity-50 grayscale"
                   />
-                  <span className="absolute -right-1 -bottom-1 rounded bg-muted px-0.5 text-[8px] font-bold ring-1 ring-card">
+                  <span className="absolute -right-1 -bottom-1 rounded bg-muted px-0.5 text-xs leading-none font-bold ring-1 ring-card">
                     V{use.gameNumber}
                   </span>
                 </span>
