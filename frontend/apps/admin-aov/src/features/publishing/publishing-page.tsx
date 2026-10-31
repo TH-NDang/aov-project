@@ -1,6 +1,6 @@
 import { HeroTimeline } from "./hero-timeline"
 import { useEffect, useRef, useState, type ComponentProps } from "react"
-import { Link, useBeforeUnload, useNavigate, useParams } from "react-router"
+import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft,
@@ -107,9 +107,50 @@ function PublishingFrame({ rulesetId, ...props }: ComponentProps<typeof Page> & 
   )
 }
 
+const heroIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export function PublishingPage({ translationMode = false }: { translationMode?: boolean }) {
   const { heroId = "" } = useParams()
+  if (heroId && !heroIdPattern.test(heroId)) return <HeroCodeRedirect code={heroId} />
   return <PublishingWorkspace key={`${heroId}:${translationMode}`} heroId={heroId} translationMode={translationMode} />
+}
+
+/** Opens `/hero/{code}` links, e.g. `/hero/airi`, by swapping the code for the hero's id. */
+function HeroCodeRedirect({ code }: { code: string }) {
+  const location = useLocation()
+  const lookup = useQuery({
+    queryKey: ["publishing-hero-code", code.toLowerCase()],
+    queryFn: ({ signal }) => api.heroes(0, { q: code }, signal),
+  })
+  const match = lookup.data?.items.find((row) => row.code.toLowerCase() === code.toLowerCase())
+  if (match)
+    return (
+      <Navigate
+        replace
+        to={`${location.pathname.replace(/^\/hero\/[^/]+/, `/hero/${match.id}`)}${location.search}${location.hash}`}
+      />
+    )
+  return (
+    <Page>
+      {lookup.isPending ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Đang tìm tướng “{code}”…
+        </p>
+      ) : (
+        <div role="alert" className="space-y-3 rounded-xl border border-dashed p-8 text-center">
+          <p className="font-medium">
+            {lookup.isError ? errorMessage(lookup.error) : `Không tìm thấy tướng có mã “${code}”.`}
+          </p>
+          <Button variant="outline" asChild>
+            <Link to="/hero">
+              <ArrowLeft className="size-4" />
+              Về danh sách tướng
+            </Link>
+          </Button>
+        </div>
+      )}
+    </Page>
+  )
 }
 
 export function PublishingWorkspace({
