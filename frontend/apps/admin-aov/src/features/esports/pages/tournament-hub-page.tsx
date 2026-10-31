@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
-import { Plus, Trophy, Upload, UserRound, Users } from "lucide-react"
-import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
+import { Plus, Trophy, Upload } from "lucide-react"
+import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
 import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
@@ -97,33 +97,18 @@ function Hub({ access }: { access: Access }) {
           />
         }
         actions={
-          <PageActionsMenu label="Giải đấu: tạo, nhập, đội tuyển và tuyển thủ">
-            {access.canWrite && (
-              <>
-                <DropdownMenuItem onSelect={() => setCreating(true)}>
-                  <Plus />
-                  Tạo giải
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setImporting(true)}>
-                  <Upload />
-                  Nhập dữ liệu
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            )}
-            <DropdownMenuItem asChild>
-              <Link to="/teams">
-                <Users />
-                Đội tuyển
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/players">
-                <UserRound />
-                Tuyển thủ
-              </Link>
-            </DropdownMenuItem>
-          </PageActionsMenu>
+          access.canWrite && (
+            <PageActionsMenu label="Giải đấu: tạo và nhập dữ liệu">
+              <DropdownMenuItem onSelect={() => setCreating(true)}>
+                <Plus />
+                Tạo giải
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setImporting(true)}>
+                <Upload />
+                Nhập dữ liệu
+              </DropdownMenuItem>
+            </PageActionsMenu>
+          )
         }
       />
 
