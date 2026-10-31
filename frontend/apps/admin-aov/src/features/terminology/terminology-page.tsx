@@ -27,6 +27,9 @@ import {
   type RichTextSettings,
 } from "@aov/ui/lib/entity-rich-text"
 import { Button } from "@aov/ui/components/button"
+import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
+import { PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
 import { useBeforeUnload, useSearchParams } from "react-router"
@@ -89,6 +92,7 @@ export function TerminologyPage() {
   const [previewContext, setPreviewContext] = useState<"admin" | "wiki">("admin")
   const [message, setMessage] = useState("")
   const [saving, setSaving] = useState(false)
+  const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
   useEffect(() => {
     if (draft) setMessage("")
   }, [draft])
@@ -201,42 +205,37 @@ export function TerminologyPage() {
     <main className="mx-auto w-full min-w-0 max-w-7xl space-y-4 p-4 md:px-6 md:py-5">
       <fieldset disabled={saving || catalog.settings.isPending} className="contents">
         <header className="min-w-0 space-y-4">
-          <div className="flex items-center justify-between gap-2 sm:gap-3">
-            <h1 className="min-w-0 text-base font-semibold tracking-tight sm:text-xl">Thuật ngữ & tham chiếu</h1>
-            {(view !== "preview" || draft) && (
-              <div className="flex shrink-0 items-center gap-2">
+          <PageHeader
+            title="Thuật ngữ & tham chiếu"
+            search={
+              view === "terms" || view === "references" ? <div ref={setSearchSlot} className="contents" /> : undefined
+            }
+            actions={
+              <PageActionsMenu label="Thêm và tải lại thuật ngữ">
                 {view === "terms" && (
-                  <Button
-                    size="sm"
-                    className="size-9 shrink-0 p-0 sm:w-auto sm:px-3"
-                    aria-label="Thêm thuật ngữ"
-                    title="Thêm thuật ngữ"
-                    disabled={!catalog.canEdit}
-                    onClick={createTerm}
-                  >
-                    <Plus aria-hidden className="size-4" />
-                    <span className="hidden sm:inline">Thêm thuật ngữ</span>
-                  </Button>
+                  <>
+                    <DropdownMenuItem disabled={!catalog.canEdit} onSelect={createTerm}>
+                      <Plus />
+                      Thêm thuật ngữ
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
                 )}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-9 text-muted-foreground"
-                  aria-label="Tải lại thiết lập"
-                  title="Tải lại thiết lập"
+                <DropdownMenuItem
                   disabled={saving}
-                  onClick={async () => {
+                  onSelect={async () => {
                     if (!draft || window.confirm("Bỏ thay đổi và tải lại?")) {
                       setDraft(null)
                       await catalog.settings.refetch()
                     }
                   }}
                 >
-                  <RotateCcw className="size-4" />
-                </Button>
-              </div>
-            )}
-          </div>
+                  <RotateCcw />
+                  Tải lại thiết lập
+                </DropdownMenuItem>
+              </PageActionsMenu>
+            }
+          />
           <Tabs value={view} onValueChange={setView} className="min-w-0 max-w-full">
             <ScrollableTabsList activeValue={view} aria-label="Nội dung thuật ngữ và tham chiếu">
               <TabsTrigger value="terms" className="h-9 gap-2 rounded-lg px-3 text-sm">
@@ -358,6 +357,7 @@ export function TerminologyPage() {
           <ReferenceCatalogTable
             key={view}
             variant={view}
+            searchSlot={searchSlot}
             loading={catalog.settings.isPending || (view === "references" && catalog.catalog.isPending)}
             actions={
               <>

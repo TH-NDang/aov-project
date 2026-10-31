@@ -21,6 +21,7 @@ import {
   Zap,
 } from "lucide-react"
 import { useId, useMemo, useState, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
 import {
@@ -83,6 +84,7 @@ export function ReferenceCatalogTable({
   variant,
   renderAliasAction,
   loading = false,
+  searchSlot,
 }: {
   entities: EntityReference[]
   locale: string
@@ -96,6 +98,8 @@ export function ReferenceCatalogTable({
   variant?: "terms" | "references"
   renderAliasAction?: (entity: EntityReference) => ReactNode
   loading?: boolean
+  /** The page header's search slot; without it the search stays in the toolbar. */
+  searchSlot?: HTMLElement | null
 }) {
   const [search, setSearch] = useState("")
   const [kind, setKind] = useState("all")
@@ -104,6 +108,19 @@ export function ReferenceCatalogTable({
   const [expandedKinds, setExpandedKinds] = useState(false)
   const kindsId = useId()
   const termsOnly = variant ? variant === "terms" : entities.every((entity) => entity.kind === "term")
+  const searchField = (
+    <SearchField
+      placement={searchSlot ? "header" : "inline"}
+      label="Tìm danh mục"
+      placeholder={termsOnly ? "Tìm thuật ngữ…" : "Tìm tham chiếu…"}
+      shortcut
+      value={search}
+      onChange={(value) => {
+        setSearch(value)
+        setPage(0)
+      }}
+    />
+  )
   const kindCounts = useMemo(() => {
     const counts = new Map<EntityReference["kind"], number>()
     for (const entity of entities) counts.set(entity.kind, (counts.get(entity.kind) ?? 0) + 1)
@@ -150,17 +167,7 @@ export function ReferenceCatalogTable({
     >
       <div className="space-y-3 rounded-xl border bg-muted/20 p-3">
         <div className="flex min-w-0 items-center gap-2">
-          <SearchField
-            className="min-w-0 flex-1"
-            label="Tìm danh mục"
-            placeholder={termsOnly ? "Tìm thuật ngữ…" : "Tìm tham chiếu…"}
-            shortcut
-            value={search}
-            onChange={(value) => {
-              setSearch(value)
-              setPage(0)
-            }}
-          />
+          {searchSlot ? createPortal(searchField, searchSlot) : <div className="min-w-0 flex-1">{searchField}</div>}
           {actions}
         </div>
         {!termsOnly && availableKinds.length > 1 && (

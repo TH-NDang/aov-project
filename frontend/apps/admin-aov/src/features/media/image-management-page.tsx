@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
-import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
+import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
@@ -293,29 +293,28 @@ export function ImageManagementPage() {
     <Page>
       <PageHeader
         title="Quản lý ảnh"
-        description="Thư viện ảnh, phiên bản và thông tin nguồn."
         actions={
-          <>
+          <PageActionsMenu label="Thêm ảnh và tùy chọn thư viện">
             {writable && (
               <>
-                <Button asChild variant="ghost" size="icon" className="size-9">
-                  <Link to="/media-contact-requests" aria-label="Liên hệ về ảnh" title="Liên hệ về ảnh">
-                    <Mail className="size-4" />
-                  </Link>
-                </Button>
-                <Button size="sm" className="h-9 gap-1.5" onClick={() => setUpload(true)}>
-                  <Plus className="size-4" />
+                <DropdownMenuItem onSelect={() => setUpload(true)}>
+                  <Plus />
                   Thêm ảnh
-                </Button>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/media-contact-requests">
+                    <Mail />
+                    Liên hệ về ảnh
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
               </>
             )}
-            <PageActionsMenu label="Tùy chọn thư viện ảnh">
-              <DropdownMenuItem disabled={assets.isFetching} onSelect={() => void assets.refetch()}>
-                <RefreshCw aria-hidden className={assets.isFetching ? "motion-safe:animate-spin" : undefined} />
-                Làm mới danh sách ảnh
-              </DropdownMenuItem>
-            </PageActionsMenu>
-          </>
+            <DropdownMenuItem disabled={assets.isFetching} onSelect={() => void assets.refetch()}>
+              <RefreshCw aria-hidden className={assets.isFetching ? "motion-safe:animate-spin" : undefined} />
+              Làm mới danh sách ảnh
+            </DropdownMenuItem>
+          </PageActionsMenu>
         }
       />
       <div className="space-y-3" role="region" aria-label="Bộ lọc thư viện ảnh">

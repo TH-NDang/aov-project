@@ -2,6 +2,7 @@ import { Activity, lazy, Suspense, useEffect, useState } from "react"
 import { Navigate, useLocation, useSearchParams } from "react-router"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@aov/ui/components/tabs"
 import { MEDIA_NAV } from "@/app/nav"
+import { PageHeader } from "@/components/page-header"
 import { NavIcon } from "@/app/nav-icon"
 import { MEDIA_TABS, mediaTabLocation, readMediaTab, type MediaTab } from "./media-location"
 import type { Request } from "../publishing/publishing-api"
@@ -15,6 +16,9 @@ export function MediaWorkspace({ request }: { request?: Request }) {
   const [params, setParams] = useSearchParams()
   const selected = readMediaTab(params)
   const [visited, setVisited] = useState<Set<MediaTab>>(() => new Set([selected]))
+  // The active tab renders its search and actions into these header slots.
+  const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
+  const [actionsSlot, setActionsSlot] = useState<HTMLDivElement | null>(null)
   useEffect(
     () => setVisited((current) => (current.has(selected) ? current : new Set([...current, selected]))),
     [selected],
@@ -30,6 +34,12 @@ export function MediaWorkspace({ request }: { request?: Request }) {
       }}
       className="min-h-0 min-w-0 flex-1 gap-0"
     >
+      <PageHeader
+        className="shrink-0 px-4 pt-4 md:px-6 md:pt-5"
+        title="Không gian ảnh"
+        search={<div ref={setSearchSlot} className="contents" />}
+        actions={<div ref={setActionsSlot} className="contents" />}
+      />
       <div className="shrink-0 scrollbar-none overflow-x-auto overflow-y-hidden border-b px-4 pt-2 md:px-6">
         <TabsList variant="line" aria-label="Loại ảnh" className="h-11 min-w-max justify-start">
           {MEDIA_NAV.map((item, index) => (
@@ -57,11 +67,16 @@ export function MediaWorkspace({ request }: { request?: Request }) {
               }
             >
               {tab === "badges" ? (
-                <BadgesPage request={request} />
+                <BadgesPage
+                  request={request}
+                  searchSlot={tab === selected ? searchSlot : null}
+                  actionsSlot={tab === selected ? actionsSlot : null}
+                />
               ) : (
                 <CharacterImagesPage
                   role={tab === "head" ? "HEAD" : tab === "cover" ? "SPLASH" : "PORTRAIT"}
                   request={request}
+                  searchSlot={tab === selected ? searchSlot : null}
                 />
               )}
             </Suspense>

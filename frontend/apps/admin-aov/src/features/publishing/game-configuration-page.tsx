@@ -4,20 +4,16 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router"
 import { CatalogTimeline } from "./catalog-timeline"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronDown, Link2, RefreshCw, MoreHorizontal, Plus } from "lucide-react"
+import { CalendarPlus, ChevronDown, Link2, RefreshCw, Plus } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@aov/ui/components/dropdown-menu"
+import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { MarketSchedule, PatchMarketSchedule, ConfirmRelease } from "./market-schedule"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { Page, PageHeader } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi } from "./publishing-api"
@@ -69,47 +65,39 @@ export function GameConfigurationPage() {
     <Page>
       <PageHeader
         title="Phiên bản và thị trường"
-        description="Mùa, patch và lịch phát hành theo từng thị trường."
         actions={
-          <>
+          <PageActionsMenu label="Tạo và thiết lập phiên bản">
             {capabilities.includes("patch:write") && (
               <>
-                <Button variant="outline" size="sm" onClick={() => setSetup("season")}>
-                  <Plus className="size-4" />
-                  Tạo mùa
-                </Button>
-                <Button size="sm" onClick={() => setSetup("patch")}>
-                  <Plus className="size-4" />
+                <DropdownMenuItem onSelect={() => setSetup("patch")}>
+                  <Plus />
                   Tạo patch
-                </Button>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSetup("season")}>
+                  <CalendarPlus />
+                  Tạo mùa
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
               </>
             )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-8" aria-label="Tùy chọn phiên bản và thị trường">
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onSelect={() => void overview.refetch()}>
-                  <RefreshCw />
-                  Làm mới
+            {capabilities.includes("region:admin") && (
+              <>
+                <DropdownMenuItem onSelect={() => setSetup("assignment")}>
+                  <Link2 />
+                  Gán thị trường vào bộ quy tắc
                 </DropdownMenuItem>
-                {capabilities.includes("region:admin") && (
-                  <>
-                    <DropdownMenuItem onSelect={() => setSetup("assignment")}>
-                      <Link2 />
-                      Gán thị trường vào bộ quy tắc
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => setSetup("ruleset")}>
-                      <Plus />
-                      Tạo bộ quy tắc mới
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
+                <DropdownMenuItem onSelect={() => setSetup("ruleset")}>
+                  <Plus />
+                  Tạo bộ quy tắc mới
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            <DropdownMenuItem onSelect={() => void overview.refetch()}>
+              <RefreshCw />
+              Làm mới
+            </DropdownMenuItem>
+          </PageActionsMenu>
         }
       />
       <Sheet

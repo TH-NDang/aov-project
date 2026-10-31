@@ -196,7 +196,16 @@ function ImageRowsTable({
   )
 }
 
-export function CharacterImagesPage({ role, request = backendRequest }: { role: MediaRole; request?: Request }) {
+export function CharacterImagesPage({
+  role,
+  request = backendRequest,
+  searchSlot,
+}: {
+  role: MediaRole
+  request?: Request
+  /** Header slot of the image workspace; see `ImageContextControls`. */
+  searchSlot?: HTMLElement | null
+}) {
   const context = useImageContext(request)
   const locale = useContentLocale()
   const api = useMemo(() => createCharacterImageApi(request), [request])
@@ -256,9 +265,12 @@ export function CharacterImagesPage({ role, request = backendRequest }: { role: 
   )
   return (
     <Page className="min-h-0 min-w-0 gap-3 overflow-hidden">
-      <div className="shrink-0">
-        <ImageContextControls context={context} placeholder="Tìm tướng hoặc mã tướng…" />
-      </div>
+      <ImageContextControls
+        className="shrink-0"
+        context={context}
+        placeholder="Tìm tướng hoặc mã tướng…"
+        searchSlot={searchSlot}
+      />
       {(images.isError || context.rulesets.isError) && (
         <p role="alert" className="shrink-0 text-sm text-destructive">
           {errorMessage(images.error ?? context.rulesets.error)}

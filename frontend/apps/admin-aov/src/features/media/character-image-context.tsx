@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query"
 import { useSearchParams } from "react-router"
 import { SearchField } from "@/components/search-field"
+import { createPortal } from "react-dom"
+import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { createCharacterImageApi } from "./character-image-api"
 import { control } from "../publishing/fields"
@@ -43,24 +45,38 @@ export function useImageContext(request: Request = backendRequest) {
   }
 }
 
+/**
+ * Search and ruleset controls of an image tab. `searchSlot` places the search in the workspace header: an element
+ * while the tab is active, `null` while it is hidden; leave it out to keep the search in the toolbar.
+ */
 export function ImageContextControls({
   context,
   placeholder,
+  searchSlot,
+  className,
 }: {
   context: ReturnType<typeof useImageContext>
   placeholder: string
+  searchSlot?: HTMLElement | null
+  className?: string
 }) {
+  const search = (
+    <SearchField
+      placement={searchSlot ? "header" : "inline"}
+      className={searchSlot ? undefined : "w-full sm:w-80"}
+      label={placeholder}
+      placeholder={placeholder}
+      shortcut
+      value={context.search}
+      onChange={context.setSearch}
+    />
+  )
+  const rulesetChoice = hasRulesetChoice(context.rulesets.data)
+  if (searchSlot !== undefined && !rulesetChoice) return searchSlot ? createPortal(search, searchSlot) : null
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <SearchField
-        className="w-full sm:w-80"
-        label={placeholder}
-        placeholder={placeholder}
-        shortcut
-        value={context.search}
-        onChange={context.setSearch}
-      />
-      {hasRulesetChoice(context.rulesets.data) && (
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      {searchSlot === undefined ? search : searchSlot && createPortal(search, searchSlot)}
+      {rulesetChoice && (
         <select
           aria-label="Bộ quy tắc"
           className={`${control} h-9 w-auto max-w-52 py-0`}

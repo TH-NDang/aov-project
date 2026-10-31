@@ -73,7 +73,6 @@ export function UsersPage() {
     <Page>
       <PageHeader
         title="Người dùng"
-        description="Tra cứu hồ sơ và thông tin hiển thị của người dùng."
         search={
           canRead ? (
             <SearchField
