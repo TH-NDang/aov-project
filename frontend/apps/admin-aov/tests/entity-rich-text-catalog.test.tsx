@@ -6,7 +6,12 @@ import { JSDOM } from "jsdom"
 import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
+import {
+  fillReferenceInput,
+  referenceInput,
+  referenceInputValue,
+  selectReferenceInput,
+} from "./fixtures/reference-input"
 
 test("catalog lists backend heroes, warehouse items and glossary; filters, mentions and server round-trip work", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
@@ -104,7 +109,9 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     assert.ok(test())
   }
   const button = (name: string) =>
-    [...document.querySelectorAll<HTMLButtonElement>("button")].find((node) => node.textContent?.trim() === name)!
+    [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+      (node) => (node.getAttribute("aria-label") || node.textContent?.trim()) === name,
+    )!
   const fill = async (node: HTMLInputElement, value: string) =>
     act(async () => {
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(node, value)
@@ -218,6 +225,26 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     await act(async () => button("Trang bị").click())
     assert.equal(document.querySelectorAll("tbody tr").length, 1)
     assert.match(document.querySelector("table")!.textContent!, /Kiếm QA/)
+    const language = document.querySelector<HTMLSelectElement>('[aria-label="Ngôn ngữ danh mục"]')!
+    const changeLanguage = async (value: string) => {
+      await act(async () => {
+        language.value = value
+        language.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+      })
+    }
+    await changeLanguage("en-US")
+    assert.match(document.querySelector("table")!.textContent!, /QA Sword/)
+    assert.equal(button("Thiếu bản dịch"), undefined, "Translation filter follows the selected reference kind")
+    await act(async () => button("Tướng").click())
+    assert.match(button("Thiếu bản dịch").textContent!, /2/)
+    await act(async () => button("Thiếu bản dịch").click())
+    assert.equal(document.querySelectorAll("tbody tr").length, 2)
+    await changeLanguage("vi-VN")
+    assert.equal(document.querySelectorAll("tbody tr").length, 0)
+    await act(async () => button("Bỏ bộ lọc").click())
+    assert.ok(document.querySelectorAll("tbody tr").length > 2)
+    assert.equal(button("Tất cả").getAttribute("aria-pressed"), "true")
+    await act(async () => button("Trang bị").click())
     await act(async () => document.querySelector<HTMLButtonElement>("tbody button")!.click())
     const autoItem = [...document.querySelectorAll<HTMLLabelElement>("label")]
       .find((label) => label.textContent?.includes("Tự nhận diện tên trong mô tả"))!
@@ -273,6 +300,27 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     })
     assert.equal(referenceInputValue(previewInput), latestPreview, "Typing retains the latest editable value")
     await waitFor(() => document.querySelector('[data-slot="entity-rich-text"]')?.textContent === latestPreview)
+    await act(async () => selectReferenceInput(previewInput, 0, latestPreview.length))
+    await act(async () => button("Đậm").click())
+    assert.equal(referenceInputValue(previewInput), `<b>${latestPreview}</b>`)
+    await act(async () => button("Xếp dọc").click())
+    assert.equal(referenceInput(document), previewInput, "Layout changes retain the editor and its history")
+    await act(async () => button("Hai cột").click())
+    await act(async () => button("Hoàn tác").click())
+    assert.equal(referenceInputValue(previewInput), latestPreview)
+    await act(async () => button("Làm lại").click())
+    assert.equal(referenceInputValue(previewInput), `<b>${latestPreview}</b>`)
+    await act(async () => button("Xóa nội dung thử").click())
+    assert.equal(referenceInputValue(previewInput), "")
+    await act(async () => button("Khôi phục nội dung").click())
+    assert.equal(referenceInputValue(previewInput), `<b>${latestPreview}</b>`)
+    await act(async () => button("Ví dụ").click())
+    assert.ok(referenceInputValue(previewInput).startsWith(`<b>${latestPreview}</b>\n\n`))
+    await act(async () => button("Wiki").click())
+    assert.equal(button("Wiki").getAttribute("aria-pressed"), "true")
+    await act(async () => button("Chèn tham chiếu").click())
+    assert.match(document.querySelector('[role="listbox"]')!.textContent!, /Airi/)
+    await act(async () => button("Đóng gợi ý").click())
     assert.equal(
       (await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()).version,
       4,
