@@ -3,9 +3,9 @@ import { Link, useSearchParams } from "react-router"
 import type { DocumentView, PlayerContent, TeamContent } from "@aov/community-contracts"
 import { Check, List, Plus, Trash2, Trophy, Upload, UserRound, Users, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { cn } from "@aov/ui/lib/utils"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
+import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { SearchField } from "@/components/search-field"
 import { AccessGate } from "@/features/esports/pages/esports-shell"
@@ -112,31 +112,26 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
           </>
         }
       />
-      <nav className="flex gap-1 border-b" aria-label="Danh mục">
+      <FilterTabs label="Danh mục">
         {(
           [
             { id: "teams", label: "Đội tuyển", icon: Users, count: teams.data?.length },
             { id: "players", label: "Tuyển thủ", icon: UserRound, count: players.data?.length },
           ] as const
         ).map((item) => (
-          <button
+          <FilterTab
             key={item.id}
-            type="button"
-            aria-pressed={tab === item.id}
+            active={tab === item.id}
+            count={item.count}
             onClick={() => {
               setSearch("")
               navigate({ tab: item.id === "teams" ? null : item.id })
             }}
-            className={cn(
-              "-mb-px flex h-10 items-center gap-1.5 border-b-2 px-3 text-sm font-medium",
-              tab === item.id ? "border-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
           >
-            <item.icon size={15} /> {item.label}
-            <small className="text-muted-foreground">{item.count}</small>
-          </button>
+            <item.icon /> {item.label}
+          </FilterTab>
         ))}
-      </nav>
+      </FilterTabs>
       {deleted ? (
         <RecordTrash key={tab} initialKind={tab} actorKey={actorKey} canWrite={canWrite} />
       ) : active.error ? (

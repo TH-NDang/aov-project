@@ -5,6 +5,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { cn } from "@aov/ui/lib/utils"
+import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { HeroAsset } from "../publishing/hero-content"
 import { enchantmentBranchColor } from "./enchantment-colors"
 import { warehouseText, type EnchantmentContent, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
@@ -43,42 +44,31 @@ export function EnchantmentBranches({
       : branches.filter((branch) => branch.code === active)
   return (
     <div className="space-y-5">
-      {scoped && (
-        <Button size="sm" variant={!active ? "secondary" : "ghost"} aria-pressed={!active} onClick={() => onSelect("")}>
-          Tất cả hệ
-        </Button>
-      )}
-      <div className="flex min-w-0 flex-nowrap gap-1" aria-label="Các hệ phù hiệu">
+      <FilterTabs label="Các hệ phù hiệu">
+        {scoped && (
+          <FilterTab active={!active} onClick={() => onSelect("")}>
+            Tất cả hệ
+          </FilterTab>
+        )}
         {branches.map((branch) => {
           const text = warehouseText(branch.translations, locale)
           return (
             <Tooltip key={branch.code} delayDuration={250}>
               <TooltipTrigger asChild>
-                <button
-                  type="button"
+                <FilterTab
+                  active={branch.code === active}
+                  count={records.filter((entry) => entry.content.branchCode === branch.code).length}
                   onClick={() => onSelect(branch.code)}
                   aria-label={text?.name ?? branch.code}
-                  aria-pressed={branch.code === active}
-                  style={{ "--branch-color": enchantmentBranchColor(branch) } as CSSProperties}
-                  className={cn(
-                    "relative flex h-9 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-1.5 text-xs transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
-                    active === branch.code && "bg-accent/40 font-medium",
-                  )}
                 >
                   <HeroAsset
                     id={branch.iconAssetId}
                     alt=""
                     frameAspectRatio={1}
-                    className="size-6 shrink-0 rounded-full border-0 bg-transparent"
+                    className="size-5 shrink-0 rounded-full border-0 bg-transparent"
                   />
-                  <span className="truncate">{text?.name ?? branch.code}</span>
-                  {active === branch.code && (
-                    <span
-                      aria-hidden
-                      className="absolute right-2 bottom-0 left-2 h-0.5 rounded-full bg-[var(--branch-color)]"
-                    />
-                  )}
-                </button>
+                  {text?.name ?? branch.code}
+                </FilterTab>
               </TooltipTrigger>
               <TooltipContent
                 side="top"
@@ -105,7 +95,7 @@ export function EnchantmentBranches({
             </Tooltip>
           )
         })}
-      </div>
+      </FilterTabs>
       {shown.map((branch) => {
         const text = warehouseText(branch.translations, locale)
         const entries = records.filter((entry) => entry.content.branchCode === branch.code)
