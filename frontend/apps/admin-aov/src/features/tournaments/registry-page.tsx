@@ -1,11 +1,10 @@
 import { useState } from "react"
-import { Link, useSearchParams } from "react-router"
+import { Link, Navigate, useSearchParams } from "react-router"
 import type { DocumentView, PlayerContent, TeamContent } from "@aov/community-contracts"
-import { Check, List, Plus, Trash2, Trophy, Upload, UserRound, Users, X } from "lucide-react"
+import { Check, List, Plus, Trash2, Trophy, Upload, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
-import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { SearchField } from "@/components/search-field"
 import { AccessGate } from "@/features/esports/pages/esports-shell"
@@ -19,17 +18,29 @@ import { RegistryImportSheet } from "./registry-import"
 import { tournamentError } from "./tournament-api"
 import "./tournament-styles"
 
-type Tab = "teams" | "players"
-type Editor = { kind: Tab; entry?: DocumentView<TeamContent | PlayerContent> }
+type RegistryKind = "teams" | "players"
+type Editor = { kind: RegistryKind; entry?: DocumentView<TeamContent | PlayerContent> }
 
-/** Shared identities (teams and players) used by every tournament; tournament pages live under /tournaments. */
-export function RegistryPage() {
-  return <AccessGate>{(access) => <Registry canWrite={access.canWrite} actorKey={access.actorKey} />}</AccessGate>
+export function LegacyRegistryRedirect() {
+  const [params] = useSearchParams()
+  const pathname = params.get("tab") === "players" ? "/players" : "/teams"
+  const search = new URLSearchParams(params)
+  search.delete("tab")
+  return <Navigate to={{ pathname, search: search.toString() }} replace />
 }
 
-function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string }) {
+/** Shared identities (teams and players) used by every tournament; tournament pages live under /tournaments. */
+export function RegistryPage({ kind }: { kind: RegistryKind }) {
+  return (
+    <AccessGate>
+      {(access) => <Registry key={kind} kind={kind} canWrite={access.canWrite} actorKey={access.actorKey} />}
+    </AccessGate>
+  )
+}
+
+function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: boolean; actorKey: string }) {
   const [params, setParams] = useSearchParams()
-  const tab: Tab = params.get("tab") === "players" ? "players" : "teams"
+  const title = kind === "teams" ? "Đội tuyển" : "Tuyển thủ"
   const deleted = params.get("state") === "deleted"
   const country = params.get("country") ?? ""
   const [search, setSearch] = useState("")
@@ -49,18 +60,18 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
       }
       return next
     })
-  const active = tab === "teams" ? teams : players
+  const active = kind === "teams" ? teams : players
 
   return (
     <Page className="mx-auto w-full max-w-[1400px]">
       <PageHeader
-        title="Đội & tuyển thủ"
+        title={title}
         search={
           deleted ? undefined : (
             <SearchField
               placement="header"
-              label={tab === "teams" ? "Tìm đội tuyển" : "Tìm tuyển thủ"}
-              placeholder={tab === "teams" ? "Tìm đội tuyển…" : "Tên thi đấu, tên khác…"}
+              label={kind === "teams" ? "Tìm đội tuyển" : "Tìm tuyển thủ"}
+              placeholder={kind === "teams" ? "Tìm đội tuyển…" : "Tên thi đấu, tên khác…"}
               shortcut
               value={search}
               onChange={setSearch}
@@ -79,12 +90,12 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
                 <Trash2 size={14} /> Thùng rác <X size={14} />
               </Button>
             )}
-            <PageActionsMenu label="Đội & tuyển thủ: thêm, nhập và thùng rác">
+            <PageActionsMenu label={`${title}: thêm, nhập và thùng rác`}>
               {canWrite && (
                 <>
-                  <DropdownMenuItem disabled={deleted} onSelect={() => setEditor({ kind: tab })}>
+                  <DropdownMenuItem disabled={deleted} onSelect={() => setEditor({ kind })}>
                     <Plus />
-                    {tab === "teams" ? "Thêm đội" : "Thêm tuyển thủ"}
+                    {kind === "teams" ? "Thêm đội" : "Thêm tuyển thủ"}
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setImporting(true)}>
                     <Upload />
@@ -112,28 +123,8 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
           </>
         }
       />
-      <FilterTabs label="Danh mục">
-        {(
-          [
-            { id: "teams", label: "Đội tuyển", icon: Users, count: teams.data?.length },
-            { id: "players", label: "Tuyển thủ", icon: UserRound, count: players.data?.length },
-          ] as const
-        ).map((item) => (
-          <FilterTab
-            key={item.id}
-            active={tab === item.id}
-            count={item.count}
-            onClick={() => {
-              setSearch("")
-              navigate({ tab: item.id === "teams" ? null : item.id })
-            }}
-          >
-            <item.icon /> {item.label}
-          </FilterTab>
-        ))}
-      </FilterTabs>
       {deleted ? (
-        <RecordTrash key={tab} initialKind={tab} actorKey={actorKey} canWrite={canWrite} />
+        <RecordTrash key={kind} initialKind={kind} actorKey={actorKey} canWrite={canWrite} />
       ) : active.error ? (
         <p role="alert" className="text-sm text-destructive">
           {tournamentError(active.error)}
@@ -142,7 +133,7 @@ function Registry({ canWrite, actorKey }: { canWrite: boolean; actorKey: string 
         <p role="status" className="text-sm text-muted-foreground">
           Đang tải…
         </p>
-      ) : tab === "teams" ? (
+      ) : kind === "teams" ? (
         <TeamRegistry
           teams={teams.data ?? []}
           {...{ country, search, canWrite }}

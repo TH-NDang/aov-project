@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
-import { Plus, Trophy, Upload, Users } from "lucide-react"
+import { Plus, Trophy, Upload, UserRound, Users } from "lucide-react"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
 import { FilterTab, FilterTabs } from "@/components/filter-tabs"
@@ -97,7 +97,7 @@ function Hub({ access }: { access: Access }) {
           />
         }
         actions={
-          <PageActionsMenu label="Giải đấu: tạo, nhập và đội tuyển">
+          <PageActionsMenu label="Giải đấu: tạo, nhập, đội tuyển và tuyển thủ">
             {access.canWrite && (
               <>
                 <DropdownMenuItem onSelect={() => setCreating(true)}>
@@ -112,9 +112,15 @@ function Hub({ access }: { access: Access }) {
               </>
             )}
             <DropdownMenuItem asChild>
-              <Link to="/tournaments/registry">
+              <Link to="/teams">
                 <Users />
-                Đội & tuyển thủ
+                Đội tuyển
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/players">
+                <UserRound />
+                Tuyển thủ
               </Link>
             </DropdownMenuItem>
           </PageActionsMenu>

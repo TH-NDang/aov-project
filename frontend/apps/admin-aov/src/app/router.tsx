@@ -176,10 +176,26 @@ const routes: RouteObject[] = [
           },
           {
             path: "tournaments/registry",
-            handle: title("Đội & tuyển thủ"),
+            handle: { pageTab: false } satisfies RouteHandle,
             lazy: async () => ({
-              Component: (await import("@/features/tournaments/registry-page")).RegistryPage,
+              Component: (await import("@/features/tournaments/registry-page")).LegacyRegistryRedirect,
             }),
+          },
+          {
+            path: "teams",
+            handle: title("Đội tuyển"),
+            lazy: async () => {
+              const { RegistryPage } = await import("@/features/tournaments/registry-page")
+              return { Component: () => <RegistryPage kind="teams" /> }
+            },
+          },
+          {
+            path: "players",
+            handle: title("Tuyển thủ"),
+            lazy: async () => {
+              const { RegistryPage } = await import("@/features/tournaments/registry-page")
+              return { Component: () => <RegistryPage kind="players" /> }
+            },
           },
           {
             path: "tournaments/:tournamentId",
