@@ -290,19 +290,20 @@ test("team regions filter independently from name search", async () => {
       )
     }
     await render(<Host />)
-    assert.equal(document.querySelectorAll(".tournament-registry-card").length, 2)
+    assert.equal(document.querySelectorAll("tbody tr").length, 2)
     await change('[aria-label="Lọc khu vực đội tuyển"]', "TH")
     assert.equal(region, "TH")
-    assert.equal(document.querySelectorAll(".tournament-registry-card").length, 1)
-    assert.match(document.querySelector(".tournament-registry-card")?.textContent ?? "", /Thailand Team/)
+    assert.equal(document.querySelectorAll("tbody tr").length, 1)
+    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Thailand Team/)
     assert.equal(document.querySelectorAll('[aria-label^="Sửa đội"]').length, 0)
   })
 })
 
-test("a full team card opens the existing editor and can be found through its alias", async () => {
+test("team identities open the editor through alias search while roster actions remain separate", async () => {
   await withUi(async ({ render, document }) => {
     const { TeamRegistry } = await import("../src/features/tournaments/team-registry")
     let edited = ""
+    let roster = ""
     await render(
       <TeamRegistry
         teams={[
@@ -329,22 +330,29 @@ test("a full team card opens the existing editor and can be found through its al
         onEdit={(entry) => {
           edited = entry.id
         }}
+        onRoster={(entry) => {
+          roster = entry.id
+        }}
       />,
     )
-    const card = document.querySelector<HTMLButtonElement>(
-      '.tournament-registry-card[aria-label="Sửa đội WANIN FlashWolves"]',
-    )
+    const card = document.querySelector<HTMLButtonElement>('[aria-label="Sửa đội WANIN FlashWolves"]')
     assert.ok(card)
     assert.equal(card.tagName, "BUTTON")
     assert.equal(card.querySelector("button"), null)
     assert.match(card.title, /Flash Wolves/)
-    assert.equal(card.querySelector(".tournament-team-short-name")?.textContent, "FW")
+    assert.match(card.textContent ?? "", /FW/)
     await act(async () => card.click())
     assert.equal(edited, "fw")
+    edited = ""
+    await act(async () =>
+      document.querySelector<HTMLButtonElement>('[aria-label="Đội hình WANIN FlashWolves"]')!.click(),
+    )
+    assert.equal(roster, "fw")
+    assert.equal(edited, "")
   })
 })
 
-test("player cards support alias search, optional photos and country badges without inferring a current team", async () => {
+test("player identities support alias search, optional photos and country badges without inferring a current team", async () => {
   await withUi(async ({ render, document }) => {
     const { PlayerRegistry } = await import("../src/features/tournaments/player-registry")
     let edited = ""
@@ -388,5 +396,99 @@ test("player cards support alias search, optional photos and country badges with
     assert.equal(card.querySelector("button"), null)
     await act(async () => card.click())
     assert.equal(edited, "player")
+  })
+})
+
+test("registry pagination resets for sorting and filters, and empty searches can be cleared without editing", async () => {
+  await withUi(async ({ render, document, change, click }) => {
+    const { PlayerRegistry } = await import("../src/features/tournaments/player-registry")
+    const players = Array.from({ length: 31 }, (_, index) => ({
+      id: `player-${index}`,
+      version: 0,
+      createdAt: "",
+      updatedAt: "",
+      missingFields: [],
+      content: {
+        code: `player-${index}`,
+        nickname: `Player ${String(index).padStart(2, "0")}`,
+        country: index === 30 ? "TH" : "VN",
+        aliases: index === 30 ? ["Tuyển thủ cuối"] : [],
+      },
+    }))
+    function Host({ search }: { search: string }) {
+      const [country, setCountry] = useState("")
+      const [cleared, setCleared] = useState(false)
+      return (
+        <PlayerRegistry
+          players={players}
+          search={cleared ? "" : search}
+          country={country}
+          canWrite={false}
+          onCountryChange={setCountry}
+          onSearchChange={() => setCleared(true)}
+          onEdit={() => assert.fail("Read-only must not edit")}
+        />
+      )
+    }
+    const next = () => act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Trang sau"]')!.click())
+    await render(<Host search="" />)
+    assert.equal(document.querySelectorAll("tbody tr").length, 25)
+    await next()
+    assert.equal(document.querySelectorAll("tbody tr").length, 6)
+    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 25/)
+
+    await change('[aria-label="Sắp xếp tuyển thủ"]', "desc")
+    assert.equal(document.querySelectorAll("tbody tr").length, 25)
+    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 30/)
+    await next()
+    await render(<Host search="tuyen thu cuoi" />)
+    assert.equal(document.querySelectorAll("tbody tr").length, 1)
+    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 30/)
+
+    await change('[aria-label="Lọc quốc gia tuyển thủ"]', "VN")
+    assert.equal(document.querySelectorAll("tbody tr").length, 0)
+    assert.match(document.body.textContent ?? "", /Không tìm thấy tuyển thủ/)
+    await click("Xóa bộ lọc")
+    assert.equal(document.querySelectorAll("tbody tr").length, 25)
+    assert.equal(document.querySelectorAll('[aria-label^="Sửa tuyển thủ"]').length, 0)
+  })
+})
+
+test("tournament list opens the selected record and displays recorded match counts", async () => {
+  await withUi(async ({ render, document }) => {
+    const { TournamentList } = await import("../src/features/tournaments/tournament-list")
+    let opened = ""
+    await render(
+      <TournamentList
+        entries={[
+          {
+            id: "cup",
+            version: 0,
+            createdAt: "",
+            updatedAt: "",
+            missingFields: [],
+            content: {
+              code: "cup",
+              name: "Test Cup",
+              region: "VN",
+              startsOn: "2026-10-01",
+              status: "ONGOING",
+              tier: "A",
+            },
+          },
+        ]}
+        stats={new Map([["cup", { teams: 4, matches: 6, played: 2 }]])}
+        onOpen={(entry) => {
+          opened = entry.id
+        }}
+      />,
+    )
+    const opener = document.querySelector<HTMLButtonElement>('[aria-label="Mở giải Test Cup"]')!
+    assert.ok(opener)
+    assert.match(document.body.textContent ?? "", /Từ 01\/10\/2026/)
+    assert.match(document.body.textContent ?? "", /2\/6 trận đã đấu/)
+    assert.match(document.body.textContent ?? "", /4 đội tham dự/)
+    await act(async () => opener.click())
+    assert.equal(opened, "cup")
   })
 })
