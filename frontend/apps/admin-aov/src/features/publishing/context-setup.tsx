@@ -7,6 +7,7 @@ import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { useIsWide } from "@/hooks/use-media-query"
 import { createPublishingApi } from "./publishing-api"
+import { assignSharedRuleset, defaultRulesetId } from "./default-ruleset"
 import { SeasonSetup } from "./season-setup"
 import { DataLanguage } from "./data-language"
 import { control } from "./fields"
@@ -109,7 +110,7 @@ function CreateRegion({ onDone }: { onDone: () => void }) {
         setBusy(true)
         setError("")
         try {
-          await backendRequest("/admin/regions", {
+          const created = await backendRequest<{ id: string }>("/admin/regions", {
             method: "POST",
             body: JSON.stringify({
               code: data.code,
@@ -120,6 +121,9 @@ function CreateRegion({ onDone }: { onDone: () => void }) {
               available: data.available,
             }),
           })
+          // New markets share the default ruleset; there is no per-market gameplay choice for now.
+          const rulesetId = defaultRulesetId(await createPublishingApi(backendRequest).rulesets())
+          if (rulesetId) await assignSharedRuleset(backendRequest, rulesetId, [created.id])
           await draft.discard()
           onDone()
         } catch (cause) {
