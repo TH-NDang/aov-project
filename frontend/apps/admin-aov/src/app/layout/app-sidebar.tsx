@@ -58,7 +58,7 @@ function NavLink({ item, counts, nested = false }: { item: NavItem; counts: Atte
   )
 }
 
-function WikiSection({ section, counts }: { section: NavSection; counts: AttentionCounts }) {
+function NavigationSection({ section, counts }: { section: NavSection; counts: AttentionCounts }) {
   const { pathname } = useLocation()
   const { state, isMobile } = useSidebar()
   const active = section.items.some((item) => isNavActive(item, pathname))
@@ -78,13 +78,13 @@ function WikiSection({ section, counts }: { section: NavSection; counts: Attenti
   }
 
   return (
-    <Collapsible asChild open={open} onOpenChange={setOpen} className="group/wiki-section">
+    <Collapsible asChild open={open} onOpenChange={setOpen} className="group/nav-section">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
           <SidebarMenuButton className="h-8 gap-2 font-medium [&>svg:first-child]:size-5" tooltip={section.title}>
             <NavIcon item={section} />
             <span>{section.title}</span>
-            <ChevronRight className="ml-auto transition-transform duration-200 ease-out group-data-[state=open]/wiki-section:rotate-90 motion-reduce:transition-none" />
+            <ChevronRight className="ml-auto transition-transform duration-200 ease-out group-data-[state=open]/nav-section:rotate-90 motion-reduce:transition-none" />
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down motion-reduce:animate-none">
@@ -157,11 +157,11 @@ export function AppSidebar() {
           <SidebarGroup key={group.label} className="px-2 py-1">
             <SidebarGroupLabel className="h-6 text-xs tracking-wide uppercase">{group.label}</SidebarGroupLabel>
             <SidebarMenu>
+              {group.sections?.map((section) => (
+                <NavigationSection key={section.title} section={section} counts={counts} />
+              ))}
               {group.items.map((item) => (
                 <NavLink key={item.to} item={item} counts={counts} />
-              ))}
-              {group.sections?.map((section) => (
-                <WikiSection key={section.title} section={section} counts={counts} />
               ))}
             </SidebarMenu>
           </SidebarGroup>

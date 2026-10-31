@@ -140,17 +140,37 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Giải đấu & trực tiếp",
     items: [
       {
-        title: "Giải đấu",
-        icon: "tournaments",
-        to: "/tournaments",
-        description: "Giải, đội, lịch thi đấu",
-      },
-      {
         title: "Livestream",
         icon: "streams",
         to: "/streams",
         description: "Kênh và trạng thái live",
         soon: true,
+      },
+    ],
+    sections: [
+      {
+        title: "Quản lý thi đấu",
+        icon: "competition",
+        items: [
+          {
+            title: "Giải đấu",
+            icon: "tournaments",
+            to: "/tournaments",
+            description: "Giải đấu, lịch thi đấu và kết quả",
+          },
+          {
+            title: "Đội tuyển",
+            icon: "teams",
+            to: "/teams",
+            description: "Hồ sơ đội tuyển và đội hình thi đấu",
+          },
+          {
+            title: "Tuyển thủ",
+            icon: "players",
+            to: "/players",
+            description: "Hồ sơ, tên thi đấu và thông tin tuyển thủ",
+          },
+        ],
       },
     ],
   },

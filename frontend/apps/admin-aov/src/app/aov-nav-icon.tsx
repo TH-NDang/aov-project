@@ -3,6 +3,7 @@ import {
   BookUser,
   CalendarRange,
   CircleUserRound,
+  ClipboardList,
   ContactRound,
   FileText,
   Gem,
@@ -19,7 +20,9 @@ import {
   SquareUserRound,
   Swords,
   Trophy,
+  UserRound,
   Users,
+  UsersRound,
   Zap,
   type LucideIcon,
 } from "lucide-react"
@@ -49,7 +52,10 @@ export const NAV_ICONS = {
   spells: Zap,
   releases: CalendarRange,
   glossary: BookA,
+  competition: ClipboardList,
   tournaments: Trophy,
+  teams: UsersRound,
+  players: UserRound,
   streams: MonitorPlay,
   page: FileText,
 } satisfies Record<string, LucideIcon>
