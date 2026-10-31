@@ -1,6 +1,6 @@
 import { BackgroundTaskStatus } from "./background-task-status"
 import { Link, useLocation } from "react-router"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ChevronRight, PanelRightClose, PanelRightOpen } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { AovMark, AovWordmark } from "@aov/ui/components/aov-brand"
@@ -31,18 +31,58 @@ type AttentionCounts = ReturnType<typeof useAttentionCounts>
 function NavLink({ item, counts, nested = false }: { item: NavItem; counts: AttentionCounts; nested?: boolean }) {
   const { actor } = useSession()
   const { pathname } = useLocation()
-  const { isMobile, setOpenMobile } = useSidebar()
+  const { isMobile, openMobile, setOpenMobile, state } = useSidebar()
+  const linkRef = useRef<HTMLAnchorElement>(null)
+  const active = activeNavItem(pathname)?.to === item.to
+  const allowed = !item.capability || !!actor?.capabilities.includes(item.capability)
   const count = item.badge ? counts[item.badge] : undefined
-  if (item.capability && !actor?.capabilities.includes(item.capability)) return null
+
+  useEffect(() => {
+    const link = linkRef.current
+    const container = link?.closest<HTMLElement>('[data-sidebar="content"]')
+    if (!active || !allowed || !link || !container || (isMobile && !openMobile)) return
+
+    const reveal = () => {
+      if (!link.getClientRects().length || !container.clientHeight) return
+      const itemBounds = link.getBoundingClientRect()
+      const viewport = container.getBoundingClientRect()
+      const top = viewport.top + 8
+      const bottom = viewport.bottom - 8
+
+      // Scroll only the menu, leaving page panels and their saved positions untouched.
+      if (itemBounds.top < top) container.scrollTop += itemBounds.top - top
+      else if (itemBounds.bottom > bottom) container.scrollTop += itemBounds.bottom - bottom
+    }
+    let frame = requestAnimationFrame(reveal)
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(reveal)
+    })
+    observer.observe(container)
+    // Sections change height while opening, including those above the active item.
+    for (const group of container.children) observer.observe(group)
+
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
+  }, [active, allowed, pathname, isMobile, openMobile, state])
+
+  if (!allowed) return null
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
         className="h-8 gap-2 group-data-[collapsible=icon]:h-8! group-data-[collapsible=icon]:p-1! [&>svg]:size-5 data-[active=true]:[&>svg]:text-[var(--aov-icon-accent,#b28b44)]"
-        isActive={activeNavItem(pathname)?.to === item.to}
+        isActive={active}
         tooltip={item.title}
       >
-        <Link to={item.to} className={nested ? "pl-5" : undefined} onClick={() => isMobile && setOpenMobile(false)}>
+        <Link
+          ref={linkRef}
+          to={item.to}
+          className={nested ? "pl-5" : undefined}
+          onClick={() => isMobile && setOpenMobile(false)}
+        >
           <NavIcon item={item} />
           <span>{item.title}</span>
         </Link>
