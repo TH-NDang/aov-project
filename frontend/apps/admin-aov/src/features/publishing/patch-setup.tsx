@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react"
-import { invalidateReferenceCatalog } from "../terminology/reference-api"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
@@ -13,7 +12,6 @@ import type { PageSlice, Region, Ruleset } from "./types"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
-const rulesetDraftSchema = z.object({ code: z.string(), description: z.string() })
 const assignmentDraftSchema = z.object({
   regionId: z.string(),
   rulesetId: z.string(),
@@ -39,13 +37,12 @@ export function PatchSetup({
   regions,
   mode = "all",
   initialRegion = "",
-  onRulesetCreated,
 }: {
   rulesets: Ruleset[]
   regions: Region[]
-  mode?: "all" | "ruleset" | "patch" | "assignment"
+  /** Rulesets are not created here: the wiki runs on one default ruleset (see `default-ruleset.ts`). */
+  mode?: "all" | "patch" | "assignment"
   initialRegion?: string
-  onRulesetCreated?: () => void
 }) {
   const Container = mode === "all" ? Box : SetupPanel
   const queryClient = useQueryClient()
@@ -55,12 +52,6 @@ export function PatchSetup({
     queryKey: ["publishing-patches", page],
     queryFn: () => backendRequest<PageSlice<Patch>>(`/admin/patches?page=${page}&size=20`),
     enabled: mode === "all" || mode === "patch",
-  })
-  const rulesetDraft = useDraftForm({
-    form: "ruleset:create",
-    initialValue: { code: "", description: "" },
-    schema: rulesetDraftSchema,
-    enabled: mode === "all" || mode === "ruleset",
   })
   const assignmentDraft = useDraftForm({
     form: `ruleset:assignment:${initialRegion || "any"}`,
@@ -90,13 +81,11 @@ export function PatchSetup({
     try {
       await action()
       await queryClient.invalidateQueries({ queryKey: ["publishing-rulesets"] })
-      if (mode === "ruleset") await invalidateReferenceCatalog(queryClient)
       await queryClient.invalidateQueries({ queryKey: ["publishing-patches"] })
       if (regionId) await assignments.refetch()
       await queryClient.invalidateQueries({ queryKey: ["publication-overview"] })
       await queryClient.invalidateQueries({ queryKey: ["authoring-contexts"] })
       setMessage(message)
-      if (mode === "ruleset") onRulesetCreated?.()
     } catch (error) {
       setError(errorMessage(error))
     } finally {
@@ -143,11 +132,7 @@ export function PatchSetup({
     </label>
   )
   return (
-    <Container
-      title={
-        mode === "ruleset" ? "Tạo ruleset" : mode === "assignment" ? "Liên kết gameplay" : "Patch và lịch phát hành"
-      }
-    >
+    <Container title={mode === "assignment" ? "Liên kết gameplay" : "Patch và lịch phát hành"}>
       <p className="text-sm text-muted-foreground">
         Nội dung gameplay dùng chung theo ruleset. Mỗi thị trường có lịch mùa và lịch phát hành patch riêng.
       </p>
@@ -164,42 +149,6 @@ export function PatchSetup({
       <fieldset disabled={busy} className="grid gap-5">
         {capabilities.includes("region:admin") && (
           <>
-            {(mode === "all" || mode === "ruleset") && (
-              <form
-                className="space-y-3 rounded-lg border p-4"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const f = rulesetDraft.form.getValues()
-                  void perform(async () => {
-                    await api.send("/admin/rulesets", "POST", f)
-                    await rulesetDraft.draft.discard()
-                  }, "Đã tạo ruleset.")
-                }}
-              >
-                <DraftStatus draft={rulesetDraft.draft} disabled={busy} />
-                {mode === "all" && <h3 className="font-medium">Ruleset</h3>}
-                <label className="grid gap-1 text-sm">
-                  Mã
-                  <input
-                    {...rulesetDraft.form.register("code")}
-                    disabled={!rulesetDraft.draft.ready || rulesetDraft.draft.invalid}
-                    className={control}
-                    required
-                    pattern="[A-Za-z0-9][A-Za-z0-9-]{0,63}"
-                  />
-                </label>
-                <label className="grid gap-1 text-sm">
-                  Mô tả
-                  <textarea
-                    {...rulesetDraft.form.register("description")}
-                    disabled={!rulesetDraft.draft.ready || rulesetDraft.draft.invalid}
-                    className={control}
-                    required
-                  />
-                </label>
-                <Button disabled={!rulesetDraft.draft.ready || rulesetDraft.draft.invalid}>Tạo ruleset</Button>
-              </form>
-            )}
             {(mode === "all" || mode === "assignment") && (
               <form
                 className="space-y-3 rounded-lg border p-4"

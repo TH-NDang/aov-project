@@ -3,8 +3,9 @@ import { SharedPatchSetup, SeasonScheduleForm, PatchReleaseForm } from "./shared
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router"
 import { CatalogTimeline } from "./catalog-timeline"
-import { useQuery } from "@tanstack/react-query"
-import { CalendarPlus, ChevronDown, Link2, RefreshCw, Plus } from "lucide-react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { CalendarPlus, ChevronDown, Link2, RefreshCw, Plus, Shapes } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -17,6 +18,8 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi } from "./publishing-api"
+import { DEFAULT_RULESET_CODE } from "./default-ruleset"
+import { invalidateReferenceCatalog } from "../terminology/reference-api"
 import { SeasonSetup } from "./season-setup"
 import { PatchSetup } from "./patch-setup"
 import { PatchChangesTable } from "./patch-changes-table"
@@ -34,7 +37,7 @@ const api = createPublishingApi(backendRequest)
 export function GameConfigurationPage() {
   const overview = usePublicationOverview()
   const locale = useContentLocale()
-  const [setup, setSetup] = useState<"ruleset" | "season" | "patch" | "assignment" | null>(null)
+  const [setup, setSetup] = useState<"season" | "patch" | "assignment" | null>(null)
   const [marketId, setMarketId] = useState<string | null>(null)
   const wide = useIsWide()
   const capabilities = useSession().actor?.capabilities ?? []
@@ -61,6 +64,24 @@ export function GameConfigurationPage() {
     if (next.seasonId) setExpanded((old) => ({ ...old, [next.seasonId]: true }))
   }
   const data = overview.data
+  const queryClient = useQueryClient()
+  // A new database has no ruleset; the wiki only ever needs the one default ruleset.
+  async function createDefaultRuleset() {
+    try {
+      await api.send("/admin/rulesets", "POST", {
+        code: DEFAULT_RULESET_CODE,
+        description: "Bộ gameplay Liên Quân dùng chung giữa các thị trường.",
+      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["publishing-rulesets"] }),
+        overview.refetch(),
+        invalidateReferenceCatalog(queryClient),
+      ])
+      toast.success("Đã tạo bộ quy tắc mặc định.")
+    } catch (cause) {
+      toast.error(errorMessage(cause))
+    }
+  }
   return (
     <Page>
       <PageHeader
@@ -82,13 +103,15 @@ export function GameConfigurationPage() {
             )}
             {capabilities.includes("region:admin") && (
               <>
+                {data && !data.rulesets.length && (
+                  <DropdownMenuItem onSelect={() => void createDefaultRuleset()}>
+                    <Shapes />
+                    Tạo bộ quy tắc mặc định
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onSelect={() => setSetup("assignment")}>
                   <Link2 />
                   Gán thị trường vào bộ quy tắc
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSetup("ruleset")}>
-                  <Plus />
-                  Tạo bộ quy tắc mới
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
@@ -112,20 +135,12 @@ export function GameConfigurationPage() {
         >
           <SheetHeader>
             <SheetTitle>
-              {setup === "ruleset"
-                ? "Tạo bộ quy tắc mới"
-                : setup === "season"
-                  ? "Tạo mùa"
-                  : setup === "assignment"
-                    ? "Gán thị trường vào bộ quy tắc"
-                    : "Tạo patch"}
+              {setup === "season" ? "Tạo mùa" : setup === "assignment" ? "Gán thị trường vào bộ quy tắc" : "Tạo patch"}
             </SheetTitle>
             <SheetDescription>
               {setup === "season"
                 ? "Tạo mùa dùng chung; thiết lập lịch thị trường sau."
-                : setup === "ruleset"
-                  ? "Chỉ cần khi một thị trường dùng gameplay khác bộ quy tắc mặc định."
-                  : "Dùng chung nội dung gameplay; khai báo lịch phát hành riêng cho mỗi thị trường."}
+                : "Dùng chung nội dung gameplay; khai báo lịch phát hành riêng cho mỗi thị trường."}
             </SheetDescription>
           </SheetHeader>
           <div className="overflow-y-auto px-4 pb-6">
@@ -135,13 +150,7 @@ export function GameConfigurationPage() {
               <SharedPatchSetup onDone={() => setSetup(null)} />
             ) : (
               setup && (
-                <PatchSetup
-                  key={setup}
-                  mode={setup}
-                  rulesets={rulesets.data ?? []}
-                  regions={regions.data ?? []}
-                  onRulesetCreated={() => setSetup(null)}
-                />
+                <PatchSetup key={setup} mode={setup} rulesets={rulesets.data ?? []} regions={regions.data ?? []} />
               )
             )}
             {(rulesets.error || regions.error) && <p role="alert">{errorMessage(rulesets.error || regions.error)}</p>}
