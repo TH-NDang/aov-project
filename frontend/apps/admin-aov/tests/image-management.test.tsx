@@ -15,6 +15,8 @@ test("image management loads on scroll, retries without losing rows and filters 
   const intersections = intersectionHarness()
   const missing = new Set([32, 40, 44])
   const calls: { page: number; needsCredit: boolean; type: string | null }[] = []
+  // One-row requests count the images still missing a source or owner for the reminder above the filters.
+  const reminders: { type: string | null }[] = []
   let failNextPage = true
   const originals = new Map<string, PropertyDescriptor | undefined>()
   const fetcher: typeof fetch = async (input) => {
@@ -30,7 +32,8 @@ test("image management loads on scroll, retries without losing rows and filters 
       const size = Number(url.searchParams.get("size"))
       const needsCredit = url.searchParams.get("needsCredit") === "true"
       const type = url.searchParams.get("semanticType")
-      calls.push({ page, needsCredit, type })
+      if (size === 1) reminders.push({ type })
+      else calls.push({ page, needsCredit, type })
       if (!needsCredit && !type && page === 1 && failNextPage) {
         failNextPage = false
         return Response.json({ detail: "Temporary image listing failure" }, { status: 503 })
@@ -120,6 +123,8 @@ test("image management loads on scroll, retries without losing rows and filters 
     assert.equal(document.querySelector('[aria-label="Chọn tất cả ảnh đã tải"]'), null)
     assert.ok(!document.body.textContent?.includes("Bổ sung nguồn / credit hàng loạt"))
     assert.equal(calls.length, 1)
+    await waitFor(() => /3 ảnh\s*còn thiếu nguồn hoặc chủ sở hữu/.test(document.body.textContent ?? ""))
+    assert.deepEqual(reminders, [{ type: null }])
     assert.ok(
       ![...document.querySelectorAll("button")].some((button) => ["Trước", "Sau"].includes(button.textContent ?? "")),
     )

@@ -5,10 +5,13 @@ export function MediaSourceFields({
   value,
   onChange,
   disabled = false,
+  autoFocusOwner = false,
 }: {
   value: MediaSourceInput
   onChange: (value: MediaSourceInput) => void
   disabled?: boolean
+  /** Focus the owner field, for completing a source that only lacks its owner. */
+  autoFocusOwner?: boolean
 }) {
   return (
     <fieldset disabled={disabled} className="grid gap-3 rounded-lg border p-3">
@@ -26,27 +29,36 @@ export function MediaSourceFields({
           <option value="OTHER">Khác / chưa xác minh</option>
         </select>
       </label>
-      <label className="grid gap-1 text-sm">
-        Tên nguồn
-        <input
-          className={control}
-          required
-          maxLength={200}
-          value={value.label}
-          onChange={(event) => onChange({ ...value, label: event.target.value })}
-          placeholder="Ví dụ: Garena Liên Quân, Liquipedia…"
-        />
-      </label>
-      <label className="grid gap-1 text-sm">
-        Chủ sở hữu / tên cần credit
-        <input
-          className={control}
-          maxLength={200}
-          value={value.ownerName ?? ""}
-          onChange={(event) => onChange({ ...value, ownerName: event.target.value || null })}
-          placeholder="Để trống nếu chưa xác nhận"
-        />
-      </label>
+      <div className="grid gap-1">
+        <label className="grid gap-1 text-sm">
+          Tên nguồn
+          <input
+            className={control}
+            required
+            maxLength={200}
+            value={value.label}
+            onChange={(event) => onChange({ ...value, label: event.target.value })}
+            placeholder="Ví dụ: Garena Liên Quân, Liquipedia…"
+          />
+        </label>
+        <span className="type-meta">Nơi bạn lấy ảnh.</span>
+      </div>
+      <div className="grid gap-1">
+        <label className="grid gap-1 text-sm">
+          Chủ sở hữu / tên cần credit
+          <input
+            className={control}
+            maxLength={200}
+            autoFocus={autoFocusOwner}
+            value={value.ownerName ?? ""}
+            onChange={(event) => onChange({ ...value, ownerName: event.target.value || null })}
+            placeholder="Ví dụ: Garena, BOOM Esports…"
+          />
+        </label>
+        <span className="type-meta">
+          Người hoặc tổ chức sở hữu ảnh. Ảnh chỉ được tính là đủ nguồn khi có mục này; để trống nếu chưa xác nhận.
+        </span>
+      </div>
       <label className="grid gap-1 text-sm">
         URL nguồn ảnh
         <input

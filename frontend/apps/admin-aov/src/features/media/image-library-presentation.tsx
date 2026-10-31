@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { CircleAlert, CircleCheck, ImageIcon, ImageOff } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { needsMediaCredit, type MediaCredit } from "@aov/ui/lib/media-credit"
+import type { MediaCredit } from "@aov/ui/lib/media-credit"
+import { primarySource, sourceGap, sourceGapHints, sourceGapLabels } from "./media-source-gaps"
 
 export function LibraryImage({ url, className }: { url: string | null; className?: string }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
@@ -42,31 +43,26 @@ export function LibraryCredit({
 }) {
   if (!versionId) return <span className="text-xs text-muted-foreground">Chờ hoàn tất upload</span>
   if (!sources) return <span className="text-xs text-muted-foreground">Chưa tải thông tin nguồn</span>
-  const incomplete = needsMediaCredit(sources)
-  const source =
-    sources.find((entry) => entry.label.trim() && entry.ownerName?.trim() && !entry.label.includes("Chưa xác minh")) ??
-    sources[0]
-  const label = incomplete ? "Cần bổ sung nguồn / credit" : "Đã có nguồn & credit"
+  const gap = sourceGap(sources)
+  const source = primarySource(sources)
   return (
-    <span className="block min-w-0 space-y-1" title={label}>
+    <span className="block min-w-0 space-y-1" title={sourceGapHints[gap]}>
       <span
         className={cn(
           "flex items-center gap-1.5 text-xs font-medium",
-          incomplete ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground",
+          gap === "none" ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400",
         )}
       >
-        {incomplete ? (
-          <CircleAlert aria-hidden className="size-3.5 shrink-0" />
-        ) : (
+        {gap === "none" ? (
           <CircleCheck aria-hidden className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+        ) : (
+          <CircleAlert aria-hidden className="size-3.5 shrink-0" />
         )}
-        <span className="truncate">{incomplete ? "Cần bổ sung" : "Đủ nguồn & credit"}</span>
-        {incomplete && <span className="sr-only">nguồn / credit</span>}
+        <span className="truncate">{sourceGapLabels[gap]}</span>
       </span>
       {!compact && (
         <span className="block truncate text-xs text-muted-foreground" title={source?.label}>
-          {source?.ownerName?.trim() ||
-            (source?.label && !source.label.includes("Chưa xác minh") ? source.label : "Chưa có nguồn xác nhận")}
+          {source ? source.ownerName?.trim() || source.label : "Chưa có nguồn"}
         </span>
       )}
     </span>

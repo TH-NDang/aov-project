@@ -1,18 +1,22 @@
 import { Badge } from "@aov/ui/components/badge"
-import { needsMediaCredit, type MediaCredit } from "@aov/ui/lib/media-credit"
+import type { MediaCredit } from "@aov/ui/lib/media-credit"
+import { sourceGap, sourceGapHints, sourceGapLabels } from "./media-source-gaps"
 
 export function MediaSourceStatus({ sources, versionId }: { sources?: MediaCredit[]; versionId?: string | null }) {
   if (!versionId) return <span className="text-xs text-muted-foreground">Chờ hoàn tất upload</span>
   if (!sources) return <span className="text-xs text-muted-foreground">Chưa tải thông tin nguồn</span>
-  const incomplete = needsMediaCredit(sources)
+  const gap = sourceGap(sources)
   return (
     <Badge
       variant="outline"
+      title={sourceGapHints[gap]}
       className={
-        incomplete ? "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300" : "text-muted-foreground"
+        gap === "none"
+          ? "text-muted-foreground"
+          : "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300"
       }
     >
-      {incomplete ? "Cần bổ sung nguồn / credit" : "Đã có nguồn & credit"}
+      {sourceGapLabels[gap]}
     </Badge>
   )
 }

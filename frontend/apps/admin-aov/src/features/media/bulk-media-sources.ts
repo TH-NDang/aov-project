@@ -28,6 +28,16 @@ export function bulkSourceValidation(source: MediaSourceInput) {
   return null
 }
 
+const sourceBody = (source: MediaSourceInput) =>
+  JSON.stringify({
+    ...source,
+    type: source.type ?? "OTHER",
+    label: source.label.trim(),
+    ownerName: source.ownerName?.trim() || null,
+    url: source.url?.trim() || null,
+    contactUrl: source.contactUrl?.trim() || null,
+  })
+
 /** Pin each write to the selected version and keep successful writes out of retries. */
 export async function addMediaSourcesInBulk(
   request: Request,
@@ -38,25 +48,32 @@ export async function addMediaSourcesInBulk(
 ) {
   if (bulkSourceValidation(source)) throw new Error("Invalid bulk media source.")
   const unique = [...new Map(targets.map((target) => [target.assetId, target])).values()]
-  const results: MediaSourceResult[] = unique.map((target) => ({ target, state: "pending" }))
-  const body = JSON.stringify({
-    ...source,
-    type: source.type ?? "OTHER",
-    label: source.label.trim(),
-    ownerName: source.ownerName?.trim() || null,
-    url: source.url?.trim() || null,
-    contactUrl: source.contactUrl?.trim() || null,
-  })
+  return addSourcesPerTarget(
+    request,
+    unique.map((target) => ({ target, source })),
+    onProgress,
+    shouldStop,
+  )
+}
+
+/** Adds one source per image, e.g. each image's own source completed with its owner. */
+export async function addSourcesPerTarget(
+  request: Request,
+  items: readonly { target: MediaSourceTarget; source: MediaSourceInput }[],
+  onProgress: (result: MediaSourceResult) => void,
+  shouldStop: () => boolean = () => false,
+) {
+  const results: MediaSourceResult[] = items.map(({ target }) => ({ target, state: "pending" }))
   let next = 0
   const report = (index: number, state: MediaSourceResult["state"], message?: string) => {
-    const result = { target: unique[index], state, message }
+    const result = { target: items[index].target, state, message }
     results[index] = result
     onProgress(result)
   }
   async function worker() {
-    while (!shouldStop() && next < unique.length) {
+    while (!shouldStop() && next < items.length) {
       const index = next++
-      const target = unique[index]
+      const { target, source } = items[index]
       const assetPath = `/admin/media/assets/${encodeURIComponent(target.assetId)}`
       report(index, "saving")
       try {
@@ -71,7 +88,7 @@ export async function addMediaSourcesInBulk(
         }
         const saved = await request<Asset>(`${assetPath}/versions/${encodeURIComponent(target.versionId)}/sources`, {
           method: "POST",
-          body,
+          body: sourceBody(source),
         })
         report(
           index,
@@ -85,6 +102,6 @@ export async function addMediaSourcesInBulk(
       }
     }
   }
-  await Promise.all(Array.from({ length: Math.min(3, unique.length) }, () => worker()))
+  await Promise.all(Array.from({ length: Math.min(3, items.length) }, () => worker()))
   return results
 }
