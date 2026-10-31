@@ -162,7 +162,7 @@ export function BroadcastTimeline({
           ) : (
             <span>Ngoài ván đấu</span>
           )}
-          <span className="hidden text-[10px] @2xl:inline">· trục ngang là vị trí trên video</span>
+          <span className="hidden text-xs @2xl:inline">· trục ngang là vị trí trên video</span>
         </span>
         {focused && (
           <button type="button" className="esp-bt-button" onClick={() => fitChapter(focused)}>

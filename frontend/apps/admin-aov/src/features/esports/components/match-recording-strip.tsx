@@ -34,7 +34,7 @@ export function MatchRecordingStrip({
   return (
     <div
       data-recording={recording.state}
-      className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-dashed bg-muted/25 px-3 py-1.5 text-[11px] @lg:pl-[calc(92px+1.5rem)]"
+      className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-dashed bg-muted/25 px-3 py-1.5 text-xs @lg:pl-[calc(92px+1.5rem)]"
       aria-label={`Tình trạng ghi: ${MATCH_STATE_LABELS[recording.state]}`}
     >
       <span

@@ -137,7 +137,7 @@ export function ImportUploadRecovery({
   if (!sessions.data?.length && !active && !sessions.error && !message) return null
   return (
     <section className="space-y-3 rounded-xl border bg-card p-5" aria-label="Khôi phục upload">
-      <h2 className="font-semibold">Upload đang dở</h2>
+      <h2 className="text-base font-bold">Upload đang dở</h2>
       <p className="text-sm text-muted-foreground">
         Ảnh đã hoàn tất được giữ trên máy chủ. Chọn lại folder/ZIP ban đầu nếu còn ảnh chưa tải; không cần ánh xạ lại.
       </p>

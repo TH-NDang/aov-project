@@ -107,14 +107,14 @@ export function EventFeed({
           </button>
         ))}
       </div>
-      <p className="flex items-center gap-3 border-b px-3 py-1 text-[10px] text-muted-foreground">
+      <p className="flex items-center gap-3 border-b px-3 py-1 text-xs text-muted-foreground">
         <span>⏱ giờ trong trận</span>
         <span>
           <VideoMark /> vị trí trên video
         </span>
       </p>
       {onShowAllItems && (hiddenItems > 0 || showAllItems) && (
-        <label className="flex items-center gap-2 border-b px-3 py-1.5 text-[11px] text-muted-foreground">
+        <label className="flex items-center gap-2 border-b px-3 py-1.5 text-xs text-muted-foreground">
           <input type="checkbox" checked={showAllItems} onChange={(event) => onShowAllItems(event.target.checked)} />
           Hiện cả trang bị cấp 1–2{!showAllItems && ` (${hiddenItems} đang ẩn)`}
         </label>
@@ -131,7 +131,7 @@ export function EventFeed({
               data-future={group.start > at}
             >
               {title && (
-                <div className="flex items-center gap-2 px-1 pb-1 text-[11px] font-semibold text-muted-foreground">
+                <div className="flex items-center gap-2 px-1 pb-1 text-xs font-semibold text-muted-foreground">
                   <span className="esp-num">
                     <TimeTag kind="game" seconds={group.start} /> – <TimeTag kind="game" seconds={group.end} />
                   </span>
@@ -154,9 +154,7 @@ export function EventFeed({
                       >
                         <span className="flex w-14 shrink-0 flex-col text-xs font-semibold text-muted-foreground">
                           <TimeTag kind="game" seconds={event.at} className="text-foreground" />
-                          {videoAt && (
-                            <TimeTag kind="video" seconds={videoAt(event)} className="text-[10px] font-normal" />
-                          )}
+                          {videoAt && <TimeTag kind="video" seconds={videoAt(event)} className="text-xs font-normal" />}
                         </span>
                         <EventLine
                           event={event}

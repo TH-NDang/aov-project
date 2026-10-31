@@ -67,7 +67,7 @@ export function SkinBadgeLabel({
         {badge?.displayName && badge.displayName !== badge.code ? badge.displayName : "Chưa đặt tên"}
       </span>
       {fallback && badge?.actualLocale && (
-        <span className="shrink-0 text-[10px] text-muted-foreground">{badge.actualLocale}</span>
+        <span className="shrink-0 text-xs text-muted-foreground">{badge.actualLocale}</span>
       )}
     </div>
   )

@@ -133,7 +133,7 @@ export function AppSidebar() {
                     <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#18181b]">
                       <AovMark className="size-6" />
                     </div>
-                    <AovWordmark product="Admin" className="flex-1 text-[15px]" />
+                    <AovWordmark product="Admin" className="flex-1 text-base" />
                   </Link>
                 </SidebarMenuButton>
                 <Button
@@ -155,7 +155,7 @@ export function AppSidebar() {
       <SidebarContent className="[overflow-anchor:none] [scrollbar-gutter:stable] group-data-[collapsible=icon]:[scrollbar-gutter:auto]">
         {NAV_GROUPS.map((group) => (
           <SidebarGroup key={group.label} className="px-2 py-1">
-            <SidebarGroupLabel className="h-6 text-[11px] tracking-wide uppercase">{group.label}</SidebarGroupLabel>
+            <SidebarGroupLabel className="h-6 text-xs tracking-wide uppercase">{group.label}</SidebarGroupLabel>
             <SidebarMenu>
               {group.items.map((item) => (
                 <NavLink key={item.to} item={item} counts={counts} />

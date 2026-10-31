@@ -206,29 +206,24 @@ function GraphCard({
             </span>
           )}
           <span
-            className="absolute -right-1.5 -bottom-1.5 rounded-md bg-card px-1 text-[10px] font-semibold leading-4 tabular-nums text-amber-600 shadow-sm ring-1 ring-border dark:text-amber-400"
+            className="absolute -right-1.5 -bottom-1.5 rounded-md bg-card px-1 text-xs font-semibold leading-4 tabular-nums text-amber-600 shadow-sm ring-1 ring-border dark:text-amber-400"
             title={`Giá ${price} vàng`}
           >
             {price}
           </span>
         </span>
         <span className="min-w-0 flex-1 space-y-0.5">
+          {/* Long names step down to 12px, the smallest size the admin uses. */}
           <span
             className={cn(
-              "line-clamp-2 font-medium leading-tight break-words",
-              name.length > 26 ? "text-[11px]" : name.length > 16 ? "text-xs" : "text-[13px]",
+              "line-clamp-2 leading-tight font-semibold break-words",
+              name.length > 16 ? "text-xs" : "text-sm",
             )}
           >
             {name}
           </span>
           {summary && (
-            <span
-              className={cn(
-                "line-clamp-3 leading-snug text-muted-foreground",
-                summary.length > 60 ? "text-[10px]" : "text-[11px]",
-              )}
-              title={summary}
-            >
+            <span className="line-clamp-3 text-xs text-muted-foreground" title={summary}>
               {summary}
             </span>
           )}
@@ -236,20 +231,20 @@ function GraphCard({
           <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground empty:hidden">
             {item.content.tier !== null && item.content.tier !== column + 1 && (
               <span
-                className="rounded bg-muted px-1.5 py-0.5 text-[10px]"
+                className="rounded bg-muted px-1.5 py-0.5 text-xs"
                 title={`Trang bị cấp ${item.content.tier}, hiển thị ở cột ${column + 1}`}
               >
                 Cấp {item.content.tier}
               </span>
             )}
             {item.content.recipeStatus === "UNKNOWN" && (
-              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px]" title="Công thức chưa xác nhận">
+              <span className="rounded bg-muted px-1.5 py-0.5 text-xs" title="Công thức chưa xác nhận">
                 Công thức?
               </span>
             )}
             {missing > 0 && (
               <span
-                className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-700 dark:text-amber-300"
+                className="rounded bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-700 dark:text-amber-300"
                 title={`Còn thiếu ${missing} mục bắt buộc để xuất bản`}
               >
                 Thiếu {missing}

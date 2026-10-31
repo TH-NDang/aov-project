@@ -61,7 +61,7 @@ export function ArcanaCollection({
           <header className={cn("flex items-center gap-2 border-b border-border/50 px-3 py-2", details.header)}>
             <Gem aria-hidden className={cn("size-4", details.icon)} />
             <h3 className="text-xs font-semibold">Ngọc {details.label}</h3>
-            <span className="text-[11px] text-muted-foreground tabular-nums">{items.length} ngọc</span>
+            <span className="text-xs text-muted-foreground tabular-nums">{items.length} ngọc</span>
           </header>
           <div className="space-y-4 p-2">
             {combatGroups.map(({ key, label, icon: Icon, colorLabel }) => {
@@ -79,8 +79,8 @@ export function ArcanaCollection({
                       className="size-3.5 text-muted-foreground"
                       style={{ color: statColor(colorLabel) }}
                     />
-                    <h4 className="text-[11px] font-semibold">{label}</h4>
-                    <span className="text-[10px] text-muted-foreground tabular-nums">{members.length}</span>
+                    <h4 className="text-xs font-semibold">{label}</h4>
+                    <span className="text-xs text-muted-foreground tabular-nums">{members.length}</span>
                     <div aria-hidden className="h-px flex-1 bg-border/60" />
                   </div>
                   <div className={gridClass}>
@@ -108,7 +108,7 @@ export function ArcanaCollection({
     <div className="@container/arcana min-w-0 space-y-3">
       {highest.length > 0 && (
         <section className="space-y-3" aria-label="Ngọc bậc III">
-          <h2 className="flex items-center gap-2 px-1 text-sm font-semibold">
+          <h2 className="flex items-center gap-2 px-1 text-base font-bold">
             Ngọc bậc III <span className="ml-1 text-muted-foreground">{highest.length}</span>
           </h2>
           {groups(highest, 3)}
@@ -180,7 +180,7 @@ function ArcanaCard({
           frameAspectRatio={1}
           className="size-9 shrink-0 rounded-full border-0 bg-transparent"
         />
-        <p className="line-clamp-2 min-w-0 text-[13px] leading-[18px] font-bold">
+        <p className="line-clamp-2 min-w-0 text-sm leading-[18px] font-bold">
           {compactArcanaName(name, entry.content.color, entry.content.tier)}
         </p>
       </div>
@@ -191,7 +191,7 @@ function ArcanaCard({
           return (
             <div
               key={stat.key}
-              className="flex items-baseline justify-between gap-2 text-[11px] leading-4"
+              className="flex items-baseline justify-between gap-2 text-xs leading-4"
               style={{ color }}
             >
               <dt className={cn("min-w-0 font-medium break-words", !color && "text-muted-foreground")}>{label}</dt>
@@ -208,7 +208,7 @@ function ArcanaCard({
       {(entry.revision.state === "DRAFT" || entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE")) && (
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           {entry.revision.state === "DRAFT" && (
-            <Badge variant="outline" className="w-fit text-[10px]">
+            <Badge variant="outline" className="w-fit text-xs">
               Nháp
             </Badge>
           )}

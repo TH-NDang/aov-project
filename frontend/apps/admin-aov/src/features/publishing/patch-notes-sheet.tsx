@@ -196,7 +196,7 @@ function HeroChoice({
                 <HeroAsset id={hero.iconAssetId} alt="" className="size-8 shrink-0 rounded-md" frameAspectRatio={1} />
                 <span className="min-w-0">
                   <span className="block truncate">{hero.name}</span>
-                  {taken && <span className="block text-[11px] text-muted-foreground">Đã ghi ở patch này</span>}
+                  {taken && <span className="block text-xs text-muted-foreground">Đã ghi ở patch này</span>}
                 </span>
               </button>
             </li>

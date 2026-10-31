@@ -291,7 +291,7 @@ function ObservedAt({
             onClick={() => onSeekGame(value)}
           >
             <TimeTag kind="game" seconds={value} />
-            {clock && <TimeTag kind="video" seconds={clock.toVideo(value)} className="text-[10px] opacity-75" />}
+            {clock && <TimeTag kind="video" seconds={clock.toVideo(value)} className="text-xs opacity-75" />}
           </button>
           <button
             type="button"

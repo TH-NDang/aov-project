@@ -20,7 +20,7 @@ export function PageHeader({ title, description, actions, search, className, chi
     return (
       <div className={cn("@container/page-header flex flex-col gap-3", className)}>
         <div className="relative flex min-h-9 items-center gap-2 @3xl/page-header:grid @3xl/page-header:grid-cols-[1fr_auto_1fr] @3xl/page-header:gap-x-4">
-          <h1 className="min-w-0 flex-1 truncate text-xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight">{title}</h1>
           {search}
           {actions && (
             <div className="flex shrink-0 items-center gap-2 @3xl/page-header:justify-self-end">{actions}</div>
@@ -34,7 +34,7 @@ export function PageHeader({ title, description, actions, search, className, chi
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0 space-y-0.5">
-          <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           {description && <p className="text-sm text-muted-foreground">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

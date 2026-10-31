@@ -185,7 +185,7 @@ export function ReferencePreviewWorkspace({ onLocaleChange, context, onContextCh
             className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-card"
           >
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-3 py-1 @xl/preview:min-h-12 @xl/preview:py-2">
-              <h2 className="text-sm font-semibold">Soạn nội dung thử</h2>
+              <h2 className="text-base font-bold">Soạn nội dung thử</h2>
               <div className="flex items-center gap-0.5">
                 <Button
                   type="button"
@@ -272,11 +272,11 @@ export function ReferencePreviewWorkspace({ onLocaleChange, context, onContextCh
             className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-card"
           >
             <div className="flex min-h-9 shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-3 py-1 @xl/preview:min-h-12 @xl/preview:py-2">
-              <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <h2 className="flex items-center gap-2 text-base font-bold">
                 <Eye aria-hidden className="size-4 text-muted-foreground" />
                 Kết quả hiển thị
               </h2>
-              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span
                   aria-hidden
                   className={cn("size-1.5 rounded-full", updating ? "bg-amber-500" : "bg-emerald-500")}

@@ -247,7 +247,7 @@ export function DashboardPage() {
                   {stat.value === undefined ? <Skeleton className="h-7 w-14" /> : formatNumber(stat.value)}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="truncate px-3 text-[11px] text-muted-foreground">{stat.hint}</CardContent>
+              <CardContent className="truncate px-3 text-xs text-muted-foreground">{stat.hint}</CardContent>
             </Card>
           </Link>
         ))}

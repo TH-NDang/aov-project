@@ -63,7 +63,7 @@ export function MediaContactPage() {
             {requests.data?.items.map((entry) => (
               <article key={entry.id} className="space-y-3 rounded-xl border p-4">
                 <div className="flex flex-wrap justify-between gap-2">
-                  <h2 className="font-semibold">
+                  <h2 className="text-base font-bold">
                     {entry.name} ·{" "}
                     {entry.topic === "SOURCE"
                       ? "Nguồn / credit"

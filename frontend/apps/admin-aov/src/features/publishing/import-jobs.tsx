@@ -59,7 +59,7 @@ export function ImportJobHistory() {
   const jobs = useImportJobs()
   return (
     <section className="space-y-3" aria-label="Tiến trình trên máy chủ">
-      <h2 className="font-semibold">Tiến trình trên máy chủ</h2>
+      <h2 className="text-base font-bold">Tiến trình trên máy chủ</h2>
       {jobs.isPending && <p className="text-sm text-muted-foreground">Đang tải tiến trình…</p>}
       {jobs.error && (
         <p role="alert" className="text-sm text-destructive">

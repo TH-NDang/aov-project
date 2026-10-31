@@ -114,7 +114,7 @@ export function SkillArtworkStack({
         </span>
       ))}
       {skills.length > 1 && (
-        <span className="absolute right-0 bottom-0 z-10 flex items-center gap-0.5 rounded-full border bg-card px-1 py-0.5 text-[9px] font-medium text-muted-foreground">
+        <span className="absolute right-0 bottom-0 z-10 flex items-center gap-0.5 rounded-full border bg-card px-1 py-0.5 text-xs font-medium text-muted-foreground">
           <ArrowLeftRight className="size-2.5" />
           {skills.length}
         </span>

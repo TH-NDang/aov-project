@@ -64,7 +64,7 @@ export function ParticipantsGrid({
                     <PlayerPhoto name={member.name} url={member.photoUrl} size={24} />
                     <span className="min-w-0 flex-1 truncate font-medium">{member.name}</span>
                     {member.status && STATUS_TEXT[member.status] && (
-                      <span className="rounded bg-muted px-1.5 text-[10px] text-muted-foreground no-underline">
+                      <span className="rounded bg-muted px-1.5 text-xs text-muted-foreground no-underline">
                         {STATUS_TEXT[member.status]}
                       </span>
                     )}

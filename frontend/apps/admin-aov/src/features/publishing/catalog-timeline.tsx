@@ -120,7 +120,7 @@ function CountBadge({ props, variant }: { props: TimelineProps; variant: Variant
   return (
     <span
       className={cn(
-        "rounded-full px-1.5 text-[11px] leading-4 tabular-nums",
+        "rounded-full px-1.5 text-xs leading-4 tabular-nums",
         count.changes ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground",
       )}
       aria-hidden
@@ -206,7 +206,7 @@ function TimelineRail(props: TimelineProps & { groups: SeasonGroup[] }) {
             disabled={!group.id}
             onClick={() => onChange({ seasonId: group.id, variantId: "" })}
             className={cn(
-              "h-7 shrink-0 rounded-md px-1.5 text-[11px] whitespace-nowrap text-muted-foreground transition-colors enabled:hover:text-foreground",
+              "h-7 shrink-0 rounded-md px-1.5 text-xs whitespace-nowrap text-muted-foreground transition-colors enabled:hover:text-foreground",
               value.seasonId === group.id &&
                 !value.variantId &&
                 "font-medium text-foreground underline underline-offset-4",
@@ -299,7 +299,7 @@ function ScopeButton(props: TimelineProps & { groups: SeasonGroup[] }) {
             <button
               type="button"
               disabled={!group.id}
-              className="w-full px-2 py-1 text-left text-[11px] text-muted-foreground"
+              className="w-full px-2 py-1 text-left text-xs text-muted-foreground"
               onClick={() => choose({ seasonId: group.id, variantId: "" })}
             >
               {group.name}

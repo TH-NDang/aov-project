@@ -219,7 +219,7 @@ export function DraftEditor({
               slot.kind === "BAN" && (slot.hero?.id || slot.hero?.name) && "opacity-55 grayscale-[0.6]",
             )}
           />
-          <span className="esp-num absolute -top-1 -left-1 rounded bg-card px-0.5 text-[9px] font-bold text-muted-foreground ring-1 ring-border">
+          <span className="esp-num absolute -top-1 -left-1 rounded bg-card px-0.5 text-xs font-bold text-muted-foreground ring-1 ring-border">
             {slot.index + 1}
           </span>
           {slot.kind === "BAN" && (
@@ -248,7 +248,7 @@ export function DraftEditor({
               </header>
               {(["BAN", "PICK"] as const).map((kind) => (
                 <div key={kind} className="flex items-center gap-1.5">
-                  <span className="w-8 shrink-0 text-[10px] font-bold tracking-wide text-muted-foreground uppercase">
+                  <span className="w-8 shrink-0 text-xs font-bold tracking-wide text-muted-foreground uppercase">
                     {kind === "BAN" ? "Cấm" : "Chọn"}
                   </span>
                   <span className="flex flex-wrap gap-1.5">{own(kind).map(slotButton)}</span>
@@ -321,7 +321,7 @@ export function DraftEditor({
           <Undo2 size={13} /> Hoàn tác
         </Button>
       </div>
-      <p className="text-[11px] text-muted-foreground">
+      <p className="text-xs text-muted-foreground">
         {locks.decider
           ? `Ván ${content.number} là ván cuối của BO: mở lại toàn bộ tướng.`
           : "Chỉ gợi ý tướng còn hợp lệ: chưa bị cấm/chọn ở ván này và đội chưa dùng ở ván trước."}
@@ -385,7 +385,7 @@ export function DraftEditor({
                 aria-label={`Tuyển thủ ${LANE_LABELS[participant.lane].name} của ${team.name}`}
                 value={participant.playerId ?? ""}
                 onChange={(event) => update(index, { playerId: event.target.value || null })}
-                className="h-7 min-w-0 flex-1 rounded-md border bg-background px-1.5 text-[11px]"
+                className="h-7 min-w-0 flex-1 rounded-md border bg-background px-1.5 text-xs"
               >
                 <option value="">Tuyển thủ…</option>
                 {members.map((member) => (
@@ -398,7 +398,7 @@ export function DraftEditor({
             </li>
           ))}
         </ul>
-        {!members.length && <p className="text-[10px] text-muted-foreground">Chưa có danh sách đăng ký ở giải.</p>}
+        {!members.length && <p className="text-xs text-muted-foreground">Chưa có danh sách đăng ký ở giải.</p>}
       </section>
     )
   }
@@ -410,7 +410,7 @@ export function DraftEditor({
     <div className="space-y-2">
       <div className="grid grid-cols-2 gap-2">{(["BLUE", "RED"] as const).map(lineup)}</div>
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="mr-auto text-[11px] text-muted-foreground">Bấm ô tướng để hoán đổi trong đội, rồi chốt.</span>
+        <span className="mr-auto text-xs text-muted-foreground">Bấm ô tướng để hoán đổi trong đội, rồi chốt.</span>
         {canFill && (
           <Button
             size="sm"
@@ -450,7 +450,7 @@ export function DraftEditor({
 
   return (
     <div className="space-y-2.5 p-3">
-      <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+      <div className="flex flex-wrap items-center gap-1.5 text-xs">
         <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5">
           Bắt đầu {draft.startSecond != null ? <TimeTag kind="video" seconds={draft.startSecond} /> : "chưa ghi"}
         </span>
@@ -540,7 +540,7 @@ function LineupHero({
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" sideOffset={6} className="w-auto max-w-[calc(100vw-1.5rem)] p-2">
-        <p className="mb-1.5 text-[11px] text-muted-foreground">Tướng đội đã chọn · chọn để hoán đổi</p>
+        <p className="mb-1.5 text-xs text-muted-foreground">Tướng đội đã chọn · chọn để hoán đổi</p>
         <div className="flex flex-wrap gap-1" role="listbox" aria-label={label}>
           {picks.map((hero) => (
             <button
@@ -552,7 +552,7 @@ function LineupHero({
                 onPick(hero)
                 setOpen(false)
               }}
-              className="flex w-14 flex-col items-center gap-0.5 rounded-md p-1 text-[10px] hover:bg-muted aria-selected:bg-[var(--esp-gold-soft)]"
+              className="flex w-14 flex-col items-center gap-0.5 rounded-md p-1 text-xs hover:bg-muted aria-selected:bg-[var(--esp-gold-soft)]"
             >
               <HeroIcon hero={icon(hero)} size={34} />
               <span className="line-clamp-1 w-full text-center">{hero.name}</span>

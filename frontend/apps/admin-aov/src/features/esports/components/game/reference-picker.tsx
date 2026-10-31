@@ -90,7 +90,7 @@ export function ReferencePicker({
               role="option"
               aria-selected={value?.id === option.id}
               onClick={() => choose({ id: option.id, name: option.name })}
-              className="flex flex-col items-center gap-1 rounded-md p-1 text-[10px] leading-tight hover:bg-muted aria-selected:bg-[var(--esp-gold-soft)]"
+              className="flex flex-col items-center gap-1 rounded-md p-1 text-xs leading-tight hover:bg-muted aria-selected:bg-[var(--esp-gold-soft)]"
             >
               {option.iconUrl ? (
                 <img src={option.iconUrl} alt="" loading="lazy" className="size-10 rounded-md object-cover" />

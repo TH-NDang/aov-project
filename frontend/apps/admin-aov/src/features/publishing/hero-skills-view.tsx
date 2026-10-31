@@ -145,22 +145,22 @@ export function HeroSkillsView({
                     <SkillArtwork skill={skill} heroId={heroId} className="size-11" />
                   )}
                   <span className="min-w-0 space-y-1">
-                    <span className="block text-[10px] font-medium tracking-wide text-muted-foreground">
+                    <span className="block text-xs font-medium tracking-wide text-muted-foreground">
                       {skillLabel(skill)}
                     </span>
                     <span className={cn("block line-clamp-2 text-xs leading-5", active && "font-semibold")}>
                       {name}
                     </span>
                     {skill.formKey && (
-                      <span className="block truncate text-[10px] text-muted-foreground">{skill.formKey}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{skill.formKey}</span>
                     )}
                     {multiple ? (
-                      <span className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground @min-[760px]/skills:justify-start">
+                      <span className="flex items-center justify-center gap-1 text-xs text-muted-foreground @min-[760px]/skills:justify-start">
                         <ArrowLeftRight className="size-3" />
                         {group.skills.length} biến thể
                       </span>
                     ) : (
-                      variant && <span className="block text-[10px] text-muted-foreground">{variant}</span>
+                      variant && <span className="block text-xs text-muted-foreground">{variant}</span>
                     )}
                   </span>
                 </button>
@@ -284,7 +284,7 @@ export function HeroSkillsView({
                     frameAspectRatio={1}
                     preview
                   />
-                  <p className="text-[11px] leading-5 text-muted-foreground">
+                  <p className="text-xs leading-5 text-muted-foreground">
                     {image.sourceSlot === 0 ? "Nội tại" : `Chiêu ${image.sourceSlot}`}
                     <span className="block">Ảnh {image.variantNo}</span>
                   </p>

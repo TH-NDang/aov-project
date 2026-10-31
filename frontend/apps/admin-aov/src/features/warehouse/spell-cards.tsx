@@ -110,28 +110,28 @@ function SpellCard({
         <div className="flex flex-wrap justify-center gap-1">
           <Badge
             variant={entry.content.availability === "AVAILABLE" ? "secondary" : "outline"}
-            className="px-1.5 py-0 text-[9px] leading-4"
+            className="px-1.5 py-0 text-xs leading-4"
           >
             {availabilityLabels[entry.content.availability]}
           </Badge>
           {isLegacy(entry) && !entry.revision.effectiveFromPatchVariantId && (
-            <Badge variant="outline" className="px-1.5 py-0 text-[9px] leading-4">
+            <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
               Chưa rõ patch
             </Badge>
           )}
           {entry.revision.state === "DRAFT" && (
-            <Badge variant="outline" className="px-1.5 py-0 text-[9px] leading-4">
+            <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
               Nháp
             </Badge>
           )}
         </div>
       </div>
       {text?.summary && (
-        <p className="w-full truncate text-[10px] text-muted-foreground" title={text.summary}>
+        <p className="w-full truncate text-xs text-muted-foreground" title={text.summary}>
           {text.summary}
         </p>
       )}
-      <div className="mt-auto flex w-full min-w-0 items-center justify-center gap-1 border-t border-border/50 pt-1.5 text-[10px] leading-4 text-muted-foreground">
+      <div className="mt-auto flex w-full min-w-0 items-center justify-center gap-1 border-t border-border/50 pt-1.5 text-xs leading-4 text-muted-foreground">
         <span className="flex min-w-0 items-center gap-1">
           <Clock3 aria-hidden className="size-3 shrink-0" />
           <span

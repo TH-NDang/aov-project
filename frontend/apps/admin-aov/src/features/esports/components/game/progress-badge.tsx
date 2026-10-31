@@ -17,7 +17,7 @@ export function ProgressBadge({ progress, className }: { progress: RecordingProg
       data-state={state}
       title={`${STATE_LABELS[state]} · ${done}/${total} mục bắt buộc`}
       className={cn(
-        "esp-num inline-flex items-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold",
+        "esp-num inline-flex items-center gap-0.5 rounded-full px-1.5 text-xs font-semibold",
         className,
         state === "confirmed" && "bg-[var(--esp-live)]/15 text-[var(--esp-live)]",
         state === "ready" && "bg-[var(--esp-gold-soft)] text-[var(--esp-gold-text)]",

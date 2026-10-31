@@ -49,7 +49,7 @@ export function Field({
 export function Box({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-4 rounded-xl border bg-card p-4 md:p-6">
-      <h2 className="font-semibold">{title}</h2>
+      <h2 className="text-base font-bold">{title}</h2>
       {children}
     </section>
   )

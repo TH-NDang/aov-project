@@ -64,7 +64,7 @@ export function LibraryCredit({
         {incomplete && <span className="sr-only">nguồn / credit</span>}
       </span>
       {!compact && (
-        <span className="block truncate text-[11px] text-muted-foreground" title={source?.label}>
+        <span className="block truncate text-xs text-muted-foreground" title={source?.label}>
           {source?.ownerName?.trim() ||
             (source?.label && !source.label.includes("Chưa xác minh") ? source.label : "Chưa có nguồn xác nhận")}
         </span>

@@ -163,9 +163,7 @@ function HeroContentBody({
               frameAspectRatio={1}
             />
             <div className="min-w-0 flex-1 space-y-1.5">
-              <h2 className="break-words text-xl font-semibold tracking-tight">
-                {profile?.name || "Tướng chưa đặt tên"}
-              </h2>
+              <h2 className="break-words text-xl font-bold tracking-tight">{profile?.name || "Tướng chưa đặt tên"}</h2>
               {profile?.title && <p className="text-sm text-muted-foreground">{profile.title}</p>}
               <div className="flex flex-wrap gap-2">
                 {content.PROFILE?.roles.map((role) => (

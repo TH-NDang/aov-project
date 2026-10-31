@@ -446,9 +446,7 @@ export function PublishingWorkspace({
                 <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
                   {heroName}
                 </h1>
-                <p className="text-[11px] text-muted-foreground">
-                  {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
-                </p>
+                <p className="text-xs text-muted-foreground">{revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}</p>
               </div>
               {quickSwitcher}
               {revision && (
@@ -850,7 +848,7 @@ export function PublishingWorkspace({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h2 className="font-semibold">Quản lý phiên bản</h2>
+                      <h2 className="text-base font-bold">Quản lý phiên bản</h2>
                       <p className="mt-1 text-sm text-muted-foreground">
                         Bản #{revision.revisionNo} · {STATES[revision.state]} · {CAUSES[revision.cause]}
                       </p>

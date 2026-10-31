@@ -61,9 +61,7 @@ export function MatchRow({
         <span className="flex items-center gap-1.5">
           <BestOfBadge bestOf={content.bestOf} />
           {showStage && (
-            <span className="hidden text-[10px] text-muted-foreground @2xl:inline">
-              {stageInfo(content.stage).label}
-            </span>
+            <span className="hidden text-xs text-muted-foreground @2xl:inline">{stageInfo(content.stage).label}</span>
           )}
         </span>
       </span>

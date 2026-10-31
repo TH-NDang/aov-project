@@ -84,7 +84,7 @@ export function SpellArtwork({
         title={selectedName}
         className={cn(
           "block text-center text-muted-foreground",
-          compact ? "truncate text-[9px] leading-3" : "min-h-8 text-[11px] leading-4",
+          compact ? "truncate text-xs leading-3" : "min-h-8 text-xs leading-4",
         )}
       >
         {selectedName}

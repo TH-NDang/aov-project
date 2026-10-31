@@ -92,7 +92,7 @@ export function StandingsTable({
                         <span
                           key={index}
                           className={cn(
-                            "grid size-5 place-items-center rounded text-[10px] font-bold",
+                            "grid size-5 place-items-center rounded text-xs font-bold",
                             result === "W" ? "esp-win-score" : "bg-muted text-muted-foreground",
                           )}
                           title={result === "W" ? "Victory" : "Defeat"}
