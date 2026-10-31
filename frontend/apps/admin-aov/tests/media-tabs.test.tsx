@@ -139,7 +139,11 @@ test("media query tabs restore back/forward state and legacy links never create 
     assert.equal(router.state.location.hash, "#image")
     assert.equal(appTabs().length, 1)
     assert.ok(appTabs()[0]?.startsWith("/hero/media?"))
-    assert.equal(document.querySelectorAll("h1").length, 0)
+    assert.deepEqual(
+      [...document.querySelectorAll("h1")].map((heading) => heading.textContent),
+      ["Không gian ảnh"],
+      "Only the workspace has a heading; its tabs do not add their own",
+    )
     await clickTab("Cover")
     await waitFor(() => requests.some((path) => path.includes("role=SPLASH")))
     assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "cover")
@@ -183,9 +187,8 @@ test("media query tabs restore back/forward state and legacy links never create 
         await router.navigate("/hero/media?ruleset=rule&q=airi&tab=head")
       })
       await waitFor(() => selected() === "Head")
-      const input = document.querySelector<HTMLInputElement>(
-        '[role="tabpanel"]:not([hidden]) input[aria-label="Tìm tướng hoặc mã tướng…"]',
-      )!
+      // The active tab places its search in the workspace header.
+      const input = document.querySelector<HTMLInputElement>('input[aria-label="Tìm tướng hoặc mã tướng…"]')!
       assert.equal(input.value, "airi")
       await act(async () => {
         Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(input, typed)
@@ -194,7 +197,7 @@ test("media query tabs restore back/forward state and legacy links never create 
       assert.equal(new URLSearchParams(router.state.location.search).get("q") ?? "", typed)
       await clickTab(destination)
       assert.equal(new URLSearchParams(router.state.location.search).get("q") ?? "", typed)
-      const visibleInput = document.querySelector<HTMLInputElement>('[role="tabpanel"]:not([hidden]) input')!
+      const visibleInput = document.querySelector<HTMLInputElement>('input[type="search"]')!
       assert.equal(visibleInput.value, typed)
       await waitFor(() =>
         requests.some(

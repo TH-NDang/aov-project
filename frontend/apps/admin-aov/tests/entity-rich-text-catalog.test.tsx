@@ -268,7 +268,17 @@ test("catalog lists backend heroes, warehouse items and glossary; filters, menti
     assert.equal(area.textContent?.includes("<ref="), false, "Raw reference syntax is hidden while editing")
     await act(async () => button("Lưu thay đổi").click())
     await waitFor(() => !!document.body.textContent?.includes("Đã lưu. Admin và wiki dùng chung thiết lập này."))
-    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Tải lại thiết lập"]')!.click())
+    // Reloading lives in the page actions menu.
+    await act(async () =>
+      document
+        .querySelector<HTMLButtonElement>('[aria-label="Thêm và tải lại thuật ngữ"]')!
+        .dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
+    )
+    await act(async () =>
+      [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+        .find((item) => item.textContent?.includes("Tải lại thiết lập"))!
+        .click(),
+    )
     assert.equal(referenceInputValue(area), "<ref=hero:fixture-hero>Airi</ref>")
     const stored = await (await fixture.fetcher("/api/wiki/v1/admin/reference-settings")).json()
     assert.equal(stored.version, 4)

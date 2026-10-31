@@ -128,7 +128,8 @@ export function SearchField({
         variant="ghost"
         size="icon"
         className="relative size-9 shrink-0 rounded-full sm:hidden"
-        aria-label={active ? `${label}: ${active}` : label}
+        aria-label={active ? `Mở tìm kiếm: ${active}` : "Mở tìm kiếm"}
+        title={label}
         onClick={() => setExpanded(true)}
       >
         <Search className="size-4" />

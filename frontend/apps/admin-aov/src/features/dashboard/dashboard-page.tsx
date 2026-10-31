@@ -217,7 +217,7 @@ export function DashboardPage() {
 
   return (
     <Page>
-      <PageHeader title="Bảng điều khiển" description="Tình trạng dữ liệu AOV Wiki và những việc cần xử lý." />
+      <PageHeader title="Bảng điều khiển" />
       {(rulesets.isError ||
         catalog.isError ||
         enchantments.isError ||

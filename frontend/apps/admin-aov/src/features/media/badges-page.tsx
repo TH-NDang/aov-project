@@ -1,10 +1,12 @@
 import { Fragment, useMemo, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import {
   ChevronDown,
   ChevronRight,
   FolderInput,
+  FolderPlus,
   Languages,
   LoaderCircle,
   MoreHorizontal,
@@ -22,6 +24,7 @@ import {
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { Page } from "@/components/page-header"
+import { PageActionsMenu } from "@/components/page-actions-menu"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { useCollapseScrollAnchor } from "@/hooks/use-collapse-scroll-anchor"
 import { errorMessage } from "@/lib/api/errors"
@@ -51,7 +54,16 @@ import { SkinBadgeArtwork } from "./skin-badge-artwork"
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, SkinBadgeRecord>()
 
-export function BadgesPage({ request = backendRequest }: { request?: Request }) {
+export function BadgesPage({
+  request = backendRequest,
+  searchSlot,
+  actionsSlot,
+}: {
+  request?: Request
+  /** Header slots of the image workspace: an element while the tab is active, `null` while hidden. */
+  searchSlot?: HTMLElement | null
+  actionsSlot?: HTMLElement | null
+}) {
   const context = useImageContext(request)
   const locale = useContentLocale()
   const { actor } = useSession()
@@ -80,11 +92,29 @@ export function BadgesPage({ request = backendRequest }: { request?: Request }) 
   }
   return (
     <Page className="min-h-0 min-w-0 gap-3 overflow-hidden">
-      <div className="flex shrink-0 flex-wrap items-end gap-3">
-        <div className="min-w-48 flex-1">
-          <ImageContextControls context={context} placeholder="Tìm nhóm, tên hoặc mã nhãn…" />
-        </div>
-        {writable && (
+      <div className="flex shrink-0 flex-wrap items-end gap-3 empty:hidden">
+        <ImageContextControls
+          className="min-w-48 flex-1"
+          context={context}
+          placeholder="Tìm nhóm, tên hoặc mã nhãn…"
+          searchSlot={searchSlot}
+        />
+        {writable &&
+          actionsSlot &&
+          createPortal(
+            <PageActionsMenu label="Tạo nhãn và nhóm bậc trang phục">
+              <DropdownMenuItem onSelect={() => createBadge(null)}>
+                <Plus />
+                Tạo nhãn
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setGroupEditor(null)}>
+                <FolderPlus />
+                Tạo nhóm
+              </DropdownMenuItem>
+            </PageActionsMenu>,
+            actionsSlot,
+          )}
+        {writable && actionsSlot === undefined && (
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setGroupEditor(null)}>
               <Plus className="size-4" />

@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Archive, Database, Download, FileUp, KeyRound, Pencil, Plus, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
+import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
+import { PageActionsMenu } from "@/components/page-actions-menu"
 import { Input } from "@aov/ui/components/input"
 import { Badge } from "@aov/ui/components/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
@@ -198,12 +200,13 @@ export function StoragePage() {
     <Page>
       <PageHeader
         title="Lưu trữ"
-        description="Tạo bảng riêng, quản lý cột và import dữ liệu theo ID. Dữ liệu được lưu bằng JSON trong dự án."
         actions={
-          <Button onClick={() => openEditor({ kind: "create" })}>
-            <Plus />
-            Tạo bảng
-          </Button>
+          <PageActionsMenu label="Tạo bảng lưu trữ">
+            <DropdownMenuItem onSelect={() => openEditor({ kind: "create" })}>
+              <Plus />
+              Tạo bảng
+            </DropdownMenuItem>
+          </PageActionsMenu>
         }
       />
       {(tables.error || query.error || error) && !editor && (

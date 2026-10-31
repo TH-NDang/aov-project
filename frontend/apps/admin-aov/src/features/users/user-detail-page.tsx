@@ -67,7 +67,6 @@ export function UserDetailPage() {
       </div>
       <PageHeader
         title="Chi tiết người dùng"
-        description="Hồ sơ đã lưu trong hệ thống."
         actions={
           canRead &&
           validId && (
