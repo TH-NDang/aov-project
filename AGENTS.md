@@ -96,6 +96,12 @@ Do not run concurrent builds against the same output directory or edit shared so
 - React + TypeScript + Vite. Shared UI from `@aov/ui` (`packages/ui`).
 - Commands: `pnpm dev`, `pnpm typecheck`, `pnpm build`, `pnpm format` (run inside `frontend`).
 - Formatting is owned by Prettier (`frontend/.prettierrc.json`: no semicolons, double quotes, 120 columns).
+- Typography (admin) follows a 12/14/16/24 reading scale. Never use text smaller than 12px (`text-xs`), in Tailwind
+  classes, inline styles or CSS; `pnpm run test:typography` in `apps/admin-aov` fails otherwise. Reading text is
+  regular weight, titles bold. Use the role styles from `packages/ui/src/styles/typography.css` instead of picking
+  sizes: `type-page-title` (24/32 bold, used by `PageHeader`), `type-section-title` (16/24 bold, section `h2`),
+  `type-body` (14/20), `type-label` (12/16 semibold, column headers and field labels), `type-meta` (12/16 muted).
+  Do not combine a `type-*` style with `text-{size}` or `font-{weight}` on the same element.
 
 ## Git
 
