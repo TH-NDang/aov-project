@@ -15,7 +15,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
-import { Circle, CircleHelp, GripVertical, ImageOff, Link2, Lock, PanelRightOpen } from "lucide-react"
+import { Circle, CircleHelp, GripVertical, ImageOff, Link2, PanelRightOpen } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { ItemCategoryIcon, itemCategoryFallback } from "./item-category-icon"
 import { Button } from "@aov/ui/components/button"
@@ -72,6 +72,7 @@ function edgeSpeed(position: number, start: number, end: number, band: number) {
   return 0
 }
 const columnWidth = 232
+const maxColumnWidth = 300
 const portInset = 12
 const portRadius = 6
 function positioned(position: ItemContent["shopPositions"][number] | null) {
@@ -135,7 +136,7 @@ function GraphCard({
   onPort: (port: Port) => void
   terminal?: boolean
   reference?: boolean
-  /** Published items stay movable; the page asks to create a draft when one is changed. */
+  /** Published, not a draft. Published items stay movable; the page asks to create a draft when one is changed. */
   locked?: boolean
   /** Does not match the current search. */
   dimmed?: boolean
@@ -171,20 +172,12 @@ function GraphCard({
           type="button"
           aria-label={`Di chuyển ${name}`}
           title="Kéo để đổi ô"
-          className="cursor-grab touch-none self-stretch text-muted-foreground opacity-50 transition-opacity group-hover/card:opacity-100 hover:text-foreground focus-visible:opacity-100 active:cursor-grabbing [@media(hover:none)]:opacity-100"
+          className="cursor-grab touch-none self-stretch text-muted-foreground opacity-0 transition-opacity group-hover/card:opacity-100 hover:text-foreground focus-visible:opacity-100 active:cursor-grabbing [@media(hover:none)]:opacity-100"
           {...drag.listeners}
           {...drag.attributes}
         >
           <GripVertical className="size-3.5" />
         </button>
-      )}
-      {editable && locked && (
-        <Lock
-          aria-label="Đã xuất bản · kéo hoặc nối sẽ tạo bản nháp"
-          className="absolute top-1.5 right-1.5 size-3 text-muted-foreground/70 transition-opacity group-hover/card:opacity-0 [@media(hover:none)]:hidden"
-        >
-          <title>Đã xuất bản · kéo hoặc nối sẽ tạo bản nháp</title>
-        </Lock>
       )}
       <button
         type="button"
@@ -237,6 +230,14 @@ function GraphCard({
                 Cấp {item.content.tier}
               </span>
             )}
+            {!locked && (
+              <span
+                className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300"
+                title="Bản nháp chưa xuất bản"
+              >
+                Nháp
+              </span>
+            )}
             {item.content.recipeStatus === "UNKNOWN" && (
               <span className="rounded bg-muted px-1.5 py-0.5 text-xs" title="Công thức chưa xác nhận">
                 Công thức?
@@ -280,6 +281,11 @@ function GraphCard({
             className={cn(
               "absolute top-1/2 z-20 flex h-11 w-6 -translate-y-1/2 touch-none items-center justify-center rounded-lg text-muted-foreground enabled:cursor-crosshair enabled:hover:text-primary focus-visible:outline-2 focus-visible:outline-ring data-[connection-compatible=true]:text-primary/70 data-[connection-source=true]:bg-primary/10 data-[connection-source=true]:text-primary data-[connection-target=true]:bg-primary/15 data-[connection-target=true]:text-primary data-[connection-target=true]:ring-2 data-[connection-target=true]:ring-primary/50",
               side === "in" ? "left-0" : "right-0",
+              // Ports stay out of sight until a card is hovered, wired into the selection, or a connection is open.
+              !armed &&
+                !selected &&
+                !related &&
+                "opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 data-[connection-compatible=true]:opacity-100 data-[connection-source=true]:opacity-100 [@media(hover:none)]:opacity-100",
               armed?.id === item.id && armed.side === side && "text-primary",
             )}
           >
@@ -690,30 +696,6 @@ export function ItemShopGraph({
           </select>
         )}
       </div>
-      {armed && (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs text-primary"
-        >
-          <Link2 className="size-3.5 shrink-0" />
-          Đang nối {warehouseName(byId.get(armed.id)!, locale)} · chọn chấm ở phía đối diện. Esc để hủy.
-        </p>
-      )}
-      {selectedId && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            <span aria-hidden className="h-0 w-7 border-t-[3px] border-primary" />
-            Nguyên liệu trực tiếp
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <span aria-hidden className="h-0 w-7 border-t border-dashed border-primary" />
-            Nguyên liệu gián tiếp / nâng cấp
-          </span>
-          <Button size="sm" variant="ghost" onClick={() => onFocus(null)}>
-            Bỏ chọn
-          </Button>
-        </div>
-      )}
       <DndContext
         sensors={sensors}
         autoScroll={{ threshold: { x: 0.12, y: 0.15 }, acceleration: 18 }}
@@ -724,288 +706,329 @@ export function ItemShopGraph({
           suppressClick.current = Date.now() + 300
         }}
       >
-        <div
-          ref={scrollArea}
-          className="overflow-x-auto rounded-xl border bg-muted/15"
-          tabIndex={0}
-          aria-label="Bảng vị trí trang bị"
-          onKeyDown={(event) => {
-            if ((event.target as Element).closest("[data-item-region-help]")) return
-            if (event.key === "Escape") {
-              cancelConnection()
-              if (armed) setArmed(null)
-              else onFocus(null)
-            }
-          }}
-        >
+        <div className="relative">
+          {(armed || selectedId) && (
+            // A zero-height sticky row keeps the hints in view without moving the board when they appear.
+            <div className="pointer-events-none sticky top-2 z-30 flex h-0 justify-end px-2">
+              <div className="pointer-events-auto mt-2 flex max-w-[calc(100%-1rem)] flex-col items-end gap-1.5">
+                {armed && (
+                  <p
+                    role="status"
+                    className="flex items-center gap-2 rounded-lg border border-primary/30 bg-card/95 px-2.5 py-1.5 text-xs text-primary shadow-sm backdrop-blur"
+                  >
+                    <Link2 className="size-3.5 shrink-0" />
+                    Đang nối {warehouseName(byId.get(armed.id)!, locale)} · chọn chấm ở phía đối diện. Esc để hủy.
+                  </p>
+                )}
+                {selectedId && (
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border bg-card/95 py-1 pr-1 pl-2.5 text-xs text-muted-foreground shadow-sm backdrop-blur">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span aria-hidden className="h-0 w-5 border-t-[3px] border-primary" />
+                      Nguyên liệu trực tiếp
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span aria-hidden className="h-0 w-5 border-t border-dashed border-primary" />
+                      Gián tiếp / nâng cấp
+                    </span>
+                    <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => onFocus(null)}>
+                      Bỏ chọn
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           <div
-            ref={canvas}
-            className="relative p-7 [contain:layout_paint]"
-            style={{ minWidth: columns * columnWidth + (columns - 1) * 48 + 56 }}
-            onPointerDown={(event) => {
-              if (event.button !== 0 || pointer.current) return
-              const port = (event.target as Element).closest<HTMLElement>("[data-link-id]")
-              if (port) {
-                const element = event.currentTarget
-                const bounds = element.getBoundingClientRect()
-                const source = port.getBoundingClientRect()
-                const origin = {
-                  x: (source.left + source.right) / 2 - bounds.left,
-                  y: (source.top + source.bottom) / 2 - bounds.top,
-                }
-                const side = port.dataset.linkSide as Port["side"]
-                const targets = [...element.querySelectorAll<HTMLElement>("[data-link-id]")]
-                  .filter((target) => target.dataset.linkId !== port.dataset.linkId && target.dataset.linkSide !== side)
-                  .map((target): PortTarget => {
-                    const rect = target.getBoundingClientRect()
-                    return {
-                      id: target.dataset.linkId!,
-                      side: target.dataset.linkSide as Port["side"],
-                      element: target,
-                      x: (rect.left + rect.right) / 2 - bounds.left,
-                      y: (rect.top + rect.bottom) / 2 - bounds.top,
-                      left: rect.left - bounds.left,
-                      right: rect.right - bounds.left,
-                      top: rect.top - bounds.top,
-                      bottom: rect.bottom - bounds.top,
-                    }
-                  })
-                port.setPointerCapture?.(event.pointerId)
-                port.setAttribute("data-connection-source", "true")
-                pointer.current = {
-                  port: { id: port.dataset.linkId!, side },
-                  element: port,
-                  pointerId: event.pointerId,
-                  x: event.clientX,
-                  y: event.clientY,
-                  startX: event.clientX,
-                  startY: event.clientY,
-                  origin,
-                  targets,
-                  magnetRadius: event.pointerType === "touch" ? 32 : 20,
-                  dragged: false,
-                  target: null,
-                }
+            ref={scrollArea}
+            className="overflow-x-auto rounded-xl border bg-muted/15"
+            tabIndex={0}
+            aria-label="Bảng vị trí trang bị"
+            onKeyDown={(event) => {
+              if ((event.target as Element).closest("[data-item-region-help]")) return
+              if (event.key === "Escape") {
+                cancelConnection()
+                if (armed) setArmed(null)
+                else onFocus(null)
               }
-            }}
-            onPointerMove={(event) => {
-              const session = pointer.current
-              if (!session || session.pointerId !== event.pointerId) return
-              session.x = event.clientX
-              session.y = event.clientY
-              if (!session.dragged && Math.hypot(event.clientX - session.startX, event.clientY - session.startY) > 6) {
-                session.dragged = true
-                setArmed(null)
-                session.targets.forEach((target) => target.element.setAttribute("data-connection-compatible", "true"))
-              }
-              if (session.dragged) {
-                event.preventDefault()
-                queueConnection()
-              }
-            }}
-            onPointerCancel={(event) => {
-              if (pointer.current?.pointerId === event.pointerId) cancelConnection()
-            }}
-            onLostPointerCapture={(event) => {
-              if (pointer.current?.pointerId === event.pointerId) cancelConnection()
-            }}
-            onPointerUp={(event) => {
-              const session = pointer.current
-              if (!session || session.pointerId !== event.pointerId) return
-              const bounds = event.currentTarget.getBoundingClientRect()
-              const target = nearestPort(session, event.clientX - bounds.left, event.clientY - bounds.top)
-              clearConnection()
-              if (!session.dragged) return
-              suppressClick.current = Date.now() + 300
-              if (target) connect(session.port, target)
-              else setArmed(null)
             }}
           >
             <div
-              className="grid items-start gap-x-12"
-              style={{ gridTemplateColumns: `repeat(${columns},${columnWidth}px)` }}
+              ref={canvas}
+              className="relative p-7 [contain:layout_paint]"
+              style={{ minWidth: columns * columnWidth + (columns - 1) * 48 + 56 }}
+              onPointerDown={(event) => {
+                if (event.button !== 0 || pointer.current) return
+                const port = (event.target as Element).closest<HTMLElement>("[data-link-id]")
+                if (port) {
+                  const element = event.currentTarget
+                  const bounds = element.getBoundingClientRect()
+                  const source = port.getBoundingClientRect()
+                  const origin = {
+                    x: (source.left + source.right) / 2 - bounds.left,
+                    y: (source.top + source.bottom) / 2 - bounds.top,
+                  }
+                  const side = port.dataset.linkSide as Port["side"]
+                  const targets = [...element.querySelectorAll<HTMLElement>("[data-link-id]")]
+                    .filter(
+                      (target) => target.dataset.linkId !== port.dataset.linkId && target.dataset.linkSide !== side,
+                    )
+                    .map((target): PortTarget => {
+                      const rect = target.getBoundingClientRect()
+                      return {
+                        id: target.dataset.linkId!,
+                        side: target.dataset.linkSide as Port["side"],
+                        element: target,
+                        x: (rect.left + rect.right) / 2 - bounds.left,
+                        y: (rect.top + rect.bottom) / 2 - bounds.top,
+                        left: rect.left - bounds.left,
+                        right: rect.right - bounds.left,
+                        top: rect.top - bounds.top,
+                        bottom: rect.bottom - bounds.top,
+                      }
+                    })
+                  port.setPointerCapture?.(event.pointerId)
+                  port.setAttribute("data-connection-source", "true")
+                  pointer.current = {
+                    port: { id: port.dataset.linkId!, side },
+                    element: port,
+                    pointerId: event.pointerId,
+                    x: event.clientX,
+                    y: event.clientY,
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    origin,
+                    targets,
+                    magnetRadius: event.pointerType === "touch" ? 32 : 20,
+                    dragged: false,
+                    target: null,
+                  }
+                }
+              }}
+              onPointerMove={(event) => {
+                const session = pointer.current
+                if (!session || session.pointerId !== event.pointerId) return
+                session.x = event.clientX
+                session.y = event.clientY
+                if (
+                  !session.dragged &&
+                  Math.hypot(event.clientX - session.startX, event.clientY - session.startY) > 6
+                ) {
+                  session.dragged = true
+                  setArmed(null)
+                  session.targets.forEach((target) => target.element.setAttribute("data-connection-compatible", "true"))
+                }
+                if (session.dragged) {
+                  event.preventDefault()
+                  queueConnection()
+                }
+              }}
+              onPointerCancel={(event) => {
+                if (pointer.current?.pointerId === event.pointerId) cancelConnection()
+              }}
+              onLostPointerCapture={(event) => {
+                if (pointer.current?.pointerId === event.pointerId) cancelConnection()
+              }}
+              onPointerUp={(event) => {
+                const session = pointer.current
+                if (!session || session.pointerId !== event.pointerId) return
+                const bounds = event.currentTarget.getBoundingClientRect()
+                const target = nearestPort(session, event.clientX - bounds.left, event.clientY - bounds.top)
+                clearConnection()
+                if (!session.dragged) return
+                suppressClick.current = Date.now() + 300
+                if (target) connect(session.port, target)
+                else setArmed(null)
+              }}
             >
-              {Array.from({ length: columns }, (_, column) => {
-                const native = placements.filter((p) => p.position.column === column && positioned(p.position))
-                const sections = itemShopSections(placements, column)
-                const lastRow = Math.max(-1, ...native.map((p) => p.position.row!))
-                const references = external.filter((p) => p.position?.column === column && positioned(p.position))
-                const groups = [...new Set(references.map((p) => p.categoryCode))]
-                const card = (placement: (typeof placements)[number], reference = false) => (
-                  <GraphCard
-                    key={`${placement.item.id}:${placement.index}`}
-                    item={placement.item}
-                    index={placement.index}
-                    editable={editable}
-                    locked={placement.item.revision.state !== "DRAFT"}
-                    selected={placement.item.id === selectedId}
-                    related={related.has(placement.item.id)}
-                    locale={locale}
-                    onSelect={() => onFocus(selectedId === placement.item.id ? null : placement.item.id)}
-                    onOpen={() => onSelect(placement.item.id)}
-                    column={column}
-                    columns={columns}
-                    armed={armed}
-                    onPort={portClick}
-                    terminal={placement.terminal}
-                    reference={reference}
-                    dimmed={!!matches && !matches.has(placement.item.id)}
-                  />
-                )
-                return (
-                  <section key={column} aria-label={`Cột ${column + 1}`} className="min-w-0 space-y-3">
-                    <h3 className="sticky top-0 z-10 mx-auto w-fit rounded-full border bg-card px-3 py-0.5 text-center text-xs font-medium text-muted-foreground">
-                      Cột {column + 1}
-                    </h3>
-                    {sections.map((section) => {
-                      const firstRow = section.rows[0].row
-                      const lastRow = section.rows.at(-1)!.row
-                      const cells = section.rows.map(({ row, placements }) => (
-                        <GraphCell key={row} row={row} column={column}>
-                          {placements.map((placement) => card(placement))}
-                        </GraphCell>
-                      ))
-                      return section.terminal ? (
-                        <section
-                          key={firstRow}
-                          aria-label={`Trang bị hoàn chỉnh · Cột ${column + 1} · Hàng ${firstRow + 1}–${lastRow + 1}`}
-                          className="space-y-2 rounded-xl border bg-muted/25 py-2"
-                        >
-                          <h4 className="flex items-center gap-1 px-3 text-xs font-medium text-muted-foreground">
-                            Trang bị hoàn chỉnh
-                            <ItemShopRegionHelp kind="terminal" />
-                          </h4>
-                          {cells}
-                        </section>
-                      ) : (
-                        <div key={firstRow} className="space-y-2">
-                          {cells}
-                        </div>
-                      )
-                    })}
-                    {more > 0 && (
-                      <div className="space-y-2">
-                        {Array.from({ length: more }, (_, index) => (
-                          <GraphCell
-                            key={index}
-                            row={Math.max(native.length ? 0 : 3, lastRow + 1) + index}
-                            column={column}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    {groups.map((code) => {
-                      const group = categories.find((entry) => entry.code === code)
-                      const name = group ? warehouseText(group.translations, locale)?.name || code : code
-                      return (
-                        <section
-                          key={code ?? "unassigned"}
-                          aria-label={`Thuộc tính khác · ${name || "Chưa phân loại"} · Cột ${column + 1}`}
-                          className="space-y-3 border-t border-dashed pt-3"
-                        >
-                          <h4 className="flex flex-wrap items-center gap-x-2 px-1 text-xs">
-                            <span className="font-semibold">{name || "Chưa phân loại"}</span>
-                            <span className="text-muted-foreground">Thuộc tính khác</span>
-                            <ItemShopRegionHelp
-                              kind="external"
-                              sourceGroup={name || "Chưa phân loại"}
-                              selectedItem={
-                                byId.has(selectedId ?? "")
-                                  ? warehouseName(byId.get(selectedId!)!, locale)
-                                  : "món đang chọn"
-                              }
+              <div
+                className="grid items-start justify-center gap-x-12"
+                style={{ gridTemplateColumns: `repeat(${columns},minmax(${columnWidth}px,${maxColumnWidth}px))` }}
+              >
+                {Array.from({ length: columns }, (_, column) => {
+                  const native = placements.filter((p) => p.position.column === column && positioned(p.position))
+                  const sections = itemShopSections(placements, column)
+                  const lastRow = Math.max(-1, ...native.map((p) => p.position.row!))
+                  const references = external.filter((p) => p.position?.column === column && positioned(p.position))
+                  const groups = [...new Set(references.map((p) => p.categoryCode))]
+                  const card = (placement: (typeof placements)[number], reference = false) => (
+                    <GraphCard
+                      key={`${placement.item.id}:${placement.index}`}
+                      item={placement.item}
+                      index={placement.index}
+                      editable={editable}
+                      locked={placement.item.revision.state !== "DRAFT"}
+                      selected={placement.item.id === selectedId}
+                      related={related.has(placement.item.id)}
+                      locale={locale}
+                      onSelect={() => onFocus(selectedId === placement.item.id ? null : placement.item.id)}
+                      onOpen={() => onSelect(placement.item.id)}
+                      column={column}
+                      columns={columns}
+                      armed={armed}
+                      onPort={portClick}
+                      terminal={placement.terminal}
+                      reference={reference}
+                      dimmed={!!matches && !matches.has(placement.item.id)}
+                    />
+                  )
+                  return (
+                    <section key={column} aria-label={`Cột ${column + 1}`} className="min-w-0 space-y-3">
+                      <h3 className="sticky top-0 z-10 mx-auto flex w-fit items-center gap-1.5 rounded-full border bg-card px-3 py-0.5 text-xs font-semibold">
+                        Cột {column + 1}
+                        <span className="font-normal tabular-nums text-muted-foreground">
+                          {new Set(native.map((p) => p.item.id)).size} món
+                        </span>
+                      </h3>
+                      {sections.map((section) => {
+                        const firstRow = section.rows[0].row
+                        const lastRow = section.rows.at(-1)!.row
+                        const cells = section.rows.map(({ row, placements }) => (
+                          <GraphCell key={row} row={row} column={column}>
+                            {placements.map((placement) => card(placement))}
+                          </GraphCell>
+                        ))
+                        return section.terminal ? (
+                          <section
+                            key={firstRow}
+                            aria-label={`Trang bị hoàn chỉnh · Cột ${column + 1} · Hàng ${firstRow + 1}–${lastRow + 1}`}
+                            className="space-y-2 rounded-xl border bg-muted/25 py-2"
+                          >
+                            <h4 className="flex items-center gap-1 px-3 text-xs font-medium text-muted-foreground">
+                              Trang bị hoàn chỉnh
+                              <ItemShopRegionHelp kind="terminal" />
+                            </h4>
+                            {cells}
+                          </section>
+                        ) : (
+                          <div key={firstRow} className="space-y-2">
+                            {cells}
+                          </div>
+                        )
+                      })}
+                      {more > 0 && (
+                        <div className="space-y-2">
+                          {Array.from({ length: more }, (_, index) => (
+                            <GraphCell
+                              key={index}
+                              row={Math.max(native.length ? 0 : 3, lastRow + 1) + index}
+                              column={column}
                             />
-                          </h4>
-                          {references
-                            .filter((p) => p.categoryCode === code)
-                            .map((p) =>
-                              card(
-                                {
-                                  item: p.item,
-                                  position: p.position!,
-                                  index: p.index,
-                                  terminal: false,
-                                },
-                                true,
-                              ),
-                            )}
-                        </section>
-                      )
-                    })}
-                  </section>
-                )
-              })}
-            </div>
-            <svg
-              className="pointer-events-none absolute inset-0 z-10 size-full"
-              aria-label="Đường ghép của trang bị được chọn"
-            >
-              <defs>
-                <marker
-                  id={marker}
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="5"
-                  markerWidth="10"
-                  markerHeight="10"
-                  markerUnits="userSpaceOnUse"
-                  orient="auto"
-                >
-                  <path d="M0 0 L10 5 L0 10 Z" fill="context-stroke" />
-                </marker>
-              </defs>
-              <g aria-hidden="true" fill="none" stroke="var(--background)" strokeWidth="7" strokeLinejoin="round">
+                          ))}
+                        </div>
+                      )}
+                      {groups.map((code) => {
+                        const group = categories.find((entry) => entry.code === code)
+                        const name = group ? warehouseText(group.translations, locale)?.name || code : code
+                        return (
+                          <section
+                            key={code ?? "unassigned"}
+                            aria-label={`Thuộc tính khác · ${name || "Chưa phân loại"} · Cột ${column + 1}`}
+                            className="space-y-3 border-t border-dashed pt-3"
+                          >
+                            <h4 className="flex flex-wrap items-center gap-x-2 px-1 text-xs">
+                              <span className="font-semibold">{name || "Chưa phân loại"}</span>
+                              <span className="text-muted-foreground">Thuộc tính khác</span>
+                              <ItemShopRegionHelp
+                                kind="external"
+                                sourceGroup={name || "Chưa phân loại"}
+                                selectedItem={
+                                  byId.has(selectedId ?? "")
+                                    ? warehouseName(byId.get(selectedId!)!, locale)
+                                    : "món đang chọn"
+                                }
+                              />
+                            </h4>
+                            {references
+                              .filter((p) => p.categoryCode === code)
+                              .map((p) =>
+                                card(
+                                  {
+                                    item: p.item,
+                                    position: p.position!,
+                                    index: p.index,
+                                    terminal: false,
+                                  },
+                                  true,
+                                ),
+                              )}
+                          </section>
+                        )
+                      })}
+                    </section>
+                  )
+                })}
+              </div>
+              <svg
+                className="pointer-events-none absolute inset-0 z-10 size-full"
+                aria-label="Đường ghép của trang bị được chọn"
+              >
+                <defs>
+                  <marker
+                    id={marker}
+                    viewBox="0 0 10 10"
+                    refX="9"
+                    refY="5"
+                    markerWidth="10"
+                    markerHeight="10"
+                    markerUnits="userSpaceOnUse"
+                    orient="auto"
+                  >
+                    <path d="M0 0 L10 5 L0 10 Z" fill="context-stroke" />
+                  </marker>
+                </defs>
+                <g aria-hidden="true" fill="none" stroke="var(--background)" strokeWidth="7" strokeLinejoin="round">
+                  {paths.map((path) => (
+                    <path key={path.key} d={path.d} data-recipe-halo="" />
+                  ))}
+                </g>
                 {paths.map((path) => (
-                  <path key={path.key} d={path.d} data-recipe-halo="" />
+                  <g key={path.key} className="text-primary" opacity={path.direct ? 1 : 0.65}>
+                    <path
+                      d={path.d}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={path.direct ? 3.2 : 1.6}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeDasharray={path.direct ? undefined : "6 5"}
+                      markerEnd={`url(#${marker})`}
+                      data-recipe-line={path.direct ? "direct" : "indirect"}
+                    />
+                    <path
+                      d={path.d}
+                      fill="none"
+                      stroke="transparent"
+                      strokeWidth="12"
+                      className="pointer-events-auto cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={path.label}
+                      onClick={() => onFocus(path.to)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault()
+                          onFocus(path.to)
+                        }
+                      }}
+                    >
+                      <title>{path.label}</title>
+                    </path>
+                  </g>
                 ))}
-              </g>
-              {paths.map((path) => (
-                <g key={path.key} className="text-primary" opacity={path.direct ? 1 : 0.65}>
+                <g ref={preview} visibility="hidden" aria-hidden="true" className="text-primary">
+                  <path ref={previewHalo} fill="none" stroke="var(--background)" strokeWidth="7" />
                   <path
-                    d={path.d}
+                    ref={previewWire}
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth={path.direct ? 3.2 : 1.6}
+                    strokeWidth="2.5"
                     strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeDasharray={path.direct ? undefined : "6 5"}
                     markerEnd={`url(#${marker})`}
-                    data-recipe-line={path.direct ? "direct" : "indirect"}
                   />
-                  <path
-                    d={path.d}
-                    fill="none"
-                    stroke="transparent"
-                    strokeWidth="12"
-                    className="pointer-events-auto cursor-pointer"
-                    role="button"
-                    tabIndex={0}
-                    aria-label={path.label}
-                    onClick={() => onFocus(path.to)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault()
-                        onFocus(path.to)
-                      }
-                    }}
-                  >
-                    <title>{path.label}</title>
-                  </path>
+                  <circle ref={previewTip} fill="var(--background)" stroke="currentColor" strokeWidth="2" />
                 </g>
-              ))}
-              <g ref={preview} visibility="hidden" aria-hidden="true" className="text-primary">
-                <path ref={previewHalo} fill="none" stroke="var(--background)" strokeWidth="7" />
-                <path
-                  ref={previewWire}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  markerEnd={`url(#${marker})`}
-                />
-                <circle ref={previewTip} fill="var(--background)" stroke="currentColor" strokeWidth="2" />
-              </g>
-            </svg>
+              </svg>
+            </div>
           </div>
         </div>
         {createPortal(
