@@ -68,7 +68,7 @@ export function SearchField({
   }, [shortcut, enabled, header])
   const field = (
     <div className="relative w-full min-w-0">
-      <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <input
         {...props}
         ref={(node) => {
@@ -89,14 +89,14 @@ export function SearchField({
             onChange("")
           } else event.currentTarget.blur()
         }}
-        className="peer h-9 w-full rounded-lg border bg-background pr-9 pl-8 text-sm transition-colors outline-none placeholder:text-muted-foreground hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:opacity-50 [&::-webkit-search-cancel-button]:appearance-none"
+        className="peer h-9 w-full rounded-full border bg-background pr-10 pl-10 text-sm transition-colors outline-none placeholder:text-muted-foreground hover:border-foreground/20 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/20 disabled:opacity-50 [&::-webkit-search-cancel-button]:appearance-none"
       />
       {value ? (
         <button
           type="button"
           aria-label="Xóa tìm kiếm"
           title="Xóa (Esc)"
-          className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+          className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => {
             onChange("")
@@ -108,7 +108,7 @@ export function SearchField({
       ) : (
         shortcut &&
         enabled && (
-          <Kbd className="absolute top-1/2 right-2 hidden -translate-y-1/2 peer-focus-visible:hidden sm:inline-flex">
+          <Kbd className="absolute top-1/2 right-3 hidden -translate-y-1/2 peer-focus-visible:hidden sm:inline-flex">
             /
           </Kbd>
         )
@@ -127,7 +127,7 @@ export function SearchField({
       <Button
         variant="ghost"
         size="icon"
-        className="relative size-9 shrink-0 sm:hidden"
+        className="relative size-9 shrink-0 rounded-full sm:hidden"
         aria-label={active ? `${label}: ${active}` : label}
         onClick={() => setExpanded(true)}
       >
