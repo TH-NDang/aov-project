@@ -5,20 +5,26 @@ interface PageHeaderProps {
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
-  /** A `SearchField` with `placement="header"`: centered between title and actions, an icon on phones. */
+  /**
+   * A `SearchField` with `placement="header"`: centered between title and actions when the header is at least 48rem
+   * wide, otherwise an icon that opens the field over the header row.
+   */
   search?: ReactNode
   className?: string
   children?: ReactNode
 }
 
 export function PageHeader({ title, description, actions, search, className, children }: PageHeaderProps) {
+  // The layout follows the header's own width, not the window's: the sidebar can leave a wide window little room.
   if (search)
     return (
-      <div className={cn("flex flex-col gap-3", className)}>
-        <div className="relative flex min-h-9 items-center gap-2 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:gap-x-4">
+      <div className={cn("@container/page-header flex flex-col gap-3", className)}>
+        <div className="relative flex min-h-9 items-center gap-2 @3xl/page-header:grid @3xl/page-header:grid-cols-[1fr_auto_1fr] @3xl/page-header:gap-x-4">
           <h1 className="min-w-0 flex-1 truncate text-xl font-semibold tracking-tight">{title}</h1>
           {search}
-          {actions && <div className="flex shrink-0 items-center gap-2 sm:justify-self-end">{actions}</div>}
+          {actions && (
+            <div className="flex shrink-0 items-center gap-2 @3xl/page-header:justify-self-end">{actions}</div>
+          )}
         </div>
         {description && <p className="-mt-1 text-sm text-muted-foreground">{description}</p>}
         {children}
