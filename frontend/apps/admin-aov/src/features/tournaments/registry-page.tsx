@@ -6,8 +6,7 @@ import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
-import { SearchField } from "@/components/search-field"
-import { AccessGate } from "@/features/esports/pages/esports-shell"
+import { AccessGate, LoadError } from "@/features/esports/pages/esports-shell"
 import { useRecords } from "@/features/esports/data/use-esports-data"
 import { RegistryEditor } from "./registry-editor"
 import { TeamRegistry } from "./team-registry"
@@ -15,7 +14,7 @@ import { PlayerRegistry } from "./player-registry"
 import { TeamRosterSheet } from "./team-roster-sheet"
 import { RecordTrash } from "./record-trash"
 import { RegistryImportSheet } from "./registry-import"
-import { tournamentError } from "./tournament-api"
+import { ManagementLoading } from "./management-list"
 import "./tournament-styles"
 
 type RegistryKind = "teams" | "players"
@@ -63,23 +62,21 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
   const active = kind === "teams" ? teams : players
 
   return (
-    <Page className="mx-auto w-full max-w-[1400px]">
+    <Page className="mx-auto w-full max-w-[1400px] gap-5">
       <PageHeader
         title={title}
-        search={
-          deleted ? undefined : (
-            <SearchField
-              placement="header"
-              label={kind === "teams" ? "Tìm đội tuyển" : "Tìm tuyển thủ"}
-              placeholder={kind === "teams" ? "Tìm đội tuyển…" : "Tên thi đấu, tên khác…"}
-              shortcut
-              value={search}
-              onChange={setSearch}
-            />
-          )
+        description={
+          kind === "teams"
+            ? "Hồ sơ đội tuyển và đội hình theo từng giải đấu."
+            : "Hồ sơ, tên thi đấu và các tên khác của tuyển thủ."
         }
         actions={
           <>
+            {canWrite && !deleted && (
+              <Button onClick={() => setEditor({ kind })}>
+                <Plus aria-hidden="true" /> {kind === "teams" ? "Thêm đội tuyển" : "Thêm tuyển thủ"}
+              </Button>
+            )}
             {deleted && (
               <Button
                 variant="secondary"
@@ -90,13 +87,9 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
                 <Trash2 size={14} /> Thùng rác <X size={14} />
               </Button>
             )}
-            <PageActionsMenu label={`${title}: thêm, nhập và thùng rác`}>
+            <PageActionsMenu label={`${title}: nhập dữ liệu và thùng rác`}>
               {canWrite && (
                 <>
-                  <DropdownMenuItem disabled={deleted} onSelect={() => setEditor({ kind })}>
-                    <Plus />
-                    {kind === "teams" ? "Thêm đội" : "Thêm tuyển thủ"}
-                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setImporting(true)}>
                     <Upload />
                     Nhập dữ liệu
@@ -119,17 +112,14 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
       {deleted ? (
         <RecordTrash key={kind} initialKind={kind} actorKey={actorKey} canWrite={canWrite} />
       ) : active.error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {tournamentError(active.error)}
-        </p>
+        <LoadError error={active.error} onRetry={() => void active.refetch()} />
       ) : active.isPending ? (
-        <p role="status" className="text-sm text-muted-foreground">
-          Đang tải…
-        </p>
+        <ManagementLoading />
       ) : kind === "teams" ? (
         <TeamRegistry
           teams={teams.data ?? []}
           {...{ country, search, canWrite }}
+          onSearchChange={setSearch}
           onCountryChange={(value) => navigate({ country: value || null })}
           onEdit={(entry) => setEditor({ kind: "teams", entry })}
           onRoster={(team) => setRosterTeamId(team.id)}
@@ -138,6 +128,7 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
         <PlayerRegistry
           players={players.data ?? []}
           {...{ country, search, canWrite }}
+          onSearchChange={setSearch}
           onCountryChange={(value) => navigate({ country: value || null })}
           onEdit={(entry) => setEditor({ kind: "players", entry })}
         />

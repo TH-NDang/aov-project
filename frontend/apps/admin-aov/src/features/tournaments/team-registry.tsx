@@ -1,10 +1,20 @@
 import { Edit3, Users } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import type { DocumentView, TeamContent } from "@aov/community-contracts"
-import { Input } from "@aov/ui/components/input"
+import { Button } from "@aov/ui/components/button"
+import { TableCell, TableRow } from "@aov/ui/components/table"
 import { RegistryLogo } from "./registry-logo"
 import { TeamRegionBadge, teamRegionName } from "./team-region"
 import { registrySearchText } from "./registry-form-model"
+import {
+  ManagementEmpty,
+  ManagementFooter,
+  ManagementPanel,
+  ManagementTable,
+  ManagementToolbar,
+  managementSelectClassName,
+  useManagementPagination,
+} from "./management-list"
 
 export function TeamRegistry({
   teams,
@@ -22,33 +32,47 @@ export function TeamRegistry({
   search: string
   canWrite: boolean
   onCountryChange: (country: string) => void
-  /** Shows a search box in the toolbar; the registry page searches from its header instead. */
   onSearchChange?: (search: string) => void
   onEdit: (team: DocumentView<TeamContent>) => void
   selectedId?: string
   onRoster?: (team: DocumentView<TeamContent>) => void
 }) {
-  useEffect(() => {
-    if (selectedId) document.getElementById(`tournament-team-${selectedId}`)?.scrollIntoView?.({ block: "nearest" })
-  }, [selectedId, teams])
+  const [order, setOrder] = useState("asc")
   const countries = [...new Set(teams.map((team) => team.content.country || ""))].sort((a, b) =>
     teamRegionName(a).localeCompare(teamRegionName(b), "vi"),
   )
   const query = registrySearchText(search)
-  const shown = teams.filter(
-    (team) =>
-      (!country || (team.content.country || "UNKNOWN") === country) &&
-      registrySearchText(
-        `${team.content.name} ${team.content.code} ${team.content.shortName ?? ""} ${(team.content.aliases ?? []).join(" ")}`,
-      ).includes(query),
-  )
-  const groups = [...new Set(shown.map((team) => team.content.country || ""))].sort((a, b) =>
-    teamRegionName(a).localeCompare(teamRegionName(b), "vi"),
-  )
+  const shown = teams
+    .filter(
+      (team) =>
+        (!country || (team.content.country || "UNKNOWN") === country) &&
+        registrySearchText(
+          `${team.content.name} ${team.content.code} ${team.content.shortName ?? ""} ${(team.content.aliases ?? []).join(" ")}`,
+        ).includes(query),
+    )
+    .sort((a, b) => a.content.name.localeCompare(b.content.name, "vi") * (order === "asc" ? 1 : -1))
+  const pagination = useManagementPagination(shown, JSON.stringify([search, country, order]), selectedId)
+  const reset = () => {
+    onCountryChange("")
+    onSearchChange?.("")
+  }
+  const filtered = !!country || !!search.trim()
+
+  useEffect(() => {
+    if (selectedId) document.getElementById(`tournament-team-${selectedId}`)?.scrollIntoView?.({ block: "nearest" })
+  }, [selectedId, teams, pagination.page])
+
   return (
-    <>
-      <div className="tournament-overview-controls">
+    <ManagementPanel>
+      <ManagementToolbar
+        search={search}
+        onSearchChange={onSearchChange}
+        searchLabel="Tìm đội tuyển"
+        placeholder="Tên đội, tên viết tắt hoặc mã…"
+        onReset={filtered ? reset : undefined}
+      >
         <select
+          className={managementSelectClassName}
           aria-label="Lọc khu vực đội tuyển"
           value={country}
           onChange={(event) => onCountryChange(event.target.value)}
@@ -63,89 +87,115 @@ export function TeamRegistry({
             <option value={country}>{teamRegionName(country === "UNKNOWN" ? "" : country)}</option>
           )}
         </select>
-        {onSearchChange && (
-          <Input
-            aria-label="Tìm đội tuyển"
-            placeholder="Tìm đội tuyển…"
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-          />
-        )}
-        <small className="tournament-filter-count" role="status">
-          {shown.length}/{teams.length} đội
-        </small>
-      </div>
-      {groups.map((code) => {
-        const entries = shown.filter((team) => (team.content.country || "") === code)
-        return (
-          <section className="tournament-team-group" key={code || "UNKNOWN"}>
-            <h2>
-              <TeamRegionBadge code={code} />
-              <small>{entries.length} đội</small>
-            </h2>
-            <div className="tournament-registry-list">
-              {entries.map((entry) => {
-                const body = (
-                  <>
-                    <RegistryLogo url={entry.content.logoUrl} name={entry.content.shortName || entry.content.name} />
-                    <div>
-                      <strong className="tournament-team-name">
-                        {entry.content.shortName && (
-                          <span className="tournament-team-short-name">{entry.content.shortName}</span>
-                        )}
-                        <span>{entry.content.name}</span>
-                      </strong>
-                      {!entry.content.shortName && <small>{entry.content.code}</small>}
-                    </div>
-                    {canWrite && <Edit3 size={14} className="tournament-card-edit-hint" aria-hidden="true" />}
-                  </>
-                )
-                const props = {
-                  className: "tournament-registry-card",
-                  id: `tournament-team-${entry.id}`,
-                  "data-selected": selectedId === entry.id || undefined,
-                  title: [entry.content.name, ...(entry.content.aliases ?? [])].join("\n"),
-                }
-                const card = canWrite ? (
-                  <button
-                    {...props}
-                    type="button"
-                    aria-label={`Sửa đội ${entry.content.name}`}
-                    onClick={() => onEdit(entry)}
-                  >
-                    {body}
-                  </button>
-                ) : (
-                  <article {...props}>{body}</article>
-                )
-                return (
-                  <div className="tournament-team-card" key={entry.id}>
-                    {card}
-                    {onRoster && (
-                      <button
-                        type="button"
-                        className="tournament-team-roster-action"
-                        onClick={() => onRoster(entry)}
-                        aria-label={`Đội hình ${entry.content.name}`}
-                      >
-                        <Users size={13} />
-                        Đội hình
-                      </button>
+        <select
+          className={managementSelectClassName}
+          aria-label="Sắp xếp đội tuyển"
+          value={order}
+          onChange={(event) => setOrder(event.target.value)}
+        >
+          <option value="asc">Tên A–Z</option>
+          <option value="desc">Tên Z–A</option>
+        </select>
+      </ManagementToolbar>
+      {shown.length ? (
+        <ManagementTable
+          label="Danh sách đội tuyển"
+          columns={[
+            { label: "Đội tuyển" },
+            { label: "Khu vực", className: "hidden w-44 @2xl:table-cell" },
+            { label: "Tên khác", className: "hidden w-1/4 @4xl:table-cell" },
+            ...(onRoster ? [{ label: "Đội hình", className: "w-20 text-right @xl:w-32" }] : []),
+          ]}
+        >
+          {pagination.rows.map((entry) => {
+            const body = (
+              <>
+                <RegistryLogo url={entry.content.logoUrl} name={entry.content.shortName || entry.content.name} />
+                <span className="min-w-0 flex-1 space-y-1">
+                  <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                    <strong className="type-body break-words">{entry.content.name}</strong>
+                    {entry.content.shortName && (
+                      <span className="type-label rounded bg-muted px-1.5 py-0.5 text-muted-foreground">
+                        {entry.content.shortName}
+                      </span>
                     )}
-                  </div>
-                )
-              })}
-            </div>
-          </section>
-        )
-      })}
-      {!shown.length && (
-        <div className="tournament-empty-inline">
-          {teams.length
-            ? "Không có đội phù hợp với bộ lọc."
-            : "Chưa có đội tuyển. Tạo hồ sơ trước, sau đó chọn vào đội hình từng ván."}
-        </div>
+                  </span>
+                  <span className="type-meta block truncate">{entry.content.code}</span>
+                  <span className="block @2xl:hidden">
+                    <TeamRegionBadge code={entry.content.country} />
+                  </span>
+                </span>
+                {canWrite && (
+                  <Edit3
+                    className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground"
+                    aria-hidden="true"
+                  />
+                )}
+              </>
+            )
+            const props = {
+              className:
+                "group flex w-full min-w-0 items-center gap-3 rounded-md text-left outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              title: [entry.content.name, ...(entry.content.aliases ?? [])].join("\n"),
+            }
+            return (
+              <TableRow
+                key={entry.id}
+                id={`tournament-team-${entry.id}`}
+                data-state={selectedId === entry.id ? "selected" : undefined}
+              >
+                <TableCell>
+                  {canWrite ? (
+                    <button
+                      {...props}
+                      type="button"
+                      aria-label={`Sửa đội ${entry.content.name}`}
+                      onClick={() => onEdit(entry)}
+                    >
+                      {body}
+                    </button>
+                  ) : (
+                    <div {...props}>{body}</div>
+                  )}
+                </TableCell>
+                <TableCell className="hidden @2xl:table-cell">
+                  <TeamRegionBadge code={entry.content.country} />
+                </TableCell>
+                <TableCell className="hidden @4xl:table-cell">
+                  <span className="type-meta block truncate" title={entry.content.aliases?.join(", ")}>
+                    {entry.content.aliases?.join(", ") || "—"}
+                  </span>
+                </TableCell>
+                {onRoster && (
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onRoster(entry)}
+                      aria-label={`Đội hình ${entry.content.name}`}
+                    >
+                      <Users aria-hidden="true" />
+                      <span className="hidden @xl:inline">Đội hình</span>
+                    </Button>
+                  </TableCell>
+                )}
+              </TableRow>
+            )
+          })}
+        </ManagementTable>
+      ) : (
+        <ManagementEmpty
+          title={teams.length ? "Không tìm thấy đội tuyển" : "Chưa có đội tuyển"}
+          description={
+            teams.length
+              ? "Thử tên khác hoặc xóa bộ lọc để xem toàn bộ đội tuyển."
+              : "Thêm hồ sơ đội tuyển để quản lý thông tin và đội hình thi đấu."
+          }
+          onReset={filtered ? reset : undefined}
+        />
       )}
-    </>
+      <ManagementFooter count={shown.length} total={teams.length} noun="đội tuyển" {...pagination} />
+    </ManagementPanel>
   )
 }
