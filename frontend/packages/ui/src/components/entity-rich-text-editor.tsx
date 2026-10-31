@@ -27,6 +27,8 @@ import {
   type EntityIconResolver,
 } from "./entity-rich-text"
 import { Button } from "./button"
+import { AtSign, Paintbrush, Redo2, Undo2 } from "lucide-react"
+import { cn } from "../lib/utils"
 
 const empty: EntityReference[] = []
 const kinds = entityKindLabels
@@ -46,6 +48,9 @@ export interface EntityRichTextEditorProps {
   resolveIcon?: EntityIconResolver
   renderPreview?: boolean
   hideLabel?: boolean
+  compact?: boolean
+  className?: string
+  inputClassName?: string
   searchReferences?: EntityReferenceSearch
 }
 
@@ -148,6 +153,9 @@ export function EntityRichTextEditor({
   resolveIcon,
   renderPreview = true,
   hideLabel = false,
+  compact = false,
+  className,
+  inputClassName,
   searchReferences,
 }: EntityRichTextEditorProps) {
   const limit = Math.max(0, Math.min(100000, maxLength))
@@ -388,7 +396,7 @@ export function EntityRichTextEditor({
   return (
     <div
       ref={editor}
-      className="min-w-0 space-y-2"
+      className={cn("min-w-0 space-y-2", className)}
       data-slot="entity-rich-text-editor"
       onBlur={(event) => {
         const target = event.relatedTarget as Node | null
@@ -409,9 +417,16 @@ export function EntityRichTextEditor({
       <div
         role="toolbar"
         aria-label={`Định dạng ${label}`}
-        className="flex flex-wrap items-center gap-1 rounded-md border bg-muted/30 p-1"
+        className={cn(
+          "flex flex-wrap items-center gap-1 rounded-md border bg-muted/30 p-1",
+          compact && "gap-0.5 rounded-lg",
+        )}
       >
-        <div role="group" aria-label="Định dạng chữ" className="flex shrink-0 items-center gap-1 border-r pr-2">
+        <div
+          role="group"
+          aria-label="Định dạng chữ"
+          className={cn("flex shrink-0 items-center gap-1 border-r pr-2", compact && "gap-0.5 pr-1")}
+        >
           {(
             [
               ["b", "Đậm", "B"],
@@ -424,44 +439,60 @@ export function EntityRichTextEditor({
               variant={(kind === "b" ? formatting.bold : formatting.italic) ? "secondary" : "ghost"}
               size="sm"
               aria-label={name}
+              title={kind === "b" ? "Đậm (Ctrl+B)" : "Nghiêng (Ctrl+I)"}
               aria-pressed={kind === "b" ? formatting.bold : formatting.italic}
               disabled={disabled}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => format(kind)}
-              className={kind === "b" ? "font-bold" : "italic"}
+              className={cn(kind === "b" ? "font-bold" : "italic", compact && "size-7 rounded-md p-0")}
             >
               {text}
             </Button>
           ))}
         </div>
-        <div role="group" aria-label="Màu chữ" className="flex shrink-0 items-center gap-1 border-r px-1 pr-2">
+        <div
+          role="group"
+          aria-label="Màu chữ"
+          className={cn("flex shrink-0 items-center gap-1 border-r px-1 pr-2", compact && "gap-0.5 pr-1")}
+        >
           <label className="flex items-center gap-1 text-xs">
-            Màu
+            <span className={compact ? "sr-only" : undefined}>Màu</span>
             <input
               type="color"
               aria-label={`Màu chữ ${label}`}
               value={color}
               disabled={disabled}
               onChange={(e) => setColor(e.target.value)}
-              className="size-8 cursor-pointer rounded"
+              title="Chọn màu chữ"
+              className={cn("size-8 cursor-pointer rounded", compact && "size-7 rounded-md border bg-background p-0.5")}
             />
           </label>
           <Button
             type="button"
             size="sm"
             variant="ghost"
+            aria-label="Áp dụng màu"
+            title="Áp dụng màu cho chữ đang chọn"
+            className={compact ? "size-7 rounded-md p-0" : undefined}
             disabled={disabled}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => format("color")}
           >
-            Áp dụng màu
+            {compact ? <Paintbrush aria-hidden className="size-3.5" /> : "Áp dụng màu"}
           </Button>
         </div>
-        <div role="group" aria-label="Chèn tham chiếu" className="flex shrink-0 items-center border-r px-1 pr-2">
+        <div
+          role="group"
+          aria-label="Chèn tham chiếu"
+          className={cn("flex shrink-0 items-center border-r px-1 pr-2", compact && "px-0.5 pr-1")}
+        >
           <Button
             type="button"
             size="sm"
             variant="ghost"
+            aria-label={compact ? "Chèn tham chiếu" : undefined}
+            title="Chèn tham chiếu (@)"
+            className={compact ? "size-7 rounded-md p-0" : undefined}
             disabled={disabled}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
@@ -471,38 +502,49 @@ export function EntityRichTextEditor({
               setDismissed(true)
             }}
           >
-            @ Tham chiếu
+            {compact ? <AtSign aria-hidden className="size-3.5" /> : "@ Tham chiếu"}
           </Button>
         </div>
-        <div role="group" aria-label="Lịch sử chỉnh sửa" className="flex shrink-0 items-center gap-1 px-1">
+        <div
+          role="group"
+          aria-label="Lịch sử chỉnh sửa"
+          className={cn("flex shrink-0 items-center gap-1 px-1", compact && "gap-0.5 px-0.5")}
+        >
           <Button
             type="button"
             size="sm"
             variant="ghost"
             aria-label="Hoàn tác"
+            title="Hoàn tác (Ctrl+Z)"
+            className={compact ? "size-7 rounded-md p-0" : undefined}
             disabled={disabled || position.current === 0}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => undo()}
           >
-            ↶
+            {compact ? <Undo2 aria-hidden className="size-3.5" /> : "↶"}
           </Button>
           <Button
             type="button"
             size="sm"
             variant="ghost"
             aria-label="Làm lại"
+            title="Làm lại (Ctrl+Shift+Z)"
+            className={compact ? "size-7 rounded-md p-0" : undefined}
             disabled={disabled || position.current >= history.current.length - 1}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => undo(true)}
           >
-            ↷
+            {compact ? <Redo2 aria-hidden className="size-3.5" /> : "↷"}
           </Button>
         </div>
       </div>
       <EntityReferenceInput
         id={id}
         ref={area}
-        className="min-h-28 w-full rounded-lg border bg-background px-3 py-2 text-sm leading-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:opacity-50"
+        className={cn(
+          "min-h-28 w-full rounded-lg border bg-background px-3 py-2 text-sm leading-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-disabled:opacity-50",
+          inputClassName,
+        )}
         value={value}
         entities={resolvedEntities}
         autoRecognize={autoRecognize}
@@ -567,7 +609,9 @@ export function EntityRichTextEditor({
         }}
       />
       <p id={`${id}-help`} className="text-xs text-muted-foreground">
-        Tên và thuật ngữ đầy đủ được nhận diện tự động. Gõ @ để tìm và chèn thẻ tham chiếu.
+        {compact
+          ? "Gõ @ để chèn tham chiếu · Ctrl+B / Ctrl+I để định dạng."
+          : "Tên và thuật ngữ đầy đủ được nhận diện tự động. Gõ @ để tìm và chèn thẻ tham chiếu."}
       </p>
       <PopoverPrimitive.Root
         open={popupOpen}
