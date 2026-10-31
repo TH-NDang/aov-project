@@ -33,7 +33,7 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
-import { errorMessage } from "@/lib/api/errors"
+import { errorMessage, isApiError } from "@/lib/api/errors"
 import type { Hero } from "@/lib/api/types"
 import { languageOptions } from "../users/profile-preference-picker"
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
@@ -107,11 +107,19 @@ function PublishingFrame({ rulesetId, ...props }: ComponentProps<typeof Page> & 
   )
 }
 
-const heroIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
 export function PublishingPage({ translationMode = false }: { translationMode?: boolean }) {
   const { heroId = "" } = useParams()
-  if (heroId && !heroIdPattern.test(heroId)) return <HeroCodeRedirect code={heroId} />
+  // Shares the workspace's revisions query; the backend rejects a hero code in the id slot, e.g. /hero/airi.
+  const revisions = useQuery({
+    queryKey: ["publishing-revisions", heroId],
+    queryFn: () => api.revisions(heroId),
+    enabled: !!heroId,
+  })
+  if (
+    isApiError(revisions.error, "INVALID_REQUEST") &&
+    revisions.error.problem.errors?.some((field) => field.path === "heroId")
+  )
+    return <HeroCodeRedirect code={heroId} />
   return <PublishingWorkspace key={`${heroId}:${translationMode}`} heroId={heroId} translationMode={translationMode} />
 }
 
