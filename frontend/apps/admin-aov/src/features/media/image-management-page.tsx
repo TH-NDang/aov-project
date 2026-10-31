@@ -583,7 +583,7 @@ export function ImageManagementPage() {
           <span className="mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
             <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
           </span>
-          <h2 className="text-base font-bold">{needsCredit ? "Không có ảnh cần bổ sung" : "Chưa có ảnh"}</h2>
+          <h2 className="type-section-title">{needsCredit ? "Không có ảnh cần bổ sung" : "Chưa có ảnh"}</h2>
           <p className="text-xs text-muted-foreground">
             {needsCredit ? "Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
           </p>

@@ -167,7 +167,7 @@ export function GameConfigurationPage() {
         <>
           <MarketOverview data={data} onOpenMarket={setMarketId} />
           <section className="min-w-0 space-y-3">
-            <h2 className="text-base font-bold">Mùa và bản cập nhật</h2>
+            <h2 className="type-section-title">Mùa và bản cập nhật</h2>
             <CatalogTimeline data={data} value={timelineScope} onChange={changeScope} showCounts={false} />
             {!data.seasons.length && (
               <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">
@@ -321,7 +321,7 @@ function MarketOverview({ data, onOpenMarket }: { data: PublicationOverview; onO
   return (
     <section className="overflow-hidden rounded-xl border bg-card" aria-label="Thị trường">
       <div className="border-b px-4 py-3">
-        <h2 className="text-base font-bold">Thị trường đang phát hành</h2>
+        <h2 className="type-section-title">Thị trường đang phát hành</h2>
       </div>
       {groups.map(({ rule, markets }) => (
         <div key={rule.id || "none"}>

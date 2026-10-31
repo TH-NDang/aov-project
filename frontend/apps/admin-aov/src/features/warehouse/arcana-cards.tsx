@@ -108,7 +108,7 @@ export function ArcanaCollection({
     <div className="@container/arcana min-w-0 space-y-3">
       {highest.length > 0 && (
         <section className="space-y-3" aria-label="Ngọc bậc III">
-          <h2 className="flex items-center gap-2 px-1 text-base font-bold">
+          <h2 className="flex items-center gap-2 px-1 type-section-title">
             Ngọc bậc III <span className="ml-1 text-muted-foreground">{highest.length}</span>
           </h2>
           {groups(highest, 3)}

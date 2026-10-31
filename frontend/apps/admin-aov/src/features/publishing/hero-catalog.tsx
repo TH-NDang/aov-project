@@ -337,7 +337,7 @@ export function HeroCatalog({
     <section className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2.5">
-          <h2 className="text-base font-bold">Danh sách tướng</h2>
+          <h2 className="type-section-title">Danh sách tướng</h2>
           <span className="rounded-md bg-muted/70 px-2 py-1 text-xs text-muted-foreground tabular-nums">
             <span className="sr-only">Đã tải </span>
             {heroes.data?.pages.reduce((n, p) => n + p.items.length, 0) ?? 0} /{" "}

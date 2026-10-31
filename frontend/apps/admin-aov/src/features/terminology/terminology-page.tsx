@@ -283,7 +283,7 @@ export function TerminologyPage() {
                 <Settings2 aria-hidden className="size-5 text-muted-foreground" />
               </span>
               <div>
-                <h2 className="text-base font-bold">Nhận diện trong mô tả</h2>
+                <h2 className="type-section-title">Nhận diện trong mô tả</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Áp dụng chung cho admin và wiki. Thay đổi có hiệu lực sau khi lưu.
                 </p>

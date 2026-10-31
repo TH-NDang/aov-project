@@ -483,7 +483,7 @@ export function HeroImport({
     <section className="overflow-hidden rounded-xl border bg-card" aria-label="Import tướng">
       <div className="border-b bg-muted/30 px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base flex items-center gap-2 font-bold">
+          <h2 className="flex items-center gap-2 type-section-title">
             <Upload className="size-4" /> Nhập dữ liệu tướng
           </h2>
           <span className="text-xs text-muted-foreground">JSON / CSV · Tối đa 5 MB / 200 tướng</span>

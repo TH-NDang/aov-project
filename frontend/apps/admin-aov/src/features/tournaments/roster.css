@@ -56,7 +56,7 @@
 }
 .tournament-roster-list-heading small {
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-membership-list {
   display: flex;
@@ -103,7 +103,7 @@ button.tournament-member-body:hover {
 }
 .tournament-member-body small {
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-member-lane {
   flex-shrink: 0;
@@ -111,7 +111,7 @@ button.tournament-member-body:hover {
   background: var(--muted);
   padding: 4px 6px;
   color: var(--muted-foreground);
-  font-size: 10px;
+  font-size: 12px;
 }
 .tournament-roster-form {
   display: flex;
@@ -142,7 +142,7 @@ button.tournament-member-body:hover {
 .tournament-roster-extra > summary {
   cursor: pointer;
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 12px;
 }
 .tournament-roster-extra > div {
   padding-top: 12px;
@@ -156,7 +156,7 @@ button.tournament-member-body:hover {
 .tournament-roster-source-note {
   max-height: 160px;
   overflow-y: auto;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
   white-space: pre-wrap;
 }

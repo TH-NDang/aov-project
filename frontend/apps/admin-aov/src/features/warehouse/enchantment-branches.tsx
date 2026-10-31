@@ -127,7 +127,7 @@ export function EnchantmentBranches({
                 />
               </div>
               <div className="min-w-0 flex-1 space-y-1">
-                <h2 className="text-base font-bold tracking-tight @min-[520px]/enchantments:text-lg">
+                <h2 className="tracking-tight @min-[520px]/enchantments:text-lg type-section-title">
                   {text?.name ?? branch.code}
                 </h2>
                 <p className="text-xs text-muted-foreground">{entries.length} phù hiệu</p>
