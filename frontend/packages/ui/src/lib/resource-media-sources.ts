@@ -70,7 +70,7 @@ export function buildResourceMediaSources(documents: Record<string, unknown>): R
           label: derived
             ? "Ảnh đã xử lý / tái tạo theo mẫu Garena"
             : figmaExport
-              ? "Ảnh chụp Liên Quân — gói Figma do người dùng cung cấp"
+              ? "Ảnh chụp từ game Liên Quân"
               : providedZip
                 ? "Ảnh chụp Liên Quân — gói phu-tro.zip do người dùng cung cấp"
                 : garena
