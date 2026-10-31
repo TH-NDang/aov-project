@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router"
 import { CatalogTimeline } from "./catalog-timeline"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { CalendarPlus, ChevronDown, Link2, RefreshCw, Plus, Shapes } from "lucide-react"
+import { CalendarPlus, ChevronDown, RefreshCw, Plus, Shapes } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -18,7 +18,7 @@ import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi } from "./publishing-api"
-import { DEFAULT_RULESET_CODE } from "./default-ruleset"
+import { assignSharedRuleset, DEFAULT_RULESET_CODE } from "./default-ruleset"
 import { invalidateReferenceCatalog } from "../terminology/reference-api"
 import { SeasonSetup } from "./season-setup"
 import { PatchSetup } from "./patch-setup"
@@ -68,10 +68,16 @@ export function GameConfigurationPage() {
   // A new database has no ruleset; the wiki only ever needs the one default ruleset.
   async function createDefaultRuleset() {
     try {
-      await api.send("/admin/rulesets", "POST", {
+      const created = await api.send<{ id: string }>("/admin/rulesets", "POST", {
         code: DEFAULT_RULESET_CODE,
         description: "Bộ gameplay Liên Quân dùng chung giữa các thị trường.",
       })
+      // Every market shares this ruleset, so assign them all right away.
+      await assignSharedRuleset(
+        backendRequest,
+        created.id,
+        (data?.markets ?? []).map((market) => market.id),
+      )
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["publishing-rulesets"] }),
         overview.refetch(),
@@ -101,17 +107,11 @@ export function GameConfigurationPage() {
                 <DropdownMenuSeparator />
               </>
             )}
-            {capabilities.includes("region:admin") && (
+            {capabilities.includes("region:admin") && data && !data.rulesets.length && (
               <>
-                {data && !data.rulesets.length && (
-                  <DropdownMenuItem onSelect={() => void createDefaultRuleset()}>
-                    <Shapes />
-                    Tạo bộ quy tắc mặc định
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onSelect={() => setSetup("assignment")}>
-                  <Link2 />
-                  Gán thị trường vào bộ quy tắc
+                <DropdownMenuItem onSelect={() => void createDefaultRuleset()}>
+                  <Shapes />
+                  Tạo bộ quy tắc mặc định
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
