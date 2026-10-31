@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { ItemCategoryIcon, itemCategoryFallback } from "./item-category-icon"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
+import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { HeroAsset } from "../publishing/hero-content"
 import { control } from "../publishing/fields"
 import { itemEdges, selectedItemEdges, routeItemWire, type CardRect } from "./item-graph"
@@ -635,11 +636,7 @@ export function ItemShopGraph({
   return (
     <section className="min-w-0 space-y-3" aria-label="Sơ đồ trang bị">
       <div className="flex flex-wrap items-center gap-2">
-        <div
-          className="flex min-w-0 flex-1 gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none]"
-          role="group"
-          aria-label="Nhóm trang bị"
-        >
+        <FilterTabs label="Nhóm trang bị">
           {categories.map((group) => {
             const count = items.filter(
               (item) =>
@@ -648,17 +645,12 @@ export function ItemShopGraph({
             ).length
             const active = category === group.code
             return (
-              <Button
+              <FilterTab
                 key={group.code}
-                variant={active ? "secondary" : "ghost"}
-                size="sm"
-                aria-pressed={active}
+                active={active}
+                count={count}
                 title={matches ? `${count} món khớp tìm kiếm` : undefined}
-                className={cn(
-                  "h-8 shrink-0 gap-1.5",
-                  !active && "text-muted-foreground",
-                  matches && !count && !active && "opacity-50",
-                )}
+                className={cn(matches && !count && !active && "opacity-50")}
                 onClick={() => {
                   onCategory(group.code)
                   onFocus(null)
@@ -668,18 +660,11 @@ export function ItemShopGraph({
               >
                 <ItemCategoryIcon category={group} />
                 {warehouseText(group.translations, locale)?.name || group.code}
-                <span
-                  className={cn(
-                    "text-xs tabular-nums text-muted-foreground",
-                    matches && count > 0 && "rounded-full bg-primary/15 px-1.5 font-medium text-primary",
-                  )}
-                >
-                  {count}
-                </span>
-              </Button>
+              </FilterTab>
             )
           })}
-        </div>
+        </FilterTabs>
+        <span className="flex-1" />
         {missingIcons.length > 0 && (
           <Button
             variant="ghost"

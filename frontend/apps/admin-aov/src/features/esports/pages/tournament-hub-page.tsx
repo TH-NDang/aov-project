@@ -4,9 +4,9 @@ import type { DocumentView, TournamentContent } from "@aov/community-contracts"
 import { Plus, Trophy, Upload, Users } from "lucide-react"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { PageHeader } from "@/components/page-header"
+import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { SearchField } from "@/components/search-field"
-import { cn } from "@aov/ui/lib/utils"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { RegistryImportSheet } from "@/features/tournaments/registry-import"
 import { useRecords } from "../data/use-esports-data"
@@ -122,28 +122,19 @@ function Hub({ access }: { access: Access }) {
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex rounded-full border p-0.5" role="group" aria-label="Trạng thái">
+        <FilterTabs label="Trạng thái">
           {STATUS_FILTERS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={status === value}
-              onClick={() => setFilter("status", value)}
-              className={cn(
-                "h-7 rounded-full px-3 text-xs font-medium transition",
-                status === value ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
+            <FilterTab key={value} active={status === value} onClick={() => setFilter("status", value)}>
               {value === "all" ? "Tất cả" : STATUS_LABELS[value]}
-            </button>
+            </FilterTab>
           ))}
-        </div>
+        </FilterTabs>
         {tiers.length > 1 && (
           <select
             aria-label="Hạng giải"
             value={tier}
             onChange={(event) => setFilter("tier", event.target.value)}
-            className="h-8 rounded-full border bg-background px-3 text-xs"
+            className="h-10 rounded-xl border bg-background px-3 text-sm"
           >
             <option value="">Mọi hạng</option>
             {tiers.map((value) => (

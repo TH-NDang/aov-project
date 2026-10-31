@@ -1,8 +1,8 @@
-import { useId } from "react"
 import { Gem, LayoutGrid, RotateCcw, SlidersHorizontal } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
 import { cn } from "@aov/ui/lib/utils"
+import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 
 const colors = [
   {
@@ -25,11 +25,6 @@ const colors = [
   },
 ] as const
 
-const optionClass = "h-7 min-w-0 gap-1.5 px-2.5 text-xs has-[>svg]:px-2.5"
-const activeClass = "bg-background text-foreground shadow-xs ring-1 ring-border/60 hover:bg-background"
-const groupClass = "grid grid-cols-4 gap-1 rounded-lg bg-muted/60 p-1"
-const labelClass = "text-[11px] font-medium text-muted-foreground"
-
 export function ArcanaFilters({
   color,
   tier,
@@ -51,99 +46,68 @@ export function ArcanaFilters({
   onStatChange: (value: string | null) => void
   onReset: () => void
 }) {
-  const statId = useId()
   return (
-    <div className="flex min-w-0 flex-wrap items-end gap-x-5 gap-y-3" role="group" aria-label="Bộ lọc ngọc">
-      <div className="min-w-0 space-y-1.5">
-        <div className={labelClass}>Màu ngọc</div>
-        <div className={groupClass} role="group" aria-label="Màu ngọc">
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className={cn(optionClass, !color ? activeClass : "text-muted-foreground")}
-            aria-pressed={!color}
-            onClick={() => onColorChange(null)}
+    <div className="flex min-w-0 flex-wrap items-center gap-2" role="group" aria-label="Bộ lọc ngọc">
+      <FilterTabs label="Màu ngọc">
+        <FilterTab active={!color} onClick={() => onColorChange(null)}>
+          <LayoutGrid aria-hidden />
+          Tất cả màu
+        </FilterTab>
+        {colors.map(({ value, label, icon, active }) => (
+          <FilterTab
+            key={value}
+            active={color === value}
+            className={cn(color === value && cn("ring-1", active))}
+            onClick={() => onColorChange(value)}
           >
-            <LayoutGrid aria-hidden className="size-3.5" />
-            Tất cả
-          </Button>
-          {colors.map(({ value, label, icon, active }) => (
-            <Button
-              key={value}
-              type="button"
-              size="sm"
-              variant="ghost"
-              className={cn(optionClass, color === value ? cn("ring-1", active) : "text-muted-foreground")}
-              aria-pressed={color === value}
-              onClick={() => onColorChange(value)}
-            >
-              <Gem aria-hidden className={cn("size-3.5", icon)} />
-              {label}
-            </Button>
-          ))}
-        </div>
-      </div>
-      <div className="min-w-0 space-y-1.5">
-        <div className={labelClass}>Bậc ngọc</div>
-        <div className={groupClass} role="group" aria-label="Bậc ngọc">
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className={cn(optionClass, !tier ? activeClass : "text-muted-foreground")}
-            aria-pressed={!tier}
-            onClick={() => onTierChange(null)}
+            <Gem aria-hidden className={icon} />
+            {label}
+          </FilterTab>
+        ))}
+      </FilterTabs>
+      <FilterTabs label="Bậc ngọc">
+        <FilterTab active={!tier} onClick={() => onTierChange(null)}>
+          Mọi bậc
+        </FilterTab>
+        {[3, 2, 1].map((value) => (
+          <FilterTab
+            key={value}
+            active={tier === String(value)}
+            aria-label={`Bậc ${["I", "II", "III"][value - 1]}`}
+            onClick={() => onTierChange(String(value))}
           >
-            Tất cả
-          </Button>
-          {[3, 2, 1].map((value) => (
-            <Button
-              key={value}
-              type="button"
-              size="sm"
-              variant="ghost"
-              className={cn(optionClass, tier === String(value) ? activeClass : "text-muted-foreground")}
-              aria-label={`Bậc ${["I", "II", "III"][value - 1]}`}
-              aria-pressed={tier === String(value)}
-              onClick={() => onTierChange(String(value))}
-            >
-              {["I", "II", "III"][value - 1]}
-            </Button>
-          ))}
-        </div>
-      </div>
-      <div className="w-full min-w-0 space-y-1.5 sm:w-52">
-        <label className={labelClass} htmlFor={statId}>
-          Chỉ số
-        </label>
-        <Select
-          value={stat || "all"}
-          disabled={statDisabled}
-          onValueChange={(value) => onStatChange(value === "all" ? null : value)}
+            {["I", "II", "III"][value - 1]}
+          </FilterTab>
+        ))}
+      </FilterTabs>
+      <Select
+        value={stat || "all"}
+        disabled={statDisabled}
+        onValueChange={(value) => onStatChange(value === "all" ? null : value)}
+      >
+        <SelectTrigger
+          aria-label="Lọc chỉ số ngọc"
+          className={cn(
+            "h-10! w-full gap-2 rounded-xl text-sm shadow-none sm:w-52",
+            stat && "border-primary/40 bg-primary/5",
+          )}
         >
-          <SelectTrigger
-            id={statId}
-            aria-label="Lọc chỉ số ngọc"
-            className={cn("w-full gap-2 rounded-lg text-xs shadow-none", stat && "border-primary/40 bg-primary/5")}
-          >
-            <SlidersHorizontal aria-hidden className="size-3.5 shrink-0" />
-            <span className="min-w-0 flex-1 truncate text-left">
-              <SelectValue placeholder="Tất cả chỉ số" />
-            </span>
-          </SelectTrigger>
-          <SelectContent position="popper" align="start" className="rounded-lg">
-            <SelectItem value="all" className="text-xs">
-              Tất cả chỉ số
+          <SlidersHorizontal aria-hidden className="size-3.5 shrink-0" />
+          <span className="min-w-0 flex-1 truncate text-left">
+            <SelectValue placeholder="Tất cả chỉ số" />
+          </span>
+        </SelectTrigger>
+        <SelectContent position="popper" align="start" className="rounded-lg">
+          <SelectItem value="all" className="text-xs">
+            Tất cả chỉ số
+          </SelectItem>
+          {statOptions.map(({ value, label }) => (
+            <SelectItem key={value} value={value} className="text-xs">
+              {label}
             </SelectItem>
-            {statOptions.map(({ value, label }) => (
-              <SelectItem key={value} value={value} className="text-xs">
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          ))}
+        </SelectContent>
+      </Select>
       {(color || tier || stat) && (
         <Button type="button" variant="ghost" size="sm" className="h-9 text-xs text-muted-foreground" onClick={onReset}>
           <RotateCcw aria-hidden className="size-3.5" />

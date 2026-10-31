@@ -9,6 +9,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { SearchField } from "@/components/search-field"
+import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { matchesQuery } from "@/lib/text"
@@ -308,24 +309,23 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
         />
       )}
       {kind === "spells" && (
-        <div className="flex flex-wrap gap-1" role="group" aria-label="Lọc khả dụng phụ trợ">
-          <Button size="sm" variant={!availability ? "secondary" : "ghost"} onClick={() => setAvailability(null)}>
-            <LayoutGrid aria-hidden className="size-3.5" />
+        <FilterTabs label="Lọc khả dụng phụ trợ">
+          <FilterTab active={!availability} count={records.length} onClick={() => setAvailability(null)}>
+            <LayoutGrid aria-hidden />
             Tất cả
-          </Button>
+          </FilterTab>
           {spellAvailabilityFilters.map((value) => (
-            <Button
+            <FilterTab
               key={value}
-              size="sm"
-              variant={availability === value ? "secondary" : "ghost"}
-              aria-pressed={availability === value}
+              active={availability === value}
+              count={records.filter((entry) => (entry.content as SpellContent).availability === value).length}
               onClick={() => setAvailability(value)}
             >
-              <Archive aria-hidden className="size-3.5" />
+              <Archive aria-hidden />
               {availabilityLabels[value]}
-            </Button>
+            </FilterTab>
           ))}
-        </div>
+        </FilterTabs>
       )}
       {issue && (
         <div
