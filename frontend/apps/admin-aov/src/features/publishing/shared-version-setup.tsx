@@ -301,7 +301,7 @@ function ScheduleForm({
       >
         <SheetContent
           side={wide ? "right" : "bottom"}
-          className={wide ? "w-[480px] sm:max-w-[480px]" : "max-h-[90dvh] rounded-t-2xl"}
+          className={wide ? "w-[min(480px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
         >
           <SheetHeader>
             <SheetTitle>{patch ? "Lịch phát hành patch" : "Lịch mùa theo thị trường"}</SheetTitle>

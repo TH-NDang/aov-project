@@ -111,7 +111,7 @@ export function MediaBulkSourceEditor({
       <SheetContent
         side={wide ? "right" : "bottom"}
         showCloseButton={!busy}
-        className={wide ? "w-[680px] sm:max-w-[680px]" : "max-h-[90dvh] rounded-t-2xl"}
+        className={wide ? "w-[min(760px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
         onEscapeKeyDown={(event) => {
           if (running.current) event.preventDefault()
         }}

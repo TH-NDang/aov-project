@@ -638,7 +638,7 @@ export function ImageManagementPage() {
       >
         <SheetContent
           side={wide ? "right" : "bottom"}
-          className={wide ? "w-[640px] sm:max-w-[640px]" : "max-h-[90dvh] rounded-t-2xl"}
+          className={wide ? "w-[min(640px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
         >
           <SheetHeader>
             <SheetTitle>Chi tiết ảnh</SheetTitle>
@@ -799,7 +799,7 @@ export function ImageManagementPage() {
       <Sheet open={upload} onOpenChange={setUpload}>
         <SheetContent
           side={wide ? "right" : "bottom"}
-          className={wide ? "w-[520px] sm:max-w-[520px]" : "max-h-[90dvh] rounded-t-2xl"}
+          className={wide ? "w-[min(480px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
         >
           <SheetHeader>
             <SheetTitle>Thêm ảnh</SheetTitle>

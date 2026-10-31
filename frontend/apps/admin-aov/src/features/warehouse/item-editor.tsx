@@ -2,7 +2,8 @@ import { ItemRowPicker } from "./item-row-picker"
 import { shopColumns } from "./item-shop-position"
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
+import { History, Languages, Plus, Settings2, Trash2 } from "lucide-react"
+import { DraftPrompt } from "@/components/draft-prompt"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
@@ -75,7 +76,7 @@ export function ItemEditor({
         side={wide ? "right" : "bottom"}
         className={
           wide
-            ? "flex w-[min(620px,90vw)] flex-col overflow-y-auto sm:max-w-none"
+            ? "flex w-[min(640px,94vw)] flex-col overflow-y-auto sm:max-w-none"
             : "flex max-h-[92dvh] flex-col overflow-y-auto rounded-t-2xl"
         }
         onEscapeKeyDown={(event) => {
@@ -103,20 +104,18 @@ export function ItemEditor({
               </ul>
             </div>
           ) : null}
-          {entry.revision.state !== "DRAFT" && (
-            <Button variant="outline" disabled={busy} onClick={onFork}>
-              Tạo bản nháp chỉnh sửa
-            </Button>
-          )}
+          {entry.revision.state !== "DRAFT" && <DraftPrompt busy={busy} onCreate={onFork} />}
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="w-full">
-              <TabsTrigger className="flex-1" value="gameplay">
-                Thông tin & công thức
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="gameplay">
+                <Settings2 className="size-4" /> Thông tin & công thức
               </TabsTrigger>
-              <TabsTrigger className="flex-1" value="translations">
-                Bản dịch · {value.translations.length}
+              <TabsTrigger value="translations">
+                <Languages className="size-4" /> Bản dịch · {value.translations.length}
               </TabsTrigger>
-              <TabsTrigger value="history">Lịch sử</TabsTrigger>
+              <TabsTrigger value="history">
+                <History className="size-4" /> Lịch sử
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="gameplay" className="space-y-5 pt-3">
               <WarehousePatchContext
