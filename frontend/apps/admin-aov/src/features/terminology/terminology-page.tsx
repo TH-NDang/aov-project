@@ -409,7 +409,7 @@ export function TerminologyPage() {
             side={wide ? "right" : "bottom"}
             className={
               wide
-                ? "flex w-[min(660px,90vw)] flex-col gap-0 overflow-hidden sm:max-w-none"
+                ? "flex w-[min(640px,94vw)] flex-col gap-0 overflow-hidden sm:max-w-none"
                 : "flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-2xl"
             }
           >

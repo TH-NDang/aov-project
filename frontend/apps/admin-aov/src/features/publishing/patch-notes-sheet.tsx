@@ -64,7 +64,7 @@ export function RecordPatchNotesSheet(props: RecordPatchNotesProps) {
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
       <SheetContent
         side={wide ? "right" : "bottom"}
-        className={wide ? "w-[640px] sm:max-w-[640px]" : "max-h-[90dvh] rounded-t-2xl"}
+        className={wide ? "w-[min(640px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
       >
         <SheetHeader className="border-b">
           <SheetTitle>Ghi thay đổi từ ghi chú cập nhật</SheetTitle>

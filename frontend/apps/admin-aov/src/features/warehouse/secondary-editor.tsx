@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react"
 import { Archive, History, Image, Languages, LoaderCircle, Plus, Save, Settings2, Trash2 } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
+import { DraftPrompt } from "@/components/draft-prompt"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@aov/ui/components/tabs"
 import { useIsWide } from "@/hooks/use-media-query"
@@ -256,12 +257,7 @@ export function SecondaryEditor({
             </div>
           )}
           {readOnly && onCreateDraft && (
-            <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border bg-muted/40 p-3">
-              <p className="flex-1 text-sm">Bản đã xuất bản. Tạo bản nháp để cập nhật.</p>
-              <Button size="sm" disabled={busy} onClick={() => void act(onCreateDraft)}>
-                <Plus className="size-4" /> Tạo bản nháp
-              </Button>
-            </div>
+            <DraftPrompt className="mb-4" busy={busy} onCreate={() => void act(onCreateDraft)} />
           )}
           <Tabs defaultValue="information" className="gap-5">
             <TabsList className={`grid w-full ${hasHistory ? "grid-cols-4" : "grid-cols-3"}`}>
@@ -1048,7 +1044,7 @@ export function EnchantmentBranchEditor({
         side={wide ? "right" : "bottom"}
         className={
           wide
-            ? "flex w-[min(600px,94vw)] flex-col overflow-hidden sm:max-w-none"
+            ? "flex w-[min(640px,94vw)] flex-col overflow-hidden sm:max-w-none"
             : "flex h-[92dvh] flex-col overflow-hidden rounded-t-2xl"
         }
       >

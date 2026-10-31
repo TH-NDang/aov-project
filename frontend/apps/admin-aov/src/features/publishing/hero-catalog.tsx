@@ -12,7 +12,7 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  ChevronsLeft,
+  ChevronsRight,
   Clock3,
   Info,
 } from "lucide-react"
@@ -686,7 +686,7 @@ function HeroQuickView({
         }}
       >
         <SheetContent
-          side="left"
+          side="right"
           showCloseButton={false}
           className="h-dvh w-[min(960px,calc(100vw-44px))] gap-0 overflow-visible ease-out data-[state=open]:duration-200 data-[state=closed]:duration-150 motion-reduce:animate-none sm:max-w-[min(960px,calc(100vw-44px))]"
         >
@@ -694,12 +694,12 @@ function HeroQuickView({
             <Button
               variant="outline"
               size="icon"
-              className="absolute top-1/2 -right-[43px] z-10 h-[68px] w-11 -translate-y-1/2 cursor-pointer touch-manipulation rounded-l-none rounded-r-xl border-border bg-background text-muted-foreground shadow-md hover:text-foreground"
+              className="absolute top-1/2 -left-[43px] z-10 h-[68px] w-11 -translate-y-1/2 cursor-pointer touch-manipulation rounded-l-xl rounded-r-none border-border bg-background text-muted-foreground shadow-md hover:text-foreground"
               aria-label="Đóng trang tướng"
               title="Đóng trang tướng"
               disabled={saving}
             >
-              <ChevronsLeft aria-hidden className="size-5" />
+              <ChevronsRight aria-hidden className="size-5" />
             </Button>
           </SheetClose>
           <SheetHeader className="h-11 shrink-0 justify-center gap-0 border-b px-4 py-0">

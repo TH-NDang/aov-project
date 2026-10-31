@@ -116,7 +116,7 @@ export function MarketSchedule({
     >
       <SheetContent
         side={wide ? "right" : "bottom"}
-        className={wide ? "w-[680px] sm:max-w-[680px]" : "max-h-[90dvh] rounded-t-2xl"}
+        className={wide ? "w-[min(760px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
       >
         <SheetHeader>
           <SheetTitle>{market && <MarketBadge code={market.code} name={market.displayName} showName />}</SheetTitle>

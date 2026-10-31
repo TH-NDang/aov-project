@@ -110,7 +110,7 @@ export function SkinBadgeEditor({
         side={wide ? "right" : "bottom"}
         className={
           wide
-            ? "flex w-[min(580px,90vw)] flex-col overflow-y-auto sm:max-w-none"
+            ? "flex w-[min(640px,94vw)] flex-col overflow-y-auto sm:max-w-none"
             : "flex max-h-[92dvh] flex-col overflow-y-auto rounded-t-2xl"
         }
         onEscapeKeyDown={(event) => {

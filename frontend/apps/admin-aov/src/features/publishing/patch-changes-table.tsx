@@ -212,7 +212,7 @@ function HeroPatchChangesTable({
       >
         <SheetContent
           side={wide ? "right" : "bottom"}
-          className={wide ? "w-[560px] sm:max-w-[560px]" : "max-h-[85dvh] rounded-t-2xl"}
+          className={wide ? "w-[min(640px,94vw)] sm:max-w-none" : "max-h-[85dvh] rounded-t-2xl"}
         >
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
