@@ -95,7 +95,7 @@ export function ItemSearch({
           id={listId}
           role="listbox"
           aria-label="Kết quả tìm trang bị"
-          className="absolute top-full right-0 left-0 z-40 mt-1 sm:min-w-72 overflow-hidden rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg"
+          className="absolute top-full right-0 left-0 z-40 mt-1 @3xl/page-header:min-w-72 overflow-hidden rounded-lg border bg-popover p-1 text-popover-foreground shadow-lg"
         >
           {shown.length ? (
             shown.map((item, index) => {

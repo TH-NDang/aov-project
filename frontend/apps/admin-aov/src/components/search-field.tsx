@@ -11,9 +11,9 @@ type InputProps = Omit<ComponentProps<"input">, "value" | "onChange" | "type" | 
  * Compact search box shared by catalog pages: clear button, Esc to clear and "/" to focus when `shortcut` is set.
  * Only one field per page should enable the shortcut.
  *
- * `placement="header"` is for `PageHeader`'s search slot: a fixed width centered by the header on larger screens,
- * and an icon on phones that lays the field over the header row. `children` render next to the input, e.g. a
- * result list positioned below it.
+ * `placement="header"` is for `PageHeader`'s search slot: a fixed width centered by a wide header, and in a narrow
+ * header (phones, or a window squeezed by the sidebar) an icon that lays the field over the header row. `children`
+ * render next to the input, e.g. a result list positioned below it.
  */
 export function SearchField({
   value,
@@ -108,7 +108,12 @@ export function SearchField({
       ) : (
         shortcut &&
         enabled && (
-          <Kbd className="absolute top-1/2 right-3 hidden -translate-y-1/2 peer-focus-visible:hidden sm:inline-flex">
+          <Kbd
+            className={cn(
+              "absolute top-1/2 right-3 hidden -translate-y-1/2 peer-focus-visible:hidden",
+              header ? "@3xl/page-header:inline-flex" : "sm:inline-flex",
+            )}
+          >
             /
           </Kbd>
         )
@@ -127,7 +132,7 @@ export function SearchField({
       <Button
         variant="ghost"
         size="icon"
-        className="relative size-9 shrink-0 rounded-full sm:hidden"
+        className="relative size-9 shrink-0 rounded-full @3xl/page-header:hidden"
         aria-label={active ? `Mở tìm kiếm: ${active}` : "Mở tìm kiếm"}
         title={label}
         onClick={() => setExpanded(true)}
@@ -137,10 +142,10 @@ export function SearchField({
       </Button>
       <div
         className={cn(
-          "min-w-0 sm:relative sm:w-80 lg:w-96",
+          "min-w-0 @3xl/page-header:relative @3xl/page-header:w-72 @4xl/page-header:w-80 @5xl/page-header:w-96",
           expanded
-            ? "max-sm:absolute max-sm:inset-0 max-sm:z-30 max-sm:flex max-sm:items-center max-sm:bg-background"
-            : "max-sm:hidden",
+            ? "@max-3xl/page-header:absolute @max-3xl/page-header:inset-0 @max-3xl/page-header:z-30 @max-3xl/page-header:flex @max-3xl/page-header:items-center @max-3xl/page-header:bg-background"
+            : "@max-3xl/page-header:hidden",
           className,
         )}
         onBlur={(event) => {
