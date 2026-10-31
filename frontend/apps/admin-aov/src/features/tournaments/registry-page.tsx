@@ -1,7 +1,7 @@
 import { useState } from "react"
-import { Link, Navigate, useSearchParams } from "react-router"
+import { Navigate, useSearchParams } from "react-router"
 import type { DocumentView, PlayerContent, TeamContent } from "@aov/community-contracts"
-import { Check, List, Plus, Trash2, Trophy, Upload, X } from "lucide-react"
+import { Check, List, Plus, Trash2, Upload, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Page, PageHeader } from "@/components/page-header"
@@ -111,13 +111,6 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
               <DropdownMenuItem onSelect={() => navigate({ state: "deleted" })}>
                 <Trash2 />
                 Thùng rác{deleted && <Check className="ml-auto" />}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/tournaments">
-                  <Trophy />
-                  Giải đấu
-                </Link>
               </DropdownMenuItem>
             </PageActionsMenu>
           </>
