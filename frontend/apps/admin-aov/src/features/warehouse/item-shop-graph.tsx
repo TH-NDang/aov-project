@@ -72,7 +72,6 @@ function edgeSpeed(position: number, start: number, end: number, band: number) {
   return 0
 }
 const columnWidth = 232
-const maxColumnWidth = 300
 const portInset = 12
 const portRadius = 6
 function positioned(position: ItemContent["shopPositions"][number] | null) {
@@ -842,7 +841,7 @@ export function ItemShopGraph({
             >
               <div
                 className="grid items-start justify-center gap-x-12"
-                style={{ gridTemplateColumns: `repeat(${columns},minmax(${columnWidth}px,${maxColumnWidth}px))` }}
+                style={{ gridTemplateColumns: `repeat(${columns},${columnWidth}px)` }}
               >
                 {Array.from({ length: columns }, (_, column) => {
                   const native = placements.filter((p) => p.position.column === column && positioned(p.position))
