@@ -44,7 +44,7 @@ export function HeroTranslationStatus({
       <div className="flex items-start gap-3">
         <Languages className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
         <div>
-          <h2 className="font-semibold">Bản dịch nội dung</h2>
+          <h2 className="text-base font-bold">Bản dịch nội dung</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Dùng chung chỉ số, kỹ năng và ảnh. Mỗi ngôn ngữ có văn bản riêng; lịch phát hành được thiết lập theo thị
             trường.

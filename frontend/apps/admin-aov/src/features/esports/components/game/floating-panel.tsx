@@ -89,7 +89,7 @@ export function FloatingPanel({
           <GripHorizontal size={14} className="text-muted-foreground" aria-hidden="true" />
         )}
         {icon}
-        <h2 className="flex-1 text-sm font-semibold">{title}</h2>
+        <h2 className="flex-1 text-base font-bold">{title}</h2>
         <button
           type="button"
           onClick={onClose}

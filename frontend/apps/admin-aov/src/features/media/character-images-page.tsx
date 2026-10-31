@@ -124,7 +124,7 @@ function ImageRowsTable({
               {!row.original.assetId && row.original.main && (
                 <p className="text-xs text-muted-foreground">Chưa chọn ảnh chính</p>
               )}
-              {!row.original.main && <p className="text-[11px] text-muted-foreground">Ảnh bổ sung</p>}
+              {!row.original.main && <p className="text-xs text-muted-foreground">Ảnh bổ sung</p>}
             </div>
           ),
         }),
@@ -163,7 +163,7 @@ function ImageRowsTable({
         <col className={skins ? "hidden lg:table-column lg:w-[30%]" : ""} />
         {skins && <col className="hidden md:table-column md:w-44" />}
       </colgroup>
-      <thead className="bg-muted/30 text-left text-[11px] text-muted-foreground">
+      <thead className="bg-muted/30 text-left text-xs text-muted-foreground">
         {table.getHeaderGroups().map((headerGroup) => (
           <tr key={headerGroup.id}>
             {headerGroup.headers.map((header) => (

@@ -71,7 +71,7 @@ export function TournamentBanner({
             { icon: Trophy, label: "Vô địch", value: content.result?.winnerName ?? "Chưa có" },
           ].map((item) => (
             <div key={item.label} className="esp-glass rounded-xl px-3 py-2">
-              <p className="flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-white/60">
+              <p className="flex items-center gap-1.5 text-xs uppercase tracking-wide text-white/60">
                 <item.icon size={12} /> {item.label}
               </p>
               <p className="esp-num truncate text-lg font-semibold">{item.value}</p>
@@ -83,7 +83,7 @@ export function TournamentBanner({
             <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
               <div className="h-full rounded-full bg-[var(--esp-gold)]" style={{ width: `${progress * 100}%` }} />
             </div>
-            <p className="text-[11px] text-white/60">Tiến độ lịch thi đấu {Math.round(progress * 100)}%</p>
+            <p className="text-xs text-white/60">Tiến độ lịch thi đấu {Math.round(progress * 100)}%</p>
           </div>
         )}
         {children}
@@ -135,15 +135,15 @@ export function TournamentCard({
         <span className="esp-num grid grid-cols-3 gap-2 text-center">
           <span className="rounded-lg bg-muted/60 py-1.5">
             <strong className="block text-base">{stats.teams}</strong>
-            <span className="text-[11px] text-muted-foreground">đội</span>
+            <span className="text-xs text-muted-foreground">đội</span>
           </span>
           <span className="rounded-lg bg-muted/60 py-1.5">
             <strong className="block text-base">{stats.matches}</strong>
-            <span className="text-[11px] text-muted-foreground">trận</span>
+            <span className="text-xs text-muted-foreground">trận</span>
           </span>
           <span className="rounded-lg bg-muted/60 py-1.5">
             <strong className="block text-base">{stats.played}</strong>
-            <span className="text-[11px] text-muted-foreground">đã đấu</span>
+            <span className="text-xs text-muted-foreground">đã đấu</span>
           </span>
         </span>
         {progress !== null && content.status === "ONGOING" && (

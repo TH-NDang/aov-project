@@ -72,9 +72,9 @@ export function ClusterCard({
                 activeId === event.id && "bg-[var(--esp-gold-soft)]",
               )}
             >
-              <span className="w-14 shrink-0 text-[11px] text-muted-foreground">
+              <span className="w-14 shrink-0 text-xs text-muted-foreground">
                 <TimeTag kind="game" seconds={clock(event)} />
-                {videoTime && <TimeTag kind="video" seconds={videoTime(event)} className="block text-[10px]" />}
+                {videoTime && <TimeTag kind="video" seconds={videoTime(event)} className="block text-xs" />}
               </span>
               <EventLine
                 event={event}

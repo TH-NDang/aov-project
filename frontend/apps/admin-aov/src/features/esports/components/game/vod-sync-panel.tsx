@@ -174,7 +174,7 @@ export function VodSyncPanel({
                 Lưu
               </Button>
             </span>
-            <span className="block text-[11px] text-muted-foreground">
+            <span className="block text-xs text-muted-foreground">
               {endGame ? (
                 <>
                   Thời lượng ván <TimeTag kind="game" seconds={endGame} className="text-foreground" />

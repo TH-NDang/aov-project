@@ -31,7 +31,7 @@ export function WarehouseNotes({
           </dl>
           <details className="mt-3">
             <summary className="cursor-pointer text-muted-foreground">Xem bản ghi nguồn đầy đủ</summary>
-            <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-[11px]">
+            <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-xs">
               {JSON.stringify(source, null, 2)}
             </pre>
           </details>

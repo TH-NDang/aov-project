@@ -98,12 +98,12 @@ export function ProgressPanel({
                   <span className="flex items-center gap-1.5 font-medium">
                     {step.label}
                     {step.required && step.status !== "done" && (
-                      <span className="rounded bg-destructive/10 px-1 text-[10px] font-semibold text-destructive">
+                      <span className="rounded bg-destructive/10 px-1 text-xs font-semibold text-destructive">
                         bắt buộc
                       </span>
                     )}
                     {!step.required && (
-                      <span className="rounded bg-muted px-1 text-[10px] text-muted-foreground">tùy nguồn</span>
+                      <span className="rounded bg-muted px-1 text-xs text-muted-foreground">tùy nguồn</span>
                     )}
                   </span>
                   <span className="block truncate text-xs text-muted-foreground">{step.detail}</span>
@@ -131,7 +131,7 @@ export function ProgressPanel({
           {busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
           {progress.state === "changed" ? `Xác nhận lại ván ${game.number}` : `Xác nhận hoàn tất ván ${game.number}`}
         </Button>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           {!canPublish
             ? "Tài khoản chưa có quyền xác nhận (xuất bản) ván."
             : progress.state === "confirmed"

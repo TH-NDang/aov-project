@@ -145,7 +145,7 @@ export function HeroAliasEditor({
           type="button"
           size="sm"
           variant="ghost"
-          className="mt-1 h-7 gap-1 px-1.5 text-[11px] text-muted-foreground"
+          className="mt-1 h-7 gap-1 px-1.5 text-xs text-muted-foreground"
           disabled={disabled}
           title={`Sửa tên gọi khác của ${name}`}
           aria-label={`Sửa tên gọi khác của ${name}`}

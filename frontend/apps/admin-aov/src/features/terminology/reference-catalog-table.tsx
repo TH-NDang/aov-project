@@ -197,10 +197,7 @@ export function ReferenceCatalogTable({
                   >
                     <Icon aria-hidden className="size-3.5" />
                     <span className="min-w-0 truncate">{label}</span>
-                    <span
-                      aria-hidden
-                      className="ml-auto text-[11px] text-muted-foreground tabular-nums @xl/catalog:ml-0.5"
-                    >
+                    <span aria-hidden className="ml-auto text-xs text-muted-foreground tabular-nums @xl/catalog:ml-0.5">
                       {key === "all" ? entities.length : kindCounts.get(key)}
                     </span>
                   </Button>
@@ -354,7 +351,7 @@ export function ReferenceCatalogTable({
                           )}
                           {termsOnly && !!text?.aliases.length && <AliasChips aliases={text.aliases} />}
                           {termsOnly && manual && (
-                            <span className="inline-flex rounded bg-muted px-1.5 py-0.5 text-[11px] font-normal text-muted-foreground">
+                            <span className="inline-flex rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
                               Chọn bằng @
                             </span>
                           )}
@@ -386,11 +383,11 @@ export function ReferenceCatalogTable({
                     </td>
                     <td className="mt-2 inline-block @xl/catalog:mt-0 @xl/catalog:table-cell @xl/catalog:px-3 @xl/catalog:py-3">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="mr-1 text-[11px] text-muted-foreground @xl/catalog:hidden">Bản dịch</span>
+                        <span className="mr-1 text-xs text-muted-foreground @xl/catalog:hidden">Bản dịch</span>
                         {entity.translations.map((copy) => (
                           <span
                             key={copy.locale}
-                            className={`rounded-md border px-1.5 py-0.5 text-[11px] font-medium ${copy.locale.toLowerCase() === locale.toLowerCase() ? "border-border bg-muted/60 text-foreground" : "border-transparent text-muted-foreground"}`}
+                            className={`rounded-md border px-1.5 py-0.5 text-xs font-medium ${copy.locale.toLowerCase() === locale.toLowerCase() ? "border-border bg-muted/60 text-foreground" : "border-transparent text-muted-foreground"}`}
                           >
                             {copy.locale}
                           </span>

@@ -112,7 +112,7 @@ export function ItemSlot({
   const src = safeImage(iconUrl)
   return (
     <span
-      className="esp-slot text-[10px] font-semibold text-muted-foreground"
+      className="esp-slot text-xs font-semibold text-muted-foreground"
       style={{ width: size, height: size }}
       data-state={state}
       data-changed={changed || undefined}
@@ -138,7 +138,7 @@ export function TierBadge({ tier }: { tier?: TournamentContent["tier"] }) {
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center rounded px-1.5 text-[11px] font-bold tracking-wide",
+        "inline-flex h-5 items-center rounded px-1.5 text-xs font-bold tracking-wide",
         tier === "S"
           ? "bg-[var(--esp-gold)] text-[var(--esp-ink)]"
           : tier === "A"
@@ -184,7 +184,7 @@ export function RegionFlag({ code, withName = true }: { code?: string; withName?
           loading="lazy"
         />
       ) : (
-        <span className="rounded bg-muted px-1 text-[10px] font-semibold">{code || "?"}</span>
+        <span className="rounded bg-muted px-1 text-xs font-semibold">{code || "?"}</span>
       )}
       {withName && <span>{regionName(code)}</span>}
     </span>
@@ -194,7 +194,7 @@ export function RegionFlag({ code, withName = true }: { code?: string; withName?
 export function SectionTitle({ children, action, id }: { children: ReactNode; action?: ReactNode; id?: string }) {
   return (
     <div className="flex items-end justify-between gap-3">
-      <h2 id={id} className="text-base font-semibold tracking-tight">
+      <h2 id={id} className="text-base font-bold tracking-tight">
         {children}
       </h2>
       {action}

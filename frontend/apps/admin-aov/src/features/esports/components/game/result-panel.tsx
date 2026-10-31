@@ -91,7 +91,7 @@ export function ResultPanel({
             </Button>
           )}
         </span>
-        <span className="block text-[11px] text-muted-foreground">
+        <span className="block text-xs text-muted-foreground">
           {duration !== null ? (
             <>
               Thời lượng ván <TimeTag kind="game" seconds={duration} className="text-foreground" />

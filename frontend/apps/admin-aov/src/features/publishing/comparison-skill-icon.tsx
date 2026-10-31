@@ -123,7 +123,7 @@ export function ComparisonSkillIcon(props: ComparisonSkillIconProps) {
             ) : (
               <MissingSkillIcon skill={skill} compact />
             )}
-            <span className="block text-[10px] text-muted-foreground">{label}</span>
+            <span className="block text-xs text-muted-foreground">{label}</span>
           </div>
         ))}
       </div>

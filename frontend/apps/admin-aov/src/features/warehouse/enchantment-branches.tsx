@@ -85,9 +85,7 @@ export function EnchantmentBranches({
                 <div className="flex items-center gap-2.5">
                   <span aria-hidden className="h-8 w-0.5 shrink-0 rounded-full bg-[var(--branch-color)]" />
                   <div className="space-y-0.5">
-                    <p className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-                      Hệ phù hiệu
-                    </p>
+                    <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">Hệ phù hiệu</p>
                     <p className="text-sm leading-5 font-semibold">{text?.name ?? branch.code}</p>
                   </div>
                 </div>
@@ -129,7 +127,7 @@ export function EnchantmentBranches({
                 />
               </div>
               <div className="min-w-0 flex-1 space-y-1">
-                <h2 className="text-base font-semibold tracking-tight @min-[520px]/enchantments:text-lg">
+                <h2 className="text-base font-bold tracking-tight @min-[520px]/enchantments:text-lg">
                   {text?.name ?? branch.code}
                 </h2>
                 <p className="text-xs text-muted-foreground">{entries.length} phù hiệu</p>
@@ -156,9 +154,7 @@ export function EnchantmentBranches({
                       )}
                       {tierIndex > 0 && <span aria-hidden className={cn(railClass, "top-0 h-10")} />}
                       <div className="relative mt-4 flex flex-col items-center gap-1 bg-card py-1">
-                        <span className="text-[9px] font-medium tracking-widest text-muted-foreground uppercase">
-                          Cấp
-                        </span>
+                        <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">Cấp</span>
                         <span className="grid size-6 place-items-center rounded-full border border-[var(--branch-border)] bg-[var(--branch-tint)] font-serif text-xs font-semibold text-[var(--branch-color)]">
                           {["I", "II", "III"][tier - 1]}
                         </span>
@@ -214,7 +210,7 @@ export function EnchantmentBranches({
                             </span>
                             {label?.summary && (
                               <span
-                                className="w-full truncate text-[10px] leading-4 text-muted-foreground @min-[520px]/enchantments:text-[11px]"
+                                className="w-full truncate text-xs leading-4 text-muted-foreground @min-[520px]/enchantments:text-xs"
                                 title={label.summary}
                               >
                                 {label.summary}
@@ -224,7 +220,7 @@ export function EnchantmentBranches({
                               !!entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE")) && (
                               <div className="mt-auto flex w-full flex-wrap items-center justify-center gap-1 border-t border-border/50 pt-2">
                                 {entry.revision.state === "DRAFT" && (
-                                  <Badge variant="outline" className="text-[10px]">
+                                  <Badge variant="outline" className="text-xs">
                                     Nháp
                                   </Badge>
                                 )}

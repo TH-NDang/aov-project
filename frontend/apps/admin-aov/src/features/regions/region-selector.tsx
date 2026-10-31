@@ -51,7 +51,7 @@ export function RegionSelector() {
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 max-w-[calc(100vw-1rem)] p-2">
         <div className="px-2 py-2">
-          <h2 className="text-sm font-semibold">Thị trường dữ liệu</h2>
+          <h2 className="text-base font-bold">Thị trường dữ liệu</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Dữ liệu hiện tại dành cho Việt Nam. Các thị trường khác sẽ được mở khi sẵn sàng.
           </p>
@@ -82,7 +82,7 @@ export function RegionSelector() {
                     aria-label={region.displayName + (disabled ? ": Chưa hỗ trợ" : ": Đang dùng")}
                     className="flex w-full items-start gap-3 rounded-md px-3 py-2.5 text-left hover:bg-accent disabled:cursor-not-allowed disabled:hover:bg-transparent"
                   >
-                    <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-semibold">
+                    <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold">
                       {region.code === "GLOBAL" ? <Globe2 className="size-4" /> : region.code}
                     </span>
                     <span className="min-w-0 flex-1">

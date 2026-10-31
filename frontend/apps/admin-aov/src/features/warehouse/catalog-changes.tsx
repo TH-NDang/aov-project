@@ -134,7 +134,7 @@ export function CatalogChangeBadges({
                 : config.label
             }
             data-catalog-change={kind}
-            className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] leading-4", tone)}
+            className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs leading-4", tone)}
           >
             <Icon className="size-3" aria-hidden />
             <span className={compact ? "sr-only" : ""}>{config.label}</span>

@@ -65,7 +65,7 @@ export function Scoreboard({
               )}
               {game.winner && <ResultTag won={game.winner === code} />}
             </span>
-            <span className="flex flex-wrap gap-x-2 text-[11px] text-muted-foreground">
+            <span className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
               {code === "BLUE" ? "Đội Xanh" : "Đội Đỏ"}
               {taken.map(([kind, count]) => (
                 <span key={kind} className="inline-flex items-center gap-0.5">
@@ -106,7 +106,7 @@ export function Scoreboard({
             aria-label={`Tướng ${view.team.name} đã dùng ở ván trước`}
           >
             <span
-              className="mr-0.5 inline-flex items-center gap-0.5 rounded bg-muted px-1 text-[10px] font-bold tracking-wide text-muted-foreground uppercase"
+              className="mr-0.5 inline-flex items-center gap-0.5 rounded bg-muted px-1 text-xs font-bold tracking-wide text-muted-foreground uppercase"
               title="Không được chọn lại trong loạt BO này"
             >
               <History size={10} strokeWidth={2.6} /> Đã dùng
@@ -186,7 +186,7 @@ export function Scoreboard({
                     {seat.hero?.name ?? "Chưa chọn tướng"}
                     {reused != null && (
                       <span
-                        className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400"
+                        className="inline-flex items-center gap-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400"
                         title="Theo luật BO, đội không được chọn lại tướng đã dùng ở ván trước"
                       >
                         <TriangleAlert size={10} /> đã dùng ở V{reused}
@@ -262,7 +262,7 @@ function LoadoutSlot({
 
 function BanLabel() {
   return (
-    <span className="mr-0.5 inline-flex items-center gap-0.5 rounded bg-muted px-1 text-[10px] font-bold tracking-wide text-muted-foreground uppercase">
+    <span className="mr-0.5 inline-flex items-center gap-0.5 rounded bg-muted px-1 text-xs font-bold tracking-wide text-muted-foreground uppercase">
       <Ban size={10} strokeWidth={2.6} /> Cấm
     </span>
   )

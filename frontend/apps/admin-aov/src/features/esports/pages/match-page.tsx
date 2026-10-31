@@ -565,7 +565,7 @@ function MatchViewer({
               ⏱ {formatClock(chapter.duration)}
             </span>
             {!chapter.synced && videoId && (
-              <span className="rounded bg-muted px-1 text-[10px] text-muted-foreground">chưa căn video</span>
+              <span className="rounded bg-muted px-1 text-xs text-muted-foreground">chưa căn video</span>
             )}
           </button>
         )
@@ -637,7 +637,7 @@ function MatchViewer({
         <span
           key={flash.id}
           role="status"
-          className="esp-num rounded-full bg-foreground px-2.5 py-0.5 text-[11px] font-medium text-background animate-in fade-in"
+          className="esp-num rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-background animate-in fade-in"
         >
           {flash.text}
         </span>
@@ -940,7 +940,7 @@ function ShortcutList({
             <div key={entry.text} className="contents">
               <dt className="flex gap-1">
                 {entry.keys.map((key) => (
-                  <kbd key={key} className="rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px]">
+                  <kbd key={key} className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">
                     {key}
                   </kbd>
                 ))}
@@ -949,7 +949,7 @@ function ShortcutList({
             </div>
           ))}
         </dl>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Bấm vào video vẫn dùng được phím tắt. Kéo video nổi bằng chuột, hoặc Alt + phím mũi tên.
         </p>
       </PopoverContent>
@@ -1069,7 +1069,7 @@ function MatchSetupGuide({
           <li key={index} className="flex gap-2">
             <span
               className={cn(
-                "grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold",
+                "grid size-5 shrink-0 place-items-center rounded-full text-xs font-bold",
                 step.done ? "bg-[var(--esp-live)] text-white" : "bg-muted text-muted-foreground",
               )}
             >

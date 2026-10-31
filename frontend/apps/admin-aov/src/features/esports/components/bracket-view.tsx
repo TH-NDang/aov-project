@@ -54,9 +54,9 @@ function SlotCard({
         <span className="block border-t" />
         {line(slot.teamBId, slot.scoreB, slot.winner === "B")}
       </button>
-      <span className="mt-1 flex items-center justify-between px-1 text-[10px] text-muted-foreground">
+      <span className="mt-1 flex items-center justify-between px-1 text-xs text-muted-foreground">
         <span>{slot.projected ? "Dự kiến theo nhánh" : <RelativeDate value={slot.scheduledAt} />}</span>
-        <BestOfBadge bestOf={slot.bestOf} className="h-4 px-1.5 text-[9px]" />
+        <BestOfBadge bestOf={slot.bestOf} className="h-4 px-1.5 text-xs" />
       </span>
     </div>
   )

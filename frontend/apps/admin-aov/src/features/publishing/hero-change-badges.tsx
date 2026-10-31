@@ -146,7 +146,7 @@ export function HeroChangeSummary({
               <span className="text-xs text-muted-foreground">Chưa đánh giá</span>
             )}
             {patchLabel && (
-              <span className="max-w-full truncate text-[11px] text-muted-foreground tabular-nums">{patchLabel}</span>
+              <span className="max-w-full truncate text-xs text-muted-foreground tabular-nums">{patchLabel}</span>
             )}
           </span>
           <ChevronDown aria-hidden className="size-3 shrink-0 text-muted-foreground" />

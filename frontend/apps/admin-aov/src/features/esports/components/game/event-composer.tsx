@@ -304,7 +304,7 @@ export function EventComposer({
           <Clock3 size={13} /> Hiện tại ({video ? `${VIDEO_MARK} ` : ""}
           {nowText})
         </Button>
-        <p id={hintId} className="w-full text-right text-[11px] text-muted-foreground" aria-live="polite">
+        <p id={hintId} className="w-full text-right text-xs text-muted-foreground" aria-live="polite">
           {typed === null ? (
             <span className="text-destructive">Nhập dạng phút:giây, ví dụ 1:02:30.</span>
           ) : second === null ? (
@@ -424,7 +424,7 @@ export function EventComposer({
                   aria-pressed={draft.slot === index + 1}
                   onClick={() => set({ slot: index + 1 })}
                   className={cn(
-                    "flex flex-col items-center gap-0.5 rounded-lg border p-1 text-[10px]",
+                    "flex flex-col items-center gap-0.5 rounded-lg border p-1 text-xs",
                     draft.slot === index + 1 ? "border-[var(--esp-gold)] bg-[var(--esp-gold-soft)]" : "hover:bg-muted",
                   )}
                 >
@@ -494,7 +494,7 @@ export function EventComposer({
       </Field>
 
       <div className="flex items-center justify-end gap-2 border-t pt-3">
-        <span className="mr-auto text-[11px] text-muted-foreground">Enter để lưu · Esc để đóng</span>
+        <span className="mr-auto text-xs text-muted-foreground">Enter để lưu · Esc để đóng</span>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           <X size={14} /> Hủy
         </Button>

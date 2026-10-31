@@ -258,7 +258,7 @@ export function ImageManagementPage() {
               title={`Cập nhật ${date(getValue())} · Tạo lúc ${date(row.original.createdAt)}`}
             >
               {new Date(getValue()).toLocaleDateString("vi-VN")}
-              <span className="mt-1 block text-[11px] text-muted-foreground">
+              <span className="mt-1 block text-xs text-muted-foreground">
                 {new Date(getValue()).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
               </span>
             </time>
@@ -473,7 +473,7 @@ export function ImageManagementPage() {
                     {types[row.semanticType] ?? row.semanticType}
                   </span>
                   <span className="flex flex-wrap items-center justify-between gap-1">
-                    <span className="font-mono text-[11px] text-muted-foreground">{row.id.slice(0, 8)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{row.id.slice(0, 8)}</span>
                     <LibraryState
                       state={row.state}
                       label={states[row.state] ?? row.state}
@@ -508,7 +508,7 @@ export function ImageManagementPage() {
               <col />
               <col className="w-28" />
             </colgroup>
-            <thead className="border-b bg-muted/30 text-[11px] text-muted-foreground">
+            <thead className="border-b bg-muted/30 text-xs text-muted-foreground">
               {table.getHeaderGroups().map((group) => (
                 <tr key={group.id}>
                   {writable && (
@@ -583,7 +583,7 @@ export function ImageManagementPage() {
           <span className="mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
             <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
           </span>
-          <h2 className="text-sm font-semibold">{needsCredit ? "Không có ảnh cần bổ sung" : "Chưa có ảnh"}</h2>
+          <h2 className="text-base font-bold">{needsCredit ? "Không có ảnh cần bổ sung" : "Chưa có ảnh"}</h2>
           <p className="text-xs text-muted-foreground">
             {needsCredit ? "Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
           </p>

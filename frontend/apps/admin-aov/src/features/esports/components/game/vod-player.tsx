@@ -464,7 +464,7 @@ export const VodPlayer = forwardRef<
           >
             <RotateCw size={15} />
           </button>
-          <span className="esp-num shrink-0 px-1 text-[11px] whitespace-nowrap text-white/85">
+          <span className="esp-num shrink-0 px-1 text-xs whitespace-nowrap text-white/85">
             {formatClock(shown)}
             {length > 0 && <span className="text-white/50"> / {formatClock(length)}</span>}
           </span>
@@ -515,7 +515,7 @@ export const VodPlayer = forwardRef<
           <select
             value={rate}
             aria-label="Tốc độ phát"
-            className="h-7 shrink-0 rounded-md bg-transparent px-1 text-[11px] hover:bg-white/15 [&>option]:text-black"
+            className="h-7 shrink-0 rounded-md bg-transparent px-1 text-xs hover:bg-white/15 [&>option]:text-black"
             onChange={(event) => {
               const next = Number(event.target.value)
               setRate(next)

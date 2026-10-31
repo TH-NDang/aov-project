@@ -55,7 +55,7 @@ export function PreviewDivider({ value, onChange, controls }: Props) {
     >
       <span aria-hidden className="h-px w-8 bg-border" />
       <GripHorizontal aria-hidden className="size-4" />
-      <span aria-hidden className="text-[10px]">
+      <span aria-hidden className="text-xs">
         Kéo để chia khung
       </span>
       <span aria-hidden className="h-px w-8 bg-border" />

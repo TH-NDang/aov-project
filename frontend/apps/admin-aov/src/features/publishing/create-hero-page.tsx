@@ -101,7 +101,7 @@ export function CreateHeroPage() {
               }
             }}
           >
-            <h2 className="font-semibold">Thông tin nhận diện</h2>
+            <h2 className="text-base font-bold">Thông tin nhận diện</h2>
             <fieldset disabled={busy || !draft.ready || draft.invalid} className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm">
                 Mã tướng

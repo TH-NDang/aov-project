@@ -10,7 +10,7 @@ export function MediaCode({ value, label, plain = false }: { value: string; labe
           : "group/code inline-flex min-w-0 max-w-full items-center gap-0.5 rounded-md bg-muted/70 pl-1.5 text-muted-foreground ring-1 ring-border/50 ring-inset"
       }
     >
-      <code className="truncate text-[11px] leading-5 font-normal" title={`${label}: ${value}`}>
+      <code className="truncate text-xs leading-5 font-normal" title={`${label}: ${value}`}>
         <span className="sr-only">{label}: </span>
         {value}
       </code>

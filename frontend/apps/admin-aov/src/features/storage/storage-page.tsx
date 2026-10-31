@@ -255,7 +255,7 @@ export function StoragePage() {
         table && (
           <>
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="mr-2 text-lg font-semibold">{table.name}</h2>
+              <h2 className="mr-2 text-lg font-bold">{table.name}</h2>
               <Badge variant="outline">
                 {table.rows.length} dòng · {table.columns.length} cột
               </Badge>

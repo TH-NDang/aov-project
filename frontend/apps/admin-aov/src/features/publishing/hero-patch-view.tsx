@@ -122,7 +122,7 @@ export function HeroPatchTimeline({
                 active ? "border-primary bg-primary/10" : "hover:bg-muted/50",
               )}
             >
-              <span className="block text-[11px] text-muted-foreground">{season?.displayName ?? "Chưa gắn mùa"}</span>
+              <span className="block text-xs text-muted-foreground">{season?.displayName ?? "Chưa gắn mùa"}</span>
               <span className="block text-sm font-medium">{item.patchCode}</span>
             </button>
           )

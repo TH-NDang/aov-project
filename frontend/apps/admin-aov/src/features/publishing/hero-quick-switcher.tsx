@@ -213,7 +213,7 @@ function HeroQuickSwitcherPanel({ heroId, locale, rulesetId = "", onSelect }: He
                 <span className="block truncate text-xs text-muted-foreground">{hero.code}</span>
               </span>
               {current && (
-                <span className="flex shrink-0 items-center gap-1 text-[10px] text-muted-foreground">
+                <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
                   <Check className="size-3.5" />
                   Đang xem
                 </span>
