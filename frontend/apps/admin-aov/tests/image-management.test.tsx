@@ -143,6 +143,22 @@ test("image management loads on scroll, retries without losing rows and filters 
     assert.equal(document.querySelector('[aria-label="Đang tải thêm ảnh…"]'), null)
     assert.match(document.body.textContent!, /Đã tải hết 45 ảnh/)
 
+    const viewButton = (label: string) =>
+      [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Kiểu xem ảnh"] button')].find(
+        (button) => button.textContent?.trim() === label,
+      )!
+    const callsBeforeViewChange = calls.length
+    await act(async () => viewButton("Lưới").click())
+    assert.equal(document.querySelectorAll('[aria-label="Lưới ảnh"] > li').length, 45)
+    assert.equal(document.querySelector("table"), null)
+    assert.equal(calls.length, callsBeforeViewChange)
+    const brokenImage = document.querySelector('[aria-label="Lưới ảnh"] img')!
+    await act(async () => brokenImage.dispatchEvent(new dom.window.Event("error")))
+    assert.ok(document.querySelector('[aria-label="Không tải được ảnh"]'))
+    assert.ok(document.querySelector('[aria-label="Xem ảnh asset-0"]'))
+    await act(async () => viewButton("Bảng").click())
+    assert.equal(rows().length, 45)
+
     const filter = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!
     await act(async () => filter.click())
     await waitFor(() => rows().length === 3)
@@ -169,6 +185,14 @@ test("image management loads on scroll, retries without losing rows and filters 
     await act(async () => filter.click())
     await waitFor(() => document.body.textContent!.includes("Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này."))
     assert.equal(document.querySelector('[aria-label="Đang tải thêm ảnh…"]'), null)
+    await act(async () => viewButton("Lưới").click())
+    assert.equal(document.querySelector("table"), null)
+    assert.match(document.body.textContent!, /Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này/)
+    const reset = [...document.querySelectorAll("button")].find((button) => button.textContent === "Xem tất cả ảnh")!
+    await act(async () => reset.click())
+    await waitFor(() => document.querySelectorAll('[aria-label="Lưới ảnh"] > li').length === 45)
+    assert.equal(document.querySelector("select")!.value, "")
+    assert.equal(filter.checked, false)
   } finally {
     await act(async () => root.unmount())
     await logout()

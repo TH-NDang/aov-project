@@ -1,11 +1,23 @@
 import { useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, ImageIcon, LayoutGrid, List, Mail, Plus, RefreshCw } from "lucide-react"
+import {
+  ArrowUpRight,
+  CheckCheck,
+  Eye,
+  ImageIcon,
+  LayoutGrid,
+  List,
+  Mail,
+  Plus,
+  RefreshCw,
+  SlidersHorizontal,
+  X,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { DropdownMenuItem } from "@aov/ui/components/dropdown-menu"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { InfiniteScroll } from "@/components/infinite-scroll"
@@ -21,6 +33,7 @@ import { invalidateMediaAsset } from "./media-cache"
 import { MediaSourceEditor } from "./media-source-editor"
 import { MediaSourceFields } from "./media-source-fields"
 import { MediaSourceStatus } from "./media-source-status"
+import { LibraryCredit, LibraryImage, LibraryState } from "./image-library-presentation"
 import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
 import type { MediaSourceTarget } from "./bulk-media-sources"
 import { creditHttpUrl, currentMediaSources, needsMediaCredit, type MediaSourceInput } from "@aov/ui/lib/media-credit"
@@ -175,67 +188,80 @@ export function ImageManagementPage() {
   const columns = useMemo(
     () =>
       helper.columns([
-        helper.display({
-          id: "preview",
+        helper.accessor("id", {
           header: "Ảnh",
           cell: ({ row }) => (
-            <button
-              aria-label={`Xem ảnh ${row.original.id}`}
-              onClick={() => setSelected(row.original.id)}
-              className="flex size-12 items-center justify-center overflow-hidden rounded-md border bg-muted"
-            >
-              {row.original.currentUrl ? (
-                <img src={row.original.currentUrl} alt="" className="size-full object-contain" loading="lazy" />
-              ) : (
-                <ImageIcon className="size-5 text-muted-foreground" />
-              )}
-            </button>
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                aria-label={`Xem ảnh ${row.original.id}`}
+                onClick={() => setSelected(row.original.id)}
+                className="group/preview relative shrink-0 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <LibraryImage url={row.original.currentUrl} className="size-11" />
+                <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40 text-white opacity-0 transition-opacity group-hover/preview:opacity-100 group-focus-visible/preview:opacity-100">
+                  <Eye aria-hidden className="size-4" />
+                </span>
+              </button>
+              <div className="min-w-0 space-y-1">
+                <button
+                  className="group flex max-w-full items-center gap-1 rounded text-xs font-semibold outline-none hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setSelected(row.original.id)}
+                  aria-label={`Chi tiết ảnh ${row.original.id}`}
+                  title={row.original.id}
+                >
+                  <span className="truncate font-mono">{row.original.id.slice(0, 8)}</span>
+                  <ArrowUpRight
+                    aria-hidden
+                    className="size-3 shrink-0 text-muted-foreground group-hover:text-primary"
+                  />
+                </button>
+                <span
+                  className="block truncate text-xs text-muted-foreground"
+                  title={types[row.original.semanticType] ?? row.original.semanticType}
+                >
+                  {types[row.original.semanticType] ?? row.original.semanticType}
+                </span>
+              </div>
+            </div>
           ),
-        }),
-        helper.accessor("id", {
-          header: "Mã ảnh",
-          cell: ({ row }) => (
-            <button
-              className="group flex items-center gap-2 font-mono text-xs hover:text-primary"
-              onClick={() => setSelected(row.original.id)}
-              aria-label={`Chi tiết ảnh ${row.original.id}`}
-            >
-              <span>{row.original.id.slice(0, 8)}</span>
-              <ArrowUpRight className="size-4 opacity-60 group-hover:opacity-100" />
-            </button>
-          ),
-        }),
-        helper.accessor("semanticType", {
-          header: "Loại ảnh",
-          cell: ({ getValue }) => types[getValue()] ?? getValue(),
         }),
         helper.accessor("state", {
           header: "Trạng thái",
-          cell: ({ row, getValue }) =>
-            row.original.currentVersionId ? (
-              <Badge variant="secondary">{states[getValue()] ?? getValue()}</Badge>
-            ) : (
-              <Badge variant="outline">Chưa hoàn tất upload</Badge>
-            ),
+          cell: ({ row, getValue }) => (
+            <LibraryState
+              state={getValue()}
+              label={states[getValue()] ?? getValue()}
+              ready={!!row.original.currentVersionId}
+            />
+          ),
         }),
         helper.display({
           id: "source",
-          header: "Nguồn ảnh",
+          header: "Nguồn & credit",
           cell: ({ row }) => (
             <button
               type="button"
-              className="text-left"
+              className="block w-full min-w-0 rounded text-left outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => setSelected(row.original.id)}
               aria-label={`Nguồn và credit ảnh ${row.original.id}`}
             >
-              <MediaSourceStatus sources={row.original.sources} versionId={row.original.currentVersionId} />
+              <LibraryCredit sources={row.original.sources} versionId={row.original.currentVersionId} />
             </button>
           ),
         }),
         helper.accessor("updatedAt", {
           header: "Cập nhật",
           cell: ({ row, getValue }) => (
-            <span title={`Tạo lúc ${date(row.original.createdAt)}`}>{date(getValue())}</span>
+            <time
+              dateTime={getValue()}
+              className="block whitespace-nowrap text-xs tabular-nums"
+              title={`Cập nhật ${date(getValue())} · Tạo lúc ${date(row.original.createdAt)}`}
+            >
+              {new Date(getValue()).toLocaleDateString("vi-VN")}
+              <span className="mt-1 block text-[11px] text-muted-foreground">
+                {new Date(getValue()).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            </time>
           ),
         }),
       ]),
@@ -267,106 +293,126 @@ export function ImageManagementPage() {
     <Page>
       <PageHeader
         title="Quản lý ảnh"
+        description="Thư viện ảnh, phiên bản và thông tin nguồn."
         actions={
           <>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-9"
-              aria-label="Làm mới danh sách ảnh"
-              title="Làm mới"
-              onClick={() => void assets.refetch()}
-              disabled={assets.isFetching}
-            >
-              <RefreshCw className={assets.isFetching ? "size-4 animate-spin" : "size-4"} />
-            </Button>
             {writable && (
-              <PageActionsMenu label="Thêm ảnh và liên hệ">
-                <DropdownMenuItem onSelect={() => setUpload(true)}>
-                  <Plus />
-                  Thêm ảnh
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/media-contact-requests">
-                    <Mail />
-                    Liên hệ về ảnh
+              <>
+                <Button asChild variant="ghost" size="icon" className="size-9">
+                  <Link to="/media-contact-requests" aria-label="Liên hệ về ảnh" title="Liên hệ về ảnh">
+                    <Mail className="size-4" />
                   </Link>
-                </DropdownMenuItem>
-              </PageActionsMenu>
+                </Button>
+                <Button size="sm" className="h-9 gap-1.5" onClick={() => setUpload(true)}>
+                  <Plus className="size-4" />
+                  Thêm ảnh
+                </Button>
+              </>
             )}
+            <PageActionsMenu label="Tùy chọn thư viện ảnh">
+              <DropdownMenuItem disabled={assets.isFetching} onSelect={() => void assets.refetch()}>
+                <RefreshCw aria-hidden className={assets.isFetching ? "motion-safe:animate-spin" : undefined} />
+                Làm mới danh sách ảnh
+              </DropdownMenuItem>
+            </PageActionsMenu>
           </>
         }
       />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <label className="flex items-center gap-2 text-sm">
-          <span className="whitespace-nowrap">Loại ảnh</span>
-          <select
-            className={control}
-            value={type}
-            onChange={(e) => {
-              setType(e.target.value)
-              setMarked(new Map())
-            }}
-          >
-            <option value="">Tất cả</option>
-            {Object.entries(types).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex cursor-pointer items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={needsCredit}
-            onChange={(event) => {
-              setNeedsCredit(event.target.checked)
-              setMarked(new Map())
-            }}
-            className="size-4 accent-primary"
-          />
-          Chỉ ảnh thiếu nguồn hoặc credit
-        </label>
-        <span className="ml-auto text-sm text-muted-foreground" role="status">
-          {assets.isPending ? "Đang tải ảnh…" : `Đã tải ${rows.length} / ${total} ảnh`}
-        </span>
-        <div className="inline-flex rounded-lg border p-0.5" role="group" aria-label="Kiểu xem ảnh">
-          {(
-            [
-              [false, List, "Bảng"],
-              [true, LayoutGrid, "Lưới"],
-            ] as const
-          ).map(([isGrid, Icon, label]) => (
-            <Button
-              key={label}
-              type="button"
-              size="sm"
-              variant={grid === isGrid ? "secondary" : "ghost"}
-              aria-pressed={grid === isGrid}
-              className="h-7 gap-1.5 px-2"
-              onClick={() =>
-                setParams(
-                  (current) => {
-                    const next = new URLSearchParams(current)
-                    if (isGrid) next.set("view", "grid")
-                    else next.delete("view")
-                    return next
-                  },
-                  { replace: true, preventScrollReset: true },
-                )
-              }
+      <div className="space-y-3" role="region" aria-label="Bộ lọc thư viện ảnh">
+        <div className="flex flex-wrap items-center gap-2.5 rounded-lg border bg-muted/30 p-2.5">
+          <label className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium text-foreground sm:flex-none">
+            <SlidersHorizontal aria-hidden className="size-4 shrink-0" />
+            <span className="shrink-0">Loại ảnh</span>
+            <select
+              aria-label="Loại ảnh"
+              className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-3 text-sm font-medium text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-44"
+              value={type}
+              onChange={(e) => {
+                setType(e.target.value)
+                setMarked(new Map())
+              }}
             >
-              <Icon className="size-4" />
-              {label}
+              <option value="">Tất cả loại ảnh</option>
+              {Object.entries(types).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label
+            className={`flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm font-medium shadow-xs transition-colors focus-within:ring-[3px] focus-within:ring-ring/20 ${needsCredit ? "border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-200" : "border-input bg-background text-foreground hover:bg-accent"}`}
+          >
+            <input
+              type="checkbox"
+              aria-label="Chỉ ảnh thiếu nguồn hoặc credit"
+              checked={needsCredit}
+              onChange={(event) => {
+                setNeedsCredit(event.target.checked)
+                setMarked(new Map())
+              }}
+              className="size-4 accent-primary"
+            />
+            <span className="whitespace-nowrap">Thiếu nguồn / credit</span>
+          </label>
+          {(type || needsCredit) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto h-9 gap-1 px-2 text-sm text-foreground"
+              onClick={() => {
+                setType("")
+                setNeedsCredit(false)
+                setMarked(new Map())
+              }}
+            >
+              <X aria-hidden className="size-3.5" />
+              Bỏ bộ lọc
             </Button>
-          ))}
+          )}
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm text-foreground/75 tabular-nums" role="status">
+            {assets.isPending ? "Đang tải ảnh…" : `Đã tải ${rows.length} / ${total} ảnh`}
+          </span>
+          <div className="inline-flex shrink-0 rounded-lg bg-muted/60 p-0.5" role="group" aria-label="Kiểu xem ảnh">
+            {(
+              [
+                [false, List, "Bảng"],
+                [true, LayoutGrid, "Lưới"],
+              ] as const
+            ).map(([isGrid, Icon, label]) => (
+              <Button
+                key={label}
+                type="button"
+                size="sm"
+                variant="ghost"
+                aria-pressed={grid === isGrid}
+                className={`h-8 gap-1.5 rounded-md px-3 text-sm ${grid === isGrid ? "bg-background font-semibold text-foreground shadow-sm hover:bg-background" : "text-foreground/75"}`}
+                onClick={() =>
+                  setParams(
+                    (current) => {
+                      const next = new URLSearchParams(current)
+                      if (isGrid) next.set("view", "grid")
+                      else next.delete("view")
+                      return next
+                    },
+                    { replace: true, preventScrollReset: true },
+                  )
+                }
+              >
+                <Icon aria-hidden className="size-3.5" />
+                {label}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
       {writable && marked.size > 0 && (
-        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-background/95 p-3 shadow-sm">
+        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/25 bg-background/95 px-3 py-2.5 shadow-sm backdrop-blur-sm">
           <div className="text-sm">
-            <p className="font-medium" role="status">
+            <p className="flex items-center gap-2 font-medium" role="status">
+              <CheckCheck aria-hidden className="size-4 text-primary" />
               Đã chọn {marked.size} ảnh
             </p>
             <p className="text-xs text-muted-foreground">
@@ -374,17 +420,17 @@ export function ImageManagementPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" disabled={!marked.size} onClick={() => setMarked(new Map())}>
+            <Button size="sm" variant="ghost" disabled={!marked.size} onClick={() => setMarked(new Map())}>
               Bỏ chọn
             </Button>
-            <Button disabled={!marked.size} onClick={() => setBulkTargets([...marked.values()])}>
+            <Button size="sm" disabled={!marked.size} onClick={() => setBulkTargets([...marked.values()])}>
               Bổ sung nguồn / credit hàng loạt
             </Button>
           </div>
         </div>
       )}
       {assets.error && (
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm">
           <p role="alert" className="text-destructive">
             {assets.isFetchNextPageError ? "Chưa tải thêm được ảnh. " : ""}
             {errorMessage(assets.error)}
@@ -399,36 +445,51 @@ export function ImageManagementPage() {
         </div>
       )}
       {grid && (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6" aria-label="Lưới ảnh">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,160px),1fr))] gap-3" aria-label="Lưới ảnh">
           {rows.map((row) => (
             <li
               key={row.id}
-              className={`group relative overflow-hidden rounded-xl border bg-card ${marked.has(row.id) ? "ring-2 ring-primary" : ""}`}
+              className={`group relative min-w-0 overflow-hidden rounded-xl border bg-card transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-sm ${marked.has(row.id) ? "border-primary ring-1 ring-primary" : ""}`}
             >
               <button
                 type="button"
-                className="block w-full text-left"
+                className="block w-full rounded-xl text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 aria-label={`Xem ảnh ${row.id}`}
                 onClick={() => setSelected(row.id)}
               >
-                <span className="flex aspect-square items-center justify-center bg-muted/40 p-2">
-                  {row.currentUrl ? (
-                    <img src={row.currentUrl} alt="" className="max-h-full max-w-full object-contain" loading="lazy" />
-                  ) : (
-                    <ImageIcon className="size-6 text-muted-foreground" />
-                  )}
+                <span className="relative block border-b bg-muted/20 p-4">
+                  <LibraryImage
+                    url={row.currentUrl}
+                    className="aspect-[4/3] w-full rounded-none border-0 bg-transparent"
+                  />
+                  <span className="absolute right-2 bottom-2 flex size-7 items-center justify-center rounded-md bg-background/90 text-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                    <Eye aria-hidden className="size-3.5" />
+                  </span>
                 </span>
-                <span className="block space-y-1 p-2">
-                  <span className="block truncate text-xs font-medium">
+                <span className="block space-y-2 p-3">
+                  <span
+                    className="block truncate text-xs font-semibold"
+                    title={types[row.semanticType] ?? row.semanticType}
+                  >
                     {types[row.semanticType] ?? row.semanticType}
                   </span>
-                  <MediaSourceStatus sources={row.sources} versionId={row.currentVersionId} />
+                  <span className="flex flex-wrap items-center justify-between gap-1">
+                    <span className="font-mono text-[11px] text-muted-foreground">{row.id.slice(0, 8)}</span>
+                    <LibraryState
+                      state={row.state}
+                      label={states[row.state] ?? row.state}
+                      ready={!!row.currentVersionId}
+                    />
+                  </span>
+                  <span className="block border-t pt-2">
+                    <LibraryCredit sources={row.sources} versionId={row.currentVersionId} compact />
+                  </span>
                 </span>
               </button>
               {writable && canSelect(row) && (
                 <input
                   type="checkbox"
-                  className="absolute top-2 left-2 size-4 accent-primary"
+                  className="absolute top-2 left-2 size-4 cursor-pointer accent-primary"
                   aria-label={`Chọn ảnh ${row.id} trong lưới`}
                   checked={marked.has(row.id)}
                   onChange={() => toggleRow(row)}
@@ -438,72 +499,111 @@ export function ImageManagementPage() {
           ))}
         </ul>
       )}
-      <div className={`overflow-x-auto rounded-xl border bg-card ${grid ? "hidden" : ""}`}>
-        <table className="w-full min-w-[760px] text-left text-sm">
-          <thead className="bg-muted/50">
-            {table.getHeaderGroups().map((group) => (
-              <tr key={group.id}>
-                {writable && (
-                  <th className="w-12 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-primary"
-                      aria-label="Chọn tất cả ảnh đã tải"
-                      checked={allMarked}
-                      disabled={!selectable.length}
-                      onChange={toggleLoaded}
-                      ref={(node) => {
-                        if (node) node.indeterminate = someMarked && !allMarked
-                      }}
-                    />
-                  </th>
-                )}
-                {group.headers.map((header) => (
-                  <th key={header.id} className="px-4 py-3 font-medium">
-                    <table.FlexRender header={header} />
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className={`border-t hover:bg-muted/30 ${marked.has(row.id) ? "bg-muted/40" : ""}`}>
-                {writable && (
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-primary"
-                      aria-label={`Chọn ảnh ${row.original.id}`}
-                      checked={marked.has(row.original.id)}
-                      disabled={!canSelect(row.original)}
-                      title={canSelect(row.original) ? undefined : "Ảnh chưa hoàn tất upload hoặc không còn hoạt động."}
-                      onChange={() => toggleRow(row.original)}
-                    />
-                  </td>
-                )}
-                {row.getAllCells().map((cell) => (
-                  <td key={cell.id} className="whitespace-nowrap px-4 py-3">
-                    <table.FlexRender cell={cell} />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {assets.isPending ? (
-          <p role="status" className="p-8 text-center">
-            Đang tải ảnh…
+      {!grid && (
+        <div className="overflow-x-auto rounded-xl border bg-card">
+          <table className="w-full min-w-[560px] table-fixed text-left text-sm" aria-label="Danh sách ảnh">
+            <colgroup>
+              {writable && <col className="w-10" />}
+              <col className="w-[32%]" />
+              <col className="w-[20%]" />
+              <col />
+              <col className="w-28" />
+            </colgroup>
+            <thead className="border-b bg-muted/30 text-[11px] text-muted-foreground">
+              {table.getHeaderGroups().map((group) => (
+                <tr key={group.id}>
+                  {writable && (
+                    <th scope="col" className="px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        className="size-3.5 cursor-pointer accent-primary"
+                        aria-label="Chọn tất cả ảnh đã tải"
+                        checked={allMarked}
+                        disabled={!selectable.length}
+                        onChange={toggleLoaded}
+                        ref={(node) => {
+                          if (node) node.indeterminate = someMarked && !allMarked
+                        }}
+                      />
+                    </th>
+                  )}
+                  {group.headers.map((header) => (
+                    <th scope="col" key={header.id} className="px-3 py-2.5 font-medium">
+                      <table.FlexRender header={header} />
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className={`border-b border-border/60 transition-colors last:border-b-0 hover:bg-muted/35 focus-within:bg-muted/35 ${marked.has(row.id) ? "bg-primary/5" : ""}`}
+                >
+                  {writable && (
+                    <td className="px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        className="size-3.5 cursor-pointer accent-primary disabled:cursor-not-allowed"
+                        aria-label={`Chọn ảnh ${row.original.id}`}
+                        checked={marked.has(row.original.id)}
+                        disabled={!canSelect(row.original)}
+                        title={
+                          canSelect(row.original) ? undefined : "Ảnh chưa hoàn tất upload hoặc không còn hoạt động."
+                        }
+                        onChange={() => toggleRow(row.original)}
+                      />
+                    </td>
+                  )}
+                  {row.getAllCells().map((cell) => (
+                    <td key={cell.id} className="px-3 py-2.5">
+                      <table.FlexRender cell={cell} />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {assets.isPending && (
+        <div role="status" className="space-y-3 rounded-xl border p-4">
+          <span className="sr-only">Đang tải ảnh…</span>
+          {Array.from({ length: 6 }, (_, index) => (
+            <div key={index} aria-hidden className="flex items-center gap-3 motion-safe:animate-pulse">
+              <span className="size-11 rounded-lg bg-muted" />
+              <span className="h-3 w-24 rounded bg-muted" />
+              <span className="ml-auto h-3 w-32 rounded bg-muted" />
+            </div>
+          ))}
+        </div>
+      )}
+      {!assets.isPending && !assets.error && !rows.length && (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed bg-muted/10 px-5 py-12 text-center">
+          <span className="mb-2 flex size-12 items-center justify-center rounded-full bg-muted">
+            <ImageIcon aria-hidden className="size-5 text-muted-foreground" />
+          </span>
+          <h2 className="text-sm font-semibold">{needsCredit ? "Không có ảnh cần bổ sung" : "Chưa có ảnh"}</h2>
+          <p className="text-xs text-muted-foreground">
+            {needsCredit ? "Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
           </p>
-        ) : (
-          !assets.error &&
-          !rows.length && (
-            <p className="p-8 text-center text-muted-foreground">
-              {needsCredit ? "Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
-            </p>
-          )
-        )}
-      </div>
+          {(type || needsCredit) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => {
+                setType("")
+                setNeedsCredit(false)
+                setMarked(new Map())
+              }}
+            >
+              Xem tất cả ảnh
+            </Button>
+          )}
+        </div>
+      )}
       <InfiniteScroll
         key={`${type}:${needsCredit}`}
         query={assets}

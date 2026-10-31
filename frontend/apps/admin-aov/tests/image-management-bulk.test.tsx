@@ -159,6 +159,17 @@ test("bulk media selection survives scrolling, resets on filtering and applies s
     await waitFor(() => document.body.textContent!.includes("/ 21 ảnh"))
     await click(checkbox("Chọn ảnh bulk-2"))
     await click(checkbox("Chọn ảnh bulk-3"))
+    const viewButton = (label: string) =>
+      [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Kiểu xem ảnh"] button')].find(
+        (button) => button.textContent?.trim() === label,
+      )!
+    await click(viewButton("Lưới"))
+    assert.equal(checkbox("Chọn ảnh bulk-2 trong lưới").checked, true)
+    assert.equal(checkbox("Chọn ảnh bulk-3 trong lưới").checked, true)
+    assert.equal(checkbox("Chọn ảnh bulk-1 trong lưới"), null)
+    await click(viewButton("Bảng"))
+    assert.equal(checkbox("Chọn ảnh bulk-2").checked, true)
+    assert.equal(checkbox("Chọn ảnh bulk-3").checked, true)
     await click(button("Bổ sung nguồn / credit hàng loạt"))
     await waitFor(() => !!document.querySelector('[role="dialog"]'))
     assert.equal(document.querySelectorAll('[aria-label="Ảnh được bổ sung nguồn hàng loạt"] li').length, 2)
