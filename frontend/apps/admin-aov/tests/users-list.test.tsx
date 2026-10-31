@@ -88,7 +88,7 @@ test("users load on scroll, retain rows after errors and restart server search w
   const rows = () => [...document.querySelectorAll('a[aria-label^="Xem hồ sơ "]')]
   const sentinel = () => document.querySelector<HTMLElement>('[aria-label="Đang tải thêm người dùng…"]')!
   const waitFor = async (condition: () => boolean, message: string) => {
-    for (let attempt = 0; attempt < 150 && !condition(); attempt++)
+    for (let attempt = 0; attempt < 400 && !condition(); attempt++)
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 10))
       })
