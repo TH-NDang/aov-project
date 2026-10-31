@@ -1,4 +1,4 @@
-import { Info, ExternalLink } from "lucide-react"
+import { Info, ExternalLink, Copyright, CircleAlert } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { creditHttpUrl, type MediaCredit } from "../lib/media-credit"
 
@@ -6,10 +6,13 @@ import { creditHttpUrl, type MediaCredit } from "../lib/media-credit"
 export function ImageCredit({
   sources = [],
   contactHref,
+  manageHref,
   className = "",
 }: {
   sources?: MediaCredit[]
   contactHref?: string
+  /** Admin only: where the image's source can be corrected. */
+  manageHref?: string
   className?: string
 }) {
   return (
@@ -38,10 +41,19 @@ export function ImageCredit({
               const contact = creditHttpUrl(source.contactUrl)
               return (
                 <li key={index} className="space-y-1.5 break-words">
-                  <p className="font-medium">{source.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Chủ sở hữu / credit: {source.ownerName || "Chưa xác nhận"}
-                  </p>
+                  <p className="text-xs text-muted-foreground">Thuộc về</p>
+                  {source.ownerName ? (
+                    <p className="flex items-center gap-1.5 font-semibold">
+                      <Copyright className="size-4 shrink-0" aria-hidden="true" />
+                      {source.ownerName}
+                    </p>
+                  ) : (
+                    <p className="flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-300">
+                      <CircleAlert className="size-4 shrink-0" aria-hidden="true" />
+                      Chưa xác nhận chủ sở hữu
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Lấy từ: {source.label}</p>
                   {url && (
                     <a
                       className="flex items-center gap-1 underline underline-offset-4"
@@ -68,6 +80,11 @@ export function ImageCredit({
         {contactHref && (
           <a className="mt-4 block border-t pt-3 text-xs underline underline-offset-4" href={contactHref}>
             Liên hệ về ảnh / đính chính nguồn
+          </a>
+        )}
+        {manageHref && (
+          <a className="mt-4 block border-t pt-3 text-xs underline underline-offset-4" href={manageHref}>
+            Sửa nguồn trong Quản lý ảnh
           </a>
         )}
       </PopoverContent>

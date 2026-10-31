@@ -54,7 +54,6 @@ const sourceTarget = (row: Row): MediaSourceTarget => ({
 export function ImageManagementPage() {
   const [type, setType] = useState("")
   const [needsCredit, setNeedsCredit] = useState(false)
-  const [selected, setSelected] = useState<string | null>(null)
   const [marked, setMarked] = useState<Map<string, MediaSourceTarget>>(() => new Map())
   const [bulkTargets, setBulkTargets] = useState<MediaSourceTarget[] | null>(null)
   const [ownerTargets, setOwnerTargets] = useState<OwnerTarget[] | null>(null)
@@ -62,6 +61,18 @@ export function ImageManagementPage() {
   const [uploadType, setUploadType] = useState("HERO_HEAD")
   const wide = useIsWide()
   const [params, setParams] = useSearchParams()
+  // The open image lives in the URL (?asset=…), so other pages can link straight to an image's sources.
+  const selected = params.get("asset")
+  const setSelected = (id: string | null) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (id) next.set("asset", id)
+        else next.delete("asset")
+        return next
+      },
+      { preventScrollReset: true },
+    )
   const grid = params.get("view") === "grid"
   const writable = useSession().actor?.capabilities.includes("media:write")
   const assets = useInfiniteQuery({

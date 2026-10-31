@@ -57,3 +57,12 @@ export function visibleSources<T extends MediaCredit>(sources: readonly T[]): T[
       !sources.some((other) => other !== source && other.ownerName?.trim() && sameOrigin(other, source)),
   )
 }
+
+/** One line for hover hints on image thumbnails: who owns the image and where it came from. */
+export function creditSummary(sources: readonly MediaCredit[]) {
+  const gap = sourceGap(sources)
+  const source = primarySource(visibleSources(sources))
+  if (gap === "none" && source) return `© ${source.ownerName!.trim()} · Nguồn: ${source.label}`
+  if (gap === "missing-owner" && source) return `Chưa ghi chủ sở hữu · Nguồn: ${source.label}`
+  return sourceGapLabels[gap]
+}

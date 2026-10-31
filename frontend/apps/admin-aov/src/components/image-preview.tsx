@@ -10,10 +10,12 @@ interface ImagePreviewProps {
   className?: string
   showHint?: boolean
   overlay?: ReactNode
+  /** Shown under the large image, e.g. who owns it. */
+  meta?: ReactNode
 }
 
 /** Add a keyboard-accessible preview trigger over a non-interactive image thumbnail. */
-export function ImagePreview({ src, alt, children, className, showHint = true, overlay }: ImagePreviewProps) {
+export function ImagePreview({ src, alt, children, className, showHint = true, overlay, meta }: ImagePreviewProps) {
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLButtonElement>(null)
   return (
@@ -35,7 +37,7 @@ export function ImagePreview({ src, alt, children, className, showHint = true, o
       </button>
       {overlay}
       <ImageLightbox
-        images={[{ path: src, title: alt }]}
+        images={[{ path: src, title: alt, meta }]}
         index={open ? 0 : null}
         onIndexChange={(index) => setOpen(index !== null)}
         onCloseAutoFocus={(event) => {

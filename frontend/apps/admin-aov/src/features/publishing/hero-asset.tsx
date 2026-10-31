@@ -7,6 +7,8 @@ import { ImagePreview } from "@/components/image-preview"
 import { createPublishingApi } from "./publishing-api"
 import { ImageCredit } from "@aov/ui/components/image-credit"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
+import { ImageCreditPanel } from "../media/image-credit-panel"
+import { creditSummary, visibleSources } from "../media/media-source-gaps"
 
 const api = createPublishingApi(backendRequest)
 
@@ -34,10 +36,15 @@ export function HeroAsset({
     enabled: !!id,
     staleTime: 60000,
   })
+  const sources = asset.data?.currentUrl
+    ? visibleSources(currentMediaSources(asset.data.provenance ?? [], asset.data.currentVersionId))
+    : []
   const thumbnail = (
     <div
       className={cn("@container overflow-hidden rounded-xl border bg-muted/40", className)}
       style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}
+      // Hovering any image tells who owns it, without opening it.
+      title={asset.data?.currentUrl ? creditSummary(sources) : undefined}
     >
       {asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
         <img
@@ -68,7 +75,7 @@ export function HeroAsset({
     </div>
   )
   const credit = asset.data?.currentUrl ? (
-    <ImageCredit sources={currentMediaSources(asset.data.provenance ?? [], asset.data.currentVersionId)} />
+    <ImageCredit sources={sources} manageHref={`/image-management?asset=${encodeURIComponent(asset.data.id)}`} />
   ) : null
   return preview && asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
     <ImagePreview
@@ -76,6 +83,7 @@ export function HeroAsset({
       alt={alt || "Ảnh"}
       className={naturalAspectRatio || frameAspectRatio ? className : undefined}
       overlay={credit}
+      meta={<ImageCreditPanel sources={sources} assetId={asset.data.id} />}
     >
       {thumbnail}
     </ImagePreview>
