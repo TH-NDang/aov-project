@@ -9,6 +9,7 @@ import com.wikiaov.media.internal.application.SourceInput;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.asset.persistence.MediaAssetRepository;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAsset;
+import com.wikiaov.media.internal.owner.application.MediaOwners;
 import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
 import com.wikiaov.media.internal.query.application.MediaAssetViews;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
@@ -30,15 +31,17 @@ public class CreateMediaAsset {
     private final CurrentActor currentActor;
     private final AuditLog auditLog;
     private final Clock clock;
+    private final MediaOwners owners;
 
     CreateMediaAsset(MediaAssetRepository assets, MediaProvenanceRepository provenance, MediaAssetViews assetViews,
-            CurrentActor currentActor, AuditLog auditLog, Clock clock) {
+            CurrentActor currentActor, AuditLog auditLog, Clock clock, MediaOwners owners) {
         this.assets = assets;
         this.provenance = provenance;
         this.assetViews = assetViews;
         this.currentActor = currentActor;
         this.auditLog = auditLog;
         this.clock = clock;
+        this.owners = owners;
     }
 
     public record Command(
@@ -56,7 +59,7 @@ public class CreateMediaAsset {
         MediaAsset asset = assets.save(
                 MediaAsset.create(UUID.randomUUID(), command.semanticType(), MediaWritePolicy.ref(actor), now));
         if (command.source() != null) {
-            provenance.save(command.source().toProvenance(asset.getId(), null, now));
+            provenance.save(owners.attach(command.source()).toProvenance(asset.getId(), null, now));
         }
         auditLog.record(new AuditEntry(actor, "MEDIA_ASSET_CREATED", MediaWritePolicy.AUDIT_AGGREGATE, asset.getId(),
                 null, null, null, null, MediaWritePolicy.metadata("semanticType", command.semanticType().name())));

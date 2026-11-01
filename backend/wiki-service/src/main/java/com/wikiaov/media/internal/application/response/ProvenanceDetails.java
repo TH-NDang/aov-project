@@ -15,6 +15,7 @@ public record ProvenanceDetails(
         @Nullable Instant observedAt,
         @Nullable String note,
         @Nullable String ownerName,
-        @Nullable String contactUrl
+        @Nullable String contactUrl,
+        @Nullable UUID ownerId
 ) {
 }

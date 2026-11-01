@@ -11,6 +11,7 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -575,6 +576,81 @@ class MediaAdminApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[?(@.id == '%s')].sources[*].ownerName".formatted(assetId),
                         hasItem(nullValue())));
+    }
+
+    @Test
+    void ownerNamesShareOneCatalogEntryThatRenamesAndMergesEverySource() throws Exception {
+        String unique = UUID.randomUUID().toString().substring(0, 8);
+        String name = "Studio " + unique;
+        String first = createAsset("OTHER");
+        String firstVersion = JsonPath.read(uploadVersion(first, TestImages.png(28, 28), "image/png"), "$.versionId");
+        String second = createAsset("OTHER");
+        String secondVersion = JsonPath.read(uploadVersion(second, TestImages.png(29, 29), "image/png"),
+                "$.versionId");
+        addSource(first, firstVersion, "{\"label\":\"Capture\",\"ownerName\":\"  " + name + " \"}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.provenance[0].ownerName").value(name));
+        addSource(second, secondVersion,
+                "{\"label\":\"Capture\",\"ownerName\":\"" + name.toUpperCase().replace(" ", "   ") + "\"}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.provenance[0].ownerName").value(name));
+
+        String listed = mvc.perform(get(BASE + "/owners").param("q", " studio  " + unique.toUpperCase()).with(reader()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items", hasSize(1)))
+                .andExpect(jsonPath("$.items[0].name").value(name))
+                .andExpect(jsonPath("$.items[0].assetCount").value(2))
+                .andReturn().getResponse().getContentAsString();
+        String ownerId = JsonPath.read(listed, "$.items[0].id");
+        long version = JsonPath.<Number>read(listed, "$.items[0].version").longValue();
+        mvc.perform(get(BASE + "/owners").param("unknown", "x").with(reader())).andExpect(status().isBadRequest());
+
+        String renamed = "Renamed " + unique;
+        String update = "{\"name\":\"" + renamed + "\",\"contactUrl\":\"https://example.com/owner\","
+                + "\"expectedVersion\":%d}";
+        mvc.perform(put(BASE + "/owners/" + ownerId).with(reader()).contentType(MediaType.APPLICATION_JSON)
+                .content(update.formatted(version))).andExpect(status().isForbidden());
+        mvc.perform(put(BASE + "/owners/" + ownerId).with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content(update.formatted(version)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value(renamed))
+                .andExpect(jsonPath("$.assetCount").value(2));
+        mvc.perform(get(BASE + "/assets/" + first).with(reader()))
+                .andExpect(jsonPath("$.provenance[0].ownerName").value(renamed))
+                .andExpect(jsonPath("$.provenance[0].ownerId").value(ownerId))
+                .andExpect(jsonPath("$.provenance[0].contactUrl").value("https://example.com/owner"));
+        assertThat(mediaAssets.find(UUID.fromString(second)).orElseThrow().currentVersion().sources().getFirst()
+                .ownerName()).isEqualTo(renamed);
+        mvc.perform(put(BASE + "/owners/" + ownerId).with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content(update.formatted(version)))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("MEDIA_OWNER_VERSION_CONFLICT"));
+
+        String other = "Other " + unique;
+        addSource(second, secondVersion, "{\"label\":\"Second capture\",\"ownerName\":\"" + other + "\"}")
+                .andExpect(status().isOk());
+        String otherListed = mvc.perform(get(BASE + "/owners").param("q", other).with(reader()))
+                .andReturn().getResponse().getContentAsString();
+        String otherId = JsonPath.read(otherListed, "$.items[0].id");
+        long otherVersion = JsonPath.<Number>read(otherListed, "$.items[0].version").longValue();
+        mvc.perform(put(BASE + "/owners/" + otherId).with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"" + renamed.toLowerCase() + "\",\"expectedVersion\":" + otherVersion + "}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("MEDIA_OWNER_NAME_TAKEN"))
+                .andExpect(jsonPath("$.context.ownerId").value(ownerId));
+
+        String merge = "{\"targetId\":\"%s\",\"expectedVersion\":%d}";
+        mvc.perform(post(BASE + "/owners/" + otherId + "/merge").with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content(merge.formatted(otherId, otherVersion))).andExpect(status().isBadRequest());
+        mvc.perform(post(BASE + "/owners/" + otherId + "/merge").with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content(merge.formatted(ownerId, otherVersion)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(ownerId))
+                .andExpect(jsonPath("$.assetCount").value(2));
+        mvc.perform(get(BASE + "/owners").param("q", other).with(reader())).andExpect(jsonPath("$.items", hasSize(0)));
+        mvc.perform(get(BASE + "/assets/" + second).with(reader()))
+                .andExpect(jsonPath("$.provenance[*].ownerName", everyItem(is(renamed))));
+        mvc.perform(post(BASE + "/owners/" + otherId + "/merge").with(editor()).contentType(MediaType.APPLICATION_JSON)
+                .content(merge.formatted(ownerId, otherVersion)))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("MEDIA_OWNER_NOT_FOUND"));
+    }
+
+    private ResultActions addSource(String assetId, String versionId, String json) throws Exception {
+        return mvc.perform(post(BASE + "/assets/" + assetId + "/versions/" + versionId + "/sources").with(editor())
+                .contentType(MediaType.APPLICATION_JSON).content(json));
     }
 
     @Test

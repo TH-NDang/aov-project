@@ -13,6 +13,7 @@ import com.wikiaov.media.internal.asset.persistence.MediaAssetVersionRepository;
 import com.wikiaov.media.internal.asset.persistence.entity.MediaAssetVersion;
 import com.wikiaov.media.internal.ingestion.application.MediaIngestion;
 import com.wikiaov.media.internal.ingestion.domain.image.InvalidMediaException;
+import com.wikiaov.media.internal.owner.application.MediaOwners;
 import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
 import com.wikiaov.media.internal.query.application.MediaAssetViews;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
@@ -55,12 +56,13 @@ public class CompleteMediaUpload {
     private final TransactionTemplate transaction;
     private final Clock clock;
     private final MediaProvenanceRepository provenance;
+    private final MediaOwners owners;
 
     CompleteMediaUpload(MediaUploadSessionRepository sessions, MediaAssetVersionRepository versions,
             MediaIngestion ingestion, ObjectStorage storage, MediaAssetAccess assetAccess, MediaAssetViews assetViews,
             MediaProperties properties,
             CurrentActor currentActor, AuditLog auditLog, TransactionTemplate transaction, Clock clock,
-            MediaProvenanceRepository provenance) {
+            MediaProvenanceRepository provenance, MediaOwners owners) {
         this.sessions = sessions;
         this.versions = versions;
         this.ingestion = ingestion;
@@ -73,6 +75,7 @@ public class CompleteMediaUpload {
         this.transaction = transaction;
         this.clock = clock;
         this.provenance = provenance;
+        this.owners = owners;
     }
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
@@ -114,8 +117,8 @@ public class CompleteMediaUpload {
                             var source = new SourceInput(session.getSourceType(), session.getSourceLabel(),
                                     session.getSourceUrl(), session.getSourceObservedAt(), session.getSourceNote(),
                                     session.getSourceOwnerName(), session.getSourceContactUrl());
-                            provenance
-                                    .save(source.toProvenance(session.getAssetId(), version.getId(), clock.instant()));
+                            provenance.save(owners.attach(source).toProvenance(session.getAssetId(), version.getId(),
+                                    clock.instant()));
                         }
                         if (session.getSourceLabel() == null && !duplicate && version.getVersionNo() > 1) {
                             var source = new SourceInput(

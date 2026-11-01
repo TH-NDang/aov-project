@@ -55,6 +55,7 @@ class OpenApiMvcTest extends OpenApiContractChecks {
                     baseline.properties()
                             .forEach(entry -> controllers.add(entry.getKey().replace('/', '.').replace(".java", "")));
                     controllers.add("com.wikiaov.media.internal.web.MediaDeletionController");
+                    controllers.add("com.wikiaov.media.internal.web.MediaOwnerAdminController");
                     for (String controllerName : controllers) {
                         Class<?> controller = Class.forName(controllerName);
                         registry.registerBeanDefinition(controller.getName(), new RootBeanDefinition(controller));

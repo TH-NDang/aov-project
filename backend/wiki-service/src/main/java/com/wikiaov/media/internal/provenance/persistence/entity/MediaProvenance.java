@@ -49,8 +49,12 @@ public class MediaProvenance extends AssignedIdEntity {
     @Column(name = "note", updatable = false)
     private @Nullable String note;
 
+    /** Copy of the owner's display name; owner renames and merges rewrite it (ADR-017). */
     @Column(name = "owner_name", length = 200, updatable = false)
     private @Nullable String ownerName;
+
+    @Column(name = "owner_id", updatable = false)
+    private @Nullable UUID ownerId;
 
     @Column(name = "contact_url", length = 2048, updatable = false)
     private @Nullable String contactUrl;
@@ -60,7 +64,7 @@ public class MediaProvenance extends AssignedIdEntity {
 
     public static MediaProvenance record(UUID id, UUID assetId, @Nullable UUID assetVersionId,
             ProvenanceSourceType sourceType, String sourceLabel, @Nullable String sourceUrl,
-            @Nullable Instant observedAt, @Nullable String note, @Nullable String ownerName,
+            @Nullable Instant observedAt, @Nullable String note, @Nullable UUID ownerId, @Nullable String ownerName,
             @Nullable String contactUrl, Instant now) {
         MediaProvenance provenance = new MediaProvenance();
         provenance.id = id;
@@ -71,6 +75,7 @@ public class MediaProvenance extends AssignedIdEntity {
         provenance.sourceUrl = sourceUrl;
         provenance.observedAt = observedAt;
         provenance.note = note;
+        provenance.ownerId = ownerId;
         provenance.ownerName = ownerName;
         provenance.contactUrl = contactUrl;
         provenance.createdAt = now;

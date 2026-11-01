@@ -8,6 +8,7 @@ import com.wikiaov.media.internal.application.SourceInput;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.asset.application.MediaAssetAccess;
 import com.wikiaov.media.internal.asset.persistence.MediaAssetVersionRepository;
+import com.wikiaov.media.internal.owner.application.MediaOwners;
 import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
 import com.wikiaov.media.internal.query.application.MediaAssetViews;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
@@ -29,10 +30,11 @@ public class AddMediaSource {
     private final CurrentActor actors;
     private final AuditLog audit;
     private final Clock clock;
+    private final MediaOwners owners;
 
     public AddMediaSource(MediaAssetAccess assets, MediaAssetVersionRepository versions,
             MediaProvenanceRepository provenance, MediaAssetViews views, CurrentActor actors, AuditLog audit,
-            Clock clock) {
+            Clock clock, MediaOwners owners) {
         this.assets = assets;
         this.versions = versions;
         this.provenance = provenance;
@@ -40,16 +42,18 @@ public class AddMediaSource {
         this.actors = actors;
         this.audit = audit;
         this.clock = clock;
+        this.owners = owners;
     }
 
     @PreAuthorize(MediaWritePolicy.CAN_WRITE_MEDIA)
     @Transactional
-    public MediaAssetDetails execute(UUID assetId, UUID versionId, SourceInput source) {
+    public MediaAssetDetails execute(UUID assetId, UUID versionId, SourceInput requested) {
         var actor = actors.require();
         var asset = assets.requireActiveAsset(assetId);
         versions.findById(versionId).filter(version -> assetId.equals(version.getAssetId()))
                 .orElseThrow(() -> new ApiException(MediaErrorCode.MEDIA_VERSION_NOT_FOUND,
                         "Media version does not exist."));
+        SourceInput source = owners.attach(requested);
 
         boolean exists = provenance.findByAssetIdOrderByCreatedAtAsc(assetId).stream()
                 .anyMatch(record -> versionId.equals(record.getAssetVersionId())

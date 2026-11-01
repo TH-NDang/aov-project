@@ -14,6 +14,11 @@ public enum MediaErrorCode implements ApiErrorCode {
 
     MEDIA_CONTACT_NOT_FOUND(HttpStatus.NOT_FOUND, "Contact request not found"),
     MEDIA_CONTACT_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many contact requests"),
+    MEDIA_OWNER_NOT_FOUND(HttpStatus.NOT_FOUND, "Media owner not found"),
+    /** Another owner has the same name once case and whitespace are ignored; context: {@code ownerId}. */
+    MEDIA_OWNER_NAME_TAKEN(HttpStatus.CONFLICT, "Media owner name taken"),
+    /** {@code expectedVersion} is stale; context: {@code currentVersion}. */
+    MEDIA_OWNER_VERSION_CONFLICT(HttpStatus.CONFLICT, "Media owner version conflict"),
 
     MEDIA_ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "Media asset not found"),
     MEDIA_DELETION_NOT_FOUND(HttpStatus.NOT_FOUND, "Media deletion not found"),

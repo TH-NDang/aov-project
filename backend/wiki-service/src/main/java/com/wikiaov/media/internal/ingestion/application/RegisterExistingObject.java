@@ -7,6 +7,7 @@ import com.wikiaov.media.internal.application.response.MediaVersionResult;
 import com.wikiaov.media.internal.asset.application.MediaAssetAccess;
 import com.wikiaov.media.internal.domain.model.MediaObjectKeys;
 import com.wikiaov.media.internal.ingestion.domain.image.InvalidMediaException;
+import com.wikiaov.media.internal.owner.application.MediaOwners;
 import com.wikiaov.media.internal.provenance.persistence.MediaProvenanceRepository;
 import com.wikiaov.media.internal.query.application.MediaAssetViews;
 import com.wikiaov.media.internal.shared.application.MediaWritePolicy;
@@ -36,10 +37,11 @@ public class RegisterExistingObject {
     private final CurrentActor currentActor;
     private final TransactionTemplate transaction;
     private final Clock clock;
+    private final MediaOwners owners;
 
     RegisterExistingObject(MediaIngestion ingestion, MediaProvenanceRepository provenance, MediaAssetAccess assetAccess,
             MediaAssetViews assetViews,
-            CurrentActor currentActor, TransactionTemplate transaction, Clock clock) {
+            CurrentActor currentActor, TransactionTemplate transaction, Clock clock, MediaOwners owners) {
         this.ingestion = ingestion;
         this.provenance = provenance;
         this.assetAccess = assetAccess;
@@ -47,6 +49,7 @@ public class RegisterExistingObject {
         this.currentActor = currentActor;
         this.transaction = transaction;
         this.clock = clock;
+        this.owners = owners;
     }
 
     public record Command(
@@ -70,8 +73,8 @@ public class RegisterExistingObject {
             MediaIngestion.Outcome outcome = ingestion.ingest(command.assetId(), command.objectKey(), actor, "IMPORT",
                     (version, duplicate) -> {
                         if (!duplicate && command.source() != null) {
-                            provenance.save(command.source().toProvenance(command.assetId(), version.getId(),
-                                    clock.instant()));
+                            provenance.save(owners.attach(command.source()).toProvenance(command.assetId(),
+                                    version.getId(), clock.instant()));
                         }
                     });
             return assetViews.result(outcome.asset(), outcome.version(), outcome.duplicate());
