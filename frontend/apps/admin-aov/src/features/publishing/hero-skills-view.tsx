@@ -7,6 +7,7 @@ import { HeroAsset } from "./hero-asset"
 import { groupHeroSkills, selectSkillTranslation, skillLabel, skillVariantLabel } from "./hero-skills"
 import { SkillArtwork, SkillArtworkStack, skillImageMatch, useHeroSkillImages } from "./skill-artwork"
 import { SkillSourceDetails } from "./hero-source-details"
+import { ImageCreditSummary } from "./image-credit-summary"
 import type { Skill } from "./types"
 
 export type HeroSkillsLayout = "focus" | "flat"
@@ -75,33 +76,39 @@ export function HeroSkillsView({
   return (
     <div className="@container/skills min-w-0 space-y-5">
       {current && (
-        <div
-          role="group"
-          aria-label="Cách hiển thị kỹ năng"
-          className="flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1"
-        >
-          {(
-            [
-              ["focus", PanelLeft, "Tập trung"],
-              ["flat", List, "Dạng phẳng"],
-            ] as const
-          ).map(([mode, Icon, label]) => (
-            <button
-              key={mode}
-              type="button"
-              aria-pressed={layout === mode}
-              className={cn(
-                "flex min-h-9 items-center gap-2 rounded-md px-3 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                layout === mode
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-              onClick={() => changeLayout(mode)}
-            >
-              <Icon className="size-3.5" />
-              {label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div
+            role="group"
+            aria-label="Cách hiển thị kỹ năng"
+            className="flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1"
+          >
+            {(
+              [
+                ["focus", PanelLeft, "Tập trung"],
+                ["flat", List, "Dạng phẳng"],
+              ] as const
+            ).map(([mode, Icon, label]) => (
+              <button
+                key={mode}
+                type="button"
+                aria-pressed={layout === mode}
+                className={cn(
+                  "flex min-h-9 items-center gap-2 rounded-md px-3 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  layout === mode
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => changeLayout(mode)}
+              >
+                <Icon className="size-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+          <ImageCreditSummary
+            label="ảnh kỹ năng"
+            assetIds={skills.map((skill) => skill.iconAssetId || skillImageMatch(skill, images.data ?? [])?.assetId)}
+          />
         </div>
       )}
       {current && layout === "focus" ? (

@@ -12,8 +12,8 @@ import { statLabel } from "./patch-change-model"
 import { heroReviewNotes } from "./hero-source-details"
 import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
-import { HeroImageSource } from "./hero-image-source"
 import { HeroAsset } from "./hero-asset"
+import { ImageCreditSummary } from "./image-credit-summary"
 export { HeroAsset } from "./hero-asset"
 
 const icons = {
@@ -321,49 +321,68 @@ function HeroContentBody({
             )
           else if (section === "SKINS")
             body = content.SKINS?.skins.length ? (
-              <div className="grid grid-cols-1 gap-5 @min-[520px]:grid-cols-2 @min-[1000px]:grid-cols-3">
-                {[...content.SKINS.skins]
-                  .sort((a, b) => a.displayOrder - b.displayOrder)
-                  .map((skin) => {
-                    const text = localized(skin.translations, locale)
-                    return (
-                      <article key={skin.skinKey} className="space-y-2">
-                        <HeroAsset id={skin.artAssetId} className="aspect-[4/3]" />
-                        <h4 className="text-sm font-medium">{text?.name || skin.skinKey}</h4>
-                        {skin.rarityCode && <Badge variant="outline">{skin.rarityCode}</Badge>}
-                        {text?.locale !== locale && (
-                          <p className="text-xs text-muted-foreground">Dự phòng: {text?.locale ?? "chưa có"}</p>
-                        )}
-                        {text?.description && <Text>{text.description}</Text>}
-                        {text?.acquisitionNote && <Text>{text.acquisitionNote}</Text>}
-                      </article>
-                    )
-                  })}
+              <div className="space-y-4">
+                <ImageCreditSummary
+                  label="ảnh trang phục"
+                  assetIds={content.SKINS.skins.map((skin) => skin.artAssetId)}
+                />
+                <div className="grid grid-cols-1 gap-5 @min-[520px]:grid-cols-2 @min-[1000px]:grid-cols-3">
+                  {[...content.SKINS.skins]
+                    .sort((a, b) => a.displayOrder - b.displayOrder)
+                    .map((skin) => {
+                      const text = localized(skin.translations, locale)
+                      return (
+                        <article key={skin.skinKey} className="space-y-2">
+                          <HeroAsset
+                            id={skin.artAssetId}
+                            alt={text?.name || skin.skinKey}
+                            className="aspect-[4/3]"
+                            preview
+                          />
+                          <h4 className="text-sm font-medium">{text?.name || skin.skinKey}</h4>
+                          {skin.rarityCode && <Badge variant="outline">{skin.rarityCode}</Badge>}
+                          {text?.locale !== locale && (
+                            <p className="text-xs text-muted-foreground">Dự phòng: {text?.locale ?? "chưa có"}</p>
+                          )}
+                          {text?.description && <Text>{text.description}</Text>}
+                          {text?.acquisitionNote && <Text>{text.acquisitionNote}</Text>}
+                        </article>
+                      )
+                    })}
+                </div>
               </div>
             ) : (
               <Text>Chưa có trang phục trong bản dữ liệu này.</Text>
             )
           else
             body = (
-              <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
-                {(["HEAD", "PORTRAIT", "SPLASH"] as const).map((role) => (
-                  <div
-                    key={role}
-                    className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
-                  >
-                    <HeroAsset
-                      id={content.MEDIA_BINDINGS?.bindings[role]}
-                      alt={`${profile?.name || "Tướng"} · ${role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"}`}
-                      className="w-full"
-                      naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
-                      preview
-                    />
-                    <p className="text-center text-xs text-muted-foreground">
-                      {role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"}
-                    </p>
-                    <HeroImageSource assetId={content.MEDIA_BINDINGS?.bindings[role]} />
-                  </div>
-                ))}
+              <div className="space-y-4">
+                {/* Each image's own credit lives in its info button; this line only sums them up. */}
+                <ImageCreditSummary
+                  label="ảnh tướng"
+                  assetIds={(["HEAD", "PORTRAIT", "SPLASH"] as const).map(
+                    (role) => content.MEDIA_BINDINGS?.bindings[role],
+                  )}
+                />
+                <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
+                  {(["HEAD", "PORTRAIT", "SPLASH"] as const).map((role) => (
+                    <div
+                      key={role}
+                      className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
+                    >
+                      <HeroAsset
+                        id={content.MEDIA_BINDINGS?.bindings[role]}
+                        alt={`${profile?.name || "Tướng"} · ${role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"}`}
+                        className="w-full"
+                        naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
+                        preview
+                      />
+                      <p className="text-center text-xs text-muted-foreground">
+                        {role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )
           return (

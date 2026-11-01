@@ -234,15 +234,18 @@ export function ImageDetailSheet({
   assetId,
   writable,
   wide,
+  startWith = null,
   onClose,
 }: {
   assetId: string | null
   writable: boolean
   wide: boolean
+  /** Opens straight into completing the owner or adding a source. */
+  startWith?: "owner" | "new" | null
   onClose: () => void
 }) {
   const client = useQueryClient()
-  const [editing, setEditing] = useState<"owner" | "new" | null>(null)
+  const [editing, setEditing] = useState<"owner" | "new" | null>(writable ? startWith : null)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
   const [upgradeError, setUpgradeError] = useState("")

@@ -1,31 +1,39 @@
 import { Info, ExternalLink, Copyright, CircleAlert } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
-import { creditHttpUrl, type MediaCredit } from "../lib/media-credit"
+import { creditHttpUrl, needsMediaCredit, type MediaCredit } from "../lib/media-credit"
 
 /** Render as a sibling of image links and preview buttons, never inside an interactive card. */
 export function ImageCredit({
   sources = [],
   contactHref,
   manageHref,
+  flagMissing = false,
   className = "",
 }: {
   sources?: MediaCredit[]
   contactHref?: string
   /** Admin only: where the image's source can be corrected. */
   manageHref?: string
+  /** Admin only: highlight the button while the image lacks a verified source or owner. */
+  flagMissing?: boolean
   className?: string
 }) {
+  const missing = flagMissing && needsMediaCredit(sources)
   return (
     <Popover>
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label="Nguồn ảnh"
-          title="Nguồn ảnh"
-          className={`absolute right-1 bottom-1 z-30 grid size-7 place-items-center rounded-full border border-white/30 bg-black/75 text-white shadow-sm hover:bg-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className}`}
+          aria-label={missing ? "Nguồn ảnh · chưa đủ nguồn hoặc chủ sở hữu" : "Nguồn ảnh"}
+          title={missing ? "Chưa đủ nguồn hoặc chủ sở hữu" : "Nguồn ảnh"}
+          className={`absolute right-1 bottom-1 z-30 grid size-7 place-items-center rounded-full border shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${missing ? "border-amber-200/60 bg-amber-500 text-black hover:bg-amber-400" : "border-white/30 bg-black/75 text-white hover:bg-black"} ${className}`}
           onClick={(event) => event.stopPropagation()}
         >
-          <Info className="size-4" aria-hidden="true" />
+          {missing ? (
+            <CircleAlert className="size-4" aria-hidden="true" />
+          ) : (
+            <Info className="size-4" aria-hidden="true" />
+          )}
         </button>
       </PopoverTrigger>
       <PopoverContent

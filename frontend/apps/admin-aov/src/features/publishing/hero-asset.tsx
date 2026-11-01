@@ -75,7 +75,11 @@ export function HeroAsset({
     </div>
   )
   const credit = asset.data?.currentUrl ? (
-    <ImageCredit sources={sources} manageHref={`/image-management?asset=${encodeURIComponent(asset.data.id)}`} />
+    <ImageCredit
+      sources={sources}
+      manageHref={`/image-management?asset=${encodeURIComponent(asset.data.id)}`}
+      flagMissing
+    />
   ) : null
   return preview && asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
     <ImagePreview
