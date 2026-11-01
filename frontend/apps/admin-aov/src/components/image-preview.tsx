@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { Maximize2 } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { ImageLightbox } from "./image-lightbox"
+import { ImageLightbox, type LightboxImage } from "./image-lightbox"
 
 /** Smaller images are too small for corner controls; they stay clickable and show their hover title. */
 const roomyWidth = 96
@@ -19,6 +19,8 @@ interface ImagePreviewProps {
   meta?: ReactNode
   /** Hover text for the whole image, e.g. who owns it. */
   title?: string
+  /** Opens the large view inside a set of related images, e.g. all images of one skin. */
+  gallery?: { images: LightboxImage[]; index: number }
 }
 
 /** Add a keyboard-accessible preview trigger over a non-interactive image thumbnail. */
@@ -31,8 +33,9 @@ export function ImagePreview({
   overlay,
   meta,
   title,
+  gallery,
 }: ImagePreviewProps) {
-  const [open, setOpen] = useState(false)
+  const [index, setIndex] = useState<number | null>(null)
   const [roomy, setRoomy] = useState(true)
   const frame = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
@@ -55,7 +58,7 @@ export function ImagePreview({
         aria-label={`Xem lớn ${alt}`}
         aria-haspopup="dialog"
         title={title}
-        onClick={() => setOpen(true)}
+        onClick={() => setIndex(gallery?.index ?? 0)}
         className="absolute inset-0 cursor-zoom-in rounded-[inherit] transition-colors hover:bg-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         {showHint && roomy && (
@@ -67,9 +70,9 @@ export function ImagePreview({
       </button>
       {roomy && overlay}
       <ImageLightbox
-        images={[{ path: src, title: alt, meta }]}
-        index={open ? 0 : null}
-        onIndexChange={(index) => setOpen(index !== null)}
+        images={gallery?.images ?? [{ path: src, title: alt, meta }]}
+        index={index}
+        onIndexChange={setIndex}
         onCloseAutoFocus={(event) => {
           event.preventDefault()
           trigger.current?.focus({ preventScroll: true })

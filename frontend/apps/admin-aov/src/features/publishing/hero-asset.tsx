@@ -4,6 +4,7 @@ import { Image } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { ImagePreview } from "@/components/image-preview"
+import type { LightboxImage } from "@/components/image-lightbox"
 import { createPublishingApi } from "./publishing-api"
 import { ImageCredit } from "@aov/ui/components/image-credit"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
@@ -19,6 +20,7 @@ export function HeroAsset({
   preview = false,
   naturalAspectRatio,
   frameAspectRatio,
+  gallery,
 }: {
   id?: string | null
   alt?: string
@@ -28,6 +30,8 @@ export function HeroAsset({
   naturalAspectRatio?: number
   /** Reserve a stable frame before the image loads, without cropping its contents. */
   frameAspectRatio?: number
+  /** Open the large view among related images instead of alone. */
+  gallery?: { images: LightboxImage[]; index: number }
 }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const asset = useQuery({
@@ -90,6 +94,7 @@ export function HeroAsset({
       overlay={credit}
       title={creditSummary(sources)}
       meta={<ImageCreditPanel sources={sources} assetId={asset.data.id} />}
+      gallery={gallery}
     >
       {thumbnail}
     </ImagePreview>

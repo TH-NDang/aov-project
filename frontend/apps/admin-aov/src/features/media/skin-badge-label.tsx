@@ -5,17 +5,8 @@ import type { Request } from "../publishing/publishing-api"
 import { createCharacterImageApi } from "./character-image-api"
 import { SkinBadgeArtwork } from "./skin-badge-artwork"
 
-export function SkinBadgeLabel({
-  code,
-  locale,
-  request = backendRequest,
-}: {
-  code: string | null
-  locale?: string
-  request?: Request
-}) {
-  const contentLocale = useContentLocale()
-  const language = locale ?? contentLocale
+/** Looks up one skin badge by code; badges are listed per locale, so it pages until the code turns up. */
+export function useSkinBadge(code: string | null, language: string, request: Request = backendRequest) {
   const result = useQuery({
     queryKey: ["skin-badges", "selected", language, code],
     queryFn: async ({ signal }) => {
@@ -32,7 +23,21 @@ export function SkinBadgeLabel({
     enabled: !!code,
     staleTime: 60000,
   })
-  const badge = result.data?.items.find((item) => item.code === code)
+  return { result, badge: result.data?.items.find((item) => item.code === code) }
+}
+
+export function SkinBadgeLabel({
+  code,
+  locale,
+  request = backendRequest,
+}: {
+  code: string | null
+  locale?: string
+  request?: Request
+}) {
+  const contentLocale = useContentLocale()
+  const language = locale ?? contentLocale
+  const { result, badge } = useSkinBadge(code, language, request)
   if (!code) return <span className="text-xs text-muted-foreground">Chưa gắn nhãn</span>
   if (result.isPending)
     return (

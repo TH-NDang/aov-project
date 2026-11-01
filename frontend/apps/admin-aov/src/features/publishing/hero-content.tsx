@@ -14,6 +14,7 @@ import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
 import { ImageCreditSummary } from "./image-credit-summary"
+import { SkinCard, skinImageIds } from "./skin-card"
 export { HeroAsset } from "./hero-asset"
 
 const icons = {
@@ -324,29 +325,21 @@ function HeroContentBody({
               <div className="space-y-4">
                 <ImageCreditSummary
                   label="ảnh trang phục"
-                  assetIds={content.SKINS.skins.map((skin) => skin.artAssetId)}
+                  assetIds={content.SKINS.skins.flatMap((skin) => Object.values(skinImageIds(skin)))}
                 />
-                <div className="grid grid-cols-1 gap-5 @min-[520px]:grid-cols-2 @min-[1000px]:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 @min-[520px]:grid-cols-2 @min-[1000px]:grid-cols-3">
                   {[...content.SKINS.skins]
                     .sort((a, b) => a.displayOrder - b.displayOrder)
                     .map((skin) => {
                       const text = localized(skin.translations, locale)
                       return (
-                        <article key={skin.skinKey} className="space-y-2">
-                          <HeroAsset
-                            id={skin.artAssetId}
-                            alt={text?.name || skin.skinKey}
-                            className="aspect-[4/3]"
-                            preview
-                          />
-                          <h4 className="text-sm font-medium">{text?.name || skin.skinKey}</h4>
-                          {skin.rarityCode && <Badge variant="outline">{skin.rarityCode}</Badge>}
+                        <SkinCard key={skin.skinKey} skin={skin} name={text?.name || skin.skinKey} locale={locale}>
                           {text?.locale !== locale && (
-                            <p className="text-xs text-muted-foreground">Dự phòng: {text?.locale ?? "chưa có"}</p>
+                            <p className="type-meta">Dự phòng: {text?.locale ?? "chưa có"}</p>
                           )}
                           {text?.description && <Text>{text.description}</Text>}
                           {text?.acquisitionNote && <Text>{text.acquisitionNote}</Text>}
-                        </article>
+                        </SkinCard>
                       )
                     })}
                 </div>
