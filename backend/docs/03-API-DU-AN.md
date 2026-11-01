@@ -2566,3 +2566,34 @@ cấp asset. Không lẫn nguồn phiên bản khác; không trả note hoặc �
   tối đa 100, chỉ nhận page/size. Bao gồm thông tin riêng của người gửi để xử lý yêu cầu.
 - POST `/api/wiki/v1/admin/media/contact-requests/{id}/resolve`: cần `media:write`, trả bản ghi RESOLVED;
   gọi lặp giữ resolvedAt cũ. Không tồn tại trả 404 MEDIA_CONTACT_NOT_FOUND; có audit, không gửi email.
+
+
+### Danh mục chủ sở hữu ảnh (01/11/2026, ADR-017)
+
+`SourceRequest.ownerName` giữ nguyên schema. Khi ghi nguồn, backend bỏ khoảng trắng đầu/cuối, gộp
+khoảng trắng liên tiếp và so khớp không phân biệt hoa/thường với danh mục chủ sở hữu; chưa có thì tạo
+mới. Nguồn được lưu và trả về với tên hiển thị của chủ sở hữu, ví dụ gửi `"garena  / liên quân mobile"`
+khi đã có "Garena / Liên Quân Mobile" thì nguồn ghi "Garena / Liên Quân Mobile". Nguồn không gửi
+`contactUrl` nhận liên hệ của chủ sở hữu (nếu có). `ProvenanceDetails` (chi tiết asset admin) bổ sung
+`ownerId` nullable. Các response khác (`sources` trong danh sách, `MediaAssetReference`) không đổi.
+
+`MediaOwnerView`: `{id, name, contactUrl, assetCount, version}`. `assetCount` là số asset có ít nhất
+một nguồn gắn chủ sở hữu này.
+
+- GET `/api/wiki/v1/admin/media/owners?q=&page=0&size=20`: cần `catalog:read`, chỉ nhận `q`, `page`,
+  `size` (size tối đa 100). `q` (tối đa 200) so khớp chứa trong tên đã chuẩn hóa, không phân biệt
+  hoa/thường. Sắp theo `assetCount` giảm dần rồi tên. Trả PageSlice.
+- PATCH `/api/wiki/v1/admin/media/owners/{id}`: cần `media:write`; body
+  `{name, contactUrl?, expectedVersion}` (name bắt buộc, tối đa 200; contactUrl HTTP(S), tối đa 2048,
+  null để bỏ). Cập nhật tên trên mọi nguồn của chủ sở hữu và liên hệ trên các nguồn đang mang liên hệ
+  cũ của chủ sở hữu, trong một transaction, có audit `MEDIA_OWNER_UPDATED`. Trả `MediaOwnerView`.
+  Không tồn tại trả 404 `MEDIA_OWNER_NOT_FOUND`; tên trùng (sau chuẩn hóa) với chủ sở hữu khác trả 409
+  `MEDIA_OWNER_NAME_TAKEN` với context `ownerId`; `expectedVersion` cũ trả 409
+  `MEDIA_OWNER_VERSION_CONFLICT` với context `currentVersion`.
+- POST `/api/wiki/v1/admin/media/owners/{id}/merge`: cần `media:write`; body
+  `{targetId, expectedVersion}` (phiên bản của chủ sở hữu bị gộp). Chuyển mọi nguồn sang chủ sở hữu
+  đích, lấy tên của đích, rồi xóa chủ sở hữu bị gộp; audit `MEDIA_OWNERS_MERGED`. Trả `MediaOwnerView`
+  của đích. Gộp vào chính nó trả 400 `INVALID_REQUEST`; không tồn tại hoặc phiên bản cũ trả lỗi như PATCH.
+
+Giao diện admin gợi ý tên chủ sở hữu đã có khi nhập và hỏi lại khi tên mới gần giống tên sẵn có (so
+sánh không dấu). Đây chỉ là gợi ý; backend không tự suy ra chủ sở hữu từ URL, tên file hay tên đội.

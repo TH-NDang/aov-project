@@ -1749,3 +1749,19 @@ topic SOURCE/RIGHTS/OTHER, message (4000), status OPEN/RESOLVED, created_at và 
 FK ghép bảo đảm version thuộc đúng asset. Email/nội dung chỉ được đọc qua API quản trị có quyền
 `media:write`. Nguồn bổ sung không sửa bytes, không sửa snapshot Hero/Item và không ghi ngược vào
 `resources/`. Công cụ backfill ghép phiên bản cloud bằng SHA-256, mặc định chỉ lập báo cáo.
+
+
+### Danh mục chủ sở hữu ảnh (V040, ADR-017)
+
+`media.media_owner`: `id UUID PK`, `name VARCHAR(200) NOT NULL` (tên hiển thị, không rỗng),
+`name_key VARCHAR(200) NOT NULL UNIQUE` (tên viết thường, khoảng trắng đã gộp), `contact_url
+VARCHAR(2048) NULL`, `lock_version BIGINT NOT NULL`, `created_at`, `updated_at`.
+
+`media_provenance` bổ sung `owner_id UUID NULL REFERENCES media.media_owner(id)` và index theo
+`owner_id`. `owner_name` vẫn là bản sao tên hiển thị của chủ sở hữu; đổi tên/gộp chủ sở hữu cập nhật
+`owner_id`, `owner_name` (và `contact_url` đang mang liên hệ cũ của chủ sở hữu) trong cùng transaction.
+Các cột khác của nguồn giữ chỉ-thêm.
+
+Migration tạo một chủ sở hữu cho mỗi khóa từ `owner_name` hiện có, chọn cách viết dùng nhiều nhất làm
+tên hiển thị, rồi gắn `owner_id` và đồng bộ `owner_name` cho mọi nguồn khớp khóa. Không sửa nguồn
+chưa có chủ sở hữu.
