@@ -2583,7 +2583,7 @@ một nguồn gắn chủ sở hữu này.
 - GET `/api/wiki/v1/admin/media/owners?q=&page=0&size=20`: cần `catalog:read`, chỉ nhận `q`, `page`,
   `size` (size tối đa 100). `q` (tối đa 200) so khớp chứa trong tên đã chuẩn hóa, không phân biệt
   hoa/thường. Sắp theo `assetCount` giảm dần rồi tên. Trả PageSlice.
-- PATCH `/api/wiki/v1/admin/media/owners/{id}`: cần `media:write`; body
+- PUT `/api/wiki/v1/admin/media/owners/{id}`: cần `media:write`; body
   `{name, contactUrl?, expectedVersion}` (name bắt buộc, tối đa 200; contactUrl HTTP(S), tối đa 2048,
   null để bỏ). Cập nhật tên trên mọi nguồn của chủ sở hữu và liên hệ trên các nguồn đang mang liên hệ
   cũ của chủ sở hữu, trong một transaction, có audit `MEDIA_OWNER_UPDATED`. Trả `MediaOwnerView`.
@@ -2593,7 +2593,7 @@ một nguồn gắn chủ sở hữu này.
 - POST `/api/wiki/v1/admin/media/owners/{id}/merge`: cần `media:write`; body
   `{targetId, expectedVersion}` (phiên bản của chủ sở hữu bị gộp). Chuyển mọi nguồn sang chủ sở hữu
   đích, lấy tên của đích, rồi xóa chủ sở hữu bị gộp; audit `MEDIA_OWNERS_MERGED`. Trả `MediaOwnerView`
-  của đích. Gộp vào chính nó trả 400 `INVALID_REQUEST`; không tồn tại hoặc phiên bản cũ trả lỗi như PATCH.
+  của đích. Gộp vào chính nó trả 400 `INVALID_REQUEST`; không tồn tại hoặc phiên bản cũ trả lỗi như PUT.
 
 Giao diện admin gợi ý tên chủ sở hữu đã có khi nhập và hỏi lại khi tên mới gần giống tên sẵn có (so
 sánh không dấu). Đây chỉ là gợi ý; backend không tự suy ra chủ sở hữu từ URL, tên file hay tên đội.
