@@ -518,6 +518,13 @@ class MediaAdminApiIntegrationTest {
         mvc.perform(get(BASE + "/assets?needsCredit=true&size=100").with(reader()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items[*].id", hasItem(otherId)));
         mvc.perform(get(BASE + "/assets?needsCredit=invalid").with(reader())).andExpect(status().isBadRequest());
+
+        String avatarId = createAsset("USER_AVATAR");
+        uploadVersion(avatarId, TestImages.png(23, 23), "image/png");
+        mvc.perform(get(BASE + "/assets?needsCredit=true&semanticType=USER_AVATAR&size=100").with(reader()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get(BASE + "/assets?semanticType=USER_AVATAR&size=100").with(reader()))
+                .andExpect(jsonPath("$.items[*].id", hasItem(avatarId)));
     }
 
     @Test

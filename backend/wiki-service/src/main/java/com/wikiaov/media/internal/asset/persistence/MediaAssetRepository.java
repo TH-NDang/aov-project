@@ -50,6 +50,7 @@ public interface MediaAssetRepository extends Repository<MediaAsset, UUID> {
     @Query("""
             select a from MediaAsset a
             where (:semanticType is null or a.semanticType = :semanticType)
+              and a.semanticType <> com.wikiaov.media.MediaSemanticType.USER_AVATAR
               and a.deletedAt is null
               and a.currentVersionId is not null
               and not exists (
@@ -67,5 +68,6 @@ public interface MediaAssetRepository extends Repository<MediaAsset, UUID> {
                   and p.ownerName is not null and trim(p.ownerName) <> ''
               )
             """)
+    /** User avatars belong to their user and never need a credit (03, needsCredit). */
     Page<MediaAsset> findNeedingCredit(@Nullable MediaSemanticType semanticType, Pageable pageable);
 }
