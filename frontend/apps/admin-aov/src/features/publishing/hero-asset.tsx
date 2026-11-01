@@ -81,8 +81,10 @@ export function HeroAsset({
     <ImagePreview
       src={asset.data.currentUrl}
       alt={alt || "Ảnh"}
-      className={naturalAspectRatio || frameAspectRatio ? className : undefined}
+      // The preview frame takes the thumbnail's size, so its corner controls sit on the image itself.
+      className={className}
       overlay={credit}
+      title={creditSummary(sources)}
       meta={<ImageCreditPanel sources={sources} assetId={asset.data.id} />}
     >
       {thumbnail}

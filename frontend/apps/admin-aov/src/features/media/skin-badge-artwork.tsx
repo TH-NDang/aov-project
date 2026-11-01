@@ -5,6 +5,9 @@ import { backendRequest } from "@/app/auth/session"
 import { ImagePreview } from "@/components/image-preview"
 import { createPublishingApi, type Request } from "../publishing/publishing-api"
 import type { SkinBadgeRecord } from "./character-image-api"
+import { currentMediaSources } from "@aov/ui/lib/media-credit"
+import { ImageCreditPanel } from "./image-credit-panel"
+import { creditSummary, visibleSources } from "./media-source-gaps"
 
 export function SkinBadgeArtwork({
   badge,
@@ -28,6 +31,9 @@ export function SkinBadgeArtwork({
     staleTime: 60000,
   })
   const url = asset.data?.currentUrl
+  const sources = url
+    ? visibleSources(currentMediaSources(asset.data?.provenance ?? [], asset.data?.currentVersionId))
+    : []
   const failed = asset.isError || (!!url && failedUrl === url)
   const loading = !!id && asset.isPending
   const alt = `Biểu tượng nhãn ${name} · ${language}`
@@ -62,7 +68,14 @@ export function SkinBadgeArtwork({
     </span>
   )
   return url && !failed ? (
-    <ImagePreview src={url} alt={alt} className={`${size} shrink-0 rounded-lg`} showHint={!compact}>
+    <ImagePreview
+      src={url}
+      alt={alt}
+      className={`${size} shrink-0 rounded-lg`}
+      showHint={!compact}
+      title={creditSummary(sources)}
+      meta={<ImageCreditPanel sources={sources} assetId={asset.data?.id} />}
+    >
       {thumbnail}
     </ImagePreview>
   ) : (
