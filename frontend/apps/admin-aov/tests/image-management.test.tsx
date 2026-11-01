@@ -123,7 +123,12 @@ test("image management loads on scroll, retries without losing rows and filters 
     assert.equal(document.querySelector('[aria-label="Chọn tất cả ảnh đã tải"]'), null)
     assert.ok(!document.body.textContent?.includes("Bổ sung nguồn / credit hàng loạt"))
     assert.equal(calls.length, 1)
-    await waitFor(() => /3 ảnh\s*còn thiếu nguồn hoặc chủ sở hữu/.test(document.body.textContent ?? ""))
+    const sourceTab = (label: string) =>
+      [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Lọc theo nguồn"] button')].find((button) =>
+        button.textContent?.includes(label),
+      )!
+    // The credit filter shows how many images still lack a source or owner.
+    await waitFor(() => /Thiếu nguồn \/ chủ sở hữu\s*3/.test(sourceTab("Thiếu nguồn").textContent ?? ""))
     assert.deepEqual(reminders, [{ type: null }])
     assert.ok(
       ![...document.querySelectorAll("button")].some((button) => ["Trước", "Sau"].includes(button.textContent ?? "")),
@@ -164,9 +169,9 @@ test("image management loads on scroll, retries without losing rows and filters 
     await act(async () => viewButton("Bảng").click())
     assert.equal(rows().length, 45)
 
-    const filter = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!
-    await act(async () => filter.click())
+    await act(async () => sourceTab("Thiếu nguồn").click())
     await waitFor(() => rows().length === 3)
+    assert.equal(sourceTab("Thiếu nguồn").getAttribute("aria-pressed"), "true")
     assert.deepEqual(calls.at(-1), { page: 0, type: null, needsCredit: true })
     assert.ok(document.querySelector('[aria-label="Chi tiết ảnh asset-32"]'))
     assert.match(document.body.textContent!, /Đã tải 3 \/ 3 ảnh/)
@@ -182,12 +187,12 @@ test("image management loads on scroll, retries without losing rows and filters 
     assert.equal(document.querySelector('[aria-label="Chi tiết ảnh asset-40"]'), null)
     assert.ok(document.querySelector('[aria-label="Chi tiết ảnh asset-44"]'))
 
-    await act(async () => filter.click())
+    await act(async () => sourceTab("Tất cả ảnh").click())
     await waitFor(() => rows().length === 20)
     assert.deepEqual(calls.at(-1), { page: 0, type: "HERO_HEAD", needsCredit: false })
     await selectType("ITEM_ICON")
     await waitFor(() => document.body.textContent!.includes("Chưa có ảnh thuộc loại này."))
-    await act(async () => filter.click())
+    await act(async () => sourceTab("Thiếu nguồn").click())
     await waitFor(() => document.body.textContent!.includes("Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này."))
     assert.equal(document.querySelector('[aria-label="Đang tải thêm ảnh…"]'), null)
     await act(async () => viewButton("Lưới").click())
@@ -197,7 +202,7 @@ test("image management loads on scroll, retries without losing rows and filters 
     await act(async () => reset.click())
     await waitFor(() => document.querySelectorAll('[aria-label="Lưới ảnh"] > li').length === 45)
     assert.equal(document.querySelector("select")!.value, "")
-    assert.equal(filter.checked, false)
+    assert.equal(sourceTab("Tất cả ảnh").getAttribute("aria-pressed"), "true")
   } finally {
     await act(async () => root.unmount())
     await logout()

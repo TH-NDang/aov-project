@@ -154,8 +154,11 @@ test("bulk media selection survives scrolling, resets on filtering and applies s
       type.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
     })
     await waitFor(() => !document.body.textContent!.includes("Đã chọn") && !!checkbox("Chọn ảnh bulk-2"))
-    const sourceFilter = document.querySelector<HTMLInputElement>('input[type="checkbox"]')!
-    await click(sourceFilter)
+    await click(
+      [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Lọc theo nguồn"] button')].find((node) =>
+        node.textContent?.includes("Thiếu nguồn"),
+      ),
+    )
     await waitFor(() => document.body.textContent!.includes("/ 21 ảnh"))
     await click(checkbox("Chọn ảnh bulk-2"))
     await click(checkbox("Chọn ảnh bulk-3"))

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CircleAlert, CircleCheck, ImageIcon, ImageOff } from "lucide-react"
+import { CircleAlert, Copyright, ImageIcon, ImageOff } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { MediaCredit } from "@aov/ui/lib/media-credit"
 import { primarySource, sourceGap, sourceGapHints, sourceGapLabels } from "./media-source-gaps"
@@ -32,59 +32,52 @@ export function LibraryImage({ url, className }: { url: string | null; className
   )
 }
 
-export function LibraryCredit({
-  sources,
-  versionId,
-  compact = false,
-}: {
-  sources?: MediaCredit[]
-  versionId?: string | null
-  compact?: boolean
-}) {
-  if (!versionId) return <span className="text-xs text-muted-foreground">Chờ hoàn tất upload</span>
-  if (!sources) return <span className="text-xs text-muted-foreground">Chưa tải thông tin nguồn</span>
+/** Who owns the image, or what is missing; the image list leads with this. */
+export function LibraryOwner({ sources, versionId }: { sources?: MediaCredit[]; versionId?: string | null }) {
+  if (!versionId) return <span className="type-meta">Chờ hoàn tất upload</span>
+  if (!sources) return <span className="type-meta">Chưa tải thông tin nguồn</span>
   const gap = sourceGap(sources)
-  const source = primarySource(sources)
-  return (
-    <span className="block min-w-0 space-y-1" title={sourceGapHints[gap]}>
-      <span
-        className={cn(
-          "flex items-center gap-1.5 text-xs font-medium",
-          gap === "none" ? "text-muted-foreground" : "text-amber-700 dark:text-amber-400",
-        )}
-      >
-        {gap === "none" ? (
-          <CircleCheck aria-hidden className="size-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-        ) : (
-          <CircleAlert aria-hidden className="size-3.5 shrink-0" />
-        )}
-        <span className="truncate">{sourceGapLabels[gap]}</span>
-      </span>
-      {!compact && (
-        <span className="block truncate text-xs text-muted-foreground" title={source?.label}>
-          {source ? source.ownerName?.trim() || source.label : "Chưa có nguồn"}
-        </span>
-      )}
+  const owner = primarySource(sources)?.ownerName?.trim()
+  return gap === "none" && owner ? (
+    <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium" title={owner}>
+      <Copyright aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
+      <span className="truncate">{owner}</span>
+    </span>
+  ) : (
+    <span
+      className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-amber-700 dark:text-amber-400"
+      title={sourceGapHints[gap]}
+    >
+      <CircleAlert aria-hidden className="size-3.5 shrink-0" />
+      <span className="truncate">{sourceGapLabels[gap]}</span>
     </span>
   )
 }
 
-export function LibraryState({ state, label, ready }: { state: string; label: string; ready: boolean }) {
+/** Where the image came from, shown next to its owner. */
+export function LibrarySource({ sources, className }: { sources?: MediaCredit[]; className?: string }) {
+  const source = primarySource(sources ?? [])
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-      <span
-        aria-hidden
-        className={cn(
-          "size-1.5 shrink-0 rounded-full",
-          !ready
-            ? "bg-amber-500"
-            : state === "ACTIVE"
-              ? "bg-emerald-500"
-              : state === "BLOCKED"
-                ? "bg-destructive"
-                : "bg-muted-foreground/50",
-        )}
-      />
+    <span className={cn("block truncate text-xs text-muted-foreground", className)} title={source?.label}>
+      {source?.label || "Chưa có nguồn"}
+    </span>
+  )
+}
+
+/** Only states worth noticing get a badge; an active, uploaded image shows nothing. */
+export function LibraryStateBadge({ state, label, ready }: { state: string; label: string; ready: boolean }) {
+  if (ready && state === "ACTIVE") return null
+  return (
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center rounded-full border px-1.5 text-xs leading-5",
+        !ready
+          ? "border-amber-500/40 text-amber-700 dark:text-amber-400"
+          : state === "BLOCKED"
+            ? "border-destructive/40 text-destructive"
+            : "text-muted-foreground",
+      )}
+    >
       {ready ? label : "Chờ upload"}
     </span>
   )

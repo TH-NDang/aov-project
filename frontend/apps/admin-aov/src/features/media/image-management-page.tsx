@@ -29,10 +29,10 @@ import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../publishing/asset-picker"
 import { control } from "../publishing/fields"
 import type { Asset, PageSlice } from "../publishing/types"
-import { LibraryCredit, LibraryImage, LibraryState } from "./image-library-presentation"
+import { LibraryImage, LibraryOwner, LibrarySource, LibraryStateBadge } from "./image-library-presentation"
 import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
 import { ImageDetailSheet, imageStates, imageTypes } from "./image-detail-sheet"
-import { ownerCandidate, primarySource, sourceGap } from "./media-source-gaps"
+import { creditSummary, ownerCandidate, sourceGap, sourceGapLabels } from "./media-source-gaps"
 import { MediaOwnerBulkEditor, type OwnerTarget } from "./media-owner-bulk-editor"
 import { MediaOwnersSheet } from "./media-owners-sheet"
 import type { MediaSourceTarget } from "./bulk-media-sources"
@@ -45,6 +45,12 @@ const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, Row>()
 const empty: Row[] = []
 const date = (value: string) => new Date(value).toLocaleString("vi-VN")
+/** Columns that narrow screens drop; phones show the owner under the image name instead. */
+const narrowHidden: Record<string, string> = {
+  owner: "hidden sm:table-cell",
+  source: "hidden md:table-cell",
+  updatedAt: "hidden sm:table-cell",
+}
 const canSelect = (row: Row) => row.state === "ACTIVE" && !!row.currentVersionId
 const sourceTarget = (row: Row): MediaSourceTarget => ({
   assetId: row.id,
@@ -107,7 +113,12 @@ export function ImageManagementPage() {
     enabled: !needsCredit,
     staleTime: 30_000,
   })
-  const missingTotal = missing.data?.totalElements ?? 0
+  const missingCount = needsCredit ? (assets.data ? total : undefined) : missing.data?.totalElements
+  function showMissing(next: boolean) {
+    if (next === needsCredit) return
+    setNeedsCredit(next)
+    setMarked(new Map())
+  }
   const selectable = useMemo(() => rows.filter(canSelect), [rows])
   const allMarked = selectable.length > 0 && selectable.every((row) => marked.has(row.id))
   // Selected images that already name where they came from and only lack an owner.
@@ -165,43 +176,38 @@ export function ImageManagementPage() {
               </button>
               <div className="min-w-0 space-y-1">
                 <button
-                  className="group flex max-w-full items-center gap-1 rounded text-xs font-semibold outline-none hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                  className="group flex max-w-full items-center gap-1 rounded text-sm font-medium outline-none hover:text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring"
                   onClick={() => setSelected(row.original.id)}
                   aria-label={`Chi tiết ảnh ${row.original.id}`}
                   title={row.original.id}
                 >
-                  <span className="truncate">
-                    {primarySource(row.original.sources ?? [])?.label || row.original.id.slice(0, 8)}
-                  </span>
+                  <span className="truncate">{types[row.original.semanticType] ?? row.original.semanticType}</span>
                   <ArrowUpRight
                     aria-hidden
                     className="size-3 shrink-0 text-muted-foreground group-hover:text-primary"
                   />
                 </button>
-                <span
-                  className="block truncate text-xs text-muted-foreground"
-                  title={types[row.original.semanticType] ?? row.original.semanticType}
-                >
-                  {types[row.original.semanticType] ?? row.original.semanticType} ·{" "}
-                  <span className="font-mono">{row.original.id.slice(0, 8)}</span>
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate font-mono text-xs text-muted-foreground">
+                    {row.original.id.slice(0, 8)}
+                  </span>
+                  <LibraryStateBadge
+                    state={row.original.state}
+                    label={states[row.original.state] ?? row.original.state}
+                    ready={!!row.original.currentVersionId}
+                  />
+                </span>
+                {/* Phones drop the owner column; the owner stays visible here. */}
+                <span className="block sm:hidden">
+                  <LibraryOwner sources={row.original.sources} versionId={row.original.currentVersionId} />
                 </span>
               </div>
             </div>
           ),
         }),
-        helper.accessor("state", {
-          header: "Trạng thái",
-          cell: ({ row, getValue }) => (
-            <LibraryState
-              state={getValue()}
-              label={states[getValue()] ?? getValue()}
-              ready={!!row.original.currentVersionId}
-            />
-          ),
-        }),
         helper.display({
-          id: "source",
-          header: "Nguồn & chủ sở hữu",
+          id: "owner",
+          header: "Chủ sở hữu",
           cell: ({ row }) => (
             <button
               type="button"
@@ -209,9 +215,19 @@ export function ImageManagementPage() {
               onClick={() => setSelected(row.original.id)}
               aria-label={`Nguồn và credit ảnh ${row.original.id}`}
             >
-              <LibraryCredit sources={row.original.sources} versionId={row.original.currentVersionId} />
+              <LibraryOwner sources={row.original.sources} versionId={row.original.currentVersionId} />
+              {/* The source column is hidden on narrow screens, so the source moves under the owner. */}
+              {row.original.currentVersionId && (
+                <LibrarySource sources={row.original.sources} className="mt-0.5 md:hidden" />
+              )}
             </button>
           ),
+        }),
+        helper.display({
+          id: "source",
+          header: "Nguồn",
+          cell: ({ row }) =>
+            row.original.currentVersionId ? <LibrarySource sources={row.original.sources} className="text-sm" /> : null,
         }),
         helper.accessor("updatedAt", {
           header: "Cập nhật",
@@ -264,44 +280,33 @@ export function ImageManagementPage() {
           </PageActionsMenu>
         }
       />
-      {!needsCredit && !!missingTotal && (
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 text-left text-sm text-amber-900 transition-colors hover:bg-amber-500/15 dark:text-amber-200"
-          onClick={() => {
-            setNeedsCredit(true)
-            setMarked(new Map())
-          }}
-        >
-          <CircleAlert aria-hidden className="size-4 shrink-0" />
-          <span className="min-w-0 flex-1">
-            <span className="font-semibold">{missingTotal.toLocaleString("vi-VN")} ảnh</span> còn thiếu nguồn hoặc chủ
-            sở hữu{type ? ` trong loại ${types[type] ?? type}` : ""}.
-          </span>
-          <span className="shrink-0 font-medium underline-offset-2 hover:underline">Xem</span>
-        </button>
-      )}
       <div className="flex flex-wrap items-center gap-2" role="region" aria-label="Bộ lọc thư viện ảnh">
-        <label
-          className={`flex h-10 cursor-pointer items-center gap-2 rounded-xl border px-3 text-sm font-medium transition-colors focus-within:ring-[3px] focus-within:ring-ring/20 ${needsCredit ? "border-amber-500/60 bg-amber-500/15 text-amber-900 dark:text-amber-200" : "bg-background hover:bg-accent"}`}
-        >
-          <input
-            type="checkbox"
-            aria-label="Chỉ ảnh thiếu nguồn hoặc chủ sở hữu"
-            checked={needsCredit}
-            onChange={(event) => {
-              setNeedsCredit(event.target.checked)
-              setMarked(new Map())
-            }}
-            className="size-4 accent-primary"
-          />
-          <span className="whitespace-nowrap">Thiếu nguồn hoặc chủ sở hữu</span>
-        </label>
-        <label className="flex min-w-0 items-center">
+        {/* One control for the credit filter; its count replaces a separate reminder. */}
+        <FilterTabs label="Lọc theo nguồn">
+          <FilterTab active={!needsCredit} onClick={() => showMissing(false)}>
+            Tất cả ảnh
+          </FilterTab>
+          <FilterTab
+            active={needsCredit}
+            onClick={() => showMissing(true)}
+            className={missingCount ? "text-amber-700 dark:text-amber-400" : undefined}
+          >
+            <CircleAlert aria-hidden />
+            Thiếu nguồn / chủ sở hữu
+            {missingCount !== undefined && (
+              <span
+                className={`rounded-full px-1.5 text-xs tabular-nums ${missingCount ? "bg-amber-500/15" : "bg-muted text-muted-foreground"}`}
+              >
+                {missingCount.toLocaleString("vi-VN")}
+              </span>
+            )}
+          </FilterTab>
+        </FilterTabs>
+        <label className="flex min-w-40 flex-1 items-center sm:min-w-0 sm:flex-none">
           <span className="sr-only">Loại ảnh</span>
           <select
             aria-label="Loại ảnh"
-            className="h-10 min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
+            className="h-10 w-full min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
             value={type}
             onChange={(e) => {
               setType(e.target.value)
@@ -331,10 +336,14 @@ export function ImageManagementPage() {
             Bỏ bộ lọc
           </Button>
         )}
-        <span className="ml-auto text-sm text-muted-foreground tabular-nums" role="status">
+        {/* Phones keep the view switch beside the type filter and move the count to a short line below. */}
+        <span
+          className="order-last w-full text-xs text-muted-foreground tabular-nums sm:order-none sm:ml-auto sm:w-auto sm:text-sm"
+          role="status"
+        >
           {assets.isPending ? "Đang tải ảnh…" : `Đã tải ${rows.length} / ${total} ảnh`}
         </span>
-        <FilterTabs label="Kiểu xem ảnh">
+        <FilterTabs label="Kiểu xem ảnh" className="ml-auto sm:ml-0">
           {(
             [
               [false, List, "Bảng"],
@@ -357,37 +366,11 @@ export function ImageManagementPage() {
               }
             >
               <Icon aria-hidden />
-              {label}
+              <span className="sr-only sm:not-sr-only">{label}</span>
             </FilterTab>
           ))}
         </FilterTabs>
       </div>
-      {writable && marked.size > 0 && (
-        <div className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/25 bg-background/95 px-3 py-2.5 shadow-sm backdrop-blur-sm">
-          <div className="text-sm">
-            <p className="flex items-center gap-2 font-medium" role="status">
-              <CheckCheck aria-hidden className="size-4 text-primary" />
-              Đã chọn {marked.size} ảnh
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Chọn tất cả chỉ áp dụng cho ảnh đã tải. Đổi bộ lọc sẽ bỏ lựa chọn.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="ghost" disabled={!marked.size} onClick={() => setMarked(new Map())}>
-              Bỏ chọn
-            </Button>
-            {markedOwnerTargets.length > 0 && (
-              <Button size="sm" variant="outline" onClick={() => setOwnerTargets(markedOwnerTargets)}>
-                Bổ sung chủ sở hữu ({markedOwnerTargets.length})
-              </Button>
-            )}
-            <Button size="sm" disabled={!marked.size} onClick={() => setBulkTargets([...marked.values()])}>
-              Bổ sung nguồn / credit hàng loạt
-            </Button>
-          </div>
-        </div>
-      )}
       {assets.error && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm">
           <p role="alert" className="text-destructive">
@@ -425,24 +408,26 @@ export function ImageManagementPage() {
                     <Eye aria-hidden className="size-3.5" />
                   </span>
                 </span>
-                <span className="block space-y-2 p-3">
-                  <span
-                    className="block truncate text-xs font-semibold"
-                    title={types[row.semanticType] ?? row.semanticType}
-                  >
-                    {types[row.semanticType] ?? row.semanticType}
-                  </span>
-                  <span className="flex flex-wrap items-center justify-between gap-1">
-                    <span className="font-mono text-xs text-muted-foreground">{row.id.slice(0, 8)}</span>
-                    <LibraryState
+                <span
+                  className="block space-y-1 p-3"
+                  title={row.currentVersionId ? creditSummary(row.sources ?? []) : undefined}
+                >
+                  <span className="flex min-w-0 items-center justify-between gap-2">
+                    <span className="truncate text-xs font-medium">{types[row.semanticType] ?? row.semanticType}</span>
+                    <LibraryStateBadge
                       state={row.state}
                       label={states[row.state] ?? row.state}
                       ready={!!row.currentVersionId}
                     />
                   </span>
-                  <span className="block border-t pt-2">
-                    <LibraryCredit sources={row.sources} versionId={row.currentVersionId} compact />
-                  </span>
+                  <span className="block font-mono text-xs text-muted-foreground">{row.id.slice(0, 8)}</span>
+                  {/* Only a gap is worth a line; complete credits show on hover and in the details. */}
+                  {row.currentVersionId && sourceGap(row.sources ?? []) !== "none" && (
+                    <span className="flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+                      <CircleAlert aria-hidden className="size-3.5 shrink-0" />
+                      <span className="truncate">{sourceGapLabels[sourceGap(row.sources ?? [])]}</span>
+                    </span>
+                  )}
                 </span>
               </button>
               {writable && canSelect(row) && (
@@ -460,13 +445,13 @@ export function ImageManagementPage() {
       )}
       {!grid && (
         <div className="overflow-x-auto rounded-xl border bg-card">
-          <table className="w-full min-w-[560px] table-fixed text-left text-sm" aria-label="Danh sách ảnh">
+          <table className="w-full table-fixed text-left text-sm" aria-label="Danh sách ảnh">
             <colgroup>
               {writable && <col className="w-10" />}
-              <col className="w-[32%]" />
-              <col className="w-[20%]" />
-              <col />
-              <col className="w-28" />
+              <col className="sm:w-[55%] md:w-[34%]" />
+              <col className="hidden sm:table-column md:w-[26%]" />
+              <col className="hidden md:table-column" />
+              <col className="hidden w-28 sm:table-column" />
             </colgroup>
             <thead className="border-b bg-muted/30 text-xs text-muted-foreground">
               {table.getHeaderGroups().map((group) => (
@@ -487,7 +472,11 @@ export function ImageManagementPage() {
                     </th>
                   )}
                   {group.headers.map((header) => (
-                    <th scope="col" key={header.id} className="px-3 py-2.5 font-medium">
+                    <th
+                      scope="col"
+                      key={header.id}
+                      className={`px-3 py-2.5 font-medium ${narrowHidden[header.id] ?? ""}`}
+                    >
                       <table.FlexRender header={header} />
                     </th>
                   ))}
@@ -516,7 +505,7 @@ export function ImageManagementPage() {
                     </td>
                   )}
                   {row.getAllCells().map((cell) => (
-                    <td key={cell.id} className="px-3 py-2.5">
+                    <td key={cell.id} className={`px-3 py-2.5 ${narrowHidden[cell.column.id] ?? ""}`}>
                       <table.FlexRender cell={cell} />
                     </td>
                   ))}
@@ -571,6 +560,34 @@ export function ImageManagementPage() {
       />
       {!assets.isPending && !assets.isError && !assets.hasNextPage && rows.length > 0 && (
         <p className="text-center text-xs text-muted-foreground">Đã tải hết {total} ảnh.</p>
+      )}
+      {/* Floats at the bottom while scrolling, so the actions stay in reach on long lists and phones. */}
+      {writable && marked.size > 0 && (
+        <div
+          role="region"
+          aria-label="Ảnh đã chọn"
+          className="sticky bottom-3 z-30 mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-xl border bg-popover px-3 py-2 text-sm shadow-lg animate-in fade-in slide-in-from-bottom-2"
+        >
+          <span
+            className="flex items-center gap-2 font-medium tabular-nums"
+            role="status"
+            title="Chọn tất cả chỉ áp dụng cho ảnh đã tải. Đổi bộ lọc sẽ bỏ lựa chọn."
+          >
+            <CheckCheck aria-hidden className="size-4 text-primary" />
+            Đã chọn {marked.size} ảnh
+          </span>
+          <Button size="sm" variant="ghost" disabled={!marked.size} onClick={() => setMarked(new Map())}>
+            Bỏ chọn
+          </Button>
+          {markedOwnerTargets.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => setOwnerTargets(markedOwnerTargets)}>
+              Bổ sung chủ sở hữu ({markedOwnerTargets.length})
+            </Button>
+          )}
+          <Button size="sm" disabled={!marked.size} onClick={() => setBulkTargets([...marked.values()])}>
+            Bổ sung nguồn / credit hàng loạt
+          </Button>
+        </div>
       )}
       {ownersOpen && <MediaOwnersSheet writable={!!writable} onClose={() => setOwnersOpen(false)} />}
       {writable && ownerTargets && (
