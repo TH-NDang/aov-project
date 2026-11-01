@@ -1133,6 +1133,8 @@ lọc trước phân trang nên `totalElements` là tổng ảnh khớp trong to
 của phiên bản đang dùng; chỉ dùng nguồn cấp asset nếu phiên bản chưa có nguồn riêng. Nguồn
 ghi “Chưa xác minh” chưa được tính đầy đủ. Chỉ cần một nguồn đầy đủ, không bắt buộc URL cho
 ảnh chụp game; nguồn của phiên bản cũ và ảnh chưa hoàn tất upload không làm sai bộ lọc.
+Ảnh đại diện người dùng (`USER_AVATAR`) thuộc về chính người dùng tải lên, không cần ghi nguồn hay chủ
+sở hữu nên không bao giờ nằm trong kết quả `needsCredit=true` (01/11/2026).
 
 ---
 
