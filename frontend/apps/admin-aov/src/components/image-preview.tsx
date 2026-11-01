@@ -50,7 +50,8 @@ export function ImagePreview({
     return () => observer.disconnect()
   }, [])
   return (
-    <div ref={frame} className={cn("group/image-preview relative rounded-xl", className)}>
+    // Isolated, so the corner controls never paint over sticky page bars.
+    <div ref={frame} className={cn("group/image-preview relative isolate rounded-xl", className)}>
       {children}
       <button
         ref={trigger}

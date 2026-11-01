@@ -67,7 +67,7 @@ export function SkinCard({
 
   return (
     <article className="flex min-w-0 flex-col overflow-hidden rounded-xl border bg-card">
-      <div className="relative">
+      <div className="relative isolate">
         <HeroAsset
           id={ids.SPLASH}
           alt={`${name} · Ảnh nền`}

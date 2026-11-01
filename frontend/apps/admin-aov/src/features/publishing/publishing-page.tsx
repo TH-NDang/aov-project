@@ -7,16 +7,11 @@ import {
   BookOpen,
   CheckCircle2,
   FileUp,
-  GitCompareArrows,
-  ImageIcon,
   Languages,
-  Layers,
   MoreHorizontal,
   Plus,
   Save,
   Settings2,
-  Sparkles,
-  Swords,
   X,
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -79,6 +74,7 @@ import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { visibleSkins } from "./hero-skins"
+import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
 import {
   dirtyHeroSections,
   emptyHeroContent,
@@ -421,131 +417,104 @@ export function PublishingWorkspace({
           }
         />
       ) : (
-        <header className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              {!onUnsavedChange && (
-                <Button variant="ghost" size="icon" asChild>
-                  <Link
-                    to="/hero"
-                    aria-label="Danh sách tướng"
-                    onClick={(event) => {
-                      if (!canLeave()) event.preventDefault()
-                    }}
-                  >
-                    <ArrowLeft className="size-4" />
-                  </Link>
-                </Button>
-              )}
-              <HeroAsset
-                id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
-                alt={`Ảnh tướng ${heroName}`}
-                className="size-9 shrink-0 rounded-full"
-                frameAspectRatio={1}
-              />
-              <div className="min-w-0">
-                <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
-                  {heroName}
-                </h1>
-                <p className="text-xs text-muted-foreground">{revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}</p>
-              </div>
-              {quickSwitcher}
-              {revision && (
-                <Badge variant={revision.state === "DRAFT" ? "secondary" : "outline"}>{STATES[revision.state]}</Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {revision && (
-                <label className="flex items-center gap-2 text-sm">
-                  <span className="sr-only">Phiên bản dữ liệu</span>
-                  <select
-                    aria-label="Phiên bản dữ liệu"
-                    className={`${control} max-w-60`}
-                    value={selectedId}
-                    disabled={busy}
-                    onChange={(event) => {
-                      setSelectedId(event.target.value)
-                      updateLocation({ revision: event.target.value, compare: null, changes: null })
-                      setEditing(false)
-                    }}
-                  >
-                    {revisions.data?.map((row) => (
-                      <option key={row.id} value={row.id}>
-                        Bản #{row.revisionNo} · {STATES[row.state]}
-                        {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
-                          ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
-                          : ""}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" aria-label="Thao tác tướng">
-                    <MoreHorizontal className="size-4" />
+        <>
+          <header className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                {!onUnsavedChange && (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link
+                      to="/hero"
+                      aria-label="Danh sách tướng"
+                      onClick={(event) => {
+                        if (!canLeave()) event.preventDefault()
+                      }}
+                    >
+                      <ArrowLeft className="size-4" />
+                    </Link>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => setManagementOpen(true)}>
-                    <Settings2 />
-                    Quản lý phiên bản & xuất bản
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled={busy} onSelect={() => void refresh()}>
-                    Tải dữ liệu mới nhất
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                )}
+                <HeroAsset
+                  id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                  alt={`Ảnh tướng ${heroName}`}
+                  className="size-9 shrink-0 rounded-full"
+                  frameAspectRatio={1}
+                />
+                <div className="min-w-0">
+                  <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
+                    {heroName}
+                  </h1>
+                  <p className="text-xs text-muted-foreground">
+                    {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
+                  </p>
+                </div>
+                {quickSwitcher}
+                {revision && (
+                  <Badge variant={revision.state === "DRAFT" ? "secondary" : "outline"}>{STATES[revision.state]}</Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {revision && (
+                  <label className="flex items-center gap-2 text-sm">
+                    <span className="sr-only">Phiên bản dữ liệu</span>
+                    <select
+                      aria-label="Phiên bản dữ liệu"
+                      className={`${control} max-w-60`}
+                      value={selectedId}
+                      disabled={busy}
+                      onChange={(event) => {
+                        setSelectedId(event.target.value)
+                        updateLocation({ revision: event.target.value, compare: null, changes: null })
+                        setEditing(false)
+                      }}
+                    >
+                      {revisions.data?.map((row) => (
+                        <option key={row.id} value={row.id}>
+                          Bản #{row.revisionNo} · {STATES[row.state]}
+                          {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
+                            ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Thao tác tướng">
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => setManagementOpen(true)}>
+                      <Settings2 />
+                      Quản lý phiên bản & xuất bản
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem disabled={busy} onSelect={() => void refresh()}>
+                      Tải dữ liệu mới nhất
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-          </div>
-          {/* One tab row: the hero's content sections, then translations, history and patch data. */}
-          <div className="flex gap-0.5 overflow-x-auto border-b" role="tablist" aria-label="Không gian quản lý tướng">
-            {(
-              [
-                ["overview", "overview", BookOpen, "Tổng quan", null],
-                ["overview", "skills", Swords, "Kỹ năng", preview?.content.SKILLS?.skills.length ?? null],
-                [
-                  "overview",
-                  "skins",
-                  Sparkles,
-                  "Trang phục",
-                  preview ? visibleSkins(preview.content.SKINS?.skins ?? []).length : null,
-                ],
-                ["overview", "media", ImageIcon, "Ảnh", null],
-                ["translations", null, Languages, "Bản dịch", null],
-                ["history", null, GitCompareArrows, "Lịch sử", null],
-                ["patch", null, Layers, "Theo patch", null],
-              ] as const
-            ).map(([key, contentTab, Icon, label, count]) => {
-              const selected = view === key && (!contentTab || location.tab === contentTab)
-              return (
-                <Button
-                  key={contentTab ?? key}
-                  role="tab"
-                  aria-selected={selected}
-                  aria-controls={
-                    contentTab && contentTab !== "overview" ? `hero-content-${contentTab}` : `workspace-${key}`
-                  }
-                  disabled={busy}
-                  variant="ghost"
-                  size="sm"
-                  className={`h-9 shrink-0 rounded-b-none border-b-2 px-2.5 ${selected ? "border-primary text-primary" : "border-transparent text-muted-foreground"}`}
-                  onClick={() => {
-                    if (!contentTab) return switchView(key)
-                    if (busy) return
-                    updateLocation({ view: "overview", tab: contentTab === "overview" ? null : contentTab })
-                    setEditing(false)
-                  }}
-                >
-                  <Icon className="size-4" />
-                  {label}
-                  {count !== null && <span className="text-xs tabular-nums text-muted-foreground">{count}</span>}
-                </Button>
-              )
-            })}
-          </div>
-        </header>
+          </header>
+          <HeroWorkspaceTabs
+            view={view}
+            contentTab={location.tab}
+            busy={busy}
+            counts={{
+              skills: preview?.content.SKILLS?.skills.length ?? null,
+              skins: preview ? visibleSkins(preview.content.SKINS?.skins ?? []).length : null,
+            }}
+            onContentTab={(contentTab) => {
+              if (busy) return
+              updateLocation({ view: "overview", tab: contentTab === "overview" ? null : contentTab })
+              setEditing(false)
+            }}
+            onView={switchView}
+          />
+        </>
       )}
       {[rulesets.error, regions.error, revisions.error, read.error].filter(Boolean).map((failure, index) => (
         <p key={index} role="alert" className="rounded-xl border border-destructive/30 p-4 text-sm text-destructive">
