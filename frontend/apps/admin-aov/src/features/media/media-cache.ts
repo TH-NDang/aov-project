@@ -36,6 +36,16 @@ export async function invalidateMediaAssets(client: QueryClient, assetIds: reado
   await client.invalidateQueries(filters)
 }
 
+/** Refreshes every cached image view, e.g. after an owner rename rewrote sources across many images. */
+export async function invalidateAllMediaAssets(client: QueryClient) {
+  const filters = {
+    predicate: ({ queryKey }: { queryKey: readonly unknown[] }) =>
+      lists.has(String(queryKey[0])) || details.has(String(queryKey[0])),
+  }
+  await client.cancelQueries(filters)
+  await client.invalidateQueries(filters)
+}
+
 /** Icons observe the same query as the asset picker, including version changes. */
 export function createMediaIconResolver(
   client: QueryClient,

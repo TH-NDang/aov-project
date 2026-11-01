@@ -10,6 +10,7 @@ import { control } from "../publishing/fields"
 import { addSourcesPerTarget, type MediaSourceResult, type MediaSourceTarget } from "./bulk-media-sources"
 import { invalidateMediaAsset } from "./media-cache"
 import { LibraryImage } from "./image-library-presentation"
+import { OwnerNameHints, OwnerNameInput } from "./owner-name-field"
 
 export interface OwnerTarget {
   target: MediaSourceTarget
@@ -87,13 +88,12 @@ export function MediaOwnerBulkEditor({
           <div className="flex flex-wrap items-end gap-2 rounded-xl border bg-muted/20 p-3">
             <label className="grid min-w-0 flex-1 gap-1 text-sm">
               Điền giống nhau cho các ảnh còn trống
-              <input
+              <OwnerNameInput
                 className={control}
-                maxLength={200}
                 value={shared}
                 disabled={busy}
                 placeholder="Ví dụ: Garena"
-                onChange={(event) => setShared(event.target.value)}
+                onValueChange={setShared}
               />
             </label>
             <Button
@@ -112,6 +112,7 @@ export function MediaOwnerBulkEditor({
             >
               Điền vào ô trống
             </Button>
+            <OwnerNameHints className="basis-full" value={shared} disabled={busy} onPick={setShared} />
           </div>
           <ul className="divide-y rounded-xl border" aria-label="Ảnh cần bổ sung chủ sở hữu">
             {items.map(({ target, source }) => {
@@ -123,17 +124,22 @@ export function MediaOwnerBulkEditor({
                     <p className="truncate text-sm font-medium" title={source.label}>
                       {source.label}
                     </p>
-                    <input
+                    <OwnerNameInput
                       className={control}
                       aria-label={`Chủ sở hữu của ${source.label}`}
-                      maxLength={200}
                       disabled={busy || result?.state === "success"}
                       placeholder="Chủ sở hữu / tên cần credit"
                       value={owners[target.assetId] ?? ""}
-                      onChange={(event) =>
-                        setOwners((current) => ({ ...current, [target.assetId]: event.target.value }))
-                      }
+                      onValueChange={(owner) => setOwners((current) => ({ ...current, [target.assetId]: owner }))}
                     />
+                    {result?.state !== "success" && (
+                      <OwnerNameHints
+                        value={owners[target.assetId] ?? ""}
+                        showQuickPicks={false}
+                        disabled={busy}
+                        onPick={(owner) => setOwners((current) => ({ ...current, [target.assetId]: owner }))}
+                      />
+                    )}
                     {result?.message && result.state !== "success" && (
                       <p className="text-xs text-destructive">{result.message}</p>
                     )}

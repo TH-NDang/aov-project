@@ -1,5 +1,6 @@
 import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
 import { control } from "../publishing/fields"
+import { OwnerNameHints, OwnerNameInput } from "./owner-name-field"
 
 export function MediaSourceFields({
   value,
@@ -46,15 +47,19 @@ export function MediaSourceFields({
       <div className="grid gap-1">
         <label className="grid gap-1 text-sm">
           Chủ sở hữu / tên cần credit
-          <input
+          <OwnerNameInput
             className={control}
-            maxLength={200}
             autoFocus={autoFocusOwner}
             value={value.ownerName ?? ""}
-            onChange={(event) => onChange({ ...value, ownerName: event.target.value || null })}
+            onValueChange={(ownerName) => onChange({ ...value, ownerName: ownerName || null })}
             placeholder="Ví dụ: Garena, BOOM Esports…"
           />
         </label>
+        <OwnerNameHints
+          value={value.ownerName ?? ""}
+          disabled={disabled}
+          onPick={(ownerName) => onChange({ ...value, ownerName })}
+        />
         <span className="type-meta">
           Người hoặc tổ chức sở hữu ảnh. Ảnh chỉ được tính là đủ nguồn khi có mục này; để trống nếu chưa xác nhận.
         </span>

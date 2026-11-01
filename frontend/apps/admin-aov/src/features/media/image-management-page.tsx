@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   CheckCheck,
   CircleAlert,
+  Copyright,
   Eye,
   ImageIcon,
   LayoutGrid,
@@ -33,6 +34,7 @@ import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
 import { ImageDetailSheet, imageStates, imageTypes } from "./image-detail-sheet"
 import { ownerCandidate, primarySource, sourceGap } from "./media-source-gaps"
 import { MediaOwnerBulkEditor, type OwnerTarget } from "./media-owner-bulk-editor"
+import { MediaOwnersSheet } from "./media-owners-sheet"
 import type { MediaSourceTarget } from "./bulk-media-sources"
 import { Link, useSearchParams } from "react-router"
 
@@ -58,6 +60,7 @@ export function ImageManagementPage() {
   const [bulkTargets, setBulkTargets] = useState<MediaSourceTarget[] | null>(null)
   const [ownerTargets, setOwnerTargets] = useState<OwnerTarget[] | null>(null)
   const [upload, setUpload] = useState(false)
+  const [ownersOpen, setOwnersOpen] = useState(false)
   const [uploadType, setUploadType] = useState("HERO_HEAD")
   const wide = useIsWide()
   const [params, setParams] = useSearchParams()
@@ -250,6 +253,10 @@ export function ImageManagementPage() {
                 <DropdownMenuSeparator />
               </>
             )}
+            <DropdownMenuItem onSelect={() => setOwnersOpen(true)}>
+              <Copyright />
+              Chủ sở hữu ảnh
+            </DropdownMenuItem>
             <DropdownMenuItem disabled={assets.isFetching} onSelect={() => void assets.refetch()}>
               <RefreshCw aria-hidden className={assets.isFetching ? "motion-safe:animate-spin" : undefined} />
               Làm mới danh sách ảnh
@@ -565,6 +572,7 @@ export function ImageManagementPage() {
       {!assets.isPending && !assets.isError && !assets.hasNextPage && rows.length > 0 && (
         <p className="text-center text-xs text-muted-foreground">Đã tải hết {total} ảnh.</p>
       )}
+      {ownersOpen && <MediaOwnersSheet writable={!!writable} onClose={() => setOwnersOpen(false)} />}
       {writable && ownerTargets && (
         <MediaOwnerBulkEditor
           items={ownerTargets}
