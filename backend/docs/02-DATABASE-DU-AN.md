@@ -1333,6 +1333,13 @@ Không thêm trigram/full-text index trước khi có query thật và đo execu
 
 ## 39. Data retention
 
+Xóa ảnh không còn tham chiếu (01/11/2026): `media.media_asset.deleted_at` đánh dấu khi đã xóa bytes và purge CDN.
+Giữ hàng asset/version/source để phục vụ audit; không tái sử dụng UUID hoặc URL cũ. `media.media_deletion` lưu
+asset UUID, phiên bản yêu cầu, danh sách object key/URL đã chốt, trạng thái PREPARED/ORIGIN_DELETED/COMPLETE,
+mã lỗi gần nhất, thời hạn giữ lượt xử lý, thời điểm yêu cầu/hoàn tất và optimistic version. Bản ghi tiến trình
+không chứa credential. Community lưu `tournament.retired_media_asset(id, retired_at)` để ngăn gắn lại ảnh đã
+được chấp thuận xóa; danh tính và dữ liệu tham chiếu vẫn do mỗi service sở hữu riêng.
+
 ### Published revisions
 
 Không hard delete trong normal admin flow.

@@ -1123,6 +1123,17 @@ BLOCKED      rút xuống (ví dụ lý do pháp lý), không được phục v�
 
 và retention phù hợp với lịch sử.
 
+Xóa bytes của asset không còn tham chiếu (bổ sung 01/11/2026): admin có `media:write` được yêu cầu xóa toàn bộ
+phiên bản ảnh không còn dùng. Phải kiểm tra cả CURRENT/DRAFT/HISTORICAL của Wiki và dữ liệu Community, kể cả
+thùng rác và snapshot xuất bản. Upload còn hiệu lực/đang xác minh chặn xóa. Asset chuyển BLOCKED trước thao tác
+ngoài DB; các luồng gắn ảnh mới dùng khóa chia sẻ với thao tác xóa. Community giữ dấu asset đã ngừng sử dụng dưới
+cùng khóa ghi danh bạ để chặn gắn lại URL. Không xóa dây chuyền khi xóa đội, giải hoặc tuyển thủ.
+
+Tiến trình lưu bền trong DB: PREPARED → ORIGIN_DELETED → COMPLETE. Xóa object qua `ObjectStorage`, sau đó purge
+đúng URL bất biến qua Cloudflare; không purge toàn zone. Lỗi có thể thử lại với cùng phiên bản yêu cầu ban đầu.
+Metadata, nguồn và audit được giữ làm dấu vết; asset hoàn tất xóa được ẩn khỏi danh sách ảnh. Không giữ transaction
+khi gọi R2, Cloudflare hoặc Community. Chưa cấu hình purge cho CDN công khai thì từ chối trước khi xóa bytes.
+
 ### 12.8 Trạng thái version và version đang dùng
 
 - `MediaAssetVersion.state`: `READY` (đã kiểm tra, nằm ở key bất biến), `DEPRECATED`, `BLOCKED`.

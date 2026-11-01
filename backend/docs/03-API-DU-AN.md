@@ -1342,6 +1342,34 @@ Draft/historical reference không chặn deprecate. Asset đã `DEPRECATED`/`BLO
 
 Historical asset/version chỉ purge khi retention policy chứng minh không cần tái tạo lịch sử.
 
+### 36.1 Xóa bytes ảnh không còn sử dụng (01/11/2026)
+
+`POST /api/wiki/v1/admin/media/assets/{assetId}/delete` nhận `{expectedVersion, reason}`; `reason` bắt buộc,
+không rỗng, tối đa 2000 ký tự. Cần `catalog:read`, `media:write` và quyền `tournament:read/write` để kiểm tra,
+ngừng tham chiếu ảnh tại Community bằng token hiện tại. Mọi CURRENT/DRAFT/HISTORICAL và dữ liệu Community trong
+thùng rác/lịch sử đều chặn xóa (`409 MEDIA_ASSET_IN_USE`). Upload chưa hết hạn hoặc đang xác minh trả
+`409 MEDIA_UPLOAD_IN_PROGRESS`; phiên bản cũ trả `409 MEDIA_ASSET_VERSION_CONFLICT`.
+
+Backend chốt các key/URL, chuyển asset BLOCKED, xóa mọi phiên bản và file upload tạm, rồi purge đúng URL CDN.
+Không nhận object key/URL hoặc credential từ client. Metadata/source/audit được giữ; asset hoàn tất được ẩn
+khỏi danh sách ảnh. Response `200` gồm `{assetId,state,expectedVersion,objects,publicUrls,lastError,requestedAt,completedAt}`;
+`expectedVersion` giữ phiên bản của yêu cầu ban đầu để giao diện tiếp tục đúng yêu cầu sau khi tải lại trang.
+`state=COMPLETE` nghĩa là R2 đã nhận lệnh xóa và CDN đã chấp nhận purge (hoặc local không có CDN).
+
+`GET /api/wiki/v1/admin/media/assets/{assetId}/deletion` cùng quyền Media trả tiến trình đã lưu; chưa có yêu cầu
+trả `404 MEDIA_DELETION_NOT_FOUND`. Khi lỗi, gọi lại POST với `expectedVersion` ban đầu; không cần tạo thao tác
+mới. PREPARED sẽ thử lại xóa file, ORIGIN_DELETED chỉ tiếp tục purge. COMPLETE là no-op. Hai lượt xử lý cùng
+lúc trả `409 MEDIA_DELETION_IN_PROGRESS`; sau sự cố tiến trình có thể nhận lại lượt sau 10 phút.
+
+Thiếu cấu hình CDN trả `503 MEDIA_CACHE_PURGE_NOT_CONFIGURED` trước khi sửa dữ liệu. Lỗi Cloudflare trả
+`502 MEDIA_CACHE_PURGE_FAILED`; không xác minh được Community trả `502 MEDIA_COMPETITION_CHECK_FAILED` và
+không tiếp tục xóa. Lỗi kho ảnh tiếp tục dùng `STORAGE_UNAVAILABLE`. Các lệnh HTTP/storage chạy ngoài transaction.
+
+Community bổ sung GET `/api/community/v1/admin/media-assets/{assetId}/usage` (`tournament:read`) và POST
+`/api/community/v1/admin/media-assets/{assetId}/retire` (`tournament:write`). Trả `{assetId,references,retired}`;
+retire từ chối khi còn tham chiếu, kể cả hồ sơ đã xóa mềm. Sau khi retire, việc tạo/sửa hồ sơ gắn lại URL ảnh đó
+trả `409 TOURNAMENT_MEDIA_RETIRED`. Thao tác này không xóa hồ sơ hoặc bytes, không đọc DB Wiki.
+
 ---
 
 # PHẦN F — ADMIN PATCH API
