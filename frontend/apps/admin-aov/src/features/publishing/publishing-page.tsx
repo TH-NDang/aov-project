@@ -1,5 +1,5 @@
 import { HeroTimeline } from "./hero-timeline"
-import { useEffect, useRef, useState, type ComponentProps } from "react"
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
@@ -10,8 +10,11 @@ import {
   Languages,
   MoreHorizontal,
   Plus,
+  RefreshCw,
   Save,
+  Send,
   Settings2,
+  Trash2,
   X,
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -23,7 +26,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { Page, PageHeader } from "@/components/page-header"
+import { useIsWide } from "@/hooks/use-media-query"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
@@ -101,6 +106,34 @@ function PublishingFrame({ rulesetId, ...props }: ComponentProps<typeof Page> & 
     <ReferenceRulesetProvider rulesetId={rulesetId}>
       <Page {...props} />
     </ReferenceRulesetProvider>
+  )
+}
+
+/** Mounted while open, so the viewport check runs only when the sheet is shown. */
+function ManagementSheet({
+  description,
+  onClose,
+  children,
+}: {
+  description: string
+  onClose: () => void
+  children: ReactNode
+}) {
+  const wide = useIsWide()
+  return (
+    <Sheet open onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side={wide ? "right" : "bottom"}
+        aria-label="Quản lý phiên bản"
+        className={wide ? "w-[min(640px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
+      >
+        <SheetHeader className="gap-1 border-b">
+          <SheetTitle className="type-section-title pr-8">Quản lý phiên bản</SheetTitle>
+          <SheetDescription>{description}</SheetDescription>
+        </SheetHeader>
+        {children}
+      </SheetContent>
+    </Sheet>
   )
 }
 
@@ -193,7 +226,6 @@ export function PublishingWorkspace({
   }
   const setFilter = (next: CatalogFilter) => updateLocation({ season: next.seasonId, patch: next.variantId })
   const editorRef = useRef<HTMLDivElement>(null)
-  const managementRef = useRef<HTMLDivElement>(null)
   const heroHeadingRef = useRef<HTMLHeadingElement>(null)
   const overview = usePublicationOverview()
   const displayLocale = useContentLocale()
@@ -285,15 +317,6 @@ export function PublishingWorkspace({
       editorRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
     }
   }, [editing])
-  useEffect(() => {
-    if (!managementOpen) return
-    // The actions menu returns focus to its trigger when it closes; move focus after that so the panel stays in view.
-    const timer = window.setTimeout(() => {
-      managementRef.current?.focus({ preventScroll: true })
-      managementRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [managementOpen])
   useBeforeUnload((event) => {
     if (busy) {
       event.preventDefault()
@@ -377,6 +400,17 @@ export function PublishingWorkspace({
       setEditing(false)
     }, "Đã tải phiên bản mới nhất.")
   }
+  // The one action the header offers for this version; the rest stays in its menu.
+  const headerAction =
+    revision?.state === "DRAFT" && canPublish ? "publish" : revision?.state === "PUBLISHED" && canWrite ? "draft" : null
+  function discardDraft() {
+    if (!revision || !window.confirm("Hủy bản nháp này? Bản đã xuất bản vẫn được giữ lại.")) return
+    void run(async () => {
+      const discarded = await api.discard(revision)
+      await localDraft.discard()
+      await openRevision(discarded)
+    }, "Đã hủy bản nháp.")
+  }
 
   return (
     <PublishingFrame
@@ -418,48 +452,78 @@ export function PublishingWorkspace({
         />
       ) : (
         <>
-          <header className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2.5">
-                {!onUnsavedChange && (
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link
-                      to="/hero"
-                      aria-label="Danh sách tướng"
-                      onClick={(event) => {
-                        if (!canLeave()) event.preventDefault()
-                      }}
-                    >
-                      <ArrowLeft className="size-4" />
-                    </Link>
-                  </Button>
-                )}
-                <HeroAsset
-                  id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
-                  alt={`Ảnh tướng ${heroName}`}
-                  className="size-9 shrink-0 rounded-full"
-                  frameAspectRatio={1}
-                />
-                <div className="min-w-0">
-                  <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
-                    {heroName}
-                  </h1>
-                  <p className="text-xs text-muted-foreground">
-                    {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
-                  </p>
+          <header>
+            {/* Narrow: name and menu on one line, version and the main action on the next. Wide: one line. */}
+            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:gap-2">
+              <div className="flex min-w-0 items-center gap-2 @2xl:contents">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  {!onUnsavedChange && (
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link
+                        to="/hero"
+                        aria-label="Danh sách tướng"
+                        onClick={(event) => {
+                          if (!canLeave()) event.preventDefault()
+                        }}
+                      >
+                        <ArrowLeft className="size-4" />
+                      </Link>
+                    </Button>
+                  )}
+                  <HeroAsset
+                    id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                    alt={`Ảnh tướng ${heroName}`}
+                    className="size-9 shrink-0 rounded-full"
+                    frameAspectRatio={1}
+                  />
+                  <div className="min-w-0">
+                    <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
+                      {heroName}
+                    </h1>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
+                    </p>
+                  </div>
+                  {quickSwitcher}
                 </div>
-                {quickSwitcher}
-                {revision && (
-                  <Badge variant={revision.state === "DRAFT" ? "secondary" : "outline"}>{STATES[revision.state]}</Badge>
-                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Thao tác tướng" className="@2xl:order-last">
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onSelect={() => setManagementOpen(true)}>
+                      <Settings2 />
+                      Quản lý phiên bản
+                    </DropdownMenuItem>
+                    <DropdownMenuItem disabled={busy} onSelect={() => void refresh()}>
+                      <RefreshCw />
+                      Tải dữ liệu mới nhất
+                    </DropdownMenuItem>
+                    {writable && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          variant="destructive"
+                          disabled={busy || !!dirty.size}
+                          onSelect={() => discardDraft()}
+                        >
+                          <Trash2 />
+                          Hủy bản nháp
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <div className="flex items-center gap-2">
-                {revision && (
-                  <label className="flex items-center gap-2 text-sm">
+              <div className="flex min-w-0 items-center gap-2 @2xl:contents">
+                {revision && (revisions.data?.length ?? 0) > 1 ? (
+                  <label className="flex min-w-0 flex-1 items-center text-sm @2xl:flex-none">
                     <span className="sr-only">Phiên bản dữ liệu</span>
                     <select
                       aria-label="Phiên bản dữ liệu"
-                      className={`${control} max-w-60`}
+                      className={`${control} @2xl:w-auto @2xl:max-w-60`}
                       value={selectedId}
                       disabled={busy}
                       onChange={(event) => {
@@ -478,24 +542,26 @@ export function PublishingWorkspace({
                       ))}
                     </select>
                   </label>
+                ) : (
+                  // Most heroes have a single version; there is nothing to switch to.
+                  revision && (
+                    <span className="inline-flex h-9 min-w-0 flex-1 items-center rounded-md border bg-muted/40 px-3 text-sm whitespace-nowrap @2xl:flex-none">
+                      Bản #{revision.revisionNo} · {STATES[revision.state]}
+                    </span>
+                  )
                 )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" aria-label="Thao tác tướng">
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => setManagementOpen(true)}>
-                      <Settings2 />
-                      Quản lý phiên bản & xuất bản
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem disabled={busy} onSelect={() => void refresh()}>
-                      Tải dữ liệu mới nhất
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {headerAction === "publish" && (
+                  <Button disabled={busy} onClick={() => setManagementOpen(true)}>
+                    <Send className="size-4" />
+                    Xuất bản
+                  </Button>
+                )}
+                {headerAction === "draft" && (
+                  <Button variant="outline" disabled={busy} onClick={() => setManagementOpen(true)}>
+                    <Plus className="size-4" />
+                    Tạo bản nháp
+                  </Button>
+                )}
               </div>
             </div>
           </header>
@@ -568,12 +634,16 @@ export function PublishingWorkspace({
           {preview && revision && (
             <>
               <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                {/* The version is in the header; only what it does not say stays here. */}
                 <span>
-                  {(rulesets.data?.length ?? 0) > 1
-                    ? `${rulesets.data?.find((row) => row.id === revision.rulesetId)?.code ?? "Bộ quy tắc khác"} · `
-                    : ""}
-                  Bản #{revision.revisionNo}
-                  {dirty.size ? ` · ${dirty.size} nhóm chưa lưu` : ""}
+                  {[
+                    (rulesets.data?.length ?? 0) > 1
+                      ? (rulesets.data?.find((row) => row.id === revision.rulesetId)?.code ?? "Bộ quy tắc khác")
+                      : "",
+                    dirty.size ? `${dirty.size} nhóm chưa lưu` : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </span>
                 {!translating && !editing && (
                   <label className="flex items-center gap-2">
@@ -815,237 +885,211 @@ export function PublishingWorkspace({
                   </div>
                 )}
               </div>
+              {/* A sheet keeps publishing next to the page instead of below every section. */}
               {managementOpen && (
-                <section
-                  ref={managementRef}
-                  tabIndex={-1}
-                  className="scroll-mt-16 space-y-5 rounded-2xl border bg-muted/10 p-4 outline-none @min-[650px]:p-6"
-                  aria-label="Quản lý phiên bản"
+                <ManagementSheet
+                  onClose={() => setManagementOpen(false)}
+                  description={`Bản #${revision.revisionNo} · ${STATES[revision.state]} · ${CAUSES[revision.cause]}`}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 className="type-section-title">Quản lý phiên bản</h2>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Bản #{revision.revisionNo} · {STATES[revision.state]} · {CAUSES[revision.cause]}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Đóng quản lý phiên bản"
-                      onClick={() => setManagementOpen(false)}
-                    >
-                      <X className="size-4" />
-                    </Button>
-                  </div>
-                  {revision.state === "PUBLISHED" && canWrite && (
-                    <Box title="Tạo bản nháp kế thừa">
-                      <form
-                        className="space-y-4"
-                        onSubmit={(event) => {
-                          event.preventDefault()
-                          void run(async () => {
-                            await openRevision(
-                              await api.fork(
-                                revision,
-                                cause,
-                                cause === "GAME_PATCH" ? (importContext?.patchVariantId ?? null) : null,
-                              ),
-                            )
-                            setManagementOpen(false)
-                          }, "Đã tạo bản nháp từ phiên bản đã chọn.")
-                        }}
-                      >
-                        <label className="grid gap-2 text-sm">
-                          Loại thay đổi
-                          <select
-                            className={control}
-                            value={cause}
-                            onChange={(event) => setCause(event.target.value as Cause)}
-                          >
-                            {Object.entries(CAUSES)
-                              .filter(([key]) => key !== "DATA_BASELINE")
-                              .map(([key, label]) => (
-                                <option value={key} key={key}>
-                                  {label}
-                                </option>
-                              ))}
-                          </select>
-                        </label>
-                        {cause === "GAME_PATCH" && (
-                          <>
-                            <ImportContextPicker
-                              regions={regions.data ?? []}
-                              value={importContext}
-                              onChange={setImportContext}
-                              disabled={busy}
-                              locale={locale}
-                              onLocaleChange={translating ? setTargetLocale : setContentLocale}
-                            />
-                            {importContext && importContext.rulesetId !== revision.rulesetId && (
-                              <p className="text-sm text-destructive">Chọn patch thuộc cùng bộ quy tắc gameplay.</p>
-                            )}
-                          </>
+                  <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pt-4 pb-6">
+                    {/* The header's publish button opens this sheet, so the publish checks lead. */}
+                    {revision.state === "DRAFT" && (
+                      <Box title="Kiểm tra trước khi xuất bản">
+                        {issues.length ? (
+                          <ul className="space-y-2 text-sm text-muted-foreground">
+                            {issues.map((issue) => (
+                              <li key={issue} className="flex gap-2">
+                                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
+                                {issue}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="flex items-center gap-2 text-sm">
+                            <CheckCircle2 className="size-4 text-emerald-600" />
+                            Đã đủ nội dung chính. Hệ thống sẽ kiểm tra dữ liệu và ảnh khi xuất bản.
+                          </p>
                         )}
-                        <Button
-                          disabled={
-                            busy ||
-                            !!dirty.size ||
-                            (cause === "GAME_PATCH" &&
-                              (!importContext || importContext.rulesetId !== revision.rulesetId))
-                          }
-                        >
-                          Tạo bản nháp từ mốc này
-                        </Button>
-                      </form>
-                    </Box>
-                  )}
-                  {revision.cause === "DATA_BASELINE" && (
-                    <p className="rounded-xl border bg-card p-4 text-sm leading-6 text-muted-foreground">
-                      Đây là mốc dữ liệu đã thu thập. Khi chưa có bản trước để đối chiếu, lịch sử không thể kết luận
-                      tướng đã thay đổi gì ở patch này. Bạn có thể bổ sung mốc cũ rồi so sánh sau.
-                    </p>
-                  )}
-                  {writable && revision.cause === "DATA_BASELINE" && !revision.sourceRevisionId && (
-                    <BaselineContextForm
-                      revision={revision}
-                      disabled={busy || !!dirty.size}
-                      onBusyChange={setBusy}
-                      onMove={async (next) => {
-                        await openRevision(next)
-                        await invalidateHeroCatalogs(queryClient)
-                        await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
-                        await revisions.refetch()
-                        setMessage("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")
-                      }}
-                    />
-                  )}
-                  {revision.state === "PUBLISHED" &&
-                    revision.cause === "GAME_PATCH" &&
-                    revision.effectiveFromPatchVariantId &&
-                    capabilities.includes("patch:write") && (
-                      <PatchChangeForm key={revision.id} revision={revision} locale={locale} />
+                        {dirty.size > 0 && (
+                          <p className="text-sm text-amber-600">
+                            Lưu {dirty.size} nhóm đang chỉnh sửa trước khi xuất bản.
+                          </p>
+                        )}
+                        <div className="flex flex-wrap gap-3">
+                          {revision.state === "DRAFT" && canPublish && (
+                            <Button
+                              disabled={busy || !!dirty.size || !!issues.length}
+                              onClick={() =>
+                                void run(async () => {
+                                  const published = await api.publish(revision, note)
+                                  await localDraft.discard()
+                                  await openRevision(published)
+                                }, "Đã xuất bản phiên bản tướng.")
+                              }
+                            >
+                              Xuất bản tướng
+                            </Button>
+                          )}
+                        </div>
+                      </Box>
                     )}
-                  <Box title="Kiểm tra trước khi xuất bản">
-                    {issues.length ? (
-                      <ul className="space-y-2 text-sm text-muted-foreground">
-                        {issues.map((issue) => (
-                          <li key={issue} className="flex gap-2">
-                            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
-                            {issue}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="size-4 text-emerald-600" />
-                        Đã đủ nội dung chính. Hệ thống sẽ kiểm tra dữ liệu và ảnh khi xuất bản.
-                      </p>
-                    )}
-                    {dirty.size > 0 && (
-                      <p className="text-sm text-amber-600">Lưu {dirty.size} nhóm đang chỉnh sửa trước khi xuất bản.</p>
-                    )}
-                    <div className="flex flex-wrap gap-3">
-                      {revision.state === "DRAFT" && canPublish && (
-                        <Button
-                          disabled={busy || !!dirty.size || !!issues.length}
-                          onClick={() =>
+                    {revision.state === "PUBLISHED" && canWrite && (
+                      <Box title="Tạo bản nháp kế thừa">
+                        <form
+                          className="space-y-4"
+                          onSubmit={(event) => {
+                            event.preventDefault()
                             void run(async () => {
-                              const published = await api.publish(revision, note)
-                              await localDraft.discard()
-                              await openRevision(published)
-                            }, "Đã xuất bản phiên bản tướng.")
-                          }
-                        >
-                          Xuất bản tướng
-                        </Button>
-                      )}
-                      {writable && (
-                        <Button
-                          variant="outline"
-                          disabled={busy || !!dirty.size}
-                          onClick={() => {
-                            if (window.confirm("Hủy bản nháp này? Bản đã xuất bản vẫn được giữ lại."))
-                              void run(async () => {
-                                const discarded = await api.discard(revision)
-                                await localDraft.discard()
-                                await openRevision(discarded)
-                              }, "Đã hủy bản nháp.")
+                              await openRevision(
+                                await api.fork(
+                                  revision,
+                                  cause,
+                                  cause === "GAME_PATCH" ? (importContext?.patchVariantId ?? null) : null,
+                                ),
+                              )
+                              setManagementOpen(false)
+                            }, "Đã tạo bản nháp từ phiên bản đã chọn.")
                           }}
                         >
-                          Hủy bản nháp
-                        </Button>
-                      )}
-                    </div>
-                  </Box>
-                  {writable && !translating && (
-                    <details className="rounded-xl border bg-card p-4">
-                      <summary className="cursor-pointer text-sm font-medium">
-                        Điền dữ liệu từ tài nguyên tham khảo
-                      </summary>
-                      <div className="mt-4 space-y-4">
-                        <Button variant="outline" onClick={() => setShowResources(!showResources)}>
-                          {showResources ? "Đóng danh mục" : "Mở danh mục resources"}
-                        </Button>
-                        {showResources && (
-                          <>
-                            {resources.isError && <p role="alert">{errorMessage(resources.error)}</p>}
-                            <label className="grid gap-2 text-sm">
-                              Tướng nguồn
-                              <select
-                                className={control}
-                                value={resourceId}
-                                onChange={(event) => setResourceId(event.target.value)}
-                              >
-                                <option value="">Chọn tướng để đối chiếu</option>
-                                {resources.data?.map((hero) => (
-                                  <option value={hero.id} key={hero.id}>
-                                    {hero.name} · {hero.id}
+                          <label className="grid gap-2 text-sm">
+                            Loại thay đổi
+                            <select
+                              className={control}
+                              value={cause}
+                              onChange={(event) => setCause(event.target.value as Cause)}
+                            >
+                              {Object.entries(CAUSES)
+                                .filter(([key]) => key !== "DATA_BASELINE")
+                                .map(([key, label]) => (
+                                  <option value={key} key={key}>
+                                    {label}
                                   </option>
                                 ))}
-                              </select>
-                            </label>
-                            {resource && (
-                              <>
-                                <p className="text-sm text-muted-foreground">
-                                  Điền tên, kỹ năng và trang phục vào bản đang sửa. Dữ liệu còn thiếu có thể bổ sung sau
-                                  trong bản nháp.
-                                </p>
-                                <Button
-                                  disabled={busy || !!dirty.size}
-                                  onClick={() => {
-                                    localDraft.update({
-                                      ...localDraft.value,
-                                      content: { ...preview.content, ...resourceContent(resource, locale) },
-                                    })
-                                    updateLocation({ view: "overview" })
-                                    setEditing(true)
-                                    setManagementOpen(false)
-                                  }}
+                            </select>
+                          </label>
+                          {cause === "GAME_PATCH" && (
+                            <>
+                              <ImportContextPicker
+                                regions={regions.data ?? []}
+                                value={importContext}
+                                onChange={setImportContext}
+                                disabled={busy}
+                                locale={locale}
+                                onLocaleChange={translating ? setTargetLocale : setContentLocale}
+                              />
+                              {importContext && importContext.rulesetId !== revision.rulesetId && (
+                                <p className="text-sm text-destructive">Chọn patch thuộc cùng bộ quy tắc gameplay.</p>
+                              )}
+                            </>
+                          )}
+                          <Button
+                            disabled={
+                              busy ||
+                              !!dirty.size ||
+                              (cause === "GAME_PATCH" &&
+                                (!importContext || importContext.rulesetId !== revision.rulesetId))
+                            }
+                          >
+                            Tạo bản nháp từ mốc này
+                          </Button>
+                        </form>
+                      </Box>
+                    )}
+                    {revision.cause === "DATA_BASELINE" && (
+                      <p className="rounded-xl border bg-card p-4 text-sm leading-6 text-muted-foreground">
+                        Đây là mốc dữ liệu đã thu thập. Khi chưa có bản trước để đối chiếu, lịch sử không thể kết luận
+                        tướng đã thay đổi gì ở patch này. Bạn có thể bổ sung mốc cũ rồi so sánh sau.
+                      </p>
+                    )}
+                    {writable && revision.cause === "DATA_BASELINE" && !revision.sourceRevisionId && (
+                      <BaselineContextForm
+                        revision={revision}
+                        disabled={busy || !!dirty.size}
+                        onBusyChange={setBusy}
+                        onMove={async (next) => {
+                          await openRevision(next)
+                          await invalidateHeroCatalogs(queryClient)
+                          await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
+                          await revisions.refetch()
+                          setMessage("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")
+                        }}
+                      />
+                    )}
+                    {revision.state === "PUBLISHED" &&
+                      revision.cause === "GAME_PATCH" &&
+                      revision.effectiveFromPatchVariantId &&
+                      capabilities.includes("patch:write") && (
+                        <PatchChangeForm key={revision.id} revision={revision} locale={locale} />
+                      )}
+                    {writable && !translating && (
+                      <details className="rounded-xl border bg-card p-4">
+                        <summary className="cursor-pointer text-sm font-medium">
+                          Điền dữ liệu từ tài nguyên tham khảo
+                        </summary>
+                        <div className="mt-4 space-y-4">
+                          <Button variant="outline" onClick={() => setShowResources(!showResources)}>
+                            {showResources ? "Đóng danh mục" : "Mở danh mục resources"}
+                          </Button>
+                          {showResources && (
+                            <>
+                              {resources.isError && <p role="alert">{errorMessage(resources.error)}</p>}
+                              <label className="grid gap-2 text-sm">
+                                Tướng nguồn
+                                <select
+                                  className={control}
+                                  value={resourceId}
+                                  onChange={(event) => setResourceId(event.target.value)}
                                 >
-                                  Điền vào bản nháp
-                                </Button>
-                              </>
-                            )}
-                          </>
-                        )}
-                      </div>
+                                  <option value="">Chọn tướng để đối chiếu</option>
+                                  {resources.data?.map((hero) => (
+                                    <option value={hero.id} key={hero.id}>
+                                      {hero.name} · {hero.id}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              {resource && (
+                                <>
+                                  <p className="text-sm text-muted-foreground">
+                                    Điền tên, kỹ năng và trang phục vào bản đang sửa. Dữ liệu còn thiếu có thể bổ sung
+                                    sau trong bản nháp.
+                                  </p>
+                                  <Button
+                                    disabled={busy || !!dirty.size}
+                                    onClick={() => {
+                                      localDraft.update({
+                                        ...localDraft.value,
+                                        content: { ...preview.content, ...resourceContent(resource, locale) },
+                                      })
+                                      updateLocation({ view: "overview" })
+                                      setEditing(true)
+                                      setManagementOpen(false)
+                                    }}
+                                  >
+                                    Điền vào bản nháp
+                                  </Button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </details>
+                    )}
+                    <details className="text-xs text-muted-foreground">
+                      <summary className="cursor-pointer">Mã định danh hệ thống</summary>
+                      <dl className="mt-3 space-y-2 break-all font-mono">
+                        <div>
+                          <dt>Tướng</dt>
+                          <dd>{heroId}</dd>
+                        </div>
+                        <div>
+                          <dt>Phiên bản</dt>
+                          <dd>{revision.id}</dd>
+                        </div>
+                      </dl>
                     </details>
-                  )}
-                  <details className="text-xs text-muted-foreground">
-                    <summary className="cursor-pointer">Mã định danh hệ thống</summary>
-                    <dl className="mt-3 space-y-2 break-all font-mono">
-                      <div>
-                        <dt>Tướng</dt>
-                        <dd>{heroId}</dd>
-                      </div>
-                      <div>
-                        <dt>Phiên bản</dt>
-                        <dd>{revision.id}</dd>
-                      </div>
-                    </dl>
-                  </details>
-                </section>
+                  </div>
+                </ManagementSheet>
               )}
             </>
           )}

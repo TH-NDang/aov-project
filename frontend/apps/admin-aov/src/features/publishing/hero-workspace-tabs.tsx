@@ -60,8 +60,8 @@ export function HeroWorkspaceTabs({
   const tab = (selected: boolean, wide = false) =>
     cn(
       "relative shrink-0 rounded-b-none border-b-2 @2xl:h-9 @2xl:px-2.5",
-      // Narrow: icon over label, every slot the same width.
-      "@max-2xl:h-14 @max-2xl:min-w-0 @max-2xl:flex-col @max-2xl:gap-1 @max-2xl:px-0.5 @max-2xl:text-xs @max-2xl:has-[>svg]:px-0.5",
+      // Narrow: icon over label; slots start from their label width and share the rest, so no label is cut.
+      "@max-2xl:h-14 @max-2xl:min-w-0 @max-2xl:flex-auto @max-2xl:flex-col @max-2xl:gap-1 @max-2xl:px-0.5 @max-2xl:text-xs @max-2xl:has-[>svg]:px-0.5",
       wide && "@max-2xl:hidden",
       selected ? "border-primary text-primary" : "border-transparent text-muted-foreground",
     )
@@ -70,7 +70,7 @@ export function HeroWorkspaceTabs({
       <div
         role="tablist"
         aria-label="Không gian quản lý tướng"
-        className="grid min-w-0 flex-1 grid-cols-4 @2xl:flex @2xl:gap-0.5 @2xl:overflow-x-auto"
+        className="flex min-w-0 flex-1 @2xl:gap-0.5 @2xl:overflow-x-auto"
       >
         {contentTabs.map(([key, Icon, label]) => {
           const selected = view === "overview" && contentTab === key
@@ -123,7 +123,7 @@ export function HeroWorkspaceTabs({
             aria-label={
               activeOther ? `Đang mở ${activeOther[2]} · chọn phần khác` : "Thêm phần: Bản dịch, Lịch sử, Theo patch"
             }
-            className={cn(tab(!!activeOther), "w-1/5 @2xl:hidden")}
+            className={cn(tab(!!activeOther), "@max-2xl:flex-none @max-2xl:px-2 @max-2xl:has-[>svg]:px-2 @2xl:hidden")}
           >
             <MoreIcon className="size-5" />
             <span className="max-w-full truncate">{activeOther?.[2] ?? "Thêm"}</span>
