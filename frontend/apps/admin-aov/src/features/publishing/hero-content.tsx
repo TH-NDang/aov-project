@@ -15,6 +15,7 @@ import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
 import { ImageCreditSummary } from "./image-credit-summary"
 import { SkinCard, skinImageIds } from "./skin-card"
+import { visibleSkins } from "./hero-skins"
 export { HeroAsset } from "./hero-asset"
 
 const icons = {
@@ -143,6 +144,8 @@ function HeroContentBody({
 }) {
   const profile = localized(content.PROFILE?.translations, locale)
   const reviewNotes = heroReviewNotes(content.SKILLS?.skills ?? [])
+  // The base appearance repeats the hero's own images, which the Images tab already shows.
+  const skins = visibleSkins(content.SKINS?.skins ?? [])
   const [localTab, setLocalTab] = useState<HeroContentTab>("overview")
   const tab = selectedTab ?? localTab
   const visibleSections: Section[] =
@@ -212,7 +215,7 @@ function HeroContentBody({
           [
             ["overview", BookOpen, "Tổng quan", null],
             ["skills", Swords, "Kỹ năng", content.SKILLS?.skills.length ?? 0],
-            ["skins", Sparkles, "Trang phục", content.SKINS?.skins.length ?? 0],
+            ["skins", Sparkles, "Trang phục", skins.length],
             ["media", Image, "Ảnh tướng", null],
           ] as const
         ).map(([key, Icon, label, count]) => (
@@ -321,14 +324,14 @@ function HeroContentBody({
               />
             )
           else if (section === "SKINS")
-            body = content.SKINS?.skins.length ? (
+            body = skins.length ? (
               <div className="space-y-4">
                 <ImageCreditSummary
                   label="ảnh trang phục"
-                  assetIds={content.SKINS.skins.flatMap((skin) => Object.values(skinImageIds(skin)))}
+                  assetIds={skins.flatMap((skin) => Object.values(skinImageIds(skin)))}
                 />
                 <div className="grid grid-cols-1 gap-4 @min-[520px]:grid-cols-2 @min-[1000px]:grid-cols-3">
-                  {[...content.SKINS.skins]
+                  {[...skins]
                     .sort((a, b) => a.displayOrder - b.displayOrder)
                     .map((skin) => {
                       const text = localized(skin.translations, locale)

@@ -42,3 +42,20 @@ test("skin catalog selects a revision within the chosen ruleset and never mixes 
   assert.equal(result.items[0].id, "hero/draft/airi-skin")
   assert.equal(result.items[0].heroName, "Airi")
 })
+
+test("hero skins tab leaves out the base appearance but keeps real skins that end in its words", async () => {
+  const { visibleSkins } = await import("../src/features/publishing/hero-skins")
+  const keys = (skinKeys: string[]) =>
+    visibleSkins(skinKeys.map((skinKey) => ({ skinKey }))).map((skin) => skin.skinKey)
+  assert.deepEqual(keys(["airi-mac-dinh-1", "airi-ninja-xanh-la-1", "airi-thich-khach-1"]), [
+    "airi-ninja-xanh-la-1",
+    "airi-thich-khach-1",
+  ])
+  assert.deepEqual(keys(["lu-bu-heroskin-1", "lu-bu-default-1", "default", "lu-bu-tuong-quan-1"]), [
+    "lu-bu-tuong-quan-1",
+  ])
+  assert.deepEqual(keys(["airi-chien-binh-mac-dinh-1", "airi-ninja-xanh-la-1"]), [
+    "airi-chien-binh-mac-dinh-1",
+    "airi-ninja-xanh-la-1",
+  ])
+})

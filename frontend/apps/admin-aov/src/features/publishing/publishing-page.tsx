@@ -78,6 +78,7 @@ import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatus } from "@/app/drafts/draft-status"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
+import { visibleSkins } from "./hero-skins"
 import {
   dirtyHeroSections,
   emptyHeroContent,
@@ -504,7 +505,13 @@ export function PublishingWorkspace({
               [
                 ["overview", "overview", BookOpen, "Tổng quan", null],
                 ["overview", "skills", Swords, "Kỹ năng", preview?.content.SKILLS?.skills.length ?? null],
-                ["overview", "skins", Sparkles, "Trang phục", preview?.content.SKINS?.skins.length ?? null],
+                [
+                  "overview",
+                  "skins",
+                  Sparkles,
+                  "Trang phục",
+                  preview ? visibleSkins(preview.content.SKINS?.skins ?? []).length : null,
+                ],
                 ["overview", "media", ImageIcon, "Ảnh", null],
                 ["translations", null, Languages, "Bản dịch", null],
                 ["history", null, GitCompareArrows, "Lịch sử", null],
