@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { CircleAlert, Copyright, ImageIcon, ImageOff } from "lucide-react"
+import { CircleAlert, Copyright, ImageIcon, ImageOff, UserRound } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { MediaCredit } from "@aov/ui/lib/media-credit"
 import { primarySource, sourceGap, sourceGapHints, sourceGapLabels } from "./media-source-gaps"
@@ -33,8 +33,24 @@ export function LibraryImage({ url, className }: { url: string | null; className
 }
 
 /** Who owns the image, or what is missing; the image list leads with this. */
-export function LibraryOwner({ sources, versionId }: { sources?: MediaCredit[]; versionId?: string | null }) {
+export function LibraryOwner({
+  sources,
+  versionId,
+  userImage = false,
+}: {
+  sources?: MediaCredit[]
+  versionId?: string | null
+  /** A user's own avatar, which needs no owner. */
+  userImage?: boolean
+}) {
   if (!versionId) return <span className="type-meta">Chờ hoàn tất upload</span>
+  if (userImage)
+    return (
+      <span className="type-meta flex min-w-0 items-center gap-1.5" title="Ảnh đại diện không cần ghi chủ sở hữu.">
+        <UserRound aria-hidden className="size-3.5 shrink-0" />
+        <span className="truncate">Ảnh người dùng tải lên</span>
+      </span>
+    )
   if (!sources) return <span className="type-meta">Chưa tải thông tin nguồn</span>
   const gap = sourceGap(sources)
   const owner = primarySource(sources)?.ownerName?.trim()

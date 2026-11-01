@@ -30,6 +30,7 @@ import { invalidateMediaAsset } from "./media-cache"
 import { ImageDeleteAction } from "./image-delete-action"
 import { MediaSourceFields } from "./media-source-fields"
 import {
+  needsNoCredit,
   ownerCandidate,
   primarySource,
   sourceGap,
@@ -269,6 +270,7 @@ export function ImageDetailSheet({
   const sources = currentMediaSources(data?.provenance ?? [], data?.currentVersionId)
   const shown = visibleSources(sources)
   const gap = sourceGap(sources)
+  const userImage = needsNoCredit(data?.semanticType)
   const main = primarySource(sources)
   const ownerless = ownerCandidate(shown)
   const typeLabel = data ? (imageTypes[data.semanticType] ?? data.semanticType) : ""
@@ -364,12 +366,19 @@ export function ImageDetailSheet({
                     hint: "Ảnh chưa bị ngừng hay khóa. Có đang được dùng hay không xem ở Nơi dùng.",
                     tone: active ? "ok" : "warn",
                   },
-                  {
-                    label: "Nguồn",
-                    value: sourceGapLabels[gap],
-                    hint: sourceGapHints[gap],
-                    tone: gap === "none" ? "ok" : "warn",
-                  },
+                  userImage
+                    ? {
+                        label: "Nguồn",
+                        value: "Không cần",
+                        hint: "Ảnh đại diện thuộc về người dùng tải lên.",
+                        tone: "muted",
+                      }
+                    : {
+                        label: "Nguồn",
+                        value: sourceGapLabels[gap],
+                        hint: sourceGapHints[gap],
+                        tone: gap === "none" ? "ok" : "warn",
+                      },
                   {
                     label: "Nơi dùng",
                     value: usages.isPending || tournament.loading ? "…" : useCount ? `${useCount} nơi` : "Chưa dùng",
@@ -407,26 +416,32 @@ export function ImageDetailSheet({
                   )
                 }
               >
-                <div
-                  className={cn(
-                    "flex items-start gap-2 rounded-lg border p-3 text-sm",
-                    gap === "none"
-                      ? "border-emerald-500/30 bg-emerald-500/5"
-                      : "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200",
-                  )}
-                >
-                  {gap === "none" ? (
-                    <CircleCheck
-                      aria-hidden
-                      className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
-                    />
-                  ) : (
-                    <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
-                  )}
-                  <p>
-                    <span className="font-semibold">{sourceGapLabels[gap]}.</span> {sourceGapHints[gap]}
+                {userImage ? (
+                  <p className="rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground">
+                    Ảnh đại diện do người dùng tự tải lên nên không cần ghi nguồn hay chủ sở hữu.
                   </p>
-                </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex items-start gap-2 rounded-lg border p-3 text-sm",
+                      gap === "none"
+                        ? "border-emerald-500/30 bg-emerald-500/5"
+                        : "border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200",
+                    )}
+                  >
+                    {gap === "none" ? (
+                      <CircleCheck
+                        aria-hidden
+                        className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+                      />
+                    ) : (
+                      <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+                    )}
+                    <p>
+                      <span className="font-semibold">{sourceGapLabels[gap]}.</span> {sourceGapHints[gap]}
+                    </p>
+                  </div>
+                )}
                 {!data.currentVersionId && (
                   <p className="text-sm text-muted-foreground">Ảnh chưa hoàn tất upload nên chưa nhận nguồn.</p>
                 )}

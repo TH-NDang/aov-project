@@ -32,7 +32,7 @@ import type { Asset, PageSlice } from "../publishing/types"
 import { LibraryImage, LibraryOwner, LibrarySource, LibraryStateBadge } from "./image-library-presentation"
 import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
 import { ImageDetailSheet, imageStates, imageTypes } from "./image-detail-sheet"
-import { creditSummary, ownerCandidate, sourceGap, sourceGapLabels } from "./media-source-gaps"
+import { creditSummary, needsNoCredit, ownerCandidate, sourceGap, sourceGapLabels } from "./media-source-gaps"
 import { MediaOwnerBulkEditor, type OwnerTarget } from "./media-owner-bulk-editor"
 import { MediaOwnersSheet } from "./media-owners-sheet"
 import type { MediaSourceTarget } from "./bulk-media-sources"
@@ -199,7 +199,11 @@ export function ImageManagementPage() {
                 </span>
                 {/* Phones drop the owner column; the owner stays visible here. */}
                 <span className="block sm:hidden">
-                  <LibraryOwner sources={row.original.sources} versionId={row.original.currentVersionId} />
+                  <LibraryOwner
+                    sources={row.original.sources}
+                    versionId={row.original.currentVersionId}
+                    userImage={needsNoCredit(row.original.semanticType)}
+                  />
                 </span>
               </div>
             </div>
@@ -215,7 +219,11 @@ export function ImageManagementPage() {
               onClick={() => setSelected(row.original.id)}
               aria-label={`Nguồn và credit ảnh ${row.original.id}`}
             >
-              <LibraryOwner sources={row.original.sources} versionId={row.original.currentVersionId} />
+              <LibraryOwner
+                sources={row.original.sources}
+                versionId={row.original.currentVersionId}
+                userImage={needsNoCredit(row.original.semanticType)}
+              />
               {/* The source column is hidden on narrow screens, so the source moves under the owner. */}
               {row.original.currentVersionId && (
                 <LibrarySource sources={row.original.sources} className="mt-0.5 md:hidden" />
@@ -227,7 +235,9 @@ export function ImageManagementPage() {
           id: "source",
           header: "Nguồn",
           cell: ({ row }) =>
-            row.original.currentVersionId ? <LibrarySource sources={row.original.sources} className="text-sm" /> : null,
+            row.original.currentVersionId && !needsNoCredit(row.original.semanticType) ? (
+              <LibrarySource sources={row.original.sources} className="text-sm" />
+            ) : null,
         }),
         helper.accessor("updatedAt", {
           header: "Cập nhật",
@@ -422,12 +432,14 @@ export function ImageManagementPage() {
                   </span>
                   <span className="block font-mono text-xs text-muted-foreground">{row.id.slice(0, 8)}</span>
                   {/* Only a gap is worth a line; complete credits show on hover and in the details. */}
-                  {row.currentVersionId && sourceGap(row.sources ?? []) !== "none" && (
-                    <span className="flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
-                      <CircleAlert aria-hidden className="size-3.5 shrink-0" />
-                      <span className="truncate">{sourceGapLabels[sourceGap(row.sources ?? [])]}</span>
-                    </span>
-                  )}
+                  {row.currentVersionId &&
+                    !needsNoCredit(row.semanticType) &&
+                    sourceGap(row.sources ?? []) !== "none" && (
+                      <span className="flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-400">
+                        <CircleAlert aria-hidden className="size-3.5 shrink-0" />
+                        <span className="truncate">{sourceGapLabels[sourceGap(row.sources ?? [])]}</span>
+                      </span>
+                    )}
                 </span>
               </button>
               {writable && canSelect(row) && (
@@ -645,11 +657,14 @@ export function ImageManagementPage() {
             <label className="grid gap-2 text-sm">
               Loại ảnh
               <select className={control} value={uploadType} onChange={(event) => setUploadType(event.target.value)}>
-                {Object.entries(types).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
+                {/* Avatars are uploaded by their users from the profile, without an owner. */}
+                {Object.entries(types)
+                  .filter(([key]) => !needsNoCredit(key))
+                  .map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
               </select>
             </label>
             <AssetPicker

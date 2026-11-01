@@ -204,6 +204,17 @@ test("focused skill editing preserves forms, effects and translations while addi
     await waitFor(() => !!document.querySelector('[aria-label="Chọn ảnh skill-icon"]'))
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Chọn ảnh skill-icon"]')!.click())
     assert.equal(current.skills[1].iconAssetId, "skill-icon")
+    // New uploads must name their owner first.
+    const ownerField = [...editor().querySelectorAll("label")]
+      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
+      .querySelector("input")!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(
+        ownerField,
+        "Garena / Liên Quân Mobile",
+      )
+      ownerField.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
     const fileInput = editor().querySelector<HTMLInputElement>('input[aria-label="Tải ảnh mới"]')!
     await act(async () => {
       Object.defineProperty(fileInput, "files", {

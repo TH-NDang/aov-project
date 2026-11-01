@@ -1,4 +1,4 @@
-import { useId, type InputHTMLAttributes } from "react"
+import { useId, type ComponentProps } from "react"
 import { Copyright } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { similarOwner, useMediaOwners } from "./media-owners"
@@ -10,7 +10,7 @@ export function OwnerNameInput({
   value,
   onValueChange,
   ...props
-}: Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "list"> & {
+}: Omit<ComponentProps<"input">, "value" | "onChange" | "list"> & {
   value: string
   onValueChange: (value: string) => void
 }) {

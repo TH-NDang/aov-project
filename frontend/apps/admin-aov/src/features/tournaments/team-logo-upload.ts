@@ -11,7 +11,7 @@ export class RegistryLogoUploadError extends Error {
 export async function uploadRegistryLogo(
   request: Request,
   file: File,
-  owner: { kind: "team" | "tournament" | "player"; name: string; sourceUrl?: string },
+  owner: { kind: "team" | "tournament" | "player"; name: string; sourceUrl?: string; ownerName?: string },
   signal: AbortSignal,
   fetcher: typeof fetch = fetch,
 ): Promise<string> {
@@ -28,6 +28,8 @@ export async function uploadRegistryLogo(
     {
       label: `${owner.kind === "player" ? "Ảnh tuyển thủ" : owner.kind === "team" ? "Logo đội tuyển" : "Logo giải đấu"} ${owner.name.trim() || file.name}`,
       url: owner.sourceUrl && /^https?:\/\//i.test(owner.sourceUrl) ? owner.sourceUrl : null,
+      // Named by the person uploading; never inferred from the team or player name.
+      ...(owner.ownerName?.trim() ? { ownerName: owner.ownerName.trim() } : {}),
       note: `Uploaded ${owner.kind} logo: ${file.name}`,
     },
     signedUpload,

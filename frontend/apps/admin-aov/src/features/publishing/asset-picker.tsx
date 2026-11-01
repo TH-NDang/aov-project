@@ -65,10 +65,14 @@ export function AssetPicker({
   })
   const [downloadUrl, setDownloadUrl] = useState("")
   const [sourceEdited, setSourceEdited] = useState(false)
-  const validSource =
-    !!source.label.trim() &&
-    (!source.url || !!creditHttpUrl(source.url)) &&
-    (!source.contactUrl || !!creditHttpUrl(source.contactUrl))
+  // A new image names its owner up front, so it never starts out missing credit.
+  const linkProblem = !source.label.trim()
+    ? "Điền tên nguồn trước khi tải ảnh."
+    : (source.url && !creditHttpUrl(source.url)) || (source.contactUrl && !creditHttpUrl(source.contactUrl))
+      ? "URL nguồn và liên hệ phải bắt đầu bằng http:// hoặc https://."
+      : ""
+  const sourceProblem = linkProblem || (source.ownerName?.trim() ? "" : "Điền chủ sở hữu trước khi tải ảnh.")
+  const validSource = !sourceProblem
   const writable = getSession().actor?.capabilities.includes("media:write")
   const assets = useQuery({
     queryKey: ["publishing-assets", semanticType, page],
@@ -89,7 +93,7 @@ export function AssetPicker({
     setError("")
     setMessage("")
     try {
-      if (!validSource) throw new Error("Điền tên nguồn và URL HTTP(S) hợp lệ trước khi tải ảnh.")
+      if (sourceProblem) throw new Error(sourceProblem)
       await upgradeHeroImage(backendRequest, value, file, fetch, source)
       await invalidateMediaAsset(queryClient, value)
       if (!alive.current) return
@@ -104,7 +108,9 @@ export function AssetPicker({
     setBusy(true)
     setError("")
     try {
-      if (!validSource) throw new Error("Điền tên nguồn và URL HTTP(S) hợp lệ trước khi tải ảnh.")
+      // Resource images take their source and owner from the resource manifest.
+      const automatic = fromResources && !!resourcePath && !sourceEdited
+      if (automatic ? linkProblem : sourceProblem) throw new Error(automatic ? linkProblem : sourceProblem)
       const selectedFile = await file
       let credit = source
       if (fromResources && resourcePath && !sourceEdited) {
@@ -138,6 +144,7 @@ export function AssetPicker({
             setSourceEdited(true)
           }}
           disabled={busy}
+          ownerRequired
         />
       )}
       {value && (
@@ -173,6 +180,11 @@ export function AssetPicker({
         </div>
       )}
       <p className="text-xs text-muted-foreground">{value ? `Asset đã chọn: ${value}` : "Chưa chọn ảnh"}</p>
+      {writable && sourceProblem && (
+        <p className="text-xs text-amber-700 dark:text-amber-400">
+          {sourceProblem} Chọn ảnh có sẵn trong kho không cần điền.
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         {directUpload && writable && (
           <>
@@ -180,7 +192,8 @@ export function AssetPicker({
               type="button"
               size="sm"
               variant="outline"
-              disabled={busy}
+              disabled={busy || !validSource}
+              title={sourceProblem || undefined}
               onClick={() => fileInput.current?.click()}
             >
               <Upload className="size-4" /> Tải ảnh mới
@@ -268,6 +281,7 @@ export function AssetPicker({
                 <input
                   className={control}
                   type="file"
+                  disabled={!validSource}
                   accept="image/png,image/jpeg,image/webp"
                   onChange={(e) => {
                     const file = e.target.files?.[0]
@@ -293,7 +307,7 @@ export function AssetPicker({
             className={control}
             type="file"
             accept="image/png,image/jpeg,image/webp"
-            disabled={busy}
+            disabled={busy || !validSource}
             onChange={(e) => {
               const file = e.target.files?.[0]
               if (file) void upgrade(file)

@@ -20,6 +20,9 @@ export const sourceGapHints: Record<SourceGap, string> = {
   "missing-owner": "Đã biết ảnh lấy từ đâu nhưng chưa ghi ai là chủ sở hữu cần credit.",
 }
 
+/** User avatars belong to the user who uploaded them and never need a source or owner (03, needsCredit). */
+export const needsNoCredit = (semanticType?: string | null) => semanticType === "USER_AVATAR"
+
 const unverified = (source: MediaCredit) => source.label.includes("Chưa xác minh")
 
 export function sourceGap(sources: readonly MediaCredit[]): SourceGap {

@@ -371,6 +371,17 @@ async function withUi(
         })
       },
       upload: async (file) => {
+        // New uploads must name their owner first.
+        const ownerField = [...document.querySelectorAll("label")]
+          .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
+          .querySelector("input")!
+        await act(async () => {
+          Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(
+            ownerField,
+            "Garena / Liên Quân Mobile",
+          )
+          ownerField.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+        })
         const input = document.querySelector<HTMLInputElement>('input[type="file"][aria-label="Tải ảnh mới"]')!
         assert.ok(input)
         await act(async () => {

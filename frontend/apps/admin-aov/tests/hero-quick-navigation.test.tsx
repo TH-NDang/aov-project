@@ -227,6 +227,17 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     assert.equal(new URLSearchParams(router.state.location.search).get("skillLayout"), "flat")
     assert.equal(new URLSearchParams(router.state.location.search).get("hero"), null)
     await click(visibleButton("Chỉnh sửa Kỹ năng"))
+    // New uploads must name their owner first.
+    const ownerField = [...document.querySelectorAll("label")]
+      .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
+      .querySelector("input")!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(
+        ownerField,
+        "Garena / Liên Quân Mobile",
+      )
+      ownerField.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
     const upload = document.querySelector<HTMLInputElement>('input[type="file"][aria-label="Tải ảnh mới"]')!
     await act(async () => {
       Object.defineProperty(upload, "files", {

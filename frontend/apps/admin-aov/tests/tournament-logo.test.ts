@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { uploadTeamLogo } from "../src/features/tournaments/team-logo-upload"
+import { uploadRegistryLogo, uploadTeamLogo } from "../src/features/tournaments/team-logo-upload"
 import type { Request } from "../src/features/publishing/publishing-api"
 
 test("team logos use Media ingestion and return immutable URLs without forwarding API credentials to storage", async () => {
@@ -66,6 +66,15 @@ test("team logos use Media ingestion and return immutable URLs without forwardin
       "/admin/media/assets/asset",
     ],
   )
+
+  await uploadRegistryLogo(
+    request,
+    file,
+    { kind: "player", name: "Player", ownerName: "  BOOM Esports " },
+    signal,
+    fetcher,
+  )
+  assert.equal(JSON.parse(String(calls[4].init?.body)).source.ownerName, "BOOM Esports")
 })
 
 test("invalid team-logo files fail before creating any Media asset", async () => {

@@ -6,6 +6,11 @@ import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { ApiError, errorMessage } from "@/lib/api/errors"
 import { RegistryLogoUploadError, uploadRegistryLogo } from "./team-logo-upload"
+import { OwnerNameHints, OwnerNameInput } from "../media/owner-name-field"
+
+/** The same look as the shared text input, for the owner field that needs suggestions. */
+const inputClass =
+  "h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 aria-invalid:border-destructive md:text-sm dark:bg-input/30"
 
 export function RegistryLogo({ url, name, portrait = false }: { url?: string; name: string; portrait?: boolean }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
@@ -47,12 +52,20 @@ export function RegistryLogoField({
   const canUpload = useSession().actor?.capabilities.includes("media:write") ?? false
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
+  // Not inferred from the team or player name: the person uploading says who owns the image.
+  const [owner, setOwner] = useState("")
   const input = useRef<HTMLInputElement>(null)
+  const ownerInput = useRef<HTMLInputElement>(null)
   const controller = useRef<AbortController | null>(null)
   useEffect(() => () => controller.current?.abort(), [])
 
   async function choose(file?: File) {
     if (!file || !canUpload || busy) return
+    if (!owner.trim()) {
+      setError("Điền chủ sở hữu ảnh trước khi tải lên.")
+      ownerInput.current?.focus()
+      return
+    }
     const upload = new AbortController()
     controller.current = upload
     setBusy(true)
@@ -62,7 +75,12 @@ export function RegistryLogoField({
       const url = await uploadRegistryLogo(
         backendRequest,
         file,
-        { kind: kind === "teams" ? "team" : kind === "players" ? "player" : "tournament", name, sourceUrl: value },
+        {
+          kind: kind === "teams" ? "team" : kind === "players" ? "player" : "tournament",
+          name,
+          sourceUrl: value,
+          ownerName: owner,
+        },
         upload.signal,
       )
       if (!upload.signal.aborted) onChange(url)
@@ -112,7 +130,12 @@ export function RegistryLogoField({
             variant="outline"
             size="sm"
             disabled={!canUpload || busy}
-            onClick={() => input.current?.click()}
+            onClick={() => {
+              if (!owner.trim()) {
+                setError("Điền chủ sở hữu ảnh trước khi tải lên.")
+                ownerInput.current?.focus()
+              } else input.current?.click()
+            }}
           >
             {busy ? <LoaderCircle size={15} className="animate-spin" /> : <Upload size={15} />}
             {busy ? "Đang tải ảnh…" : kind === "players" ? "Tải ảnh lên" : "Tải logo lên"}
@@ -120,6 +143,26 @@ export function RegistryLogoField({
           <small>{canUpload ? "PNG, JPEG, WebP · tối đa 25 MB" : "Cần quyền media:write để tải ảnh."}</small>
         </div>
       </div>
+      {canUpload && (
+        <div className="grid gap-1.5">
+          <label>
+            Chủ sở hữu ảnh (bắt buộc khi tải lên)
+            <OwnerNameInput
+              ref={ownerInput}
+              className={inputClass}
+              value={owner}
+              disabled={busy}
+              aria-invalid={(!!error && !owner.trim()) || undefined}
+              placeholder="Ví dụ: tên đội, ban tổ chức, Garena…"
+              onValueChange={(next) => {
+                setOwner(next)
+                if (next.trim()) setError("")
+              }}
+            />
+          </label>
+          <OwnerNameHints value={owner} disabled={busy} onPick={setOwner} />
+        </div>
+      )}
       <label>
         {kind === "players" ? "Đường dẫn ảnh" : "Đường dẫn logo"}
         <Input

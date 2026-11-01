@@ -7,13 +7,17 @@ export function MediaSourceFields({
   onChange,
   disabled = false,
   autoFocusOwner = false,
+  ownerRequired = false,
 }: {
   value: MediaSourceInput
   onChange: (value: MediaSourceInput) => void
   disabled?: boolean
   /** Focus the owner field, for completing a source that only lacks its owner. */
   autoFocusOwner?: boolean
+  /** New uploads must name an owner, so they never start out missing credit. */
+  ownerRequired?: boolean
 }) {
+  const ownerMissing = ownerRequired && !value.ownerName?.trim()
   return (
     <fieldset disabled={disabled} className="grid gap-3 rounded-lg border p-3">
       <legend className="px-1 text-sm font-medium">Nguồn & chủ sở hữu ảnh</legend>
@@ -50,6 +54,8 @@ export function MediaSourceFields({
           <OwnerNameInput
             className={control}
             autoFocus={autoFocusOwner}
+            required={ownerRequired}
+            aria-invalid={ownerMissing || undefined}
             value={value.ownerName ?? ""}
             onValueChange={(ownerName) => onChange({ ...value, ownerName: ownerName || null })}
             placeholder="Ví dụ: Garena, BOOM Esports…"
@@ -60,9 +66,15 @@ export function MediaSourceFields({
           disabled={disabled}
           onPick={(ownerName) => onChange({ ...value, ownerName })}
         />
-        <span className="type-meta">
-          Người hoặc tổ chức sở hữu ảnh. Ảnh chỉ được tính là đủ nguồn khi có mục này; để trống nếu chưa xác nhận.
-        </span>
+        {ownerRequired ? (
+          <span className={ownerMissing ? "type-meta text-amber-700 dark:text-amber-400" : "type-meta"}>
+            Bắt buộc khi tải ảnh mới. Chọn tên đã dùng để mọi ảnh của cùng chủ sở hữu ghi giống nhau.
+          </span>
+        ) : (
+          <span className="type-meta">
+            Người hoặc tổ chức sở hữu ảnh. Ảnh chỉ được tính là đủ nguồn khi có mục này; để trống nếu chưa xác nhận.
+          </span>
+        )}
       </div>
       <label className="grid gap-1 text-sm">
         URL nguồn ảnh
