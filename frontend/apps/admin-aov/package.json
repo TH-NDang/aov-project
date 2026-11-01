@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "test:media-deletion": "tsx --tsconfig tests/tsconfig.json --test --test-force-exit tests/media-deletion.test.tsx",
     "test:media-credits": "tsx --tsconfig tests/tsconfig.json --test --test-force-exit --test-concurrency=1 tests/media-source-credits.test.ts tests/hero-image-source.test.tsx tests/import-upload-session.test.ts tests/character-image-api.test.ts tests/infinite-scroll.test.tsx tests/image-management.test.tsx tests/image-management-bulk.test.tsx tests/bulk-media-sources.test.ts tests/media-cache.test.ts",
     "test:hero-aliases": "tsx --tsconfig tests/tsconfig.json --test --test-concurrency=1 tests/hero-aliases.test.ts tests/entity-rich-text-catalog.test.tsx",
     "test:registry-import": "tsx --tsconfig tests/tsconfig.json --test --test-concurrency=1 tests/registry-import-model.test.ts tests/registry-import-runner.test.ts tests/registry-import-ui.test.tsx",

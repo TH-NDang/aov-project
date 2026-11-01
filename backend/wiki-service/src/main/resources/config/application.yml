@@ -98,6 +98,11 @@ wiki:
     validation-timeout: 5m
     # Prefix that serves the assets/ prefix of the bucket (reverse proxy or CDN).
     public-base-url: ${MEDIA_PUBLIC_BASE_URL:/media}
+    deletion:
+      community-base-url: ${COMMUNITY_API_BASE_URL:http://localhost:8082}
+      cloudflare-enabled: ${MEDIA_CLOUDFLARE_PURGE_ENABLED:false}
+      cloudflare-zone-id: ${CLOUDFLARE_ZONE_ID:}
+      cloudflare-api-token: ${CLOUDFLARE_CACHE_PURGE_TOKEN:}
 
 logging:
   pattern:

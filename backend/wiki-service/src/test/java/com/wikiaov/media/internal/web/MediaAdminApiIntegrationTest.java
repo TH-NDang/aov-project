@@ -26,7 +26,11 @@ import com.wikiaov.media.MediaUsage;
 import com.wikiaov.media.MediaUsageProvider;
 import com.wikiaov.media.MediaUsageScope;
 import com.wikiaov.media.TestImages;
+import com.wikiaov.media.internal.application.MediaErrorCode;
+import com.wikiaov.media.internal.deletion.application.port.CompetitionMediaGuard;
+import com.wikiaov.media.internal.deletion.application.port.MediaCachePurge;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
+import com.wikiaov.platform.ApiException;
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -50,9 +54,11 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
@@ -83,6 +89,99 @@ class MediaAdminApiIntegrationTest {
 
     @Autowired
     StubUsages usages;
+
+    @MockitoBean
+    CompetitionMediaGuard competitionMedia;
+
+    @MockitoBean
+    MediaCachePurge mediaCache;
+
+    @Test
+    void deletionRemovesAllVersionsAndResumesAfterCacheFailure() throws Exception {
+        String assetId = createAsset("OTHER");
+        String first = uploadVersion(assetId, TestImages.png(35, 35), "image/png");
+        String second = uploadVersion(assetId, TestImages.png(45, 45), "image/png");
+        String firstId = JsonPath.read(first, "$.versionId");
+        String secondId = JsonPath.read(second, "$.versionId");
+        String firstKey = "assets/" + assetId + "/" + firstId + ".png";
+        String secondKey = "assets/" + assetId + "/" + secondId + ".png";
+        long expected = assetVersion(assetId);
+        var id = UUID.fromString(assetId);
+        org.mockito.Mockito.doAnswer(invocation -> {
+            assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
+            return null;
+        }).when(competitionMedia).retire(id);
+        org.mockito.Mockito.doThrow(new ApiException(MediaErrorCode.MEDIA_CACHE_PURGE_FAILED, "Synthetic CDN failure"))
+                .doNothing().when(mediaCache).purge(org.mockito.ArgumentMatchers.anyList());
+
+        deleteAsset(assetId, expected).andExpect(status().isBadGateway());
+        assertThat(storage.stat(firstKey)).isEmpty();
+        assertThat(storage.stat(secondKey)).isEmpty();
+        mvc.perform(get(BASE + "/assets/" + assetId + "/deletion").with(editor()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.state").value("ORIGIN_DELETED"))
+                .andExpect(jsonPath("$.expectedVersion").value(expected))
+                .andExpect(jsonPath("$.lastError").value("MEDIA_CACHE_PURGE_FAILED"));
+        assertThat(mediaAssets.find(id).orElseThrow().usable()).isFalse();
+        uploadRequest(assetId, "{\"contentType\":\"image/png\",\"sizeBytes\":100}")
+                .andExpect(status().isConflict());
+
+        deleteAsset(assetId, expected).andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("COMPLETE"))
+                .andExpect(jsonPath("$.publicUrls").value(2))
+                .andExpect(jsonPath("$.lastError").value(nullValue()));
+        deleteAsset(assetId, expected).andExpect(status().isOk()).andExpect(jsonPath("$.state").value("COMPLETE"));
+        org.mockito.Mockito.verify(mediaCache, org.mockito.Mockito.times(2)).purge(List.of(
+                "/media/" + assetId + "/" + secondId + ".png", "/media/" + assetId + "/" + firstId + ".png"));
+        mvc.perform(get(BASE + "/assets?semanticType=OTHER&size=100").with(reader()))
+                .andExpect(jsonPath("$.items[*].id", org.hamcrest.Matchers.not(hasItem(assetId))));
+    }
+
+    @Test
+    void deletionProtectsEveryUsageScopeAndOutstandingUploads() throws Exception {
+        String assetId = createAsset("OTHER");
+        UUID id = UUID.fromString(assetId);
+        for (var scope : MediaUsageScope.values()) {
+            usages.byAsset.put(id,
+                    List.of(new MediaUsage("HERO", "HERO", UUID.randomUUID(), UUID.randomUUID(), "HEAD", scope)));
+            deleteAsset(assetId, 0).andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.code").value("MEDIA_ASSET_IN_USE"));
+        }
+        usages.byAsset.remove(id);
+        uploadRequest(assetId, "{\"contentType\":\"image/png\",\"sizeBytes\":100}").andExpect(status().isCreated());
+        deleteAsset(assetId, assetVersion(assetId)).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("MEDIA_UPLOAD_IN_PROGRESS"));
+        org.mockito.Mockito.verify(mediaCache, org.mockito.Mockito.never())
+                .purge(org.mockito.ArgumentMatchers.anyList());
+    }
+
+    @Test
+    void deletionRequiresWritePermissionFreshVersionAndSuccessfulExternalChecks() throws Exception {
+        String assetId = createAsset("OTHER");
+        mvc.perform(post(BASE + "/assets/" + assetId + "/delete").with(reader())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"expectedVersion\":0,\"reason\":\"Unused\"}"))
+                .andExpect(status().isForbidden());
+        deleteAsset(assetId, 42).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("MEDIA_ASSET_VERSION_CONFLICT"));
+        org.mockito.Mockito.doThrow(new ApiException(MediaErrorCode.MEDIA_ASSET_IN_USE, "Competition reference"))
+                .when(competitionMedia).requireUnused(UUID.fromString(assetId));
+        deleteAsset(assetId, 0).andExpect(status().isConflict());
+        mvc.perform(get(BASE + "/assets/" + assetId).with(reader()))
+                .andExpect(jsonPath("$.state").value("ACTIVE"));
+        mvc.perform(get(BASE + "/assets/" + assetId + "/deletion").with(editor()))
+                .andExpect(status().isNotFound());
+    }
+
+    private long assetVersion(String assetId) throws Exception {
+        String body = mvc.perform(get(BASE + "/assets/" + assetId).with(editor()))
+                .andReturn().getResponse().getContentAsString();
+        return ((Number) JsonPath.read(body, "$.version")).longValue();
+    }
+
+    private ResultActions deleteAsset(String assetId, long version) throws Exception {
+        return mvc.perform(post(BASE + "/assets/" + assetId + "/delete").with(editor())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"expectedVersion\":" + version + ",\"reason\":\"Unused image cleanup\"}"));
+    }
 
     @Test
     void uploadCreatesAndActivatesTheFirstVersion() throws Exception {

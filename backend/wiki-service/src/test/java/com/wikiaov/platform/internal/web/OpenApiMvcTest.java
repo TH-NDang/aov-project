@@ -51,8 +51,12 @@ class OpenApiMvcTest extends OpenApiContractChecks {
                     var baseline = JsonMapper.builder().build().readTree(
                             Path.of("src/test/resources/contracts/controller-baseline.json").toFile());
                     Set<Class<?>> dependencies = new HashSet<>();
-                    for (var entry : baseline.properties()) {
-                        Class<?> controller = Class.forName(entry.getKey().replace('/', '.').replace(".java", ""));
+                    var controllers = new java.util.ArrayList<String>();
+                    baseline.properties()
+                            .forEach(entry -> controllers.add(entry.getKey().replace('/', '.').replace(".java", "")));
+                    controllers.add("com.wikiaov.media.internal.web.MediaDeletionController");
+                    for (String controllerName : controllers) {
+                        Class<?> controller = Class.forName(controllerName);
                         registry.registerBeanDefinition(controller.getName(), new RootBeanDefinition(controller));
                         for (var constructor : controller.getDeclaredConstructors()) {
                             for (Class<?> dependency : constructor.getParameterTypes()) {

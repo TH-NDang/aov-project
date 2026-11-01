@@ -32,6 +32,15 @@ export function isApiError(error: unknown, code?: string): error is ApiError {
 
 /** Vietnamese messages keyed by stable error codes. */
 const MESSAGES: Record<string, string> = {
+  MEDIA_ASSET_IN_USE: "Ảnh còn được sử dụng trong dữ liệu, bản nháp hoặc lịch sử. Gỡ liên kết trước khi xoá.",
+  MEDIA_UPLOAD_IN_PROGRESS: "Ảnh đang được tải lên. Chờ hoàn tất rồi thử lại.",
+  MEDIA_ASSET_VERSION_CONFLICT: "Ảnh vừa thay đổi. Kiểm tra thông tin mới và xác nhận lại trước khi xoá.",
+  MEDIA_DELETION_IN_PROGRESS: "Một yêu cầu khác đang xoá ảnh này. Tiến trình sẽ được cập nhật; hãy chờ rồi thử lại.",
+  MEDIA_CACHE_PURGE_NOT_CONFIGURED:
+    "Chưa bật cấu hình xoá cache ảnh. Kiểm tra cấu hình rồi khởi động lại dịch vụ Wiki.",
+  MEDIA_CACHE_PURGE_FAILED: "File ảnh đã xoá nhưng chưa dọn xong bản lưu đệm. Chọn Tiếp tục xoá để thử lại.",
+  MEDIA_COMPETITION_CHECK_FAILED:
+    "Chưa xác minh được liên kết thi đấu. Kiểm tra dịch vụ thi đấu và quyền truy cập rồi thử lại.",
   HERO_IMPORT_CONTEXT_CONFLICT: "Patch không thuộc bộ quy tắc đã chọn. Hãy chọn lại mùa và patch.",
   HERO_IMPORT_SNAPSHOT_EXISTS: "Patch này đã có mốc dữ liệu. Chọn loại nhập “Bổ sung / sửa dữ liệu”.",
   HERO_IMPORT_MISSING_BASELINE: "Chưa có mốc dữ liệu phù hợp. Chọn “Dữ liệu ban đầu” để ghi nhận trạng thái đã biết.",

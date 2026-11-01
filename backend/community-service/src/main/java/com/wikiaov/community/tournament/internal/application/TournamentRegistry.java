@@ -8,6 +8,7 @@ import com.wikiaov.community.tournament.internal.archive.domain.RegistryKind;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.domain.TournamentMetadataRules;
+import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
 import com.wikiaov.community.tournament.internal.persistence.*;
 import java.util.UUID;
 import org.springframework.data.domain.Pageable;
@@ -18,10 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class TournamentRegistry {
     private final RegistryArchivePolicy archives;
+    private final CompetitionMedia media;
     private final TournamentRepository repository;
 
-    public TournamentRegistry(TournamentRepository repository, RegistryArchivePolicy archives) {
+    public TournamentRegistry(TournamentRepository repository, RegistryArchivePolicy archives, CompetitionMedia media) {
         this.archives = archives;
+        this.media = media;
         this.repository = repository;
     }
 
@@ -40,6 +43,7 @@ public class TournamentRegistry {
     public View<Tournament> create(Tournament content, String actor) {
         archives.lockWrites();
         validate(content);
+        media.requireAvailable(content.logoUrl());
 
         var row = repository.saveAndFlush(new TournamentRecord(UUID.randomUUID(), content, actor));
         return TournamentViews.view(row, row.getContent());
@@ -48,6 +52,7 @@ public class TournamentRegistry {
     public View<Tournament> update(UUID id, Long version, Tournament content, String actor) {
         archives.lockWrites();
         validate(content);
+        media.requireAvailable(content.logoUrl());
 
         var row = repository.findById(id).orElseThrow(TournamentErrors::missing);
         RegistryArchivePolicy.requireActive(row);

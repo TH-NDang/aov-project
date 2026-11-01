@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /** Implements the public {@link MediaAssets} contract for other modules. */
 @Service
@@ -43,7 +44,8 @@ class MediaAssetLookup implements MediaAssets {
     @Override
     @Transactional(readOnly = true)
     public Optional<MediaAssetReference> find(UUID assetId) {
-        return assets.findById(assetId).map(asset -> new MediaAssetReference(asset.getId(),
+        var found = bindingTransaction() ? assets.lockForBinding(assetId) : assets.findById(assetId);
+        return found.map(asset -> new MediaAssetReference(asset.getId(),
                 asset.getSemanticType(), asset.getLifecycleState(), currentVersion(asset)));
     }
 
@@ -54,7 +56,7 @@ class MediaAssetLookup implements MediaAssets {
         if (requested.isEmpty()) {
             return Map.of();
         }
-        var found = assets.findByIdIn(requested);
+        var found = bindingTransaction() ? assets.lockAllForBinding(requested) : assets.findByIdIn(requested);
         var versionIds = found.stream().map(MediaAsset::getCurrentVersionId).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         Map<UUID, MediaAssetVersion> current = versionIds.isEmpty()
@@ -85,6 +87,11 @@ class MediaAssetLookup implements MediaAssets {
                 .map(version -> reference(version,
                         provenance.findByAssetIdInOrderByCreatedAtAscIdAsc(Set.of(asset.getId()))))
                 .orElse(null);
+    }
+
+    private static boolean bindingTransaction() {
+        return TransactionSynchronizationManager.isActualTransactionActive()
+                && !TransactionSynchronizationManager.isCurrentTransactionReadOnly();
     }
 
     private MediaAssetReference.CurrentVersion reference(MediaAssetVersion version, List<MediaProvenance> credits) {

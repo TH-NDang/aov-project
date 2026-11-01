@@ -65,6 +65,9 @@ public class MediaAsset extends AssignedIdEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "deleted_at")
+    private @Nullable Instant deletedAt;
+
     public static MediaAsset create(UUID id, MediaSemanticType semanticType, ActorRef createdBy, Instant now) {
         MediaAsset asset = new MediaAsset();
         asset.id = id;
@@ -111,5 +114,17 @@ public class MediaAsset extends AssignedIdEntity {
             lifecycleState = MediaAssetState.DEPRECATED;
             updatedAt = now;
         }
+    }
+
+    /** Stops binding and serving before external deletion begins; metadata remains for audit. */
+    public void blockForDeletion(Instant now) {
+        lifecycleState = MediaAssetState.BLOCKED;
+        currentVersionId = null;
+        updatedAt = now;
+    }
+
+    public void markDeleted(Instant now) {
+        deletedAt = now;
+        updatedAt = now;
     }
 }

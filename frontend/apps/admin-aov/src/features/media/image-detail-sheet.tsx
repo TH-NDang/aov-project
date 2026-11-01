@@ -27,6 +27,7 @@ import { useRecords, useTournamentAccess } from "../esports/data/use-esports-dat
 import { upgradeHeroImage } from "../publishing/publishing-api"
 import type { Asset } from "../publishing/types"
 import { invalidateMediaAsset } from "./media-cache"
+import { ImageDeleteAction } from "./image-delete-action"
 import { MediaSourceFields } from "./media-source-fields"
 import {
   ownerCandidate,
@@ -236,6 +237,7 @@ export function ImageDetailSheet({
   wide,
   startWith = null,
   onClose,
+  onDeleted,
 }: {
   assetId: string | null
   writable: boolean
@@ -243,11 +245,13 @@ export function ImageDetailSheet({
   /** Opens straight into completing the owner or adding a source. */
   startWith?: "owner" | "new" | null
   onClose: () => void
+  onDeleted?: (assetId: string) => void
 }) {
   const client = useQueryClient()
   const [editing, setEditing] = useState<"owner" | "new" | null>(writable ? startWith : null)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [upgradeError, setUpgradeError] = useState("")
   const details = useQuery({
     queryKey: ["managed-image", assetId],
@@ -274,7 +278,7 @@ export function ImageDetailSheet({
   const active = data?.state === "ACTIVE"
 
   function close() {
-    if (upgrading) return
+    if (upgrading || deleting) return
     setEditing(null)
     setUpgradeOpen(false)
     setUpgradeError("")
@@ -605,6 +609,22 @@ export function ImageDetailSheet({
             </>
           )}
         </div>
+        {data && writable && (
+          <div className="shrink-0 border-t bg-background px-4 py-3">
+            <ImageDeleteAction
+              key={data.id}
+              asset={{ ...data, currentUrl: current?.url ?? null }}
+              label={title}
+              versionCount={data.versions.length}
+              disabled={upgrading || editing !== null}
+              onBusyChange={setDeleting}
+              onDeleted={() => {
+                onDeleted?.(data.id)
+                onClose()
+              }}
+            />
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   )

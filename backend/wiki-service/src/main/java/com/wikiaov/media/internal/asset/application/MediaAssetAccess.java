@@ -8,6 +8,7 @@ import com.wikiaov.platform.ApiException;
 import java.util.UUID;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /** Loads and flushes asset identities with the media module's conflict semantics. */
 @Component
@@ -19,7 +20,11 @@ public class MediaAssetAccess {
     }
 
     public MediaAsset requireAsset(UUID assetId) {
-        return assets.findById(assetId).orElseThrow(() -> new ApiException(MediaErrorCode.MEDIA_ASSET_NOT_FOUND,
+        var found = TransactionSynchronizationManager.isActualTransactionActive()
+                && !TransactionSynchronizationManager.isCurrentTransactionReadOnly()
+                        ? assets.lockForWrite(assetId)
+                        : assets.findById(assetId);
+        return found.orElseThrow(() -> new ApiException(MediaErrorCode.MEDIA_ASSET_NOT_FOUND,
                 "Media asset " + assetId + " does not exist."));
     }
 

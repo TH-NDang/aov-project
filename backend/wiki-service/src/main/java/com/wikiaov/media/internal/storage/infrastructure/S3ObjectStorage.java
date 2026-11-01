@@ -85,7 +85,12 @@ class S3ObjectStorage implements ObjectStorage {
 
     @Override
     public void delete(String key) {
-        call("delete", key, () -> s3.deleteObject(request -> request.bucket(properties.bucketFor(key)).key(key)));
+        try {
+            call("delete", key, () -> s3.deleteObject(request -> request.bucket(properties.bucketFor(key)).key(key)));
+        } catch (ApiException exception) {
+            if (exception.getErrorCode() != MediaErrorCode.MEDIA_OBJECT_NOT_FOUND)
+                throw exception;
+        }
     }
 
     @Override

@@ -1,5 +1,33 @@
 # R2 và CDN cho Media
 
+## Xóa ảnh qua backend
+
+API `POST /api/wiki/v1/admin/media/assets/{assetId}/delete` kiểm tra ảnh không còn được Wiki hoặc Community
+sử dụng, xóa bytes bằng AWS SDK S3 rồi purge đúng URL qua API Cloudflare. Đây là thao tác xóa vĩnh viễn bytes;
+metadata và audit còn được giữ. API có tiến trình bền và hỗ trợ gọi lại khi mạng lỗi. Xem mục 36.1 của đặc tả API.
+
+Với kho R2 có domain CDN, thêm vào file `.env.r2` riêng tư trước khi khởi động lại backend:
+
+```dotenv
+MEDIA_CLOUDFLARE_PURGE_ENABLED=true
+CLOUDFLARE_ZONE_ID=<zone ID của athahub.com>
+CLOUDFLARE_CACHE_PURGE_TOKEN=<token chỉ có quyền Zone / Cache Purge cho athahub.com>
+COMMUNITY_API_BASE_URL=http://localhost:8082
+```
+
+Zone ID khác Account ID. Token purge khác cặp access key/secret S3 của R2; không gửi token cho frontend,
+không commit và không đưa vào log. Không cần quyền sửa DNS, bucket hoặc toàn bộ tài khoản. Tài khoản gọi API
+cần quyền Media và quyền đọc/ghi giải đấu; Community phải chạy để xác minh cả ảnh trong hồ sơ đã xóa mềm.
+Không cấu hình token thì thao tác xóa trên CDN công khai bị từ chối trước khi xóa file.
+
+Cloudflare nhận danh sách `files`, chia tối đa 30 URL mỗi lượt, không dùng `purge_everything`. API báo thành công
+là đã chấp nhận purge; browser đã tải ảnh trước đó có thể còn giữ cache cục bộ. Tham khảo
+[Purge Cached Content](https://developers.cloudflare.com/api/resources/cache/methods/purge/).
+
+Ví dụ body: `{"expectedVersion":3,"reason":"Ảnh nhập thử không còn sử dụng"}`. Theo dõi bằng
+`GET /api/wiki/v1/admin/media/assets/{assetId}/deletion`. Nếu state là ORIGIN_DELETED thì file gốc đã xóa, lần
+POST tiếp theo với cùng expectedVersion chỉ tiếp tục dọn cache; không khôi phục bytes hoặc tạo UUID mới.
+
 Backend local hiện đã dùng R2 để upload và lưu Media, phục vụ ảnh qua `https://img.athahub.com/assets`. Đợt chuyển ngày 23/10/2026 đã sao chép và kiểm chứng toàn bộ 5.489 phiên bản Media tại thời điểm chuyển trước khi đổi cấu hình. Cấu hình mẫu nằm ở `r2.env.example`; khóa thật chỉ nằm trong `.env.r2` bị Git bỏ qua trên máy.
 
 Khởi động lại từ thư mục `backend/wiki-service`:

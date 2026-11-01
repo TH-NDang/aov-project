@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
@@ -66,9 +67,10 @@ class AvatarUploadService implements AvatarUploads {
         return new Result(result.assetId(), previewUrl(result.assetId()).orElseThrow());
     }
 
+    @Transactional
     public boolean canBind(UUID assetId) {
         Actor actor = human();
-        return assets.findById(assetId).filter(asset -> asset.isActive() && asset.hasCurrentVersion()
+        return assets.lockForBinding(assetId).filter(asset -> asset.isActive() && asset.hasCurrentVersion()
                 && asset.getSemanticType() == MediaSemanticType.USER_AVATAR
                 && asset.getCreatedByIssuer().equals(actor.issuer())
                 && asset.getCreatedBySubject().equals(actor.subject()))

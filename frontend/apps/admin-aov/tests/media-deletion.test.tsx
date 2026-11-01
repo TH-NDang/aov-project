@@ -1,0 +1,202 @@
+import assert from "node:assert/strict"
+import { test } from "node:test"
+import * as React from "react"
+import { act } from "react"
+import { JSDOM } from "jsdom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import type { MediaDeletion } from "../src/features/media/media-deletion"
+
+test("image deletion requires verified references and confirmation, survives reload and refreshes the library", async () => {
+  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/image-management", pretendToBeVisual: true })
+  const originals = new Map<string, PropertyDescriptor | undefined>()
+  let capabilities = ["catalog:read", "media:write"]
+  let competitionCapabilities = ["tournament:read", "tournament:write"]
+  let references = 1
+  let statusUnavailable = true
+  let progress: MediaDeletion | null = null
+  let completeCount = 0
+  let releaseDeletion: (() => void) | undefined
+  const posts: { expectedVersion: number; reason: string }[] = []
+  const fetcher: typeof fetch = async (input, init) => {
+    const path = new URL(String(input), "http://localhost").pathname
+    if (path.endsWith("/auth/refresh")) return Response.json({ accessToken: "test", expiresIn: 3600 })
+    if (path.endsWith("/auth/logout")) return new Response(null, { status: 204 })
+    if (path === "/api/wiki/v1/admin/me")
+      return Response.json({ issuer: "fixture", subject: "editor", type: "HUMAN", capabilities })
+    if (path === "/api/community/v1/admin/me") return Response.json({ capabilities: competitionCapabilities })
+    if (path.endsWith("/users/me")) return Response.json({ locale: "vi-VN" })
+    if (path.endsWith("/deletion")) {
+      if (statusUnavailable) return Response.json({ code: "UNAVAILABLE", status: 503 }, { status: 503 })
+      return progress
+        ? Response.json(progress)
+        : Response.json({ code: "MEDIA_DELETION_NOT_FOUND", status: 404 }, { status: 404 })
+    }
+    if (path.endsWith("/usages")) return Response.json({ counts: { current: 0, draft: 0, historical: 0 } })
+    if (path.endsWith("/usage")) return Response.json({ references })
+    if (path.endsWith("/delete")) {
+      assert.equal(init?.method, "POST")
+      posts.push(JSON.parse(String(init.body)))
+      await new Promise<void>((resolve) => {
+        releaseDeletion = resolve
+      })
+      progress = {
+        assetId: "sample",
+        state: posts.length === 1 ? "ORIGIN_DELETED" : "COMPLETE",
+        expectedVersion: 7,
+        objects: 2,
+        publicUrls: 2,
+        lastError: posts.length === 1 ? "MEDIA_CACHE_PURGE_FAILED" : null,
+        requestedAt: "2026-11-01T12:00:00Z",
+        completedAt: posts.length === 1 ? null : "2026-11-01T12:01:00Z",
+      }
+      return posts.length === 1
+        ? Response.json({ code: "MEDIA_CACHE_PURGE_FAILED", status: 502 }, { status: 502 })
+        : Response.json(progress)
+    }
+    throw new Error(`Unexpected request: ${path}`)
+  }
+  for (const [key, value] of Object.entries({
+    React,
+    window: dom.window,
+    document: dom.window.document,
+    navigator: dom.window.navigator,
+    HTMLElement: dom.window.HTMLElement,
+    Element: dom.window.Element,
+    Node: dom.window.Node,
+    NodeFilter: dom.window.NodeFilter,
+    HTMLInputElement: dom.window.HTMLInputElement,
+    MutationObserver: dom.window.MutationObserver,
+    CustomEvent: dom.window.CustomEvent,
+    getComputedStyle: dom.window.getComputedStyle,
+    BroadcastChannel: undefined,
+    fetch: fetcher,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  })) {
+    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
+    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
+  }
+  const { verifySession, logout } = await import("../src/app/auth/session")
+  const { ImageDeleteAction } = await import("../src/features/media/image-delete-action")
+  const { createRoot } = await import("react-dom/client")
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
+  const root = createRoot(dom.window.document.getElementById("root")!)
+  const document = dom.window.document
+  const waitFor = async (condition: () => boolean) => {
+    for (let attempt = 0; attempt < 200 && !condition(); attempt++)
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5))
+      })
+    assert.ok(condition(), document.body.textContent ?? "")
+  }
+  const button = (text: string, scope: ParentNode = document) =>
+    [...scope.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === text)!
+  const dialog = () => document.querySelector('[role="dialog"]')!
+  const render = async (key: string, state = "ACTIVE", version = 7) => {
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <ImageDeleteAction
+            key={key}
+            asset={{
+              id: "sample",
+              semanticType: "OTHER",
+              version,
+              state,
+              currentUrl: "/sample.png",
+              currentVersionId: "v2",
+            }}
+            label="Ảnh kiểm tra"
+            versionCount={2}
+            onBusyChange={() => {}}
+            onDeleted={() => {
+              completeCount++
+            }}
+          />
+        </QueryClientProvider>,
+      ),
+    )
+  }
+  try {
+    await verifySession()
+    await render("initial")
+    await waitFor(() => !!button("Xoá ảnh"))
+    await act(async () => button("Xoá ảnh").click())
+    await waitFor(() => !!document.querySelector('[role="alert"]'))
+    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    assert.equal(posts.length, 0)
+
+    statusUnavailable = false
+    await act(async () => button("Kiểm tra lại").click())
+    await waitFor(() => document.body.textContent!.includes("Ảnh còn 1 liên kết"))
+    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    references = 0
+    await act(async () => button("Kiểm tra lại").click())
+    await waitFor(() => document.body.textContent!.includes("Ảnh không còn liên kết sử dụng."))
+    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    await act(async () => {
+      const textarea = document.querySelector("textarea")!
+      Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value")!.set!.call(
+        textarea,
+        "  Ảnh tải thử  ",
+      )
+      textarea.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
+    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    await act(async () => document.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click())
+    await waitFor(() => !button("Xoá vĩnh viễn").disabled)
+    await act(async () => {
+      button("Xoá vĩnh viễn").click()
+      button("Xoá vĩnh viễn").click()
+    })
+    await waitFor(() => posts.length === 1)
+    assert.deepEqual(posts[0], { expectedVersion: 7, reason: "Ảnh tải thử" })
+    assert.equal(button("Huỷ").disabled, true)
+    await act(async () => releaseDeletion!())
+    await waitFor(() => document.body.textContent!.includes("Còn bước dọn bản ảnh lưu đệm."))
+    assert.equal(completeCount, 0)
+
+    // Recreate the component and clear its cached progress as a browser reload would.
+    await act(async () => root.render(<></>))
+    client.removeQueries({ queryKey: ["media-deletion", "sample"] })
+    client.setQueryData(["managed-images", "infinite"], { pages: [] })
+    await render("resumed", "BLOCKED", 8)
+    await waitFor(() => !!button("Tiếp tục xoá"))
+    await act(async () => button("Tiếp tục xoá").click())
+    await waitFor(() => !!dialog() && !button("Tiếp tục xoá", dialog()).disabled)
+    assert.equal(document.querySelector("textarea"), null)
+    await act(async () => button("Tiếp tục xoá", dialog()).click())
+    await waitFor(() => posts.length === 2)
+    assert.equal(posts[1].expectedVersion, 7)
+    await act(async () => releaseDeletion!())
+    await waitFor(() => completeCount === 1)
+    assert.equal(document.querySelector('[role="dialog"]'), null)
+    assert.equal(client.getQueryState(["managed-images", "infinite"])?.isInvalidated, true)
+
+    progress = null
+    client.removeQueries({ queryKey: ["media-deletion", "sample"] })
+    competitionCapabilities = ["tournament:read"]
+    client.setQueryData(["community", "tournaments", "me", "fixture:editor"], { capabilities: competitionCapabilities })
+    await render("no-competition-write")
+    await act(async () => button("Xoá ảnh").click())
+    await waitFor(() => document.body.textContent!.includes("Cần quyền chỉnh sửa ảnh"))
+    assert.equal(button("Xoá vĩnh viễn").disabled, true)
+    assert.equal(posts.length, 2)
+
+    capabilities = ["catalog:read"]
+    await act(async () => {
+      await verifySession()
+    })
+    await render("reader")
+    assert.equal(button("Xoá ảnh"), undefined)
+    assert.equal(posts.length, 2)
+  } finally {
+    await act(async () => root.unmount())
+    await logout()
+    client.clear()
+    dom.window.close()
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
+      else Reflect.deleteProperty(globalThis, key)
+    }
+  }
+})

@@ -593,7 +593,20 @@ export function ImageManagementPage() {
           }
         />
       )}
-      <ImageDetailSheet assetId={selected} writable={!!writable} wide={wide} onClose={() => setSelected(null)} />
+      <ImageDetailSheet
+        key={selected}
+        assetId={selected}
+        writable={!!writable}
+        wide={wide}
+        onClose={() => setSelected(null)}
+        onDeleted={(id) =>
+          setMarked((current) => {
+            const next = new Map(current)
+            next.delete(id)
+            return next
+          })
+        }
+      />
       <Sheet open={upload} onOpenChange={setUpload}>
         <SheetContent
           side={wide ? "right" : "bottom"}

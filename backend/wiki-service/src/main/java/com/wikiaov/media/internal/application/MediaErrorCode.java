@@ -16,6 +16,11 @@ public enum MediaErrorCode implements ApiErrorCode {
     MEDIA_CONTACT_RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many contact requests"),
 
     MEDIA_ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "Media asset not found"),
+    MEDIA_DELETION_NOT_FOUND(HttpStatus.NOT_FOUND, "Media deletion not found"),
+    MEDIA_DELETION_IN_PROGRESS(HttpStatus.CONFLICT, "Media deletion in progress"),
+    MEDIA_CACHE_PURGE_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE, "Media cache purge not configured"),
+    MEDIA_CACHE_PURGE_FAILED(HttpStatus.BAD_GATEWAY, "Media cache purge failed"),
+    MEDIA_COMPETITION_CHECK_FAILED(HttpStatus.BAD_GATEWAY, "Competition media check failed"),
     /** The asset is DEPRECATED or BLOCKED; context: {@code state}. */
     MEDIA_ASSET_NOT_ACTIVE(HttpStatus.CONFLICT, "Media asset not active"),
     /** {@code expectedVersion} is stale; context: {@code currentVersion}. */

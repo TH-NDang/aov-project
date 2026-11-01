@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.upload.persistence;
 
 import com.wikiaov.media.internal.upload.persistence.entity.MediaUploadSession;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.repository.Repository;
@@ -13,4 +14,6 @@ public interface MediaUploadSessionRepository extends Repository<MediaUploadSess
     Optional<MediaUploadSession> findById(UUID id);
 
     MediaUploadSession save(MediaUploadSession session);
+
+    List<MediaUploadSession> findByAssetId(UUID assetId);
 }

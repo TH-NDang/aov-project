@@ -770,6 +770,36 @@ class TournamentApiIntegrationTest {
     ) {
     }
 
+    @Test
+    void mediaRetirementProtectsTrashAndPreventsReusingDeletedImageUrls() throws Exception {
+        UUID asset = UUID.randomUUID();
+        String image = "https://images.example/assets/" + asset + "/" + UUID.randomUUID() + ".png";
+        String code = "media-" + UUID.randomUUID();
+        var team = create("teams", new Team(code, "Media team", null, null, image));
+        mvc.perform(authorized(post(ADMIN + "/media-assets/" + asset + "/retire")))
+                .andExpect(status().isConflict());
+        var deleted = write(post(ADMIN + "/teams/" + id(team) + "/delete"), Map.of("version", version(team)));
+        mvc.perform(authorized(get(ADMIN + "/media-assets/" + asset + "/usage")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.references").value(1));
+        mvc.perform(authorized(post(ADMIN + "/media-assets/" + asset + "/retire")))
+                .andExpect(status().isConflict());
+        var restored = write(post(ADMIN + "/teams/" + id(team) + "/restore"), Map.of("version", version(deleted)));
+        write(put(ADMIN + "/teams/" + id(team)), Map.of("version", version(restored),
+                "content", new Team(code, "Media team", null, null, null)));
+        for (int attempt = 0; attempt < 2; attempt++) {
+            mvc.perform(authorized(post(ADMIN + "/media-assets/" + asset + "/retire")))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.retired").value(true));
+        }
+        mvc.perform(authorized(post(ADMIN + "/teams")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(
+                        Map.of("content", new Team("other-" + UUID.randomUUID(), "Other", null, null, image)))))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_MEDIA_RETIRED"));
+        mvc.perform(authorized(post(ADMIN + "/players")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("content",
+                        new Player("other-" + UUID.randomUUID(), "Other", null, null, image, List.of())))))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_MEDIA_RETIRED"));
+    }
+
     private Fixture fixture() throws Exception {
         var blue = create("teams", new Team("blue-" + UUID.randomUUID(), "Blue team", null, null, null));
         var red = create("teams", new Team("red-" + UUID.randomUUID(), "Red team", null, null, null));
