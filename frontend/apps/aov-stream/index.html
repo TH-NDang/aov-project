@@ -4,8 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/src/assets/stream-owl.svg" />
-    <meta name="theme-color" content="#101722" />
+    <meta name="theme-color" content="#0c111d" />
     <title>AOV Stream</title>
+    <script>
+      // Apply a stored light/dark choice before the first paint; otherwise the system preference decides.
+      try {
+        const theme = localStorage.getItem("aov-stream-theme")
+        if (theme === "light" || theme === "dark") document.documentElement.dataset.theme = theme
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -39,7 +39,7 @@ function Inventory({ participant, game, time }: { participant: Participant; game
               ) : (
                 <span aria-hidden="true">{known ? "·" : "?"}</span>
               )}
-              <small>{slot + 1}</small>
+              <small className="sr-only">Ô {slot + 1}</small>
             </span>
           )
         })}

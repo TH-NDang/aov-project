@@ -1,12 +1,13 @@
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import { Link, useParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { profileKindLabels, type CommunityProfile, type PageViewer } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamShell } from "../../components/stream-shell"
+import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { signIn, useCommunitySession } from "./community-auth"
-import { Avatar } from "./community-directory"
+import { Avatar, followersLabel, hueOf, kindIcons } from "./community-ui"
 import { CommunityFeed } from "./community-feed"
 import { ProfileCompetitionSummary } from "./public-competitions"
 
@@ -22,12 +23,19 @@ export function CommunityProfilePage() {
   return (
     <StreamShell>
       {profile.isPending ? (
-        <div className="cp-container">Đang tải hồ sơ…</div>
+        <div className="cp-container" role="status" aria-label="Đang tải hồ sơ">
+          <div className="hub-skeleton cp-header-skeleton" />
+        </div>
       ) : profile.isError ? (
-        <div className="cp-container cp-empty">
-          <h1>Chưa mở được hồ sơ</h1>
-          <p role="alert">{profile.error.message}</p>
-          <Link to="/pages">Về danh bạ</Link>
+        <div className="cp-container">
+          <div className="hub-state">
+            <StreamIcon name="info" size={28} />
+            <h1>Chưa mở được hồ sơ</h1>
+            <p role="alert">{profile.error.message}</p>
+            <Link className="cp-button" to="/pages">
+              Về danh bạ
+            </Link>
+          </div>
         </div>
       ) : (
         <Profile key={profile.data.id} profile={profile.data} />
@@ -81,27 +89,38 @@ function Profile({ profile }: { profile: CommunityProfile }) {
   const authenticated = (action: () => void) => (session.status === "authenticated" ? action() : void signIn())
   return (
     <div className="cp-container">
+      <title>{`${content.name} — AOV Stream`}</title>
       <Link className="cp-back" to="/pages">
-        ← Danh bạ thi đấu
+        <StreamIcon name="back" size={16} />
+        Danh bạ thi đấu
       </Link>
-      <header className="cp-profile-header">
+      <header className="hub-card cp-page-header">
         <div
-          className="cp-cover"
-          style={content.coverUrl ? { backgroundImage: `url(${JSON.stringify(content.coverUrl)})` } : undefined}
+          className="cp-cover hub-art"
+          style={
+            {
+              "--hub-hue": hueOf(content.name),
+              ...(content.coverUrl ? { backgroundImage: `url(${JSON.stringify(content.coverUrl)})` } : {}),
+            } as CSSProperties
+          }
         />
         <div className="cp-identity">
           <Avatar profile={profile} />
           <div className="cp-identity-title">
-            <span className="cp-eyebrow">
+            <span className="hub-kicker">
+              <StreamIcon name={kindIcons[profile.kind]} size={14} />
               {profileKindLabels[profile.kind]} {content.country ? `· ${content.country}` : ""}
             </span>
             <h1>
               {content.name}
               {profile.represented && <OfficialBadge className="cp-official" label="Đại diện đã xác minh" />}
             </h1>
-            <p className="cp-meta">
-              {profile.represented ? "Đại diện đã xác minh" : "Hồ sơ do AthaHub tổng hợp"} ·{" "}
-              {profile.followers.toLocaleString("vi-VN")} người theo dõi
+            <p className="cp-identity-meta">
+              <span>{profile.represented ? "Đại diện đã xác minh" : "Hồ sơ do AthaHub tổng hợp"}</span>
+              <span>
+                <StreamIcon name="users" size={14} />
+                {followersLabel(profile.followers)}
+              </span>
             </p>
           </div>
           <div className="cp-actions">
@@ -111,28 +130,30 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               disabled={follow.isPending}
               onClick={() => authenticated(() => follow.mutate())}
             >
-              {viewer.data?.following ? "✓ Đang theo dõi" : "+ Theo dõi"}
+              <StreamIcon name={viewer.data?.following ? "check" : "plus"} size={16} />
+              {viewer.data?.following ? "Đang theo dõi" : "Theo dõi"}
             </button>
             {viewer.data?.role && (
               <Link className="cp-button" to={`/manage/${profile.id}`}>
+                <StreamIcon name="edit" size={16} />
                 Quản lý trang
               </Link>
             )}
           </div>
         </div>
+        <nav className="cp-tabs cp-header-tabs" aria-label="Nội dung hồ sơ">
+          {tabs.map(([value, label]) => (
+            <button key={value} aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value!)}>
+              {label}
+            </button>
+          ))}
+        </nav>
       </header>
       {(follow.isError || viewer.isError) && (
         <p className="cp-error" role="alert">
           {follow.error?.message || viewer.error?.message}
         </p>
       )}
-      <nav className="cp-tabs" aria-label="Nội dung hồ sơ">
-        {tabs.map(([value, label]) => (
-          <button key={value} aria-current={tab === value ? "page" : undefined} onClick={() => setTab(value)}>
-            {label}
-          </button>
-        ))}
-      </nav>
       <div className="cp-columns">
         <div className="cp-main-column">
           {tab === "competitions" && <ProfileCompetitionSummary profile={profile} />}
@@ -148,14 +169,17 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                 <h2>Điểm nhấn</h2>
                 <div className="cp-stat-grid">
                   <div>
+                    <StreamIcon name="trophy" size={20} />
                     <strong>{content.achievements.length}</strong>
                     <span>Thành tích đã ghi nhận</span>
                   </div>
                   <div>
+                    <StreamIcon name="flag" size={20} />
                     <strong>{content.history.length}</strong>
                     <span>Mốc lịch sử</span>
                   </div>
                   <div>
+                    <StreamIcon name="link" size={20} />
                     <strong>{content.sources.length}</strong>
                     <span>Nguồn đối chiếu</span>
                   </div>
@@ -163,9 +187,14 @@ function Profile({ profile }: { profile: CommunityProfile }) {
               </section>
               {content.achievements.slice(0, 3).map((item, i) => (
                 <article className="cp-panel cp-highlight" key={i}>
-                  <span className="cp-eyebrow">{item.placement}</span>
-                  <h2>{item.title}</h2>
-                  <p className="cp-meta">{item.date || "Chưa xác định ngày"}</p>
+                  <span className="cp-highlight-icon" aria-hidden="true">
+                    <StreamIcon name="trophy" size={22} />
+                  </span>
+                  <div>
+                    <span className="hub-kicker">{item.placement}</span>
+                    <h2>{item.title}</h2>
+                    <p className="cp-meta">{item.date || "Chưa xác định ngày"}</p>
+                  </div>
                 </article>
               ))}
             </>
@@ -187,7 +216,8 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                   </div>
                   {item.sourceUrl && (
                     <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                      Nguồn ↗
+                      Nguồn
+                      <StreamIcon name="external" size={12} />
                     </a>
                   )}
                 </article>
@@ -213,7 +243,8 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                     {item.role && <p>{item.role}</p>}
                     {item.sourceUrl && (
                       <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                        Nguồn đối chiếu ↗
+                        Nguồn đối chiếu
+                        <StreamIcon name="external" size={12} />
                       </a>
                     )}
                   </article>
@@ -240,7 +271,8 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                   </div>
                   {item.sourceUrl && (
                     <a className="cp-source" href={item.sourceUrl} target="_blank" rel="noreferrer">
-                      Nguồn ↗
+                      Nguồn
+                      <StreamIcon name="external" size={12} />
                     </a>
                   )}
                 </article>
@@ -248,7 +280,12 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             </section>
           )}
           {tab === "posts" && (
-            <CommunityFeed pageId={profile.id} pageName={content.name} role={viewer.data?.role || ""} />
+            <CommunityFeed
+              pageId={profile.id}
+              pageName={content.name}
+              role={viewer.data?.role || ""}
+              represented={profile.represented}
+            />
           )}
         </div>
         <aside className="cp-side-column">
@@ -257,11 +294,14 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             {content.links.length ? (
               content.links.map((link, i) => (
                 <a className="cp-external" key={i} href={link.url} target="_blank" rel="noreferrer">
+                  <span className="hub-link-icon" aria-hidden="true">
+                    <StreamIcon name="link" size={16} />
+                  </span>
                   <span className="cp-link-label">
                     {link.label}
                     {link.official && <OfficialBadge label="Kênh chính thức" />}
                   </span>
-                  <span>↗</span>
+                  <StreamIcon name="external" size={14} />
                 </a>
               ))
             ) : (
@@ -270,15 +310,18 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           </section>
           <section className="cp-panel">
             <h2>Nguồn thông tin</h2>
+            {!content.sources.length && <p className="cp-muted">Chưa có nguồn được công bố.</p>}
             {content.sources.map((source, i) => (
               <div key={i} className="cp-source-row">
                 <a href={source.url} target="_blank" rel="noreferrer">
-                  {source.label} ↗
+                  {source.label}
+                  <StreamIcon name="external" size={12} />
                 </a>
                 {source.checkedOn && <small>Đối chiếu {source.checkedOn}</small>}
               </div>
             ))}
             <button className="cp-text-button" onClick={() => authenticated(() => setSuggesting(!suggesting))}>
+              <StreamIcon name="edit" size={14} />
               Đề xuất chỉnh sửa
             </button>
             {suggesting && (
@@ -314,7 +357,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             )}
           </section>
           {!viewer.data?.role && (
-            <section className="cp-panel">
+            <section className="cp-panel cp-claim-panel">
               <h2>Bạn là người đại diện?</h2>
               <p className="cp-muted">Nhận quyền quản lý để cập nhật giới thiệu và đăng bài dưới tên trang.</p>
               <button className="cp-button" onClick={() => authenticated(() => setClaiming(!claiming))}>

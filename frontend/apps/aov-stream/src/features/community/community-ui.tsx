@@ -1,0 +1,96 @@
+import type { CSSProperties } from "react"
+import { useQuery } from "@tanstack/react-query"
+import type {
+  CommunityProfile,
+  CompetitionView,
+  PageSlice,
+  ProfileKind,
+  TournamentContent,
+} from "@aov/community-contracts"
+import type { StreamIconName } from "../../components/stream-icon"
+import { communityApi } from "./community-api"
+
+export const kindIcons: Record<ProfileKind, StreamIconName> = {
+  ORGANIZATION: "building",
+  TEAM: "shield",
+  PLAYER: "user",
+}
+
+/** A stable hue per name, so pages and competitions without artwork still get distinct covers. */
+export function hueOf(text: string) {
+  let hash = 0
+  for (const character of text) hash = (hash * 31 + character.charCodeAt(0)) | 0
+  return Math.abs(hash) % 360
+}
+
+const dayFormat = new Intl.DateTimeFormat("vi-VN", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "UTC",
+})
+
+/** Formats an ISO calendar date (yyyy-mm-dd) without shifting it through the viewer's time zone. */
+export function formatDay(value?: string | null) {
+  if (!value) return ""
+  const date = new Date(`${value.slice(0, 10)}T00:00:00Z`)
+  return Number.isNaN(date.getTime()) ? value : dayFormat.format(date)
+}
+
+export function dayRange(startsOn?: string | null, endsOn?: string | null, fallback = "Chưa xác định lịch") {
+  const start = formatDay(startsOn)
+  const end = formatDay(endsOn)
+  if (!start && !end) return fallback
+  return `${start || "Chưa rõ"} – ${end || "Chưa rõ"}`
+}
+
+export type CompetitionStatus = "ONGOING" | "UPCOMING" | "ANNOUNCED" | "FINISHED"
+export const competitionStatusLabels: Record<CompetitionStatus, string> = {
+  ONGOING: "Đang diễn ra",
+  UPCOMING: "Sắp diễn ra",
+  ANNOUNCED: "Đã công bố",
+  FINISHED: "Đã kết thúc",
+}
+
+/** Uses the edited status when there is one; otherwise reads it from the published dates. */
+export function competitionStatus(tournament: TournamentContent, today = new Date().toISOString().slice(0, 10)) {
+  if (tournament.status && tournament.status !== "UNKNOWN") return tournament.status as CompetitionStatus
+  const { startsOn, endsOn } = tournament
+  if (endsOn && endsOn.slice(0, 10) < today) return "FINISHED"
+  if (startsOn && startsOn.slice(0, 10) > today) return "UPCOMING"
+  if (startsOn && (!endsOn || endsOn.slice(0, 10) >= today)) return "ONGOING"
+  return null
+}
+
+export function competitionsQuery(filter: Record<string, string>, page: number, size = 12) {
+  return {
+    queryKey: ["published-competitions", filter, page, size],
+    queryFn: () =>
+      communityApi<PageSlice<CompetitionView>>(
+        `/competitions?${new URLSearchParams({ ...filter, page: String(page), size: String(size) })}`,
+      ),
+    staleTime: 60_000,
+  }
+}
+
+/** The first published competitions, shared by the home banner, the home list and the side rail. */
+export const useFeaturedCompetitions = () => useQuery(competitionsQuery({}, 0))
+
+export function Avatar({ profile, className = "" }: { profile: CommunityProfile; className?: string }) {
+  const name = profile.content?.name || profile.code
+  return profile.content?.avatarUrl ? (
+    <img className={`cp-avatar ${className}`} src={profile.content.avatarUrl} alt="" />
+  ) : (
+    <div
+      className={`cp-avatar cp-initial ${className}`}
+      style={{ "--hub-hue": hueOf(name) } as CSSProperties}
+      aria-hidden="true"
+    >
+      {name.slice(0, 2).toUpperCase() || "AH"}
+    </div>
+  )
+}
+
+export function followersLabel(count: number) {
+  return `${count.toLocaleString("vi-VN")} người theo dõi`
+}

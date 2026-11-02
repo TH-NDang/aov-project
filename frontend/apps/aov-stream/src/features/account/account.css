@@ -7,10 +7,10 @@
   width: 32px;
   height: 32px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--hub-border);
   border-radius: 50%;
-  background: var(--secondary);
-  color: var(--primary);
+  background: linear-gradient(135deg, #3a4a8a, #1b2448);
+  color: #fff;
   font-size: 12px;
   font-weight: 700;
 }
@@ -28,7 +28,7 @@
   font-size: 28px;
 }
 .account-profile {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 .account-profile-intro p {
   max-width: 640px;
@@ -45,7 +45,9 @@
 .account-field-label {
   display: block;
   margin-bottom: 8px;
+  color: var(--hub-text-soft);
   font-size: 14px;
+  font-weight: 600;
 }
 .account-profile .account-file {
   position: relative;
@@ -54,7 +56,7 @@
   cursor: pointer;
 }
 .account-profile .account-file:focus-within {
-  outline: 2px solid var(--ring);
+  outline: 2px solid var(--hub-accent);
   outline-offset: 4px;
 }
 .account-profile .account-file[aria-disabled] {
@@ -99,7 +101,7 @@
   justify-content: flex-end;
   margin-top: 8px;
   padding-top: 20px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--hub-border);
 }
 .cp-session .account-session-link {
   display: inline-flex;
@@ -107,32 +109,35 @@
   gap: 8px;
   max-width: 200px;
   min-height: 36px;
-  color: #cbd5e1;
+  padding: 2px 12px 2px 2px;
+  border: 1px solid var(--hub-border);
+  border-radius: 999px;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.cp-session .account-session-link:hover {
+  background: var(--hub-hover);
 }
 .cp-session .account-session-link[aria-current] {
-  color: var(--primary);
+  border-color: color-mix(in srgb, var(--hub-accent) 55%, transparent);
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
 }
 .account-session-link > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.cp-session .account-signout {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-@media (max-width: 640px) {
-  .account-session-link > span:last-child,
-  .cp-session .account-signout > span {
+@media (max-width: 1099px) {
+  .account-session-link > span:last-child {
     display: none;
   }
-  .cp-session .account-signout {
-    width: 34px;
-    height: 34px;
-    justify-content: center;
-    padding: 0;
+  .cp-session .account-session-link {
+    padding: 1px;
   }
+}
+@media (max-width: 640px) {
   .account-avatar-large {
     width: 72px;
     height: 72px;

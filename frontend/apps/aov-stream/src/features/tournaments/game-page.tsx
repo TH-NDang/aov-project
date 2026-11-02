@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import type { GameSide, PublishedGame } from "@aov/community-contracts"
@@ -6,6 +6,7 @@ import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { StreamImage } from "../../components/stream-image"
 import { gameQuery } from "./tournament-api"
+import { hueOf } from "../community/community-ui"
 import { ReferenceArt } from "./reference-art"
 import { clock, LANES, LANE_SHORT, observationTimes, orderedParticipants, referenceName } from "./tournament-model"
 import { EquipmentEvents, GameLoadouts, type LoadoutTab } from "./game-loadouts"
@@ -68,16 +69,16 @@ function PublishedGameView({ game }: { game: PublishedGame }) {
       <title>{`${game.teams[game.content.sides[0]?.teamId || ""]?.shortName || "Trận đấu"} vs ${game.teams[game.content.sides[1]?.teamId || ""]?.shortName || ""} — Ván ${game.content.number} | AOV Stream`}</title>
       <div className="game-detail">
         <nav className="game-breadcrumb" aria-label="Đường dẫn">
-          <Link to="/">
-            <StreamIcon name="back" size={15} />
-            Giải đấu
+          <Link to="/games">
+            <StreamIcon name="back" size={16} />
+            Ván đấu
           </Link>
-          <span>/</span>
-          <Link to={`/?tournament=${game.series.tournamentId}`}>{game.tournament.name}</Link>
+          <span aria-hidden="true">/</span>
+          <Link to={`/games?tournament=${game.series.tournamentId}`}>{game.tournament.name}</Link>
         </nav>
-        <header className="game-heading">
+        <header className="game-heading hub-art" style={{ "--hub-hue": hueOf(game.tournament.name) } as CSSProperties}>
           <div>
-            <span className="stream-eyebrow">
+            <span className="hub-kicker">
               {game.series.stage || "TRẬN ĐẤU"} · BO{game.series.bestOf}
             </span>
             <h1>
@@ -104,7 +105,7 @@ function PublishedGameView({ game }: { game: PublishedGame }) {
           </div>
           {game.content.sourceUrl && (
             <a className="game-source" href={game.content.sourceUrl} target="_blank" rel="noreferrer noopener">
-              <StreamIcon name="play" size={15} />
+              <StreamIcon name="play" size={16} />
               Xem nguồn
               <StreamIcon name="external" size={12} />
             </a>
@@ -186,16 +187,20 @@ export function GamePage() {
   if (query.data) return <PublishedGameView game={query.data} key={query.data.publishedAt} />
   return (
     <StreamShell>
-      <div className="stream-state" role="status">
-        <StreamIcon name={query.isPending ? "clock" : "info"} size={32} />
+      <div className="hub-state" role="status">
+        <StreamIcon name={query.isPending ? "clock" : "info"} size={28} />
         <h1>{query.isPending ? "Đang mở ván đấu…" : "Chưa mở được ván đấu"}</h1>
         {query.isError && (
           <>
             <p>{query.error.message}</p>
-            <button type="button" onClick={() => void query.refetch()}>
-              Thử lại
-            </button>
-            <Link to="/">Về danh sách</Link>
+            <div className="hub-state-actions">
+              <button type="button" className="cp-button cp-primary" onClick={() => void query.refetch()}>
+                Thử lại
+              </button>
+              <Link className="cp-button" to="/games">
+                Về danh sách
+              </Link>
+            </div>
           </>
         )}
       </div>

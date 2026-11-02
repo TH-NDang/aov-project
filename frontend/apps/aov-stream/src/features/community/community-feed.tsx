@@ -1,20 +1,38 @@
-import { useState } from "react"
+import { useState, type CSSProperties } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { CommunityPost, CommunityComment, PageSlice, PageRole } from "@aov/community-contracts"
+import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamIcon } from "../../components/stream-icon"
+import { initials } from "../account/profile-model"
 import { communityApi } from "./community-api"
 import { signIn, useCommunitySession } from "./community-auth"
+import { hueOf } from "./community-ui"
+
+function AuthorMark({ name, small = false }: { name: string; small?: boolean }) {
+  return (
+    <span
+      className={small ? "cp-author-mark cp-author-mark-small" : "cp-author-mark"}
+      style={{ "--hub-hue": hueOf(name) } as CSSProperties}
+      aria-hidden="true"
+    >
+      {initials(name)}
+    </span>
+  )
+}
 
 export function CommunityFeed({
   pageId,
   pageName,
   role,
   manage = false,
+  represented = false,
 }: {
   pageId: string
   pageName: string
   role: PageRole | ""
   manage?: boolean
+  /** Posts made as a page with a verified representative carry the official badge. */
+  represented?: boolean
 }) {
   const session = useCommunitySession()
   const client = useQueryClient()
@@ -38,12 +56,15 @@ export function CommunityFeed({
   })
   return (
     <div className="cp-feed">
-      <section className="cp-panel">
+      <section className="cp-panel cp-composer">
         <h2>Bài viết & thảo luận</h2>
         {session.status !== "authenticated" ? (
-          <div className="cp-actions">
+          <div className="cp-composer-guest">
+            <span className="hub-link-icon" aria-hidden="true">
+              <StreamIcon name="message" size={18} />
+            </span>
             <p className="cp-muted">Đăng nhập để chia sẻ và tham gia thảo luận.</p>
-            <button className="cp-button" onClick={() => void signIn()}>
+            <button className="cp-button cp-primary" onClick={() => void signIn()}>
               Đăng nhập
             </button>
           </div>
@@ -65,7 +86,7 @@ export function CommunityFeed({
                 placeholder="Viết nội dung của bạn…"
               />
             </label>
-            <div className="cp-actions">
+            <div className="cp-actions cp-composer-actions">
               <label className="cp-inline-label">
                 Đăng với tư cách
                 <select value={asPage ? "page" : "self"} onChange={(e) => setAsPage(e.target.value === "page")}>
@@ -74,6 +95,7 @@ export function CommunityFeed({
                 </select>
               </label>
               <button className="cp-button cp-primary" disabled={write.isPending}>
+                <StreamIcon name="send" size={16} />
                 Đăng bài
               </button>
               <button
@@ -94,20 +116,22 @@ export function CommunityFeed({
         )}
       </section>
       {posts.isPending ? (
-        <p>Đang tải bài viết…</p>
+        <div className="hub-skeleton-rows" role="status" aria-label="Đang tải bài viết" />
       ) : posts.isError ? (
         <p role="alert" className="cp-error">
           {posts.error.message}
         </p>
       ) : !posts.data.items.length ? (
-        <div className="cp-panel cp-empty">
-          <p>Chưa có bài viết. Thông tin hồ sơ vẫn được cập nhật ở các mục bên cạnh.</p>
+        <div className="hub-state">
+          <StreamIcon name="message" size={28} />
+          <h3>Chưa có bài viết</h3>
+          <p>Thông tin hồ sơ vẫn được cập nhật ở các mục bên cạnh.</p>
         </div>
       ) : (
-        posts.data.items.map((post) => <Post key={post.id} post={post} role={role} />)
+        posts.data.items.map((post) => <Post key={post.id} post={post} role={role} represented={represented} />)
       )}
       {posts.data && posts.data.totalElements > 20 && (
-        <div className="cp-actions">
+        <div className="hub-pagination">
           <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
             Trước
           </button>
@@ -123,7 +147,7 @@ export function CommunityFeed({
     </div>
   )
 }
-function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
+function Post({ post, role, represented }: { post: CommunityPost; role: PageRole | ""; represented: boolean }) {
   const session = useCommunitySession()
   const client = useQueryClient()
   const [expanded, setExpanded] = useState(false)
@@ -194,13 +218,23 @@ function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
     },
   })
   return (
-    <article className="cp-panel">
+    <article className="cp-panel cp-post">
       <header className="cp-post-header">
-        <strong>{post.authorName}</strong>
-        <span className="cp-meta">{post.asPage ? "Đăng bởi đại diện trang" : "Thành viên cộng đồng"}</span>
-        <time className="cp-meta">{new Date(post.createdAt).toLocaleString("vi-VN")}</time>
+        <AuthorMark name={post.authorName} />
+        <div className="cp-post-author">
+          <strong>
+            {post.authorName}
+            {post.asPage && represented && <OfficialBadge label="Bài đăng của đại diện đã xác minh" />}
+          </strong>
+          <span className="cp-meta">
+            {post.asPage ? "Đăng bởi đại diện trang" : "Thành viên cộng đồng"} ·{" "}
+            <time dateTime={post.createdAt}>{new Date(post.createdAt).toLocaleString("vi-VN")}</time>
+          </span>
+        </div>
         {post.status !== "PUBLISHED" && (
-          <span className="cp-badge">{post.status === "HIDDEN" ? "Đã ẩn" : "Bản nháp"}</span>
+          <span className="cp-badge" data-status={post.status}>
+            {post.status === "HIDDEN" ? "Đã ẩn" : "Bản nháp"}
+          </span>
         )}
       </header>
       <p className="cp-prose">{post.body}</p>
@@ -244,7 +278,7 @@ function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
           {edit.error.message}
         </p>
       )}
-      <div className="cp-actions">
+      <div className="cp-post-actions">
         {post.status === "PUBLISHED" && (
           <button
             className="cp-like"
@@ -259,41 +293,47 @@ function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
         )}
         {post.status !== "HIDDEN" && (post.own || (post.asPage && ["OWNER", "EDITOR"].includes(role))) && (
           <button
-            className="cp-text-button"
+            className="cp-post-tool"
             onClick={() => {
               setEditedBody(post.body)
               setEditing(!editing)
             }}
           >
+            <StreamIcon name="edit" size={16} />
             Chỉnh sửa
           </button>
         )}
         <button
-          className="cp-text-button"
+          className="cp-like"
+          aria-expanded={expanded}
           disabled={post.status !== "PUBLISHED"}
           onClick={() => setExpanded(!expanded)}
         >
+          <StreamIcon name="message" size={16} />
           Bình luận
         </button>
         {session.status === "authenticated" && post.status === "PUBLISHED" && (
           <button
-            className="cp-text-button"
+            className="cp-post-tool"
             onClick={() => {
               setReportedComment(undefined)
               setReporting(!reporting)
             }}
           >
+            <StreamIcon name="flag" size={16} />
             Báo cáo
           </button>
         )}
         {post.status !== "DRAFT" && ["OWNER", "MODERATOR"].includes(role) && (
-          <button className="cp-text-button" disabled={hide.isPending} onClick={() => hide.mutate(undefined)}>
+          <button className="cp-post-tool" disabled={hide.isPending} onClick={() => hide.mutate(undefined)}>
+            <StreamIcon name={post.status === "HIDDEN" ? "eye" : "eyeOff"} size={16} />
             {post.status === "HIDDEN" ? "Khôi phục hiển thị" : "Ẩn bài viết"}
           </button>
         )}
       </div>
       {reporting && (
         <form
+          className="cp-inline-form"
           onSubmit={(e) => {
             e.preventDefault()
             report.mutate()
@@ -308,7 +348,11 @@ function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
           </button>
         </form>
       )}
-      {report.isSuccess && <p className="cp-success">Đã gửi báo cáo.</p>}
+      {report.isSuccess && (
+        <p className="cp-success" role="status">
+          Đã gửi báo cáo.
+        </p>
+      )}
       {(report.isError || hide.isError || reply.isError || like.isError) && (
         <p className="cp-error" role="alert">
           {report.error?.message || hide.error?.message || reply.error?.message || like.error?.message}
@@ -319,29 +363,43 @@ function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
           {comments.isError && <p role="alert">{comments.error.message}</p>}
           {comments.data?.items.map((comment) => (
             <div className="cp-comment" key={comment.id}>
-              <strong>
-                {comment.authorName}
-                {comment.asPage ? " · Đại diện trang" : ""}
-              </strong>
-              <p className="cp-prose">{comment.body}</p>
-              {session.status === "authenticated" && (
-                <button
-                  className="cp-text-button"
-                  onClick={() => {
-                    setReportedComment(comment.id)
-                    setReporting(true)
-                  }}
-                >
-                  Báo cáo bình luận
-                </button>
-              )}
-              {["OWNER", "MODERATOR"].includes(role) && (
-                <button className="cp-text-button" onClick={() => hide.mutate(comment.id)}>
-                  Ẩn bình luận
-                </button>
-              )}
+              <AuthorMark name={comment.authorName} small />
+              <div className="cp-comment-body">
+                <div className="cp-comment-bubble">
+                  <strong>
+                    {comment.authorName}
+                    {comment.asPage ? " · Đại diện trang" : ""}
+                  </strong>
+                  <p className="cp-prose">{comment.body}</p>
+                </div>
+                <div className="cp-comment-tools">
+                  <time className="cp-meta" dateTime={comment.createdAt}>
+                    {new Date(comment.createdAt).toLocaleString("vi-VN")}
+                  </time>
+                  {session.status === "authenticated" && (
+                    <button
+                      className="cp-text-button"
+                      onClick={() => {
+                        setReportedComment(comment.id)
+                        setReporting(true)
+                      }}
+                    >
+                      Báo cáo bình luận
+                    </button>
+                  )}
+                  {["OWNER", "MODERATOR"].includes(role) && (
+                    <button className="cp-text-button" onClick={() => hide.mutate(comment.id)}>
+                      Ẩn bình luận
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
+          {comments.isLoading && <p className="cp-muted">Đang tải bình luận…</p>}
+          {comments.data && !comments.data.items.length && (
+            <p className="cp-muted">Chưa có bình luận. Hãy là người đầu tiên chia sẻ suy nghĩ.</p>
+          )}
           {comments.data && comments.data.totalElements > 30 && (
             <div className="cp-actions">
               <button className="cp-button" disabled={!commentPage} onClick={() => setCommentPage(commentPage - 1)}>
@@ -358,6 +416,7 @@ function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
           )}
           {session.status === "authenticated" && (
             <form
+              className="cp-reply"
               onSubmit={(e) => {
                 e.preventDefault()
                 reply.mutate()
@@ -374,7 +433,8 @@ function Post({ post, role }: { post: CommunityPost; role: PageRole | "" }) {
                     Trả lời với tư cách trang
                   </label>
                 )}
-                <button className="cp-button" disabled={reply.isPending}>
+                <button className="cp-button cp-primary" disabled={reply.isPending}>
+                  <StreamIcon name="send" size={16} />
                   Gửi bình luận
                 </button>
               </div>

@@ -26,15 +26,25 @@ export function CommunitySessionButton() {
             <AccountAvatar url={profile.data?.avatarUrl} name={name} />
             <span>{name}</span>
           </Link>
-          <button className="account-signout" title="Đăng xuất" aria-label="Đăng xuất" onClick={() => signOut()}>
-            <StreamIcon name="logout" size={16} />
-            <span>Đăng xuất</span>
+          <button
+            className="hub-icon-button account-signout"
+            title="Đăng xuất"
+            aria-label="Đăng xuất"
+            onClick={() => signOut()}
+          >
+            <StreamIcon name="logout" size={18} />
           </button>
         </>
       ) : (
-        <button onClick={() => void signIn().catch(() => setError("Chưa mở được đăng nhập."))}>Đăng nhập</button>
+        <button className="hub-signin" onClick={() => void signIn().catch(() => setError("Chưa mở được đăng nhập."))}>
+          Đăng nhập
+        </button>
       )}
-      {error && <span role="alert">{error}</span>}
+      {error && (
+        <span className="cp-session-error" role="alert">
+          {error}
+        </span>
+      )}
     </div>
   )
 }
@@ -56,16 +66,19 @@ export function CommunityLoginCallback() {
   }, [navigate])
   return (
     <StreamShell>
-      <div className="cp-container cp-empty">
-        <h1>{error ? "Đăng nhập chưa hoàn tất" : "Đang hoàn tất đăng nhập…"}</h1>
-        {error && (
-          <>
-            <p role="alert">{error}</p>
-            <Link className="cp-button" to="/pages">
-              Về danh bạ
-            </Link>
-          </>
-        )}
+      <div className="cp-container">
+        <section className="hub-state">
+          <StreamIcon name={error ? "info" : "clock"} size={32} />
+          <h1>{error ? "Đăng nhập chưa hoàn tất" : "Đang hoàn tất đăng nhập…"}</h1>
+          {error && (
+            <>
+              <p role="alert">{error}</p>
+              <Link className="cp-button" to="/pages">
+                Về danh bạ
+              </Link>
+            </>
+          )}
+        </section>
       </div>
     </StreamShell>
   )

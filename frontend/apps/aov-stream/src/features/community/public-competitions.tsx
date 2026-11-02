@@ -1,29 +1,230 @@
-import { useState } from "react"
+import { useEffect, useState, type CSSProperties } from "react"
 import { Link, useParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { slotLabel, type CommunityProfile, type CompetitionView, type PageSlice } from "@aov/community-contracts"
 import { StreamShell } from "../../components/stream-shell"
+import { StreamBrand } from "../../components/stream-brand"
+import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
+import { CommunityAside } from "./community-aside"
+import {
+  competitionStatus,
+  competitionStatusLabels,
+  competitionsQuery,
+  dayRange,
+  hueOf,
+  useFeaturedCompetitions,
+  type CompetitionStatus,
+} from "./community-ui"
 import { gamesQuery } from "../tournaments/tournament-api"
 import { GameCard } from "../tournaments/game-card"
 
+const hue = (name: string) => ({ "--hub-hue": hueOf(name) }) as CSSProperties
+const monogram = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 3)
+    .map((word) => word[0]!.toUpperCase())
+    .join("")
+const statusOrder: (CompetitionStatus | null)[] = ["ONGOING", "UPCOMING", "ANNOUNCED", null, "FINISHED"]
+
+function StatusBadge({ status }: { status: CompetitionStatus | null }) {
+  return status ? (
+    <span className="hub-status" data-status={status}>
+      {competitionStatusLabels[status]}
+    </span>
+  ) : null
+}
+
 export function CompetitionDirectory() {
+  const [tab, setTab] = useState<"competitions" | "games">("competitions")
   return (
-    <StreamShell>
-      <div className="cp-container">
-        <header className="cp-heading">
-          <span className="cp-eyebrow">THI ĐẤU</span>
-          <h1>Theo dõi từng mùa giải.</h1>
-          <p>Lịch đấu, đội hình, nhánh đấu và kết quả đã được biên tập, đối chiếu nguồn.</p>
-        </header>
-        <CompetitionList />
-        <Link className="cp-button" to="/games">
-          Khám phá các ván đã ghi nhận →
-        </Link>
-      </div>
+    <StreamShell aside={<CommunityAside />}>
+      <title>AOV Stream — Giải đấu Liên Quân</title>
+      <FeaturedCompetitions />
+      <section className="hub-card hub-feed">
+        <div className="hub-feed-header">
+          <nav className="cp-tabs" aria-label="Nội dung trang chủ">
+            <button aria-current={tab === "competitions" ? "page" : undefined} onClick={() => setTab("competitions")}>
+              Mùa giải
+            </button>
+            <button aria-current={tab === "games" ? "page" : undefined} onClick={() => setTab("games")}>
+              Ván đấu mới
+            </button>
+          </nav>
+        </div>
+        <div className="hub-feed-body">{tab === "competitions" ? <CompetitionList /> : <LatestGames />}</div>
+      </section>
     </StreamShell>
   )
 }
+
+/** The home banner: published competitions that are running or coming up first, or a welcome slide without any. */
+function FeaturedCompetitions() {
+  const query = useFeaturedCompetitions()
+  const featured = [...(query.data?.items || [])]
+    .sort(
+      (a, b) =>
+        statusOrder.indexOf(competitionStatus(a.content.tournament)) -
+        statusOrder.indexOf(competitionStatus(b.content.tournament)),
+    )
+    .slice(0, 5)
+  const [index, setIndex] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const active = featured.length ? index % featured.length : 0
+  useEffect(() => {
+    if (featured.length < 2 || paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const timer = window.setInterval(() => setIndex((value) => value + 1), 7000)
+    return () => window.clearInterval(timer)
+  }, [featured.length, paused])
+  const go = (step: number) => setIndex(active + step + featured.length)
+  return (
+    <section
+      className="hub-hero"
+      aria-roledescription="carousel"
+      aria-label="Giải đấu nổi bật"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
+      {featured.length ? (
+        featured.map((entry, position) => {
+          const { tournament, plan } = entry.content
+          return (
+            <article
+              key={entry.id}
+              className="hub-hero-slide hub-art"
+              style={hue(tournament.name)}
+              data-active={position === active || undefined}
+              aria-hidden={position !== active}
+              aria-roledescription="slide"
+              aria-label={`${position + 1} / ${featured.length}`}
+            >
+              <div className="hub-hero-copy">
+                <StatusBadge status={competitionStatus(tournament)} />
+                <span className="hub-kicker">
+                  {[tournament.region, plan.circuit].filter(Boolean).join(" · ") || "Giải đấu"}
+                </span>
+                <h2>{tournament.name}</h2>
+                <p>
+                  {plan.notes ||
+                    tournament.note ||
+                    "Lịch đấu, đội hình, nhánh đấu và kết quả đã được biên tập, đối chiếu nguồn."}
+                </p>
+                <div className="hub-hero-meta">
+                  <span>
+                    <StreamIcon name="calendar" size={14} />
+                    {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
+                  </span>
+                  <span>
+                    <StreamIcon name="users" size={14} />
+                    {plan.entrants.length} đội
+                  </span>
+                </div>
+                <Link className="hub-hero-cta" to={`/competitions/${entry.id}`} tabIndex={position === active ? 0 : -1}>
+                  Xem giải đấu
+                  <StreamIcon name="arrow" size={16} />
+                </Link>
+              </div>
+              <div className="hub-hero-art" aria-hidden="true">
+                {tournament.logoUrl ? <img src={tournament.logoUrl} alt="" /> : <StreamBrand compact />}
+              </div>
+            </article>
+          )
+        })
+      ) : (
+        <article className="hub-hero-slide hub-art" style={{ "--hub-hue": 228 } as CSSProperties} data-active>
+          <div className="hub-hero-copy">
+            <span className="hub-kicker">Liên Quân Mobile · AOV Stream</span>
+            <h2>Theo dõi từng mùa giải, từng ván đấu.</h2>
+            <p>
+              Lịch đấu, đội hình, nhánh đấu và kết quả được biên tập, đối chiếu nguồn — cùng cộng đồng đội tuyển, tuyển
+              thủ và người hâm mộ.
+            </p>
+            <Link className="hub-hero-cta" to="/games">
+              Khám phá ván đấu
+              <StreamIcon name="arrow" size={16} />
+            </Link>
+            <Link className="hub-hero-cta" to="/pages">
+              Vào cộng đồng
+            </Link>
+          </div>
+          <div className="hub-hero-art" aria-hidden="true">
+            <StreamBrand compact />
+          </div>
+        </article>
+      )}
+      {featured.length > 1 && (
+        <div className="hub-hero-controls">
+          <div className="hub-hero-dots">
+            {featured.map((entry, position) => (
+              <button
+                key={entry.id}
+                aria-label={`Xem giải ${position + 1}: ${entry.content.tournament.name}`}
+                aria-current={position === active || undefined}
+                onClick={() => setIndex(position)}
+              />
+            ))}
+          </div>
+          <button aria-label="Giải trước" onClick={() => go(-1)}>
+            <StreamIcon name="chevronLeft" size={18} />
+          </button>
+          <button aria-label="Giải tiếp theo" onClick={() => go(1)}>
+            <StreamIcon name="chevronRight" size={18} />
+          </button>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function LatestGames() {
+  const games = useInfiniteQuery(gamesQuery())
+  const items = games.data?.pages[0]?.items.slice(0, 6) || []
+  if (games.isPending)
+    return (
+      <div className="game-card-grid" role="status" aria-label="Đang tải ván đấu">
+        <div className="game-card-skeleton" />
+        <div className="game-card-skeleton" />
+      </div>
+    )
+  if (games.isError && !items.length)
+    return (
+      <div className="hub-state">
+        <StreamIcon name="reset" size={28} />
+        <h3>Chưa kết nối được dữ liệu ván đấu</h3>
+        <button className="cp-button" onClick={() => void games.refetch()}>
+          Thử lại
+        </button>
+      </div>
+    )
+  if (!items.length)
+    return (
+      <div className="hub-state">
+        <StreamBrand compact />
+        <h3>Chưa có ván đấu được công bố</h3>
+        <p>Các ván đã được rà soát và xuất bản sẽ xuất hiện tại đây.</p>
+      </div>
+    )
+  return (
+    <>
+      <div className="game-card-grid">
+        {items.map((game) => (
+          <GameCard key={game.id} game={game} />
+        ))}
+      </div>
+      <div className="hub-feed-footer">
+        <Link className="cp-button" to="/games">
+          Xem tất cả ván đấu
+          <StreamIcon name="arrow" size={16} />
+        </Link>
+      </div>
+    </>
+  )
+}
+
 export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
   const [page, setPage] = useState(0)
   const filter: Record<string, string> = profile
@@ -33,63 +234,92 @@ export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
         ? { teamId: profile.entityId || "" }
         : { playerId: profile.entityId || "" }
     : {}
-  const query = useQuery({
-    queryKey: ["published-competitions", filter, page],
-    queryFn: () =>
-      communityApi<PageSlice<CompetitionView>>(
-        `/competitions?${new URLSearchParams({ ...filter, page: String(page), size: "12" })}`,
-      ),
-  })
-  if (query.isPending) return <p>Đang tải giải đấu…</p>
-  if (query.isError)
-    return (
-      <p className="cp-error" role="alert">
-        {query.error.message} <button onClick={() => void query.refetch()}>Thử lại</button>
-      </p>
-    )
-  return (
-    <section className="cp-section">
-      <h2>{profile ? "Giải đấu đã tham gia" : "Các mùa giải"}</h2>
-      {!query.data.items.length && (
-        <div className="cp-empty">
-          <h3>Chưa có giải đã công bố</h3>
-          <p>Lịch và thông tin sẽ xuất hiện khi được biên tập xong.</p>
-        </div>
-      )}
-      <div className="cp-directory">
+  const query = useQuery(competitionsQuery(filter, page))
+  const body = query.isPending ? (
+    <div className="hub-skeleton-rows" role="status" aria-label="Đang tải giải đấu" />
+  ) : query.isError ? (
+    <div className="hub-state" role="alert">
+      <StreamIcon name="reset" size={28} />
+      <h3>{query.error.message}</h3>
+      <button className="cp-button" onClick={() => void query.refetch()}>
+        Thử lại
+      </button>
+    </div>
+  ) : !query.data.items.length ? (
+    <div className="hub-state">
+      <StreamIcon name="calendar" size={28} />
+      <h3>Chưa có giải đã công bố</h3>
+      <p>Lịch và thông tin sẽ xuất hiện khi được biên tập xong.</p>
+    </div>
+  ) : (
+    <>
+      <div className="hub-event-list">
         {query.data.items.map((entry) => (
-          <Link className="cp-card" key={entry.id} to={`/competitions/${entry.id}`}>
-            <div>
-              <span className="cp-eyebrow">
-                {entry.content.tournament.region} · {entry.content.plan.circuit || "GIẢI ĐẤU"}
-              </span>
-              <h3>{entry.content.tournament.name}</h3>
-              <p className="cp-meta">
-                {entry.content.tournament.startsOn || "Chờ lịch"} → {entry.content.tournament.endsOn || ""}
-              </p>
-              <p>
-                {entry.content.plan.entrants.length} đội · {entry.content.plan.matches.length} trận
-              </p>
-            </div>
-          </Link>
+          <CompetitionEvent key={entry.id} entry={entry} />
         ))}
       </div>
-      <div className="cp-pagination">
-        <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-          Trước
-        </button>
-        <span>Trang {page + 1}</span>
-        <button
-          className="cp-button"
-          disabled={(page + 1) * 12 >= query.data.totalElements}
-          onClick={() => setPage(page + 1)}
-        >
-          Sau
-        </button>
-      </div>
+      {query.data.totalElements > 12 && (
+        <div className="hub-pagination">
+          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
+            <StreamIcon name="chevronLeft" size={16} />
+            Trước
+          </button>
+          <span>Trang {page + 1}</span>
+          <button
+            className="cp-button"
+            disabled={(page + 1) * 12 >= query.data.totalElements}
+            onClick={() => setPage(page + 1)}
+          >
+            Sau
+            <StreamIcon name="chevronRight" size={16} />
+          </button>
+        </div>
+      )}
+    </>
+  )
+  if (!profile) return body
+  return (
+    <section className="cp-section">
+      <h2>Giải đấu đã tham gia</h2>
+      {body}
     </section>
   )
 }
+
+function CompetitionEvent({ entry }: { entry: CompetitionView }) {
+  const { tournament, plan } = entry.content
+  return (
+    <Link className="hub-event" to={`/competitions/${entry.id}`}>
+      <span className="hub-event-cover hub-art" style={hue(tournament.name)}>
+        {tournament.logoUrl ? <img src={tournament.logoUrl} alt="" /> : <b>{monogram(tournament.name)}</b>}
+        <StatusBadge status={competitionStatus(tournament)} />
+      </span>
+      <span className="hub-event-body">
+        <span className="hub-kicker">
+          {[tournament.region, plan.circuit].filter(Boolean).join(" · ") || "Giải đấu"}
+        </span>
+        <h3>{tournament.name}</h3>
+        <p>
+          {plan.entrants.length} đội · {plan.matches.length} trận
+          {plan.organizer ? ` · ${plan.organizer}` : ""}
+        </p>
+        <span className="hub-event-chips">
+          <span className="hub-chip">
+            <StreamIcon name="calendar" size={14} />
+            {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
+          </span>
+          {plan.prizePool && (
+            <span className="hub-chip">
+              <StreamIcon name="trophy" size={14} />
+              {plan.prizePool} {plan.currency}
+            </span>
+          )}
+        </span>
+      </span>
+    </Link>
+  )
+}
+
 export function EntityPageLink({ kind, id, name }: { kind: "TEAM" | "PLAYER"; id: string; name: string }) {
   const page = useQuery({
     queryKey: ["entity-page", kind, id],
@@ -99,6 +329,16 @@ export function EntityPageLink({ kind, id, name }: { kind: "TEAM" | "PLAYER"; id
   })
   return page.data ? <Link to={`/pages/${page.data.code}`}>{name}</Link> : <span>{name}</span>
 }
+
+const competitionTabs = [
+  ["overview", "Tổng quan"],
+  ["teams", "Đội hình"],
+  ["matches", "Lịch & kết quả"],
+  ["standings", "Bảng xếp hạng"],
+  ["bracket", "Nhánh đấu"],
+  ["games", "Ván đấu"],
+] as const
+
 export function PublicCompetitionPage() {
   const { id = "" } = useParams()
   const query = useQuery({
@@ -109,9 +349,18 @@ export function PublicCompetitionPage() {
   if (!query.data)
     return (
       <StreamShell>
-        <div className="cp-container">
-          <Link to="/">← Giải đấu</Link>
-          <p role={query.isError ? "alert" : undefined}>{query.isError ? query.error.message : "Đang tải giải đấu…"}</p>
+        <Link className="cp-back" to="/">
+          <StreamIcon name="back" size={16} />
+          Tất cả giải đấu
+        </Link>
+        <div className="hub-state" role={query.isError ? "alert" : "status"}>
+          <StreamIcon name={query.isError ? "info" : "clock"} size={28} />
+          <h1>{query.isError ? query.error.message : "Đang tải giải đấu…"}</h1>
+          {query.isError && (
+            <button className="cp-button" onClick={() => void query.refetch()}>
+              Thử lại
+            </button>
+          )}
         </div>
       </StreamShell>
     )
@@ -121,29 +370,39 @@ export function PublicCompetitionPage() {
   const fixture = (key: string) => {
     const match = plan.matches.find((match) => match.key === key)!,
       result = resolved.find((row) => row.key === key)
+    const decided = result?.scoreA != null && result?.scoreB != null && result.scoreA !== result.scoreB
     return (
       <article key={key} className="cp-match">
-        <div className="cp-meta">
-          {match.label} · BO{match.bestOf}
-          <br />
-          {match.scheduledAt
-            ? new Intl.DateTimeFormat("vi-VN", {
-                dateStyle: "short",
-                timeStyle: "short",
-                timeZone: plan.timezone,
-              }).format(new Date(match.scheduledAt))
-            : "Chờ lịch"}
+        <div className="cp-match-head">
+          <span className="hub-chip">
+            {match.label} · BO{match.bestOf}
+          </span>
+          <span className="cp-meta">
+            <StreamIcon name="clock" size={14} />
+            {match.scheduledAt
+              ? new Intl.DateTimeFormat("vi-VN", {
+                  dateStyle: "short",
+                  timeStyle: "short",
+                  timeZone: plan.timezone,
+                }).format(new Date(match.scheduledAt))
+              : "Chờ lịch"}
+          </span>
         </div>
         <div className="cp-match-teams">
-          <span>{team(result?.teamAId) || slotLabel(match.a, teams)}</span>
+          <span data-winner={(decided && result!.scoreA! > result!.scoreB!) || undefined}>
+            {team(result?.teamAId) || slotLabel(match.a, teams)}
+          </span>
           <strong>
             {result?.scoreA ?? "–"} : {result?.scoreB ?? "–"}
           </strong>
-          <span>{team(result?.teamBId) || slotLabel(match.b, teams)}</span>
+          <span data-winner={(decided && result!.scoreB! > result!.scoreA!) || undefined}>
+            {team(result?.teamBId) || slotLabel(match.b, teams)}
+          </span>
         </div>
         {match.seriesId && (
-          <Link className="cp-meta" to={`/games?tournament=${id}&q=${encodeURIComponent(match.label)}`}>
-            Xem các ván đã công bố →
+          <Link className="cp-match-link" to={`/games?tournament=${id}&q=${encodeURIComponent(match.label)}`}>
+            Xem các ván đã công bố
+            <StreamIcon name="arrow" size={14} />
           </Link>
         )}
       </article>
@@ -151,39 +410,49 @@ export function PublicCompetitionPage() {
   }
   return (
     <StreamShell>
+      <title>{`${tournament.name} — AOV Stream`}</title>
       <div className="cp-container">
         <Link className="cp-back" to="/">
-          ← Tất cả giải đấu
+          <StreamIcon name="back" size={16} />
+          Tất cả giải đấu
         </Link>
-        <header className="cp-competition-header">
-          {tournament.logoUrl && <img src={tournament.logoUrl} alt="" />}
-          <div>
-            <span className="cp-eyebrow">
-              {plan.circuit || "GIẢI ĐẤU"} · {tournament.region}
+        <header className="hub-card cp-page-header">
+          <div className="cp-competition-cover hub-art" style={hue(tournament.name)}>
+            <span className="cp-competition-logo">
+              {tournament.logoUrl ? <img src={tournament.logoUrl} alt="" /> : monogram(tournament.name)}
             </span>
-            <h1>{tournament.name}</h1>
-            <p className="cp-meta">
-              {tournament.startsOn || "Chưa xác định"} → {tournament.endsOn || "Chưa xác định"} · {plan.entrants.length}{" "}
-              đội
-            </p>
+            <div className="cp-competition-title">
+              <StatusBadge status={competitionStatus(tournament)} />
+              <span className="hub-kicker">
+                {[plan.circuit || "Giải đấu", tournament.region].filter(Boolean).join(" · ")}
+              </span>
+              <h1>{tournament.name}</h1>
+              <div className="hub-banner-stats">
+                <span>
+                  <StreamIcon name="calendar" size={14} />
+                  {dayRange(tournament.startsOn, tournament.endsOn)}
+                </span>
+                <span>
+                  <StreamIcon name="users" size={14} />
+                  {plan.entrants.length} đội
+                </span>
+                <span>
+                  <StreamIcon name="gamepad" size={14} />
+                  {plan.matches.length} trận
+                </span>
+              </div>
+            </div>
           </div>
+          <nav className="cp-tabs cp-header-tabs" aria-label="Nội dung giải đấu">
+            {competitionTabs.map(([key, label]) => (
+              <button key={key} aria-current={tab === key ? "page" : undefined} onClick={() => setTab(key)}>
+                {label}
+              </button>
+            ))}
+          </nav>
         </header>
-        <nav className="cp-tabs" aria-label="Nội dung giải đấu">
-          {[
-            ["overview", "Tổng quan"],
-            ["teams", "Đội hình"],
-            ["matches", "Lịch & kết quả"],
-            ["standings", "Bảng xếp hạng"],
-            ["bracket", "Nhánh đấu"],
-            ["games", "Ván đấu"],
-          ].map(([key, label]) => (
-            <button key={key} aria-current={tab === key ? "page" : undefined} onClick={() => setTab(key!)}>
-              {label}
-            </button>
-          ))}
-        </nav>
         {tab === "overview" && (
-          <div className="cp-profile-grid">
+          <div className="cp-columns">
             <div className="cp-main-column">
               <section className="cp-section">
                 <h2>Giới thiệu</h2>
@@ -192,7 +461,10 @@ export function PublicCompetitionPage() {
               <section className="cp-section">
                 <h2>Thể thức</h2>
                 {plan.stages.map((stage) => (
-                  <article className="cp-list-row" key={stage.code}>
+                  <article className="cp-stage" key={stage.code}>
+                    <span className="cp-stage-icon" aria-hidden="true">
+                      <StreamIcon name={stage.format === "ROUND_ROBIN" ? "table" : "bracket"} size={20} />
+                    </span>
                     <div>
                       <h3>{stage.name}</h3>
                       <p>
@@ -218,8 +490,9 @@ export function PublicCompetitionPage() {
                       )}
                       {stage.patchNote && <p>{stage.patchNote}</p>}
                       {stage.sourceUrl && (
-                        <a href={stage.sourceUrl} target="_blank" rel="noreferrer">
-                          Điều lệ ↗
+                        <a className="cp-source" href={stage.sourceUrl} target="_blank" rel="noreferrer">
+                          Điều lệ
+                          <StreamIcon name="external" size={12} />
                         </a>
                       )}
                     </div>
@@ -227,27 +500,33 @@ export function PublicCompetitionPage() {
                 ))}
               </section>
             </div>
-            <aside>
+            <aside className="cp-side-column">
               <section className="cp-section">
                 <h2>Thông tin</h2>
                 <dl className="cp-facts">
-                  <dt>Đơn vị tổ chức</dt>
-                  <dd>
-                    {organizer ? (
-                      <Link className="cp-organizer" to={`/pages/${organizer.code}`}>
-                        {organizer.logoUrl && <img src={organizer.logoUrl} alt="" />}
-                        {organizer.name}
-                      </Link>
-                    ) : plan.organizerPageId ? (
-                      <Link to={`/pages/${plan.organizerPageId}`}>{plan.organizer}</Link>
-                    ) : (
-                      plan.organizer || "Chưa cập nhật"
-                    )}
-                  </dd>
-                  <dt>Quỹ giải thưởng</dt>
-                  <dd>{plan.prizePool ? `${plan.prizePool} ${plan.currency}` : "Chưa công bố"}</dd>
-                  <dt>Múi giờ</dt>
-                  <dd>{plan.timezone}</dd>
+                  <div>
+                    <dt>Đơn vị tổ chức</dt>
+                    <dd>
+                      {organizer ? (
+                        <Link className="cp-organizer" to={`/pages/${organizer.code}`}>
+                          {organizer.logoUrl && <img src={organizer.logoUrl} alt="" />}
+                          {organizer.name}
+                        </Link>
+                      ) : plan.organizerPageId ? (
+                        <Link to={`/pages/${plan.organizerPageId}`}>{plan.organizer}</Link>
+                      ) : (
+                        plan.organizer || "Chưa cập nhật"
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Quỹ giải thưởng</dt>
+                    <dd>{plan.prizePool ? `${plan.prizePool} ${plan.currency}` : "Chưa công bố"}</dd>
+                  </div>
+                  <div>
+                    <dt>Múi giờ</dt>
+                    <dd>{plan.timezone}</dd>
+                  </div>
                   {plan.venues.map((venue, index) => (
                     <div key={index}>
                       <dt>{venue.stageCode || "Địa điểm"}</dt>
@@ -257,8 +536,9 @@ export function PublicCompetitionPage() {
                     </div>
                   ))}
                 </dl>
-                <a href={plan.sourceUrl} target="_blank" rel="noreferrer">
-                  Nguồn kiểm chứng ↗
+                <a className="cp-source" href={plan.sourceUrl} target="_blank" rel="noreferrer">
+                  Nguồn kiểm chứng
+                  <StreamIcon name="external" size={12} />
                 </a>
                 <p className="cp-meta">Cập nhật: {new Date(query.data.publishedAt!).toLocaleString("vi-VN")}</p>
               </section>
@@ -268,13 +548,22 @@ export function PublicCompetitionPage() {
         {tab === "teams" && (
           <div className="cp-directory">
             {plan.entrants.map((entrant) => (
-              <section className="cp-section" key={entrant.teamId}>
-                <h2>{team(entrant.teamId)}</h2>
-                {entrant.status === "WITHDRAWN" && <p>Đã rút lui</p>}
+              <section className="cp-section cp-team-card" key={entrant.teamId}>
+                <h2>
+                  <span className="cp-team-logo" style={hue(teams[entrant.teamId]?.name || entrant.teamId)}>
+                    {teams[entrant.teamId]?.logoUrl ? (
+                      <img src={teams[entrant.teamId]!.logoUrl} alt="" />
+                    ) : (
+                      (teams[entrant.teamId]?.name || "?").slice(0, 1).toUpperCase()
+                    )}
+                  </span>
+                  {team(entrant.teamId)}
+                </h2>
+                {entrant.status === "WITHDRAWN" && <span className="cp-badge">Đã rút lui</span>}
                 {rosters
                   .filter((row) => row.teamId === entrant.teamId)
                   .map((row) => (
-                    <div className="cp-list-row" key={row.playerId}>
+                    <div className="cp-roster-row" key={row.playerId}>
                       <EntityPageLink
                         kind="PLAYER"
                         id={row.playerId}
@@ -295,24 +584,37 @@ export function PublicCompetitionPage() {
                 )}
               </section>
             ))}
+            {!plan.entrants.length && (
+              <div className="hub-state">
+                <StreamIcon name="users" size={28} />
+                <h3>Chưa có đội tham dự được công bố</h3>
+              </div>
+            )}
           </div>
         )}
         {tab === "matches" && (
           <section className="cp-section">
             <h2>Lịch thi đấu</h2>
             <p className="cp-meta">Giờ hiển thị: {plan.timezone}</p>
-            {!plan.matches.length && <p>Chưa có lịch thi đấu.</p>}
+            {!plan.matches.length && <p className="cp-muted">Chưa có lịch thi đấu.</p>}
             {plan.stages.map((stage) => (
-              <div key={stage.code}>
+              <div className="cp-stage-fixtures" key={stage.code}>
                 <h3>{stage.name}</h3>
-                {plan.matches.filter((match) => match.stageCode === stage.code).map((match) => fixture(match.key))}
+                <div className="cp-fixture-grid">
+                  {plan.matches.filter((match) => match.stageCode === stage.code).map((match) => fixture(match.key))}
+                </div>
               </div>
             ))}
           </section>
         )}
         {tab === "standings" && (
           <>
-            {!standings.length && <p className="cp-empty">Giải chưa có bảng xếp hạng vòng tròn.</p>}
+            {!standings.length && (
+              <div className="hub-state">
+                <StreamIcon name="table" size={28} />
+                <h3>Giải chưa có bảng xếp hạng vòng tròn.</h3>
+              </div>
+            )}
             {standings.map((table) => (
               <section className="cp-section" key={table.stageCode}>
                 <h2>{plan.stages.find((stage) => stage.code === table.stageCode)?.name}</h2>
@@ -330,14 +632,21 @@ export function PublicCompetitionPage() {
                     </thead>
                     <tbody>
                       {table.rows.map((row) => (
-                        <tr key={row.teamId}>
+                        <tr key={row.teamId} data-qualified={row.qualified || undefined}>
                           <td>
-                            {row.rank}
-                            {row.tied && "="}
+                            <span className="cp-rank">
+                              {row.rank}
+                              {row.tied && "="}
+                            </span>
                           </td>
                           <td>
                             {team(row.teamId)}
-                            {row.qualified && " ✓"}
+                            {row.qualified && (
+                              <span className="cp-qualified" title="Đã giành suất đi tiếp">
+                                <StreamIcon name="check" size={14} />
+                                <span className="sr-only">Đã giành suất đi tiếp</span>
+                              </span>
+                            )}
                           </td>
                           <td>{row.played}</td>
                           <td>{row.won}</td>
@@ -360,7 +669,10 @@ export function PublicCompetitionPage() {
         {tab === "bracket" && (
           <>
             {!plan.stages.some((stage) => stage.format !== "ROUND_ROBIN") && (
-              <p className="cp-empty">Giải chưa có nhánh đấu.</p>
+              <div className="hub-state">
+                <StreamIcon name="bracket" size={28} />
+                <h3>Giải chưa có nhánh đấu.</h3>
+              </div>
             )}
             {plan.stages
               .filter((stage) => stage.format !== "ROUND_ROBIN")
@@ -398,18 +710,24 @@ function PublishedGames({ tournamentId }: { tournamentId: string }) {
   return (
     <section className="cp-section">
       <h2>Ván đấu đã công bố</h2>
-      {query.isPending && <p>Đang tải…</p>}
-      {query.isError && <p role="alert">{query.error.message}</p>}
-      {!query.isPending && !games.length && <p>Chưa có ván đã ghi nhận chi tiết.</p>}
+      {query.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải ván đấu" />}
+      {query.isError && (
+        <p className="cp-error" role="alert">
+          {query.error.message}
+        </p>
+      )}
+      {!query.isPending && !games.length && <p className="cp-muted">Chưa có ván đã ghi nhận chi tiết.</p>}
       <div className="game-card-grid">
         {games.map((game) => (
           <GameCard key={game.id} game={game} />
         ))}
       </div>
       {query.hasNextPage && (
-        <button className="cp-button" disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-          Xem thêm
-        </button>
+        <div className="hub-feed-footer">
+          <button className="cp-button" disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
+            Xem thêm
+          </button>
+        </div>
       )}
     </section>
   )
@@ -441,36 +759,46 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
             ? "Các trận của đội có tuyển thủ trong danh sách đăng ký mùa giải. Danh sách này không khẳng định tuyển thủ đã ra sân từng trận."
             : "Theo các bản công bố của từng mùa giải."}
         </p>
-        {query.isPending && <p>Đang tải…</p>}
-        {query.isError && <p role="alert">{query.error.message}</p>}
-        {!query.isPending && !matches.length && <p>Chưa có lịch hoặc kết quả được công bố.</p>}
+        {query.isPending && profile.entityId && (
+          <div className="hub-skeleton-rows" role="status" aria-label="Đang tải kết quả" />
+        )}
+        {query.isError && (
+          <p className="cp-error" role="alert">
+            {query.error.message}
+          </p>
+        )}
+        {!(query.isPending && profile.entityId) && !matches.length && (
+          <p className="cp-muted">Chưa có lịch hoặc kết quả được công bố.</p>
+        )}
         {matches.map(({ entry, row }) => (
-          <div key={`${entry.id}:${row.key}`} className="cp-list-row">
-            <div>
-              <Link to={`/competitions/${entry.id}`}>{entry.content.tournament.name}</Link>
-              <p>
-                {entry.content.teams[row.teamAId || ""]?.name || "Chờ đội"}{" "}
-                <strong>
-                  {row.scoreA ?? "–"} : {row.scoreB ?? "–"}
-                </strong>{" "}
-                {entry.content.teams[row.teamBId || ""]?.name || "Chờ đội"}
-              </p>
-            </div>
+          <div key={`${entry.id}:${row.key}`} className="cp-result-row">
+            <Link className="cp-result-event" to={`/competitions/${entry.id}`}>
+              {entry.content.tournament.name}
+            </Link>
+            <span className="cp-result-teams">
+              <span>{entry.content.teams[row.teamAId || ""]?.name || "Chờ đội"}</span>
+              <strong>
+                {row.scoreA ?? "–"} : {row.scoreB ?? "–"}
+              </strong>
+              <span>{entry.content.teams[row.teamBId || ""]?.name || "Chờ đội"}</span>
+            </span>
           </div>
         ))}
-        <div className="cp-pagination">
-          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-            Trước
-          </button>
-          <span>Nhóm mùa giải {page + 1}</span>
-          <button
-            className="cp-button"
-            disabled={!query.data || (page + 1) * 10 >= query.data.totalElements}
-            onClick={() => setPage(page + 1)}
-          >
-            Sau
-          </button>
-        </div>
+        {query.data && query.data.totalElements > 10 && (
+          <div className="hub-pagination">
+            <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
+              Trước
+            </button>
+            <span>Nhóm mùa giải {page + 1}</span>
+            <button
+              className="cp-button"
+              disabled={(page + 1) * 10 >= query.data.totalElements}
+              onClick={() => setPage(page + 1)}
+            >
+              Sau
+            </button>
+          </div>
+        )}
       </section>
       <CompetitionList profile={profile} />
     </>

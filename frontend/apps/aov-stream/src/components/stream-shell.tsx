@@ -1,54 +1,201 @@
-import type { ReactNode } from "react"
-import { Link, useLocation } from "react-router"
+import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react"
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router"
+import { profileKindLabels, type ProfileKind } from "@aov/community-contracts"
 import { StreamBrand } from "./stream-brand"
-import { StreamIcon } from "./stream-icon"
+import { StreamIcon, type StreamIconName } from "./stream-icon"
+import { ThemeToggle } from "./stream-theme"
 import { CommunitySessionButton } from "../features/community/community-session"
+import { hueOf, kindIcons, useFeaturedCompetitions } from "../features/community/community-ui"
 
 export const WIKI_URL = import.meta.env.VITE_WIKI_URL || "http://localhost:5173"
 export const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "http://localhost:5175"
 
-export function StreamShell({ children }: { children: ReactNode }) {
-  const location = useLocation()
+type Destination = { to: string; label: string; icon: StreamIconName; active: (path: string) => boolean }
+
+const destinations: Destination[] = [
+  { to: "/", label: "Trang chủ", icon: "home", active: (path) => path === "/" || path.startsWith("/competitions") },
+  { to: "/games", label: "Ván đấu", icon: "gamepad", active: (path) => path.startsWith("/games") },
+  { to: "/pages", label: "Cộng đồng", icon: "users", active: (path) => path.startsWith("/pages") },
+]
+const accountPaths = ["/account", "/manage", "/invitations"]
+
+/**
+ * The portal frame: a top bar, a left rail of community sections and competitions on wide screens, and a bottom tab
+ * bar on phones. `aside` fills the right column on wide screens and follows the main content on narrower ones.
+ */
+export function StreamShell({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
+  const { pathname } = useLocation()
   return (
-    <div className="stream-shell">
+    <div className="hub-shell">
       <a href="#main" className="stream-skip">
         Đến nội dung chính
       </a>
-      <header className="stream-header">
-        <Link to="/" aria-label="AOV Stream — Trang chủ">
-          <StreamBrand />
-        </Link>
-        <nav aria-label="Điều hướng chính">
-          <Link to="/" aria-label="Giải đấu" aria-current={location.pathname === "/" ? "page" : undefined}>
-            <StreamIcon name="trophy" />
-            <span>Giải đấu</span>
+      <header className="hub-topbar">
+        <div className="hub-topbar-inner">
+          <Link to="/" className="hub-brand-link" aria-label="AOV Stream — Trang chủ">
+            <StreamBrand />
           </Link>
-          <Link to="/pages" aria-current={location.pathname.startsWith("/pages") ? "page" : undefined}>
-            Cộng đồng
-          </Link>
-          <a href={WIKI_URL} aria-label="AOV WiKi">
-            <StreamIcon name="spark" />
-            <span>WiKi</span>
-            <StreamIcon name="external" size={12} />
-          </a>
-        </nav>
-        <a
-          className="stream-admin-link"
-          href={`${ADMIN_URL}/tournaments`}
-          aria-label="Đóng góp dữ liệu giải đấu"
-          title="Biên tập dữ liệu giải đấu"
-        >
-          <StreamIcon name="plus" size={16} />
-          <span>Đóng góp</span>
-        </a>
-        <CommunitySessionButton />
+          <nav className="hub-topnav" aria-label="Điều hướng chính">
+            {destinations.map((item) => (
+              <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
+                {item.label}
+              </Link>
+            ))}
+            <a href={WIKI_URL}>
+              WiKi
+              <StreamIcon name="external" size={12} />
+            </a>
+          </nav>
+          {!pathname.startsWith("/pages") && <HeaderSearch />}
+          <div className="hub-topbar-actions">
+            <a
+              className="hub-contribute"
+              href={`${ADMIN_URL}/tournaments`}
+              aria-label="Đóng góp dữ liệu giải đấu"
+              title="Biên tập dữ liệu giải đấu"
+            >
+              <StreamIcon name="plus" size={16} />
+              <span>Đóng góp</span>
+            </a>
+            <ThemeToggle />
+            <CommunitySessionButton />
+          </div>
+        </div>
       </header>
-      <main id="main">{children}</main>
-      <footer className="stream-footer">
-        <StreamIcon name="spark" size={14} />
-        <span>Quan sát trận đấu. Khám phá cách chơi.</span>
-        <span>Dữ liệu được biên tập từ nguồn đối chiếu.</span>
+      <div className="hub-body">
+        <aside className="hub-rail" aria-label="Danh mục">
+          <StreamRail />
+        </aside>
+        <div className={aside ? "hub-content hub-content-split" : "hub-content"}>
+          <main id="main" className="hub-main">
+            {children}
+          </main>
+          {aside && (
+            <aside className="hub-aside" aria-label="Gợi ý và tài khoản">
+              {aside}
+            </aside>
+          )}
+        </div>
+      </div>
+      <footer className="hub-footer">
+        <StreamBrand compact />
+        <p>
+          <strong>AOV Stream</strong> · Quan sát trận đấu, khám phá cách chơi. Dữ liệu được biên tập từ nguồn đối chiếu.
+        </p>
+        <nav aria-label="Liên kết cuối trang">
+          <a href={WIKI_URL}>AOV WiKi</a>
+          <a href={`${ADMIN_URL}/tournaments`}>Đóng góp dữ liệu</a>
+        </nav>
       </footer>
+      <nav className="hub-bottomnav" aria-label="Điều hướng chính">
+        {destinations.map((item) => (
+          <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
+            <StreamIcon name={item.icon} size={20} />
+            <span>{item.label}</span>
+          </Link>
+        ))}
+        <a href={WIKI_URL}>
+          <StreamIcon name="spark" size={20} />
+          <span>WiKi</span>
+        </a>
+        <Link to="/account" aria-current={accountPaths.some((path) => pathname.startsWith(path)) ? "page" : undefined}>
+          <StreamIcon name="user" size={20} />
+          <span>Tài khoản</span>
+        </Link>
+      </nav>
     </div>
+  )
+}
+
+function HeaderSearch() {
+  const navigate = useNavigate()
+  const [value, setValue] = useState("")
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    const q = value.trim()
+    navigate(q ? `/pages?${new URLSearchParams({ q })}` : "/pages")
+    setValue("")
+  }
+  return (
+    <form className="hub-search" role="search" onSubmit={submit}>
+      <StreamIcon name="search" size={16} />
+      <input
+        aria-label="Tìm đội tuyển, tuyển thủ hoặc tổ chức"
+        placeholder="Tìm đội tuyển, tuyển thủ, tổ chức…"
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+      />
+    </form>
+  )
+}
+
+const kinds = Object.keys(profileKindLabels) as ProfileKind[]
+
+function StreamRail() {
+  const { pathname } = useLocation()
+  const [params] = useSearchParams()
+  const competitions = useFeaturedCompetitions()
+  const onPages = pathname === "/pages"
+  const kind = params.get("kind")
+  return (
+    <>
+      <section className="hub-rail-section">
+        <h2>Cộng đồng</h2>
+        <Link to="/pages" aria-current={onPages && !kind ? "page" : undefined}>
+          <StreamIcon name="grid" size={18} />
+          Tất cả trang
+        </Link>
+        {kinds.map((value) => (
+          <Link key={value} to={`/pages?kind=${value}`} aria-current={onPages && kind === value ? "page" : undefined}>
+            <StreamIcon name={kindIcons[value]} size={18} />
+            {profileKindLabels[value]}
+          </Link>
+        ))}
+      </section>
+      <section className="hub-rail-section">
+        <h2>Giải đấu</h2>
+        {competitions.data?.items.slice(0, 6).map((entry) => (
+          <Link
+            key={entry.id}
+            to={`/competitions/${entry.id}`}
+            aria-current={pathname === `/competitions/${entry.id}` ? "page" : undefined}
+            title={entry.content.tournament.name}
+          >
+            <span
+              className="hub-rail-logo"
+              style={{ "--hub-hue": hueOf(entry.content.tournament.name) } as CSSProperties}
+            >
+              {entry.content.tournament.logoUrl ? (
+                <img src={entry.content.tournament.logoUrl} alt="" />
+              ) : (
+                entry.content.tournament.name.slice(0, 1).toUpperCase()
+              )}
+            </span>
+            <span className="hub-rail-text">{entry.content.tournament.name}</span>
+          </Link>
+        ))}
+        {competitions.data && !competitions.data.items.length && (
+          <p className="hub-rail-note">Các mùa giải sẽ xuất hiện khi được công bố.</p>
+        )}
+        {competitions.isError && <p className="hub-rail-note">Chưa tải được danh sách giải.</p>}
+        <Link to="/games" aria-current={pathname.startsWith("/games") ? "page" : undefined}>
+          <StreamIcon name="gamepad" size={18} />
+          Ván đấu đã ghi nhận
+        </Link>
+      </section>
+      <section className="hub-rail-section">
+        <h2>Liên kết</h2>
+        <a href={WIKI_URL}>
+          <StreamIcon name="spark" size={18} />
+          AOV WiKi
+          <StreamIcon name="external" size={12} />
+        </a>
+        <a href={`${ADMIN_URL}/tournaments`}>
+          <StreamIcon name="edit" size={18} />
+          Đóng góp dữ liệu
+          <StreamIcon name="external" size={12} />
+        </a>
+      </section>
+    </>
   )
 }
