@@ -15,6 +15,8 @@ const paths = {
   plus: "M12 5v14M5 12h14",
   reset: "M4 10a8 8 0 1 1 1 8M4 4v6h6",
   list: "M8 5h13M8 12h13M8 19h13M3 5h.1M3 12h.1M3 19h.1",
+  logout: "M10 4H5v16h5m4-12 4 4-4 4m4-4H9",
+  heart: "M12 20s-7.5-4.6-9.2-9.4A4.9 4.9 0 0 1 12 6.9a4.9 4.9 0 0 1 9.2 3.7C19.5 15.4 12 20 12 20Z",
 } as const
 
 export function StreamIcon({ name, size = 18 }: { name: keyof typeof paths; size?: number }) {

@@ -20,3 +20,5 @@ Trong `frontend`, chạy `pnpm --filter @aov/aov-stream dev`. Ứng dụng dùng
 
 `pnpm --filter @aov/aov-stream test:tournaments`
 
+`pnpm --filter @aov/aov-stream test:account`
+

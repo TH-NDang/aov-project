@@ -1490,6 +1490,12 @@ button:disabled {
     min-width: 60px;
   }
 }
+/* Phone headers keep the owl mark so navigation and the session control stay on one row. */
+@media (max-width: 460px) {
+  .stream-header .stream-wordmark {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

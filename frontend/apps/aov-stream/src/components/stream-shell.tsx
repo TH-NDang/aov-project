@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { Link, useLocation } from "react-router"
 import { StreamBrand } from "./stream-brand"
 import { StreamIcon } from "./stream-icon"
+import { CommunitySessionButton } from "../features/community/community-session"
 
 export const WIKI_URL = import.meta.env.VITE_WIKI_URL || "http://localhost:5173"
 export const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "http://localhost:5175"
@@ -18,13 +19,12 @@ export function StreamShell({ children }: { children: ReactNode }) {
           <StreamBrand />
         </Link>
         <nav aria-label="Điều hướng chính">
-          <Link
-            to="/"
-            aria-label="Giải đấu"
-            aria-current={!location.pathname.startsWith("/games") ? "page" : undefined}
-          >
+          <Link to="/" aria-label="Giải đấu" aria-current={location.pathname === "/" ? "page" : undefined}>
             <StreamIcon name="trophy" />
             <span>Giải đấu</span>
+          </Link>
+          <Link to="/pages" aria-current={location.pathname.startsWith("/pages") ? "page" : undefined}>
+            Cộng đồng
           </Link>
           <a href={WIKI_URL} aria-label="AOV WiKi">
             <StreamIcon name="spark" />
@@ -41,6 +41,7 @@ export function StreamShell({ children }: { children: ReactNode }) {
           <StreamIcon name="plus" size={16} />
           <span>Đóng góp</span>
         </a>
+        <CommunitySessionButton />
       </header>
       <main id="main">{children}</main>
       <footer className="stream-footer">
