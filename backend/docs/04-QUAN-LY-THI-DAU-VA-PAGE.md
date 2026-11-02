@@ -70,6 +70,15 @@ tài khoản tối đa một lượt mỗi bài; gửi lại cùng trạng thái
 chỉ đúng với người xem đã đăng nhập (danh sách công khai luôn false). Danh sách người thích không công
 khai và lượt thích không tạo thông báo. Bài bị ẩn giữ nguyên lượt thích nhưng không nhận lượt mới.
 
+Bảng tin cộng đồng (02/11/2026): khách chưa đăng nhập vẫn đọc được bảng tin chung gồm bài đã đăng của mọi
+page công khai (mới nhất trước), bài và bình luận của từng page. Mỗi mục bảng tin kèm thẻ page (mã, loại, tên,
+avatar theo bản trình bày, có đại diện hay không). Mọi bài trả kèm số bình luận đang hiển thị. Chỉ tài khoản đã
+đăng nhập mới có bảng tin cá nhân (cùng nội dung nhưng `liked`/`own` đúng với người xem, lọc được theo các page
+đang theo dõi), danh sách page đang theo dõi, gợi ý page để theo dõi và số thông báo chưa đọc. Gợi ý chỉ gồm page
+công khai mà tài khoản chưa theo dõi và không quản lý, nhiều người theo dõi trước. Bảng tin không gồm bản nháp
+(bản nháp cá nhân vẫn chỉ ở /me/pages/{id}/feed), bài bị ẩn hay page đã thu hồi. Đánh dấu tất cả thông báo đã đọc
+chỉ ảnh hưởng hộp thông báo của chính tài khoản.
+
 Xóa hồ sơ nháp (02/11/2026): chỉ hồ sơ chưa từng công bố, chưa có người đại diện, yêu cầu nhận, thư mời,
 bài viết, người theo dõi, báo cáo hay thông báo, và không được kế hoạch giải nào tham chiếu. Xóa cả lịch sử
 thao tác của hồ sơ và giải phóng đường dẫn; ứng dụng ghi log người xóa. Các trường hợp khác trả 409
@@ -93,6 +102,9 @@ chiếu ảnh page dùng cùng khóa với retire để không ghi lại ảnh v
 
 V008 tạo community.post_like (UUID, post_id FK post, actor, created_at, unique(post_id,actor)). Thích
 dùng INSERT ... ON CONFLICT DO NOTHING nên không cần khóa page.
+
+V009 thêm index cho bảng tin: post(created_at DESC, id) chỉ với bài PUBLISHED, comment(post_id, created_at)
+chỉ với bình luận chưa ẩn, follow(actor, page_id) để tra page đang theo dõi. Không đổi dữ liệu.
 
 ## API
 
@@ -119,14 +131,18 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | POST /me/pages/{id}/invitations; /me/invitations/accept | {role} trả token; {token} nhận lời mời hoặc mã bàn giao |
 | POST /me/pages/{id}/members/{memberId}/revoke hoặc /transfer | Thu hồi / chuyển owner |
 | GET /pages/{id}/posts, /me/pages/{id}/posts, /me/pages/{id}/feed | Công khai / quản lý / công khai cùng nháp của chính mình |
+| GET /posts?page=&size= | Bảng tin công khai: bài đã đăng của mọi page công khai, mỗi mục {post,page}; `liked` luôn false |
+| GET /me/feed?following=&page=&size= | Bảng tin của người xem, cùng dạng {post,page}; `following=true` chỉ lấy page đang theo dõi |
+| GET /me/follows?page=&size=; GET /me/suggestions?page=&size= | Page đang theo dõi (theo tên) / gợi ý page để theo dõi |
 | POST /me/pages/{id}/posts; PUT /me/pages/{id}/posts/{postId} | {version?,body,asPage,publish} |
 | GET /posts/{id}/comments; POST /me/posts/{id}/comments | Bình luận công khai; {body,asPage} |
-| POST /me/posts/{id}/like | {liked}; trả {liked,likes} |
+| POST /me/posts/{id}/like | {liked}; trả {liked,likes}. Mọi bài trả kèm `comments` (số bình luận đang hiển thị) |
 | POST /me/pages/{id}/follow | {following} |
 | POST /me/pages/{id}/reports | {postId?,commentId?,reason}; không có postId là góp ý hồ sơ |
 | POST /me/pages/{id}/moderate | {postId,commentId?,hidden} |
 | GET /admin/community-reports; POST /admin/community-reports/{id}/resolve | Hàng chờ; {resolution,hide} |
 | GET /me/notifications; POST /me/notifications/{id}/read | Hộp thông báo riêng; đánh dấu đọc |
+| GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |
 | GET /admin/competitions, /admin/competitions/{id} | Tóm tắt kế hoạch / kế hoạch cùng dữ liệu giải quyết |
