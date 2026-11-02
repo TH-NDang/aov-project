@@ -41,7 +41,7 @@ Launcher đọc file môi trường như dữ liệu, không thực thi nội du
 ## Thiết lập
 
 1. Kích hoạt R2 trực tiếp trong Cloudflare. Tạo hai bucket Standard `aov-media-private` và `aov-media-assets`.
-2. Giữ `aov-media-private` hoàn toàn riêng tư. Gắn CORS trong `upload-cors.json` vào bucket này để admin upload trực tiếp bằng URL ký sẵn. Khi đổi địa chỉ admin, thêm origin chính xác, không dùng wildcard.
+2. Giữ `aov-media-private` hoàn toàn riêng tư. Gắn CORS trong `upload-cors.json` vào bucket này để admin upload Media và aov-stream upload avatar trực tiếp bằng URL ký sẵn. Khi đổi địa chỉ admin hoặc stream, thêm origin chính xác, không dùng wildcard. Ứng dụng không tự ghi CORS lên bucket cloud; sửa file này rồi áp dụng lại trong dashboard.
 3. Tạo credential R2 có quyền object read/write chỉ trên hai bucket. Nhập vào file môi trường bị Git bỏ qua trên máy; không gửi secret vào chat hoặc commit.
 4. Chỉ bật public cho `aov-media-assets` khi đã xác nhận ảnh trong đó được phép công khai. Chưa có domain thì dùng URL `r2.dev` để thử; đây không phải CDN cache và có giới hạn tốc độ.
 5. Gộp các biến mẫu vào `.env.r2` riêng tư cùng các thiết lập local cần giữ. `STORAGE_CREATE_BUCKET_IF_MISSING=false` ngăn local initializer ghi đè cấu hình bucket cloud. Chạy launcher với `-EnvironmentFile .env.r2` như hướng dẫn trên.
@@ -110,6 +110,10 @@ Biên nhận kiểm chứng và ảnh chụp dashboard nằm trong `.local-state
 5. Thử luồng upload thật: backend cấp presigned URL R2 → PUT trực tiếp lên bucket private → complete. CORS cho `http://localhost:5175` hoạt động; upload lại cùng bytes trả kết quả trùng, giữ phiên bản hiện tại; key incoming được dọn sau complete và ảnh trả về qua CDN có HIT.
 
 Biên nhận sao chép, manifest và các kết quả kiểm chứng nằm trong `.local-state/r2-migration/`. Đây là dữ liệu local bị Git bỏ qua, không phải file cần commit. Cả hai bản dump chứa dữ liệu dự án và cần được giữ riêng tư.
+
+### Avatar từ aov-stream — 02/11/2026
+
+`upload-cors.json` thêm origin `http://localhost:5174` để người dùng aov-stream tải avatar của chính mình (ADR-008). Áp dụng trong **R2 → aov-media-private → Settings → CORS Policy** bằng nội dung file; giữ nguyên hai origin admin. Tại thời điểm ghi, thay đổi này chưa được áp dụng trên Cloudflare. Sau khi áp dụng, thử chọn ảnh ở trang Tài khoản của aov-stream: preflight PUT từ `http://localhost:5174` phải được chấp nhận, complete trả avatar URL ký sẵn.
 
 ### Nguồn local và phạm vi còn giữ lại
 

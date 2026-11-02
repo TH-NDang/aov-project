@@ -2,6 +2,7 @@
   "realm": "wikiaov",
   "displayName": "WikiAOV (local)",
   "enabled": true,
+  "registrationAllowed": true,
   "sslRequired": "none",
   "accessTokenLifespan": 900,
   "roles": {
@@ -206,6 +207,33 @@
     }
   },
   "clients": [
+    {
+      "clientId": "aov-stream",
+      "name": "AthaHub Community",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:5174/auth/callback"],
+      "webOrigins": ["http://localhost:5174"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5174/pages"
+      },
+      "protocolMappers": [{
+        "name": "audience-community-service",
+        "protocol": "openid-connect",
+        "protocolMapper": "oidc-audience-mapper",
+        "config": { "included.client.audience": "community-service", "access.token.claim": "true", "id.token.claim": "false" }
+      }, {
+        "name": "audience-wiki-service",
+        "protocol": "openid-connect",
+        "protocolMapper": "oidc-audience-mapper",
+        "config": { "included.client.audience": "wiki-service", "access.token.claim": "true", "id.token.claim": "false" }
+      }]
+    },
     {
       "clientId": "wiki-service",
       "name": "wiki-service (resource server)",

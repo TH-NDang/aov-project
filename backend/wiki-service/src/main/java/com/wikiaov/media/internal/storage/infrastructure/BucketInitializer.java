@@ -17,6 +17,9 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 /**
  * Creates the media bucket at startup when {@code wiki.storage.create-bucket-if-missing=true}.
  * Local development only: production buckets are provisioned outside the application.
+ *
+ * <p>Browsers PUT presigned uploads directly to storage, so the bucket CORS rule allows exactly the frontend origins
+ * in {@code wiki.storage.upload-origins} (admin by default; the local profile adds the stream app for avatars).
  */
 @Component
 @ConditionalOnBooleanProperty("wiki.storage.create-bucket-if-missing")
@@ -26,13 +29,13 @@ class BucketInitializer implements ApplicationRunner {
 
     private final S3Client s3;
     private final Set<String> buckets;
-    private final String adminOrigin;
+    private final List<String> uploadOrigins;
 
     BucketInitializer(S3Client s3, StorageProperties properties,
-            @Value("${wiki.auth.admin-origin:http://localhost:5175}") String adminOrigin) {
+            @Value("${wiki.storage.upload-origins:${wiki.auth.admin-origin:http://localhost:5175}}") List<String> uploadOrigins) {
         this.s3 = s3;
         this.buckets = Set.copyOf(List.of(properties.bucket(), properties.effectiveAssetsBucket()));
-        this.adminOrigin = adminOrigin;
+        this.uploadOrigins = List.copyOf(uploadOrigins);
     }
 
     @Override
@@ -57,7 +60,7 @@ class BucketInitializer implements ApplicationRunner {
         }
         try {
             s3.putBucketCors(request -> request.bucket(bucket).corsConfiguration(cors -> cors.corsRules(rule -> rule
-                    .allowedOrigins(adminOrigin).allowedMethods("PUT", "GET", "HEAD")
+                    .allowedOrigins(uploadOrigins).allowedMethods("PUT", "GET", "HEAD")
                     .allowedHeaders("*").exposeHeaders("ETag").maxAgeSeconds(600))));
         } catch (SdkException ex) {
             log.warn("Could not configure local upload CORS for bucket '{}'.", bucket);

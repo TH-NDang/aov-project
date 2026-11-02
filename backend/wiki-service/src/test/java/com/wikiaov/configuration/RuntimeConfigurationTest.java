@@ -37,6 +37,8 @@ class RuntimeConfigurationTest {
                     .isEqualTo("jdbc:postgresql://database.example.test:5432/configuration_test");
             assertThat(environment.getProperty("wiki.storage.endpoint")).isEqualTo("http://storage.example.test:8333");
             assertThat(environment.getProperty("wiki.storage.create-bucket-if-missing", Boolean.class)).isTrue();
+            assertThat(environment.getProperty("wiki.storage.upload-origins"))
+                    .isEqualTo("http://localhost:5175,http://localhost:5174");
             assertThat(environment.getProperty("wiki.auth.secure-cookies", Boolean.class)).isFalse();
         });
     }
