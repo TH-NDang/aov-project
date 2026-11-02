@@ -2394,3 +2394,10 @@ email, loại yêu cầu và nội dung; lưu cho quản trị viên xử lý, k
 hệ của người gửi không được đưa vào credit công khai. Chỉ người có `media:write` xem/đánh dấu
 đã xử lý yêu cầu. Chặn quá 5 lần gửi/10 phút theo địa chỉ kết nối trên mỗi instance; không tin
 header proxy do client tự cung cấp.
+
+### Quản lý mùa giải và page cộng đồng (ADR-018)
+
+Theo phạm vi người dùng chấp nhận ngày 01/11/2026, bổ sung luồng quản lý sáu bước, page tổ chức/đội/
+tuyển thủ độc lập tài khoản, nhận quyền đại diện và cộng đồng. Hành vi chi tiết tại
+[04-QUAN-LY-THI-DAU-VA-PAGE.md](04-QUAN-LY-THI-DAU-VA-PAGE.md), phần Luồng sử dụng và Page.
+Không thay cơ chế snapshot ván của ADR-015; không tự nhận quyền đại diện từ tên.

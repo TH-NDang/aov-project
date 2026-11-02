@@ -2599,3 +2599,10 @@ một nguồn gắn chủ sở hữu này.
 
 Giao diện admin gợi ý tên chủ sở hữu đã có khi nhập và hỏi lại khi tên mới gần giống tên sẵn có (so
 sánh không dấu). Đây chỉ là gợi ý; backend không tự suy ra chủ sở hữu từ URL, tên file hay tên đội.
+
+### API page cộng đồng và kế hoạch giải (ADR-018)
+
+Bổ sung các nhóm /pages, /me, /admin/pages, /admin/page-claims, /admin/community-reports,
+/competitions, /admin/competitions dưới /api/community/v1. Endpoint, body và phân quyền tại
+[04-QUAN-LY-THI-DAU-VA-PAGE.md](04-QUAN-LY-THI-DAU-VA-PAGE.md), phần API.
+Quyền theo page độc lập tournament:write/publish; API công khai không trả bằng chứng claim hay actor.

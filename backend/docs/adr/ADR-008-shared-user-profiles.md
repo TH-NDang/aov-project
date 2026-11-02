@@ -21,7 +21,11 @@ sách toàn bộ tài khoản trong Keycloak. Không ghi đè tên hiển thị 
 
 API cá nhân cần Bearer token hợp lệ cho audience `wiki-service`, không cần `catalog:read`.
 Admin API vẫn cần `catalog:read`, thêm `user:read` để đọc và `user:write` để sửa hồ sơ khác.
-Gateway đăng nhập admin vẫn dành cho người có `catalog:read`; luồng đăng nhập wiki/stream triển khai sau.
+Gateway đăng nhập admin vẫn dành cho người có `catalog:read`. Từ 02/11/2026, aov-stream đăng nhập bằng
+public client `aov-stream` (Code + PKCE, token trong bộ nhớ, xem 04 mục "Vận hành dev"); client này có
+thêm audience `wiki-service` để người dùng sửa hồ sơ và avatar của chính mình ở trang Tài khoản. Token
+stream của tài khoản có role client `wiki-service` vẫn mang các role đó; stream không gọi Admin API.
+Luồng đăng nhập wiki triển khai sau.
 Lưu hồ sơ dùng optimistic version, trả conflict khi cũ; ghi audit cùng transaction, không ghi nội dung
 giới thiệu hoặc token vào metadata audit. Chưa có xóa hồ sơ, khóa tài khoản hay chỉnh role trong UI này.
 
@@ -39,8 +43,11 @@ giới thiệu hoặc token vào metadata audit. Chưa có xóa hồ sơ, khóa 
 - `UserMediaUsage` báo tham chiếu CURRENT/AVATAR để media ngăn deprecate avatar đang dùng.
 - Avatar preview dùng URL GET ký sẵn 15 phút; không lưu URL có chữ ký vào DB, không truyền bytes qua backend.
   Frontend làm mới URL định kỳ. PNG/JPEG/WebP, tối đa 25 MB (cấu hình media có thể chặt hơn); chưa crop/resize.
-- Local bucket initializer đặt CORS cho đúng `ADMIN_ORIGIN`, cho PUT/GET/HEAD. Production phải provision CORS
-  tương ứng bên storage; endpoint ký URL phải được trình duyệt truy cập và dùng HTTPS khi admin dùng HTTPS.
+- Local bucket initializer đặt CORS cho đúng các origin trong `wiki.storage.upload-origins` (mặc định
+  `ADMIN_ORIGIN`; profile local thêm aov-stream `http://localhost:5174`), cho PUT/GET/HEAD. Bucket cloud (R2)
+  không do ứng dụng ghi cấu hình: áp dụng `infra/cloudflare/upload-cors.json` bên storage. Production phải
+  provision CORS tương ứng; endpoint ký URL phải được trình duyệt truy cập và dùng HTTPS khi frontend dùng HTTPS.
+- Avatar là ảnh của chính người dùng: ticket chỉ gồm tên file, loại và dung lượng, không có nguồn hay chủ sở hữu.
 
 ## Kiểm chứng
 

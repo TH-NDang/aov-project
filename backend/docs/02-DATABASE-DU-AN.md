@@ -1765,3 +1765,10 @@ Các cột khác của nguồn giữ chỉ-thêm.
 Migration tạo một chủ sở hữu cho mỗi khóa từ `owner_name` hiện có, chọn cách viết dùng nhiều nhất làm
 tên hiển thị, rồi gắn `owner_id` và đồng bộ `owner_name` cho mọi nguồn khớp khóa. Không sửa nguồn
 chưa có chủ sở hữu.
+
+### Community page và kế hoạch mùa giải (ADR-018)
+
+Database community bổ sung schema community qua V006 và kế hoạch/revision trong schema tournament
+qua V007. Cấu trúc, ràng buộc và khóa được đặc tả tại
+[04-QUAN-LY-THI-DAU-VA-PAGE.md](04-QUAN-LY-THI-DAU-VA-PAGE.md), phần Cơ sở dữ liệu.
+Không đọc/ghi database Wiki, không sửa migration đã áp dụng.
