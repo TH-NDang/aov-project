@@ -6,16 +6,7 @@ import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { pageApi, pageError, pageKeys } from "./page-api"
 import { Field } from "./profile-fields"
-
-function profileSlug(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[đĐ]/g, "d")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-}
+import { profileSlug } from "./profile-slug"
 
 export function CreateProfileSheet({
   kind,
@@ -34,7 +25,10 @@ export function CreateProfileSheet({
 }) {
   const client = useQueryClient()
   const [name, setName] = useState(initialName)
-  const [code, setCode] = useState(profileSlug(initialName))
+  const [code, setCode] = useState(profileSlug(initialName) ?? "")
+  // Once the code is typed by hand, renaming no longer overwrites it.
+  const [codeTyped, setCodeTyped] = useState(false)
+  const nonLatin = !!name.trim() && profileSlug(name) === null
   const [source, setSource] = useState(initialSource)
   const create = useMutation({
     mutationFn: () =>
@@ -75,24 +69,28 @@ export function CreateProfileSheet({
             value={name}
             onChange={(e) => {
               setName(e.target.value)
-              setCode(
-                e.target.value
-                  .normalize("NFD")
-                  .replace(/[\u0300-\u036f]/g, "")
-                  .replace(/[đĐ]/g, "d")
-                  .toLowerCase()
-                  .replace(/[^a-z0-9]+/g, "-")
-                  .replace(/^-|-$/g, ""),
-              )
+              if (!codeTyped) setCode(profileSlug(e.target.value) ?? "")
             }}
           />
-          <Field
-            label="Đường dẫn hồ sơ *"
-            required
-            pattern="[a-z0-9][a-z0-9-]{1,99}"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
+          <div className="grid gap-2">
+            <Field
+              label="Đường dẫn hồ sơ *"
+              required
+              pattern="[a-z0-9][a-z0-9-]{1,99}"
+              placeholder="garena-aov-taiwan"
+              aria-describedby="profile-code-hint"
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value)
+                setCodeTyped(true)
+              }}
+            />
+            <p id="profile-code-hint" className="type-meta">
+              {nonLatin && !codeTyped
+                ? "Tên có chữ không phải Latin nên không tự tạo được đường dẫn. Hãy tự đặt bằng chữ thường không dấu, số và gạch nối."
+                : "Chữ thường không dấu, số và gạch nối; dùng làm địa chỉ trang công khai."}
+            </p>
+          </div>
           <Field
             label="Nguồn tham khảo"
             type="url"

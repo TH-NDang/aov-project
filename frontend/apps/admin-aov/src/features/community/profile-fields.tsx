@@ -127,6 +127,7 @@ export function ProfileFields({
                 />
                 <Field
                   label="Tên kênh"
+                  aria-label={`Tên kênh ${index + 1}`}
                   value={item.label}
                   onChange={(e) =>
                     set(
@@ -137,6 +138,7 @@ export function ProfileFields({
                 />
                 <Field
                   label="Đường dẫn"
+                  aria-label={`Đường dẫn kênh ${index + 1}`}
                   type="url"
                   value={item.url}
                   onChange={(e) =>
@@ -150,6 +152,7 @@ export function ProfileFields({
                   <input
                     type="checkbox"
                     className="size-4 accent-primary"
+                    aria-label={`Kênh ${index + 1} là kênh chính thức`}
                     checked={!!item.official}
                     onChange={(e) =>
                       set(
@@ -158,11 +161,14 @@ export function ProfileFields({
                       )
                     }
                   />
-                  <OfficialBadge label="Kênh chính thức" />
+                  <span aria-hidden>
+                    <OfficialBadge label="Kênh chính thức" />
+                  </span>
                   Kênh chính thức
                 </label>
                 <Remove
                   label="Gỡ kênh"
+                  name={`Gỡ kênh ${index + 1}`}
                   onClick={() =>
                     set(
                       "links",
@@ -414,9 +420,10 @@ function Add({ label, onClick }: { label: string; onClick: () => void }) {
     </Button>
   )
 }
-function Remove({ label, onClick }: { label: string; onClick: () => void }) {
+/** `name` tells repeated rows apart for screen readers by adding the row number. */
+function Remove({ label, name, onClick }: { label: string; name?: string; onClick: () => void }) {
   return (
-    <Button type="button" variant="ghost" onClick={onClick}>
+    <Button type="button" variant="ghost" aria-label={name} onClick={onClick}>
       <Trash2 className="size-4" />
       {label}
     </Button>
