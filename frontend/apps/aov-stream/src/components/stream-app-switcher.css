@@ -1,0 +1,28 @@
+.hub-brand-group {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+@media (max-width: 767px) {
+  .hub-brand-group .public-app-wordmark {
+    font-size: 18px;
+  }
+  .hub-brand-group .public-app-trigger {
+    gap: 6px;
+    padding-inline: 4px;
+  }
+}
+@media (max-width: 420px) {
+  .hub-brand-group .public-app-wordmark-prefix {
+    display: none;
+  }
+  .hub-brand-group .public-app-wordmark-product {
+    font-size: 14px;
+  }
+}
+@media (max-width: 360px) {
+  .hub-brand-group .public-app-wordmark {
+    display: none;
+  }
+}

@@ -47,7 +47,7 @@ Edit this mole mascot app icon. Preserve the original brown/cream mole identity,
 Bám theo thanh điều hướng của https://wiki.hoyolab.com/pc/hsr/home (giống bản Genshin):
 
 - Cao 48px, nền `#000000a6` + blur, viền dưới trắng 8%, padding ngang 24px.
-- Trái: logo 28px, wordmark AOVWiKi 20px (không có vạch ngăn) + **nút thả xuống** ngay cạnh (tương đương bộ chọn game, không hiện tên mục trên header). Danh sách (`SECTIONS` trong `wiki-header.tsx`): AOV WiKi (logo + mô tả nhỏ bên dưới) và Stream (ô icon giữ chỗ, đánh dấu "Sắp ra mắt"). Thêm icon Stream bằng cách đặt `image` cho mục đó.
+- Trái: logo chuột chũi dẫn về trang chủ; tên **AOV Wiki** kèm mũi tên là nút mở menu chuyển ứng dụng. Danh sách (`SECTIONS` trong `wiki-header.tsx`) gồm AOV Wiki và AOV Stream, có logo, mô tả và nhãn **Đang xem**. Chọn Stream mở frontend Stream trong cùng tab.
 - Giữa: ô tìm kiếm cao 28px, tối đa 540px, bo 23px, căn giữa màn hình bằng lưới 3 cột (`minmax(max-content, 1fr) | minmax(0, 540px) | minmax(max-content, 1fr)`).
 - Phải: chọn ngôn ngữ (viền 25%, bo 8px), avatar (không có chuông thông báo) — đều 28px, cách nhau 24px. Thư viện và chi tiết Tướng có thêm icon **Phản hồi vấn đề** trên desktop.
 - Dropdown/popover dùng chung hằng `PANEL_SURFACE` trong `wiki-header.tsx` (nền tối trong mờ, bo 12px).
@@ -91,3 +91,11 @@ Theo bản mobile của HoYoWiki (https://wiki.hoyolab.com/m/hsr/home):
 - Giữa: trên trang chủ là logo 24px + chữ AOVWiKi 18px, căn giữa tuyệt đối; thư viện hiện “Tướng”, chi tiết để trống vùng này.
 - Phải: nút tròn tìm kiếm và nút "⋯", cách nhau 12px. Thư viện và chi tiết có thêm nút mở mục lục.
 - Nút "⋯" mở tấm trượt từ dưới lên (`MoreMenu`, Drawer của `@aov/ui`), theo thứ tự: danh sách khu vực (AOV WiKi / Stream — cùng dữ liệu `SECTIONS` và component `SectionItemBody` với dropdown desktop), khối tài khoản (sắp ra mắt), dòng Ngôn ngữ. Nút tài khoản và ngôn ngữ bị ẩn khỏi header trên điện thoại.
+
+## Chuyển giữa Wiki và Stream
+
+- Desktop dùng menu cạnh logo; điện thoại dùng mục AOV Stream trong menu "⋯". Stream có menu tương ứng cạnh logo cú để quay về Wiki, trên cả desktop và điện thoại.
+- Chữ logo và các dòng ứng dụng dùng chung `PublicAppWordmark`/`PublicAppOptionBody` từ `@aov/ui`: AOV nét dày nghiêng, gạch nhấn vát, tên sản phẩm chữ hoa giãn nhẹ. Wiki dùng màu kem/hổ phách của chuột chũi; Stream dùng kem/tím chàm và điểm vàng của cú. Menu Wiki dùng nền tối; menu Stream theo giao diện sáng/tối của trang.
+- Cấu hình `VITE_STREAM_URL` trong môi trường của `apps/aov-wiki` để đặt địa chỉ Stream. Nếu bỏ trống, dùng cùng giao thức và hostname với Wiki, cổng `5174`, hỗ trợ cả truy cập qua IP trong mạng LAN.
+- Khi triển khai, đặt URL công khai đầy đủ trước khi build, ví dụ `VITE_STREAM_URL=https://stream.example.com`; khởi động lại dev server khi thay biến môi trường. Chiều ngược lại dùng `VITE_WIKI_URL` trong `apps/aov-stream`.
+- Liên kết sang Stream không mang theo bộ lọc mùa/patch của Wiki. Các liên kết nội bộ Wiki vẫn giữ ngữ cảnh tra cứu.

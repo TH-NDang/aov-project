@@ -1,14 +1,16 @@
 import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react"
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router"
 import { profileKindLabels, type ProfileKind } from "@aov/community-contracts"
+import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { StreamBrand } from "./stream-brand"
+import { StreamAppSwitcher } from "./stream-app-switcher"
 import { StreamIcon, type StreamIconName } from "./stream-icon"
 import { ThemeToggle } from "./stream-theme"
 import { CommunitySessionButton } from "../features/community/community-session"
 import { SignInDialog } from "../features/community/community-signin"
 import { hueOf, kindIcons, useFeaturedCompetitions } from "../features/community/community-ui"
 
-export const WIKI_URL = import.meta.env.VITE_WIKI_URL || "http://localhost:5173"
+export const WIKI_URL = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
 export const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "http://localhost:5175"
 
 type Destination = { to: string; label: string; icon: StreamIconName; active: (path: string) => boolean }
@@ -37,19 +39,18 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
       </a>
       <header className="hub-topbar">
         <div className="hub-topbar-inner">
-          <Link to="/" className="hub-brand-link" aria-label="AOV Stream — Trang chủ">
-            <StreamBrand />
-          </Link>
+          <div className="hub-brand-group">
+            <Link to="/" className="hub-brand-link" aria-label="AOV Stream — Trang chủ">
+              <StreamBrand compact />
+            </Link>
+            <StreamAppSwitcher wikiUrl={WIKI_URL} />
+          </div>
           <nav className="hub-topnav" aria-label="Điều hướng chính">
             {destinations.map((item) => (
               <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
                 {item.label}
               </Link>
             ))}
-            <a href={WIKI_URL}>
-              WiKi
-              <StreamIcon name="external" size={12} />
-            </a>
           </nav>
           {!onDirectory && <HeaderSearch />}
           <div className="hub-topbar-actions">

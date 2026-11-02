@@ -1,3 +1,12 @@
+@media (max-width: 640px) {
+  .wiki-app-switcher {
+    display: none;
+  }
+  .wiki-mobile-wordmark {
+    font-size: 18px;
+  }
+}
+
 .wiki-header[data-variant="hero"] {
   background: rgba(var(--hero-surface-rgb, 20, 25, 32), calc(var(--header-solid, 0) * 0.96));
   border-bottom-color: rgb(255 255 255 / calc(var(--header-solid, 0) * 0.08));

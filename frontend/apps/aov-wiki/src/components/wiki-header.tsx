@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
-import { AovWordmark } from "@aov/ui/components/aov-brand"
+import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
+import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import {
   DropdownMenu,
@@ -40,102 +41,57 @@ const PANEL_SURFACE =
 const UTILITY_BUTTON =
   "wiki-header-utility grid size-9 place-items-center rounded-full text-header-muted transition-colors hover:bg-white/7 hover:text-gold data-[state=open]:bg-white/7 data-[state=open]:text-gold"
 
-/** Row of the area list, shared by the desktop dropdown and the phone "more" sheet. */
-const SECTION_ROW =
-  "flex min-h-15 cursor-pointer items-center gap-3 rounded-[8px] px-3 py-2.5 text-sm text-white/85 no-underline data-[disabled]:cursor-default data-[disabled]:opacity-60 data-[selected]:bg-gold/7"
-
 /** Phone layout (≤640px): 28px outlined circle, like the HoYoWiki mobile header. */
 const MOBILE_ROUND =
   "max-[640px]:size-7 max-[640px]:border max-[640px]:border-white/25 max-[640px]:bg-transparent max-[640px]:text-white"
 
 const WIKI_LOGO_URL = "/images/mole-logo-v4.png"
-
-function Wordmark({ size = "lg" }: { size?: "lg" | "sm" }) {
-  return (
-    <AovWordmark
-      className={cn("text-[#f5eee0]", size === "lg" ? "text-[22px] max-[640px]:text-[18px]" : "text-[16px]")}
-    />
-  )
-}
+const STREAM_URL = publicSiteUrl(import.meta.env.VITE_STREAM_URL, 5174, window.location.origin)
 
 type Section = {
-  id: string
-  /** Display name; may be a node, e.g. the AOVWiKi wordmark. */
-  name: ReactNode
+  id: "wiki" | "stream"
+  product: "Wiki" | "Stream"
   label: string
   description: string
-  /** Icon image path under `public/`. Leave empty to show a placeholder slot. */
-  image?: string
-  href?: string
-  soon?: boolean
+  image: string
+  href: string
 }
 
 /** Areas of the AOV site, like the game selector on HoYoWiki. */
 const SECTIONS: Section[] = [
   {
     id: "wiki",
-    name: <Wordmark size="sm" />,
-    label: "AOV WiKi",
+    product: "Wiki",
+    label: "AOV Wiki",
     description: "Tra cứu tướng, trang bị, phù hiệu",
     image: WIKI_LOGO_URL,
     href: "/",
   },
   {
     id: "stream",
-    name: "Stream",
-    label: "Stream",
-    description: "Xem trực tiếp các trận đấu",
-    // image: "/images/stream-icon.png", // TODO: add the Stream icon
-    soon: true,
+    product: "Stream",
+    label: "AOV Stream",
+    description: "Khám phá giải đấu, ván đấu và cộng đồng",
+    image: "/icons/stream-owl.svg",
+    href: STREAM_URL,
   },
 ]
 const CURRENT_SECTION = "wiki"
 
-function SectionIcon({ section }: { section: Section }) {
-  if (section.image) {
-    return (
-      <img
-        className="size-9 shrink-0 rounded-[9px] border border-[#efc78466] bg-[#bd843f] object-cover"
-        src={section.image}
-        alt=""
-        width="36"
-        height="36"
-      />
-    )
-  }
-  return (
-    <span
-      className="size-9 shrink-0 rounded-[9px] border border-dashed border-white/25 bg-white/4"
-      aria-hidden="true"
-    />
-  )
-}
-
-/** One area row: icon, name (+ coming-soon badge), description and a check when current. */
 function SectionItemBody({ section }: { section: Section }) {
-  const { locale, t } = useWikiContext()
+  const { locale } = useWikiContext()
   return (
-    <>
-      <SectionIcon section={section} />
-      <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
-        <span className="flex items-center gap-2 leading-tight font-bold">
-          {section.name}
-          {section.soon && (
-            <span className="rounded-full border border-white/15 px-[7px] py-px text-[10px] font-medium text-header-muted">
-              {t("comingSoon")}
-            </span>
-          )}
-        </span>
-        <span className="text-xs leading-[1.35] text-white/50">
-          {wikiText(
-            locale,
-            section.description,
-            section.id === "wiki" ? "Explore the Arena of Valor wiki" : "Watch live matches",
-          )}
-        </span>
-      </span>
-      {section.id === CURRENT_SECTION && <Icon name="check" className="size-4 text-gold" />}
-    </>
+    <PublicAppOptionBody
+      product={section.product}
+      image={section.image}
+      description={wikiText(
+        locale,
+        section.description,
+        section.id === "wiki" ? "Explore the Arena of Valor wiki" : "Explore tournaments, games and the community",
+      )}
+      current={section.id === CURRENT_SECTION}
+      currentLabel={wikiText(locale, "Đang xem", "Current")}
+    />
   )
 }
 
@@ -146,37 +102,36 @@ function SectionSelector() {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
-        className="group grid h-8 w-6 place-items-center rounded-[6px] text-header-muted transition-colors hover:bg-white/7 hover:text-gold data-[state=open]:bg-white/7 data-[state=open]:text-gold max-[640px]:hidden"
+        className="public-app-trigger wiki-app-switcher"
+        data-product="wiki"
         aria-label={`${t("application")} — ${current.label}`}
       >
-        <Icon
-          name="chevron"
-          className="size-[18px] transition-transform duration-200 group-data-[state=open]:rotate-180"
-        />
+        <PublicAppWordmark product="Wiki" />
+        <span className="public-app-chevron">
+          <Icon name="chevron" />
+        </span>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        alignOffset={-102}
-        sideOffset={12}
-        className={cn(PANEL_SURFACE, "min-w-[280px] p-2")}
+        alignOffset={-42}
+        sideOffset={10}
+        className="public-app-theme public-app-menu"
+        data-appearance="wiki"
       >
+        <div className="public-app-menu-title">{t("application")}</div>
         {SECTIONS.map((s) => {
           const selected = s.id === CURRENT_SECTION
           return (
             <DropdownMenuItem
               key={s.id}
-              className={SECTION_ROW + " focus:bg-white/8 focus:text-white"}
-              data-selected={selected || undefined}
-              disabled={s.soon}
-              asChild={!!s.href}
+              className="public-app-option"
+              data-product={s.id}
+              data-current={selected || undefined}
+              asChild
             >
-              {s.href ? (
-                <a href={href(s.href)} aria-current={selected ? "page" : undefined}>
-                  <SectionItemBody section={s} />
-                </a>
-              ) : (
+              <a href={selected ? href(s.href) : s.href} aria-current={selected ? "true" : undefined}>
                 <SectionItemBody section={s} />
-              )}
+              </a>
             </DropdownMenuItem>
           )
         })}
@@ -278,23 +233,20 @@ function MoreMenu({ onOpenContents }: { onOpenContents?: () => void }) {
               </button>
             </DrawerClose>
           )}
-          <nav aria-label={t("application")} className="flex flex-col gap-1">
+          <nav aria-label={t("application")} className="public-app-theme" data-appearance="wiki">
             {SECTIONS.map((s) => {
               const selected = s.id === CURRENT_SECTION
-              return s.href ? (
+              return (
                 <a
                   key={s.id}
-                  href={href(s.href)}
-                  className={SECTION_ROW + " hover:bg-white/8"}
-                  data-selected={selected || undefined}
-                  aria-current={selected ? "page" : undefined}
+                  href={selected ? href(s.href) : s.href}
+                  className="public-app-option"
+                  data-product={s.id}
+                  data-current={selected || undefined}
+                  aria-current={selected ? "true" : undefined}
                 >
                   <SectionItemBody section={s} />
                 </a>
-              ) : (
-                <div key={s.id} className={SECTION_ROW} data-disabled="" aria-disabled="true">
-                  <SectionItemBody section={s} />
-                </div>
               )
             })}
           </nav>
@@ -437,9 +389,10 @@ export function WikiHeader({
         </a>
         <div
           className={cn(
-            "flex min-w-0 shrink-0 items-center gap-2.5 max-[640px]:absolute max-[640px]:left-1/2 max-[640px]:-translate-x-1/2 max-[640px]:gap-2",
+            "public-app-theme flex min-w-0 shrink-0 items-center gap-1 max-[640px]:absolute max-[640px]:left-1/2 max-[640px]:-translate-x-1/2 max-[640px]:gap-2",
             (pageTitle || variant === "hero") && "max-[640px]:hidden",
           )}
+          data-appearance="wiki"
         >
           <a className="group shrink-0 rounded-[9px]" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
             <img
@@ -451,12 +404,10 @@ export function WikiHeader({
               fetchPriority="high"
             />
           </a>
-          <div className="flex items-center gap-0.5">
-            <a className="inline-flex shrink-0 pr-1 no-underline" href={href("/")} tabIndex={-1} aria-hidden="true">
-              <Wordmark />
-            </a>
-            <SectionSelector />
-          </div>
+          <a className="hidden max-[640px]:inline-flex" href={href("/")} tabIndex={-1} aria-hidden="true">
+            <PublicAppWordmark product="Wiki" className="wiki-mobile-wordmark" />
+          </a>
+          <SectionSelector />
         </div>
 
         {pageTitle && variant !== "hero" && (

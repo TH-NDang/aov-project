@@ -1,0 +1,231 @@
+.public-app-theme {
+  --app-text: var(--hub-text, var(--foreground));
+  --app-muted: var(--hub-muted, var(--muted-foreground));
+  --app-surface: var(--hub-surface, var(--popover));
+  --app-border: var(--hub-border, var(--border));
+  --app-hover: var(--hub-hover, var(--accent));
+  --app-accent: var(--hub-accent-strong, var(--primary));
+  --app-selected: var(--hub-accent-soft, color-mix(in srgb, var(--primary) 9%, var(--popover)));
+}
+.public-app-theme[data-appearance="wiki"] {
+  --app-text: #f4f0e7;
+  --app-muted: #a2aab9;
+  --app-surface: #171c25;
+  --app-border: #ffffff1f;
+  --app-hover: #ffffff0a;
+  --app-accent: #e4c88e;
+  --app-selected: #e4c88e0d;
+  --brand-wiki-ink: #f5e6cc;
+  --brand-wiki-accent: #e5b566;
+  --brand-wiki-tint: #e5b5660d;
+  --brand-stream-ink: #eee0ba;
+  --brand-stream-accent: #aebbe3;
+  --brand-stream-tint: #aebbe314;
+}
+.public-app-wordmark[data-product="wiki"] {
+  --wordmark-ink: var(--brand-wiki-ink, #f5e6cc);
+  --wordmark-accent: var(--brand-wiki-accent, #e5b566);
+  --wordmark-line: var(--wordmark-accent);
+}
+.public-app-wordmark[data-product="stream"] {
+  --wordmark-ink: var(--brand-stream-ink, #eee0ba);
+  --wordmark-accent: var(--brand-stream-accent, #aebbe3);
+  --wordmark-line: #d3a857;
+}
+.public-app-option[data-product="wiki"],
+.public-app-trigger[data-product="wiki"] {
+  --app-accent: var(--brand-wiki-accent, #e5b566);
+  --app-selected: var(--brand-wiki-tint, #e5b5660d);
+}
+.public-app-option[data-product="stream"],
+.public-app-trigger[data-product="stream"] {
+  --app-accent: var(--brand-stream-accent, #aebbe3);
+  --app-selected: var(--brand-stream-tint, #aebbe314);
+}
+.public-app-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42em;
+  color: var(--wordmark-ink);
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: 22px;
+  line-height: 1;
+  white-space: nowrap;
+  font-style: normal;
+}
+.public-app-wordmark-prefix {
+  position: relative;
+  display: inline-block;
+  padding-right: 0.04em;
+  font-family: "Arial Black", "Segoe UI", sans-serif;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.075em;
+  line-height: 0.95;
+  transform: skewX(-5deg);
+}
+.public-app-wordmark-prefix::after {
+  position: absolute;
+  right: 0.06em;
+  bottom: -0.18em;
+  left: 0.08em;
+  height: 2px;
+  background: var(--wordmark-line);
+  clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
+  content: "";
+}
+.public-app-wordmark-product {
+  color: var(--wordmark-accent);
+  padding-top: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 16px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.public-app-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  flex-shrink: 0;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--app-muted);
+  cursor: pointer;
+  transition:
+    background 150ms,
+    border-color 150ms;
+}
+.public-app-trigger:hover,
+.public-app-trigger[data-state="open"] {
+  border-color: var(--app-border);
+  background: var(--app-hover);
+}
+.public-app-chevron {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 6px;
+  background: var(--app-hover);
+  color: var(--app-muted);
+}
+.public-app-chevron > svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 150ms;
+}
+.public-app-trigger[data-state="open"] .public-app-chevron > svg {
+  transform: rotate(180deg);
+}
+.public-app-menu {
+  width: min(352px, calc(100vw - 24px));
+  padding: 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow:
+    0 16px 48px -12px #0005,
+    0 3px 8px #0001;
+}
+.public-app-menu-title {
+  display: block;
+  margin: 0 4px 8px;
+  padding: 8px 6px 12px;
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  letter-spacing: 0.025em;
+}
+.public-app-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--app-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 150ms,
+    border-color 150ms;
+}
+.public-app-option + .public-app-option {
+  margin-top: 4px;
+}
+.public-app-option[data-current="true"] {
+  border-color: color-mix(in srgb, var(--app-accent) 24%, transparent);
+  background: var(--app-selected);
+}
+.public-app-option:hover,
+.public-app-option:focus {
+  border-color: var(--app-border);
+  background: var(--app-hover);
+  color: var(--app-text);
+}
+.public-app-option-image {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 0 0 1px #ffffff14;
+}
+.public-app-option-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+.public-app-option-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.public-app-option .public-app-wordmark {
+  font-size: 20px;
+}
+.public-app-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--app-accent);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.public-app-current::before {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  content: "";
+}
+.public-app-description {
+  color: var(--app-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.public-app-option-arrow {
+  flex-shrink: 0;
+  color: var(--app-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-app-trigger,
+  .public-app-chevron > svg,
+  .public-app-option {
+    transition: none;
+  }
+}

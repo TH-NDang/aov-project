@@ -19,6 +19,12 @@
   --hub-accent: #f2b13c;
   --hub-accent-strong: #8d5900;
   --hub-accent-soft: #fdf2d9;
+  --brand-wiki-ink: #69462f;
+  --brand-wiki-accent: #94651d;
+  --brand-wiki-tint: #fdf2d9;
+  --brand-stream-ink: #303653;
+  --brand-stream-accent: #526294;
+  --brand-stream-tint: #eef0fa;
   --hub-on-accent: #241800;
   --hub-indigo: #4c58d0;
   --hub-indigo-soft: #eceefe;
@@ -72,6 +78,12 @@
     --hub-accent: #f2b84b;
     --hub-accent-strong: #f5c56b;
     --hub-accent-soft: rgb(242 184 75 / 13%);
+    --brand-wiki-ink: #f5e6cc;
+    --brand-wiki-accent: #e5b566;
+    --brand-wiki-tint: #e5b5660d;
+    --brand-stream-ink: #eee0ba;
+    --brand-stream-accent: #aebbe3;
+    --brand-stream-tint: #aebbe314;
     --hub-on-accent: #1f1503;
     --hub-indigo: #959dff;
     --hub-indigo-soft: rgb(124 136 255 / 15%);
@@ -101,6 +113,12 @@
   --hub-accent: #f2b84b;
   --hub-accent-strong: #f5c56b;
   --hub-accent-soft: rgb(242 184 75 / 13%);
+  --brand-wiki-ink: #f5e6cc;
+  --brand-wiki-accent: #e5b566;
+  --brand-wiki-tint: #e5b5660d;
+  --brand-stream-ink: #eee0ba;
+  --brand-stream-accent: #aebbe3;
+  --brand-stream-tint: #aebbe314;
   --hub-on-accent: #1f1503;
   --hub-indigo: #959dff;
   --hub-indigo-soft: rgb(124 136 255 / 15%);
@@ -228,16 +246,7 @@ button:disabled {
   border-radius: 11px;
 }
 .stream-wordmark {
-  color: var(--hub-text);
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.4px;
-  white-space: nowrap;
-}
-.stream-wordmark > span {
-  margin-left: 4px;
-  color: var(--hub-accent-strong);
-  font-weight: 600;
+  font-size: 20px;
 }
 .hub-topnav {
   display: flex;
