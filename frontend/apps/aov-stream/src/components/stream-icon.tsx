@@ -43,6 +43,8 @@ const paths = {
   close: "M6 6l12 12M18 6 6 18",
   send: "M4 12 20 4l-6 16-3-7-7-1Z",
   pin: "M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Zm2.5-11.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0",
+  more: "M6.5 12a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm6.5 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm6.5 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z",
+  feed: "M4 5h16v4H4V5Zm0 7h10m-10 4h16m-16 3h7",
 } as const
 
 export type StreamIconName = keyof typeof paths

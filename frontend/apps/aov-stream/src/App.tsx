@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router"
 import { TournamentDirectory } from "./features/tournaments/tournament-directory"
 import { GamePage } from "./features/tournaments/game-page"
-import { CommunityDirectory } from "./features/community/community-directory"
+import { CommunityHome } from "./features/community/community-home"
 import { CommunityProfilePage } from "./features/community/community-profile"
 import { CommunityAccount, CommunityPageManager, CommunityInvitation } from "./features/community/community-account"
 import { CommunityLoginCallback } from "./features/community/community-session"
@@ -14,7 +14,7 @@ export default function App() {
       <Route path="/competitions/:id" element={<PublicCompetitionPage />} />
       <Route path="/games" element={<TournamentDirectory />} />
       <Route path="/games/:id" element={<GamePage />} />
-      <Route path="/pages" element={<CommunityDirectory />} />
+      <Route path="/pages" element={<CommunityHome />} />
       <Route path="/pages/:code" element={<CommunityProfilePage />} />
       <Route path="/account" element={<CommunityAccount />} />
       <Route path="/manage/:id" element={<CommunityPageManager />} />

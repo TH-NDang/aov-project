@@ -1,17 +1,26 @@
 import { Link } from "react-router"
-import { useQuery } from "@tanstack/react-query"
-import { profileKindLabels, type CommunityProfile, type PageSlice } from "@aov/community-contracts"
+import { profileKindLabels } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
 import { ADMIN_URL, WIKI_URL } from "../../components/stream-shell"
 import { AccountAvatar } from "../account/account-profile"
 import { useOwnProfile } from "../account/profile-api"
-import { communityApi } from "./community-api"
 import { signIn, useCommunitySession } from "./community-auth"
-import { Avatar, followersLabel } from "./community-ui"
+import {
+  useFollowedPages,
+  useFollowPage,
+  useNotifications,
+  useReadNotifications,
+  useSuggestions,
+  useUnreadCount,
+} from "./community-queries"
+import { Avatar, followersLabel, timeAgo } from "./community-ui"
 
-/** The right column of portal pages: the viewer's account, pages worth following and the companion sites. */
+/**
+ * The right column of portal pages. Visitors get an invitation to sign in; the account card, notifications and
+ * page suggestions exist only for signed-in viewers.
+ */
 export function CommunityAside({
   suggestions = true,
   representative = false,
@@ -19,10 +28,13 @@ export function CommunityAside({
   suggestions?: boolean
   representative?: boolean
 }) {
+  const session = useCommunitySession()
+  const signedIn = session.status === "authenticated"
   return (
     <>
-      <SessionCard />
-      {suggestions && <FollowSuggestions />}
+      {signedIn ? <AccountCard /> : <GuestCard />}
+      {signedIn && <NotificationsCard />}
+      {signedIn && suggestions && <FollowSuggestions />}
       {representative && (
         <section className="hub-card hub-card-padded">
           <h2 className="hub-card-title">Bạn là người đại diện?</h2>
@@ -59,33 +71,14 @@ export function CommunityAside({
   )
 }
 
-function SessionCard() {
-  const session = useCommunitySession()
-  const profile = useOwnProfile()
-  if (session.status === "authenticated") {
-    const name = profile.data?.displayName || session.name
-    return (
-      <section className="hub-card hub-session-card">
-        <div className="hub-session-cover" aria-hidden="true" />
-        <div className="hub-session-body">
-          <AccountAvatar url={profile.data?.avatarUrl} name={name} large />
-          <strong>{name}</strong>
-          <span className="hub-card-text">Thành viên cộng đồng AOV Stream</span>
-          <Link className="cp-button" to="/account">
-            <StreamIcon name="user" size={16} />
-            Tài khoản của bạn
-          </Link>
-        </div>
-      </section>
-    )
-  }
+function GuestCard() {
   return (
     <section className="hub-card hub-session-card hub-session-guest">
       <div className="hub-session-body">
         <StreamBrand compact />
         <strong>Tham gia cộng đồng</strong>
         <span className="hub-card-text">
-          Theo dõi đội tuyển yêu thích, thích bài viết và cùng thảo luận về từng trận.
+          Ai cũng đọc được bài viết. Đăng nhập để theo dõi trang, nhận thông báo, thích và bình luận.
         </span>
         <div className="hub-session-actions">
           <button className="cp-button cp-primary" onClick={() => void signIn()}>
@@ -100,40 +93,115 @@ function SessionCard() {
   )
 }
 
+function AccountCard() {
+  const session = useCommunitySession()
+  const profile = useOwnProfile()
+  const follows = useFollowedPages()
+  const unread = useUnreadCount()
+  const name = profile.data?.displayName || session.name
+  return (
+    <section className="hub-card hub-session-card">
+      <div className="hub-session-cover" aria-hidden="true" />
+      <div className="hub-session-body">
+        <AccountAvatar url={profile.data?.avatarUrl} name={name} large />
+        <strong>{name}</strong>
+        <span className="hub-card-text">Thành viên cộng đồng AOV Stream</span>
+        <div className="hub-session-stats">
+          <Link to="/account?tab=follows">
+            <strong>{follows.data?.totalElements ?? "—"}</strong>
+            <span>Đang theo dõi</span>
+          </Link>
+          <Link to="/account?tab=notifications">
+            <strong>{unread.data?.unread ?? "—"}</strong>
+            <span>Chưa đọc</span>
+          </Link>
+        </div>
+        <Link className="cp-button" to="/account">
+          <StreamIcon name="user" size={16} />
+          Tài khoản của bạn
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+function NotificationsCard() {
+  const latest = useNotifications(0, 8)
+  const read = useReadNotifications()
+  const items = latest.data?.items.slice(0, 4) || []
+  return (
+    <section className="hub-card hub-card-padded">
+      <div className="hub-card-heading">
+        <h2 className="hub-card-title">Thông báo</h2>
+        <Link to="/account?tab=notifications" className="hub-card-more">
+          Xem tất cả
+        </Link>
+      </div>
+      {latest.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải thông báo" />}
+      {latest.isError && <p className="hub-card-text">Chưa tải được thông báo.</p>}
+      {latest.data && !items.length && <p className="hub-card-text">Thông báo mới sẽ xuất hiện tại đây.</p>}
+      {items.map((item) => (
+        <Link
+          key={item.id}
+          className="hub-notification hub-notification-row"
+          data-unread={!item.read || undefined}
+          to={`/pages/${item.pageId}`}
+          onClick={() => !item.read && read.one.mutate(item.id)}
+        >
+          <span>{item.message}</span>
+          <time dateTime={item.createdAt}>{timeAgo(item.createdAt)}</time>
+        </Link>
+      ))}
+    </section>
+  )
+}
+
 function FollowSuggestions() {
-  const pages = useQuery({
-    queryKey: ["page-suggestions"],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>("/pages?size=5"),
-    staleTime: 60_000,
-  })
+  const pages = useSuggestions(5)
+  const follow = useFollowPage()
   return (
     <section className="hub-card hub-card-padded">
       <div className="hub-card-heading">
         <h2 className="hub-card-title">Gợi ý theo dõi</h2>
-        <Link to="/pages" className="hub-card-more">
+        <Link to="/pages?tab=directory" className="hub-card-more">
           Xem tất cả
         </Link>
       </div>
       {pages.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải gợi ý" />}
       {pages.isError && <p className="hub-card-text">Chưa tải được gợi ý.</p>}
       {pages.data && !pages.data.items.length && (
-        <p className="hub-card-text">Các trang đội tuyển, tuyển thủ và tổ chức sẽ xuất hiện khi được công bố.</p>
+        <p className="hub-card-text">Bạn đã theo dõi mọi trang hiện có. Trang mới sẽ được gợi ý tại đây.</p>
       )}
       {pages.data?.items.map((profile) => (
-        <Link key={profile.id} className="hub-suggestion" to={`/pages/${profile.code}`}>
-          <Avatar profile={profile} />
-          <span>
-            <strong>
-              {profile.content?.name || profile.code}
-              {profile.represented && <OfficialBadge label="Đại diện đã xác minh" />}
-            </strong>
-            <small>
-              {profileKindLabels[profile.kind]} · {followersLabel(profile.followers)}
-            </small>
-          </span>
-          <StreamIcon name="chevronRight" size={16} />
-        </Link>
+        <div key={profile.id} className="hub-suggestion">
+          <Link to={`/pages/${profile.code}`} className="hub-suggestion-link">
+            <Avatar profile={profile} />
+            <span>
+              <strong>
+                <span>{profile.content?.name || profile.code}</span>
+                {profile.represented && <OfficialBadge label="Đại diện đã xác minh" />}
+              </strong>
+              <small>
+                {profileKindLabels[profile.kind]} · {followersLabel(profile.followers)}
+              </small>
+            </span>
+          </Link>
+          <button
+            className="cp-follow-chip cp-follow-primary"
+            disabled={follow.isPending}
+            onClick={() => follow.mutate({ pageId: profile.id, following: true })}
+            aria-label={`Theo dõi ${profile.content?.name || profile.code}`}
+          >
+            <StreamIcon name="plus" size={14} />
+            Theo dõi
+          </button>
+        </div>
       ))}
+      {follow.isError && (
+        <p className="cp-error" role="alert">
+          {follow.error.message}
+        </p>
+      )}
     </section>
   )
 }

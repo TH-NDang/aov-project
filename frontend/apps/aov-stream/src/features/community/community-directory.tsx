@@ -3,17 +3,16 @@ import { Link, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { profileKindLabels, type CommunityProfile, type ProfileKind, type PageSlice } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
-import { StreamShell } from "../../components/stream-shell"
 import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
-import { CommunityAside } from "./community-aside"
+import { useFollowedIds, useFollowPage } from "./community-queries"
 import { Avatar, followersLabel, hueOf, kindIcons } from "./community-ui"
-import "./community.css"
 
 const kinds = Object.keys(profileKindLabels) as ProfileKind[]
 
-export function CommunityDirectory() {
+/** The searchable list of published pages; kind and search live in the URL so the header search can open it. */
+export function PageDirectory() {
   const [params, setParams] = useSearchParams()
   const requested = params.get("kind") as ProfileKind | null
   const kind = requested && kinds.includes(requested) ? requested : null
@@ -23,6 +22,7 @@ export function CommunityDirectory() {
   const scope = `${kind}:${search}`
   const page = paging.scope === scope ? paging.page : 0
   const setPage = (next: number) => setPaging({ scope, page: next })
+  const following = useFollowedIds()
   const query = useQuery({
     queryKey: ["public-pages", kind, search, page],
     queryFn: () =>
@@ -34,6 +34,7 @@ export function CommunityDirectory() {
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
+        next.set("tab", "directory")
         if (value) next.set(key, value)
         else next.delete(key)
         return next
@@ -42,110 +43,92 @@ export function CommunityDirectory() {
     )
   }
   return (
-    <StreamShell aside={<CommunityAside suggestions={false} representative />}>
-      <title>Cộng đồng — AOV Stream</title>
-      <div className="cp-container">
-        <header className="hub-banner hub-art" style={{ "--hub-hue": 200 } as CSSProperties}>
-          <div className="hub-banner-copy">
-            <span className="hub-kicker">Con người · Đội tuyển · Cộng đồng</span>
-            <h1>Những gương mặt của đấu trường</h1>
-            <p>Khám phá đội tuyển, theo dõi tuyển thủ và kết nối với những câu chuyện phía sau mỗi trận đấu.</p>
-            {query.data && (
-              <div className="hub-banner-stats">
-                <span>
-                  <StreamIcon name="users" size={14} />
-                  {query.data.totalElements.toLocaleString("vi-VN")} trang
-                  {kind ? ` ${profileKindLabels[kind].toLocaleLowerCase("vi-VN")}` : ""}
-                </span>
-              </div>
-            )}
-          </div>
-          <span className="hub-banner-mark" aria-hidden="true">
-            <StreamBrand compact />
-          </span>
-        </header>
-        <div className="cp-toolbar">
-          <div className="hub-pills" role="group" aria-label="Loại trang">
-            <button aria-pressed={!kind} onClick={() => update("kind", "")}>
-              <StreamIcon name="grid" size={16} />
-              Tất cả
+    <div className="cp-directory-tab">
+      <div className="cp-toolbar">
+        <div className="hub-pills" role="group" aria-label="Loại trang">
+          <button aria-pressed={!kind} onClick={() => update("kind", "")}>
+            <StreamIcon name="grid" size={16} />
+            Tất cả
+          </button>
+          {kinds.map((type) => (
+            <button key={type} aria-pressed={kind === type} onClick={() => update("kind", type)}>
+              <StreamIcon name={kindIcons[type]} size={16} />
+              {profileKindLabels[type]}
             </button>
-            {kinds.map((type) => (
-              <button key={type} aria-pressed={kind === type} onClick={() => update("kind", type)}>
-                <StreamIcon name={kindIcons[type]} size={16} />
-                {profileKindLabels[type]}
-              </button>
-            ))}
-          </div>
-          <label className="stream-search">
-            <StreamIcon name="search" size={16} />
-            <input
-              aria-label="Tìm hồ sơ"
-              placeholder="Tìm tên hoặc mã hồ sơ…"
-              value={search}
-              onChange={(event) => update("q", event.target.value)}
-            />
-          </label>
+          ))}
         </div>
-        {query.isPending ? (
-          <div className="cp-grid" role="status" aria-label="Đang tải danh bạ">
-            {Array.from({ length: 6 }, (_, index) => (
-              <div className="hub-skeleton cp-card-skeleton" key={index} />
-            ))}
-          </div>
-        ) : query.isError ? (
-          <div className="hub-state" role="alert">
-            <StreamIcon name="reset" size={28} />
-            <h2>{query.error.message}</h2>
-            <button className="cp-button" onClick={() => void query.refetch()}>
-              Thử lại
-            </button>
-          </div>
-        ) : !query.data.items.length ? (
-          <div className="hub-state">
-            <StreamBrand compact />
-            <h2>{search ? "Chưa tìm thấy hồ sơ phù hợp" : "Danh bạ đang được xây dựng"}</h2>
-            <p>Hồ sơ đã đối chiếu và công bố sẽ xuất hiện tại đây.</p>
-            {search && (
-              <button className="cp-button" onClick={() => update("q", "")}>
-                Xóa tìm kiếm
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="cp-grid">
-            {query.data.items.map((profile) => (
-              <ProfileCard key={profile.id} profile={profile} />
-            ))}
-          </div>
-        )}
-        {query.data && query.data.totalElements > 24 && (
-          <div className="hub-pagination">
-            <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-              <StreamIcon name="chevronLeft" size={16} />
-              Trước
-            </button>
-            <span>Trang {page + 1}</span>
-            <button
-              className="cp-button"
-              disabled={(page + 1) * 24 >= query.data.totalElements}
-              onClick={() => setPage(page + 1)}
-            >
-              Tiếp
-              <StreamIcon name="chevronRight" size={16} />
-            </button>
-          </div>
-        )}
+        <label className="stream-search">
+          <StreamIcon name="search" size={16} />
+          <input
+            aria-label="Tìm trang"
+            placeholder="Tìm đội tuyển, tuyển thủ, tổ chức…"
+            value={search}
+            onChange={(event) => update("q", event.target.value)}
+          />
+        </label>
       </div>
-    </StreamShell>
+      {query.isPending ? (
+        <div className="cp-grid" role="status" aria-label="Đang tải danh bạ">
+          {Array.from({ length: 6 }, (_, index) => (
+            <div className="hub-skeleton cp-card-skeleton" key={index} />
+          ))}
+        </div>
+      ) : query.isError ? (
+        <div className="hub-state" role="alert">
+          <StreamIcon name="reset" size={28} />
+          <h2>{query.error.message}</h2>
+          <button className="cp-button" onClick={() => void query.refetch()}>
+            Thử lại
+          </button>
+        </div>
+      ) : !query.data.items.length ? (
+        <div className="hub-state">
+          <StreamBrand compact />
+          <h2>{search ? "Chưa tìm thấy trang phù hợp" : "Danh bạ đang được xây dựng"}</h2>
+          <p>Trang đã đối chiếu và công bố sẽ xuất hiện tại đây.</p>
+          {search && (
+            <button className="cp-button" onClick={() => update("q", "")}>
+              Xóa tìm kiếm
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="cp-grid">
+          {query.data.items.map((profile) => (
+            <ProfileCard key={profile.id} profile={profile} following={following} />
+          ))}
+        </div>
+      )}
+      {query.data && query.data.totalElements > 24 && (
+        <div className="hub-pagination">
+          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
+            <StreamIcon name="chevronLeft" size={16} />
+            Trước
+          </button>
+          <span>Trang {page + 1}</span>
+          <button
+            className="cp-button"
+            disabled={(page + 1) * 24 >= query.data.totalElements}
+            onClick={() => setPage(page + 1)}
+          >
+            Tiếp
+            <StreamIcon name="chevronRight" size={16} />
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
-function ProfileCard({ profile }: { profile: CommunityProfile }) {
+/** `following` is null for signed-out viewers, who see no follow button. */
+function ProfileCard({ profile, following }: { profile: CommunityProfile; following: Set<string> | null }) {
+  const follow = useFollowPage()
   const name = profile.content?.name || profile.code
   const cover = profile.content?.coverUrl
+  const followed = following?.has(profile.id) ?? false
   return (
-    <Link className="cp-profile-card" to={`/pages/${profile.code}`}>
+    <article className="cp-profile-card">
+      <Link className="cp-card-link" to={`/pages/${profile.code}`} aria-label={name} />
       <span
         className="cp-card-cover hub-art"
         style={
@@ -169,9 +152,19 @@ function ProfileCard({ profile }: { profile: CommunityProfile }) {
         <span className="cp-card-meta">{followersLabel(profile.followers)}</span>
         <span className="cp-card-footer">
           <span>{profile.represented ? "Đại diện đã xác minh" : "Hồ sơ do AthaHub tổng hợp"}</span>
-          <StreamIcon name="chevronRight" size={16} />
+          {following && (
+            <button
+              className={followed ? "cp-follow-chip" : "cp-follow-chip cp-follow-primary"}
+              aria-pressed={followed}
+              disabled={follow.isPending}
+              onClick={() => follow.mutate({ pageId: profile.id, following: !followed })}
+            >
+              <StreamIcon name={followed ? "check" : "plus"} size={14} />
+              {followed ? "Đang theo dõi" : "Theo dõi"}
+            </button>
+          )}
         </span>
       </span>
-    </Link>
+    </article>
   )
 }

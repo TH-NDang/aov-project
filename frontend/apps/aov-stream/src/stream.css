@@ -2342,3 +2342,262 @@ button:disabled {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Account controls in the top bar ---------- */
+.hub-signup {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--hub-border-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hub-text);
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.hub-signup:hover {
+  background: var(--hub-hover);
+}
+.hub-session-pending {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(100deg, var(--hub-raised) 30%, var(--hub-hover) 48%, var(--hub-raised) 70%);
+  background-size: 250% 100%;
+  animation: stream-shimmer 1.4s infinite;
+}
+.hub-bell {
+  position: relative;
+}
+.hub-bell[data-state="open"] {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.hub-badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  display: grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 2px solid var(--hub-surface);
+  border-radius: 999px;
+  background: #e5484d;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-sizing: content-box;
+}
+
+/* Popovers and menus from @aov/ui, restyled to the portal surfaces. */
+.hub-popover {
+  z-index: 60;
+  border: 1px solid var(--hub-border);
+  border-radius: 14px;
+  background: var(--hub-surface);
+  color: var(--hub-text);
+  box-shadow: var(--hub-shadow-lg);
+}
+.hub-notifications {
+  width: min(360px, calc(100vw - 24px));
+  padding: 0;
+  overflow: hidden;
+}
+.hub-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hub-border);
+}
+.hub-popover-header strong {
+  font-size: 16px;
+}
+.hub-popover-header .cp-text-button {
+  font-size: 12px;
+}
+.hub-popover-empty {
+  margin: 0;
+  padding: 20px 16px;
+  color: var(--hub-muted);
+  font-size: 14px;
+  text-align: center;
+}
+.hub-notifications .hub-skeleton-rows {
+  height: 120px;
+  margin: 12px 16px;
+}
+.hub-notification-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+.hub-notification {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 16px 10px 30px;
+  border: 0;
+  background: transparent;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  text-align: left;
+}
+.hub-notification:hover {
+  background: var(--hub-hover);
+}
+.hub-notification::before {
+  content: "";
+  position: absolute;
+  top: 17px;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+}
+.hub-notification[data-unread] {
+  color: var(--hub-text);
+  font-weight: 600;
+}
+.hub-notification[data-unread]::before {
+  background: var(--hub-accent);
+}
+.hub-notification time {
+  color: var(--hub-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.hub-notification-row {
+  margin: 0 -8px;
+  padding: 8px 8px 8px 22px;
+  border-radius: 10px;
+}
+.hub-notification-row::before {
+  top: 15px;
+  left: 8px;
+}
+.hub-popover-footer {
+  display: block;
+  padding: 12px 16px;
+  border-top: 1px solid var(--hub-border);
+  color: var(--hub-accent-strong);
+  font-size: 14px;
+  font-weight: 650;
+  text-align: center;
+}
+.hub-popover-footer:hover {
+  background: var(--hub-hover);
+}
+.hub-account-menu {
+  width: 264px;
+  padding: 6px;
+}
+.hub-post-menu {
+  min-width: 200px;
+  padding: 6px;
+}
+.hub-account-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+}
+.hub-account-summary .account-avatar {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+}
+.hub-account-summary > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.hub-account-summary strong {
+  overflow: hidden;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hub-account-summary small {
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+.hub-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: var(--hub-text-soft);
+  font-size: 14px;
+  cursor: pointer;
+}
+.hub-menu-item[data-highlighted] {
+  background: var(--hub-hover);
+  color: var(--hub-text);
+}
+.hub-menu-item[data-variant="destructive"] {
+  color: var(--hub-danger);
+}
+.hub-menu-item[data-variant="destructive"][data-highlighted] {
+  background: var(--hub-danger-soft);
+  color: var(--hub-danger);
+}
+
+/* Side cards for signed-in viewers */
+.hub-session-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+.hub-session-stats > a {
+  display: grid;
+  gap: 0;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--hub-raised);
+}
+.hub-session-stats > a:hover {
+  background: var(--hub-hover);
+}
+.hub-session-stats strong {
+  color: var(--hub-text);
+  font-size: 18px;
+  font-weight: 800;
+}
+.hub-session-stats span {
+  color: var(--hub-muted);
+  font-size: 12px;
+}
+.hub-suggestion-link {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.hub-suggestion-link > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.hub-suggestion strong > span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (max-width: 1099px) {
+  .hub-signup {
+    display: none;
+  }
+}

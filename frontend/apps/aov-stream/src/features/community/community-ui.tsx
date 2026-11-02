@@ -94,3 +94,32 @@ export function Avatar({ profile, className = "" }: { profile: CommunityProfile;
 export function followersLabel(count: number) {
   return `${count.toLocaleString("vi-VN")} người theo dõi`
 }
+
+/** A page's avatar from its feed card; pages without artwork get initials on a colour from their name. */
+export function CardAvatar({ name, url, className = "" }: { name: string; url?: string | null; className?: string }) {
+  return url ? (
+    <img className={`cp-avatar ${className}`} src={url} alt="" />
+  ) : (
+    <span
+      className={`cp-avatar cp-initial ${className}`}
+      style={{ "--hub-hue": hueOf(name) } as CSSProperties}
+      aria-hidden="true"
+    >
+      {name.slice(0, 2).toUpperCase() || "AH"}
+    </span>
+  )
+}
+
+const relativeTime = new Intl.RelativeTimeFormat("vi-VN", { numeric: "auto" })
+const postDate = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
+
+/** Recent moments read as relative minutes, hours or days; anything older than a week shows its date. */
+export function timeAgo(value: string, now = Date.now()) {
+  const seconds = Math.round((new Date(value).getTime() - now) / 1000)
+  if (Number.isNaN(seconds)) return ""
+  if (seconds > -60) return "Vừa xong"
+  if (seconds > -3600) return relativeTime.format(Math.round(seconds / 60), "minute")
+  if (seconds > -86400) return relativeTime.format(Math.round(seconds / 3600), "hour")
+  if (seconds > -7 * 86400) return relativeTime.format(Math.round(seconds / 86400), "day")
+  return postDate.format(new Date(value))
+}

@@ -5,6 +5,7 @@ import { StreamBrand } from "./stream-brand"
 import { StreamIcon, type StreamIconName } from "./stream-icon"
 import { ThemeToggle } from "./stream-theme"
 import { CommunitySessionButton } from "../features/community/community-session"
+import { SignInDialog } from "../features/community/community-signin"
 import { hueOf, kindIcons, useFeaturedCompetitions } from "../features/community/community-ui"
 
 export const WIKI_URL = import.meta.env.VITE_WIKI_URL || "http://localhost:5173"
@@ -25,6 +26,10 @@ const accountPaths = ["/account", "/manage", "/invitations"]
  */
 export function StreamShell({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   const { pathname } = useLocation()
+  const [params] = useSearchParams()
+  // The directory tab has its own search field.
+  const onDirectory =
+    pathname === "/pages" && (params.has("q") || params.has("kind") || params.get("tab") === "directory")
   return (
     <div className="hub-shell">
       <a href="#main" className="stream-skip">
@@ -46,7 +51,7 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
               <StreamIcon name="external" size={12} />
             </a>
           </nav>
-          {!pathname.startsWith("/pages") && <HeaderSearch />}
+          {!onDirectory && <HeaderSearch />}
           <div className="hub-topbar-actions">
             <a
               className="hub-contribute"
@@ -103,6 +108,7 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
           <span>Tài khoản</span>
         </Link>
       </nav>
+      <SignInDialog />
     </div>
   )
 }
@@ -137,13 +143,18 @@ function StreamRail() {
   const competitions = useFeaturedCompetitions()
   const onPages = pathname === "/pages"
   const kind = params.get("kind")
+  const directory = params.get("tab") === "directory" || params.has("q")
   return (
     <>
       <section className="hub-rail-section">
         <h2>Cộng đồng</h2>
-        <Link to="/pages" aria-current={onPages && !kind ? "page" : undefined}>
+        <Link to="/pages" aria-current={onPages && !kind && !directory && !params.has("tab") ? "page" : undefined}>
+          <StreamIcon name="feed" size={18} />
+          Bảng tin
+        </Link>
+        <Link to="/pages?tab=directory" aria-current={onPages && directory && !kind ? "page" : undefined}>
           <StreamIcon name="grid" size={18} />
-          Tất cả trang
+          Danh bạ trang
         </Link>
         {kinds.map((value) => (
           <Link key={value} to={`/pages?kind=${value}`} aria-current={onPages && kind === value ? "page" : undefined}>

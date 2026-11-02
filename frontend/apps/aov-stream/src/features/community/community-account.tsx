@@ -1,14 +1,13 @@
 import { useState, type CSSProperties } from "react"
-import { Link, useNavigate, useParams } from "react-router"
+import { Link, useNavigate, useParams, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import type {
-  CommunityProfile,
-  CommunityNotification,
-  PageClaim,
-  PageManager,
-  PageViewer,
-  PageSlice,
-  ProfilePresentation,
+import {
+  profileKindLabels,
+  type CommunityProfile,
+  type PageClaim,
+  type PageManager,
+  type PageViewer,
+  type ProfilePresentation,
 } from "@aov/community-contracts"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamBrand } from "../../components/stream-brand"
@@ -16,154 +15,245 @@ import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { signIn, useCommunitySession } from "./community-auth"
 import { CommunityFeed } from "./community-feed"
-import { hueOf } from "./community-ui"
+import {
+  useFollowedPages,
+  useFollowPage,
+  useNotifications,
+  useReadNotifications,
+  useUnreadCount,
+} from "./community-queries"
+import { Avatar, followersLabel, hueOf } from "./community-ui"
 import { AccountAvatar, AccountProfile } from "../account/account-profile"
 import { useOwnProfile } from "../account/profile-api"
 
 const roleLabels = { OWNER: "Quản trị chính", EDITOR: "Biên tập viên", MODERATOR: "Kiểm duyệt viên" } as const
 const claimLabels = { PENDING: "Đang chờ xét duyệt", APPROVED: "Đã chấp thuận", REJECTED: "Chưa được chấp thuận" }
 
+type AccountTab = "profile" | "follows" | "notifications" | "pages"
+const accountTabs: [AccountTab, string][] = [
+  ["profile", "Hồ sơ"],
+  ["follows", "Đang theo dõi"],
+  ["notifications", "Thông báo"],
+  ["pages", "Trang & yêu cầu"],
+]
+
 export function CommunityAccount() {
   const session = useCommunitySession()
   const ownProfile = useOwnProfile()
-  const client = useQueryClient()
-  const [page, setPage] = useState(0)
+  const [params, setParams] = useSearchParams()
+  const requested = params.get("tab") as AccountTab | null
+  const tab = accountTabs.some(([value]) => value === requested) ? requested! : "profile"
   const enabled = session.status === "authenticated"
-  const managed = useQuery({
-    queryKey: ["managed-pages", session.revision],
-    queryFn: () => communityApi<CommunityProfile[]>("/me/pages"),
-    enabled,
-  })
-  const claims = useQuery({
-    queryKey: ["my-claims", session.revision],
-    queryFn: () => communityApi<PageClaim[]>("/me/claims"),
-    enabled,
-  })
-  const inbox = useQuery({
-    queryKey: ["notifications", session.revision, page],
-    queryFn: () => communityApi<PageSlice<CommunityNotification>>(`/me/notifications?page=${page}&size=24`),
-    enabled,
-  })
-  const read = useMutation({
-    mutationFn: (id: string) => communityApi(`/me/notifications/${id}/read`, {}),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["notifications"] }),
-  })
+  const unread = useUnreadCount()
   return (
     <StreamShell>
       <title>Tài khoản — AOV Stream</title>
       <div className="cp-container">
-        <header className="hub-banner hub-art cp-account-banner" style={{ "--hub-hue": 232 } as CSSProperties}>
-          {enabled ? (
-            <AccountAvatar url={ownProfile.data?.avatarUrl} name={ownProfile.data?.displayName || session.name} large />
-          ) : (
-            <span className="hub-banner-mark" aria-hidden="true">
-              <StreamBrand compact />
-            </span>
-          )}
-          <div className="hub-banner-copy">
-            <span className="hub-kicker">Tài khoản</span>
-            <h1>{enabled ? ownProfile.data?.displayName || session.name : "Tham gia cộng đồng"}</h1>
-            <p>Chỉnh sửa hồ sơ, theo dõi các trang bạn quan tâm và quản lý hoạt động của mình.</p>
+        <header className="hub-card cp-page-header">
+          <div className="hub-banner hub-art cp-account-banner" style={{ "--hub-hue": 232 } as CSSProperties}>
+            {enabled ? (
+              <AccountAvatar
+                url={ownProfile.data?.avatarUrl}
+                name={ownProfile.data?.displayName || session.name}
+                large
+              />
+            ) : (
+              <span className="hub-banner-mark" aria-hidden="true">
+                <StreamBrand compact />
+              </span>
+            )}
+            <div className="hub-banner-copy">
+              <span className="hub-kicker">Tài khoản</span>
+              <h1>{enabled ? ownProfile.data?.displayName || session.name : "Tham gia cộng đồng"}</h1>
+              <p>Chỉnh sửa hồ sơ, theo dõi các trang bạn quan tâm và quản lý hoạt động của mình.</p>
+            </div>
           </div>
+          {enabled && (
+            <nav className="cp-tabs cp-header-tabs" aria-label="Mục tài khoản">
+              {accountTabs.map(([value, label]) => (
+                <button
+                  key={value}
+                  aria-current={tab === value ? "page" : undefined}
+                  onClick={() => setParams(value === "profile" ? {} : { tab: value })}
+                >
+                  {label}
+                  {value === "notifications" && !!unread.data?.unread && (
+                    <span className="cp-tab-count">{unread.data.unread}</span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          )}
         </header>
         {!enabled ? (
           <SignInPrompt />
+        ) : tab === "follows" ? (
+          <FollowedPages />
+        ) : tab === "notifications" ? (
+          <NotificationInbox />
+        ) : tab === "pages" ? (
+          <ManagedPages />
         ) : (
-          <>
-            <AccountProfile />
-            <div className="cp-columns">
-              <div className="cp-main-column">
-                <section className="cp-panel">
-                  <h2>Trang bạn quản lý</h2>
-                  {managed.isError && <p className="cp-error">{managed.error.message}</p>}
-                  {managed.data?.length ? (
-                    managed.data.map((profile) => (
-                      <Link className="cp-list-row cp-link-row" key={profile.id} to={`/manage/${profile.id}`}>
-                        <span
-                          className="cp-row-mark"
-                          style={{ "--hub-hue": hueOf(profile.content?.name || profile.code) } as CSSProperties}
-                          aria-hidden="true"
-                        >
-                          {(profile.content?.name || profile.code).slice(0, 1).toUpperCase()}
-                        </span>
-                        <strong>{profile.content?.name || profile.code}</strong>
-                        <span className="cp-row-action">
-                          Quản lý
-                          <StreamIcon name="chevronRight" size={16} />
-                        </span>
-                      </Link>
-                    ))
-                  ) : (
-                    <p className="cp-muted">
-                      Bạn chưa quản lý trang nào. Mở hồ sơ của mình và gửi yêu cầu nhận quyền đại diện.
-                    </p>
-                  )}
-                </section>
-                <section className="cp-panel">
-                  <h2>Yêu cầu đại diện của bạn</h2>
-                  {claims.isError && <p className="cp-error">{claims.error.message}</p>}
-                  {claims.data?.length ? (
-                    claims.data.map((claim) => (
-                      <article className="cp-list-row" key={claim.id}>
-                        <div>
-                          <Link to={`/pages/${claim.pageId}`}>
-                            <strong>{claim.pageName}</strong>
-                          </Link>
-                          {claim.resolution && <p className="cp-meta">{claim.resolution}</p>}
-                        </div>
-                        <span className="cp-badge" data-status={claim.status}>
-                          {claimLabels[claim.status]}
-                        </span>
-                      </article>
-                    ))
-                  ) : (
-                    <p className="cp-muted">Chưa có yêu cầu.</p>
-                  )}
-                </section>
-              </div>
-              <aside className="cp-side-column">
-                <section className="cp-panel">
-                  <h2>Thông báo</h2>
-                  {inbox.isError && <p className="cp-error">{inbox.error.message}</p>}
-                  {!inbox.data?.items.length && <p className="cp-muted">Thông báo mới sẽ xuất hiện tại đây.</p>}
-                  {inbox.data?.items.map((item) => (
-                    <article className="cp-notification" data-unread={!item.read || undefined} key={item.id}>
-                      <Link to={`/pages/${item.pageId}`}>{item.message}</Link>
-                      <small>{new Date(item.createdAt).toLocaleString("vi-VN")}</small>
-                      {!item.read && (
-                        <button
-                          className="cp-text-button"
-                          disabled={read.isPending}
-                          onClick={() => read.mutate(item.id)}
-                        >
-                          Đánh dấu đã đọc
-                        </button>
-                      )}
-                    </article>
-                  ))}
-                  {inbox.data && inbox.data.totalElements > 24 && (
-                    <div className="hub-pagination">
-                      <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-                        Trước
-                      </button>
-                      <button
-                        className="cp-button"
-                        disabled={(page + 1) * 24 >= inbox.data.totalElements}
-                        onClick={() => setPage(page + 1)}
-                      >
-                        Tiếp
-                      </button>
-                    </div>
-                  )}
-                </section>
-              </aside>
-            </div>
-          </>
+          <AccountProfile />
         )}
       </div>
     </StreamShell>
   )
 }
+
+function FollowedPages() {
+  const follows = useFollowedPages()
+  const follow = useFollowPage()
+  return (
+    <section className="cp-panel">
+      <h2>Trang đang theo dõi</h2>
+      <p className="cp-muted">Bài mới từ các trang này xuất hiện ở mục "Đang theo dõi" của cộng đồng.</p>
+      {follows.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải trang theo dõi" />}
+      {follows.isError && <p className="cp-error">{follows.error.message}</p>}
+      {follows.data && !follows.data.items.length && (
+        <div className="hub-state">
+          <StreamIcon name="heart" size={28} />
+          <h3>Bạn chưa theo dõi trang nào</h3>
+          <Link className="cp-button cp-primary" to="/pages?tab=directory">
+            Khám phá trang
+          </Link>
+        </div>
+      )}
+      {follows.data?.items.map((profile) => (
+        <div className="cp-list-row cp-link-row" key={profile.id}>
+          <Avatar profile={profile} className="cp-row-avatar" />
+          <Link to={`/pages/${profile.code}`} className="cp-row-title">
+            <strong>{profile.content?.name || profile.code}</strong>
+            <span className="cp-meta">
+              {profileKindLabels[profile.kind]} · {followersLabel(profile.followers)}
+            </span>
+          </Link>
+          <button
+            className="cp-follow-chip"
+            disabled={follow.isPending}
+            onClick={() => follow.mutate({ pageId: profile.id, following: false })}
+          >
+            Bỏ theo dõi
+          </button>
+        </div>
+      ))}
+      {follow.isError && <p className="cp-error">{follow.error.message}</p>}
+    </section>
+  )
+}
+
+function NotificationInbox() {
+  const [page, setPage] = useState(0)
+  const inbox = useNotifications(page, 24)
+  const unread = useUnreadCount()
+  const read = useReadNotifications()
+  return (
+    <section className="cp-panel" id="notifications">
+      <div className="cp-panel-heading">
+        <h2>Thông báo</h2>
+        <button
+          className="cp-text-button"
+          disabled={!unread.data?.unread || read.all.isPending}
+          onClick={() => read.all.mutate()}
+        >
+          <StreamIcon name="check" size={14} />
+          Đánh dấu đã đọc tất cả
+        </button>
+      </div>
+      {inbox.isError && <p className="cp-error">{inbox.error.message}</p>}
+      {inbox.data && !inbox.data.items.length && <p className="cp-muted">Thông báo mới sẽ xuất hiện tại đây.</p>}
+      {inbox.data?.items.map((item) => (
+        <article className="cp-notification" data-unread={!item.read || undefined} key={item.id}>
+          <Link to={`/pages/${item.pageId}`} onClick={() => !item.read && read.one.mutate(item.id)}>
+            {item.message}
+          </Link>
+          <small>{new Date(item.createdAt).toLocaleString("vi-VN")}</small>
+          {!item.read && (
+            <button className="cp-text-button" disabled={read.one.isPending} onClick={() => read.one.mutate(item.id)}>
+              Đánh dấu đã đọc
+            </button>
+          )}
+        </article>
+      ))}
+      {inbox.data && inbox.data.totalElements > 24 && (
+        <div className="hub-pagination">
+          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
+            Trước
+          </button>
+          <button
+            className="cp-button"
+            disabled={(page + 1) * 24 >= inbox.data.totalElements}
+            onClick={() => setPage(page + 1)}
+          >
+            Tiếp
+          </button>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function ManagedPages() {
+  const session = useCommunitySession()
+  const managed = useQuery({
+    queryKey: ["managed-pages", session.revision],
+    queryFn: () => communityApi<CommunityProfile[]>("/me/pages"),
+  })
+  const claims = useQuery({
+    queryKey: ["my-claims", session.revision],
+    queryFn: () => communityApi<PageClaim[]>("/me/claims"),
+  })
+  return (
+    <div className="cp-columns cp-columns-even">
+      <section className="cp-panel">
+        <h2>Trang bạn quản lý</h2>
+        {managed.isError && <p className="cp-error">{managed.error.message}</p>}
+        {managed.data?.length ? (
+          managed.data.map((profile) => (
+            <Link className="cp-list-row cp-link-row" key={profile.id} to={`/manage/${profile.id}`}>
+              <span
+                className="cp-row-mark"
+                style={{ "--hub-hue": hueOf(profile.content?.name || profile.code) } as CSSProperties}
+                aria-hidden="true"
+              >
+                {(profile.content?.name || profile.code).slice(0, 1).toUpperCase()}
+              </span>
+              <strong>{profile.content?.name || profile.code}</strong>
+              <span className="cp-row-action">
+                Quản lý
+                <StreamIcon name="chevronRight" size={16} />
+              </span>
+            </Link>
+          ))
+        ) : (
+          <p className="cp-muted">Bạn chưa quản lý trang nào. Mở trang của mình và gửi yêu cầu nhận quyền đại diện.</p>
+        )}
+      </section>
+      <section className="cp-panel">
+        <h2>Yêu cầu đại diện của bạn</h2>
+        {claims.isError && <p className="cp-error">{claims.error.message}</p>}
+        {claims.data?.length ? (
+          claims.data.map((claim) => (
+            <article className="cp-list-row" key={claim.id}>
+              <div>
+                <Link to={`/pages/${claim.pageId}`}>
+                  <strong>{claim.pageName}</strong>
+                </Link>
+                {claim.resolution && <p className="cp-meta">{claim.resolution}</p>}
+              </div>
+              <span className="cp-badge" data-status={claim.status}>
+                {claimLabels[claim.status]}
+              </span>
+            </article>
+          ))
+        ) : (
+          <p className="cp-muted">Chưa có yêu cầu.</p>
+        )}
+      </section>
+    </div>
+  )
+}
+
 export function SignInPrompt() {
   return (
     <div className="hub-state cp-signin">

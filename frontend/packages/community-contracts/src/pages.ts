@@ -81,7 +81,20 @@ export type CommunityPost = {
   likes: number
   /** Always false in the anonymous public list. */
   liked: boolean
+  /** Visible (not hidden) comments. */
+  comments: number
 }
+/** The published page a feed post belongs to; the avatar follows the representative's presentation. */
+export type PageCard = {
+  id: string
+  code: string
+  kind: ProfileKind
+  name: string
+  avatarUrl?: string | null
+  represented: boolean
+}
+/** An item of the cross-page feed (`GET /posts`, `GET /me/feed`). */
+export type FeedPost = { post: CommunityPost; page: PageCard }
 export type CommunityComment = {
   id: string
   postId: string

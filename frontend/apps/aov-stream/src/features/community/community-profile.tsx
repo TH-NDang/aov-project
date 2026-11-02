@@ -1,14 +1,17 @@
 import { useState, type CSSProperties } from "react"
 import { Link, useParams } from "react-router"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { profileKindLabels, type CommunityProfile, type PageViewer } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
-import { signIn, useCommunitySession } from "./community-auth"
+import { useCommunitySession } from "./community-auth"
 import { Avatar, followersLabel, hueOf, kindIcons } from "./community-ui"
 import { CommunityFeed } from "./community-feed"
+import { ChannelStrip } from "./community-home"
+import { useFollowPage } from "./community-queries"
+import { useSignedInAction } from "./community-signin"
 import { ProfileCompetitionSummary } from "./public-competitions"
 
 export function CommunityProfilePage() {
@@ -45,8 +48,8 @@ export function CommunityProfilePage() {
 }
 function Profile({ profile }: { profile: CommunityProfile }) {
   const session = useCommunitySession()
-  const client = useQueryClient()
-  const [tab, setTab] = useState("overview")
+  const signedIn = useSignedInAction()
+  const [tab, setTab] = useState("posts")
   const [claiming, setClaiming] = useState(false)
   const [evidence, setEvidence] = useState("")
   const [suggesting, setSuggesting] = useState(false)
@@ -56,13 +59,7 @@ function Profile({ profile }: { profile: CommunityProfile }) {
     queryFn: () => communityApi<PageViewer>(`/me/pages/${profile.id}`),
     enabled: session.status === "authenticated",
   })
-  const follow = useMutation({
-    mutationFn: () => communityApi(`/me/pages/${profile.id}/follow`, { following: !viewer.data?.following }),
-    onSuccess: async () => {
-      await client.invalidateQueries({ queryKey: ["page-viewer"] })
-      await client.invalidateQueries({ queryKey: ["public-page"] })
-    },
-  })
+  const follow = useFollowPage()
   const claim = useMutation({
     mutationFn: () => communityApi(`/me/pages/${profile.id}/claims`, { evidence }),
     onSuccess: () => {
@@ -79,21 +76,18 @@ function Profile({ profile }: { profile: CommunityProfile }) {
   })
   const content = profile.content!
   const tabs = [
-    ["overview", "Tổng quan"],
+    ["posts", "Bài viết"],
+    ["overview", "Giới thiệu"],
     ...(profile.kind === "PLAYER" ? [] : [["roster", "Thành viên"]]),
     ["history", profile.kind === "PLAYER" ? "Sự nghiệp" : "Lịch sử"],
     ["achievements", "Thành tích"],
     ["competitions", "Thi đấu"],
-    ["posts", "Bài viết & thảo luận"],
   ]
-  const authenticated = (action: () => void) => (session.status === "authenticated" ? action() : void signIn())
+  const authenticated = session.status === "authenticated"
   return (
     <div className="cp-container">
       <title>{`${content.name} — AOV Stream`}</title>
-      <Link className="cp-back" to="/pages">
-        <StreamIcon name="back" size={16} />
-        Danh bạ thi đấu
-      </Link>
+      <ChannelStrip active={profile.code} />
       <header className="hub-card cp-page-header">
         <div
           className="cp-cover hub-art"
@@ -124,15 +118,17 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             </p>
           </div>
           <div className="cp-actions">
-            <button
-              className={viewer.data?.following ? "cp-button" : "cp-button cp-primary"}
-              aria-pressed={viewer.data?.following ?? false}
-              disabled={follow.isPending}
-              onClick={() => authenticated(() => follow.mutate())}
-            >
-              <StreamIcon name={viewer.data?.following ? "check" : "plus"} size={16} />
-              {viewer.data?.following ? "Đang theo dõi" : "Theo dõi"}
-            </button>
+            {authenticated && viewer.data && (
+              <button
+                className={viewer.data.following ? "cp-button" : "cp-button cp-primary"}
+                aria-pressed={viewer.data.following}
+                disabled={follow.isPending}
+                onClick={() => follow.mutate({ pageId: profile.id, following: !viewer.data!.following })}
+              >
+                <StreamIcon name={viewer.data.following ? "check" : "plus"} size={16} />
+                {viewer.data.following ? "Đang theo dõi" : "Theo dõi"}
+              </button>
+            )}
             {viewer.data?.role && (
               <Link className="cp-button" to={`/manage/${profile.id}`}>
                 <StreamIcon name="edit" size={16} />
@@ -289,6 +285,46 @@ function Profile({ profile }: { profile: CommunityProfile }) {
           )}
         </div>
         <aside className="cp-side-column">
+          {!authenticated && (
+            <section className="cp-panel cp-guest-panel">
+              <h2>Theo dõi {content.name}</h2>
+              <p className="cp-muted">
+                Đăng nhập để theo dõi trang, nhận thông báo khi có bài mới, thích và bình luận cùng cộng đồng.
+              </p>
+              <button
+                className="cp-button cp-primary"
+                onClick={() => signedIn(`Đăng nhập để theo dõi ${content.name}.`, () => undefined)}
+              >
+                Đăng nhập
+              </button>
+            </section>
+          )}
+          {tab !== "overview" && (
+            <section className="cp-panel">
+              <h2>Giới thiệu</h2>
+              <p className="cp-prose cp-about">
+                {content.biography || "Thông tin giới thiệu đang được bổ sung từ các nguồn công khai."}
+              </p>
+              <ul className="cp-about-facts">
+                <li>
+                  <StreamIcon name={kindIcons[profile.kind]} size={16} />
+                  {profileKindLabels[profile.kind]}
+                  {content.country ? ` · ${content.country}` : ""}
+                </li>
+                <li>
+                  <StreamIcon name="users" size={16} />
+                  {followersLabel(profile.followers)}
+                </li>
+                <li>
+                  <StreamIcon name="trophy" size={16} />
+                  {content.achievements.length} thành tích đã ghi nhận
+                </li>
+              </ul>
+              <button className="cp-text-button" onClick={() => setTab("overview")}>
+                Xem đầy đủ
+              </button>
+            </section>
+          )}
           <section className="cp-panel">
             <h2>Thông tin liên hệ</h2>
             {content.links.length ? (
@@ -320,7 +356,12 @@ function Profile({ profile }: { profile: CommunityProfile }) {
                 {source.checkedOn && <small>Đối chiếu {source.checkedOn}</small>}
               </div>
             ))}
-            <button className="cp-text-button" onClick={() => authenticated(() => setSuggesting(!suggesting))}>
+            <button
+              className="cp-text-button"
+              onClick={() =>
+                signedIn("Đăng nhập để gửi đề xuất chỉnh sửa đến đội ngũ biên tập.", () => setSuggesting(!suggesting))
+              }
+            >
               <StreamIcon name="edit" size={14} />
               Đề xuất chỉnh sửa
             </button>
@@ -360,7 +401,14 @@ function Profile({ profile }: { profile: CommunityProfile }) {
             <section className="cp-panel cp-claim-panel">
               <h2>Bạn là người đại diện?</h2>
               <p className="cp-muted">Nhận quyền quản lý để cập nhật giới thiệu và đăng bài dưới tên trang.</p>
-              <button className="cp-button" onClick={() => authenticated(() => setClaiming(!claiming))}>
+              <button
+                className="cp-button"
+                onClick={() =>
+                  signedIn("Đăng nhập bằng tài khoản của bạn để gửi yêu cầu quản lý trang.", () =>
+                    setClaiming(!claiming),
+                  )
+                }
+              >
                 Yêu cầu quản lý trang
               </button>
               {claiming && (

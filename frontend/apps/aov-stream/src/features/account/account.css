@@ -104,6 +104,7 @@
   border-top: 1px solid var(--hub-border);
 }
 .cp-session .account-session-link {
+  background: transparent;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -119,18 +120,25 @@
 .cp-session .account-session-link:hover {
   background: var(--hub-hover);
 }
-.cp-session .account-session-link[aria-current] {
+.cp-session .account-session-link > svg {
+  flex-shrink: 0;
+  color: var(--hub-muted);
+  transform: rotate(90deg);
+}
+.cp-session .account-session-link[data-current],
+.cp-session .account-session-link[data-state="open"] {
   border-color: color-mix(in srgb, var(--hub-accent) 55%, transparent);
   background: var(--hub-accent-soft);
   color: var(--hub-accent-strong);
 }
-.account-session-link > span:last-child {
+.account-session-link > span:nth-child(2) {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 @media (max-width: 1099px) {
-  .account-session-link > span:last-child {
+  .account-session-link > span:nth-child(2),
+  .account-session-link > svg {
     display: none;
   }
   .cp-session .account-session-link {
