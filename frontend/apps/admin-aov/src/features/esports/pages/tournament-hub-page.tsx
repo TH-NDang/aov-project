@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { useNavigate, useSearchParams } from "react-router"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
 import { Plus, Upload } from "lucide-react"
@@ -45,6 +47,10 @@ function Hub({ access }: { access: Access }) {
   const tournaments = useRecords("tournaments")
   const series = useRecords("series")
   const teams = useRecords("teams")
+  const plans = useQuery({
+    queryKey: [...competitionKeys, access.actorKey, "summaries"],
+    queryFn: competitionApi.summaries,
+  })
 
   const stats = useMemo(() => {
     const result = new Map<string, TournamentStats>()
@@ -60,8 +66,12 @@ function Hub({ access }: { access: Access }) {
           .filter((entry) => entry.content.tournamentId === tournamentId)
           .flatMap((entry) => [entry.content.teamAId, entry.content.teamBId]),
       ).size
+    for (const plan of plans.data || []) {
+      const previous = result.get(plan.id)
+      result.set(plan.id, { teams: plan.entrants, matches: plan.matches, played: previous?.played || 0 })
+    }
     return result
-  }, [series.data])
+  }, [series.data, plans.data])
 
   const visible = (tournaments.data ?? [])
     .filter((entry) => status === "all" || (entry.content.status ?? "UNKNOWN") === status)

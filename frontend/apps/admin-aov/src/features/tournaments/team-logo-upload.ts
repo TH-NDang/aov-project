@@ -7,11 +7,24 @@ export class RegistryLogoUploadError extends Error {
   }
 }
 
+const imageLabels = {
+  player: "Ảnh tuyển thủ",
+  team: "Logo đội tuyển",
+  tournament: "Logo giải đấu",
+  organization: "Logo tổ chức",
+  cover: "Ảnh bìa",
+} as const
+
 /** Reuse Media ingestion; only the resulting immutable URL crosses the service boundary. */
 export async function uploadRegistryLogo(
   request: Request,
   file: File,
-  owner: { kind: "team" | "tournament" | "player"; name: string; sourceUrl?: string; ownerName?: string },
+  owner: {
+    kind: "team" | "tournament" | "player" | "organization" | "cover"
+    name: string
+    sourceUrl?: string
+    ownerName?: string
+  },
   signal: AbortSignal,
   fetcher: typeof fetch = fetch,
 ): Promise<string> {
@@ -26,7 +39,7 @@ export async function uploadRegistryLogo(
     file,
     "OTHER",
     {
-      label: `${owner.kind === "player" ? "Ảnh tuyển thủ" : owner.kind === "team" ? "Logo đội tuyển" : "Logo giải đấu"} ${owner.name.trim() || file.name}`,
+      label: `${imageLabels[owner.kind]} ${owner.name.trim() || file.name}`,
       url: owner.sourceUrl && /^https?:\/\//i.test(owner.sourceUrl) ? owner.sourceUrl : null,
       // Named by the person uploading; never inferred from the team or player name.
       ...(owner.ownerName?.trim() ? { ownerName: owner.ownerName.trim() } : {}),

@@ -185,17 +185,35 @@ const routes: RouteObject[] = [
             path: "teams",
             handle: title("Đội tuyển"),
             lazy: async () => {
-              const { RegistryPage } = await import("@/features/tournaments/registry-page")
-              return { Component: () => <RegistryPage kind="teams" /> }
+              const { PageDirectory } = await import("@/features/community/page-directory")
+              return { Component: () => <PageDirectory kind="TEAM" /> }
             },
           },
           {
             path: "players",
             handle: title("Tuyển thủ"),
             lazy: async () => {
-              const { RegistryPage } = await import("@/features/tournaments/registry-page")
-              return { Component: () => <RegistryPage kind="players" /> }
+              const { PageDirectory } = await import("@/features/community/page-directory")
+              return { Component: () => <PageDirectory kind="PLAYER" /> }
             },
+          },
+          {
+            path: "organizations",
+            handle: title("Tổ chức"),
+            lazy: async () => {
+              const { PageDirectory } = await import("@/features/community/page-directory")
+              return { Component: () => <PageDirectory kind="ORGANIZATION" /> }
+            },
+          },
+          {
+            path: "pages/:pageId",
+            handle: title("Hồ sơ công khai"),
+            lazy: async () => ({ Component: (await import("@/features/community/page-editor")).PageEditor }),
+          },
+          {
+            path: "page-requests",
+            handle: title("Yêu cầu & kiểm duyệt"),
+            lazy: async () => ({ Component: (await import("@/features/community/page-review")).PageReview }),
           },
           {
             path: "tournaments/:tournamentId",
@@ -203,7 +221,7 @@ const routes: RouteObject[] = [
               <TournamentCrumb tournamentId={match.params.tournamentId} fallback="Chi tiết giải" />
             )),
             lazy: async () => ({
-              Component: (await import("@/features/esports/pages/tournament-page")).TournamentPage,
+              Component: (await import("@/features/competition/competition-workspace")).CompetitionWorkspace,
             }),
           },
           {

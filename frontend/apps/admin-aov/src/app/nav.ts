@@ -153,6 +153,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: "competition",
         items: [
           {
+            title: "Tổ chức",
+            icon: "teams",
+            to: "/organizations",
+            description: "Đơn vị tổ chức và thương hiệu",
+          },
+          {
             title: "Giải đấu",
             icon: "tournaments",
             to: "/tournaments",
@@ -169,6 +175,12 @@ export const NAV_GROUPS: NavGroup[] = [
             icon: "players",
             to: "/players",
             description: "Hồ sơ, tên thi đấu và thông tin tuyển thủ",
+          },
+          {
+            title: "Yêu cầu & kiểm duyệt",
+            icon: "users",
+            to: "/page-requests",
+            description: "Đại diện trang và báo cáo cộng đồng",
           },
         ],
       },
