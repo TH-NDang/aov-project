@@ -63,6 +63,37 @@ public class PageProfiles {
     }
 
     @Transactional(readOnly = true)
+    public Slice<Profile> followed(int page, int size) {
+        var actor = CommunityActor.require();
+        return Slice.of(pages.followedBy(actor.key(), paging(page, size)).map(row -> view(row, false)));
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<Profile> suggestions(int page, int size) {
+        var actor = CommunityActor.require();
+        return Slice.of(pages.suggestedFor(actor.key(), paging(page, size)).map(row -> view(row, false)));
+    }
+
+    /** Cards for the published pages among {@code ids}; withdrawn or unknown pages are left out. */
+    @Transactional(readOnly = true)
+    public Map<UUID, PageCard> cards(Collection<UUID> ids) {
+        if (ids.isEmpty())
+            return Map.of();
+        var rows = pages.findAllById(ids).stream().filter(row -> row.getPublishedContent() != null).toList();
+        if (rows.isEmpty())
+            return Map.of();
+        var represented = members.ownedAmong(rows.stream().map(PageRecord::getId).toList());
+
+        var cards = new HashMap<UUID, PageCard>();
+        for (var row : rows) {
+            var content = row.getPublishedContent().present(row.getPresentation());
+            cards.put(row.getId(), new PageCard(row.getId(), row.getCode(), row.getKind(), content.name(),
+                    content.avatarUrl(), represented.contains(row.getId())));
+        }
+        return cards;
+    }
+
+    @Transactional(readOnly = true)
     public Profile byCode(String code) {
         var row = pages.findByCode(code).orElseThrow(PageAccess::missing);
         return read(row.getId(), false);

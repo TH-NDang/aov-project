@@ -196,6 +196,21 @@ public interface PageApi {
     @PutMapping(ApiPaths.ROOT + "/me/pages/{id}/posts/{postId}")
     Post updatePost(@PathVariable UUID id, @PathVariable UUID postId, @RequestBody PostWrite body);
 
+    @GetMapping(ApiPaths.ROOT + "/posts")
+    Slice<FeedPost> latestPosts(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size);
+
+    @GetMapping(ApiPaths.ROOT + "/me/feed")
+    Slice<FeedPost> timeline(@RequestParam(defaultValue = "false") boolean following,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
+
+    @GetMapping(ApiPaths.ROOT + "/me/follows")
+    Slice<Profile> follows(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
+
+    @GetMapping(ApiPaths.ROOT + "/me/suggestions")
+    Slice<Profile> suggestions(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size);
+
     @GetMapping(ApiPaths.ROOT + "/posts/{id}/comments")
     Slice<Comment> comments(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "30") int size);
@@ -227,4 +242,10 @@ public interface PageApi {
 
     @PostMapping(ApiPaths.ROOT + "/me/notifications/{id}/read")
     void readNotification(@PathVariable UUID id);
+
+    @GetMapping(ApiPaths.ROOT + "/me/notifications/unread")
+    UnreadCount unreadNotifications();
+
+    @PostMapping(ApiPaths.ROOT + "/me/notifications/read-all")
+    void readAllNotifications();
 }

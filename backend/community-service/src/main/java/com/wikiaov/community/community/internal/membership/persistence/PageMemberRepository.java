@@ -13,4 +13,7 @@ public interface PageMemberRepository extends JpaRepository<PageMember, UUID> {
     List<PageMember> findByActor(String actor);
 
     boolean existsByPageIdAndRole(UUID pageId, String role);
+
+    @Query("select m.pageId from PageMember m where m.role = 'OWNER' and m.pageId in :pages")
+    Set<UUID> ownedAmong(Collection<UUID> pages);
 }

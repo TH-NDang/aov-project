@@ -287,6 +287,73 @@ class PageApiIntegrationTest {
                 .content("{\"liked\":true}")).andExpect(status().isNotFound());
     }
 
+    @Test
+    void anonymousReadersFollowTheCrossPageFeedWhileFollowsAndSuggestionsNeedAnAccount() throws Exception {
+        String followed = publishedOrganization("Followed organization");
+        String other = publishedOrganization("Other organization");
+        var news = send(post(ROOT + "/me/pages/" + followed + "/posts"), "feed-writer", false,
+                Map.of("body", "Followed news", "asPage", false, "publish", true));
+        send(post(ROOT + "/me/pages/" + other + "/posts"), "feed-writer", false,
+                Map.of("body", "Other news", "asPage", false, "publish", true));
+        send(post(ROOT + "/me/pages/" + other + "/posts"), "feed-writer", false,
+                Map.of("body", "Draft news", "asPage", false, "publish", false));
+        String newsId = news.path("id").asText();
+        send(post(ROOT + "/me/posts/" + newsId + "/comments"), "feed-reader", false,
+                Map.of("body", "First", "asPage", false));
+        send(post(ROOT + "/me/posts/" + newsId + "/like"), "feed-reader", false, Map.of("liked", true));
+
+        mvc.perform(get(ROOT + "/posts?size=100")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].post.body").value("Other news"))
+                .andExpect(jsonPath("$.items[?(@.post.body == 'Followed news')].post.comments").value(1))
+                .andExpect(jsonPath("$.items[?(@.post.body == 'Followed news')].post.likes").value(1))
+                .andExpect(jsonPath("$.items[?(@.post.body == 'Followed news')].post.liked").value(false))
+                .andExpect(jsonPath("$.items[?(@.post.body == 'Followed news')].page.name")
+                        .value("Followed organization"))
+                .andExpect(jsonPath("$.items[?(@.post.body == 'Draft news')]").isEmpty());
+        mvc.perform(get(ROOT + "/pages/" + followed + "/posts")).andExpect(jsonPath("$.items[0].comments").value(1));
+        mvc.perform(get(ROOT + "/posts?following=true")).andExpect(status().isUnprocessableEntity());
+        for (var path : List.of("/me/feed", "/me/follows", "/me/suggestions", "/me/notifications/unread"))
+            mvc.perform(get(ROOT + path)).andExpect(status().isUnauthorized());
+
+        send(post(ROOT + "/me/pages/" + followed + "/follow"), "feed-reader", false, Map.of("following", true));
+        var following = send(get(ROOT + "/me/feed?following=true&size=100"), "feed-reader", false, null);
+        assertThat(following.path("items")).extracting(item -> item.path("post").path("body").asText())
+                .containsExactly("Followed news");
+        assertThat(following.path("items").get(0).path("post").path("liked").asBoolean()).isTrue();
+        var everything = send(get(ROOT + "/me/feed?size=100"), "feed-writer", false, null);
+        assertThat(everything.path("items")).extracting(item -> item.path("post").path("body").asText())
+                .contains("Followed news", "Other news").doesNotContain("Draft news");
+        mvc.perform(as(get(ROOT + "/me/follows"), "feed-reader", false))
+                .andExpect(jsonPath("$.totalElements").value(1)).andExpect(jsonPath("$.items[0].id").value(followed));
+        var suggestions = send(get(ROOT + "/me/suggestions?size=100"), "feed-reader", false, null);
+        assertThat(suggestions.path("items")).extracting(item -> item.path("id").asText()).contains(other)
+                .doesNotContain(followed);
+
+        var current = send(get(ROOT + "/admin/pages/" + other), "editor", true, null);
+        send(post(ROOT + "/admin/pages/" + other + "/withdraw"), "publisher", true,
+                Map.of("version", current.path("version").asLong()));
+        mvc.perform(get(ROOT + "/posts?size=100")).andExpect(jsonPath("$.items[?(@.post.body == 'Other news')]")
+                .isEmpty());
+
+        mvc.perform(as(get(ROOT + "/me/notifications/unread"), "feed-writer", false))
+                .andExpect(jsonPath("$.unread").value(1));
+        send(post(ROOT + "/me/notifications/read-all"), "feed-writer", false, null);
+        mvc.perform(as(get(ROOT + "/me/notifications/unread"), "feed-writer", false))
+                .andExpect(jsonPath("$.unread").value(0));
+        mvc.perform(as(get(ROOT + "/me/notifications"), "feed-writer", false))
+                .andExpect(jsonPath("$.items[0].read").value(true));
+    }
+
+    private String publishedOrganization(String name) throws Exception {
+        var page = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "ORGANIZATION", "code", "feed-" + UUID.randomUUID(), "content", Map.of("name", name,
+                        "sources", List.of(Map.of("label", "Official", "url", "https://example.com")))));
+        String id = page.path("id").asText();
+        send(post(ROOT + "/admin/pages/" + id + "/publish"), "editor", true,
+                Map.of("version", page.path("version").asLong()));
+        return id;
+    }
+
     private org.springframework.test.web.servlet.ResultActions accept(String token, String actor) throws Exception {
         return mvc.perform(as(post(ROOT + "/me/invitations/accept"), actor, false)
                 .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("token", token))));

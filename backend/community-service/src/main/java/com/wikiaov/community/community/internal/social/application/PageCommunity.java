@@ -21,10 +21,11 @@ public class PageCommunity {
     private final PostLikeRepository likes;
     private final CommunityReportRepository reports;
     private final PageNotifications notifications;
+    private final PageProfiles profiles;
 
     public PageCommunity(PageAccess access, CommunityPostRepository posts, CommunityCommentRepository comments,
             PageFollowRepository follows, PostLikeRepository likes, CommunityReportRepository reports,
-            PageNotifications notifications) {
+            PageNotifications notifications, PageProfiles profiles) {
         this.access = access;
         this.posts = posts;
         this.comments = comments;
@@ -32,6 +33,7 @@ public class PageCommunity {
         this.likes = likes;
         this.reports = reports;
         this.notifications = notifications;
+        this.profiles = profiles;
     }
 
     @Transactional(readOnly = true)
@@ -52,6 +54,18 @@ public class PageCommunity {
         var actor = CommunityActor.require();
         access.published(pageId);
         return Slice.of(views(posts.visibleTo(pageId, actor.key(), PageProfiles.paging(page, size)), actor));
+    }
+
+    /** The public feed across published pages; anonymous readers never see their own likes. */
+    @Transactional(readOnly = true)
+    public Slice<FeedPost> latest(int page, int size) {
+        return feedView(posts.published(null, PageProfiles.paging(page, size)), null);
+    }
+
+    @Transactional(readOnly = true)
+    public Slice<FeedPost> timeline(boolean following, int page, int size) {
+        var actor = CommunityActor.require();
+        return feedView(posts.published(following ? actor.key() : null, PageProfiles.paging(page, size)), actor);
     }
 
     public Post write(UUID pageId, UUID id, Long version, String body, boolean asPage, boolean publish) {
@@ -88,7 +102,8 @@ public class PageCommunity {
         if (newlyPublished && asPage)
             notifyFollowers(pageId, profile.getPublishedContent().name() + " vừa đăng bài mới.");
         return postView(row, actor, likes.countByPostId(row.getId()),
-                likes.existsByPostIdAndActor(row.getId(), actor.key()));
+                likes.existsByPostIdAndActor(row.getId(), actor.key()),
+                comments.countByPostIdAndHiddenFalse(row.getId()));
     }
 
     @Transactional(readOnly = true)
@@ -228,25 +243,40 @@ public class PageCommunity {
         return post;
     }
 
-    /** Counts likes for a whole page of posts in two queries; {@code actor} is null for anonymous readers. */
+    /**
+     * Counts likes and visible comments for a whole page of posts in batch queries; {@code actor} is null for
+     * anonymous readers.
+     */
     private org.springframework.data.domain.Page<Post> views(org.springframework.data.domain.Page<CommunityPost> rows,
             CommunityActor actor) {
         var ids = rows.map(CommunityPost::getId).getContent();
-        var counts = new HashMap<UUID, Long>();
+        var likeCounts = new HashMap<UUID, Long>();
+        var commentCounts = new HashMap<UUID, Long>();
         var liked = new HashSet<UUID>();
         if (!ids.isEmpty()) {
-            likes.countByPosts(ids).forEach(count -> counts.put(count.getPostId(), count.getLikes()));
+            likes.countByPosts(ids).forEach(count -> likeCounts.put(count.getPostId(), count.getLikes()));
+            comments.countByPosts(ids).forEach(count -> commentCounts.put(count.getPostId(), count.getComments()));
             if (actor != null)
                 liked.addAll(likes.likedBy(actor.key(), ids));
         }
 
-        return rows.map(row -> postView(row, actor, counts.getOrDefault(row.getId(), 0L), liked.contains(row.getId())));
+        return rows.map(row -> postView(row, actor, likeCounts.getOrDefault(row.getId(), 0L),
+                liked.contains(row.getId()), commentCounts.getOrDefault(row.getId(), 0L)));
     }
 
-    private Post postView(CommunityPost row, CommunityActor actor, long likeCount, boolean liked) {
+    /** Feed rows whose page was withdrawn between the two reads are dropped from the slice. */
+    private Slice<FeedPost> feedView(org.springframework.data.domain.Page<CommunityPost> rows, CommunityActor actor) {
+        var cards = profiles.cards(rows.map(CommunityPost::getPageId).toSet());
+        var items = views(rows, actor).getContent().stream().filter(post -> cards.containsKey(post.pageId()))
+                .map(post -> new FeedPost(post, cards.get(post.pageId()))).toList();
+
+        return new Slice<>(items, rows.getTotalElements(), rows.getNumber(), rows.getSize());
+    }
+
+    private Post postView(CommunityPost row, CommunityActor actor, long likeCount, boolean liked, long commentCount) {
         return new Post(row.getId(), row.getVersion(), row.getPageId(), row.getAuthorName(), row.getAsPage(),
                 row.getBody(), row.getStatus(), row.getCreatedAt(),
-                actor != null && actor.key().equals(row.getActor()), likeCount, liked);
+                actor != null && actor.key().equals(row.getActor()), likeCount, liked, commentCount);
     }
 
     private void notifyFollowers(UUID pageId, String message) {

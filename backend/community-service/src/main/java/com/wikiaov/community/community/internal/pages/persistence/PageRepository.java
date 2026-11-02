@@ -22,6 +22,31 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
 
     Optional<PageRecord> findByCode(String code);
 
+    @Query(value = """
+        SELECT p.* FROM community.page p JOIN community.follow f ON f.page_id = p.id
+        WHERE f.actor = :actor AND p.published_content IS NOT NULL
+        ORDER BY lower(p.published_content->>'name'), p.id
+        """, countQuery = """
+        SELECT count(*) FROM community.page p JOIN community.follow f ON f.page_id = p.id
+        WHERE f.actor = :actor AND p.published_content IS NOT NULL
+        """, nativeQuery = true)
+    Page<PageRecord> followedBy(String actor, Pageable pageable);
+
+    /** Published pages the account neither follows nor manages, the most followed first. */
+    @Query(value = """
+        SELECT p.* FROM community.page p
+        WHERE p.published_content IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM community.follow f WHERE f.page_id = p.id AND f.actor = :actor)
+          AND NOT EXISTS (SELECT 1 FROM community.page_member m WHERE m.page_id = p.id AND m.actor = :actor)
+        ORDER BY (SELECT count(*) FROM community.follow f WHERE f.page_id = p.id) DESC, p.updated_at DESC, p.id
+        """, countQuery = """
+        SELECT count(*) FROM community.page p
+        WHERE p.published_content IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM community.follow f WHERE f.page_id = p.id AND f.actor = :actor)
+          AND NOT EXISTS (SELECT 1 FROM community.page_member m WHERE m.page_id = p.id AND m.actor = :actor)
+        """, nativeQuery = true)
+    Page<PageRecord> suggestedFor(String actor, Pageable pageable);
+
     Optional<PageRecord> findByKindAndEntityId(String kind, UUID entityId);
 
     long countByKindAndEntityId(String kind, UUID entityId);

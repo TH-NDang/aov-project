@@ -73,7 +73,30 @@ public final class PageViews {
             Instant createdAt,
             boolean own,
             long likes,
-            boolean liked
+            boolean liked,
+            long comments
+    ) {
+    }
+
+    /** The published page a feed post belongs to; the avatar follows the representative's presentation. */
+    public record PageCard(
+            UUID id,
+            String code,
+            String kind,
+            String name,
+            String avatarUrl,
+            boolean represented
+    ) {
+    }
+
+    public record FeedPost(
+            Post post,
+            PageCard page
+    ) {
+    }
+
+    public record UnreadCount(
+            long unread
     ) {
     }
 

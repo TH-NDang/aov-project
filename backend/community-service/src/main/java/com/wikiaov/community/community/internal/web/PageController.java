@@ -203,6 +203,30 @@ public class PageController implements PageApi {
     }
 
     @Override
+    public Slice<FeedPost> latestPosts(int page, int size) {
+        parameters("page", "size");
+        return social.latest(page, size);
+    }
+
+    @Override
+    public Slice<FeedPost> timeline(boolean following, int page, int size) {
+        parameters("following", "page", "size");
+        return social.timeline(following, page, size);
+    }
+
+    @Override
+    public Slice<Profile> follows(int page, int size) {
+        parameters("page", "size");
+        return profiles.followed(page, size);
+    }
+
+    @Override
+    public Slice<Profile> suggestions(int page, int size) {
+        parameters("page", "size");
+        return profiles.suggestions(page, size);
+    }
+
+    @Override
     public Slice<Comment> comments(UUID id, int page, int size) {
         parameters("page", "size");
         return social.comments(id, page, size);
@@ -251,5 +275,15 @@ public class PageController implements PageApi {
     @Override
     public void readNotification(UUID id) {
         notifications.read(id);
+    }
+
+    @Override
+    public UnreadCount unreadNotifications() {
+        return notifications.unread();
+    }
+
+    @Override
+    public void readAllNotifications() {
+        notifications.readAll();
     }
 }

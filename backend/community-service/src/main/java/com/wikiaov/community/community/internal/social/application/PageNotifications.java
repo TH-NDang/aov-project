@@ -35,6 +35,15 @@ public class PageNotifications {
                         row.getReadAt() != null)));
     }
 
+    @Transactional(readOnly = true)
+    public UnreadCount unread() {
+        return new UnreadCount(notifications.countByActorAndReadAtIsNull(CommunityActor.require().key()));
+    }
+
+    public void readAll() {
+        notifications.readAll(CommunityActor.require().key(), Instant.now());
+    }
+
     public void read(UUID id) {
         var row = notifications.findById(id).orElseThrow(PageAccess::missing);
         if (!row.getActor().equals(CommunityActor.require().key()))
