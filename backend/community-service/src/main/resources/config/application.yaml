@@ -13,6 +13,7 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+    default-schema: public
   security:
     oauth2:
       resourceserver:

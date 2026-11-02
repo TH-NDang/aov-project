@@ -203,3 +203,15 @@ python ./scripts/test_import_collected_metadata.py
 ```
 
 Kiểm thử PostgreSQL dùng Docker Testcontainers riêng, không sửa database local. Không chạy hai build vào cùng thư mục.
+
+## Page cộng đồng và không gian giải đấu
+
+Xem [đặc tả luồng, dữ liệu và API](../docs/04-QUAN-LY-THI-DAU-VA-PAGE.md).
+Admin: /organizations, /teams, /players, /page-requests, /tournaments/{id}.
+Public (aov-stream): /, /competitions/{id}, /pages, /pages/{code}, /account, /manage/{id}.
+
+Sau khi lấy mã mới, khởi động lại dịch vụ để Flyway áp dụng V006/V007. Realm đã tồn tại cần
+chạy ../wiki-service/scripts/sync-community-client.ps1 -EnableRegistration một lần để bật
+client aov-stream và đăng ký người dùng. Không gán quyền admin cho tài khoản thường.
+Biến frontend tùy chọn: VITE_AUTH_ISSUER, VITE_AUTH_CLIENT_ID (mặc định aov-stream),
+VITE_STREAM_URL ở admin (mặc định http://localhost:5174).

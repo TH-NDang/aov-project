@@ -19,10 +19,13 @@ public class CompetitionMedia {
             "/(?:assets|media)/([0-9a-fA-F-]{36})/[0-9a-fA-F-]{36}\\.(?:png|jpg|webp)");
     private final RetiredMediaRepository repository;
     private final RegistryWriteGuard writes;
+    private final java.util.List<com.wikiaov.community.tournament.CompetitionReferences> additional;
 
-    public CompetitionMedia(RetiredMediaRepository repository, RegistryWriteGuard writes) {
+    public CompetitionMedia(RetiredMediaRepository repository, RegistryWriteGuard writes,
+            java.util.List<com.wikiaov.community.tournament.CompetitionReferences> additional) {
         this.repository = repository;
         this.writes = writes;
+        this.additional = additional;
     }
 
     public record Usage(
@@ -35,14 +38,14 @@ public class CompetitionMedia {
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
     public Usage usage(UUID assetId) {
-        return new Usage(assetId, repository.countReferences(assetId), repository.existsById(assetId));
+        return new Usage(assetId, references(assetId), repository.existsById(assetId));
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
     @Transactional
     public Usage retire(UUID assetId) {
         writes.acquire();
-        long references = repository.countReferences(assetId);
+        long references = references(assetId);
         if (references > 0) {
             throw new ApiException(TournamentErrorCode.TOURNAMENT_RECORD_IN_USE,
                     "The image is referenced by competition records or publication history.",
@@ -76,5 +79,10 @@ public class CompetitionMedia {
             throw new ApiException(TournamentErrorCode.TOURNAMENT_MEDIA_RETIRED,
                     "The image has been retired and cannot be referenced again.");
         }
+    }
+
+    private long references(UUID id) {
+        return repository.countReferences(id)
+                + additional.stream().mapToLong(provider -> provider.mediaReferences(id)).sum();
     }
 }

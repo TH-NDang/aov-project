@@ -18,10 +18,13 @@ import org.springframework.stereotype.Component;
 public class RegistryArchivePolicy {
     private final RegistryWriteGuard writes;
     private final RegistryUsageRepository usages;
+    private final List<com.wikiaov.community.tournament.CompetitionReferences> additional;
 
-    public RegistryArchivePolicy(RegistryWriteGuard writes, RegistryUsageRepository usages) {
+    public RegistryArchivePolicy(RegistryWriteGuard writes, RegistryUsageRepository usages,
+            List<com.wikiaov.community.tournament.CompetitionReferences> additional) {
         this.writes = writes;
         this.usages = usages;
+        this.additional = additional;
     }
 
     public void lockWrites() {
@@ -29,10 +32,15 @@ public class RegistryArchivePolicy {
     }
 
     public Impact impact(RegistryKind kind, VersionedRecord row) {
-        var references = usages.usages(kind.name(), row.getId()).stream().filter(usage -> usage.getCount() > 0)
-                .map(usage -> new Usage(usage.getType(), usage.getCount(),
-                        usagePath(usage.getType(), kind, row.getId())))
-                .toList();
+        var references = new java.util.ArrayList<>(
+                usages.usages(kind.name(), row.getId()).stream().filter(usage -> usage.getCount() > 0)
+                        .map(usage -> new Usage(usage.getType(), usage.getCount(),
+                                usagePath(usage.getType(), kind, row.getId())))
+                        .toList());
+        long extra = additional.stream().mapToLong(provider -> provider.identityReferences(kind.name(), row.getId()))
+                .sum();
+        if (extra > 0)
+            references.add(new Usage("COMPETITION_PAGE", extra, "/tournaments"));
         return new Impact(row.getId(), row.getVersion(), row.getDeletedAt(),
                 row.getDeletedAt() == null && references.isEmpty(), references);
     }

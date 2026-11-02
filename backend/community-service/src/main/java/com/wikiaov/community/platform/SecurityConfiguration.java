@@ -21,6 +21,7 @@ class SecurityConfiguration {
                 .authorizeHttpRequests(a -> a.requestMatchers("/actuator/health", "/error").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/api/community/**").permitAll()
                         .requestMatchers("/api/community/*/admin/**").hasAuthority("tournament:read")
+                        .requestMatchers("/api/community/*/me", "/api/community/*/me/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/community/*/**").permitAll().anyRequest().denyAll())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwt -> {
                     if (jwt.getSubject() == null || jwt.getSubject().isBlank())
