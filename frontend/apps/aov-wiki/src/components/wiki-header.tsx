@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
 import { useNavigate, useSearchParams } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
-import { aovMarkUrl } from "@aov/ui/lib/brand"
-import { AovMark, AovWordmark } from "@aov/ui/components/aov-brand"
+import { AovWordmark } from "@aov/ui/components/aov-brand"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import {
   DropdownMenu,
@@ -49,6 +48,8 @@ const SECTION_ROW =
 const MOBILE_ROUND =
   "max-[640px]:size-7 max-[640px]:border max-[640px]:border-white/25 max-[640px]:bg-transparent max-[640px]:text-white"
 
+const WIKI_LOGO_URL = "/images/mole-logo-v4.png"
+
 function Wordmark({ size = "lg" }: { size?: "lg" | "sm" }) {
   return (
     <AovWordmark
@@ -76,7 +77,7 @@ const SECTIONS: Section[] = [
     name: <Wordmark size="sm" />,
     label: "AOV WiKi",
     description: "Tra cứu tướng, trang bị, phù hiệu",
-    image: aovMarkUrl,
+    image: WIKI_LOGO_URL,
     href: "/",
   },
   {
@@ -94,7 +95,7 @@ function SectionIcon({ section }: { section: Section }) {
   if (section.image) {
     return (
       <img
-        className="size-9 shrink-0 rounded-[9px] border border-[#c9a86a33] bg-[#18181b] object-contain p-1.5"
+        className="size-9 shrink-0 rounded-[9px] border border-[#efc78466] bg-[#bd843f] object-cover"
         src={section.image}
         alt=""
         width="36"
@@ -441,8 +442,12 @@ export function WikiHeader({
           )}
         >
           <a className="group shrink-0 rounded-[9px]" href={href("/")} aria-label={`AOV Wiki — ${t("home")}`}>
-            <AovMark
-              className="block size-8 transition-opacity group-hover:opacity-80 max-[640px]:size-7"
+            <img
+              src={WIKI_LOGO_URL}
+              alt=""
+              width={32}
+              height={32}
+              className="block size-8 rounded-[8px] border border-[#efc78480] bg-[#bd843f] object-cover transition-opacity group-hover:opacity-80 max-[640px]:size-7 max-[640px]:rounded-[7px]"
               fetchPriority="high"
             />
           </a>
