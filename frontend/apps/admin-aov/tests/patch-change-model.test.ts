@@ -11,6 +11,54 @@ import {
   suggestedRows,
 } from "../src/features/publishing/patch-change-model"
 import type { Content } from "../src/features/publishing/types"
+import { formatPatchValue } from "../src/features/publishing/patch-value"
+import { comparisonValue } from "../src/features/publishing/hero-comparison"
+
+test("patch formulas use readable stat names while preserving coefficients, grouping and stored values", () => {
+  const examples = [
+    ["45 + 0.23*physicalAttack", "45 + 0.23 × Công vật lý"],
+    ["110 + 22*(rank-1) + 0.18*physicalAttack", "110 + 22 × (cấp chiêu − 1) + 0.18 × Công vật lý"],
+    [
+      "500 + 100*(rank-1) + 0.5*magicAttack + 0.05*maxHealth",
+      "500 + 100 × (cấp chiêu − 1) + 0.5 × Công phép + 0.05 × Máu tối đa",
+    ],
+    ["182~364 + 0.28*bonusPhysicalAttack", "182 – 364 + 0.28 × Công vật lý cộng thêm"],
+    ["6 - 0.4*(rank-1)", "6 − 0.4 × (cấp chiêu − 1)"],
+    ["-0.5*magicAttack/(heroLevel+1)", "−0.5 × Công phép ÷ (cấp tướng + 1)"],
+  ]
+  for (const [raw, readable] of examples) {
+    assert.equal(formatPatchValue(raw), readable)
+    assert.equal(comparisonValue(raw), readable)
+    const payload = changePayload({
+      ...emptyRow("SKILL"),
+      kind: "BUFF",
+      key: "skill-1",
+      field: "damage",
+      oldValue: raw,
+      newValue: "500",
+    })
+    assert.ok("oldValue" in payload)
+    assert.equal(payload.oldValue, raw)
+  }
+})
+
+test("formula display leaves prose, rich text, unknown variables and incomplete expressions intact", () => {
+  for (const value of [
+    "Gây 45 (+0.23 công vật lý) sát thương chuẩn.",
+    "<color=#ff0000>45 + 0.23*physicalAttack</color>",
+    "**physicalAttack**",
+    "physicalAttackBonus + 0.5*magicAttack",
+    "physicalAttack()",
+    "physicalAttack +",
+    "2**physicalAttack",
+    "(physicalAttack + 1",
+    "physicalAttack + 1)",
+    "physicalAttack 5",
+    "0.23",
+    "",
+  ])
+    assert.equal(formatPatchValue(value), value)
+})
 
 const content = (
   hp: number,

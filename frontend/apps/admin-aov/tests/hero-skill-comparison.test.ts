@@ -7,6 +7,7 @@ import {
 } from "../src/features/publishing/hero-skill-comparison"
 import type { HeroComparison } from "../src/features/publishing/publishing-api"
 import type { Revision, Skill } from "../src/features/publishing/types"
+import { skillFieldLabel } from "../src/features/publishing/patch-change-model"
 
 const skill = (key: string, metadata: Record<string, unknown> = {}, description = "Mô tả kỹ năng"): Skill => ({
   skillKey: key,
@@ -159,8 +160,8 @@ test("unknown meaningful source fields and structured effects remain readable wi
   after.effects.push({ effectType: "SLOW", metadata: { duration: 2, strength: [25, 35] } })
   const group = buildSkillComparison(compare([before], [after]), "vi-VN").skills[0]
   assert.equal(group.rows.length, 3)
-  assert.ok(group.rows.some((row) => row.label === "customMechanic · Tầm tác động" && row.after === 6))
-  assert.ok(group.rows.some((row) => row.label === "SLOW · Thời gian tác dụng" && row.after === 2))
+  assert.ok(group.rows.some((row) => row.label === "Thông số khác · Tầm tác động" && row.after === 6))
+  assert.ok(group.rows.some((row) => row.label === "Làm chậm · Thời gian tác dụng" && row.after === 2))
   assert.ok(group.rows.some((row) => Array.isArray(row.after) && row.after.join("/") === "25/35"))
   assert.ok(group.rows.every((row) => typeof row.after !== "object" || Array.isArray(row.after)))
 })
@@ -262,5 +263,100 @@ test("unknown old values remain unknown and labels cover real imported mechanic 
   assert.equal(result.skills[0].rows[0].before, null)
   assert.deepEqual(result.skills[0].kinds, ["REWORK"])
   assert.equal(skillComparisonFieldLabel("skill_3.cannonSeparation"), "Tách Pháo tử quang")
-  assert.equal(skillComparisonFieldLabel("skill_4.futureMechanic"), "skill_4.futureMechanic")
+  assert.equal(skillComparisonFieldLabel("skill_4.futureMechanic"), "Thông số khác")
+  for (const label of [skillComparisonFieldLabel, skillFieldLabel]) {
+    assert.equal(label("passive.stackDecay"), "Giảm tầng cộng dồn")
+    assert.equal(label("skill_1.cooldownSeconds"), "Hồi chiêu")
+    assert.equal(label("futureMechanic"), "Thông số khác")
+    assert.equal(label("Sát thương mỗi tầng"), "Sát thương mỗi tầng")
+  }
+})
+
+test("formatting, whitespace and tag ordering do not create content changes", () => {
+  const before = skill(
+    "skill-0-1",
+    {
+      energyCost: { display: "<color=#62A2CC>N.lượng: 0</color>" },
+      tags: ["<color=#AA0000>Vật lý</color>", "<color=#00AA00>Tăng ST</color>"],
+    },
+    "Gây <color=#AA0000>120 sát thương</color>.\nHồi máu.",
+  )
+  const after = skill(
+    "skill-0-1",
+    {
+      energyCost: { display: "N.lượng: 0" },
+      tags: ["Tăng ST", "<color=#BB0000>Vật lý</color>", "Vật lý"],
+    },
+    "Gây <b>120 sát thương</b>. Hồi máu.",
+  )
+  const input = compare([before], [after])
+  input.changes = [
+    { section: "profile", path: "/summary", kind: "CHANGED", before: "<b>Giới thiệu</b>", after: "Giới thiệu" },
+  ]
+  assert.deepEqual(buildSkillComparison(input, "vi-VN"), { skills: [], otherChanges: [] })
+
+  const changed = structuredClone(after)
+  changed.translations[0].description = "Gây <color=#BB0000>150 sát thương</color>. Hồi máu."
+  changed.effects[0].metadata.energyCost = { display: "N.lượng: 10" }
+  changed.effects[0].metadata.tags = ["<color=#BB0000>Vật lý</color>", "Làm chậm"]
+  const group = buildSkillComparison(compare([before], [changed]), "vi-VN").skills[0]
+  assert.equal(group.rows.length, 2)
+  assert.equal(group.descriptions[0].after, changed.translations[0].description)
+  assert.ok(group.rows.some((row) => row.id === "energyCost" && row.after === "N.lượng: 10"))
+  assert.ok(
+    group.rows.some(
+      (row) => row.id === "tags" && Array.isArray(row.after) && row.after.includes("<color=#BB0000>Vật lý</color>"),
+    ),
+  )
+})
+
+test("manual import evidence is hidden while gameplay facts and unrelated edits remain intact", () => {
+  const capture = {
+    patchCode: "2026-10-30",
+    seasonCode: "s4-2026",
+    observedAt: "2026-11-01T02:43:42.386Z",
+    sourceForm: "default",
+    fieldReview: { cooldown: { status: "VERIFIED" } },
+    contentReview: {
+      file: "content-review.json",
+      fields: ["energy_cost"],
+      status: "VISUALLY_CHECKED_LISTED_FIELDS_ONLY",
+    },
+    descriptionReviews: [{ status: "VERIFIED" }],
+    fragments: [{ description: "Unreviewed source text" }],
+    sourceImages: ["capture.png"],
+    sourceArchive: "aov.zip",
+    sourceArchiveSha256: "source-hash",
+    identityBasis: "portrait",
+    heroClassification: { role: "fighter" },
+    observedAttributes: { physicalAttack: 160 },
+    observedPatchValues: { cooldown: 5 },
+    tableObservationStatus: "OBSERVED",
+  }
+  const before = skill("skill-1-1", { ...capture, cooldown: { seconds: 6 } })
+  const after = skill("skill-1-1", { cooldown: { seconds: 5 } })
+  const input = compare([before], [after])
+  input.changes.push(
+    { section: "profile", path: "/metadata/observedAt", kind: "REMOVED", before: capture.observedAt, after: null },
+    { section: "profile", path: "/metadata", kind: "REMOVED", before: { capture: [capture] }, after: null },
+    {
+      section: "profile",
+      path: "/extra",
+      kind: "CHANGED",
+      before: { caption: "Cũ", capture, optional: null },
+      after: { caption: "Mới", optional: null },
+    },
+  )
+  const original = structuredClone(input)
+  const result = buildSkillComparison(input, "vi-VN")
+  assert.deepEqual(result.skills[0].rows, [
+    { id: "cooldown", label: "Hồi chiêu", before: "6 giây", after: "5 giây", kinds: [] },
+  ])
+  assert.deepEqual(
+    result.otherChanges.map((change) => change.path),
+    ["/summary", "/extra"],
+  )
+  assert.deepEqual(result.otherChanges[1].before, { caption: "Cũ", optional: null })
+  assert.deepEqual(result.otherChanges[1].after, { caption: "Mới", optional: null })
+  assert.deepEqual(input, original)
 })

@@ -63,7 +63,12 @@ export function PatchChangeForm({ revision, locale }: { revision: Revision; loca
             {savedId === recorded.id ? "Đã ghi lịch sử thay đổi." : "Patch này đã có lịch sử thay đổi của tướng."}
             <SourceBadge change={recorded} />
           </p>
-          <ChangeLines changes={recorded.changes} content={after.data?.content} locale={locale} />
+          <ChangeLines
+            changes={recorded.changes}
+            content={after.data?.content}
+            heroId={revision.heroId}
+            locale={locale}
+          />
         </div>
       ) : (
         <div className="space-y-3">

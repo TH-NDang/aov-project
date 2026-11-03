@@ -3,6 +3,7 @@ import { backendRequest } from "@/app/auth/session"
 import { CatalogTimeline, type TimelineCount } from "./catalog-timeline"
 import type { CatalogFilter } from "./catalog-context"
 import type { PublicationOverview } from "./publication-overview"
+import { currentHeroCatalogScope } from "./hero-catalog-scope"
 export function HeroTimeline({
   data,
   rulesetId,
@@ -35,6 +36,8 @@ export function HeroTimeline({
       onChange={onChange}
       counts={counts}
       loading={queries.some((q) => q.isPending)}
+      heroCatalog
+      currentFilter={currentHeroCatalogScope(data)}
     />
   )
 }

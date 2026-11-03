@@ -1,3 +1,4 @@
+import { catalogScopePatch } from "./catalog-scope"
 import { PatchDataReview } from "./patch-data-review"
 import { SharedPatchSetup, SeasonScheduleForm, PatchReleaseForm } from "./shared-version-setup"
 import { useEffect, useState } from "react"
@@ -50,10 +51,7 @@ export function GameConfigurationPage() {
     setParams(
       (current) => {
         const copy = new URLSearchParams(current)
-        for (const [key, value] of [
-          ["season", next.seasonId],
-          ["patch", next.variantId],
-        ]) {
+        for (const [key, value] of Object.entries(catalogScopePatch(next))) {
           if (value) copy.set(key, value)
           else copy.delete(key)
         }
@@ -168,7 +166,13 @@ export function GameConfigurationPage() {
           <MarketOverview data={data} onOpenMarket={setMarketId} />
           <section className="min-w-0 space-y-3">
             <h2 className="type-section-title">Mùa và bản cập nhật</h2>
-            <CatalogTimeline data={data} value={timelineScope} onChange={changeScope} showCounts={false} />
+            <CatalogTimeline
+              data={data}
+              value={timelineScope}
+              onChange={changeScope}
+              showCounts={false}
+              seasonView="each-patch"
+            />
             {!data.seasons.length && (
               <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">
                 Chưa có mùa. Bấm “Tạo mùa” ở đầu trang.

@@ -1,5 +1,15 @@
 import { useState, type ComponentType } from "react"
-import { ArrowDown, ArrowUp, ArrowUpRight, ChevronDown, Ellipsis, RefreshCw, Scale, Wrench } from "lucide-react"
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpRight,
+  ChevronDown,
+  Ellipsis,
+  GitCompareArrows,
+  RefreshCw,
+  Scale,
+  Wrench,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
@@ -20,7 +30,7 @@ const kindStyles: Record<ChangeKind, KindStyle> = {
     icon: ArrowDown,
   },
   ADJUSTMENT: {
-    label: "Cân bằng",
+    label: "Điều chỉnh",
     icon: Scale,
   },
   REWORK: {
@@ -42,7 +52,15 @@ export function curatedChangeKinds(kinds: readonly string[]): ChangeKind[] {
   return (Object.keys(kindStyles) as ChangeKind[]).filter((kind) => selected.has(kind))
 }
 
-export function ChangeKindBadge({ kind, compact = false }: { kind: string; compact?: boolean }) {
+export function ChangeKindBadge({
+  kind,
+  compact = false,
+  className = "",
+}: {
+  kind: string
+  compact?: boolean
+  className?: string
+}) {
   const { colors } = useChangeColors()
   const normalized = normalizeChangeKind(kind)
   const { label, icon: Icon } = kindStyles[normalized]
@@ -50,7 +68,7 @@ export function ChangeKindBadge({ kind, compact = false }: { kind: string; compa
     <span
       data-change-kind={normalized}
       title={normalized === "OTHER" && kind !== "OTHER" ? `${label} · ${kind}` : label}
-      className={`inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border text-xs font-medium ${compact ? "size-7" : "px-2 py-1"} ${changeTone(normalized, colors)}`}
+      className={`type-label inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border ${compact ? "size-7" : "px-2 py-1"} ${changeTone(normalized, colors)} ${className}`}
     >
       <Icon className="size-3.5 shrink-0" aria-hidden />
       <span className={compact ? "sr-only" : ""}>{label}</span>
@@ -110,42 +128,45 @@ export function ChangeKindBadges({
 }
 
 export function HeroChangeSummary({
-  kinds,
+  overallKind,
   summary,
   patchLabel,
+  showPatchLabel = true,
   actualLocale,
   locale,
   onOpen,
   className = "",
 }: {
-  kinds: readonly string[]
+  overallKind: string | null
   summary?: string | null
   patchLabel?: string
+  showPatchLabel?: boolean
   actualLocale?: string | null
   locale?: string
   onOpen?: () => void
   className?: string
 }) {
   const [open, setOpen] = useState(false)
-  const ordered = curatedChangeKinds(kinds)
-  if (!ordered.length && !summary)
-    return <span className="text-xs text-muted-foreground">Chưa có thay đổi gameplay</span>
-  const labels = ordered.map((kind) => kindStyles[kind].label).join(", ") || "Chưa phân loại"
+  const label = overallKind ? kindStyles[normalizeChangeKind(overallKind)].label : "Chưa đánh giá"
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={`Xem thay đổi gameplay${patchLabel ? ` tại ${patchLabel}` : ""}: ${labels}`}
-          className={`inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border border-border/60 bg-background/60 px-2 py-1 text-left outline-none transition-colors hover:border-ring/50 hover:bg-accent hover:shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=open]:border-ring/50 data-[state=open]:bg-accent ${className}`}
+          aria-label={`Xem thay đổi gameplay${patchLabel ? ` tại ${patchLabel}` : ""}: ${label}`}
+          title="Đánh giá tổng thể tướng trong patch"
+          className={`inline-flex max-w-full cursor-pointer items-center gap-1 rounded-md py-1 text-left outline-none transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=open]:bg-accent/50 ${className}`}
         >
           <span className="flex min-w-0 flex-col items-start gap-1">
-            {ordered.length ? (
-              <ChangeKindBadges kinds={kinds} compact />
+            {overallKind ? (
+              <ChangeKindBadge kind={overallKind} />
             ) : (
-              <span className="text-xs text-muted-foreground">Chưa đánh giá</span>
+              <span className="type-label inline-flex items-center gap-1.5 rounded-md border border-border bg-muted/30 px-2 py-1 text-muted-foreground">
+                <GitCompareArrows className="size-3.5" aria-hidden />
+                Chưa đánh giá
+              </span>
             )}
-            {patchLabel && (
+            {showPatchLabel && patchLabel && (
               <span className="max-w-full truncate text-xs text-muted-foreground tabular-nums">{patchLabel}</span>
             )}
           </span>
@@ -154,14 +175,13 @@ export function HeroChangeSummary({
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80 max-w-[calc(100vw-2rem)] space-y-4 p-4">
         <div>
-          <h3 className="text-sm font-semibold">Thay đổi gameplay</h3>
+          <h3 className="type-section-title">Thay đổi tại patch</h3>
           {patchLabel && <p className="mt-1 text-xs text-muted-foreground">{patchLabel}</p>}
         </div>
-        {ordered.length ? (
-          <ChangeKindBadges kinds={kinds} maxVisible={6} />
-        ) : (
-          <span className="text-xs text-muted-foreground">Chưa đánh giá tổng thể</span>
-        )}
+        <div className="space-y-1.5">
+          <p className="type-meta">Đánh giá tổng thể</p>
+          {overallKind ? <ChangeKindBadge kind={overallKind} /> : <p className="type-body">Chưa đánh giá</p>}
+        </div>
         <p className="whitespace-pre-wrap break-words text-sm leading-6">
           {summary || "Đã ghi nhận thay đổi. Mở chi tiết để xem nội dung đối chiếu."}
         </p>

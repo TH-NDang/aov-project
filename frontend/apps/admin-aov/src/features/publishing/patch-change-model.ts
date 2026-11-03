@@ -57,26 +57,9 @@ export const STAT_LABELS: Record<string, string> = {
 
 export const UNIT_LABELS: Record<string, string> = { PERCENT: "%", UNKNOWN: "", POINT: "" }
 
-/** Common skill fields; editors may still type another key the notes name. */
-export const SKILL_FIELDS: Record<string, string> = {
-  cooldown: "Hồi chiêu",
-  damage: "Sát thương",
-  energyCost: "Tiêu hao năng lượng",
-  duration: "Thời gian hiệu lực",
-  range: "Tầm",
-  shield: "Lá chắn",
-  heal: "Hồi máu",
-  slow: "Làm chậm",
-  stun: "Khống chế",
-  magicDamage: "Sát thương phép",
-  physicalDamage: "Sát thương vật lý",
-  trueDamage: "Sát thương chuẩn",
-  description: "Mô tả",
-}
+export { SKILL_FIELD_LABELS as SKILL_FIELDS, skillFieldLabel } from "./skill-field-labels"
 
 export const statLabel = (key: string) => STAT_LABELS[key] ?? key
-/** Imported keys may be scoped, such as "skill_2.magicDamage"; the last segment names the field. */
-export const skillFieldLabel = (key: string) => SKILL_FIELDS[key] ?? SKILL_FIELDS[key.split(".").pop() ?? ""] ?? key
 
 export interface ChangeRow {
   id: string

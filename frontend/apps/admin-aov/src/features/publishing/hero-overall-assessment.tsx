@@ -15,7 +15,7 @@ export interface HeroAssessment {
 const options = {
   BUFF: "Tăng sức mạnh",
   NERF: "Giảm sức mạnh",
-  ADJUSTMENT: "Cân bằng",
+  ADJUSTMENT: "Điều chỉnh",
   REWORK: "Làm lại",
   FIX: "Sửa lỗi",
   OTHER: "Khác",
@@ -48,7 +48,7 @@ export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
         )}
       </div>
       <p className="text-xs leading-5 text-muted-foreground">
-        Đánh giá riêng cho toàn bộ tướng. Các nhãn tăng/giảm trên từng kỹ năng và chỉ số được giữ độc lập.
+        Chọn một đánh giá cho toàn bộ tướng trong patch này. Các nhãn trên từng kỹ năng và chỉ số mô tả thay đổi cụ thể.
       </p>
       {canWrite && (
         <div className="flex flex-wrap gap-2">

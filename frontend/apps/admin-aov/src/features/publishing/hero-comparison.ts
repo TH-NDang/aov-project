@@ -1,3 +1,5 @@
+import { formatPatchValue } from "./patch-value"
+
 export type DiffSegment = { type: "same" | "removed" | "added"; text: string }
 
 export function plainComparisonText(text: string): string {
@@ -55,14 +57,17 @@ export function textDifference(before: string, after: string): DiffSegment[] {
   return result
 }
 
-export function comparisonValue(value: unknown): string {
+export function comparisonValue(value: unknown, field?: string): string {
   if (value === null || value === undefined) return "Chưa ghi nhận"
   if (typeof value === "boolean") return value ? "Có" : "Không"
   if (typeof value === "number") return new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 6 }).format(value)
-  if (typeof value === "string") return value || "Trống"
-  if (Array.isArray(value)) return value.map(comparisonValue).join(" · ") || "Trống"
+  if (typeof value === "string") {
+    const label = field && comparisonEnumLabels[field]?.[value]
+    return label || formatPatchValue(value) || "Trống"
+  }
+  if (Array.isArray(value)) return value.map((item) => comparisonValue(item, field)).join(" · ") || "Trống"
   return Object.entries(value as Record<string, unknown>)
-    .map(([key, item]) => `${comparisonFieldLabels[key] ?? key}: ${comparisonValue(item)}`)
+    .map(([key, item]) => `${comparisonFieldLabels[key] ?? "Thông tin khác"}: ${comparisonValue(item, key)}`)
     .join("\n")
 }
 
@@ -79,6 +84,7 @@ export const comparisonFieldLabels: Record<string, string> = {
   lore: "Cốt truyện",
   description: "Mô tả",
   roles: "Vai trò",
+  statKey: "Chỉ số",
   baseValue: "Giá trị ghi nhận",
   growthPerLevel: "Tăng mỗi cấp",
   unit: "Đơn vị",
@@ -86,6 +92,10 @@ export const comparisonFieldLabels: Record<string, string> = {
   formKey: "Dạng tướng",
   iconAssetId: "Ảnh kỹ năng",
   artAssetId: "Ảnh trang phục",
+  headAssetId: "Ảnh đại diện",
+  portraitAssetId: "Chân dung",
+  assetId: "Ảnh",
+  images: "Ảnh",
   rarityCode: "Bậc",
   acquisitionNote: "Cách sở hữu",
   effects: "Thông số & nguồn",
@@ -128,6 +138,34 @@ export const comparisonFieldLabels: Record<string, string> = {
   MAGIC_LIFESTEAL: "Hút máu phép",
   COOLDOWN_REDUCTION: "Giảm hồi chiêu",
   values: "Thuộc tính",
+}
+
+const comparisonEnumLabels: Record<string, Record<string, string>> = {
+  statKey: comparisonFieldLabels,
+  unit: { UNKNOWN: "Chưa xác định", PERCENT: "%", POINT: "Điểm", seconds: "Giây", percent: "%" },
+  kind: { ACTIVE: "Chủ động", PASSIVE: "Nội tại" },
+  roles: {
+    WARRIOR: "Đấu sĩ",
+    TANK: "Đỡ đòn",
+    ASSASSIN: "Sát thủ",
+    MAGE: "Pháp sư",
+    MARKSMAN: "Xạ thủ",
+    SUPPORT: "Trợ thủ",
+  },
+}
+
+/** Resolve saved image references; arbitrary text must never be treated as an asset identifier. */
+export function comparisonImages(value: unknown, field: string): { id: string }[] {
+  if (Array.isArray(value)) return value.flatMap((item) => comparisonImages(item, field))
+  if (value && typeof value === "object" && "assetId" in value && typeof value.assetId === "string")
+    return value.assetId ? [{ id: value.assetId }] : []
+  if (
+    typeof value === "string" &&
+    value &&
+    (field.endsWith("AssetId") || ["assetId", "HEAD", "PORTRAIT", "SPLASH"].includes(field))
+  )
+    return [{ id: value }]
+  return []
 }
 
 export function comparisonPathLabels(

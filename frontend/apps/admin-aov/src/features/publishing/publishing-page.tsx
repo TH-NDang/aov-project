@@ -1,3 +1,5 @@
+import { catalogScopePatch } from "./catalog-scope"
+import { resolveHeroCatalogScope } from "./hero-catalog-scope"
 import { HeroTimeline } from "./hero-timeline"
 import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
@@ -220,14 +222,32 @@ export function PublishingWorkspace({
   const [importContext, setImportContext] = useState<ImportContext | null>(null)
   const [resourceId, setResourceId] = useState("")
   const [showResources, setShowResources] = useState(false)
-  const filter: CatalogFilter = {
+  const requestedFilter: CatalogFilter = {
     seasonId: heroLocationId(urlParams.get("season")),
     variantId: heroLocationId(urlParams.get("patch")),
   }
-  const setFilter = (next: CatalogFilter) => updateLocation({ season: next.seasonId, patch: next.variantId })
   const editorRef = useRef<HTMLDivElement>(null)
   const heroHeadingRef = useRef<HTMLHeadingElement>(null)
   const overview = usePublicationOverview()
+  const filter = !heroId && overview.data ? resolveHeroCatalogScope(overview.data, requestedFilter) : requestedFilter
+  const setFilter = (next: CatalogFilter) =>
+    updateLocation(catalogScopePatch(!heroId && overview.data ? resolveHeroCatalogScope(overview.data, next) : next))
+  useEffect(() => {
+    if (
+      !heroId &&
+      overview.data &&
+      (filter.variantId !== requestedFilter.variantId || filter.seasonId !== requestedFilter.seasonId)
+    )
+      updateLocation(catalogScopePatch(filter))
+  }, [
+    heroId,
+    overview.data,
+    filter.variantId,
+    filter.seasonId,
+    requestedFilter.variantId,
+    requestedFilter.seasonId,
+    updateLocation,
+  ])
   const displayLocale = useContentLocale()
   const location = readHeroLocation(urlParams, translationMode, displayLocale)
   const { view, section, targetLocale, sourceLocale } = location
@@ -613,13 +633,15 @@ export function PublishingWorkspace({
               {overview.error ? errorMessage(overview.error) : "Đang tải mùa và patch…"}
             </p>
           )}
-          <HeroCatalog
-            ruleset=""
-            locale={displayLocale}
-            overview={overview.data}
-            filter={filter}
-            searchSlot={searchSlot}
-          />
+          {overview.data && (
+            <HeroCatalog
+              ruleset=""
+              locale={displayLocale}
+              overview={overview.data}
+              filter={filter}
+              searchSlot={searchSlot}
+            />
+          )}
         </>
       ) : (
         <>
@@ -732,6 +754,7 @@ export function PublishingWorkspace({
                   <HeroPatchTimeline
                     heroId={heroId}
                     revision={revision}
+                    revisions={revisions.data ?? []}
                     content={preview.content}
                     locale={locale}
                     canRecord={capabilities.includes("patch:write")}

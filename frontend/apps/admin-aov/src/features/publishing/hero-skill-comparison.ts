@@ -1,3 +1,6 @@
+import { SKILL_FIELD_LABELS as fieldLabels, skillFieldLabel } from "./skill-field-labels"
+import { plainComparisonText } from "./hero-comparison"
+import { compareSkillRanks, type RankComparison } from "./skill-rank-values"
 import type { HeroComparison } from "./publishing-api"
 import type { Skill } from "./types"
 
@@ -17,6 +20,7 @@ export interface SkillComparisonRow {
   before: unknown
   after: unknown
   kinds: string[]
+  ranks?: RankComparison
 }
 
 export interface SkillComparisonGroup {
@@ -46,58 +50,7 @@ const normalized = (value: string) =>
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "")
 
-const fieldLabels: Record<string, string> = {
-  cooldown: "Hồi chiêu",
-  cooldownSeconds: "Hồi chiêu",
-  energyCost: "Tiêu hao năng lượng",
-  passiveAttackMultiplier: "Hệ số công vật lý nội tại khi kích hoạt",
-  speedDurationSeconds: "Thời gian tăng tốc (giây)",
-  heroDamage: "Sát thương lên tướng",
-  bonusAttackCanCrit: "Chí mạng đòn đánh cường hóa",
-  bonusPhysicalDamage: "Sát thương vật lý cộng thêm",
-  magicDamage: "Sát thương phép",
-  heal: "Hồi máu",
-  damage: "Sát thương",
-  physicalDamage: "Sát thương vật lý",
-  initialReductionStacks: "Tầng giảm sát thương ban đầu",
-  damageReductionPercentPerStack: "Giảm sát thương mỗi tầng (%)",
-  maximumReductionStacks: "Số tầng tối đa",
-  collisionDamage: "Sát thương va chạm",
-  bonusDamage: "Sát thương cộng thêm",
-  shield: "Lá chắn",
-  initialMagicDamage: "Sát thương phép ban đầu",
-  periodicMagicDamage: "Sát thương phép duy trì",
-  empoweredPhysicalDamage: "Sát thương đòn đánh cường hóa",
-  magicDefenseReduction: "Giảm giáp phép",
-  reveal: "Lộ diện mục tiêu",
-  vision: "Tầm nhìn",
-  skill_1InnerAreaLink: "Liên kết Kim quang ấn",
-  cannonSeparation: "Tách Pháo tử quang",
-  stackDecay: "Giảm tầng cộng dồn",
-  empoweredAttackDash: "Đột kích bằng đòn đánh cường hóa",
-  empoweredAttackDashWithoutTarget: "Lướt khi không có mục tiêu",
-  skill_2DetonationLink: "Liên kết kích nổ Lập phương thứ nguyên",
-  doliaRefreshImmortality: "Miễn tử khi Dolia làm mới chiêu",
-  collisionPhysicalDamage: "Sát thương vật lý va chạm",
-  disease: "Dấu bệnh",
-  evolution: "Tiến hóa kỹ năng",
-  enhancement: "Cường hóa đòn đánh",
-  evolutionThreshold: "Mốc tiến hóa",
-  area: "Vùng tác động",
-  waves: "Sóng phép",
-  tags: "Đặc tính",
-  name: "Tên kỹ năng",
-  kind: "Loại kỹ năng",
-  formKey: "Dạng tướng",
-  iconAssetId: "Ảnh kỹ năng",
-  duration: "Thời gian tác dụng",
-  range: "Tầm tác động",
-  radius: "Bán kính",
-  value: "Giá trị",
-  unit: "Đơn vị",
-}
-
-export const skillComparisonFieldLabel = (field: string) => fieldLabels[field.split(".").at(-1)!] ?? field
+export const skillComparisonFieldLabel = skillFieldLabel
 
 const aliases = new Map(
   Object.entries(fieldLabels).flatMap(([key, label]) => [
@@ -125,11 +78,28 @@ const noise = new Set(
     "sources",
     "provenance",
     "review_required",
+    "patchCode",
+    "seasonCode",
+    "observedAt",
+    "sourceForm",
+    "fieldReview",
+    "contentReview",
+    "descriptionReviews",
+    "fragments",
+    "sourceImages",
+    "sourceArchive",
+    "sourceArchiveSha256",
+    "identityBasis",
+    "heroClassification",
+    "observedAttributes",
+    "observedPatchValues",
+    "tableObservationStatus",
   ].map(normalized),
 )
 
-/** Stable comparison keeps object property order from creating a visible difference. */
+/** Compare readable content, ignoring presentation markup, whitespace and object property order. */
 function canonical(value: unknown): string {
+  if (typeof value === "string") return JSON.stringify(plainComparisonText(value).replace(/\s+/gu, " ").trim())
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`
   const object = record(value)
   if (object)
@@ -162,7 +132,7 @@ function descriptionChanges(before: Skill | null, after: Skill | null, locale: s
     .flatMap((language) => {
       const oldText = before?.translations.find((item) => item.locale === language)?.description ?? null
       const newText = after?.translations.find((item) => item.locale === language)?.description ?? null
-      return oldText === newText ? [] : [{ locale: language, before: oldText, after: newText }]
+      return same(oldText, newText) ? [] : [{ locale: language, before: oldText, after: newText }]
     })
 }
 
@@ -205,7 +175,12 @@ function skillFacts(skill: Skill | null): Map<string, Fact> {
   for (const effect of skill.effects ?? []) {
     const metadata = record(effect.metadata) ?? {}
     if (effect.effectType !== "SOURCE_SNAPSHOT") {
-      for (const fact of flattenFacts(metadata, `effect.${effect.effectType}`, effect.effectType)) add(fact)
+      for (const fact of flattenFacts(
+        metadata,
+        `effect.${effect.effectType}`,
+        skillComparisonFieldLabel(effect.effectType),
+      ))
+        add(fact)
       continue
     }
     for (const key of ["cooldown", "energyCost"] as const) {
@@ -235,7 +210,12 @@ function skillFacts(skill: Skill | null): Map<string, Fact> {
     }
     for (const [key, value] of Object.entries(metadata)) {
       if (noise.has(normalized(key)) || ["cooldown", "energyCost", "levelTable"].includes(key)) continue
-      const visibleValue = key === "tags" && Array.isArray(value) ? [...new Set(value)].sort() : value
+      const visibleValue =
+        key === "tags" && Array.isArray(value)
+          ? [...new Map(value.map((tag) => [canonical(tag), tag])).values()].sort((a, b) =>
+              canonical(a).localeCompare(canonical(b)),
+            )
+          : value
       for (const fact of flattenFacts(visibleValue, fieldId(key), skillComparisonFieldLabel(key))) add(fact)
     }
   }
@@ -305,15 +285,20 @@ export function buildSkillComparison(comparison: HeroComparison, locale: string,
         kinds: [],
       })
     }
+    const visibleRows = rows.flatMap((row) => {
+      const ranks = compareSkillRanks(row.before, row.after, beforeSkill, afterSkill)
+      if (ranks && !ranks.changed.some(Boolean)) return []
+      return [ranks ? { ...row, ranks } : row]
+    })
     const descriptions = descriptionChanges(beforeSkill, afterSkill, locale)
-    if (!rows.length && !descriptions.length) continue
+    if (!visibleRows.length && !descriptions.length) continue
     skills.push({
       skillKey,
       name: translatedName(afterSkill, locale) || translatedName(beforeSkill, locale) || skillKey,
       kind: !beforeSkill ? "ADDED" : !afterSkill ? "REMOVED" : "CHANGED",
       beforeSkill,
       afterSkill,
-      rows,
+      rows: visibleRows,
       descriptions,
       kinds: unique(matching.map((change) => change.changeKind)),
     })
@@ -324,5 +309,27 @@ export function buildSkillComparison(comparison: HeroComparison, locale: string,
         (b.afterSkill?.displayOrder ?? b.beforeSkill?.displayOrder ?? Number.MAX_SAFE_INTEGER) ||
       a.skillKey.localeCompare(b.skillKey),
   )
-  return { skills, otherChanges: comparison.changes.filter((change) => change.section !== "skills") }
+  const otherChanges = comparison.changes.flatMap((change) => {
+    if (change.section === "skills" || change.path.split("/").some((key) => noise.has(normalized(key)))) return []
+    const before = withoutCaptureMetadata(change.before) ?? null
+    const after = withoutCaptureMetadata(change.after) ?? null
+    if (same(before, after)) return []
+    return same(before, change.before) && same(after, change.after) ? [change] : [{ ...change, before, after }]
+  })
+  return { skills, otherChanges }
+}
+
+/** Hide import-only object differences without mutating the stored snapshots or their audit evidence. */
+function withoutCaptureMetadata(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    const items = value.map(withoutCaptureMetadata).filter((item) => item !== undefined)
+    return value.length && !items.length ? undefined : items
+  }
+  const object = record(value)
+  if (!object) return value
+  const entries = Object.entries(object)
+    .filter(([key]) => !noise.has(normalized(key)))
+    .map(([key, item]) => [key, withoutCaptureMetadata(item)])
+    .filter(([, item]) => item !== undefined)
+  return Object.keys(object).length && !entries.length ? undefined : Object.fromEntries(entries)
 }

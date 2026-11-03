@@ -5,6 +5,7 @@ import {
   comparisonValue,
   plainComparisonText,
   comparisonPathLabels,
+  comparisonImages,
 } from "../src/features/publishing/hero-comparison"
 import { captureDataset, mergeResourceArtwork } from "../src/features/publishing/hero-source-dataset"
 import { sourceHttpUrl, sourceReviewNotes } from "../src/features/publishing/hero-source-review"
@@ -55,6 +56,31 @@ test("long descriptions use bounded work while preserving both sides", () => {
 test("visible text comparison ignores safe formatting without interpreting arbitrary HTML", () => {
   assert.equal(plainComparisonText("<color=#FD8841>120</color> <ref=hero:airi>Airi</ref>"), "120 Airi")
   assert.equal(plainComparisonText("<script>run()</script>"), "<script>run()</script>")
+})
+
+test("structured comparison fields use readable labels without rewriting descriptive text", () => {
+  assert.equal(
+    comparisonValue({ statKey: "ATTACK_DAMAGE", baseValue: 173, unit: "POINT" }),
+    "Chỉ số: Công vật lý\nGiá trị ghi nhận: 173\nĐơn vị: Điểm",
+  )
+  assert.equal(comparisonValue("UNKNOWN", "unit"), "Chưa xác định")
+  assert.equal(comparisonValue(["WARRIOR", "ASSASSIN"], "roles"), "Đấu sĩ · Sát thủ")
+  assert.equal(comparisonValue("PASSIVE", "kind"), "Nội tại")
+  assert.equal(comparisonValue("PASSIVE"), "PASSIVE")
+  assert.equal(comparisonValue({ futureField: "Nội dung" }), "Thông tin khác: Nội dung")
+  assert.deepEqual(comparisonPathLabels("skins", "/headAssetId", [], "vi-VN"), ["Trang phục", "Ảnh đại diện"])
+})
+
+test("image comparisons resolve direct references and gallery arrays without exposing asset IDs as text", () => {
+  assert.deepEqual(comparisonImages("image-a", "headAssetId"), [{ id: "image-a" }])
+  assert.deepEqual(comparisonImages("image-a", "HEAD"), [{ id: "image-a" }])
+  assert.deepEqual(comparisonImages([{ assetId: "image-a", label: "source.jpg" }, { assetId: "image-b" }], "HEAD"), [
+    { id: "image-a" },
+    { id: "image-b" },
+  ])
+  assert.deepEqual(comparisonImages(null, "headAssetId"), [])
+  assert.deepEqual(comparisonImages("Mô tả kỹ năng", "description"), [])
+  assert.deepEqual(comparisonImages(["Tăng ST", "Vật lý"], "tags"), [])
 })
 
 test("comparison paths identify skills by name and retain removed and unknown identities", () => {

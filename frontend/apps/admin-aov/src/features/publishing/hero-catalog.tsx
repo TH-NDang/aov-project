@@ -1,4 +1,3 @@
-import { CatalogChangeBadges } from "../warehouse/catalog-changes"
 import { lazy, memo, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
@@ -47,6 +46,8 @@ import {
 import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { HeroQuickViewBody } from "./hero-quick-view-body"
 import { useHeroEntries } from "./patch-notes-sheet"
+import { showAllHeroes } from "./hero-catalog-scope"
+import { useHeroScopeChanges } from "./use-hero-scope-changes"
 const HeroWorkspace = lazy(() =>
   import("./publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
 )
@@ -75,7 +76,7 @@ export function HeroCatalog({
   const sort = params.get("sort") === "edited-desc" ? "edited-desc" : "code"
   const [search, setSearch] = useState(q)
   const searchRef = useRef<HTMLInputElement>(null)
-  const showAll = params.get("show") === "all"
+  const showAll = showAllHeroes(params)
   const timeZone = useContentTimeZone()
   const reviewedVariants =
     overview?.variants.filter(
@@ -83,6 +84,7 @@ export function HeroCatalog({
     ) ?? []
   const reviewed = reviewedVariants.length > 0 && reviewedVariants.every((v) => v.dataReviewState === "COMPLETE")
   const scoped = !!(filter.seasonId || filter.variantId)
+  const scopeChanges = useHeroScopeChanges(overview, filter, locale, scoped && showAll)
   useEffect(() => setSearch(q), [q])
   useEffect(() => {
     if (search.trim() === q) return
@@ -101,9 +103,17 @@ export function HeroCatalog({
     updateParams.current = setParams
   }, [setParams])
   const openHero = useCallback((hero: CatalogRow) => {
-    updateParams.current((current) => openHeroLocation(current, hero.id, hero.selectedRevision?.id), {
-      preventScrollReset: true,
-    })
+    updateParams.current(
+      (current) => {
+        const next = openHeroLocation(current, hero.id, hero.selectedRevision?.id)
+        return !hero.selectedRevision && current.get("patch")
+          ? patchHeroLocation(next, { view: "patch", atPatch: current.get("patch") })
+          : next
+      },
+      {
+        preventScrollReset: true,
+      },
+    )
   }, [])
   const openGameplayChange = useCallback((hero: CatalogRow, change: HeroGameplayChange) => {
     updateParams.current(
@@ -122,11 +132,11 @@ export function HeroCatalog({
   }, [])
   const query: HeroCatalogQuery = {
     q,
-    includeUnchanged: showAll ? "true" : "false",
+    includeUnchanged: "false",
     sort,
     locale,
-    seasonId: filter.seasonId,
-    patchVariantId: filter.variantId,
+    seasonId: showAll ? "" : filter.seasonId,
+    patchVariantId: showAll ? "" : filter.variantId,
     rulesetId: ruleset,
   }
   const heroes = useInfiniteQuery({
@@ -138,7 +148,11 @@ export function HeroCatalog({
   const data = useMemo(
     () =>
       heroCatalogRows(
-        heroes.data?.pages.flatMap((page) => page.items) ?? [],
+        heroes.data?.pages.flatMap((page) =>
+          page.items.map((hero) =>
+            scoped && showAll ? { ...hero, gameplayChanges: scopeChanges.byHero[hero.id] ?? [] } : hero,
+          ),
+        ) ?? [],
         overview,
         {
           seasonId: filter.seasonId,
@@ -147,7 +161,7 @@ export function HeroCatalog({
         ruleset,
         showAll,
       ),
-    [heroes.data, overview, filter.seasonId, filter.variantId, ruleset, showAll],
+    [heroes.data, overview, filter.seasonId, filter.variantId, ruleset, showAll, scoped, scopeChanges.byHero],
   )
   // Names and heads come from the reference catalog at once; each row's revision fills in when it loads.
   const entries = useHeroEntries(locale)
@@ -187,9 +201,9 @@ export function HeroCatalog({
           header: () => (
             <span
               className="inline-flex items-center gap-1"
-              title={scoped ? "Đánh giá trong phạm vi" : "Đánh giá patch gần nhất"}
+              title={scoped ? "Thay đổi tại patch đang chọn" : "Đánh giá patch gần nhất"}
             >
-              {scoped ? "Đánh giá phạm vi" : "Đánh giá patch"}
+              {scoped ? "Thay đổi tại patch" : "Đánh giá patch"}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="size-5" aria-label="Xem chú giải loại thay đổi">
@@ -200,35 +214,24 @@ export function HeroCatalog({
                   <h3 className="font-semibold">Loại thay đổi gameplay</h3>
                   <ChangeKindBadges kinds={["BUFF", "NERF", "ADJUSTMENT", "REWORK", "FIX", "OTHER"]} maxVisible={6} />
                   <p className="text-xs leading-5 text-muted-foreground">
-                    Đánh giá tổng thể được chọn riêng cho mỗi patch. Từng kỹ năng/chỉ số vẫn có nhãn tăng, giảm hoặc
-                    điều chỉnh độc lập.
+                    Mỗi tướng có một đánh giá tổng thể trong mỗi patch. Nhãn tăng, giảm hoặc điều chỉnh của từng kỹ
+                    năng/chỉ số nằm trong phần chi tiết.
                   </p>
                 </PopoverContent>
               </Popover>
             </span>
           ),
           cell: ({ row }) =>
-            scoped && showAll && !row.original.changes.length ? (
-              <CatalogChangeBadges
-                kinds={[
-                  row.original.selectedRevision?.cause === "DATA_BASELINE" &&
-                  overview?.variants.some(
-                    (v) =>
-                      v.id === row.original.selectedRevision?.effectiveFromPatchVariantId &&
-                      (!filter.variantId || v.id === filter.variantId) &&
-                      (!filter.seasonId || v.seasonId === filter.seasonId),
-                  )
-                    ? "DATA_BASELINE"
-                    : reviewed
-                      ? "UNCHANGED"
-                      : "INHERITED",
-                ]}
-              />
+            scoped && showAll && (scopeChanges.pending || scopeChanges.error) ? (
+              <span className="type-meta">{scopeChanges.error ? "Chưa tải được thay đổi" : "Đang tải thay đổi…"}</span>
+            ) : scoped && showAll && !row.original.changes.length ? (
+              <span className="type-meta">{reviewed ? "Không thay đổi" : "Chưa ghi nhận thay đổi"}</span>
             ) : (
               <HeroGameplayChanges
                 hero={row.original}
                 overview={overview}
                 locale={locale}
+                showPatchLabel={!filter.variantId}
                 onOpen={openGameplayChange}
               />
             ),
@@ -283,7 +286,7 @@ export function HeroCatalog({
                 </p>
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground">Chưa có phiên bản</span>
+              <span className="type-meta">{scoped ? "Chưa có dữ liệu tại patch" : "Chưa có phiên bản"}</span>
             )
           },
         }),
@@ -314,6 +317,8 @@ export function HeroCatalog({
       openGameplayChange,
       scoped,
       showAll,
+      scopeChanges.pending,
+      scopeChanges.error,
       entryById,
       timeZone,
       reviewed,
@@ -341,7 +346,7 @@ export function HeroCatalog({
           <span className="rounded-md bg-muted/70 px-2 py-1 text-xs text-muted-foreground tabular-nums">
             <span className="sr-only">Đã tải </span>
             {heroes.data?.pages.reduce((n, p) => n + p.items.length, 0) ?? 0} /{" "}
-            {heroes.data?.pages[0]?.totalElements ?? 0} tướng{scoped ? " có thay đổi" : ""}
+            {heroes.data?.pages[0]?.totalElements ?? 0} tướng{scoped && !showAll ? " có thay đổi" : ""}
           </span>
         </div>
         <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
@@ -426,13 +431,13 @@ export function HeroCatalog({
         <div className="grid justify-items-center gap-2 p-12 text-center text-muted-foreground">
           <BookOpen className="size-8" />
           <p>
-            {scoped
+            {scoped && !showAll
               ? "Chưa ghi nhận thay đổi gameplay phù hợp với bộ lọc."
               : q
                 ? "Không tìm thấy tướng theo tên hoặc mã này."
                 : "Chưa có tướng trong kho."}
           </p>
-          {scoped && (
+          {scoped && !showAll && (
             <>
               <p className="max-w-md text-xs">
                 Mốc dữ liệu ban đầu và chỉnh sửa nội dung không được tính là thay đổi gameplay.
@@ -441,7 +446,7 @@ export function HeroCatalog({
                 variant="outline"
                 onClick={() => {
                   setSearch("")
-                  setParams((current) => patchHeroLocation(current, { season: "", patch: "", q: "" }), {
+                  setParams((current) => patchHeroLocation(current, { show: "all", q: "" }), {
                     preventScrollReset: true,
                   })
                 }}
@@ -517,11 +522,13 @@ function HeroGameplayChanges({
   hero,
   overview,
   locale,
+  showPatchLabel,
   onOpen,
 }: {
   hero: CatalogRow
   overview?: PublicationOverview
   locale: string
+  showPatchLabel: boolean
   onOpen: (hero: CatalogRow, change: HeroGameplayChange) => void
 }) {
   const [open, setOpen] = useState(false)
@@ -537,9 +544,10 @@ function HeroGameplayChanges({
     const change = hero.changes[0]
     return (
       <HeroChangeSummary
-        kinds={change.overallKind ? [change.overallKind] : []}
-        summary={change.summary ?? "Chưa đánh giá tổng thể tướng. Mở chi tiết để xem từng kỹ năng/chỉ số."}
+        overallKind={change.overallKind ?? null}
+        summary={change.summary ?? "Mở chi tiết để xem thay đổi từng kỹ năng/chỉ số."}
         patchLabel={patchName(change)}
+        showPatchLabel={showPatchLabel}
         actualLocale={change.actualLocale}
         locale={locale}
         onOpen={() => onOpen(hero, change)}
@@ -796,7 +804,7 @@ function HeroText({ hero, locale, fallbackName }: { hero: CatalogRow; locale: st
     translations?.find((t) => t.locale === locale) ??
     translations?.find((t) => t.locale === "vi-VN") ??
     translations?.[0]
-  if (!hero.selectedRevision) return "—"
+  if (!hero.selectedRevision) return <span className="type-body">{fallbackName ?? hero.code}</span>
   if (query.error)
     return (
       <span className="text-xs text-destructive" title={errorMessage(query.error)}>

@@ -18,6 +18,7 @@ const heroKeys = [
   "diff",
   "changes",
   "atPatch",
+  "anchorRevision",
 ] as const
 const contentTabs: HeroContentTab[] = ["overview", "skills", "skins", "media"]
 const sections: Section[] = ["PROFILE", "OVERVIEW_RATINGS", "COMBAT_STATS", "SKILLS", "SKINS", "MEDIA_BINDINGS"]
@@ -76,6 +77,7 @@ export function switchHeroLocation(params: URLSearchParams, heroId: string, revi
     diff: null,
     changes: null,
     skill: null,
+    anchorRevision: null,
   })
 }
 

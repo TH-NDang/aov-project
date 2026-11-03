@@ -378,7 +378,7 @@ export function BackendItemsPage() {
               {scope.scoped
                 ? scope.showAll
                   ? "Chưa có dữ liệu trang bị đã xuất bản tại mốc này."
-                  : "Chưa ghi nhận trang bị thay đổi trong phạm vi này. Chọn Tất cả tại mốc để xem dữ liệu kế thừa."
+                  : "Chưa ghi nhận trang bị thay đổi trong phạm vi này. Chọn Dữ liệu tại mốc để xem dữ liệu kế thừa."
                 : "Chưa có trang bị trong bộ quy tắc này."}
             </p>
           )}

@@ -237,6 +237,24 @@ export function createHeroCatalogFixture() {
       await holds.get(query.q)?.promise
       return Response.json(response(query))
     }
+    const patchChanges = /^\/admin\/patch-variants\/([^/]+)\/hero-changes$/.exec(path)
+    if (patchChanges)
+      return Response.json(
+        heroes.flatMap((hero) =>
+          (hero.gameplayChanges ?? [])
+            .filter((change) => change.patchVariantId === patchChanges[1])
+            .map((change) => ({
+              ...change,
+              heroId: hero.id,
+              heroCode: hero.code,
+              changes: change.changeKinds.map((changeKind) => ({
+                id: change.id,
+                type: "HERO_SKILL_CHANGE",
+                changeKind,
+              })),
+            })),
+        ),
+      )
     const revisions = /^\/admin\/heroes\/([^/]+)\/revisions$/.exec(path)
     if (revisions) return Response.json(heroes.find((hero) => hero.id === revisions[1])?.revisions ?? [])
     const preview = /^\/admin\/heroes\/([^/]+)\/revisions\/([^/]+)$/.exec(path)

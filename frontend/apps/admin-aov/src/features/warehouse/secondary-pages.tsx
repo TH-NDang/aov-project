@@ -425,7 +425,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
               {scoped
                 ? scopeState.showAll
                   ? "Chưa có dữ liệu đã xuất bản phù hợp tại mốc này"
-                  : "Chưa ghi nhận thay đổi phù hợp. Chọn Tất cả tại mốc để xem dữ liệu kế thừa."
+                  : "Chưa ghi nhận thay đổi phù hợp. Chọn Dữ liệu tại mốc để xem dữ liệu kế thừa."
                 : records.length
                   ? "Không có kết quả phù hợp"
                   : "Chưa có dữ liệu trong bộ quy tắc này"}

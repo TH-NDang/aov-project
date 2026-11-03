@@ -70,16 +70,22 @@ export function heroCatalogRows(
       scoped && !includeUnchanged
         ? [...new Set(changes.map((change) => change.rulesetId))].flatMap((rule) => {
             const latest = changes.find((change) => change.rulesetId === rule)!
-            // A patch-notes change has no target snapshot; the hero is shown with its latest kept revision.
+            // Patch notes can exist before any snapshot; never substitute a future revision.
             const revision =
               hero.revisions.find((item) => item.id === latest.toHeroRevisionId) ??
-              hero.revisions
-                .filter((item) => item.rulesetId === rule && item.state !== "DISCARDED")
-                .sort((a, b) => b.revisionNo - a.revisionNo)[0]
+              selectCatalogRevisions(
+                hero.revisions,
+                data,
+                { seasonId: latest.seasonId ?? "", variantId: latest.patchVariantId },
+                rule,
+              )[0]
             return revision ? [revision] : []
           })
         : selectCatalogRevisions(hero.revisions, data, filter, ruleset)
-    if (!revisions.length) return scoped || ruleset ? [] : [{ ...hero, changes: [], rowKey: hero.id }]
+    if (!revisions.length)
+      return (scoped && includeUnchanged) || changes.length || (!scoped && !ruleset)
+        ? [{ ...hero, changes, rowKey: hero.id }]
+        : []
     return revisions.map((selectedRevision) => ({
       ...hero,
       selectedRevision,

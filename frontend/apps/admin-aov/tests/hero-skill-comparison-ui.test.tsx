@@ -41,6 +41,10 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
           },
           rawAttributes: { hp: cooldown * 100 },
           reviewFlags: [{ note: `Source capture ${cooldown}` }],
+          patchCode: `patch-${cooldown}`,
+          observedAt: `2026-11-01T02:43:${cooldown}Z`,
+          fieldReview: { cooldown: { sourceArchiveSha256: `source-hash-${cooldown}` } },
+          contentReview: { file: "content-review.json", reviewId: `review-${cooldown}` },
         },
       },
     ],
@@ -58,12 +62,18 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
       assert.ok([previous.id, unrelated.id].includes(fromId))
       const before = makeSkill(fromId === previous.id ? 8 : 16)
       const after = makeSkill(12)
+      const unchangedBefore = makeSkill(5)
+      unchangedBefore.skillKey = "skill-0-1"
+      unchangedBefore.effects[0].metadata.tags = ["<color=#AA0000>Vật lý</color>", "Tăng ST"]
+      const unchangedAfter = structuredClone(unchangedBefore)
+      unchangedAfter.effects[0].metadata.tags = ["Tăng ST", "<color=#BB0000>Vật lý</color>"]
+      unchangedAfter.translations[0].description = `<b>${unchangedBefore.translations[0].description}</b>`
       const comparison: HeroComparison = {
         status: "AVAILABLE",
         from: fromId === previous.id ? previous : unrelated,
         to: current,
-        before: { skills: { skills: [before] } },
-        after: { skills: { skills: [after] } },
+        before: { skills: { skills: [before, unchangedBefore] } },
+        after: { skills: { skills: [after, unchangedAfter] } },
         changes: [
           {
             section: "skills",
@@ -174,15 +184,20 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
       [...card().querySelectorAll("tbody td")].map((cell) => cell.textContent),
       ["8 giây", "12 giây"],
     )
-    assert.equal(card().querySelector("details")?.open, false)
+    assert.equal(card().querySelector("details")?.open, true)
     assert.ok(card().querySelector('[role="img"][aria-label="Chiêu 1 · Chưa có ảnh kỹ năng"]'))
     assert.equal(card().querySelector("img"), null)
-    assert.doesNotMatch(card().textContent!, /rawAttributes|reviewFlags|Source capture/)
+    assert.doesNotMatch(
+      card().textContent!,
+      /rawAttributes|reviewFlags|Source capture|patchCode|observedAt|fieldReview|source-hash/,
+    )
     assert.equal(
       requests.some((request) => request.path.endsWith("/data/heroes.json")),
       false,
     )
 
+    await act(async () => card().querySelector("summary")!.click())
+    assert.equal(card().querySelector("details")?.open, false)
     await act(async () => {
       card().querySelector("summary")!.click()
       const split = [...document.querySelectorAll("button")].find((button) => button.textContent === "Hai cột")!
@@ -212,12 +227,15 @@ test("history deduplicates real patch skill facts and uses gameplay categories o
     assert.equal(card().querySelectorAll("tbody tr").length, 1)
     assert.equal(card().querySelectorAll("[data-change-kind]").length, 0)
     assert.match(card().querySelectorAll("tbody td")[1].textContent!, /12 giây/)
-    assert.equal(card().querySelector("details")?.open, false)
+    assert.equal(card().querySelector("details")?.open, true)
     assert.equal(beforeDescription().textContent, "Gây sát thương. Hồi chiêu 16 giây.")
     assert.equal(beforeDescription().querySelector("del")?.textContent, "16")
     assert.equal(afterDescription().textContent, "Gây sát thương. Hồi chiêu 12 giây.")
     assert.equal(afterDescription().querySelector("ins")?.textContent, "12")
-    assert.doesNotMatch(card().textContent!, /rawAttributes|reviewFlags|Source capture/)
+    assert.doesNotMatch(
+      card().textContent!,
+      /rawAttributes|reviewFlags|Source capture|patchCode|observedAt|fieldReview|source-hash/,
+    )
     assert.deepEqual(sources, [previous.id, unrelated.id])
     assert.deepEqual(unexpected, [])
     assert.deepEqual(

@@ -81,7 +81,7 @@ test("timeline keeps baseline separate, selects a patch, and suppresses selectio
     assert.match(button("15/10").textContent!, /Chưa ghi nhận thay đổi/)
     await act(async () => button("29/09").click())
     assert.deepEqual(selected, { seasonId: "s4", variantId: "added" })
-    const rail = button("29/09").parentElement!
+    const rail = button("29/09").closest<HTMLElement>('[aria-label="Chọn patch"]')!
     Object.assign(rail, { setPointerCapture() {}, hasPointerCapture: () => true, releasePointerCapture() {} })
     const pointer = (type: string, x: number) => {
       const event = new window.Event(type, { bubbles: true, cancelable: true })

@@ -70,6 +70,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
   const { HeroCatalog } = await import("../src/features/publishing/hero-catalog")
+  const { CatalogViewMode } = await import("../src/features/publishing/catalog-view-mode")
   const { heroCatalogKey } = await import("../src/features/publishing/publishing-api")
   const root = createRoot(dom.window.document.getElementById("root")!)
   const cache = new QueryClient({
@@ -80,9 +81,10 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
   const mount = async (filter = emptyFilter, ruleset = "", locale = "vi-VN") =>
     act(async () => {
       root.render(
-        <MemoryRouter initialEntries={["/hero"]}>
+        <MemoryRouter initialEntries={["/hero?show=changes"]}>
           <QueryClientProvider client={cache}>
             <div id="catalog-scroll" style={{ overflowY: "auto" }}>
+              <CatalogViewMode defaultAll allLabel="Tất cả tướng" />
               <HeroCatalog ruleset={ruleset} locale={locale} overview={catalogOverview} filter={filter} />
             </div>
           </QueryClientProvider>
@@ -298,6 +300,35 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
         cache.getQueryData(heroCatalogKey(query)),
         `Expected independent cache entry for ${JSON.stringify(query)}`,
       )
+    await act(async () =>
+      [...document.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.trim() === "Tất cả tướng")!
+        .click(),
+    )
+    await mount({ seasonId: "season-new", variantId: "patch-current" })
+    await waitFor(
+      () =>
+        codes().includes("aa-baseline-only") &&
+        !!document.querySelector('[aria-label^="Xem thay đổi gameplay tại current-patch"]'),
+      "All mode keeps unchanged identities and loads the selected patch's changes",
+    )
+    assert.ok(!row("aa-baseline-only").querySelector('[aria-label^="Xem thay đổi gameplay"]'))
+    assert.ok(!document.body.textContent!.includes("tướng có thay đổi"))
+    await mount({ seasonId: "season-new", variantId: "patch-early" })
+    await waitFor(
+      () => !!row("ad-current-change").querySelector('[aria-label^="Xem thay đổi gameplay tại early-season-patch"]'),
+      "Historical patch badges do not reuse the latest catalog change",
+    )
+    assert.ok(!row("ad-current-change").textContent!.includes("current-patch"))
+    await act(async () =>
+      [...document.querySelectorAll<HTMLButtonElement>("button")]
+        .find((button) => button.textContent?.trim() === "Chỉ thay đổi")!
+        .click(),
+    )
+    await waitFor(
+      () => codes().length === 2 && !codes().includes("aa-baseline-only"),
+      "Changing mode keeps the selected historical patch",
+    )
   } finally {
     releaseSlow?.()
     await act(async () => root.unmount())

@@ -5,7 +5,7 @@ import { HeroOverallAssessment } from "./hero-overall-assessment"
 import { useMemo, useState } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ArrowUpRight, FilePlus2, Pin } from "lucide-react"
+import { ArrowUpRight, ChevronRight, FilePlus2 } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -18,8 +18,11 @@ import { AovNavIcon } from "@/app/aov-nav-icon"
 import { HeroAsset } from "./hero-content"
 import { changeDomain, type CatalogChange } from "../warehouse/catalog-changes"
 import { dateLabel, phaseLabels, type PublicationOverview } from "./publication-overview"
-import { ChangeLines, KindBadge, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
+import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
+import { HeroChangeSummary } from "./hero-change-badges"
 import { RecordPatchNotesSheet, useHeroEntries } from "./patch-notes-sheet"
+import { selectCatalogRevisions } from "./catalog-data"
+import { createPublishingApi, heroPreviewKey } from "./publishing-api"
 
 type ChangeSet = RecordedChangeSet
 const warehouseDomains = ["items", "enchantments", "arcana", "spells"] as const
@@ -49,18 +52,19 @@ function PatchHeroIdentity({ change, hero, onOpen }: { change: ChangeSet; hero?:
       type="button"
       onClick={onOpen}
       aria-label={`Xem thay đổi ${name}`}
-      className="group flex w-full min-w-44 items-center gap-2.5 rounded-md text-left focus-visible:outline-2 focus-visible:outline-ring"
+      className="group flex w-full min-w-36 items-center gap-2 rounded-md text-left focus-visible:outline-2 focus-visible:outline-ring"
     >
       <HeroAsset id={hero?.iconAssetId} alt={name} className="size-9 shrink-0 rounded-lg" frameAspectRatio={1} />
       <span className="min-w-0 flex-1">
-        <span className="block font-medium">{name}</span>
-        <span className="block font-mono text-xs text-muted-foreground">{change.heroCode}</span>
+        <span className="type-body block">{name}</span>
+        <span className="type-meta block">{change.heroCode}</span>
       </span>
       <ArrowUpRight className="size-4 shrink-0 text-muted-foreground [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100" />
     </button>
   )
 }
 const empty: ChangeSet[] = []
+const api = createPublishingApi(backendRequest)
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, ChangeSet>()
 function HeroPatchChangesTable({
@@ -78,6 +82,21 @@ function HeroPatchChangesTable({
   const heroes = useHeroEntries(locale)
   const heroById = useMemo(() => new Map(heroes.map((hero) => [hero.id, hero])), [heroes])
   const detail = query.data?.find((row) => row.id === selected?.id) ?? selected
+  const detailRevisions = useQuery({
+    queryKey: ["publishing-revisions", detail?.heroId ?? ""],
+    queryFn: () => api.revisions(detail!.heroId),
+    enabled: !!detail && !detail.toHeroRevisionId,
+    staleTime: 30000,
+  })
+  const detailRevisionId =
+    detail?.toHeroRevisionId ??
+    selectCatalogRevisions(detailRevisions.data ?? [], overview, { seasonId: "", variantId })[0]?.id
+  const detailReference = useQuery({
+    queryKey: heroPreviewKey(detail?.heroId ?? "", detailRevisionId ?? ""),
+    queryFn: () => api.read(detail!.heroId, detailRevisionId!),
+    enabled: !!detail && !!detailRevisionId,
+    staleTime: 60000,
+  })
   const markets = overview.releases.filter(
     (r) => r.variantId === variantId && (r.status === "SCHEDULED" || r.phase === "AWAITING_CONFIRMATION"),
   )
@@ -85,12 +104,7 @@ function HeroPatchChangesTable({
     () =>
       helper.columns([
         helper.accessor("heroCode", {
-          header: () => (
-            <span className="flex items-center gap-2">
-              <Pin className="size-3.5" />
-              Tướng
-            </span>
-          ),
+          header: "Tướng",
           cell: ({ row }) => (
             <PatchHeroIdentity
               change={row.original}
@@ -101,16 +115,17 @@ function HeroPatchChangesTable({
         }),
         helper.display({
           id: "kind",
-          header: "Tính chất",
+          header: "Đánh giá",
           cell: ({ row }) => (
-            <div className="flex max-w-56 flex-wrap gap-1">
-              {row.original.overallKind && <KindBadge kind={row.original.overallKind} className="font-medium" />}
-              {[...new Set(row.original.changes.map((c) => c.changeKind))]
-                .filter((kind) => kind !== row.original.overallKind)
-                .map((kind) => (
-                  <KindBadge key={kind} kind={kind} />
-                ))}
-            </div>
+            <HeroChangeSummary
+              overallKind={row.original.overallKind ?? null}
+              summary={row.original.summary || `${row.original.changes.length} mục thay đổi`}
+              patchLabel={overview.variants.find((variant) => variant.id === variantId)?.patchCode}
+              showPatchLabel={false}
+              actualLocale={row.original.actualLocale}
+              locale={locale}
+              onOpen={() => setSelected(row.original)}
+            />
           ),
         }),
         helper.display({
@@ -118,10 +133,18 @@ function HeroPatchChangesTable({
           header: "Nội dung",
           cell: ({ row }) => (
             <div className="space-y-1">
-              <p className="line-clamp-2 max-w-lg whitespace-pre-wrap">
-                {row.original.summary || `${row.original.changes.length} mục thay đổi`}
-              </p>
-              <SourceBadge change={row.original} />
+              <button
+                type="button"
+                className="type-body inline-flex items-center gap-1 rounded text-left hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                onClick={() => setSelected(row.original)}
+                aria-label={`Xem ${row.original.changes.length} thay đổi của ${heroById.get(row.original.heroId)?.name ?? row.original.heroCode}`}
+              >
+                {row.original.changes.length} thay đổi
+                <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
+              </button>
+              <div>
+                <SourceBadge change={row.original} />
+              </div>
               {row.original.actualLocale && row.original.actualLocale !== locale && (
                 <span className="block text-xs text-muted-foreground">
                   Ngôn ngữ dự phòng: {row.original.actualLocale}
@@ -130,26 +153,30 @@ function HeroPatchChangesTable({
             </div>
           ),
         }),
-        helper.display({
-          id: "markets",
-          header: "Thị trường",
-          cell: () => (
-            <div className="flex flex-wrap gap-1">
-              {markets.map((r) => {
-                const m = overview.markets.find((m) => m.id === r.regionId)
-                if (!m) return null
-                return (
-                  <MarketBadge
-                    key={r.id}
-                    code={m.code}
-                    name={m.displayName}
-                    detail={`${phaseLabels[r.phase]} · ${dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}`}
-                  />
-                )
-              })}
-            </div>
-          ),
-        }),
+        ...(markets.length
+          ? [
+              helper.display({
+                id: "markets",
+                header: "Thị trường",
+                cell: () => (
+                  <div className="flex flex-wrap gap-1">
+                    {markets.map((r) => {
+                      const m = overview.markets.find((m) => m.id === r.regionId)
+                      if (!m) return null
+                      return (
+                        <MarketBadge
+                          key={r.id}
+                          code={m.code}
+                          name={m.displayName}
+                          detail={`${phaseLabels[r.phase]} · ${dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}`}
+                        />
+                      )
+                    })}
+                  </div>
+                ),
+              }),
+            ]
+          : []),
       ]),
     [overview, variantId, locale, heroById],
   )
@@ -174,13 +201,13 @@ function HeroPatchChangesTable({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[680px] text-sm">
-            <thead className="bg-muted/60 text-xs text-muted-foreground">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead className="bg-muted/40">
               <tr>
                 {table.getHeaderGroups()[0]?.headers.map((h) => (
                   <th
                     key={h.id}
-                    className={`px-3 py-2 text-left font-medium ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
+                    className={`type-label px-3 py-2 text-left text-muted-foreground ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
                   >
                     <table.FlexRender header={h} />
                   </th>
@@ -189,11 +216,11 @@ function HeroPatchChangesTable({
             </thead>
             <tbody>
               {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-t align-top hover:bg-muted/20">
+                <tr key={row.id} className="border-t border-border/60 align-middle hover:bg-muted/20">
                   {row.getAllCells().map((cell) => (
                     <td
                       key={cell.id}
-                      className={`px-3 py-2 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 border-r bg-card" : ""}`}
+                      className={`px-3 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 bg-card" : ""}`}
                     >
                       <table.FlexRender cell={cell} />
                     </td>
@@ -224,7 +251,14 @@ function HeroPatchChangesTable({
           </SheetHeader>
           <div className="space-y-3 overflow-y-auto px-4 pb-6">
             {detail && <HeroOverallAssessment key={`${detail.id}-${detail.assessmentVersion}`} change={detail} />}
-            {detail && <ChangeLines changes={detail.changes} locale={locale} />}
+            {detail && (
+              <ChangeLines
+                changes={detail.changes}
+                content={detailReference.data?.content}
+                heroId={detail.heroId}
+                locale={locale}
+              />
+            )}
             {detail && (
               <Button asChild variant="outline">
                 <Link

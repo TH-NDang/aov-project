@@ -21,6 +21,12 @@ import { localized } from "./hero-content"
 import { usePublicationOverview } from "./publication-overview"
 import { ROLES, type Content, type Revision } from "./types"
 import { useHeroLocation } from "./use-hero-location"
+import { control } from "./fields"
+import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "./patch-view-anchor"
+import { formatPatchValue } from "./patch-value"
+import { skillLabel } from "./hero-skills"
+import { compareSkillRanks } from "./skill-rank-values"
+import { SkillRankValues } from "./skill-rank-table"
 
 const provenanceTone: Record<Provenance, string> = {
   OBSERVED: "text-emerald-700 dark:text-emerald-300",
@@ -50,12 +56,14 @@ function ProvenanceTag({ value, patch }: { value: Provenance; patch?: string | n
 export function HeroPatchTimeline({
   heroId,
   revision,
+  revisions,
   content,
   locale,
   canRecord,
 }: {
   heroId: string
   revision: Revision
+  revisions: Revision[]
   content: Content
   locale: string
   canRecord: boolean
@@ -73,10 +81,12 @@ export function HeroPatchTimeline({
     variants.find((item) => item.id === revision.effectiveFromPatchVariantId) ??
     variants[0]
   const patchCode = (id: string | null | undefined) => variants.find((item) => item.id === id)?.patchCode ?? null
+  const anchors = patchViewAnchors(revisions, heroId, revision.rulesetId, variants)
+  const anchor = selectedPatchAnchor(anchors, params.get("anchorRevision"))
+  const request = patchViewRequest(heroId, variant?.id ?? "", anchor?.id ?? null)
   const view = useQuery({
-    queryKey: ["hero-patch-view", heroId, variant?.id],
-    queryFn: () =>
-      backendRequest<PatchView>(`/admin/heroes/${heroId}/patch-view?patchVariantId=${encodeURIComponent(variant!.id)}`),
+    queryKey: request.queryKey,
+    queryFn: () => backendRequest<PatchView>(request.path),
     enabled: !!variant,
     staleTime: 30000,
   })
@@ -90,8 +100,10 @@ export function HeroPatchTimeline({
     staleTime: 30000,
   })
   const recorded = changes.data?.find((change) => change.heroId === heroId)
-  const skillName = (key: string) =>
-    localized(content.SKILLS?.skills.find((skill) => skill.skillKey === key)?.translations, locale)?.name ?? key
+  const skillName = (key: string) => {
+    const skill = content.SKILLS?.skills.find((entry) => entry.skillKey === key)
+    return skill ? `${skillLabel(skill)} · ${localized(skill.translations, locale)?.name ?? key}` : key
+  }
   const sourceUrl =
     overview.data?.releases.find((release) => release.variantId === variant?.id && release.sourceUrl)?.sourceUrl ?? ""
 
@@ -157,7 +169,7 @@ export function HeroPatchTimeline({
             {errorMessage(changes.error)}
           </p>
         )}
-        {recorded && <ChangeLines changes={recorded.changes} content={content} locale={locale} />}
+        {recorded && <ChangeLines changes={recorded.changes} content={content} heroId={heroId} locale={locale} />}
       </section>
 
       <section className="space-y-3 rounded-xl border bg-card p-4">
@@ -173,6 +185,25 @@ export function HeroPatchTimeline({
             </Badge>
           )}
         </div>
+        <label className="grid gap-1.5 text-sm">
+          <span>Mốc dữ liệu dùng để suy ra</span>
+          <select
+            className={control}
+            value={anchor?.id ?? "auto"}
+            onChange={(event) => update({ anchorRevision: event.target.value })}
+          >
+            <option value="auto">Tự động theo patch đang xem</option>
+            {anchors.map((item) => (
+              <option key={item.id} value={item.id}>
+                {patchCode(item.effectiveFromPatchVariantId)} · Bản {item.revisionNo}
+                {item.cause === "DATA_BASELINE" ? " · Mốc nhập ban đầu" : ""}
+              </option>
+            ))}
+          </select>
+          <span className="text-xs text-muted-foreground">
+            Mặc định dùng mốc nhập ban đầu mới nhất đã xuất bản. Bản nháp chưa được dùng để suy ra lịch sử.
+          </span>
+        </label>
         {view.isPending ? (
           <p role="status" className="text-sm text-muted-foreground">
             Đang tính dữ liệu…
@@ -238,15 +269,33 @@ export function HeroPatchTimeline({
               <div className="space-y-1.5">
                 <span className="text-xs text-muted-foreground">Kỹ năng đã ghi trong ghi chú</span>
                 <ul className="divide-y rounded-lg border text-sm">
-                  {data.skillFields.map((field) => (
-                    <li key={`${field.skillKey}:${field.fieldKey}`} className="flex flex-wrap gap-x-3 gap-y-1 p-2.5">
-                      <span className="font-medium">
-                        {skillName(field.skillKey)} · {skillFieldLabel(field.fieldKey)}
-                      </span>
-                      <span className="min-w-0 flex-1 whitespace-pre-wrap">{field.value ?? "—"}</span>
-                      <ProvenanceTag value={field.provenance} patch={patchCode(field.patchVariantId)} />
-                    </li>
-                  ))}
+                  {data.skillFields.map((field) => {
+                    const skill = content.SKILLS?.skills.find((entry) => entry.skillKey === field.skillKey)
+                    const ranks = compareSkillRanks(null, field.value, skill, skill)
+                    return (
+                      <li key={`${field.skillKey}:${field.fieldKey}`} className="flex flex-wrap gap-x-3 gap-y-1 p-2.5">
+                        <span className="font-medium">
+                          {skillName(field.skillKey)} · {skillFieldLabel(field.fieldKey)}
+                        </span>
+                        {!ranks && (
+                          <span className="min-w-0 flex-1 whitespace-pre-wrap">
+                            {formatPatchValue(field.value ?? "—")}
+                          </span>
+                        )}
+                        <ProvenanceTag value={field.provenance} patch={patchCode(field.patchVariantId)} />
+                        {ranks && (
+                          <div className="mt-2 w-full min-w-0">
+                            <SkillRankValues
+                              columns={ranks.columns}
+                              values={ranks.after}
+                              summary={ranks.summary.after}
+                              label={skillFieldLabel(field.fieldKey)}
+                            />
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             )}

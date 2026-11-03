@@ -256,11 +256,11 @@ test("fallback copy is explicit and skill level labels, zero costs and collapsed
     assert.match(details.textContent!, /Tiêu hao: 0/)
     assert.deepEqual(
       [...details.querySelectorAll("thead th")].map((node) => node.textContent),
-      ["Thông số", "Lv 1", "Lv 2", "Lv 3"],
+      ["Thông số", "Cấp 1", "Cấp 2", "Cấp 3", "Tổng quan"],
     )
     assert.deepEqual(
       [...details.querySelectorAll("tbody td")].map((node) => node.textContent),
-      ["100", "150", "200"],
+      ["100", "150", "200", "100 / 150 / 200"],
     )
     const source = details.querySelector("details")!
     assert.equal(source.open, false)

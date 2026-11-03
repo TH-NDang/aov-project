@@ -1,15 +1,13 @@
 import { ArrowRight, ExternalLink, FileText, GitCompareArrows } from "lucide-react"
-import { Badge } from "@aov/ui/components/badge"
+import { ChangeKindBadge } from "./hero-change-badges"
 import { cn } from "@aov/ui/lib/utils"
 import { localized } from "./hero-content"
-import {
-  KIND_LABELS,
-  SOURCE_LABELS,
-  UNIT_LABELS,
-  skillFieldLabel,
-  statLabel,
-  type ChangeKind,
-} from "./patch-change-model"
+import { SOURCE_LABELS, UNIT_LABELS, skillFieldLabel, statLabel } from "./patch-change-model"
+import { formatPatchValue } from "./patch-value"
+import { SkillArtwork } from "./skill-artwork"
+import { skillLabel } from "./hero-skills"
+import { compareSkillRanks } from "./skill-rank-values"
+import { SkillRankComparison } from "./skill-rank-table"
 import { ROLES, type ChangeSource, type Content, type Role } from "./types"
 
 export interface RecordedChange {
@@ -34,19 +32,8 @@ export interface RecordedChangeSet {
   changes: RecordedChange[]
 }
 
-const kindTone: Partial<Record<string, string>> = {
-  BUFF: "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  NERF: "border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300",
-  REWORK: "border-violet-500/40 bg-violet-500/10 text-violet-700 dark:text-violet-300",
-  FIX: "border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300",
-}
-
 export function KindBadge({ kind, className }: { kind: string; className?: string }) {
-  return (
-    <Badge variant="outline" className={cn("font-normal", kindTone[kind], className)}>
-      {KIND_LABELS[kind as ChangeKind] ?? kind}
-    </Badge>
-  )
+  return <ChangeKindBadge kind={kind} className={className} />
 }
 
 export function SourceBadge({ change }: { change: Pick<RecordedChangeSet, "sourceKind" | "sourceUrl"> }) {
@@ -81,19 +68,23 @@ const text = (value: unknown) => (value === null || value === undefined || value
 export function ChangeLines({
   changes,
   content,
+  heroId,
   locale,
   className,
 }: {
   changes: RecordedChange[]
   content?: Content | null
+  heroId?: string
   locale: string
   className?: string
 }) {
-  const skillName = (key: unknown) =>
-    localized(content?.SKILLS?.skills.find((skill) => skill.skillKey === key)?.translations, locale)?.name ?? text(key)
   return (
     <ul className={cn("divide-y rounded-lg border", className)}>
       {changes.map((change) => {
+        const skill =
+          change.type === "HERO_SKILL_CHANGE"
+            ? content?.SKILLS?.skills.find((entry) => entry.skillKey === change.skillKey)
+            : undefined
         let subject = ""
         let before: unknown
         let after: unknown
@@ -106,11 +97,20 @@ export function ChangeLines({
             after = change.newValue === null ? null : `${change.newValue}${unit}`
             break
           }
-          case "HERO_SKILL_CHANGE":
-            subject = `${skillName(change.skillKey)} · ${skillFieldLabel(String(change.fieldKey))}`
-            before = change.oldValue
-            after = change.newValue
+          case "HERO_SKILL_CHANGE": {
+            const slot = /^skill-(\d+)-\d+$/.exec(text(change.skillKey))?.[1]
+            const label = skill
+              ? `${skillLabel(skill)} · ${localized(skill.translations, locale)?.name ?? text(change.skillKey)}`
+              : slot === "0"
+                ? "Nội tại"
+                : slot
+                  ? `Chiêu ${slot}`
+                  : text(change.skillKey)
+            subject = `${label} · ${skillFieldLabel(String(change.fieldKey))}`
+            before = typeof change.oldValue === "string" ? formatPatchValue(change.oldValue) : change.oldValue
+            after = typeof change.newValue === "string" ? formatPatchValue(change.newValue) : change.newValue
             break
+          }
           case "HERO_ROLE_CHANGE":
             subject = `${change.added ? "Thêm" : "Bỏ"} vai trò ${ROLES[change.roleCode as Role] ?? text(change.roleCode)}`
             break
@@ -119,7 +119,7 @@ export function ChangeLines({
             detail = "Đổi ảnh tướng"
             break
           case "HERO_MECHANIC_CHANGE":
-            subject = `Cơ chế: ${text(change.mechanicKey)}`
+            subject = `Cơ chế: ${skillFieldLabel(text(change.mechanicKey))}`
             detail = text(change.description)
             break
           default:
@@ -127,28 +127,43 @@ export function ChangeLines({
             detail = text(change.description)
         }
         const long = String(before ?? "").length > 40 || String(after ?? "").length > 40
+        const ranks =
+          change.type === "HERO_SKILL_CHANGE" ? compareSkillRanks(change.oldValue, change.newValue, skill, skill) : null
         return (
-          <li key={change.id} className="flex flex-wrap items-start gap-x-3 gap-y-1 p-2.5 text-sm">
-            <KindBadge kind={change.changeKind} className="shrink-0" />
-            <span className="min-w-0 flex-1">
-              <span className="font-medium">{subject}</span>
+          <li key={change.id} className="flex items-start gap-3 p-3 text-sm">
+            {skill && <SkillArtwork skill={skill} heroId={heroId} className="size-10" preview />}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="font-medium">{subject}</span>
+                <KindBadge kind={change.changeKind} />
+              </div>
               {detail && <span className="block whitespace-pre-wrap text-muted-foreground">{detail}</span>}
-              {(before !== undefined || after !== undefined) &&
+              {ranks ? (
+                <div className="mt-2">
+                  <SkillRankComparison data={ranks} label={skillFieldLabel(String(change.fieldKey))} />
+                </div>
+              ) : (
+                (before !== undefined || after !== undefined) &&
                 (long ? (
-                  <span className="mt-1 grid gap-1 text-xs">
-                    <span className="rounded bg-red-500/5 p-1.5 whitespace-pre-wrap text-muted-foreground line-through decoration-red-500/40">
-                      {text(before)}
+                  <span className="type-body mt-1 grid gap-1.5">
+                    <span className="grid grid-cols-[3rem_minmax(0,1fr)] items-baseline gap-2 rounded-md bg-muted/30 px-2 py-1.5">
+                      <span className="type-meta">Trước</span>
+                      <span className="whitespace-pre-wrap break-words">{text(before)}</span>
                     </span>
-                    <span className="rounded bg-emerald-500/5 p-1.5 whitespace-pre-wrap">{text(after)}</span>
+                    <span className="grid grid-cols-[3rem_minmax(0,1fr)] items-baseline gap-2 rounded-md bg-muted/50 px-2 py-1.5">
+                      <span className="type-meta">Sau</span>
+                      <span className="whitespace-pre-wrap break-words">{text(after)}</span>
+                    </span>
                   </span>
                 ) : (
-                  <span className="ml-2 inline-flex items-center gap-1.5 tabular-nums">
+                  <span className="mt-1 inline-flex flex-wrap items-center gap-1.5 tabular-nums">
                     <span className="text-muted-foreground">{text(before)}</span>
                     <ArrowRight className="size-3.5 text-muted-foreground" />
                     <span className="font-medium">{text(after)}</span>
                   </span>
-                ))}
-            </span>
+                ))
+              )}
+            </div>
           </li>
         )
       })}

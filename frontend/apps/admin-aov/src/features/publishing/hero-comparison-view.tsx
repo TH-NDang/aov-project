@@ -4,14 +4,22 @@ import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../terminology/catalog"
 import { ChangeKindBadges } from "./hero-change-badges"
 import { ComparisonSkillIcon } from "./comparison-skill-icon"
-import { comparisonPathLabels, comparisonValue, plainComparisonText, textDifference } from "./hero-comparison"
+import { HeroAsset } from "./hero-asset"
+import { SkillRankComparison } from "./skill-rank-table"
+import {
+  comparisonImages,
+  comparisonPathLabels,
+  comparisonValue,
+  plainComparisonText,
+  textDifference,
+} from "./hero-comparison"
 import type { HeroComparison } from "./publishing-api"
 import type { SkillComparisonGroup } from "./hero-skill-comparison"
 
 export type DescriptionDiffMode = "inline" | "split"
 
-function ContentText({ value }: { value: unknown }) {
-  return <AdminEntityText text={comparisonValue(value)} />
+function ContentText({ value, field }: { value: unknown; field?: string }) {
+  return <AdminEntityText text={comparisonValue(value, field)} />
 }
 
 export function DescriptionComparison({
@@ -127,7 +135,8 @@ export function SkillComparisonCard({
   referenceCodes: readonly string[]
 }) {
   const heading = useId()
-  const rows = group.rows.filter((row) => row.id !== "iconAssetId")
+  const rows = group.rows.filter((row) => row.id !== "iconAssetId" && !row.ranks)
+  const rankedRows = group.rows.filter((row) => row.ranks)
   const descriptions = (
     <div className="divide-y">
       {group.descriptions.map((description) => (
@@ -166,6 +175,13 @@ export function SkillComparisonCard({
           </div>
         )}
       </header>
+      {rankedRows.length > 0 && (
+        <div className="space-y-4 border-t p-4">
+          {rankedRows.map((row) => (
+            <SkillRankComparison key={row.id} data={row.ranks!} label={row.label} />
+          ))}
+        </div>
+      )}
       {rows.length > 0 && (
         <table className="w-full table-fixed border-collapse text-left text-xs @min-[620px]:text-sm">
           <caption className="sr-only">Chỉ số trước và sau của {group.name}</caption>
@@ -197,10 +213,10 @@ export function SkillComparisonCard({
                   </span>
                 </th>
                 <td className="whitespace-pre-wrap break-words bg-muted/10 px-3 py-3 align-top leading-6 text-muted-foreground">
-                  <ContentText value={row.before} />
+                  <ContentText value={row.before} field={row.id} />
                 </td>
                 <td className="whitespace-pre-wrap break-words px-3 py-3 align-top font-medium leading-6">
-                  <ContentText value={row.after} />
+                  <ContentText value={row.after} field={row.id} />
                 </td>
               </tr>
             ))}
@@ -208,8 +224,8 @@ export function SkillComparisonCard({
         </table>
       )}
       {group.descriptions.length > 0 &&
-        (rows.length ? (
-          <details className="group/description border-t">
+        (rows.length || rankedRows.length ? (
+          <details open className="group/description border-t">
             <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm text-muted-foreground transition-colors hover:bg-muted/20 focus-visible:outline-2 focus-visible:outline-ring">
               <BookOpenText className="size-4" />
               Đối chiếu mô tả đầy đủ
@@ -236,6 +252,12 @@ export function OtherComparisonCard({
   mode: DescriptionDiffMode
 }) {
   const labels = comparisonPathLabels(change.section, change.path, [comparison.after, comparison.before], locale)
+  const field = change.path.split("/").at(-1)
+  const images = {
+    before: comparisonImages(change.before, field ?? ""),
+    after: comparisonImages(change.after, field ?? ""),
+  }
+  const isImage = images.before.length > 0 || images.after.length > 0
   const numberDelta =
     typeof change.before === "number" && typeof change.after === "number" ? change.after - change.before : null
   return (
@@ -246,7 +268,31 @@ export function OtherComparisonCard({
           {change.kind === "ADDED" ? "Bổ sung" : change.kind === "REMOVED" ? "Đã bỏ" : "Thay đổi"}
         </Badge>
       </header>
-      {numberDelta !== null ? (
+      {isImage ? (
+        <div className="grid grid-cols-2 gap-4 p-4">
+          {(["before", "after"] as const).map((side) => {
+            return (
+              <div key={side} className="min-w-0 space-y-2">
+                <p className="type-meta">{side === "before" ? "Trước" : "Sau"}</p>
+                {images[side].length ? (
+                  images[side].map((image, index) => (
+                    <HeroAsset
+                      key={`${image.id}-${index}`}
+                      id={image.id}
+                      alt={`${labels.join(" · ")} · ${side === "before" ? "Trước" : "Sau"}`}
+                      className="h-32 w-full max-w-56"
+                      frameAspectRatio={16 / 9}
+                      preview
+                    />
+                  ))
+                ) : (
+                  <p className="type-body text-muted-foreground">Chưa có ảnh</p>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ) : numberDelta !== null ? (
         <div className="flex flex-wrap items-center gap-3 p-4 tabular-nums">
           <span className="text-muted-foreground">
             <ContentText value={change.before} />
@@ -261,7 +307,11 @@ export function OtherComparisonCard({
           </Badge>
         </div>
       ) : (
-        <DescriptionComparison before={change.before} after={change.after} mode={mode} />
+        <DescriptionComparison
+          before={comparisonValue(change.before, field)}
+          after={comparisonValue(change.after, field)}
+          mode={mode}
+        />
       )}
     </article>
   )

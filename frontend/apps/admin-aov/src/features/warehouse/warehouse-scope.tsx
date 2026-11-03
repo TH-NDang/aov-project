@@ -1,3 +1,4 @@
+import { catalogScopePatch } from "../publishing/catalog-scope"
 import { useMemo } from "react"
 import { useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -47,10 +48,7 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
     setParams(
       (current) => {
         const copy = new URLSearchParams(current)
-        for (const [key, value] of [
-          ["season", next.seasonId],
-          ["patch", next.variantId],
-        ])
+        for (const [key, value] of Object.entries(catalogScopePatch(next)))
           if (value) copy.set(key, value)
           else copy.delete(key)
         copy.delete("group")

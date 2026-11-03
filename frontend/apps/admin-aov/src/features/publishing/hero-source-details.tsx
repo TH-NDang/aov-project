@@ -3,6 +3,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../terminology/catalog"
 import type { Skill } from "./types"
 import { sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
+import { hasRankFormula, skillSourceTable } from "./skill-rank-values"
 
 type RecordValue = Record<string, unknown>
 const record = (value: unknown): RecordValue | null =>
@@ -28,12 +29,11 @@ export function SkillSourceDetails({ skill, collapseSources = false }: { skill: 
   if (!source) return null
   const cooldown = record(source.cooldown)
   const energy = record(source.energyCost)
-  const cooldownText =
+  const rawCooldownText =
     text(cooldown?.display) || (typeof cooldown?.seconds === "number" ? `Hồi chiêu: ${cooldown.seconds} giây` : "")
   const energyText = text(energy?.display) || (typeof energy?.value === "number" ? `Tiêu hao: ${energy.value}` : "")
-  const table = record(source.levelTable)
-  const columns = strings(table?.column_labels)
-  const rows = records(table?.rows)
+  const { columns, rows, derived } = skillSourceTable(skill)
+  const cooldownText = derived && hasRankFormula(rawCooldownText) ? "" : rawCooldownText
   const notes = sourceReviewNotes(source.reviewFlags)
   const sourceImageUrl = sourceHttpUrl(source.sourceImageUrl)
   const tags = strings(source.tags)
@@ -92,17 +92,22 @@ export function SkillSourceDetails({ skill, collapseSources = false }: { skill: 
           aria-label={`Thông số theo cấp kỹ năng ${skill.skillKey}`}
         >
           <table className="w-full border-collapse text-left text-xs tabular-nums">
-            <caption className="sr-only">Thông số theo cấp chiêu, giữ nguyên nhãn từ nguồn.</caption>
+            <caption className="sr-only">Thông số theo cấp chiêu</caption>
             <thead>
               <tr className="border-b bg-muted/40">
-                <th scope="col" className="sticky left-0 z-10 min-w-32 bg-muted px-3 py-2.5 font-medium">
+                <th scope="col" className="sticky left-0 z-10 min-w-28 bg-muted px-3 py-2.5 font-medium">
                   Thông số
                 </th>
                 {columns.map((column, index) => (
-                  <th scope="col" key={index} className="min-w-16 px-3 py-2.5 text-center font-medium">
+                  <th scope="col" key={index} className="min-w-12 px-2 py-2.5 text-center font-medium">
                     {column}
                   </th>
                 ))}
+                {columns.length > 1 && (
+                  <th scope="col" className="min-w-36 border-l px-3 py-2.5 font-medium">
+                    Tổng quan
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -110,8 +115,8 @@ export function SkillSourceDetails({ skill, collapseSources = false }: { skill: 
                 <tr key={index} className="border-b last:border-0">
                   <th scope="row" className="sticky left-0 bg-card px-3 py-2.5 font-medium">
                     <span className="flex items-center gap-2">
-                      {text(row.label) || "Chưa có nhãn"}
-                      {row.review_required === true && (
+                      {row.label}
+                      {row.reviewRequired && (
                         <span title="Nhãn và giá trị cần đối chiếu nguồn">
                           <AlertTriangle className="size-3 shrink-0 text-amber-600" />
                           <span className="sr-only">Cần đối chiếu</span>
@@ -119,11 +124,20 @@ export function SkillSourceDetails({ skill, collapseSources = false }: { skill: 
                       )}
                     </span>
                   </th>
-                  {strings(row.display_values).map((value, cell) => (
-                    <td key={cell} className="px-3 py-2.5 text-center">
-                      <AdminEntityText text={value} />
+                  {row.values.map((value, cell) => (
+                    <td
+                      key={cell}
+                      colSpan={row.values.length === 1 ? Math.max(1, columns.length) : undefined}
+                      className="px-2 py-2.5 text-center"
+                    >
+                      <AdminEntityText text={value ?? "—"} />
                     </td>
                   ))}
+                  {columns.length > 1 && (
+                    <td className="min-w-36 border-l bg-muted/15 px-3 py-2.5">
+                      <AdminEntityText text={row.summary ?? "—"} />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
