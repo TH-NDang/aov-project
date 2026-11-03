@@ -544,13 +544,17 @@ class MediaAdminApiIntegrationTest {
 
     @Test
     void sourceSurvivesUploadRetriesAndCanBeBackfilledWithoutReplacingBytes() throws Exception {
+        UUID ownerPage = UUID.randomUUID();
+        UUID relatedPage = UUID.randomUUID();
         String assetId = createAsset("HERO_HEAD");
         byte[] png = TestImages.png(30, 20);
         String ticket = uploadRequest(assetId, """
                 {"fileName":"head.png","contentType":"image/png","sizeBytes":%d,
                  "source":{"type":"GAME_CLIENT","label":"Game capture","ownerName":"Garena",
-                           "contactUrl":"https://example.com/contact","note":"private/path.png"}}
-                """.formatted(png.length)).andExpect(status().isCreated()).andReturn().getResponse()
+                           "contactUrl":"https://example.com/contact","note":"private/path.png",
+                           "ownerPageId":"%s","relatedPageId":"%s"}}
+                """.formatted(png.length, ownerPage, relatedPage)).andExpect(status().isCreated()).andReturn()
+                .getResponse()
                 .getContentAsString();
         putBytes(ticket, png);
         String uploadId = JsonPath.read(ticket, "$.uploadId");
@@ -564,6 +568,28 @@ class MediaAdminApiIntegrationTest {
         assertThat(mediaAssets.find(UUID.fromString(assetId)).orElseThrow().currentVersion().sources().getFirst()
                 .ownerName())
                 .isEqualTo("Garena");
+        var credit = mediaAssets.find(UUID.fromString(assetId)).orElseThrow().currentVersion().sources().getFirst();
+        assertThat(credit.ownerPageId()).isEqualTo(ownerPage);
+        assertThat(credit.relatedPageId()).isEqualTo(relatedPage);
+        String details = mvc.perform(get(BASE + "/assets/" + assetId).with(reader())).andReturn().getResponse()
+                .getContentAsString();
+        String sourceId = JsonPath.read(details, "$.provenance[0].id");
+        String referencesPath = BASE + "/assets/" + assetId + "/sources/" + sourceId + "/references";
+        String referencesBody = "{\"expectedVersion\":0,\"relatedPageId\":\"" + relatedPage + "\"}";
+        mvc.perform(put(referencesPath).with(reader()).contentType(MediaType.APPLICATION_JSON).content(referencesBody))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(referencesPath).with(editor()).contentType(MediaType.APPLICATION_JSON).content(referencesBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.currentVersionId").value(versionId))
+                .andExpect(jsonPath("$.provenance[0].ownerPageId").isEmpty())
+                .andExpect(jsonPath("$.provenance[0].relatedPageId").value(relatedPage.toString()))
+                .andExpect(jsonPath("$.provenance[0].ownerName").value("Garena"))
+                .andExpect(jsonPath("$.provenance[0].referenceVersion").value(1));
+        mvc.perform(put(referencesPath).with(editor()).contentType(MediaType.APPLICATION_JSON).content(referencesBody))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("MEDIA_SOURCE_VERSION_CONFLICT"));
+        mvc.perform(put(referencesPath.replace(assetId, createAsset("OTHER"))).with(editor())
+                .contentType(MediaType.APPLICATION_JSON).content(referencesBody))
+                .andExpect(status().isNotFound());
         mvc.perform(get(BASE + "/assets").param("semanticType", "HERO_HEAD").param("size", "100").with(reader()))
                 .andExpect(status().isOk())
                 .andExpect(

@@ -16,6 +16,9 @@ public record ProvenanceDetails(
         @Nullable String note,
         @Nullable String ownerName,
         @Nullable String contactUrl,
-        @Nullable UUID ownerId
+        @Nullable UUID ownerId,
+        @Nullable UUID ownerPageId,
+        @Nullable UUID relatedPageId,
+        long referenceVersion
 ) {
 }

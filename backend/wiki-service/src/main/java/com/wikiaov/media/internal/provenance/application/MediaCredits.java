@@ -20,7 +20,7 @@ public final class MediaCredits {
                 : specific;
         return selected.stream().map(record -> new MediaCredit(record.getSourceType().name(), record.getSourceLabel(),
                 publicUrl(record.getSourceUrl()), record.getOwnerName(), publicUrl(record.getContactUrl()),
-                record.getObservedAt()))
+                record.getObservedAt(), record.getOwnerPageId(), record.getRelatedPageId()))
                 .distinct().toList();
     }
 

@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -59,13 +60,29 @@ public class MediaProvenance extends AssignedIdEntity {
     @Column(name = "contact_url", length = 2048, updatable = false)
     private @Nullable String contactUrl;
 
+    /** Soft references to community pages; never interpreted as ownership verification. */
+    @Column(name = "owner_page_id")
+    private @Nullable UUID ownerPageId;
+
+    @Column(name = "related_page_id")
+    private @Nullable UUID relatedPageId;
+
+    @Version
+    @Column(name = "reference_version", nullable = false)
+    private long referenceVersion;
+
+    public void reference(@Nullable UUID ownerPageId, @Nullable UUID relatedPageId) {
+        this.ownerPageId = ownerPageId;
+        this.relatedPageId = relatedPageId;
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     public static MediaProvenance record(UUID id, UUID assetId, @Nullable UUID assetVersionId,
             ProvenanceSourceType sourceType, String sourceLabel, @Nullable String sourceUrl,
             @Nullable Instant observedAt, @Nullable String note, @Nullable UUID ownerId, @Nullable String ownerName,
-            @Nullable String contactUrl, Instant now) {
+            @Nullable String contactUrl, @Nullable UUID ownerPageId, @Nullable UUID relatedPageId, Instant now) {
         MediaProvenance provenance = new MediaProvenance();
         provenance.id = id;
         provenance.assetId = assetId;
@@ -78,6 +95,8 @@ public class MediaProvenance extends AssignedIdEntity {
         provenance.ownerId = ownerId;
         provenance.ownerName = ownerName;
         provenance.contactUrl = contactUrl;
+        provenance.ownerPageId = ownerPageId;
+        provenance.relatedPageId = relatedPageId;
         provenance.createdAt = now;
         return provenance;
     }

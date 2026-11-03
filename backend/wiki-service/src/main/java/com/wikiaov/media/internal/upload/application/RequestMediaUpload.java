@@ -107,7 +107,7 @@ public class RequestMediaUpload {
         if (command.source() != null) {
             var source = command.source();
             session.recordSource(source.type(), source.label(), source.url(), source.ownerName(), source.contactUrl(),
-                    source.observedAt(), source.note());
+                    source.observedAt(), source.note(), source.ownerPageId(), source.relatedPageId());
         }
         sessions.save(session);
         // Signing is a local computation; no network call happens inside the transaction.

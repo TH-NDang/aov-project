@@ -63,7 +63,9 @@ public class AddMediaSource {
                         && Objects.equals(source.note(), record.getNote())
                         && Objects.equals(source.observedAt(), record.getObservedAt())
                         && Objects.equals(source.ownerName(), record.getOwnerName())
-                        && Objects.equals(source.contactUrl(), record.getContactUrl()));
+                        && Objects.equals(source.contactUrl(), record.getContactUrl())
+                        && Objects.equals(source.ownerPageId(), record.getOwnerPageId())
+                        && Objects.equals(source.relatedPageId(), record.getRelatedPageId()));
         if (!exists) {
             var saved = provenance.save(source.toProvenance(assetId, versionId, clock.instant()));
             audit.record(new AuditEntry(actor, "MEDIA_SOURCE_ADDED", MediaWritePolicy.AUDIT_AGGREGATE, assetId,

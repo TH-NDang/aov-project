@@ -21,6 +21,8 @@ public enum MediaErrorCode implements ApiErrorCode {
     MEDIA_OWNER_VERSION_CONFLICT(HttpStatus.CONFLICT, "Media owner version conflict"),
 
     MEDIA_ASSET_NOT_FOUND(HttpStatus.NOT_FOUND, "Media asset not found"),
+    MEDIA_SOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, "Media source not found"),
+    MEDIA_SOURCE_VERSION_CONFLICT(HttpStatus.CONFLICT, "Media source reference version conflict"),
     MEDIA_DELETION_NOT_FOUND(HttpStatus.NOT_FOUND, "Media deletion not found"),
     MEDIA_DELETION_IN_PROGRESS(HttpStatus.CONFLICT, "Media deletion in progress"),
     MEDIA_CACHE_PURGE_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE, "Media cache purge not configured"),

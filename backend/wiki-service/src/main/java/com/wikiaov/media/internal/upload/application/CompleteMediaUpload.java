@@ -116,7 +116,8 @@ public class CompleteMediaUpload {
                         if (session.getSourceLabel() != null && session.getSourceType() != null) {
                             var source = new SourceInput(session.getSourceType(), session.getSourceLabel(),
                                     session.getSourceUrl(), session.getSourceObservedAt(), session.getSourceNote(),
-                                    session.getSourceOwnerName(), session.getSourceContactUrl());
+                                    session.getSourceOwnerName(), session.getSourceContactUrl(), null,
+                                    session.getSourceOwnerPageId(), session.getSourceRelatedPageId());
                             provenance.save(owners.attach(source).toProvenance(session.getAssetId(), version.getId(),
                                     clock.instant()));
                         }

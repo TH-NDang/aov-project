@@ -19,26 +19,29 @@ public record SourceInput(
         @Nullable String note,
         @Nullable String ownerName,
         @Nullable String contactUrl,
-        @Nullable UUID ownerId
+        @Nullable UUID ownerId,
+        @Nullable UUID ownerPageId,
+        @Nullable UUID relatedPageId
 ) {
 
     public SourceInput(ProvenanceSourceType type, String label, @Nullable String url,
             @Nullable Instant observedAt, @Nullable String note) {
-        this(type, label, url, observedAt, note, null, null, null);
+        this(type, label, url, observedAt, note, null, null, null, null, null);
     }
 
     public SourceInput(ProvenanceSourceType type, String label, @Nullable String url,
             @Nullable Instant observedAt, @Nullable String note, @Nullable String ownerName,
             @Nullable String contactUrl) {
-        this(type, label, url, observedAt, note, ownerName, contactUrl, null);
+        this(type, label, url, observedAt, note, ownerName, contactUrl, null, null, null);
     }
 
     public SourceInput withOwner(@Nullable UUID ownerId, @Nullable String ownerName, @Nullable String contactUrl) {
-        return new SourceInput(type, label, url, observedAt, note, ownerName, contactUrl, ownerId);
+        return new SourceInput(type, label, url, observedAt, note, ownerName, contactUrl, ownerId, ownerPageId,
+                relatedPageId);
     }
 
     public MediaProvenance toProvenance(UUID assetId, @Nullable UUID versionId, Instant now) {
         return MediaProvenance.record(UUID.randomUUID(), assetId, versionId, type, label, url, observedAt, note,
-                ownerId, ownerName, contactUrl, now);
+                ownerId, ownerName, contactUrl, ownerPageId, relatedPageId, now);
     }
 }

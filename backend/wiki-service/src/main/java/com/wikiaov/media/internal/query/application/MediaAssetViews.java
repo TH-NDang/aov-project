@@ -34,7 +34,8 @@ public class MediaAssetViews {
                 .map(record -> new ProvenanceDetails(record.getId(), record.getAssetVersionId(),
                         record.getSourceType(), record.getSourceLabel(), record.getSourceUrl(),
                         record.getObservedAt(), record.getNote(), record.getOwnerName(), record.getContactUrl(),
-                        record.getOwnerId()))
+                        record.getOwnerId(), record.getOwnerPageId(), record.getRelatedPageId(),
+                        record.getReferenceVersion()))
                 .toList();
         return new MediaAssetDetails(asset.getId(), asset.getSemanticType(), asset.getLifecycleState(),
                 asset.getLockVersion(), asset.getCurrentVersionId(), versionDetails, provenanceDetails,

@@ -62,6 +62,12 @@ public class MediaUploadSession extends AssignedIdEntity {
     @Column(name = "source_contact_url", length = 2048, updatable = false)
     private @Nullable String sourceContactUrl;
 
+    @Column(name = "source_owner_page_id", updatable = false)
+    private @Nullable UUID sourceOwnerPageId;
+
+    @Column(name = "source_related_page_id", updatable = false)
+    private @Nullable UUID sourceRelatedPageId;
+
     @Column(name = "source_observed_at", updatable = false)
     private @Nullable Instant sourceObservedAt;
 
@@ -124,7 +130,7 @@ public class MediaUploadSession extends AssignedIdEntity {
 
     public void recordSource(ProvenanceSourceType type, String label, @Nullable String url,
             @Nullable String ownerName, @Nullable String contactUrl, @Nullable Instant observedAt,
-            @Nullable String note) {
+            @Nullable String note, @Nullable UUID ownerPageId, @Nullable UUID relatedPageId) {
         sourceType = type;
         sourceLabel = label;
         sourceUrl = url;
@@ -132,6 +138,8 @@ public class MediaUploadSession extends AssignedIdEntity {
         sourceContactUrl = contactUrl;
         sourceObservedAt = observedAt;
         sourceNote = note;
+        sourceOwnerPageId = ownerPageId;
+        sourceRelatedPageId = relatedPageId;
     }
 
     /** Still waiting for (or in the middle of) completion. */
