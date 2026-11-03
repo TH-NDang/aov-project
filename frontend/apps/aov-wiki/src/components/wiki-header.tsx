@@ -10,18 +10,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@aov/ui/components/drawer"
+import { DrawerClose } from "@aov/ui/components/drawer"
+import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import "./wiki-header.css"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
 import { WikiIcon } from "./wiki-icon"
+import { WikiAccountMenu } from "../features/auth/wiki-account"
 
 type IconName =
   "search" | "globe" | "user" | "chevron" | "check" | "home" | "more" | "close" | "chevronRight" | "contents"
@@ -180,89 +175,75 @@ function useScrollProgressVar(ref: RefObject<HTMLElement | null>, distance: numb
   }, [ref, distance])
 }
 
-/** Phone-only "more" sheet: area switcher, account and language, like the HoYoWiki mobile menu. */
+/** Phone-only sheet for navigation, account preferences and optional table of contents. */
 function MoreMenu({ onOpenContents }: { onOpenContents?: () => void }) {
-  const { t, href } = useWikiContext()
+  const { t, href, locale } = useWikiContext()
   const openContentsAfterClose = useRef(false)
 
   return (
-    <Drawer>
-      <DrawerTrigger
-        className={cn(UTILITY_BUTTON, "wiki-header-mobile-control hidden max-[640px]:grid", MOBILE_ROUND)}
-        aria-label={t("more")}
-      >
-        <Icon name="more" className="size-4" />
-      </DrawerTrigger>
-      <DrawerContent
-        className="border-white/10 bg-[#202329] pb-[max(20px,env(safe-area-inset-bottom))] text-header-text data-[vaul-drawer-direction=bottom]:rounded-t-[16px]"
-        onCloseAutoFocus={(event) => {
-          if (!openContentsAfterClose.current) return
-
-          event.preventDefault()
-          openContentsAfterClose.current = false
-          onOpenContents?.()
-        }}
-      >
-        <div className="relative px-4 pt-3 pb-4">
-          <DrawerTitle className="text-center font-heading text-base font-bold text-header-text">
-            {t("more")}
-          </DrawerTitle>
-          <DrawerDescription className="sr-only">
-            {t("application")}, {t("market")}, {t("language")}
-          </DrawerDescription>
-          <DrawerClose
-            className="absolute top-2 right-3 grid size-8 place-items-center rounded-full text-header-muted hover:text-white"
-            aria-label={t("close")}
+    <PublicPreferencesDrawer
+      product="wiki"
+      locale={locale}
+      trigger={
+        <button
+          type="button"
+          className={cn(UTILITY_BUTTON, "wiki-header-mobile-control hidden max-[640px]:grid", MOBILE_ROUND)}
+          aria-label={t("more")}
+        >
+          <Icon name="more" className="size-4" />
+        </button>
+      }
+      onCloseAutoFocus={(event) => {
+        if (!openContentsAfterClose.current) return
+        event.preventDefault()
+        openContentsAfterClose.current = false
+        onOpenContents?.()
+      }}
+    >
+      <WikiAccountMenu inline />
+      {onOpenContents && (
+        <DrawerClose asChild>
+          <button
+            type="button"
+            className="flex min-h-12 items-center gap-3 rounded-[8px] px-3 text-left text-sm text-gold hover:bg-white/8"
+            onClick={() => {
+              openContentsAfterClose.current = true
+            }}
           >
-            <Icon name="close" className="size-[18px]" />
-          </DrawerClose>
-        </div>
-        <div className="flex flex-col gap-3 px-4">
-          {onOpenContents && (
-            <DrawerClose asChild>
-              <button
-                type="button"
-                className="flex min-h-12 items-center gap-3 rounded-[8px] px-3 text-left text-sm text-gold hover:bg-white/8"
-                onClick={() => {
-                  openContentsAfterClose.current = true
-                }}
-              >
-                <Icon name="contents" className="size-[18px]" />
-                <span className="flex-1">{t("contents")}</span>
-                <Icon name="chevronRight" className="size-4" />
-              </button>
-            </DrawerClose>
-          )}
-          <nav aria-label={t("application")} className="public-app-theme" data-appearance="wiki">
-            {SECTIONS.map((s) => {
-              const selected = s.id === CURRENT_SECTION
-              return (
-                <a
-                  key={s.id}
-                  href={selected ? href(s.href) : s.href}
-                  className="public-app-option"
-                  data-product={s.id}
-                  data-current={selected || undefined}
-                  aria-current={selected ? "true" : undefined}
-                >
-                  <SectionItemBody section={s} />
-                </a>
-              )
-            })}
-          </nav>
-          <div className="flex items-center gap-3 rounded-[12px] bg-white/5 p-3">
-            <span className="grid size-11 shrink-0 place-items-center rounded-full border border-white/10 bg-[#2a2e37] text-header-muted">
-              <Icon name="user" className="size-5" />
-            </span>
-            <span className="min-w-0 flex-1 text-[13px] leading-snug text-[#b2b4bc]">{t("signInNote")}</span>
-            <span className="rounded-full border border-white/25 px-3 py-1.5 text-xs text-header-muted">
-              {t("comingSoon")}
-            </span>
-          </div>
-          <WikiPreferenceControls mobile />
-        </div>
-      </DrawerContent>
-    </Drawer>
+            <Icon name="contents" className="size-[18px]" />
+            <span className="flex-1">{t("contents")}</span>
+            <Icon name="chevronRight" className="size-4" />
+          </button>
+        </DrawerClose>
+      )}
+      <div className="public-preferences-label">{t("application")}</div>
+      <nav aria-label={t("application")} className="public-preferences-apps" data-appearance="wiki">
+        {SECTIONS.map((s) => {
+          const selected = s.id === CURRENT_SECTION
+          return (
+            <a
+              key={s.id}
+              href={selected ? href(s.href) : s.href}
+              className="public-preferences-app"
+              data-product={s.id}
+              data-current={selected || undefined}
+              aria-current={selected ? "true" : undefined}
+            >
+              <img src={s.image} alt="" width={32} height={32} />
+              <span>
+                <strong>AOV {s.product}</strong>
+                <small>
+                  {selected ? wikiText(locale, "Đang xem", "Current") : wikiText(locale, "Mở ứng dụng", "Open app")}
+                </small>
+              </span>
+              <Icon name={selected ? "check" : "chevronRight"} className="public-preferences-app-status" />
+            </a>
+          )
+        })}
+      </nav>
+      <div className="public-preferences-label">{wikiText(locale, "Cài đặt", "Settings")}</div>
+      <WikiPreferenceControls mobile />
+    </PublicPreferencesDrawer>
   )
 }
 
@@ -469,23 +450,9 @@ export function WikiHeader({
           )}
           {feedback && <span className="inline-flex max-[640px]:hidden">{feedback}</span>}
           <WikiPreferenceControls />
-          <HeaderPanel
-            label={t("account")}
-            className={cn(UTILITY_BUTTON, "border border-white/10 bg-[#2a2e37] max-[640px]:hidden")}
-            trigger={<Icon name="user" className="size-[18px]" />}
-          >
-            <p className="mb-2 text-[9px] tracking-[1px] text-primary">
-              {wikiText(locale, "CHÀO NHÀ THÁM HIỂM", "WELCOME, EXPLORER")}
-            </p>
-            <PanelTitle>{wikiText(locale, "Góc của bạn", "Your corner")}</PanelTitle>
-            <PanelText>
-              {wikiText(
-                locale,
-                "Đăng nhập và lưu nội dung yêu thích sẽ sớm có mặt.",
-                "Sign-in and saved favorites are coming soon.",
-              )}
-            </PanelText>
-          </HeaderPanel>
+          <span className="inline-flex max-[640px]:hidden">
+            <WikiAccountMenu />
+          </span>
           <MoreMenu onOpenContents={variant === "hero" ? onOpenContents : undefined} />
         </nav>
       </div>

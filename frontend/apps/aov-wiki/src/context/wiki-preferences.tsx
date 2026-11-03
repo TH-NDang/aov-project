@@ -1,12 +1,8 @@
 import { useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { WikiIcon } from "../components/wiki-icon"
-import { useWikiContext, type WikiRegion, type WikiLanguage } from "./wiki-context"
+import { useWikiContext, type WikiRegion } from "./wiki-context"
 
-const LANGUAGES: WikiLanguage[] = [
-  { code: "vi-VN", name: "Tiếng Việt" },
-  { code: "en-US", name: "English" },
-]
 const FLAGS = new Set(["VN", "US", "TH", "TW", "ID"])
 const MARKET_NAMES: Record<string, string> = {
   VN: "Vietnam",
@@ -37,17 +33,25 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
   const context = useWikiContext()
   const { region, locale, regions, regionsPending, regionsError, setRegion, setLocale, t } = context
   const [marketOpen, setMarketOpen] = useState(false)
-  const [languageOpen, setLanguageOpen] = useState(false)
   const current = regions.find((market) => market.code === region)
   const english = locale.startsWith("en")
-  const languages = context.options?.languages.length ? context.options.languages : LANGUAGES
 
   if (mobile)
     return (
       <div className="wiki-preferences-mobile">
         <label>
           <span>
-            <WikiIcon name="globe" size={18} />
+            <WikiIcon name="globe" size={16} />
+            {t("language")}
+          </span>
+          <select value={locale} onChange={(event) => setLocale(event.target.value)}>
+            <option value="vi-VN">Tiếng Việt</option>
+            <option value="en-US">English</option>
+          </select>
+        </label>
+        <label>
+          <span>
+            <MarketFlag code={region} />
             {t("market")}
           </span>
           <select value={region} disabled={regionsPending} onChange={(event) => setRegion(event.target.value)}>
@@ -60,25 +64,11 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
             ))}
           </select>
         </label>
-        <label>
-          <span>
-            <WikiIcon name="globe" size={18} />
-            {t("language")}
-          </span>
-          <select value={locale} onChange={(event) => setLocale(event.target.value)}>
-            {languages.map((language) => (
-              <option key={language.code} value={language.code}>
-                {language.nativeName ?? language.name}
-              </option>
-            ))}
-          </select>
-        </label>
         {regionsError && (
           <button className="wiki-preference-retry" type="button" onClick={() => void context.retryRegions()}>
             {t("marketError")} {t("retry")}
           </button>
         )}
-        <p>{t("marketNote")}</p>
       </div>
     )
 
@@ -130,34 +120,6 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
             </div>
           )}
           <p className="wiki-preference-note">{t("marketNote")}</p>
-        </PopoverContent>
-      </Popover>
-      <Popover open={languageOpen} onOpenChange={setLanguageOpen}>
-        <PopoverTrigger className="wiki-preference-trigger" aria-label={t("language")}>
-          <WikiIcon name="globe" size={16} />
-          <span>{locale.startsWith("en") ? "EN" : locale === "vi-VN" ? "VI" : locale}</span>
-          <WikiIcon name="chevron" size={13} />
-        </PopoverTrigger>
-        <PopoverContent className="wiki-preference-panel wiki-preference-language" align="end" sideOffset={12}>
-          <h2>{t("language")}</h2>
-          <div className="wiki-preference-options">
-            {languages.map((language) => (
-              <button
-                key={language.code}
-                type="button"
-                aria-pressed={language.code === locale}
-                onClick={() => {
-                  setLocale(language.code)
-                  setLanguageOpen(false)
-                }}
-              >
-                <span>
-                  <strong>{language.nativeName ?? language.name}</strong>
-                </span>
-                {language.code === locale && <WikiIcon name="check" size={15} />}
-              </button>
-            ))}
-          </div>
         </PopoverContent>
       </Popover>
     </div>

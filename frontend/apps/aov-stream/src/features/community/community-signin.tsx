@@ -69,7 +69,7 @@ export function SignInDialog() {
             {error}
           </p>
         )}
-        <p className="cp-dialog-note">Đăng nhập qua trang tài khoản AthaHub; AOV Stream không lưu mật khẩu.</p>
+        <p className="cp-dialog-note">Đăng nhập qua trang tài khoản AOV; AOV Stream không lưu mật khẩu.</p>
       </DialogContent>
     </Dialog>
   )

@@ -1,0 +1,207 @@
+.public-account-panel.public-preferences-drawer {
+  width: 100%;
+  max-height: calc(100dvh - 56px);
+  margin-top: 0;
+  padding: 0 0 max(16px, env(safe-area-inset-bottom));
+  overflow: visible;
+  border: 1px solid var(--account-line);
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  touch-action: pan-y;
+  animation-duration: 240ms;
+}
+.public-preferences-drawer[data-product="wiki"] {
+  background: #202329;
+}
+.public-preferences-overlay[data-vaul-overlay] {
+  background: #0005;
+  animation-duration: 240ms;
+}
+.public-preferences-handle[data-vaul-handle] {
+  width: 64px;
+  height: 24px;
+  flex-shrink: 0;
+  margin: 0 auto;
+  background: transparent;
+  opacity: 1;
+  touch-action: none;
+  cursor: grab;
+}
+.public-preferences-handle::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  width: 36px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--account-muted);
+  opacity: 0.3;
+}
+.public-preferences-handle:active {
+  cursor: grabbing;
+}
+.public-preferences-handle:hover::before,
+.public-preferences-handle:active::before {
+  opacity: 0.55;
+}
+.public-preferences-handle [data-vaul-handle-hitarea] {
+  width: 64px;
+  height: 24px;
+}
+.public-preferences-header {
+  position: relative;
+  padding: 0 48px 12px;
+  text-align: center;
+}
+.public-preferences-header [data-slot="drawer-title"] {
+  color: var(--account-text);
+  font-size: 15px;
+  line-height: 24px;
+}
+.public-preferences-header button {
+  position: absolute;
+  top: -6px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--account-muted);
+  cursor: pointer;
+}
+.public-preferences-header button:hover {
+  color: var(--account-text);
+  background: var(--account-fill);
+}
+.public-preferences-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 0 16px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--account-line) transparent;
+}
+.public-preferences-label {
+  padding: 5px 2px 0;
+  color: var(--account-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.public-preferences-apps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.public-preferences-app {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 10px;
+  border: 1px solid var(--account-line);
+  border-radius: 10px;
+  background: var(--account-fill);
+  color: var(--account-text);
+  text-decoration: none;
+}
+.public-preferences-app[data-current] {
+  border-color: var(--account-selected-line);
+  background: var(--account-selected);
+}
+.public-preferences-app:hover {
+  background: color-mix(in srgb, var(--account-accent) 10%, transparent);
+}
+.public-preferences-app img {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.public-preferences-app > span {
+  min-width: 0;
+  flex: 1;
+}
+.public-preferences-app strong {
+  display: block;
+  color: var(--account-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.public-preferences-app small {
+  display: block;
+  margin-top: 2px;
+  color: var(--account-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.public-preferences-app > svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: var(--account-accent);
+}
+.public-preferences-body .public-account-settings {
+  border: 1px solid var(--account-line);
+  border-radius: 10px;
+  padding: 0 12px;
+  background: var(--account-fill);
+}
+.public-preferences-body .public-account-language {
+  min-height: 48px;
+  padding: 4px 0;
+  font-size: 12px;
+}
+.public-preferences-body .public-account-language-trigger {
+  font-size: 12px;
+}
+.public-preferences-body .public-account-appearance {
+  min-height: 48px;
+  margin: 0;
+  padding: 6px 0;
+  border-top: 1px solid var(--account-line);
+}
+.public-preferences-body .public-account-appearance legend {
+  font-size: 12px;
+}
+.public-preferences-body .public-account-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 0;
+}
+.public-preferences-body .public-account-links a {
+  min-height: 44px;
+  font-size: 12px;
+}
+.public-preferences-body .public-account-links svg {
+  flex-shrink: 0;
+}
+@media (max-width: 360px) {
+  .public-preferences-body {
+    padding-inline: 12px;
+  }
+  .public-preferences-app {
+    gap: 6px;
+    padding: 9px 8px;
+  }
+  .public-preferences-app > svg {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-preferences-drawer[data-vaul-drawer],
+  .public-preferences-overlay[data-vaul-overlay] {
+    animation: none !important;
+    transition: none !important;
+  }
+}

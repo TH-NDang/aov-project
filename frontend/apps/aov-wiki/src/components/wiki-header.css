@@ -129,6 +129,42 @@
   display: grid;
   gap: 10px;
 }
+.public-preferences-body .wiki-preferences-mobile {
+  gap: 0;
+  padding: 0 12px;
+  border: 1px solid #ffffff0d;
+  border-radius: 12px;
+  background: #ffffff03;
+}
+.public-preferences-body .wiki-preferences-mobile > label {
+  min-height: 48px;
+  gap: 8px;
+  padding: 4px 0;
+}
+.public-preferences-body .wiki-preferences-mobile > label:last-of-type {
+  border-bottom: 0;
+}
+.public-preferences-body .wiki-preferences-mobile > label > span {
+  font-size: 12px;
+  color: #c5c2bd;
+}
+.public-preferences-body .wiki-preferences-mobile select {
+  width: 42%;
+  min-height: 36px;
+  padding: 5px 2px;
+  border: 0;
+  background: transparent;
+  color: #e3c58e;
+  font-size: 12px;
+  text-align: right;
+}
+.public-preferences-body .wiki-preferences-mobile select option {
+  background: #232329;
+  color: #eee9df;
+}
+.public-preferences-body .wiki-preference-retry {
+  padding-block: 8px;
+}
 .wiki-preferences-mobile > label {
   display: flex;
   min-height: 44px;

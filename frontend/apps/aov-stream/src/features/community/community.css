@@ -1,7 +1,7 @@
 /* Community, profile, competition and account pages. Tokens come from src/stream.css. */
 .cp-container {
   min-width: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
 }
 .cp-back {
@@ -27,8 +27,8 @@
 }
 .cp-prose {
   color: var(--hub-text-soft);
-  font-size: 15px;
-  line-height: 1.75;
+  font-size: 14px;
+  line-height: 1.65;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -38,10 +38,10 @@
   :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select) {
   display: block;
   width: 100%;
-  min-height: 42px;
-  padding: 10px 12px;
+  min-height: 38px;
+  padding: 8px 10px;
   border: 1px solid var(--hub-border-strong);
-  border-radius: 12px;
+  border-radius: 8px;
   background: var(--hub-sunken);
   color: var(--hub-text);
   font: inherit;
@@ -64,10 +64,10 @@
 }
 :where(.cp-container) label {
   display: grid;
-  gap: 6px;
-  margin: 14px 0;
+  gap: 5px;
+  margin: 10px 0;
   color: var(--hub-text-soft);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 :where(.cp-container) fieldset {
@@ -118,14 +118,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 16px;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
   border: 1px solid var(--hub-border-strong);
   border-radius: 999px;
   background: var(--hub-surface);
   color: var(--hub-text);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -150,7 +150,7 @@
   border: 0;
   background: transparent;
   color: var(--hub-accent-strong);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 .cp-text-button:hover:not(:disabled) {
@@ -210,7 +210,7 @@
 .cp-tabs {
   display: flex;
   gap: 4px;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   overflow-x: auto;
   border-bottom: 1px solid var(--hub-border);
   scrollbar-width: none;
@@ -221,20 +221,25 @@
 .cp-tabs button {
   position: relative;
   flex-shrink: 0;
-  height: 48px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 12px;
   border: 0;
+  border-radius: 8px 8px 0 0;
   background: transparent;
   color: var(--hub-muted);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 650;
   white-space: nowrap;
+  transition:
+    background-color 160ms,
+    color 160ms;
 }
 .cp-tabs button:hover {
-  color: var(--hub-text);
+  background: var(--hub-hover);
+  color: var(--hub-accent-strong);
 }
 .cp-tabs button[aria-current] {
-  color: var(--hub-text);
+  color: var(--hub-accent-strong);
 }
 .cp-tabs button[aria-current]::after {
   content: "";
@@ -256,22 +261,22 @@
 /* Panels and layout */
 .cp-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   align-items: start;
-  gap: 16px;
+  gap: 12px;
 }
 .cp-main-column,
 .cp-side-column,
 .cp-feed {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   min-width: 0;
 }
 .cp-panel,
 .cp-section {
   min-width: 0;
-  padding: 20px 22px;
+  padding: 16px;
   border: 1px solid var(--hub-border);
   border-radius: var(--hub-radius);
   background: var(--hub-surface);
@@ -286,9 +291,9 @@
 }
 .cp-panel h2,
 .cp-section h2 {
-  margin: 0 0 12px;
+  margin: 0 0 10px;
   color: var(--hub-text);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.4;
 }
@@ -296,7 +301,7 @@
 .cp-section h3 {
   margin: 0 0 4px;
   color: var(--hub-text);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
 }
 .cp-panel p {
@@ -317,7 +322,7 @@
   overflow: hidden;
 }
 .cp-cover {
-  height: 200px;
+  height: 160px;
   background-position: center;
   background-size: cover;
 }
@@ -326,9 +331,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 16px 20px;
-  margin-top: -48px;
-  padding: 0 24px 20px;
+  gap: 12px 16px;
+  margin-top: -40px;
+  padding: 0 18px 16px;
 }
 .cp-avatar {
   width: 88px;
@@ -348,9 +353,9 @@
   font-weight: 800;
 }
 .cp-identity > .cp-avatar {
-  width: 112px;
-  height: 112px;
-  border-radius: 26px;
+  width: 88px;
+  height: 88px;
+  border-radius: 20px;
   box-shadow: var(--hub-shadow-lg);
 }
 .cp-identity > .cp-initial {
@@ -359,7 +364,7 @@
 .cp-identity-title {
   flex: 1;
   min-width: 220px;
-  padding-top: 56px;
+  padding-top: 48px;
 }
 .cp-identity-title h1 {
   display: flex;
@@ -368,7 +373,7 @@
   gap: 8px;
   margin: 4px 0 0;
   color: var(--hub-text);
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.4px;
@@ -395,16 +400,16 @@
 .cp-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 0 0 16px;
+  gap: 8px;
+  margin: 0 0 12px;
 }
 .cp-toolbar .hub-pills {
   min-width: 0;
 }
 .cp-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
 }
 .cp-profile-card {
   display: flex;
@@ -416,17 +421,18 @@
   background: var(--hub-surface);
   box-shadow: var(--hub-shadow);
   transition:
-    transform 0.2s,
-    box-shadow 0.2s,
-    border-color 0.2s;
+    background-color 160ms,
+    box-shadow 160ms,
+    border-color 160ms;
 }
-.cp-profile-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--hub-border-strong);
+.cp-profile-card:hover,
+.cp-profile-card:focus-within {
+  border-color: var(--hub-accent-border);
+  background: color-mix(in srgb, var(--hub-accent) 3%, var(--hub-surface));
   box-shadow: var(--hub-shadow-lg);
 }
 .cp-card-cover {
-  height: 88px;
+  height: 72px;
   background-position: center;
   background-size: cover;
 }
@@ -436,17 +442,17 @@
   flex: 1;
   flex-direction: column;
   gap: 4px;
-  padding: 40px 16px 14px;
+  padding: 32px 12px 12px;
 }
 .cp-card-content > .cp-avatar {
   position: absolute;
-  top: -32px;
-  left: 16px;
-  width: 64px;
-  height: 64px;
+  top: -26px;
+  left: 12px;
+  width: 52px;
+  height: 52px;
   border-width: 3px;
-  border-radius: 18px;
-  font-size: 20px;
+  border-radius: 14px;
+  font-size: 18px;
 }
 .cp-card-kind {
   display: inline-flex;
@@ -462,7 +468,7 @@
   gap: 6px;
   min-width: 0;
   color: var(--hub-text);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
 }
 .cp-card-name > span {
@@ -473,6 +479,7 @@
 .cp-card-meta {
   color: var(--hub-muted);
   font-size: 12px;
+  font-weight: 500;
 }
 .cp-card-footer {
   display: flex;
@@ -480,13 +487,14 @@
   justify-content: space-between;
   gap: 8px;
   margin-top: auto;
-  padding-top: 12px;
+  padding-top: 8px;
   border-top: 1px solid var(--hub-border);
   color: var(--hub-muted);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 650;
 }
-.cp-profile-card:hover .cp-card-footer {
+.cp-profile-card:hover .cp-card-footer,
+.cp-profile-card:focus-within .cp-card-footer {
   color: var(--hub-accent-strong);
 }
 .cp-card-content > .cp-card-meta + .cp-card-footer {
@@ -1267,6 +1275,15 @@
   }
 }
 @media (max-width: 767px) {
+  .cp-button {
+    min-height: 40px;
+  }
+  :where(.cp-container)
+    :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]), textarea, select) {
+    min-height: 40px;
+    font-size: 16px;
+  }
+
   .cp-panel,
   .cp-section {
     padding: 16px;
@@ -1277,24 +1294,24 @@
   }
   .cp-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 10px;
   }
   .cp-card-cover {
-    height: 64px;
+    height: 56px;
   }
   .cp-card-content {
-    padding: 32px 12px 12px;
+    padding: 26px 10px 10px;
   }
   .cp-card-content > .cp-avatar {
-    top: -26px;
-    left: 12px;
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
+    top: -22px;
+    left: 10px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     font-size: 16px;
   }
   .cp-card-name {
-    font-size: 15px;
+    font-size: 13px;
   }
   .cp-card-footer > span {
     min-width: 0;
@@ -1343,7 +1360,8 @@
   }
   .cp-tabs button {
     padding: 0 12px;
-    font-size: 14px;
+    font-size: 13px;
+    height: 44px;
   }
   .cp-tabs button[aria-current]::after {
     left: 12px;
@@ -1394,8 +1412,8 @@
 .cp-channels {
   display: flex;
   gap: 4px;
-  margin: 0 0 16px;
-  padding: 6px;
+  margin: 0 0 12px;
+  padding: 4px;
   overflow-x: auto;
   border: 1px solid var(--hub-border);
   border-radius: var(--hub-radius);
@@ -1409,15 +1427,15 @@
 .cp-channel {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
   max-width: 200px;
-  height: 44px;
-  padding: 0 14px 0 6px;
-  border-radius: 12px;
+  height: 38px;
+  padding: 0 10px 0 4px;
+  border-radius: 8px;
   color: var(--hub-text-soft);
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 650;
 }
 .cp-channel > span:last-child {
   overflow: hidden;
@@ -1426,7 +1444,7 @@
 }
 .cp-channel:hover {
   background: var(--hub-hover);
-  color: var(--hub-text);
+  color: var(--hub-accent-strong);
 }
 .cp-channel[aria-current] {
   background: var(--hub-accent-soft);
@@ -1434,10 +1452,10 @@
 }
 .cp-channel .cp-avatar,
 .cp-channel-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-width: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 12px;
 }
 .cp-channel-icon {
@@ -1451,7 +1469,7 @@
   color: var(--hub-on-accent);
 }
 .cp-community-banner {
-  min-height: 140px;
+  min-height: 120px;
 }
 
 /* Post lists: posts separated by rules inside one card. */
@@ -1460,7 +1478,7 @@
   flex-direction: column;
 }
 .cp-feed > .cp-post-list {
-  padding: 0 22px;
+  padding: 0 16px;
   border: 1px solid var(--hub-border);
   border-radius: var(--hub-radius);
   background: var(--hub-surface);

@@ -1,0 +1,385 @@
+.public-account-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid var(--hub-border, #ffffff24);
+  border-radius: 50%;
+  background: var(--hub-surface, #ffffff08);
+  color: var(--hub-muted, #d4d2ce);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
+  font-size: 14px;
+  font-weight: 700;
+}
+.public-account-trigger:hover,
+.public-account-trigger[data-state="open"] {
+  color: var(--hub-accent-strong, #d3a857);
+  border-color: color-mix(in srgb, var(--hub-accent, #d3a857) 35%, transparent);
+  background: var(--hub-accent-soft, #d3a85714);
+}
+.public-account-trigger:focus-visible {
+  outline: 2px solid var(--hub-accent, #d3a857);
+  outline-offset: 3px;
+}
+.public-account-trigger-user {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.public-account-panel.public-account-inline {
+  width: 100%;
+  max-height: none;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.public-account-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 68px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--account-accent) 22%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--account-accent) 5%, transparent);
+  color: var(--account-text);
+  text-align: left;
+}
+button.public-account-summary {
+  cursor: pointer;
+}
+button.public-account-summary:hover {
+  background: color-mix(in srgb, var(--account-accent) 10%, transparent);
+}
+button.public-account-summary:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.public-account-summary .public-account-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+.public-account-summary-copy {
+  flex: 1;
+  min-width: 0;
+}
+.public-account-summary-copy strong {
+  display: block;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.public-account-summary-copy small {
+  display: block;
+  margin-top: 3px;
+  color: var(--account-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+.public-account-summary-action {
+  color: var(--account-accent);
+  flex-shrink: 0;
+}
+.public-account-summary-exit {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--account-muted);
+  cursor: pointer;
+}
+.public-account-summary-exit:hover {
+  background: var(--account-fill);
+  color: var(--account-text);
+}
+.public-account-panel,
+.public-account-theme {
+  --account-bg: #171d2b;
+  --account-text: #e6e9f0;
+  --account-muted: #a1aabb;
+  --account-line: #ffffff12;
+  --account-fill: #ffffff07;
+  --account-accent: #c0caee;
+  --account-on-accent: #242c49;
+  --account-action: var(--account-accent);
+  --account-selected: color-mix(in srgb, var(--account-accent) 8%, transparent);
+  --account-selected-line: color-mix(in srgb, var(--account-accent) 25%, transparent);
+}
+.public-account-panel {
+  box-sizing: border-box;
+  max-height: var(--radix-popover-content-available-height);
+  overflow-y: auto;
+  width: min(304px, calc(100vw - 24px));
+  padding: 8px;
+  border: 1px solid var(--account-line);
+  border-radius: 16px;
+  background: var(--account-bg);
+  color: var(--account-text);
+  box-shadow: 0 16px 56px #0004;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.public-account-panel[data-product="stream"],
+.public-account-theme[data-product="stream"] {
+  --account-bg: var(--hub-surface);
+  --account-text: var(--hub-text);
+  --account-muted: var(--hub-muted);
+  --account-line: var(--hub-border);
+  --account-fill: var(--hub-raised);
+  --account-accent: var(--hub-accent-strong);
+  --account-action: var(--hub-accent);
+  --account-on-accent: var(--hub-on-accent);
+  --account-selected: var(--hub-accent-soft);
+}
+.public-account-panel[data-product="wiki"],
+.public-account-theme[data-product="wiki"] {
+  --account-bg: #232329;
+  --account-text: #f0e9df;
+  --account-muted: #b3ada8;
+  --account-accent: #e7c285;
+  --account-on-accent: #392b1b;
+}
+.public-account-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px 18px;
+}
+.public-account-heading > div {
+  min-width: 0;
+}
+.public-account-heading strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 22px;
+}
+.public-account-heading small {
+  display: block;
+  font-size: 12px;
+  margin-top: 3px;
+  color: var(--account-muted);
+}
+.public-account-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: var(--account-fill);
+  color: var(--account-accent);
+  border: 1px solid var(--account-line);
+}
+.public-account-settings {
+  border-block: 1px solid var(--account-line);
+  padding: 8px 4px;
+}
+.public-account-language {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 7px;
+  font-size: 13px;
+}
+.public-account-language > label {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+.public-account-language svg {
+  color: var(--account-muted);
+}
+.public-account-language-trigger[data-slot="select-trigger"] {
+  min-width: 0;
+  width: 132px;
+  height: 36px;
+  padding: 6px 9px;
+  border: 1px solid var(--account-line);
+  border-radius: 8px;
+  background: var(--account-fill);
+  color: var(--account-text);
+  box-shadow: none;
+  font: inherit;
+  cursor: pointer;
+}
+.public-account-language-trigger[data-state="open"],
+.public-account-language-trigger:hover {
+  border-color: var(--account-selected-line);
+  background: var(--account-selected);
+}
+.public-account-language-menu {
+  z-index: 60;
+  min-width: 148px;
+  border: 1px solid var(--account-line);
+  border-radius: 10px;
+  background: var(--account-bg);
+  color: var(--account-text);
+  box-shadow: 0 10px 28px #0003;
+}
+.public-account-language-menu [data-slot="select-item"] {
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 13px;
+  line-height: 20px;
+}
+.public-account-language-menu [data-state="checked"] {
+  border-color: var(--account-selected-line);
+  background: var(--account-selected);
+  color: var(--account-accent);
+}
+.public-account-language-menu [data-highlighted] {
+  background: var(--account-fill);
+  color: var(--account-text);
+}
+.public-account-language-menu [data-state="checked"][data-highlighted] {
+  background: var(--account-selected);
+  color: var(--account-accent);
+}
+.public-account-language-menu [data-slot="select-item-indicator"] svg {
+  color: var(--account-accent);
+}
+.public-account-appearance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 4px;
+  padding: 0 7px;
+  border: 0;
+}
+.public-account-appearance legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  float: left;
+  margin-right: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.public-account-appearance > div {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--account-fill);
+  border: 1px solid var(--account-line);
+  border-radius: 9px;
+}
+.public-account-appearance button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 9px;
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--account-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.public-account-appearance button[aria-pressed="true"] {
+  border-color: var(--account-selected-line);
+  color: var(--account-accent);
+  background: var(--account-selected);
+}
+.public-account-appearance button:hover {
+  color: var(--account-text);
+}
+.public-account-panel button:focus-visible,
+.public-account-panel select:focus-visible,
+.public-account-panel a:focus-visible {
+  outline: 2px solid var(--account-accent);
+  outline-offset: 2px;
+}
+.public-account-signin {
+  padding: 14px 8px 6px;
+}
+.public-account-signin > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 41px;
+  padding: 9px 16px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--account-action);
+  color: var(--account-on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.public-account-signin > button:hover {
+  filter: brightness(1.07);
+}
+.public-account-signin > button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.public-account-signin p {
+  margin: 10px 0 1px;
+  text-align: center;
+  color: var(--account-muted);
+  font-size: 12px;
+}
+.public-account-links {
+  padding: 0 4px 8px;
+}
+.public-account-links a,
+.public-account-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 9px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--account-text);
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.public-account-links a:hover,
+.public-account-logout:hover {
+  background: var(--account-fill);
+}
+.public-account-logout {
+  margin-top: 5px;
+  color: #de8f89;
+}
+.public-account-error {
+  padding: 4px 10px;
+  color: #e89e97;
+  font-size: 13px;
+}
+@media (max-width: 640px) {
+  .public-account-trigger[data-product="wiki"] {
+    width: 28px;
+    height: 28px;
+  }
+  .public-account-trigger[data-product="wiki"] svg {
+    width: 16px;
+    height: 16px;
+  }
+}

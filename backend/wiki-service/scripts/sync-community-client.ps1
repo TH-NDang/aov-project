@@ -2,13 +2,18 @@
 param(
     [string]$ServerUrl = 'http://localhost:8081',
     [string]$Realm = 'wikiaov',
-    [string]$Origin = 'http://localhost:5174',
+    [ValidateSet('aov-stream', 'aov-wiki')]
+    [string]$ClientId = 'aov-stream',
+    [string]$Origin,
+    [string]$LoginTheme = 'aov-public',
     [PSCredential]$Credential,
     [switch]$EnableRegistration,
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $Origin) { $Origin = if ($ClientId -eq 'aov-wiki') { 'http://localhost:5173' } else { 'http://localhost:5174' } }
+$returnPath = if ($ClientId -eq 'aov-wiki') { '/' } else { '/pages' }
 foreach ($value in @($ServerUrl, $Origin)) {
     $uri = [Uri]$value
     if ($uri.Scheme -ne 'https' -and -not ($uri.Scheme -eq 'http' -and $uri.IsLoopback)) {
@@ -17,13 +22,14 @@ foreach ($value in @($ServerUrl, $Origin)) {
     if ($uri.UserInfo -or $uri.Query -or $uri.Fragment -or $uri.AbsolutePath -ne '/') { throw 'Use an origin without path, credentials, query or fragment.' }
 }
 $client = @{
-    clientId = 'aov-stream'; name = 'AthaHub Community'; enabled = $true; publicClient = $true
+    clientId = $ClientId; name = $(if ($ClientId -eq 'aov-wiki') { 'AOV Wiki' } else { 'AOV Stream' }); enabled = $true; publicClient = $true
     standardFlowEnabled = $true; implicitFlowEnabled = $false; directAccessGrantsEnabled = $false; serviceAccountsEnabled = $false
     redirectUris = @("$($Origin.TrimEnd('/'))/auth/callback"); webOrigins = @($Origin.TrimEnd('/'))
-    attributes = @{'pkce.code.challenge.method' = 'S256'; 'post.logout.redirect.uris' = "$($Origin.TrimEnd('/'))/pages"}
+    rootUrl = $Origin.TrimEnd('/'); baseUrl = "$($Origin.TrimEnd('/'))$returnPath"
+    attributes = @{'pkce.code.challenge.method' = 'S256'; 'post.logout.redirect.uris' = "$($Origin.TrimEnd('/'))$returnPath"; 'login_theme' = $LoginTheme}
 }
 # community-service serves pages and tournaments; wiki-service serves the shared user profile (ADR-008).
-$audiences = @('community-service', 'wiki-service')
+$audiences = if ($ClientId -eq 'aov-wiki') { @('wiki-service') } else { @('community-service', 'wiki-service') }
 if ($DryRun) { [pscustomobject]@{Client = $client; Audiences = $audiences}; return }
 if (-not $Credential) { $Credential = Get-Credential -UserName 'admin' -Message 'Keycloak master realm administrator' }
 $sessionHeaders = $null
@@ -40,14 +46,17 @@ try {
         $response = Invoke-RestMethod @arguments
         if ($null -ne $response) { $response | Write-Output }
     }
-    $found = @(Invoke-ClientAdmin GET '/clients?clientId=aov-stream' | Where-Object clientId -eq 'aov-stream')
+    $found = @(Invoke-ClientAdmin GET "/clients?clientId=$ClientId" | Where-Object clientId -eq $ClientId)
     if ($found.Count -gt 1) { throw 'Expected at most one community client.' }
     if ($found.Count) {
         $client.id = $found[0].id
+        foreach ($attribute in $found[0].attributes.PSObject.Properties) {
+            if (-not $client.attributes.ContainsKey($attribute.Name)) { $client.attributes[$attribute.Name] = $attribute.Value }
+        }
         $null = Invoke-ClientAdmin PUT "/clients/$($client.id)" $client
     } else {
         $null = Invoke-ClientAdmin POST '/clients' $client
-        $found = @(Invoke-ClientAdmin GET '/clients?clientId=aov-stream' | Where-Object clientId -eq 'aov-stream')
+        $found = @(Invoke-ClientAdmin GET "/clients?clientId=$ClientId" | Where-Object clientId -eq $ClientId)
         $client.id = $found[0].id
     }
     foreach ($audience in $audiences) {
@@ -62,12 +71,15 @@ try {
             $null = Invoke-ClientAdmin PUT "/clients/$($client.id)/protocol-mappers/models/$($mapper.id)" $mapper
         } else { $null = Invoke-ClientAdmin POST "/clients/$($client.id)/protocol-mappers/models" $mapper }
     }
+    $realmSettings = Invoke-ClientAdmin GET ''
+    $locales = @(@($realmSettings.supportedLocales) + @('vi', 'en') | Where-Object { $_ } | Select-Object -Unique)
+    $null = Invoke-ClientAdmin PUT '' @{internationalizationEnabled = $true; supportedLocales = $locales; defaultLocale = 'vi'}
     if ($EnableRegistration) { $null = Invoke-ClientAdmin PUT '' @{registrationAllowed = $true} }
     $verified = Invoke-ClientAdmin GET "/clients/$($client.id)"
     if (-not $verified.publicClient -or $verified.attributes.'pkce.code.challenge.method' -ne 'S256' -or $verified.directAccessGrantsEnabled) { throw 'Community client verification failed.' }
     $configured = @(Invoke-ClientAdmin GET "/clients/$($client.id)/protocol-mappers/models" | ForEach-Object { $_.config.'included.client.audience' })
     foreach ($audience in $audiences) { if ($configured -notcontains $audience) { throw "Community client lacks the $audience audience." } }
-    Write-Host 'Community client configured with exact redirect URI, PKCE and community-service/wiki-service audiences. No roles were granted.'
+    Write-Host "$ClientId configured with exact redirect URI, PKCE, AOV login theme and required audiences. No roles were granted."
 } finally {
     $sessionHeaders = $null
     $sessionResponse = $null

@@ -1,58 +1,87 @@
 import { useEffect, useState } from "react"
-import { Link, useLocation, useNavigate } from "react-router"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@aov/ui/components/dropdown-menu"
+import { Link, useNavigate } from "react-router"
+import { PublicAccountMenu, PublicAccountSettings, PublicAccountSummary } from "@aov/ui/components/public-account-menu"
+import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
+import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { publicAuthError } from "@aov/ui/lib/public-auth"
+import { useStreamTheme } from "../../components/stream-theme"
+import { useStreamLocale } from "../../components/stream-locale"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { completeLogin, signIn, signOut, useCommunitySession } from "./community-auth"
 import { useNotifications, useReadNotifications, useUnreadCount } from "./community-queries"
 import { timeAgo } from "./community-ui"
-import { StreamShell } from "../../components/stream-shell"
+import { StreamShell, StreamMobileNavigation, WIKI_URL } from "../../components/stream-shell"
+import owlMark from "../../assets/stream-owl.svg"
 import { StreamIcon, type StreamIconName } from "../../components/stream-icon"
-import { AccountAvatar } from "../account/account-profile"
 import { useOwnProfile } from "../account/profile-api"
 
 export function CommunitySessionButton() {
   const session = useCommunitySession()
-  const [error, setError] = useState("")
-  if (session.status === "loading")
-    return <span className="hub-session-pending" role="status" aria-label="Đang đăng nhập" />
-  if (session.status !== "authenticated")
-    return (
-      <div className="cp-session">
-        <button
-          className="hub-signin"
-          onClick={() => {
-            setError("")
-            void signIn().catch(() => setError("Chưa mở được đăng nhập."))
-          }}
-        >
-          Đăng nhập
-        </button>
-        <button
-          className="hub-signup"
-          onClick={() => {
-            setError("")
-            void signIn(true).catch(() => setError("Chưa mở được đăng ký."))
-          }}
-        >
-          Đăng ký
-        </button>
-        {error && (
-          <span className="cp-session-error" role="alert">
-            {error}
-          </span>
-        )}
-      </div>
-    )
+  const profile = useOwnProfile()
+  const { locale, setLocale, text } = useStreamLocale()
+  const { theme, setTheme } = useStreamTheme()
+  const mobile = useIsMobile()
+  const accountProps = {
+    product: "stream" as const,
+    locale,
+    onLocaleChange: setLocale,
+    theme,
+    onThemeChange: setTheme,
+    name: session.status === "authenticated" ? profile.data?.displayName || session.name : undefined,
+    loading: session.status === "loading",
+    onSignIn: () => signIn(),
+    onSignOut: () => signOut(),
+  }
+  const links =
+    session.status === "authenticated" &&
+    accountLinks.map((item) => (
+      <Link key={item.to} to={item.to}>
+        <StreamIcon name={item.icon} size={16} />
+        {text(item.label, item.english)}
+      </Link>
+    ))
+  const wikiLogoUrl = new URL("images/mole-logo-v4.png", `${WIKI_URL.replace(/\/$/, "")}/`).href
   return (
     <div className="cp-session">
-      <NotificationBell />
-      <AccountMenu />
+      {session.status === "authenticated" && <NotificationBell />}
+      {mobile ? (
+        <PublicPreferencesDrawer
+          product="stream"
+          locale={locale}
+          trigger={
+            <button type="button" className="public-account-trigger" aria-label={text("Tùy chọn", "Preferences")}>
+              <StreamIcon name="more" size={20} />
+            </button>
+          }
+        >
+          <PublicAccountSummary {...accountProps} />
+          {links && <div className="public-account-links">{links}</div>}
+          <StreamMobileNavigation />
+          <div className="public-preferences-label">{text("Chọn ứng dụng", "Choose application")}</div>
+          <nav className="public-preferences-apps" aria-label={text("Chọn ứng dụng", "Choose application")}>
+            <a className="public-preferences-app" href={WIKI_URL}>
+              <img src={wikiLogoUrl} alt="" width={30} height={30} />
+              <span>
+                <strong>AOV Wiki</strong>
+                <small>{text("Mở ứng dụng", "Open app")}</small>
+              </span>
+              <StreamIcon name="chevronRight" size={13} />
+            </a>
+            <Link className="public-preferences-app" data-current="true" aria-current="true" to="/">
+              <img src={owlMark} alt="" width={30} height={30} />
+              <span>
+                <strong>AOV Stream</strong>
+                <small>{text("Đang xem", "Current")}</small>
+              </span>
+              <StreamIcon name="check" size={13} />
+            </Link>
+          </nav>
+          <div className="public-preferences-label">{text("Cài đặt", "Settings")}</div>
+          <PublicAccountSettings {...accountProps} />
+        </PublicPreferencesDrawer>
+      ) : (
+        <PublicAccountMenu {...accountProps}>{links}</PublicAccountMenu>
+      )}
     </div>
   )
 }
@@ -113,59 +142,15 @@ function NotificationBell() {
   )
 }
 
-const accountLinks: { to: string; label: string; icon: StreamIconName }[] = [
-  { to: "/account", label: "Hồ sơ của tôi", icon: "user" },
-  { to: "/account?tab=follows", label: "Trang đang theo dõi", icon: "heart" },
-  { to: "/account?tab=notifications", label: "Thông báo", icon: "bell" },
-  { to: "/account?tab=pages", label: "Trang tôi quản lý", icon: "shield" },
+const accountLinks: { to: string; label: string; english: string; icon: StreamIconName }[] = [
+  { to: "/account", label: "Hồ sơ của tôi", english: "My profile", icon: "user" },
+  { to: "/account?tab=follows", label: "Trang đang theo dõi", english: "Following", icon: "heart" },
+  { to: "/account?tab=notifications", label: "Thông báo", english: "Notifications", icon: "bell" },
+  { to: "/account?tab=pages", label: "Trang tôi quản lý", english: "My pages", icon: "shield" },
 ]
 
-function AccountMenu() {
-  const session = useCommunitySession()
-  const profile = useOwnProfile()
-  const location = useLocation()
-  const name = profile.data?.displayName || session.name
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          className="account-session-link"
-          aria-label={`Tài khoản: ${name}`}
-          data-current={location.pathname === "/account" || undefined}
-        >
-          <AccountAvatar url={profile.data?.avatarUrl} name={name} />
-          <span>{name}</span>
-          <StreamIcon name="chevronRight" size={14} />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8} className="hub-popover hub-account-menu">
-        <div className="hub-account-summary">
-          <AccountAvatar url={profile.data?.avatarUrl} name={name} large />
-          <span>
-            <strong>{name}</strong>
-            <small>Thành viên cộng đồng</small>
-          </span>
-        </div>
-        <DropdownMenuSeparator />
-        {accountLinks.map((item) => (
-          <DropdownMenuItem key={item.to} asChild className="hub-menu-item">
-            <Link to={item.to}>
-              <StreamIcon name={item.icon} size={16} />
-              {item.label}
-            </Link>
-          </DropdownMenuItem>
-        ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="hub-menu-item" variant="destructive" onSelect={() => signOut()}>
-          <StreamIcon name="logout" size={16} />
-          Đăng xuất
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
 export function CommunityLoginCallback() {
+  const { locale, text } = useStreamLocale()
   const navigate = useNavigate()
   const [error, setError] = useState("")
   useEffect(() => {
@@ -174,28 +159,35 @@ export function CommunityLoginCallback() {
       .then((path) => {
         if (active) navigate(path, { replace: true })
       })
-      .catch((error) => {
-        if (active) setError(error.message)
+      .catch(() => {
+        if (active) setError(publicAuthError(locale))
       })
     return () => {
       active = false
     }
-  }, [navigate])
+  }, [navigate, locale])
   return (
     <StreamShell>
       <div className="cp-container">
         <section className="hub-state">
           <StreamIcon name={error ? "info" : "clock"} size={32} />
-          <h1>{error ? "Đăng nhập chưa hoàn tất" : "Đang hoàn tất đăng nhập…"}</h1>
+          <h1>
+            {error
+              ? text("Đăng nhập chưa hoàn tất", "Sign-in incomplete")
+              : text("Đang hoàn tất đăng nhập…", "Completing sign-in…")}
+          </h1>
           {error && (
             <>
               <p role="alert">{error}</p>
               <div className="hub-state-actions">
-                <button className="cp-button cp-primary" onClick={() => void signIn()}>
-                  Thử đăng nhập lại
+                <button
+                  className="cp-button cp-primary"
+                  onClick={() => void signIn().catch(() => setError(publicAuthError(locale)))}
+                >
+                  {text("Thử đăng nhập lại", "Try again")}
                 </button>
                 <Link className="cp-button" to="/pages">
-                  Về cộng đồng
+                  {text("Về cộng đồng", "Back to community")}
                 </Link>
               </div>
             </>

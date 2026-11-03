@@ -7,10 +7,19 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import owlMark from "../assets/stream-owl.svg"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
+import { useIsMobile } from "@aov/ui/hooks/use-mobile"
 import "./stream-app-switcher.css"
 
 export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
+  const mobile = useIsMobile()
   const wikiLogoUrl = new URL("images/mole-logo-v4.png", `${wikiUrl.replace(/\/$/, "")}/`).href
+
+  if (mobile)
+    return (
+      <span className="public-app-theme" data-product="stream">
+        <PublicAppWordmark product="Stream" />
+      </span>
+    )
 
   return (
     <DropdownMenu modal={false}>

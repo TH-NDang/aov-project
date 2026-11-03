@@ -55,6 +55,23 @@ if (Compare-Object $clientPreview.Audiences $streamAudiences) {
     throw 'The stream client synchronization must grant the same audiences as the local realm.'
 }
 $importer = $realm.clients | Where-Object clientId -eq 'wiki-importer'
+foreach ($clientName in @('aov-wiki', 'aov-stream')) {
+    $publicClient = @($realm.clients | Where-Object clientId -eq $clientName)
+    $publicPreview = & $streamClient -ClientId $clientName -DryRun
+    if ($publicClient.Count -ne 1 -or -not $publicClient[0].publicClient -or
+        $publicClient[0].directAccessGrantsEnabled -or $publicClient[0].implicitFlowEnabled -or
+        $publicClient[0].serviceAccountsEnabled -or $publicClient[0].attributes.'pkce.code.challenge.method' -ne 'S256' -or
+        $publicClient[0].attributes.login_theme -ne 'aov-public' -or
+        $publicPreview.Client.attributes.login_theme -ne 'aov-public' -or
+        (Compare-Object $publicClient[0].redirectUris $publicPreview.Client.redirectUris)) {
+        throw "Public login configuration differs from the synchronized client: $clientName"
+    }
+}
+$wikiClient = $realm.clients | Where-Object clientId -eq 'aov-wiki'
+$wikiAudiences = @($wikiClient.protocolMappers | ForEach-Object { $_.config.'included.client.audience' })
+if ((Compare-Object $wikiAudiences @('wiki-service')) -or -not $realm.internationalizationEnabled) {
+    throw 'Wiki must use the shared profile audience and localized login theme.'
+}
 if (@($importer.protocolMappers | Where-Object name -eq 'audience-community-service').Count) {
     throw 'The wiki importer must not receive community access.'
 }

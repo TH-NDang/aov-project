@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { StreamIcon } from "./stream-icon"
 
 type Theme = "light" | "dark"
 
@@ -17,8 +16,8 @@ function paintBrowserChrome(theme: Theme) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#0c111d" : "#f3f5f9")
 }
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState(appliedTheme)
+export function useStreamTheme() {
+  const [theme, updateTheme] = useState(appliedTheme)
 
   useEffect(() => {
     paintBrowserChrome(theme)
@@ -26,26 +25,25 @@ export function ThemeToggle() {
 
   useEffect(() => {
     const media = systemDark()
-    const follow = () => setTheme(appliedTheme())
+    const follow = () => updateTheme(appliedTheme())
     media.addEventListener("change", follow)
-    return () => media.removeEventListener("change", follow)
+    window.addEventListener("aov-theme-change", follow)
+    return () => {
+      media.removeEventListener("change", follow)
+      window.removeEventListener("aov-theme-change", follow)
+    }
   }, [])
 
-  function toggle() {
-    const next = theme === "dark" ? "light" : "dark"
+  function setTheme(next: Theme) {
     document.documentElement.dataset.theme = next
     try {
       localStorage.setItem(STORAGE_KEY, next)
     } catch {
       // Private browsing may refuse storage; the choice then lasts for this page only.
     }
-    setTheme(next)
+    updateTheme(next)
+    window.dispatchEvent(new Event("aov-theme-change"))
   }
 
-  const label = theme === "dark" ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"
-  return (
-    <button type="button" className="hub-icon-button" onClick={toggle} aria-label={label} title={label}>
-      <StreamIcon name={theme === "dark" ? "sun" : "moon"} size={18} />
-    </button>
-  )
+  return { theme, setTheme }
 }

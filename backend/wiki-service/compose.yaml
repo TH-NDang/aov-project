@@ -50,6 +50,7 @@ services:
     volumes:
       - keycloak-data:/opt/keycloak/data
       - ./infra/local/keycloak:/opt/keycloak/data/import:ro
+      - ./infra/local/keycloak-themes/aov-public:/opt/keycloak/themes/aov-public:ro
 volumes:
   postgres-data:
   seaweedfs-data:

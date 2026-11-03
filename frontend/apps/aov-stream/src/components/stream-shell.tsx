@@ -5,7 +5,7 @@ import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { StreamBrand } from "./stream-brand"
 import { StreamAppSwitcher } from "./stream-app-switcher"
 import { StreamIcon, type StreamIconName } from "./stream-icon"
-import { ThemeToggle } from "./stream-theme"
+import { useStreamLocale } from "./stream-locale"
 import { CommunitySessionButton } from "../features/community/community-session"
 import { SignInDialog } from "../features/community/community-signin"
 import { hueOf, kindIcons, useFeaturedCompetitions } from "../features/community/community-ui"
@@ -13,20 +13,38 @@ import { hueOf, kindIcons, useFeaturedCompetitions } from "../features/community
 export const WIKI_URL = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
 export const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || "http://localhost:5175"
 
-type Destination = { to: string; label: string; icon: StreamIconName; active: (path: string) => boolean }
+type Destination = {
+  to: string
+  label: string
+  english: string
+  icon: StreamIconName
+  active: (path: string) => boolean
+}
 
 const destinations: Destination[] = [
-  { to: "/", label: "Trang chủ", icon: "home", active: (path) => path === "/" || path.startsWith("/competitions") },
-  { to: "/games", label: "Ván đấu", icon: "gamepad", active: (path) => path.startsWith("/games") },
-  { to: "/pages", label: "Cộng đồng", icon: "users", active: (path) => path.startsWith("/pages") },
+  {
+    to: "/",
+    label: "Trang chủ",
+    english: "Home",
+    icon: "home",
+    active: (path) => path === "/" || path.startsWith("/competitions"),
+  },
+  { to: "/games", label: "Ván đấu", english: "Games", icon: "gamepad", active: (path) => path.startsWith("/games") },
+  {
+    to: "/pages",
+    label: "Cộng đồng",
+    english: "Community",
+    icon: "users",
+    active: (path) => path.startsWith("/pages"),
+  },
 ]
-const accountPaths = ["/account", "/manage", "/invitations"]
 
 /**
- * The portal frame: a top bar, a left rail of community sections and competitions on wide screens, and a bottom tab
- * bar on phones. `aside` fills the right column on wide screens and follows the main content on narrower ones.
+ * The portal frame: a top bar with a mobile preferences menu and a left rail on wide screens.
+ * `aside` fills the right column on wide screens and follows the main content on narrower ones.
  */
 export function StreamShell({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
+  const { text } = useStreamLocale()
   const { pathname } = useLocation()
   const [params] = useSearchParams()
   // The directory tab has its own search field.
@@ -48,7 +66,7 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
           <nav className="hub-topnav" aria-label="Điều hướng chính">
             {destinations.map((item) => (
               <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
-                {item.label}
+                {text(item.label, item.english)}
               </Link>
             ))}
           </nav>
@@ -61,9 +79,8 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
               title="Biên tập dữ liệu giải đấu"
             >
               <StreamIcon name="plus" size={16} />
-              <span>Đóng góp</span>
+              <span>{text("Đóng góp", "Contribute")}</span>
             </a>
-            <ThemeToggle />
             <CommunitySessionButton />
           </div>
         </div>
@@ -93,24 +110,25 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
           <a href={`${ADMIN_URL}/tournaments`}>Đóng góp dữ liệu</a>
         </nav>
       </footer>
-      <nav className="hub-bottomnav" aria-label="Điều hướng chính">
-        {destinations.map((item) => (
-          <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
-            <StreamIcon name={item.icon} size={20} />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-        <a href={WIKI_URL}>
-          <StreamIcon name="spark" size={20} />
-          <span>WiKi</span>
-        </a>
-        <Link to="/account" aria-current={accountPaths.some((path) => pathname.startsWith(path)) ? "page" : undefined}>
-          <StreamIcon name="user" size={20} />
-          <span>Tài khoản</span>
-        </Link>
-      </nav>
       <SignInDialog />
     </div>
+  )
+}
+
+export function StreamMobileNavigation() {
+  const { pathname } = useLocation()
+  const { text } = useStreamLocale()
+  return (
+    <nav className="hub-mobile-menu-nav" aria-label={text("Điều hướng chính", "Main navigation")}>
+      {destinations
+        .filter((item) => item.to !== "/")
+        .map((item) => (
+          <Link key={item.to} to={item.to} aria-current={item.active(pathname) ? "page" : undefined}>
+            <StreamIcon name={item.icon} size={17} />
+            <span>{text(item.label, item.english)}</span>
+          </Link>
+        ))}
+    </nav>
   )
 }
 

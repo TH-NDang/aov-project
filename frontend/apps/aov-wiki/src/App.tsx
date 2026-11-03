@@ -9,6 +9,7 @@ import { SkinDirectoryLoading } from "./features/skins/skin-loading"
 import { WarehouseRouteLoading } from "./features/warehouse/warehouse-loading"
 import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
+import { WikiLoginCallback } from "./features/auth/wiki-account"
 
 const HeroRoutes = lazy(() => import("./features/hero/hero-routes"))
 const SkinDirectory = lazy(() =>
@@ -53,6 +54,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/auth/callback" element={<WikiLoginCallback />} />
         <Route
           path="/hero/*"
           element={
