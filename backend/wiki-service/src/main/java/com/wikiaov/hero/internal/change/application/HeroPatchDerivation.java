@@ -4,6 +4,7 @@ import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroPatchView;
 import com.wikiaov.hero.internal.application.response.HeroPatchView.*;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
+import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory.Entry;
@@ -43,7 +44,7 @@ public class HeroPatchDerivation {
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
-    public HeroPatchView at(UUID heroId, UUID variantId) {
+    public HeroPatchView at(UUID heroId, UUID variantId, UUID anchorRevisionId) {
         var variant = contexts.variant(variantId);
         var revisions = store.revisions(heroId);
         if (revisions.isEmpty())
@@ -51,7 +52,9 @@ public class HeroPatchDerivation {
 
         Map<UUID, Long> ordinals = contexts.rulesetVariants(variant.rulesetId()).stream()
                 .collect(Collectors.toMap(PatchVariantReference::id, PatchVariantReference::rulesetOrdinal));
-        var anchor = anchor(revisions, variant, ordinals);
+        var anchor = anchorRevisionId == null
+                ? anchor(revisions, variant, ordinals)
+                : selectedAnchor(heroId, anchorRevisionId, revisions, variant, ordinals);
         if (anchor == null)
             return new HeroPatchView(heroId, variantId, new Anchor(Direction.NONE, null, null), List.of(), List.of(),
                     List.of(), List.of());
@@ -62,6 +65,23 @@ public class HeroPatchDerivation {
 
         return derived.view(heroId, variantId, new Anchor(anchor.direction(), anchor.revision().id(),
                 anchor.revision().effectiveFromPatchVariantId()));
+    }
+
+    private static Anchoring selectedAnchor(UUID heroId, UUID revisionId, List<HeroRevisionView> revisions,
+            PatchVariantReference variant, Map<UUID, Long> ordinals) {
+        var revision = revisions.stream().filter(candidate -> candidate.id().equals(revisionId)
+                && candidate.heroId().equals(heroId) && candidate.state().equals("PUBLISHED")
+                && candidate.rulesetId().equals(variant.rulesetId())
+                && candidate.effectiveFromPatchVariantId() != null
+                && ordinals.containsKey(candidate.effectiveFromPatchVariantId())).findFirst()
+                .orElseThrow(() -> HeroValidation.invalid(
+                        "The anchor must be a published revision of this hero and ruleset with a known patch."));
+
+        long ordinal = ordinal(revision, ordinals);
+        Direction direction = ordinal == variant.rulesetOrdinal()
+                ? Direction.EXACT
+                : ordinal < variant.rulesetOrdinal() ? Direction.FORWARD : Direction.BACKWARD;
+        return new Anchoring(revision, direction, ordinal);
     }
 
     /** Prefers the latest revision at or before the patch; otherwise the earliest one after it. */

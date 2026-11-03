@@ -48,7 +48,7 @@ public interface HeroChangesApi {
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(hidden = true) HttpServletRequest request);
 
-    @Operation(operationId = "heroChangesApi_patchView", summary = "Patch view - hero changes", description = "Hero gameplay data at a patch, derived on read from the nearest published revision and the recorded change sets; derived and carried values are marked and never stored. Requires a valid bearer token with catalog:read. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+    @Operation(operationId = "heroChangesApi_patchView", summary = "Patch view - hero changes", description = "Hero gameplay data at a patch, derived on read from a selected published anchor (or the automatic anchor when omitted) and the recorded change sets; derived and carried values are marked and never stored. Requires a valid bearer token with catalog:read. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
             @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
             @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
@@ -56,6 +56,7 @@ public interface HeroChangesApi {
     })
     HeroPatchView patchView(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Patch variant whose data is derived.") UUID patchVariantId,
+            @Parameter(description = "Optional published revision of this hero and ruleset with a known effective patch.") UUID anchorRevisionId,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroChangesApi_history", summary = "History - hero changes", description = "History for hero changes. Public read endpoint. Unrecognized query parameters are rejected. Returns the existing dynamic JSON object; property availability depends on the selected context and content.", responses = {

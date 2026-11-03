@@ -42,9 +42,9 @@ public class HeroChangesController implements HeroChangesApi {
 
     @GetMapping(path = "/admin/heroes/{heroId}/patch-view", version = "1")
     public HeroPatchView patchView(@PathVariable UUID heroId, @RequestParam UUID patchVariantId,
-            HttpServletRequest request) {
-        QueryParameters.requireOnly(request, Set.of("patchVariantId"));
-        return derivation.at(heroId, patchVariantId);
+            @RequestParam(required = false) UUID anchorRevisionId, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of("patchVariantId", "anchorRevisionId"));
+        return derivation.at(heroId, patchVariantId, anchorRevisionId);
     }
 
     @GetMapping(path = "/heroes/{heroId}/changes", version = "1")

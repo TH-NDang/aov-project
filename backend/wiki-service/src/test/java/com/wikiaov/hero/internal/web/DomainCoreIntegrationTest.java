@@ -547,6 +547,14 @@ class DomainCoreIntegrationTest {
                 .containsEntry("skillKey", "skill-1").containsEntry("fieldKey", "cooldown").containsEntry("value", "8")
                 .containsEntry("provenance", "DERIVED");
 
+        var selected = send(get(ROOT + "/admin/heroes/" + hero + "/patch-view")
+                .param("patchVariantId", past.toString()).param("anchorRevisionId", observed.get("id").toString()),
+                null, 200);
+        assertThat((Map<String, Object>) selected.get("anchor")).containsEntry("direction", "BACKWARD")
+                .containsEntry("revisionId", observed.get("id"));
+        assertThat(((List<Map<String, Object>>) selected.get("stats")).getFirst()).containsEntry("baseValue", 3600)
+                .containsEntry("provenance", "DERIVED");
+
         var later = send(post(ROOT + "/admin/heroes"), Map.of("code", "violet", "name", "Violet", "initialLocale",
                 "vi-VN", "rulesetId", ruleset, "contextId", current), 201);
         UUID laterHero = uuid(later, "heroId");
@@ -570,6 +578,11 @@ class DomainCoreIntegrationTest {
                 .param("patchVariantId", past.toString()), null, 200);
         assertThat((Map<String, Object>) none.get("anchor")).containsEntry("direction", "NONE");
         assertThat((List<?>) none.get("stats")).isEmpty();
+        send(get(ROOT + "/admin/heroes/" + uuid(unpublished, "heroId") + "/patch-view")
+                .param("patchVariantId", past.toString()).param("anchorRevisionId", id(unpublished).toString()), null,
+                422);
+        send(get(ROOT + "/admin/heroes/" + hero + "/patch-view").param("patchVariantId", past.toString())
+                .param("anchorRevisionId", id(later).toString()), null, 422);
         send(get(ROOT + "/admin/heroes/" + hero + "/patch-view").param("patchVariantId", past.toString())
                 .param("unknown", "1"), null, 400);
     }
