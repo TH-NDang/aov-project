@@ -257,8 +257,8 @@ Kỹ năng và trang phục **không** là module riêng: chúng không có ý n
 ```text
 admin-aov-backend confidential client — Direct Grant cho modal mật khẩu; Code + PKCE cho Google qua backend
 admin-aov      public client cũ, không dùng trong luồng admin hiện tại
-aov-wiki       public client, PKCE — chỉ cần khi có tính năng người dùng cuối đăng nhập (sau)
-aov-stream     public client, PKCE — chỉ cần khi có tính năng người dùng cuối đăng nhập (sau)
+aov-wiki       public client, Code + PKCE S256 — đăng nhập qua theme AOV, audience wiki-service
+aov-stream     public client, Code + PKCE S256 — đăng nhập qua theme AOV, audience community-service và wiki-service
 wiki-importer  confidential client, client credentials — script import dữ liệu gọi admin API
 ```
 

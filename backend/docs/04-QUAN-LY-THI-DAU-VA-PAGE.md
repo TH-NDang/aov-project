@@ -162,7 +162,7 @@ reload có thể cần bấm đăng nhập lại bằng phiên SSO hiện có. T
 
 Access token của aov-stream mang hai audience: community-service cho page/thi đấu và wiki-service cho
 hồ sơ dùng chung (ADR-008). Trang Tài khoản (/account) gọi /api/wiki/v1/users/me để sửa tên hiển thị,
-giới thiệu, ngôn ngữ, múi giờ và avatar; header hiển thị tên/avatar từ hồ sơ này. Avatar là ảnh của
+giới thiệu, ngôn ngữ, múi giờ và avatar; popup tài khoản trên header hiển thị tên từ hồ sơ này. Avatar là ảnh của
 chính người dùng, không có nguồn hay chủ sở hữu ảnh. Tài khoản đã có role client của wiki-service hoặc
 community-service vẫn mang các role đó trong token stream; aov-stream không gọi API admin và không cấp
 role mới. Upload avatar PUT thẳng từ localhost:5174 lên bucket private nên CORS của bucket phải có origin
@@ -173,6 +173,13 @@ Realm đã tồn tại đồng bộ bằng backend/wiki-service/scripts/sync-com
 -EnableRegistration để bật đăng ký realm. Máy chủ thực dùng -ServerUrl, -Realm, -Origin chính xác
 và HTTPS. Script không cấp role. Khởi động lại community-service để Flyway áp dụng migration;
 không chạy lại import realm, không xóa database.
+
+Theme `aov-public` thay giao diện đăng nhập mặc định bằng thiết kế AOV cho cả Stream và Wiki, giữ nguyên
+Code + PKCE. Compose mount `infra/local/keycloak-themes/aov-public` vào thư mục themes của Keycloak.
+Đồng bộ Wiki bằng cùng script với `-ClientId aov-wiki` (mặc định origin localhost:5173, callback
+`/auth/callback`, logout `/`, chỉ audience wiki-service). Script đặt theme ở từng client và bật
+ngôn ngữ vi/en cho realm; không đổi theme đăng nhập admin. Menu icon tài khoản Stream chứa ngôn ngữ,
+giao diện sáng/tối và đăng nhập; Wiki không có lựa chọn giao diện.
 
 Flyway luôn dùng default-schema public, nơi lưu bảng lịch sử migration. Không để phụ thuộc
 search_path của tài khoản database: khi schema community trùng tên user xuất hiện, PostgreSQL

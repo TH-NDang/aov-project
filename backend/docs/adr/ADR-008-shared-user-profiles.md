@@ -25,7 +25,9 @@ Gateway đăng nhập admin vẫn dành cho người có `catalog:read`. Từ 02
 public client `aov-stream` (Code + PKCE, token trong bộ nhớ, xem 04 mục "Vận hành dev"); client này có
 thêm audience `wiki-service` để người dùng sửa hồ sơ và avatar của chính mình ở trang Tài khoản. Token
 stream của tài khoản có role client `wiki-service` vẫn mang các role đó; stream không gọi Admin API.
-Luồng đăng nhập wiki triển khai sau.
+Từ 03/11/2026, Wiki dùng public client `aov-wiki`, Code + PKCE S256 và audience `wiki-service`;
+đọc tên hiển thị qua `/api/wiki/v1/users/me`. Hai frontend dùng trang đăng nhập thiết kế AOV riêng
+(theme `aov-public` tại Keycloak), không nhận mật khẩu trong frontend hoặc dùng password grant.
 Lưu hồ sơ dùng optimistic version, trả conflict khi cũ; ghi audit cùng transaction, không ghi nội dung
 giới thiệu hoặc token vào metadata audit. Chưa có xóa hồ sơ, khóa tài khoản hay chỉnh role trong UI này.
 
