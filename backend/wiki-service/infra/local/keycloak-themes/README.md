@@ -5,6 +5,10 @@ trong Compose. Mỗi client dùng mascot và bảng màu của ứng dụng. Tem
 form đăng nhập, đăng ký, xác minh, MFA và khôi phục mật khẩu kế thừa Keycloak để giữ validation,
 action URL và các bước xác thực. Các tính năng chỉ hiện khi realm đã bật/cấu hình tương ứng.
 
+Trên desktop, cột thương hiệu bám theo màn hình khi cuộn form đăng nhập/đăng ký; nội dung tự thu gọn
+theo chiều cao cửa sổ. Mobile dùng một cột, giữ ô nhập và nút thao tác cao tối thiểu 44px. Form đăng ký
+đặt tên/họ cùng hàng khi đủ chỗ, giữ nguyên thứ tự bàn phím và validation của Keycloak.
+
 ## Local
 
 Compose mount theme ở chế độ chỉ đọc. Với realm đã tồn tại, chạy từ `backend/wiki-service`:

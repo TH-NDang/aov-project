@@ -53,28 +53,30 @@ input[type="submit"] {
 }
 .aov-layout {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
   min-height: 100svh;
 }
 .aov-story {
-  position: relative;
+  position: sticky;
+  top: 0;
+  align-self: start;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 48px;
-  padding: 40px clamp(32px, 5vw, 80px);
-  overflow: hidden;
+  gap: clamp(16px, 3svh, 32px);
+  height: 100svh;
+  padding: clamp(24px, 4svh, 40px) clamp(28px, 4vw, 64px);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #ffffff26 transparent;
   border-right: 1px solid #ffffff0d;
-  background:
-    radial-gradient(ellipse at 20% 40%, var(--glow), transparent 60%),
-    var(--story);
+  background: radial-gradient(ellipse at 20% 40%, var(--glow), transparent 60%), var(--story);
 }
 .aov-story::before {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(#ffffff03 1px, transparent 1px),
-    linear-gradient(90deg, #ffffff03 1px, transparent 1px);
+    linear-gradient(#ffffff03 1px, transparent 1px), linear-gradient(90deg, #ffffff03 1px, transparent 1px);
   background-size: 48px 48px;
   pointer-events: none;
   content: "";
@@ -83,13 +85,14 @@ input[type="submit"] {
 .aov-story-content,
 .aov-story-footer {
   position: relative;
+  flex-shrink: 0;
 }
 .aov-story-top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px;
 }
 .aov-brand {
   display: inline-flex;
@@ -134,33 +137,36 @@ input[type="submit"] {
   text-transform: uppercase;
 }
 .aov-account-label {
-  color: #ffffff80;
+  padding: 6px 9px;
+  border: 1px solid #ffffff14;
+  border-radius: 6px;
+  color: #ffffff99;
   font-size: 12px;
 }
 .aov-story-content {
-  max-width: 410px;
+  max-width: 380px;
   margin: auto 0;
-  padding: 20px 0;
+  padding: 12px 0;
 }
 .aov-mascot-frame {
   position: relative;
   display: inline-flex;
-  margin-bottom: 40px;
-  padding: 12px;
+  margin-bottom: clamp(20px, 4svh, 36px);
+  padding: 10px;
   border: 1px solid #ffffff14;
-  border-radius: 40px;
+  border-radius: 30px;
   background: #ffffff05;
   box-shadow: 0 20px 60px #0002;
   transform: rotate(-5deg);
 }
 .aov-mascot-frame img {
-  width: 152px;
-  height: 152px;
-  border-radius: 30px;
+  width: clamp(80px, 16svh, 128px);
+  height: clamp(80px, 16svh, 128px);
+  border-radius: 22px;
   object-fit: cover;
 }
 .aov-eyebrow {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   color: var(--accent);
   font-size: 12px;
   font-weight: 600;
@@ -170,16 +176,17 @@ input[type="submit"] {
 .aov-story h2 {
   margin: 0;
   color: var(--ink);
-  font-size: clamp(32px, 3.2vw, 48px);
+  font-size: clamp(28px, 3vw, 42px);
   font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -1.2px;
+  line-height: 1.18;
+  letter-spacing: -1px;
+  text-wrap: balance;
 }
 .aov-story-description {
-  margin: 24px 0 0;
+  margin: 18px 0 0;
   color: #ffffffa3;
-  font-size: 16px;
-  line-height: 1.8;
+  font-size: 14px;
+  line-height: 1.75;
 }
 .aov-story-footer {
   display: flex;
@@ -198,9 +205,9 @@ input[type="submit"] {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 32px clamp(24px, 5vw, 80px);
-  background:
-    radial-gradient(ellipse at top right, #ffffff03, transparent 55%), #10131c;
+  min-height: 100svh;
+  padding: 24px clamp(24px, 4.5vw, 72px);
+  background: radial-gradient(ellipse at top right, #ffffff03, transparent 55%), #10131c;
 }
 .aov-toolbar {
   display: flex;
@@ -214,7 +221,8 @@ input[type="submit"] {
   align-items: center;
   gap: 8px;
   color: #a9afbe;
-  font-size: 14px;
+  font-size: 12px;
+  font-weight: 600;
 }
 .aov-locale {
   position: relative;
@@ -250,15 +258,15 @@ input[type="submit"] {
 }
 .aov-form-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   margin: auto;
-  padding: 48px 0;
+  padding: 32px 0 16px;
 }
 .aov-mobile-brand {
   display: none;
 }
 .aov-form-header {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 .aov-form-header .aov-eyebrow {
   margin-bottom: 12px;
@@ -266,19 +274,19 @@ input[type="submit"] {
 .aov-form-header h1 {
   margin: 0;
   color: #f2f0eb;
-  font-size: 30px;
+  font-size: 28px;
   line-height: 1.25;
   letter-spacing: -0.8px;
   font-weight: 700;
 }
 .aov-form-intro {
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   color: #a4aabb;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .aov-required {
-  margin: 16px 0 0;
+  margin: 12px 0 0;
   color: #a4aabb;
   font-size: 12px;
 }
@@ -287,23 +295,24 @@ input[type="submit"] {
   color: var(--accent);
 }
 .aov-field {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
+  min-width: 0;
 }
 .aov-label,
 .aov-field > label {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #dadde6;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 .aov-label-wrapper {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: var(--accent);
-  font-size: 14px;
+  font-size: 13px;
 }
 .aov-label-wrapper .aov-label {
   margin-bottom: 0;
@@ -313,20 +322,24 @@ input[type="submit"] {
 .aov-field textarea {
   display: block;
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
   border: 1px solid #343948;
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 10px 12px;
   background: #1b1f2a;
   color: #f2f0eb;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 22px;
-  transition: border-color 150ms;
+  transition:
+    border-color 150ms,
+    background-color 150ms,
+    box-shadow 150ms;
 }
 .aov-input:hover {
   border-color: #545c70;
 }
 .aov-input:focus {
+  background: #202534;
   border-color: var(--accent);
   outline: 2px solid color-mix(in srgb, var(--accent) 18%, transparent);
   outline-offset: 1px;
@@ -338,14 +351,17 @@ input[type="submit"] {
   position: relative;
 }
 .aov-input-group > .aov-input {
-  padding-right: 114px;
+  padding-right: 48px;
 }
 .aov-password-toggle {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  min-height: 38px;
-  padding: 6px 10px;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   border: 0;
   border-radius: 7px;
   background: transparent;
@@ -354,16 +370,22 @@ input[type="submit"] {
 .aov-password-toggle:hover {
   background: #ffffff08;
 }
-.aov-password-toggle::after {
-  content: attr(aria-label);
-  font-size: 12px;
+.aov-password-toggle > i {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  mask: url("../img/eye.svg") center / contain no-repeat;
+}
+.aov-password-toggle > .aov-eye-off {
+  mask-image: url("../img/eye-off.svg");
 }
 .aov-form-settings {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px;
-  font-size: 14px;
+  font-size: 13px;
 }
 .aov-form-settings .checkbox label {
   display: flex;
@@ -381,14 +403,18 @@ input[type="radio"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
-  padding: 12px 20px;
+  min-height: 44px;
+  padding: 10px 18px;
   border: 1px solid #343948;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 8px;
+  font-size: 13px;
   font-weight: 700;
   text-align: center;
   text-decoration: none;
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
 }
 .aov-button-primary {
   border-color: transparent;
@@ -396,7 +422,8 @@ input[type="radio"] {
   color: var(--accent-dark);
 }
 .aov-button-primary:hover {
-  filter: brightness(1.08);
+  background: color-mix(in srgb, var(--accent) 88%, white);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 12%, transparent);
 }
 .aov-button-secondary {
   background: #ffffff08;
@@ -443,7 +470,7 @@ input[type="radio"] {
   color: #9ed6b4;
 }
 .aov-social {
-  margin-top: 24px;
+  margin-top: 20px;
   text-align: center;
 }
 .aov-social hr {
@@ -451,7 +478,7 @@ input[type="radio"] {
   border-top: 1px solid #ffffff14;
 }
 .aov-social h2 {
-  margin: 20px 0 16px;
+  margin: 16px 0 12px;
   color: #a4aabb;
   font-size: 12px;
   font-weight: 400;
@@ -469,15 +496,16 @@ input[type="radio"] {
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-height: 46px;
-  padding: 12px 16px;
+  min-height: 44px;
+  padding: 10px 14px;
   border: 1px solid #343948;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #e4e7f0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 .aov-social-button:hover {
+  border-color: #545c70;
   background: #ffffff08;
   text-decoration: none;
 }
@@ -492,9 +520,9 @@ input[type="radio"] {
   display: none;
 }
 #kc-info {
-  margin-top: 28px;
+  margin-top: 20px;
   color: #a4aabb;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
   line-height: 1.7;
 }
@@ -503,8 +531,8 @@ input[type="radio"] {
   font-weight: 600;
 }
 .aov-form-footer {
-  margin: 32px 0 0;
-  padding-top: 24px;
+  margin: 24px 0 0;
+  padding-top: 16px;
   border-top: 1px solid #ffffff0d;
   color: #777f93;
   font-size: 12px;
@@ -543,7 +571,33 @@ input[type="radio"] {
   white-space: nowrap;
 }
 #kc-form-buttons {
-  margin-top: 24px;
+  margin-top: 20px;
+}
+#kc-register-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 12px;
+}
+#kc-register-form > * {
+  grid-column: 1 / -1;
+}
+#kc-register-form > .aov-field:has(#firstName),
+#kc-register-form > .aov-field:has(#lastName) {
+  grid-column: span 1;
+}
+#kc-register-form > .aov-field:has(#kc-form-buttons) {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 0;
+}
+#kc-register-form #kc-form-buttons {
+  margin-top: 0;
+}
+#kc-register-form #kc-form-options {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
 }
 #kc-form-buttons input + input,
 #kc-form-buttons button + button {
@@ -566,17 +620,53 @@ input[type="radio"] {
   }
   .aov-form-panel {
     min-height: 100svh;
-    padding: 20px 24px;
+    padding: 16px 24px;
   }
   .aov-form-card {
-    padding: 40px 0;
+    padding: 28px 0 12px;
   }
   .aov-mobile-brand {
     display: inline-flex;
-    margin-bottom: 40px;
+    margin-bottom: 24px;
   }
   .aov-form-header .aov-eyebrow {
     display: none;
+  }
+  .aov-input,
+  .aov-field select,
+  .aov-field textarea {
+    font-size: 16px;
+  }
+}
+@media (max-width: 380px) {
+  .aov-form-panel {
+    padding-inline: 20px;
+  }
+  .aov-form-header h1 {
+    font-size: 25px;
+  }
+  #kc-register-form > .aov-field:has(#firstName),
+  #kc-register-form > .aov-field:has(#lastName) {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 801px) and (max-height: 620px) {
+  .aov-story {
+    gap: 16px;
+    padding-block: 24px;
+  }
+  .aov-mascot-frame {
+    margin-bottom: 20px;
+  }
+  .aov-mascot-frame img {
+    width: 80px;
+    height: 80px;
+  }
+  .aov-story h2 {
+    font-size: 28px;
+  }
+  .aov-story-description {
+    margin-top: 12px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
