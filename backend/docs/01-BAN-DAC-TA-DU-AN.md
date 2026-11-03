@@ -2109,6 +2109,12 @@ thay đổi được đánh dấu suy ra kèm change set; phần còn lại gi�
 Kỹ năng chỉ trả giá trị theo từng trường đã ghi. Kết quả suy ra không được lưu thành snapshot và không
 được trình bày như dữ liệu quan sát.
 
+Có thể chọn rõ `anchorRevisionId` để dùng baseline mới suy ngược dù tướng đã có mốc cũ. Mốc được chọn
+phải đã xuất bản, thuộc đúng tướng/ruleset và có patch xác định; mốc nháp, đã hủy, khác phạm vi hoặc
+không rõ patch bị từ chối. Khi bỏ tham số, API giữ thuật toán tự động nêu trên. Admin mặc định chọn
+DATA_BASELINE đã xuất bản ở patch mới nhất, cho phép chọn bản khác hoặc quay về tự động; lựa chọn
+mốc độc lập với patch đang xem. Không xóa snapshot cũ và không coi dữ liệu OCR chưa duyệt là mốc.
+
 ### Import tướng chạy nền
 
 Tác vụ import được lưu ở backend sau bước xác nhận. Người dùng có thể đóng hoặc tải lại web và xem lại tiến trình bằng cùng tài khoản. Mỗi tướng có kết quả riêng; lỗi một tướng không hủy các tướng đã lưu. Backend tiếp tục tác vụ chưa hoàn tất sau khi khởi động lại. Chuẩn bị file và upload ảnh vẫn diễn ra trước khi gửi tác vụ. Xem ADR-009-DURABLE-HERO-IMPORT.md.

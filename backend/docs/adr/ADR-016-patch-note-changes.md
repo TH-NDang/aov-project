@@ -36,6 +36,14 @@ cần snapshot đầy đủ của tướng ở patch đó.
   Giá trị bị chạm được đánh dấu suy ra, kèm change set; phần còn lại giữ như bản neo và đánh dấu chưa
   xác minh. Kỹ năng chỉ trả giá trị theo trường đã ghi vì nội dung kỹ năng là mô tả tự do.
 
+### Bổ sung ngày 2026-11-03: chọn mốc quan sát
+
+Có thể chọn rõ `anchorRevisionId` để dùng baseline mới suy ngược dù tướng đã có mốc cũ. Mốc được chọn
+phải đã xuất bản, thuộc đúng tướng/ruleset và có patch xác định; mốc nháp, đã hủy, khác phạm vi hoặc
+không rõ patch bị từ chối. Khi bỏ tham số, API giữ thuật toán tự động nêu trên. Admin mặc định chọn
+DATA_BASELINE đã xuất bản ở patch mới nhất, cho phép chọn bản khác hoặc quay về tự động; lựa chọn
+mốc độc lập với patch đang xem. Không xóa snapshot cũ và không coi dữ liệu OCR chưa duyệt là mốc.
+
 ## Hệ quả
 
 - Ghi được thay đổi của các patch đã qua mà không cần thu thập lại toàn bộ dữ liệu tướng.

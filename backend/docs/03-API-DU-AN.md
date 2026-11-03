@@ -1477,6 +1477,10 @@ changeSetId, patchVariantId), `skillFields` (skillKey, fieldKey, value, provenan
 patchVariantId) và `appliedChangeSetIds`. Giá trị suy ra ghi change set và patch đã đặt giá trị đó. Suy ra theo
 [ADR-016](adr/ADR-016-patch-note-changes.md); không lưu kết quả.
 
+Tham số tùy chọn `anchorRevisionId` chọn mốc thay cho thuật toán tự động. Mốc phải đã xuất bản,
+thuộc đúng tướng/ruleset và có patch xác định trong ruleset. Không hợp lệ trả HTTP 422
+`HERO_INVALID_CONTENT`; không âm thầm đổi sang mốc khác. Khi bỏ tham số, hành vi cũ được giữ nguyên.
+
 ---
 
 ## 40. Item/Arcana/... patch changes
