@@ -1,13 +1,19 @@
-import type { ComponentType, InputHTMLAttributes, ReactNode } from "react"
+import { useState, type ComponentType, type InputHTMLAttributes, type ReactNode } from "react"
 import { BookOpenText, History, ImagePlus, Info, Link2, Plus, Trash2, Trophy, Users } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Textarea } from "@aov/ui/components/textarea"
-import type { ProfileContent, ProfileKind } from "@aov/community-contracts"
+import type { ProfileContent, ProfileKind, ProfileMember } from "@aov/community-contracts"
 import { ProfilePicker, TournamentPicker } from "./profile-pickers"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { PlatformIcon } from "./platform-icon"
 import { ProfileImageField } from "./profile-image-field"
+import { useQueries } from "@tanstack/react-query"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
+import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
+import { pageApi, pageKeys } from "./page-api"
+import { ProfileRosterLineup } from "./profile-roster-lineup"
+import { ProfileRosterMemberChoice } from "./profile-roster-member-choice"
 
 export function Field({ label, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
@@ -66,7 +72,7 @@ export function ProfileFields({
     <Field label={label} type={type} value={content[key] || ""} onChange={(event) => set(key, event.target.value)} />
   )
   return (
-    <fieldset disabled={disabled} className="space-y-5 disabled:opacity-75">
+    <fieldset disabled={disabled} className="@container/profile-fields min-w-0 space-y-5 disabled:opacity-75">
       {tab === "overview" && (
         <>
           <Section title="Thông tin hồ sơ" icon={Info}>
@@ -185,74 +191,8 @@ export function ProfileFields({
           </Section>
         </>
       )}
-      {tab === "roster" && (
-        <Section
-          title="Thành viên và ban huấn luyện"
-          icon={Users}
-          description="Lịch sử thành viên độc lập với đội hình đăng ký trong từng mùa giải."
-        >
-          {content.roster.map((item, index) => {
-            const update = (key: string, value: string) =>
-              set(
-                "roster",
-                content.roster.map((row, i) => (i === index ? { ...row, [key]: value || null } : row)),
-              )
-            return (
-              <div key={index} className="space-y-3 rounded-lg border p-4">
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Field label="Tên *" value={item.name} onChange={(e) => update("name", e.target.value)} />
-                  <ProfilePicker
-                    label="Liên kết hồ sơ thành viên"
-                    value={item.pageId}
-                    onChange={(value) => update("pageId", value)}
-                  />
-                  <Field
-                    label="Vai trò / vị trí *"
-                    value={item.role}
-                    onChange={(e) => update("role", e.target.value)}
-                  />
-                  <Field
-                    label="Trạng thái"
-                    placeholder="Chính thức, dự bị, đã rời đội…"
-                    value={item.status || ""}
-                    onChange={(e) => update("status", e.target.value)}
-                  />
-                  <Field
-                    label="Ngày tham gia"
-                    type="date"
-                    value={item.startsOn || ""}
-                    onChange={(e) => update("startsOn", e.target.value)}
-                  />
-                  <Field
-                    label="Ngày kết thúc"
-                    type="date"
-                    value={item.endsOn || ""}
-                    onChange={(e) => update("endsOn", e.target.value)}
-                  />
-                  <Field
-                    label="Nguồn"
-                    type="url"
-                    value={item.sourceUrl || ""}
-                    onChange={(e) => update("sourceUrl", e.target.value)}
-                  />
-                </div>
-                <Remove
-                  label="Gỡ thành viên"
-                  onClick={() =>
-                    set(
-                      "roster",
-                      content.roster.filter((_, i) => i !== index),
-                    )
-                  }
-                />
-              </div>
-            )
-          })}
-          <Add
-            label="Thêm thành viên"
-            onClick={() => set("roster", [...content.roster, { name: "", role: "", status: "Chính thức" }])}
-          />
-        </Section>
+      {tab === "roster" && kind === "TEAM" && (
+        <RosterPanel value={content.roster} onChange={(value) => set("roster", value)} disabled={disabled} />
       )}
       {tab === "history" && (
         <Section
@@ -427,5 +367,160 @@ function Remove({ label, name, onClick }: { label: string; name?: string; onClic
       <Trash2 className="size-4" />
       {label}
     </Button>
+  )
+}
+
+function RosterPanel({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: ProfileMember[]
+  onChange: (value: ProfileMember[]) => void
+  disabled?: boolean
+}) {
+  const access = useTournamentAccess()
+  const ids = [...new Set(value.flatMap((member) => (member.pageId ? [member.pageId] : [])))]
+  const profiles = useQueries({
+    queries: ids.map((id) => ({
+      queryKey: [...pageKeys, access.actorKey, id],
+      queryFn: () => pageApi.read(id),
+      staleTime: 60_000,
+    })),
+  })
+  const [editing, setEditing] = useState<{ index: number; member: ProfileMember } | null>(null)
+  const update = (key: keyof ProfileMember, value: string) =>
+    setEditing(
+      (current) =>
+        current && {
+          ...current,
+          member: { ...current.member, [key]: key === "name" || key === "role" ? value : value || null },
+        },
+    )
+  return (
+    <Section title="Đội hình & ban huấn luyện" icon={Users}>
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          onClick={() => setEditing({ index: value.length, member: { name: "", role: "", status: "Chính thức" } })}
+        >
+          <Plus className="size-4" />
+          Thêm thành viên
+        </Button>
+      </div>
+      {value.length ? (
+        <ProfileRosterLineup
+          members={value}
+          profiles={new Map(ids.map((id, i) => [id, profiles[i]?.data]))}
+          disabled={disabled}
+          onEdit={(index) => setEditing({ index, member: { ...value[index] } })}
+          onRemove={(index) => onChange(value.filter((_, i) => i !== index))}
+        />
+      ) : (
+        <p className="type-meta">Chưa có thành viên trong đội hình.</p>
+      )}
+      {editing && (
+        <Sheet
+          open
+          onOpenChange={(open) => {
+            if (!open) setEditing(null)
+          }}
+        >
+          <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+            <SheetHeader>
+              <SheetTitle>{editing.index === value.length ? "Thêm thành viên" : "Chỉnh sửa thành viên"}</SheetTitle>
+              <SheetDescription>Vị trí, trạng thái và thời gian tham gia đội tuyển.</SheetDescription>
+            </SheetHeader>
+            <form
+              className="space-y-4 px-4 pb-6"
+              onSubmit={(event) => {
+                event.preventDefault()
+                if (!disabled) {
+                  onChange(
+                    editing.index === value.length
+                      ? [...value, editing.member]
+                      : value.map((member, index) => (index === editing.index ? editing.member : member)),
+                  )
+                  setEditing(null)
+                }
+              }}
+            >
+              <fieldset disabled={disabled} className="space-y-4">
+                <Field
+                  label="Tên *"
+                  required
+                  value={editing.member.name}
+                  onChange={(event) => update("name", event.target.value)}
+                />
+                <ProfilePicker
+                  label="Liên kết hồ sơ thành viên"
+                  value={editing.member.pageId}
+                  onChange={(value) => update("pageId", value)}
+                />
+                <div className="grid items-start gap-4 sm:grid-cols-2">
+                  <ProfileRosterMemberChoice
+                    label="Vị trí trong đội *"
+                    value={editing.member.role}
+                    options={[
+                      "Đường Tà thần",
+                      "Đi rừng",
+                      "Đường giữa",
+                      "Đường Rồng",
+                      "Trợ thủ",
+                      "Huấn luyện viên",
+                      "Phân tích đội tuyển",
+                    ]}
+                    roleIcons
+                    disabled={disabled}
+                    required
+                    onChange={(value) => update("role", value)}
+                  />
+                  <ProfileRosterMemberChoice
+                    label="Trạng thái"
+                    value={editing.member.status || ""}
+                    options={["Chính thức", "Dự bị", "Đã rời đội", "Cho mượn", "Thử việc"]}
+                    disabled={disabled}
+                    onChange={(value) => update("status", value)}
+                  />
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field
+                    label="Ngày tham gia"
+                    type="date"
+                    value={editing.member.startsOn || ""}
+                    onChange={(event) => update("startsOn", event.target.value)}
+                  />
+                  <Field
+                    label="Ngày kết thúc"
+                    type="date"
+                    min={editing.member.startsOn || undefined}
+                    value={editing.member.endsOn || ""}
+                    onChange={(event) => update("endsOn", event.target.value)}
+                  />
+                </div>
+                <Field
+                  label="Nguồn đối chiếu"
+                  type="url"
+                  value={editing.member.sourceUrl || ""}
+                  onChange={(event) => update("sourceUrl", event.target.value)}
+                />
+              </fieldset>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={disabled}>
+                  Áp dụng
+                </Button>
+                <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+                  Hủy
+                </Button>
+              </div>
+              <p className="type-meta">Thay đổi được ghi nhận sau khi bạn lưu nháp đội tuyển.</p>
+            </form>
+          </SheetContent>
+        </Sheet>
+      )}
+    </Section>
   )
 }
