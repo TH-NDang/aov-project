@@ -1772,3 +1772,14 @@ Database community bổ sung schema community qua V006 và kế hoạch/revision
 qua V007. Cấu trúc, ràng buộc và khóa được đặc tả tại
 [04-QUAN-LY-THI-DAU-VA-PAGE.md](04-QUAN-LY-THI-DAU-VA-PAGE.md), phần Cơ sở dữ liệu.
 Không đọc/ghi database Wiki, không sửa migration đã áp dụng.
+
+## Tham chiếu hồ sơ cho nguồn ảnh (03/11/2026)
+
+Migration V041 bổ sung `owner_page_id UUID NULL`, `related_page_id UUID NULL` và
+`reference_version BIGINT NOT NULL DEFAULT 0` vào `media.media_provenance`. Hai UUID là tham chiếu mềm
+sang page Community, không có khóa ngoại chéo dịch vụ. `media.media_upload_session` thêm
+`source_owner_page_id UUID NULL`, `source_related_page_id UUID NULL` để giữ lựa chọn qua upload/retry.
+
+Nguồn cũ không có tham chiếu vẫn hợp lệ. Chỉ hai UUID được sửa qua thao tác tham chiếu có kiểm tra
+phiên bản và audit; thông tin nguồn gốc và bytes giữ nguyên. Tham chiếu không xác nhận quyền sở hữu,
+không cấp quyền quản lý page, không tự nối theo tên. Xem ADR-017 và đặc tả 04.

@@ -2610,3 +2610,20 @@ Bổ sung các nhóm /pages, /me, /admin/pages, /admin/page-claims, /admin/commu
 /competitions, /admin/competitions dưới /api/community/v1. Endpoint, body và phân quyền tại
 [04-QUAN-LY-THI-DAU-VA-PAGE.md](04-QUAN-LY-THI-DAU-VA-PAGE.md), phần API.
 Quyền theo page độc lập tournament:write/publish; API công khai không trả bằng chứng claim hay actor.
+
+## Tham chiếu hồ sơ của ảnh (03/11/2026)
+
+`SourceRequest` nhận thêm `ownerPageId`, `relatedPageId` (UUID nullable); upload, tạo asset, import và
+bổ sung nguồn giữ nguyên hai trường đến `ProvenanceDetails` và `MediaCredit` công khai. Tên credit,
+URL nguồn và URL liên hệ độc lập tham chiếu. `ProvenanceDetails.referenceVersion` là phiên bản riêng
+cho việc cập nhật tham chiếu. Dữ liệu cũ không có tham chiếu trả null.
+
+PUT `/api/wiki/v1/admin/media/assets/{assetId}/sources/{sourceId}/references`
+- Quyền: `catalog:read` và `media:write`; asset phải còn ACTIVE, nguồn phải thuộc asset.
+- Body: `{expectedVersion, ownerPageId, relatedPageId}`; expectedVersion bắt buộc, không âm.
+- Trả `MediaAssetDetails`; không thay version ảnh đang hiển thị, tên credit, nhãn nguồn, URL hay ghi chú.
+- 404 `MEDIA_SOURCE_NOT_FOUND` nếu không có nguồn thuộc ảnh; 409 `MEDIA_SOURCE_VERSION_CONFLICT` nếu
+  tham chiếu đã đổi. Dùng null để gỡ tham chiếu, audit `MEDIA_SOURCE_REFERENCES_UPDATED`.
+- Wiki không gọi Community trong transaction và không tự xác minh page; chỉ nhận UUID. UI chọn hồ sơ
+  bằng API Community, khách chỉ đọc được bản đã công bố. Tham chiếu không khả dụng vẫn giữ credit và
+  URL nguồn. Việc liên kết không cấp quyền đại diện hay khẳng định giấy phép sử dụng ảnh.

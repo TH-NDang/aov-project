@@ -44,6 +44,17 @@ Nguồn ảnh chỉ được thêm, không sửa, nên không có cách đổi t
 - Phiên upload đang chờ vẫn giữ tên đã gõ; nếu chủ sở hữu bị đổi tên trước khi hoàn tất, tên cũ sẽ
   tạo lại một chủ sở hữu và có thể gộp.
 
+## Bổ sung tham chiếu hồ sơ (03/11/2026)
+
+Nguồn ảnh và phiên upload nhận thêm `ownerPageId`, `relatedPageId` tùy chọn, trỏ tới hồ sơ Community.
+Tên ghi công và danh mục `media_owner` giữ nguyên; không tự nối page theo tên gần giống, không suy ra
+quyền đại diện hoặc giấy phép ảnh. Không có khóa ngoại hay truy vấn chéo database; UI giải quyết hồ sơ
+qua API Community, khách chỉ đọc bản công bố. Không có hồ sơ thì vẫn hiển thị tên và nguồn đã ghi.
+
+Chỉ hai UUID tham chiếu được sửa tại nguồn hiện có qua thao tác riêng có `referenceVersion` và audit
+`MEDIA_SOURCE_REFERENCES_UPDATED`. Đây là ngoại lệ bổ sung với tính chỉ-thêm của nguồn; tên, URL,
+ghi chú, thời điểm và ảnh không bị sửa bởi thao tác này. Nguồn/upload cũ không có ID vẫn hợp lệ.
+
 ## Kiểm chứng
 
 - Test tích hợp: ghi nguồn với tên khác hoa/thường dùng chung một chủ sở hữu và tên hiển thị chuẩn;
