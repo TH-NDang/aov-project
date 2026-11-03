@@ -56,8 +56,8 @@ class ApiInterfaceContractTest {
                     Method apiMethod = contract.getDeclaredMethod(method.getName(), method.getParameterTypes());
                     Operation operation = apiMethod.getDeclaredAnnotation(Operation.class);
                     assertThat(operation).as(method.toString()).isNotNull();
-                    assertThat(operation.description()).isNotBlank();
-                    assertThat(operation.responses()).isNotEmpty();
+                    assertThat(operation.description()).as(method.toString()).isNotBlank();
+                    assertThat(operation.responses()).as(method.toString()).isNotEmpty();
                     assertThat(ids.add(operation.operationId())).as(operation.operationId()).isTrue();
                     assertThat(method.getDeclaredAnnotations()).noneMatch(ApiInterfaceContractTest::isDocumentation);
                     for (var parameter : method.getParameters()) {
@@ -76,8 +76,8 @@ class ApiInterfaceContractTest {
                 controllers++;
             }
         }
-        assertThat(controllers).isEqualTo(47);
-        assertThat(operations).isEqualTo(180);
+        assertThat(controllers).isEqualTo(48);
+        assertThat(operations).isEqualTo(181);
     }
 
     @Test
