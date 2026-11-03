@@ -2,13 +2,12 @@ import type { ComponentType, ReactNode } from "react"
 import { useState } from "react"
 import { AlertTriangle, BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { ROLES, SECTIONS, type Content, type Section, type Source } from "./types"
+import { SECTIONS, type Content, type Section } from "./types"
+import { HeroOverview } from "./hero-overview"
+import { HeroContentSources } from "./hero-content-sources"
 import { AdminEntityText, AdminReferenceProvider } from "../terminology/catalog"
-import { comparisonFieldLabels } from "./hero-comparison"
-import { statLabel } from "./patch-change-model"
 import { heroReviewNotes } from "./hero-source-details"
 import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
@@ -79,31 +78,6 @@ function Text({ children }: { children?: ReactNode }) {
   )
 }
 
-function Sources({ sources }: { sources: Source[] }) {
-  if (!sources.length) return null
-  return (
-    <details className="mt-5 border-t pt-3 text-xs text-muted-foreground">
-      <summary className="cursor-pointer py-1">Nguồn & đối chiếu ({sources.length})</summary>
-      <ul className="mt-3 space-y-2">
-        {sources.map((source, index) => (
-          <li key={index}>
-            {source.sourceUrl && /^https?:\/\//i.test(source.sourceUrl) ? (
-              <a href={source.sourceUrl} target="_blank" rel="noreferrer" className="underline">
-                {source.label}
-              </a>
-            ) : (
-              source.label
-            )}
-            {" · "}
-            {source.verificationState === "VERIFIED" ? "Đã đối chiếu" : "Chưa đối chiếu"}
-            {source.note && <p className="mt-1 break-words">{source.note}</p>}
-          </li>
-        ))}
-      </ul>
-    </details>
-  )
-}
-
 export function HeroContent(props: Parameters<typeof HeroContentBody>[0]) {
   return (
     <AdminReferenceProvider locale={props.locale}>
@@ -133,7 +107,7 @@ function HeroContentBody({
   locale: string
   editable: boolean
   busy: boolean
-  onEdit: (section: Section) => void
+  onEdit: (section: Section, profilePart?: "information" | "lore") => void
   tab?: HeroContentTab
   onTabChange?: (tab: HeroContentTab) => void
   heroId?: string
@@ -149,50 +123,9 @@ function HeroContentBody({
   const [localTab, setLocalTab] = useState<HeroContentTab>("overview")
   const tab = selectedTab ?? localTab
   const visibleSections: Section[] =
-    tab === "overview"
-      ? ["PROFILE", "OVERVIEW_RATINGS", "COMBAT_STATS"]
-      : tab === "skills"
-        ? ["SKILLS"]
-        : tab === "skins"
-          ? ["SKINS"]
-          : ["MEDIA_BINDINGS"]
+    tab === "overview" ? [] : tab === "skills" ? ["SKILLS"] : tab === "skins" ? ["SKINS"] : ["MEDIA_BINDINGS"]
   return (
-    <div className="space-y-5" aria-label="Nội dung tướng">
-      {tab === "overview" && (
-        <section className="relative isolate overflow-hidden rounded-2xl border bg-card">
-          <div className="relative flex items-start gap-4 p-4 sm:p-5">
-            <HeroAsset
-              id={content.MEDIA_BINDINGS?.bindings.HEAD}
-              className="size-16 shrink-0 rounded-xl"
-              frameAspectRatio={1}
-            />
-            <div className="min-w-0 flex-1 space-y-1.5">
-              <h2 className="break-words text-xl font-bold tracking-tight">{profile?.name || "Tướng chưa đặt tên"}</h2>
-              {profile?.title && <p className="text-sm text-muted-foreground">{profile.title}</p>}
-              <div className="flex flex-wrap gap-2">
-                {content.PROFILE?.roles.map((role) => (
-                  <Badge key={role} variant="secondary">
-                    {ROLES[role]}
-                  </Badge>
-                ))}
-                {profile && profile.locale !== locale && (
-                  <Badge variant="outline">
-                    Dự phòng: {profile.locale} · chưa có {locale}
-                  </Badge>
-                )}
-              </div>
-            </div>
-            {editable && (
-              <IconAction label="Chỉnh sửa Thông tin" icon={Pencil} disabled={busy} onClick={() => onEdit("PROFILE")} />
-            )}
-          </div>
-          {profile?.summary && (
-            <div className="px-4 pb-4 sm:px-5">
-              <Text>{profile.summary}</Text>
-            </div>
-          )}
-        </section>
-      )}
+    <div className="space-y-4" aria-label="Nội dung tướng">
       {reviewNotes.length > 0 && (
         <details className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
           <summary className="flex cursor-pointer items-center gap-2 font-medium">
@@ -235,83 +168,22 @@ function HeroContentBody({
           </Button>
         ))}
       </div>
-      <div
-        className={`grid items-start gap-5 ${tab === "overview" ? "@min-[900px]:grid-cols-2" : ""}`}
-        role="tabpanel"
-        id={`hero-content-${tab}`}
-      >
+      <div className="grid items-start gap-4" role="tabpanel" id={`hero-content-${tab}`}>
+        {tab === "overview" && (
+          <HeroOverview
+            content={content}
+            profile={profile}
+            locale={locale}
+            editable={editable}
+            busy={busy}
+            onEdit={onEdit}
+          />
+        )}
         {SECTIONS.filter(([key]) => visibleSections.includes(key)).map(([section, , label]) => {
           const Icon = icons[section]
           const data = content[section]
           let body: ReactNode
-          if (section === "PROFILE")
-            body = profile?.lore ? (
-              <Text>{profile.lore}</Text>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
-                Chưa có cốt truyện.
-                {editable && (
-                  <Button size="sm" variant="outline" disabled={busy} onClick={() => onEdit("PROFILE")}>
-                    Thêm cốt truyện
-                  </Button>
-                )}
-              </div>
-            )
-          else if (section === "OVERVIEW_RATINGS")
-            body = content.OVERVIEW_RATINGS ? (
-              <div className="space-y-4">
-                {(
-                  [
-                    ["survivability", "Sinh tồn"],
-                    ["attackDamage", "Đánh thường"],
-                    ["skillEffects", "Hiệu ứng kỹ năng"],
-                    ["difficulty", "Độ khó"],
-                  ] as const
-                ).map(([key, title]) => {
-                  const value = content.OVERVIEW_RATINGS![key]
-                  return (
-                    <div key={key}>
-                      <div className="mb-2 flex justify-between text-sm">
-                        <span>{title}</span>
-                        <span>{Number.isFinite(value) ? `${value}/10` : "Chưa có"}</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary"
-                          style={{ width: `${Number.isFinite(value) ? Math.max(0, Math.min(100, value * 10)) : 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <Text />
-            )
-          else if (section === "COMBAT_STATS")
-            body = content.COMBAT_STATS?.values.length ? (
-              <dl className="grid grid-cols-2 gap-2 @min-[600px]:grid-cols-4">
-                {content.COMBAT_STATS.values.map((stat) => (
-                  <div key={stat.statKey} className="rounded-lg bg-muted/40 px-3 py-2">
-                    <dt className="text-xs text-muted-foreground">
-                      {comparisonFieldLabels[stat.statKey] ?? statLabel(stat.statKey)}
-                    </dt>
-                    <dd className="text-base font-semibold tabular-nums">
-                      {stat.baseValue ?? "—"}
-                      <span className="ml-1 text-xs font-normal">
-                        {["POINT", "UNKNOWN"].includes(stat.unit) ? "" : stat.unit === "PERCENT" ? "%" : stat.unit}
-                      </span>
-                    </dd>
-                    {stat.growthPerLevel !== null && (
-                      <p className="text-xs text-muted-foreground">+{stat.growthPerLevel} / cấp</p>
-                    )}
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <Text />
-            )
-          else if (section === "SKILLS")
+          if (section === "SKILLS")
             body = (
               <HeroSkillsView
                 skills={content.SKILLS?.skills ?? []}
@@ -403,7 +275,7 @@ function HeroContentBody({
                 />
               </div>
               {body}
-              <Sources sources={data?.sources ?? []} />
+              <HeroContentSources sources={data?.sources ?? []} />
             </section>
           )
         })}

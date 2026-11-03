@@ -19,7 +19,8 @@ import {
 import { RecordPatchNotesSheet } from "./patch-notes-sheet"
 import { localized } from "./hero-content"
 import { usePublicationOverview } from "./publication-overview"
-import { ROLES, type Content, type Revision } from "./types"
+import { type Content, type Revision } from "./types"
+import { HeroRoleBadge } from "./hero-classification-badges"
 import { useHeroLocation } from "./use-hero-location"
 import { control } from "./fields"
 import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "./patch-view-anchor"
@@ -255,13 +256,9 @@ export function HeroPatchTimeline({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">Vai trò</span>
                 {data.roles.map((role) => (
-                  <span
-                    key={role.roleCode}
-                    className="inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm"
-                  >
-                    {ROLES[role.roleCode] ?? role.roleCode}
+                  <HeroRoleBadge key={role.roleCode} role={role.roleCode}>
                     <ProvenanceIcon value={role.provenance} />
-                  </span>
+                  </HeroRoleBadge>
                 ))}
               </div>
             )}

@@ -1,12 +1,14 @@
 import { HeroSkillsEditor } from "./hero-skills-editor"
+import { HeroProfileEditor, type ProfileEditorPart } from "./hero-profile-editor"
+import { HeroStatsEditor } from "./hero-stats-editor"
 import { Button } from "@aov/ui/components/button"
 import type { Hero } from "@/lib/api/types"
 import { AssetPicker } from "./asset-picker"
 import { SkinBadgePicker } from "../media/skin-badge-picker"
 import { retainImageOptions } from "./image-options"
+import { heroRatingScale } from "./hero-rating-scale"
 import { Field, SourceFields } from "./fields"
 import {
-  ROLES,
   type Content,
   type Section,
   type Profile,
@@ -16,7 +18,6 @@ import {
   type Skins,
   type Bindings,
   type MediaRole,
-  type Role,
 } from "./types"
 
 export function emptySection(section: Section, locale: string): NonNullable<Content[Section]> {
@@ -52,6 +53,7 @@ export function SectionEditor({
   initialSkillKey,
   heroId,
   onBusyChange,
+  profilePart = "information",
 }: {
   section: Section
   value: Content[Section]
@@ -61,91 +63,21 @@ export function SectionEditor({
   initialSkillKey?: string
   heroId?: string
   onBusyChange?: (busy: boolean) => void
+  profilePart?: ProfileEditorPart
 }) {
   const data = value ?? emptySection(section, locale)
   let editor
   if (section === "PROFILE") {
-    const p = data as Profile
-    editor = (
-      <>
-        {p.translations.map((t, i) => (
-          <div key={i} className="space-y-3 rounded-lg border p-3">
-            <Field
-              label="Ngôn ngữ (BCP 47)"
-              value={t.locale}
-              onChange={(locale) =>
-                onChange({ ...p, translations: p.translations.map((v, n) => (n === i ? { ...v, locale } : v)) })
-              }
-              required
-            />
-            {(
-              [
-                ["name", "Tên tướng"],
-                ["title", "Danh hiệu"],
-                ["summary", "Giới thiệu"],
-                ["lore", "Cốt truyện"],
-              ] as const
-            ).map(([key, label]) => (
-              <Field
-                key={key}
-                label={label}
-                multiline={key === "lore" || key === "summary"}
-                richTextLocale={t.locale}
-                required={key === "name"}
-                value={t[key] ?? ""}
-                onChange={(text) =>
-                  onChange({ ...p, translations: p.translations.map((v, n) => (n === i ? { ...v, [key]: text } : v)) })
-                }
-              />
-            ))}
-            {p.translations.length > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onChange({ ...p, translations: p.translations.filter((_, n) => n !== i) })}
-              >
-                Bỏ bản dịch
-              </Button>
-            )}
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            onChange({
-              ...p,
-              translations: [...p.translations, { locale: "", name: "", title: null, summary: null, lore: null }],
-            })
-          }
-        >
-          Thêm bản dịch
-        </Button>
-        <div className="flex flex-wrap gap-4">
-          {Object.entries(ROLES).map(([role, label]) => (
-            <label key={role} className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={p.roles.includes(role as Role)}
-                onChange={(e) =>
-                  onChange({
-                    ...p,
-                    roles: e.target.checked ? [...p.roles, role as Role] : p.roles.filter((r) => r !== role),
-                  })
-                }
-              />
-              {label}
-            </label>
-          ))}
-        </div>
-      </>
-    )
+    editor = <HeroProfileEditor value={data as Profile} locale={locale} part={profilePart} onChange={onChange} />
   } else if (section === "OVERVIEW_RATINGS") {
     const raw = data as Ratings
     const p = { ...raw, scaleCode: raw.scaleCode || "GAME_OVERVIEW_10" }
+    const scale = heroRatingScale(p.scaleCode)
     editor = (
       <>
-        <p className="text-sm text-muted-foreground">Thang GAME_OVERVIEW_10: từ 0 đến 10. Chỉ điền khi đã có nguồn.</p>
+        <p className="text-sm text-muted-foreground">
+          Thang đánh giá từ 0 đến {scale.maximum}. Chỉ điền khi đã có nguồn.
+        </p>
         <div className="grid gap-3 sm:grid-cols-2">
           {(
             [
@@ -159,12 +91,12 @@ export function SectionEditor({
               key={key}
               type="number"
               min="0"
-              max="10"
+              max={String(scale.maximum)}
               step="any"
               required
               label={label}
-              value={Number.isFinite(p[key]) ? p[key] : ""}
-              onChange={(v) => onChange({ ...p, [key]: v === "" ? NaN : Number(v) })}
+              value={Number.isFinite(p[key]) ? p[key] / scale.factor : ""}
+              onChange={(v) => onChange({ ...p, [key]: v === "" ? NaN : Number(v) * scale.factor })}
             />
           ))}
         </div>
@@ -175,69 +107,7 @@ export function SectionEditor({
       </>
     )
   } else if (section === "COMBAT_STATS") {
-    const p = data as Stats
-    editor = (
-      <>
-        {p.values.map((s, i) => (
-          <div key={i} className="grid gap-3 rounded-lg border p-3 sm:grid-cols-2">
-            <Field
-              label="Mã chỉ số (HP, ARMOR…)"
-              required
-              pattern="[A-Z][A-Z0-9_]{0,63}"
-              value={s.statKey}
-              onChange={(statKey) =>
-                onChange({ ...p, values: p.values.map((v, n) => (n === i ? { ...v, statKey } : v)) })
-              }
-            />
-            <Field
-              label="Đơn vị"
-              required
-              value={s.unit}
-              onChange={(unit) => onChange({ ...p, values: p.values.map((v, n) => (n === i ? { ...v, unit } : v)) })}
-            />
-            {(
-              [
-                ["baseValue", "Cơ bản"],
-                ["growthPerLevel", "Tăng mỗi cấp"],
-              ] as const
-            ).map(([key, label]) => (
-              <Field
-                key={key}
-                type="number"
-                step="any"
-                label={label}
-                value={s[key] ?? ""}
-                onChange={(text) =>
-                  onChange({
-                    ...p,
-                    values: p.values.map((v, n) => (n === i ? { ...v, [key]: text === "" ? null : Number(text) } : v)),
-                  })
-                }
-              />
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onChange({ ...p, values: p.values.filter((_, n) => n !== i) })}
-            >
-              Bỏ chỉ số
-            </Button>
-          </div>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            onChange({
-              ...p,
-              values: [...p.values, { statKey: "", baseValue: null, growthPerLevel: null, unit: "POINT" }],
-            })
-          }
-        >
-          Thêm chỉ số
-        </Button>
-      </>
-    )
+    editor = <HeroStatsEditor value={data as Stats} onChange={onChange} />
   } else if (section === "SKILLS") {
     editor = (
       <HeroSkillsEditor
@@ -435,7 +305,9 @@ export function SectionEditor({
   return (
     <div className="space-y-4">
       {editor}
-      <SourceFields sources={data.sources} onChange={(sources) => onChange({ ...data, sources })} />
+      {!(section === "PROFILE" && profilePart === "lore") && (
+        <SourceFields sources={data.sources} onChange={(sources) => onChange({ ...data, sources })} />
+      )}
     </div>
   )
 }

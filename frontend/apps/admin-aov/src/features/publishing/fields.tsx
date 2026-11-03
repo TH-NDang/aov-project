@@ -54,6 +54,15 @@ export function Box({ title, children }: { title: string; children: ReactNode })
     </section>
   )
 }
+
+function sourceDateInput(value: string | null) {
+  if (!value) return ""
+  const date = new Date(value)
+  if (!Number.isFinite(date.getTime())) return ""
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+  return local.toISOString().slice(0, 19)
+}
+
 export function SourceFields({ sources, onChange }: { sources: Source[]; onChange: (sources: Source[]) => void }) {
   return (
     <details className="rounded-md border p-3">
@@ -75,10 +84,16 @@ export function SourceFields({ sources, onChange }: { sources: Source[]; onChang
               }
             />
             <Field
-              label="Ngày quan sát (ISO 8601)"
-              value={source.observedAt ?? ""}
+              label="Ngày giờ ghi nhận nguồn"
+              type="datetime-local"
+              step="1"
+              value={sourceDateInput(source.observedAt)}
               onChange={(observedAt) =>
-                onChange(sources.map((s, n) => (n === i ? { ...s, observedAt: observedAt || null } : s)))
+                onChange(
+                  sources.map((s, n) =>
+                    n === i ? { ...s, observedAt: observedAt ? new Date(observedAt).toISOString() : null } : s,
+                  ),
+                )
               }
             />
             <Field

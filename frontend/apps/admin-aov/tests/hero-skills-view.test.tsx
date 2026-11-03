@@ -3,6 +3,7 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
+import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Skill } from "../src/features/publishing/types"
 import type { SkillImage } from "../src/features/publishing/skill-artwork"
@@ -14,10 +15,172 @@ import {
   skillVariantLabel,
   groupHeroSkills,
 } from "../src/features/publishing/hero-skills"
-import { createHeroFixture } from "./fixtures/hero-workspace-data"
+import { createHeroFixture, fixtureContent } from "./fixtures/hero-workspace-data"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
+
+test("hero overview shows captured positions and five-point ratings without changing stored content", async () => {
+  await withView(async ({ document, render, click }) => {
+    const { HeroContent } = await import("../src/features/publishing/hero-content")
+    const { recommendedHeroPositions } = await import("../src/features/publishing/hero-classification-badges")
+    const content = structuredClone(fixtureContent)
+    content.PROFILE!.translations[0].summary = "Giới thiệu dài cần giữ đầy đủ khi người xem mở rộng. ".repeat(10)
+    Object.assign(content.OVERVIEW_RATINGS!, { survivability: null })
+    content.SKILLS!.skills[0].effects = [
+      {
+        effectType: "SOURCE_SNAPSHOT",
+        metadata: { heroClassification: { recommendedPositions: ["top", "rung", "top", "invalid", "__proto__"] } },
+      },
+    ]
+    const original = JSON.stringify(content)
+    assert.deepEqual(recommendedHeroPositions(content.SKILLS!.skills), ["top", "rung"])
+    assert.deepEqual(recommendedHeroPositions(fixtureContent.SKILLS!.skills), [])
+    await render(
+      <MemoryRouter>
+        <HeroContent content={content} locale="vi-VN" editable={false} busy={false} onEdit={() => {}} />
+      </MemoryRouter>,
+    )
+    const role = document.querySelector('[aria-label="Vai trò: Sát thủ"]')!
+    assert.match(role.querySelector("img")!.getAttribute("src")!, /images\/hero\/vai-tro\/sat-thu.png$/)
+    const position = document.querySelector('[aria-label="Vị trí game gợi ý: Rừng"]')!
+    assert.equal(position.querySelector("img"), null)
+    assert.equal(position.querySelector("svg")!.getAttribute("fill"), "currentColor")
+    assert.equal(position.querySelector("svg")!.getAttribute("aria-hidden"), "true")
+    assert.match(document.body.textContent!, /3\.5\/5/)
+    assert.match(document.body.textContent!, /4\/5/)
+    assert.match(document.body.textContent!, /Sinh tồnChưa có/)
+    assert.doesNotMatch(document.body.textContent!, /\/10/)
+    const expand = document.querySelector<HTMLButtonElement>('button[aria-controls][aria-expanded="false"]')!
+    assert.ok(expand)
+    await click(expand)
+    assert.equal(expand.getAttribute("aria-expanded"), "true")
+    assert.equal(
+      document.getElementById(expand.getAttribute("aria-controls")!)!.textContent,
+      content.PROFILE!.translations[0].summary,
+    )
+    const lore = document.querySelector<HTMLDetailsElement>("#hero-lore")!
+    assert.equal(lore.open, false)
+    await click(lore.querySelector("summary")!)
+    assert.equal(lore.open, true)
+    assert.equal(JSON.stringify(content), original)
+    const withoutLore = structuredClone(content)
+    withoutLore.PROFILE!.translations[0].lore = null
+    await render(
+      <MemoryRouter>
+        <HeroContent content={withoutLore} locale="vi-VN" editable={false} busy={false} onEdit={() => {}} />
+      </MemoryRouter>,
+    )
+    assert.equal(document.querySelector("#hero-lore"), null)
+  })
+})
+
+test("five-point rating edits preserve stored scale, fractional values, zero and missing input", async () => {
+  await withView(async ({ dom, document, render }) => {
+    const { SectionEditor } = await import("../src/features/publishing/section-editor")
+    let value = structuredClone(fixtureContent.OVERVIEW_RATINGS!)
+    const mount = () =>
+      render(
+        <SectionEditor
+          section="OVERVIEW_RATINGS"
+          value={value}
+          locale="vi-VN"
+          onChange={(next) => {
+            value = next as typeof value
+          }}
+        />,
+      )
+    await mount()
+    const inputs = [...document.querySelectorAll<HTMLInputElement>('input[type="number"]')]
+    assert.deepEqual(
+      inputs.map((input) => input.value),
+      ["2", "3.5", "3", "4"],
+    )
+    assert.ok(inputs.every((input) => input.max === "5"))
+    for (const [display, stored] of [
+      ["3.5", 7],
+      ["0", 0],
+      ["5", 10],
+      ["", NaN],
+    ] as const) {
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(inputs[0], display)
+        inputs[0].dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+      })
+      assert.equal(value.survivability, stored)
+      assert.equal(value.scaleCode, "GAME_OVERVIEW_10")
+      await mount()
+    }
+  })
+})
+
+test("stat choices and calendar inputs preserve unknown data, zero and missing values", async () => {
+  await withView(async ({ dom, document, render }) => {
+    const { SectionEditor } = await import("../src/features/publishing/section-editor")
+    let value = structuredClone(fixtureContent.COMBAT_STATS!)
+    value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, growthPerLevel: null, unit: "custom-unit" })
+    value.sources = [
+      {
+        label: "Source",
+        sourceUrl: null,
+        observedAt: "2026-11-01T02:43:10.386Z",
+        verificationState: "VERIFIED",
+        note: null,
+      },
+    ]
+    const mount = () =>
+      render(
+        <SectionEditor
+          section="COMBAT_STATS"
+          value={value}
+          locale="vi-VN"
+          onChange={(next) => {
+            value = next as typeof value
+          }}
+        />,
+      )
+    const select = async (node: HTMLSelectElement, next: string) => {
+      await act(async () => {
+        node.value = next
+        node.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+      })
+      await mount()
+    }
+    const type = async (node: HTMLInputElement, next: string) => {
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(node, next)
+        node.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+      })
+      await mount()
+    }
+    await mount()
+    assert.doesNotMatch(document.body.textContent!, /BCP 47|ISO 8601|Mã chỉ số \(HP/)
+    const choice = document.querySelector<HTMLSelectElement>("select")!
+    assert.equal(choice.selectedOptions[0].textContent, "Máu")
+    assert.equal(choice.querySelector<HTMLOptionElement>('option[value="ARMOR"]')!.disabled, true)
+    await select(choice, "CRITICAL_CHANCE")
+    assert.equal(value.values[0].unit, "PERCENT")
+    await type(document.querySelector<HTMLInputElement>('input[type="number"]')!, "0")
+    assert.equal(value.values[0].baseValue, 0)
+    await type(document.querySelector<HTMLInputElement>('input[type="number"]')!, "")
+    assert.equal(value.values[0].baseValue, null)
+    assert.deepEqual(value.values[2], {
+      statKey: "CUSTOM_STAT",
+      baseValue: 17,
+      growthPerLevel: null,
+      unit: "custom-unit",
+    })
+    assert.equal(
+      value.sources[0].observedAt,
+      "2026-11-01T02:43:10.386Z",
+      "Opening the calendar must not rewrite source precision",
+    )
+    await type(document.querySelector<HTMLInputElement>('input[type="datetime-local"]')!, "2026-11-04T10:15:00")
+    assert.equal(value.sources[0].observedAt, new Date("2026-11-04T10:15:00").toISOString())
+    await type(document.querySelector<HTMLInputElement>('input[type="datetime-local"]')!, "")
+    assert.equal(value.sources[0].observedAt, null)
+  })
+})
 
 function skill(skillKey: string, displayOrder = 0, formKey: string | null = null): Skill {
   return {

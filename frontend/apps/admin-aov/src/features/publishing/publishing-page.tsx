@@ -54,6 +54,8 @@ import { DataLanguage } from "./data-language"
 import { Box, Field, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
+import { replaceProfilePart, type ProfileEditorPart } from "./hero-profile-editor"
+import { sameDraftValue } from "@/app/drafts/draft-store"
 import { ImportContextPicker, type ImportContext } from "./import-context"
 import { type CatalogFilter } from "./catalog-context"
 import { usePublicationOverview, useContentLocale } from "./publication-overview"
@@ -213,6 +215,7 @@ export function PublishingWorkspace({
   const requestedRevision = revisionId ?? heroLocationId(urlParams.get("revision"))
   const [selectedId, setSelectedId] = useState(requestedRevision)
   const [editing, setEditing] = useState(false)
+  const [profilePart, setProfilePart] = useState<ProfileEditorPart>("information")
   const [managementOpen, setManagementOpen] = useState(false)
   const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
   const [busy, setBusy] = useState(false)
@@ -284,11 +287,12 @@ export function PublishingWorkspace({
   })
   const preview: Preview | null = read.data ? { ...read.data, content: localDraft.value.content } : null
   const dirty = new Set(dirtyHeroSections(localDraft.value, initialCopy))
-  const note = localDraft.value.notes[section] ?? ""
+  const noteKey = editing && section === "PROFILE" && profilePart === "lore" ? "PROFILE_LORE" : section
+  const note = localDraft.value.notes[noteKey] ?? ""
   const setNote = (value: string) => {
     const notes = { ...localDraft.value.notes }
-    if (value) notes[section] = value
-    else delete notes[section]
+    if (value) notes[noteKey] = value
+    else delete notes[noteKey]
     localDraft.update({ ...localDraft.value, notes })
   }
   const resources = useQuery({
@@ -306,6 +310,21 @@ export function PublishingWorkspace({
   const writable = canWrite && revision?.state === "DRAFT"
   const translating = view === "translations"
   const locale = translating ? targetLocale : location.readLocale
+  const focusedProfile = !translating && section === "PROFILE"
+  const editorLocale = focusedProfile
+    ? (localized(preview?.content.PROFILE?.translations, locale)?.locale ?? locale)
+    : locale
+  const sectionValue = focusedProfile
+    ? replaceProfilePart(
+        read.data?.content.PROFILE ?? null,
+        preview?.content.PROFILE ?? null,
+        profilePart,
+        editorLocale,
+      )
+    : preview?.content[section]
+  const sectionDirty = focusedProfile ? !sameDraftValue(sectionValue, read.data?.content.PROFILE) : dirty.has(section)
+  const editorTitle =
+    focusedProfile && profilePart === "lore" ? "Cốt truyện" : SECTIONS.find(([key]) => key === section)![2]
   const heroName = localized(preview?.content.PROFILE?.translations, displayLocale)?.name || "Hồ sơ tướng"
   const issues = preview ? publishIssues(preview.content) : []
 
@@ -404,9 +423,19 @@ export function PublishingWorkspace({
   }
   function cancelSection() {
     const notes = { ...localDraft.value.notes }
-    delete notes[section]
+    delete notes[noteKey]
     localDraft.update({
-      content: { ...localDraft.value.content, [section]: structuredClone(read.data?.content[section]) },
+      content: {
+        ...localDraft.value.content,
+        [section]: focusedProfile
+          ? replaceProfilePart(
+              localDraft.value.content.PROFILE,
+              read.data?.content.PROFILE ?? null,
+              profilePart,
+              editorLocale,
+            )
+          : structuredClone(read.data?.content[section]),
+      },
       notes,
     })
     setEditing(false)
@@ -713,8 +742,9 @@ export function PublishingWorkspace({
                     onSkillLayoutChange={(layout) => updateLocation({ skillLayout: layout === "flat" ? "flat" : null })}
                     onSkillChange={(skill) => updateLocation({ skill })}
                     onTabChange={(tab) => updateLocation({ tab })}
-                    onEdit={(next) => {
+                    onEdit={(next, part = "information") => {
                       setSection(next)
+                      setProfilePart(part)
                       setEditing(true)
                       setError("")
                       setMessage("")
@@ -808,41 +838,50 @@ export function PublishingWorkspace({
                         )}
                       </fieldset>
                     )}
-                    <div className="flex gap-1 overflow-x-auto" aria-label="Các phần nội dung">
-                      {SECTIONS.filter(([key]) => !translating || ["PROFILE", "SKILLS", "SKINS"].includes(key)).map(
-                        ([key, , label]) => (
-                          <Button
-                            key={key}
-                            type="button"
-                            disabled={busy}
-                            className="shrink-0"
-                            variant={section === key ? "secondary" : "ghost"}
-                            onClick={() => setSection(key)}
-                          >
-                            {label}
-                            {dirty.has(key) && (
-                              <span className="size-1.5 rounded-full bg-amber-500" aria-label="Chưa lưu" />
-                            )}
-                          </Button>
-                        ),
-                      )}
-                    </div>
-                    <Box title={SECTIONS.find((row) => row[0] === section)![2]}>
+                    {translating && (
+                      <div className="flex gap-1 overflow-x-auto" aria-label="Các phần nội dung">
+                        {SECTIONS.filter(([key]) => ["PROFILE", "SKILLS", "SKINS"].includes(key)).map(
+                          ([key, , label]) => (
+                            <Button
+                              key={key}
+                              type="button"
+                              disabled={busy}
+                              className="shrink-0"
+                              variant={section === key ? "secondary" : "ghost"}
+                              onClick={() => setSection(key)}
+                            >
+                              {label}
+                              {dirty.has(key) && (
+                                <span className="size-1.5 rounded-full bg-amber-500" aria-label="Chưa lưu" />
+                              )}
+                            </Button>
+                          ),
+                        )}
+                      </div>
+                    )}
+                    <Box title={editorTitle}>
                       <form
                         onSubmit={(event) => {
                           event.preventDefault()
                           void run(async () => {
-                            const value = preview.content[section] ?? emptySection(section, locale)
+                            const value = sectionValue ?? emptySection(section, editorLocale)
                             const next = await api.save(revision, section, value, note)
                             const saved = await api.read(heroId, revision.id)
                             queryClient.setQueryData(["publishing-preview", heroId, revision.id], saved)
                             const notes = { ...localDraft.value.notes }
-                            delete notes[section]
-                            localDraft.rebase(
-                              { content: { ...preview.content, [section]: saved.content[section] }, notes },
-                              { content: saved.content, notes: {} },
-                              next.version,
-                            )
+                            delete notes[noteKey]
+                            const content = {
+                              ...preview.content,
+                              [section]: focusedProfile
+                                ? replaceProfilePart(
+                                    preview.content.PROFILE,
+                                    saved.content.PROFILE,
+                                    profilePart,
+                                    editorLocale,
+                                  )
+                                : saved.content[section],
+                            }
+                            localDraft.rebase({ content, notes }, { content: saved.content, notes: {} }, next.version)
                             if (!translating) setEditing(false)
                           }, "Đã lưu nội dung vào bản nháp.")
                         }}
@@ -875,7 +914,8 @@ export function PublishingWorkspace({
                             <SectionEditor
                               section={section}
                               value={preview.content[section]}
-                              locale={locale}
+                              locale={editorLocale}
+                              profilePart={profilePart}
                               onChange={update}
                               resource={resource}
                               heroId={heroId}
@@ -887,15 +927,15 @@ export function PublishingWorkspace({
                           {writable && (
                             <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-card/95 px-4 py-3 backdrop-blur-sm md:-mx-6 md:px-6">
                               <p className="text-xs text-muted-foreground">
-                                {dirty.has(section) ? "Có thay đổi chưa lưu" : "Chưa có thay đổi trong nhóm này"}
+                                {sectionDirty ? "Có thay đổi chưa lưu" : "Chưa có thay đổi trong phần này"}
                               </p>
                               <div className="flex gap-2">
                                 <Button type="button" variant="outline" onClick={cancelSection}>
                                   <X className="size-4" />
-                                  <span className="hidden sm:inline">Hủy chỉnh sửa nhóm này</span>
+                                  <span className="hidden sm:inline">Hủy chỉnh sửa phần này</span>
                                   <span className="sm:hidden">Hủy</span>
                                 </Button>
-                                <Button disabled={!dirty.has(section)}>
+                                <Button disabled={!sectionDirty}>
                                   <Save className="size-4" />
                                   {busy ? "Đang lưu…" : "Lưu phần này"}
                                 </Button>

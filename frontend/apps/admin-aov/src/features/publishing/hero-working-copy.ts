@@ -3,7 +3,7 @@ import { sameDraftValue } from "@/app/drafts/draft-store"
 import { reconcileDraft } from "@/app/drafts/draft-merge"
 import { SECTIONS, type Content, type Section } from "./types"
 
-export type HeroWorkingCopy = { content: Content; notes: Partial<Record<Section, string>> }
+export type HeroWorkingCopy = { content: Content; notes: Partial<Record<Section | "PROFILE_LORE", string>> }
 const text = z.string()
 const nullableText = text.nullable()
 const number = z.union([z.number(), z.nan()])
@@ -89,7 +89,7 @@ const contentSchema = z.object({
 })
 export const heroWorkingSchema = z.object({
   content: contentSchema,
-  notes: z.partialRecord(z.enum(SECTIONS.map(([key]) => key) as [Section, ...Section[]]), z.string()),
+  notes: z.partialRecord(z.enum([...SECTIONS.map(([key]) => key), "PROFILE_LORE"]), z.string()),
 }) as unknown as z.ZodType<HeroWorkingCopy>
 
 export const emptyHeroContent: Content = {

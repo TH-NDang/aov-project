@@ -1,0 +1,118 @@
+import type { ReactNode } from "react"
+import { Badge } from "@aov/ui/components/badge"
+import { HeroLaneIcon, type HeroLane } from "@aov/ui/components/hero-lane-icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
+import { MediaImage } from "@/components/media-image"
+import { ROLES, type Role, type Skill } from "./types"
+
+const roleIcons: Record<Role, string> = {
+  TANK: "do-don",
+  WARRIOR: "dau-si",
+  ASSASSIN: "sat-thu",
+  MAGE: "phap-su",
+  MARKSMAN: "xa-thu",
+  SUPPORT: "tro-thu",
+}
+
+const positions = {
+  top: "Đường Tà thần Caesar",
+  mid: "Đường giữa",
+  rung: "Rừng",
+  "rong-ad": "Đường Rồng",
+  "tro-thu": "Hỗ trợ",
+} as const
+type Position = keyof typeof positions
+
+const positionLanes: Record<Position, HeroLane> = {
+  top: "TOP",
+  mid: "MID",
+  rung: "JUNGLE",
+  "rong-ad": "DRAGON",
+  "tro-thu": "SUPPORT",
+}
+
+/** Read only captured recommendations; roles alone do not establish a lane. */
+export function recommendedHeroPositions(skills: Skill[]): Position[] {
+  const found = new Set<Position>()
+  for (const skill of skills) {
+    for (const effect of skill.effects) {
+      if (effect.effectType !== "SOURCE_SNAPSHOT") continue
+      const classification = effect.metadata.heroClassification
+      if (!classification || typeof classification !== "object") continue
+      const values = (classification as Record<string, unknown>).recommendedPositions
+      if (!Array.isArray(values)) continue
+      for (const value of values)
+        if (typeof value === "string" && Object.hasOwn(positions, value)) found.add(value as Position)
+    }
+  }
+  return [...found]
+}
+
+function ClassificationBadge({
+  label,
+  group,
+  icon,
+  children,
+}: {
+  label: string
+  group: string
+  icon: ReactNode
+  children?: ReactNode
+}) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge
+            variant="secondary"
+            tabIndex={0}
+            aria-label={`${group}: ${label}`}
+            className="min-h-8 min-w-8 gap-1.5 px-1.5 focus-visible:outline-2 focus-visible:outline-ring sm:px-2"
+          >
+            {icon}
+            <span className="sr-only sm:not-sr-only">{label}</span>
+            {children}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          {group}: {label}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
+
+export function HeroRoleBadge({ role, children }: { role: Role; children?: ReactNode }) {
+  return (
+    <ClassificationBadge
+      label={ROLES[role]}
+      group="Vai trò"
+      icon={
+        <MediaImage
+          path={`${import.meta.env?.BASE_URL ?? "/"}images/hero/vai-tro/${roleIcons[role]}.png`}
+          alt=""
+          className="size-5 shrink-0 object-contain"
+        />
+      }
+    >
+      {children}
+    </ClassificationBadge>
+  )
+}
+
+export function HeroPositionBadges({ skills }: { skills: Skill[] }) {
+  const values = recommendedHeroPositions(skills)
+  if (!values.length) return null
+  return (
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Vị trí game gợi ý">
+      {values.map((position) => (
+        <ClassificationBadge
+          key={position}
+          group="Vị trí game gợi ý"
+          label={positions[position]}
+          icon={<HeroLaneIcon lane={positionLanes[position]} />}
+        />
+      ))}
+    </div>
+  )
+}
