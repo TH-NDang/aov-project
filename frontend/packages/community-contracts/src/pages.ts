@@ -1,4 +1,15 @@
-export type ProfileKind = "ORGANIZATION" | "TEAM" | "PLAYER"
+export type ProfileKind = "ORGANIZATION" | "TEAM" | "PLAYER" | "PERSON" | "CIRCUIT"
+export const personRoleLabels = {
+  COACH: "Huấn luyện viên",
+  TEAM_ANALYST: "Phân tích đội tuyển",
+  HOST: "MC",
+  INTERVIEWER: "Phỏng vấn",
+  CASTER: "Bình luận viên",
+  GUEST_ANALYST: "Khách mời phân tích",
+} as const
+export type PersonRole = keyof typeof personRoleLabels
+export const isIndividualProfile = (kind: ProfileKind) => kind === "PLAYER" || kind === "PERSON"
+export const isCommunityProfile = (kind: ProfileKind) => kind !== "CIRCUIT"
 export type PageRole = "OWNER" | "EDITOR" | "MODERATOR"
 /** `official` marks a channel run by the organization, team or player itself. */
 export type ProfileLink = { label: string; url: string; official?: boolean | null }
@@ -39,6 +50,15 @@ export type ProfileContent = {
   history: ProfileHistory[]
   achievements: ProfileAchievement[]
   roster: ProfileMember[]
+  personRoles?: PersonRole[]
+  channelOrganizationId?: string | null
+}
+export type TeamAffiliation = {
+  teamPageId: string
+  teamCode: string
+  teamName: string
+  teamAvatarUrl?: string | null
+  member: ProfileMember
 }
 export type ProfilePresentation = Pick<ProfileContent, "biography" | "avatarUrl" | "coverUrl" | "links">
 export type CommunityProfile = {
@@ -52,7 +72,11 @@ export type CommunityProfile = {
   represented: boolean
   followers: number
   updatedAt: string
+  /** Present while the page is broadcasting. */
+  live?: PageLive | null
 }
+/** A running broadcast of a page; see spec 04, live status. */
+export type PageLive = { url: string; title: string; startedAt: string }
 export type PageClaim = {
   id: string
   version: number
@@ -83,7 +107,19 @@ export type CommunityPost = {
   liked: boolean
   /** Visible (not hidden) comments. */
   comments: number
+  /** Absent in responses from services older than post kinds; treat as TEXT. */
+  kind?: PostKind
+  /** Required for NEWS, optional otherwise. */
+  title?: string | null
+  /** The video of a VIDEO post. */
+  videoUrl?: string | null
+  /** Up to four images. */
+  imageUrls?: string[]
+  /** Only page posts are pinned, one per page. */
+  pinned?: boolean
 }
+export type PostKind = "TEXT" | "NEWS" | "VIDEO"
+export const postKindLabels: Record<PostKind, string> = { TEXT: "Bài viết", NEWS: "Tin tức", VIDEO: "Video" }
 /** The published page a feed post belongs to; the avatar follows the representative's presentation. */
 export type PageCard = {
   id: string
@@ -125,7 +161,9 @@ export const emptyProfile = (name = ""): ProfileContent => ({
   roster: [],
 })
 export const profileKindLabels: Record<ProfileKind, string> = {
+  CIRCUIT: "Hệ thống giải",
   ORGANIZATION: "Tổ chức",
   TEAM: "Đội tuyển",
   PLAYER: "Tuyển thủ",
+  PERSON: "Nhân sự",
 }

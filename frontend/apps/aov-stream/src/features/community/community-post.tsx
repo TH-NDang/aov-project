@@ -8,7 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@aov/ui/components/dropdown-menu"
+} from "@aov/ui/components/public-overlay"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamIcon } from "../../components/stream-icon"
 import { initials } from "../account/profile-model"
@@ -17,6 +17,7 @@ import { useCommunitySession } from "./community-auth"
 import { useFollowPage } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
 import { CardAvatar, hueOf, timeAgo } from "./community-ui"
+import { PostImages, PostVideo } from "./post-media"
 
 /** Lists that show posts; every change to a post or its comments refreshes them all. */
 const postLists = ["page-posts", "community-feed"]
@@ -66,6 +67,7 @@ export function PostCard({
   const [commentPage, setCommentPage] = useState(0)
   const [editing, setEditing] = useState(false)
   const [editedBody, setEditedBody] = useState(post.body)
+  const [editedTitle, setEditedTitle] = useState(post.title || "")
   const [reportedComment, setReportedComment] = useState<string | undefined>()
   const refreshLists = () => Promise.all(postLists.map((key) => client.invalidateQueries({ queryKey: [key] })))
   // A like shown before the feed refetches; a newer `post` from the server replaces it.
@@ -86,7 +88,16 @@ export function PostCard({
     mutationFn: (publish: boolean) =>
       communityApi(
         `/me/pages/${post.pageId}/posts/${post.id}`,
-        { version: post.version, body: editedBody, asPage: post.asPage, publish },
+        {
+          version: post.version,
+          kind: post.kind,
+          title: editedTitle,
+          body: editedBody,
+          videoUrl: post.videoUrl,
+          imageUrls: post.imageUrls,
+          asPage: post.asPage,
+          publish,
+        },
         "PUT",
       ),
     onSuccess: async () => {
@@ -127,7 +138,12 @@ export function PostCard({
       await client.invalidateQueries({ queryKey: ["post-comments", post.id] })
     },
   })
+  const pin = useMutation({
+    mutationFn: () => communityApi(`/me/pages/${post.pageId}/posts/${post.id}/pin`, { pinned: !post.pinned }),
+    onSuccess: refreshLists,
+  })
   const canEdit = post.status !== "HIDDEN" && (post.own || (post.asPage && ["OWNER", "EDITOR"].includes(role)))
+  const canPin = post.asPage && post.status === "PUBLISHED" && ["OWNER", "EDITOR"].includes(role)
   const canModerate = post.status !== "DRAFT" && ["OWNER", "MODERATOR"].includes(role)
   const published = post.status === "PUBLISHED"
   const long = longPost(post.body)
@@ -175,6 +191,12 @@ export function PostCard({
             </>
           )}
         </div>
+        {post.pinned && (
+          <span className="cp-badge cp-pin-badge">
+            <StreamIcon name="pin" size={12} />
+            Đã ghim
+          </span>
+        )}
         {post.status !== "PUBLISHED" && (
           <span className="cp-badge" data-status={post.status}>
             {post.status === "HIDDEN" ? "Đã ẩn" : "Bản nháp"}
@@ -198,17 +220,24 @@ export function PostCard({
                 <StreamIcon name="more" size={18} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="hub-popover hub-post-menu">
+            <DropdownMenuContent align="end" className="hub-popover hub-post-menu" drawerTitle="Tùy chọn bài viết">
               {canEdit && (
                 <DropdownMenuItem
                   className="hub-menu-item"
                   onSelect={() => {
                     setEditedBody(post.body)
+                    setEditedTitle(post.title || "")
                     setEditing(true)
                   }}
                 >
                   <StreamIcon name="edit" size={16} />
                   Chỉnh sửa
+                </DropdownMenuItem>
+              )}
+              {canPin && (
+                <DropdownMenuItem className="hub-menu-item" disabled={pin.isPending} onSelect={() => pin.mutate()}>
+                  <StreamIcon name="pin" size={16} />
+                  {post.pinned ? "Bỏ ghim" : "Ghim lên đầu trang"}
                 </DropdownMenuItem>
               )}
               {published && (
@@ -231,9 +260,14 @@ export function PostCard({
           </DropdownMenu>
         )}
       </header>
-      <p className="cp-prose cp-post-body" data-folded={(long && !unfolded) || undefined}>
-        {post.body}
-      </p>
+      {post.title && <h3 className="cp-post-title">{post.title}</h3>}
+      {post.body && (
+        <p className="cp-prose cp-post-body" data-folded={(long && !unfolded) || undefined}>
+          {post.body}
+        </p>
+      )}
+      {post.videoUrl && <PostVideo url={post.videoUrl} title={post.title || `Video của ${post.authorName}`} />}
+      <PostImages urls={post.imageUrls || []} alt={post.title || post.authorName} />
       {long && (
         <button className="cp-text-button" onClick={() => setUnfolded(!unfolded)}>
           {unfolded ? "Thu gọn" : "Xem thêm"}
@@ -247,10 +281,21 @@ export function PostCard({
             edit.mutate(true)
           }}
         >
+          {post.kind === "NEWS" && (
+            <label>
+              Tiêu đề
+              <input
+                required
+                maxLength={200}
+                value={editedTitle}
+                onChange={(event) => setEditedTitle(event.target.value)}
+              />
+            </label>
+          )}
           <label>
             Nội dung bài viết
             <textarea
-              required
+              required={post.kind !== "VIDEO"}
               maxLength={20000}
               rows={5}
               value={editedBody}
@@ -264,7 +309,7 @@ export function PostCard({
             <button
               type="button"
               className="cp-button"
-              disabled={edit.isPending || !editedBody.trim()}
+              disabled={edit.isPending || (post.kind !== "VIDEO" && !editedBody.trim())}
               onClick={() => edit.mutate(false)}
             >
               Giữ ở bản nháp
@@ -275,9 +320,9 @@ export function PostCard({
           </div>
         </form>
       )}
-      {edit.isError && (
+      {(edit.isError || pin.isError) && (
         <p className="cp-error" role="alert">
-          {edit.error.message}
+          {edit.error?.message || pin.error?.message}
         </p>
       )}
       <div className="cp-post-actions">

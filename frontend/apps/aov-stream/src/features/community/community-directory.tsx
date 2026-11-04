@@ -1,9 +1,14 @@
 import { useState, type CSSProperties } from "react"
 import { Link, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { profileKindLabels, type CommunityProfile, type ProfileKind, type PageSlice } from "@aov/community-contracts"
+import {
+  isCommunityProfile,
+  profileKindLabels,
+  type CommunityProfile,
+  type ProfileKind,
+  type PageSlice,
+} from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
-import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { useFollowedIds, useFollowPage } from "./community-queries"
@@ -34,7 +39,6 @@ export function PageDirectory() {
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
-        next.set("tab", "directory")
         if (value) next.set(key, value)
         else next.delete(key)
         return next
@@ -57,15 +61,6 @@ export function PageDirectory() {
             </button>
           ))}
         </div>
-        <label className="stream-search">
-          <StreamIcon name="search" size={16} />
-          <input
-            aria-label="Tìm trang"
-            placeholder="Tìm đội tuyển, tuyển thủ, tổ chức…"
-            value={search}
-            onChange={(event) => update("q", event.target.value)}
-          />
-        </label>
       </div>
       {query.isPending ? (
         <div className="cp-grid" role="status" aria-label="Đang tải danh bạ">
@@ -83,7 +78,7 @@ export function PageDirectory() {
         </div>
       ) : !query.data.items.length ? (
         <div className="hub-state">
-          <StreamBrand compact />
+          <StreamIcon name="grid" size={28} />
           <h2>{search ? "Chưa tìm thấy trang phù hợp" : "Danh bạ đang được xây dựng"}</h2>
           <p>Trang đã đối chiếu và công bố sẽ xuất hiện tại đây.</p>
           {search && (
@@ -121,11 +116,12 @@ export function PageDirectory() {
 }
 
 /** `following` is null for signed-out viewers, who see no follow button. */
-function ProfileCard({ profile, following }: { profile: CommunityProfile; following: Set<string> | null }) {
+export function ProfileCard({ profile, following }: { profile: CommunityProfile; following: Set<string> | null }) {
   const follow = useFollowPage()
   const name = profile.content?.name || profile.code
   const cover = profile.content?.coverUrl
   const followed = following?.has(profile.id) ?? false
+  const community = isCommunityProfile(profile.kind)
   return (
     <article className="cp-profile-card">
       <Link className="cp-card-link" to={`/pages/${profile.code}`} aria-label={name} />
@@ -147,12 +143,20 @@ function ProfileCard({ profile, following }: { profile: CommunityProfile; follow
         </span>
         <strong className="cp-card-name">
           <span>{name}</span>
-          {profile.represented && <OfficialBadge label="Đại diện đã xác minh" />}
+          {community && profile.represented && <OfficialBadge label="Đại diện đã xác minh" />}
         </strong>
-        <span className="cp-card-meta">{followersLabel(profile.followers)}</span>
+        <span className="cp-card-meta">
+          {community ? followersLabel(profile.followers) : "Tổng quan · Các mùa giải · Lịch sử"}
+        </span>
         <span className="cp-card-footer">
-          <span>{profile.represented ? "Đại diện đã xác minh" : "Hồ sơ do AthaHub tổng hợp"}</span>
-          {following && (
+          <span>
+            {!community
+              ? "Trang thông tin"
+              : profile.represented
+                ? "Đại diện đã xác minh"
+                : "Hồ sơ do AthaHub tổng hợp"}
+          </span>
+          {community && following && (
             <button
               className={followed ? "cp-follow-chip" : "cp-follow-chip cp-follow-primary"}
               aria-pressed={followed}

@@ -114,7 +114,7 @@ function FollowedPages() {
         <div className="hub-state">
           <StreamIcon name="heart" size={28} />
           <h3>Bạn chưa theo dõi trang nào</h3>
-          <Link className="cp-button cp-primary" to="/pages?tab=directory">
+          <Link className="cp-button cp-primary" to="/explore">
             Khám phá trang
           </Link>
         </div>

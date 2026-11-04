@@ -1,23 +1,22 @@
-import { useEffect, useState, type CSSProperties } from "react"
-import { Link, useParams } from "react-router"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { slotLabel, type CommunityProfile, type CompetitionView, type PageSlice } from "@aov/community-contracts"
+import { useState, type CSSProperties } from "react"
+import { Link, useParams, useSearchParams } from "react-router"
+import { useQuery } from "@tanstack/react-query"
+import { type CommunityProfile, type CompetitionView, type PageSlice } from "@aov/community-contracts"
 import { StreamShell } from "../../components/stream-shell"
-import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
-import { CommunityAside } from "./community-aside"
 import {
   competitionStatus,
   competitionStatusLabels,
   competitionsQuery,
   dayRange,
   hueOf,
-  useFeaturedCompetitions,
   type CompetitionStatus,
 } from "./community-ui"
-import { gamesQuery } from "../tournaments/tournament-api"
-import { GameCard } from "../tournaments/game-card"
+import { competitionQuery } from "../tournaments/tournament-api"
+import { MatchRow } from "../tournaments/match-components"
+import { competitionMatches, competitionMatchHref } from "../tournaments/match-model"
+import { CompetitionSchedule } from "../tournaments/competition-schedule"
 
 const hue = (name: string) => ({ "--hub-hue": hueOf(name) }) as CSSProperties
 const monogram = (name: string) =>
@@ -27,7 +26,6 @@ const monogram = (name: string) =>
     .slice(0, 3)
     .map((word) => word[0]!.toUpperCase())
     .join("")
-const statusOrder: (CompetitionStatus | null)[] = ["ONGOING", "UPCOMING", "ANNOUNCED", null, "FINISHED"]
 
 function StatusBadge({ status }: { status: CompetitionStatus | null }) {
   return status ? (
@@ -37,202 +35,16 @@ function StatusBadge({ status }: { status: CompetitionStatus | null }) {
   ) : null
 }
 
-export function CompetitionDirectory() {
-  const [tab, setTab] = useState<"competitions" | "games">("competitions")
-  return (
-    <StreamShell aside={<CommunityAside />}>
-      <title>AOV Stream — Giải đấu Liên Quân</title>
-      <FeaturedCompetitions />
-      <section className="hub-card hub-feed">
-        <div className="hub-feed-header">
-          <nav className="cp-tabs" aria-label="Nội dung trang chủ">
-            <button aria-current={tab === "competitions" ? "page" : undefined} onClick={() => setTab("competitions")}>
-              Mùa giải
-            </button>
-            <button aria-current={tab === "games" ? "page" : undefined} onClick={() => setTab("games")}>
-              Ván đấu mới
-            </button>
-          </nav>
-        </div>
-        <div className="hub-feed-body">{tab === "competitions" ? <CompetitionList /> : <LatestGames />}</div>
-      </section>
-    </StreamShell>
-  )
-}
-
-/** The home banner: published competitions that are running or coming up first, or a welcome slide without any. */
-function FeaturedCompetitions() {
-  const query = useFeaturedCompetitions()
-  const featured = [...(query.data?.items || [])]
-    .sort(
-      (a, b) =>
-        statusOrder.indexOf(competitionStatus(a.content.tournament)) -
-        statusOrder.indexOf(competitionStatus(b.content.tournament)),
-    )
-    .slice(0, 5)
-  const [index, setIndex] = useState(0)
-  const [paused, setPaused] = useState(false)
-  const active = featured.length ? index % featured.length : 0
-  useEffect(() => {
-    if (featured.length < 2 || paused || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
-    const timer = window.setInterval(() => setIndex((value) => value + 1), 7000)
-    return () => window.clearInterval(timer)
-  }, [featured.length, paused])
-  const go = (step: number) => setIndex(active + step + featured.length)
-  return (
-    <section
-      className="hub-hero"
-      aria-roledescription="carousel"
-      aria-label="Giải đấu nổi bật"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-    >
-      {featured.length ? (
-        featured.map((entry, position) => {
-          const { tournament, plan } = entry.content
-          return (
-            <article
-              key={entry.id}
-              className="hub-hero-slide hub-art"
-              style={hue(tournament.name)}
-              data-active={position === active || undefined}
-              aria-hidden={position !== active}
-              aria-roledescription="slide"
-              aria-label={`${position + 1} / ${featured.length}`}
-            >
-              <div className="hub-hero-copy">
-                <StatusBadge status={competitionStatus(tournament)} />
-                <span className="hub-kicker">
-                  {[tournament.region, plan.circuit].filter(Boolean).join(" · ") || "Giải đấu"}
-                </span>
-                <h2>{tournament.name}</h2>
-                <p>
-                  {plan.notes ||
-                    tournament.note ||
-                    "Lịch đấu, đội hình, nhánh đấu và kết quả đã được biên tập, đối chiếu nguồn."}
-                </p>
-                <div className="hub-hero-meta">
-                  <span>
-                    <StreamIcon name="calendar" size={14} />
-                    {dayRange(tournament.startsOn, tournament.endsOn, "Chờ lịch")}
-                  </span>
-                  <span>
-                    <StreamIcon name="users" size={14} />
-                    {plan.entrants.length} đội
-                  </span>
-                </div>
-                <Link className="hub-hero-cta" to={`/competitions/${entry.id}`} tabIndex={position === active ? 0 : -1}>
-                  Xem giải đấu
-                  <StreamIcon name="arrow" size={16} />
-                </Link>
-              </div>
-              <div className="hub-hero-art" aria-hidden="true">
-                {tournament.logoUrl ? <img src={tournament.logoUrl} alt="" /> : <StreamBrand compact />}
-              </div>
-            </article>
-          )
-        })
-      ) : (
-        <article className="hub-hero-slide hub-art" style={{ "--hub-hue": 228 } as CSSProperties} data-active>
-          <div className="hub-hero-copy">
-            <span className="hub-kicker">Liên Quân Mobile · AOV Stream</span>
-            <h2>Theo dõi từng mùa giải, từng ván đấu.</h2>
-            <p>
-              Lịch đấu, đội hình, nhánh đấu và kết quả được biên tập, đối chiếu nguồn — cùng cộng đồng đội tuyển, tuyển
-              thủ và người hâm mộ.
-            </p>
-            <Link className="hub-hero-cta" to="/games">
-              Khám phá ván đấu
-              <StreamIcon name="arrow" size={16} />
-            </Link>
-            <Link className="hub-hero-cta" to="/pages">
-              Vào cộng đồng
-            </Link>
-          </div>
-          <div className="hub-hero-art" aria-hidden="true">
-            <StreamBrand compact />
-          </div>
-        </article>
-      )}
-      {featured.length > 1 && (
-        <div className="hub-hero-controls">
-          <div className="hub-hero-dots">
-            {featured.map((entry, position) => (
-              <button
-                key={entry.id}
-                aria-label={`Xem giải ${position + 1}: ${entry.content.tournament.name}`}
-                aria-current={position === active || undefined}
-                onClick={() => setIndex(position)}
-              />
-            ))}
-          </div>
-          <button aria-label="Giải trước" onClick={() => go(-1)}>
-            <StreamIcon name="chevronLeft" size={18} />
-          </button>
-          <button aria-label="Giải tiếp theo" onClick={() => go(1)}>
-            <StreamIcon name="chevronRight" size={18} />
-          </button>
-        </div>
-      )}
-    </section>
-  )
-}
-
-function LatestGames() {
-  const games = useInfiniteQuery(gamesQuery())
-  const items = games.data?.pages[0]?.items.slice(0, 6) || []
-  if (games.isPending)
-    return (
-      <div className="game-card-grid" role="status" aria-label="Đang tải ván đấu">
-        <div className="game-card-skeleton" />
-        <div className="game-card-skeleton" />
-      </div>
-    )
-  if (games.isError && !items.length)
-    return (
-      <div className="hub-state">
-        <StreamIcon name="reset" size={28} />
-        <h3>Chưa kết nối được dữ liệu ván đấu</h3>
-        <button className="cp-button" onClick={() => void games.refetch()}>
-          Thử lại
-        </button>
-      </div>
-    )
-  if (!items.length)
-    return (
-      <div className="hub-state">
-        <StreamBrand compact />
-        <h3>Chưa có ván đấu được công bố</h3>
-        <p>Các ván đã được rà soát và xuất bản sẽ xuất hiện tại đây.</p>
-      </div>
-    )
-  return (
-    <>
-      <div className="game-card-grid">
-        {items.map((game) => (
-          <GameCard key={game.id} game={game} />
-        ))}
-      </div>
-      <div className="hub-feed-footer">
-        <Link className="cp-button" to="/games">
-          Xem tất cả ván đấu
-          <StreamIcon name="arrow" size={16} />
-        </Link>
-      </div>
-    </>
-  )
-}
-
 export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
   const [page, setPage] = useState(0)
   const filter: Record<string, string> = profile
-    ? profile.kind === "ORGANIZATION"
-      ? { organizerPageId: profile.id }
-      : profile.kind === "TEAM"
-        ? { teamId: profile.entityId || "" }
-        : { playerId: profile.entityId || "" }
+    ? profile.kind === "CIRCUIT"
+      ? { circuitPageId: profile.id }
+      : profile.kind === "ORGANIZATION"
+        ? { organizerPageId: profile.id }
+        : profile.kind === "TEAM"
+          ? { teamId: profile.entityId || "" }
+          : { playerId: profile.entityId || "" }
     : {}
   const query = useQuery(competitionsQuery(filter, page))
   const body = query.isPending ? (
@@ -248,7 +60,7 @@ export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
   ) : !query.data.items.length ? (
     <div className="hub-state">
       <StreamIcon name="calendar" size={28} />
-      <h3>Chưa có giải đã công bố</h3>
+      <h3>{profile?.kind === "CIRCUIT" ? "Chưa có mùa giải được công bố" : "Chưa có giải đã công bố"}</h3>
       <p>Lịch và thông tin sẽ xuất hiện khi được biên tập xong.</p>
     </div>
   ) : (
@@ -280,13 +92,22 @@ export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
   if (!profile) return body
   return (
     <section className="cp-section">
-      <h2>Giải đấu đã tham gia</h2>
+      <h2>
+        {profile.kind === "CIRCUIT"
+          ? "Các mùa giải"
+          : profile.kind === "ORGANIZATION"
+            ? "Giải đấu tổ chức"
+            : "Giải đấu đã tham gia"}
+      </h2>
+      {profile.kind === "ORGANIZATION" && (
+        <p className="cp-meta">Các mùa giải đã công bố có liên kết với tổ chức này.</p>
+      )}
       {body}
     </section>
   )
 }
 
-function CompetitionEvent({ entry }: { entry: CompetitionView }) {
+export function CompetitionEvent({ entry }: { entry: CompetitionView }) {
   const { tournament, plan } = entry.content
   return (
     <Link className="hub-event" to={`/competitions/${entry.id}`}>
@@ -331,25 +152,29 @@ export function EntityPageLink({ kind, id, name }: { kind: "TEAM" | "PLAYER"; id
 }
 
 const competitionTabs = [
-  ["overview", "Tổng quan"],
-  ["teams", "Đội hình"],
   ["matches", "Lịch & kết quả"],
-  ["standings", "Bảng xếp hạng"],
-  ["bracket", "Nhánh đấu"],
-  ["games", "Ván đấu"],
+  ["standings", "BXH & nhánh đấu"],
+  ["teams", "Đội tham dự"],
+  ["overview", "Thông tin"],
 ] as const
 
 export function PublicCompetitionPage() {
   const { id = "" } = useParams()
-  const query = useQuery({
-    queryKey: ["competition", id],
-    queryFn: () => communityApi<CompetitionView>(`/competitions/${id}`),
-  })
-  const [tab, setTab] = useState("overview")
+  const query = useQuery(competitionQuery(id))
+  const [params, setParams] = useSearchParams()
+  const requested = params.get("tab")
+  const tab =
+    requested === "bracket" ? "standings" : competitionTabs.some(([key]) => key === requested) ? requested : "matches"
+  const setTab = (next: string) =>
+    setParams((current) => {
+      const updated = new URLSearchParams(current)
+      updated.set("tab", next)
+      return updated
+    })
   if (!query.data)
     return (
       <StreamShell>
-        <Link className="cp-back" to="/">
+        <Link className="cp-back" to="/competitions">
           <StreamIcon name="back" size={16} />
           Tất cả giải đấu
         </Link>
@@ -364,55 +189,19 @@ export function PublicCompetitionPage() {
         </div>
       </StreamShell>
     )
-  const { tournament, plan, teams, players, rosters, resolved, standings, organizer } = query.data.content
+  const { tournament, plan, teams, players, rosters, standings, organizer, circuit } = query.data.content
   const team = (teamId?: string | null) =>
     teamId ? <EntityPageLink kind="TEAM" id={teamId} name={teams[teamId]?.name || "Đội chưa có thông tin"} /> : null
+  const matches = competitionMatches([query.data])
   const fixture = (key: string) => {
-    const match = plan.matches.find((match) => match.key === key)!,
-      result = resolved.find((row) => row.key === key)
-    const decided = result?.scoreA != null && result?.scoreB != null && result.scoreA !== result.scoreB
-    return (
-      <article key={key} className="cp-match">
-        <div className="cp-match-head">
-          <span className="hub-chip">
-            {match.label} · BO{match.bestOf}
-          </span>
-          <span className="cp-meta">
-            <StreamIcon name="clock" size={14} />
-            {match.scheduledAt
-              ? new Intl.DateTimeFormat("vi-VN", {
-                  dateStyle: "short",
-                  timeStyle: "short",
-                  timeZone: plan.timezone,
-                }).format(new Date(match.scheduledAt))
-              : "Chờ lịch"}
-          </span>
-        </div>
-        <div className="cp-match-teams">
-          <span data-winner={(decided && result!.scoreA! > result!.scoreB!) || undefined}>
-            {team(result?.teamAId) || slotLabel(match.a, teams)}
-          </span>
-          <strong>
-            {result?.scoreA ?? "–"} : {result?.scoreB ?? "–"}
-          </strong>
-          <span data-winner={(decided && result!.scoreB! > result!.scoreA!) || undefined}>
-            {team(result?.teamBId) || slotLabel(match.b, teams)}
-          </span>
-        </div>
-        {match.seriesId && (
-          <Link className="cp-match-link" to={`/games?tournament=${id}&q=${encodeURIComponent(match.label)}`}>
-            Xem các ván đã công bố
-            <StreamIcon name="arrow" size={14} />
-          </Link>
-        )}
-      </article>
-    )
+    const entry = matches.find((entry) => entry.match.key === key)
+    return entry ? <MatchRow key={key} entry={entry} /> : null
   }
   return (
     <StreamShell>
       <title>{`${tournament.name} — AOV Stream`}</title>
       <div className="cp-container">
-        <Link className="cp-back" to="/">
+        <Link className="cp-back" to="/competitions">
           <StreamIcon name="back" size={16} />
           Tất cả giải đấu
         </Link>
@@ -424,7 +213,8 @@ export function PublicCompetitionPage() {
             <div className="cp-competition-title">
               <StatusBadge status={competitionStatus(tournament)} />
               <span className="hub-kicker">
-                {[plan.circuit || "Giải đấu", tournament.region].filter(Boolean).join(" · ")}
+                {circuit ? <Link to={`/pages/${circuit.code}`}>{circuit.name}</Link> : plan.circuit || "Giải đấu"}
+                {tournament.region && ` · ${tournament.region}`}
               </span>
               <h1>{tournament.name}</h1>
               <div className="hub-banner-stats">
@@ -594,17 +384,8 @@ export function PublicCompetitionPage() {
         )}
         {tab === "matches" && (
           <section className="cp-section">
-            <h2>Lịch thi đấu</h2>
-            <p className="cp-meta">Giờ hiển thị: {plan.timezone}</p>
-            {!plan.matches.length && <p className="cp-muted">Chưa có lịch thi đấu.</p>}
-            {plan.stages.map((stage) => (
-              <div className="cp-stage-fixtures" key={stage.code}>
-                <h3>{stage.name}</h3>
-                <div className="cp-fixture-grid">
-                  {plan.matches.filter((match) => match.stageCode === stage.code).map((match) => fixture(match.key))}
-                </div>
-              </div>
-            ))}
+            <h2>Lịch & kết quả</h2>
+            <CompetitionSchedule entries={matches} timeZone={plan.timezone} />
           </section>
         )}
         {tab === "standings" && (
@@ -666,7 +447,7 @@ export function PublicCompetitionPage() {
             ))}
           </>
         )}
-        {tab === "bracket" && (
+        {tab === "standings" && (
           <>
             {!plan.stages.some((stage) => stage.format !== "ROUND_ROBIN") && (
               <div className="hub-state">
@@ -699,37 +480,8 @@ export function PublicCompetitionPage() {
               ))}
           </>
         )}
-        {tab === "games" && <PublishedGames tournamentId={id} />}
       </div>
     </StreamShell>
-  )
-}
-function PublishedGames({ tournamentId }: { tournamentId: string }) {
-  const query = useInfiniteQuery(gamesQuery({ tournamentId }))
-  const games = query.data?.pages.flatMap((page) => page.items) || []
-  return (
-    <section className="cp-section">
-      <h2>Ván đấu đã công bố</h2>
-      {query.isPending && <div className="hub-skeleton-rows" role="status" aria-label="Đang tải ván đấu" />}
-      {query.isError && (
-        <p className="cp-error" role="alert">
-          {query.error.message}
-        </p>
-      )}
-      {!query.isPending && !games.length && <p className="cp-muted">Chưa có ván đã ghi nhận chi tiết.</p>}
-      <div className="game-card-grid">
-        {games.map((game) => (
-          <GameCard key={game.id} game={game} />
-        ))}
-      </div>
-      {query.hasNextPage && (
-        <div className="hub-feed-footer">
-          <button className="cp-button" disabled={query.isFetchingNextPage} onClick={() => void query.fetchNextPage()}>
-            Xem thêm
-          </button>
-        </div>
-      )}
-    </section>
   )
 }
 export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfile }) {
@@ -740,7 +492,7 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
     queryFn: () => communityApi<PageSlice<CompetitionView>>(`/competitions?${filter}&size=10&page=${page}`),
     enabled: !!profile.entityId,
   })
-  if (profile.kind === "ORGANIZATION") return <CompetitionList profile={profile} />
+  if (profile.kind === "ORGANIZATION" || profile.kind === "CIRCUIT") return <CompetitionList profile={profile} />
   const matches = (query.data?.items || []).flatMap((entry) => {
     const ids =
       profile.kind === "TEAM"
@@ -775,13 +527,13 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
             <Link className="cp-result-event" to={`/competitions/${entry.id}`}>
               {entry.content.tournament.name}
             </Link>
-            <span className="cp-result-teams">
+            <Link className="cp-result-teams" to={competitionMatchHref(entry.id, row.key)}>
               <span>{entry.content.teams[row.teamAId || ""]?.name || "Chờ đội"}</span>
               <strong>
                 {row.scoreA ?? "–"} : {row.scoreB ?? "–"}
               </strong>
               <span>{entry.content.teams[row.teamBId || ""]?.name || "Chờ đội"}</span>
-            </span>
+            </Link>
           </div>
         ))}
         {query.data && query.data.totalElements > 10 && (

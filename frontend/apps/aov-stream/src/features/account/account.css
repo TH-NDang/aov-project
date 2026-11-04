@@ -36,8 +36,8 @@
 .account-avatar-field {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin: 24px 0 8px;
+  gap: var(--hub-layout-gap);
+  margin: var(--hub-space-4) 0 var(--hub-space-2);
 }
 .account-avatar-field .cp-meta {
   margin: 8px 0 0;
@@ -100,7 +100,7 @@
 .account-profile-actions {
   justify-content: flex-end;
   margin-top: 8px;
-  padding-top: 20px;
+  padding-top: var(--hub-panel-padding);
   border-top: 1px solid var(--hub-border);
 }
 .cp-session .account-session-link {
@@ -150,9 +150,6 @@
     width: 72px;
     height: 72px;
     font-size: 22px;
-  }
-  .account-avatar-field {
-    gap: 16px;
   }
   .account-profile-actions .cp-button {
     flex: 1;

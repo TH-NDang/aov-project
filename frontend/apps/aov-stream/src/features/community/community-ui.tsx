@@ -11,9 +11,11 @@ import type { StreamIconName } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 
 export const kindIcons: Record<ProfileKind, StreamIconName> = {
+  CIRCUIT: "trophy",
   ORGANIZATION: "building",
   TEAM: "shield",
   PLAYER: "user",
+  PERSON: "user",
 }
 
 /** A stable hue per name, so pages and competitions without artwork still get distinct covers. */

@@ -6,11 +6,11 @@ import { useIsMobile } from "@aov/ui/hooks/use-mobile"
 import { publicAuthError } from "@aov/ui/lib/public-auth"
 import { useStreamTheme } from "../../components/stream-theme"
 import { useStreamLocale } from "../../components/stream-locale"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { completeLogin, signIn, signOut, useCommunitySession } from "./community-auth"
 import { useNotifications, useReadNotifications, useUnreadCount } from "./community-queries"
 import { timeAgo } from "./community-ui"
-import { StreamShell, StreamMobileNavigation, WIKI_URL } from "../../components/stream-shell"
+import { StreamShell, WIKI_URL } from "../../components/stream-shell"
 import owlMark from "../../assets/stream-owl.svg"
 import { StreamIcon, type StreamIconName } from "../../components/stream-icon"
 import { useOwnProfile } from "../account/profile-api"
@@ -56,7 +56,6 @@ export function CommunitySessionButton() {
         >
           <PublicAccountSummary {...accountProps} />
           {links && <div className="public-account-links">{links}</div>}
-          <StreamMobileNavigation />
           <div className="public-preferences-label">{text("Chọn ứng dụng", "Choose application")}</div>
           <nav className="public-preferences-apps" aria-label={text("Chọn ứng dụng", "Choose application")}>
             <a className="public-preferences-app" href={WIKI_URL}>
@@ -105,7 +104,7 @@ function NotificationBell() {
           {count > 0 && <span className="hub-badge">{count > 99 ? "99+" : count}</span>}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={8} className="hub-popover hub-notifications">
+      <PopoverContent align="end" sideOffset={8} className="hub-popover hub-notifications" drawerTitle="Thông báo">
         <div className="hub-popover-header">
           <strong>Thông báo</strong>
           <button className="cp-text-button" disabled={!count || read.all.isPending} onClick={() => read.all.mutate()}>
@@ -186,8 +185,8 @@ export function CommunityLoginCallback() {
                 >
                   {text("Thử đăng nhập lại", "Try again")}
                 </button>
-                <Link className="cp-button" to="/pages">
-                  {text("Về cộng đồng", "Back to community")}
+                <Link className="cp-button" to="/">
+                  {text("Về trang chủ", "Back to home")}
                 </Link>
               </div>
             </>

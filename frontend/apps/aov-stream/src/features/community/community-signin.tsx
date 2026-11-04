@@ -1,5 +1,5 @@
 import { useState, useSyncExternalStore } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/public-overlay"
 import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
 import { signIn, useCommunitySession } from "./community-auth"

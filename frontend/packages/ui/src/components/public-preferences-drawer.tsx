@@ -1,14 +1,7 @@
 import { useState, type ComponentProps, type ReactNode } from "react"
 import { X } from "lucide-react"
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerHandle,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerTrigger,
-} from "./drawer"
+import { DrawerClose, DrawerContent, DrawerHandle, DrawerTitle, DrawerDescription, DrawerTrigger } from "./drawer"
+import { PublicDrawer as Drawer } from "./public-overlay"
 import "./public-account-menu.css"
 import "./public-preferences-drawer.css"
 

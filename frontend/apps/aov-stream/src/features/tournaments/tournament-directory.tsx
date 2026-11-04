@@ -1,9 +1,8 @@
 import { useDeferredValue, useEffect, useRef, type CSSProperties } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { useSearchParams } from "react-router"
-import { StreamBrand } from "../../components/stream-brand"
+import { Link, useSearchParams } from "react-router"
 import { StreamIcon } from "../../components/stream-icon"
-import { StreamShell, ADMIN_URL } from "../../components/stream-shell"
+import { StreamShell } from "../../components/stream-shell"
 import { gamesQuery, tournamentsQuery } from "./tournament-api"
 import { GameCard } from "./game-card"
 import { CommunityAside } from "../community/community-aside"
@@ -11,6 +10,7 @@ import { CommunityAside } from "../community/community-aside"
 export function TournamentDirectory() {
   const [params, setParams] = useSearchParams()
   const tournament = params.get("tournament") || ""
+  const seriesId = params.get("series") || ""
   const q = params.get("q") || ""
   const search = useDeferredValue(
     q
@@ -19,7 +19,7 @@ export function TournamentDirectory() {
       .replace(/[\u0300-\u036f]/g, "")
       .toLocaleLowerCase("vi-VN"),
   )
-  const games = useInfiniteQuery(gamesQuery({ tournamentId: tournament || undefined }))
+  const games = useInfiniteQuery(gamesQuery({ tournamentId: tournament || undefined, seriesId: seriesId || undefined }))
   const tournaments = useQuery(tournamentsQuery)
   const sentinel = useRef<HTMLDivElement>(null)
   const entries = games.data?.pages.flatMap((page) => page.items) || []
@@ -49,6 +49,7 @@ export function TournamentDirectory() {
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
+        if (key === "tournament") next.delete("series")
         if (value) next.set(key, value)
         else next.delete(key)
         return next
@@ -57,12 +58,16 @@ export function TournamentDirectory() {
     )
   }
   return (
-    <StreamShell aside={<CommunityAside />}>
-      <title>Ván đấu — AOV Stream</title>
+    <StreamShell aside={<CommunityAside schedule />}>
+      <title>Tra cứu ván đấu — AOV Stream</title>
+      <Link className="cp-back" to="/competitions">
+        <StreamIcon name="back" size={16} />
+        Giải đấu
+      </Link>
       <header className="hub-banner hub-art" style={{ "--hub-hue": 252 } as CSSProperties}>
         <div className="hub-banner-copy">
           <span className="hub-kicker">Đấu trường trong tầm ngắm</span>
-          <h1>Mỗi trận đấu, một góc nhìn mới.</h1>
+          <h1>Tra cứu ván đấu</h1>
           <p>Theo dấu đội hình, cách lên đồ và những lựa chọn làm nên ván đấu.</p>
           <div className="hub-banner-stats">
             <span>
@@ -75,9 +80,6 @@ export function TournamentDirectory() {
             </span>
           </div>
         </div>
-        <span className="hub-banner-mark" aria-hidden="true">
-          <StreamBrand compact />
-        </span>
       </header>
       <section className="stream-directory" id="matches">
         <div className="stream-toolbar">
@@ -85,7 +87,7 @@ export function TournamentDirectory() {
             <div className="hub-section-heading">
               <h2>
                 <StreamIcon name="trophy" size={20} />
-                Trận đấu
+                Ván đấu đã công bố
               </h2>
             </div>
             <label className="stream-search">
@@ -117,7 +119,7 @@ export function TournamentDirectory() {
           </div>
         </div>
         {games.isPending ? (
-          <div className="game-card-grid" role="status" aria-label="Đang tải trận đấu">
+          <div className="game-card-grid" role="status" aria-label="Đang tải ván đấu">
             {Array.from({ length: 4 }, (_, index) => (
               <div className="game-card-skeleton" key={index} aria-hidden="true" />
             ))}
@@ -139,21 +141,21 @@ export function TournamentDirectory() {
           </div>
         ) : (
           <div className="hub-state">
-            <StreamBrand compact />
-            <h3>{q ? "Chưa tìm thấy trận phù hợp" : "Đấu trường đang chờ những bản ghi đầu tiên"}</h3>
+            <StreamIcon name="gamepad" size={28} />
+            <h3>{q ? "Chưa tìm thấy ván phù hợp" : "Chưa có ván đấu được công bố"}</h3>
             <p>
               {q ? "Thử tên đội hoặc chọn giải khác." : "Các ván đã được rà soát và xuất bản sẽ xuất hiện tại đây."}
             </p>
             {!q && (
-              <a className="cp-button" href={`${ADMIN_URL}/tournaments`}>
-                Đến trang biên tập <StreamIcon name="arrow" size={15} />
-              </a>
+              <Link className="cp-button" to="/competitions">
+                Xem giải đấu <StreamIcon name="arrow" size={15} />
+              </Link>
             )}
           </div>
         )}
         <div ref={sentinel} className="stream-load-more" role="status">
           {games.isFetchingNextPage ? (
-            "Đang tải thêm trận đấu…"
+            "Đang tải thêm ván đấu…"
           ) : games.isFetchNextPageError ? (
             <button type="button" onClick={() => void games.fetchNextPage()}>
               Tải lại phần tiếp theo

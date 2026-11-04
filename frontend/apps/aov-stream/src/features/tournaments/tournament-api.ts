@@ -1,5 +1,11 @@
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
-import type { PageSlice, PublishedGame, TournamentContent, SeriesContent } from "@aov/community-contracts"
+import type {
+  CompetitionView,
+  PageSlice,
+  PublishedGame,
+  TournamentContent,
+  SeriesContent,
+} from "@aov/community-contracts"
 
 export interface PublishedSummary<T> {
   id: string
@@ -14,6 +20,40 @@ async function read<T>(path: string, signal: AbortSignal): Promise<T> {
     )
   return response.json()
 }
+
+/** Read every public page so filtering and match grouping never silently omit later pages. */
+async function readPages<T>(path: string, signal: AbortSignal): Promise<T[]> {
+  const items: T[] = []
+  for (let page = 0; ; page += 1) {
+    const result = await read<PageSlice<T>>(`${path}${path.includes("?") ? "&" : "?"}page=${page}&size=50`, signal)
+    items.push(...result.items)
+    if (!result.items.length || (result.page + 1) * result.size >= result.totalElements) return items
+  }
+}
+
+export const competitionCatalogQuery = queryOptions({
+  queryKey: ["competition-catalog"],
+  queryFn: ({ signal }) => readPages<CompetitionView>("/competitions", signal),
+  staleTime: 60_000,
+  retry: 1,
+})
+
+export const competitionQuery = (id: string) =>
+  queryOptions({
+    queryKey: ["competition", id],
+    queryFn: ({ signal }) => read<CompetitionView>(`/competitions/${encodeURIComponent(id)}`, signal),
+    staleTime: 60_000,
+    retry: 1,
+  })
+
+export const matchGamesQuery = (seriesId?: string | null) =>
+  queryOptions({
+    queryKey: ["match-games", seriesId],
+    queryFn: ({ signal }) => readPages<PublishedGame>(`/games?seriesId=${encodeURIComponent(seriesId!)}`, signal),
+    enabled: !!seriesId,
+    staleTime: 60_000,
+    retry: 1,
+  })
 export function gamesQuery(filters: { tournamentId?: string; seriesId?: string } = {}) {
   return infiniteQueryOptions({
     queryKey: ["community", "games", filters],

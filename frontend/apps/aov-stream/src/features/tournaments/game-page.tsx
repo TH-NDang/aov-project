@@ -10,6 +10,7 @@ import { hueOf } from "../community/community-ui"
 import { ReferenceArt } from "./reference-art"
 import { clock, LANES, LANE_SHORT, observationTimes, orderedParticipants, referenceName } from "./tournament-model"
 import { EquipmentEvents, GameLoadouts, type LoadoutTab } from "./game-loadouts"
+import { MatchGameNavigation } from "./match-components"
 
 function TeamDraft({ side, game }: { side: GameSide; game: PublishedGame }) {
   const team = game.teams[side.teamId]
@@ -69,12 +70,16 @@ function PublishedGameView({ game }: { game: PublishedGame }) {
       <title>{`${game.teams[game.content.sides[0]?.teamId || ""]?.shortName || "Trận đấu"} vs ${game.teams[game.content.sides[1]?.teamId || ""]?.shortName || ""} — Ván ${game.content.number} | AOV Stream`}</title>
       <div className="game-detail">
         <nav className="game-breadcrumb" aria-label="Đường dẫn">
-          <Link to="/games">
+          <Link to="/competitions">
             <StreamIcon name="back" size={16} />
-            Ván đấu
+            Giải đấu
           </Link>
           <span aria-hidden="true">/</span>
-          <Link to={`/games?tournament=${game.series.tournamentId}`}>{game.tournament.name}</Link>
+          <Link to={`/competitions/${game.series.tournamentId}?tab=matches`}>{game.tournament.name}</Link>
+          <span aria-hidden="true">/</span>
+          <Link to={`/matches/${game.content.seriesId}`}>{game.series.name || "Trận đấu"}</Link>
+          <span aria-hidden="true">/</span>
+          <span>Ván {game.content.number}</span>
         </nav>
         <header className="game-heading hub-art" style={{ "--hub-hue": hueOf(game.tournament.name) } as CSSProperties}>
           <div>
@@ -111,6 +116,7 @@ function PublishedGameView({ game }: { game: PublishedGame }) {
             </a>
           )}
         </header>
+        <MatchGameNavigation seriesId={game.content.seriesId} activeGameId={game.id} />
         <div className="game-draft-board">
           {game.content.sides.map((side) => (
             <TeamDraft side={side} game={game} key={side.side} />

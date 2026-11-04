@@ -33,6 +33,7 @@ export type CompetitionStage = {
 }
 export type CompetitionPlan = {
   circuit: string
+  circuitPageId?: string | null
   organizer: string
   organizerPageId?: string | null
   timezone: string
@@ -68,6 +69,7 @@ export type CompetitionStanding = {
   qualified: boolean
 }
 export type CompetitionSnapshot = {
+  circuit?: { id: string; code: string; name: string; logoUrl?: string | null; published: boolean } | null
   organizer?: { id: string; code: string; name: string; logoUrl?: string | null; published: boolean } | null
   tournament: TournamentContent
   plan: CompetitionPlan

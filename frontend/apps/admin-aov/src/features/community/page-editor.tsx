@@ -64,7 +64,13 @@ function EditorLoader({ access }: { access: Access }) {
 }
 type Icon = ComponentType<{ className?: string }>
 type Tab = [string, string, Icon, number | null]
-const kindIcons: Record<ProfileKind, Icon> = { ORGANIZATION: Building2, TEAM: Users, PLAYER: UserRound }
+const kindIcons: Record<ProfileKind, Icon> = {
+  ORGANIZATION: Building2,
+  TEAM: Users,
+  PLAYER: UserRound,
+  PERSON: UserRound,
+  CIRCUIT: Trophy,
+}
 const httpUrl = (value?: string | null) => !!value && /^https?:\/\//i.test(value)
 
 function Editor({ entry, access }: { entry: CommunityProfile; access: Access }) {

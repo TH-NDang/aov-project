@@ -4,7 +4,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@aov/ui/components/dropdown-menu"
+} from "@aov/ui/components/public-overlay"
 import owlMark from "../assets/stream-owl.svg"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
@@ -41,7 +41,13 @@ export function StreamAppSwitcher({ wikiUrl }: { wikiUrl: string }) {
           </svg>
         </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" alignOffset={-40} sideOffset={10} className="public-app-theme public-app-menu">
+      <DropdownMenuContent
+        align="start"
+        alignOffset={-40}
+        sideOffset={10}
+        className="public-app-theme public-app-menu"
+        drawerTitle="Chọn ứng dụng"
+      >
         <div className="public-app-menu-title">Chọn ứng dụng</div>
         <DropdownMenuItem asChild className="public-app-option" data-product="wiki">
           <a href={wikiUrl}>

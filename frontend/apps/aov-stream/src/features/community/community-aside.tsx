@@ -16,6 +16,7 @@ import {
   useUnreadCount,
 } from "./community-queries"
 import { Avatar, followersLabel, timeAgo } from "./community-ui"
+import { TodaySchedule } from "./community-schedule"
 
 /**
  * The right column of portal pages. Visitors get an invitation to sign in; the account card, notifications and
@@ -24,16 +25,21 @@ import { Avatar, followersLabel, timeAgo } from "./community-ui"
 export function CommunityAside({
   suggestions = true,
   representative = false,
+  schedule = false,
 }: {
   suggestions?: boolean
   representative?: boolean
+  /** Lists today's matches, or the next ones, from the published competitions. */
+  schedule?: boolean
 }) {
   const session = useCommunitySession()
   const signedIn = session.status === "authenticated"
   return (
     <>
       {signedIn ? <AccountCard /> : <GuestCard />}
+      {schedule && <TodaySchedule />}
       {signedIn && <NotificationsCard />}
+      {signedIn && suggestions && <FollowingCard />}
       {signedIn && suggestions && <FollowSuggestions />}
       {representative && (
         <section className="hub-card hub-card-padded">
@@ -156,6 +162,34 @@ function NotificationsCard() {
   )
 }
 
+/** Quick access to the pages the viewer follows; replaces the old row of page chips above the feed. */
+function FollowingCard() {
+  const pages = useFollowedPages()
+  const items = pages.data?.items || []
+  if (!items.length) return null
+  return (
+    <section className="hub-card hub-card-padded">
+      <div className="hub-card-heading">
+        <h2 className="hub-card-title">Đang theo dõi</h2>
+        <Link to="/account?tab=follows" className="hub-card-more">
+          Xem tất cả
+        </Link>
+      </div>
+      <ul className="cp-following">
+        {items.slice(0, 6).map((profile) => (
+          <li key={profile.id}>
+            <Link to={`/pages/${profile.code}`}>
+              <Avatar profile={profile} />
+              <span>{profile.content?.name || profile.code}</span>
+              {profile.live && <span className="cp-live-badge">Trực tiếp</span>}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 function FollowSuggestions() {
   const pages = useSuggestions(5)
   const follow = useFollowPage()
@@ -163,7 +197,7 @@ function FollowSuggestions() {
     <section className="hub-card hub-card-padded">
       <div className="hub-card-heading">
         <h2 className="hub-card-title">Gợi ý theo dõi</h2>
-        <Link to="/pages?tab=directory" className="hub-card-more">
+        <Link to="/explore" className="hub-card-more">
           Xem tất cả
         </Link>
       </div>

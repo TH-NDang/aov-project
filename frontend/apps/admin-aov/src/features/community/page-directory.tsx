@@ -10,8 +10,12 @@ import { AccessGate, type Access } from "@/features/esports/pages/esports-shell"
 import { pageApi, pageError, pageKeys } from "./page-api"
 import { CreateProfileSheet } from "./create-profile-sheet"
 
-const paths = { ORGANIZATION: "/organizations", TEAM: "/teams", PLAYER: "/players" }
-export const profileDirectoryPath = (kind: ProfileKind) => paths[kind]
+const paths: Partial<Record<ProfileKind, string>> = {
+  ORGANIZATION: "/organizations",
+  TEAM: "/teams",
+  PLAYER: "/players",
+}
+export const profileDirectoryPath = (kind: ProfileKind) => paths[kind] ?? "/tournaments"
 export function PageDirectory({ kind }: { kind: ProfileKind }) {
   return <AccessGate>{(access) => <Directory key={kind} kind={kind} access={access} />}</AccessGate>
 }
@@ -43,7 +47,7 @@ function Directory({ kind, access }: { kind: ProfileKind; access: Access }) {
         <span className="type-label mr-2 text-muted-foreground">DANH BẠ THI ĐẤU</span>
         {(Object.keys(paths) as ProfileKind[]).map((type) => (
           <Button key={type} variant={kind === type ? "secondary" : "ghost"} asChild>
-            <Link to={paths[type]}>{profileKindLabels[type]}</Link>
+            <Link to={profileDirectoryPath(type)}>{profileKindLabels[type]}</Link>
           </Button>
         ))}
       </div>

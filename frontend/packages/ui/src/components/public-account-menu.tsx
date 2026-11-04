@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { Globe2, LogIn, LogOut, Moon, Sun, UserRound } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "./popover"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
+import { Popover, PopoverContent, PopoverTrigger } from "./public-overlay"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./public-select"
+import { useIsMobile } from "../hooks/use-mobile"
 import "./public-account-menu.css"
 
 export type PublicAccountOptionsProps = {
@@ -20,6 +21,7 @@ export type PublicAccountOptionsProps = {
 type Props = PublicAccountOptionsProps & { triggerClassName?: string }
 
 export function PublicAccountMenu(props: Props) {
+  const mobile = useIsMobile()
   const { product, locale, name, triggerClassName = "" } = props
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -39,6 +41,7 @@ export function PublicAccountMenu(props: Props) {
     return () => window.removeEventListener("resize", onResize)
   }, [open])
   function leave() {
+    if (mobile) return
     cancel()
     timer.current = setTimeout(() => {
       if (panel.current?.querySelector('[data-slot="select-trigger"][data-state="open"]')) return
@@ -53,7 +56,7 @@ export function PublicAccountMenu(props: Props) {
         data-product={product}
         aria-label={text("Tài khoản và tùy chọn", "Account and preferences")}
         onPointerEnter={(event) => {
-          if (event.pointerType !== "mouse") return
+          if (mobile || event.pointerType !== "mouse") return
           cancel()
           if (!open)
             timer.current = setTimeout(() => {
@@ -73,6 +76,7 @@ export function PublicAccountMenu(props: Props) {
         </span>
       </PopoverTrigger>
       <PopoverContent
+        drawerTitle={text("Tài khoản và tùy chọn", "Account and preferences")}
         ref={panel}
         align="end"
         side="bottom"
@@ -205,6 +209,7 @@ export function PublicAccountSettings({
             <SelectValue />
           </SelectTrigger>
           <SelectContent
+            drawerTitle={text("Ngôn ngữ", "Language")}
             className="public-account-theme public-account-language-menu"
             data-product={product}
             position="popper"

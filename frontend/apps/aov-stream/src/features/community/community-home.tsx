@@ -1,75 +1,82 @@
-import { useEffect, useRef, type CSSProperties } from "react"
-import { Link, useSearchParams } from "react-router"
+import { useEffect, useRef } from "react"
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import type { CommunityProfile, FeedPost, PageSlice } from "@aov/community-contracts"
+import {
+  isCommunityProfile,
+  type CommunityProfile,
+  type FeedPost,
+  type PageSlice,
+  type PostKind,
+} from "@aov/community-contracts"
 import { StreamShell } from "../../components/stream-shell"
-import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { CommunityAside } from "./community-aside"
 import { useCommunitySession } from "./community-auth"
-import { PageDirectory } from "./community-directory"
+import { ProfileCard } from "./community-directory"
 import { PostCard } from "./community-post"
+import { LiveRow } from "./community-live"
 import { useFollowedIds } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
-import { Avatar } from "./community-ui"
 import "./community.css"
 
-type Tab = "latest" | "following" | "directory"
+type Tab = "latest" | "following" | "video" | "news"
+
+const filters: { value: Tab; label: string }[] = [
+  { value: "latest", label: "Tất cả" },
+  { value: "following", label: "Đang theo dõi" },
+  { value: "video", label: "Video" },
+  { value: "news", label: "Tin tức" },
+]
+const tabKinds: Partial<Record<Tab, PostKind>> = { video: "VIDEO", news: "NEWS" }
 
 export function CommunityHome() {
   const session = useCommunitySession()
   const signedIn = useSignedInAction()
   const [params, setParams] = useSearchParams()
+  // The page directory moved to the explore page; old links keep their search and kind.
+  if (params.has("q") || params.has("kind") || params.get("tab") === "directory") {
+    const moved = new URLSearchParams(params)
+    moved.delete("tab")
+    const search = moved.toString()
+    return <Navigate to={search ? `/explore?${search}` : "/explore"} replace />
+  }
   const requested = params.get("tab")
+  if (requested === "results") return <Navigate to="/competitions?tab=schedule&scope=results" replace />
   const tab: Tab =
-    params.has("q") || params.has("kind") || requested === "directory"
-      ? "directory"
-      : requested === "following" && session.status === "authenticated"
+    requested === "following"
+      ? session.status === "authenticated"
         ? "following"
         : "latest"
+      : filters.find((filter) => filter.value === requested)?.value || "latest"
   const open = (next: Tab) => setParams(next === "latest" ? {} : { tab: next })
   return (
-    <StreamShell aside={<CommunityAside suggestions />}>
-      <title>Cộng đồng — AOV Stream</title>
+    <StreamShell aside={<CommunityAside suggestions schedule />}>
+      <title>Bảng tin — AOV Stream</title>
       <div className="cp-container">
-        <ChannelStrip />
-        <header className="hub-banner hub-art cp-community-banner" style={{ "--hub-hue": 214 } as CSSProperties}>
-          <div className="hub-banner-copy">
-            <span className="hub-kicker">Cộng đồng Liên Quân</span>
-            <h1>Tin mới từ đấu trường</h1>
-            <p>
-              Bài viết từ tổ chức, đội tuyển, tuyển thủ và người hâm mộ. Ai cũng đọc được; đăng nhập để thích, bình luận
-              và theo dõi.
-            </p>
-          </div>
-          <span className="hub-banner-mark" aria-hidden="true">
-            <StreamBrand compact />
-          </span>
-        </header>
+        <h1 className="sr-only">Bảng tin cộng đồng</h1>
         <section className="hub-card hub-feed">
-          <div className="hub-feed-header">
-            <nav className="cp-tabs" aria-label="Nội dung cộng đồng">
-              <button aria-current={tab === "latest" ? "page" : undefined} onClick={() => open("latest")}>
-                Mới nhất
-              </button>
-              <button
-                aria-current={tab === "following" ? "page" : undefined}
-                onClick={() => signedIn("Đăng nhập để xem bài mới từ các trang bạn theo dõi.", () => open("following"))}
-              >
-                Đang theo dõi
-              </button>
-              <button aria-current={tab === "directory" ? "page" : undefined} onClick={() => open("directory")}>
-                Danh bạ trang
-              </button>
-            </nav>
+          <div className="hub-feed-header cp-feed-filters">
+            <div className="hub-pills" role="group" aria-label="Lọc bảng tin">
+              {filters.map((filter) => (
+                <button
+                  key={filter.value}
+                  type="button"
+                  aria-pressed={tab === filter.value}
+                  onClick={() =>
+                    filter.value === "following"
+                      ? signedIn("Đăng nhập để xem bài mới từ các trang bạn theo dõi.", () => open("following"))
+                      : open(filter.value)
+                  }
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="hub-feed-body">
-            {tab === "directory" ? (
-              <PageDirectory />
-            ) : (
-              <CrossFeed key={tab} following={tab === "following"} onExplore={() => open("directory")} />
-            )}
+            {tab === "latest" && <LiveRow />}
+            <CrossFeed key={tab} following={tab === "following"} kind={tabKinds[tab]} />
           </div>
         </section>
       </div>
@@ -77,49 +84,23 @@ export function CommunityHome() {
   )
 }
 
-/** Published pages as channels, like a channel bar: the shared feed first, then each page. */
-export function ChannelStrip({ active }: { active?: string }) {
-  const pages = useQuery({
-    queryKey: ["page-channels"],
-    queryFn: () => communityApi<PageSlice<CommunityProfile>>("/pages?size=20"),
-    staleTime: 60_000,
-  })
-  if (pages.data && !pages.data.items.length) return null
-  return (
-    <nav className="cp-channels" aria-label="Kênh cộng đồng">
-      <Link to="/pages" className="cp-channel" aria-current={!active ? "page" : undefined}>
-        <span className="cp-channel-icon">
-          <StreamIcon name="feed" size={18} />
-        </span>
-        <span>Bảng tin</span>
-      </Link>
-      {pages.data?.items.map((page) => (
-        <Link
-          key={page.id}
-          to={`/pages/${page.code}`}
-          className="cp-channel"
-          aria-current={active === page.code ? "page" : undefined}
-          title={page.content?.name}
-        >
-          <Avatar profile={page} />
-          <span>{page.content?.shortName || page.content?.name || page.code}</span>
-        </Link>
-      ))}
-    </nav>
-  )
-}
-
-function CrossFeed({ following, onExplore }: { following: boolean; onExplore: () => void }) {
+function CrossFeed({ following, kind }: { following: boolean; kind?: PostKind }) {
+  const navigate = useNavigate()
   const session = useCommunitySession()
   const followedIds = useFollowedIds()
   const signedIn = session.status === "authenticated"
   const sentinel = useRef<HTMLDivElement>(null)
   const feed = useInfiniteQuery({
-    queryKey: ["community-feed", following, signedIn ? session.revision : 0],
+    queryKey: ["community-feed", following, kind, signedIn ? session.revision : 0],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       communityApi<PageSlice<FeedPost>>(
-        signedIn ? `/me/feed?following=${following}&page=${pageParam}&size=10` : `/posts?page=${pageParam}&size=10`,
+        `${signedIn ? "/me/feed" : "/posts"}?${new URLSearchParams({
+          ...(signedIn ? { following: String(following) } : {}),
+          ...(kind ? { kind } : {}),
+          page: String(pageParam),
+          size: "10",
+        })}`,
       ),
     getNextPageParam: (last) => ((last.page + 1) * last.size < last.totalElements ? last.page + 1 : undefined),
   })
@@ -160,19 +141,18 @@ function CrossFeed({ following, onExplore }: { following: boolean; onExplore: ()
         <StreamIcon name="heart" size={28} />
         <h3>Chưa có bài mới từ trang bạn theo dõi</h3>
         <p>Theo dõi tổ chức, đội tuyển hoặc tuyển thủ để thấy bài viết của họ tại đây.</p>
-        <button className="cp-button cp-primary" onClick={onExplore}>
+        <button className="cp-button cp-primary" onClick={() => navigate("/explore")}>
           Khám phá trang
         </button>
       </div>
-    ) : (
+    ) : kind ? (
       <div className="hub-state">
-        <StreamBrand compact />
-        <h3>Chưa có bài viết công khai</h3>
-        <p>Bài viết của tổ chức, đội tuyển, tuyển thủ và cộng đồng sẽ xuất hiện tại đây.</p>
-        <button className="cp-button" onClick={onExplore}>
-          Xem danh bạ trang
-        </button>
+        <StreamIcon name={kind === "VIDEO" ? "play" : "feed"} size={28} />
+        <h3>{kind === "VIDEO" ? "Chưa có video" : "Chưa có tin tức"}</h3>
+        <p>Bài {kind === "VIDEO" ? "video" : "tin tức"} của các trang sẽ xuất hiện tại đây ngay khi được đăng.</p>
       </div>
+    ) : (
+      <FeaturedPages />
     )
   return (
     <div className="cp-post-list">
@@ -197,6 +177,42 @@ function CrossFeed({ following, onExplore }: { following: boolean; onExplore: ()
           "Bạn đã xem hết bài viết."
         ) : null}
       </div>
+    </div>
+  )
+}
+
+/** An empty feed still gives visitors somewhere to go: the published community pages, ready to follow. */
+function FeaturedPages() {
+  const following = useFollowedIds()
+  const pages = useQuery({
+    queryKey: ["page-channels"],
+    queryFn: () => communityApi<PageSlice<CommunityProfile>>("/pages?size=20"),
+    staleTime: 60_000,
+  })
+  const featured = (pages.data?.items || []).filter((page) => isCommunityProfile(page.kind)).slice(0, 6)
+  return (
+    <div className="cp-featured">
+      <div className="cp-featured-intro">
+        <h2>Bắt đầu với các trang chính thức</h2>
+        <p>Chưa có bài viết công khai. Theo dõi trang để thấy bài mới ngay khi được đăng.</p>
+      </div>
+      {pages.isPending ? (
+        <div className="cp-grid" role="status" aria-label="Đang tải trang nổi bật">
+          {Array.from({ length: 3 }, (_, index) => (
+            <div className="hub-skeleton cp-card-skeleton" key={index} />
+          ))}
+        </div>
+      ) : featured.length ? (
+        <div className="cp-grid">
+          {featured.map((profile) => (
+            <ProfileCard key={profile.id} profile={profile} following={following} />
+          ))}
+        </div>
+      ) : null}
+      <Link className="cp-button" to="/explore">
+        Xem tất cả trong Khám phá
+        <StreamIcon name="arrow" size={15} />
+      </Link>
     </div>
   )
 }
