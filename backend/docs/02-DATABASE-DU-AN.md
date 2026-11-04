@@ -982,6 +982,12 @@ Nếu một patch family có nhiều variant cho cùng ruleset vì use case đ�
 
 ---
 
+### Ghi chú bổ sung của variant
+
+Ghi chú biên tập bổ sung nằm trong `patch.variant_note` (V045), mỗi cặp `variant_id` và `locale` có tối đa một dòng.
+Trường `body` giữ nội dung nhiều dòng; `version` dùng để phát hiện ghi đè, kể cả sau khi xóa nội dung.
+Ghi chú độc lập với các lần phát hành theo thị trường và với lịch sử gameplay trong từng danh mục.
+
 ## 27. `patch.patch_release`
 
 Region rollout.

@@ -2389,6 +2389,10 @@ giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay s�
 
 ### Xem toàn bộ dữ liệu tại mốc và rà soát patch
 
+- `GET /admin/patch-variants/{id}/notes/{locale}` cần `catalog:read`, trả `{body, version}` của đúng patch và ngôn ngữ (chưa ghi: chuỗi rỗng, phiên bản 0).
+  `PUT` cùng đường dẫn cần `patch:write`, nhận `{body, expectedVersion}`; tối đa 20.000 ký tự, để trống để bỏ ghi chú, xung đột trả 409.
+  Ghi chú bổ sung không tạo sự kiện gameplay cho tướng hoặc kho trang bị.
+
 - `GET /admin/patch-variants/{id}/hero-stat-samples` cần quyền `catalog:read`. Mỗi tướng có tối đa một mẫu,
   lấy revision mới nhất còn hiệu lực gắn trực tiếp với variant và bộ luật. Mẫu có trạng thái nháp, vai trò,
   chỉ số cơ bản đã nhập và các giá trị đọc thủ công từ ảnh kèm patch và cấp tướng nếu biết.
