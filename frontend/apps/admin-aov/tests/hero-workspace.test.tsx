@@ -185,6 +185,26 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
       /BCP 47|Thêm bản dịch|Cốt truyện/,
     )
     await type(input("Tên tướng"), "Unsaved hero")
+    const draftControl = document.querySelector<HTMLButtonElement>('header button[aria-label*="phần chưa lưu"]')!
+    assert.ok(draftControl)
+    assert.equal(document.querySelector('[aria-label="Trạng thái bản nháp"]'), null)
+    await click(draftControl)
+    assert.ok(document.querySelector('[aria-label="Trạng thái bản nháp"]')?.textContent?.includes("Bỏ bản nháp"))
+    await click(button("Xem thay đổi"))
+    const review = Array.from(document.querySelectorAll('[role="dialog"]')).find((el) => el.querySelector("dl"))!
+    assert.ok(review.textContent!.includes("Bản #"))
+    assert.deepEqual(
+      Array.from(review.querySelectorAll("dt"), (el) => el.textContent),
+      ["Trước", "Sau"],
+    )
+    assert.deepEqual(
+      Array.from(review.querySelectorAll("dd"), (el) => el.textContent),
+      [fixtureContent.PROFILE!.translations[0].name, "Unsaved hero"],
+    )
+    assert.equal(review.querySelector('section[aria-label="Kỹ năng"]'), null)
+    assert.equal(fixture.writes.length, 0)
+    await click(review.querySelector<HTMLButtonElement>('[data-slot="sheet-close"],button:last-child')!)
+    await click(draftControl)
     assert.equal(unsafe, false, "Locally captured edits must not prevent opening another page")
     assert.equal(document.querySelector<HTMLButtonElement>('[aria-controls="workspace-translations"]')!.disabled, false)
     const unload = new dom.window.Event("beforeunload", { cancelable: true })

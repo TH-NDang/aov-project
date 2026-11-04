@@ -1,12 +1,72 @@
-import { useState } from "react"
-import { Check, HardDrive, LoaderCircle, RotateCcw } from "lucide-react"
+import { useState, type ReactNode } from "react"
+import { Check, HardDrive, LoaderCircle, RotateCcw, TriangleAlert } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import type { useLocalDraft } from "./use-local-draft"
 
 type DraftStatusValue = Pick<
   ReturnType<typeof useLocalDraft>,
   "ready" | "dirty" | "conflict" | "invalid" | "persistence" | "error" | "discard" | "flush" | "keepMine"
 >
+export function DraftStatusControl({
+  draft,
+  disabled,
+  sections,
+  children,
+}: {
+  draft: DraftStatusValue
+  disabled: boolean
+  sections: number
+  children?: ReactNode
+}) {
+  const warning = draft.conflict || draft.invalid || !!draft.error
+  const pending = !draft.ready || draft.persistence === "pending"
+  if (!warning && !pending && !draft.dirty) return null
+  const label = draft.conflict
+    ? "Xung đột bản nháp"
+    : warning
+      ? "Lỗi bản nháp"
+      : !draft.ready
+        ? "Đang khôi phục nháp"
+        : pending
+          ? "Đang lưu nháp"
+          : draft.persistence === "saved"
+            ? "Nháp trên thiết bị"
+            : "Nháp trong phiên này"
+  const Icon = warning ? TriangleAlert : pending ? LoaderCircle : HardDrive
+  const description = sections ? `${label} · ${sections} phần chưa lưu` : label
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          aria-label={description}
+          title={description}
+          className={`h-8 shrink-0 gap-1.5 px-2 ${warning ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}`}
+        >
+          <Icon aria-hidden className={`size-4 ${pending && !warning ? "animate-spin" : ""}`} />
+          {warning ? (
+            <span className="type-label">{label}</span>
+          ) : (
+            sections > 0 && <span className="type-label tabular-nums">{sections}</span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        collisionPadding={12}
+        aria-label="Trạng thái bản nháp"
+        className="w-80 max-w-[calc(100vw-1.5rem)] p-2"
+      >
+        <DraftStatus draft={draft} disabled={disabled} />
+        {draft.ready && draft.dirty && !draft.invalid && children}
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function DraftStatus({ draft, disabled = false }: { draft: DraftStatusValue; disabled?: boolean }) {
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [acting, setActing] = useState(false)

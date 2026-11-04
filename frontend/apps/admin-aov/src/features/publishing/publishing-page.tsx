@@ -89,7 +89,8 @@ import {
 import { useHeroLocation } from "./use-hero-location"
 import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
-import { DraftStatus } from "@/app/drafts/draft-status"
+import { DraftStatusControl } from "@/app/drafts/draft-status"
+import { HeroDraftChanges } from "./hero-draft-changes"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { visibleSkins } from "./hero-skins"
 import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
@@ -639,6 +640,17 @@ export function PublishingWorkspace({
                   </div>
                   {quickSwitcher}
                   {preview && <HeroReviewNotice skills={preview.content.SKILLS?.skills ?? []} />}
+                  {writable && (
+                    <DraftStatusControl key={revision.id} draft={localDraft} disabled={busy} sections={dirty.size}>
+                      <HeroDraftChanges
+                        before={initialCopy}
+                        after={localDraft.value}
+                        locale={locale}
+                        name={heroName}
+                        revisionNo={revision.revisionNo}
+                      />
+                    </DraftStatusControl>
+                  )}
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -804,20 +816,11 @@ export function PublishingWorkspace({
           )}
           {preview && revision && (
             <>
-              <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
-                {/* The version is in the header; only what it does not say stays here. */}
-                <span>
-                  {[
-                    (rulesets.data?.length ?? 0) > 1
-                      ? (rulesets.data?.find((row) => row.id === revision.rulesetId)?.code ?? "Bộ quy tắc khác")
-                      : "",
-                    dirty.size ? `${dirty.size} nhóm chưa lưu` : "",
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </span>
-              </div>
-              {writable && <DraftStatus draft={localDraft} disabled={busy} />}
+              {(rulesets.data?.length ?? 0) > 1 && (
+                <p className="type-meta">
+                  {rulesets.data?.find((row) => row.id === revision.rulesetId)?.code ?? "Bộ quy tắc khác"}
+                </p>
+              )}
               {revision.state !== "DRAFT" && (editing || translating) && (
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-4 text-sm">
                   <p>Đang xem bản chỉ đọc. Tạo bản nháp để chỉnh sửa hoặc thêm bản dịch.</p>
