@@ -289,7 +289,7 @@ export function EntityReferencePopover({
         align="start"
         collisionPadding={12}
         sideOffset={8}
-        className="w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl p-0 break-words shadow-xl"
+        className="flex max-h-(--radix-popover-content-available-height) w-80 max-w-[calc(100vw-1.5rem)] flex-col overflow-y-auto overscroll-contain rounded-xl p-0 break-words shadow-xl"
         aria-labelledby={titleId}
         aria-describedby={descriptionId}
         onOpenAutoFocus={(event) => event.preventDefault()}
@@ -306,7 +306,7 @@ export function EntityReferencePopover({
           })
         }}
       >
-        <div className="flex items-start gap-3 border-b bg-muted/30 p-4">
+        <div className="flex shrink-0 items-start gap-3 border-b bg-muted/30 p-4">
           <EntityReferenceArtwork entity={entity} resolveIcon={resolveIcon} className="size-11 rounded-lg" />
           <div className="min-w-0 flex-1">
             <div className="mb-1 text-xs font-medium text-muted-foreground">{skill ? skill.ownerName : kind}</div>
@@ -324,20 +324,24 @@ export function EntityReferencePopover({
             <X className="size-4" />
           </button>
         </div>
-        <div className="space-y-3 p-4">
+        <div
+          role="region"
+          aria-label={`Mô tả ${name}`}
+          tabIndex={0}
+          className="max-h-64 min-h-12 space-y-3 overflow-y-auto overscroll-contain p-4 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+        >
           {skill && entity.iconSource === "LIBRARY" && (
             <div className="text-xs text-muted-foreground">Ảnh tham khảo từ thư viện kỹ năng</div>
           )}
           {matched.toLowerCase() !== locale.toLowerCase() && (
             <div className="text-xs text-muted-foreground">Ngôn ngữ dự phòng: {matched}</div>
           )}
-          <p
-            id={descriptionId}
-            className="max-h-52 overflow-y-auto whitespace-pre-wrap text-sm leading-6 text-muted-foreground"
-          >
+          <p id={descriptionId} className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
             {renderDescriptionNodes(descriptionNodes)}
           </p>
-          {route && (
+        </div>
+        {route && (
+          <div className="shrink-0 border-t p-3">
             <a
               href={route}
               className="flex min-h-10 items-center justify-between gap-3 rounded-md border px-3 text-sm font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
@@ -345,8 +349,8 @@ export function EntityReferencePopover({
               Mở trang {name}
               <ArrowUpRight className="size-4 shrink-0" aria-hidden="true" />
             </a>
-          )}
-        </div>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   )
