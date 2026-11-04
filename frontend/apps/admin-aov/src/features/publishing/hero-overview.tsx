@@ -48,6 +48,8 @@ function OverviewSummary({ text }: { text: string }) {
 
 export function HeroOverview({
   content,
+  heroId,
+  variantId,
   statDefaults,
   patchCode,
   referenceError,
@@ -59,6 +61,8 @@ export function HeroOverview({
   onTranslate,
 }: {
   content: Content
+  heroId?: string
+  variantId?: string
   statDefaults?: StatDefault[]
   patchCode?: string
   referenceError?: boolean
@@ -144,6 +148,8 @@ export function HeroOverview({
               edit("COMBAT_STATS", "Chỉ số"),
             )}
             <HeroCombatAttributes
+              heroId={heroId}
+              variantId={variantId}
               stats={content.COMBAT_STATS}
               skills={content.SKILLS}
               roles={content.PROFILE?.roles}

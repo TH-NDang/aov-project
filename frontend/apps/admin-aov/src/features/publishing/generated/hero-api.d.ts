@@ -427,6 +427,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/wiki/v1/admin/patch-variants/{id}/hero-stat-samples": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["heroStatSamples_forPatch"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults": {
     parameters: {
       query?: never
@@ -841,6 +857,25 @@ export interface components {
       difficulty: number
       derived: boolean
       sources: components["schemas"]["HeroSource"][]
+    }
+    HeroStatSample: {
+      /** Format: uuid */
+      heroId: string
+      draft: boolean
+      roles: string[]
+      baseStats: {
+        [key: string]: {
+          value: number
+          unit: string
+        }
+      }
+      capture: {
+        patchCode: string | null
+        level: number | null
+        values: {
+          [key: string]: unknown
+        }
+      } | null
     }
     PatchStatDefault: {
       statKey: string
@@ -2074,6 +2109,28 @@ export interface operations {
         }
         content: {
           "application/json": components["schemas"]["SkinBadgeGroupView"]
+        }
+      }
+    }
+  }
+  heroStatSamples_forPatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description One explicit hero revision per hero at this patch, including drafts */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HeroStatSample"][]
         }
       }
     }

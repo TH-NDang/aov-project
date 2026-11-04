@@ -5,6 +5,7 @@ import type { components } from "./generated/hero-api"
 import type { Content, Role, Skills, Stats } from "./types"
 
 export type StatDefault = components["schemas"]["PatchStatDefault"]
+export type StatSample = components["schemas"]["HeroStatSample"]
 
 type Group = "Cơ bản" | "Tấn công"
 type Attribute = { key: string; field: string; group: Group; percent?: string }
@@ -27,8 +28,40 @@ const attributes: Attribute[] = [
   { key: "COOLDOWN_REDUCTION", field: "cooldownReductionPercent", group: "Tấn công" },
 ]
 
+const fields = new Map(attributes.map((a) => [a.key, a]))
+
 export function statUnit(key: string) {
-  return attributes.some((a) => a.key === key && a.field.endsWith("Percent")) ? "PERCENT" : "POINT"
+  return fields.get(key)?.field.endsWith("Percent") ? "PERCENT" : "POINT"
+}
+
+export interface StatReading {
+  value?: number | string
+  unit: string
+  percent?: number
+  resource?: string
+}
+
+export function observedStat(key: string, values?: Record<string, unknown>): StatReading | undefined {
+  const field = fields.get(key)
+  if (!field || !values) return
+  const raw = values[field.field]
+  const component = field.percent && values[field.percent]
+  const percent = typeof component === "number" && Number.isFinite(component) ? component : undefined
+  const value =
+    typeof raw === "number" && Number.isFinite(raw)
+      ? raw
+      : key === "ATTACK_RANGE_TYPE" && typeof raw === "string" && raw.trim()
+        ? raw.trim()
+        : undefined
+  if (value === undefined && percent === undefined) return
+  const resource =
+    key === "MAX_RESOURCE" && typeof values.resourceLabel === "string" ? values.resourceLabel.trim() : undefined
+  return { value, percent, unit: statUnit(key), resource }
+}
+
+export function normalizedUnit(key: string, unit: string) {
+  const normalized = unit.trim().toUpperCase()
+  return key === "HP" && normalized === "HP" ? "POINT" : normalized
 }
 
 export function formatStat(value: number, unit: string) {
@@ -89,6 +122,7 @@ export interface AttributeRow {
   observed?: string
   reference?: StatDefault
   matchesDefault: boolean
+  reading?: StatReading
 }
 
 export function combatAttributeRows(
@@ -98,21 +132,19 @@ export function combatAttributeRows(
 ): AttributeRow[] {
   const heroes = new Map(stats?.values.map((v) => [v.statKey, v]))
   const shared = new Map(defaults.map((v) => [v.statKey, v]))
-  const fields = new Map(attributes.map((a) => [a.key, a]))
   const keys = new Set([...fields.keys(), ...heroes.keys(), ...shared.keys()])
   return Array.from(keys).flatMap<AttributeRow>((key) => {
     const definition = fields.get(key)
     const own = heroes.get(key)
     const reference = shared.get(key)
-    const raw = definition && observation?.values[definition.field]
-    const percent = definition?.percent && observation?.values[definition.percent]
-    let observed = typeof raw === "number" && Number.isFinite(raw) ? formatStat(raw, statUnit(key)) : undefined
-    if (definition?.percent && typeof percent === "number" && Number.isFinite(percent))
-      observed = (observed ?? "—") + " | " + formatStat(percent, "PERCENT")
-    if (key === "ATTACK_RANGE_TYPE" && typeof raw === "string" && raw.trim()) observed = raw
+    const capture = observedStat(key, observation?.values)
+    let observed = typeof capture?.value === "number" ? formatStat(capture.value, capture.unit) : capture?.value
+    if (capture?.percent !== undefined) observed = (observed ?? "—") + " | " + formatStat(capture.percent, "PERCENT")
     if (!own && !reference && !observation) return []
     const ownValue = own?.baseValue != null ? formatStat(own.baseValue, own.unit) : undefined
     const fallback = reference && formatStat(reference.baseValue, reference.unit)
+    const reading =
+      own?.baseValue != null ? { value: own.baseValue, unit: own.unit, resource: capture?.resource } : capture
     const kind =
       ownValue != null
         ? "Giá trị riêng"
@@ -137,7 +169,9 @@ export function combatAttributeRows(
         growth: own?.growthPerLevel,
         observed,
         reference,
-        matchesDefault: !!reference && (ownValue ?? observed) === fallback,
+        matchesDefault:
+          !!reference && reading?.value === reference.baseValue && normalizedUnit(key, reading.unit) === reference.unit,
+        reading,
       },
     ]
   })

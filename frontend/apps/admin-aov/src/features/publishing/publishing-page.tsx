@@ -757,6 +757,7 @@ export function PublishingWorkspace({
               <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
                 {view === "overview" && !editing && (
                   <HeroContent
+                    variantId={statPatch?.id}
                     statDefaults={statDefaults.data}
                     referenceError={statDefaults.isError}
                     patchCode={statPatch?.patchCode}

@@ -1,4 +1,6 @@
-import { ChevronDown } from "lucide-react"
+import { useState } from "react"
+import { ChartNoAxesColumn, ChevronDown } from "lucide-react"
+import { HeroStatAnalysisPanel } from "./hero-stat-analysis-panel"
 import {
   combatAttributeRows,
   formatStat,
@@ -12,7 +14,9 @@ export function HeroCombatAttributes({
   stats,
   skills,
   roles = [],
-  defaults = [],
+  defaults,
+  heroId,
+  variantId,
   patchCode,
   referenceError,
 }: {
@@ -20,12 +24,15 @@ export function HeroCombatAttributes({
   skills: Skills | null
   roles?: Role[]
   defaults?: StatDefault[]
+  heroId?: string
+  variantId?: string
   patchCode?: string
   referenceError?: boolean
 }) {
+  const [analysisOpen, setAnalysisOpen] = useState(false)
   const snapshot = observedAttributes(skills)
   const observation = patchCode && snapshot?.patchCode !== patchCode ? undefined : snapshot
-  const rows = combatAttributeRows(stats, observation, defaults)
+  const rows = combatAttributeRows(stats, observation, defaults ?? [])
   const summary = ["HP", ...overviewAttackStats(roles, skills), "MOVEMENT_SPEED", "ATTACK_RANGE_TYPE"]
     .map((key) => rows.find((r) => r.key === key && r.value !== "—"))
     .filter((r) => !!r)
@@ -53,6 +60,34 @@ export function HeroCombatAttributes({
             </p>
           )}
         </div>
+      )}
+      {heroId && rows.length > 0 && (
+        <details
+          className="group/analysis rounded-lg border"
+          onToggle={(event) => setAnalysisOpen(event.currentTarget.open)}
+        >
+          <summary className="type-body flex cursor-pointer list-none items-center gap-2 px-3 py-2">
+            <ChartNoAxesColumn aria-hidden className="size-4 text-muted-foreground" />
+            Phân tích thuộc tính
+            <ChevronDown aria-hidden className="ml-auto size-4 transition-transform group-open/analysis:rotate-180" />
+          </summary>
+          {analysisOpen &&
+            (variantId && patchCode ? (
+              <HeroStatAnalysisPanel
+                key={heroId + variantId}
+                rows={rows}
+                heroId={heroId}
+                variantId={variantId}
+                patchCode={patchCode}
+                roles={roles}
+                level={observation?.level ?? null}
+                defaultsReady={defaults !== undefined}
+                referenceError={referenceError}
+              />
+            ) : (
+              <p className="type-meta border-t p-3">Cần xác định patch của phiên bản để đối chiếu thuộc tính.</p>
+            ))}
+        </details>
       )}
       {rows.length ? (
         <details className="group/stats rounded-lg border" open={summary.length ? undefined : true}>

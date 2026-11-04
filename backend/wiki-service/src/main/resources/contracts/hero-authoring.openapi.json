@@ -1314,6 +1314,37 @@
         }
       }
     },
+    "/api/wiki/v1/admin/patch-variants/{id}/hero-stat-samples": {
+      "get": {
+        "operationId": "heroStatSamples_forPatch",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "One explicit hero revision per hero at this patch, including drafts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeroStatSample"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults": {
       "get": {
         "operationId": "patchStatDefaults_effective",
@@ -2679,6 +2710,72 @@
             "items": {
               "$ref": "#/components/schemas/HeroSource"
             }
+          }
+        }
+      },
+      "HeroStatSample": {
+        "type": "object",
+        "required": [
+          "heroId",
+          "draft",
+          "roles",
+          "baseStats",
+          "capture"
+        ],
+        "properties": {
+          "heroId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "draft": {
+            "type": "boolean"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "baseStats": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "required": [
+                "value",
+                "unit"
+              ],
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "capture": {
+            "type": "object",
+            "required": [
+              "patchCode",
+              "level",
+              "values"
+            ],
+            "properties": {
+              "patchCode": {
+                "type": "string",
+                "nullable": true
+              },
+              "level": {
+                "type": "number",
+                "nullable": true
+              },
+              "values": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "nullable": true
           }
         }
       },

@@ -446,6 +446,12 @@ class DomainCoreIntegrationTest {
                 200);
         var atBaseline = send(get(ROOT + "/admin/heroes").param("patchVariantId", variant.toString())
                 .param("includeUnchanged", "true"), null, 200);
+        mvc.perform(get(ROOT + "/admin/patch-variants/" + variant + "/hero-stat-samples")
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].heroId").value(hero.toString())).andExpect(jsonPath("$[0].draft").value(true))
+                .andExpect(jsonPath("$[0].roles[0]").value("ASSASSIN"))
+                .andExpect(jsonPath("$[0].baseStats.HP.value").isNumber());
         assertThat(atBaseline.get("totalElements")).isEqualTo(1);
         assertThat(send(get(ROOT + "/admin/heroes").param("patchVariantId", first.toString())
                 .param("includeUnchanged", "true").param("q", "Current patch name"), null, 200)

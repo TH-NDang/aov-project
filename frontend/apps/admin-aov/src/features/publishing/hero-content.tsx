@@ -91,6 +91,7 @@ export function HeroContent(props: Parameters<typeof HeroContentBody>[0]) {
 
 function HeroContentBody({
   content,
+  variantId,
   statDefaults,
   patchCode,
   referenceError,
@@ -112,6 +113,7 @@ function HeroContentBody({
   showTabs?: boolean
   content: Content
   statDefaults?: StatDefault[]
+  variantId?: string
   patchCode?: string
   referenceError?: boolean
   locale: string
@@ -169,6 +171,8 @@ function HeroContentBody({
       <div className="grid items-start gap-4" role="tabpanel" id={`hero-content-${tab}`}>
         {tab === "overview" && (
           <HeroOverview
+            heroId={heroId}
+            variantId={variantId}
             statDefaults={statDefaults}
             patchCode={patchCode}
             referenceError={referenceError}

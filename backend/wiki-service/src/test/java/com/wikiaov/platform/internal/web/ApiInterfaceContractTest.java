@@ -76,8 +76,8 @@ class ApiInterfaceContractTest {
                 controllers++;
             }
         }
-        assertThat(controllers).isEqualTo(49);
-        assertThat(operations).isEqualTo(183);
+        assertThat(controllers).isEqualTo(50);
+        assertThat(operations).isEqualTo(184);
     }
 
     @Test

@@ -5,8 +5,8 @@ import { invalidateReferenceCatalog } from "../terminology/reference-api"
 export function invalidateHeroCatalogs(cache: QueryClient) {
   return Promise.all([
     invalidateReferenceCatalog(cache),
-    ...["publishing-heroes", "character-images", "skin-badges", "publication-overview"].map((key) =>
-      cache.invalidateQueries({ queryKey: [key] }),
+    ...["publishing-heroes", "character-images", "skin-badges", "publication-overview", "hero-stat-samples"].map(
+      (key) => cache.invalidateQueries({ queryKey: [key] }),
     ),
   ])
 }
