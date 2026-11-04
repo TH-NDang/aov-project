@@ -8,6 +8,7 @@ export function MediaSourceFields({
   disabled = false,
   autoFocusOwner = false,
   ownerRequired = false,
+  form,
 }: {
   value: MediaSourceInput
   onChange: (value: MediaSourceInput) => void
@@ -16,6 +17,8 @@ export function MediaSourceFields({
   autoFocusOwner?: boolean
   /** New uploads must name an owner, so they never start out missing credit. */
   ownerRequired?: boolean
+  /** An empty form owner keeps upload controls out of the surrounding content form. */
+  form?: string
 }) {
   const ownerMissing = ownerRequired && !value.ownerName?.trim()
   return (
@@ -24,6 +27,7 @@ export function MediaSourceFields({
       <label className="grid gap-1 text-sm">
         Loại nguồn
         <select
+          form={form}
           className={control}
           value={value.type ?? "OTHER"}
           onChange={(event) => onChange({ ...value, type: event.target.value })}
@@ -38,6 +42,7 @@ export function MediaSourceFields({
         <label className="grid gap-1 text-sm">
           Tên nguồn
           <input
+            form={form}
             className={control}
             required
             maxLength={200}
@@ -52,6 +57,7 @@ export function MediaSourceFields({
         <label className="grid gap-1 text-sm">
           Chủ sở hữu / tên cần credit
           <OwnerNameInput
+            form={form}
             className={control}
             autoFocus={autoFocusOwner}
             required={ownerRequired}
@@ -79,6 +85,7 @@ export function MediaSourceFields({
       <label className="grid gap-1 text-sm">
         URL nguồn ảnh
         <input
+          form={form}
           className={control}
           type="url"
           maxLength={2048}
@@ -90,6 +97,7 @@ export function MediaSourceFields({
       <label className="grid gap-1 text-sm">
         Trang liên hệ của bên cung cấp (nếu có)
         <input
+          form={form}
           className={control}
           type="url"
           maxLength={2048}

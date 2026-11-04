@@ -103,6 +103,7 @@ test("focused skill editing preserves forms, effects and translations while addi
   }
   const snapshot = structuredClone(original)
   let current = original
+  let saved: Skills | undefined
   let setCurrent: React.Dispatch<React.SetStateAction<Skills>>
   function Harness() {
     const [value, setValue] = React.useState(original)
@@ -149,7 +150,15 @@ test("focused skill editing preserves forms, effects and translations while addi
       root.render(
         <QueryClientProvider client={client}>
           <MemoryRouter>
-            <Harness />
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                saved = current
+              }}
+            >
+              <Harness />
+              <button type="submit">Lưu phần này</button>
+            </form>
           </MemoryRouter>
         </QueryClientProvider>,
       ),
@@ -194,6 +203,9 @@ test("focused skill editing preserves forms, effects and translations while addi
     const description = referenceInput(editor())
     await act(async () => fillReferenceInput(description, "Updated English description"))
     assert.equal(current.skills[1].translations[1].description, "Updated English description")
+    assert.equal(button("Tải ảnh mới").disabled, true, "Uploading still requires image credit")
+    await act(async () => button("Lưu phần này").click())
+    assert.equal(saved?.skills[1].translations[1].description, "Updated English description")
     await act(async () =>
       [...editor().querySelectorAll("summary")]
         .find((element) => element.textContent?.trim() === "Ảnh kỹ năng")!
@@ -202,6 +214,12 @@ test("focused skill editing preserves forms, effects and translations while addi
     assert.ok(editor().querySelector('input[aria-label="Tải ảnh mới"]'), "Selected skill supports direct upload")
     await act(async () => button("Chọn từ kho ảnh").click())
     await waitFor(() => !!document.querySelector('[aria-label="Chọn ảnh skill-icon"]'))
+    const downloadUrl = [...editor().querySelectorAll("label")]
+      .find((label) => label.textContent?.trim() === "Link file ảnh để tải")!
+      .querySelector("input")!
+    await type(downloadUrl, "unfinished-url")
+    assert.equal(downloadUrl.validity.typeMismatch, true)
+    assert.equal(button("Lưu phần này").form!.checkValidity(), true)
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Chọn ảnh skill-icon"]')!.click())
     assert.equal(current.skills[1].iconAssetId, "skill-icon")
     // New uploads must name their owner first.

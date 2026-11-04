@@ -138,6 +138,7 @@ export function AssetPicker({
     <div className="space-y-2 rounded-lg border p-3">
       {writable && (
         <MediaSourceFields
+          form=""
           value={source}
           onChange={(value) => {
             setSource(value)
@@ -264,7 +265,7 @@ export function AssetPicker({
           </div>
           {writable && (
             <fieldset disabled={busy} className="space-y-3 border-t pt-3">
-              <Field label="Link file ảnh để tải" type="url" value={downloadUrl} onChange={setDownloadUrl} />
+              <Field label="Link file ảnh để tải" type="url" form="" value={downloadUrl} onChange={setDownloadUrl} />
               <Button
                 type="button"
                 variant="outline"
