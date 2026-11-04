@@ -205,7 +205,7 @@ function ArcanaCard({
         })}
         {!entry.content.stats.length && <p className="text-xs text-muted-foreground">Chưa có chỉ số</p>}
       </dl>
-      {(entry.revision.state === "DRAFT" || entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE")) && (
+      {(entry.revision.state === "DRAFT" || !!entry.changeKinds?.length) && (
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           {entry.revision.state === "DRAFT" && (
             <Badge variant="outline" className="w-fit text-xs">
@@ -213,7 +213,7 @@ function ArcanaCard({
             </Badge>
           )}
           <span className="ml-auto">
-            <CatalogChangeBadges kinds={entry.changeKinds ?? []} hideBaseline />
+            <CatalogChangeBadges kinds={entry.changeKinds ?? []} />
           </span>
         </div>
       )}

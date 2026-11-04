@@ -14,11 +14,11 @@ import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { matchesQuery } from "@/lib/text"
 import { useWarehouseCatalog, warehouseApi, warehouseKeys, invalidateWarehouseCatalogs } from "./warehouse-api"
-import { WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
+import { WarehouseDraftMenu, WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
 import { EnchantmentBranches } from "./enchantment-branches"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
 import { enchantmentBranchColor } from "./enchantment-colors"
-import { useWarehouseScope, WarehouseScopeControls } from "./warehouse-scope"
+import { useWarehouseScope, WarehouseScopeControls, WarehouseScopeEmpty } from "./warehouse-scope"
 import { availabilityLabels, SpellCollection } from "./spell-cards"
 import { ArcanaCollection } from "./arcana-cards"
 import { ArcanaFilters } from "./arcana-filters"
@@ -135,6 +135,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
   const statOptionsReady =
     !!context.rulesetId &&
     context.rulesets.isSuccess &&
+    !overview.isPending &&
     (scoped ? scopedCatalog.isSuccess && !scopedCatalog.isFetching : catalog.isSuccess && !catalog.isFetching)
 
   useEffect(() => {
@@ -250,6 +251,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
                   <Plus />
                   Tạo {secondaryNames[kind]}
                 </DropdownMenuItem>
+                <WarehouseDraftMenu entries={records} locale={context.locale} onOpen={open} />
                 {kind === "enchantments" && (
                   <>
                     <DropdownMenuSeparator />
@@ -310,7 +312,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       )}
       {kind === "spells" && (
         <FilterTabs label="Lọc khả dụng phụ trợ">
-          <FilterTab active={!availability} count={records.length} onClick={() => setAvailability(null)}>
+          <FilterTab active={!availability} count={scopedRecords.length} onClick={() => setAvailability(null)}>
             <LayoutGrid aria-hidden />
             Tất cả
           </FilterTab>
@@ -318,7 +320,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
             <FilterTab
               key={value}
               active={availability === value}
-              count={records.filter((entry) => (entry.content as SpellContent).availability === value).length}
+              count={scopedRecords.filter((entry) => (entry.content as SpellContent).availability === value).length}
               onClick={() => setAvailability(value)}
             >
               <Archive aria-hidden />
@@ -352,12 +354,18 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       {(catalog.isPending && !!context.rulesetId) ||
       (kind === "enchantments" && branches.isPending) ||
       overview.isPending ||
-      (scoped && scopedCatalog.isPending) ? (
+      (scoped && (scopedCatalog.isPending || (!scopeState.showAll && scopeState.changes.isPending))) ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 8 }, (_, index) => (
             <Skeleton key={index} className="h-36 w-full rounded-xl" />
           ))}
         </div>
+      ) : scoped && !visible.length ? (
+        !issue &&
+        scopedCatalog.isSuccess &&
+        (scopeState.showAll || scopeState.changes.isSuccess) && (
+          <WarehouseScopeEmpty scope={scopeState} filtered={!!scopedRecords.length} />
+        )
       ) : kind === "enchantments" ? (
         <EnchantmentBranches
           records={visible as WarehouseEntry<EnchantmentContent>[]}
@@ -376,14 +384,15 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
         <>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>
-              {visible.length} / {records.length} {secondaryNames[kind]}
+              {visible.length} / {scopedRecords.length} {secondaryNames[kind]}
             </span>
             <span aria-hidden>·</span>
             <Languages className="size-3.5" />
             <span>
               {
-                records.filter((entry) => entry.content.translations.some((text) => text.locale === context.locale))
-                  .length
+                scopedRecords.filter((entry) =>
+                  entry.content.translations.some((text) => text.locale === context.locale),
+                ).length
               }{" "}
               có bản dịch {context.locale}
             </span>
@@ -409,7 +418,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
           )}
         </>
       )}
-      {!catalog.isPending && !(scoped && scopedCatalog.isPending) && !visible.length && !issue && (
+      {!overview.isPending && !scoped && catalog.isSuccess && !visible.length && !issue && (
         <div className="grid min-h-48 place-items-center rounded-xl border border-dashed p-6 text-center">
           <div className="space-y-2">
             <div className="mx-auto grid size-10 place-items-center rounded-xl bg-muted">
@@ -422,13 +431,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
               )}
             </div>
             <p className="font-medium">
-              {scoped
-                ? scopeState.showAll
-                  ? "Chưa có dữ liệu đã xuất bản phù hợp tại mốc này"
-                  : "Chưa ghi nhận thay đổi phù hợp. Chọn Dữ liệu tại mốc để xem dữ liệu kế thừa."
-                : records.length
-                  ? "Không có kết quả phù hợp"
-                  : "Chưa có dữ liệu trong bộ quy tắc này"}
+              {records.length ? "Không có kết quả phù hợp" : "Chưa có dữ liệu trong bộ quy tắc này"}
             </p>
             <p className="text-sm text-muted-foreground">
               {records.length ? "Thử đổi điều kiện lọc hoặc từ khóa." : "Tạo mục mới hoặc nhập dữ liệu vào backend."}

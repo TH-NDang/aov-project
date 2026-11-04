@@ -82,6 +82,7 @@ test("timeline keeps baseline separate, selects a patch, and suppresses selectio
     await act(async () => button("29/09").click())
     assert.deepEqual(selected, { seasonId: "s4", variantId: "added" })
     const rail = button("29/09").closest<HTMLElement>('[aria-label="Chọn patch"]')!
+    Object.defineProperties(rail, { clientWidth: { value: 300 }, scrollWidth: { value: 600 } })
     Object.assign(rail, { setPointerCapture() {}, hasPointerCapture: () => true, releasePointerCapture() {} })
     const pointer = (type: string, x: number) => {
       const event = new window.Event(type, { bubbles: true, cancelable: true })
@@ -101,6 +102,10 @@ test("timeline keeps baseline separate, selects a patch, and suppresses selectio
       button("15/10").click()
     })
     assert.equal(rail.scrollLeft, 120)
+    await act(async () => {
+      rail.dispatchEvent(new window.Event("scroll"))
+    })
+    assert.equal(document.querySelector('button[aria-label^="Cuộn "]'), null)
     assert.equal(selected.variantId, "added", "Dragging does not accidentally select a patch")
     await act(async () => button("15/10").click())
     assert.equal(selected.variantId, "empty")
@@ -121,7 +126,7 @@ test("timeline keeps baseline separate, selects a patch, and suppresses selectio
         }
       />,
     )
-    assert.equal(button("15/10"), null)
+    assert.ok(button("15/10"), "A reviewed patch without changes remains available to inspect the catalog")
     assert.ok(button("29/09"))
     assert.deepEqual(
       [...document.querySelectorAll('[aria-label^="Lọc mùa"]')].map((season) => season.textContent),
@@ -1019,8 +1024,8 @@ test("arcana separates combat groups within each color and tier without duplicat
   })
 })
 
-test("arcana stat filters follow color, tier, search and loaded scope without discarding pending selections", async () => {
-  await withUi(async ({ document, client, render }) => {
+test("arcana filters follow the loaded patch and distinguish missing changes from filtered results", async () => {
+  await withUi(async ({ document, client, render, click }) => {
     const { BackendArcanaPage } = await import("../src/features/warehouse/secondary-pages")
     const { warehouseKeys } = await import("../src/features/warehouse/warehouse-api")
     const definitions: [string, ArcanaContent["color"], number, string][] = [
@@ -1102,9 +1107,36 @@ test("arcana stat filters follow color, tier, search and loaded scope without di
     assert.equal(params.get("stat"), "armor")
     assert.equal(select().disabled, false)
     assert.deepEqual(shown(), ["Xem green-armor"])
+    assert.doesNotMatch(document.body.textContent!, /0 mục thay đổi|trong phạm vi này/i)
+    const changesKey = [...warehouseKeys.catalog("arcana", "standard", "vi-VN"), "scope", "", "patch-fixture", false]
+    client.setQueryData(changesKey, [])
+    await act(async () => setFilters("patch=patch-fixture&show=changes&color=GREEN"))
+    assert.match(document.body.textContent!, /Chưa ghi nhận thay đổi về ngọc trong patch 2026-10-15/)
+    await click("Xem tất cả ngọc")
+    assert.equal(params.get("patch"), "patch-fixture")
+    assert.equal(params.get("color"), "GREEN")
+    assert.equal(params.get("show"), "all")
+    assert.deepEqual(shown(), ["Xem green-armor"])
+
+    client.setQueryData(changesKey, [records[3], records[0]])
+    client.setQueryData(
+      ["warehouse", "changes", "arcana", "standard", "vi-VN"],
+      [
+        { ownerId: records[0].id, patchVariantId: "patch-fixture", kinds: ["DATA_BASELINE"] },
+        { ownerId: records[3].id, patchVariantId: "patch-fixture", kinds: ["BUFF"] },
+      ],
+    )
+    await act(async () => setFilters("patch=patch-fixture&show=changes&color=RED"))
+    assert.match(document.body.textContent!, /Không tìm thấy ngọc phù hợp với bộ lọc/)
+    assert.doesNotMatch(document.body.textContent!, /Xem tất cả ngọc|Chưa ghi nhận thay đổi về ngọc/)
+    await act(async () => setFilters("patch=patch-fixture&show=changes&color=GREEN"))
+    assert.deepEqual(shown(), ["Xem green-armor"])
+    assert.ok(document.querySelector('[data-catalog-change="BUFF"]'))
+    await act(async () => setFilters("patch=patch-fixture&stat=armor"))
+    assert.equal(document.querySelector('[data-catalog-change="DATA_BASELINE"]'), null)
     await act(async () => {
       client.setQueryData(
-        [...warehouseKeys.catalog("arcana", "standard", "vi-VN"), "scope", "", "patch-fixture", false],
+        [...warehouseKeys.catalog("arcana", "standard", "vi-VN"), "scope", "", "patch-fixture", true],
         [],
       )
       await new Promise((resolve) => setTimeout(resolve, 0))

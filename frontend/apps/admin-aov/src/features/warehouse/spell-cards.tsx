@@ -156,9 +156,9 @@ function SpellCard({
               : `Lv ${entry.content.unlockLevel}`}
         </span>
       </div>
-      {entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE") && (
+      {!!entry.changeKinds?.length && (
         <div className="flex justify-center">
-          <CatalogChangeBadges kinds={entry.changeKinds ?? []} compact hideBaseline />
+          <CatalogChangeBadges kinds={entry.changeKinds ?? []} compact />
         </div>
       )}
     </div>

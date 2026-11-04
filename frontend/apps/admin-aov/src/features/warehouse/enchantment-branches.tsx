@@ -216,15 +216,14 @@ export function EnchantmentBranches({
                                 {label.summary}
                               </span>
                             )}
-                            {(entry.revision.state === "DRAFT" ||
-                              !!entry.changeKinds?.some((kind) => kind !== "DATA_BASELINE")) && (
+                            {(entry.revision.state === "DRAFT" || !!entry.changeKinds?.length) && (
                               <div className="mt-auto flex w-full flex-wrap items-center justify-center gap-1 border-t border-border/50 pt-2">
                                 {entry.revision.state === "DRAFT" && (
                                   <Badge variant="outline" className="text-xs">
                                     Nháp
                                   </Badge>
                                 )}
-                                <CatalogChangeBadges kinds={entry.changeKinds ?? []} hideBaseline />
+                                <CatalogChangeBadges kinds={entry.changeKinds ?? []} />
                               </div>
                             )}
                           </button>

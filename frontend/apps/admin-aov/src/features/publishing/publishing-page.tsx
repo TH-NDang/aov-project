@@ -1,5 +1,5 @@
-import { catalogScopePatch } from "./catalog-scope"
-import { resolveHeroCatalogScope } from "./hero-catalog-scope"
+import { catalogScopePatch, resolveCatalogScope } from "./catalog-scope"
+import { useCatalogScopePreference } from "./catalog-scope-memory"
 import { HeroTimeline } from "./hero-timeline"
 import { useEffect, useId, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react"
 import { revisionSkillReferences } from "./revision-skill-references"
@@ -265,9 +265,10 @@ export function PublishingWorkspace({
   const sectionFormId = useId()
   const heroHeadingRef = useRef<HTMLHeadingElement>(null)
   const overview = usePublicationOverview()
-  const filter = !heroId && overview.data ? resolveHeroCatalogScope(overview.data, requestedFilter) : requestedFilter
+  const preferred = useCatalogScopePreference(overview.data, requestedFilter, !heroId)
+  const filter = !heroId && overview.data ? resolveCatalogScope(overview.data, preferred) : requestedFilter
   const setFilter = (next: CatalogFilter) =>
-    updateLocation(catalogScopePatch(!heroId && overview.data ? resolveHeroCatalogScope(overview.data, next) : next))
+    updateLocation(catalogScopePatch(!heroId && overview.data ? resolveCatalogScope(overview.data, next) : next))
   useEffect(() => {
     if (
       !heroId &&

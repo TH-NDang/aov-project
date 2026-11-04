@@ -20,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tool
 import { CommandMenu } from "./command-menu"
 import { usePageTabs } from "./page-tabs"
 import { PageTabOverlay, SortablePageTab } from "./sortable-page-tab"
+import { catalogTabTarget, useSavedCatalogScope } from "@/features/publishing/catalog-scope-memory"
 import { useHotkeys } from "../hotkeys"
 
 export interface RouteHandle {
@@ -34,6 +35,7 @@ const modifiers = [horizontalOnly]
 export function SiteHeader() {
   const { enabled } = useHotkeys()
   const { sessions: tabs, activePath: pathname, closeTab, moveTab } = usePageTabs()
+  const savedScope = useSavedCatalogScope()
   const { toggleSidebar, isMobile } = useSidebar()
   const [commandOpen, setCommandOpen] = useState(false)
   const [dragging, setDragging] = useState<{ path: string; width?: number } | null>(null)
@@ -88,7 +90,7 @@ export function SiteHeader() {
             {tabs.map((tab) => (
               <SortablePageTab
                 key={tab.path}
-                tab={tab}
+                tab={tab.path === pathname ? tab : { ...tab, to: catalogTabTarget(tab.to, savedScope) }}
                 active={tab.path === pathname}
                 canClose={tabs.length > 1 || tab.path !== "/"}
                 previewDisabled={dragging !== null}

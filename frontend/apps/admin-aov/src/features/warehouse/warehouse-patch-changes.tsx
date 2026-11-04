@@ -6,7 +6,13 @@ import { Link, useSearchParams } from "react-router"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { ExternalLink } from "lucide-react"
 import { HeroAsset } from "../publishing/hero-content"
-import { CatalogChangeBadges, useCatalogChanges, type CatalogChange, type CatalogBadgeKind } from "./catalog-changes"
+import {
+  CatalogChangeBadges,
+  useCatalogChanges,
+  isGameplayChange,
+  type CatalogChange,
+  type CatalogBadgeKind,
+} from "./catalog-changes"
 import { errorMessage } from "@/lib/api/errors"
 import type { WarehouseKind } from "./warehouse-types"
 const features = tableFeatures({})
@@ -36,7 +42,7 @@ export function WarehousePatchChanges({
   })
   const data = useMemo<Row[]>(() => {
     const changes = (query.data ?? []).filter((c) => c.patchVariantId === variantId)
-    if (!showAll) return changes
+    if (!showAll) return changes.filter(isGameplayChange)
     const byOwner = new Map(changes.map((c) => [c.ownerId, c]))
     const rows: Row[] = (snapshot.data ?? []).map(
       (entry) =>
@@ -63,7 +69,8 @@ export function WarehousePatchChanges({
         },
     )
     const ids = new Set(rows.map((r) => r.ownerId))
-    const isChanged = (row: Row) => row.kinds.some((k) => k !== "UNCHANGED" && k !== "INHERITED")
+    const isChanged = (row: Row) =>
+      row.kinds.some((k) => k !== "UNCHANGED" && k !== "INHERITED" && k !== "DATA_BASELINE")
     return [...rows, ...changes.filter((c) => !ids.has(c.ownerId))].sort(
       (a, b) => Number(isChanged(b)) - Number(isChanged(a)) || a.name.localeCompare(b.name, locale),
     )
@@ -147,13 +154,7 @@ export function WarehousePatchChanges({
     )
   return (
     <div className="overflow-x-auto">
-      {showAll && (
-        <p className="px-3 py-2 text-xs text-muted-foreground">
-          {data.length} mục tại mốc ·{" "}
-          {data.filter((r) => !r.kinds.includes("UNCHANGED") && !r.kinds.includes("INHERITED")).length} mục có ghi nhận.
-          Các mục còn lại kế thừa dữ liệu trước đó{reviewed ? "." : "; patch chưa hoàn tất rà soát."}
-        </p>
-      )}
+      {showAll && <p className="px-3 py-2 text-xs text-muted-foreground">{data.length} mục tại mốc đã chọn</p>}
       <table className="w-full text-sm">
         <thead className="bg-muted/40">
           {table.getHeaderGroups().map((group) => (

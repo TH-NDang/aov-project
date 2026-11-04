@@ -1,10 +1,10 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
-  currentHeroCatalogScope,
-  resolveHeroCatalogScope,
-  showAllHeroes,
-} from "../src/features/publishing/hero-catalog-scope"
+  currentCatalogScope,
+  resolveCatalogScope,
+  showAllCatalogEntries,
+} from "../src/features/publishing/catalog-scope"
 import { heroCatalogRows } from "../src/features/publishing/catalog-data"
 import { catalogOverview, createHeroCatalogFixture } from "./fixtures/hero-catalog-data"
 import type { PublicationOverview } from "../src/features/publishing/publication-overview"
@@ -37,17 +37,18 @@ const overview: PublicationOverview = {
 
 test("hero scope opens the current release and preserves explicit historical or draft selections", () => {
   const current = { seasonId: "season-new", variantId: "patch-current" }
-  assert.deepEqual(currentHeroCatalogScope(overview), current)
-  assert.deepEqual(resolveHeroCatalogScope(overview, { seasonId: "", variantId: "" }), current)
-  assert.deepEqual(resolveHeroCatalogScope(overview, { seasonId: "season-new", variantId: "" }), current)
-  assert.equal(resolveHeroCatalogScope(overview, { seasonId: "season-old", variantId: "" }).variantId, "patch-old")
-  assert.equal(resolveHeroCatalogScope(overview, { seasonId: "", variantId: "patch-future" }).variantId, "patch-future")
+  assert.deepEqual(currentCatalogScope(overview), current)
+  assert.deepEqual(resolveCatalogScope(overview, { seasonId: "", variantId: "" }), current)
+  for (const seasonId of ["season-new", "season-old"]) {
+    assert.deepEqual(resolveCatalogScope(overview, { seasonId, variantId: "" }), { seasonId, variantId: "" })
+  }
+  assert.equal(resolveCatalogScope(overview, { seasonId: "", variantId: "patch-future" }).variantId, "patch-future")
   assert.equal(
-    resolveHeroCatalogScope(overview, { seasonId: "season-new", variantId: "patch-early" }).variantId,
+    resolveCatalogScope(overview, { seasonId: "season-new", variantId: "patch-early" }).variantId,
     "patch-early",
   )
-  assert.equal(showAllHeroes(new URLSearchParams()), true)
-  assert.equal(showAllHeroes(new URLSearchParams("show=changes")), false)
+  assert.equal(showAllCatalogEntries(new URLSearchParams()), true)
+  assert.equal(showAllCatalogEntries(new URLSearchParams("show=changes")), false)
 })
 
 test("all heroes keeps identities with no snapshot at the target without substituting future content", () => {

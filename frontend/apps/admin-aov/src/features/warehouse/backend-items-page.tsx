@@ -1,4 +1,4 @@
-import { useWarehouseScope, WarehouseScopeControls } from "./warehouse-scope"
+import { useWarehouseScope, WarehouseScopeControls, WarehouseScopeEmpty } from "./warehouse-scope"
 import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useBlocker } from "react-router"
@@ -25,7 +25,7 @@ import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { Field } from "../publishing/fields"
 import { warehouseApi, invalidateWarehouseCatalogs, useWarehouseCatalog, useWarehouseMetadata } from "./warehouse-api"
-import { WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
+import { WarehouseDraftMenu, WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
 import { ItemSearch, itemSearchMatches } from "./item-search"
 import { warehouseName, type ItemContent, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
 import { EnchantmentBranchEditor } from "./secondary-editor"
@@ -34,7 +34,19 @@ import { ItemShopGraph, ItemShopHelp } from "./item-shop-graph"
 import { ItemEditor } from "./item-editor"
 
 type Entry = WarehouseEntry<ItemContent>
-type PendingItem = { content: ItemContent; patchId?: string | null }
+type PendingItem = { entry: Entry; content: ItemContent; patchId?: string | null }
+function withPendingEdits(entry: Entry, pending?: PendingItem): Entry {
+  if (!pending) return entry
+  return {
+    ...entry,
+    content: pending.content,
+    revision: {
+      ...pending.entry.revision,
+      effectiveFromPatchVariantId:
+        pending.patchId === undefined ? pending.entry.revision.effectiveFromPatchVariantId : pending.patchId,
+    },
+  }
+}
 /** A board change waiting for its published item to get a draft. */
 type DraftAction =
   | { type: "connect"; from: string; to: string }
@@ -59,6 +71,7 @@ export function BackendItemsPage() {
   const context = useWarehouseContext()
   const scope = useWarehouseScope("items", context.rulesetId, context.locale)
   const catalog = useWarehouseCatalog("items", context.rulesetId, context.locale)
+  const displayedCatalog = scope.scoped ? scope.query : catalog
   const groups = useWarehouseMetadata("items")
   const client = useQueryClient()
   const { actor } = useSession()
@@ -75,7 +88,7 @@ export function BackendItemsPage() {
   const [extraRows, setExtraRows] = useState(0)
   const [jump, setJump] = useState<{ id: string; group: string | null } | null>(null)
   const [draftRequest, setDraftRequest] = useState<DraftRequest | null>(null)
-  const [queuedDraft, setQueuedDraft] = useState<DraftRequest | null>(null)
+  const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
   const [autoDraft, setAutoDraft] = useState(false)
   const [rememberDraft, setRememberDraft] = useState(false)
   const [categoryEditor, setCategoryEditor] = useState<WarehouseMetadata | "new" | null>(null)
@@ -86,20 +99,18 @@ export function BackendItemsPage() {
     () =>
       (scope.scoped ? (scope.query.data ?? empty) : (catalog.data ?? empty)).map((base) => {
         const item = { ...base, changeKinds: scope.badgeKinds(base.id) }
-        const pendingItem = edits.get(item.id)
-        if (!pendingItem) return item
-
-        return {
-          ...item,
-          content: pendingItem.content,
-          revision: {
-            ...item.revision,
-            effectiveFromPatchVariantId:
-              pendingItem.patchId === undefined ? item.revision.effectiveFromPatchVariantId : pendingItem.patchId,
-          },
-        }
+        return withPendingEdits(item, edits.get(item.id))
       }),
-    [catalog.data, edits, scope.query.data, scope.scoped, scope.latest, scope.showAll],
+    [
+      catalog.data,
+      edits,
+      scope.query.data,
+      scope.scoped,
+      scope.latest,
+      scope.showAll,
+      scope.baselineIds,
+      scope.reviewed,
+    ],
   )
   const matches = useMemo(
     () => (context.q ? new Set(itemSearchMatches(rows, context.q, context.locale).map((item) => item.id)) : null),
@@ -115,7 +126,11 @@ export function BackendItemsPage() {
       .querySelector(`[data-item-node="${CSS.escape(jump.id)}"]`)
       ?.scrollIntoView({ block: "center", inline: "center", behavior: "smooth" })
   }, [jump, category])
-  const selected = rows.find((item) => item.id === selectedId)
+  const selectedBase =
+    (editingEntry?.id === selectedId && editingEntry.revision.rulesetId === context.rulesetId ? editingEntry : null) ??
+    rows.find((item) => item.id === selectedId) ??
+    catalog.data?.find((item) => item.id === selectedId)
+  const selected = selectedBase && withPendingEdits(selectedBase, edits.get(selectedId))
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) => pending > 0 && currentLocation.pathname !== nextLocation.pathname,
   )
@@ -129,6 +144,7 @@ export function BackendItemsPage() {
     return () => window.removeEventListener("beforeunload", guard)
   }, [pending])
   function select(id: string) {
+    setEditingEntry(null)
     setFocusId(id)
     setSelectedId(id)
   }
@@ -142,10 +158,18 @@ export function BackendItemsPage() {
     setFocusId(item.id)
     setJump({ id: item.id, group: position.categoryCode })
   }
-  function update(id: string, content: ItemContent, patchId?: string | null) {
+  function editDraft(entry: Entry) {
+    setEditingEntry(entry)
+    setSelectedId(entry.id)
+  }
+  function update(entry: Entry, content: ItemContent, patchId?: string | null) {
     setUndo((history) => [...history.slice(-19), new Map(edits)])
     setEdits((previous) =>
-      new Map(previous).set(id, { content, patchId: patchId === undefined ? previous.get(id)?.patchId : patchId }),
+      new Map(previous).set(entry.id, {
+        entry,
+        content,
+        patchId: patchId === undefined ? previous.get(entry.id)?.patchId : patchId,
+      }),
     )
   }
   async function refresh() {
@@ -156,9 +180,7 @@ export function BackendItemsPage() {
     setError("")
     try {
       for (const [id, pendingItem] of edits) {
-        const entry = catalog.data?.find((item) => item.id === id)
-        if (!entry) throw new Error("Trang bị không còn trong danh sách. Tải lại trước khi lưu.")
-        await warehouseApi.save("items", entry, pendingItem.content, pendingItem.patchId)
+        await warehouseApi.save("items", pendingItem.entry, pendingItem.content, pendingItem.patchId)
         setEdits((previous) => {
           const next = new Map(previous)
           next.delete(id)
@@ -179,8 +201,9 @@ export function BackendItemsPage() {
     setBusy(true)
     setError("")
     try {
-      await warehouseApi.fork("items", entry)
+      const draft = await getDraft(entry)
       await refresh()
+      editDraft(draft)
     } catch (cause) {
       setError(errorMessage(cause))
     } finally {
@@ -216,7 +239,8 @@ export function BackendItemsPage() {
       setCreating(false)
       setName("")
       setCode("")
-      select(result.id)
+      setFocusId(result.id)
+      editDraft(result)
     } catch (cause) {
       setError(errorMessage(cause))
     } finally {
@@ -227,50 +251,53 @@ export function BackendItemsPage() {
     if (autoDraft) void createDraftAndApply(request)
     else setDraftRequest(request)
   }
+  function getDraft(entry: Entry) {
+    return (
+      catalog.data?.find(
+        (item) =>
+          item.id === entry.id &&
+          item.revision.state === "DRAFT" &&
+          item.revision.sourceRevisionId === entry.revision.id,
+      ) ?? warehouseApi.fork("items", entry)
+    )
+  }
   async function createDraftAndApply(request: DraftRequest) {
     const entry = rows.find((item) => item.id === request.id)
     if (!entry) return
     setBusy(true)
     setError("")
     try {
-      await warehouseApi.fork("items", entry)
+      const draft = await getDraft(entry)
       await refresh()
-      setQueuedDraft(request)
+      const action = request.action
+      if (action.type === "connect") connect(action.from, action.to, draft)
+      else move(action.id, action.index, action.row, action.column, draft)
     } catch (cause) {
       setError(errorMessage(cause))
     } finally {
       setBusy(false)
     }
   }
-  // Applies the change that asked for a draft once the refreshed catalog shows that draft.
-  useEffect(() => {
-    if (!queuedDraft) return
-    if (rows.find((item) => item.id === queuedDraft.id)?.revision.state !== "DRAFT") return
-    setQueuedDraft(null)
-    const action = queuedDraft.action
-    if (action.type === "connect") connect(action.from, action.to)
-    else move(action.id, action.index, action.row, action.column)
-  }, [queuedDraft, rows])
-  function move(id: string, index: number, row: number, column: number) {
-    const item = rows.find((entry) => entry.id === id)!
+  function move(id: string, index: number, row: number, column: number, draft?: Entry) {
+    const item = draft ?? rows.find((entry) => entry.id === id)!
     if (item.revision.state !== "DRAFT") {
       requestDraft({ id, action: { type: "move", id, index, row, column } })
       return
     }
-    update(id, {
+    update(item, {
       ...item.content,
       shopPositions: item.content.shopPositions.map((position, i) =>
         i === index ? { ...position, row, column } : position,
       ),
     })
   }
-  function connect(from: string, to: string) {
+  function connect(from: string, to: string, draft?: Entry) {
     const problem = recipeConnectionError(rows, from, to)
     if (problem) {
       toast.error(problem)
       return
     }
-    const target = rows.find((item) => item.id === to)!
+    const target = draft ?? rows.find((item) => item.id === to)!
     if (target.revision.state !== "DRAFT") {
       requestDraft({ id: to, action: { type: "connect", from, to } })
       return
@@ -279,7 +306,7 @@ export function BackendItemsPage() {
       select(to)
       return
     }
-    update(to, {
+    update(target, {
       ...target.content,
       recipeStatus: "VERIFIED",
       components: [...target.content.components, { itemId: from, quantity: 1 }],
@@ -323,6 +350,7 @@ export function BackendItemsPage() {
                   <Plus />
                   Tạo trang bị
                 </DropdownMenuItem>
+                <WarehouseDraftMenu entries={catalog.data ?? empty} locale={context.locale} onOpen={editDraft} />
                 <DropdownMenuItem disabled={busy} onSelect={() => setExtraRows((rows) => rows + 2)}>
                   <Rows3 />
                   Thêm 2 hàng trống
@@ -345,16 +373,23 @@ export function BackendItemsPage() {
         }
       />
       <WarehouseScopeControls scope={scope} />
-      {(error || catalog.isError || groups.isError) && (
+      {(error || displayedCatalog.isError || groups.isError) && (
         <p role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
-          {error || errorMessage(catalog.error ?? groups.error)}
+          {error || errorMessage(displayedCatalog.error ?? groups.error)}
         </p>
       )}
-      {catalog.isPending || groups.isPending ? (
+      {displayedCatalog.isPending ||
+      groups.isPending ||
+      (!scope.scoped && scope.overview.isPending) ||
+      (scope.scoped && !scope.showAll && scope.changes.isPending) ? (
         <p role="status" className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
           <LoaderCircle className="size-4 animate-spin" />
           Đang tải kho trang bị…
         </p>
+      ) : scope.scoped && !rows.length ? (
+        displayedCatalog.isSuccess &&
+        groups.isSuccess &&
+        (scope.showAll || scope.changes.isSuccess) && <WarehouseScopeEmpty scope={scope} />
       ) : (
         <>
           <ItemShopGraph
@@ -373,13 +408,9 @@ export function BackendItemsPage() {
             onConnect={connect}
             onMove={move}
           />
-          {!rows.length && (
+          {!rows.length && !displayedCatalog.isError && (
             <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-              {scope.scoped
-                ? scope.showAll
-                  ? "Chưa có dữ liệu trang bị đã xuất bản tại mốc này."
-                  : "Chưa ghi nhận trang bị thay đổi trong phạm vi này. Chọn Dữ liệu tại mốc để xem dữ liệu kế thừa."
-                : "Chưa có trang bị trong bộ quy tắc này."}
+              Chưa có trang bị trong bộ quy tắc này.
             </p>
           )}
         </>
@@ -402,7 +433,7 @@ export function BackendItemsPage() {
               toast.error(problem)
               return
             }
-            update(selected.id, content, patchId)
+            update(selected, content, patchId)
             setSelectedId(null)
           }}
           onFork={() => void fork(selected)}

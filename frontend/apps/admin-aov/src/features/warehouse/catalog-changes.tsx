@@ -79,6 +79,9 @@ export function scopedChanges(changes: CatalogChange[], data: PublicationOvervie
   )
   return changes.filter((c) => variants.has(c.patchVariantId))
 }
+export function isGameplayChange(change: Pick<CatalogChange, "kinds">) {
+  return change.kinds.some((kind) => kind !== "DATA_BASELINE")
+}
 export function changeCounts(changes: CatalogChange[]) {
   const result = new Map<string, TimelineCount>()
   const seen = new Set<string>()
@@ -96,15 +99,12 @@ export function changeCounts(changes: CatalogChange[]) {
 export function CatalogChangeBadges({
   kinds,
   compact = false,
-  hideBaseline = false,
 }: {
   kinds: readonly CatalogBadgeKind[]
   compact?: boolean
-  /** Cards skip the baseline label, which almost every record carries and so says nothing. */
-  hideBaseline?: boolean
 }) {
   const { colors } = useChangeColors()
-  const shown = [...new Set(kinds)].filter((kind) => !hideBaseline || kind !== "DATA_BASELINE")
+  const shown = [...new Set(kinds)]
   if (!shown.length) return null
   return (
     <span className="inline-flex flex-wrap items-center gap-1">

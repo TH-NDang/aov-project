@@ -2,6 +2,41 @@ import { useImageContext } from "../media/character-image-context"
 import { useContentLocale } from "../publishing/publication-overview"
 import { control } from "../publishing/fields"
 import { hasRulesetChoice } from "../publishing/default-ruleset"
+import {
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@aov/ui/components/dropdown-menu"
+import { FilePenLine } from "lucide-react"
+import { warehouseName, type WarehouseEntry } from "./warehouse-types"
+
+export function WarehouseDraftMenu<T extends WarehouseEntry>({
+  entries,
+  locale,
+  onOpen,
+}: {
+  entries: T[]
+  locale: string
+  onOpen: (entry: T) => void
+}) {
+  const drafts = entries.filter((entry) => entry.revision.state === "DRAFT")
+  if (!drafts.length) return null
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger>
+        <FilePenLine aria-hidden /> Bản nháp ({drafts.length})
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
+        {drafts.map((entry) => (
+          <DropdownMenuItem key={entry.id} onSelect={() => onOpen(entry)}>
+            {warehouseName(entry, locale)}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
+  )
+}
 
 export function useWarehouseContext() {
   const context = useImageContext()

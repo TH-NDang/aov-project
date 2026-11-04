@@ -1,4 +1,5 @@
-import { catalogScopePatch } from "./catalog-scope"
+import { activeCatalogScope, catalogScopePatch, currentCatalogScope } from "./catalog-scope"
+import { useCatalogScopePreference } from "./catalog-scope-memory"
 import { PatchDataReview } from "./patch-data-review"
 import { PatchStatDefaults } from "./patch-stat-defaults"
 import { SharedPatchSetup, SeasonScheduleForm, PatchReleaseForm } from "./shared-version-setup"
@@ -47,11 +48,23 @@ export function GameConfigurationPage() {
   const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets, enabled: !!setup })
   const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions, enabled: !!setup })
   const [params, setParams] = useSearchParams()
-  const timelineScope = { seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }
+  const data = overview.data
+  const requested = useCatalogScopePreference(data, {
+    seasonId: params.get("season") ?? "",
+    variantId: params.get("patch") ?? "",
+  })
+  const season = data?.seasons.find((s) => s.id === requested.seasonId)
+  const defaultPatchId = !requested.variantId && !season && data ? currentCatalogScope(data).variantId : ""
+  const selectedPatch = data?.variants.find((v) => v.id === (requested.variantId || defaultPatchId))
+  const timelineScope = {
+    seasonId: selectedPatch ? (selectedPatch.seasonId ?? "") : (season?.id ?? ""),
+    variantId: selectedPatch?.id ?? "",
+  }
   const changeScope = (next: typeof timelineScope) => {
     setParams(
       (current) => {
         const copy = new URLSearchParams(current)
+        copy.delete("show")
         for (const [key, value] of Object.entries(catalogScopePatch(next))) {
           if (value) copy.set(key, value)
           else copy.delete(key)
@@ -62,7 +75,6 @@ export function GameConfigurationPage() {
     )
     if (next.seasonId) setExpanded((old) => ({ ...old, [next.seasonId]: true }))
   }
-  const data = overview.data
   const queryClient = useQueryClient()
   // A new database has no ruleset; the wiki only ever needs the one default ruleset.
   async function createDefaultRuleset() {
@@ -172,7 +184,7 @@ export function GameConfigurationPage() {
               value={timelineScope}
               onChange={changeScope}
               showCounts={false}
-              seasonView="each-patch"
+              currentFilter={activeCatalogScope(data)}
             />
             {!data.seasons.length && (
               <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">

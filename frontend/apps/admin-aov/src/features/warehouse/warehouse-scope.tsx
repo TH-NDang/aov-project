@@ -1,5 +1,6 @@
-import { catalogScopePatch } from "../publishing/catalog-scope"
+import { activeCatalogScope, catalogScopePatch, showAllCatalogEntries } from "../publishing/catalog-scope"
 import { useMemo } from "react"
+import { useCatalogScopePreference } from "../publishing/catalog-scope-memory"
 import { useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { type CatalogFilter } from "../publishing/catalog-context"
@@ -7,29 +8,29 @@ import { CatalogTimeline } from "../publishing/catalog-timeline"
 import { usePublicationOverview } from "../publishing/publication-overview"
 import { errorMessage } from "@/lib/api/errors"
 import { Button } from "@aov/ui/components/button"
+import { useSearchParam } from "@/hooks/use-search-param"
 import { warehouseApi, warehouseKeys } from "./warehouse-api"
-import { useCatalogChanges, changeCounts, scopedChanges, CatalogChangeBadges } from "./catalog-changes"
+import {
+  useCatalogChanges,
+  changeCounts,
+  scopedChanges,
+  isGameplayChange,
+  type CatalogBadgeKind,
+} from "./catalog-changes"
 import type { WarehouseKind } from "./warehouse-types"
+
+const names: Record<WarehouseKind, string> = {
+  items: "trang bị",
+  enchantments: "phù hiệu",
+  spells: "phụ trợ",
+  arcana: "ngọc",
+}
 
 export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: string, locale: string) {
   const [params, setParams] = useSearchParams()
-  const value: CatalogFilter = { seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }
-  const showAll = params.get("show") === "all"
-  const scoped = !!(value.seasonId || value.variantId)
+  const requested: CatalogFilter = { seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }
+  const showAll = showAllCatalogEntries(params)
   const overview = usePublicationOverview()
-  const changes = useCatalogChanges(kind, rulesetId, locale)
-  const query = useQuery({
-    queryKey: [...warehouseKeys.catalog(kind, rulesetId, locale), "scope", value.seasonId, value.variantId, showAll],
-    queryFn: ({ signal }) =>
-      warehouseApi.list(kind, rulesetId, locale, signal, {
-        seasonId: value.seasonId,
-        patchVariantId: value.variantId,
-        includeUnchanged: showAll,
-      }),
-    enabled: scoped && !!rulesetId,
-    staleTime: 60000,
-    refetchOnWindowFocus: false,
-  })
   const data = useMemo(
     () =>
       overview.data
@@ -44,10 +45,16 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
         : undefined,
     [overview.data, rulesetId],
   )
+  const currentFilter = data && activeCatalogScope(data)
+  const preferred = useCatalogScopePreference(data, requested)
+  const value = preferred.seasonId || preferred.variantId ? preferred : (currentFilter ?? preferred)
+  const scoped = !!(value.seasonId || value.variantId)
+  const changes = useCatalogChanges(kind, rulesetId, locale)
   const onChange = (next: CatalogFilter) =>
     setParams(
       (current) => {
         const copy = new URLSearchParams(current)
+        copy.delete("scope")
         for (const [key, value] of Object.entries(catalogScopePatch(next)))
           if (value) copy.set(key, value)
           else copy.delete(key)
@@ -62,52 +69,75 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
   )
   const latest = useMemo(() => {
     const result = new Map<string, (typeof matched)[number]>()
-    for (const change of matched) {
+    for (const change of matched.filter(isGameplayChange)) {
       const old = result.get(change.ownerId)
       const ordinal = (id: string) => data?.variants.find((v) => v.id === id)?.rulesetOrdinal ?? 0
       if (!old || ordinal(change.patchVariantId) > ordinal(old.patchVariantId)) result.set(change.ownerId, change)
     }
     return result
   }, [matched, data])
+  const query = useQuery({
+    queryKey: [...warehouseKeys.catalog(kind, rulesetId, locale), "scope", value.seasonId, value.variantId, showAll],
+    queryFn: ({ signal }) =>
+      warehouseApi.list(kind, rulesetId, locale, signal, {
+        seasonId: value.seasonId,
+        patchVariantId: value.variantId,
+        includeUnchanged: showAll,
+      }),
+    select: (rows) => (showAll ? rows : rows.filter((row) => latest.has(row.id))),
+    enabled: scoped && !!rulesetId,
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  })
   const variants =
     data?.variants.filter(
       (v) => (!value.seasonId || v.seasonId === value.seasonId) && (!value.variantId || v.id === value.variantId),
     ) ?? []
   const reviewed = variants.length > 0 && variants.every((v) => v.dataReviewState === "COMPLETE")
-  const badgeKinds = (id: string): import("./catalog-changes").CatalogBadgeKind[] =>
-    latest.get(id)?.kinds ?? (scoped && showAll ? [reviewed ? "UNCHANGED" : "INHERITED"] : [])
-  return { value, scoped, overview, changes, query, data, onChange, latest, matched, showAll, badgeKinds }
+  const baselineIds = useMemo(
+    () => new Set(matched.filter((row) => !isGameplayChange(row)).map((row) => row.ownerId)),
+    [matched],
+  )
+  const badgeKinds = (id: string): CatalogBadgeKind[] => {
+    const kinds = latest.get(id)?.kinds
+    if (kinds) return kinds
+    if (baselineIds.has(id)) return []
+    return scoped && showAll ? [reviewed ? "UNCHANGED" : "INHERITED"] : []
+  }
+  return {
+    kind,
+    currentFilter,
+    value,
+    scoped,
+    overview,
+    changes,
+    query,
+    data,
+    onChange,
+    baselineIds,
+    reviewed,
+    latest,
+    showAll,
+    badgeKinds,
+  }
 }
 export type WarehouseScopeState = ReturnType<typeof useWarehouseScope>
 export function WarehouseScopeControls({ scope }: { scope: WarehouseScopeState }) {
   const counts = changeCounts(scope.changes.data ?? [])
   for (const variant of scope.data?.variants ?? [])
     if (!counts.has(variant.id)) counts.set(variant.id, { changes: 0, baseline: 0 })
-  const kinds = [...new Set(scope.matched.flatMap((c) => c.kinds))]
   return (
     <div className="min-w-0 space-y-3">
       {scope.data && (
-        <>
-          <CatalogTimeline
-            data={scope.data}
-            value={scope.value}
-            onChange={scope.onChange}
-            counts={scope.changes.isError ? undefined : counts}
-            loading={scope.changes.isPending}
-          />
-          {scope.scoped && !scope.changes.isPending && !scope.changes.isError && (
-            <div role="status" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span>
-                {new Set(scope.matched.filter((c) => !c.kinds.includes("DATA_BASELINE")).map((c) => c.ownerId)).size}{" "}
-                mục thay đổi
-              </span>
-              <CatalogChangeBadges kinds={kinds} />
-              {!scope.matched.some((c) => !c.kinds.includes("DATA_BASELINE")) && (
-                <span>Chưa ghi nhận thay đổi gameplay trong phạm vi này.</span>
-              )}
-            </div>
-          )}
-        </>
+        <CatalogTimeline
+          allLabel={`Tất cả ${names[scope.kind]}`}
+          currentFilter={scope.currentFilter}
+          data={scope.data}
+          value={scope.value}
+          onChange={scope.onChange}
+          counts={scope.changes.isError ? undefined : counts}
+          loading={scope.changes.isPending}
+        />
       )}
       {(scope.overview.error || scope.changes.error) && (
         <div role="alert" className="text-sm text-destructive">
@@ -123,6 +153,31 @@ export function WarehouseScopeControls({ scope }: { scope: WarehouseScopeState }
             Thử lại
           </Button>
         </div>
+      )}
+    </div>
+  )
+}
+
+export function WarehouseScopeEmpty({ scope, filtered = false }: { scope: WarehouseScopeState; filtered?: boolean }) {
+  const [, setShow] = useSearchParam("show")
+  const name = names[scope.kind]
+  const patch = scope.data?.variants.find((entry) => entry.id === scope.value.variantId)
+  const season = scope.data?.seasons.find((entry) => entry.id === scope.value.seasonId)
+  const period = patch ? `patch ${patch.patchCode}` : season ? `mùa ${season.displayName}` : "mốc đã chọn"
+  const message = filtered
+    ? `Không tìm thấy ${name} phù hợp với bộ lọc hiện tại.`
+    : scope.showAll
+      ? `Chưa có dữ liệu ${name} đã xuất bản tại ${period}.`
+      : `Chưa ghi nhận thay đổi về ${name} trong ${period}.`
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-6">
+      <p role="status" className="type-body text-muted-foreground">
+        {message}
+      </p>
+      {!filtered && !scope.showAll && (
+        <Button type="button" size="sm" variant="outline" onClick={() => setShow("all")}>
+          Xem tất cả {name}
+        </Button>
       )}
     </div>
   )

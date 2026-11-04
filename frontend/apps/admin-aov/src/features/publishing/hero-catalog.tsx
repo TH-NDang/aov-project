@@ -46,7 +46,7 @@ import {
 import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { HeroQuickViewBody } from "./hero-quick-view-body"
 import { useHeroEntries } from "./patch-notes-sheet"
-import { showAllHeroes } from "./hero-catalog-scope"
+import { showAllCatalogEntries } from "./catalog-scope"
 import { useHeroScopeChanges } from "./use-hero-scope-changes"
 const HeroWorkspace = lazy(() =>
   import("./publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
@@ -76,7 +76,7 @@ export function HeroCatalog({
   const sort = params.get("sort") === "edited-desc" ? "edited-desc" : "code"
   const [search, setSearch] = useState(q)
   const searchRef = useRef<HTMLInputElement>(null)
-  const showAll = showAllHeroes(params)
+  const showAll = showAllCatalogEntries(params)
   const timeZone = useContentTimeZone()
   const reviewedVariants =
     overview?.variants.filter(

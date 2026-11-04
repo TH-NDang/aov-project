@@ -16,7 +16,7 @@ import { errorMessage } from "@/lib/api/errors"
 import { MarketBadge } from "./market-badge"
 import { AovNavIcon } from "@/app/aov-nav-icon"
 import { HeroAsset } from "./hero-content"
-import { changeDomain, type CatalogChange } from "../warehouse/catalog-changes"
+import { changeDomain, isGameplayChange, type CatalogChange } from "../warehouse/catalog-changes"
 import { dateLabel, phaseLabels, type PublicationOverview } from "./publication-overview"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { HeroChangeSummary } from "./hero-change-badges"
@@ -311,10 +311,15 @@ export function PatchChangesTable({
   warehouses.forEach((query, index) => {
     counts.set(
       warehouseDomains[index],
-      new Set(query.data?.filter((row) => row.patchVariantId === variantId).map((row) => row.ownerId) ?? []).size,
+      new Set(
+        query.data
+          ?.filter((row) => row.patchVariantId === variantId && isGameplayChange(row))
+          .map((row) => row.ownerId) ?? [],
+      ).size,
     )
   })
-  const available = changeDomains.filter((entry) => (counts.get(entry.id) ?? 0) > 0)
+  const showAll = params.get("show") === "all"
+  const available = showAll ? changeDomains : changeDomains.filter((entry) => (counts.get(entry.id) ?? 0) > 0)
   const domain = available.find((entry) => entry.id === params.get("domain"))?.id ?? available[0]?.id
   const queries = [heroes, ...warehouses]
   const errors = queries.filter((query) => query.isError)
@@ -363,7 +368,7 @@ export function PatchChangesTable({
             <TabsTrigger key={entry.id} value={entry.id} className="gap-2">
               <AovNavIcon name={entry.id} className="size-4" />
               {entry.label}
-              <span className="text-xs tabular-nums text-muted-foreground">{counts.get(entry.id)}</span>
+              {!showAll && <span className="text-xs tabular-nums text-muted-foreground">{counts.get(entry.id)}</span>}
             </TabsTrigger>
           ))}
         </TabsList>

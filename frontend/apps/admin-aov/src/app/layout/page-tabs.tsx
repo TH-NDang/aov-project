@@ -22,6 +22,7 @@ import {
 } from "react-router"
 import type { RouteHandle } from "./site-header"
 import { useHotkeys } from "../hotkeys"
+import { catalogTabTarget, useSavedCatalogScope } from "@/features/publishing/catalog-scope-memory"
 import { createPageTabPreviewStore } from "./page-tab-preview-store"
 import { PageTabPreviewContext, usePageTabCapture } from "./page-tab-preview"
 
@@ -71,6 +72,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
   const matches = useMatches() as UIMatch<unknown, RouteHandle | undefined>[]
   const transient = matches.some((match) => match.handle?.pageTab === false)
   const navigate = useNavigate()
+  const savedScope = useSavedCatalogScope()
   const active = useMemo<PageSession>(() => {
     const match = [...matches].reverse().find((entry) => entry.handle?.crumb)
     return {
@@ -119,7 +121,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
     setSaved(remaining)
     if (path === active.path) {
       setClosingPath(path)
-      void navigate(remaining[Math.max(0, index - 1)]?.to ?? "/", { replace: true })
+      void navigate(catalogTabTarget(remaining[Math.max(0, index - 1)]?.to ?? "/", savedScope), { replace: true })
     }
   }
 
@@ -159,7 +161,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
       if (digit) {
         event.preventDefault()
         const destination = digit === 9 ? sessions.at(-1) : sessions[digit - 1]
-        if (destination && destination.path !== active.path) void navigate(destination.to)
+        if (destination && destination.path !== active.path) void navigate(catalogTabTarget(destination.to, savedScope))
       } else if (event.key.toLowerCase() === "w") {
         event.preventDefault()
         if (sessions.length > 1 || active.path !== "/") closeTab(active.path)
@@ -167,7 +169,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
     }
     window.addEventListener("keydown", onKeyDown)
     return () => window.removeEventListener("keydown", onKeyDown)
-  }, [enabled, sessions, active.path, navigate, closeTab, transient])
+  }, [enabled, sessions, active.path, navigate, closeTab, transient, savedScope])
 
   return (
     <PageTabsContext.Provider

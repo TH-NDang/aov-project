@@ -105,6 +105,7 @@ test("publication overview shows flags and hero heads, and only tabs with change
         heroId: "hero",
         heroCode: "airi",
         toHeroRevisionId: "revision",
+        overallKind: "BUFF",
         summary: "Adjusted skill",
         actualLocale: "vi-VN",
         changes: [
@@ -157,11 +158,11 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.doesNotMatch(document.body.textContent ?? "", /Shared gameplay/)
     assert.match(document.querySelector('[aria-label="Thị trường"]')?.textContent ?? "", /S4 2026.*patch-october/)
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
-    assert.equal(document.querySelector('button[aria-label="Xem thay đổi Airi"]'), null)
-    const patch = [...document.querySelectorAll<HTMLButtonElement>("button[aria-expanded]")].find((b) =>
-      b.textContent?.includes("patch-october"),
+    assert.equal(document.querySelector('[aria-label="Phạm vi hiển thị"]'), null)
+    const patch = [...document.querySelectorAll<HTMLButtonElement>("button[aria-expanded]")].find(
+      (b) => b.getAttribute("aria-expanded") === "true" && b.textContent?.includes("patch-october"),
     )!
-    await act(async () => patch.click())
+    assert.ok(patch, "The active patch is open by default")
     assert.ok(document.querySelector('button[aria-label="Xem thay đổi Airi"]'))
     assert.ok(document.querySelector("td.sticky"))
     assert.match(document.body.textContent ?? "", /Tăng sức mạnh/)
@@ -173,7 +174,8 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.equal(tabs()[0].getAttribute("aria-selected"), "true", "A stale empty domain falls back to a populated tab")
     assert.ok(tabs()[0].querySelector("svg"))
     assert.ok(document.querySelector('img[src="/fixture-head.png"]'))
-    assert.ok(document.querySelectorAll('img[src="/images/flags/vn.svg"]').length >= 3)
+    assert.ok(document.querySelector('[aria-label="Thị trường"] img[src="/images/flags/vn.svg"]'))
+    assert.ok(document.querySelector('td img[src="/images/flags/vn.svg"]'))
     const overview = cache.getQueryData<import("../src/features/publishing/publication-overview").PublicationOverview>([
       "publication-overview",
     ])!

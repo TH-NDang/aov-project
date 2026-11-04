@@ -9,6 +9,10 @@ import type { PublicationOverview } from "../src/features/publishing/publication
 
 async function withDocument(run: (root: Root, dom: JSDOM) => Promise<void>) {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
+  Object.defineProperty(dom.window, "matchMedia", {
+    configurable: true,
+    value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
+  })
   const originals = new Map<string, PropertyDescriptor | undefined>()
   for (const [key, value] of Object.entries({
     React,
@@ -66,7 +70,7 @@ test("hero timeline defaults to all heroes and keeps a patch selected when retur
       return (
         <CatalogTimeline
           data={catalogOverview}
-          heroCatalog
+          allLabel="Tất cả tướng"
           value={{ seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }}
           currentFilter={{ seasonId: "season-new", variantId: "patch-current" }}
           onChange={(next) =>
@@ -86,6 +90,8 @@ test("hero timeline defaults to all heroes and keeps a patch selected when retur
       [...dom.window.document.querySelectorAll<HTMLButtonElement>("button")].find(
         (entry) => entry.textContent?.trim() === name || entry.getAttribute("aria-label") === name,
       )!
+    assert.equal(button("Tất cả tướng"), undefined)
+    await act(async () => button("Tùy chọn dòng thời gian").click())
     assert.equal(button("Tất cả tướng").getAttribute("aria-pressed"), "true")
     assert.equal(button("Bỏ lọc"), undefined)
     await act(async () => button("Chỉ thay đổi").click())
@@ -95,12 +101,137 @@ test("hero timeline defaults to all heroes and keeps a patch selected when retur
     )
     assert.equal(current.get("patch"), "patch-early")
     assert.equal(current.get("show"), "changes")
-    await act(async () => button("Patch hiện tại").click())
+    if (!button("Về patch hiện tại")) await act(async () => button("Tùy chọn dòng thời gian").click())
+    await act(async () => button("Về patch hiện tại").click())
     assert.equal(current.get("patch"), "patch-current")
     assert.equal(current.get("q"), "Airi")
+    await act(async () => button("Tùy chọn dòng thời gian").click())
     await act(async () => button("Tất cả tướng").click())
     assert.equal(current.get("show"), "all")
     assert.equal(current.get("patch"), "patch-current")
+  })
+})
+
+test("phones select patches directly on the rail and open only the options in a bottom sheet", async () => {
+  await withDocument(async (root, dom) => {
+    Object.defineProperty(dom.window, "matchMedia", {
+      value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+    })
+    const { MemoryRouter } = await import("react-router")
+    const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
+    const { catalogOverview } = await import("./fixtures/hero-catalog-data")
+    let selected: CatalogFilter | undefined
+    await act(async () =>
+      root.render(
+        <MemoryRouter>
+          <CatalogTimeline
+            data={catalogOverview}
+            allLabel="Tất cả tướng"
+            value={{ seasonId: "season-new", variantId: "patch-current" }}
+            onChange={(value) => {
+              selected = value
+            }}
+          />
+        </MemoryRouter>,
+      ),
+    )
+    const document = dom.window.document
+    const rail = document.querySelector('[role="group"][aria-label="Chọn patch"]')!
+    assert.equal(document.querySelector('button[aria-label="Chọn mùa hoặc patch"]'), null)
+    await act(async () => rail.querySelector<HTMLButtonElement>('[aria-label="Lọc patch early-season-patch"]')!.click())
+    assert.deepEqual(selected, { seasonId: "season-new", variantId: "patch-early" })
+    assert.equal(document.querySelector('[role="dialog"]'), null)
+    const trigger = document.querySelector<HTMLButtonElement>('button[aria-label="Tùy chọn dòng thời gian"]')!
+    assert.match(trigger.textContent!, /Tùy chọn/)
+    await act(async () => trigger.click())
+    const sheet = document.querySelector('[data-slot="sheet-content"]')!
+    assert.ok(sheet.classList.contains("bottom-0"))
+    const buttons = [...sheet.querySelectorAll<HTMLButtonElement>("button")]
+    assert.equal(
+      buttons.find((button) => button.textContent?.includes("Tất cả tướng"))?.getAttribute("aria-pressed"),
+      "true",
+    )
+    const changes = buttons.find((button) => button.textContent?.includes("Chỉ thay đổi"))!
+    await act(async () => changes.click())
+    assert.equal(changes.getAttribute("aria-pressed"), "true")
+    await act(async () => buttons.find((button) => button.textContent?.trim() === "Close")!.click())
+    assert.equal(document.querySelector('[data-slot="sheet-content"]'), null)
+  })
+})
+
+test("catalog navigation remembers the season or patch, pins empty selections and respects explicit links", async () => {
+  await withDocument(async (root, dom) => {
+    const { MemoryRouter, useNavigate, useSearchParams } = await import("react-router")
+    const { useCatalogScopePreference, catalogTabTarget, useSavedCatalogScope } =
+      await import("../src/features/publishing/catalog-scope-memory")
+    const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
+    const { catalogOverview } = await import("./fixtures/hero-catalog-data")
+    let go: (to: string) => void
+    let saved = ""
+    function Host() {
+      go = useNavigate()
+      saved = useSavedCatalogScope()
+      const [params] = useSearchParams()
+      const value = useCatalogScopePreference(catalogOverview, {
+        seasonId: params.get("season") ?? "",
+        variantId: params.get("patch") ?? "",
+      })
+      return (
+        <CatalogTimeline
+          data={catalogOverview}
+          value={value}
+          allLabel="Tất cả"
+          onChange={() => {}}
+          currentFilter={{ seasonId: "season-new", variantId: "patch-current" }}
+          counts={new Map(catalogOverview.variants.map((v) => [v.id, { changes: 0, baseline: 1 }]))}
+        />
+      )
+    }
+    await act(async () =>
+      root.render(
+        <MemoryRouter initialEntries={["/items?season=season-old&patch=patch-old"]}>
+          <Host />
+        </MemoryRouter>,
+      ),
+    )
+    const patch = (name: string) => dom.window.document.querySelector(`button[aria-label="Lọc patch ${name}"]`)
+    await act(async () => go("/arcana?color=RED"))
+    assert.equal(patch("old-season-patch")?.getAttribute("aria-pressed"), "true")
+    assert.ok(patch("old-season-patch")?.querySelector('[aria-label="Mốc đã chọn"]'))
+    assert.ok(patch("current-patch"), "The current patch stays visible even in a different season")
+    assert.equal(patch("early-season-patch"), null)
+    assert.equal(
+      catalogTabTarget("/arcana?color=RED&season=season-new&patch=patch-early", saved),
+      "/arcana?color=RED&season=season-old&patch=patch-old",
+    )
+    assert.equal(
+      catalogTabTarget("/hero?hero=editing&patch=patch-early", saved),
+      "/hero?hero=editing&patch=patch-early",
+    )
+    await act(async () => go("/spells?emptyPatches=show&show=changes&season=season-old&patch=patch-old"))
+    const trigger = dom.window.document.querySelector<HTMLButtonElement>(
+      'button[aria-label="Tùy chọn dòng thời gian"]',
+    )!
+    await act(async () => {
+      const enter = new dom.window.Event("pointerover", { bubbles: true })
+      Object.defineProperty(enter, "pointerType", { value: "mouse" })
+      trigger.dispatchEvent(enter)
+      await new Promise((resolve) => setTimeout(resolve, 180))
+    })
+    const check = dom.window.document.querySelector<HTMLInputElement>(
+      '[data-slot="popover-content"] input[type=checkbox]',
+    )!
+    assert.ok(check?.checked)
+    await act(async () => check.click())
+    assert.equal(patch("current-patch")?.getAttribute("aria-pressed"), "true")
+    assert.equal(patch("old-season-patch"), null)
+    assert.equal(new URLSearchParams(saved).get("patch"), "patch-current")
+    await act(async () => go("/spells?season=season-old&patch=patch-old"))
+    assert.equal(patch("old-season-patch")?.getAttribute("aria-pressed"), "true")
+    await act(async () => go("/items?season=season-old"))
+    await act(async () => go("/enchantments"))
+    assert.equal(dom.window.document.querySelector('[aria-label="Lọc mùa S3"]')?.getAttribute("aria-pressed"), "true")
+    assert.equal(patch("old-season-patch"), null)
   })
 })
 
@@ -275,7 +406,7 @@ test("catalog filters explain change-only scope, clear stale patch selection, an
   })
 })
 
-test("timeline separates scope from mode, explains season endpoints, and resets the scoped mode atomically", async () => {
+test("timeline preserves catalog display mode across patches and hides data filters in market configuration", async () => {
   await withDocument(async (root, dom) => {
     const { MemoryRouter, useSearchParams } = await import("react-router")
     const { CatalogTimeline } = await import("../src/features/publishing/catalog-timeline")
@@ -311,7 +442,7 @@ test("timeline separates scope from mode, explains season endpoints, and resets 
       ],
     }
     let current = new URLSearchParams()
-    function Host({ eachPatch = false }: { eachPatch?: boolean }) {
+    function Host({ configuration = false }: { configuration?: boolean }) {
       const [params, setParams] = useSearchParams()
       current = params
       return (
@@ -319,67 +450,59 @@ test("timeline separates scope from mode, explains season endpoints, and resets 
           data={data}
           value={{ seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }}
           onChange={(next) => setParams((previous) => patchHeroLocation(previous, catalogScopePatch(next)))}
-          seasonView={eachPatch ? "each-patch" : "latest"}
+          allLabel={configuration ? undefined : "Tất cả trang bị"}
+          showCounts={!configuration}
+          counts={new Map([["late", { changes: 0, baseline: 3 }]])}
         />
       )
     }
-    const render = async (eachPatch = false) =>
+    const render = async (configuration = false) =>
       act(async () =>
         root.render(
           <MemoryRouter initialEntries={["/hero?q=Lauriel&domain=heroes"]}>
-            <Host eachPatch={eachPatch} />
+            <Host configuration={configuration} />
           </MemoryRouter>,
         ),
       )
     const document = dom.window.document
     const button = (label: string) =>
       [...document.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === label)
-    const click = async (element: HTMLButtonElement | undefined | null) => {
+    const click = async (element: HTMLElement | undefined | null) => {
       assert.ok(element)
       await act(async () => element.click())
     }
     const status = () => document.querySelector('[role="status"]')!.textContent!
     await render()
-    assert.equal(button("Tất cả"), undefined)
-    assert.equal(button("Tất cả patch"), undefined)
-    assert.equal(button("Bỏ lọc"), undefined)
-    assert.equal(button("Dữ liệu tại mốc"), undefined)
-    assert.match(status(), /Danh sách chung/)
-
+    assert.equal(button("Danh mục chung"), undefined)
+    assert.equal(button("Chỉ thay đổi"), undefined)
     await click(document.querySelector<HTMLButtonElement>('[aria-label="Lọc mùa S4 2026"]'))
     assert.equal(current.get("season"), "s4")
-    assert.equal(button("Chỉ thay đổi")!.getAttribute("aria-pressed"), "true")
-    assert.match(status(), /Thay đổi trong mùa S4 2026/)
-    await click(button("Dữ liệu tại mốc"))
-    assert.equal(current.get("show"), "all")
-    assert.match(status(), /Dữ liệu đến patch cuối của mùa: 15\/11 \(nháp\)/)
-    await render(true)
-    assert.match(status(), /Dữ liệu tại từng patch trong mùa S4 2026/)
-    await render()
-
+    assert.equal(document.querySelector('[aria-label="Lọc patch 15/11"]'), null)
+    await click(document.querySelector<HTMLButtonElement>('button[aria-label="Tùy chọn dòng thời gian"]'))
+    await click(document.querySelector<HTMLInputElement>('[data-slot="popover-content"] input[type=checkbox]'))
+    assert.ok(document.querySelector('[aria-label="Lọc patch 15/11"]'))
+    assert.equal(current.get("emptyPatches"), "show")
+    assert.equal(button("Tất cả trang bị")!.getAttribute("aria-pressed"), "true")
+    await click(button("Chỉ thay đổi"))
     await click(document.querySelector<HTMLButtonElement>('[aria-label="Lọc patch 30/10"]'))
-    assert.equal(current.get("show"), "all", "Changing time scope retains the chosen display mode")
-    assert.match(status(), /Dữ liệu đến patch S4 2026 · 30\/10/)
-    await click(button("Bỏ lọc"))
-    assert.equal(current.has("season"), false)
+    assert.equal(current.get("show"), "changes")
+    assert.match(status(), /S4 2026 · 30.10 · Chỉ thay đổi/)
+    await render(true)
+    assert.equal(button("Chỉ thay đổi"), undefined)
+    assert.equal(button("Tất cả trang bị"), undefined)
+    assert.equal(button("Danh mục chung"), undefined)
+    assert.ok(document.querySelector('[aria-label="Lọc patch 15/11"]'))
+    await render()
+    await click(document.querySelector<HTMLButtonElement>('[aria-label="Lọc mùa S4 2026"]'))
+    assert.equal(current.get("show"), "changes")
     assert.equal(current.has("patch"), false)
-    assert.equal(current.has("show"), false, "Reset must not leave a hidden snapshot mode")
+    assert.equal(current.get("season"), "s4")
     assert.equal(current.get("q"), "Lauriel")
     assert.equal(current.get("domain"), "heroes")
-    assert.equal(button("Dữ liệu tại mốc"), undefined)
-    await click(document.querySelector<HTMLButtonElement>('[aria-label="Lọc patch 30/10"]'))
-    assert.equal(button("Chỉ thay đổi")!.getAttribute("aria-pressed"), "true")
 
-    await click(document.querySelector<HTMLButtonElement>('[aria-label="Chọn mùa hoặc patch"]'))
-    const popover = document.querySelector('[data-slot="popover-content"]')!
-    assert.ok(popover)
-    assert.ok(!popover.textContent!.includes("Tất cả"))
-    const mobilePatch = [...popover.querySelectorAll<HTMLButtonElement>("button")].find((item) =>
-      item.textContent?.includes("15/11"),
-    )!
-    await click(mobilePatch)
+    await click(document.querySelector<HTMLButtonElement>('[aria-label="Lọc patch 15/11"]'))
     assert.equal(current.get("patch"), "late")
-    assert.equal(document.querySelector('[data-slot="popover-content"]'), null)
-    assert.match(status(), /Thay đổi tại patch S4 2026 · 15\/11 · Nháp/)
+    assert.equal(document.querySelector('[data-slot="sheet-content"]'), null)
+    assert.match(status(), /S4 2026 · 15\/11 · Nháp · Chỉ thay đổi/)
   })
 })

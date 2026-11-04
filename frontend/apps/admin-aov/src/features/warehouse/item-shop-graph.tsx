@@ -219,7 +219,7 @@ function GraphCard({
               {summary}
             </span>
           )}
-          {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact hideBaseline />}
+          {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact />}
           <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground empty:hidden">
             {item.content.tier !== null && item.content.tier !== column + 1 && (
               <span
