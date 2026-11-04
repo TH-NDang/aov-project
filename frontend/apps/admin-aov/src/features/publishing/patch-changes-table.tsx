@@ -1,5 +1,7 @@
 import { HeroCatalog } from "./hero-catalog"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
+import { Tabs, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
+import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
+import { ActionStrip } from "@/components/action-strip"
 import { WarehousePatchChanges } from "../warehouse/warehouse-patch-changes"
 import { HeroOverallAssessment } from "./hero-overall-assessment"
 import { useMemo, useState } from "react"
@@ -20,7 +22,15 @@ import { changeDomain, isGameplayChange, type CatalogChange } from "../warehouse
 import { dateLabel, phaseLabels, type PublicationOverview } from "./publication-overview"
 import { ChangeLines, SourceBadge, type RecordedChangeSet } from "./patch-change-lines"
 import { HeroChangeSummary } from "./hero-change-badges"
-import { RecordPatchNotesSheet, useHeroEntries } from "./patch-notes-sheet"
+import {
+  RecordPatchNotesSheet,
+  useHeroEntries,
+  PatchNoteIcon,
+  noteDomainKeys,
+  patchNoteDomains,
+  type PatchNoteDomain,
+} from "./patch-notes-sheet"
+import { PatchAdditionalNotes } from "./patch-additional-notes"
 import { selectCatalogRevisions } from "./catalog-data"
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
 
@@ -290,8 +300,9 @@ export function PatchChangesTable({
   locale: string
 }) {
   const [params, setParams] = useSearchParams()
-  const [recording, setRecording] = useState(false)
-  const canRecord = useSession().actor?.capabilities.includes("patch:write") ?? false
+  const [recording, setRecording] = useState<PatchNoteDomain | null>(null)
+  const capabilities = useSession().actor?.capabilities ?? []
+  const canRecord = capabilities.includes("patch:write")
   const variant = overview.variants.find((v) => v.id === variantId)
   const rulesetId = variant?.rulesetId ?? ""
   const heroes = useQuery(heroChangesOptions(variantId, locale))
@@ -334,7 +345,7 @@ export function PatchChangesTable({
       </p>
     )
   else if (!available.length && !errors.length)
-    body = <p className="p-4 text-sm text-muted-foreground">Chưa ghi nhận thay đổi trong patch này.</p>
+    body = <p className="p-4 text-sm text-muted-foreground">Chưa ghi nhận thay đổi gameplay trong patch này.</p>
   else {
     const warning = errors.length > 0 && (
       <div role="alert" className="flex flex-wrap items-center gap-2 p-4 text-sm text-destructive">
@@ -363,7 +374,7 @@ export function PatchChangesTable({
         className="min-w-0"
       >
         {warning}
-        <TabsList className="flex h-auto flex-wrap justify-start" aria-label="Nhóm có thay đổi">
+        <ScrollableTabsList activeValue={domain} variant="line" className="w-fit" aria-label="Nhóm có thay đổi">
           {available.map((entry) => (
             <TabsTrigger key={entry.id} value={entry.id} className="gap-2">
               <AovNavIcon name={entry.id} className="size-4" />
@@ -371,7 +382,7 @@ export function PatchChangesTable({
               {!showAll && <span className="text-xs tabular-nums text-muted-foreground">{counts.get(entry.id)}</span>}
             </TabsTrigger>
           ))}
-        </TabsList>
+        </ScrollableTabsList>
         <TabsContent value="heroes">
           {params.get("show") === "all" ? (
             <HeroCatalog ruleset={rulesetId} locale={locale} overview={overview} filter={{ seasonId: "", variantId }} />
@@ -392,20 +403,63 @@ export function PatchChangesTable({
 
   return (
     <section className="min-w-0 border-t" aria-label="Thay đổi trong patch">
-      <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-3">
-        <h4 className="text-sm font-semibold">Thay đổi trong patch</h4>
+      <div className="space-y-2 py-3">
+        <h3 className="type-section-title">Thay đổi trong patch</h3>
         {canRecord && variant && (
-          <Button size="sm" variant="outline" onClick={() => setRecording(true)}>
-            <FilePlus2 className="size-4" />
-            Ghi từ ghi chú cập nhật
-          </Button>
+          <ActionStrip aria-label="Thêm ghi chú cập nhật">
+            <span className="type-label mr-1 inline-flex items-center gap-1.5 text-muted-foreground">
+              <FilePlus2 aria-hidden className="size-4" /> Thêm ghi chú
+            </span>
+            {noteDomainKeys
+              .filter(
+                (key) =>
+                  key === "general" ||
+                  key === "heroes" ||
+                  (variant.status === "PUBLISHED" &&
+                    capabilities.includes(`${changeDomain[key].toLowerCase()}:publish`)),
+              )
+              .map((key) => (
+                <Button
+                  key={key}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  aria-haspopup="dialog"
+                  aria-label={`Thêm ghi chú · ${patchNoteDomains[key]}`}
+                  onClick={() => setRecording(key)}
+                >
+                  <PatchNoteIcon domain={key} /> {patchNoteDomains[key]}
+                </Button>
+              ))}
+          </ActionStrip>
         )}
       </div>
       {body}
+      <PatchAdditionalNotes
+        variantId={variantId}
+        locale={locale}
+        onEdit={canRecord ? () => setRecording("general") : undefined}
+      />
       {canRecord && variant && (
         <RecordPatchNotesSheet
-          open={recording}
-          onOpenChange={setRecording}
+          key={`${variantId}:${locale}`}
+          open={!!recording}
+          onOpenChange={(open) => {
+            if (!open) setRecording(null)
+          }}
+          initialDomain={recording ?? undefined}
+          published={variant.status === "PUBLISHED"}
+          onDomainSaved={(saved) => {
+            if (saved !== "general")
+              setParams(
+                (current) => {
+                  const next = new URLSearchParams(current)
+                  next.set("domain", saved)
+                  return next
+                },
+                { replace: true, preventScrollReset: true },
+              )
+          }}
           variantId={variantId}
           patchLabel={variant.patchCode}
           rulesetId={rulesetId}
