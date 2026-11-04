@@ -480,6 +480,7 @@ test("enchantment scope controls clear dependent patches and show both matching 
       id: branchCode,
       code: branchCode,
       revision: fixtureRevision(branchCode),
+      changeKinds: ["INHERITED"],
       missingFields: [],
       content: {
         branchCode,
@@ -528,6 +529,7 @@ test("enchantment scope controls clear dependent patches and show both matching 
       })
     }
     await select("Mùa có thay đổi", "s4")
+    assert.equal(document.querySelector('[data-catalog-change="INHERITED"]'), null)
     assert.deepEqual(selected, { seasonId: "s4", variantId: "" })
     assert.equal(document.querySelector('select[aria-label="Patch có thay đổi"] option[value="baseline"]'), null)
     await select("Patch có thay đổi", "september")
@@ -739,6 +741,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     const entry: WarehouseEntry<SpellContent> = {
       id: "punish",
       code: "trung-tri",
+      changeKinds: ["INHERITED", "BUFF"],
       revision: {
         id: "revision",
         ownerId: "punish",
@@ -795,6 +798,8 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     }
     await render(<SpellCollection {...props} />)
     const card = document.querySelector<HTMLElement>('[data-spell-card="punish"]')!
+    assert.equal(card.querySelector('[data-catalog-change="INHERITED"]'), null)
+    assert.ok(card.querySelector('[data-catalog-change="BUFF"]'))
     const openButton = card.querySelector<HTMLButtonElement>('button[aria-label="Xem Trừng trị"]')!
     assert.ok(card)
     // The whole card opens the details; the repeated open hint is gone, the accessible label remains.
@@ -929,6 +934,7 @@ test("arcana keeps tier III visible, collapses lower tiers and reveals filtered 
       id: `tier-${tier}`,
       code: `tier-${tier}`,
       revision: fixtureRevision(`tier-${tier}`),
+      changeKinds: ["INHERITED"],
       content: {
         iconAssetId: "arcana-icon",
         notes: null,
@@ -949,6 +955,7 @@ test("arcana keeps tier III visible, collapses lower tiers and reveals filtered 
     }
     await render(<ArcanaCollection {...props} />)
     assert.ok(document.querySelector('button[aria-label="Xem Ngọc 3"]'))
+    assert.equal(document.querySelector('[data-catalog-change="INHERITED"]'), null)
     assert.equal(document.querySelector('button[aria-label="Xem Ngọc 1"]'), null)
     assert.equal(document.querySelector('button[aria-label="Xem Ngọc 2"]'), null)
     const tiers = [...document.querySelectorAll<HTMLButtonElement>('[data-slot="collapsible-trigger"]')]
@@ -2039,6 +2046,8 @@ test("shop separates terminal column two items and renders external attributes b
         { itemId: "gloves", quantity: 1 },
       ]),
     ]
+    items[0].changeKinds = ["INHERITED"]
+    items[3].changeKinds = ["BUFF"]
     const original = structuredClone(items)
     let focus: string | null = "uriel",
       opened: string | undefined
@@ -2063,6 +2072,8 @@ test("shop separates terminal column two items and renders external attributes b
     )
     const terminal = document.querySelector('[aria-label^="Trang bị hoàn chỉnh · Cột 2"]')!
     assert.match(terminal.textContent!, /Gươm Uriel/)
+    assert.equal(document.querySelector('[data-catalog-change="INHERITED"]'), null)
+    assert.ok(terminal.querySelector('[data-catalog-change="BUFF"]'))
     assert.equal(terminal.querySelector('[aria-label="Nâng cấp từ Gươm Uriel"]'), null)
     assert.ok(terminal.querySelector('[aria-label="Ghép từ Gươm Uriel"]'))
     assert.ok(document.querySelector('[aria-label="Nâng cấp từ Chùy cổ"]'))

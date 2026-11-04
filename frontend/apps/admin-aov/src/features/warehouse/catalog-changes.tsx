@@ -33,6 +33,10 @@ export const catalogChangeKinds = {
 } as const
 export type CatalogChangeKind = keyof typeof catalogChangeKinds
 export type CatalogBadgeKind = CatalogChangeKind | "UNCHANGED" | "INHERITED"
+export function cardChangeKinds(kinds: readonly CatalogBadgeKind[] = []) {
+  return kinds.filter((kind) => kind !== "INHERITED")
+}
+
 export interface CatalogChange {
   id: string
   domain: string

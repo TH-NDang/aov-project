@@ -1,6 +1,6 @@
 import { itemShopLayout, itemShopSections } from "./item-shop-layout"
 import { ItemShopRegionHelp } from "./item-shop-region-help"
-import { CatalogChangeBadges } from "./catalog-changes"
+import { cardChangeKinds, CatalogChangeBadges } from "./catalog-changes"
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import {
@@ -148,6 +148,7 @@ function GraphCard({
   const name = warehouseName(item, locale)
   const summary = warehouseText(item.content.translations, locale)?.summary?.trim()
   const price = item.content.price?.toLocaleString("vi-VN") ?? "—"
+  const changeKinds = cardChangeKinds(item.changeKinds)
   const hasOutput = column < columns - 1 && !terminal
   const missing = item.missingFields?.length ?? 0
   const Fallback = itemCategoryFallback(item.content.categoryCode)
@@ -219,7 +220,7 @@ function GraphCard({
               {summary}
             </span>
           )}
-          {!!item.changeKinds?.length && <CatalogChangeBadges kinds={item.changeKinds} compact />}
+          {!!changeKinds.length && <CatalogChangeBadges kinds={changeKinds} compact />}
           <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground empty:hidden">
             {item.content.tier !== null && item.content.tier !== column + 1 && (
               <span

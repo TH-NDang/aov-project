@@ -1,4 +1,4 @@
-import { CatalogChangeBadges } from "./catalog-changes"
+import { cardChangeKinds, CatalogChangeBadges } from "./catalog-changes"
 import { useState } from "react"
 import { ChevronDown, Clock3 } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
@@ -78,6 +78,7 @@ function SpellCard({
   onOpen: () => void
 }) {
   const text = warehouseText(entry.content.translations, locale)
+  const changeKinds = cardChangeKinds(entry.changeKinds)
   return (
     <div
       data-spell-card={entry.id}
@@ -156,9 +157,9 @@ function SpellCard({
               : `Lv ${entry.content.unlockLevel}`}
         </span>
       </div>
-      {!!entry.changeKinds?.length && (
+      {!!changeKinds.length && (
         <div className="flex justify-center">
-          <CatalogChangeBadges kinds={entry.changeKinds ?? []} compact />
+          <CatalogChangeBadges kinds={changeKinds} compact />
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { CatalogChangeBadges } from "./catalog-changes"
+import { cardChangeKinds, CatalogChangeBadges } from "./catalog-changes"
 import type { CSSProperties } from "react"
 import { ArrowUpRight, Check, Pencil } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
@@ -171,6 +171,7 @@ export function EnchantmentBranches({
                       {nodes.map((entry) => {
                         const label = warehouseText(entry.content.translations, locale)
                         const selected = selectedId === entry.id
+                        const changeKinds = cardChangeKinds(entry.changeKinds)
                         return (
                           <button
                             key={entry.id}
@@ -216,14 +217,14 @@ export function EnchantmentBranches({
                                 {label.summary}
                               </span>
                             )}
-                            {(entry.revision.state === "DRAFT" || !!entry.changeKinds?.length) && (
+                            {(entry.revision.state === "DRAFT" || !!changeKinds.length) && (
                               <div className="mt-auto flex w-full flex-wrap items-center justify-center gap-1 border-t border-border/50 pt-2">
                                 {entry.revision.state === "DRAFT" && (
                                   <Badge variant="outline" className="text-xs">
                                     {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
                                   </Badge>
                                 )}
-                                <CatalogChangeBadges kinds={entry.changeKinds ?? []} />
+                                <CatalogChangeBadges kinds={changeKinds} />
                               </div>
                             )}
                           </button>

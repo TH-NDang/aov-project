@@ -1,4 +1,4 @@
-import { CatalogChangeBadges } from "./catalog-changes"
+import { cardChangeKinds, CatalogChangeBadges } from "./catalog-changes"
 import { useState } from "react"
 import { ChevronDown, CircleDot, Gem, Sparkles, Swords } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
@@ -161,6 +161,7 @@ function ArcanaCard({
   onOpen: () => void
 }) {
   const text = warehouseText(entry.content.translations, locale)
+  const changeKinds = cardChangeKinds(entry.changeKinds)
   const name = warehouseName(entry, locale)
   return (
     <button
@@ -205,7 +206,7 @@ function ArcanaCard({
         })}
         {!entry.content.stats.length && <p className="text-xs text-muted-foreground">Chưa có chỉ số</p>}
       </dl>
-      {(entry.revision.state === "DRAFT" || !!entry.changeKinds?.length) && (
+      {(entry.revision.state === "DRAFT" || !!changeKinds.length) && (
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           {entry.revision.state === "DRAFT" && (
             <Badge variant="outline" className="w-fit text-xs">
@@ -213,7 +214,7 @@ function ArcanaCard({
             </Badge>
           )}
           <span className="ml-auto">
-            <CatalogChangeBadges kinds={entry.changeKinds ?? []} />
+            <CatalogChangeBadges kinds={changeKinds} />
           </span>
         </div>
       )}
