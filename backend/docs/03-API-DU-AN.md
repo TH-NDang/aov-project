@@ -2411,6 +2411,7 @@ giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay s�
   (0 khi tạo). Thành công trả 204 và mở lại rà soát nếu cần. Khi xung đột phiên bản, trả 409.
 
 - `GET /admin/{heroes|items|enchantments|arcana|spells}` thêm `includeUnchanged=true` khi lọc `seasonId` / `patchVariantId`: kế thừa dữ liệu đã xuất bản đến mốc đích. Mặc định giữ chế độ chỉ thay đổi.
+- Với Trang bị và Phụ trợ, danh sách quản trị “Tất cả” có thể gửi thêm `includeUnscoped=true` cùng ruleset và mốc đang xem. Khi chưa có bản có ngày áp dụng phù hợp, danh sách trả bản đã xuất bản chưa rõ patch và giữ nguyên patch rỗng. Hồ sơ này không tạo thay đổi gameplay tại mốc đang xem.
 - `PUT /admin/patch-variants/{id}/data-review`: quyền `patch:write`, body `{ state: "COMPLETE" | "IN_PROGRESS", expectedVersion: number }`. Mốc phải đã xuất bản; phiên bản ban đầu 0, trả 409 nếu bị thay đổi đồng thời.
 - Publication overview bổ sung `dataReviewState`, `dataReviewVersion`, `dataReviewedAt` trên variant. Trạng thái này tách khỏi trạng thái xuất bản và trạng thái đang áp dụng của thị trường.
 
