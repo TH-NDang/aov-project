@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   compareSkillRanks,
+  rankSummary,
   rankValues,
   skillRankCount,
   skillSourceTable,
@@ -66,6 +67,31 @@ test("damage tables evaluate rank scaling but retain unknown combat stats as rea
     "8/7/6",
   ])
     assert.equal(rankValues(invalid, 6), null)
+})
+
+test("recorded rank summaries infer only complete, uniform series and retain the recorded cells", () => {
+  const columns = Array.from({ length: 6 }, (_, i) => `Lv ${i + 1}`)
+  const values = ["11", "10.6", "10.2", "9.8", "9.4", "9"]
+  for (const [series, summary] of [
+    [[125, 150, 175, 200, 225, 250], "125 (+25/cấp chiêu)"],
+    [[250, 300, 350, 400, 450, 500], "250 (+50/cấp chiêu)"],
+    [[150, 180, 210, 240, 270, 300], "150 (+30/cấp chiêu)"],
+    [values, "11 (−0,4/cấp chiêu)"],
+  ] as const)
+    assert.equal(rankSummary(series, columns), summary)
+  const table = skillSourceTable(skill(columns, values))
+  assert.equal(table.rows[0].summary, "11 (−0,4/cấp chiêu)")
+  assert.deepEqual(table.rows[0].values, values)
+  assert.equal(compareSkillRanks(values, values)?.summary.before, table.rows[0].summary)
+  assert.equal(rankSummary(["0%", "0%", "0%"]), "0%")
+  assert.equal(rankSummary(["10%", "12%", "14%"]), "10% (+2 điểm %/cấp chiêu)")
+  assert.equal(rankSummary(["8,5s", "8s", "7,5s"]), "8,5s (−0,5s/cấp chiêu)")
+  assert.equal(rankSummary(["10 (+25% Công phép)", "15 (+25% Công phép)"]), "10 (+5/cấp chiêu) (+25% Công phép)")
+  assert.equal(rankSummary(["10", "", "20"]), "10 / — / 20")
+  assert.equal(rankSummary([10, 15, 25]), "10 / 15 / 25")
+  assert.equal(rankSummary(["10s", "12%"]), "10s / 12%")
+  assert.equal(rankSummary(["10", "20"], ["Lv 1", "Lv 3"]), "10 / 20")
+  assert.equal(rankSummary(["10", "20"], columns), "10 / 20")
 })
 
 test("recorded rank counts override standard slots and unknown or passive slots are not guessed", () => {

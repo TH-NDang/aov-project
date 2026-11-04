@@ -25,10 +25,40 @@ export function rankFieldLabel(label: string): string {
   return label === "Hồi chiêu" ? "Hồi chiêu (giây)" : label
 }
 
-function rankSummary(value: unknown): string | null {
+const rankPrefix = /^(?:lv\.?|cấp(?: chiêu)?)\s*(\d+)\s*:\s*/i
+const rankScalar =
+  /^([+−-]?\d+(?:[.,]\d{1,6})?)\s*(%|s|giây)?(\s*\(\s*\+\d+(?:[.,]\d+)?%\s+(?:công phép|công vật lý(?: cộng thêm)?|máu tối đa)\s*\))?$/i
+
+/** Derive the display from the recorded cells without replacing them with a guessed formula. */
+export function rankSummary(value: unknown, columns?: readonly string[]): string | null {
   if (value === null || value === undefined) return null
-  if (Array.isArray(value)) return value.map(rankSummary).join(" / ")
-  return formatPatchValue(clean(String(value)).replace(/^(?:lv\.?|cấp(?: chiêu)?)\s*\d+\s*:\s*/i, ""))
+  if (!Array.isArray(value)) return formatPatchValue(clean(String(value)).replace(rankPrefix, ""))
+  const cells = value.map((item) => clean(String(item ?? "")))
+  const parts = cells.map((cell) => cell.replace(rankPrefix, ""))
+  const fallback = parts.map((part) => formatPatchValue(part) || "—").join(" / ")
+  if (
+    cells.length < 2 ||
+    (columns &&
+      (columns.length !== cells.length || columns.some((col, i) => Number(rankColumn(col)?.[1]) !== i + 1))) ||
+    cells.some((cell, i) => rankPrefix.test(cell) && Number(cell.match(rankPrefix)![1]) !== i + 1)
+  )
+    return fallback
+  const readings = parts.map((part) => rankScalar.exec(part))
+  const first = readings[0]
+  if (!first || !readings.every((reading) => reading && reading[2] === first[2] && reading[3] === first[3]))
+    return fallback
+
+  // Compare millionths as integers so decimal cooldowns do not accumulate floating-point error.
+  const scale = 1_000_000
+  const numbers = readings.map((reading) => Math.round(Number(reading![1].replace(",", ".").replace("−", "-")) * scale))
+  const step = numbers[1] - numbers[0]
+  if (!numbers.every((n, i) => Number.isSafeInteger(n) && (!i || n - numbers[i - 1] === step))) return fallback
+  const unit = first[2] === "giây" ? " giây" : (first[2] ?? "")
+  const suffix = first[3] ? " " + first[3].trim() : ""
+  const base = numeric.format(numbers[0] / scale) + unit
+  if (!step) return base + suffix
+  const increment = (step > 0 ? "+" : "−") + numeric.format(Math.abs(step) / scale) + (unit === "%" ? " điểm %" : unit)
+  return `${base} (${increment}/cấp chiêu)${suffix}`
 }
 
 export function skillRankCount(skill?: Skill | null): number | null {
@@ -184,14 +214,15 @@ export function compareSkillRanks(
   const oldValues = rankValues(before, count)
   const newValues = rankValues(after, count)
   if (!oldValues || !newValues) return null
+  const columns = Array.from({ length: count }, (_, i) => `Cấp ${i + 1}`)
   return {
-    columns: Array.from({ length: count }, (_, index) => `Cấp ${index + 1}`),
+    columns,
     before: oldValues,
     after: newValues,
     changed: oldValues.map(
       (value, index) => plainComparisonText(value ?? "") !== plainComparisonText(newValues[index] ?? ""),
     ),
-    summary: { before: rankSummary(before), after: rankSummary(after) },
+    summary: { before: rankSummary(before, columns), after: rankSummary(after, columns) },
   }
 }
 
@@ -221,7 +252,7 @@ export function skillSourceTable(skill: Skill) {
     rows: rows.map((row) => ({
       ...row,
       label: rankFieldLabel(row.label),
-      summary: rankSummary(row.values),
+      summary: rankSummary(row.values, columns),
       values: count && row.values.length === 1 ? (rankValues(row.values[0], count) ?? row.values) : row.values,
     })),
     derived: !!count,

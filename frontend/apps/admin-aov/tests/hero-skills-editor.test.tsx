@@ -239,8 +239,9 @@ test("focused skill editing preserves forms, effects and translations while addi
     await act(async () => button("Tập trung").click())
     await act(async () => button("Sửa bảng").click())
     await type(editor().querySelector<HTMLInputElement>('[aria-label="ST gốc · Cấp 2"]')!, "250")
+    assert.ok(editor().querySelector("tbody")!.textContent!.includes("100 (+150/cấp chiêu)"))
     await act(async () => button("Xem bảng").click())
-    assert.match(editor().querySelector("table")!.textContent!, /250/)
+    assert.ok(editor().querySelector("table")!.textContent!.includes("100 (+150/cấp chiêu)"))
     await act(async () => button("Thêm nhãn").click())
     const tagInput = editor().querySelectorAll<HTMLDivElement>('[data-slot="entity-reference-input"]')[1]
     await act(async () => fillReferenceInput(tagInput, "Đẩy lùi"))

@@ -778,7 +778,7 @@ test("fallback copy is explicit and skill level labels, zero costs and collapsed
     )
     assert.deepEqual(
       [...details.querySelectorAll("tbody td")].map((node) => node.textContent),
-      ["100", "150", "200", "100 / 150 / 200"],
+      ["100", "150", "200", "100 (+50/cấp chiêu)"],
     )
     const source = details.querySelector("details")!
     assert.equal(source.open, false)

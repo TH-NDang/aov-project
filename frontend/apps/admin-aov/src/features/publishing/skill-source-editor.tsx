@@ -6,7 +6,7 @@ import { AdminEntityText } from "../terminology/catalog"
 import { AdminLiveRichTextField } from "../terminology/rich-text-field"
 import { plainComparisonText } from "./hero-comparison"
 import { isRecord } from "./import-relations"
-import { rankValues, skillRankCount, skillSourceTable } from "./skill-rank-values"
+import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "./skill-rank-values"
 import type { Skill } from "./types"
 
 export function SkillTagsEditor({
@@ -184,7 +184,11 @@ export function SkillTableEditor({
                     ))}
                     {columns.length > 1 && (
                       <td className="min-w-36 px-2">
-                        {calculated ? valueInput(0, "Tổng quan") : <AdminEntityText text={values.join(" / ")} />}
+                        {calculated ? (
+                          valueInput(0, "Tổng quan")
+                        ) : (
+                          <AdminEntityText text={rankSummary(values, columns) ?? "—"} />
+                        )}
                       </td>
                     )}
                     <td>
