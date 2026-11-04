@@ -155,6 +155,7 @@ test("unplaced records and external selections remain available without coordina
       components: components("without-position", "malformed", "native-unplaced"),
     }),
     item("without-position", null, { categoryCode: "magic", shopPositions: [] }),
+    item("category-only", null, { categoryCode: "attack", shopPositions: [] }),
     item("malformed", null, {
       categoryCode: "defense",
       shopPositions: [
@@ -166,6 +167,8 @@ test("unplaced records and external selections remain available without coordina
   ]
   const snapshot = structuredClone(rows)
   const result = itemShopLayout(rows, "source-unplaced", "attack")
+  assert.equal(result.unplaced.filter((entry) => entry.id === "category-only").length, 1)
+  assert.ok(!itemShopLayout(rows, null, "magic").unplaced.some((entry) => entry.id === "category-only"))
   assert.equal(result.placements[0].position.column, null)
   assert.deepEqual(
     result.external.map(({ item, position, categoryCode, index }) => [

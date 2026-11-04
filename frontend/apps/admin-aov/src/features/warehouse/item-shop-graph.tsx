@@ -238,6 +238,9 @@ function GraphCard({
                 {item.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
               </span>
             )}
+            {item.revision.state === "PUBLISHED" && !item.revision.effectiveFromPatchVariantId && (
+              <span className="rounded bg-muted px-1.5 py-0.5 text-xs">Chưa rõ patch</span>
+            )}
             {item.content.recipeStatus === "UNKNOWN" && (
               <span className="rounded bg-muted px-1.5 py-0.5 text-xs" title="Công thức chưa xác nhận">
                 Công thức?
@@ -1042,16 +1045,17 @@ export function ItemShopGraph({
           document.body,
         )}
       </DndContext>
-      {[...placements, ...external].some((p) => !positioned(p.position)) && (
+      {layout.unplaced.length > 0 && (
         <div className="flex flex-wrap gap-2">
           <span className="text-xs text-muted-foreground">Chưa xếp ô</span>
-          {[...placements, ...external]
-            .filter((p) => !positioned(p.position))
-            .map(({ item, index }) => (
-              <Button key={`${item.id}:${index}`} size="sm" variant="outline" onClick={() => onSelect(item.id)}>
-                {warehouseName(item, locale)}
-              </Button>
-            ))}
+          {layout.unplaced.map((item) => (
+            <Button key={item.id} size="sm" variant="outline" onClick={() => onSelect(item.id)}>
+              {warehouseName(item, locale)}
+              {item.revision.state === "PUBLISHED" && !item.revision.effectiveFromPatchVariantId && (
+                <span className="type-meta">Chưa rõ patch</span>
+              )}
+            </Button>
+          ))}
         </div>
       )}
       {!!layout.missingIds.length && (

@@ -290,6 +290,15 @@ class WarehouseCatalogIntegrationTest {
         assertThat(publishedRevision.get("effectiveFromPatchVariantId")).isNull();
         assertThat(publishedRevision.get("state")).isEqualTo("PUBLISHED");
         assertThat(publishedRevision.get("archived")).isEqualTo(true);
+        var timeline = List.of(contexts.variant(VARIANT));
+        when(contexts.catalogVariants(null)).thenReturn(timeline);
+        var archiveList = get(ROOT + "/spells").param("rulesetId", RULESET.toString())
+                .param("patchVariantId", VARIANT.toString()).param("includeUnchanged", "true");
+        assertThat(number(send(archiveList, null, 200), "totalElements")).isZero();
+        var archiveRows = (List<?>) send(archiveList.param("includeUnscoped", "true"), null, 200).get("items");
+        assertThat(archiveRows).hasSize(1);
+        assertThat(map(map(archiveRows.getFirst()).get("revision"))).containsEntry("id", publishedRevision.get("id"))
+                .containsEntry("archived", true).containsEntry("effectiveFromPatchVariantId", null);
         send(post(ROOT + "/spells/" + created.get("id") + "/drafts"), Map.of("rulesetId", RULESET,
                 "sourceRevisionId", publishedRevision.get("id"), "cause", "GAME_PATCH", "effectiveFromPatchVariantId",
                 VARIANT), 422);
@@ -414,12 +423,20 @@ class WarehouseCatalogIntegrationTest {
                 .params(futureVariant, futurePatch, RULESET).update();
         when(contexts.variant(futureVariant))
                 .thenReturn(new PatchVariantReference(futureVariant, futurePatch, RULESET, null, 20, true));
+        var timeline = List.of(contexts.variant(VARIANT), contexts.variant(futureVariant));
+        when(contexts.catalogVariants(null)).thenReturn(timeline);
         for (var path : List.of("items", "spells")) {
             var body = Map.of("code", "precedence-" + path, "rulesetId", RULESET, "initialLocale", "vi-VN",
                     "name", "Baseline", "content", path.equals("items") ? itemContent(null) : availableSpellContent());
             var created = send(post(ROOT + "/" + path), body, 201);
             var baseline = send(post(draftPath(path, created) + "/publish"), Map.of("expectedVersion", 1), 200);
             var baselineRevision = map(baseline.get("revision"));
+            var allAtPatch = get(ROOT + "/" + path).param("rulesetId", RULESET.toString())
+                    .param("patchVariantId", VARIANT.toString()).param("includeUnchanged", "true")
+                    .param("includeUnscoped", "true");
+            var rows = (List<?>) send(allAtPatch, null, 200).get("items");
+            assertThat(rows).hasSize(1);
+            assertThat(map(map(rows.getFirst()).get("revision"))).containsEntry("id", baselineRevision.get("id"));
             String forks = ROOT + "/" + path + "/" + created.get("id") + "/drafts";
             var changed = send(post(forks), Map.of("rulesetId", RULESET, "sourceRevisionId", baselineRevision.get("id"),
                     "cause", "GAME_PATCH", "effectiveFromPatchVariantId", VARIANT), 201);
@@ -440,6 +457,10 @@ class WarehouseCatalogIntegrationTest {
                             "cause", "GAME_PATCH", "effectiveFromPatchVariantId", futureVariant),
                     201);
             send(post(draftPath(path, future) + "/publish"), Map.of("expectedVersion", 1), 200);
+            rows = (List<?>) send(allAtPatch, null, 200).get("items");
+            assertThat(rows).hasSize(1);
+            assertThat(map(map(rows.getFirst()).get("revision"))).containsEntry("id",
+                    map(patched.get("revision")).get("id"));
             selected = send(get("/api/wiki/v1/" + path + "/" + created.get("id")), null, 200);
             assertThat(map(selected.get("revision")).get("id")).isEqualTo(map(patched.get("revision")).get("id"));
             var earlierDraft = send(post(forks),

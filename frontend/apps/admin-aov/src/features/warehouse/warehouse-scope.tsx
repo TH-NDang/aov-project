@@ -7,7 +7,7 @@ import {
 import { useMemo } from "react"
 import { useCatalogScopePreference } from "../publishing/catalog-scope-memory"
 import { useSearchParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { type CatalogFilter } from "../publishing/catalog-context"
 import { CatalogTimeline } from "../publishing/catalog-timeline"
 import { usePublicationOverview, type PublicationOverview } from "../publishing/publication-overview"
@@ -48,6 +48,7 @@ const names: Record<WarehouseKind, string> = {
 }
 
 export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: string, locale: string) {
+  const client = useQueryClient()
   const [params, setParams] = useSearchParams()
   const requested: CatalogFilter = { seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }
   const showAll = showAllCatalogEntries(params)
@@ -122,12 +123,41 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
   }, [matched, data])
   const query = useQuery({
     queryKey: [...warehouseKeys.catalog(kind, rulesetId, locale), "scope", value.seasonId, value.variantId, showAll],
-    queryFn: ({ signal }) =>
-      warehouseApi.list(kind, rulesetId, locale, signal, {
+    queryFn: async ({ signal }) => {
+      const filter = {
         seasonId: value.seasonId,
         patchVariantId: value.variantId,
         includeUnchanged: showAll,
-      }),
+      }
+      const includeUnscoped = showAll && (kind === "items" || kind === "spells")
+      try {
+        return await warehouseApi.list(kind, rulesetId, locale, signal, { ...filter, includeUnscoped })
+      } catch (error) {
+        if (
+          !includeUnscoped ||
+          !isApiError(error, "INVALID_QUERY_PARAMETER") ||
+          !error.problem.errors?.some((field) => field.path === "includeUnscoped" && field.code === "UNKNOWN_PARAMETER")
+        )
+          throw error
+        // Older servers expose undated publications only in the full catalog.
+        const [rows, all] = await Promise.all([
+          warehouseApi.list(kind, rulesetId, locale, signal, filter),
+          client.fetchQuery({
+            queryKey: warehouseKeys.catalog(kind, rulesetId, locale),
+            queryFn: ({ signal }) => warehouseApi.list(kind, rulesetId, locale, signal),
+            staleTime: 60000,
+          }),
+        ])
+        const existing = new Set(rows.map((entry) => entry.id))
+        return [
+          ...rows,
+          ...all.filter(
+            ({ id, revision }) =>
+              !existing.has(id) && revision.state === "PUBLISHED" && revision.effectiveFromPatchVariantId === null,
+          ),
+        ]
+      }
+    },
     select: (rows) => (showAll ? rows : rows.filter((row) => latest.has(row.id))),
     enabled: scoped && !!rulesetId,
     staleTime: 60000,
@@ -147,10 +177,11 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
     () => new Set(matched.filter((row) => !isGameplayChange(row)).map((row) => row.ownerId)),
     [matched],
   )
-  const badgeKinds = (id: string): CatalogBadgeKind[] => {
+  const badgeKinds = ({ id, revision }: WarehouseEntry): CatalogBadgeKind[] => {
+    if (revision.state === "DRAFT" && showAll) return []
     const kinds = latest.get(id)?.kinds
     if (kinds) return kinds
-    if (baselineIds.has(id)) return []
+    if (baselineIds.has(id) || !revision.effectiveFromPatchVariantId) return []
     return scoped && showAll ? [reviewed ? "UNCHANGED" : "INHERITED"] : []
   }
   return {

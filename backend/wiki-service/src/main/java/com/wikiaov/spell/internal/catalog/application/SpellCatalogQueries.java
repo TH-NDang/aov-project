@@ -77,17 +77,18 @@ class SpellCatalogQueries {
 
     PageSlice<SpellView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged) {
-        return list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged, false);
+        return list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged, false, false);
     }
 
     PageSlice<SpellView> list(UUID rulesetId, String locale, String q, int page, int size,
-            UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean draftsOnly) {
+            UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped, boolean draftsOnly) {
         requirePageBounds(page, size);
         if (rulesetId != null)
             contexts.requireRuleset(rulesetId);
         String needle = q.strip().toLowerCase(Locale.ROOT);
         var candidates = activeSnapshots(rulesetId, draftsOnly);
-        var scoped = snapshotsInScope(candidates, rulesetId, seasonId, patchVariantId, includeUnchanged);
+        var scoped = snapshotsInScope(candidates, rulesetId, seasonId, patchVariantId, includeUnchanged,
+                includeUnscoped);
         var selected = CatalogSnapshots.latestByOwner(scoped, this::patchOrdinal);
         var copies = translationsFor(selected);
         var owners = matchingOwners(selected, copies, needle);
@@ -113,24 +114,26 @@ class SpellCatalogQueries {
 
     private List<CatalogSnapshots.Snapshot<SpellRevision>> snapshotsInScope(
             List<CatalogSnapshots.Snapshot<SpellRevision>> candidates, UUID rulesetId,
-            UUID seasonId, UUID patchVariantId, boolean includeUnchanged) {
+            UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped) {
         if (seasonId == null && patchVariantId == null)
             return candidates;
         var scope = CatalogPatchScope.resolve(contexts, rulesetId, seasonId, patchVariantId, includeUnchanged);
         if (includeUnchanged)
-            return carriedForwardSnapshots(candidates, scope);
+            return carriedForwardSnapshots(candidates, scope, includeUnscoped);
         return changedSnapshots(candidates, rulesetId, scope.selectedPatchIds());
     }
 
     private List<CatalogSnapshots.Snapshot<SpellRevision>> carriedForwardSnapshots(
-            List<CatalogSnapshots.Snapshot<SpellRevision>> candidates, CatalogPatchScope scope) {
+            List<CatalogSnapshots.Snapshot<SpellRevision>> candidates, CatalogPatchScope scope,
+            boolean includeUnscoped) {
         var allowed = scope.selectedPatchIds();
         var applicable = scope.applicablePatchIds();
         var changes = patchChanges.findAll().stream()
                 .map(f -> new CatalogSnapshots.Change(f.getOwnerId(), f.getPatchVariantId(),
                         f.getKinds().contains(CatalogChanges.Kind.REMOVED)))
                 .toList();
-        return CatalogSnapshots.carriedForward(candidates, allowed, applicable, changes, this::patchOrdinal);
+        return CatalogSnapshots.carriedForward(candidates, allowed, applicable, changes, this::patchOrdinal,
+                includeUnscoped);
 
     }
 

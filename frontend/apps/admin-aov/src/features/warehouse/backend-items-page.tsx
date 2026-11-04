@@ -104,7 +104,7 @@ export function BackendItemsPage() {
       scope.entries.map((base) => {
         const item = {
           ...base,
-          changeKinds: base.revision.state === "DRAFT" && scope.showAll ? [] : scope.badgeKinds(base.id),
+          changeKinds: scope.badgeKinds(base),
         }
         return withPendingEdits(item, edits.get(item.id))
       }),
@@ -221,9 +221,9 @@ export function BackendItemsPage() {
     setBusy(true)
     setError("")
     try {
-      await warehouseApi.publish("items", entry)
+      const published = await warehouseApi.publish("items", entry)
       await refresh()
-      setSelectedId(null)
+      openEntry(published)
       toast.success("Đã xuất bản trang bị.")
     } catch (cause) {
       setError(errorMessage(cause))

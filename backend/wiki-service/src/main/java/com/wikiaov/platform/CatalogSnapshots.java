@@ -37,7 +37,13 @@ public final class CatalogSnapshots {
 
     public static <T> List<Snapshot<T>> carriedForward(List<Snapshot<T>> candidates, Set<UUID> selectedPatches,
             Set<UUID> applicablePatches, List<Change> changes, ToLongFunction<UUID> ordinal) {
-        return CatalogSnapshotSelector.carriedForward(candidates, selectedPatches, applicablePatches, changes, ordinal);
+        return carriedForward(candidates, selectedPatches, applicablePatches, changes, ordinal, false);
+    }
+
+    public static <T> List<Snapshot<T>> carriedForward(List<Snapshot<T>> candidates, Set<UUID> selectedPatches,
+            Set<UUID> applicablePatches, List<Change> changes, ToLongFunction<UUID> ordinal, boolean includeUnscoped) {
+        return CatalogSnapshotSelector.carriedForward(candidates, selectedPatches, applicablePatches, changes, ordinal,
+                includeUnscoped);
     }
 
     public static <T> Map<UUID, T> latestByOwner(List<Snapshot<T>> candidates, ToLongFunction<UUID> ordinal) {

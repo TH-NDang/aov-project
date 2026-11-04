@@ -1,5 +1,5 @@
 import { cardChangeKinds, CatalogChangeBadges } from "./catalog-changes"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ChevronDown, Clock3 } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@aov/ui/components/collapsible"
@@ -26,6 +26,10 @@ export function SpellCollection({
   const [legacyOpen, setLegacyOpen] = useState(revealLegacy)
   const current = records.filter((entry) => !isLegacy(entry))
   const legacy = records.filter(isLegacy)
+  const selectedLegacy = legacy.some((entry) => entry.id === selectedId)
+  useEffect(() => {
+    if (selectedLegacy) setLegacyOpen(true)
+  }, [selectedId, selectedLegacy])
   function cards(entries: WarehouseEntry<SpellContent>[]) {
     return entries.map((entry) => (
       <SpellCard
@@ -108,7 +112,7 @@ function SpellCard({
             {availabilityLabels[entry.content.availability]}
           </Badge>
         )}
-        {isLegacy(entry) && !entry.revision.effectiveFromPatchVariantId && (
+        {entry.revision.state === "PUBLISHED" && !entry.revision.effectiveFromPatchVariantId && (
           <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
             Chưa rõ patch
           </Badge>

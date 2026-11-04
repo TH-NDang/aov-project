@@ -21,6 +21,7 @@ export interface ExternalItemShopPlacement {
 export interface ItemShopLayout {
   placements: ItemShopPlacement[]
   external: ExternalItemShopPlacement[]
+  unplaced: Entry[]
   missingIds: string[]
 }
 
@@ -118,5 +119,14 @@ export function itemShopLayout(
       },
     ]
   })
-  return { placements, external, missingIds: [...related].filter((id) => !byId.has(id)) }
+  const unplacedIds = new Set(
+    [...placements, ...external]
+      .filter(({ position }) => !position || !validCoordinate(position.row) || !validCoordinate(position.column))
+      .map(({ item }) => item.id),
+  )
+  const unplaced = items.filter(
+    (item) =>
+      unplacedIds.has(item.id) || (item.content.categoryCode === category && !item.content.shopPositions.length),
+  )
+  return { placements, external, unplaced, missingIds: [...related].filter((id) => !byId.has(id)) }
 }

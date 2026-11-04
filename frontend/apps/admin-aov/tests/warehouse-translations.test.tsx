@@ -834,6 +834,13 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     assert.ok(document.querySelector('button[aria-label="Xem Phụ trợ đã gỡ"]'))
     await act(async () => toggle.click())
     assert.equal(toggle.getAttribute("aria-expanded"), "false")
+    await render(<SpellCollection {...props} selectedId={removed.id} />)
+    assert.equal(toggle.getAttribute("aria-expanded"), "true")
+    const published = { ...removed, revision: { ...removed.revision, state: "PUBLISHED" as const } }
+    await render(<SpellCollection {...props} records={[entry, published]} />)
+    const archivedCard = document.querySelector<HTMLElement>('[data-spell-card="legacy"]')!
+    assert.match(archivedCard.textContent!, /Chưa rõ patch/)
+    assert.doesNotMatch(archivedCard.textContent!, /Nháp/)
     await render(<SpellCollection key="filtered" {...props} records={[removed]} revealLegacy />)
     assert.equal(document.querySelector('[data-slot="collapsible-trigger"]')?.getAttribute("aria-expanded"), "true")
     assert.ok(document.querySelector('button[aria-label="Xem Phụ trợ đã gỡ"]'))

@@ -33,6 +33,7 @@ public interface SpellAdminApi {
             @Parameter(description = "Season id identifier.") UUID seasonId,
             @Parameter(description = "Patch variant id identifier.") UUID patchVariantId,
             @Parameter(description = "Include entries that have no changes in the selected context.") boolean includeUnchanged,
+            @Parameter(description = "Include published observations without a known patch as a fallback.") boolean includeUnscoped,
             @Parameter(description = "List working drafts across patches in one ruleset.") boolean draftsOnly,
             @Parameter(hidden = true) HttpServletRequest request);
 

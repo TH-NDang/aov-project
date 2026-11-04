@@ -36,7 +36,7 @@ public final class CatalogSnapshotSelector {
     }
 
     public static <T> List<Snapshot<T>> carriedForward(List<Snapshot<T>> candidates, Set<UUID> selectedPatches,
-            Set<UUID> applicablePatches, List<Change> changes, ToLongFunction<UUID> ordinal) {
+            Set<UUID> applicablePatches, List<Change> changes, ToLongFunction<UUID> ordinal, boolean includeUnscoped) {
         Map<UUID, Change> latestChanges = changes.stream()
                 .filter(change -> applicablePatches.contains(change.patchVariantId()))
                 .collect(Collectors.toMap(Change::ownerId, change -> change,
@@ -44,7 +44,9 @@ public final class CatalogSnapshotSelector {
                                 .applyAsLong(second.patchVariantId()) ? first : second));
         return candidates.stream()
                 .filter(candidate -> candidate.state().equals("PUBLISHED")
-                        && applicablePatches.contains(candidate.patchVariantId()))
+                        && (candidate.patchVariantId() == null
+                                ? includeUnscoped && !selectedPatches.isEmpty()
+                                : applicablePatches.contains(candidate.patchVariantId())))
                 .filter(candidate -> survivesRemoval(candidate, latestChanges.get(candidate.ownerId()),
                         selectedPatches, ordinal))
                 .toList();
@@ -54,7 +56,9 @@ public final class CatalogSnapshotSelector {
             ToLongFunction<UUID> ordinal) {
         return latestChange == null || !latestChange.removed()
                 || selectedPatches.contains(latestChange.patchVariantId())
-                || ordinal.applyAsLong(candidate.patchVariantId()) > ordinal.applyAsLong(latestChange.patchVariantId());
+                || candidate.patchVariantId() != null
+                        && ordinal.applyAsLong(candidate.patchVariantId()) > ordinal
+                                .applyAsLong(latestChange.patchVariantId());
     }
 
     public static <T> Map<UUID, T> latestByOwner(List<Snapshot<T>> candidates, ToLongFunction<UUID> ordinal) {

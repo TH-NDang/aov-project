@@ -98,11 +98,11 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
 
   const records = (catalog.data ?? []).map((entry) => ({
     ...entry,
-    changeKinds: scopeState.badgeKinds(entry.id),
+    changeKinds: scopeState.badgeKinds(entry),
   }))
   const scopedRecords = scopeState.entries.map((entry) => ({
     ...entry,
-    changeKinds: entry.revision.state === "DRAFT" && scopeState.showAll ? [] : scopeState.badgeKinds(entry.id),
+    changeKinds: scopeState.badgeKinds(entry),
   }))
   const sortedBranches = [...(branches.data ?? [])].sort((a, b) => a.displayOrder - b.displayOrder)
   const activeBranch = sortedBranches.find((branch) => branch.code === branchCode) ?? sortedBranches[0]

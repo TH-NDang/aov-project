@@ -26,6 +26,7 @@ export interface WarehouseScope {
   seasonId?: string
   patchVariantId?: string
   includeUnchanged?: boolean
+  includeUnscoped?: boolean
 }
 export function createWarehouseApi(request: Request = backendRequest) {
   const send = <T>(path: string, method: string, body: unknown) =>
@@ -44,6 +45,7 @@ export function createWarehouseApi(request: Request = backendRequest) {
         const params = new URLSearchParams({ rulesetId, locale, page: String(page), size: "100" })
         if (scope?.draftsOnly) params.set("draftsOnly", "true")
         if (scope?.includeUnchanged) params.set("includeUnchanged", "true")
+        if (scope?.includeUnscoped) params.set("includeUnscoped", "true")
         if (scope?.seasonId) params.set("seasonId", scope.seasonId)
         if (scope?.patchVariantId) params.set("patchVariantId", scope.patchVariantId)
         const slice = await request<PageSlice<WarehouseEntry<WarehouseContents[K]>>>(`/admin/${kind}?${params}`, {
