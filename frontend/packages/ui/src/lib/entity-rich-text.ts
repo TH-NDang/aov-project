@@ -66,6 +66,8 @@ export type EntityReference = {
   icon?: string | null
   iconAssetId?: string | null
   autoMatch?: boolean
+  /** Owner-qualified phrases resolved for this text only. */
+  qualifiedSkillAliases?: string[]
   display?: { color?: string; underline?: boolean; showIcon?: boolean }
   destinations?: { admin?: string; wiki?: string }
   heroId?: string
@@ -325,12 +327,24 @@ export function resolveEntityRoute(entity: EntityReference, context: "admin" | "
 }
 
 type Match = { entity: EntityReference; actualLocale: string }
-type Trie = { children: Map<string, Trie>; match?: Match | null }
-export type EntityIndex = { root: Trie; byId: Map<string, Match>; accentInsensitive: boolean }
+type Trie = { children: Map<string, Trie>; match?: Match | null; localSkill?: Match | null }
+export type EntityIndex = {
+  root: Trie
+  byId: Map<string, Match>
+  ownerSlots: Map<string, Match | null>
+  accentInsensitive: boolean
+}
 export const foldEntitySearch = (value: string) =>
   value.normalize("NFD").replace(/\p{M}/gu, "").replace(/[đĐ]/g, "d").toLowerCase()
 const fold = (value: string, accentInsensitive: boolean) =>
   accentInsensitive ? foldEntitySearch(value) : value.normalize("NFC").toLowerCase()
+
+/** Only callers with a complete set of skills for the owner may enable slot mentions. */
+function skillSlotNames(entity: EntityReference) {
+  const slot = entity.sourceSlot
+  if (slot == null || !Number.isInteger(slot) || slot < 0) return []
+  return slot === 0 ? ["nội tại"] : slot === 3 ? ["chiêu 3", "chiêu cuối"] : [`chiêu ${slot}`]
+}
 
 export function createEntityIndex(
   entities: EntityReference[],
@@ -340,6 +354,7 @@ export function createEntityIndex(
 ): EntityIndex {
   const root: Trie = { children: new Map() }
   const byId = new Map<string, Match>()
+  const ownerSlots = new Map<string, Match | null>()
   const accentInsensitive = options.accentInsensitive === true
   let catalogEntries = 0
   let skillEntries = 0
@@ -384,13 +399,20 @@ export function createEntityIndex(
     if (!translation) continue
     const match = { entity, actualLocale: translation.locale }
     byId.set(`${entity.kind}:${entity.id}`, match)
-    if (
-      entity.kind === "skill" ||
-      entity.autoMatch === false ||
-      (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)
-    )
-      continue
-    for (const alias of [translation.name, ...translation.aliases.slice(0, 20)]) {
+    if (entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)) continue
+    const slots = entity.kind === "skill" ? skillSlotNames(entity) : []
+    if (slots.length) {
+      const key = `${entity.heroId}:${entity.sourceSlot}`
+      const previous = ownerSlots.get(key)
+      ownerSlots.set(key, previous === undefined || previous?.entity.id === entity.id ? match : null)
+    }
+    const owner = entity.owner && referenceTranslation(entity.owner, language, fallbackLocale)
+    const names =
+      entity.kind === "skill"
+        ? (entity.qualifiedSkillAliases ??
+          slots.flatMap((label) => (owner ? [label, `${label} ${owner.name}`, `${label} của ${owner.name}`] : [label])))
+        : [translation.name, ...translation.aliases.slice(0, 20)]
+    for (const alias of names) {
       const name = fold(alias.trim(), accentInsensitive)
       if (!name || name.length > 200) continue
       let node = root
@@ -402,12 +424,14 @@ export function createEntityIndex(
         }
         node = child
       }
-      if (node.match === undefined) node.match = match
-      else if (node.match && (node.match.entity.id !== entity.id || node.match.entity.kind !== entity.kind))
-        node.match = null
+      const property = slots.includes(alias) ? "localSkill" : "match"
+      const existing = node[property]
+      if (existing === undefined) node[property] = match
+      else if (existing && (existing.entity.id !== entity.id || existing.entity.kind !== entity.kind))
+        node[property] = null
     }
   }
-  return { root, byId, accentInsensitive }
+  return { root, byId, ownerSlots, accentInsensitive }
 }
 
 export function parseRichText(
@@ -419,6 +443,7 @@ export function parseRichText(
     maxLength?: number
     maxDepth?: number
     maxReferences?: number
+    onOwnerFirstSkill?: (heroId: string, slot: number) => void
   } = {},
 ): RichTextNode[] {
   const limit = (value: number | undefined, maximum: number) =>
@@ -468,9 +493,22 @@ export function parseRichText(
         const next = node.children.get(chars[end]!.char)
         if (!next) break
         node = next
-        if (node.match && (!chars[end + 1] || !word.test(chars[end + 1]!.char))) best = { match: node.match, end }
+        if (chars[end + 1] && word.test(chars[end + 1]!.char)) continue
+        let match = node.match
+        if (node.localSkill) {
+          const previous = nodes.at(-1)
+          const followsHero =
+            previous?.type === "reference" &&
+            previous.entity.kind === "hero" &&
+            /^\s+$/u.test(text.slice(cursor, chars[start]!.start))
+          if (!followsHero && !hasFollowingOwner(end)) match = node.localSkill
+        }
+        if (match) best = { match, end }
       }
       if (!best) continue
+      if (best.match.entity.kind === "hero" && (index.ownerSlots.size || options.onOwnerFirstSkill)) {
+        best = ownerFirstSkill(best.match.entity.id, best.end) ?? best
+      }
       const key = `${best.match.entity.kind}:${best.match.entity.id}`
       if (options.firstOccurrenceOnly && recognized.has(key)) continue
       append(nodes, text.slice(cursor, chars[start]!.start))
@@ -483,6 +521,37 @@ export function parseRichText(
     }
     append(nodes, text.slice(cursor))
     return nodes
+
+    function ownerFirstSkill(heroId: string, end: number) {
+      const afterOwner = chars[end]!.end
+      const tail = text.slice(afterOwner, afterOwner + 201).normalize("NFC")
+      const suffix = tail.match(/^\s+(?:chiêu\s+(cuối|[1-9]\d?)|nội\s+tại)(?![\p{L}\p{M}\p{N}_])/iu)
+      if (!suffix) return
+      const number = suffix[1]?.toLowerCase()
+      const slot = number === "cuối" ? 3 : Number(number ?? 0)
+      // The normalized suffix and the folded character array each count one position per letter.
+      end += Array.from(suffix[0]).length
+      if (end >= chars.length || hasFollowingOwner(end)) return
+      options.onOwnerFirstSkill?.(heroId, slot)
+      const match = index.ownerSlots.get(`${heroId}:${slot}`)
+      if (match) return { match, end }
+    }
+
+    function hasFollowingOwner(end: number) {
+      const tail = text.slice(chars[end]!.end, chars[end]!.end + 201)
+      return /^\s+(?:của\s|đối phương|đồng minh|kẻ địch)/iu.test(tail) || followingHero(end + 1)
+    }
+
+    function followingHero(start: number) {
+      while (chars[start] && /\s/u.test(chars[start]!.char)) start++
+      let node: Trie | undefined = index.root
+      for (let i = start; i < chars.length && i - start < 200; i++) {
+        node = node.children.get(chars[i]!.char)
+        if (!node) break
+        if (node.match?.entity.kind === "hero" && (!chars[i + 1] || !word.test(chars[i + 1]!.char))) return true
+      }
+      return false
+    }
   }
   function parse(from: number, to: number, firstToken: number, depth: number, auto: boolean): RichTextNode[] {
     if (depth >= maxDepth) return [{ type: "text", text: source.slice(from, to) }]

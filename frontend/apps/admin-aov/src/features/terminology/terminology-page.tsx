@@ -20,6 +20,7 @@ import { memo, useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import {
+  createEntityIndex,
   managedCommunityReference,
   resolveEntityRoute,
   validateRichTextSettings,
@@ -127,8 +128,19 @@ export function TerminologyPage() {
   const translation = entity?.translations.find((entry) => entry.locale === locale)
   const searchPreviewReferences = useReferenceSearch(catalog.rulesetId)
   const searchDescriptionReferences = useReferenceSearch(catalog.rulesetId)
-  const previewSkills = useSkillReferences(preview, locale, catalog.rulesetId)
-  const descriptionSkills = useSkillReferences(translation?.description ?? "", locale, catalog.rulesetId)
+  const skillOwners = useMemo(
+    () =>
+      settings.autoRecognize
+        ? createEntityIndex(
+            editorEntities.filter((entry) => entry.kind === "hero"),
+            locale,
+            settings.fallbackLocale,
+          )
+        : undefined,
+    [editorEntities, locale, settings.autoRecognize, settings.fallbackLocale],
+  )
+  const previewSkills = useSkillReferences(preview, locale, catalog.rulesetId, skillOwners)
+  const descriptionSkills = useSkillReferences(translation?.description ?? "", locale, catalog.rulesetId, skillOwners)
   const previewCommunity = useCommunityReferences(preview, locale)
   const descriptionCommunity = useCommunityReferences(translation?.description ?? "", locale)
   const previewEntities = useMemo(

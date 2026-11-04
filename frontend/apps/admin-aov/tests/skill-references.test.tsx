@@ -4,7 +4,7 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import { QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query"
-import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { createEntityIndex, parseRichText, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { ReferenceSearchPage } from "@aov/ui/lib/entity-rich-text-editor"
 import type { Request } from "../src/features/publishing/publishing-api"
 import type { SkillReferenceScope } from "../src/features/terminology/skill-reference-api"
@@ -249,9 +249,26 @@ test("catalog invalidation fences late lookup and search responses before fresh 
   }
 })
 
-test("useSkillReferences resolves only explicit tokens and shares batches across mounted text consumers", async () => {
+test("readers share explicit lookups and resolve only unambiguous owner-qualified skill mentions", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero" })
   const batches: string[][] = []
+  const slotRequests: string[] = []
+  const owner = entity(id(1)).owner!
+  const florentino = {
+    ...owner,
+    id: "00000000-0000-4000-8000-000000000003",
+    translations: [{ ...owner.translations[0]!, name: "Florentino", aliases: ["Flo"] }],
+  }
+  const heroes: EntityReference[] = [
+    florentino,
+    { ...owner, translations: [{ ...owner.translations[0]!, aliases: ["Ninja", "Shared"] }] },
+    {
+      ...owner,
+      id: "00000000-0000-4000-8000-000000000002",
+      translations: [{ ...owner.translations[0]!, name: "Dolia", aliases: ["Shared"] }],
+    },
+  ]
+  const owners = createEntityIndex(heroes, "vi-VN", "vi-VN")
   currentFetch = async (input) => {
     const path = String(input).replace("/api/wiki/v1", "")
     if (path === "/auth/refresh") return Response.json({ accessToken: "fixture-only", expiresIn: 3600 })
@@ -265,7 +282,22 @@ test("useSkillReferences resolves only explicit tokens and shares batches across
         capabilities: ["catalog:read"],
       })
     if (path.startsWith("/admin/reference-skills?")) {
-      const ids = new URL(path, "http://test").searchParams.get("ids")!.split(",")
+      const params = new URL(path, "http://test").searchParams
+      if (params.has("heroId")) {
+        const slot = params.get("q")!
+        const ownerId = params.get("heroId")!
+        assert.equal(params.get("rulesetId"), scope.rulesetId)
+        slotRequests.push(`${ownerId}:${slot}`)
+        const sourceSlot = Number(slot.split(" ")[1])
+        const skill = {
+          ...entity(`${ownerId}.skill-${sourceSlot}-1`),
+          sourceSlot,
+          heroId: ownerId,
+          owner: heroes.find((hero) => hero.id === ownerId),
+        }
+        return Response.json({ ...page([skill]), totalElements: sourceSlot === 2 ? 2 : 1 })
+      }
+      const ids = params.get("ids")!.split(",")
       batches.push(ids)
       return Response.json(page(ids.filter((value) => value !== id(3)).map((value) => entity(value))))
     }
@@ -291,8 +323,8 @@ test("useSkillReferences resolves only explicit tokens and shares batches across
   const root = createRoot(dom.window.document.getElementById("root")!)
   const token = (number: number) => `<ref=skill:${id(number)}>Skill</ref>`
   const rendered = new Map<string, EntityReference[]>()
-  function Reader({ name, text }: { name: string; text: string }) {
-    const items = useSkillReferences(text, "vi-VN", "standard")
+  function Reader({ name, text, named = false }: { name: string; text: string; named?: boolean }) {
+    const items = useSkillReferences(text, "vi-VN", "standard", named ? owners : undefined)
     rendered.set(name, items)
     return <div data-reader={name}>{items.map((value) => value.skillKey).join("|")}</div>
   }
@@ -327,6 +359,40 @@ test("useSkillReferences resolves only explicit tokens and shares batches across
     const stable = rendered.get("first")
     await render(true)
     assert.equal(rendered.get("first"), stable, "Unchanged query data preserves the reference array across renders")
+    const sample =
+      "chiêu cuối Airi, CHIÊU 3 của Ninja, nội tại Airi, chiêu 2 Airi, chiêu 1 Shared, chiêu cuối, nội tại. <noauto>chiêu 1 Dolia</noauto> flo chiêu cuối, Florentino chiêu 3, Ninja nội tại, flo chiêu 1x, flo chiêu cuối của Airi."
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <Reader name="named" text={sample} named />
+        </QueryClientProvider>,
+      ),
+    )
+    for (let attempt = 0; attempt < 100 && rendered.get("named")?.length !== 3; attempt++) {
+      await act(settle)
+    }
+    assert.deepEqual(slotRequests.sort(), [
+      `${heroId}:chiêu 0`,
+      `${heroId}:chiêu 2`,
+      `${heroId}:chiêu 3`,
+      `${florentino.id}:chiêu 3`,
+    ])
+    const index = createEntityIndex([...heroes, ...rendered.get("named")!], "vi-VN", "vi-VN")
+    const links = parseRichText(sample, index).flatMap((node) =>
+      node.type === "reference" ? [[node.label, node.entity.kind, node.entity.skillKey]] : [],
+    )
+    assert.deepEqual(links, [
+      ["chiêu cuối Airi", "skill", "skill-3-1"],
+      ["CHIÊU 3 của Ninja", "skill", "skill-3-1"],
+      ["nội tại Airi", "skill", "skill-0-1"],
+      ["Airi", "hero", undefined],
+      ["flo chiêu cuối", "skill", "skill-3-1"],
+      ["Florentino chiêu 3", "skill", "skill-3-1"],
+      ["Ninja nội tại", "skill", "skill-0-1"],
+      ["flo", "hero", undefined],
+      ["flo", "hero", undefined],
+      ["chiêu cuối của Airi", "skill", "skill-3-1"],
+    ])
   } finally {
     await act(async () => root.unmount())
     client.clear()

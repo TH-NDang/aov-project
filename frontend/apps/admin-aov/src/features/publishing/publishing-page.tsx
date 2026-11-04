@@ -1,7 +1,9 @@
 import { catalogScopePatch } from "./catalog-scope"
 import { resolveHeroCatalogScope } from "./hero-catalog-scope"
 import { HeroTimeline } from "./hero-timeline"
-import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react"
+import { revisionSkillReferences } from "./revision-skill-references"
+import { useHeroSkillImages } from "./skill-artwork"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
@@ -113,9 +115,20 @@ const CAUSES: Record<Cause, string> = {
 }
 const STATES = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
 
-function PublishingFrame({ rulesetId, ...props }: ComponentProps<typeof Page> & { rulesetId?: string }) {
+function PublishingFrame({
+  revision,
+  heroContent,
+  ...props
+}: ComponentProps<typeof Page> & { revision?: Revision; heroContent?: Content }) {
+  const images = useHeroSkillImages(
+    heroContent?.SKILLS?.skills.some((skill) => !skill.iconAssetId) ? revision?.heroId : undefined,
+  )
+  const skills = useMemo(
+    () => (revision && heroContent ? revisionSkillReferences(revision, heroContent, images.data ?? []) : []),
+    [revision, heroContent, images.data],
+  )
   return (
-    <ReferenceRulesetProvider rulesetId={rulesetId}>
+    <ReferenceRulesetProvider rulesetId={revision?.rulesetId} skills={skills}>
       <Page {...props} />
     </ReferenceRulesetProvider>
   )
@@ -493,7 +506,8 @@ export function PublishingWorkspace({
 
   return (
     <PublishingFrame
-      rulesetId={revision?.rulesetId}
+      revision={revision}
+      heroContent={view === "overview" || translating ? preview?.content : undefined}
       className={`@container min-w-0 ${heroId ? "mx-auto w-full max-w-6xl" : ""}`}
     >
       {!onUnsavedChange && <HeroNavigationGuard unsafe={busy} busy={busy} />}

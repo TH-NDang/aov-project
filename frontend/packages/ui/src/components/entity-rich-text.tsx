@@ -393,7 +393,7 @@ function EntityMention({
     >
       <button
         type="button"
-        aria-label={`${kind}: ${skill ? `${skill.ownerName} · ` : ""}${node.label}${skill?.detail ? ` · ${skill.detail}` : ""}`}
+        aria-label={`${kind}: ${skill && node.manual ? `${skill.ownerName} · ` : ""}${node.label}${skill?.detail ? ` · ${skill.detail}` : ""}`}
         className="inline-block max-w-full cursor-pointer rounded-sm align-baseline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         style={style}
       >
@@ -404,7 +404,7 @@ function EntityMention({
             className={skill ? "mr-1.5 size-[1.25em]" : "mr-1 size-[1.1em]"}
           />
         )}
-        {skill && (
+        {skill && node.manual && (
           <>
             <span className="opacity-75">{skill.ownerName}</span>
             <span aria-hidden="true" className="mx-1 opacity-50">

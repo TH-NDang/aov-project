@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/react-query"
-import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { validSkillReference, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { EntityReferenceSearch, ReferenceSearchPage } from "@aov/ui/lib/entity-rich-text-editor"
 import { backendRequest } from "@/app/auth/session"
 import type { Request } from "../publishing/publishing-api"
@@ -24,6 +24,8 @@ const scopeKey = (scope: SkillReferenceScope) => [scope.issuer, scope.subject, s
 export const skillReferenceKeys = {
   all: prefix,
   entry: (scope: SkillReferenceScope, id: string) => [...prefix, "entry", ...scopeKey(scope), id] as const,
+  slot: (scope: SkillReferenceScope, heroId: string, slot: number) =>
+    [...prefix, "slot", ...scopeKey(scope), heroId, slot] as const,
   search: (scope: SkillReferenceScope, owner: string, query: string, page: number) =>
     [...prefix, "search", ...scopeKey(scope), owner, query, page] as const,
 }
@@ -35,6 +37,22 @@ export function createSkillReferenceApi(request: Request = backendRequest) {
     return values
   }
   return {
+    async uniqueSlot(heroId: string, slot: number, scope: SkillReferenceScope, signal: AbortSignal) {
+      const values = params(scope.locale, scope.rulesetId)
+      values.set("heroId", heroId)
+      values.set("q", `chiêu ${slot}`)
+      values.set("size", "2")
+      const page = await request<ReferenceSearchPage>(`/admin/reference-skills?${values}`, { signal })
+      const [skill] = page.items
+      return page.totalElements === 1 &&
+        page.items.length === 1 &&
+        skill?.kind === "skill" &&
+        skill.heroId === heroId &&
+        skill.sourceSlot === slot &&
+        validSkillReference(skill)
+        ? skill
+        : null
+    },
     search(query: string, locale: string, rulesetId: string, page: number, signal: AbortSignal) {
       const values = params(locale, rulesetId)
       values.set("q", query.trim().slice(0, 100))
@@ -144,6 +162,19 @@ function batchLookup(
     signal.addEventListener("abort", waiter.cancel, { once: true })
     currentQueue.push(waiter)
   })
+}
+
+export function skillReferenceSlotOptions(
+  client: QueryClient,
+  scope: SkillReferenceScope,
+  heroId: string,
+  slot: number,
+) {
+  configureCache(client)
+  return {
+    queryKey: skillReferenceKeys.slot(scope, heroId, slot),
+    queryFn: ({ signal }: { signal: AbortSignal }) => skillReferenceApi.uniqueSlot(heroId, slot, scope, signal),
+  }
 }
 
 export function skillReferenceEntryOptions(

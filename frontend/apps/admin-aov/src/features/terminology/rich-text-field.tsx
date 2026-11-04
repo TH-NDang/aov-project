@@ -12,7 +12,7 @@ export function AdminRichTextField(
   const skills = useSkillReferences(props.value, props.locale, catalog.rulesetId)
   const community = useCommunityReferences(props.value, props.locale)
   const searchReferences = useReferenceSearch(catalog.rulesetId)
-  const entities = useMemo(() => [...catalog.entities, ...skills, ...community], [catalog.entities, skills, community])
+  const entities = useMemo(() => [...skills, ...community, ...catalog.entities], [catalog.entities, skills, community])
   return (
     <EntityRichTextEditor
       {...props}
@@ -28,7 +28,7 @@ export function AdminRichTextPreview({ text, locale }: { text: string; locale: s
   const catalog = useReferenceCatalog()
   const skills = useSkillReferences(text, locale, catalog.rulesetId)
   const community = useCommunityReferences(text, locale)
-  const entities = useMemo(() => [...catalog.entities, ...skills, ...community], [catalog.entities, skills, community])
+  const entities = useMemo(() => [...skills, ...community, ...catalog.entities], [catalog.entities, skills, community])
   return (
     <EntityRichText
       text={text}

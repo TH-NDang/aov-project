@@ -16,15 +16,30 @@ import { mergeReferenceCatalog } from "./hero-aliases"
 
 const publishing = createPublishingApi(backendRequest)
 const ReferenceRulesetContext = createContext<string | undefined>(undefined)
+const noEntities: EntityReference[] = []
+const RevisionSkillsContext = createContext<EntityReference[]>(noEntities)
 
-export function ReferenceRulesetProvider({ rulesetId, children }: { rulesetId?: string; children: ReactNode }) {
-  return <ReferenceRulesetContext.Provider value={rulesetId}>{children}</ReferenceRulesetContext.Provider>
+export function ReferenceRulesetProvider({
+  rulesetId,
+  skills = noEntities,
+  children,
+}: {
+  rulesetId?: string
+  skills?: EntityReference[]
+  children: ReactNode
+}) {
+  return (
+    <ReferenceRulesetContext.Provider value={rulesetId}>
+      <RevisionSkillsContext.Provider value={skills}>{children}</RevisionSkillsContext.Provider>
+    </ReferenceRulesetContext.Provider>
+  )
 }
 
 export function useReferenceCatalog() {
   const client = useQueryClient()
   const [params] = useSearchParams()
   const inheritedRulesetId = useContext(ReferenceRulesetContext)
+  const skills = useContext(RevisionSkillsContext)
   const requestedRulesetId = inheritedRulesetId ?? params.get("ruleset") ?? ""
   const session = useSyncExternalStore(subscribeSession, getSession, getSession)
   const settings = useQuery({ queryKey: ["rich-text-settings"], queryFn: loadSettings, retry: false, staleTime: 60000 })
@@ -45,8 +60,8 @@ export function useReferenceCatalog() {
   const config = settings.data?.settings ?? defaultSettings
   const entities = useMemo(() => {
     const entries = [...countryReferences, ...(communityCatalog.data?.items ?? []), ...(catalog.data ?? [])]
-    return mergeReferenceCatalog(entries, config.entities)
-  }, [catalog.data, communityCatalog.data, config.entities])
+    return [...mergeReferenceCatalog(entries, config.entities), ...skills]
+  }, [catalog.data, communityCatalog.data, config.entities, skills])
   const resolveIcon = useMemo(() => createMediaIconResolver(client, publishing.asset), [client])
   return {
     settings,
@@ -68,7 +83,6 @@ type ReferenceContextValue = {
   resolveIcon: ReturnType<typeof useReferenceCatalog>["resolveIcon"]
 }
 const ReferenceContext = createContext<ReferenceContextValue | null>(null)
-const noEntities: EntityReference[] = []
 export function AdminReferenceProvider({
   locale,
   entities: local = noEntities,

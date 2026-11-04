@@ -13,7 +13,10 @@ export function skillSlot(skill: Skill): number | null {
   if (typeof snapshot?.sourceSlot === "number" && Number.isInteger(snapshot.sourceSlot) && snapshot.sourceSlot >= 0)
     return snapshot.sourceSlot
   const match = /^skill-(\d+)-(\d+)$/.exec(skill.skillKey)
-  return match ? Number(match[1]) : null
+  if (match) return Number(match[1])
+  if (skill.skillKey === "capture-passive") return 0
+  const captured = /^capture-skill-(\d+)$/.exec(skill.skillKey)
+  return captured ? Number(captured[1]) : null
 }
 
 export function skillVariant(skill: Skill): number | null {

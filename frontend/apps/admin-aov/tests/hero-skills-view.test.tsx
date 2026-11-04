@@ -15,12 +15,54 @@ import {
   skillVariantLabel,
   groupHeroSkills,
 } from "../src/features/publishing/hero-skills"
-import { createHeroFixture, fixtureContent } from "./fixtures/hero-workspace-data"
+import { createHeroFixture, fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
+import {
+  createEntityIndex,
+  parseRichText,
+  resolveEntityRoute,
+  type EntityReference,
+} from "@aov/ui/lib/entity-rich-text"
 import { analyzeStat, statDistribution } from "../src/features/publishing/hero-stat-analysis"
 import { combatAttributeRows, type StatSample } from "../src/features/publishing/combat-attributes"
 
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
+
+test("hero descriptions resolve named and implicit skill slots in the viewed revision only", async () => {
+  await withView(async () => {
+    const { revisionSkillReferences } = await import("../src/features/publishing/revision-skill-references")
+    const revision = { ...fixtureRevision, heroId: "d3eedc27-7cfd-4f08-8f80-32df46a55719" }
+    const content = structuredClone(fixtureContent)
+    content.PROFILE!.translations[0].name = "Dolia"
+    content.SKILLS!.skills = [skill("skill-1-1"), skill("skill-3-1"), { ...skill("passive"), kind: "PASSIVE" }]
+    const translation = (name: string) => [{ locale: "vi-VN", name, description: "", aliases: [] }]
+    const catalog: EntityReference[] = [
+      { kind: "hero", id: revision.heroId, translations: [{ ...translation("Dolia")[0]!, aliases: ["Doli"] }] },
+      { kind: "term", id: "noi-tai", translations: translation("Nội tại") },
+      { kind: "hero", id: "airi", translations: translation("Airi") },
+    ]
+    const index = () =>
+      createEntityIndex([...catalog, ...revisionSkillReferences(revision, content, [])], "vi-VN", "vi-VN")
+    const references = (text: string) =>
+      parseRichText(text, index()).filter((node) => node.type === "reference" && node.entity.kind === "skill")
+    const ultimate = references("Hãy cố gắng dùng chiêu cuối Dolia cho những chiêu quan trọng.")[0]!
+    assert.equal(ultimate.label, "chiêu cuối Dolia")
+    assert.equal(ultimate.entity.skillKey, "skill-3-1")
+    assert.equal(references("doli chiêu cuối")[0]?.label, "doli chiêu cuối")
+    assert.equal(references("Airi chiêu cuối").length, 0)
+    assert.ok(resolveEntityRoute(ultimate.entity, "admin")!.includes(`revision=${revision.id}`))
+    assert.deepEqual(
+      references("Dùng chiêu 1 rồi kích hoạt nội tại.").map((n) => n.entity.skillKey),
+      ["skill-1-1", "passive"],
+    )
+    assert.equal(references("nội tại của Dolia")[0]?.label, "nội tại của Dolia")
+    assert.equal(references("chiêu cuối của đồng minh, chiêu 1 Airi, chiêu 12").length, 0)
+    assert.equal(references("<noauto>chiêu cuối</noauto>").length, 0)
+    assert.equal(parseRichText("chiêu cuối Dolia", index(), { autoRecognize: false })[0]?.type, "text")
+    content.SKILLS!.skills.push(skill("skill-1-2"))
+    assert.equal(references("chiêu 1 và chiêu 1 Dolia").length, 0)
+  })
+})
 
 test("relative stat levels count ties, including zero, and need five other heroes", () => {
   assert.equal(statDistribution(200, [200, 200, 200, 200]).label, "Chưa đủ mẫu")
