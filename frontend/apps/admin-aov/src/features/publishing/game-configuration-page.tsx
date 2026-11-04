@@ -1,20 +1,31 @@
-import { activeCatalogScope, catalogScopePatch, currentCatalogScope } from "./catalog-scope"
+import { activeCatalogScope, catalogScopePatch, resolveCatalogScope } from "./catalog-scope"
 import { useCatalogScopePreference } from "./catalog-scope-memory"
 import { PatchDataReview } from "./patch-data-review"
 import { PatchStatDefaults } from "./patch-stat-defaults"
 import { SharedPatchSetup, SeasonScheduleForm, PatchReleaseForm } from "./shared-version-setup"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useSearchParams } from "react-router"
 import { CatalogTimeline } from "./catalog-timeline"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
-import { CalendarPlus, ChevronDown, RefreshCw, Plus, Shapes } from "lucide-react"
+import {
+  CalendarDays,
+  CalendarPlus,
+  ChevronRight,
+  Globe2,
+  Layers,
+  RefreshCw,
+  Plus,
+  Shapes,
+  CalendarCog,
+} from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
 import { useIsWide } from "@/hooks/use-media-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { MarketSchedule, PatchMarketSchedule, ConfirmRelease } from "./market-schedule"
 import { Button } from "@aov/ui/components/button"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
 import { Badge } from "@aov/ui/components/badge"
 import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
@@ -34,6 +45,7 @@ import {
   phaseLabels,
   type PublicationOverview,
   type Variant,
+  type Season,
 } from "./publication-overview"
 const api = createPublishingApi(backendRequest)
 
@@ -44,7 +56,6 @@ export function GameConfigurationPage() {
   const [marketId, setMarketId] = useState<string | null>(null)
   const wide = useIsWide()
   const capabilities = useSession().actor?.capabilities ?? []
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets, enabled: !!setup })
   const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions, enabled: !!setup })
   const [params, setParams] = useSearchParams()
@@ -53,18 +64,25 @@ export function GameConfigurationPage() {
     seasonId: params.get("season") ?? "",
     variantId: params.get("patch") ?? "",
   })
-  const season = data?.seasons.find((s) => s.id === requested.seasonId)
-  const defaultPatchId = !requested.variantId && !season && data ? currentCatalogScope(data).variantId : ""
-  const selectedPatch = data?.variants.find((v) => v.id === (requested.variantId || defaultPatchId))
-  const timelineScope = {
-    seasonId: selectedPatch ? (selectedPatch.seasonId ?? "") : (season?.id ?? ""),
-    variantId: selectedPatch?.id ?? "",
-  }
+  const timelineScope = data ? resolveCatalogScope(data, requested) : requested
+  const selectedPatch = data?.variants.find((v) => v.id === timelineScope.variantId)
+  const view = params.get("tab") === "markets" ? "markets" : "versions"
+  const changeView = (value: string) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (value === "markets") next.set("tab", "markets")
+        else next.delete("tab")
+        return next
+      },
+      { preventScrollReset: true },
+    )
   const changeScope = (next: typeof timelineScope) => {
     setParams(
       (current) => {
         const copy = new URLSearchParams(current)
         copy.delete("show")
+        copy.delete("tab")
         for (const [key, value] of Object.entries(catalogScopePatch(next))) {
           if (value) copy.set(key, value)
           else copy.delete(key)
@@ -73,7 +91,6 @@ export function GameConfigurationPage() {
       },
       { replace: true, preventScrollReset: true },
     )
-    if (next.seasonId) setExpanded((old) => ({ ...old, [next.seasonId]: true }))
   }
   const queryClient = useQueryClient()
   // A new database has no ruleset; the wiki only ever needs the one default ruleset.
@@ -176,120 +193,149 @@ export function GameConfigurationPage() {
       )}
       {data && (
         <>
-          <MarketOverview data={data} onOpenMarket={setMarketId} />
-          <section className="min-w-0 space-y-3">
-            <h2 className="type-section-title">Mùa và bản cập nhật</h2>
-            <CatalogTimeline
-              data={data}
-              value={timelineScope}
-              onChange={changeScope}
-              showCounts={false}
-              currentFilter={activeCatalogScope(data)}
-            />
-            {!data.seasons.length && (
-              <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">
-                Chưa có mùa. Bấm “Tạo mùa” ở đầu trang.
-              </p>
-            )}
-            {[...data.seasons]
-              .sort((a, b) => b.ordinal - a.ordinal)
-              .filter((s) => !timelineScope.seasonId || s.id === timelineScope.seasonId)
-              .map((s) => {
-                const variants = data.variants
-                  .filter((v) => v.seasonId === s.id && (!timelineScope.variantId || v.id === timelineScope.variantId))
-                  .sort((a, b) => a.rulesetOrdinal - b.rulesetOrdinal)
-                const schedules = (data.seasonSchedules ?? []).filter((schedule) => schedule.seasonId === s.id)
-                return (
-                  <details
-                    key={s.id}
-                    className="group rounded-xl border bg-card"
-                    open={
-                      expanded[s.id] ??
-                      (timelineScope.seasonId === s.id ||
-                        data.variants.some((v) => v.id === timelineScope.variantId && v.seasonId === s.id) ||
-                        schedules.some((schedule) => schedule.phase === "CURRENT"))
-                    }
-                    onToggle={(event) => {
-                      const open = event.currentTarget.open
-                      setExpanded((previous) => (previous[s.id] === open ? previous : { ...previous, [s.id]: open }))
-                    }}
-                  >
-                    <summary className="flex cursor-pointer list-none flex-wrap items-center gap-3 p-4">
-                      <ChevronDown className="size-4" />
-                      <span className="font-semibold">{s.displayName}</span>
-                      {data.markets.some((m) => m.currentSeasonId === s.id) && <Badge>Đang áp dụng</Badge>}
-                      <span className="text-xs text-muted-foreground">
-                        #{s.ordinal} · {schedules.length} thị trường đã lên lịch
-                      </span>
-                      <span className="ml-auto text-xs text-muted-foreground">{variants.length} patch</span>
-                    </summary>
-                    <div className="space-y-3 border-t p-3">
-                      <div className="space-y-2 p-3">
-                        {schedules.map((schedule) => {
-                          const market = data.markets.find((m) => m.id === schedule.regionId)
-                          return (
-                            <div key={schedule.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                              {market && <MarketBadge code={market.code} name={market.displayName} showName />}
-                              <span className="text-muted-foreground">
-                                {dateLabel(schedule.startsOn ?? schedule.startsAt, locale)} –{" "}
-                                {dateLabel(schedule.endsOn ?? schedule.endsAt, locale)} · {phaseLabels[schedule.phase]}
-                              </span>
-                            </div>
-                          )
-                        })}
-                      </div>
-                      <details className="rounded-lg bg-muted/20 p-3">
-                        <summary className="cursor-pointer text-sm font-medium">
-                          Thiết lập lịch mùa theo thị trường
-                        </summary>
-                        <div className="pt-3">
-                          <SeasonScheduleForm seasonId={s.id} data={data} />
-                        </div>
-                      </details>
-                      {variants.length ? (
-                        variants.map((v) => (
-                          <PatchDisclosure
-                            key={v.id}
-                            variant={v}
-                            data={data}
-                            locale={locale}
-                            phase={v.status}
-                            selected={timelineScope.variantId === v.id}
-                          />
-                        ))
-                      ) : (
-                        <p className="p-4 text-sm text-muted-foreground">Chưa có patch trong mùa này.</p>
-                      )}
-                    </div>
-                  </details>
-                )
-              })}
-            {data.variants.some((v) => !v.seasonId) && (
-              <details className="rounded-xl border bg-card">
-                <summary className="cursor-pointer p-4 font-medium">Patch cũ chưa gắn mùa</summary>
-                <div className="space-y-3 p-3">
-                  {data.variants
-                    .filter((v) => !v.seasonId)
-                    .map((v) => (
-                      <PatchDisclosure
-                        key={v.id}
-                        variant={v}
+          <Tabs value={view} onValueChange={changeView} className="min-w-0 gap-4">
+            <div className="border-b">
+              <TabsList variant="line" aria-label="Quản lý phiên bản và thị trường">
+                <TabsTrigger value="versions">
+                  <Layers aria-hidden /> Phiên bản
+                </TabsTrigger>
+                <TabsTrigger value="markets">
+                  <Globe2 aria-hidden /> Thị trường
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <TabsContent value="versions" className="min-w-0 space-y-4">
+              <CatalogTimeline
+                data={data}
+                value={timelineScope}
+                onChange={changeScope}
+                showCounts={false}
+                currentFilter={activeCatalogScope(data)}
+              />
+              {selectedPatch ? (
+                <PatchDetail key={selectedPatch.id} variant={selectedPatch} data={data} locale={locale} />
+              ) : (
+                <>
+                  {!data.seasons.length && (
+                    <p className="type-meta">Chưa có mùa. Bạn có thể tạo mùa trong menu đầu trang.</p>
+                  )}
+                  {[...data.seasons]
+                    .filter((s) => !timelineScope.seasonId || s.id === timelineScope.seasonId)
+                    .sort((a, b) => b.ordinal - a.ordinal)
+                    .map((s) => (
+                      <SeasonVersions
+                        key={s.id}
+                        season={s}
                         data={data}
                         locale={locale}
-                        phase={v.status}
-                        selected={timelineScope.variantId === v.id}
+                        onSelect={(v) => changeScope({ seasonId: v.seasonId ?? "", variantId: v.id })}
                       />
                     ))}
-                </div>
-              </details>
-            )}
-          </section>
+                  {!timelineScope.seasonId && data.variants.some((v) => !v.seasonId) && (
+                    <SeasonVersions
+                      data={data}
+                      locale={locale}
+                      onSelect={(v) => changeScope({ seasonId: v.seasonId ?? "", variantId: v.id })}
+                    />
+                  )}
+                </>
+              )}
+            </TabsContent>
+            <TabsContent value="markets" className="min-w-0">
+              <MarketOverview data={data} onOpenMarket={setMarketId} />
+            </TabsContent>
+          </Tabs>
           <MarketSchedule marketId={marketId} data={data} locale={locale} onClose={() => setMarketId(null)} />
         </>
       )}
     </Page>
   )
 }
+function PatchStatus({ variant, data }: { variant: Variant; data: PublicationOverview }) {
+  const markets = data.markets.filter((m) =>
+    data.releases.some((r) => r.id === m.currentReleaseId && r.variantId === variant.id),
+  )
+  return markets.length ? (
+    <span
+      title={markets.map((m) => m.displayName).join(", ")}
+      className="type-label inline-flex shrink-0 items-center gap-1.5 text-emerald-700 dark:text-emerald-400"
+    >
+      <span className="size-1.5 rounded-full bg-current" aria-hidden /> Đang áp dụng
+    </span>
+  ) : (
+    <span className="type-meta">{phaseLabels[variant.status] ?? variant.status}</span>
+  )
+}
+
+function SeasonVersions({
+  season,
+  data,
+  locale,
+  onSelect,
+}: {
+  season?: Season
+  data: PublicationOverview
+  locale: string
+  onSelect: (patch: Variant) => void
+}) {
+  const patches = data.variants
+    .filter((v) => (v.seasonId ?? "") === (season?.id ?? ""))
+    .sort((a, b) => b.rulesetOrdinal - a.rulesetOrdinal)
+  const schedules = (data.seasonSchedules ?? []).filter((schedule) => schedule.seasonId === season?.id)
+  return (
+    <section className="min-w-0 space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-baseline gap-2">
+          <h2 className="type-section-title">{season?.displayName ?? "Patch chưa gắn mùa"}</h2>
+          <span className="type-meta">{patches.length} patch</span>
+        </div>
+        {season && <SeasonScheduleForm seasonId={season.id} data={data} />}
+      </header>
+      {schedules.length > 0 && (
+        <ul aria-label="Lịch mùa" className="space-y-1.5">
+          {schedules.map((schedule) => {
+            const market = data.markets.find((m) => m.id === schedule.regionId)
+            const start = dateLabel(schedule.startsOn ?? schedule.startsAt, locale)
+            const end = schedule.endsOn ?? schedule.endsAt
+            return (
+              <li key={schedule.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 type-meta">
+                <CalendarDays aria-hidden className="size-4" />
+                <span>
+                  {market?.displayName ?? "Thị trường"} · {end ? `${start} – ${dateLabel(end, locale)}` : `Từ ${start}`}
+                </span>
+                {schedule.phase !== "RECORDED" && <span>{phaseLabels[schedule.phase] ?? schedule.phase}</span>}
+              </li>
+            )
+          })}
+        </ul>
+      )}
+      <ul aria-label="Các patch trong mùa" className="divide-y border-y">
+        {patches.map((v) => (
+          <li key={v.id}>
+            <button
+              type="button"
+              aria-label={`Mở patch ${v.patchCode}`}
+              onClick={() => onSelect(v)}
+              className="flex min-h-12 w-full items-center gap-3 rounded-sm px-2 text-left hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="type-body block break-words">{v.patchCode}</span>
+                {data.rulesets.length > 1 && (
+                  <span className="type-meta">{data.rulesets.find((r) => r.id === v.rulesetId)?.code}</span>
+                )}
+              </span>
+              {v.dataReviewState === "COMPLETE" && <span className="type-meta">Đã kiểm tra</span>}
+              <PatchStatus variant={v} data={data} />
+              <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      {!patches.length && <p className="type-meta">Chưa có patch trong mùa này.</p>}
+    </section>
+  )
+}
+
 /** Markets that publish the wiki, grouped by ruleset only when more than one ruleset exists. */
 function MarketOverview({ data, onOpenMarket }: { data: PublicationOverview; onOpenMarket: (id: string) => void }) {
   const grouped = data.rulesets.length > 1
@@ -308,153 +354,126 @@ function MarketOverview({ data, onOpenMarket }: { data: PublicationOverview; onO
     return (
       <li
         key={m.id}
-        className="grid items-center gap-x-4 gap-y-1 px-4 py-3 text-sm sm:grid-cols-[minmax(10rem,1fr)_1fr_1.4fr]"
+        className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3 @xl/markets:grid-cols-[minmax(8rem,1fr)_minmax(12rem,1.5fr)_auto]"
       >
-        <MarketBadge code={m.code} name={m.displayName} showName onOpen={() => onOpenMarket(m.id)} />
-        <span>
-          <span className="block text-xs text-muted-foreground">Mùa hiện tại</span>
-          {season?.displayName ?? <span className="text-muted-foreground">Chưa có</span>}
-        </span>
-        <span>
-          <span className="block text-xs text-muted-foreground">Patch hiện tại</span>
-          {variant ? (
-            <span className="inline-flex items-center gap-2">
-              {variant.patchCode}
-              <Badge>Đang áp dụng</Badge>
-            </span>
-          ) : (
-            <span className="text-muted-foreground">Chưa xác nhận</span>
-          )}
-          {pending && (
-            <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {data.variants.find((v) => v.id === pending.variantId)?.patchCode} · Chờ xác nhận
-              <ConfirmRelease id={pending.id} />
-            </span>
-          )}
-        </span>
+        <MarketBadge code={m.code} name={m.displayName} showName />
+        <dl className="col-span-2 row-start-2 flex flex-wrap items-baseline gap-x-5 gap-y-1 @xl/markets:col-span-1 @xl/markets:col-start-2 @xl/markets:row-start-1">
+          <div className="flex items-baseline gap-1.5">
+            <dt className="type-meta">Mùa</dt>
+            <dd className="type-body">{season?.displayName ?? "Chưa có"}</dd>
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <dt className="type-meta">Patch</dt>
+            <dd className="type-body break-all">{variant?.patchCode ?? "Chưa xác nhận"}</dd>
+          </div>
+        </dl>
+        <Button
+          variant="outline"
+          size="sm"
+          className="col-start-2 row-start-1 justify-self-end @xl/markets:col-start-3"
+          aria-label={`Quản lý mùa và patch của ${m.displayName}`}
+          onClick={() => onOpenMarket(m.id)}
+        >
+          <CalendarCog aria-hidden className="size-4" /> Quản lý lịch
+        </Button>
+        {pending && (
+          <div className="col-span-full flex flex-wrap items-center gap-2 type-meta">
+            Chờ xác nhận {data.variants.find((v) => v.id === pending.variantId)?.patchCode}
+            <ConfirmRelease id={pending.id} />
+          </div>
+        )}
       </li>
     )
   }
   return (
-    <section className="overflow-hidden rounded-xl border bg-card" aria-label="Thị trường">
-      <div className="border-b px-4 py-3">
-        <h2 className="type-section-title">Thị trường đang phát hành</h2>
-      </div>
+    <section className="@container/markets min-w-0 space-y-4" aria-label="Thị trường">
+      <h2 className="type-section-title">Phiên bản đang áp dụng</h2>
       {groups.map(({ rule, markets }) => (
         <div key={rule.id || "none"}>
-          {grouped && (
-            <p className="border-b bg-muted/30 px-4 py-1.5 text-xs font-medium text-muted-foreground">{rule.code}</p>
-          )}
+          {grouped && <h3 className="type-label text-muted-foreground">{rule.code}</h3>}
           {markets.length ? (
-            <ul className="divide-y">{markets.map(row)}</ul>
+            <ul className="divide-y border-y">{markets.map(row)}</ul>
           ) : (
-            <p className="px-4 py-3 text-sm text-muted-foreground">Chưa có thị trường áp dụng.</p>
+            <p className="py-3 type-meta">Chưa có thị trường áp dụng.</p>
           )}
         </div>
       ))}
-      {!groups.length && <p className="px-4 py-3 text-sm text-muted-foreground">Chưa có thị trường đang phát hành.</p>}
+      {!groups.length && <p className="type-meta">Chưa có thị trường đang phát hành.</p>}
       {unsupported.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 border-t bg-muted/20 px-4 py-2.5 text-xs text-muted-foreground">
-          Chưa hỗ trợ:
-          {unsupported.map((m) => (
-            <MarketBadge key={m.id} code={m.code} name={m.displayName} onOpen={() => onOpenMarket(m.id)} />
-          ))}
-        </div>
+        <details className="group/unsupported">
+          <summary className="type-label inline-flex cursor-pointer list-none items-center gap-2 rounded-sm py-2 text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+            <ChevronRight aria-hidden className="size-4 group-open/unsupported:rotate-90" />
+            Thị trường chưa hỗ trợ ({unsupported.length})
+          </summary>
+          <ul className="flex flex-wrap gap-2 py-2">
+            {unsupported.map((m) => (
+              <li key={m.id}>
+                <button
+                  type="button"
+                  onClick={() => onOpenMarket(m.id)}
+                  aria-label={`Mở ${m.displayName}`}
+                  className="inline-flex min-h-9 items-center rounded-md px-1.5 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                >
+                  <MarketBadge code={m.code} name={m.displayName} showName />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
     </section>
   )
 }
 
-function PatchDisclosure({
-  variant,
-  data,
-  locale,
-  phase,
-  time,
-  source,
-  selected = false,
-}: {
-  variant: Variant
-  data: PublicationOverview
-  locale: string
-  phase: string
-  time?: string
-  source?: string | null
-  selected?: boolean
-}) {
-  const [open, setOpen] = useState(selected)
-  useEffect(() => {
-    if (selected) setOpen(true)
-  }, [selected])
-  // Recorded changes are what editors open a patch for; schedules and data review sit one click away.
+function PatchDetail({ variant, data, locale }: { variant: Variant; data: PublicationOverview; locale: string }) {
   const [section, setSection] = useState<"changes" | "schedule" | "review" | "stats">("changes")
+  const season = data.seasons.find((s) => s.id === variant.seasonId)
+  const rule = data.rulesets.length > 1 && data.rulesets.find((r) => r.id === variant.rulesetId)
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen(!open)}
-        className="flex w-full flex-wrap items-center gap-3 bg-muted/20 p-4 text-left"
-      >
-        <ChevronDown className={`size-4 transition-transform ${open ? "rotate-180" : ""}`} />
-        <span className="font-medium">{variant.patchCode}</span>
-        {data.releases.some(
-          (r) => r.variantId === variant.id && data.markets.some((m) => m.currentReleaseId === r.id),
-        ) && <Badge>Đang áp dụng</Badge>}
-        {variant.dataReviewState === "COMPLETE" && <Badge variant="secondary">Đã hoàn tất nhập liệu</Badge>}
-        <Badge variant={phase === "CURRENT" ? "default" : "outline"}>{phaseLabels[phase] ?? phase}</Badge>
-        {data.rulesets.length > 1 && (
-          <span className="text-xs text-muted-foreground">
-            {data.rulesets.find((r) => r.id === variant.rulesetId)?.code}
-          </span>
-        )}
-        {time && <span className="ml-auto text-xs text-muted-foreground">{dateLabel(time, locale)}</span>}
-      </button>
-      {open && (
-        <div className="border-t">
-          <div className="flex flex-wrap items-center gap-1 px-3 pt-3" aria-label="Phần của patch">
-            {(
-              [
-                ["changes", "Thay đổi"],
-                ["stats", "Thuộc tính mặc định"],
-                ["schedule", "Lịch phát hành"],
-                ["review", "Kiểm tra dữ liệu"],
-              ] as const
-            ).map(([key, label]) => (
-              <Button
-                key={key}
-                type="button"
-                size="sm"
-                variant={section === key ? "secondary" : "ghost"}
-                aria-pressed={section === key}
-                className="h-8"
-                onClick={() => setSection(key)}
-              >
-                {label}
-              </Button>
-            ))}
-            {source && /^https?:\/\//.test(source) && (
-              <a className="ml-auto text-sm text-primary underline" href={source} target="_blank" rel="noreferrer">
-                Nguồn cập nhật
-              </a>
-            )}
-          </div>
-          {section === "changes" && <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />}
-          {section === "stats" && <PatchStatDefaults variant={variant} />}
-          {section === "schedule" && (
-            <div className="space-y-2 pb-3">
-              <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
-              <details className="mx-3 rounded-lg bg-muted/20 p-3">
-                <summary className="cursor-pointer text-sm font-medium">Thiết lập lịch patch theo thị trường</summary>
-                <div className="pt-3">
-                  <PatchReleaseForm variant={variant} data={data} />
-                </div>
-              </details>
-            </div>
-          )}
-          {section === "review" && <PatchDataReview variant={variant} />}
+    <section className="min-w-0 space-y-3">
+      <header className="flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="type-meta">
+            {[season?.displayName ?? "Chưa gắn mùa", rule && rule.code].filter(Boolean).join(" · ")}
+          </p>
+          <h2 className="type-section-title break-words">{variant.patchCode}</h2>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <PatchStatus variant={variant} data={data} />
+          {variant.dataReviewState === "COMPLETE" && <Badge variant="secondary">Đã hoàn tất nhập liệu</Badge>}
+          {variant.status === "DRAFT" && <PatchReleaseForm variant={variant} data={data} />}
+        </div>
+      </header>
+      <div role="group" aria-label="Phần của patch" className="flex flex-wrap items-center gap-1">
+        {(
+          [
+            ["changes", "Thay đổi"],
+            ["stats", "Thuộc tính mặc định"],
+            ["schedule", "Lịch phát hành"],
+            ["review", "Kiểm tra dữ liệu"],
+          ] as const
+        ).map(([key, label]) => (
+          <Button
+            key={key}
+            type="button"
+            size="sm"
+            variant={section === key ? "secondary" : "ghost"}
+            aria-pressed={section === key}
+            onClick={() => setSection(key)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      {section === "changes" && <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />}
+      {section === "stats" && <PatchStatDefaults variant={variant} />}
+      {section === "schedule" && (
+        <div className="space-y-2 border-t pt-3">
+          {variant.status === "PUBLISHED" && <PatchReleaseForm variant={variant} data={data} />}
+          <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
         </div>
       )}
-    </div>
+      {section === "review" && <PatchDataReview variant={variant} />}
+    </section>
   )
 }

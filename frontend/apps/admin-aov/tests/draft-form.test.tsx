@@ -46,11 +46,15 @@ test("season forms restore invalid input and saving one market preserves another
         subject: "editor",
         type: "HUMAN",
         displayName: "Editor",
-        capabilities: ["catalog:read", "patch:write"],
+        capabilities: ["catalog:read", "patch:write", "patch:publish"],
       })
     if (String(input).endsWith("/admin/seasons/season/schedules")) {
       scheduleWrites.push(JSON.parse(String(init?.body)))
       return Response.json({})
+    }
+    if (String(input).endsWith("/admin/patch-variants/patch/releases")) {
+      scheduleWrites.push(JSON.parse(String(init?.body)))
+      return Response.json({ id: "new-release" })
     }
     if (String(input).endsWith("/admin/seasons")) {
       if (init?.method === "POST") {
@@ -199,7 +203,7 @@ test("season forms restore invalid input and saving one market preserves another
     await mount()
     await act(async () =>
       [...dom.window.document.querySelectorAll("button")]
-        .find((button) => button.textContent?.includes("Thiết lập lịch thị trường"))!
+        .find((button) => button.textContent?.includes("Thiết lập lịch mùa"))!
         .click(),
     )
     await waitFor(
@@ -222,6 +226,55 @@ test("season forms restore invalid input and saving one market preserves another
     assert.equal((retained.value as { dates: Record<string, { text: string }> }).dates["vn:start"].text, "10/09/2026")
     assert.equal((retained.base as { dates: Record<string, { text: string }> }).dates["vn:start"], undefined)
     assert.ok(retained, "Saving Thailand must not discard the unsaved Vietnam schedule")
+    const { MarketSchedule } = await import("../src/features/publishing/market-schedule")
+    const marketData: PublicationOverview = {
+      ...scheduleData,
+      markets: scheduleData.markets.map((m) => ({ ...m, currentRulesetId: "shared" })),
+      seasons: [{ id: "season", code: "s4", displayName: "S4", ordinal: 4 }],
+      variants: [
+        {
+          id: "patch",
+          patchId: "patch",
+          seasonId: "season",
+          rulesetId: "shared",
+          rulesetOrdinal: 2,
+          patchCode: "October",
+          status: "PUBLISHED",
+        },
+      ],
+    }
+    await act(async () =>
+      root.render(
+        <MemoryRouter>
+          <QueryClientProvider client={cache}>
+            <MarketSchedule marketId="vn" data={marketData} locale="vi-VN" onClose={() => {}} />
+          </QueryClientProvider>
+        </MemoryRouter>,
+      ),
+    )
+    const picker = dom.window.document.querySelector<HTMLSelectElement>("select")!
+    await act(async () => {
+      picker.value = "patch"
+      picker.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+    })
+    const day = () => dom.window.document.querySelector<HTMLInputElement>('[aria-label="Ngày phát hành"]')!
+    await waitFor(() => !!day() && !day().closest("fieldset")!.disabled)
+    assert.equal(dom.window.document.querySelector('[aria-label="Thị trường"]'), null)
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(day(), "30/10/2026")
+      day().dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
+    await act(async () => {
+      day().form!.dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true }))
+    })
+    await waitFor(() => scheduleWrites.length === 2)
+    assert.deepEqual(scheduleWrites[1], {
+      regionId: "vn",
+      seasonId: "season",
+      effectiveOn: "2026-10-30",
+      effectiveAt: null,
+      sourceUrl: null,
+    })
   } finally {
     await act(async () => root.unmount())
     for (const key of Object.keys(draftRepository.store.getState().slots)) await draftRepository.remove(key)

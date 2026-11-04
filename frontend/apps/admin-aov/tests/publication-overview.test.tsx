@@ -154,19 +154,29 @@ test("publication overview shows flags and hero heads, and only tabs with change
       ),
     )
     const document = dom.window.document
+    const openView = async (name: string) => {
+      const tab = [
+        ...document.querySelectorAll<HTMLButtonElement>('[aria-label="Quản lý phiên bản và thị trường"] [role="tab"]'),
+      ].find((tab) => tab.textContent?.trim() === name)!
+      await act(async () => {
+        tab.dispatchEvent(new dom.window.MouseEvent("mousedown", { bubbles: true, button: 0 }))
+        tab.click()
+      })
+    }
+    await openView("Thị trường")
     // With a single default ruleset the market overview does not repeat the ruleset name.
     assert.doesNotMatch(document.body.textContent ?? "", /Shared gameplay/)
     assert.match(document.querySelector('[aria-label="Thị trường"]')?.textContent ?? "", /S4 2026.*patch-october/)
+    assert.ok(document.querySelector('[aria-label="Quản lý mùa và patch của Việt Nam"]'))
+    assert.ok(document.querySelector('[aria-label="Thị trường"] img[src="/images/flags/vn.svg"]'))
+    await openView("Phiên bản")
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
     assert.equal(document.querySelector('[aria-label="Phạm vi hiển thị"]'), null)
-    const patch = [...document.querySelectorAll<HTMLButtonElement>("button[aria-expanded]")].find(
-      (b) => b.getAttribute("aria-expanded") === "true" && b.textContent?.includes("patch-october"),
-    )!
-    assert.ok(patch, "The active patch is open by default")
+    assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
     assert.ok(document.querySelector('button[aria-label="Xem thay đổi Airi"]'))
     assert.ok(document.querySelector("td.sticky"))
     assert.match(document.body.textContent ?? "", /Tăng sức mạnh/)
-    const tabs = () => [...document.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+    const tabs = () => [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Nhóm có thay đổi"] [role="tab"]')]
     assert.deepEqual(
       tabs().map((tab) => tab.textContent?.trim()),
       ["Tướng1"],
@@ -174,7 +184,6 @@ test("publication overview shows flags and hero heads, and only tabs with change
     assert.equal(tabs()[0].getAttribute("aria-selected"), "true", "A stale empty domain falls back to a populated tab")
     assert.ok(tabs()[0].querySelector("svg"))
     assert.ok(document.querySelector('img[src="/fixture-head.png"]'))
-    assert.ok(document.querySelector('[aria-label="Thị trường"] img[src="/images/flags/vn.svg"]'))
     assert.ok(document.querySelector('td img[src="/images/flags/vn.svg"]'))
     const overview = cache.getQueryData<import("../src/features/publishing/publication-overview").PublicationOverview>([
       "publication-overview",
@@ -232,8 +241,11 @@ test("publication overview shows flags and hero heads, and only tabs with change
     await updateCache(["patch-changes", "variant", "vi-VN"], [])
     assert.equal(tabs().length, 0)
     assert.match(document.body.textContent ?? "", /Chưa ghi nhận thay đổi trong patch này/)
-    await act(async () => patch.click())
-    assert.equal(document.querySelector('button[aria-label="Xem thay đổi Airi"]'), null)
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Lọc mùa S4 2026"]')!.click())
+    const seasonPatch = document.querySelector<HTMLButtonElement>('[aria-label="Mở patch patch-october"]')!
+    assert.ok(seasonPatch)
+    await act(async () => seasonPatch.click())
+    assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
   } finally {
     await act(async () => root.unmount())
     cache.clear()

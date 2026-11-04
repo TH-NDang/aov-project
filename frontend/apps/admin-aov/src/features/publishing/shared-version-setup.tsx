@@ -1,5 +1,6 @@
 import { scheduleDate, parseScheduleDate, scheduleDateText } from "./schedule-date"
 import { useState } from "react"
+import { toast } from "sonner"
 import { CalendarDays, Clock, Plus } from "lucide-react"
 import { Calendar } from "@aov/ui/components/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
@@ -205,7 +206,7 @@ export function PatchReleaseForm({ variant, data }: { variant: Variant; data: Pu
   if (!canPublish) return null
   if (variant.status !== "PUBLISHED")
     return (
-      <div className="p-4">
+      <div>
         <Button
           disabled={busy}
           onClick={async () => {
@@ -221,7 +222,7 @@ export function PatchReleaseForm({ variant, data }: { variant: Variant; data: Pu
             }
           }}
         >
-          Xuất bản patch để lên lịch
+          Xuất bản patch {variant.patchCode}
         </Button>
         {error && <p role="alert">{error}</p>}
       </div>
@@ -235,16 +236,18 @@ export function PatchReleaseForm({ variant, data }: { variant: Variant; data: Pu
     />
   )
 }
-function ScheduleForm({
+export function ScheduleForm({
   endpoint,
   data,
   seasonId,
   patch = false,
+  marketId,
 }: {
   endpoint: string
   data: PublicationOverview
   seasonId: string | null
   patch?: boolean
+  marketId?: string
 }) {
   const cache = useQueryClient()
   const [error, setError] = useState("")
@@ -256,24 +259,29 @@ function ScheduleForm({
   const sources: Record<string, string> = {}
   if (patch) {
     for (const release of data.releases.filter(
-      (item) => item.variantId === endpoint.split("/")[3] && item.status !== "CANCELLED",
+      (item) =>
+        item.variantId === endpoint.split("/")[3] &&
+        item.status !== "CANCELLED" &&
+        (!marketId || item.regionId === marketId),
     )) {
       dates[`${release.regionId}:start`] = dateDraft(release.effectiveOn ?? release.effectiveAt)
       sources[release.regionId] = release.sourceUrl ?? ""
     }
   } else {
-    for (const schedule of data.seasonSchedules.filter((item) => item.seasonId === seasonId)) {
+    for (const schedule of data.seasonSchedules.filter(
+      (item) => item.seasonId === seasonId && (!marketId || item.regionId === marketId),
+    )) {
       dates[`${schedule.regionId}:start`] = dateDraft(schedule.startsOn ?? schedule.startsAt)
       dates[`${schedule.regionId}:end`] = dateDraft(schedule.endsOn ?? schedule.endsAt)
     }
   }
   const draft = useLocalDraft({
-    form: `schedule:${endpoint}`,
+    form: marketId ? `schedule:${endpoint}:${marketId}` : `schedule:${endpoint}`,
     initialValue: { regionId: "", dates, sources },
     schema: scheduleDraftSchema,
     enabled: !!canWrite,
   })
-  const regionId = draft.value.regionId
+  const regionId = marketId ?? draft.value.regionId
   const setRegionId = (regionId: string) => draft.update({ ...draft.value, regionId })
   const setDateDraft = (name: string, value: DateDraft) =>
     draft.update({ ...draft.value, dates: { ...draft.value.dates, [`${regionId}:${name}`]: value } })
@@ -281,17 +289,153 @@ function ScheduleForm({
   const existing = !patch
     ? data.seasonSchedules.find((s) => s.seasonId === seasonId && s.regionId === regionId)
     : undefined
+  const form = (
+    <form
+      className={marketId ? "grid gap-4" : "grid gap-6 overflow-y-auto px-4 pb-6"}
+      onSubmit={async (e) => {
+        e.preventDefault()
+        if (!draft.ready || draft.invalid || draft.conflict || busy) return
+        const f = new FormData(e.currentTarget)
+        if (!regionId || !f.get("start")) {
+          setError("Vui lòng chọn thị trường và ngày bắt đầu.")
+          return
+        }
+        setBusy(true)
+        setError("")
+        try {
+          const start = scheduleDate(String(f.get("start")), String(f.get("startTime") || ""))
+          const end = patch || !f.get("end") ? null : scheduleDate(String(f.get("end")), String(f.get("endTime") || ""))
+          const body = patch
+            ? {
+                regionId,
+                seasonId,
+                effectiveAt: start.at,
+                effectiveOn: start.on,
+                sourceUrl: f.get("source") || null,
+              }
+            : {
+                regionId,
+                startsAt: start.at,
+                startsOn: start.on,
+                endsAt: end?.at ?? null,
+                endsOn: end?.on ?? null,
+              }
+          await backendRequest(endpoint, { method: "POST", body: JSON.stringify(body) })
+          const savedDates = { [`${regionId}:start`]: dateDraft(start.on ?? start.at) }
+          if (!patch) savedDates[`${regionId}:end`] = dateDraft(end?.on ?? end?.at)
+          const savedSources = patch ? { [regionId]: String(f.get("source") || "") } : {}
+          draft.rebase(
+            {
+              regionId: "",
+              dates: { ...draft.value.dates, ...savedDates },
+              sources: { ...draft.value.sources, ...savedSources },
+            },
+            { regionId: "", dates: { ...dates, ...savedDates }, sources: { ...sources, ...savedSources } },
+          )
+          await cache.invalidateQueries({ queryKey: ["publication-overview"] })
+          await cache.invalidateQueries({ queryKey: ["authoring-contexts"] })
+          setOpen(false)
+          toast.success(patch ? "Đã lưu lịch phát hành patch." : "Đã lưu lịch mùa.")
+        } catch (cause) {
+          setError(errorMessage(cause))
+        } finally {
+          setBusy(false)
+        }
+      }}
+    >
+      <DraftStatus draft={draft} disabled={busy} />
+      {!marketId && (
+        <div className="grid gap-2 text-sm">
+          <span>Thị trường</span>
+          <Select
+            value={regionId}
+            onValueChange={setRegionId}
+            required
+            disabled={busy || !draft.ready || draft.invalid || draft.conflict}
+          >
+            <SelectTrigger className="w-full" aria-label="Thị trường">
+              <SelectValue placeholder="Chọn thị trường" />
+            </SelectTrigger>
+            <SelectContent>
+              {data.markets
+                .filter((m) => m.available)
+                .map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.displayName}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      <ScheduleDateField
+        key={`${regionId}-start-${open}`}
+        name="start"
+        label={patch ? "Ngày phát hành" : "Bắt đầu mùa"}
+        disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
+        value={draft.value.dates[`${regionId}:start`] ?? dateDraft(existing?.startsOn ?? existing?.startsAt)}
+        onChange={(value) => setDateDraft("start", value)}
+      />
+      {!patch && (
+        <ScheduleDateField
+          key={`${regionId}-end-${open}`}
+          name="end"
+          label="Kết thúc mùa"
+          disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
+          optional
+          value={draft.value.dates[`${regionId}:end`] ?? dateDraft(existing?.endsOn ?? existing?.endsAt)}
+          onChange={(value) => setDateDraft("end", value)}
+        />
+      )}
+      {patch && (
+        <label className="grid gap-2 text-sm">
+          Nguồn cập nhật
+          <input
+            name="source"
+            type="url"
+            className={control}
+            disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
+            placeholder="https://…"
+            value={draft.value.sources[regionId] ?? ""}
+            onChange={(event) =>
+              draft.update({
+                ...draft.value,
+                sources: { ...draft.value.sources, [regionId]: event.target.value },
+              })
+            }
+          />
+        </label>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      <div className="flex justify-end gap-2 border-t pt-4">
+        {!marketId && (
+          <Button type="button" variant="outline" disabled={busy} onClick={() => setOpen(false)}>
+            Hủy
+          </Button>
+        )}
+        <Button disabled={busy || !draft.ready || draft.invalid || draft.conflict}>
+          {busy ? "Đang lưu…" : "Lưu lịch"}
+        </Button>
+      </div>
+    </form>
+  )
+  if (marketId) return form
   return (
-    <div className="p-4">
+    <div>
       <Button
         variant="outline"
+        size="sm"
         onClick={() => {
           setError("")
           setOpen(true)
         }}
       >
         <Plus className="size-4" />
-        Thiết lập lịch thị trường
+        {patch ? "Đặt lịch phát hành" : "Thiết lập lịch mùa"}
       </Button>
       <Sheet
         open={open}
@@ -311,134 +455,7 @@ function ScheduleForm({
                 : "Chọn ngày bắt đầu; có thể bổ sung ngày kết thúc sau."}
             </SheetDescription>
           </SheetHeader>
-          <form
-            className="overflow-y-auto px-4 pb-6 grid gap-6"
-            onSubmit={async (e) => {
-              e.preventDefault()
-              if (!draft.ready || draft.invalid || draft.conflict || busy) return
-              const f = new FormData(e.currentTarget)
-              if (!regionId || !f.get("start")) {
-                setError("Vui lòng chọn thị trường và ngày bắt đầu.")
-                return
-              }
-              setBusy(true)
-              setError("")
-              try {
-                const start = scheduleDate(String(f.get("start")), String(f.get("startTime") || ""))
-                const end =
-                  patch || !f.get("end") ? null : scheduleDate(String(f.get("end")), String(f.get("endTime") || ""))
-                const body = patch
-                  ? {
-                      regionId,
-                      seasonId,
-                      effectiveAt: start.at,
-                      effectiveOn: start.on,
-                      sourceUrl: f.get("source") || null,
-                    }
-                  : {
-                      regionId,
-                      startsAt: start.at,
-                      startsOn: start.on,
-                      endsAt: end?.at ?? null,
-                      endsOn: end?.on ?? null,
-                    }
-                await backendRequest(endpoint, { method: "POST", body: JSON.stringify(body) })
-                const savedDates = { [`${regionId}:start`]: dateDraft(start.on ?? start.at) }
-                if (!patch) savedDates[`${regionId}:end`] = dateDraft(end?.on ?? end?.at)
-                const savedSources = patch ? { [regionId]: String(f.get("source") || "") } : {}
-                draft.rebase(
-                  {
-                    regionId: "",
-                    dates: { ...draft.value.dates, ...savedDates },
-                    sources: { ...draft.value.sources, ...savedSources },
-                  },
-                  { regionId: "", dates: { ...dates, ...savedDates }, sources: { ...sources, ...savedSources } },
-                )
-                await cache.invalidateQueries({ queryKey: ["publication-overview"] })
-                await cache.invalidateQueries({ queryKey: ["authoring-contexts"] })
-                setOpen(false)
-              } catch (cause) {
-                setError(errorMessage(cause))
-              } finally {
-                setBusy(false)
-              }
-            }}
-          >
-            <DraftStatus draft={draft} disabled={busy} />
-            <div className="grid gap-2 text-sm">
-              <span>Thị trường</span>
-              <Select
-                value={regionId}
-                onValueChange={setRegionId}
-                required
-                disabled={busy || !draft.ready || draft.invalid || draft.conflict}
-              >
-                <SelectTrigger className="w-full" aria-label="Thị trường">
-                  <SelectValue placeholder="Chọn thị trường" />
-                </SelectTrigger>
-                <SelectContent>
-                  {data.markets
-                    .filter((m) => m.available)
-                    .map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.displayName}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <ScheduleDateField
-              key={`${regionId}-start-${open}`}
-              name="start"
-              label={patch ? "Ngày phát hành" : "Bắt đầu mùa"}
-              disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
-              value={draft.value.dates[`${regionId}:start`] ?? dateDraft(existing?.startsOn ?? existing?.startsAt)}
-              onChange={(value) => setDateDraft("start", value)}
-            />
-            {!patch && (
-              <ScheduleDateField
-                key={`${regionId}-end-${open}`}
-                name="end"
-                label="Kết thúc mùa"
-                disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
-                optional
-                value={draft.value.dates[`${regionId}:end`] ?? dateDraft(existing?.endsOn ?? existing?.endsAt)}
-                onChange={(value) => setDateDraft("end", value)}
-              />
-            )}
-            {patch && (
-              <label className="grid gap-2 text-sm">
-                Nguồn cập nhật
-                <input
-                  name="source"
-                  type="url"
-                  className={control}
-                  disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
-                  placeholder="https://…"
-                  value={draft.value.sources[regionId] ?? ""}
-                  onChange={(event) =>
-                    draft.update({
-                      ...draft.value,
-                      sources: { ...draft.value.sources, [regionId]: event.target.value },
-                    })
-                  }
-                />
-              </label>
-            )}
-            {error && (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
-            )}
-            <div className="flex justify-end gap-2 border-t pt-4">
-              <Button type="button" variant="outline" disabled={busy} onClick={() => setOpen(false)}>
-                Hủy
-              </Button>
-              <Button disabled={busy || !draft.ready || draft.invalid || draft.conflict}>
-                {busy ? "Đang lưu…" : "Lưu lịch"}
-              </Button>
-            </div>
-          </form>
+          {form}
         </SheetContent>
       </Sheet>
     </div>
