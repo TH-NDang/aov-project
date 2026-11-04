@@ -2389,6 +2389,11 @@ giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay s�
 
 ### Xem toàn bộ dữ liệu tại mốc và rà soát patch
 
+- `GET /admin/patch-variants/{id}/hero-stat-samples` cần quyền `catalog:read`. Mỗi tướng có tối đa một mẫu,
+  lấy revision mới nhất còn hiệu lực gắn trực tiếp với variant và bộ luật. Mẫu có trạng thái nháp, vai trò,
+  chỉ số cơ bản đã nhập và các giá trị đọc thủ công từ ảnh kèm patch và cấp tướng nếu biết.
+  Mặc định kế thừa không được tính như một lần quan sát.
+
 - `GET /admin/patch-variants/{id}/stat-defaults` cần quyền `catalog:read`. Mỗi dòng trả mã thuộc tính,
   giá trị, đơn vị, URL nguồn, patch khai báo và phiên bản của dòng. API kế thừa từ các patch đã xuất bản trong cùng bộ luật.
 - `PUT /admin/patch-variants/{id}/stat-defaults/{key}` cần quyền `patch:write`. Body gồm
