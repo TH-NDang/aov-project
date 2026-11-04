@@ -2283,7 +2283,8 @@ biên tập/nguồn, tối đa 32768 ký tự; public không trả ghi chú này
 - Enchantment: branchCode,tier,position. Tier 1–3, position có thể null khi chưa biết.
 - Spell: cooldownSeconds,unlockLevel,unlockType ACCOUNT_CREATION/LEVEL/UNKNOWN,availability
   AVAILABLE/REMOVED/UNKNOWN,legacy,displayOrder,chargeRechargeSeconds,maxCharges,defaultStateKey,
-  states[{key,iconAssetId,translations}],referenceImages[{assetId,notes}].
+  states[{key,iconAssetId,translations}],referenceImages[{assetId,notes}]. Có thể xuất bản khi
+  chưa biết cách mở khóa hoặc cấp mở khóa; các giá trị đã ghi nhận vẫn được giữ.
 
 GET `/admin/item-categories` và `/admin/enchantment-branches` trả array metadata gồm code,version,
 displayOrder,iconAssetId,backgroundAssetId,color,translations[{locale,name,description,suitability}].
