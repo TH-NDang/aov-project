@@ -94,37 +94,30 @@ function SpellCard({
         aria-pressed={active}
         className="absolute inset-0 z-10 cursor-pointer rounded-lg focus-visible:outline-none"
       />
-      <div className="flex h-16 w-full items-center justify-center">
-        <SpellArtwork
-          iconAssetId={entry.content.iconAssetId}
-          states={entry.content.states}
-          defaultStateKey={entry.content.defaultStateKey}
-          name={warehouseName(entry, locale)}
-          locale={locale}
-          compact
-        />
-      </div>
-      <div className="w-full min-w-0 space-y-1">
-        <p className="truncate text-xs leading-4 font-semibold" title={text?.name || entry.code}>
-          {text?.name || entry.code}
-        </p>
-        <div className="flex flex-wrap justify-center gap-1 empty:hidden">
-          {entry.content.availability !== "AVAILABLE" && (
-            <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
-              {availabilityLabels[entry.content.availability]}
-            </Badge>
-          )}
-          {isLegacy(entry) && !entry.revision.effectiveFromPatchVariantId && (
-            <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
-              Chưa rõ patch
-            </Badge>
-          )}
-          {entry.revision.state === "DRAFT" && (
-            <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
-              {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
-            </Badge>
-          )}
-        </div>
+      <SpellArtwork
+        iconAssetId={entry.content.iconAssetId}
+        states={entry.content.states}
+        defaultStateKey={entry.content.defaultStateKey}
+        name={warehouseName(entry, locale)}
+        locale={locale}
+        card
+      />
+      <div className="flex flex-wrap justify-center gap-1 empty:hidden">
+        {entry.content.availability !== "AVAILABLE" && (
+          <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
+            {availabilityLabels[entry.content.availability]}
+          </Badge>
+        )}
+        {isLegacy(entry) && !entry.revision.effectiveFromPatchVariantId && (
+          <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
+            Chưa rõ patch
+          </Badge>
+        )}
+        {entry.revision.state === "DRAFT" && (
+          <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
+            {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
+          </Badge>
+        )}
       </div>
       {text?.summary && (
         <p className="w-full truncate text-xs text-muted-foreground" title={text.summary}>

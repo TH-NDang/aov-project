@@ -296,7 +296,6 @@ export function SecondaryEditor({
             <div className="relative shrink-0">
               {kind === "spells" ? (
                 <SpellArtwork
-                  compact
                   iconAssetId={content.iconAssetId}
                   states={content.states}
                   defaultStateKey={content.defaultStateKey}

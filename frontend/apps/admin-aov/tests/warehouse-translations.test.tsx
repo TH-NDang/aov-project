@@ -805,6 +805,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     // The whole card opens the details; the repeated open hint is gone, the accessible label remains.
     assert.ok(openButton)
     assert.doesNotMatch(card.textContent!, /Xem chi tiết/)
+    assert.equal(card.textContent!.match(/Trừng trị/g)?.length, 1)
     assert.match(card.textContent!, /Hồi chiêu 10 giây/)
     assert.doesNotMatch(card.textContent!, /Lv 1|Đang có/)
     assert.deepEqual(
@@ -819,6 +820,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     assert.ok(switchButton)
     await act(async () => switchButton.click())
     assert.equal(card.querySelector('[aria-live="polite"]')?.textContent, "Trừng trị tê tái")
+    assert.equal(card.textContent!.match(/Trừng trị/g)?.length, 1)
     assert.ok(card.querySelector('button[aria-label="Chuyển sang Trừng trị thường"]'))
     assert.equal(opened, undefined)
     assert.equal(entry.content.defaultStateKey, undefined)
