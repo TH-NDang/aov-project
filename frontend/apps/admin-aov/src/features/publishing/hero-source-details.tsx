@@ -1,9 +1,12 @@
-import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink } from "lucide-react"
+import { useState } from "react"
+import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink, Pencil } from "lucide-react"
+import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../terminology/catalog"
 import type { Skill } from "./types"
 import { sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
 import { hasRankFormula, skillSourceTable } from "./skill-rank-values"
+import { SkillTagsEditor, SkillTableEditor } from "./skill-source-editor"
 
 type RecordValue = Record<string, unknown>
 const record = (value: unknown): RecordValue | null =>
@@ -24,19 +27,39 @@ export function heroReviewNotes(skills: Skill[]): string[] {
   )
 }
 
-export function SkillSourceDetails({ skill, collapseSources = false }: { skill: Skill; collapseSources?: boolean }) {
+export function SkillSourceDetails({
+  skill,
+  collapseSources = false,
+  locale = "vi-VN",
+  onChange,
+}: {
+  skill: Skill
+  collapseSources?: boolean
+  locale?: string
+  onChange?: (effects: Skill["effects"]) => void
+}) {
+  const [tableOpen, setTableOpen] = useState(false)
   const source = snapshot(skill)
-  if (!source) return null
-  const cooldown = record(source.cooldown)
-  const energy = record(source.energyCost)
+  function updateSource(change: RecordValue) {
+    const index = skill.effects.findIndex((effect) => effect.effectType === "SOURCE_SNAPSHOT")
+    const next = { effectType: "SOURCE_SNAPSHOT", metadata: { ...source, ...change } }
+    onChange?.(
+      index < 0
+        ? [...skill.effects, next]
+        : skill.effects.map((effect, i) => (i === index ? { ...effect, ...next } : effect)),
+    )
+  }
+  if (!onChange && !source) return null
+  const cooldown = record(source?.cooldown)
+  const energy = record(source?.energyCost)
   const rawCooldownText =
     text(cooldown?.display) || (typeof cooldown?.seconds === "number" ? `Hồi chiêu: ${cooldown.seconds} giây` : "")
   const energyText = text(energy?.display) || (typeof energy?.value === "number" ? `Tiêu hao: ${energy.value}` : "")
   const { columns, rows, derived } = skillSourceTable(skill)
   const cooldownText = derived && hasRankFormula(rawCooldownText) ? "" : rawCooldownText
-  const notes = sourceReviewNotes(source.reviewFlags)
-  const sourceImageUrl = sourceHttpUrl(source.sourceImageUrl)
-  const tags = strings(source.tags)
+  const notes = sourceReviewNotes(source?.reviewFlags)
+  const sourceImageUrl = sourceHttpUrl(source?.sourceImageUrl)
+  const tags = strings(source?.tags)
   const provenance = (
     <>
       {notes.length > 0 && (
@@ -64,7 +87,7 @@ export function SkillSourceDetails({ skill, collapseSources = false }: { skill: 
   )
   return (
     <div className="space-y-4">
-      {(cooldownText || energyText || tags.length > 0) && (
+      {(cooldownText || energyText || (!onChange && tags.length > 0)) && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {cooldownText && (
             <Badge variant="secondary" className="gap-1.5">
@@ -78,71 +101,100 @@ export function SkillSourceDetails({ skill, collapseSources = false }: { skill: 
               <AdminEntityText text={energyText} />
             </Badge>
           )}
-          {tags.map((tag, index) => (
-            <Badge key={index} variant="outline">
-              <AdminEntityText text={tag} />
-            </Badge>
-          ))}
+          {!onChange &&
+            tags.map((tag, index) => (
+              <Badge key={index} variant="outline">
+                <AdminEntityText text={tag} />
+              </Badge>
+            ))}
         </div>
       )}
-      {rows.length > 0 && (
-        <div
-          className="max-w-full overflow-x-auto rounded-lg border"
-          tabIndex={0}
-          aria-label={`Thông số theo cấp kỹ năng ${skill.skillKey}`}
-        >
-          <table className="w-full border-collapse text-left text-xs tabular-nums">
-            <caption className="sr-only">Thông số theo cấp chiêu</caption>
-            <thead>
-              <tr className="border-b bg-muted/40">
-                <th scope="col" className="sticky left-0 z-10 min-w-28 bg-muted px-3 py-2.5 font-medium">
-                  Thông số
-                </th>
-                {columns.map((column, index) => (
-                  <th scope="col" key={index} className="min-w-12 px-2 py-2.5 text-center font-medium">
-                    {column}
+      {onChange && (
+        <>
+          <p className="type-meta">Đặc tính và thông số dùng chung cho các ngôn ngữ của chiêu.</p>
+          <SkillTagsEditor tags={tags} locale={locale} onChange={(tags) => updateSource({ tags })} />
+        </>
+      )}
+      {onChange && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h4 className="type-label">Thông số theo cấp chiêu</h4>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            aria-expanded={tableOpen}
+            onClick={() => setTableOpen(!tableOpen)}
+          >
+            <Pencil className="size-3.5" /> {tableOpen ? "Xem bảng" : rows.length ? "Sửa bảng" : "Thêm bảng"}
+          </Button>
+        </div>
+      )}
+      {tableOpen && onChange ? (
+        <SkillTableEditor
+          skill={skill}
+          table={record(source?.levelTable) ?? {}}
+          onChange={(levelTable) => updateSource({ levelTable })}
+        />
+      ) : (
+        rows.length > 0 && (
+          <div
+            className="max-w-full overflow-x-auto rounded-lg border"
+            tabIndex={0}
+            aria-label={`Thông số theo cấp kỹ năng ${skill.skillKey}`}
+          >
+            <table className="w-full border-collapse text-left text-xs tabular-nums">
+              <caption className="sr-only">Thông số theo cấp chiêu</caption>
+              <thead>
+                <tr className="border-b bg-muted/40">
+                  <th scope="col" className="sticky left-0 z-10 min-w-28 bg-muted px-3 py-2.5 font-medium">
+                    Thông số
                   </th>
-                ))}
-                {columns.length > 1 && (
-                  <th scope="col" className="min-w-36 border-l px-3 py-2.5 font-medium">
-                    Tổng quan
-                  </th>
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => (
-                <tr key={index} className="border-b last:border-0">
-                  <th scope="row" className="sticky left-0 bg-card px-3 py-2.5 font-medium">
-                    <span className="flex items-center gap-2">
-                      {row.label}
-                      {row.reviewRequired && (
-                        <span title="Nhãn và giá trị cần đối chiếu nguồn">
-                          <AlertTriangle className="size-3 shrink-0 text-amber-600" />
-                          <span className="sr-only">Cần đối chiếu</span>
-                        </span>
-                      )}
-                    </span>
-                  </th>
-                  {row.values.map((value, cell) => (
-                    <td
-                      key={cell}
-                      colSpan={row.values.length === 1 ? Math.max(1, columns.length) : undefined}
-                      className="px-2 py-2.5 text-center"
-                    >
-                      <AdminEntityText text={value ?? "—"} />
-                    </td>
+                  {columns.map((column, index) => (
+                    <th scope="col" key={index} className="min-w-12 px-2 py-2.5 text-center font-medium">
+                      {column}
+                    </th>
                   ))}
                   {columns.length > 1 && (
-                    <td className="min-w-36 border-l bg-muted/15 px-3 py-2.5">
-                      <AdminEntityText text={row.summary ?? "—"} />
-                    </td>
+                    <th scope="col" className="min-w-36 border-l px-3 py-2.5 font-medium">
+                      Tổng quan
+                    </th>
                   )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((row, index) => (
+                  <tr key={index} className="border-b last:border-0">
+                    <th scope="row" className="sticky left-0 bg-card px-3 py-2.5 font-medium">
+                      <span className="flex items-center gap-2">
+                        {row.label}
+                        {row.reviewRequired && (
+                          <span title="Nhãn và giá trị cần đối chiếu nguồn">
+                            <AlertTriangle className="size-3 shrink-0 text-amber-600" />
+                            <span className="sr-only">Cần đối chiếu</span>
+                          </span>
+                        )}
+                      </span>
+                    </th>
+                    {row.values.map((value, cell) => (
+                      <td
+                        key={cell}
+                        colSpan={row.values.length === 1 ? Math.max(1, columns.length) : undefined}
+                        className="px-2 py-2.5 text-center"
+                      >
+                        <AdminEntityText text={value ?? "—"} />
+                      </td>
+                    ))}
+                    {columns.length > 1 && (
+                      <td className="min-w-36 border-l bg-muted/15 px-3 py-2.5">
+                        <AdminEntityText text={row.summary ?? "—"} />
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
       )}
       {collapseSources && (notes.length > 0 || sourceImageUrl) ? (
         <details className="group/source border-t pt-3">

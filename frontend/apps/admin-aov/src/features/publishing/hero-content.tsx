@@ -188,10 +188,19 @@ function HeroContentBody({
         {SECTIONS.filter(([key]) => visibleSections.includes(key)).map(([section, , label]) => {
           const Icon = icons[section]
           const data = content[section]
+          const editAction = (
+            <IconAction
+              label={editable ? `Chỉnh sửa ${label}` : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`}
+              icon={Pencil}
+              disabled={!editable || busy}
+              onClick={() => onEdit(section)}
+            />
+          )
           let body: ReactNode
           if (section === "SKILLS")
             body = (
               <HeroSkillsView
+                action={editAction}
                 onTranslate={onTranslate}
                 skills={content.SKILLS?.skills ?? []}
                 locale={locale}
@@ -277,23 +286,21 @@ function HeroContentBody({
             <section
               key={section}
               className={cn(
-                "min-w-0 scroll-mt-4 rounded-2xl border bg-card p-4 sm:p-5",
+                "min-w-0 scroll-mt-4",
+                section !== "SKILLS" && "rounded-2xl border bg-card p-4 sm:p-5",
                 section === "COMBAT_STATS" && "@min-[900px]:col-span-2",
               )}
               id={`hero-${section}`}
             >
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h3 className="flex items-center gap-2 font-semibold">
-                  <Icon className="size-4 text-muted-foreground" />
-                  {section === "PROFILE" ? "Cốt truyện & thông tin" : label}
-                </h3>
-                <IconAction
-                  label={editable ? `Chỉnh sửa ${label}` : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`}
-                  icon={Pencil}
-                  disabled={!editable || busy}
-                  onClick={() => onEdit(section)}
-                />
-              </div>
+              {section !== "SKILLS" && (
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h3 className="flex items-center gap-2 font-semibold">
+                    <Icon className="size-4 text-muted-foreground" />
+                    {section === "PROFILE" ? "Cốt truyện & thông tin" : label}
+                  </h3>
+                  {editAction}
+                </div>
+              )}
               {body}
               <HeroContentSources sources={data?.sources ?? []} />
             </section>

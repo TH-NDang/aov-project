@@ -1,4 +1,6 @@
 import { HeroSkillsEditor } from "./hero-skills-editor"
+import { AdminReferenceProvider } from "../terminology/catalog"
+import type { HeroSkillsLayout } from "./hero-skills-view"
 import { HeroProfileEditor, type ProfileEditorPart } from "./hero-profile-editor"
 import { HeroStatsEditor } from "./hero-stats-editor"
 import type { StatDefault } from "./combat-attributes"
@@ -8,8 +10,9 @@ import { AssetPicker } from "./asset-picker"
 import { SkinBadgePicker } from "../media/skin-badge-picker"
 import { retainImageOptions } from "./image-options"
 import { heroRatingScale } from "./hero-rating-scale"
-import { Field, SourceFields } from "./fields"
+import { Field, SectionSources } from "./fields"
 import {
+  SECTIONS,
   type Content,
   type Section,
   type Profile,
@@ -52,6 +55,9 @@ export function SectionEditor({
   onChange,
   resource,
   initialSkillKey,
+  skillLayout,
+  onSkillLayoutChange,
+  onSkillChange,
   heroId,
   onBusyChange,
   profilePart = "information",
@@ -66,6 +72,9 @@ export function SectionEditor({
   onChange: (value: NonNullable<Content[Section]>) => void
   resource?: Hero
   initialSkillKey?: string
+  skillLayout?: HeroSkillsLayout
+  onSkillLayoutChange?: (layout: HeroSkillsLayout) => void
+  onSkillChange?: (skillKey: string) => void
   heroId?: string
   onBusyChange?: (busy: boolean) => void
   profilePart?: ProfileEditorPart
@@ -128,15 +137,20 @@ export function SectionEditor({
     )
   } else if (section === "SKILLS") {
     editor = (
-      <HeroSkillsEditor
-        value={data as Skills}
-        locale={locale}
-        onChange={onChange}
-        resource={resource}
-        initialSkillKey={initialSkillKey}
-        heroId={heroId}
-        onBusyChange={onBusyChange}
-      />
+      <AdminReferenceProvider locale={locale}>
+        <HeroSkillsEditor
+          value={data as Skills}
+          locale={locale}
+          onChange={onChange}
+          resource={resource}
+          initialSkillKey={initialSkillKey}
+          layout={skillLayout}
+          onLayoutChange={onSkillLayoutChange}
+          onSkillChange={onSkillChange}
+          heroId={heroId}
+          onBusyChange={onBusyChange}
+        />
+      </AdminReferenceProvider>
     )
   } else if (section === "SKINS") {
     const p = data as Skins
@@ -323,8 +337,12 @@ export function SectionEditor({
   return (
     <div className="space-y-4">
       {editor}
-      {!(section === "PROFILE" && profilePart === "lore") && (
-        <SourceFields sources={data.sources} onChange={(sources) => onChange({ ...data, sources })} />
+      {section !== "SKILLS" && !(section === "PROFILE" && profilePart === "lore") && (
+        <SectionSources
+          sectionLabel={SECTIONS.find(([key]) => key === section)![2]}
+          sources={data.sources}
+          onChange={(sources) => onChange({ ...data, sources })}
+        />
       )}
     </div>
   )

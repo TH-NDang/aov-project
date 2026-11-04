@@ -1,7 +1,7 @@
 import { catalogScopePatch } from "./catalog-scope"
 import { resolveHeroCatalogScope } from "./hero-catalog-scope"
 import { HeroTimeline } from "./hero-timeline"
-import { useEffect, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react"
+import { useEffect, useId, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react"
 import { revisionSkillReferences } from "./revision-skill-references"
 import { useHeroSkillImages } from "./skill-artwork"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
@@ -20,7 +20,6 @@ import {
   X,
 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Badge } from "@aov/ui/components/badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,7 +58,7 @@ import {
   type TranslationTarget,
 } from "./hero-translation-model"
 import { TranslationEditor, type TranslatableSection } from "./translation-editor"
-import { Box, Field, control } from "./fields"
+import { Box, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
 import { statPatchContext } from "./combat-attributes"
@@ -116,10 +115,12 @@ const CAUSES: Record<Cause, string> = {
 const STATES = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
 
 function PublishingFrame({
+  detail,
+  footer,
   revision,
   heroContent,
   ...props
-}: ComponentProps<typeof Page> & { revision?: Revision; heroContent?: Content }) {
+}: ComponentProps<typeof Page> & { detail: boolean; footer?: ReactNode; revision?: Revision; heroContent?: Content }) {
   const images = useHeroSkillImages(
     heroContent?.SKILLS?.skills.some((skill) => !skill.iconAssetId) ? revision?.heroId : undefined,
   )
@@ -129,7 +130,16 @@ function PublishingFrame({
   )
   return (
     <ReferenceRulesetProvider rulesetId={revision?.rulesetId} skills={skills}>
-      <Page {...props} />
+      {detail ? (
+        <div className="@container flex h-full min-h-0 min-w-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+            <Page {...props} />
+          </div>
+          {footer}
+        </div>
+      ) : (
+        <Page {...props} />
+      )}
     </ReferenceRulesetProvider>
   )
 }
@@ -251,6 +261,7 @@ export function PublishingWorkspace({
     variantId: heroLocationId(urlParams.get("patch")),
   }
   const editorRef = useRef<HTMLDivElement>(null)
+  const sectionFormId = useId()
   const heroHeadingRef = useRef<HTMLHeadingElement>(null)
   const overview = usePublicationOverview()
   const filter = !heroId && overview.data ? resolveHeroCatalogScope(overview.data, requestedFilter) : requestedFilter
@@ -341,6 +352,14 @@ export function PublishingWorkspace({
   const locale = translating ? targetLocale : location.readLocale
   const focusedProfile = !translating && section === "PROFILE"
   const editorLocale = locale
+  const editorDisabled =
+    !writable ||
+    busy ||
+    !localDraft.ready ||
+    localDraft.invalid ||
+    localDraft.conflict ||
+    read.isFetching ||
+    (translating && sourceLocale === locale)
   const sectionValue = focusedProfile
     ? replaceProfilePart(
         read.data?.content.PROFILE ?? null,
@@ -465,6 +484,9 @@ export function PublishingWorkspace({
     setEditing(false)
   }
   function cancelSection() {
+    setEditing(false)
+    setError("")
+    if (!sectionDirty && !note) return
     const notes = { ...localDraft.value.notes }
     delete notes[noteKey]
     localDraft.update({
@@ -481,8 +503,6 @@ export function PublishingWorkspace({
       },
       notes,
     })
-    setEditing(false)
-    setError("")
   }
   async function refresh() {
     if (!canLeave()) return
@@ -506,6 +526,46 @@ export function PublishingWorkspace({
 
   return (
     <PublishingFrame
+      detail={!!heroId}
+      footer={
+        writable &&
+        (editing || translating) && (
+          <fieldset
+            aria-label="Lưu thay đổi"
+            disabled={editorDisabled}
+            className="m-0 min-w-0 shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)]"
+          >
+            <div className="mx-auto grid w-full max-w-6xl gap-2 px-4 py-2 @min-[650px]:grid-cols-[minmax(0,1fr)_auto] @min-[650px]:items-center md:px-6">
+              <label className="min-w-0">
+                <span className="sr-only">Ghi chú thay đổi</span>
+                <input
+                  form={sectionFormId}
+                  className="h-9 w-full rounded-md border bg-background px-3 text-sm disabled:bg-muted/40 disabled:text-muted-foreground"
+                  placeholder="Ghi chú thay đổi (tùy chọn)"
+                  value={note}
+                  disabled={!sectionDirty}
+                  onChange={(event) => setNote(event.target.value)}
+                />
+              </label>
+              <div className="flex min-w-0 items-center justify-end gap-2">
+                <span className="type-meta mr-auto truncate @min-[650px]:sr-only">
+                  {sectionDirty ? "Có thay đổi chưa lưu" : "Chưa có thay đổi"}
+                </span>
+                <Button type="button" variant="outline" onClick={cancelSection}>
+                  <X className="size-4" />
+                  <span>
+                    Hủy<span className="sr-only"> chỉnh sửa phần này</span>
+                  </span>
+                </Button>
+                <Button type="submit" form={sectionFormId} disabled={!sectionDirty}>
+                  <Save className="size-4" />
+                  {busy ? "Đang lưu…" : "Lưu phần này"}
+                </Button>
+              </div>
+            </div>
+          </fieldset>
+        )
+      }
       revision={revision}
       heroContent={view === "overview" || translating ? preview?.content : undefined}
       className={`@container min-w-0 ${heroId ? "mx-auto w-full max-w-6xl" : ""}`}
@@ -655,7 +715,7 @@ export function PublishingWorkspace({
                     content={preview.content}
                     locale={location.readLocale}
                     revisionNo={revision.revisionNo}
-                    disabled={busy || editing}
+                    disabled={busy || (editing && section !== "SKILLS")}
                     onChange={setContentLocale}
                   />
                 )}
@@ -855,15 +915,6 @@ export function PublishingWorkspace({
                     role="region"
                     aria-label="Chỉnh sửa nội dung"
                   >
-                    {!translating && (
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <Button variant="ghost" disabled={busy} onClick={() => setEditing(false)}>
-                          <ArrowLeft className="size-4" />
-                          Xem hồ sơ
-                        </Button>
-                        <Badge variant="outline">Chỉnh sửa bản nháp</Badge>
-                      </div>
-                    )}
                     {translating && (
                       <fieldset
                         disabled={busy}
@@ -919,10 +970,12 @@ export function PublishingWorkspace({
                         )}
                       </div>
                     )}
-                    <Box title={editorTitle}>
+                    <Box title={editorTitle} unframed={section === "SKILLS" && !translating}>
                       <form
+                        id={sectionFormId}
                         onSubmit={(event) => {
                           event.preventDefault()
+                          if (!sectionDirty || editorDisabled) return
                           void run(async () => {
                             const value = sectionValue ?? emptySection(section, editorLocale)
                             const next = await api.save(revision, section, value, note)
@@ -946,18 +999,7 @@ export function PublishingWorkspace({
                           }, "Đã lưu nội dung vào bản nháp.")
                         }}
                       >
-                        <fieldset
-                          disabled={
-                            !writable ||
-                            busy ||
-                            !localDraft.ready ||
-                            localDraft.invalid ||
-                            localDraft.conflict ||
-                            read.isFetching ||
-                            (translating && sourceLocale === locale)
-                          }
-                          className="space-y-5"
-                        >
+                        <fieldset disabled={editorDisabled} className="min-w-0 space-y-5">
                           {translating ? (
                             <TranslationEditor
                               section={section as TranslatableSection}
@@ -991,27 +1033,13 @@ export function PublishingWorkspace({
                               resource={resource}
                               heroId={heroId}
                               initialSkillKey={heroLocationId(urlParams.get("skill"))}
+                              skillLayout={urlParams.get("skillLayout") === "flat" ? "flat" : "focus"}
+                              onSkillLayoutChange={(layout) =>
+                                updateLocation({ skillLayout: layout === "flat" ? "flat" : null })
+                              }
+                              onSkillChange={(skill) => updateLocation({ skill })}
                               onBusyChange={setBusy}
                             />
-                          )}
-                          <Field label="Ghi chú thay đổi" value={note} onChange={setNote} />
-                          {writable && (
-                            <div className="sticky bottom-0 z-10 -mx-4 flex flex-wrap items-center justify-between gap-3 border-t bg-card/95 px-4 py-3 backdrop-blur-sm md:-mx-6 md:px-6">
-                              <p className="text-xs text-muted-foreground">
-                                {sectionDirty ? "Có thay đổi chưa lưu" : "Chưa có thay đổi trong phần này"}
-                              </p>
-                              <div className="flex gap-2">
-                                <Button type="button" variant="outline" onClick={cancelSection}>
-                                  <X className="size-4" />
-                                  <span className="hidden sm:inline">Hủy chỉnh sửa phần này</span>
-                                  <span className="sm:hidden">Hủy</span>
-                                </Button>
-                                <Button disabled={!sectionDirty}>
-                                  <Save className="size-4" />
-                                  {busy ? "Đang lưu…" : "Lưu phần này"}
-                                </Button>
-                              </div>
-                            </div>
                           )}
                         </fieldset>
                       </form>

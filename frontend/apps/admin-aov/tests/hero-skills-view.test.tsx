@@ -459,7 +459,7 @@ test("five-point rating edits preserve stored scale, fractional values, zero and
 })
 
 test("stat choices and calendar inputs preserve unknown data, zero and missing values", async () => {
-  await withView(async ({ dom, document, render }) => {
+  await withView(async ({ dom, document, render, click }) => {
     const { SectionEditor } = await import("../src/features/publishing/section-editor")
     let value = structuredClone(fixtureContent.COMBAT_STATS!)
     value.values.push({ statKey: "CUSTOM_STAT", baseValue: 17, growthPerLevel: null, unit: "custom-unit" })
@@ -514,14 +514,23 @@ test("stat choices and calendar inputs preserve unknown data, zero and missing v
       growthPerLevel: null,
       unit: "custom-unit",
     })
+    const openSources = () => click(document.querySelector<HTMLButtonElement>('[aria-label="Nguồn tham khảo (1)"]')!)
+    const applySources = async () => {
+      await click(document.querySelector<HTMLButtonElement>('[role="dialog"] button[type="submit"]')!)
+      await mount()
+    }
+    await openSources()
     assert.equal(
       value.sources[0].observedAt,
       "2026-11-01T02:43:10.386Z",
       "Opening the calendar must not rewrite source precision",
     )
     await type(document.querySelector<HTMLInputElement>('input[type="datetime-local"]')!, "2026-11-04T10:15:00")
+    await applySources()
     assert.equal(value.sources[0].observedAt, new Date("2026-11-04T10:15:00").toISOString())
+    await openSources()
     await type(document.querySelector<HTMLInputElement>('input[type="datetime-local"]')!, "")
+    await applySources()
     assert.equal(value.sources[0].observedAt, null)
   })
 })
@@ -635,6 +644,7 @@ async function createView() {
     document: dom.window.document,
     navigator: dom.window.navigator,
     HTMLElement: dom.window.HTMLElement,
+    HTMLInputElement: dom.window.HTMLInputElement,
     Element: dom.window.Element,
     Node: dom.window.Node,
     NodeFilter: dom.window.NodeFilter,

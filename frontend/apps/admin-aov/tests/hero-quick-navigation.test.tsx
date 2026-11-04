@@ -185,10 +185,7 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
         JSON.stringify(slot.record?.value ?? null).includes("Airi chưa lưu"),
       ),
     )
-    const leaveEditor = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
-      (button) => button.textContent?.trim() === "Xem hồ sơ",
-    )!
-    await click(leaveEditor)
+    await click(document.querySelector<HTMLButtonElement>('[role="tab"][aria-controls="hero-content-skills"]')!)
     await waitFor(() => document.body.textContent?.includes("Airi chưa lưu") === true)
     const firstUrl = router.state.location.pathname + router.state.location.search
     await switchTo("Tulen")
@@ -228,6 +225,8 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     assert.equal(new URLSearchParams(router.state.location.search).get("hero"), null)
     await click(visibleButton("Chỉnh sửa Kỹ năng"))
     // New uploads must name their owner first.
+    const quickSwitcher = visibleButton("Chuyển tướng nhanh")
+    await click(visibleButton("Chỉnh sửa ảnh kỹ năng"))
     const ownerField = [...document.querySelectorAll("label")]
       .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
       .querySelector("input")!
@@ -246,15 +245,17 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
       })
       upload.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
     })
-    await waitFor(() => !!finishUpload && visibleButton("Chuyển tướng nhanh")?.disabled === true)
+    await waitFor(() => !!finishUpload && quickSwitcher.disabled)
     const uploadUrl = router.state.location.pathname + router.state.location.search
-    await click(visibleButton("Chuyển tướng nhanh"))
+    await click(quickSwitcher)
     assert.equal(router.state.location.pathname + router.state.location.search, uploadUrl)
     assert.equal(visibleButton("Chuyển sang Airi"), undefined)
     await act(async () => {
       finishUpload!(new Response(null, { status: 200 }))
     })
-    await waitFor(() => visibleButton("Chuyển tướng nhanh")?.disabled === false)
+    await waitFor(() => !quickSwitcher.disabled)
+    await click(visibleButton("Đóng chỉnh sửa ảnh"))
+    assert.ok(visibleButton("Chuyển tướng nhanh"))
     assert.equal(fixture.writes.length, 0, "Switching heroes must not publish or save unfinished content")
   } finally {
     finishUpload?.(new Response(null, { status: 200 }))

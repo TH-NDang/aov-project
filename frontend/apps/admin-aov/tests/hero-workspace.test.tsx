@@ -158,7 +158,13 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await click(mainTab("overview"))
     await select(readLocale(), "vi-VN")
     await click(document.querySelector<HTMLButtonElement>('button[aria-label="Chỉnh sửa Thông tin"]')!)
-    await click(button("Xem hồ sơ"))
+    assert.doesNotMatch(
+      document.querySelector('[aria-label="Chỉnh sửa nội dung"]')!.textContent!,
+      /Xem hồ sơ|Chỉnh sửa bản nháp/,
+    )
+    await click(button("Hủy chỉnh sửa phần này"))
+    assert.equal(document.querySelector('[aria-label="Chỉnh sửa nội dung"]'), null)
+    assert.equal(fixture.writes.length, 0)
     await click(mainTab("translations"))
     assert.equal(translationLocale().value, "en-US")
     await select(translationLocale(), "th-TH")
@@ -248,7 +254,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await click(document.querySelector<HTMLButtonElement>('button[aria-label="Chỉnh sửa Thông tin"]')!)
     await type(input("Tên tướng"), "Pending profile name")
     await type(input("Ghi chú thay đổi"), "Pending information note")
-    await click(button("Xem hồ sơ"))
+    await click(mainTab("overview"))
     await click(button("Chỉnh sửa cốt truyện"))
     const loreEditor = document.querySelector<HTMLElement>('[contenteditable="true"]')!
     assert.ok(loreEditor)
@@ -258,11 +264,14 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
       /Tên tướng|Danh hiệu|Vai trò|Thêm bản dịch/,
     )
     assert.equal(input("Ghi chú thay đổi").value, "")
+    assert.equal(input("Ghi chú thay đổi").disabled, true)
+    assert.ok(input("Ghi chú thay đổi").closest('[aria-label="Lưu thay đổi"]')?.contains(button("Lưu phần này")))
     await act(async () => {
       loreEditor.textContent = "A separately saved story."
       loreEditor.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
     await type(input("Ghi chú thay đổi"), "Story note")
+    assert.equal(input("Ghi chú thay đổi").disabled, false)
     await click(button("Lưu phần này"))
     await waitFor(() => fixture.writes.length === 3 && !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
     assert.equal(

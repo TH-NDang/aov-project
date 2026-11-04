@@ -1,5 +1,5 @@
 import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
-import { ArrowLeftRight, ChevronDown, Image, Layers3, List, PanelLeft } from "lucide-react"
+import { ArrowLeftRight, ChevronDown, Image, Layers3, List, PanelLeft, Pencil } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
 import { AdminEntityText } from "../terminology/catalog"
@@ -23,6 +23,9 @@ export function HeroSkillsView({
   layout: requestedLayout,
   onLayoutChange,
   onTranslate,
+  action,
+  activeEditor,
+  locked = false,
 }: {
   skills: Skill[]
   locale: string
@@ -32,6 +35,9 @@ export function HeroSkillsView({
   layout?: HeroSkillsLayout
   onLayoutChange?: (layout: HeroSkillsLayout) => void
   onTranslate?: (target: TranslationTarget) => void
+  action?: ReactNode
+  activeEditor?: ReactNode
+  locked?: boolean
 }) {
   const [localKey, setLocalKey] = useState("")
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -79,40 +85,44 @@ export function HeroSkillsView({
   const unused = (images.data ?? []).filter((image) => !assigned.has(image.id) && !explicitAssets.has(image.assetId))
   return (
     <div className="@container/skills min-w-0 space-y-5">
-      {current && (
+      {(current || action) && (
         <div className="flex flex-wrap items-center gap-3">
-          <div
-            role="group"
-            aria-label="Cách hiển thị kỹ năng"
-            className="flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1"
-          >
-            {(
-              [
-                ["focus", PanelLeft, "Tập trung"],
-                ["flat", List, "Dạng phẳng"],
-              ] as const
-            ).map(([mode, Icon, label]) => (
-              <button
-                key={mode}
-                type="button"
-                aria-pressed={layout === mode}
-                className={cn(
-                  "flex min-h-9 items-center gap-2 rounded-md px-3 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  layout === mode
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                onClick={() => changeLayout(mode)}
-              >
-                <Icon className="size-3.5" />
-                {label}
-              </button>
-            ))}
-          </div>
+          {current && (
+            <div
+              role="group"
+              aria-label="Cách hiển thị kỹ năng"
+              className="flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1"
+            >
+              {(
+                [
+                  ["focus", PanelLeft, "Tập trung"],
+                  ["flat", List, "Dạng phẳng"],
+                ] as const
+              ).map(([mode, Icon, label]) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={layout === mode}
+                  disabled={locked}
+                  className={cn(
+                    "flex min-h-9 items-center gap-2 rounded-md px-3 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    layout === mode
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                  onClick={() => changeLayout(mode)}
+                >
+                  <Icon className="size-3.5" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
           <ImageCreditSummary
             label="ảnh kỹ năng"
             assetIds={skills.map((skill) => skill.iconAssetId || skillImageMatch(skill, images.data ?? [])?.assetId)}
           />
+          {action && <div className="ml-auto">{action}</div>}
         </div>
       )}
       {current && layout === "focus" ? (
@@ -142,6 +152,7 @@ export function HeroSkillsView({
                   type="button"
                   aria-pressed={active}
                   aria-controls={panelId}
+                  disabled={locked}
                   aria-label={`${skillLabel(skill)} · ${name}${multiple ? ` · ${group.skills.length} biến thể` : skill.formKey ? ` · ${skill.formKey}` : variant ? ` · ${variant}` : ""}`}
                   className={cn(
                     "flex min-w-0 flex-col items-center gap-2 rounded-xl border p-2.5 text-center transition-colors outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring @min-[760px]/skills:basis-auto @min-[760px]/skills:flex-none @min-[760px]/skills:flex-row @min-[760px]/skills:p-3 @min-[760px]/skills:text-left",
@@ -182,13 +193,14 @@ export function HeroSkillsView({
             id={panelId}
             role="region"
             aria-label="Chi tiết kỹ năng"
-            aria-live="polite"
+            aria-live={activeEditor ? "off" : "polite"}
             aria-atomic="false"
             className="min-w-0 space-y-5 @min-[760px]/skills:border-l @min-[760px]/skills:pl-6"
           >
             <SkillDetail
               onTranslate={onTranslate}
-              key={currentGroup?.key ?? current.skillKey}
+              key={activeEditor ? "editing" : (currentGroup?.key ?? current.skillKey)}
+              editor={activeEditor}
               skill={current}
               locale={locale}
               heroId={heroId}
@@ -206,6 +218,7 @@ export function HeroSkillsView({
                           key={skill.skillKey}
                           type="button"
                           aria-pressed={active}
+                          disabled={locked}
                           aria-label={`${label} · ${name}`}
                           className={cn(
                             "flex min-h-11 min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -227,16 +240,16 @@ export function HeroSkillsView({
           </div>
         </div>
       ) : current ? (
-        <div role="region" aria-label="Tất cả kỹ năng" className="space-y-5">
-          {groups.map((group) => (
+        <div role="region" aria-label="Tất cả kỹ năng" className="divide-y">
+          {groups.map((group, groupIndex) => (
             <section
-              key={group.key}
+              key={activeEditor ? groupIndex : group.key}
               aria-label={
                 group.skills.length > 1
                   ? `Nhóm ${skillLabel(group.skills[0]!)} · ${group.skills.length} biến thể`
                   : `Kỹ năng ${selectSkillTranslation(group.skills[0]!, locale)?.name || skillLabel(group.skills[0]!)}`
               }
-              className="min-w-0 rounded-2xl border bg-card p-4 @min-[600px]/skills:p-5"
+              className="min-w-0 py-5 first:pt-0 last:pb-0"
             >
               {group.skills.length > 1 && (
                 <header className="mb-5 flex items-center gap-3 border-b pb-4">
@@ -251,19 +264,30 @@ export function HeroSkillsView({
                 </header>
               )}
               <div className="divide-y">
-                {group.skills.map((skill) => (
+                {group.skills.map((skill, variantIndex) => (
                   <article
-                    key={skill.skillKey}
+                    key={activeEditor ? variantIndex : skill.skillKey}
                     aria-label={`${selectSkillTranslation(skill, locale)?.name || skillLabel(skill)}${skill.formKey ? ` · ${skill.formKey}` : skillVariantLabel(skill, skills) ? ` · ${skillVariantLabel(skill, skills)}` : ""}`}
                     className="space-y-5 py-5 first:pt-0 last:pb-0"
                   >
                     <SkillDetail
+                      editor={skill === current ? activeEditor : undefined}
                       onTranslate={onTranslate}
                       skill={skill}
                       locale={locale}
                       heroId={heroId}
                       variant={skillVariantLabel(skill, skills)}
                     />
+                    {activeEditor && skill !== current && (
+                      <button
+                        type="button"
+                        disabled={locked}
+                        className="inline-flex items-center gap-2 text-sm font-medium"
+                        onClick={() => choose(skill.skillKey)}
+                      >
+                        <Pencil className="size-4" /> Chỉnh sửa chiêu này
+                      </button>
+                    )}
                   </article>
                 ))}
               </div>
@@ -317,6 +341,7 @@ function SkillDetail({
   heroId,
   variant,
   states,
+  editor,
   onTranslate,
 }: {
   skill: Skill
@@ -324,9 +349,17 @@ function SkillDetail({
   heroId?: string
   variant?: string
   states?: ReactNode
+  editor?: ReactNode
   onTranslate?: (target: TranslationTarget) => void
 }) {
   const text = translatedText(skill.translations, locale, sectionTextFields.SKILLS)
+  if (editor)
+    return (
+      <>
+        {states}
+        {editor}
+      </>
+    )
   return (
     <>
       <header className="flex items-center gap-3">

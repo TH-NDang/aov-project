@@ -91,7 +91,19 @@ test("focused skill editing preserves forms, effects and translations while addi
       { locale: "en-US", name: `Skill ${formKey}`, description: `Original ${formKey}` },
     ],
     effects: [
-      { effectType: "SOURCE_SNAPSHOT", metadata: { cooldown: { seconds: 0 }, reviewFlags: [{ note: "Verify" }] } },
+      {
+        effectType: "SOURCE_SNAPSHOT",
+        metadata: {
+          cooldown: { seconds: 0 },
+          reviewFlags: [{ note: "Verify" }],
+          tags: ["<color=#A94C5D>Vật lý</color>"],
+          levelTable: {
+            level_axis: "skill_level",
+            column_labels: ["Lv1", "Lv2"],
+            rows: [{ label: "ST gốc", display_values: ["100", "200"], review_required: true }],
+          },
+        },
+      },
       { effectType: "DAMAGE", metadata: { values: [100, 200], form: formKey } },
     ],
   })
@@ -105,15 +117,18 @@ test("focused skill editing preserves forms, effects and translations while addi
   let current = original
   let saved: Skills | undefined
   let setCurrent: React.Dispatch<React.SetStateAction<Skills>>
+  let changeLanguage: React.Dispatch<React.SetStateAction<string>>
   function Harness() {
     const [value, setValue] = React.useState(original)
+    const [locale, setLocale] = React.useState("vi-VN")
+    changeLanguage = setLocale
     current = value
     setCurrent = setValue
     return (
       <SectionEditor
         section="SKILLS"
         value={value}
-        locale="vi-VN"
+        locale={locale}
         initialSkillKey="skill-3"
         onBusyChange={reportBusy}
         onChange={(next) => setValue(next as Skills)}
@@ -124,6 +139,7 @@ test("focused skill editing preserves forms, effects and translations while addi
   const root = createRoot(dom.window.document.getElementById("root")!)
   const document = dom.window.document
   const editor = () => document.querySelector<HTMLElement>('[aria-label="Kỹ năng đang chỉnh sửa"]')!
+  const settings = () => editor().querySelector<HTMLButtonElement>('[aria-label="Thiết lập kỹ năng"]')!
   const nameInput = () =>
     [...editor().querySelectorAll("label")]
       .find((label) => label.textContent === "Tên chiêu")!
@@ -164,19 +180,29 @@ test("focused skill editing preserves forms, effects and translations while addi
       ),
     )
     assert.equal(editor().querySelectorAll('[data-slot="entity-reference-input"]').length, 1)
-    assert.equal(document.querySelectorAll('[aria-label="Chọn kỹ năng để sửa"] [aria-pressed="true"]').length, 1)
+    assert.equal(document.querySelectorAll('[aria-label="Chọn kỹ năng"] [aria-pressed="true"]').length, 1)
     assert.equal(
-      document.querySelector('[aria-label="Chọn kỹ năng để sửa"] [aria-pressed="true"]')?.getAttribute("aria-label"),
-      "Chọn sửa kỹ năng 2: Kỹ năng cùng tên",
+      document.querySelector('[aria-label="Chọn kỹ năng"] [aria-pressed="true"]')?.getAttribute("aria-label"),
+      "Chủ động · Kỹ năng cùng tên · fox",
     )
-    assert.equal(
-      [...editor().querySelectorAll("summary")]
-        .find((element) => element.textContent?.trim() === "Thiết lập kỹ năng")!
-        .closest("details")!.open,
-      false,
-      "Identity fields are secondary",
-    )
-    const rail = document.querySelector<HTMLElement>('[aria-label="Chọn kỹ năng để sửa"]')!
+    assert.equal(settings().getAttribute("aria-expanded"), "false")
+    const sources = document.querySelector<HTMLButtonElement>('[aria-label="Nguồn tham khảo (1)"]')!
+    await act(async () => sources.click())
+    const sourceLabel = () =>
+      [...document.querySelectorAll('[role="dialog"] label')]
+        .find((label) => label.textContent === "Nhãn nguồn")!
+        .querySelector("input")!
+    await type(sourceLabel(), "Temporary source")
+    await act(async () => button("Hủy").click())
+    assert.deepEqual(current.sources, original.sources)
+    await act(async () => sources.click())
+    assert.equal(sourceLabel().value, original.sources[0].label)
+    await type(sourceLabel(), "Updated source")
+    await act(async () => button("Áp dụng").click())
+    assert.equal(current.sources[0].label, "Updated source")
+    assert.equal(saved, undefined, "Applying a sheet does not submit the surrounding section form")
+    const rail = document.querySelector<HTMLElement>('[aria-label="Chọn kỹ năng"]')!
+    Object.defineProperties(rail, { clientWidth: { value: 200 }, scrollWidth: { value: 360 } })
     rail.getBoundingClientRect = () => new dom.window.DOMRect(0, 0, 200, 100)
     const choices = [...rail.querySelectorAll<HTMLButtonElement>("button")]
     choices.forEach((element, position) => {
@@ -184,18 +210,15 @@ test("focused skill editing preserves forms, effects and translations while addi
     })
     await act(async () => choices[2].click())
     assert.equal(rail.scrollLeft, 152, "Selecting an offscreen form scrolls only the icon rail")
-    assert.equal(editor().querySelector("h3")?.textContent, "Kỹ năng cùng tên")
+    assert.equal(nameInput().value, "Kỹ năng cùng tên")
     await act(async () => choices[1].click())
     assert.equal(rail.scrollLeft, 120)
     await type(nameInput(), "Tên riêng dạng cáo")
     assert.equal(current.skills[1].translations[0].name, "Tên riêng dạng cáo")
     assert.deepEqual(current.skills[0], original.skills[0])
     assert.deepEqual(current.skills[2], original.skills[2])
-    const language = document.querySelector<HTMLSelectElement>('[aria-label="Ngôn ngữ chiêu"]')!
-    await act(async () => {
-      language.value = "en-US"
-      language.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-    })
+    assert.equal(document.querySelector('[aria-label="Ngôn ngữ chiêu"]'), null)
+    await act(async () => changeLanguage("en-US"))
     assert.equal(nameInput().value, "Skill fox")
     await type(nameInput(), "Fox skill")
     assert.equal(current.skills[1].translations[0].name, "Tên riêng dạng cáo")
@@ -203,18 +226,46 @@ test("focused skill editing preserves forms, effects and translations while addi
     const description = referenceInput(editor())
     await act(async () => fillReferenceInput(description, "Updated English description"))
     assert.equal(current.skills[1].translations[1].description, "Updated English description")
-    assert.equal(button("Tải ảnh mới").disabled, true, "Uploading still requires image credit")
+    assert.match(
+      editor().querySelector('[aria-label="Kết quả hiển thị · Mô tả"]')!.textContent!,
+      /Updated English description/,
+    )
+    assert.ok(
+      ![...editor().querySelectorAll("summary")].some((summary) => summary.textContent?.includes("Xem trước nội dung")),
+    )
+    await act(async () => button("Dạng phẳng").click())
+    assert.equal(document.querySelectorAll('[aria-label="Kỹ năng đang chỉnh sửa"]').length, 1)
+    assert.equal(nameInput().value, "Fox skill")
+    await act(async () => button("Tập trung").click())
+    await act(async () => button("Sửa bảng").click())
+    await type(editor().querySelector<HTMLInputElement>('[aria-label="ST gốc · Cấp 2"]')!, "250")
+    await act(async () => button("Xem bảng").click())
+    assert.match(editor().querySelector("table")!.textContent!, /250/)
+    await act(async () => button("Thêm nhãn").click())
+    const tagInput = editor().querySelectorAll<HTMLDivElement>('[data-slot="entity-reference-input"]')[1]
+    await act(async () => fillReferenceInput(tagInput, "Đẩy lùi"))
+    assert.match(editor().querySelector('[aria-label="Kết quả hiển thị · Nội dung nhãn"]')!.textContent!, /Đẩy lùi/)
+    await act(async () => button("Xong").click())
+    assert.equal(document.querySelector('input[aria-label="Tải ảnh mới"]'), null, "The image picker opens on demand")
     await act(async () => button("Lưu phần này").click())
     assert.equal(saved?.skills[1].translations[1].description, "Updated English description")
-    await act(async () =>
-      [...editor().querySelectorAll("summary")]
-        .find((element) => element.textContent?.trim() === "Ảnh kỹ năng")!
-        .click(),
-    )
-    assert.ok(editor().querySelector('input[aria-label="Tải ảnh mới"]'), "Selected skill supports direct upload")
+    const expectedEffects = structuredClone(original.skills[1].effects)
+    expectedEffects[0].metadata.tags = ["<color=#A94C5D>Vật lý</color>", "Đẩy lùi"]
+    expectedEffects[0].metadata.levelTable = {
+      level_axis: "skill_level",
+      column_labels: ["Lv1", "Lv2"],
+      rows: [{ label: "ST gốc", display_values: ["100", "250"], review_required: true }],
+    }
+    assert.deepEqual(saved?.skills[1].effects, expectedEffects)
+    const imageTrigger = editor().querySelector<HTMLButtonElement>('[aria-label="Chỉnh sửa ảnh kỹ năng"]')!
+    await act(async () => imageTrigger.click())
+    const imageSheet = document.querySelector<HTMLElement>('[role="dialog"]')!
+    assert.match(imageSheet.textContent!, /Fox skill/)
+    assert.equal(button("Tải ảnh mới").disabled, true, "Uploading still requires image credit")
+    assert.ok(imageSheet.querySelector('input[aria-label="Tải ảnh mới"]'), "Selected skill supports direct upload")
     await act(async () => button("Chọn từ kho ảnh").click())
     await waitFor(() => !!document.querySelector('[aria-label="Chọn ảnh skill-icon"]'))
-    const downloadUrl = [...editor().querySelectorAll("label")]
+    const downloadUrl = [...imageSheet.querySelectorAll("label")]
       .find((label) => label.textContent?.trim() === "Link file ảnh để tải")!
       .querySelector("input")!
     await type(downloadUrl, "unfinished-url")
@@ -223,7 +274,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Chọn ảnh skill-icon"]')!.click())
     assert.equal(current.skills[1].iconAssetId, "skill-icon")
     // New uploads must name their owner first.
-    const ownerField = [...editor().querySelectorAll("label")]
+    const ownerField = [...imageSheet.querySelectorAll("label")]
       .find((label) => label.textContent?.trim() === "Chủ sở hữu / tên cần credit")!
       .querySelector("input")!
     await act(async () => {
@@ -233,7 +284,7 @@ test("focused skill editing preserves forms, effects and translations while addi
       )
       ownerField.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
-    const fileInput = editor().querySelector<HTMLInputElement>('input[aria-label="Tải ảnh mới"]')!
+    const fileInput = imageSheet.querySelector<HTMLInputElement>('input[aria-label="Tải ảnh mới"]')!
     await act(async () => {
       Object.defineProperty(fileInput, "files", {
         configurable: true,
@@ -243,23 +294,30 @@ test("focused skill editing preserves forms, effects and translations while addi
     })
     await waitFor(() => !!finishUpload)
     assert.equal(uploadStates.at(-1), true)
-    const firstSkill = document.querySelector<HTMLButtonElement>('[aria-label="Chọn kỹ năng để sửa"] button')!
+    const closeImage = imageSheet.querySelector<HTMLButtonElement>('[aria-label="Đóng chỉnh sửa ảnh"]')!
+    assert.equal(closeImage.disabled, true)
+    const firstSkill = document.querySelector<HTMLButtonElement>('[aria-label="Chọn kỹ năng"] button')!
     assert.equal(firstSkill.disabled, true, "Uploads must not attach to another skill after navigation")
     assert.equal(button("Thêm kỹ năng").disabled, true)
-    assert.equal(button("Bỏ kỹ năng").disabled, true)
+    assert.equal(settings().disabled, true)
     await act(async () => firstSkill.click())
     assert.equal(nameInput().value, "Fox skill")
     await act(async () => finishUpload!(new Response(null, { status: 200 })))
     await waitFor(() => current.skills[1].iconAssetId === "uploaded-skill")
     assert.equal(uploadStates.at(-1), false)
+    await act(async () => closeImage.click())
+    assert.equal(imageTrigger.getAttribute("aria-expanded"), "false")
     assert.equal(firstSkill.disabled, false)
     assert.equal(current.skills[0].iconAssetId, null)
-    assert.deepEqual(current.skills[1].effects, original.skills[1].effects)
-    assert.deepEqual(current.sources, original.sources)
-    const keyInput = [...editor().querySelectorAll("label")]
+    assert.deepEqual(current.skills[1].effects, expectedEffects)
+    assert.deepEqual(current.sources, [{ ...original.sources[0], label: "Updated source" }])
+    await act(async () => settings().click())
+    const keyInput = [...document.querySelectorAll('[role="dialog"] label')]
       .find((label) => label.textContent === "Khóa kỹ năng")!
       .querySelector<HTMLInputElement>("input")!
     await type(keyInput, "renamed-fox")
+    assert.equal(current.skills[1].skillKey, "skill-3")
+    await act(async () => button("Áp dụng").click())
     assert.equal(nameInput().value, "Fox skill", "Changing the stable key does not switch or remount the edited form")
     assert.equal(current.skills[1].skillKey, "renamed-fox")
     const beforeAdd = structuredClone(current)
@@ -270,11 +328,33 @@ test("focused skill editing preserves forms, effects and translations while addi
     assert.equal(current.skills[3].displayOrder, 3)
     assert.equal(nameInput().value, "")
     assert.deepEqual(current.skills.slice(0, 3), beforeAdd.skills)
+    await act(async () => settings().click())
     await act(async () => button("Bỏ kỹ năng").click())
     assert.equal(current.skills.length, 3)
     assert.deepEqual(current, beforeAdd)
+    const formulaSkill = skill("skill-3-1", null, 0)
+    formulaSkill.effects[0].metadata.levelTable = {
+      column_labels: ["Thông tin công bố"],
+      rows: [{ label: "Hồi chiêu", display_values: ["8 - 0.3/cấp chiêu"] }],
+    }
+    await act(async () => {
+      setCurrent!({ skills: [formulaSkill], sources: original.sources })
+      changeLanguage("th-TH")
+    })
+    assert.equal(nameInput().value, "", "A missing translation must not be prefilled with fallback text")
+    await act(async () => button("Sửa bảng").click())
+    const formula = editor().querySelector<HTMLInputElement>('[aria-label="Hồi chiêu · Tổng quan"]')!
+    await type(formula, "7")
+    await type(formula, "7 - 0.5/cấp chiêu")
+    assert.match(editor().querySelector("tbody")!.textContent!, /6,5/)
+    await act(async () => button("Lưu phần này").click())
+    assert.deepEqual(saved?.skills[0].translations, formulaSkill.translations)
+    assert.deepEqual(saved?.skills[0].effects[0].metadata.levelTable, {
+      column_labels: ["Thông tin công bố"],
+      rows: [{ label: "Hồi chiêu", display_values: ["7 - 0.5/cấp chiêu"] }],
+    })
     await act(async () => setCurrent!({ skills: [], sources: original.sources }))
-    assert.match(document.body.textContent!, /Chưa có kỹ năng/)
+    assert.match(document.body.textContent!, /Chưa có nội dung kỹ năng/)
     await act(async () => button("Thêm kỹ năng").click())
     assert.equal(current.skills[0].skillKey, "skill-1")
     assert.equal(current.skills[0].formKey, null, "No missing form is inferred")
