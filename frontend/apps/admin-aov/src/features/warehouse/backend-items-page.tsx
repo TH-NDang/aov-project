@@ -24,7 +24,7 @@ import { UnsavedBar } from "@/components/unsaved-bar"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { Field } from "../publishing/fields"
-import { warehouseApi, invalidateWarehouseCatalogs, useWarehouseCatalog, useWarehouseMetadata } from "./warehouse-api"
+import { warehouseApi, invalidateWarehouseCatalogs, useWarehouseMetadata } from "./warehouse-api"
 import { WarehouseDraftMenu, WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
 import { ItemSearch, itemSearchMatches } from "./item-search"
 import { warehouseName, type ItemContent, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
@@ -32,6 +32,7 @@ import { EnchantmentBranchEditor } from "./secondary-editor"
 import { recipeConnectionError } from "./item-graph"
 import { ItemShopGraph, ItemShopHelp } from "./item-shop-graph"
 import { ItemEditor } from "./item-editor"
+import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"
 
 type Entry = WarehouseEntry<ItemContent>
 type PendingItem = { entry: Entry; content: ItemContent; patchId?: string | null }
@@ -52,7 +53,6 @@ type DraftAction =
   | { type: "connect"; from: string; to: string }
   | { type: "move"; id: string; index: number; row: number; column: number }
 type DraftRequest = { id: string; action: DraftAction }
-const empty: Entry[] = []
 function initialItem(locale: string, name: string): ItemContent {
   return {
     iconAssetId: null,
@@ -70,7 +70,7 @@ function initialItem(locale: string, name: string): ItemContent {
 export function BackendItemsPage() {
   const context = useWarehouseContext()
   const scope = useWarehouseScope("items", context.rulesetId, context.locale)
-  const catalog = useWarehouseCatalog("items", context.rulesetId, context.locale)
+  const catalog = scope.catalog
   const displayedCatalog = scope.scoped ? scope.query : catalog
   const groups = useWarehouseMetadata("items")
   const client = useQueryClient()
@@ -89,6 +89,10 @@ export function BackendItemsPage() {
   const [jump, setJump] = useState<{ id: string; group: string | null } | null>(null)
   const [draftRequest, setDraftRequest] = useState<DraftRequest | null>(null)
   const [editingEntry, setEditingEntry] = useState<Entry | null>(null)
+  const [translationView, setTranslationView] = useState<{ entryId: string; locale: string; language: string } | null>(
+    null,
+  )
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
   const [autoDraft, setAutoDraft] = useState(false)
   const [rememberDraft, setRememberDraft] = useState(false)
   const [categoryEditor, setCategoryEditor] = useState<WarehouseMetadata | "new" | null>(null)
@@ -97,20 +101,14 @@ export function BackendItemsPage() {
   const pending = edits.size
   const rows = useMemo(
     () =>
-      (scope.scoped ? (scope.query.data ?? empty) : (catalog.data ?? empty)).map((base) => {
-        const item = { ...base, changeKinds: scope.badgeKinds(base.id) }
+      scope.entries.map((base) => {
+        const item = {
+          ...base,
+          changeKinds: base.revision.state === "DRAFT" && scope.showAll ? [] : scope.badgeKinds(base.id),
+        }
         return withPendingEdits(item, edits.get(item.id))
       }),
-    [
-      catalog.data,
-      edits,
-      scope.query.data,
-      scope.scoped,
-      scope.latest,
-      scope.showAll,
-      scope.baselineIds,
-      scope.reviewed,
-    ],
+    [scope.entries, edits, scope.scoped, scope.latest, scope.showAll, scope.baselineIds, scope.reviewed],
   )
   const matches = useMemo(
     () => (context.q ? new Set(itemSearchMatches(rows, context.q, context.locale).map((item) => item.id)) : null),
@@ -131,6 +129,13 @@ export function BackendItemsPage() {
     rows.find((item) => item.id === selectedId) ??
     catalog.data?.find((item) => item.id === selectedId)
   const selected = selectedBase && withPendingEdits(selectedBase, edits.get(selectedId))
+  const existingDraft = scope.drafts.find((entry) => entry.id === selected?.id)
+  const recipeItems = useMemo(() => {
+    const items = new Map((catalog.data ?? []).map((entry) => [entry.id, withPendingEdits(entry, edits.get(entry.id))]))
+    for (const row of rows) items.set(row.id, row)
+    if (selected) items.set(selected.id, selected)
+    return [...items.values()]
+  }, [catalog.data, rows, edits, selected])
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) => pending > 0 && currentLocation.pathname !== nextLocation.pathname,
   )
@@ -145,6 +150,7 @@ export function BackendItemsPage() {
   }, [pending])
   function select(id: string) {
     setEditingEntry(null)
+    setEditTarget(null)
     setFocusId(id)
     setSelectedId(id)
   }
@@ -158,7 +164,8 @@ export function BackendItemsPage() {
     setFocusId(item.id)
     setJump({ id: item.id, group: position.categoryCode })
   }
-  function editDraft(entry: Entry) {
+  function openEntry(entry: Entry, section?: WarehouseSection) {
+    setEditTarget(section ? { revisionId: entry.revision.id, section } : null)
     setEditingEntry(entry)
     setSelectedId(entry.id)
   }
@@ -197,15 +204,15 @@ export function BackendItemsPage() {
       setBusy(false)
     }
   }
-  async function fork(entry: Entry) {
+  async function fork(entry: Entry, section: WarehouseSection) {
     setBusy(true)
     setError("")
     try {
       const draft = await getDraft(entry)
       await refresh()
-      editDraft(draft)
+      openEntry(draft, section)
     } catch (cause) {
-      setError(errorMessage(cause))
+      toast.error(errorMessage(cause))
     } finally {
       setBusy(false)
     }
@@ -240,7 +247,7 @@ export function BackendItemsPage() {
       setName("")
       setCode("")
       setFocusId(result.id)
-      editDraft(result)
+      openEntry(result)
     } catch (cause) {
       setError(errorMessage(cause))
     } finally {
@@ -253,7 +260,7 @@ export function BackendItemsPage() {
   }
   function getDraft(entry: Entry) {
     return (
-      catalog.data?.find(
+      scope.drafts.find(
         (item) =>
           item.id === entry.id &&
           item.revision.state === "DRAFT" &&
@@ -264,6 +271,12 @@ export function BackendItemsPage() {
   async function createDraftAndApply(request: DraftRequest) {
     const entry = rows.find((item) => item.id === request.id)
     if (!entry) return
+    const existing = scope.drafts.find((draft) => draft.id === entry.id)
+    if (existing && existing.revision.sourceRevisionId !== entry.revision.id) {
+      openEntry(existing)
+      toast.info("Đã mở bản nháp đang có. Bạn có thể chỉnh sửa trực tiếp tại đây.")
+      return
+    }
     setBusy(true)
     setError("")
     try {
@@ -292,7 +305,7 @@ export function BackendItemsPage() {
     })
   }
   function connect(from: string, to: string, draft?: Entry) {
-    const problem = recipeConnectionError(rows, from, to)
+    const problem = recipeConnectionError(recipeItems, from, to)
     if (problem) {
       toast.error(problem)
       return
@@ -344,13 +357,18 @@ export function BackendItemsPage() {
               }}
             />
             <ItemShopHelp />
+            <WarehouseDraftMenu
+              entries={scope.drafts}
+              locale={context.locale}
+              onOpen={openEntry}
+              variants={scope.data?.variants}
+            />
             {canWrite && (
               <PageActionsMenu label="Tạo và thiết lập trang bị">
                 <DropdownMenuItem disabled={busy || !context.rulesetId} onSelect={() => setCreating(true)}>
                   <Plus />
                   Tạo trang bị
                 </DropdownMenuItem>
-                <WarehouseDraftMenu entries={catalog.data ?? empty} locale={context.locale} onOpen={editDraft} />
                 <DropdownMenuItem disabled={busy} onSelect={() => setExtraRows((rows) => rows + 2)}>
                   <Rows3 />
                   Thêm 2 hàng trống
@@ -381,7 +399,10 @@ export function BackendItemsPage() {
       {displayedCatalog.isPending ||
       groups.isPending ||
       (!scope.scoped && scope.overview.isPending) ||
-      (scope.scoped && !scope.showAll && scope.changes.isPending) ? (
+      (scope.scoped &&
+        (scope.showAll
+          ? !rows.length && (scope.draftQuery.isPending || catalog.isPending)
+          : scope.changes.isPending)) ? (
         <p role="status" className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
           <LoaderCircle className="size-4 animate-spin" />
           Đang tải kho trang bị…
@@ -419,15 +440,30 @@ export function BackendItemsPage() {
         <ItemEditor
           key={`${selected.id}:${selected.revision.id}:${selected.revision.version}`}
           entry={selected}
-          items={rows}
+          items={recipeItems}
+          relatedItems={rows}
+          onView={openEntry}
           categories={categories}
           locale={context.locale}
           editable={canWrite && selected.revision.state === "DRAFT"}
           busy={busy}
-          onClose={() => setSelectedId(null)}
+          translationOnly={
+            (selected.revision.state === "DRAFT" ? selected : existingDraft)?.revision.cause === "TRANSLATION_UPDATE"
+          }
+          initialLanguage={
+            translationView && translationView.entryId === selectedId && translationView.locale === context.locale
+              ? translationView.language
+              : undefined
+          }
+          onLanguageChange={(language) => setTranslationView({ entryId: selectedId, locale: context.locale, language })}
+          initialSection={editTarget?.revisionId === selected.revision.id ? editTarget.section : undefined}
+          onClose={() => {
+            setSelectedId(null)
+            setEditTarget(null)
+          }}
           onApply={(content, patchId) => {
             const problem = content.components
-              .map((p) => recipeConnectionError(rows, p.itemId, selected.id))
+              .map((p) => recipeConnectionError(recipeItems, p.itemId, selected.id))
               .find(Boolean)
             if (problem) {
               toast.error(problem)
@@ -436,7 +472,16 @@ export function BackendItemsPage() {
             update(selected, content, patchId)
             setSelectedId(null)
           }}
-          onFork={() => void fork(selected)}
+          onFork={
+            canWrite && scope.draftsReady && selected.revision.state === "PUBLISHED"
+              ? (section) => void fork(selected, section)
+              : undefined
+          }
+          onOpenDraft={
+            canWrite && existingDraft && selected.revision.state === "PUBLISHED"
+              ? (section) => openEntry(existingDraft, section)
+              : undefined
+          }
           onPublish={
             canPublish && selected.revision.state === "DRAFT" && !edits.has(selected.id)
               ? () => void publish(selected)

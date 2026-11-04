@@ -22,6 +22,7 @@ export function invalidateWarehouseCatalogs(client: QueryClient) {
   return Promise.all([client.invalidateQueries({ queryKey: warehouseKeys.all }), invalidateReferenceCatalog(client)])
 }
 export interface WarehouseScope {
+  draftsOnly?: boolean
   seasonId?: string
   patchVariantId?: string
   includeUnchanged?: boolean
@@ -41,6 +42,7 @@ export function createWarehouseApi(request: Request = backendRequest) {
       let page = 0
       while (true) {
         const params = new URLSearchParams({ rulesetId, locale, page: String(page), size: "100" })
+        if (scope?.draftsOnly) params.set("draftsOnly", "true")
         if (scope?.includeUnchanged) params.set("includeUnchanged", "true")
         if (scope?.seasonId) params.set("seasonId", scope.seasonId)
         if (scope?.patchVariantId) params.set("patchVariantId", scope.patchVariantId)

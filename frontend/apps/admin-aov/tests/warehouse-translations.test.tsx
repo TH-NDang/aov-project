@@ -324,8 +324,13 @@ async function withUi(
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })
   client.setQueryData(["rich-text-settings"], { settings: defaultSettings, table: null })
   const document = dom.window.document
-  const findButton = (text: string) =>
-    [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent?.trim() === text)
+  const findButton = (text: string) => {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>("button")]
+    return (
+      buttons.find((button) => button.textContent?.trim() === text) ??
+      buttons.find((button) => button.getAttribute("aria-label") === text)
+    )
+  }
   const render = async (node: React.ReactNode) => {
     await act(async () =>
       root.render(
@@ -706,6 +711,7 @@ test("editing one spell translation preserves other locales, mechanics, states a
     await render(<SecondaryEditor {...props} />)
     await tab("Bản dịch")
     await language("en-US")
+    await click("Sửa bản dịch")
     await name("Sprint revised")
     await click("Lưu nháp")
     assert.ok(saved)
@@ -865,6 +871,55 @@ function fixtureRevision(id: string): WarehouseRevision {
     updatedAt: "2026-10-18",
   }
 }
+
+test("warehouse pencils resume or fork only on request and open the selected section", async () => {
+  await withUi(async ({ document, render, click }) => {
+    const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
+    const calls: string[] = []
+    const props = {
+      kind: "enchantments" as const,
+      code: "sung-man",
+      content: newSecondaryContent("enchantments", "vi-VN", "tower"),
+      branches: [],
+      locale: "vi-VN",
+      isNew: false,
+      rulesetId: "standard",
+      onClose() {},
+      onSave: async () => {},
+    }
+    const create = async (section: string) => {
+      calls.push("fork:" + section)
+    }
+    await render(<SecondaryEditor {...props} readOnly onCreateDraft={create} />)
+    assert.deepEqual(calls, [])
+    assert.equal(document.querySelector('button[aria-label="Hệ phù hiệu"]'), null)
+    await click("Tạo nháp và sửa hệ và vị trí")
+    await render(
+      <SecondaryEditor
+        {...props}
+        readOnly
+        onCreateDraft={create}
+        onOpenDraft={(section) => calls.push("open:" + section)}
+      />,
+    )
+    await click("Mở nháp và sửa bản dịch")
+    assert.deepEqual(calls, ["fork:mechanics", "open:translations"])
+    await render(<SecondaryEditor key="draft" {...props} initialSection="translations" />)
+    assert.equal(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim(), "Bản dịch")
+    assert.equal(document.querySelector<HTMLInputElement>("input")?.disabled, false)
+    await render(
+      <SecondaryEditor key="arcana" {...props} kind="arcana" content={newSecondaryContent("arcana", "vi-VN")} />,
+    )
+    await click("Sửa chỉ số")
+    await click("Thêm chỉ số")
+    assert.equal(document.querySelectorAll('input[type="number"]').length, 1)
+    assert.equal(document.querySelector("select"), null)
+    await click("Xem lại chỉ số")
+    assert.equal(document.querySelectorAll('input[type="number"]').length, 0)
+    await render(<SecondaryEditor key="restricted" {...props} readOnly />)
+    assert.equal(document.querySelector('button[aria-label*="sửa"]'), null)
+  })
+})
 
 test("arcana keeps tier III visible, collapses lower tiers and reveals filtered results with circular icons", async () => {
   await withUi(async ({ document, client, render }) => {
@@ -1144,6 +1199,21 @@ test("arcana filters follow the loaded patch and distinguish missing changes fro
     assert.equal(params.has("stat"), false)
     assert.equal(select().disabled, true)
     assert.deepEqual(shown(), [])
+    const draftKey = [...warehouseKeys.catalog("arcana", "standard", "vi-VN"), "drafts"]
+    await act(async () => {
+      client.setQueryData(draftKey, [
+        records[0],
+        { ...records[1], revision: { ...records[1].revision, effectiveFromPatchVariantId: "another-patch" } },
+      ])
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    assert.deepEqual(shown(), ["Xem red-magic"])
+    assert.match(document.body.textContent!, /Nháp · Chưa gắn patch/)
+    assert.ok(document.querySelector('[aria-label="Mở danh sách bản nháp (2)"]'))
+    assert.equal(document.querySelector('[data-catalog-change="INHERITED"]'), null)
+    await act(async () => setFilters("patch=patch-fixture&show=changes&color=RED"))
+    assert.deepEqual(shown(), [])
+    assert.ok(document.querySelector('[aria-label="Mở danh sách bản nháp (2)"]'))
   })
 })
 
@@ -1238,7 +1308,7 @@ test("archived spells stay separate, gameplay revisions require a patch, and lat
       },
     }
     await render(<SecondaryEditor {...props} />)
-    assert.ok(document.body.textContent?.includes("Có thể xuất bản hồ sơ lưu trữ"))
+    assert.match(document.body.textContent ?? "", /Chưa xác định · hồ sơ lưu trữ/)
     await click("Xuất bản")
     assert.equal(published, 1)
     await render(
@@ -1316,6 +1386,7 @@ test("baseline spell publication needs no invented patch and corrections retain 
     }
     await render(<SecondaryEditor {...props} missingFields={["effectiveFromPatchVariantId"]} allowPatchChange />)
     assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /Dữ liệu nền · chưa xác định patch/)
+    await click("Sửa mốc patch và ghi chú")
     assert.match(document.body.textContent ?? "", /không phải xác nhận mục được thêm ở mùa hiện tại/)
     await click("Xuất bản")
     assert.equal(published, 1)
@@ -1329,6 +1400,7 @@ test("baseline spell publication needs no invented patch and corrections retain 
       />,
     )
     assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /Dữ liệu nền kế thừa/)
+    await click("Sửa mốc patch và ghi chú")
     assert.equal(document.querySelector<HTMLSelectElement>('[aria-label="Ngữ cảnh dữ liệu"]')?.disabled, true)
     await click("Xuất bản")
     assert.equal(published, 2)
@@ -1390,7 +1462,7 @@ test("patch history can compare published unscoped baselines without offering dr
           select.value = value
           select.dispatchEvent(new window.Event("change", { bubbles: true }))
         })
-      await choose("Snapshot đã xuất bản", "target")
+      await choose("Bản dữ liệu đã xuất bản", "target")
       const options = () => [
         ...document.querySelectorAll<HTMLOptionElement>('[aria-label="Bản trước để đối chiếu"] option'),
       ]
@@ -1403,7 +1475,7 @@ test("patch history can compare published unscoped baselines without offering dr
         /v1 · Dữ liệu nền chưa rõ patch/,
       )
 
-      await choose("Snapshot đã xuất bản", "baseline")
+      await choose("Bản dữ liệu đã xuất bản", "baseline")
       await choose("Patch ghi nhận thay đổi", "patch-fixture")
       assert.equal(
         options().some((option) => option.value === "baseline"),
@@ -1412,6 +1484,77 @@ test("patch history can compare published unscoped baselines without offering dr
     },
     ["spell:write", "spell:publish", "patch:write"],
   )
+})
+
+test("item details show verified upgrades and select pictured ingredients only after an explicit choice", async () => {
+  await withUi(async ({ document, render, click, client }) => {
+    document.defaultView!.HTMLElement.prototype.scrollIntoView = () => {}
+    const { ItemEditor } = await import("../src/features/warehouse/item-editor")
+    const make = (id: string, name: string, ingredients: string[] = []): WarehouseEntry<ItemContent> => ({
+      id,
+      code: id,
+      revision: { ...fixtureRevision(id), state: "PUBLISHED" },
+      content: {
+        iconAssetId: id,
+        categoryCode: "thu",
+        tier: 1,
+        price: 300,
+        shopPositions: [],
+        recipeStatus: ingredients.length ? "VERIFIED" : "NONE",
+        components: ingredients.map((itemId) => ({ itemId, quantity: 1 })),
+        stats: [],
+        notes: null,
+        translations: [{ locale: "vi-VN", name }],
+      },
+    })
+    const ring = make("ring", "Nhẫn hồng ngọc")
+    const armor = make("armor", "Giáp hộ mệnh", [ring.id])
+    const gem = make("gem", "Hồng thạch")
+    const items = [ring, armor, gem, make("sword", "Kiếm ngắn")]
+    for (const item of items) client.setQueryData(["hero-content-asset", item.id], { currentUrl: `/${item.id}.png` })
+    const opened: string[] = []
+    const saved: ItemContent[] = []
+    const props = {
+      items,
+      relatedItems: items,
+      locale: "vi-VN",
+      categories: [],
+      busy: false,
+      onClose() {},
+      onView: (item: WarehouseEntry<ItemContent>) => opened.push(item.id),
+      onApply: (content: ItemContent) => saved.push(content),
+    }
+    await render(<ItemEditor {...props} entry={ring} editable={false} />)
+    const upgrade = document.querySelector<HTMLButtonElement>('[aria-label="Xem Giáp hộ mệnh"]')!
+    assert.equal(upgrade.querySelector("img")?.getAttribute("src"), "/armor.png")
+    await act(async () => upgrade.click())
+    assert.deepEqual(opened, [armor.id])
+    assert.equal(document.querySelector('[aria-label="Thêm nguyên liệu"]'), null)
+
+    await render(<ItemEditor key="draft" {...props} entry={{ ...ring, revision: fixtureRevision(ring.id) }} editable />)
+    const apply = () =>
+      [...document.querySelectorAll("button")].find((button) => button.textContent === "Áp dụng vào bản đang sửa")!
+    assert.ok(apply().disabled)
+    await click("Sửa công thức")
+    await click("Thêm nguyên liệu")
+    assert.ok(apply().disabled)
+    assert.equal(document.querySelectorAll('[role="option"][cmdk-item]').length, 2)
+    const search = document.querySelector<HTMLInputElement>('[aria-label="Tìm nguyên liệu"]')!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!.call(search, "hong thach")
+      search.dispatchEvent(new window.Event("input", { bubbles: true }))
+    })
+    const choices = [...document.querySelectorAll<HTMLElement>('[role="option"][cmdk-item]')]
+    assert.equal(choices.length, 1)
+    assert.match(choices[0].textContent!, /Hồng thạch/)
+    assert.equal(choices[0].querySelector("img")?.getAttribute("src"), "/gem.png")
+    await act(async () => choices[0].click())
+    assert.ok(!apply().disabled)
+    await act(async () => apply().click())
+    assert.deepEqual(saved[0].components, [{ itemId: gem.id, quantity: 1 }])
+    assert.equal(saved[0].recipeStatus, "VERIFIED")
+    assert.deepEqual(ring.content.components, [])
+  })
 })
 
 test("item cards separate recipe selection from opening details and hide ports on outer columns", async () => {

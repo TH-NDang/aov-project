@@ -8,6 +8,7 @@ export function WarehousePatchContext({
   value,
   onChange,
   disabled = false,
+  compact = false,
   allowUnknownPatch = false,
   baselineMode,
   label = "Ngữ cảnh dữ liệu",
@@ -18,6 +19,7 @@ export function WarehousePatchContext({
   value: string | null
   onChange: (value: string | null) => void
   disabled?: boolean
+  compact?: boolean
   allowUnknownPatch?: boolean
   baselineMode?: WarehouseBaselineMode
   label?: string
@@ -36,6 +38,18 @@ export function WarehousePatchContext({
     : baselineMode
       ? baselineLabel
       : "Chưa xác định · giữ bản nháp"
+  if (compact) {
+    const variant = variants.find((option) => option.id === value)
+    const season = variant && overview.data?.seasons.find((option) => option.id === variant.seasonId)
+    return (
+      <p role="status" className="type-body">
+        {value
+          ? [season?.displayName, variant?.patchCode ?? "Mốc đã chọn"].filter(Boolean).join(" · ")
+          : (emptyLabel ?? unknownLabel)}
+        {overview.isError && <span className="type-meta block">Chưa tải được các mốc patch.</span>}
+      </p>
+    )
+  }
   return (
     <label className="grid gap-1.5 rounded-lg border bg-muted/20 p-3 text-sm">
       <span className="font-medium">{label}</span>

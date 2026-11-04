@@ -220,7 +220,7 @@ export function EnchantmentBranches({
                               <div className="mt-auto flex w-full flex-wrap items-center justify-center gap-1 border-t border-border/50 pt-2">
                                 {entry.revision.state === "DRAFT" && (
                                   <Badge variant="outline" className="text-xs">
-                                    Nháp
+                                    {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
                                   </Badge>
                                 )}
                                 <CatalogChangeBadges kinds={entry.changeKinds ?? []} />

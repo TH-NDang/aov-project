@@ -1,9 +1,11 @@
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useEffect, useState, type ReactNode } from "react"
 import { Archive, History, Image, Languages, LoaderCircle, Plus, Save, Settings2, Trash2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
-import { DraftPrompt } from "@/components/draft-prompt"
+import { SectionPencil, type WarehouseSection } from "./warehouse-edit-section"
+import { SecondaryAttributes } from "./secondary-attributes"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@aov/ui/components/tabs"
 import { useIsWide } from "@/hooks/use-media-query"
@@ -15,6 +17,7 @@ import { Field, control } from "../publishing/fields"
 import { WarehouseTranslations } from "./warehouse-translations"
 import { WarehousePatchContext } from "./warehouse-patch-context"
 import { warehouseMissingFieldLabel } from "./warehouse-labels"
+import { WarehouseStatsEditor } from "./warehouse-stats-editor"
 import { WarehouseNotes } from "./warehouse-notes"
 import { SpellArtwork } from "./spell-artwork"
 import { SpellRemovalHistory } from "./spell-removal-history"
@@ -101,8 +104,12 @@ export function SecondaryEditor({
   branches,
   isNew,
   readOnly = false,
+  initialSection,
+  initialLanguage,
+  onLanguageChange,
   canPublish = false,
   revisionLabel,
+  translationOnly = false,
   rulesetId,
   initialPatchId = null,
   allowPatchChange = false,
@@ -110,8 +117,10 @@ export function SecondaryEditor({
   onSave,
   onPublish,
   onCreateDraft,
+  onOpenDraft,
   onDiscard,
   onClose,
+  statCatalog = [],
   enchantmentPeers = [],
   onReorderEnchantments,
   onDraft,
@@ -131,19 +140,29 @@ export function SecondaryEditor({
   readOnly?: boolean
   canPublish?: boolean
   revisionLabel?: string
+  translationOnly?: boolean
   rulesetId: string
   initialPatchId?: string | null
   allowPatchChange?: boolean
   missingFields?: string[]
   onSave: (code: string, content: SecondaryContent, patchId: string | null) => Promise<void>
   onPublish?: () => Promise<void>
-  onCreateDraft?: () => Promise<void>
+  initialSection?: WarehouseSection
+  initialLanguage?: string
+  onLanguageChange?: (language: string) => void
+  onCreateDraft?: (section: WarehouseSection) => Promise<void>
+  onOpenDraft?: (section: WarehouseSection) => void
   onDiscard?: () => Promise<void>
   onClose: () => void
+  statCatalog?: WarehouseEntry<SecondaryContent>[]
   enchantmentPeers?: WarehouseEntry<EnchantmentContent>[]
   onReorderEnchantments?: (ids: string[]) => Promise<void>
 }) {
   const wide = useIsWide()
+  const [section, setSection] = useState(initialSection)
+  const [tab, setTab] = useState<string>(
+    initialSection === "images" || initialSection === "translations" ? initialSection : "information",
+  )
   const [code, setCode] = useState(initialCode)
   const [content, setContent] = useState(initialContent)
   const [patchId, setPatchId] = useState(initialPatchId)
@@ -194,6 +213,38 @@ export function SecondaryEditor({
       setBusy(false)
     }
   }
+  function editing(target: WarehouseSection) {
+    return !readOnly && (isNew || section === target)
+  }
+  function pencil(target: WarehouseSection, className?: string) {
+    if (
+      (translationOnly && target !== "translations" && target !== "context") ||
+      isNew ||
+      (readOnly && !onOpenDraft && !onCreateDraft)
+    )
+      return null
+    const targetTab = target === "images" || target === "translations" ? target : "information"
+    const active = section === target && tab === targetTab
+    return (
+      <SectionPencil
+        section={target}
+        name={target === "mechanics" ? mechanicsTitle.toLocaleLowerCase("vi") : undefined}
+        active={active}
+        className={className}
+        disabled={busy || uploading}
+        draftAction={readOnly ? (onOpenDraft ? "open" : "create") : undefined}
+        onClick={() => {
+          if (readOnly) {
+            if (onOpenDraft) onOpenDraft(target)
+            else if (onCreateDraft) void act(() => onCreateDraft(target))
+            return
+          }
+          setSection(active ? undefined : target)
+          setTab(targetTab)
+        }}
+      />
+    )
+  }
   function save() {
     if (!code.trim() || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(code.trim())) {
       setError("Mã chỉ gồm chữ thường không dấu, số và dấu gạch nối.")
@@ -221,6 +272,10 @@ export function SecondaryEditor({
   }
   const currentText = warehouseText(content.translations, locale)
   const name = currentText?.name || initialCode
+  const mechanicsTitle = kind === "enchantments" ? "Hệ và vị trí" : kind === "arcana" ? "Phân loại ngọc" : "Thuộc tính"
+  const parts: ("mechanics" | "stats" | "states")[] = ["mechanics"]
+  if (kind === "arcana") parts.push("stats")
+  if (kind === "spells") parts.push("states")
   const orderPeers = enchantmentPeers
     .filter((entry) => entry.content.branchCode === content.branchCode && entry.content.tier === content.tier)
     .sort((a, b) => (a.content.position ?? 999) - (b.content.position ?? 999) || a.code.localeCompare(b.code))
@@ -231,19 +286,48 @@ export function SecondaryEditor({
         className={
           wide
             ? "flex w-[min(640px,94vw)] flex-col gap-0 overflow-hidden sm:max-w-none"
-            : "flex h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-2xl"
+            : "flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-2xl"
         }
         onEscapeKeyDown={(event) => (busy || uploading) && event.preventDefault()}
         onPointerDownOutside={(event) => (busy || uploading) && event.preventDefault()}
       >
-        <SheetHeader className="shrink-0 border-b pr-12">
-          <SheetTitle>{isNew ? `Tạo ${secondaryNames[kind]}` : name}</SheetTitle>
-          <SheetDescription className="flex flex-wrap items-center gap-2">
-            {revisionLabel && <Badge variant="outline">{revisionLabel}</Badge>}
-            {!isNew && <span className="font-mono text-xs">{initialCode}</span>}
-          </SheetDescription>
+        <SheetHeader className="shrink-0 flex-row items-center gap-3 border-b pr-12">
+          {!isNew && (
+            <div className="relative shrink-0">
+              {kind === "spells" ? (
+                <SpellArtwork
+                  compact
+                  iconAssetId={content.iconAssetId}
+                  states={content.states}
+                  defaultStateKey={content.defaultStateKey}
+                  name={name}
+                  locale={locale}
+                  preview
+                />
+              ) : (
+                <HeroAsset
+                  id={content.iconAssetId}
+                  alt={name}
+                  frameAspectRatio={1}
+                  preview
+                  className="size-12 shrink-0 rounded-full"
+                />
+              )}
+              {tab !== "images" && pencil("images", "absolute -top-1 -right-2 rounded-full border bg-background")}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-1">
+              <SheetTitle>{isNew ? `Tạo ${secondaryNames[kind]}` : name}</SheetTitle>
+              {tab !== "translations" && pencil("translations")}
+            </div>
+            <SheetDescription className="flex flex-wrap items-center gap-2">
+              {revisionLabel && <Badge variant="outline">{revisionLabel}</Badge>}
+              {!isNew && <span className="font-mono text-xs">{initialCode}</span>}
+            </SheetDescription>
+          </div>
         </SheetHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+        <div className="min-h-0 flex-auto overflow-y-auto px-4 py-3">
           {visibleMissing.length > 0 && (
             <div className="mb-4 space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
               <p className="font-medium">Cần bổ sung trước khi xuất bản</p>
@@ -256,10 +340,13 @@ export function SecondaryEditor({
               </div>
             </div>
           )}
-          {readOnly && onCreateDraft && (
-            <DraftPrompt className="mb-4" busy={busy} onCreate={() => void act(onCreateDraft)} />
+          {readOnly && (onOpenDraft || onCreateDraft) && (
+            <p className="type-meta mb-2">
+              {onOpenDraft ? "Chọn bút để sửa bản nháp đang có." : "Chọn bút để tạo nháp từ phiên bản đang xem."}
+            </p>
           )}
-          <Tabs defaultValue="information" className="gap-5">
+          {translationOnly && <p className="type-meta mb-2">Nháp bản dịch cho phép sửa nội dung dịch và ghi chú.</p>}
+          <Tabs value={tab} onValueChange={setTab} className="gap-3">
             <TabsList className={`grid w-full ${hasHistory ? "grid-cols-4" : "grid-cols-3"}`}>
               <TabsTrigger value="information" disabled={busy || uploading}>
                 <Settings2 className="size-4" /> Thông tin
@@ -277,47 +364,15 @@ export function SecondaryEditor({
                 </TabsTrigger>
               )}
             </TabsList>
-            <TabsContent value="information" className="space-y-5">
-              <WarehousePatchContext
-                rulesetId={rulesetId}
-                allowUnknownPatch={archiveEligible}
-                baselineMode={baselineMode}
-                value={patchId}
-                disabled={disabled || !allowPatchChange || !!sourceRevisionId}
-                onChange={(value) => {
-                  setPatchId(value)
-                  setDirty(true)
-                }}
-              />
-              <div className="flex items-start gap-3 rounded-xl border bg-muted/20 p-3">
-                {kind === "spells" ? (
-                  <SpellArtwork
-                    iconAssetId={content.iconAssetId}
-                    states={content.states}
-                    defaultStateKey={content.defaultStateKey}
-                    name={name}
-                    locale={locale}
-                    preview
-                  />
-                ) : (
-                  <HeroAsset
-                    id={content.iconAssetId}
-                    alt={name}
-                    frameAspectRatio={1}
-                    preview
-                    className="size-16 shrink-0 rounded-full"
-                  />
-                )}
-                <div className="min-w-0 space-y-1">
-                  <p className="font-medium">{name || `Tạo ${secondaryNames[kind]}`}</p>
-                  {currentText?.summary && <p className="text-sm text-muted-foreground">{currentText.summary}</p>}
-                  {currentText && currentText.locale !== locale && (
-                    <Badge variant="outline">
-                      {currentText.locale} · Chưa có {locale}
-                    </Badge>
-                  )}
-                </div>
-              </div>
+            <TabsContent value="information" className="space-y-3">
+              {currentText?.summary && currentText.summary !== currentText.description && (
+                <p className="type-body">{currentText.summary}</p>
+              )}
+              {currentText && currentText.locale !== locale && (
+                <Badge variant="outline">
+                  {currentText.locale} · Chưa có {locale}
+                </Badge>
+              )}
               {isNew && kind === "spells" && !readOnly && (
                 <fieldset disabled={busy || uploading} className="space-y-2">
                   <legend className="mb-2 text-sm font-medium">Biểu tượng phụ trợ</legend>
@@ -348,56 +403,123 @@ export function SecondaryEditor({
                   placeholder="vi-du-ma-khong-dau"
                 />
               )}
-              <SecondaryMechanics
-                kind={kind}
-                content={content}
-                onChange={update}
-                branches={branches}
-                locale={locale}
-                disabled={disabled}
-                enchantmentOrderControl={
-                  <WarehouseOrderPicker
-                    label="Thứ tự trong cấp"
-                    contextLabel={`${warehouseText(branches.find((branch) => branch.code === content.branchCode)?.translations ?? [], locale)?.name ?? content.branchCode ?? ""} · Cấp ${["I", "II", "III"][(content.tier ?? 1) - 1]}`}
-                    items={orderPeers.map((entry) => ({
-                      id: entry.id,
-                      name: warehouseText(entry.content.translations, locale)?.name ?? entry.code,
-                      iconAssetId: entry.content.iconAssetId,
-                      color: enchantmentBranchColor(
-                        branches.find((branch) => branch.code === content.branchCode) ?? {
-                          code: content.branchCode ?? "",
-                          color: null,
-                        },
-                      ),
-                    }))}
-                    disabled={disabled || dirty || isNew || !onReorderEnchantments}
-                    disabledReason={
-                      isNew
-                        ? "Lưu phù hiệu trước khi sắp xếp trong cấp."
-                        : dirty
-                          ? "Lưu thay đổi trước khi sắp xếp."
-                          : undefined
+              {parts.map((part) => (
+                <section key={part} className="space-y-2 border-t pt-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="type-section-title">
+                      {part === "stats" ? "Chỉ số" : part === "states" ? "Trạng thái phụ trợ" : mechanicsTitle}
+                    </h3>
+                    {pencil(part)}
+                  </div>
+                  {editing(part) && part === "stats" ? (
+                    <WarehouseStatsEditor
+                      stats={content.stats ?? []}
+                      catalog={statCatalog}
+                      locale={locale}
+                      disabled={disabled}
+                      onChange={(stats) => update({ stats })}
+                    />
+                  ) : editing(part) ? (
+                    <SecondaryMechanics
+                      part={part}
+                      kind={kind}
+                      content={content}
+                      onChange={update}
+                      branches={branches}
+                      locale={locale}
+                      disabled={disabled}
+                      enchantmentOrderControl={
+                        <WarehouseOrderPicker
+                          label="Thứ tự trong cấp"
+                          contextLabel={`${warehouseText(branches.find((branch) => branch.code === content.branchCode)?.translations ?? [], locale)?.name ?? content.branchCode ?? ""} · Cấp ${["I", "II", "III"][(content.tier ?? 1) - 1]}`}
+                          items={orderPeers.map((entry) => ({
+                            id: entry.id,
+                            name: warehouseText(entry.content.translations, locale)?.name ?? entry.code,
+                            iconAssetId: entry.content.iconAssetId,
+                            color: enchantmentBranchColor(
+                              branches.find((branch) => branch.code === content.branchCode) ?? {
+                                code: content.branchCode ?? "",
+                                color: null,
+                              },
+                            ),
+                          }))}
+                          disabled={disabled || dirty || isNew || !onReorderEnchantments}
+                          disabledReason={
+                            isNew
+                              ? "Lưu phù hiệu trước khi sắp xếp trong cấp."
+                              : dirty
+                                ? "Lưu thay đổi trước khi sắp xếp."
+                                : undefined
+                          }
+                          blockedReason={
+                            orderPeers.some(
+                              (entry) =>
+                                entry.revision.state !== "DRAFT" || entry.revision.cause === "TRANSLATION_UPDATE",
+                            )
+                              ? "Tạo bản nháp nội dung cho các phù hiệu trong cấp trước khi sắp xếp. Bản đã xuất bản và bản dịch được giữ nguyên."
+                              : undefined
+                          }
+                          onSave={async (ids) => {
+                            await onReorderEnchantments?.(ids)
+                          }}
+                        />
+                      }
+                    />
+                  ) : (
+                    <SecondaryAttributes
+                      part={part}
+                      kind={kind}
+                      content={content}
+                      branches={branches}
+                      locale={locale}
+                    />
+                  )}
+                </section>
+              ))}
+              <details
+                key={editing("context") ? "edit" : "view"}
+                open={editing("context") || undefined}
+                className="border-t pt-3"
+              >
+                <summary className="cursor-pointer text-sm font-medium">Mốc patch và ghi chú</summary>
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="type-label">Ngữ cảnh dữ liệu</span>
+                    {pencil("context")}
+                  </div>
+                  <WarehousePatchContext
+                    compact={!editing("context")}
+                    rulesetId={rulesetId}
+                    allowUnknownPatch={archiveEligible}
+                    baselineMode={baselineMode}
+                    value={patchId}
+                    disabled={
+                      disabled || translationOnly || !editing("context") || !allowPatchChange || !!sourceRevisionId
                     }
-                    blockedReason={
-                      orderPeers.some(
-                        (entry) => entry.revision.state !== "DRAFT" || entry.revision.cause === "TRANSLATION_UPDATE",
-                      )
-                        ? "Tạo bản nháp nội dung cho các phù hiệu trong cấp trước khi sắp xếp. Bản đã xuất bản và bản dịch được giữ nguyên."
-                        : undefined
-                    }
-                    onSave={async (ids) => {
-                      await onReorderEnchantments?.(ids)
+                    onChange={(value) => {
+                      setPatchId(value)
+                      setDirty(true)
                     }}
                   />
-                }
-              />
-              <WarehouseNotes value={content.notes} onChange={(notes) => update({ notes })} disabled={disabled} />
+                  <WarehouseNotes
+                    value={content.notes}
+                    onChange={(notes) => update({ notes })}
+                    disabled={disabled || !editing("context")}
+                  />
+                </div>
+              </details>
             </TabsContent>
             <TabsContent value="translations">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="type-section-title">Nội dung bản dịch</h3>
+                {pencil("translations")}
+              </div>
               <WarehouseTranslations
+                preview={!editing("translations")}
                 value={content.translations}
                 onChange={(translations) => update({ translations })}
-                locale={locale}
+                locale={initialLanguage ?? locale}
+                onLanguageChange={onLanguageChange}
                 disabled={disabled}
                 statKeys={(content.stats ?? []).map((stat) => stat.key).filter(Boolean)}
               />
@@ -411,6 +533,7 @@ export function SecondaryEditor({
                       </summary>
                       <div className="pt-4">
                         <WarehouseTranslations
+                          preview={!editing("translations")}
                           value={state.translations}
                           locale={locale}
                           disabled={disabled}
@@ -429,16 +552,19 @@ export function SecondaryEditor({
               )}
             </TabsContent>
             <TabsContent value="images" className="space-y-5">
-              {readOnly ? (
+              <div className="flex items-center justify-between">
+                <h3 className="type-section-title">Hình ảnh</h3>
+                {pencil("images")}
+              </div>
+              {!editing("images") ? (
                 <div className="space-y-3">
                   <HeroAsset
                     id={content.iconAssetId}
                     alt={name}
                     preview
                     frameAspectRatio={1}
-                    className="mx-auto size-48 rounded-full"
+                    className="size-20 rounded-full"
                   />
-                  <p className="text-sm text-muted-foreground">Tạo bản nháp để chọn hoặc tải ảnh mới.</p>
                   {kind === "spells" && (content.states?.length ?? 0) > 0 && (
                     <div className="grid grid-cols-2 gap-3 border-t pt-4">
                       {content.states!.map((state) => (
@@ -638,6 +764,7 @@ export function SecondaryEditor({
 }
 
 function SecondaryMechanics({
+  part,
   kind,
   content,
   onChange,
@@ -652,29 +779,37 @@ function SecondaryMechanics({
   branches: SecondaryBranch[]
   locale: string
   disabled: boolean
+  part: "mechanics" | "states" | "stats"
   enchantmentOrderControl?: ReactNode
 }) {
   if (kind === "enchantments")
     return (
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-1.5 text-sm sm:col-span-2">
-          <span>Hệ phù hiệu</span>
-          <select
-            className={control}
-            value={content.branchCode ?? ""}
+        <div className="grid gap-1.5 sm:col-span-2">
+          <span className="type-label">Hệ phù hiệu</span>
+          <Select
+            value={content.branchCode || ""}
             disabled={disabled}
-            onChange={(event) => onChange({ branchCode: event.target.value })}
+            onValueChange={(branchCode) => onChange({ branchCode })}
           >
-            <option value="">Chọn hệ</option>
-            {branches.map((branch) => (
-              <option key={branch.code} value={branch.code}>
-                {branch.translations.find((text) => text.locale === locale)?.name ??
-                  branch.translations[0]?.name ??
-                  branch.code}
-              </option>
-            ))}
-          </select>
-        </label>
+            <SelectTrigger className="w-full" aria-label="Hệ phù hiệu">
+              <SelectValue placeholder="Chọn hệ" />
+            </SelectTrigger>
+            <SelectContent>
+              {content.branchCode && !branches.some((branch) => branch.code === content.branchCode) && (
+                <SelectItem value={content.branchCode}>{content.branchCode}</SelectItem>
+              )}
+              {branches.map((branch) => (
+                <SelectItem key={branch.code} value={branch.code}>
+                  <span className="flex items-center gap-2">
+                    <HeroAsset id={branch.iconAssetId} frameAspectRatio={1} className="size-5 rounded-full" />
+                    {warehouseText(branch.translations, locale)?.name || branch.code}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <TierField value={content.tier ?? 1} disabled={disabled} onChange={(tier) => onChange({ tier })} />
         <div className="self-end">{enchantmentOrderControl}</div>
       </div>
@@ -682,251 +817,195 @@ function SecondaryMechanics({
   if (kind === "arcana")
     return (
       <div className="space-y-5">
-        <div className="grid grid-cols-2 gap-4">
-          <label className="grid gap-1.5 text-sm">
-            <span>Màu ngọc</span>
-            <select
-              className={control}
-              value={content.color ?? "RED"}
+        {part === "mechanics" && (
+          <div className="grid grid-cols-2 gap-4">
+            <label className="grid gap-1.5 text-sm">
+              <span>Màu ngọc</span>
+              <select
+                className={control}
+                value={content.color ?? "RED"}
+                disabled={disabled}
+                onChange={(event) => onChange({ color: event.target.value as SecondaryContent["color"] })}
+              >
+                <option value="RED">Đỏ</option>
+                <option value="PURPLE">Tím</option>
+                <option value="GREEN">Xanh</option>
+              </select>
+            </label>
+            <TierField value={content.tier ?? 3} disabled={disabled} onChange={(tier) => onChange({ tier })} />
+          </div>
+        )}
+      </div>
+    )
+  return (
+    <div className="space-y-5">
+      {part === "mechanics" && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Hồi chiêu (giây)"
+              type="number"
+              min={0}
+              value={content.cooldownSeconds ?? ""}
+              onChange={(value) => onChange({ cooldownSeconds: value === "" ? null : Number(value) })}
               disabled={disabled}
-              onChange={(event) => onChange({ color: event.target.value as SecondaryContent["color"] })}
-            >
-              <option value="RED">Đỏ</option>
-              <option value="PURPLE">Tím</option>
-              <option value="GREEN">Xanh</option>
-            </select>
+            />
+            <label className="grid gap-1.5 text-sm">
+              <span>Cách mở khóa</span>
+              <select
+                className={control}
+                value={content.unlockType ?? "UNKNOWN"}
+                disabled={disabled}
+                onChange={(event) =>
+                  onChange({
+                    unlockType: event.target.value as SecondaryContent["unlockType"],
+                    ...(event.target.value !== "LEVEL" ? { unlockLevel: null } : {}),
+                  })
+                }
+              >
+                <option value="ACCOUNT_CREATION">Khi tạo tài khoản</option>
+                <option value="LEVEL">Theo Lv tài khoản</option>
+                <option value="UNKNOWN">Chưa xác định</option>
+              </select>
+            </label>
+            <Field
+              label="Lv mở khóa"
+              type="number"
+              min={1}
+              step={1}
+              value={content.unlockLevel ?? ""}
+              onChange={(value) => onChange({ unlockLevel: value === "" ? null : Number(value) })}
+              disabled={disabled || content.unlockType !== "LEVEL"}
+            />
+            <label className="grid gap-1.5 text-sm">
+              <span>Khả dụng</span>
+              <select
+                className={control}
+                value={content.availability ?? "UNKNOWN"}
+                disabled={disabled}
+                onChange={(event) => onChange({ availability: event.target.value as SecondaryContent["availability"] })}
+              >
+                <option value="AVAILABLE">Đang có</option>
+                <option value="REMOVED">Đã gỡ</option>
+                <option value="UNKNOWN">Chưa xác định</option>
+              </select>
+            </label>
+            <Field
+              label="Thứ tự hiển thị"
+              type="number"
+              min={0}
+              step={1}
+              value={content.displayOrder ?? 0}
+              onChange={(value) => onChange({ displayOrder: Number(value) })}
+              disabled={disabled}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Field
+              label="Số lần tích trữ"
+              type="number"
+              min={1}
+              step={1}
+              value={content.maxCharges ?? ""}
+              onChange={(value) => onChange({ maxCharges: value === "" ? null : Number(value) })}
+              disabled={disabled}
+            />
+            <Field
+              label="Thời gian tích (giây)"
+              type="number"
+              min={0}
+              value={content.chargeRechargeSeconds ?? ""}
+              onChange={(value) => onChange({ chargeRechargeSeconds: value === "" ? null : Number(value) })}
+              disabled={disabled}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={content.legacy ?? false}
+              disabled={disabled}
+              onChange={(event) => onChange({ legacy: event.target.checked })}
+            />{" "}
+            Phụ trợ cũ
           </label>
-          <TierField value={content.tier ?? 3} disabled={disabled} onChange={(tier) => onChange({ tier })} />
-        </div>
+        </>
+      )}
+      {part === "states" && (
         <section className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-medium">Chỉ số</h3>
+          <div className="flex justify-end">
             <Button
               size="sm"
               variant="outline"
               disabled={disabled}
-              onClick={() => onChange({ stats: [...(content.stats ?? []), { key: "", value: 0, unit: null }] })}
+              onClick={() =>
+                onChange({
+                  states: [
+                    ...(content.states ?? []),
+                    {
+                      key: "",
+                      iconAssetId: null,
+                      translations: [{ locale, name: "", summary: null, description: null }],
+                    },
+                  ],
+                })
+              }
             >
-              <Plus className="size-4" /> Thêm chỉ số
+              <Plus className="size-4" /> Thêm
             </Button>
           </div>
-          {content.stats?.map((stat, index) => (
-            <div
-              key={index}
-              className="grid grid-cols-[minmax(0,1fr)_5rem_4rem_2rem] items-end gap-2 rounded-lg border p-3"
-            >
-              <Field
-                label="Mã chỉ số"
-                value={stat.key}
-                disabled={disabled}
-                onChange={(key) =>
-                  onChange({ stats: content.stats!.map((entry, n) => (n === index ? { ...entry, key } : entry)) })
-                }
-              />
-              <Field
-                label="Giá trị"
-                type="number"
-                step="any"
-                value={stat.value}
-                disabled={disabled}
-                onChange={(value) =>
-                  onChange({
-                    stats: content.stats!.map((entry, n) => (n === index ? { ...entry, value: Number(value) } : entry)),
-                  })
-                }
-              />
-              <Field
-                label="Đơn vị"
-                value={stat.unit ?? ""}
-                placeholder="%"
-                disabled={disabled}
-                onChange={(unit) =>
-                  onChange({
-                    stats: content.stats!.map((entry, n) => (n === index ? { ...entry, unit: unit || null } : entry)),
-                  })
-                }
-              />
+          {content.states?.map((state, index) => (
+            <div key={index} className="flex items-end gap-2">
+              <div className="flex-1">
+                <Field
+                  label={`Mã trạng thái ${index + 1}`}
+                  value={state.key}
+                  disabled={disabled}
+                  onChange={(key) =>
+                    onChange({
+                      states: content.states!.map((entry, n) => (n === index ? { ...entry, key } : entry)),
+                      ...(content.defaultStateKey === state.key ? { defaultStateKey: key || null } : {}),
+                    })
+                  }
+                />
+              </div>
               <Button
-                size="icon-sm"
                 variant="ghost"
+                size="icon"
                 disabled={disabled}
-                aria-label={`Bỏ chỉ số ${index + 1}`}
-                onClick={() => onChange({ stats: content.stats!.filter((_, n) => n !== index) })}
+                aria-label={`Bỏ trạng thái ${index + 1}`}
+                onClick={() =>
+                  onChange({
+                    states: content.states!.filter((_, n) => n !== index),
+                    ...(content.defaultStateKey === state.key ? { defaultStateKey: null } : {}),
+                  })
+                }
               >
                 <Trash2 className="size-4" />
               </Button>
             </div>
           ))}
-          {!content.stats?.length && (
-            <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">Chưa có chỉ số.</p>
+          {!!content.states?.length && (
+            <label className="grid gap-1.5 text-sm">
+              <span>Trạng thái mặc định</span>
+              <select
+                className={control}
+                value={content.defaultStateKey ?? ""}
+                disabled={disabled}
+                onChange={(event) => onChange({ defaultStateKey: event.target.value || null })}
+              >
+                <option value="">Chưa chọn</option>
+                {content.states
+                  .filter((state) => state.key)
+                  .map((state) => (
+                    <option key={state.key} value={state.key}>
+                      {warehouseText(state.translations, locale)?.name || state.key}
+                    </option>
+                  ))}
+              </select>
+            </label>
           )}
         </section>
-      </div>
-    )
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Hồi chiêu (giây)"
-          type="number"
-          min={0}
-          value={content.cooldownSeconds ?? ""}
-          onChange={(value) => onChange({ cooldownSeconds: value === "" ? null : Number(value) })}
-          disabled={disabled}
-        />
-        <label className="grid gap-1.5 text-sm">
-          <span>Cách mở khóa</span>
-          <select
-            className={control}
-            value={content.unlockType ?? "UNKNOWN"}
-            disabled={disabled}
-            onChange={(event) =>
-              onChange({
-                unlockType: event.target.value as SecondaryContent["unlockType"],
-                ...(event.target.value !== "LEVEL" ? { unlockLevel: null } : {}),
-              })
-            }
-          >
-            <option value="ACCOUNT_CREATION">Khi tạo tài khoản</option>
-            <option value="LEVEL">Theo Lv tài khoản</option>
-            <option value="UNKNOWN">Chưa xác định</option>
-          </select>
-        </label>
-        <Field
-          label="Lv mở khóa"
-          type="number"
-          min={1}
-          step={1}
-          value={content.unlockLevel ?? ""}
-          onChange={(value) => onChange({ unlockLevel: value === "" ? null : Number(value) })}
-          disabled={disabled || content.unlockType !== "LEVEL"}
-        />
-        <label className="grid gap-1.5 text-sm">
-          <span>Khả dụng</span>
-          <select
-            className={control}
-            value={content.availability ?? "UNKNOWN"}
-            disabled={disabled}
-            onChange={(event) => onChange({ availability: event.target.value as SecondaryContent["availability"] })}
-          >
-            <option value="AVAILABLE">Đang có</option>
-            <option value="REMOVED">Đã gỡ</option>
-            <option value="UNKNOWN">Chưa xác định</option>
-          </select>
-        </label>
-        <Field
-          label="Thứ tự hiển thị"
-          type="number"
-          min={0}
-          step={1}
-          value={content.displayOrder ?? 0}
-          onChange={(value) => onChange({ displayOrder: Number(value) })}
-          disabled={disabled}
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Field
-          label="Số lần tích trữ"
-          type="number"
-          min={1}
-          step={1}
-          value={content.maxCharges ?? ""}
-          onChange={(value) => onChange({ maxCharges: value === "" ? null : Number(value) })}
-          disabled={disabled}
-        />
-        <Field
-          label="Thời gian tích (giây)"
-          type="number"
-          min={0}
-          value={content.chargeRechargeSeconds ?? ""}
-          onChange={(value) => onChange({ chargeRechargeSeconds: value === "" ? null : Number(value) })}
-          disabled={disabled}
-        />
-      </div>
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={content.legacy ?? false}
-          disabled={disabled}
-          onChange={(event) => onChange({ legacy: event.target.checked })}
-        />{" "}
-        Phụ trợ cũ
-      </label>
-      <section className="space-y-3 border-t pt-4">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-medium">Các trạng thái</h3>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={disabled}
-            onClick={() =>
-              onChange({
-                states: [
-                  ...(content.states ?? []),
-                  {
-                    key: "",
-                    iconAssetId: null,
-                    translations: [{ locale, name: "", summary: null, description: null }],
-                  },
-                ],
-              })
-            }
-          >
-            <Plus className="size-4" /> Thêm
-          </Button>
-        </div>
-        {content.states?.map((state, index) => (
-          <div key={index} className="flex items-end gap-2">
-            <div className="flex-1">
-              <Field
-                label={`Mã trạng thái ${index + 1}`}
-                value={state.key}
-                disabled={disabled}
-                onChange={(key) =>
-                  onChange({
-                    states: content.states!.map((entry, n) => (n === index ? { ...entry, key } : entry)),
-                    ...(content.defaultStateKey === state.key ? { defaultStateKey: key || null } : {}),
-                  })
-                }
-              />
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              disabled={disabled}
-              aria-label={`Bỏ trạng thái ${index + 1}`}
-              onClick={() =>
-                onChange({
-                  states: content.states!.filter((_, n) => n !== index),
-                  ...(content.defaultStateKey === state.key ? { defaultStateKey: null } : {}),
-                })
-              }
-            >
-              <Trash2 className="size-4" />
-            </Button>
-          </div>
-        ))}
-        {!!content.states?.length && (
-          <label className="grid gap-1.5 text-sm">
-            <span>Trạng thái mặc định</span>
-            <select
-              className={control}
-              value={content.defaultStateKey ?? ""}
-              disabled={disabled}
-              onChange={(event) => onChange({ defaultStateKey: event.target.value || null })}
-            >
-              <option value="">Chưa chọn</option>
-              {content.states
-                .filter((state) => state.key)
-                .map((state) => (
-                  <option key={state.key} value={state.key}>
-                    {warehouseText(state.translations, locale)?.name || state.key}
-                  </option>
-                ))}
-            </select>
-          </label>
-        )}
-      </section>
+      )}
     </div>
   )
 }
@@ -1045,14 +1124,14 @@ export function EnchantmentBranchEditor({
         className={
           wide
             ? "flex w-[min(640px,94vw)] flex-col overflow-hidden sm:max-w-none"
-            : "flex h-[92dvh] flex-col overflow-hidden rounded-t-2xl"
+            : "flex max-h-[92dvh] flex-col overflow-hidden rounded-t-2xl"
         }
       >
         <SheetHeader className="pr-8">
           <SheetTitle>{branch ? `Chỉnh sửa ${entityName}` : `Tạo ${entityName}`}</SheetTitle>
           <SheetDescription>Thiết lập bố cục và các bản dịch.</SheetDescription>
         </SheetHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        <div className="min-h-0 flex-auto overflow-y-auto px-4 pb-4">
           <Tabs defaultValue="information" className="gap-5">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="information">

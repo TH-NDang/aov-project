@@ -37,6 +37,12 @@ export function resolveCatalogScope(data: PublicationOverview, requested: Catalo
 
 export const showAllCatalogEntries = (params: URLSearchParams) => params.get("show") !== "changes"
 
+export function draftInCatalogScope(patchId: string | null, filter: CatalogFilter, variants: readonly Variant[]) {
+  if (!patchId) return true
+  if (filter.variantId) return patchId === filter.variantId
+  return !filter.seasonId || variants.some((variant) => variant.id === patchId && variant.seasonId === filter.seasonId)
+}
+
 /** Clear the scoped display mode in the same navigation that removes the time scope. */
 export function catalogScopePatch(value: CatalogFilter): Record<string, string> {
   return {

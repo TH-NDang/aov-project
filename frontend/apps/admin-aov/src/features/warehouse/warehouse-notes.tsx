@@ -16,6 +16,7 @@ export function WarehouseNotes({
   } catch {
     /* Plain editorial notes need no source metadata. */
   }
+  const note = source ? String(source.editorNote ?? "") : (value ?? "")
   return (
     <section className="space-y-3">
       {source && (
@@ -37,13 +38,17 @@ export function WarehouseNotes({
           </details>
         </details>
       )}
-      <Field
-        label="Ghi chú biên tập"
-        multiline
-        value={source ? String(source.editorNote ?? "") : (value ?? "")}
-        disabled={disabled}
-        onChange={(note) => onChange(source ? JSON.stringify({ ...source, editorNote: note }) : note || null)}
-      />
+      {disabled ? (
+        note && <p className="type-body whitespace-pre-wrap">{note}</p>
+      ) : (
+        <Field
+          label="Ghi chú biên tập"
+          multiline
+          value={note}
+          disabled={disabled}
+          onChange={(note) => onChange(source ? JSON.stringify({ ...source, editorNote: note }) : note || null)}
+        />
+      )}
     </section>
   )
 }

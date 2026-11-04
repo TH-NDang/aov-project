@@ -234,7 +234,7 @@ function GraphCard({
                 className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-800 dark:text-amber-300"
                 title="Bản nháp chưa xuất bản"
               >
-                Nháp
+                {item.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
               </span>
             )}
             {item.content.recipeStatus === "UNKNOWN" && (
@@ -257,9 +257,13 @@ function GraphCard({
         type="button"
         variant="ghost"
         size="icon-sm"
-        className="absolute top-0.5 right-0.5 z-30 size-6 bg-card/90 opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+        className={cn(
+          "absolute top-0.5 right-0.5 z-30 size-6 bg-card/90",
+          locked &&
+            "opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
+        )}
         aria-label={`Xem trang bị ${name}`}
-        title="Mở chi tiết"
+        title={locked ? "Mở chi tiết" : "Mở bản nháp"}
         onClick={onOpen}
       >
         <PanelRightOpen className="size-3.5" />

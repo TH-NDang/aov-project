@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Languages, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
+import { AdminRichTextPreview } from "../terminology/rich-text-field"
 import { Field, control } from "../publishing/fields"
 import { languageOptions } from "../users/profile-preference-picker"
 import type { WarehouseTranslation } from "./warehouse-types"
@@ -15,6 +16,8 @@ export function WarehouseTranslations({
   onChange,
   locale,
   disabled = false,
+  preview = false,
+  onLanguageChange,
   showSummary = true,
   showEffects = false,
   statKeys = [],
@@ -24,6 +27,8 @@ export function WarehouseTranslations({
   onChange: (translations: WarehouseText[]) => void
   locale: string
   disabled?: boolean
+  preview?: boolean
+  onLanguageChange?: (language: string) => void
   showSummary?: boolean
   showEffects?: boolean
   statKeys?: string[]
@@ -46,9 +51,12 @@ export function WarehouseTranslations({
           <select
             className={control}
             value={language}
-            disabled={disabled}
+            disabled={disabled && !preview}
             aria-label="Ngôn ngữ bản dịch"
-            onChange={(event) => setLanguage(event.target.value)}
+            onChange={(event) => {
+              setLanguage(event.target.value)
+              onLanguageChange?.(event.target.value)
+            }}
           >
             {languages.map((code) => (
               <option key={code} value={code}>
@@ -60,7 +68,37 @@ export function WarehouseTranslations({
         </label>
         <Badge variant="outline">{value.length} bản dịch</Badge>
       </div>
-      {text ? (
+      {preview ? (
+        text ? (
+          <div className="type-body space-y-2">
+            <p className="font-semibold">{text.name}</p>
+            {[...new Set([showSummary && text.summary, text.description])].map(
+              (part) => part && <AdminRichTextPreview key={part} text={part} locale={language} />,
+            )}
+            {[
+              ...statKeys.map((key) => [key, text.statLabels?.[key]]),
+              ...variantKeys.map((key) => [key, text.variantLabels?.[key]]),
+            ].map(
+              ([key, label], index) =>
+                label && (
+                  <p key={index}>
+                    <span className="type-meta">{key}</span> · {label}
+                  </p>
+                ),
+            )}
+            {showEffects &&
+              text.effects?.map((effect, index) => (
+                <div key={index}>
+                  <strong>{effect.name || effect.key}</strong>
+                  {effect.type && <span className="type-meta"> · {effect.type}</span>}
+                  {effect.description && <AdminRichTextPreview text={effect.description} locale={language} />}
+                </div>
+              ))}
+          </div>
+        ) : (
+          <p className="type-meta">Chưa có bản dịch cho ngôn ngữ này.</p>
+        )
+      ) : text ? (
         <div className="space-y-4">
           <Field
             label="Tên hiển thị"

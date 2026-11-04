@@ -121,7 +121,7 @@ function SpellCard({
           )}
           {entry.revision.state === "DRAFT" && (
             <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
-              Nháp
+              {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
             </Badge>
           )}
         </div>

@@ -209,7 +209,7 @@ function ArcanaCard({
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           {entry.revision.state === "DRAFT" && (
             <Badge variant="outline" className="w-fit text-xs">
-              Nháp
+              {entry.revision.effectiveFromPatchVariantId ? "Nháp" : "Nháp · Chưa gắn patch"}
             </Badge>
           )}
           <span className="ml-auto">

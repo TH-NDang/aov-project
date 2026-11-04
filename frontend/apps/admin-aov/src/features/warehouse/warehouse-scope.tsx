@@ -1,15 +1,20 @@
-import { activeCatalogScope, catalogScopePatch, showAllCatalogEntries } from "../publishing/catalog-scope"
+import {
+  activeCatalogScope,
+  catalogScopePatch,
+  draftInCatalogScope,
+  showAllCatalogEntries,
+} from "../publishing/catalog-scope"
 import { useMemo } from "react"
 import { useCatalogScopePreference } from "../publishing/catalog-scope-memory"
 import { useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { type CatalogFilter } from "../publishing/catalog-context"
 import { CatalogTimeline } from "../publishing/catalog-timeline"
-import { usePublicationOverview } from "../publishing/publication-overview"
-import { errorMessage } from "@/lib/api/errors"
+import { usePublicationOverview, type PublicationOverview } from "../publishing/publication-overview"
+import { errorMessage, isApiError } from "@/lib/api/errors"
 import { Button } from "@aov/ui/components/button"
 import { useSearchParam } from "@/hooks/use-search-param"
-import { warehouseApi, warehouseKeys } from "./warehouse-api"
+import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "./warehouse-api"
 import {
   useCatalogChanges,
   changeCounts,
@@ -17,7 +22,23 @@ import {
   isGameplayChange,
   type CatalogBadgeKind,
 } from "./catalog-changes"
-import type { WarehouseKind } from "./warehouse-types"
+import type { WarehouseEntry, WarehouseKind } from "./warehouse-types"
+
+function appendVisibleDrafts<T extends WarehouseEntry>(
+  rows: T[],
+  drafts: T[],
+  scope: CatalogFilter,
+  variants: PublicationOverview["variants"],
+) {
+  const existing = new Set(rows.map((entry) => entry.id))
+  return [
+    ...rows,
+    ...drafts.filter(
+      ({ id, revision }) =>
+        !existing.has(id) && draftInCatalogScope(revision.effectiveFromPatchVariantId, scope, variants),
+    ),
+  ]
+}
 
 const names: Record<WarehouseKind, string> = {
   items: "trang bị",
@@ -31,6 +52,29 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
   const requested: CatalogFilter = { seasonId: params.get("season") ?? "", variantId: params.get("patch") ?? "" }
   const showAll = showAllCatalogEntries(params)
   const overview = usePublicationOverview()
+  const catalog = useWarehouseCatalog(kind, rulesetId, locale)
+  const draftQuery = useQuery({
+    queryKey: [...warehouseKeys.catalog(kind, rulesetId, locale), "drafts"],
+    queryFn: async ({ signal }) => {
+      try {
+        return await warehouseApi.list(kind, rulesetId, locale, signal, { draftsOnly: true })
+      } catch (error) {
+        // Older servers can still expose drafts through the unscoped catalog.
+        if (
+          isApiError(error, "INVALID_QUERY_PARAMETER") &&
+          error.problem.errors?.some((field) => field.path === "draftsOnly" && field.code === "UNKNOWN_PARAMETER")
+        )
+          return null
+        throw error
+      }
+    },
+    enabled: !!rulesetId,
+    staleTime: 60000,
+  })
+  const drafts = useMemo(
+    () => draftQuery.data ?? (catalog.data ?? []).filter((entry) => entry.revision.state === "DRAFT"),
+    [draftQuery.data, catalog.data],
+  )
   const data = useMemo(
     () =>
       overview.data
@@ -93,6 +137,11 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
     data?.variants.filter(
       (v) => (!value.seasonId || v.seasonId === value.seasonId) && (!value.variantId || v.id === value.variantId),
     ) ?? []
+  const entries = useMemo(() => {
+    if (!scoped) return catalog.data ?? []
+    const rows = query.data ?? []
+    return showAll ? appendVisibleDrafts(rows, drafts, value, data?.variants ?? []) : rows
+  }, [scoped, showAll, catalog.data, query.data, drafts, value.seasonId, value.variantId, data?.variants])
   const reviewed = variants.length > 0 && variants.every((v) => v.dataReviewState === "COMPLETE")
   const baselineIds = useMemo(
     () => new Set(matched.filter((row) => !isGameplayChange(row)).map((row) => row.ownerId)),
@@ -106,6 +155,11 @@ export function useWarehouseScope<K extends WarehouseKind>(kind: K, rulesetId: s
   }
   return {
     kind,
+    catalog,
+    drafts,
+    draftQuery,
+    draftsReady: draftQuery.isSuccess && (draftQuery.data !== null || catalog.isSuccess),
+    entries,
     currentFilter,
     value,
     scoped,
@@ -139,15 +193,16 @@ export function WarehouseScopeControls({ scope }: { scope: WarehouseScopeState }
           loading={scope.changes.isPending}
         />
       )}
-      {(scope.overview.error || scope.changes.error) && (
+      {(scope.overview.error || scope.changes.error || scope.draftQuery.error) && (
         <div role="alert" className="text-sm text-destructive">
-          {errorMessage(scope.overview.error ?? scope.changes.error)}
+          {errorMessage(scope.overview.error ?? scope.changes.error ?? scope.draftQuery.error)}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
               void scope.overview.refetch()
               void scope.changes.refetch()
+              void scope.draftQuery.refetch()
             }}
           >
             Thử lại

@@ -4,37 +4,49 @@ import { control } from "../publishing/fields"
 import { hasRulesetChoice } from "../publishing/default-ruleset"
 import {
   DropdownMenuItem,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { FilePenLine } from "lucide-react"
+import { Button } from "@aov/ui/components/button"
+import type { Variant } from "../publishing/publication-overview"
 import { warehouseName, type WarehouseEntry } from "./warehouse-types"
 
 export function WarehouseDraftMenu<T extends WarehouseEntry>({
   entries,
   locale,
   onOpen,
+  variants,
 }: {
   entries: T[]
   locale: string
   onOpen: (entry: T) => void
+  variants?: Variant[]
 }) {
   const drafts = entries.filter((entry) => entry.revision.state === "DRAFT")
   if (!drafts.length) return null
   return (
-    <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <FilePenLine aria-hidden /> Bản nháp ({drafts.length})
-      </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" size="sm" variant="outline" aria-label={`Mở danh sách bản nháp (${drafts.length})`}>
+          <FilePenLine aria-hidden /> Bản nháp ({drafts.length})
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="max-h-72 max-w-[calc(100vw-2rem)] overflow-y-auto">
         {drafts.map((entry) => (
-          <DropdownMenuItem key={entry.id} onSelect={() => onOpen(entry)}>
-            {warehouseName(entry, locale)}
+          <DropdownMenuItem key={entry.id} onSelect={() => onOpen(entry)} className="flex-col items-start gap-0.5">
+            <span>{warehouseName(entry, locale)}</span>
+            <span className="type-meta">
+              {entry.revision.effectiveFromPatchVariantId
+                ? (variants?.find((v) => v.id === entry.revision.effectiveFromPatchVariantId)?.patchCode ??
+                  "Đã gắn patch")
+                : "Chưa gắn patch"}
+            </span>
           </DropdownMenuItem>
         ))}
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

@@ -13,7 +13,7 @@ import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { matchesQuery } from "@/lib/text"
-import { useWarehouseCatalog, warehouseApi, warehouseKeys, invalidateWarehouseCatalogs } from "./warehouse-api"
+import { warehouseApi, warehouseKeys, invalidateWarehouseCatalogs } from "./warehouse-api"
 import { WarehouseDraftMenu, WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
 import { EnchantmentBranches } from "./enchantment-branches"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
@@ -22,6 +22,7 @@ import { useWarehouseScope, WarehouseScopeControls, WarehouseScopeEmpty } from "
 import { availabilityLabels, SpellCollection } from "./spell-cards"
 import { ArcanaCollection } from "./arcana-cards"
 import { ArcanaFilters } from "./arcana-filters"
+import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"
 import {
   warehouseText,
   type ArcanaContent,
@@ -62,8 +63,8 @@ export function BackendSpellsPage() {
 function SecondaryPage({ kind }: { kind: SecondaryKind }) {
   const context = useWarehouseContext()
   const client = useQueryClient()
-  const catalog = useWarehouseCatalog(kind, context.rulesetId, context.locale)
   const scopeState = useWarehouseScope(kind, context.rulesetId, context.locale)
+  const catalog = scopeState.catalog
   const { scoped, query: scopedCatalog, overview } = scopeState
   const branches = useQuery({
     queryKey: warehouseKeys.metadata("enchantments"),
@@ -76,6 +77,10 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
   const canPublish = capabilities.includes(`${permissionNames[kind]}:publish`)
   const [selectedId, setSelectedId] = useSearchParam("item")
   const [selectedEntry, setSelectedEntry] = useState<SecondaryEntry | null>(null)
+  const [translationView, setTranslationView] = useState<{ entryId: string; locale: string; language: string } | null>(
+    null,
+  )
+  const [editTarget, setEditTarget] = useState<EditTarget | null>(null)
   const [creating, setCreating] = useState(false)
   const [branchEditor, setBranchEditor] = useState<WarehouseMetadata | "new" | null>(null)
   const [ordering, setOrdering] = useState(false)
@@ -95,9 +100,10 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
     ...entry,
     changeKinds: scopeState.badgeKinds(entry.id),
   }))
-  const scopedRecords = scoped
-    ? (scopedCatalog.data ?? []).map((entry) => ({ ...entry, changeKinds: scopeState.badgeKinds(entry.id) }))
-    : records
+  const scopedRecords = scopeState.entries.map((entry) => ({
+    ...entry,
+    changeKinds: entry.revision.state === "DRAFT" && scopeState.showAll ? [] : scopeState.badgeKinds(entry.id),
+  }))
   const sortedBranches = [...(branches.data ?? [])].sort((a, b) => a.displayOrder - b.displayOrder)
   const activeBranch = sortedBranches.find((branch) => branch.code === branchCode) ?? sortedBranches[0]
   const selected =
@@ -106,6 +112,7 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       : (scopedRecords.find((entry) => entry.id === selectedId || entry.code === selectedId) ??
         records.find((entry) => entry.id === selectedId || entry.code === selectedId))
   const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action() })
+  const existingDraft = scopeState.drafts.find((entry) => entry.id === selected?.id)
   const candidates = scopedRecords
     .filter((entry) => {
       const text = warehouseText(entry.content.translations, context.locale)
@@ -136,17 +143,20 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
     !!context.rulesetId &&
     context.rulesets.isSuccess &&
     !overview.isPending &&
+    (!scoped || !scopeState.showAll || scopeState.draftsReady) &&
     (scoped ? scopedCatalog.isSuccess && !scopedCatalog.isFetching : catalog.isSuccess && !catalog.isFetching)
 
   useEffect(() => {
     if (kind === "arcana" && statOptionsReady && stat && !activeStat) setStat(null)
   }, [kind, statOptionsReady, stat, activeStat, setStat])
 
-  function open(entry: SecondaryEntry) {
+  function open(entry: SecondaryEntry, section?: WarehouseSection) {
+    setEditTarget(section ? { revisionId: entry.revision.id, section } : null)
     setSelectedEntry(entry)
     setSelectedId(entry.id)
   }
   function close() {
+    setEditTarget(null)
     setSelectedEntry(null)
     setSelectedId(null)
     setCreating(false)
@@ -179,15 +189,15 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
         : await warehouseApi.save(kind, selected!, value, patchId)
       await refresh()
       if (creating) close()
-      else setSelectedEntry(saved)
+      else open(saved)
     })
   }
-  async function action(type: "fork" | "publish" | "discard") {
+  async function action(type: "fork" | "publish" | "discard", section?: WarehouseSection) {
     await mutation.mutateAsync(async () => {
       const saved = await warehouseApi[type](kind, selected!)
       await refresh()
       if (type === "discard") close()
-      else setSelectedEntry(saved)
+      else open(saved, section)
     })
   }
   const issue =
@@ -238,6 +248,12 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
         actions={
           <>
             <WarehouseRulesetSelect context={context} />
+            <WarehouseDraftMenu
+              entries={scopeState.drafts}
+              locale={context.locale}
+              onOpen={open}
+              variants={scopeState.data?.variants}
+            />
             {canWrite && (
               <PageActionsMenu label={`Tạo và thiết lập ${secondaryNames[kind]}`}>
                 <DropdownMenuItem
@@ -251,7 +267,6 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
                   <Plus />
                   Tạo {secondaryNames[kind]}
                 </DropdownMenuItem>
-                <WarehouseDraftMenu entries={records} locale={context.locale} onOpen={open} />
                 {kind === "enchantments" && (
                   <>
                     <DropdownMenuSeparator />
@@ -354,7 +369,9 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       {(catalog.isPending && !!context.rulesetId) ||
       (kind === "enchantments" && branches.isPending) ||
       overview.isPending ||
-      (scoped && (scopedCatalog.isPending || (!scopeState.showAll && scopeState.changes.isPending))) ? (
+      (scoped &&
+        (scopedCatalog.isPending ||
+          (scopeState.showAll ? scopeState.draftQuery.isPending && !visible.length : scopeState.changes.isPending))) ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {Array.from({ length: 8 }, (_, index) => (
             <Skeleton key={index} className="h-36 w-full rounded-xl" />
@@ -459,18 +476,36 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
           missingFields={selected?.missingFields}
           readOnly={!canWrite || (!creating && selected!.revision.state !== "DRAFT")}
           canPublish={canPublish}
+          translationOnly={
+            (selected?.revision.state === "DRAFT" ? selected : existingDraft)?.revision.cause === "TRANSLATION_UPDATE"
+          }
           revisionLabel={
             selected
               ? `${selected.revision.state === "DRAFT" ? "Bản nháp" : selected.revision.state === "PUBLISHED" ? "Đã xuất bản" : "Đã bỏ"} · v${selected.revision.revisionNo}`
               : undefined
           }
+          initialLanguage={
+            translationView && translationView.entryId === selectedId && translationView.locale === context.locale
+              ? translationView.language
+              : undefined
+          }
+          onLanguageChange={(language) => setTranslationView({ entryId: selectedId, locale: context.locale, language })}
+          initialSection={selected && editTarget?.revisionId === selected.revision.id ? editTarget.section : undefined}
           onSave={save}
           onClose={close}
           onDraft={(entry) => setSelectedEntry(entry as SecondaryEntry)}
+          statCatalog={kind === "arcana" ? records : undefined}
           enchantmentPeers={kind === "enchantments" ? (records as WarehouseEntry<EnchantmentContent>[]) : []}
           onReorderEnchantments={canWrite ? reorderEnchantments : undefined}
           onCreateDraft={
-            !creating && canWrite && selected?.revision.state === "PUBLISHED" ? () => action("fork") : undefined
+            !creating && canWrite && scopeState.draftsReady && selected?.revision.state === "PUBLISHED"
+              ? (section) => action("fork", section)
+              : undefined
+          }
+          onOpenDraft={
+            canWrite && selected?.revision.state === "PUBLISHED" && existingDraft
+              ? (section) => open(existingDraft, section)
+              : undefined
           }
           onPublish={!creating && selected?.revision.state === "DRAFT" ? () => action("publish") : undefined}
           onDiscard={!creating && selected?.revision.state === "DRAFT" ? () => action("discard") : undefined}
