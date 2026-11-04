@@ -1,6 +1,6 @@
-import { useState } from "react"
+import { useId, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { ArrowRight, Link2, Plus, X } from "lucide-react"
+import { ArrowLeftRight, ArrowRight, Link2, Plus, Sparkles, Swords, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
@@ -23,6 +23,10 @@ import {
   type ChangeRowType,
 } from "./patch-change-model"
 import { ROLES, type ChangeSource, type Content } from "./types"
+import { HeroAsset } from "./hero-asset"
+import { SkillChangeList } from "./skill-change-list"
+import { ActionStrip } from "@/components/action-strip"
+import { selectSkillTranslation, skillLabel, skillVariantLabel } from "./hero-skills"
 
 const api = createPublishingApi(backendRequest)
 export const compactControl =
@@ -59,7 +63,9 @@ export function PatchChangeEditor({
 }: PatchChangeEditorProps) {
   const cache = useQueryClient()
   const notes = source === "PATCH_NOTES"
+  const fieldsId = useId()
   const [rows, setRows] = useState<ChangeRow[]>(() => (initialRows?.length ? initialRows : [emptyRow("STAT")]))
+  const starter = useRef(notes && !initialRows?.length ? rows[0].id : null)
   const [summary, setSummary] = useState("")
   const [sourceUrl, setSourceUrl] = useState(defaultSourceUrl)
   const [checked, setChecked] = useState(false)
@@ -75,8 +81,17 @@ export function PatchChangeEditor({
   )
   const urlProblem = notes && !isHttpUrl(sourceUrl) ? "Dán link ghi chú cập nhật chính thức (http/https)." : null
   const invalid = !summary.trim() || !!urlProblem || [...problems.values()].some(Boolean)
-  const update = (id: string, patch: Partial<ChangeRow>) =>
+  const skills = notes ? [...(reference?.SKILLS?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder) : []
+  const update = (id: string, patch: Partial<ChangeRow>) => {
+    if (starter.current === id) starter.current = null
     setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)))
+  }
+  function add(type: ChangeRowType, key = "") {
+    const row = { ...emptyRow(type), key }
+    const replace = starter.current
+    starter.current = null
+    setRows((current) => (replace && current.length === 1 && current[0].id === replace ? [row] : [...current, row]))
+  }
 
   async function submit() {
     setChecked(true)
@@ -115,7 +130,7 @@ export function PatchChangeEditor({
         void submit()
       }}
     >
-      <fieldset disabled={busy} className="space-y-4">
+      <fieldset disabled={busy} className="min-w-0 space-y-4">
         {notes && (
           <label className="grid gap-1.5 text-sm">
             <span className="font-medium">Nguồn ghi chú cập nhật</span>
@@ -139,7 +154,7 @@ export function PatchChangeEditor({
           <textarea
             rows={2}
             className={cn(compactControl, "h-auto py-2")}
-            placeholder="Ví dụ: tăng máu cơ bản, giảm hồi chiêu chiêu 2."
+            placeholder="Tóm tắt thay đổi của tướng…"
             value={summary}
             aria-invalid={checked && !summary.trim()}
             onChange={(event) => setSummary(event.target.value)}
@@ -151,11 +166,55 @@ export function PatchChangeEditor({
             <span className="text-sm font-medium">Các dòng thay đổi</span>
             <span className="text-xs text-muted-foreground">{rows.length} dòng</span>
           </div>
-          <ol className="space-y-2">
-            {rows.map((row, index) => (
+          {skills.length > 0 && (
+            <ActionStrip aria-label="Thêm thay đổi theo kỹ năng">
+              {skills.map((skill) => {
+                const name = selectSkillTranslation(skill, locale)?.name
+                const label = [skillLabel(skill), skillVariantLabel(skill, skills)].filter(Boolean).join(" · ")
+                const Icon = skill.kind === "PASSIVE" ? Sparkles : Swords
+                return (
+                  <Button
+                    key={skill.skillKey}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    aria-label={`Thêm thay đổi · ${[label, name].filter(Boolean).join(" · ")}`}
+                    title={name}
+                    onClick={() => add("SKILL", skill.skillKey)}
+                  >
+                    {skill.iconAssetId ? (
+                      <HeroAsset id={skill.iconAssetId} frameAspectRatio={1} className="size-6 rounded-md" />
+                    ) : (
+                      <Icon aria-hidden className="size-4" />
+                    )}
+                    {label}
+                    {name && <span className="max-w-32 truncate font-normal text-muted-foreground">{name}</span>}
+                  </Button>
+                )
+              })}
+            </ActionStrip>
+          )}
+          <SkillChangeList
+            entries={rows}
+            skillKeyOf={(row) =>
+              row.type === "SKILL" && reference?.SKILLS?.skills.some((skill) => skill.skillKey === row.key)
+                ? row.key
+                : undefined
+            }
+            skills={reference?.SKILLS?.skills}
+            locale={locale}
+            heroId={heroId}
+            groupAction={(key) => (
+              <Button type="button" variant="ghost" size="sm" onClick={() => add("SKILL", key)}>
+                <Plus aria-hidden className="size-4" /> Thêm dòng trong nhóm
+              </Button>
+            )}
+            renderRow={(row, skill) => (
               <ChangeRowEditor
                 key={row.id}
-                index={index}
+                index={rows.indexOf(row)}
+                grouped={!!skill}
+                fieldsId={fieldsId}
                 row={row}
                 types={types}
                 reference={reference}
@@ -165,23 +224,30 @@ export function PatchChangeEditor({
                 onChange={(patch) => update(row.id, patch)}
                 onRemove={() => setRows((current) => current.filter((item) => item.id !== row.id))}
               />
+            )}
+          />
+          <datalist id={fieldsId}>
+            {[...new Set(Object.values(SKILL_FIELDS))].map((name) => (
+              <option key={name} value={name} />
             ))}
-          </ol>
-          <div className="flex flex-wrap gap-1.5">
-            {types.map((type) => (
-              <Button
-                key={type}
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-7 gap-1 px-2 text-xs"
-                onClick={() => setRows((current) => [...current, emptyRow(type)])}
-              >
-                <Plus className="size-3.5" />
-                {ROW_TYPE_LABELS[type]}
-              </Button>
-            ))}
-          </div>
+          </datalist>
+          <ActionStrip aria-label="Thêm dòng thay đổi">
+            {types
+              .filter((type) => type !== "SKILL" || !skills.length)
+              .map((type) => (
+                <Button
+                  key={type}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1 px-2 text-xs"
+                  onClick={() => add(type)}
+                >
+                  <Plus className="size-3.5" />
+                  {ROW_TYPE_LABELS[type]}
+                </Button>
+              ))}
+          </ActionStrip>
         </div>
       </fieldset>
       {error && (
@@ -211,6 +277,8 @@ export function PatchChangeEditor({
 
 function ChangeRowEditor({
   index,
+  grouped,
+  fieldsId,
   row,
   types,
   reference,
@@ -221,6 +289,8 @@ function ChangeRowEditor({
   onRemove,
 }: {
   index: number
+  grouped: boolean
+  fieldsId: string
   row: ChangeRow
   types: ChangeRowType[]
   reference: Content | null
@@ -234,26 +304,30 @@ function ChangeRowEditor({
   const skills = skillOptions(reference, locale)
   const stat = stats.find((option) => option.key === row.key)
   const label = `Dòng ${index + 1}`
+  const [editingTarget, setEditingTarget] = useState(false)
+  const showTarget = !grouped || editingTarget
   return (
     <li
-      className={cn("space-y-2 rounded-lg border bg-card p-2.5", problem && "border-destructive/50")}
+      className={cn("space-y-2", grouped ? "py-2.5" : "rounded-lg border p-2.5", problem && "border-destructive/50")}
       aria-label={label}
     >
-      <div className="flex items-center gap-2">
-        <select
-          aria-label={`${label}: loại`}
-          className={cn(compactControl, "w-28 shrink-0")}
-          value={row.type}
-          onChange={(event) =>
-            onChange({ ...emptyRow(event.target.value as ChangeRowType), id: row.id, kind: row.kind })
-          }
-        >
-          {types.map((type) => (
-            <option key={type} value={type}>
-              {ROW_TYPE_LABELS[type]}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-wrap items-center gap-2">
+        {showTarget && (
+          <select
+            aria-label={`${label}: loại`}
+            className={cn(compactControl, "w-28 shrink-0")}
+            value={row.type}
+            onChange={(event) =>
+              onChange({ ...emptyRow(event.target.value as ChangeRowType), id: row.id, kind: row.kind })
+            }
+          >
+            {types.map((type) => (
+              <option key={type} value={type}>
+                {ROW_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </select>
+        )}
         <select
           aria-label={`${label}: tính chất`}
           className={cn(compactControl, "w-36 shrink-0", !row.kind && "text-muted-foreground")}
@@ -267,6 +341,17 @@ function ChangeRowEditor({
             </option>
           ))}
         </select>
+        {grouped && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-pressed={editingTarget}
+            onClick={() => setEditingTarget(!editingTarget)}
+          >
+            <ArrowLeftRight aria-hidden className="size-3.5" /> Đổi mục
+          </Button>
+        )}
         <Button
           type="button"
           size="icon"
@@ -332,34 +417,35 @@ function ChangeRowEditor({
       )}
       {row.type === "SKILL" && (
         <div className="grid gap-2">
-          <div className="grid gap-2 sm:grid-cols-2">
-            {skills.length ? (
-              <select
-                aria-label={`${label}: kỹ năng`}
-                className={compactControl}
-                value={row.key}
-                onChange={(event) => onChange({ key: event.target.value })}
-              >
-                <option value="">Chọn kỹ năng…</option>
-                {skills.map((option) => (
-                  <option key={option.key} value={option.key}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                aria-label={`${label}: mã kỹ năng`}
-                className={compactControl}
-                placeholder="Mã kỹ năng"
-                value={row.key}
-                onChange={(event) => onChange({ key: event.target.value })}
-              />
-            )}
+          <div className={cn("grid gap-2", showTarget && "sm:grid-cols-2")}>
+            {showTarget &&
+              (skills.length ? (
+                <select
+                  aria-label={`${label}: kỹ năng`}
+                  className={compactControl}
+                  value={row.key}
+                  onChange={(event) => onChange({ key: event.target.value })}
+                >
+                  <option value="">Chọn kỹ năng…</option>
+                  {skills.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  aria-label={`${label}: mã kỹ năng`}
+                  className={compactControl}
+                  placeholder="Mã kỹ năng"
+                  value={row.key}
+                  onChange={(event) => onChange({ key: event.target.value })}
+                />
+              ))}
             <input
               aria-label={`${label}: trường thay đổi`}
               className={compactControl}
-              list="patch-change-skill-fields"
+              list={fieldsId}
               placeholder="Trường: hồi chiêu, sát thương…"
               value={SKILL_FIELDS[row.field] ?? row.field}
               onChange={(event) => {
@@ -368,11 +454,6 @@ function ChangeRowEditor({
                 onChange({ field: known ?? typed })
               }}
             />
-            <datalist id="patch-change-skill-fields">
-              {Object.values(SKILL_FIELDS).map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
           </div>
           <div className="grid items-center gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
             <ValueInput

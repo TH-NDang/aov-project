@@ -83,6 +83,34 @@ test("the timeline uses the new published baseline, preserves it across patches 
               oldValue: "40 + 0.25*physicalAttack",
               newValue: "45 + 0.23*physicalAttack",
             },
+            {
+              id: "passive",
+              type: "HERO_SKILL_CHANGE",
+              skillKey: "passive",
+              fieldKey: "description",
+              changeKind: "FIX",
+              oldValue: "A",
+              newValue: "B",
+            },
+            { id: "hp", type: "HERO_STAT_CHANGE", statKey: "HP", changeKind: "BUFF", oldValue: 100, newValue: 120 },
+            {
+              id: "cooldown",
+              type: "HERO_SKILL_CHANGE",
+              skillKey: "skill-1",
+              fieldKey: "cooldown",
+              changeKind: "BUFF",
+              oldValue: "8",
+              newValue: "6",
+            },
+            {
+              id: "alternate",
+              type: "HERO_SKILL_CHANGE",
+              skillKey: "skill-1-2",
+              fieldKey: "range",
+              changeKind: "BUFF",
+              oldValue: "2",
+              newValue: "3",
+            },
           ],
         },
       ])
@@ -150,6 +178,19 @@ test("the timeline uses the new published baseline, preserves it across patches 
     assert.match(dom.window.document.body.textContent!, /40 \+ 0\.25 × Công vật lý/)
     assert.equal(dom.window.document.body.textContent!.split("45 + 0.23 × Công vật lý").length - 1, 2)
     assert.doesNotMatch(dom.window.document.body.textContent!, /physicalAttack/)
+    const recorded = [...dom.window.document.querySelectorAll("h3")]
+      .find((title) => title.textContent?.startsWith("Thay đổi ở"))!
+      .closest("section")!
+    const groups = [...recorded.querySelectorAll("section[aria-labelledby]")]
+    assert.deepEqual(
+      groups.map((group) => group.querySelector("h4")?.textContent),
+      ["Chiêu 1", "Nội tại · Sắc lẻm", "Chiêu 1 · Biến thể 2"],
+    )
+    assert.deepEqual(
+      groups.map((group) => group.querySelectorAll(":scope > ul > li").length),
+      [2, 1, 1],
+    )
+    assert.doesNotMatch(groups[0].textContent!, /Máu|Nội tại/)
     const select = dom.window.document.querySelector<HTMLSelectElement>("select")!
     assert.equal(select.value, baseline.id)
     assert.equal(
@@ -169,6 +210,38 @@ test("the timeline uses the new published baseline, preserves it across patches 
     })
     await waitFor(() => dom.window.document.body.textContent!.includes("8 seconds from old anchor"))
     assert.equal(requests.at(-1)!.searchParams.has("anchorRevisionId"), false)
+
+    const { PatchChangeEditor } = await import("../src/features/publishing/patch-change-editor")
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <PatchChangeEditor
+            source="PATCH_NOTES"
+            heroId={baseline.heroId}
+            variantId="oct15"
+            locale="vi-VN"
+            reference={fixture.content}
+            onSaved={() => {}}
+          />
+        </QueryClientProvider>,
+      ),
+    )
+    await act(async () =>
+      dom.window.document.querySelector<HTMLButtonElement>('[aria-label^="Thêm thay đổi · Nội tại"]')!.click(),
+    )
+    const skillGroup = dom.window.document.querySelector("section[aria-labelledby]")!
+    assert.match(skillGroup.querySelector("h4")!.textContent!, /Nội tại · Sắc lẻm/)
+    const addField = [...skillGroup.querySelectorAll("button")].find((node) =>
+      node.textContent?.includes("Thêm dòng trong nhóm"),
+    )!
+    await act(async () => addField.click())
+    assert.equal(skillGroup.querySelectorAll(":scope > ul > li").length, 2)
+    assert.equal(dom.window.document.querySelectorAll("section[aria-labelledby]").length, 1)
+    assert.equal(skillGroup.querySelector('select[aria-label$=": kỹ năng"]'), null)
+    await act(async () =>
+      [...skillGroup.querySelectorAll("button")].find((node) => node.textContent?.includes("Đổi mục"))!.click(),
+    )
+    assert.equal(skillGroup.querySelector<HTMLSelectElement>('select[aria-label$=": kỹ năng"]')?.value, "passive")
   } finally {
     await act(async () => root.unmount())
     client.clear()

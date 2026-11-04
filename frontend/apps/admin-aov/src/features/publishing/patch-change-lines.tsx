@@ -1,11 +1,9 @@
 import { ArrowRight, ExternalLink, FileText, GitCompareArrows } from "lucide-react"
 import { ChangeKindBadge } from "./hero-change-badges"
 import { cn } from "@aov/ui/lib/utils"
-import { localized } from "./hero-content"
 import { SOURCE_LABELS, UNIT_LABELS, skillFieldLabel, statLabel } from "./patch-change-model"
 import { formatPatchValue } from "./patch-value"
-import { SkillArtwork } from "./skill-artwork"
-import { skillLabel } from "./hero-skills"
+import { SkillChangeList } from "./skill-change-list"
 import { compareSkillRanks } from "./skill-rank-values"
 import { SkillRankComparison } from "./skill-rank-table"
 import { ROLES, type ChangeSource, type Content, type Role } from "./types"
@@ -64,7 +62,7 @@ export function SourceBadge({ change }: { change: Pick<RecordedChangeSet, "sourc
 
 const text = (value: unknown) => (value === null || value === undefined || value === "" ? "—" : String(value))
 
-/** One readable line per recorded change: what changed, from what, to what. */
+/** Keep the before/after and assessment of each field inside its skill. */
 export function ChangeLines({
   changes,
   content,
@@ -79,12 +77,16 @@ export function ChangeLines({
   className?: string
 }) {
   return (
-    <ul className={cn("divide-y rounded-lg border", className)}>
-      {changes.map((change) => {
-        const skill =
-          change.type === "HERO_SKILL_CHANGE"
-            ? content?.SKILLS?.skills.find((entry) => entry.skillKey === change.skillKey)
-            : undefined
+    <SkillChangeList
+      entries={changes}
+      skillKeyOf={(change) =>
+        change.type === "HERO_SKILL_CHANGE" && typeof change.skillKey === "string" ? change.skillKey : undefined
+      }
+      skills={content?.SKILLS?.skills}
+      heroId={heroId}
+      locale={locale}
+      className={className}
+      renderRow={(change, skill) => {
         let subject = ""
         let before: unknown
         let after: unknown
@@ -98,15 +100,7 @@ export function ChangeLines({
             break
           }
           case "HERO_SKILL_CHANGE": {
-            const slot = /^skill-(\d+)-\d+$/.exec(text(change.skillKey))?.[1]
-            const label = skill
-              ? `${skillLabel(skill)} · ${localized(skill.translations, locale)?.name ?? text(change.skillKey)}`
-              : slot === "0"
-                ? "Nội tại"
-                : slot
-                  ? `Chiêu ${slot}`
-                  : text(change.skillKey)
-            subject = `${label} · ${skillFieldLabel(String(change.fieldKey))}`
+            subject = skillFieldLabel(String(change.fieldKey))
             before = typeof change.oldValue === "string" ? formatPatchValue(change.oldValue) : change.oldValue
             after = typeof change.newValue === "string" ? formatPatchValue(change.newValue) : change.newValue
             break
@@ -130,8 +124,7 @@ export function ChangeLines({
         const ranks =
           change.type === "HERO_SKILL_CHANGE" ? compareSkillRanks(change.oldValue, change.newValue, skill, skill) : null
         return (
-          <li key={change.id} className="flex items-start gap-3 p-3 text-sm">
-            {skill && <SkillArtwork skill={skill} heroId={heroId} className="size-10" preview />}
+          <li key={change.id} className={cn("py-2.5 text-sm", change.type !== "HERO_SKILL_CHANGE" && "border-b px-3")}>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="font-medium">{subject}</span>
@@ -166,7 +159,7 @@ export function ChangeLines({
             </div>
           </li>
         )
-      })}
-    </ul>
+      }}
+    />
   )
 }

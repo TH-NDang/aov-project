@@ -17,7 +17,6 @@ import {
   type Provenance,
 } from "./patch-change-model"
 import { RecordPatchNotesSheet } from "./patch-notes-sheet"
-import { localized } from "./hero-content"
 import { usePublicationOverview } from "./publication-overview"
 import { type Content, type Revision } from "./types"
 import { HeroRoleBadge } from "./hero-classification-badges"
@@ -25,7 +24,7 @@ import { useHeroLocation } from "./use-hero-location"
 import { control } from "./fields"
 import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "./patch-view-anchor"
 import { formatPatchValue } from "./patch-value"
-import { skillLabel } from "./hero-skills"
+import { SkillChangeList } from "./skill-change-list"
 import { compareSkillRanks } from "./skill-rank-values"
 import { SkillRankValues } from "./skill-rank-table"
 
@@ -101,10 +100,6 @@ export function HeroPatchTimeline({
     staleTime: 30000,
   })
   const recorded = changes.data?.find((change) => change.heroId === heroId)
-  const skillName = (key: string) => {
-    const skill = content.SKILLS?.skills.find((entry) => entry.skillKey === key)
-    return skill ? `${skillLabel(skill)} · ${localized(skill.translations, locale)?.name ?? key}` : key
-  }
   const sourceUrl =
     overview.data?.releases.find((release) => release.variantId === variant?.id && release.sourceUrl)?.sourceUrl ?? ""
 
@@ -265,15 +260,20 @@ export function HeroPatchTimeline({
             {data.skillFields.length > 0 && (
               <div className="space-y-1.5">
                 <span className="text-xs text-muted-foreground">Kỹ năng đã ghi trong ghi chú</span>
-                <ul className="divide-y rounded-lg border text-sm">
-                  {data.skillFields.map((field) => {
-                    const skill = content.SKILLS?.skills.find((entry) => entry.skillKey === field.skillKey)
+                <SkillChangeList
+                  entries={data.skillFields}
+                  skillKeyOf={(field) => field.skillKey}
+                  skills={content.SKILLS?.skills}
+                  heroId={heroId}
+                  locale={locale}
+                  renderRow={(field, skill) => {
                     const ranks = compareSkillRanks(null, field.value, skill, skill)
                     return (
-                      <li key={`${field.skillKey}:${field.fieldKey}`} className="flex flex-wrap gap-x-3 gap-y-1 p-2.5">
-                        <span className="font-medium">
-                          {skillName(field.skillKey)} · {skillFieldLabel(field.fieldKey)}
-                        </span>
+                      <li
+                        key={`${field.skillKey}:${field.fieldKey}`}
+                        className="type-body flex flex-wrap gap-x-3 gap-y-1 py-2.5"
+                      >
+                        <span className="font-medium">{skillFieldLabel(field.fieldKey)}</span>
                         {!ranks && (
                           <span className="min-w-0 flex-1 whitespace-pre-wrap">
                             {formatPatchValue(field.value ?? "—")}
@@ -293,8 +293,8 @@ export function HeroPatchTimeline({
                         )}
                       </li>
                     )
-                  })}
-                </ul>
+                  }}
+                />
               </div>
             )}
           </>
