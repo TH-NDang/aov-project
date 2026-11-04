@@ -700,6 +700,11 @@ Combat stats dành cho dữ liệu gameplay có giá trị số/cấu trúc th�
 
 Không ép toàn bộ stat vào một object JSON không kiểm soát nếu domain đã ổn định đủ để mô hình hóa rõ ràng.
 
+Giá trị chung có nguồn xác nhận được quản lý theo bộ luật và patch bắt đầu có hiệu lực.
+Số đọc thủ công từ ảnh trong một patch giữ kèm nguồn và cấp tướng nếu biết. Khi ảnh chưa xác nhận cấp tướng,
+admin hiển thị số quan sát để đối chiếu và chỉ lưu giá trị cơ bản riêng khi biên tập viên nhập cho tướng.
+Thay đổi mặc định chung được ghi ở patch. Lịch sử cân bằng của từng tướng chỉ ghi thay đổi riêng.
+
 ### 7.6 Skills
 
 Skill identity phải ổn định theo hero và không dựa vào localized name.

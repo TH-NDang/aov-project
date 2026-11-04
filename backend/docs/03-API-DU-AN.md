@@ -2389,6 +2389,12 @@ giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay s�
 
 ### Xem toàn bộ dữ liệu tại mốc và rà soát patch
 
+- `GET /admin/patch-variants/{id}/stat-defaults` cần quyền `catalog:read`. Mỗi dòng trả mã thuộc tính,
+  giá trị, đơn vị, URL nguồn, patch khai báo và phiên bản của dòng. API kế thừa từ các patch đã xuất bản trong cùng bộ luật.
+- `PUT /admin/patch-variants/{id}/stat-defaults/{key}` cần quyền `patch:write`. Body gồm
+  `baseValue`, `unit` (POINT hoặc PERCENT), `sourceUrl` và `expectedVersion` của dòng tại patch đích
+  (0 khi tạo). Thành công trả 204 và mở lại rà soát nếu cần. Khi xung đột phiên bản, trả 409.
+
 - `GET /admin/{heroes|items|enchantments|arcana|spells}` thêm `includeUnchanged=true` khi lọc `seasonId` / `patchVariantId`: kế thừa dữ liệu đã xuất bản đến mốc đích. Mặc định giữ chế độ chỉ thay đổi.
 - `PUT /admin/patch-variants/{id}/data-review`: quyền `patch:write`, body `{ state: "COMPLETE" | "IN_PROGRESS", expectedVersion: number }`. Mốc phải đã xuất bản; phiên bản ban đầu 0, trả 409 nếu bị thay đổi đồng thời.
 - Publication overview bổ sung `dataReviewState`, `dataReviewVersion`, `dataReviewedAt` trên variant. Trạng thái này tách khỏi trạng thái xuất bản và trạng thái đang áp dụng của thị trường.

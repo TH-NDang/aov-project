@@ -326,6 +326,11 @@ created_at
 
 PK `(stats_revision_id, stat_key)`.
 
+`patch.stat_default` lưu giá trị chung có nguồn theo `(variant_id, stat_key)`, gồm `base_value`,
+`unit`, `source_url` và `version`. Mỗi thuộc tính lấy bản gần nhất theo `ruleset_ordinal` trong
+cùng bộ luật đến patch đích. Chỉ bản đang xem được dùng giá trị còn nháp. Mặc định không được nhân
+bản vào các dòng chỉ số riêng của tướng.
+
 Canonical stat dictionary table tùy chọn:
 
 `hero.combat_stat_definition`
