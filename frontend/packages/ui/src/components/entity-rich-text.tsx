@@ -15,6 +15,7 @@ import {
 } from "../lib/entity-rich-text"
 import { Slot } from "radix-ui"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import { ExampleTable, RichParagraph } from "./rich-text-blocks"
 import { observeReferenceIcon } from "../lib/observe-reference-icon"
 import { countryReferenceFlag, countryReferences } from "../lib/country-references"
 
@@ -178,6 +179,13 @@ export function skillReferenceContext(entity: EntityReference, locale: string, f
 
 function renderDescriptionNodes(nodes: RichTextNode[]): React.ReactNode {
   return nodes.map((node, position) => {
+    if (node.type === "exampleTable") return <ExampleTable rows={node.rows} key={position} />
+    if (node.type === "paragraph")
+      return (
+        <RichParagraph style={node.style} key={position}>
+          {renderDescriptionNodes(node.children)}
+        </RichParagraph>
+      )
     if (node.type === "text") return <React.Fragment key={position}>{node.text}</React.Fragment>
     if (node.type === "reference") return <React.Fragment key={position}>{node.label}</React.Fragment>
     if (node.type === "strong") return <strong key={position}>{renderDescriptionNodes(node.children)}</strong>
@@ -446,6 +454,13 @@ export function EntityRichText({
   )
   const renderNodes = (items: RichTextNode[], explicitColor?: string): React.ReactNode =>
     items.map((node, position) => {
+      if (node.type === "exampleTable") return <ExampleTable rows={node.rows} key={position} />
+      if (node.type === "paragraph")
+        return (
+          <RichParagraph style={node.style} key={position}>
+            {renderNodes(node.children, explicitColor)}
+          </RichParagraph>
+        )
       if (node.type === "text") return <React.Fragment key={position}>{node.text}</React.Fragment>
       if (node.type === "strong") return <strong key={position}>{renderNodes(node.children, explicitColor)}</strong>
       if (node.type === "emphasis") return <em key={position}>{renderNodes(node.children, explicitColor)}</em>

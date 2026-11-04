@@ -1,7 +1,9 @@
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
 import { EntityReferenceInput, type EntityReferenceInputHandle } from "./entity-reference-input"
-import { referenceFormatState, toggleReferenceFormat } from "../lib/reference-input-formatting"
+import { referenceFormatState, styleReferenceParagraph, toggleReferenceFormat } from "../lib/reference-input-formatting"
+import { isParagraphStyle, paragraphStyles, writeExampleTable } from "../lib/rich-text-blocks"
+import { ExampleTableDialog } from "./rich-text-blocks"
 import {
   entityKindLabels,
   referenceTranslation,
@@ -27,7 +29,7 @@ import {
   type EntityIconResolver,
 } from "./entity-rich-text"
 import { Button } from "./button"
-import { AtSign, Paintbrush, Redo2, Undo2 } from "lucide-react"
+import { AtSign, Paintbrush, Redo2, Table2, Undo2 } from "lucide-react"
 import { cn } from "../lib/utils"
 
 const empty: EntityReference[] = []
@@ -49,6 +51,7 @@ export interface EntityRichTextEditorProps {
   renderPreview?: boolean
   hideLabel?: boolean
   compact?: boolean
+  allowBlocks?: boolean
   className?: string
   inputClassName?: string
   searchReferences?: EntityReferenceSearch
@@ -154,6 +157,7 @@ export function EntityRichTextEditor({
   renderPreview = true,
   hideLabel = false,
   compact = false,
+  allowBlocks = true,
   className,
   inputClassName,
   searchReferences,
@@ -179,6 +183,10 @@ export function EntityRichTextEditor({
   const [visibleSuggestions, setVisibleSuggestions] = React.useState(suggestionBatchSize)
   const [color, setColor] = React.useState("#2563eb")
   const [notice, setNotice] = React.useState("")
+  const [table, setTable] = React.useState<{ rows?: string[][]; range: TextSelection; original: string } | null>(null)
+  const editTable = React.useCallback((rows: string[][], range: TextSelection) => {
+    setTable({ rows, range, original: current.current })
+  }, [])
   const [isComposing, setComposing] = React.useState(false)
   const [selectedReferences, setSelectedReferences] = React.useState<EntityReference[]>([])
   const [previewOpen, setPreviewOpen] = React.useState(false)
@@ -422,6 +430,46 @@ export function EntityRichTextEditor({
           compact && "gap-0.5 rounded-lg",
         )}
       >
+        {allowBlocks && (
+          <div className="flex items-center border-r pr-1">
+            <select
+              aria-label="Loại văn bản"
+              title="Đặt kiểu cho đoạn đang viết hoặc văn bản đã chọn"
+              className="h-7 rounded bg-transparent px-1 text-xs hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+              disabled={disabled || isComposing}
+              value={formatting.style}
+              onChange={(event) => {
+                const style = event.target.value
+                if (style !== "normal" && !isParagraphStyle(style)) return
+                const next = styleReferenceParagraph(current.current, selection.current, style)
+                if (next) commit(next)
+              }}
+            >
+              <option value="normal">Đoạn thường</option>
+              {Object.entries(paragraphStyles).map(([key, style]) => (
+                <option key={key} value={key}>
+                  {style.label}
+                </option>
+              ))}
+            </select>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-label="Chèn bảng ví dụ"
+              title="Chèn bảng ví dụ"
+              className="size-7 p-0"
+              disabled={disabled || isComposing}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                const end = selection.current.end
+                setTable({ range: { start: end, end }, original: current.current })
+              }}
+            >
+              <Table2 aria-hidden className="size-4" />
+            </Button>
+          </div>
+        )}
         <div
           role="group"
           aria-label="Định dạng chữ"
@@ -538,7 +586,34 @@ export function EntityRichTextEditor({
           </Button>
         </div>
       </div>
+      {table && (
+        <ExampleTableDialog
+          initial={table.rows}
+          onCancel={() => {
+            setTable(null)
+            area.current?.focus()
+          }}
+          onSave={(rows) => {
+            if (disabled || current.current !== table.original || area.current?.element?.closest("fieldset[disabled]"))
+              return false
+            const token = writeExampleTable(rows)
+            const { start, end } = table.range
+            const pos = start + token.length
+            if (
+              !commit({
+                value: current.current.slice(0, start) + token + current.current.slice(end),
+                start: pos,
+                end: pos,
+              })
+            )
+              return false
+            setTable(null)
+            return true
+          }}
+        />
+      )}
       <EntityReferenceInput
+        onEditTable={allowBlocks ? editTable : undefined}
         id={id}
         ref={area}
         className={cn(

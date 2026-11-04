@@ -22,6 +22,9 @@ import {
   type ReferenceInputNode,
 } from "../lib/reference-input-dom"
 import { paintPassiveReferences } from "../lib/reference-input-recognition"
+import { inputAtomRange } from "../lib/reference-input-dom"
+import { isParagraphStyle, paragraphStyles } from "../lib/rich-text-blocks"
+import { ExampleTable } from "./rich-text-blocks"
 import { EntityReferenceArtwork, skillReferenceContext, type EntityIconResolver } from "./entity-rich-text"
 
 export type EntityReferenceInputHandle = {
@@ -50,9 +53,10 @@ export interface EntityReferenceInputProps extends Omit<
   onCompositionStart?(): void
   onCompositionEnd?(snapshot: EditorSnapshot): boolean | void
   onHistoryUndo?(redo: boolean): void
+  onEditTable?(rows: string[][], selection: TextSelection): void
 }
 
-type ReferencePart = Extract<ReferenceInputPart, { type: "reference" }>
+type ReferencePart = Exclude<ReferenceInputPart, { type: "text" }>
 type Host = { element: HTMLSpanElement; part: ReferencePart }
 const empty: EntityReference[] = []
 const clipboardType = "application/x-aov-rich-text"
@@ -88,6 +92,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
       onCompositionStart,
       onCompositionEnd,
       onHistoryUndo,
+      onEditTable,
       onKeyDown,
       className = "",
       ...props
@@ -186,7 +191,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
       const formats: Extract<ReferenceInputNode, { type: "format" }>[] = []
       const collect = (parts: ReferenceInputNode[]) => {
         for (const part of parts) {
-          if (part.type === "reference") expected.push(part)
+          if (part.type === "reference" || part.type === "exampleTable") expected.push(part)
           if (part.type === "format") {
             formats.push(part)
             collect(part.children)
@@ -247,6 +252,14 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
             format.setAttribute("data-format-close", part.close)
             if (part.tag === "b") format.className = "font-bold"
             if (part.tag === "i") format.className = "italic"
+            if (isParagraphStyle(part.tag)) {
+              format.className = paragraphStyles[part.tag].classes
+              if (part.tag !== "note") {
+                format.setAttribute("data-heading", paragraphStyles[part.tag].label)
+                format.className +=
+                  " before:block before:text-xs before:font-semibold before:content-[attr(data-heading)]"
+              }
+            }
             if (part.color) format.style.color = part.color
             format.append(...build(part.children))
             if (!format.childNodes.length) format.append(document.createTextNode(""))
@@ -258,11 +271,15 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
             host.contentEditable = "false"
             host.setAttribute("contenteditable", "false")
             host.setAttribute("data-reference-token", part.token)
-            host.setAttribute("data-reference-kind", part.kind)
-            host.setAttribute("data-reference-id", part.id)
+            if (part.type === "reference") {
+              host.setAttribute("data-reference-kind", part.kind)
+              host.setAttribute("data-reference-id", part.id)
+            }
             host.setAttribute("draggable", "false")
             host.className =
-              "mx-0.5 inline-flex max-w-full select-all items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 align-baseline text-sm"
+              part.type === "exampleTable"
+                ? "my-1 block max-w-full"
+                : "mx-0.5 inline-flex max-w-full select-all items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 align-baseline text-sm"
           }
           next.push(retained ?? { element: host, part })
           return [document.createTextNode(""), host, document.createTextNode("")]
@@ -367,7 +384,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
       let position = 0
       for (const part of referenceInputParts(range.value)) {
         const length = part.type === "text" ? part.text.length : part.token.length
-        if (part.type === "reference" && range.start === position + (backward ? length : 0)) {
+        if (part.type !== "text" && range.start === position + (backward ? length : 0)) {
           setReferenceInputSelection(root, position, position + length)
           replace("")
           return true
@@ -443,6 +460,29 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     const chips = React.useMemo(
       () =>
         hosts.map(({ element: host, part }, index) => {
+          if (part.type === "exampleTable")
+            return createPortal(
+              <>
+                {onEditTable && (
+                  <button
+                    type="button"
+                    className="rounded px-2 py-1 text-xs font-medium hover:bg-muted"
+                    disabled={disabled || ancestorDisabled}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (!element.current || blocked()) return
+                      const range = inputAtomRange(element.current, host)
+                      if (range) onEditTable(part.rows, range)
+                    }}
+                  >
+                    Sửa bảng ví dụ
+                  </button>
+                )}
+                <ExampleTable rows={part.rows} />
+              </>,
+              host,
+              `table:${index}`,
+            )
           const known = catalog.get(`${part.kind}:${part.id}`)
           const entity: EntityReference = known ?? {
             id: part.id,
@@ -492,7 +532,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
             `${index}:${part.kind}:${part.id}`,
           )
         }),
-      [hosts, catalog, locale, fallbackLocale, resolveIcon],
+      [hosts, catalog, locale, fallbackLocale, resolveIcon, onEditTable, disabled, ancestorDisabled, blocked],
     )
     return (
       <>
@@ -545,6 +585,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
             } else commit(snapshot)
           }}
           onKeyDown={(event) => {
+            if ((event.target as HTMLElement).closest?.("button")) return
             if (blocked()) {
               event.preventDefault()
               return

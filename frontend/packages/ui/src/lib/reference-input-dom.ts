@@ -1,14 +1,17 @@
 import type { EntityKind } from "./entity-rich-text"
 import type { EditorSnapshot, TextSelection } from "./entity-rich-text-editor"
+import { exampleTablePattern, readExampleTable, type ParagraphStyle } from "./rich-text-blocks"
 
 export type ReferenceInputPart =
-  { type: "text"; text: string } | { type: "reference"; token: string; kind: EntityKind; id: string; label: string }
+  | { type: "exampleTable"; token: string; rows: string[][]; label: string }
+  | { type: "text"; text: string }
+  | { type: "reference"; token: string; kind: EntityKind; id: string; label: string }
 
 export type ReferenceInputNode =
   | ReferenceInputPart
   | {
       type: "format"
-      tag: "b" | "i" | "color" | "noauto"
+      tag: "b" | "i" | "color" | "noauto" | ParagraphStyle
       open: string
       close: string
       color?: string
@@ -19,8 +22,9 @@ const reference =
   /<ref=(hero|skill|item|enchantment|arcana|spell|team|player|country|term):([a-zA-Z0-9][a-zA-Z0-9._-]{0,127})>([^<>]+)<\/ref>/g
 const skillId = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}\.[a-z0-9]+(?:-[a-z0-9]+)*$/
 
-const formatting = /<(b|i|noauto)>|<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>|<\/(b|i|color|noauto)>/gi
-const formatOpening = /^<(b|i|noauto)>$|^<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>$/i
+const formatting =
+  /<(b|i|noauto|note|info|example)>|<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>|<\/(b|i|color|noauto|note|info|example)>/gi
+const formatOpening = /^<(b|i|noauto|note|info|example)>$|^<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>$/i
 
 function splitReferences(value: string, budget: { references: number }): ReferenceInputPart[] {
   const parts: ReferenceInputPart[] = []
@@ -38,8 +42,21 @@ function splitReferences(value: string, budget: { references: number }): Referen
   return parts
 }
 
+function inlineParts(value: string, budget: { references: number }): ReferenceInputPart[] {
+  const parts: ReferenceInputPart[] = []
+  let at = 0
+  for (const match of value.matchAll(exampleTablePattern)) {
+    const rows = readExampleTable(match[1]!)
+    if (!rows) continue
+    parts.push(...splitReferences(value.slice(at, match.index), budget))
+    parts.push({ type: "exampleTable", token: match[0], rows, label: rows.map((row) => row.join("\t")).join("\n") })
+    at = match.index + match[0].length
+  }
+  return parts.concat(splitReferences(value.slice(at), budget))
+}
+
 export function referenceInputParts(value: string): ReferenceInputPart[] {
-  const parts = splitReferences(value.slice(0, 100000), { references: 0 })
+  const parts = inlineParts(value.slice(0, 100000), { references: 0 })
   if (value.length > 100000) parts.push({ type: "text", text: value.slice(100000) })
   return parts
 }
@@ -75,7 +92,7 @@ export function referenceInputNodes(value: string): ReferenceInputNode[] {
       const closingIndex = pairs.get(index)
       if (closingIndex === undefined) continue
       const closing = tokens[closingIndex]!
-      if (token.index > at) nodes.push(...splitReferences(source.slice(at, token.index), budget))
+      if (token.index > at) nodes.push(...inlineParts(source.slice(at, token.index), budget))
       nodes.push({
         type: "format",
         tag: (token[1]?.toLowerCase() ?? "color") as Extract<ReferenceInputNode, { type: "format" }>["tag"],
@@ -87,7 +104,7 @@ export function referenceInputNodes(value: string): ReferenceInputNode[] {
       at = closing.index + closing[0].length
       index = closingIndex
     }
-    if (at < to) nodes.push(...splitReferences(source.slice(at, to), budget))
+    if (at < to) nodes.push(...inlineParts(source.slice(at, to), budget))
     return nodes
   }
   const nodes = build(0, source.length, 0, tokens.length)
@@ -147,9 +164,8 @@ function sourceMap(root: HTMLElement): SourceMap {
       return
     }
     const token = element.getAttribute("data-reference-token")
-    const reference =
-      token && referenceInputParts(token).find((part) => part.type === "reference" && part.token === token)
-    if (reference && reference.type === "reference") {
+    const reference = token && referenceInputParts(token).find((part) => part.type !== "text" && part.token === token)
+    if (reference && reference.type !== "text") {
       append(reference.token, false)
       visible(reference.label)
       result.atoms.push({ node: element, start, end: result.value.length })
@@ -191,6 +207,11 @@ function sourceMap(root: HTMLElement): SourceMap {
 
 export function serializeReferenceInput(root: HTMLElement): string {
   return sourceMap(root).value
+}
+
+export function inputAtomRange(root: HTMLElement, element: Element): TextSelection | undefined {
+  const atom = sourceMap(root).atoms.find((item) => item.node === element)
+  if (atom) return { start: atom.start, end: atom.end }
 }
 
 function sourceOffset(map: SourceMap, node: Node, offset: number, end: boolean): number {

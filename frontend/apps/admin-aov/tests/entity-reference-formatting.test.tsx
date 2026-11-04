@@ -4,7 +4,11 @@ import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
-import { referenceFormatState, toggleReferenceFormat } from "@aov/ui/lib/reference-input-formatting"
+import {
+  referenceFormatState,
+  styleReferenceParagraph,
+  toggleReferenceFormat,
+} from "@aov/ui/lib/reference-input-formatting"
 import {
   referenceInput,
   referenceInputSelection,
@@ -179,6 +183,48 @@ async function editorHarness(initial: string, catalog: EntityReference[] = [], w
     },
   }
 }
+
+test("authors can style an existing paragraph and insert, edit and undo an example table", async () => {
+  const emptyNote = styleReferenceParagraph("", { start: 0, end: 0 }, "note")!
+  assert.equal(styleReferenceParagraph(emptyNote.value, emptyNote, "normal")?.value, "")
+  const editor = await editorHarness("Mô tả\nChỉ gây 50% sát thương.")
+  const { document, dom } = editor
+  const fill = (label: string, value: string) =>
+    act(async () => {
+      const input = document.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)!
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(input, value)
+      input.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
+  try {
+    await editor.select(8)
+    await act(async () => {
+      const select = document.querySelector<HTMLSelectElement>('select[aria-label="Loại văn bản"]')!
+      select.value = "note"
+      select.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+    })
+    const styled = "Mô tả\n<note>Chỉ gây 50% sát thương.</note>"
+    assert.equal(editor.saved(), styled)
+    assert.equal(editor.input().textContent?.includes("<note>"), false)
+    await editor.select(0)
+    await editor.click("Chèn bảng ví dụ")
+    await fill("Tiêu đề cột 1", "Cấp 1")
+    await fill("Tiêu đề cột 2", "Cấp 2")
+    await fill("Hàng 1, cột 1", "15%")
+    await fill("Hàng 1, cột 2", "18%")
+    await editor.click("Chèn bảng")
+    assert.equal(editor.input().querySelector('[role="cell"]:last-child')?.textContent, "18%")
+    const saved = editor.saved()
+    assert.equal(referenceInputValue(editor.input()), saved)
+    await editor.click("Sửa bảng ví dụ")
+    await fill("Hàng 1, cột 2", "21%")
+    await editor.click("Áp dụng")
+    assert.equal(referenceInputValue(editor.input()), saved.replace("18%", "21%"))
+    await editor.click("Hoàn tác")
+    assert.equal(editor.saved(), saved)
+  } finally {
+    await editor.close()
+  }
+})
 
 test("editor bold shortcuts do not toggle the real sidebar while outside shortcuts still work", async () => {
   const editor = await editorHarness("Đậm ở đây", [], true)

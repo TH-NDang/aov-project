@@ -1,7 +1,8 @@
 import { referenceInputNodes, type ReferenceInputNode } from "./reference-input-dom"
 import type { EditorSnapshot, TextSelection } from "./entity-rich-text-editor"
+import { isParagraphStyle, type ParagraphStyle } from "./rich-text-blocks"
 
-type FormatKind = "b" | "i" | "color"
+type FormatKind = "b" | "i" | "color" | ParagraphStyle | "normal"
 type Mark = Pick<Extract<ReferenceInputNode, { type: "format" }>, "tag" | "open" | "close" | "color">
 type Run = { text: string; atom: boolean; marks: Mark[]; start: number; end: number; selected?: boolean }
 const colorPattern = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i
@@ -23,7 +24,7 @@ function flatten(value: string) {
         position += node.close.length
       } else {
         const text = node.type === "text" ? node.text : node.token
-        runs.push({ text, atom: node.type === "reference", marks, start: position, end: position + text.length })
+        runs.push({ text, atom: node.type !== "text", marks, start: position, end: position + text.length })
         position += text.length
       }
       edges.add(position)
@@ -50,7 +51,9 @@ export function referenceFormatState(value: string, selection: TextSelection) {
         .slice(0, 1)
     : runs.filter((run) => run.end > selection.start && run.start < selection.end)
   const color = selected.map((run) => [...run.marks].reverse().find((mark) => mark.tag === "color")?.color)
+  const style = selected[0]?.marks.find((mark) => isParagraphStyle(mark.tag))?.tag
   return {
+    style: style && selected.every((run) => run.marks.some((mark) => mark.tag === style)) ? style : "normal",
     bold: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "b")),
     italic: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "i")),
     color: color.length && color.every((value) => value === color[0]) ? color[0] : undefined,
@@ -149,8 +152,13 @@ export function toggleReferenceFormat(
   const active = selected.filter((run) => run.selected)
   if (!active.length) return null
   const remove = kind !== "color" && active.every((run) => run.marks.some((mark) => mark.tag === kind))
-  const added: Mark = { tag: kind, open: kind === "color" ? `<color=${color}>` : `<${kind}>`, close: `</${kind}>` }
   for (const run of active) {
+    if (kind === "normal" || isParagraphStyle(kind)) {
+      run.marks = run.marks.filter((mark) => !isParagraphStyle(mark.tag))
+      if (kind !== "normal") run.marks.unshift({ tag: kind, open: `<${kind}>`, close: `</${kind}>` })
+      continue
+    }
+    const added: Mark = { tag: kind, open: kind === "color" ? `<color=${color}>` : `<${kind}>`, close: `</${kind}>` }
     if (kind === "color" || remove) run.marks = run.marks.filter((mark) => mark.tag !== kind)
     if (!remove && (kind === "color" || !run.marks.some((mark) => mark.tag === kind))) run.marks = [...run.marks, added]
   }
@@ -172,4 +180,14 @@ export function toggleReferenceFormat(
   }
   for (let index = current.length - 1; index >= 0; index--) output += current[index]!.close
   return { value: output, start: start!, end }
+}
+
+export function styleReferenceParagraph(value: string, selection: TextSelection, style: ParagraphStyle | "normal") {
+  if (selection.start !== selection.end) return toggleReferenceFormat(value, selection, style)
+  const start = value.slice(0, selection.start).lastIndexOf("\n") + 1
+  const nextLine = value.indexOf("\n", selection.end)
+  const result =
+    toggleReferenceFormat(value, { start, end: nextLine < 0 ? value.length : nextLine }, style) ??
+    toggleReferenceFormat(value, selection, style)
+  return result && { ...result, start: result.end }
 }

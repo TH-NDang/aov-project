@@ -45,6 +45,7 @@ export function AdminLiveRichTextField({
           <AdminRichTextField
             {...props}
             compact
+            allowBlocks={!short}
             hideLabel
             renderPreview={false}
             inputClassName={short ? "min-h-12" : "min-h-32 max-h-[42dvh] resize-y overflow-y-auto leading-7"}

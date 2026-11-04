@@ -1,12 +1,10 @@
 import { formatPatchValue } from "./patch-value"
+import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 
 export type DiffSegment = { type: "same" | "removed" | "added"; text: string }
 
 export function plainComparisonText(text: string): string {
-  return text.replace(
-    /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|item|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
-    "",
-  )
+  return text.includes("<") ? referenceInputPlainText(text) : text
 }
 
 /** Bound work for long source descriptions; never build an unbounded quadratic matrix. */

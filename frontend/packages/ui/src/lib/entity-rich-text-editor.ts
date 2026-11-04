@@ -17,7 +17,7 @@ export type EntityReferenceSearch = (request: {
 export type TextSelection = { start: number; end: number }
 export type EditorSnapshot = TextSelection & { value: string }
 const tag =
-  /<\/?(?:b|i|noauto|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|skill|item|enchantment|arcana|spell|term|team|player|country):[a-zA-Z0-9._-]+)?)>/gi
+  /<\/?(?:b|i|noauto|note|info|example|exampletable|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|skill|item|enchantment|arcana|spell|term|team|player|country):[a-zA-Z0-9._-]+)?)>/gi
 
 export function safeSelection(value: string, selection: TextSelection) {
   const { start, end } = selection
@@ -32,7 +32,7 @@ export function safeSelection(value: string, selection: TextSelection) {
         if (stack.pop() !== kind) return null
       } else stack.push(kind)
     }
-    return stack.includes("ref") ? null : stack.join("/")
+    return stack.includes("ref") || stack.includes("exampletable") ? null : stack.join("/")
   }
   const left = context(start),
     right = context(end)

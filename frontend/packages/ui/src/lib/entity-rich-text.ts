@@ -1,3 +1,5 @@
+import { isParagraphStyle, readExampleTable, type ParagraphStyle } from "./rich-text-blocks"
+
 export const entityKindLabels = {
   hero: "Tướng",
   skill: "Kỹ năng",
@@ -91,6 +93,8 @@ export type RichTextSettings = {
 }
 
 export type RichTextNode =
+  | { type: "paragraph"; style: ParagraphStyle; children: RichTextNode[] }
+  | { type: "exampleTable"; rows: string[][] }
   | { type: "text"; text: string }
   | { type: "color"; color: string; children: RichTextNode[] }
   | { type: "strong"; children: RichTextNode[] }
@@ -474,7 +478,7 @@ export function parseRichText(
   const recognized = new Set<string>()
   const tokens = Array.from(
     source.matchAll(
-      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|team|player|country|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i)>|<\/(?:color|ref|noauto|b|i)>/gi,
+      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|team|player|country|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i|note|info|example|exampletable)>|<\/(?:color|ref|noauto|b|i|note|info|example|exampletable)>/gi,
     ),
   )
   const pairs = new Map<number, number>()
@@ -621,7 +625,18 @@ export function parseRichText(
       const contentStart = token.index + token[0].length
       const end = close.index + close[0].length
       const tag = token[0].toLowerCase()
-      if (tag.startsWith("<ref=")) {
+      const style = tag.slice(1, -1)
+      if (style === "exampletable") {
+        const rows = readExampleTable(source.slice(contentStart, close.index))
+        if (rows) nodes.push({ type: "exampleTable", rows })
+        else append(nodes, source.slice(token.index, end))
+      } else if (isParagraphStyle(style)) {
+        nodes.push({
+          type: "paragraph",
+          style,
+          children: parse(contentStart, close.index, position + 1, depth + 1, auto),
+        })
+      } else if (tag.startsWith("<ref=")) {
         const key = token[0].slice(5, -1).replace(/^[^:]+/, (kind) => kind.toLowerCase())
         const match = index.byId.get(key)
         if (match && references < maxReferences) {

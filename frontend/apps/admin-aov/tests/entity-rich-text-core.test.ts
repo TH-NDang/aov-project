@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { writeExampleTable } from "@aov/ui/lib/rich-text-blocks"
 import {
   createEntityIndex,
   parseRichText,
@@ -27,7 +28,15 @@ const term: EntityReference = {
 const index = createEntityIndex([hero, term], "vi-VN", "en-US")
 const flatten = (nodes: RichTextNode[]): string =>
   nodes
-    .map((node) => ("children" in node ? flatten(node.children) : node.type === "text" ? node.text : node.label))
+    .map((node) =>
+      "children" in node
+        ? flatten(node.children)
+        : node.type === "text"
+          ? node.text
+          : node.type === "exampleTable"
+            ? node.rows.flat().join(" ")
+            : node.label,
+    )
     .join("")
 const refs = (nodes: RichTextNode[]): Extract<RichTextNode, { type: "reference" }>[] =>
   nodes.flatMap((node) => (node.type === "reference" ? [node] : "children" in node ? refs(node.children) : []))
@@ -59,6 +68,8 @@ test("bold and italic parse as semantic nodes with nested legacy colors", () => 
       .map((node) => {
         if (node.type === "text") return node.text
         if (node.type === "reference") return `<ref=${node.entity.kind}:${node.entity.id}>${node.label}</ref>`
+        if (node.type === "exampleTable") return writeExampleTable(node.rows)
+        if (node.type === "paragraph") return `<${node.style}>${serialize(node.children)}</${node.style}>`
         if (node.type === "color") return `<color=${node.color}>${serialize(node.children)}</color>`
         const tag = node.type === "strong" ? "b" : "i"
         return `<${tag}>${serialize(node.children)}</${tag}>`
@@ -66,6 +77,24 @@ test("bold and italic parse as semantic nodes with nested legacy colors", () => 
       .join("")
   assert.equal(serialize(nodes), source)
   assert.equal(flatten(nodes), "Bold italic color")
+})
+
+test("typed passages preserve references while example cells remain literal and bounded", () => {
+  const rows = [
+    ["Cấp 1", "Cấp 2"],
+    ["15%", "<b>18%</b>"],
+  ]
+  const content = "<info>Triệu Vân</info><example>" + writeExampleTable(rows) + "</example><note>Phần phụ</note>"
+  const nodes = parseRichText(content, index)
+  assert.deepEqual(
+    nodes.map((n) => (n.type === "paragraph" ? n.style : n.type)),
+    ["info", "example", "note"],
+  )
+  assert.equal(refs(nodes).length, 1)
+  assert.deepEqual(nodes[1], { type: "paragraph", style: "example", children: [{ type: "exampleTable", rows }] })
+  for (const source of ['<exampletable>[["x"],[]]</exampletable>', '<info onclick="x">a</info>', "<note>missing"]) {
+    assert.equal(flatten(parseRichText(source, index)), source)
+  }
 })
 
 test("formatting preserves recognition, noauto and manual reference priority", () => {
