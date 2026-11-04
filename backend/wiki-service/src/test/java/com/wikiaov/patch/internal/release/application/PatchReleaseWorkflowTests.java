@@ -86,12 +86,15 @@ class PatchReleaseWorkflowTests {
     }
 
     @Test
-    void createsDateOnlyDraftWithRequestedSeasonWithoutCheckingAnExactTimeline() {
+    void recordsCalendarDateForLockedMarketWithoutActivatingGameplay() {
         prepareScheduling(null);
+        when(releases.lockRegion(regionId)).thenReturn(region(false));
         var input = new Release(regionId, null, null, null, seasonId, LOCAL_TODAY);
 
         workflow.schedule(variantId, input);
 
+        verify(releases).lockRegion(regionId);
+        verify(releases, never()).lockActiveRegion(regionId);
         verify(seasons).requireReleaseDate(seasonId, regionId, LOCAL_TODAY);
         verify(releases, never()).regionUsesRulesetAt(any(), any(), any());
         verify(releases, never()).contradictsTimeline(any(), any(), any());

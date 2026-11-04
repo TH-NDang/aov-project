@@ -38,7 +38,10 @@ public class PatchReleaseWorkflow {
 
     public UUID schedule(UUID variantId, Release input) {
         // Every release writer acquires the region lock before the ruleset lock.
-        releases.lockActiveRegion(input.regionId());
+        if (input.effectiveOn() != null && input.effectiveAt() == null)
+            releases.lockRegion(input.regionId());
+        else
+            releases.lockActiveRegion(input.regionId());
         var selectedVariant = releases.lockVariantWithinRuleset(variantId);
         UUID seasonId = resolveReleaseSeason(selectedVariant, input.seasonId());
         requireValidAnnouncement(input, seasonId);
