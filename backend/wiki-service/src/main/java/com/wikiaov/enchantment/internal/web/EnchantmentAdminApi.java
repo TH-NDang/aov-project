@@ -33,6 +33,7 @@ public interface EnchantmentAdminApi {
             @Parameter(description = "Season id identifier.") UUID seasonId,
             @Parameter(description = "Patch variant id identifier.") UUID patchVariantId,
             @Parameter(description = "Include entries that have no changes in the selected context.") boolean includeUnchanged,
+            @Parameter(description = "List working drafts across patches in one ruleset.") boolean draftsOnly,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "enchantmentAdminApi_latest", summary = "Latest - enchantment admin", description = "Latest for enchantment admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {

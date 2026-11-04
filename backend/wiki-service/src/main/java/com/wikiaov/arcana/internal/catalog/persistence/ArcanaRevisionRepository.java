@@ -9,5 +9,7 @@ public interface ArcanaRevisionRepository extends JpaRepository<ArcanaRevision, 
 
     List<ArcanaRevision> findByStateNot(String state);
 
+    List<ArcanaRevision> findByRulesetIdAndState(UUID rulesetId, String state);
+
     List<ArcanaRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }

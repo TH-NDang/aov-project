@@ -24,9 +24,17 @@ public class EnchantmentAdminController implements EnchantmentAdminApi {
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
-            @RequestParam(defaultValue = "false") boolean includeUnchanged, HttpServletRequest request) {
+            @RequestParam(defaultValue = "false") boolean includeUnchanged,
+            @RequestParam(defaultValue = "false") boolean draftsOnly, HttpServletRequest request) {
         QueryParameters.requireOnly(request,
-                Set.of("rulesetId", "locale", "q", "page", "size", "seasonId", "patchVariantId", "includeUnchanged"));
+                Set.of("rulesetId", "locale", "q", "page", "size", "seasonId", "patchVariantId", "includeUnchanged",
+                        "draftsOnly"));
+        if (draftsOnly) {
+            if (rulesetId == null || seasonId != null || patchVariantId != null || includeUnchanged)
+                throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
+                        "Drafts require a ruleset and no timeline filter.");
+            return catalog.drafts(rulesetId, locale, q, page, size);
+        }
         return catalog.list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged);
     }
 

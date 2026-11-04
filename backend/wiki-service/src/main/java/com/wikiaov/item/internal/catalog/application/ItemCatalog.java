@@ -67,6 +67,12 @@ public class ItemCatalog {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
+    public PageSlice<ItemView> drafts(UUID rulesetId, String locale, String q, int page, int size) {
+        return queries.list(rulesetId, locale, q, page, size, null, null, false, true);
+    }
+
+    @PreAuthorize("hasAuthority('catalog:read')")
+    @Transactional(readOnly = true)
     public PageSlice<ItemView> list(UUID rulesetId, String locale, String q, int page, int size) {
         return queries.list(rulesetId, locale, q, page, size);
     }

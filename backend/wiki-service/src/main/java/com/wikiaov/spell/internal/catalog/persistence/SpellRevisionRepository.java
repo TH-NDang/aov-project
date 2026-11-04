@@ -9,5 +9,7 @@ public interface SpellRevisionRepository extends JpaRepository<SpellRevision, UU
 
     List<SpellRevision> findByStateNot(String state);
 
+    List<SpellRevision> findByRulesetIdAndState(UUID rulesetId, String state);
+
     List<SpellRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }

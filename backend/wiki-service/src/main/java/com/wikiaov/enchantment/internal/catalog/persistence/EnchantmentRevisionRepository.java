@@ -9,5 +9,7 @@ public interface EnchantmentRevisionRepository extends JpaRepository<Enchantment
 
     List<EnchantmentRevision> findByStateNot(String state);
 
+    List<EnchantmentRevision> findByRulesetIdAndState(UUID rulesetId, String state);
+
     List<EnchantmentRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }

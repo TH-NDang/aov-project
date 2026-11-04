@@ -40,6 +40,7 @@
     [],
     [],
     [],
+    [],
     []
   ],
   "com.wikiaov.arcana.internal.web.ArcanaAdminController#latest": [
@@ -112,6 +113,7 @@
     []
   ],
   "com.wikiaov.enchantment.internal.web.EnchantmentAdminController#list": [
+    [],
     [],
     [],
     [],
@@ -539,6 +541,7 @@
     [],
     [],
     [],
+    [],
     []
   ],
   "com.wikiaov.item.internal.web.ItemAdminController#latest": [
@@ -792,6 +795,7 @@
     []
   ],
   "com.wikiaov.spell.internal.web.SpellAdminController#list": [
+    [],
     [],
     [],
     [],

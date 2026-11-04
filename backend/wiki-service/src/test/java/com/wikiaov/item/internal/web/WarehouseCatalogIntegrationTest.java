@@ -110,6 +110,8 @@ class WarehouseCatalogIntegrationTest {
     void allCatalogsPersistIncompleteDraftsAndRejectMissingPermissionsStaleVersionsAndWrongMedia() throws Exception {
         for (String path : List.of("items", "arcana", "spells", "enchantments")) {
             var created = create(path, "entry-" + path, null);
+            var drafts = get(ROOT + "/" + path).param("rulesetId", RULESET.toString()).param("draftsOnly", "true");
+            assertThat(number(send(drafts, null, 200), "totalElements")).isOne();
             assertThat(created.get("missingFields")).as(path).isInstanceOf(List.class);
             assertThat(((List<?>) created.get("missingFields")).contains("iconAssetId")).isTrue();
             var revision = map(created.get("revision"));
@@ -127,6 +129,7 @@ class WarehouseCatalogIntegrationTest {
                     .content(json.writeValueAsString(Map.of("expectedVersion", 2, "content", content))))
                     .andExpect(status().isForbidden());
             send(post(draft + "/discard"), Map.of("expectedVersion", 2), 200);
+            assertThat(number(send(drafts, null, 200), "totalElements")).isZero();
             send(put(draft), Map.of("expectedVersion", 3, "content", content), 409);
         }
     }
@@ -171,6 +174,8 @@ class WarehouseCatalogIntegrationTest {
         var created = create("arcana", "red-attack", content);
         assertThat((List<?>) created.get("missingFields")).isEmpty();
         var published = send(post(draftPath("arcana", created) + "/publish"), Map.of("expectedVersion", 1), 200);
+        var drafts = get(ROOT + "/arcana").param("rulesetId", RULESET.toString()).param("draftsOnly", "true");
+        assertThat(number(send(drafts, null, 200), "totalElements")).isZero();
         assertThat(map(published.get("revision"))).containsEntry("state", "PUBLISHED");
         send(put(draftPath("arcana", created)), Map.of("expectedVersion", 2, "content", content), 409);
         UUID revision = UUID.fromString(map(created.get("revision")).get("id").toString());
@@ -182,6 +187,10 @@ class WarehouseCatalogIntegrationTest {
                 .hasMessageContaining("immutable");
         var fork = send(post(ROOT + "/arcana/" + created.get("id") + "/drafts"), Map.of("rulesetId", RULESET,
                 "sourceRevisionId", revision, "cause", "TRANSLATION_UPDATE"), 201);
+        var workingRows = (List<?>) send(drafts, null, 200).get("items");
+        assertThat(workingRows).hasSize(1);
+        assertThat(map(map(workingRows.getFirst()).get("revision")).get("id"))
+                .isEqualTo(map(fork.get("revision")).get("id"));
         var changedMechanics = new HashMap<>(content);
         changedMechanics.put("tier", 2);
         send(put(draftPath("arcana", fork)), Map.of("expectedVersion", 1, "content", changedMechanics), 422);
@@ -433,6 +442,17 @@ class WarehouseCatalogIntegrationTest {
             send(post(draftPath(path, future) + "/publish"), Map.of("expectedVersion", 1), 200);
             selected = send(get("/api/wiki/v1/" + path + "/" + created.get("id")), null, 200);
             assertThat(map(selected.get("revision")).get("id")).isEqualTo(map(patched.get("revision")).get("id"));
+            var earlierDraft = send(post(forks),
+                    Map.of("rulesetId", RULESET, "sourceRevisionId", map(patched.get("revision")).get("id"),
+                            "cause", "TRANSLATION_UPDATE"),
+                    201);
+            var workingRows = (List<?>) send(
+                    get(ROOT + "/" + path).param("rulesetId", RULESET.toString()).param("draftsOnly", "true"),
+                    null, 200).get("items");
+            assertThat(workingRows).hasSize(1);
+            assertThat(map(map(workingRows.getFirst()).get("revision"))).containsEntry("id",
+                    map(earlierDraft.get("revision")).get("id")).containsEntry("effectiveFromPatchVariantId",
+                            VARIANT.toString());
             send(post(ROOT + "/" + path + "/" + created.get("id") + "/changes"), Map.of("patchVariantId", VARIANT,
                     "fromRevisionId", baselineRevision.get("id"), "toRevisionId",
                     map(patched.get("revision")).get("id"),

@@ -72,11 +72,16 @@ class EnchantmentCatalogQueries {
 
     PageSlice<EnchantmentView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged) {
+        return list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged, false);
+    }
+
+    PageSlice<EnchantmentView> list(UUID rulesetId, String locale, String q, int page, int size,
+            UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean draftsOnly) {
         requirePageBounds(page, size);
         if (rulesetId != null)
             contexts.requireRuleset(rulesetId);
         String needle = q.strip().toLowerCase(Locale.ROOT);
-        var candidates = activeSnapshots(rulesetId);
+        var candidates = activeSnapshots(rulesetId, draftsOnly);
         var scoped = snapshotsInScope(candidates, rulesetId, seasonId, patchVariantId, includeUnchanged);
         var selected = CatalogSnapshots.latestByOwner(scoped, this::patchOrdinal);
         var copies = translationsFor(selected);
@@ -89,8 +94,11 @@ class EnchantmentCatalogQueries {
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
     }
 
-    private List<CatalogSnapshots.Snapshot<EnchantmentRevision>> activeSnapshots(UUID rulesetId) {
-        return revisions.findByStateNot("DISCARDED").stream()
+    private List<CatalogSnapshots.Snapshot<EnchantmentRevision>> activeSnapshots(UUID rulesetId, boolean draftsOnly) {
+        var records = draftsOnly
+                ? revisions.findByRulesetIdAndState(rulesetId, "DRAFT")
+                : revisions.findByStateNot("DISCARDED");
+        return records.stream()
                 .filter(revision -> rulesetId == null || revision.getRulesetId().equals(rulesetId))
                 .map(revision -> new CatalogSnapshots.Snapshot<>(revision.getId(), revision.getOwnerId(),
                         revision.getEffectiveFromPatchVariantId(), revision.getRevisionNo(), revision.getState(),

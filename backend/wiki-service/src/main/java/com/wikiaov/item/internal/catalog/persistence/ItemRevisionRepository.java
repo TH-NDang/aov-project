@@ -9,5 +9,7 @@ public interface ItemRevisionRepository extends JpaRepository<ItemRevision, UUID
 
     List<ItemRevision> findByStateNot(String state);
 
+    List<ItemRevision> findByRulesetIdAndState(UUID rulesetId, String state);
+
     List<ItemRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }
