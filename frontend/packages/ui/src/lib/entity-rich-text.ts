@@ -66,6 +66,8 @@ export type EntityReference = {
   icon?: string | null
   iconAssetId?: string | null
   autoMatch?: boolean
+  /** Only the viewed hero revision supplies names for angle-bracket skill mentions. */
+  matchBracketedName?: boolean
   /** Owner-qualified phrases resolved for this text only. */
   qualifiedSkillAliases?: string[]
   display?: { color?: string; underline?: boolean; showIcon?: boolean }
@@ -332,12 +334,15 @@ export type EntityIndex = {
   root: Trie
   byId: Map<string, Match>
   ownerSlots: Map<string, Match | null>
+  bracketedSkills: Map<string, Match | null>
   accentInsensitive: boolean
 }
 export const foldEntitySearch = (value: string) =>
   value.normalize("NFD").replace(/\p{M}/gu, "").replace(/[đĐ]/g, "d").toLowerCase()
 const fold = (value: string, accentInsensitive: boolean) =>
   accentInsensitive ? foldEntitySearch(value) : value.normalize("NFC").toLowerCase()
+const skillMentionKey = (label: string, accentInsensitive: boolean) =>
+  fold(label.trim().replace(/\s+/gu, " "), accentInsensitive)
 
 /** Only callers with a complete set of skills for the owner may enable slot mentions. */
 function skillSlotNames(entity: EntityReference) {
@@ -355,6 +360,7 @@ export function createEntityIndex(
   const root: Trie = { children: new Map() }
   const byId = new Map<string, Match>()
   const ownerSlots = new Map<string, Match | null>()
+  const bracketedSkills = new Map<string, Match | null>()
   const accentInsensitive = options.accentInsensitive === true
   let catalogEntries = 0
   let skillEntries = 0
@@ -399,6 +405,18 @@ export function createEntityIndex(
     if (!translation) continue
     const match = { entity, actualLocale: translation.locale }
     byId.set(`${entity.kind}:${entity.id}`, match)
+    if (entity.kind === "skill" && entity.matchBracketedName) {
+      const name = skillMentionKey(translation.name, accentInsensitive)
+      if (name && name.length <= 200 && !/[<>]/u.test(name)) {
+        for (const label of [
+          `<${name}>`,
+          ...skillSlotNames(entity).map((slot) => `${fold(slot, accentInsensitive)} <${name}>`),
+        ]) {
+          const existing = bracketedSkills.get(label)
+          bracketedSkills.set(label, existing === undefined || existing?.entity.id === entity.id ? match : null)
+        }
+      }
+    }
     if (entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)) continue
     const slots = entity.kind === "skill" ? skillSlotNames(entity) : []
     if (slots.length) {
@@ -431,7 +449,7 @@ export function createEntityIndex(
         node[property] = null
     }
   }
-  return { root, byId, ownerSlots, accentInsensitive }
+  return { root, byId, ownerSlots, bracketedSkills, accentInsensitive }
 }
 
 export function parseRichText(
@@ -478,6 +496,33 @@ export function parseRichText(
   }
   function recognize(text: string, enabled: boolean): RichTextNode[] {
     if (!enabled || references >= maxReferences) return text ? [{ type: "text", text }] : []
+    if (!index.bracketedSkills.size || !text.includes("<")) return recognizeAliases(text)
+    const nodes: RichTextNode[] = []
+    let cursor = 0
+    for (const bracket of text.matchAll(/<([^<>]{1,200})>/gu)) {
+      const name = `<${skillMentionKey(bracket[1]!, index.accentInsensitive)}>`
+      if (!index.bracketedSkills.has(name)) continue
+      const before = text.slice(Math.max(cursor, bracket.index - 200), bracket.index)
+      const prefix = before.match(/(?:^|[^\p{L}\p{M}\p{N}_])([\p{L}\p{M}]+\s+[\p{L}\p{M}\p{N}]+\s+)$/u)?.[1] ?? ""
+      const qualified =
+        prefix && index.bracketedSkills.get(`${skillMentionKey(prefix, index.accentInsensitive)} ${name}`)
+      const match = qualified || index.bracketedSkills.get(name)
+      if (!match) continue
+      const start = qualified ? bracket.index - prefix.length : bracket.index
+      nodes.push(...recognizeAliases(text.slice(cursor, start)))
+      cursor = start
+      if (references >= maxReferences) break
+      cursor = bracket.index + bracket[0].length
+      nodes.push({ type: "reference", ...match, label: text.slice(start, cursor), manual: false })
+      recognized.add(`skill:${match.entity.id}`)
+      references++
+      if (references >= maxReferences) break
+    }
+    nodes.push(...recognizeAliases(text.slice(cursor)))
+    return nodes
+  }
+  function recognizeAliases(text: string): RichTextNode[] {
+    if (!text || references >= maxReferences) return text ? [{ type: "text", text }] : []
     const chars: { char: string; start: number; end: number }[] = []
     for (const cluster of text.matchAll(/\P{M}\p{M}*|\p{M}+/gu)) {
       for (const char of fold(cluster[0], index.accentInsensitive))

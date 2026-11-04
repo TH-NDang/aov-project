@@ -43,6 +43,7 @@ export function revisionSkillReferences(
       iconAssetId: skill.iconAssetId || libraryImage?.assetId,
       iconSource: skill.iconAssetId ? "REVISION" : libraryImage ? "LIBRARY" : undefined,
       translations: skill.translations.map((text) => ({ ...text, aliases: [] })),
+      matchBracketedName: true,
       autoMatch: slot != null && slots.indexOf(slot) === slots.lastIndexOf(slot),
       destinations: { admin: `/hero/${owner.id}?${params}` },
     }
