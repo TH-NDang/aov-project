@@ -225,7 +225,11 @@ export function HeroCatalog({
             scoped && showAll && (scopeChanges.pending || scopeChanges.error) ? (
               <span className="type-meta">{scopeChanges.error ? "Chưa tải được thay đổi" : "Đang tải thay đổi…"}</span>
             ) : scoped && showAll && !row.original.changes.length ? (
-              <span className="type-meta">{reviewed ? "Không thay đổi" : "Chưa ghi nhận thay đổi"}</span>
+              <span className="type-meta">
+                {reviewed && row.original.selectedRevision?.effectiveFromPatchVariantId
+                  ? "Không thay đổi"
+                  : "Chưa ghi nhận thay đổi"}
+              </span>
             ) : (
               <HeroGameplayChanges
                 hero={row.original}
@@ -242,6 +246,7 @@ export function HeroCatalog({
           cell: ({ row }) => {
             const r = row.original.selectedRevision
             const v = overview?.variants.find((v) => v.id === r?.effectiveFromPatchVariantId)
+            const patchLabel = v?.patchCode ?? (r?.state === "PUBLISHED" ? "Chưa rõ patch" : "Chưa gắn patch")
             const markets = r && overview ? appliedMarkets(row.original.revisions, r, overview) : []
             const rulesetCode =
               (overview?.rulesets.length ?? 0) > 1
@@ -272,8 +277,8 @@ export function HeroCatalog({
                   ))}
                 </div>
                 <p className="flex min-w-0 items-center gap-1.5 text-xs leading-4 text-muted-foreground">
-                  <span className="truncate" title={v?.patchCode ?? "Chưa gắn patch"}>
-                    {v?.patchCode ?? "Chưa gắn patch"}
+                  <span className="truncate" title={patchLabel}>
+                    {patchLabel}
                   </span>
                   <span className="shrink-0 tabular-nums" aria-label={`Phiên bản ${r.revisionNo}`}>
                     #{r.revisionNo}

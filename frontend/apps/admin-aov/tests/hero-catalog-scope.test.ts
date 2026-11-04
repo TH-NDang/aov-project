@@ -85,3 +85,22 @@ test("all heroes keeps identities with no snapshot at the target without substit
     0,
   )
 })
+
+test("all heroes shows an undated publication until a dated snapshot applies without adding a patch change", () => {
+  const hero = createHeroCatalogFixture().heroes.find((entry) => entry.code === "ad-current-change")!
+  const future = hero.revisions.find((entry) => entry.effectiveFromPatchVariantId === "patch-future")!
+  const undated = {
+    ...future,
+    id: "published-undated",
+    state: "PUBLISHED" as const,
+    revisionNo: 8,
+    effectiveFromPatchVariantId: null,
+  }
+  const dated = { ...undated, id: "published-at-patch", effectiveFromPatchVariantId: "patch-current", revisionNo: 2 }
+  const atPatch = { seasonId: "season-new", variantId: "patch-current" }
+  const observed = { ...hero, revisions: [undated, future], gameplayChanges: [] }
+  assert.equal(heroCatalogRows([observed], overview, atPatch, "", true)[0]?.selectedRevision?.id, undated.id)
+  assert.deepEqual(heroCatalogRows([observed], overview, atPatch, "", false), [])
+  const known = { ...observed, revisions: [undated, dated] }
+  assert.equal(heroCatalogRows([known], overview, atPatch, "", true)[0]?.selectedRevision?.id, dated.id)
+})

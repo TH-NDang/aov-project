@@ -19,6 +19,7 @@ export function selectCatalogRevisions(
   data: PublicationOverview | undefined,
   filter: CatalogFilter,
   ruleset = "",
+  includeUnscopedPublished = false,
 ) {
   const targets = data ? targetVariants(data, filter) : []
   if ((filter.seasonId || filter.variantId) && !targets.length) return []
@@ -28,7 +29,9 @@ export function selectCatalogRevisions(
   for (const r of revisions) {
     if (r.state === "DISCARDED" || (ruleset && r.rulesetId !== ruleset)) continue
     const target = targets.find((v) => v.rulesetId === r.rulesetId)
-    if (targets.length && (!target || ordinal(r) < 0 || ordinal(r) > target.rulesetOrdinal)) continue
+    const rank = ordinal(r)
+    const undated = includeUnscopedPublished && r.state === "PUBLISHED" && r.effectiveFromPatchVariantId === null
+    if (targets.length && (!target || (rank < 0 && !undated) || rank > target.rulesetOrdinal)) continue
     const previous = selected.get(r.rulesetId)
     if (
       !previous ||
@@ -81,7 +84,7 @@ export function heroCatalogRows(
               )[0]
             return revision ? [revision] : []
           })
-        : selectCatalogRevisions(hero.revisions, data, filter, ruleset)
+        : selectCatalogRevisions(hero.revisions, data, filter, ruleset, includeUnchanged)
     if (!revisions.length)
       return (scoped && includeUnchanged) || changes.length || (!scoped && !ruleset)
         ? [{ ...hero, changes, rowKey: hero.id }]
