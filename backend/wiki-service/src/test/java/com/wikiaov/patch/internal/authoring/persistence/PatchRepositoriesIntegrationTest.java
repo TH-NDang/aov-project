@@ -2,6 +2,9 @@ package com.wikiaov.patch.internal.authoring.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.wikiaov.SeaweedFsTestConfiguration;
 import com.wikiaov.TestcontainersConfiguration;
@@ -19,21 +22,27 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @Import({TestcontainersConfiguration.class, SeaweedFsTestConfiguration.class})
 @ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 @Transactional
 class PatchRepositoriesIntegrationTest {
+    @Autowired
+    MockMvc mvc;
     @Autowired
     JdbcClient jdbc;
     @Autowired
@@ -88,6 +97,31 @@ class PatchRepositoriesIntegrationTest {
                 insert into patch.patch_release(id,patch_variant_id,region_id,effective_at,status,created_at,season_id)
                 values(?,?,?,?,'SCHEDULED',?,?)
                 """, release, variant, region, Timestamp.from(effective), Timestamp.from(start), season);
+    }
+
+    @Test
+    void savesLocalizedNotesSeparatelyAndRejectsStaleChanges() throws Exception {
+        var reader = jwt().authorities(new SimpleGrantedAuthority("catalog:read"));
+        var writer = jwt().authorities(new SimpleGrantedAuthority("catalog:read"),
+                new SimpleGrantedAuthority("patch:write"));
+        String path = "/api/wiki/v1/admin/patch-variants/" + variant + "/notes/";
+        String initial = "{\"body\":\"Note A\",\"expectedVersion\":0}";
+
+        mvc.perform(get(path + "vi-VN").with(reader)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.body").value(""));
+        mvc.perform(put(path + "vi-VN").with(reader).contentType("application/json").content(initial))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(path + "vi-VN").with(writer).contentType("application/json").content(initial))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(1));
+        mvc.perform(get(path + "vi-VN").with(reader)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.body").value("Note A"));
+        mvc.perform(get(path + "en-US").with(reader)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(0));
+        mvc.perform(put(path + "vi-VN").with(writer).contentType("application/json")
+                .content("{\"body\":\"\",\"expectedVersion\":1}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.version").value(2));
+        mvc.perform(put(path + "vi-VN").with(writer).contentType("application/json").content(initial))
+                .andExpect(status().isConflict());
     }
 
     @Test
