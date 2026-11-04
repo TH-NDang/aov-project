@@ -94,7 +94,7 @@ public final class HeroContent {
     }
 
     public record Stats(
-            @NotEmpty @Size(max = 100) List<@Valid Stat> values,
+            @NotNull @NotEmpty(groups = Publication.class) @Size(max = 100) List<@Valid Stat> values,
             @NotNull @Size(max = 30) List<@Valid Source> sources
     ) {
     }

@@ -110,7 +110,7 @@ final class HeroImportContent {
         if (empty(after.get("combatStats")))
             return;
         var imported = json.convertValue(after.get("combatStats"), Stats.class);
-        validation.validate(HeroSection.COMBAT_STATS, imported);
+        validation.validatePublication(HeroSection.COMBAT_STATS, imported);
         after.put("combatStats", new Stats(imported.values().stream()
                 .sorted(Comparator.comparing(Stat::statKey)).toList(), imported.sources()));
     }
@@ -126,7 +126,8 @@ final class HeroImportContent {
             validation.validate(HeroSection.OVERVIEW_RATINGS,
                     json.convertValue(values.get("overviewRatings"), Ratings.class));
         if (values.get("combatStats") != null)
-            validation.validate(HeroSection.COMBAT_STATS, json.convertValue(values.get("combatStats"), Stats.class));
+            validation.validatePublication(HeroSection.COMBAT_STATS,
+                    json.convertValue(values.get("combatStats"), Stats.class));
 
         Map<MediaRole, UUID> bindings = new EnumMap<>(MediaRole.class);
         for (var role : MediaRole.values()) {

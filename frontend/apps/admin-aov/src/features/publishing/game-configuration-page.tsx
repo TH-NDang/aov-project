@@ -1,5 +1,6 @@
 import { catalogScopePatch } from "./catalog-scope"
 import { PatchDataReview } from "./patch-data-review"
+import { PatchStatDefaults } from "./patch-stat-defaults"
 import { SharedPatchSetup, SeasonScheduleForm, PatchReleaseForm } from "./shared-version-setup"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router"
@@ -374,7 +375,7 @@ function PatchDisclosure({
     if (selected) setOpen(true)
   }, [selected])
   // Recorded changes are what editors open a patch for; schedules and data review sit one click away.
-  const [section, setSection] = useState<"changes" | "schedule" | "review">("changes")
+  const [section, setSection] = useState<"changes" | "schedule" | "review" | "stats">("changes")
   return (
     <div className="overflow-hidden rounded-lg border">
       <button
@@ -403,6 +404,7 @@ function PatchDisclosure({
             {(
               [
                 ["changes", "Thay đổi"],
+                ["stats", "Thuộc tính mặc định"],
                 ["schedule", "Lịch phát hành"],
                 ["review", "Kiểm tra dữ liệu"],
               ] as const
@@ -426,6 +428,7 @@ function PatchDisclosure({
             )}
           </div>
           {section === "changes" && <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />}
+          {section === "stats" && <PatchStatDefaults variant={variant} />}
           {section === "schedule" && (
             <div className="space-y-2 pb-3">
               <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />

@@ -20,6 +20,143 @@ import { createHeroFixture, fixtureContent } from "./fixtures/hero-workspace-dat
 let currentFetch: typeof fetch
 const dispatchFetch: typeof fetch = (input, init) => currentFetch(input, init)
 
+test("combat attributes keep observed crit damage, patch defaults and explicit overrides distinct", async () => {
+  await withView(async ({ document, render }) => {
+    const { HeroCombatAttributes } = await import("../src/features/publishing/hero-combat-attributes")
+    const skills = structuredClone(fixtureContent.SKILLS!)
+    const values = {
+      criticalChancePercent: 0,
+      criticalDamagePercent: 200,
+      physicalDefense: 140,
+      physicalDefensePercent: 0,
+    }
+    skills.skills[0].effects.push({
+      effectType: "SOURCE_SNAPSHOT",
+      metadata: {
+        patchCode: "s4",
+        observedAttributes: {
+          scope: "DISPLAYED_SNAPSHOT_NOT_LEVEL_ONE",
+          method: "MANUAL_VISUAL_TRANSCRIPTION",
+          values,
+        },
+      },
+    })
+    const rule = {
+      statKey: "CRITICAL_DAMAGE",
+      baseValue: 200,
+      unit: "PERCENT",
+      sourceUrl: "https://example.com/source",
+      variantId: "v",
+      patchCode: "s4",
+      version: 1,
+    }
+    const mount = (patchCode: string, baseValue?: number) =>
+      render(
+        <HeroCombatAttributes
+          skills={skills}
+          stats={
+            baseValue === undefined
+              ? null
+              : {
+                  values: [{ statKey: "CRITICAL_DAMAGE", unit: "PERCENT", baseValue, growthPerLevel: null }],
+                  sources: [],
+                }
+          }
+          defaults={patchCode === "s4" ? [rule] : []}
+          patchCode={patchCode}
+        />,
+      )
+    const valueOf = (label: string) =>
+      Array.from(document.querySelectorAll("dt")).find((dt) => dt.textContent === label)?.nextElementSibling
+        ?.textContent
+
+    await mount("s4")
+    assert.match(valueOf("Giáp")!, /140 \| 0%/)
+    assert.match(valueOf("Tỉ lệ chí mạng")!, /^0%/)
+    assert.match(valueOf("Sát thương chí mạng")!, /200%.*Khớp mặc định/)
+    assert.match(valueOf("Công vật lý")!, /Chưa ghi nhận/)
+    values.criticalDamagePercent = 175
+    await mount("s4")
+    assert.match(valueOf("Sát thương chí mạng")!, /175%.*Mặc định 200%/)
+    await mount("s4", 180)
+    assert.match(valueOf("Sát thương chí mạng")!, /180%.*Giá trị riêng.*Ảnh ghi 175%/)
+    await mount("s3")
+    assert.equal(valueOf("Sát thương chí mạng"), undefined)
+    assert.doesNotMatch(document.body.textContent!, /175%/)
+  })
+})
+
+test("attack summary follows roles and active skill scaling while full details keep both stats", async () => {
+  await withView(async ({ document, render }) => {
+    const { HeroCombatAttributes } = await import("../src/features/publishing/hero-combat-attributes")
+    const skills = structuredClone(fixtureContent.SKILLS!)
+    const skill = skills.skills[0]
+    skill.kind = "ACTIVE"
+    const stats = {
+      values: [
+        { statKey: "ATTACK_DAMAGE", baseValue: 176, growthPerLevel: null, unit: "POINT" },
+        { statKey: "ABILITY_POWER", baseValue: 0, growthPerLevel: null, unit: "POINT" },
+      ],
+      sources: [],
+    }
+    const mount = async (roles: NonNullable<typeof fixtureContent.PROFILE>["roles"], text: string) => {
+      skill.translations[0].description = text
+      await render(<HeroCombatAttributes stats={stats} skills={skills} roles={roles} />)
+      assert.match(document.querySelector("details")!.textContent!, /Công vật lý/)
+      assert.match(document.querySelector("details")!.textContent!, /Công phép/)
+      return Array.from(
+        document.querySelectorAll('dl[aria-label="Thuộc tính nổi bật theo vai trò"] dt'),
+        (el) => el.textContent,
+      )
+    }
+    assert.deepEqual(await mount(["SUPPORT"], "(+25% Công phép)"), ["Công phép"])
+    assert.deepEqual(await mount(["SUPPORT", "TANK"], "(+80%Công vật lý)"), ["Công vật lý"])
+    assert.deepEqual(await mount(["MAGE", "ASSASSIN"], ""), ["Công phép"])
+    assert.deepEqual(await mount(["MARKSMAN"], ""), ["Công vật lý"])
+    assert.deepEqual(await mount(["ASSASSIN"], "(+20% công phép)"), ["Công phép"])
+    assert.deepEqual(await mount(["SUPPORT"], "(+15%Công vật lý) (+20%Công phép)"), ["Công vật lý", "Công phép"])
+    assert.deepEqual(await mount([], ""), ["Công vật lý", "Công phép"])
+  })
+})
+
+test("a hero can override a shared stat and switch back without storing a copy", async () => {
+  await withView(async ({ document, render, click }) => {
+    const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")
+    const rule = {
+      statKey: "CRITICAL_DAMAGE",
+      baseValue: 200,
+      unit: "PERCENT",
+      sourceUrl: "https://example.com/patch",
+      variantId: "variant",
+      patchCode: "s4",
+      version: 1,
+    }
+    let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = { values: [], sources: [] }
+    const mount = () =>
+      render(
+        <HeroStatsEditor
+          value={stats}
+          defaults={[rule]}
+          onChange={(v) => {
+            stats = v
+          }}
+        />,
+      )
+    await mount()
+    await click(
+      Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.includes("Đặt giá trị riêng"))!,
+    )
+    assert.deepEqual(stats.values, [
+      { statKey: "CRITICAL_DAMAGE", baseValue: null, growthPerLevel: null, unit: "PERCENT" },
+    ])
+    await mount()
+    await click(document.querySelector<HTMLButtonElement>('[aria-label="Dùng mặc định của patch"]')!)
+    assert.deepEqual(stats.values, [])
+    await mount()
+    assert.match(document.body.textContent!, /Mặc định của patch.*200%/)
+  })
+})
+
 test("hero overview shows captured positions and five-point ratings without changing stored content", async () => {
   await withView(async ({ document, render, click }) => {
     const { HeroContent } = await import("../src/features/publishing/hero-content")

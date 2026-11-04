@@ -60,6 +60,8 @@ import { TranslationEditor, type TranslatableSection } from "./translation-edito
 import { Box, Field, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
+import { statPatchContext } from "./combat-attributes"
+import { useStatDefaults } from "./patch-stat-defaults"
 import { replaceProfilePart, type ProfileEditorPart } from "./hero-profile-editor"
 import { sameDraftValue } from "@/app/drafts/draft-store"
 import { ImportContextPicker, type ImportContext } from "./import-context"
@@ -314,6 +316,13 @@ export function PublishingWorkspace({
   })
   const resource = resources.data?.find((hero) => hero.id === resourceId)
   const revision = preview?.revision
+  const statPatch = statPatchContext(
+    overview.data?.variants ?? [],
+    revision,
+    heroLocationId(urlParams.get("atPatch")) || filter.variantId || null,
+    preview?.content,
+  )
+  const statDefaults = useStatDefaults(statPatch?.id)
   const writable = canWrite && revision?.state === "DRAFT"
   const translating = view === "translations"
   const locale = translating ? targetLocale : location.readLocale
@@ -748,6 +757,9 @@ export function PublishingWorkspace({
               <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
                 {view === "overview" && !editing && (
                   <HeroContent
+                    statDefaults={statDefaults.data}
+                    referenceError={statDefaults.isError}
+                    patchCode={statPatch?.patchCode}
                     showTabs={false}
                     content={preview.content}
                     locale={locale}
@@ -952,6 +964,10 @@ export function PublishingWorkspace({
                             />
                           ) : (
                             <SectionEditor
+                              statDefaults={statDefaults.data}
+                              referenceError={statDefaults.isError}
+                              skills={preview.content.SKILLS}
+                              patchCode={statPatch?.patchCode}
                               section={section}
                               value={preview.content[section]}
                               locale={editorLocale}

@@ -427,6 +427,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["patchStatDefaults_effective"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults/{key}": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations["patchStatDefaults_set"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/wiki/v1/admin/patch-variants/{id}/data-review": {
     parameters: {
       query?: never
@@ -809,6 +841,28 @@ export interface components {
       difficulty: number
       derived: boolean
       sources: components["schemas"]["HeroSource"][]
+    }
+    PatchStatDefault: {
+      statKey: string
+      baseValue: number
+      /** @enum {string} */
+      unit: "POINT" | "PERCENT"
+      /** Format: uri */
+      sourceUrl: string
+      /** Format: uuid */
+      variantId: string
+      patchCode: string
+      /** Format: int64 */
+      version: number
+    }
+    SetPatchStatDefault: {
+      baseValue: number
+      /** @enum {string} */
+      unit: "POINT" | "PERCENT"
+      /** Format: uri */
+      sourceUrl: string
+      /** Format: int64 */
+      expectedVersion: number
     }
     HeroImportedStats: {
       values: {
@@ -2021,6 +2075,67 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["SkinBadgeGroupView"]
         }
+      }
+    }
+  }
+  patchStatDefaults_effective: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Effective stat defaults for the selected ruleset and patch */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["PatchStatDefault"][]
+        }
+      }
+    }
+  }
+  patchStatDefaults_set: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        key: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetPatchStatDefault"]
+      }
+    }
+    responses: {
+      /** @description Default saved */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Stale default version */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Invalid default or source URL */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

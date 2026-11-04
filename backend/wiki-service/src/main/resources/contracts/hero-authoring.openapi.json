@@ -1314,6 +1314,83 @@
         }
       }
     },
+    "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults": {
+      "get": {
+        "operationId": "patchStatDefaults_effective",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Effective stat defaults for the selected ruleset and patch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PatchStatDefault"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wiki/v1/admin/patch-variants/{id}/stat-defaults/{key}": {
+      "put": {
+        "operationId": "patchStatDefaults_set",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPatchStatDefault"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Default saved"
+          },
+          "409": {
+            "description": "Stale default version"
+          },
+          "422": {
+            "description": "Invalid default or source URL"
+          }
+        }
+      }
+    },
     "/api/wiki/v1/admin/patch-variants/{id}/data-review": {
       "put": {
         "operationId": "updatePatchDataReview",
@@ -2602,6 +2679,82 @@
             "items": {
               "$ref": "#/components/schemas/HeroSource"
             }
+          }
+        }
+      },
+      "PatchStatDefault": {
+        "type": "object",
+        "required": [
+          "statKey",
+          "baseValue",
+          "unit",
+          "sourceUrl",
+          "variantId",
+          "patchCode",
+          "version"
+        ],
+        "properties": {
+          "statKey": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]{0,63}$"
+          },
+          "baseValue": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "POINT",
+              "PERCENT"
+            ]
+          },
+          "sourceUrl": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+          },
+          "variantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "patchCode": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
+          }
+        }
+      },
+      "SetPatchStatDefault": {
+        "type": "object",
+        "required": [
+          "baseValue",
+          "unit",
+          "sourceUrl",
+          "expectedVersion"
+        ],
+        "properties": {
+          "baseValue": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "POINT",
+              "PERCENT"
+            ]
+          },
+          "sourceUrl": {
+            "type": "string",
+            "format": "uri",
+            "maxLength": 2048
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int64",
+            "minimum": 0
           }
         }
       },

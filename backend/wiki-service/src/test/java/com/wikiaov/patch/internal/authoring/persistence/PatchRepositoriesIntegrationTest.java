@@ -11,6 +11,7 @@ import com.wikiaov.patch.internal.context.persistence.SeasonUpdatesRepository;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseStore;
 import com.wikiaov.patch.internal.ruleset.persistence.RulesetAssignmentRepository;
+import com.wikiaov.patch.internal.stats.persistence.PatchStatDefaultRepository;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
@@ -43,6 +44,8 @@ class PatchRepositoriesIntegrationTest {
     PatchReleaseRepository releases;
     @Autowired
     PatchVariantRepository variants;
+    @Autowired
+    PatchStatDefaultRepository statDefaults;
     @Autowired
     GamePatchRepository patches;
     @Autowired
@@ -316,6 +319,33 @@ class PatchRepositoriesIntegrationTest {
                 values(?,?,?,?,?,?,?)
                 """, UUID.randomUUID(), variantId, region, Timestamp.from(at), status, Timestamp.from(start), seasonId);
         return variantId;
+    }
+
+    @Test
+    void statDefaultsInheritPublishedValuesWithoutBackdatingOrLeakingDrafts() {
+        var before = UUID.randomUUID();
+        var draft = UUID.randomUUID();
+        var after = UUID.randomUUID();
+        createPatch(UUID.randomUUID(), before, 1, season);
+        createPatch(UUID.randomUUID(), draft, 3, season);
+        createPatch(UUID.randomUUID(), after, 4, season);
+        write("update patch.patch_variant set status='DRAFT', published_at=null where id=?", draft);
+        for (var id : java.util.List.of(variant, draft)) {
+            write("""
+                    insert into patch.stat_default(id,variant_id,stat_key,base_value,unit,source_url,version)
+                    values (?,?,'CRITICAL_DAMAGE',?,'PERCENT','https://example.com/patch',1)
+                    """, UUID.randomUUID(), id, id.equals(draft) ? 180 : 200);
+        }
+
+        assertThat(statDefaults.effective(before)).isEmpty();
+        assertThat(statDefaults.effective(draft)).singleElement().satisfies(row -> {
+            assertThat(row.getBaseValue()).isEqualByComparingTo("180");
+            assertThat(row.getVariantId()).isEqualTo(draft);
+        });
+        assertThat(statDefaults.effective(after)).singleElement().satisfies(row -> {
+            assertThat(row.getBaseValue()).isEqualByComparingTo("200");
+            assertThat(row.getVariantId()).isEqualTo(variant);
+        });
     }
 
     private void createPatch(UUID patchId, UUID variantId, long ordinal, UUID seasonId) {

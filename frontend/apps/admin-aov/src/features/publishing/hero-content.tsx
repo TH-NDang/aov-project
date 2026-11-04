@@ -6,6 +6,7 @@ import { cn } from "@aov/ui/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { SECTIONS, type Content, type Section } from "./types"
 import { HeroOverview } from "./hero-overview"
+import type { StatDefault } from "./combat-attributes"
 import { HeroTranslationNotice } from "./hero-translation-notice"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { HeroContentSources } from "./hero-content-sources"
@@ -90,6 +91,9 @@ export function HeroContent(props: Parameters<typeof HeroContentBody>[0]) {
 
 function HeroContentBody({
   content,
+  statDefaults,
+  patchCode,
+  referenceError,
   locale,
   editable,
   busy,
@@ -107,6 +111,9 @@ function HeroContentBody({
   /** The hero page shows the content sections in its own tab row. */
   showTabs?: boolean
   content: Content
+  statDefaults?: StatDefault[]
+  patchCode?: string
+  referenceError?: boolean
   locale: string
   editable: boolean
   busy: boolean
@@ -162,6 +169,9 @@ function HeroContentBody({
       <div className="grid items-start gap-4" role="tabpanel" id={`hero-content-${tab}`}>
         {tab === "overview" && (
           <HeroOverview
+            statDefaults={statDefaults}
+            patchCode={patchCode}
+            referenceError={referenceError}
             content={content}
             profile={profile}
             locale={locale}

@@ -15,6 +15,10 @@ class HeroDraftValidationTest {
     void incompleteDraftsRemainValidButPublicationReportsMissingFields() {
         try (var factory = Validation.buildDefaultValidatorFactory()) {
             var validation = new HeroValidation(null, factory.getValidator(), null);
+            var stats = new Stats(List.of(), List.of());
+            validation.validate(HeroSection.COMBAT_STATS, stats);
+            assertThatThrownBy(() -> validation.validatePublication(HeroSection.COMBAT_STATS, stats))
+                    .isInstanceOf(ApiException.class);
             var profile = new Profile(List.of(new ProfileTranslation("vi-VN", "Airi", null, null, null)),
                     Set.of(), List.of());
             validation.validate(HeroSection.PROFILE, profile);

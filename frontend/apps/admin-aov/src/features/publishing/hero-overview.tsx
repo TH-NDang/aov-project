@@ -10,8 +10,8 @@ import { heroRatingScale } from "./hero-rating-scale"
 import type { ProfileEditorPart } from "./hero-profile-editor"
 import { HeroTranslationNotice } from "./hero-translation-notice"
 import type { TranslationTarget } from "./hero-translation-model"
-import { comparisonFieldLabels } from "./hero-comparison"
-import { statLabel } from "./patch-change-model"
+import { HeroCombatAttributes } from "./hero-combat-attributes"
+import type { StatDefault } from "./combat-attributes"
 import type { Content, Profile, Section } from "./types"
 
 const panel = "min-w-0 rounded-xl border bg-card p-4"
@@ -48,6 +48,9 @@ function OverviewSummary({ text }: { text: string }) {
 
 export function HeroOverview({
   content,
+  statDefaults,
+  patchCode,
+  referenceError,
   profile,
   locale,
   editable,
@@ -56,6 +59,9 @@ export function HeroOverview({
   onTranslate,
 }: {
   content: Content
+  statDefaults?: StatDefault[]
+  patchCode?: string
+  referenceError?: boolean
   profile: Profile["translations"][number] | undefined
   locale: string
   editable: boolean
@@ -65,7 +71,6 @@ export function HeroOverview({
 }) {
   const ratings = content.OVERVIEW_RATINGS
   const scale = heroRatingScale(ratings?.scaleCode ?? "GAME_OVERVIEW_10")
-  const stats = content.COMBAT_STATS?.values ?? []
   const edit = (section: Section, label: string) =>
     editable && (
       <Button
@@ -134,35 +139,18 @@ export function HeroOverview({
           </section>
           <section id="hero-COMBAT_STATS" className={cn(panel, "order-3")} aria-label="Chỉ số tướng">
             {header(
-              "Chỉ số",
+              "Thuộc tính chiến đấu",
               <ChartNoAxesCombined className="size-4 text-muted-foreground" />,
               edit("COMBAT_STATS", "Chỉ số"),
             )}
-            {stats.length ? (
-              <dl className="grid gap-x-6 @min-[560px]/overview:grid-cols-2">
-                {stats.map((stat) => (
-                  <div
-                    key={stat.statKey}
-                    className="flex min-w-0 items-start justify-between gap-3 border-b border-border/50 py-2"
-                  >
-                    <dt className="type-body min-w-0 break-words text-muted-foreground">
-                      {comparisonFieldLabels[stat.statKey] ?? statLabel(stat.statKey)}
-                    </dt>
-                    <dd className="type-body shrink-0 text-right tabular-nums">
-                      {stat.baseValue ?? "—"}
-                      <span className="type-meta ml-1">
-                        {["POINT", "UNKNOWN"].includes(stat.unit) ? "" : stat.unit === "PERCENT" ? "%" : stat.unit}
-                      </span>
-                      {stat.growthPerLevel !== null && (
-                        <span className="type-meta block">+{stat.growthPerLevel} / cấp</span>
-                      )}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            ) : (
-              <p className="type-meta">Chưa ghi nhận chỉ số trong bản dữ liệu này.</p>
-            )}
+            <HeroCombatAttributes
+              stats={content.COMBAT_STATS}
+              skills={content.SKILLS}
+              roles={content.PROFILE?.roles}
+              defaults={statDefaults}
+              patchCode={patchCode}
+              referenceError={referenceError}
+            />
             <HeroContentSources sources={content.COMBAT_STATS?.sources ?? []} compact />
           </section>
         </div>

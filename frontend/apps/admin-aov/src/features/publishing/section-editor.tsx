@@ -1,6 +1,7 @@
 import { HeroSkillsEditor } from "./hero-skills-editor"
 import { HeroProfileEditor, type ProfileEditorPart } from "./hero-profile-editor"
 import { HeroStatsEditor } from "./hero-stats-editor"
+import type { StatDefault } from "./combat-attributes"
 import { Button } from "@aov/ui/components/button"
 import type { Hero } from "@/lib/api/types"
 import { AssetPicker } from "./asset-picker"
@@ -54,6 +55,10 @@ export function SectionEditor({
   heroId,
   onBusyChange,
   profilePart = "information",
+  statDefaults,
+  skills,
+  patchCode,
+  referenceError,
 }: {
   section: Section
   value: Content[Section]
@@ -64,6 +69,10 @@ export function SectionEditor({
   heroId?: string
   onBusyChange?: (busy: boolean) => void
   profilePart?: ProfileEditorPart
+  statDefaults?: StatDefault[]
+  skills?: Skills | null
+  patchCode?: string
+  referenceError?: boolean
 }) {
   const data = value ?? emptySection(section, locale)
   let editor
@@ -107,7 +116,16 @@ export function SectionEditor({
       </>
     )
   } else if (section === "COMBAT_STATS") {
-    editor = <HeroStatsEditor value={data as Stats} onChange={onChange} />
+    editor = (
+      <HeroStatsEditor
+        value={data as Stats}
+        onChange={onChange}
+        defaults={statDefaults}
+        skills={skills}
+        patchCode={patchCode}
+        referenceError={referenceError}
+      />
+    )
   } else if (section === "SKILLS") {
     editor = (
       <HeroSkillsEditor
