@@ -24,7 +24,7 @@ import {
 
 test("opening and closing a hero retain list filters without mutating the current URL", () => {
   const original = new URLSearchParams(
-    "season=s3&patch=baseline&hero=old&tab=media&skill=skill-1-1&skillLayout=flat&target=th-TH&compare=previous",
+    "season=s3&patch=baseline&hero=old&tab=media&skill=skill-1-1&skillLayout=flat&target=th-TH&compare=previous&translationKey=skill-1-1&translationField=description",
   )
   const next = openHeroLocation(original, "hero-42", "revision-2")
   assert.equal(next.get("hero"), "hero-42")
@@ -34,6 +34,8 @@ test("opening and closing a hero retain list filters without mutating the curren
   assert.equal(next.get("skillLayout"), null)
   assert.equal(next.get("target"), null)
   assert.equal(next.get("compare"), null)
+  assert.equal(next.get("translationKey"), null)
+  assert.equal(next.get("translationField"), null)
   assert.equal(original.get("hero"), "old")
   assert.equal(closeHeroLocation(next).toString(), "season=s3&patch=baseline")
 })
@@ -60,7 +62,7 @@ test("hero URL restores both tab levels and independent reading and translation 
 
 test("full-page links carry hero navigation and comparison state without list-only parameters", () => {
   const params = new URLSearchParams(
-    "hero=hero-42&season=s3&patch=baseline&ruleset=regional&view=history&tab=skills&skill=skill-2-1&skillLayout=flat&revision=revision-1&compare=revision-0&diff=split&changes=skills&unrelated=value",
+    "hero=hero-42&season=s3&patch=baseline&ruleset=regional&view=history&tab=skills&skill=skill-2-1&skillLayout=flat&revision=revision-1&compare=revision-0&diff=split&changes=skills&unrelated=value&translationKey=skill-2-1&translationField=description",
   )
   const url = new URL(heroPageLocation("hero-42", params, "revision-2"), "http://localhost")
   assert.equal(url.pathname, "/hero/hero-42")
@@ -71,6 +73,8 @@ test("full-page links carry hero navigation and comparison state without list-on
   assert.equal(url.searchParams.get("ruleset"), "regional")
   assert.equal(url.searchParams.get("skill"), "skill-2-1")
   assert.equal(url.searchParams.get("skillLayout"), "flat")
+  assert.equal(url.searchParams.get("translationKey"), "skill-2-1")
+  assert.equal(url.searchParams.get("translationField"), "description")
   assert.equal(url.searchParams.get("hero"), null)
   assert.equal(url.searchParams.get("season"), null)
   assert.equal(url.searchParams.get("unrelated"), null)

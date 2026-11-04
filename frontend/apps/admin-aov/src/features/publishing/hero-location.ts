@@ -10,6 +10,8 @@ const heroKeys = [
   "skill",
   "skillLayout",
   "section",
+  "translationKey",
+  "translationField",
   "locale",
   "readLocale",
   "target",
@@ -77,6 +79,8 @@ export function switchHeroLocation(params: URLSearchParams, heroId: string, revi
     diff: null,
     changes: null,
     skill: null,
+    translationKey: null,
+    translationField: null,
     anchorRevision: null,
   })
 }

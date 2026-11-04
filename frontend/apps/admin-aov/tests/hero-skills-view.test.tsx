@@ -414,7 +414,8 @@ test("fallback copy is explicit and skill level labels, zero costs and collapsed
     ]
     await render(<HeroSkillsView skills={[value]} locale="th-TH" heroId="view-hero" />)
     const details = document.querySelector('[aria-label="Chi tiết kỹ năng"]')!
-    assert.match(details.textContent!, /Dự phòng: vi-VN/)
+    assert.match(details.textContent!, /Chưa dịch/)
+    assert.equal(document.querySelector('[aria-label="Nội dung chưa dịch"]'), null)
     assert.match(details.textContent!, /Hồi chiêu: 0 giây/)
     assert.match(details.textContent!, /Tiêu hao: 0/)
     assert.deepEqual(

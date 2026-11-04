@@ -9,6 +9,8 @@ import { SkillArtwork, SkillArtworkStack, skillImageMatch, useHeroSkillImages } 
 import { SkillSourceDetails } from "./hero-source-details"
 import { ImageCreditSummary } from "./image-credit-summary"
 import type { Skill } from "./types"
+import { HeroTranslationNotice } from "./hero-translation-notice"
+import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 
 export type HeroSkillsLayout = "focus" | "flat"
 
@@ -20,6 +22,7 @@ export function HeroSkillsView({
   onSkillChange,
   layout: requestedLayout,
   onLayoutChange,
+  onTranslate,
 }: {
   skills: Skill[]
   locale: string
@@ -28,6 +31,7 @@ export function HeroSkillsView({
   onSkillChange?: (key: string) => void
   layout?: HeroSkillsLayout
   onLayoutChange?: (layout: HeroSkillsLayout) => void
+  onTranslate?: (target: TranslationTarget) => void
 }) {
   const [localKey, setLocalKey] = useState("")
   const [galleryOpen, setGalleryOpen] = useState(false)
@@ -183,6 +187,7 @@ export function HeroSkillsView({
             className="min-w-0 space-y-5 @min-[760px]/skills:border-l @min-[760px]/skills:pl-6"
           >
             <SkillDetail
+              onTranslate={onTranslate}
               key={currentGroup?.key ?? current.skillKey}
               skill={current}
               locale={locale}
@@ -253,6 +258,7 @@ export function HeroSkillsView({
                     className="space-y-5 py-5 first:pt-0 last:pb-0"
                   >
                     <SkillDetail
+                      onTranslate={onTranslate}
                       skill={skill}
                       locale={locale}
                       heroId={heroId}
@@ -311,14 +317,16 @@ function SkillDetail({
   heroId,
   variant,
   states,
+  onTranslate,
 }: {
   skill: Skill
   locale: string
   heroId?: string
   variant?: string
   states?: ReactNode
+  onTranslate?: (target: TranslationTarget) => void
 }) {
-  const text = selectSkillTranslation(skill, locale)
+  const text = translatedText(skill.translations, locale, sectionTextFields.SKILLS)
   return (
     <>
       <header className="flex items-center gap-3">
@@ -333,9 +341,16 @@ function SkillDetail({
               </Badge>
             )}
             {variant && <Badge variant="outline">{variant}</Badge>}
-            {text && text.locale !== locale && <Badge variant="secondary">Dự phòng: {text.locale}</Badge>}
           </div>
         </div>
+        <HeroTranslationNotice
+          rows={skill.translations}
+          locale={locale}
+          fields={sectionTextFields.SKILLS}
+          section="SKILLS"
+          entryKey={skill.skillKey}
+          onTranslate={onTranslate}
+        />
       </header>
       {states}
       {text?.description ? (

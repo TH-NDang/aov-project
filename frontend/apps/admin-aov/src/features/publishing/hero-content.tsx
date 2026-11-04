@@ -1,14 +1,16 @@
 import type { ComponentType, ReactNode } from "react"
 import { useState } from "react"
-import { AlertTriangle, BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords } from "lucide-react"
+import { BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { SECTIONS, type Content, type Section } from "./types"
 import { HeroOverview } from "./hero-overview"
+import { HeroTranslationNotice } from "./hero-translation-notice"
+import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { HeroContentSources } from "./hero-content-sources"
 import { AdminEntityText, AdminReferenceProvider } from "../terminology/catalog"
-import { heroReviewNotes } from "./hero-source-details"
+import { HeroReviewNotice } from "./hero-review-notice"
 import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
@@ -92,6 +94,7 @@ function HeroContentBody({
   editable,
   busy,
   onEdit,
+  onTranslate,
   tab: selectedTab,
   onTabChange,
   heroId,
@@ -108,6 +111,7 @@ function HeroContentBody({
   editable: boolean
   busy: boolean
   onEdit: (section: Section, profilePart?: "information" | "lore") => void
+  onTranslate?: (target: TranslationTarget) => void
   tab?: HeroContentTab
   onTabChange?: (tab: HeroContentTab) => void
   heroId?: string
@@ -116,8 +120,7 @@ function HeroContentBody({
   skillLayout?: "focus" | "flat"
   onSkillLayoutChange?: (layout: "focus" | "flat") => void
 }) {
-  const profile = localized(content.PROFILE?.translations, locale)
-  const reviewNotes = heroReviewNotes(content.SKILLS?.skills ?? [])
+  const profile = translatedText(content.PROFILE?.translations ?? [], locale, sectionTextFields.PROFILE)
   // The base appearance repeats the hero's own images, which the Images tab already shows.
   const skins = visibleSkins(content.SKINS?.skins ?? [])
   const [localTab, setLocalTab] = useState<HeroContentTab>("overview")
@@ -126,19 +129,6 @@ function HeroContentBody({
     tab === "overview" ? [] : tab === "skills" ? ["SKILLS"] : tab === "skins" ? ["SKINS"] : ["MEDIA_BINDINGS"]
   return (
     <div className="space-y-4" aria-label="Nội dung tướng">
-      {reviewNotes.length > 0 && (
-        <details className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm">
-          <summary className="flex cursor-pointer items-center gap-2 font-medium">
-            <AlertTriangle className="size-4 shrink-0 text-amber-600" />
-            {reviewNotes.length} ghi chú cần đối chiếu từ nguồn
-          </summary>
-          <ul className="mt-3 space-y-2 pl-6 text-sm leading-6 text-muted-foreground">
-            {reviewNotes.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
-        </details>
-      )}
       <div
         className={cn("flex gap-1 overflow-x-auto border-b pb-2", !showTabs && "hidden")}
         role="tablist"
@@ -167,6 +157,7 @@ function HeroContentBody({
             {count !== null && <span className="text-xs tabular-nums text-muted-foreground">{count}</span>}
           </Button>
         ))}
+        {showTabs && <HeroReviewNotice skills={content.SKILLS?.skills ?? []} />}
       </div>
       <div className="grid items-start gap-4" role="tabpanel" id={`hero-content-${tab}`}>
         {tab === "overview" && (
@@ -177,6 +168,7 @@ function HeroContentBody({
             editable={editable}
             busy={busy}
             onEdit={onEdit}
+            onTranslate={onTranslate}
           />
         )}
         {SECTIONS.filter(([key]) => visibleSections.includes(key)).map(([section, , label]) => {
@@ -186,6 +178,7 @@ function HeroContentBody({
           if (section === "SKILLS")
             body = (
               <HeroSkillsView
+                onTranslate={onTranslate}
                 skills={content.SKILLS?.skills ?? []}
                 locale={locale}
                 heroId={heroId}
@@ -206,12 +199,25 @@ function HeroContentBody({
                   {[...skins]
                     .sort((a, b) => a.displayOrder - b.displayOrder)
                     .map((skin) => {
-                      const text = localized(skin.translations, locale)
+                      const text = translatedText(skin.translations, locale, sectionTextFields.SKINS)
                       return (
-                        <SkinCard key={skin.skinKey} skin={skin} name={text?.name || skin.skinKey} locale={locale}>
-                          {text?.locale !== locale && (
-                            <p className="type-meta">Dự phòng: {text?.locale ?? "chưa có"}</p>
-                          )}
+                        <SkinCard
+                          key={skin.skinKey}
+                          skin={skin}
+                          name={text?.name || skin.skinKey}
+                          locale={locale}
+                          action={
+                            <HeroTranslationNotice
+                              rows={skin.translations}
+                              locale={locale}
+                              fields={sectionTextFields.SKINS}
+                              section="SKINS"
+                              entryKey={skin.skinKey}
+                              onTranslate={onTranslate}
+                              disabled={busy}
+                            />
+                          }
+                        >
                           {text?.description && <Text>{text.description}</Text>}
                           {text?.acquisitionNote && <Text>{text.acquisitionNote}</Text>}
                         </SkinCard>

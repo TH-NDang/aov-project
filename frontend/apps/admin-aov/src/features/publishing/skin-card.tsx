@@ -31,12 +31,14 @@ export function SkinCard({
   name,
   locale,
   children,
+  action,
 }: {
   skin: Skin
   name: string
   locale: string
   /** Text under the name, e.g. description and acquisition note. */
   children?: ReactNode
+  action?: ReactNode
 }) {
   const ids = skinImageIds(skin)
   const assets = useQueries({
@@ -76,6 +78,7 @@ export function SkinCard({
           gallery={gallery("SPLASH")}
         />
         <SkinBadgeOverlay iconAssetId={badge?.iconAssetId} name={badgeName} />
+        {action && <div className="absolute top-2 right-2 rounded-full bg-background/95">{action}</div>}
       </div>
       <div className="flex items-start gap-3 p-3">
         <div className="flex shrink-0 items-end gap-1.5">

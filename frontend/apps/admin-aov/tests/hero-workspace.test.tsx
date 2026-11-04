@@ -27,6 +27,13 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     document: dom.window.document,
     navigator: dom.window.navigator,
     HTMLElement: dom.window.HTMLElement,
+    Element: dom.window.Element,
+    Node: dom.window.Node,
+    NodeFilter: dom.window.NodeFilter,
+    HTMLInputElement: dom.window.HTMLInputElement,
+    MutationObserver: dom.window.MutationObserver,
+    CustomEvent: dom.window.CustomEvent,
+    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
     BroadcastChannel: undefined,
     fetch: fetcher,
     IS_REACT_ACT_ENVIRONMENT: true,
@@ -81,17 +88,22 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
       node.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
   const click = async (node: HTMLElement) => act(async () => node.click())
-  const select = async (node: HTMLSelectElement, value: string) =>
-    act(async () => {
+  const select = async (node: HTMLSelectElement | HTMLButtonElement, value: string) => {
+    if (node.tagName === "BUTTON") {
+      await act(async () =>
+        node.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true })),
+      )
+      await click(document.querySelector<HTMLElement>(`[role="menuitemradio"][data-locale="${value}"]`)!)
+      return
+    }
+    await act(async () => {
       node.value = value
       node.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
     })
+  }
   const mainTab = (view: string) => document.querySelector<HTMLButtonElement>(`[aria-controls="workspace-${view}"]`)!
-  const readLocale = () => document.querySelector<HTMLSelectElement>('[aria-label="Ngôn ngữ hiển thị nội dung"]')!
-  const translationLocale = () =>
-    [...document.querySelectorAll("label")]
-      .find((label) => label.textContent?.includes("Ngôn ngữ dữ liệu"))!
-      .querySelector<HTMLSelectElement>("select")!
+  const readLocale = () => document.querySelector<HTMLButtonElement>('[aria-label="Ngôn ngữ hiển thị nội dung"]')!
+  const translationLocale = () => document.querySelector<HTMLButtonElement>('[aria-label="Ngôn ngữ đích"]')!
   try {
     await verifySession()
     await mount()
@@ -101,6 +113,52 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.ok(document.querySelector('[role="tab"][aria-controls="workspace-translations"]'))
     assert.ok(document.querySelector('[role="tab"][aria-controls="workspace-history"]'))
     assert.equal(readLocale().value, "vi-VN")
+    assert.ok(readLocale().closest("header"), "The language picker belongs to the hero header")
+    assert.equal(document.querySelectorAll('[aria-label="Ngôn ngữ hiển thị nội dung"]').length, 1)
+    await select(readLocale(), "en-US")
+    assert.match(readLocale().getAttribute("aria-description")!, /Chưa có bản dịch/)
+    assert.equal(
+      document.querySelector('[aria-label="Nội dung chưa dịch"]'),
+      null,
+      "Missing translations stay in a popup, outside the reading layout",
+    )
+    await click(document.querySelector<HTMLButtonElement>('button[aria-label^="Xem 3 mục chưa dịch"]')!)
+    await click(document.querySelector<HTMLButtonElement>('[aria-label="Dịch phần này: Giới thiệu"]')!)
+    assert.equal(translationLocale().value, "en-US")
+    assert.equal(
+      document.activeElement?.closest<HTMLElement>("[data-translation-field]")?.dataset.translationField,
+      "summary",
+    )
+    assert.equal(
+      document.activeElement?.closest<HTMLElement>("[data-translation-key]")?.dataset.translationKey,
+      "profile",
+    )
+    assert.equal(fixture.writes.length, 0)
+    await click(mainTab("overview"))
+    assert.equal(readLocale().value, "en-US")
+    await click(document.querySelector<HTMLButtonElement>('button[aria-label="Chỉnh sửa Thông tin"]')!)
+    assert.ok(
+      document.querySelector('[aria-label="Đối chiếu bản dịch"]'),
+      "Editing fallback text must open the target translation, never the source profile",
+    )
+    await click(mainTab("overview"))
+    await click(document.querySelector<HTMLButtonElement>('[aria-controls="hero-content-skills"]')!)
+    assert.equal(readLocale().value, "en-US")
+    await click(document.querySelector<HTMLButtonElement>('button[aria-label^="Xem 2 mục chưa dịch"]')!)
+    await click(document.querySelector<HTMLButtonElement>('[aria-label="Dịch phần này: Mô tả"]')!)
+    assert.equal(
+      document.activeElement?.closest<HTMLElement>("[data-translation-field]")?.dataset.translationField,
+      "description",
+    )
+    assert.equal(
+      document.activeElement?.closest<HTMLElement>("[data-translation-key]")?.dataset.translationKey,
+      "passive",
+    )
+    assert.equal(translationLocale().value, "en-US")
+    await click(mainTab("overview"))
+    await select(readLocale(), "vi-VN")
+    await click(document.querySelector<HTMLButtonElement>('button[aria-label="Chỉnh sửa Thông tin"]')!)
+    await click(button("Xem hồ sơ"))
     await click(mainTab("translations"))
     assert.equal(translationLocale().value, "en-US")
     await select(translationLocale(), "th-TH")
@@ -128,11 +186,11 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(unload.defaultPrevented, true)
     await click(mainTab("translations"))
     await select(translationLocale(), "en-US")
-    await type(input("Tên · en-US"), "Unfinished English")
+    await type(input("Tên · Tiếng Anh (Mỹ)"), "Unfinished English")
     await select(translationLocale(), "th-TH")
-    await type(input("Tên · th-TH"), "Unfinished Thai")
+    await type(input("Tên · Tiếng Thái (Thái Lan)"), "Unfinished Thai")
     await select(translationLocale(), "en-US")
-    assert.equal(input("Tên · en-US").value, "Unfinished English")
+    assert.equal(input("Tên · Tiếng Anh (Mỹ)").value, "Unfinished English")
     await click(mainTab("overview"))
     await act(async () => {
       for (const key of Object.keys(draftRepository.store.getState().slots)) await draftRepository.flush(key)
@@ -180,7 +238,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await click(mainTab("translations"))
     assert.equal(translationLocale().value, "en-US")
     const original = structuredClone(fixture.content.PROFILE!)
-    await type(input("Tên · en-US"), "Airi English")
+    await type(input("Tên · Tiếng Anh (Mỹ)"), "Airi English")
     await click(button("Lưu phần này"))
     await waitFor(() => fixture.writes.length === 2 && !unsafe)
     assert.deepEqual(fixture.content.PROFILE!.translations[0], original.translations[0])
@@ -275,6 +333,9 @@ test("translation progress uses exact locale and source tables preserve conflict
       skills: 1,
       skins: 1,
       exists: true,
+      completedFields: 7,
+      totalFields: 7,
+      missing: [],
     })
     assert.equal(translationStatus(fixtureContent, "en-US").completed, 0)
     const partial = structuredClone(fixtureContent)

@@ -6,10 +6,8 @@ import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } 
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft,
-  BookOpen,
   CheckCircle2,
   FileUp,
-  Languages,
   MoreHorizontal,
   Plus,
   RefreshCw,
@@ -41,7 +39,7 @@ import { languageOptions } from "../users/profile-preference-picker"
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
 import { invalidateHeroCatalogs } from "./publishing-cache"
 import { BaselineContextForm } from "./baseline-context-form"
-import { HeroAsset, HeroContent, localized } from "./hero-content"
+import { HeroAsset, HeroContent } from "./hero-content"
 import { HeroScrollIdentity } from "./hero-scroll-identity"
 import { HeroQuickSwitcher } from "./hero-quick-switcher"
 import { selectCatalogRevisions } from "./catalog-data"
@@ -49,8 +47,16 @@ import { HeroCatalog } from "./hero-catalog"
 import { HeroRevisionHistory } from "./hero-revision-history"
 import { HeroPatchTimeline } from "./hero-patch-view"
 import { HeroTranslationStatus } from "./hero-translation-status"
+import { HeroLanguagePicker } from "./hero-language-picker"
+import { HeroReviewNotice } from "./hero-review-notice"
+import {
+  missingTranslationFields,
+  translatedText,
+  translationFields,
+  type TranslationField,
+  type TranslationTarget,
+} from "./hero-translation-model"
 import { TranslationEditor, type TranslatableSection } from "./translation-editor"
-import { DataLanguage } from "./data-language"
 import { Box, Field, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
@@ -254,7 +260,8 @@ export function PublishingWorkspace({
   const displayLocale = useContentLocale()
   const location = readHeroLocation(urlParams, translationMode, displayLocale)
   const { view, section, targetLocale, sourceLocale } = location
-  const setSection = (value: Section) => updateLocation({ section: value })
+  const setSection = (value: Section) =>
+    updateLocation({ section: value, translationKey: null, translationField: null })
   const setContentLocale = (value: string) => updateLocation({ readLocale: value })
   const setTargetLocale = (value: string) => updateLocation({ target: value })
   const setSourceLocale = (value: string) => updateLocation({ source: value })
@@ -311,9 +318,7 @@ export function PublishingWorkspace({
   const translating = view === "translations"
   const locale = translating ? targetLocale : location.readLocale
   const focusedProfile = !translating && section === "PROFILE"
-  const editorLocale = focusedProfile
-    ? (localized(preview?.content.PROFILE?.translations, locale)?.locale ?? locale)
-    : locale
+  const editorLocale = locale
   const sectionValue = focusedProfile
     ? replaceProfilePart(
         read.data?.content.PROFILE ?? null,
@@ -325,7 +330,8 @@ export function PublishingWorkspace({
   const sectionDirty = focusedProfile ? !sameDraftValue(sectionValue, read.data?.content.PROFILE) : dirty.has(section)
   const editorTitle =
     focusedProfile && profilePart === "lore" ? "Cốt truyện" : SECTIONS.find(([key]) => key === section)![2]
-  const heroName = localized(preview?.content.PROFILE?.translations, displayLocale)?.name || "Hồ sơ tướng"
+  const heroName =
+    translatedText(preview?.content.PROFILE?.translations ?? [], location.readLocale, ["name"])?.name || "Hồ sơ tướng"
   const issues = preview ? publishIssues(preview.content) : []
 
   useEffect(() => {
@@ -412,6 +418,21 @@ export function PublishingWorkspace({
   }
   function update(value: NonNullable<Content[Section]>) {
     localDraft.update({ ...localDraft.value, content: { ...localDraft.value.content, [section]: value } })
+  }
+  function openTranslation(target: TranslationTarget) {
+    if (busy) return
+    updateLocation({
+      view: "translations",
+      section: target.section,
+      target: location.readLocale,
+      source: target.sourceLocale,
+      readLocale: location.readLocale,
+      translationKey: target.key,
+      translationField: target.field,
+    })
+    setEditing(false)
+    setError("")
+    setMessage("")
   }
   function switchView(next: HeroWorkspaceView) {
     if (busy) return
@@ -534,6 +555,7 @@ export function PublishingWorkspace({
                     </p>
                   </div>
                   {quickSwitcher}
+                  {preview && <HeroReviewNotice skills={preview.content.SKILLS?.skills ?? []} />}
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -577,7 +599,13 @@ export function PublishingWorkspace({
                       disabled={busy}
                       onChange={(event) => {
                         setSelectedId(event.target.value)
-                        updateLocation({ revision: event.target.value, compare: null, changes: null })
+                        updateLocation({
+                          revision: event.target.value,
+                          compare: null,
+                          changes: null,
+                          translationKey: null,
+                          translationField: null,
+                        })
                         setEditing(false)
                       }}
                     >
@@ -598,6 +626,15 @@ export function PublishingWorkspace({
                       Bản #{revision.revisionNo} · {STATES[revision.state]}
                     </span>
                   )
+                )}
+                {preview && revision && !translating && (
+                  <HeroLanguagePicker
+                    content={preview.content}
+                    locale={location.readLocale}
+                    revisionNo={revision.revisionNo}
+                    disabled={busy || editing}
+                    onChange={setContentLocale}
+                  />
                 )}
                 {headerAction === "publish" && (
                   <Button disabled={busy} onClick={() => setManagementOpen(true)}>
@@ -696,25 +733,6 @@ export function PublishingWorkspace({
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
-                {!translating && !editing && (
-                  <label className="flex items-center gap-2">
-                    <Languages className="size-3.5" />
-                    <span className="sr-only">Ngôn ngữ hiển thị nội dung</span>
-                    <select
-                      aria-label="Ngôn ngữ hiển thị nội dung"
-                      className="max-w-44 rounded-md border bg-background px-2 py-1.5 text-xs"
-                      value={locale}
-                      disabled={busy}
-                      onChange={(event) => setContentLocale(event.target.value)}
-                    >
-                      {languageOptions.map((option) => (
-                        <option value={option.value} key={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
               </div>
               {writable && <DraftStatus draft={localDraft} disabled={busy} />}
               {revision.state !== "DRAFT" && (editing || translating) && (
@@ -742,7 +760,17 @@ export function PublishingWorkspace({
                     onSkillLayoutChange={(layout) => updateLocation({ skillLayout: layout === "flat" ? "flat" : null })}
                     onSkillChange={(skill) => updateLocation({ skill })}
                     onTabChange={(tab) => updateLocation({ tab })}
+                    onTranslate={canWrite ? openTranslation : undefined}
                     onEdit={(next, part = "information") => {
+                      if (next === "PROFILE") {
+                        const fields = part === "lore" ? (["lore"] as const) : (["name", "title", "summary"] as const)
+                        const missing = missingTranslationFields(
+                          preview.content.PROFILE?.translations ?? [],
+                          location.readLocale,
+                          fields,
+                        )[0]
+                        if (missing) return openTranslation({ ...missing, section: "PROFILE", key: "profile" })
+                      }
                       setSection(next)
                       setProfilePart(part)
                       setEditing(true)
@@ -764,6 +792,8 @@ export function PublishingWorkspace({
                             ? languageOptions.find((option) => option.value !== next)!.value
                             : sourceLocale,
                         section: "PROFILE",
+                        translationKey: null,
+                        translationField: null,
                       })
                       setError("")
                     }}
@@ -812,25 +842,28 @@ export function PublishingWorkspace({
                         disabled={busy}
                         className="grid gap-4 rounded-xl border bg-card p-4 @min-[600px]:grid-cols-2"
                       >
-                        <label className="grid gap-2 text-sm">
-                          <span className="flex items-center gap-2">
-                            <BookOpen className="size-4 text-muted-foreground" />
-                            Ngôn ngữ nguồn
-                          </span>
-                          <select
-                            aria-label="Ngôn ngữ nguồn"
-                            className={control}
-                            value={sourceLocale}
-                            onChange={(event) => setSourceLocale(event.target.value)}
-                          >
-                            {languageOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <DataLanguage value={targetLocale} onChange={setTargetLocale} />
+                        <div className="min-w-0 space-y-2">
+                          <p className="type-label">Đọc từ</p>
+                          <HeroLanguagePicker
+                            label="Ngôn ngữ nguồn"
+                            locale={sourceLocale}
+                            disabled={busy}
+                            onChange={setSourceLocale}
+                            compact={false}
+                          />
+                        </div>
+                        <div className="min-w-0 space-y-2">
+                          <p className="type-label">Dịch sang</p>
+                          <HeroLanguagePicker
+                            label="Ngôn ngữ đích"
+                            locale={targetLocale}
+                            content={preview.content}
+                            revisionNo={revision.revisionNo}
+                            disabled={busy}
+                            onChange={setTargetLocale}
+                            compact={false}
+                          />
+                        </div>
                         {sourceLocale === locale && (
                           <p role="status" className="text-sm text-amber-600 @min-[600px]:col-span-2">
                             Chọn ngôn ngữ đích khác nguồn để bắt đầu biên dịch.
@@ -909,6 +942,13 @@ export function PublishingWorkspace({
                               sourceLocale={sourceLocale}
                               targetLocale={locale}
                               onChange={update}
+                              focusKey={urlParams.get("translationKey") ?? undefined}
+                              focusField={
+                                Object.hasOwn(translationFields, urlParams.get("translationField") ?? "")
+                                  ? (urlParams.get("translationField") as TranslationField)
+                                  : undefined
+                              }
+                              onClearFocus={() => updateLocation({ translationKey: null, translationField: null })}
                             />
                           ) : (
                             <SectionEditor

@@ -107,13 +107,11 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await click('[aria-label="Cách hiển thị kỹ năng"] button:nth-child(2)')
     assert.equal(new URLSearchParams(router.state.location.search).get("skillLayout"), "flat")
     await click('[aria-controls="workspace-translations"]')
-    const target = [...document.querySelectorAll("label")]
-      .find((label) => label.textContent?.includes("Ngôn ngữ dữ liệu"))!
-      .querySelector("select")!
+    const target = document.querySelector<HTMLButtonElement>('[aria-label="Ngôn ngữ đích"]')!
     await act(async () => {
-      target.value = "th-TH"
-      target.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+      target.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
     })
+    await click('[role="menuitemradio"][data-locale="th-TH"]')
     await click('[aria-label="Các phần nội dung"] button:nth-child(2)')
     const restoredUrl = router.state.location.pathname + router.state.location.search
     assert.equal(new URLSearchParams(router.state.location.search).get("target"), "th-TH")
@@ -152,7 +150,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.equal(params.get("skillLayout"), "flat")
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu bản dịch"]'))
     const nameInput = [...document.querySelectorAll("label")]
-      .find((label) => label.textContent === "Tên · th-TH")!
+      .find((label) => label.textContent === "Tên · Tiếng Thái (Thái Lan)")!
       .querySelector("input")!
     await act(async () => {
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(

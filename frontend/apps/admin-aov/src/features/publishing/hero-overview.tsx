@@ -1,7 +1,6 @@
 import { useId, useState, type ReactNode } from "react"
 import { BookOpen, ChartNoAxesCombined, ChevronDown, Pencil, Shield } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
 import { AdminEntityText } from "../terminology/catalog"
 import { HeroAsset } from "./hero-asset"
@@ -9,6 +8,8 @@ import { HeroPositionBadges, HeroRoleBadge } from "./hero-classification-badges"
 import { HeroContentSources } from "./hero-content-sources"
 import { heroRatingScale } from "./hero-rating-scale"
 import type { ProfileEditorPart } from "./hero-profile-editor"
+import { HeroTranslationNotice } from "./hero-translation-notice"
+import type { TranslationTarget } from "./hero-translation-model"
 import { comparisonFieldLabels } from "./hero-comparison"
 import { statLabel } from "./patch-change-model"
 import type { Content, Profile, Section } from "./types"
@@ -52,6 +53,7 @@ export function HeroOverview({
   editable,
   busy,
   onEdit,
+  onTranslate,
 }: {
   content: Content
   profile: Profile["translations"][number] | undefined
@@ -59,6 +61,7 @@ export function HeroOverview({
   editable: boolean
   busy: boolean
   onEdit: (section: Section, profilePart?: ProfileEditorPart) => void
+  onTranslate?: (target: TranslationTarget) => void
 }) {
   const ratings = content.OVERVIEW_RATINGS
   const scale = heroRatingScale(ratings?.scaleCode ?? "GAME_OVERVIEW_10")
@@ -102,13 +105,19 @@ export function HeroOverview({
               <div className="min-w-0 flex-1">
                 <h2 className="type-section-title break-words">{profile?.name || "Tướng chưa đặt tên"}</h2>
                 {profile?.title && <p className="type-body mt-0.5 text-muted-foreground">{profile.title}</p>}
-                {profile && profile.locale !== locale && (
-                  <Badge variant="outline" className="mt-1">
-                    Dự phòng: {profile.locale} · chưa có {locale}
-                  </Badge>
-                )}
               </div>
-              {edit("PROFILE", "Thông tin")}
+              <div className="flex shrink-0 items-center gap-1">
+                <HeroTranslationNotice
+                  rows={content.PROFILE?.translations ?? []}
+                  locale={locale}
+                  fields={["name", "title", "summary"]}
+                  section="PROFILE"
+                  entryKey="profile"
+                  onTranslate={onTranslate}
+                  disabled={busy}
+                />
+                {edit("PROFILE", "Thông tin")}
+              </div>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
               {!!content.PROFILE?.roles.length && (
@@ -208,7 +217,18 @@ export function HeroOverview({
               <summary className="type-section-title flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
                 <BookOpen className="size-4 text-muted-foreground" />
                 Cốt truyện
-                <ChevronDown className="ml-auto size-4 text-muted-foreground transition-transform group-open/lore:rotate-180" />
+                <span className="ml-auto flex items-center gap-2">
+                  <HeroTranslationNotice
+                    rows={content.PROFILE?.translations ?? []}
+                    locale={locale}
+                    fields={["lore"]}
+                    section="PROFILE"
+                    entryKey="profile"
+                    onTranslate={onTranslate}
+                    disabled={busy}
+                  />
+                  <ChevronDown className="size-4 text-muted-foreground transition-transform group-open/lore:rotate-180" />
+                </span>
               </summary>
               <div className="mt-3">
                 {profile?.lore ? (

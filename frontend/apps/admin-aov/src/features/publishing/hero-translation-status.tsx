@@ -2,31 +2,10 @@ import { ArrowRight, Check, Languages, Plus } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { languageOptions } from "../users/profile-preference-picker"
 import type { Content } from "./types"
+import { HeroLanguageIcon } from "./hero-language-picker"
 
-export function translationStatus(content: Content, locale: string) {
-  const profile = content.PROFILE?.translations.find((row) => row.locale === locale)
-  const skills = content.SKILLS?.skills ?? []
-  const skins = content.SKINS?.skins ?? []
-  const translated = Number(!!profile?.name.trim())
-  const translatedSkills = skills.filter((skill) => {
-    const text = skill.translations.find((row) => row.locale === locale)
-    return !!text?.name.trim() && !!text.description.trim()
-  }).length
-  const translatedSkins = skins.filter((skin) =>
-    skin.translations.some((row) => row.locale === locale && row.name.trim()),
-  ).length
-  return {
-    completed: translated + translatedSkills + translatedSkins,
-    total: 1 + skills.length + skins.length,
-    profile: translated === 1,
-    skills: translatedSkills,
-    skins: translatedSkins,
-    exists:
-      !!profile ||
-      skills.some((skill) => skill.translations.some((row) => row.locale === locale)) ||
-      skins.some((skin) => skin.translations.some((row) => row.locale === locale)),
-  }
-}
+import { translationStatus, translationStatusLabel } from "./hero-translation-model"
+export { translationStatus } from "./hero-translation-model"
 
 export function HeroTranslationStatus({
   content,
@@ -46,15 +25,14 @@ export function HeroTranslationStatus({
         <div>
           <h2 className="type-section-title">Bản dịch nội dung</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Dùng chung chỉ số, kỹ năng và ảnh. Mỗi ngôn ngữ có văn bản riêng; lịch phát hành được thiết lập theo thị
-            trường.
+            Tiến độ của phiên bản đang xem. Chỉ tính các trường có nội dung nguồn; chỉ số, đánh giá và ảnh dùng chung.
           </p>
         </div>
       </div>
       <div className="grid gap-3 @min-[600px]:grid-cols-2 @min-[1100px]:grid-cols-3">
         {languageOptions.map((option) => {
           const progress = translationStatus(content, option.value)
-          const complete = progress.completed === progress.total
+          const complete = progress.totalFields > 0 && !progress.missing.length
           return (
             <Button
               key={option.value}
@@ -64,10 +42,13 @@ export function HeroTranslationStatus({
               aria-label={`${progress.exists ? "Biên dịch" : "Tạo bản dịch"} ${option.label}`}
               aria-pressed={selectedLocale === option.value}
               onClick={() => onSelect(option.value)}
-              className={`h-auto min-w-0 flex-col items-stretch gap-3 whitespace-normal p-4 text-left ${selectedLocale === option.value ? "border-primary bg-primary/5 ring-1 ring-primary/20" : ""}`}
+              className={`h-auto min-w-0 flex-col items-stretch gap-2 whitespace-normal p-3 text-left ${selectedLocale === option.value ? "border-primary bg-primary/5 ring-1 ring-primary/20" : ""}`}
             >
               <span className="flex items-center justify-between gap-3">
-                <span className="font-medium">{option.label}</span>
+                <span className="flex items-center gap-2">
+                  <HeroLanguageIcon locale={option.value} />
+                  <span>{option.label}</span>
+                </span>
                 {complete ? (
                   <Check className="size-4 shrink-0 text-emerald-600" />
                 ) : progress.exists ? (
@@ -77,15 +58,17 @@ export function HeroTranslationStatus({
                 )}
               </span>
               <span className="flex items-center justify-between gap-2 text-xs font-normal text-muted-foreground">
-                <span>{complete ? "Đủ nội dung chính" : progress.exists ? "Đang hoàn thiện" : "Chưa có bản dịch"}</span>
+                <span>{translationStatusLabel(progress)}</span>
                 <span className="tabular-nums">
-                  {progress.completed}/{progress.total}
+                  {progress.completedFields}/{progress.totalFields}
                 </span>
               </span>
               <span className="h-1 overflow-hidden rounded-full bg-muted">
                 <span
                   className={`block h-full rounded-full ${complete ? "bg-emerald-500" : "bg-primary/70"}`}
-                  style={{ width: `${(progress.completed / progress.total) * 100}%` }}
+                  style={{
+                    width: `${progress.totalFields ? (progress.completedFields / progress.totalFields) * 100 : 0}%`,
+                  }}
                 />
               </span>
             </Button>
@@ -93,8 +76,7 @@ export function HeroTranslationStatus({
         })}
       </div>
       <p className="text-xs leading-5 text-muted-foreground">
-        Tiến độ tính theo tên tướng, tên và mô tả kỹ năng, tên trang phục. Một bản dịch mới được lưu khi bạn lưu nội
-        dung đầu tiên.
+        Nội dung đang mượn từ ngôn ngữ khác không được tính là đã dịch. Thay đổi chưa lưu chỉ thuộc bản nháp đang mở.
       </p>
     </section>
   )
