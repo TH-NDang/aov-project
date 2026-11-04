@@ -24,6 +24,12 @@ export function createReferenceSettingsApi(request = backendRequest) {
   }
 }
 export const loadSettings = () => createReferenceSettingsApi().load()
+export const referenceSettingsQuery = {
+  queryKey: ["rich-text-settings"],
+  queryFn: loadSettings,
+  retry: false,
+  staleTime: 60000,
+}
 export const saveSettings = (settings: RichTextSettings, expectedVersion: number) =>
   createReferenceSettingsApi().save(settings, expectedVersion)
 export async function loadLegacySettings() {

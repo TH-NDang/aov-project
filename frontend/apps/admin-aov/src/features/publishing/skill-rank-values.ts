@@ -57,7 +57,7 @@ export function rankSummary(value: unknown, columns?: readonly string[]): string
   const suffix = first[3] ? " " + first[3].trim() : ""
   const base = numeric.format(numbers[0] / scale) + unit
   if (!step) return base + suffix
-  const increment = (step > 0 ? "+" : "−") + numeric.format(Math.abs(step) / scale) + (unit === "%" ? " điểm %" : unit)
+  const increment = (step > 0 ? "+" : "−") + numeric.format(Math.abs(step) / scale) + unit
   return `${base} (${increment}/cấp chiêu)${suffix}`
 }
 

@@ -7,6 +7,7 @@ import type { Skill } from "./types"
 import { sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
 import { hasRankFormula, skillSourceTable } from "./skill-rank-values"
 import { SkillTagsEditor, SkillTableEditor } from "./skill-source-editor"
+import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 
 type RecordValue = Record<string, unknown>
 const record = (value: unknown): RecordValue | null =>
@@ -156,7 +157,7 @@ export function SkillSourceDetails({
                   ))}
                   {columns.length > 1 && (
                     <th scope="col" className="min-w-36 border-l px-3 py-2.5 font-medium">
-                      Tổng quan
+                      <SkillRankSummaryHeading locale={locale} />
                     </th>
                   )}
                 </tr>

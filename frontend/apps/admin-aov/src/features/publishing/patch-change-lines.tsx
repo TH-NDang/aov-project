@@ -140,7 +140,7 @@ export function ChangeLines({
               {detail && <span className="block whitespace-pre-wrap text-muted-foreground">{detail}</span>}
               {ranks ? (
                 <div className="mt-2">
-                  <SkillRankComparison data={ranks} label={skillFieldLabel(String(change.fieldKey))} />
+                  <SkillRankComparison data={ranks} label={skillFieldLabel(String(change.fieldKey))} locale={locale} />
                 </div>
               ) : (
                 (before !== undefined || after !== undefined) &&

@@ -8,6 +8,7 @@ import { plainComparisonText } from "./hero-comparison"
 import { isRecord } from "./import-relations"
 import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "./skill-rank-values"
 import type { Skill } from "./types"
+import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 
 export function SkillTagsEditor({
   tags,
@@ -134,7 +135,7 @@ export function SkillTableEditor({
                 ))}
                 {columns.length > 1 && (
                   <th scope="col" className="px-2 py-2">
-                    Tổng quan
+                    <SkillRankSummaryHeading />
                   </th>
                 )}
                 <th scope="col">

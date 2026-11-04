@@ -1,11 +1,11 @@
-import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNode } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { createContext, useContext, useMemo, useSyncExternalStore, type ReactElement, type ReactNode } from "react"
+import { QueryClientContext, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSearchParams } from "react-router"
-import { EntityRichText } from "@aov/ui/components/entity-rich-text"
+import { EntityReferencePopover, EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { createEntityIndex, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { backendRequest, getSession, subscribeSession } from "@/app/auth/session"
 import { createPublishingApi } from "../publishing/publishing-api"
-import { defaultSettings, loadSettings } from "./settings-api"
+import { defaultSettings, referenceSettingsQuery } from "./settings-api"
 import { createMediaIconResolver } from "../media/media-cache"
 import { referenceCatalogApi, referenceCatalogKeys } from "./reference-api"
 import { useSkillReferences } from "./use-skill-references"
@@ -42,7 +42,7 @@ export function useReferenceCatalog() {
   const skills = useContext(RevisionSkillsContext)
   const requestedRulesetId = inheritedRulesetId ?? params.get("ruleset") ?? ""
   const session = useSyncExternalStore(subscribeSession, getSession, getSession)
-  const settings = useQuery({ queryKey: ["rich-text-settings"], queryFn: loadSettings, retry: false, staleTime: 60000 })
+  const settings = useQuery(referenceSettingsQuery)
   const catalog = useQuery({
     queryKey: referenceCatalogKeys.catalog(session.actor?.issuer, session.actor?.subject, requestedRulesetId),
     queryFn: ({ signal }) => referenceCatalogApi.list(requestedRulesetId, signal),
@@ -122,6 +122,45 @@ export function AdminEntityText({ text }: { text: string }) {
   if (!value)
     return <EntityRichText text={text} locale="vi-VN" autoRecognize={false} context="admin" firstOccurrenceOnly />
   return <ResolvedAdminEntityText text={text} value={value} />
+}
+
+type TermHintProps = { termId: string; locale?: string; children: ReactElement }
+
+export function AdminTermHint({ termId, locale, children }: TermHintProps) {
+  const references = useContext(ReferenceContext)
+  const client = useContext(QueryClientContext)
+  if (!references)
+    return client ? (
+      <CatalogTermHint termId={termId} locale={locale}>
+        {children}
+      </CatalogTermHint>
+    ) : null
+  const match = references.index.byId.get(`term:${termId}`)
+  if (!match) return null
+  return (
+    <EntityReferencePopover
+      entity={match.entity}
+      locale={references.locale}
+      fallbackLocale={references.fallbackLocale}
+      index={references.index}
+      resolveIcon={references.resolveIcon}
+      context="admin"
+    >
+      {children}
+    </EntityReferencePopover>
+  )
+}
+
+function CatalogTermHint({ termId, locale = "vi-VN", children }: TermHintProps) {
+  const { data } = useQuery(referenceSettingsQuery)
+  const settings = data?.settings
+  const entity = settings?.entities.find((entry) => entry.kind === "term" && entry.id === termId)
+  if (!entity) return null
+  return (
+    <EntityReferencePopover entity={entity} locale={locale} fallbackLocale={settings?.fallbackLocale} context="admin">
+      {children}
+    </EntityReferencePopover>
+  )
 }
 
 function ResolvedAdminEntityText({ text, value }: { text: string; value: ReferenceContextValue }) {

@@ -140,7 +140,7 @@ function Changes({ before, after, locale }: { before: HeroWorkingCopy; after: He
               <div key={i} className="space-y-2 p-3">
                 <h4 className="type-label break-words">{row.label}</h4>
                 {ranks ? (
-                  <SkillRankComparison label={row.label} data={ranks} />
+                  <SkillRankComparison label={row.label} data={ranks} locale={locale} />
                 ) : (
                   <dl className="grid gap-2 @min-[440px]:grid-cols-2">
                     {(["before", "after"] as const).map((side) => (

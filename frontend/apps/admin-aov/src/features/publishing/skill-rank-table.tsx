@@ -2,8 +2,9 @@ import { useState } from "react"
 import { cn } from "@aov/ui/lib/utils"
 import { AdminEntityText } from "../terminology/catalog"
 import { rankFieldLabel, type RankComparison } from "./skill-rank-values"
+import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 
-export function SkillRankComparison({ data, label }: { data: RankComparison; label: string }) {
+export function SkillRankComparison({ data, label, locale }: { data: RankComparison; label: string; locale?: string }) {
   const [detailed, setDetailed] = useState(true)
   return (
     <div className="min-w-0 space-y-2">
@@ -38,7 +39,7 @@ export function SkillRankComparison({ data, label }: { data: RankComparison; lab
                   </th>
                 ))}
                 <th scope="col" className="min-w-36 border-l px-3 py-2.5 font-medium">
-                  Tổng quan
+                  <SkillRankSummaryHeading locale={locale} />
                 </th>
               </tr>
             </thead>
@@ -96,11 +97,13 @@ export function SkillRankValues({
   values,
   label,
   summary,
+  locale,
 }: {
   columns: string[]
   values: (string | null)[]
   label: string
   summary: string | null
+  locale?: string
 }) {
   return (
     <div
@@ -122,7 +125,7 @@ export function SkillRankValues({
               </th>
             ))}
             <th scope="col" className="min-w-36 border-l px-3 py-2.5 font-medium">
-              Tổng quan
+              <SkillRankSummaryHeading locale={locale} />
             </th>
           </tr>
         </thead>

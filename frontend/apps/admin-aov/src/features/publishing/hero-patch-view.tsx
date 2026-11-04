@@ -283,6 +283,7 @@ export function HeroPatchTimeline({
                         {ranks && (
                           <div className="mt-2 w-full min-w-0">
                             <SkillRankValues
+                              locale={locale}
                               columns={ranks.columns}
                               values={ranks.after}
                               summary={ranks.summary.after}
