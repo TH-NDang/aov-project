@@ -242,12 +242,14 @@ export function ScheduleForm({
   seasonId,
   patch = false,
   marketId,
+  dateOnly = false,
 }: {
   endpoint: string
   data: PublicationOverview
   seasonId: string | null
   patch?: boolean
   marketId?: string
+  dateOnly?: boolean
 }) {
   const cache = useQueryClient()
   const [error, setError] = useState("")
@@ -303,7 +305,7 @@ export function ScheduleForm({
         setBusy(true)
         setError("")
         try {
-          const start = scheduleDate(String(f.get("start")), String(f.get("startTime") || ""))
+          const start = scheduleDate(String(f.get("start")), dateOnly ? "" : String(f.get("startTime") || ""))
           const end = patch || !f.get("end") ? null : scheduleDate(String(f.get("end")), String(f.get("endTime") || ""))
           const body = patch
             ? {
@@ -372,6 +374,7 @@ export function ScheduleForm({
         key={`${regionId}-start-${open}`}
         name="start"
         label={patch ? "Ngày phát hành" : "Bắt đầu mùa"}
+        dateOnly={dateOnly}
         disabled={busy || !draft.ready || draft.invalid || draft.conflict || !regionId}
         value={draft.value.dates[`${regionId}:start`] ?? dateDraft(existing?.startsOn ?? existing?.startsAt)}
         onChange={(value) => setDateDraft("start", value)}
@@ -467,6 +470,7 @@ function ScheduleDateField({
   label,
   disabled,
   optional = false,
+  dateOnly = false,
   value: draft,
   onChange,
 }: {
@@ -474,6 +478,7 @@ function ScheduleDateField({
   label: string
   disabled: boolean
   optional?: boolean
+  dateOnly?: boolean
   value: DateDraft
   onChange: (value: DateDraft) => void
 }) {
@@ -481,7 +486,7 @@ function ScheduleDateField({
   const text = draft.text
   const [month, setMonth] = useState(date ?? new Date())
   const [open, setOpen] = useState(false)
-  const withTime = draft.withTime
+  const withTime = !dateOnly && draft.withTime
   const value = date
     ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
     : ""
@@ -549,16 +554,18 @@ function ScheduleDateField({
         </Popover>
       </div>
       <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={!date || disabled}
-          onClick={() => onChange({ ...draft, withTime: !withTime })}
-        >
-          <Clock className="size-4" />
-          {withTime ? "Bỏ giờ" : "Thêm giờ"}
-        </Button>
+        {!dateOnly && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={!date || disabled}
+            onClick={() => onChange({ ...draft, withTime: !withTime })}
+          >
+            <Clock className="size-4" />
+            {withTime ? "Bỏ giờ" : "Thêm giờ"}
+          </Button>
+        )}
         {optional && date && (
           <Button
             type="button"

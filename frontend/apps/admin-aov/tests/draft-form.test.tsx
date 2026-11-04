@@ -252,11 +252,7 @@ test("season forms restore invalid input and saving one market preserves another
         </MemoryRouter>,
       ),
     )
-    const picker = dom.window.document.querySelector<HTMLSelectElement>("select")!
-    await act(async () => {
-      picker.value = "patch"
-      picker.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
-    })
+    assert.equal(dom.window.document.querySelector("select"), null, "A single patch is already selected")
     const day = () => dom.window.document.querySelector<HTMLInputElement>('[aria-label="Ngày phát hành"]')!
     await waitFor(() => !!day() && !day().closest("fieldset")!.disabled)
     assert.equal(dom.window.document.querySelector('[aria-label="Thị trường"]'), null)
@@ -272,6 +268,66 @@ test("season forms restore invalid input and saving one market preserves another
       regionId: "vn",
       seasonId: "season",
       effectiveOn: "2026-10-30",
+      effectiveAt: null,
+      sourceUrl: null,
+    })
+    await act(async () =>
+      root.render(
+        <MemoryRouter>
+          <QueryClientProvider client={cache}>
+            <MarketSchedule
+              data={marketData}
+              marketId="th"
+              initialMode="season"
+              suggestedSeason={marketData.seasons[0]}
+              suggestedPatch={marketData.variants[0]}
+              onClose={() => {}}
+              locale="vi-VN"
+            />
+          </QueryClientProvider>
+        </MemoryRouter>,
+      ),
+    )
+    const button = (label: string) =>
+      [...dom.window.document.querySelectorAll("button")].find((node) => node.textContent?.trim() === label)
+    assert.ok(dom.window.document.querySelector('[role="dialog"] img[src="/images/flags/th.svg"]'))
+    assert.ok(dom.window.document.querySelector('[aria-label="Bắt đầu mùa"]'))
+    await act(async () => button("Patch áp dụng")!.click())
+    assert.equal(scheduleWrites.length, 2, "Selecting a market alone must not apply a patch")
+    await act(async () => button("Đặt October làm patch hiện tại")!.click())
+    await waitFor(() => scheduleWrites.length === 3)
+    const applied = scheduleWrites[2] as { regionId: string; seasonId: string; effectiveAt: string }
+    assert.equal(applied.regionId, "th")
+    assert.equal(applied.seasonId, "season")
+    assert.ok(Math.abs(Date.now() - Date.parse(applied.effectiveAt)) < 60000)
+    const locked = {
+      ...marketData,
+      markets: marketData.markets.map((m) => ({ ...m, available: false, currentRulesetId: null })),
+    }
+    await act(async () =>
+      root.render(
+        <MemoryRouter>
+          <QueryClientProvider client={cache}>
+            <MarketSchedule marketId="th" data={locked} initialMode="patch" locale="vi-VN" onClose={() => {}} />
+          </QueryClientProvider>
+        </MemoryRouter>,
+      ),
+    )
+    await waitFor(() => !!day() && !day().closest("fieldset")!.disabled)
+    assert.equal(button("Đặt October làm patch hiện tại"), undefined)
+    assert.equal(button("Thêm giờ"), undefined)
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(day(), "02/11/2026")
+      day().dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+    })
+    await act(async () =>
+      day().form!.dispatchEvent(new dom.window.Event("submit", { bubbles: true, cancelable: true })),
+    )
+    await waitFor(() => scheduleWrites.length === 4)
+    assert.deepEqual(scheduleWrites[3], {
+      regionId: "th",
+      seasonId: "season",
+      effectiveOn: "2026-11-02",
       effectiveAt: null,
       sourceUrl: null,
     })

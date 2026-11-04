@@ -45,3 +45,8 @@ export const phaseLabels: Record<string, string> = {
   PUBLISHED: "Đã xuất bản",
 }
 export { dateLabel } from "./schedule-date"
+
+export function marketReleaseLabel(release: Release, market?: Market) {
+  if (release.phase === "AWAITING_CONFIRMATION" && market && !market.available) return "Đã ghi ngày phát hành"
+  return phaseLabels[release.phase] ?? release.phase
+}

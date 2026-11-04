@@ -1,18 +1,31 @@
 import { releaseEnd } from "./release-window"
 import { useState } from "react"
 import { Link } from "react-router"
+import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { Button } from "@aov/ui/components/button"
+import { ActionStrip } from "@/components/action-strip"
 import { errorMessage } from "@/lib/api/errors"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Badge } from "@aov/ui/components/badge"
 import { MarketBadge } from "./market-badge"
 import { useIsWide } from "@/hooks/use-media-query"
-import { dateLabel, phaseLabels, type Market, type PublicationOverview } from "./publication-overview"
+import {
+  dateLabel,
+  marketReleaseLabel,
+  phaseLabels,
+  type Market,
+  type PublicationOverview,
+  type Season,
+  type Variant,
+} from "./publication-overview"
+import { invalidateReferenceCatalog } from "../terminology/reference-api"
 import { ScheduleForm } from "./shared-version-setup"
 import { control } from "./fields"
+
+export type MarketMode = "season" | "patch"
 
 export function PatchMarketSchedule({
   variantId,
@@ -44,10 +57,7 @@ export function PatchMarketSchedule({
                 {end && ` đến ${dateLabel(end, locale)}`}
               </p>
             </div>
-            <div className="type-meta">
-              {phaseLabels[r.phase] ?? r.phase}
-              {r.phase === "AWAITING_CONFIRMATION" && <ConfirmRelease id={r.id} />}
-            </div>
+            <div className="type-meta">{marketReleaseLabel(r, market)}</div>
           </li>
         )
       })}
@@ -72,6 +82,11 @@ export function ConfirmRelease({ id }: { id: string }) {
           try {
             await backendRequest(`/admin/patch-releases/${id}/confirm`, { method: "POST" })
             await cache.invalidateQueries({ queryKey: ["publication-overview"] })
+            await Promise.all([
+              cache.invalidateQueries({ queryKey: ["authoring-contexts"] }),
+              invalidateReferenceCatalog(cache),
+            ])
+            toast.success("Đã xác nhận patch đang áp dụng.")
           } catch (cause) {
             setError(errorMessage(cause))
           } finally {
@@ -91,11 +106,17 @@ export function ConfirmRelease({ id }: { id: string }) {
 }
 export function MarketSchedule({
   marketId,
+  initialMode = "patch",
+  suggestedSeason,
+  suggestedPatch,
   data,
   locale,
   onClose,
 }: {
   marketId: string | null
+  initialMode?: MarketMode
+  suggestedSeason?: Season
+  suggestedPatch?: Variant
   data: PublicationOverview
   locale: string
   onClose: () => void
@@ -115,13 +136,26 @@ export function MarketSchedule({
       >
         <SheetHeader>
           <SheetTitle>{market && <MarketBadge code={market.code} name={market.displayName} showName />}</SheetTitle>
-          <SheetDescription>Quản lý mùa và patch đang áp dụng riêng cho thị trường này.</SheetDescription>
+          <SheetDescription>
+            {market?.available
+              ? "Quản lý lịch mùa và patch của thị trường."
+              : "Thị trường chưa mở trên Wiki. Bạn có thể ghi lịch mùa và ngày phát hành patch tại đây."}
+          </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 space-y-5 overflow-y-auto px-4 pb-6">
-          {market?.available && (
-            <MarketVersionEditor key={market.id} data={data} market={market} locale={locale} onOpenPatch={onClose} />
+          {market && (
+            <MarketVersionEditor
+              key={`${market.id}-${initialMode}`}
+              data={data}
+              market={market}
+              locale={locale}
+              initialMode={initialMode}
+              suggestedSeason={suggestedSeason}
+              suggestedPatch={suggestedPatch}
+              onOpenPatch={onClose}
+            />
           )}
-          <details open={!market?.available || undefined} className="border-t pt-3">
+          <details className="border-t pt-3">
             <summary className="cursor-pointer type-section-title">Lịch sử mùa và patch</summary>
             <div className="mt-4 space-y-5">
               <section className="space-y-3">
@@ -153,7 +187,7 @@ export function MarketSchedule({
                       <div key={r.id} className="space-y-1 border-b py-2">
                         <div className="flex items-center justify-between gap-2">
                           <span>{v?.patchCode}</span>
-                          <Badge variant="outline">{phaseLabels[r.phase] ?? r.phase}</Badge>
+                          <Badge variant="outline">{marketReleaseLabel(r, market)}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {dateLabel(r.effectiveOn ?? r.effectiveAt, locale)} →{" "}
@@ -186,38 +220,56 @@ function MarketVersionEditor({
   data,
   locale,
   onOpenPatch,
+  suggestedSeason,
+  suggestedPatch,
+  initialMode = "patch",
 }: {
   market: Market
   data: PublicationOverview
   locale: string
   onOpenPatch: () => void
+  suggestedSeason?: Season
+  suggestedPatch?: Variant
+  initialMode?: MarketMode
 }) {
   const capabilities = useSession().actor?.capabilities ?? []
   const activeRelease = data.releases.find((r) => r.id === market.currentReleaseId)
   const activePatch = data.variants.find((v) => v.id === activeRelease?.variantId)
   const activeSeason = data.seasons.find((s) => s.id === market.currentSeasonId)
-  const [mode, setMode] = useState<"patch" | "season">("patch")
-  const [seasonId, setSeasonId] = useState(market.currentSeasonId ?? "")
-  const [variantId, setVariantId] = useState(activePatch?.id ?? "")
+  const dateOnly = !market.available || !market.currentRulesetId
+  const [mode, setMode] = useState<MarketMode>(initialMode)
+  const [seasonId, setSeasonId] = useState(suggestedSeason?.id ?? market.currentSeasonId ?? "")
+  const scopeSeason = suggestedSeason && !suggestedPatch ? data.seasons.find((s) => s.id === seasonId) : undefined
+  const [selection, setVariantId] = useState(
+    suggestedPatch && (!market.currentRulesetId || suggestedPatch.rulesetId === market.currentRulesetId)
+      ? suggestedPatch.id
+      : (activePatch?.id ?? ""),
+  )
   const variants = data.variants
-    .filter((v) => v.rulesetId === market.currentRulesetId)
+    .filter((v) => !market.currentRulesetId || v.rulesetId === market.currentRulesetId)
+    .filter((v) => !scopeSeason || v.seasonId === scopeSeason.id)
     .sort((a, b) => b.rulesetOrdinal - a.rulesetOrdinal)
+  const variantId = variants.length === 1 ? variants[0].id : selection
   const variant = variants.find((v) => v.id === variantId)
+  const patchLabel = (v: Variant) => {
+    if (market.currentRulesetId || data.rulesets.length < 2) return v.patchCode
+    return [v.patchCode, data.rulesets.find((r) => r.id === v.rulesetId)?.code].filter(Boolean).join(" · ")
+  }
   const nextSeasonPatch =
     variants.find((v) => v.seasonId === seasonId && v.status === "PUBLISHED") ??
     variants.find((v) => v.seasonId === seasonId)
-  const releases = data.releases.filter(
-    (r) => r.regionId === market.id && r.variantId === variantId && r.status !== "CANCELLED",
-  )
+  const releases = data.releases.filter((r) => r.regionId === market.id && r.variantId === variantId)
   return (
     <section className="space-y-4">
-      <div className="border-b pb-3">
-        <p className="type-label">Đang áp dụng</p>
-        <p className="type-section-title">
-          {activeSeason?.displayName ?? "Chưa xác định mùa"} · {activePatch?.patchCode ?? "Chưa xác nhận patch"}
-        </p>
-      </div>
-      <div role="group" aria-label="Thiết lập cho thị trường" className="flex gap-2">
+      {market.available && (
+        <div className="border-b pb-3">
+          <p className="type-label">Đang áp dụng tại {market.displayName}</p>
+          <p className="type-section-title">
+            {activeSeason?.displayName ?? "Chưa xác định mùa"} · {activePatch?.patchCode ?? "Chưa xác nhận patch"}
+          </p>
+        </div>
+      )}
+      <ActionStrip aria-label="Thiết lập cho thị trường">
         {(["patch", "season"] as const).map((key) => (
           <Button
             key={key}
@@ -227,10 +279,10 @@ function MarketVersionEditor({
             aria-pressed={key === mode}
             onClick={() => setMode(key)}
           >
-            {key === "patch" ? "Chọn patch" : "Lịch mùa"}
+            {key === "patch" ? (dateOnly ? "Lịch patch" : "Patch áp dụng") : "Lịch mùa"}
           </Button>
         ))}
-      </div>
+      </ActionStrip>
       {mode === "season" ? (
         <>
           <label className="grid gap-1 type-label">
@@ -244,10 +296,12 @@ function MarketVersionEditor({
               ))}
             </select>
           </label>
-          <p className="type-meta">
-            Thị trường lấy mùa của patch đang áp dụng. Nếu patch chưa xác định mùa, hệ thống dùng lịch mùa có đủ giờ bắt
-            đầu và kết thúc.
-          </p>
+          {market.available && (
+            <p className="type-meta">
+              Thị trường lấy mùa của patch đang áp dụng. Nếu patch chưa xác định mùa, hệ thống dùng lịch mùa có đủ giờ
+              bắt đầu và kết thúc.
+            </p>
+          )}
           {seasonId && seasonId !== market.currentSeasonId && nextSeasonPatch && (
             <Button
               size="sm"
@@ -275,19 +329,59 @@ function MarketVersionEditor({
         </>
       ) : (
         <>
-          <label className="grid gap-1 type-label">
-            Patch cho thị trường
-            <select className={control} value={variantId} onChange={(e) => setVariantId(e.target.value)}>
-              <option value="">Chọn patch</option>
-              {variants.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {data.seasons.find((s) => s.id === v.seasonId)?.displayName ?? "Chưa gắn mùa"} · {v.patchCode}
-                  {v.status === "DRAFT" ? " · Nháp" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-          {!variants.length && <p className="type-meta">Chưa có patch thuộc bộ quy tắc hiện tại của thị trường này.</p>}
+          {suggestedPatch && market.currentRulesetId && market.currentRulesetId !== suggestedPatch.rulesetId && (
+            <p className="type-meta">
+              Patch {suggestedPatch.patchCode} dùng bộ quy tắc khác với {market.displayName}.
+            </p>
+          )}
+          {variants.length > 1 && variants.length <= 6 && (
+            <fieldset className="min-w-0">
+              <legend className="type-label mb-2">
+                {scopeSeason ? `Patch trong ${scopeSeason.displayName}` : "Patch cho thị trường"}
+              </legend>
+              <ActionStrip aria-label="Chọn patch">
+                {variants.map((v) => (
+                  <Button
+                    key={v.id}
+                    type="button"
+                    size="sm"
+                    variant={v.id === variantId ? "secondary" : "outline"}
+                    aria-pressed={v.id === variantId}
+                    onClick={() => setVariantId(v.id)}
+                  >
+                    {patchLabel(v)}
+                    {v.status === "DRAFT" && <span className="type-meta">Nháp</span>}
+                  </Button>
+                ))}
+              </ActionStrip>
+            </fieldset>
+          )}
+          {variants.length === 1 && (
+            <p className="type-body">
+              Patch đã chọn · <strong>{variant && patchLabel(variant)}</strong>
+            </p>
+          )}
+          {variants.length > 6 && (
+            <label className="grid gap-1 type-label">
+              {scopeSeason ? `Patch trong ${scopeSeason.displayName}` : "Patch cho thị trường"}
+              <select className={control} value={variantId} onChange={(e) => setVariantId(e.target.value)}>
+                <option value="">Chọn patch</option>
+                {variants.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {data.seasons.find((s) => s.id === v.seasonId)?.displayName ?? "Chưa gắn mùa"} · {patchLabel(v)}
+                    {v.status === "DRAFT" ? " · Nháp" : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {!variants.length && (
+            <p className="type-meta">
+              {scopeSeason
+                ? `Chưa có patch phù hợp trong ${scopeSeason.displayName}.`
+                : "Chưa có patch phù hợp với thị trường này."}
+            </p>
+          )}
           {variant &&
             (variant.status !== "PUBLISHED" ? (
               <p className="type-body">
@@ -304,9 +398,9 @@ function MarketVersionEditor({
               releases.map((r) => (
                 <div key={r.id} className="border-l-2 pl-3">
                   <p className="type-body">
-                    {phaseLabels[r.phase] ?? r.phase} · {dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}
+                    {marketReleaseLabel(r, market)} · {dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}
                   </p>
-                  {r.phase === "AWAITING_CONFIRMATION" && (
+                  {!dateOnly && r.phase === "AWAITING_CONFIRMATION" && (
                     <>
                       <p className="type-meta">Xác nhận khi patch đã áp dụng trong game tại {market.displayName}.</p>
                       <ConfirmRelease id={r.id} />
@@ -314,16 +408,11 @@ function MarketVersionEditor({
                   )}
                 </div>
               ))
-            ) : capabilities.includes("patch:publish") ? (
+            ) : capabilities.includes("patch:publish") && dateOnly ? (
               <>
-                <p className="type-meta">
-                  Có giờ phát hành, patch tự áp dụng khi đến giờ. Nếu chỉ biết ngày, lưu lịch rồi xác nhận khi thị
-                  trường đã cập nhật.
-                </p>
-                {variant.seasonId && variant.seasonId !== market.currentSeasonId && (
-                  <p className="type-body">
-                    Khi patch này có hiệu lực, mùa hiện tại của {market.displayName} sẽ chuyển sang{" "}
-                    {data.seasons.find((s) => s.id === variant.seasonId)?.displayName}.
+                {market.available && (
+                  <p className="type-meta">
+                    Bạn có thể ghi ngày phát hành trước khi liên kết thị trường với bộ quy tắc của patch.
                   </p>
                 )}
                 <ScheduleForm
@@ -333,7 +422,40 @@ function MarketVersionEditor({
                   seasonId={variant.seasonId}
                   marketId={market.id}
                   patch
+                  dateOnly
                 />
+              </>
+            ) : capabilities.includes("patch:publish") ? (
+              <>
+                {!activePatch || variant.rulesetOrdinal > activePatch.rulesetOrdinal ? (
+                  <ApplyPatchNow key={variant.id} market={market} variant={variant} />
+                ) : (
+                  <p className="type-meta">
+                    Patch này cũ hơn patch đang áp dụng. Bạn có thể bổ sung ngày phát hành vào lịch sử thị trường.
+                  </p>
+                )}
+                {(!activePatch || variant.rulesetOrdinal > activePatch.rulesetOrdinal) &&
+                  variant.seasonId &&
+                  variant.seasonId !== market.currentSeasonId && (
+                    <p className="type-body">
+                      Khi patch này có hiệu lực, mùa hiện tại của {market.displayName} sẽ chuyển sang{" "}
+                      {data.seasons.find((s) => s.id === variant.seasonId)?.displayName}.
+                    </p>
+                  )}
+                <details className="border-t pt-3">
+                  <summary className="cursor-pointer type-label">Ghi ngày phát hành hoặc đặt lịch</summary>
+                  <p className="type-meta my-3">
+                    Có giờ phát hành: tự áp dụng khi đến giờ. Chỉ có ngày: cần xác nhận khi thị trường đã cập nhật.
+                  </p>
+                  <ScheduleForm
+                    key={variant.id}
+                    endpoint={`/admin/patch-variants/${variant.id}/releases`}
+                    data={data}
+                    seasonId={variant.seasonId}
+                    marketId={market.id}
+                    patch
+                  />
+                </details>
               </>
             ) : (
               <p className="type-meta">Cần quyền xuất bản patch để đặt lịch phát hành.</p>
@@ -341,5 +463,52 @@ function MarketVersionEditor({
         </>
       )}
     </section>
+  )
+}
+
+function ApplyPatchNow({ market, variant }: { market: Market; variant: Variant }) {
+  const cache = useQueryClient()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState("")
+  return (
+    <div className="space-y-2">
+      <p className="type-body">
+        Nếu {market.displayName} đã cập nhật trong game, bạn có thể ghi nhận patch từ thời điểm này.
+      </p>
+      <Button
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true)
+          setError("")
+          try {
+            await backendRequest(`/admin/patch-variants/${variant.id}/releases`, {
+              method: "POST",
+              body: JSON.stringify({
+                regionId: market.id,
+                seasonId: variant.seasonId,
+                effectiveAt: new Date().toISOString(),
+              }),
+            })
+            await Promise.all([
+              cache.invalidateQueries({ queryKey: ["publication-overview"] }),
+              cache.invalidateQueries({ queryKey: ["authoring-contexts"] }),
+              invalidateReferenceCatalog(cache),
+            ])
+            toast.success(`Đã áp dụng ${variant.patchCode} cho ${market.displayName}.`)
+          } catch (cause) {
+            setError(errorMessage(cause))
+          } finally {
+            setBusy(false)
+          }
+        }}
+      >
+        {busy ? "Đang áp dụng…" : `Đặt ${variant.patchCode} làm patch hiện tại`}
+      </Button>
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
   )
 }

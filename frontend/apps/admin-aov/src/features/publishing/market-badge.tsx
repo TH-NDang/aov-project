@@ -1,6 +1,18 @@
 import { ArrowUpRight, Globe } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 const flags = new Set(["VN", "US", "GB", "TH", "TW", "CN", "ID", "JP", "KR"])
+export function MarketFlag({ code }: { code: string }) {
+  const flag = code.trim().toUpperCase()
+  return flags.has(flag) ? (
+    <img
+      src={`/images/flags/${flag.toLowerCase()}.svg`}
+      alt=""
+      className="h-3.5 w-5 shrink-0 rounded-sm object-cover"
+    />
+  ) : (
+    <Globe aria-hidden className="size-3.5 shrink-0" />
+  )
+}
 export function MarketBadge({
   code,
   name,
@@ -18,15 +30,7 @@ export function MarketBadge({
   return (
     <span className="group inline-flex items-center gap-2" title={[name, detail].filter(Boolean).join(" · ")}>
       <span className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-xs">
-        {flags.has(displayCode) ? (
-          <img
-            src={`/images/flags/${displayCode.toLowerCase()}.svg`}
-            alt=""
-            className="h-3.5 w-5 rounded-sm object-cover"
-          />
-        ) : (
-          <Globe className="size-3.5" />
-        )}{" "}
+        <MarketFlag code={displayCode} />
         {displayCode}
       </span>
       {(onOpen || showName) && <span className="text-sm">{name}</span>}

@@ -84,7 +84,7 @@ export function ContextSetup({
     </Sheet>
   )
 }
-function CreateRegion({ onDone }: { onDone: () => void }) {
+export function CreateRegion({ onDone }: { onDone: (regionId: string) => void }) {
   const { form, draft } = useDraftForm({
     form: "region:create",
     initialValue: {
@@ -125,7 +125,7 @@ function CreateRegion({ onDone }: { onDone: () => void }) {
           const rulesetId = defaultRulesetId(await createPublishingApi(backendRequest).rulesets())
           if (rulesetId) await assignSharedRuleset(backendRequest, rulesetId, [created.id])
           await draft.discard()
-          onDone()
+          onDone(created.id)
         } catch (cause) {
           setError(errorMessage(cause))
         } finally {

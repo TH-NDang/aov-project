@@ -73,6 +73,15 @@ test("publication overview shows flags and hero heads, and only tabs with change
         currentSeasonId: "season",
         currentReleaseId: "release",
       },
+      {
+        id: "th",
+        code: "TH",
+        displayName: "Thái Lan",
+        available: false,
+        currentRulesetId: null,
+        currentSeasonId: null,
+        currentReleaseId: null,
+      },
     ],
     seasonSchedules: [
       {
@@ -192,12 +201,16 @@ test("publication overview shows flags and hero heads, and only tabs with change
     // With a single default ruleset the market overview does not repeat the ruleset name.
     assert.doesNotMatch(document.body.textContent ?? "", /Shared gameplay/)
     assert.match(document.querySelector('[aria-label="Thị trường"]')?.textContent ?? "", /S4 2026.*patch-october/)
-    assert.ok(document.querySelector('[aria-label="Quản lý mùa và patch của Việt Nam"]'))
+    assert.ok(document.querySelector('[aria-label="Gán mùa cho Việt Nam"]'))
+    assert.ok(document.querySelector('[aria-label="Ghi lịch mùa cho Thái Lan"]'))
+    assert.match(document.querySelector('[aria-label="Phiên bản cho Thái Lan"]')?.textContent ?? "", /Chưa ghi lịch/)
+    assert.ok(document.querySelector('[aria-label="Xem patch cho Việt Nam"]'))
     assert.ok(document.querySelector('[aria-label="Thị trường"] img[src="/images/flags/vn.svg"]'))
     await openView("Phiên bản")
     assert.match(document.body.textContent ?? "", /Đang áp dụng/)
     assert.equal(document.querySelector('[aria-label="Phạm vi hiển thị"]'), null)
     assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
+    assert.equal(document.querySelector('[aria-label="Gán mùa cho Việt Nam"]'), null)
     assert.ok(document.querySelector('button[aria-label="Xem thay đổi Airi"]'))
     assert.ok(document.querySelector("td.sticky"))
     assert.match(document.body.textContent ?? "", /Tăng sức mạnh/)
@@ -216,13 +229,24 @@ test("publication overview shows flags and hero heads, and only tabs with change
     await updateCache(["publication-overview"], {
       ...overview,
       markets: overview.markets.map((market) => ({ ...market, currentReleaseId: null })),
-      releases: overview.releases.map((release) => ({
-        ...release,
-        status: "DRAFT",
-        phase: "AWAITING_CONFIRMATION",
-        effectiveAt: null,
-        effectiveOn: "2026-10-15",
-      })),
+      releases: [
+        ...overview.releases.map((release) => ({
+          ...release,
+          status: "DRAFT",
+          phase: "AWAITING_CONFIRMATION",
+          effectiveAt: null,
+          effectiveOn: "2026-10-15",
+        })),
+        {
+          ...overview.releases[0],
+          id: "th-date",
+          regionId: "th",
+          status: "DRAFT",
+          phase: "AWAITING_CONFIRMATION",
+          effectiveAt: null,
+          effectiveOn: "2026-10-18",
+        },
+      ],
     })
     const heroPanel = document.querySelector('[role="tabpanel"][data-state="active"]')!
     assert.ok(heroPanel.querySelector('img[src="/images/flags/vn.svg"]'))
@@ -273,6 +297,11 @@ test("publication overview shows flags and hero heads, and only tabs with change
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Lọc mùa S4 2026"]')!.click())
     const seasonPatch = document.querySelector<HTMLButtonElement>('[aria-label="Mở patch patch-october"]')!
     assert.ok(seasonPatch)
+    assert.match(
+      document.querySelector('[aria-label="Thị trường trong mùa"]')?.textContent ?? "",
+      /Thái Lan.*Có lịch patch · Chưa ghi lịch mùa/,
+    )
+    assert.match(seasonPatch.textContent ?? "", /TH.*Đã ghi ngày phát hành/)
     await act(async () => seasonPatch.click())
     assert.ok([...document.querySelectorAll("h2")].some((title) => title.textContent === "patch-october"))
     const press = async (label: string) =>
