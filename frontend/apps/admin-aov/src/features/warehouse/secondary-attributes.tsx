@@ -49,18 +49,9 @@ export function SecondaryAttributes({
       ["Cấp", content.tier ?? "—"],
     )
   } else {
-    rows.push(
-      ["Hồi chiêu", content.cooldownSeconds == null ? "—" : `${content.cooldownSeconds} s`],
-      [
-        "Mở khóa",
-        content.unlockType === "ACCOUNT_CREATION"
-          ? "Khi tạo tài khoản"
-          : content.unlockLevel != null
-            ? `Cấp ${content.unlockLevel}`
-            : "Chưa xác định",
-      ],
-      ["Khả dụng", availabilityLabels[content.availability ?? "UNKNOWN"]],
-    )
+    rows.push(["Hồi chiêu", content.cooldownSeconds == null ? "—" : `${content.cooldownSeconds} s`])
+    if (content.availability !== "AVAILABLE")
+      rows.push(["Khả dụng", availabilityLabels[content.availability ?? "UNKNOWN"]])
     if (content.maxCharges != null) rows.push(["Số lần tích trữ", content.maxCharges])
     if (content.chargeRechargeSeconds != null) rows.push(["Thời gian tích", `${content.chargeRechargeSeconds} s`])
     if (content.displayOrder != null) rows.push(["Thứ tự hiển thị", content.displayOrder])

@@ -851,33 +851,6 @@ function SecondaryMechanics({
               disabled={disabled}
             />
             <label className="grid gap-1.5 text-sm">
-              <span>Cách mở khóa</span>
-              <select
-                className={control}
-                value={content.unlockType ?? "UNKNOWN"}
-                disabled={disabled}
-                onChange={(event) =>
-                  onChange({
-                    unlockType: event.target.value as SecondaryContent["unlockType"],
-                    ...(event.target.value !== "LEVEL" ? { unlockLevel: null } : {}),
-                  })
-                }
-              >
-                <option value="ACCOUNT_CREATION">Khi tạo tài khoản</option>
-                <option value="LEVEL">Theo Lv tài khoản</option>
-                <option value="UNKNOWN">Chưa xác định</option>
-              </select>
-            </label>
-            <Field
-              label="Lv mở khóa"
-              type="number"
-              min={1}
-              step={1}
-              value={content.unlockLevel ?? ""}
-              onChange={(value) => onChange({ unlockLevel: value === "" ? null : Number(value) })}
-              disabled={disabled || content.unlockType !== "LEVEL"}
-            />
-            <label className="grid gap-1.5 text-sm">
               <span>Khả dụng</span>
               <select
                 className={control}

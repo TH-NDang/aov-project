@@ -553,11 +553,6 @@ function SpellCard({ entry, selectedId, onSelect }: CatalogSelection & { entry: 
             {content.cooldownSeconds.toLocaleString(locale)} {wikiText(locale, "giây", "s")}
           </span>
         )}
-        {content.unlockType === "ACCOUNT_CREATION" ? (
-          <span>{wikiText(locale, "Có sẵn", "Available")}</span>
-        ) : (
-          content.unlockLevel != null && <span>Lv {content.unlockLevel}</span>
-        )}
       </span>
     </button>
   )

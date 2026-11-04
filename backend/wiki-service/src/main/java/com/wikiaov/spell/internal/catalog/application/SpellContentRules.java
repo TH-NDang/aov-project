@@ -111,9 +111,6 @@ class SpellContentRules {
             missing.add("cooldownSeconds");
         if (content.availability().equals("UNKNOWN"))
             missing.add("availability");
-        if (content.unlockType().equals("UNKNOWN")
-                || content.unlockType().equals("LEVEL") && content.unlockLevel() == null)
-            missing.add("unlockType");
         return missing;
     }
 

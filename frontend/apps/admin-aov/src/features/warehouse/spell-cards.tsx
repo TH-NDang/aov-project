@@ -108,13 +108,12 @@ function SpellCard({
         <p className="truncate text-xs leading-4 font-semibold" title={text?.name || entry.code}>
           {text?.name || entry.code}
         </p>
-        <div className="flex flex-wrap justify-center gap-1">
-          <Badge
-            variant={entry.content.availability === "AVAILABLE" ? "secondary" : "outline"}
-            className="px-1.5 py-0 text-xs leading-4"
-          >
-            {availabilityLabels[entry.content.availability]}
-          </Badge>
+        <div className="flex flex-wrap justify-center gap-1 empty:hidden">
+          {entry.content.availability !== "AVAILABLE" && (
+            <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
+              {availabilityLabels[entry.content.availability]}
+            </Badge>
+          )}
           {isLegacy(entry) && !entry.revision.effectiveFromPatchVariantId && (
             <Badge variant="outline" className="px-1.5 py-0 text-xs leading-4">
               Chưa rõ patch
@@ -133,29 +132,10 @@ function SpellCard({
         </p>
       )}
       <div className="mt-auto flex w-full min-w-0 items-center justify-center gap-1 border-t border-border/50 pt-1.5 text-xs leading-4 text-muted-foreground">
-        <span className="flex min-w-0 items-center gap-1">
-          <Clock3 aria-hidden className="size-3 shrink-0" />
-          <span
-            className="truncate"
-            title={
-              entry.content.cooldownSeconds == null
-                ? "Chưa rõ hồi chiêu"
-                : `${entry.content.cooldownSeconds} giây hồi chiêu`
-            }
-          >
-            {entry.content.cooldownSeconds == null ? "Chưa rõ hồi chiêu" : `${entry.content.cooldownSeconds} giây`}
-          </span>
-        </span>
-        <span aria-hidden className="shrink-0">
-          ·
-        </span>
-        <span className="min-w-0 truncate">
-          {entry.content.unlockType === "ACCOUNT_CREATION"
-            ? "Khi tạo tài khoản"
-            : entry.content.unlockLevel == null
-              ? "Chưa rõ Lv mở khóa"
-              : `Lv ${entry.content.unlockLevel}`}
-        </span>
+        <Clock3 aria-hidden className="size-3 shrink-0" />
+        {entry.content.cooldownSeconds == null
+          ? "Chưa rõ hồi chiêu"
+          : `Hồi chiêu ${entry.content.cooldownSeconds} giây`}
       </div>
       {!!changeKinds.length && (
         <div className="flex justify-center">

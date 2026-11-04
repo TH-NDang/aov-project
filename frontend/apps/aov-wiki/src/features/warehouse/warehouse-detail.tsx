@@ -43,9 +43,6 @@ function DetailFacts({ entry, groups }: { entry: WarehouseEntry; groups: Warehou
     content.price != null && `${content.price.toLocaleString(locale)} ${text("vàng", "gold")}`,
     content.cooldownSeconds != null &&
       `${text("Hồi", "Cooldown")} ${content.cooldownSeconds.toLocaleString(locale)} ${text("giây", "s")}`,
-    content.unlockType === "ACCOUNT_CREATION"
-      ? text("Có từ đầu", "Available at start")
-      : content.unlockLevel != null && `Lv ${content.unlockLevel}`,
     (content.legacy || content.availability === "REMOVED") && text("Đã ngừng sử dụng", "Retired"),
   ].filter(Boolean)
   return (

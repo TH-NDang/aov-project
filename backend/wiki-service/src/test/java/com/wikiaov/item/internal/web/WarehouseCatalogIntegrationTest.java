@@ -338,7 +338,6 @@ class WarehouseCatalogIntegrationTest {
         var content = new HashMap<String, Object>();
         content.put("iconAssetId", icon(MediaSemanticType.SPELL_ICON));
         content.put("cooldownSeconds", 90);
-        content.put("unlockType", "ACCOUNT_CREATION");
         content.put("availability", "AVAILABLE");
         content.put("legacy", true);
         content.put("translations", List.of(text("vi-VN", "Phụ trợ", "Mô tả")));
@@ -346,6 +345,7 @@ class WarehouseCatalogIntegrationTest {
                 "initialLocale", "vi-VN", "name", "Phụ trợ", "content", content), 201);
         send(post(draftPath("spells", created) + "/publish"), Map.of("expectedVersion", 1), 200);
         content.put("availability", "REMOVED");
+        content.put("unlockType", "LEVEL");
         var placed = create("spells", "legacy-placed", content);
         var cleared = send(put(draftPath("spells", placed)),
                 Map.of("expectedVersion", 1, "content", content, "clearPatchContext", true), 200);

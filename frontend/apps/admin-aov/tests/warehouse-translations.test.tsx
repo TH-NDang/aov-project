@@ -805,6 +805,8 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     // The whole card opens the details; the repeated open hint is gone, the accessible label remains.
     assert.ok(openButton)
     assert.doesNotMatch(card.textContent!, /Xem chi tiết/)
+    assert.match(card.textContent!, /Hồi chiêu 10 giây/)
+    assert.doesNotMatch(card.textContent!, /Lv 1|Đang có/)
     assert.deepEqual(
       [...card.querySelectorAll("img")].map((image) => [image.alt, image.getAttribute("src")]).sort(),
       [
