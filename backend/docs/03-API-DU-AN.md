@@ -2291,6 +2291,11 @@ PUT `/{code}` nhận expectedVersion=0 để tạo; sửa phải mang version hi
 bản dịch nên client phải giữ các locale không sửa. Nhánh dùng ENCHANTMENT_ICON, nhóm trang bị dùng
 ITEM_ICON; ảnh nền dùng OTHER. Metadata có audit và báo tham chiếu Media.
 
+Danh sách quản trị `/admin/items`, `/admin/arcana`, `/admin/spells` và `/admin/enchantments` nhận
+`draftsOnly=true` cùng `rulesetId` để tìm bản nháp đang mở, kể cả khi chưa gắn patch hoặc đang sửa
+một mốc cũ. Chế độ này hỗ trợ tìm kiếm và phân trang, không kết hợp với bộ lọc mùa/patch hay
+`includeUnchanged=true`. Nháp chỉ phục vụ biên tập, không tạo thay đổi gameplay hoặc dữ liệu public.
+
 GET `/admin/enchantments` hỗ trợ thêm `seasonId`, `patchVariantId`. Không truyền cả hai
 thì trả snapshot mới nhất như cũ. Có bộ lọc thì chỉ chọn identity có snapshot
 DATA_BASELINE hoặc GAME_PATCH trong đúng mùa/patch; trả snapshot mới nhất tại mốc
