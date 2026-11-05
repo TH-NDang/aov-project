@@ -27,7 +27,15 @@ import { Field } from "../publishing/fields"
 import { warehouseApi, invalidateWarehouseCatalogs, useWarehouseMetadata } from "./warehouse-api"
 import { WarehouseDraftMenu, WarehouseRulesetSelect, useWarehouseContext } from "./warehouse-controls"
 import { ItemSearch, itemSearchMatches } from "./item-search"
-import { warehouseName, type ItemContent, type WarehouseEntry, type WarehouseMetadata } from "./warehouse-types"
+import { ItemStatFilter } from "@aov/ui/components/warehouse/item-facts"
+import { itemMatchesStatFilters, itemReaderContent, itemStatFilterCounts } from "@aov/ui/lib/item-description"
+import {
+  warehouseName,
+  warehouseText,
+  type ItemContent,
+  type WarehouseEntry,
+  type WarehouseMetadata,
+} from "./warehouse-types"
 import { EnchantmentBranchEditor } from "./secondary-editor"
 import { recipeConnectionError } from "./item-graph"
 import { ItemShopGraph, ItemShopHelp } from "./item-shop-graph"
@@ -79,6 +87,7 @@ export function BackendItemsPage() {
   const canPublish = !!actor?.capabilities.includes("item:publish")
   const [group, setGroup] = useSearchParam("group")
   const [selectedId, setSelectedId] = useSearchParam("item")
+  const [statParam, setStatParam] = useSearchParam("stats")
   const [focusId, setFocusId] = useState<string | null>(selectedId || null)
   const [edits, setEdits] = useState<Map<string, PendingItem>>(() => new Map())
   const [undo, setUndo] = useState<Map<string, PendingItem>[]>([])
@@ -110,12 +119,43 @@ export function BackendItemsPage() {
       }),
     [scope.entries, edits, scope.scoped, scope.latest, scope.showAll, scope.baselineIds, scope.reviewed],
   )
-  const matches = useMemo(
+  const searchMatches = useMemo(
     () => (context.q ? new Set(itemSearchMatches(rows, context.q, context.locale).map((item) => item.id)) : null),
     [rows, context.q, context.locale],
   )
+  const activeStats = useMemo(() => (statParam ? statParam.split(",") : []), [statParam])
+  const statsById = useMemo(
+    () =>
+      new Map(
+        rows.map((item) => [
+          item.id,
+          itemReaderContent(item.content, warehouseText(item.content.translations, context.locale)).stats,
+        ]),
+      ),
+    [rows, context.locale],
+  )
+  const matches = useMemo(() => {
+    if (!activeStats.length) return searchMatches
+    return new Set(
+      rows
+        .filter((item) => !searchMatches || searchMatches.has(item.id))
+        .filter((item) => itemMatchesStatFilters(statsById.get(item.id) ?? [], activeStats))
+        .map((item) => item.id),
+    )
+  }, [rows, searchMatches, statsById, activeStats])
   const categories = groups.data ?? []
   const category = categories.some((c) => c.code === group) ? group : (categories[0]?.code ?? "")
+  const statCounts = useMemo(
+    () =>
+      itemStatFilterCounts(
+        rows
+          .filter((item) => item.content.shopPositions.some((position) => position.categoryCode === category))
+          .filter((item) => !searchMatches || searchMatches.has(item.id))
+          .map((item) => statsById.get(item.id) ?? []),
+        activeStats,
+      ),
+    [rows, category, searchMatches, statsById, activeStats],
+  )
   // Scrolls to a searched item once its group is on screen.
   useEffect(() => {
     if (!jump || (jump.group && jump.group !== category)) return
@@ -413,6 +453,7 @@ export function BackendItemsPage() {
         (scope.showAll || scope.changes.isSuccess) && <WarehouseScopeEmpty scope={scope} />
       ) : (
         <>
+          <ItemStatFilter value={activeStats} counts={statCounts} onChange={(value) => setStatParam(value.join(","))} />
           <ItemShopGraph
             items={rows}
             categories={categories}

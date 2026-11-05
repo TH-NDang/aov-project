@@ -10,16 +10,19 @@ export function WarehouseStatsEditor({
   locale,
   disabled,
   onChange,
+  knownStats = [],
 }: {
   stats: WarehouseStat[]
   catalog: WarehouseEntry<WarehouseContent & { stats?: WarehouseStat[] }>[]
   locale: string
   disabled: boolean
   onChange: (stats: WarehouseStat[]) => void
+  /** Suggested on top of the keys the catalog already uses, for catalogs with no structured stats yet. */
+  knownStats?: { key: string; label: string }[]
 }) {
   const list = useId()
-  const keys = new Map<string, string>()
-  const units = new Set<string>()
+  const keys = new Map<string, string>(knownStats.map(({ key, label }) => [key, label]))
+  const units = new Set<string>(knownStats.length ? ["POINT", "PERCENT"] : [])
   for (const { content } of catalog) {
     const labels = warehouseText(content.translations, locale)?.statLabels
     for (const stat of content.stats ?? []) {

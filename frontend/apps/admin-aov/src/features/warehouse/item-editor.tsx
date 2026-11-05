@@ -5,7 +5,8 @@ import { ItemRowPicker } from "./item-row-picker"
 import { shopColumns } from "./item-shop-position"
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useState } from "react"
-import { History, Languages, ArrowLeft, Plus, Settings2, Trash2 } from "lucide-react"
+import { History, Languages, ArrowLeft, Plus, Settings2, Sparkles, Trash2 } from "lucide-react"
+import { ITEM_STATS, itemStatsFromDescription } from "@aov/ui/lib/item-description"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { SectionPencil, type WarehouseSection } from "./warehouse-edit-section"
 import { Button } from "@aov/ui/components/button"
@@ -95,6 +96,7 @@ export function ItemEditor({
     )
   }
   const name = warehouseName({ ...entry, content: value }, locale)
+  const describedStats = itemStatsFromDescription(warehouseText(value.translations, locale)?.description)
   const category = categories.find((group) => group.code === value.categoryCode)
   const baselineMode = warehouseBaselineMode(entry.revision, entry.missingFields)
   const visibleMissing = (entry.missingFields ?? []).filter(
@@ -383,12 +385,24 @@ export function ItemEditor({
                   {section === "stats" && (
                     <section className="space-y-2">
                       <h3 className="type-section-title">Chỉ số</h3>
+                      {!value.stats.length && describedStats.length > 0 && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => change({ stats: describedStats })}
+                        >
+                          <Sparkles />
+                          Điền {describedStats.length} chỉ số từ mô tả
+                        </Button>
+                      )}
                       <WarehouseStatsEditor
                         stats={value.stats}
                         catalog={items}
                         locale={locale}
                         disabled={busy || uploading}
                         onChange={(stats) => change({ stats })}
+                        knownStats={ITEM_STATS.map((stat) => ({ key: stat.key, label: stat.vi }))}
                       />
                     </section>
                   )}
