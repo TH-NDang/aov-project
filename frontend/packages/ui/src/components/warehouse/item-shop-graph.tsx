@@ -788,7 +788,7 @@ export function ItemShopGraph({
           )}
           <div
             ref={scrollArea}
-            className="shop-viewport overflow-x-auto rounded-xl border bg-muted/15"
+            className="shop-viewport overflow-x-auto"
             tabIndex={0}
             aria-label={t("Bảng vị trí trang bị", "Item positions")}
             onKeyDown={(event) => {

@@ -66,9 +66,9 @@ export function ArcanaCollection<E extends WarehouseEntry<ArcanaContent>>({
         <section
           key={color}
           aria-label={`Ngọc ${details.label} bậc ${tierLabels[tier - 1]}`}
-          className="overflow-hidden rounded-xl border border-border/70"
+          className="overflow-hidden"
         >
-          <header className={cn("flex items-center gap-2 border-b border-border/50 px-3 py-2", details.header)}>
+          <header className={cn("flex items-center gap-2 rounded-md px-3 py-2", details.header)}>
             <Gem aria-hidden className={cn("size-4", details.icon)} />
             <h3 className="text-xs font-semibold">
               {t(`Ngọc ${details.label}`, `${colorDetails[color].prefixes[1]} arcana`)}
@@ -191,7 +191,7 @@ function ArcanaCard({
       aria-label={`${t("Xem", "View")} ${name}`}
       aria-pressed={active}
       className={cn(
-        "arcana-card group flex min-w-0 cursor-pointer flex-col gap-2 rounded-lg border border-border/60 bg-card p-2.5 text-left transition-colors hover:border-primary/30 hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring",
+        "arcana-card group flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl bg-card p-2.5 text-left transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring",
         active && "border-primary bg-primary/5",
       )}
     >

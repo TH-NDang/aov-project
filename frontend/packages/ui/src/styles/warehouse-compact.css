@@ -3,7 +3,7 @@
 }
 
 [data-warehouse-density="compact"] .shop-viewport {
-  --shop-column-width: clamp(92px, calc((100cqi - 78px) / 3), 198px);
+  --shop-column-width: clamp(92px, calc((100cqi - 78px) / 3), 248px);
   --shop-gap: 24px;
   --shop-padding: 12px;
   width: fit-content;
