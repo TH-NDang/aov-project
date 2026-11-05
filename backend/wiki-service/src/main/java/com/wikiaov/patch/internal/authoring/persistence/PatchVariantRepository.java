@@ -15,6 +15,9 @@ public interface PatchVariantRepository extends JpaRepository<PatchVariant, UUID
             + "v.rulesetOrdinal,v.status='PUBLISHED') from PatchVariant v where v.rulesetId=:rulesetId")
     List<PatchVariantReference> referencesByRuleset(UUID rulesetId);
 
+    @Query("select p.code from PatchVariant v join GamePatch p on p.id=v.patchId where v.id=:variantId")
+    Optional<String> patchCode(UUID variantId);
+
     List<PatchVariant> findBySeasonId(UUID seasonId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

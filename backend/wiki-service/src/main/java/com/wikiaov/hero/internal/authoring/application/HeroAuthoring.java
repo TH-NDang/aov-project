@@ -12,6 +12,7 @@ import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroImages;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
+import com.wikiaov.hero.internal.stats.domain.HeroStatObservations;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchDataReviews;
 import com.wikiaov.platform.ApiException;
@@ -263,8 +264,18 @@ public class HeroAuthoring {
         checkContext(draft.rulesetId(), draft.cause(), draft.effectiveFromPatchVariantId(), true);
         if (draft.sections().size() != HeroSection.values().length)
             throw HeroValidation.invalid("All hero sections are required.");
-        for (var section : HeroSection.values())
-            validation.validatePublication(section, sections.content(section, draft.sections().get(section)));
+        var skills = (Skills) sections.content(HeroSection.SKILLS, draft.sections().get(HeroSection.SKILLS));
+        for (var section : HeroSection.values()) {
+            var value = section == HeroSection.SKILLS
+                    ? skills
+                    : sections.content(section, draft.sections().get(section));
+            if (value instanceof Stats stats && stats.values().isEmpty() && draft.effectiveFromPatchVariantId() != null
+                    && HeroStatObservations.hasReadings(skills,
+                            contexts.patchCode(draft.effectiveFromPatchVariantId())))
+                validation.validate(section, stats);
+            else
+                validation.validatePublication(section, value);
+        }
 
         var bindings = (Bindings) sections.content(HeroSection.MEDIA_BINDINGS,
                 draft.sections().get(HeroSection.MEDIA_BINDINGS));
@@ -274,7 +285,6 @@ public class HeroAuthoring {
         var profile = (Profile) sections.content(HeroSection.PROFILE, draft.sections().get(HeroSection.PROFILE));
         var locales = profile.translations().stream().map(ProfileTranslation::locale)
                 .collect(java.util.stream.Collectors.toSet());
-        var skills = (Skills) sections.content(HeroSection.SKILLS, draft.sections().get(HeroSection.SKILLS));
         if (skills.skills().stream().anyMatch(s -> !s.translations().stream().map(SkillTranslation::locale)
                 .collect(java.util.stream.Collectors.toSet()).containsAll(locales)))
             throw HeroValidation.invalid("Every skill needs translations for all profile locales.");

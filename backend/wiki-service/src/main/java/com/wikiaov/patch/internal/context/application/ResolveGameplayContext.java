@@ -84,6 +84,11 @@ public class ResolveGameplayContext implements GameplayContexts {
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant does not exist.")));
     }
 
+    public String patchCode(UUID variantId) {
+        return variants.patchCode(variantId).orElseThrow(
+                () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The patch variant does not exist."));
+    }
+
     public List<PatchVariantReference> catalogVariants(UUID seasonId) {
         if (seasonId != null && !seasons.existsById(seasonId))
             throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "The season does not exist.");

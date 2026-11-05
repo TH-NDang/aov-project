@@ -194,6 +194,35 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void publishesObservedAttributesOnlyForTheirPatchWithoutCreatingBaseStats() throws Exception {
+        var draft = create();
+        var hero = uuid(draft, "heroId");
+        var draftId = id(draft);
+        var path = path(hero, draftId);
+        draft = complete(hero, draftId, draft);
+        draft = send(put(path + "/combat-stats"), Map.of("expectedDraftVersion", number(draft, "version"),
+                "values", List.of()), 200);
+        send(post(path + "/publish"), Map.of("expectedVersion", number(draft, "version")), 422);
+
+        var capture = Map.of("method", "MANUAL_VISUAL_TRANSCRIPTION", "scope", "DISPLAYED_SNAPSHOT_NOT_LEVEL_ONE",
+                "values", Map.of("health", 3500, "magicAttack", 0));
+        for (String code : List.of("another-patch", "patch-test-1")) {
+            var effect = Map.of("effectType", "SOURCE_SNAPSHOT", "metadata",
+                    Map.of("patchCode", code, "observedAttributes", capture));
+            var skill = Map.of("skillKey", "skill-1", "kind", "ACTIVE", "displayOrder", 0,
+                    "translations", List.of(Map.of("locale", "vi-VN", "name", "Wave", "description", "Wave")),
+                    "effects", List.of(effect));
+            draft = send(put(path + "/skills"), Map.of("expectedDraftVersion", number(draft, "version"),
+                    "skills", List.of(skill)), 200);
+            send(post(path + "/publish"), Map.of("expectedVersion", number(draft, "version")),
+                    "patch-test-1".equals(code) ? 200 : 422);
+        }
+
+        mvc.perform(get(ROOT + "/heroes/" + hero)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.combatStats.values").isEmpty());
+    }
+
+    @Test
     void completeHeroLifecycleReusesSectionsAndKeepsImmutableResourcesStable() throws Exception {
         var draft = create();
         UUID hero = uuid(draft, "heroId"), draftId = uuid(draft, "id");

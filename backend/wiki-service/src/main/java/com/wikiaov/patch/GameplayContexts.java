@@ -15,6 +15,8 @@ public interface GameplayContexts {
 
     PatchVariantReference variant(UUID variantId);
 
+    String patchCode(UUID variantId);
+
     List<PatchVariantReference> catalogVariants(UUID seasonId);
 
     List<PatchVariantReference> rulesetVariants(UUID rulesetId);
