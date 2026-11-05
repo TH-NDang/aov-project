@@ -2659,3 +2659,6 @@ PUT `/api/wiki/v1/admin/media/assets/{assetId}/sources/{sourceId}/references`
 - Wiki không gọi Community trong transaction và không tự xác minh page; chỉ nhận UUID. UI chọn hồ sơ
   bằng API Community, khách chỉ đọc được bản đã công bố. Tham chiếu không khả dụng vẫn giữ credit và
   URL nguồn. Việc liên kết không cấp quyền đại diện hay khẳng định giấy phép sử dụng ảnh.
+
+Community bổ sung loại page `CIRCUIT` và bộ lọc `circuitPageId` ở danh sách kế hoạch/mùa giải; chi tiết
+hợp đồng và tính bất biến của snapshot theo đặc tả 04.

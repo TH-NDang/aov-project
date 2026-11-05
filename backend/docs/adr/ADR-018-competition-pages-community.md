@@ -29,6 +29,24 @@ Người dùng cho phép thiết kế lại giao diện và luồng trong môi t
 - Public ở aov-stream; công cụ biên tập và duyệt ở admin-aov. Đăng nhập cộng đồng dùng Code + PKCE của
   client công khai aov-stream; người dùng thường không được cấp quyền quản trị để tham gia cộng đồng.
 
+## Mở rộng nhân sự ngày 02/11/2026
+
+Theo yêu cầu tạo tuyển thủ, huấn luyện viên và broadcast, bổ sung PERSON cho nhân sự không có danh tính
+thi đấu. PLAYER vẫn liên kết danh tính tuyển thủ như trước; cả hai có thể mang nhiều `personRoles` trên
+cùng một page. Vai trò nghề nghiệp không cấp quyền quản lý trang. Các nhóm Ban huấn luyện/Broadcast là
+bộ lọc của hồ sơ, không tạo bản sao một người theo mỗi vai trò. Xem hợp đồng chi tiết tại đặc tả 04.
+
+## Tham chiếu và hệ thống giải (03/11/2026)
+
+Mở rộng ngày 03/11/2026: thêm page CIRCUIT cho hệ thống giải và `circuitPageId` trong kế hoạch mùa giải.
+Giữ cơ chế phân tách nháp/công bố như tổ chức. Page được tham chiếu từ nguồn ảnh bằng UUID mềm;
+Wiki không đọc database Community và tham chiếu ảnh không tạo quyền sở hữu hoặc đại diện.
+
+CIRCUIT là trang thông tin biên tập về một hệ thống giải, không nhận quyền đại diện hoặc chức năng
+cộng đồng (bài viết, theo dõi, bàn giao). Giữ cùng cơ chế nội dung nháp/công bố và UUID tham chiếu,
+nhưng public dùng bố cục Tổng quan / Các mùa giải / Lịch sử; nguồn và đề xuất chỉnh sửa vẫn hoạt động.
+Thuật ngữ không tự chuyển thành page cộng đồng. Quy tắc được kiểm tra ở backend và giao diện.
+
 ## Kiểm chứng
 
 Kiểm thử PostgreSQL cho cách ly nháp/public, phiên bản, claim, quyền theo page, tác giả, thu hồi quyền,

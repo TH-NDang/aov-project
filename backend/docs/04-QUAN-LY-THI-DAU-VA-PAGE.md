@@ -38,7 +38,55 @@ giai đoạn và URL nguồn; đội hình, lịch và kết quả có thể b�
 
 ## Page và quyền đại diện
 
-Page ORGANIZATION, TEAM, PLAYER độc lập tài khoản và không giữ mật khẩu. Tài khoản dùng issuer + subject
+### Tham chiếu hồ sơ (03/11/2026)
+
+Loại `CIRCUIT` mô tả hệ thống giải xuyên nhiều mùa, ví dụ Đấu Trường Danh Vọng; không tạo danh tính đội hay
+tuyển thủ. Hồ sơ có giới thiệu, ảnh, liên kết, lịch sử, nguồn và tab các mùa giải; không có đội hình hoặc thành tích
+thi đấu. Đây là trang thông tin biên tập, không phải danh tính cộng đồng. Quyền biên tập/công bố thuộc admin;
+không nhận đại diện, bàn giao, thành viên quản lý, lớp trình bày của đại diện, bài viết hoặc theo dõi.
+Public có Tổng quan, Các mùa giải và Lịch sử; vẫn xem nguồn và gửi đề xuất chỉnh sửa. Danh bạ vẫn tìm được
+hệ thống giải; gợi ý theo dõi, danh sách đang theo dõi/quản lý và bảng tin loại CIRCUIT.
+API chặn thao tác cộng đồng bằng 403 PAGE_ACTION_FORBIDDEN, kể cả gọi trực tiếp; bỏ theo dõi cũ vẫn được phép.
+Dữ liệu cộng đồng cũ được giữ, không tự xóa; không áp dụng lớp trình bày cũ lên nội dung hệ thống giải.
+Thuật ngữ giải thích (BO5, nhánh thắng/thua…) thuộc kho thuật ngữ, không tự tạo hồ sơ cộng đồng.
+
+Kênh thông tin của CIRCUIT là tùy chọn, nằm trong Thông tin chung; header không hiển thị icon mạng xã hội
+chưa có liên kết. Website, kênh phát sóng và mạng xã hội riêng lưu trong `links`; nguồn đối chiếu vẫn ở
+`sources`. `channelOrganizationId` tùy chọn tham chiếu một ORGANIZATION cung cấp kênh chung, không sao chép
+URL hoặc cấp quyền đại diện. Chỉ CIRCUIT nhận trường này; backend kiểm tra tổ chức tồn tại khi lưu và đã
+công bố khi công bố hệ thống giải. Tham chiếu trong nháp/công bố chặn xóa nháp tổ chức. Public đọc tổ chức
+qua API công khai và dẫn tới trang tổ chức; nếu tổ chức được thu hồi thì hiển thị trạng thái chưa công bố.
+Thay đổi lựa chọn trong nháp không đổi tham chiếu công khai cho đến lần công bố tiếp theo.
+
+Kế hoạch mùa giải thêm `circuitPageId` tùy chọn, chỉ nhận hồ sơ CIRCUIT. Backend lấy tên từ hồ sơ thay vì tin
+chuỗi `circuit` gửi lên; snapshot thêm `circuit {id,code,name,logoUrl,published}`. Bản nháp dùng hồ sơ nháp,
+công bố dùng hồ sơ đã công bố và chặn nếu hồ sơ còn nháp. Tên chữ cũ vẫn đọc được khi chưa có tham chiếu.
+Tham chiếu đã lưu trong kế hoạch hoặc revision chặn xóa hồ sơ; thay đổi hồ sơ không viết lại snapshot cũ.
+
+GET `/admin/competitions` và `/competitions` nhận bộ lọc `circuitPageId`, lần lượt lọc bản nháp và snapshot
+công bố. Admin tìm/chọn hoặc tạo nhanh hồ sơ trong popup; bấm tên có tham chiếu mở giới thiệu nhanh rồi mới
+chọn mở trang đầy đủ. Tạo nhanh chỉ lưu hồ sơ nháp; chọn vào giải vẫn cần lưu bản nháp giải.
+
+Nguồn ảnh của Wiki có thể lưu `ownerPageId` và `relatedPageId` để nối hồ sơ chủ sở hữu và nội dung ảnh nhắc
+tới. Đây là UUID tham chiếu mềm giữa hai dịch vụ, không truy cập chéo database, không cấp quyền đại diện và
+không xác minh bản quyền. Khách chỉ đọc được hồ sơ đã công bố; tham chiếu hỏng hoặc chưa công bố vẫn giữ
+tên ghi công và URL nguồn ảnh độc lập. Chi tiết lưu nguồn ảnh theo đặc tả 02/03 và ADR-017.
+
+Nhân sự thi đấu (02/11/2026): bổ sung loại PERSON cho huấn luyện viên và ê-kíp broadcast. PERSON không
+tạo danh tính tuyển thủ giả và không nhận entityId. PLAYER giữ hợp đồng danh tính thi đấu hiện có.
+`PageContent.personRoles` là danh sách vai trò nghề nghiệp: COACH, TEAM_ANALYST, HOST, INTERVIEWER,
+CASTER, GUEST_ANALYST; độc lập vai trò quản lý trang OWNER/EDITOR/MODERATOR. PERSON cần ít nhất một vai trò;
+PLAYER có thể thêm các vai trò này trên cùng hồ sơ; TEAM/ORGANIZATION không nhận vai trò nhân sự. Dữ liệu
+cũ thiếu danh sách được đọc thành rỗng. Một người kiêm nhiều vai trò dùng chung page, lịch sử và quyền đại diện.
+Danh sách admin/public nhận `personRole`: một mã vai trò hoặc nhóm COACHING (COACH, TEAM_ANALYST),
+BROADCAST (HOST, INTERVIEWER, CASTER, GUEST_ANALYST). Bộ lọc public chỉ đọc vai trò đã công bố.
+Admin có tab Tuyển thủ, Ban huấn luyện và Broadcast; vai trò được chọn từ danh sách trong form tạo/sửa.
+PERSON có thông tin, hoạt động/sự nghiệp, nguồn và quyền đại diện; không mặc định hiện thành tích hay trận đấu.
+Thông tin từ đội hình của một giải được ghi rõ tên giải, trạng thái chính thức/dự bị/đã rời đội và nguồn;
+không suy diễn ngày gia nhập/rời đội từ ngày diễn ra giải. Nhân sự broadcast được ghi sự kiện trong lịch sử
+hoạt động, không tự liên kết vào một mùa giải chưa được tạo trong ứng dụng.
+
+Page ORGANIZATION, TEAM, PLAYER, PERSON độc lập tài khoản và không giữ mật khẩu. Tài khoản dùng issuer + subject
 của JWT. Page chưa có đại diện vẫn có thông tin biên tập, nguồn, lịch sử và người theo dõi.
 
 PageContent: tên, tên ngắn, quốc gia, giới thiệu, avatar, cover, links, sources, history, achievements,
@@ -46,6 +94,13 @@ roster. Mỗi link có thể đánh dấu `official` (kênh do chính tổ chứ
 không có trường này được coi là không chính thức. History/roster có ngày bắt đầu/kết thúc, vai trò, nguồn và UUID page liên quan; achievement có
 UUID mùa giải. Bản nháp riêng bản xuất bản; công bố cần ít nhất một nguồn. Đại diện có lớp trình bày
 riêng (giới thiệu, ảnh, liên kết), không được sửa thành tích, lịch sử, đội hình hay kết quả biên tập.
+
+Nội dung giao diện phân theo loại hồ sơ: ORGANIZATION có giới thiệu, lịch sử hoạt động và giải đấu tổ chức;
+TEAM có đội hình/ban huấn luyện, lịch sử và thành tích; PLAYER có sự nghiệp và thành tích. Tổ chức không
+hiển thị hoặc cho nhập đội hình/thành tích thi đấu; dữ liệu cũ vẫn giữ nguyên khi lưu các mục khác.
+Người quản lý trang thuộc quyền đại diện, độc lập với đội hình thi đấu. Bài viết, theo dõi, nguồn thông tin
+và quyền đại diện vẫn dùng chung. Giải đấu tổ chức được lấy từ liên kết organizerPageId: admin dùng liên kết
+trong bản nháp và thấy cả mùa giải chưa công bố; public chỉ dùng liên kết trong snapshot đã công bố.
 
 Claim có bằng chứng riêng tư, người có tournament:read + tournament:publish duyệt; không tự duyệt.
 Một OWNER/page. Owner mời EDITOR/MODERATOR bằng mã một lần, hạn 7 ngày; DB chỉ lưu SHA-256.
@@ -79,6 +134,23 @@ công khai mà tài khoản chưa theo dõi và không quản lý, nhiều ngư�
 (bản nháp cá nhân vẫn chỉ ở /me/pages/{id}/feed), bài bị ẩn hay page đã thu hồi. Đánh dấu tất cả thông báo đã đọc
 chỉ ảnh hưởng hộp thông báo của chính tài khoản.
 
+Bài viết nhiều dạng (03/11/2026): bài có `kind` TEXT (mặc định), NEWS (bắt buộc tiêu đề tối đa 200 ký tự)
+hoặc VIDEO (bắt buộc `videoUrl` http/https; nội dung được để trống). TEXT và NEWS bắt buộc nội dung. Mỗi bài
+có tối đa 4 ảnh (`imageUrls`, URL http/https). Ảnh trong kho được giữ như ảnh của page: không gắn được ảnh đã
+thu hồi, và ảnh đang được bài viết (kể cả bài bị ẩn hoặc bản nháp) dùng thì không thu hồi được. Bài cũ được coi
+là TEXT. Bảng tin công khai, bảng tin cá nhân và danh sách bài của page lọc được theo `kind`; bảng tin công khai
+tìm được theo `q` trong tiêu đề và nội dung.
+
+Ghim bài (03/11/2026): OWNER/EDITOR của page hoặc người có tournament:write ghim một bài đã đăng với tư cách
+page. Mỗi page ghim tối đa một bài; ghim bài mới thì bài cũ bỏ ghim. Bài ghim đứng đầu danh sách bài của page,
+không ảnh hưởng thứ tự bảng tin chung. Bài bị ẩn hoặc đưa về nháp thì tự bỏ ghim.
+
+Trạng thái trực tiếp (03/11/2026): OWNER/EDITOR hoặc người có tournament:write bật trực tiếp cho page đã công
+bố với {url,title}; url http/https, title tối đa 200 ký tự. Hồ sơ công khai trả `live` {url,title,startedAt}
+khi đang phát; trạng thái tự hết sau 12 giờ nếu không tắt. Bật khi page đang không phát thì gửi thông báo nội
+bộ cho người theo dõi; đổi link hay tiêu đề khi đang phát thì không gửi lại. GET /live liệt kê page công khai
+đang phát, mới bắt đầu trước. Stream không tự kiểm tra với YouTube/Facebook; người bật chịu trách nhiệm link.
+
 Xóa hồ sơ nháp (02/11/2026): chỉ hồ sơ chưa từng công bố, chưa có người đại diện, yêu cầu nhận, thư mời,
 bài viết, người theo dõi, báo cáo hay thông báo, và không được kế hoạch giải nào tham chiếu. Xóa cả lịch sử
 thao tác của hồ sơ và giải phóng đường dẫn; ứng dụng ghi log người xóa. Các trường hợp khác trả 409
@@ -86,6 +158,24 @@ PAGE_CONFLICT; hồ sơ đã công bố chỉ được thu hồi. Danh tính đ�
 
 Bằng chứng claim, actor, token mời, audit không có trong API công khai. Ảnh còn được page hoặc lịch
 sử giải tham chiếu bị chặn retire. Danh tính còn gắn page/kế hoạch/snapshot bị chặn xóa theo cơ chế hiện có.
+
+## Liên kết thành viên đội tuyển
+
+Liên kết thành viên đội (03/11/2026): chọn hồ sơ PLAYER/PERSON có sẵn hoặc tạo nhanh rồi thêm vào bản nháp
+đội. TEAM lưu tên từ hồ sơ liên kết khi tạo/lưu; tên cũ trong snapshot công bố không bị viết lại khi cá nhân
+đổi tên. Dòng nhập tay trước đây chưa có pageId vẫn được giữ để bổ sung liên kết. Không nhận liên kết tới
+tổ chức, đội khác hay UUID không tồn tại. Hồ sơ còn được đội hình nháp/công bố tham chiếu không thể xóa.
+GET /admin/pages/{id}/teams trả các liên kết từ đội hình nháp; GET /pages/{id}/teams chỉ trả từ đội đã
+công bố và yêu cầu cá nhân đã công bố. Mỗi mục gồm teamPageId, teamCode, teamName, teamAvatarUrl và member.
+Thông tin đội hiển thị hai chiều từ cùng bản ghi roster, không sao chép/ghi đè các mốc lịch sử cá nhân.
+Mốc có nguồn từ giải trước đây vẫn được giữ riêng, không suy diễn rằng thay đổi đội hiện tại sửa lại lịch sử.
+
+Ở admin, danh sách thành viên hiển thị ảnh, tên, vị trí và trạng thái; icon mở hồ sơ, sửa và gỡ có nhãn
+trợ năng. Thêm thành viên mở bảng chọn tuyển thủ hoặc ban huấn luyện, có tìm kiếm, phân trang và tạo
+hồ sơ nhanh. Tên/ảnh lấy từ hồ sơ đã chọn; vị trí, trạng thái, thời gian và nguồn thuộc lần tham gia đội.
+Áp dụng chỉ cập nhật bản chỉnh sửa tại chỗ, Lưu nháp mới ghi đội hình. Hồ sơ tạo nhanh được lưu độc lập.
+Vai trò kiêm nhiệm của tuyển thủ là tùy chọn; vị trí thi đấu chỉ chọn trong đội. Các mục lịch sử,
+thành tích và nguồn thu gọn thành dòng tóm tắt, mở ô nhập qua icon sửa.
 
 ## Cơ sở dữ liệu
 
@@ -105,6 +195,10 @@ dùng INSERT ... ON CONFLICT DO NOTHING nên không cần khóa page.
 
 V009 thêm index cho bảng tin: post(created_at DESC, id) chỉ với bài PUBLISHED, comment(post_id, created_at)
 chỉ với bình luận chưa ẩn, follow(actor, page_id) để tra page đang theo dõi. Không đổi dữ liệu.
+
+V010 thêm vào post: kind varchar(20) mặc định TEXT, title, video_url, image_urls jsonb mặc định [] và
+pinned_at, kèm unique một bài ghim mỗi page. Bảng page_live (page_id PK/FK page, url, title, started_at) giữ
+trạng thái trực tiếp riêng để bật/tắt không đổi version bản nháp của page.
 
 ## API
 
@@ -130,11 +224,15 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /me/pages/{id}/members | Người quản lý page |
 | POST /me/pages/{id}/invitations; /me/invitations/accept | {role} trả token; {token} nhận lời mời hoặc mã bàn giao |
 | POST /me/pages/{id}/members/{memberId}/revoke hoặc /transfer | Thu hồi / chuyển owner |
-| GET /pages/{id}/posts, /me/pages/{id}/posts, /me/pages/{id}/feed | Công khai / quản lý / công khai cùng nháp của chính mình |
-| GET /posts?page=&size= | Bảng tin công khai: bài đã đăng của mọi page công khai, mỗi mục {post,page}; `liked` luôn false |
-| GET /me/feed?following=&page=&size= | Bảng tin của người xem, cùng dạng {post,page}; `following=true` chỉ lấy page đang theo dõi |
+| GET /pages/{id}/posts?kind=, /me/pages/{id}/posts, /me/pages/{id}/feed | Công khai (bài ghim đứng đầu) / quản lý / công khai cùng nháp của chính mình |
+| GET /posts?kind=&q=&page=&size= | Bảng tin công khai: bài đã đăng của mọi page công khai, mỗi mục {post,page}; `liked` luôn false |
+| GET /me/feed?following=&kind=&page=&size= | Bảng tin của người xem, cùng dạng {post,page}; `following=true` chỉ lấy page đang theo dõi |
+| POST /me/pages/{id}/posts/{postId}/pin | {pinned}; ghim/bỏ ghim bài đã đăng với tư cách page |
+| PUT /me/pages/{id}/live; POST /me/pages/{id}/live/end | {url,title} bật hoặc cập nhật trực tiếp / tắt |
+| PUT /admin/pages/{id}/live; POST /admin/pages/{id}/live/end | Như trên cho người có tournament:write |
+| GET /live?page=&size= | Page công khai đang phát trực tiếp, mỗi mục là hồ sơ công khai có `live` |
 | GET /me/follows?page=&size=; GET /me/suggestions?page=&size= | Page đang theo dõi (theo tên) / gợi ý page để theo dõi |
-| POST /me/pages/{id}/posts; PUT /me/pages/{id}/posts/{postId} | {version?,body,asPage,publish} |
+| POST /me/pages/{id}/posts; PUT /me/pages/{id}/posts/{postId} | {version?,kind?,title?,body,videoUrl?,imageUrls?,asPage,publish} |
 | GET /posts/{id}/comments; POST /me/posts/{id}/comments | Bình luận công khai; {body,asPage} |
 | POST /me/posts/{id}/like | {liked}; trả {liked,likes}. Mọi bài trả kèm `comments` (số bình luận đang hiển thị) |
 | POST /me/pages/{id}/follow | {following} |
@@ -145,7 +243,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |
-| GET /admin/competitions, /admin/competitions/{id} | Tóm tắt kế hoạch / kế hoạch cùng dữ liệu giải quyết |
+| GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |
 | POST /admin/competitions/preview | {content,stageCode,opponent}; lịch xem trước, không ghi DB |
 | POST /admin/competitions/{id}/materialize, /publish, /withdraw | {version}; tạo trận thật / chụp snapshot / ẩn công khai |
