@@ -781,6 +781,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
         ...entry.content,
         translations: [{ locale: "vi-VN", name: "Phụ trợ đã gỡ" }],
         availability: "REMOVED",
+        cooldownSeconds: null,
         states: [],
       },
     }
@@ -789,7 +790,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     }
     let opened: string | undefined
     const props = {
-      records: [entry, removed],
+      records: [entry, removed, { ...entry, id: "first", content: { ...entry.content, states: [], displayOrder: 0 } }],
       locale: "vi-VN",
       selectedId: "",
       onOpen: (value: WarehouseEntry<SpellContent>) => {
@@ -797,6 +798,10 @@ test("spell cards expose both state icons, open details and collapse legacy entr
       },
     }
     await render(<SpellCollection {...props} />)
+    assert.deepEqual(
+      [...document.querySelectorAll("[data-spell-card]")].map((el) => el.getAttribute("data-spell-card")),
+      ["first", "punish"],
+    )
     const card = document.querySelector<HTMLElement>('[data-spell-card="punish"]')!
     assert.equal(card.querySelector('[data-catalog-change="INHERITED"]'), null)
     assert.ok(card.querySelector('[data-catalog-change="BUFF"]'))
@@ -806,7 +811,8 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     assert.ok(openButton)
     assert.doesNotMatch(card.textContent!, /Xem chi tiết/)
     assert.equal(card.textContent!.match(/Trừng trị/g)?.length, 1)
-    assert.match(card.textContent!, /Hồi chiêu 10 giây/)
+    assert.equal(card.querySelector('[role="img"][aria-label="Hồi chiêu 10 giây"]')?.textContent, "10 s")
+    assert.doesNotMatch(card.textContent!, /Hồi chiêu/)
     assert.doesNotMatch(card.textContent!, /Lv 1|Đang có/)
     assert.deepEqual(
       [...card.querySelectorAll("img")].map((image) => [image.alt, image.getAttribute("src")]).sort(),
@@ -832,6 +838,7 @@ test("spell cards expose both state icons, open details and collapse legacy entr
     await act(async () => toggle.click())
     assert.equal(toggle.getAttribute("aria-expanded"), "true")
     assert.ok(document.querySelector('button[aria-label="Xem Phụ trợ đã gỡ"]'))
+    assert.equal(document.querySelector('[role="img"][aria-label="Chưa rõ hồi chiêu"]')?.textContent, "—")
     await act(async () => toggle.click())
     assert.equal(toggle.getAttribute("aria-expanded"), "false")
     await render(<SpellCollection {...props} selectedId={removed.id} />)
@@ -1828,10 +1835,10 @@ test("shop paints wire underlays first and skips unchanged layout measurements d
     const { ItemShopGraph } = await import("../src/features/warehouse/item-shop-graph")
     const callbacks: (() => void)[] = []
     globalThis.ResizeObserver = class {
-      constructor(callback: () => void) {
-        callbacks.push(callback)
+      constructor(private callback: () => void) {}
+      observe(node: Element) {
+        if (node.hasAttribute("data-item-node") && !callbacks.includes(this.callback)) callbacks.push(this.callback)
       }
-      observe() {}
       unobserve() {}
       disconnect() {}
     } as unknown as typeof ResizeObserver
@@ -2050,7 +2057,7 @@ test("shop separates terminal column two items and renders external attributes b
     })
     const items = [
       make("sword", "Kiếm ngắn", 1, "attack", 0, 0),
-      make("mace", "Chùy cổ", 2, "attack", 1, 1, [{ itemId: "sword", quantity: 1 }]),
+      make("mace", "Chùy cổ", 3, "attack", 1, 1, [{ itemId: "sword", quantity: 1 }]),
       make("gloves", "Găng giác đấu", 1, "defense", 0, 2),
       make("uriel", "Gươm Uriel", 3, "attack", 1, 7, [
         { itemId: "mace", quantity: 1 },
@@ -2083,6 +2090,8 @@ test("shop separates terminal column two items and renders external attributes b
     )
     const terminal = document.querySelector('[aria-label^="Trang bị hoàn chỉnh · Cột 2"]')!
     assert.match(terminal.textContent!, /Gươm Uriel/)
+    assert.doesNotMatch(terminal.textContent!, /Cấp 3/)
+    assert.match(document.querySelector('[data-item-node="mace"]')!.textContent!, /Cấp 3/)
     assert.equal(document.querySelector('[data-catalog-change="INHERITED"]'), null)
     assert.ok(terminal.querySelector('[data-catalog-change="BUFF"]'))
     assert.equal(terminal.querySelector('[aria-label="Nâng cấp từ Gươm Uriel"]'), null)

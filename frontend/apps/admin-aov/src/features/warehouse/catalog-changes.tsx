@@ -33,9 +33,7 @@ export const catalogChangeKinds = {
 } as const
 export type CatalogChangeKind = keyof typeof catalogChangeKinds
 export type CatalogBadgeKind = CatalogChangeKind | "UNCHANGED" | "INHERITED"
-export function cardChangeKinds(kinds: readonly CatalogBadgeKind[] = []) {
-  return kinds.filter((kind) => kind !== "INHERITED")
-}
+export { cardChangeKinds } from "@aov/ui/components/warehouse/warehouse-view"
 
 export interface CatalogChange {
   id: string

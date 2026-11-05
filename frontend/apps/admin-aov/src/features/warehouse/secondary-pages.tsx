@@ -1,7 +1,8 @@
+import { SpellFilters } from "@aov/ui/components/warehouse/spell-filters"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Archive, Gem, GitBranch, Languages, LayoutGrid, ListOrdered, Plus, Sparkles, Zap } from "lucide-react"
+import { Gem, GitBranch, Languages, ListOrdered, Plus, Sparkles, Zap } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
 import { Skeleton } from "@aov/ui/components/skeleton"
@@ -9,7 +10,6 @@ import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { SearchField } from "@/components/search-field"
-import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { useSearchParam } from "@/hooks/use-search-param"
 import { errorMessage } from "@/lib/api/errors"
 import { matchesQuery } from "@/lib/text"
@@ -19,7 +19,7 @@ import { EnchantmentBranches } from "./enchantment-branches"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
 import { enchantmentBranchColor } from "./enchantment-colors"
 import { useWarehouseScope, WarehouseScopeControls, WarehouseScopeEmpty } from "./warehouse-scope"
-import { availabilityLabels, SpellCollection } from "./spell-cards"
+import { SpellCollection } from "./spell-cards"
 import { ArcanaCollection } from "./arcana-cards"
 import { ArcanaFilters } from "./arcana-filters"
 import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"
@@ -113,23 +113,17 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
         records.find((entry) => entry.id === selectedId || entry.code === selectedId))
   const mutation = useMutation({ mutationFn: (action: () => Promise<void>) => action() })
   const existingDraft = scopeState.drafts.find((entry) => entry.id === selected?.id)
-  const candidates = scopedRecords
-    .filter((entry) => {
-      const text = warehouseText(entry.content.translations, context.locale)
-      if (!matchesQuery(context.search, entry.code, text?.name, text?.summary, text?.description)) return false
-      if (kind === "arcana") {
-        const content = entry.content as ArcanaContent
-        return (!color || content.color === color) && (!tier || content.tier === Number(tier))
-      }
-      if (kind === "spells") return !availability || (entry.content as SpellContent).availability === availability
-      return true
-    })
-    .sort((a, b) =>
-      kind === "spells"
-        ? (a.content as SpellContent).displayOrder - (b.content as SpellContent).displayOrder ||
-          a.code.localeCompare(b.code)
-        : a.code.localeCompare(b.code),
-    )
+  const candidates = scopedRecords.filter((entry) => {
+    const text = warehouseText(entry.content.translations, context.locale)
+    if (!matchesQuery(context.search, entry.code, text?.name, text?.summary, text?.description)) return false
+    if (kind === "arcana") {
+      const content = entry.content as ArcanaContent
+      return (!color || content.color === color) && (!tier || content.tier === Number(tier))
+    }
+    if (kind === "spells") return !availability || (entry.content as SpellContent).availability === availability
+    return true
+  })
+  if (kind !== "spells") candidates.sort((a, b) => a.code.localeCompare(b.code))
   const statOptions =
     kind === "arcana"
       ? [...new Set(candidates.flatMap((entry) => (entry.content as ArcanaContent).stats.map((stat) => stat.key)))]
@@ -326,23 +320,14 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
         />
       )}
       {kind === "spells" && (
-        <FilterTabs label="Lọc khả dụng phụ trợ">
-          <FilterTab active={!availability} count={scopedRecords.length} onClick={() => setAvailability(null)}>
-            <LayoutGrid aria-hidden />
-            Tất cả
-          </FilterTab>
-          {spellAvailabilityFilters.map((value) => (
-            <FilterTab
-              key={value}
-              active={availability === value}
-              count={scopedRecords.filter((entry) => (entry.content as SpellContent).availability === value).length}
-              onClick={() => setAvailability(value)}
-            >
-              <Archive aria-hidden />
-              {availabilityLabels[value]}
-            </FilterTab>
-          ))}
-        </FilterTabs>
+        <SpellFilters
+          availability={availability}
+          setAvailability={setAvailability}
+          count={scopedRecords.length}
+          archivedCount={
+            scopedRecords.filter((entry) => (entry.content as SpellContent).availability === "REMOVED").length
+          }
+        />
       )}
       {issue && (
         <div

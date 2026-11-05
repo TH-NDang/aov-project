@@ -1,10 +1,8 @@
-import { itemCategoryFallback } from "@aov/ui/components/item-category-icons"
-export { itemCategoryFallback } from "@aov/ui/components/item-category-icons"
-import { cn } from "@aov/ui/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
-import { HeroAsset } from "../publishing/hero-asset"
 import { warehouseText, type WarehouseMetadata } from "./warehouse-types"
-
+import { ItemCategoryIcon } from "./item-category-view"
+export { ItemCategoryIcon } from "./item-category-view"
+export { itemCategoryFallback } from "@aov/ui/components/item-category-icons"
 export function ItemCategorySelect({
   label,
   categories,
@@ -47,24 +45,4 @@ export function ItemCategorySelect({
       </Select>
     </div>
   )
-}
-
-export function ItemCategoryIcon({
-  category,
-  className,
-}: {
-  category: Pick<WarehouseMetadata, "code" | "iconAssetId"> | undefined
-  className?: string
-}) {
-  if (category?.iconAssetId)
-    return (
-      <HeroAsset
-        id={category.iconAssetId}
-        alt=""
-        frameAspectRatio={1}
-        className={cn("size-5 shrink-0 rounded-sm border-0 bg-transparent", className)}
-      />
-    )
-  const Icon = itemCategoryFallback(category?.code)
-  return <Icon aria-hidden className={cn("size-5 shrink-0", className)} />
 }

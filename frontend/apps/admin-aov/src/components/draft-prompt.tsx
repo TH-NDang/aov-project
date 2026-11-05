@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react"
+import { FilePenLine, Plus } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 
@@ -6,17 +6,30 @@ import { cn } from "@aov/ui/lib/utils"
 export function DraftPrompt({
   busy = false,
   onCreate,
+  onOpenDraft,
   className,
 }: {
   busy?: boolean
-  onCreate: () => void
+  onCreate?: () => void
+  onOpenDraft?: () => void
   className?: string
 }) {
+  if (!onCreate && !onOpenDraft) return null
   return (
     <div className={cn("flex flex-wrap items-center gap-3 rounded-xl border bg-muted/40 p-3", className)}>
-      <p className="flex-1 text-sm">Bản đã xuất bản. Tạo bản nháp để cập nhật.</p>
-      <Button size="sm" disabled={busy} onClick={onCreate}>
-        <Plus className="size-4" /> Tạo bản nháp
+      <p className="flex-1 text-sm">
+        {onOpenDraft ? "Mục này có bản nháp đang chỉnh sửa." : "Bản đã xuất bản. Tạo bản nháp để cập nhật."}
+      </p>
+      <Button size="sm" disabled={busy} onClick={onOpenDraft ?? onCreate}>
+        {onOpenDraft ? (
+          <>
+            <FilePenLine /> Mở bản nháp
+          </>
+        ) : (
+          <>
+            <Plus /> Tạo bản nháp
+          </>
+        )}
       </Button>
     </div>
   )

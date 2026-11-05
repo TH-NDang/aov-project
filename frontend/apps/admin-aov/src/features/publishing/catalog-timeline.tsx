@@ -2,6 +2,7 @@ import { CatalogViewMode } from "./catalog-view-mode"
 import { useSearchParams } from "react-router"
 import { useEffect, useRef, useState } from "react"
 import { Bookmark, Database, Settings2, RotateCcw } from "lucide-react"
+import { PatchTimelineRail } from "@aov/ui/components/patch-timeline-rail"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@aov/ui/components/sheet"
@@ -322,146 +323,84 @@ function CountBadge({ props, variant }: { props: TimelineProps; variant: Variant
 
 function TimelineRail(props: TimelineProps & { groups: SeasonGroup[] }) {
   const { data, value, onChange, groups } = props
-  const rail = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ x: number; scroll: number; pointer: number } | null>(null)
-  const suppressClick = useRef(false)
-  useEffect(() => {
-    const active = rail.current?.querySelector<HTMLElement>(
-      '[data-patch][aria-pressed="true"], [data-season][aria-pressed="true"]',
-    )
-    if (active && rail.current) {
-      const offset =
-        active.getBoundingClientRect().left - rail.current.getBoundingClientRect().left + rail.current.scrollLeft
-      if (
-        offset < rail.current.scrollLeft ||
-        offset + active.offsetWidth > rail.current.scrollLeft + rail.current.clientWidth
-      )
-        rail.current.scrollLeft = Math.max(0, offset - rail.current.clientWidth / 2 + active.offsetWidth / 2)
-    }
-  }, [value.seasonId, value.variantId])
   return (
-    <div
-      ref={rail}
-      role="group"
-      aria-label="Chọn patch"
-      className="min-w-0 cursor-grab overflow-x-auto overscroll-x-contain select-none active:cursor-grabbing [scrollbar-width:none] sm:[scrollbar-width:thin] max-sm:[&::-webkit-scrollbar]:hidden"
-      onPointerDown={(event) => {
-        suppressClick.current = false
-        if (
-          event.pointerType !== "mouse" ||
-          event.button !== 0 ||
-          event.currentTarget.scrollWidth <= event.currentTarget.clientWidth
-        )
-          return
-        drag.current = { x: event.clientX, scroll: event.currentTarget.scrollLeft, pointer: event.pointerId }
-      }}
-      onPointerMove={(event) => {
-        const state = drag.current
-        if (!state || state.pointer !== event.pointerId || !event.buttons) return
-        if (Math.abs(event.clientX - state.x) > 6) {
-          suppressClick.current = true
-          event.currentTarget.setPointerCapture(event.pointerId)
-          event.currentTarget.scrollLeft = state.scroll - (event.clientX - state.x)
-          event.preventDefault()
-        }
-      }}
-      onPointerUp={(event) => {
-        if (event.currentTarget.hasPointerCapture(event.pointerId))
-          event.currentTarget.releasePointerCapture(event.pointerId)
-        drag.current = null
-      }}
-      onPointerCancel={() => {
-        drag.current = null
-        suppressClick.current = false
-      }}
-      onClickCapture={(event) => {
-        if (suppressClick.current) {
-          event.preventDefault()
-          event.stopPropagation()
-          suppressClick.current = false
-        }
-      }}
-    >
-      <div className="relative isolate flex w-max min-w-full items-center gap-2 py-0.5 before:absolute before:inset-x-0 before:top-1/2 before:-z-10 before:border-t before:border-border sm:gap-4 sm:py-1">
-        {groups.map((group) => (
-          <div key={group.id || "unscoped"} className="flex shrink-0 items-center gap-1 sm:gap-2">
-            <button
-              type="button"
-              data-season
-              aria-label={`Lọc mùa ${group.name}`}
-              title={group.current ? `${group.name} · Đang áp dụng` : group.name}
-              aria-pressed={!!group.id && value.seasonId === group.id && !value.variantId}
-              disabled={!group.id}
-              onClick={() => onChange({ seasonId: group.id, variantId: "" })}
-              className={cn(
-                "type-label h-8 shrink-0 rounded-md px-1.5 whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-7 sm:px-2",
-                "bg-muted text-muted-foreground enabled:hover:bg-accent",
-                value.seasonId === group.id &&
-                  !value.variantId &&
-                  "bg-accent text-accent-foreground ring-1 ring-inset ring-primary/50",
-              )}
-            >
-              {group.name}
-            </button>
-            <div className="flex items-center gap-1 sm:gap-1.5">
-              {group.variants.map((variant) => {
-                if (
-                  props.allLabel &&
-                  value.seasonId &&
-                  group.id &&
-                  value.seasonId !== group.id &&
-                  variant.id !== props.currentFilter?.variantId
-                )
-                  return null
-                const pressed = value.variantId === variant.id
-                const pinned = pinnedSelection(props, variant.id)
-                const current = isCurrent(data, variant)
-                const counts = countText(props, variant)
-                return (
-                  <button
-                    key={variant.id}
-                    type="button"
-                    data-patch
-                    aria-pressed={pressed}
-                    aria-label={`Lọc patch ${variant.patchCode}`}
-                    title={[
-                      `${group.name} · ${variant.patchCode}${variant.status === "DRAFT" ? " · Nháp" : ""}`,
-                      current ? "Đang áp dụng" : releaseText(data, variant),
-                      pinned ? "Đang xem · Giữ trên thanh khi chưa có thay đổi" : null,
-                      counts,
-                    ]
-                      .filter(Boolean)
-                      .join("\n")}
-                    onClick={() => onChange({ seasonId: variant.seasonId ?? "", variantId: variant.id })}
-                    className={cn(
-                      "inline-flex max-w-52 shrink-0 cursor-pointer items-center gap-1 border text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:gap-1.5",
-                      "h-8 rounded-md px-1.5 sm:h-7 sm:px-2",
-                      pressed
-                        ? "border-primary bg-background font-medium text-primary"
-                        : "bg-background hover:bg-accent",
-                      variant.status === "DRAFT" && "border-dashed",
-                      pinned &&
-                        "border-dashed border-indigo-500/60 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
-                    )}
-                  >
-                    {current && <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />}
-                    {pinned && <Bookmark className="size-3" aria-label="Mốc đã chọn" />}
-                    <span className="truncate">{variant.patchCode}</span>
-                    {variant.status === "DRAFT" && (
-                      <span className="type-meta text-amber-700 dark:text-amber-300">Nháp</span>
-                    )}
-                    <CountBadge props={props} variant={variant} />
-                    <span className="sr-only">
-                      {current ? " · Đang áp dụng" : ""}
-                      {counts ? ` · ${counts}` : ""}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+    <PatchTimelineRail selection={value.variantId || value.seasonId} label="Chọn patch">
+      {groups.map((group) => (
+        <div key={group.id || "unscoped"} className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <button
+            type="button"
+            data-season
+            aria-label={`Lọc mùa ${group.name}`}
+            title={group.current ? `${group.name} · Đang áp dụng` : group.name}
+            aria-pressed={!!group.id && value.seasonId === group.id && !value.variantId}
+            disabled={!group.id}
+            onClick={() => onChange({ seasonId: group.id, variantId: "" })}
+            className={cn(
+              "type-label h-8 shrink-0 rounded-md px-1.5 whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:h-7 sm:px-2",
+              "bg-muted text-muted-foreground enabled:hover:bg-accent",
+              value.seasonId === group.id &&
+                !value.variantId &&
+                "bg-accent text-accent-foreground ring-1 ring-inset ring-primary/50",
+            )}
+          >
+            {group.name}
+          </button>
+          <div className="flex items-center gap-1 sm:gap-1.5">
+            {group.variants.map((variant) => {
+              if (
+                props.allLabel &&
+                value.seasonId &&
+                group.id &&
+                value.seasonId !== group.id &&
+                variant.id !== props.currentFilter?.variantId
+              )
+                return null
+              const pressed = value.variantId === variant.id
+              const pinned = pinnedSelection(props, variant.id)
+              const current = isCurrent(data, variant)
+              const counts = countText(props, variant)
+              return (
+                <button
+                  key={variant.id}
+                  type="button"
+                  data-patch
+                  aria-pressed={pressed}
+                  aria-label={`Lọc patch ${variant.patchCode}`}
+                  title={[
+                    `${group.name} · ${variant.patchCode}${variant.status === "DRAFT" ? " · Nháp" : ""}`,
+                    current ? "Đang áp dụng" : releaseText(data, variant),
+                    pinned ? "Đang xem · Giữ trên thanh khi chưa có thay đổi" : null,
+                    counts,
+                  ]
+                    .filter(Boolean)
+                    .join("\n")}
+                  onClick={() => onChange({ seasonId: variant.seasonId ?? "", variantId: variant.id })}
+                  className={cn(
+                    "inline-flex max-w-52 shrink-0 cursor-pointer items-center gap-1 border text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:gap-1.5",
+                    "h-8 rounded-md px-1.5 sm:h-7 sm:px-2",
+                    pressed ? "border-primary bg-background font-medium text-primary" : "bg-background hover:bg-accent",
+                    variant.status === "DRAFT" && "border-dashed",
+                    pinned &&
+                      "border-dashed border-indigo-500/60 bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
+                  )}
+                >
+                  {current && <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden />}
+                  {pinned && <Bookmark className="size-3" aria-label="Mốc đã chọn" />}
+                  <span className="truncate">{variant.patchCode}</span>
+                  {variant.status === "DRAFT" && (
+                    <span className="type-meta text-amber-700 dark:text-amber-300">Nháp</span>
+                  )}
+                  <CountBadge props={props} variant={variant} />
+                  <span className="sr-only">
+                    {current ? " · Đang áp dụng" : ""}
+                    {counts ? ` · ${counts}` : ""}
+                  </span>
+                </button>
+              )
+            })}
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      ))}
+    </PatchTimelineRail>
   )
 }

@@ -5,7 +5,8 @@ import { ItemRowPicker } from "./item-row-picker"
 import { shopColumns } from "./item-shop-position"
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useState } from "react"
-import { Coins, History, Languages, ArrowLeft, Plus, Settings2, Trash2 } from "lucide-react"
+import { History, Languages, ArrowLeft, Plus, Settings2, Trash2 } from "lucide-react"
+import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { SectionPencil, type WarehouseSection } from "./warehouse-edit-section"
 import { Button } from "@aov/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
@@ -170,12 +171,7 @@ export function ItemEditor({
                 </span>
               )}
               {value.tier !== null && <span>Cấp {value.tier}</span>}
-              {value.price !== null && (
-                <span className="item-price-text inline-flex items-center gap-1">
-                  <Coins className="size-3.5 text-amber-600" aria-hidden />
-                  {value.price.toLocaleString(locale)} vàng
-                </span>
-              )}
+              <ItemPrice amount={value.price} locale={locale} />
               {value.price == null && value.tier == null && !value.categoryCode && canEdit && (
                 <span className="type-meta">Giá, cấp và nhóm</span>
               )}
