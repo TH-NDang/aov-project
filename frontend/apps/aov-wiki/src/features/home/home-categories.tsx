@@ -4,7 +4,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { wikiSections, type WikiSectionKey } from "../../layout/wiki-sections"
 import "./home-categories.css"
 
-const descriptions: Record<Exclude<WikiSectionKey, "updates">, [string, string]> = {
+const descriptions: Record<Exclude<WikiSectionKey, "updates" | "terms">, [string, string]> = {
   heroes: ["Kỹ năng, chỉ số và lịch sử thay đổi", "Skills, stats and change history"],
   skins: ["Trang phục theo tướng và bậc", "Skins by hero and tier"],
   items: ["Cửa hàng và công thức ghép", "Shop layout and recipes"],
@@ -20,7 +20,7 @@ export function HomeCategories() {
       <h2 id="wiki-index-title">{wikiText(locale, "Danh mục", "Browse the library")}</h2>
       <ul>
         {wikiSections.flatMap(({ key, icon, path }) =>
-          key === "updates"
+          key === "updates" || key === "terms"
             ? []
             : [
                 <li key={key}>

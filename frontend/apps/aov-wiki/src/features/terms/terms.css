@@ -1,0 +1,64 @@
+.wiki-terms {
+  max-width: 960px;
+}
+.wiki-terms-lead {
+  font: var(--wiki-type-body);
+  margin-top: 4px;
+  color: var(--aov-muted);
+}
+.wiki-terms-search.wiki-hero-search {
+  max-width: 340px;
+  margin-top: 14px;
+}
+.wiki-terms-state {
+  font: var(--wiki-type-body);
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 16px 0;
+  color: var(--aov-muted);
+}
+.wiki-terms-state button {
+  font: var(--wiki-type-category);
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  padding: 6px 14px;
+  color: var(--aov-text);
+}
+.wiki-terms-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+.wiki-term {
+  height: 100%;
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  scroll-margin-top: 72px;
+}
+.wiki-term[aria-current="true"] {
+  border-color: var(--aov-accent);
+}
+.wiki-term h2 {
+  font: var(--wiki-type-entry);
+}
+.wiki-term h2 a {
+  color: var(--aov-text);
+  text-decoration: none;
+}
+.wiki-term h2 a:hover {
+  text-decoration: underline;
+}
+.wiki-term-aliases {
+  font: var(--wiki-type-meta);
+  margin-top: 2px;
+  color: var(--aov-muted);
+}
+.wiki-term-body {
+  font: var(--wiki-type-body);
+  margin-top: 6px;
+  color: var(--aov-text-soft);
+}

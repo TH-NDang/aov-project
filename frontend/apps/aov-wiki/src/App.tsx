@@ -2,7 +2,7 @@ import { WikiIcon } from "./components/wiki-icon"
 import { FeedbackDialog } from "./layout/feedback-dialog"
 import { WikiHeader } from "./components/wiki-header"
 import { WikiHome } from "./features/home/wiki-home"
-import { Link, Route, Routes, useLocation, useParams } from "react-router"
+import { Link, Navigate, Route, Routes, useLocation, useParams, useSearchParams } from "react-router"
 import { lazy, Suspense, useEffect } from "react"
 import { HeroDirectoryLoading, HeroDetailLoading } from "./features/hero/hero-loading"
 import { WikiLibraryLayout } from "./layout/wiki-library-layout"
@@ -12,6 +12,7 @@ import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
 import { WikiLoginCallback } from "./features/auth/wiki-account"
 
+const TermsPage = lazy(() => import("./features/terms/terms-page").then((module) => ({ default: module.TermsPage })))
 const UpdatesPage = lazy(() =>
   import("./features/updates/updates-page").then((module) => ({ default: module.UpdatesPage })),
 )
@@ -38,8 +39,12 @@ function HeroDetailRoute() {
   )
 }
 
+/** Term links used to point at the home page; they now open the glossary. */
 function HomePage() {
-  const { locale } = useWikiContext()
+  const { locale, href } = useWikiContext()
+  const [params] = useSearchParams()
+  const term = params.get("term")
+  if (term) return <Navigate to={href(`/terms/${encodeURIComponent(term)}`)} replace />
   return (
     <>
       <title>{wikiText(locale, "AOV WiKi — Khai mở tri thức", "AOV WiKi — Knowledge uncovered")}</title>
@@ -100,6 +105,17 @@ export default function App() {
               </Suspense>
             }
           />
+          {["/terms", "/terms/:termId"].map((path) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <Suspense fallback={null}>
+                  <TermsPage />
+                </Suspense>
+              }
+            />
+          ))}
           <Route
             path="/updates"
             element={

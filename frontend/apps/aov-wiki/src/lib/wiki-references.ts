@@ -30,7 +30,9 @@ export const wikiReferencesQuery = (scope: WikiCatalogScope) =>
               ? `/hero/${encodeURIComponent(entity.id)}`
               : entity.kind === "skill" && entity.heroId
                 ? `/hero/${encodeURIComponent(entity.heroId)}?${new URLSearchParams({ skill: entity.skillKey ?? "" })}`
-                : null
+                : entity.kind === "term"
+                  ? `/terms/${encodeURIComponent(entity.id)}`
+                  : null
           return destination
             ? {
                 ...entity,

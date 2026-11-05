@@ -41,6 +41,12 @@ export const wikiSections = [
     path: "/updates",
     group: "news",
   },
+  {
+    key: "terms",
+    icon: "book",
+    path: "/terms",
+    group: "news",
+  },
 ] as const
 
 export type WikiSectionKey = (typeof wikiSections)[number]["key"]

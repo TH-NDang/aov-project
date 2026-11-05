@@ -95,6 +95,7 @@ const COPY: Record<string, [string, string]> = {
   spells: ["Phụ trợ", "Talents"],
   news: ["Tham khảo", "Reference"],
   updates: ["Ghi chú cập nhật", "Patch notes"],
+  terms: ["Thuật ngữ", "Glossary"],
   map: ["Bản đồ", "Maps"],
   mode: ["Chế độ chơi", "Game modes"],
   backHome: ["Về trang chủ", "Back home"],
