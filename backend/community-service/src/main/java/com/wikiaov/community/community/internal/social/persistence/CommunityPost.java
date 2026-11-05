@@ -2,7 +2,9 @@ package com.wikiaov.community.community.internal.social.persistence;
 
 import jakarta.persistence.*;
 import java.time.Instant;
-import java.util.UUID;
+import java.util.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(schema = "community", name = "post")
@@ -19,6 +21,12 @@ public class CommunityPost {
     private String status;
     private Instant createdAt;
     private Instant updatedAt;
+    private String kind = "TEXT";
+    private String title;
+    private String videoUrl;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> imageUrls = new ArrayList<>();
+    private Instant pinnedAt;
 
     public CommunityPost() {
         this.id = UUID.randomUUID();
@@ -100,4 +108,43 @@ public class CommunityPost {
         this.updatedAt = value;
     }
 
+    public String getKind() {
+        return kind;
+    }
+
+    public void setKind(String value) {
+        this.kind = value;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String value) {
+        this.title = value;
+    }
+
+    public String getVideoUrl() {
+        return videoUrl;
+    }
+
+    public void setVideoUrl(String value) {
+        this.videoUrl = value;
+    }
+
+    public List<String> getImageUrls() {
+        return imageUrls;
+    }
+
+    public void setImageUrls(List<String> value) {
+        this.imageUrls = new ArrayList<>(value);
+    }
+
+    public Instant getPinnedAt() {
+        return pinnedAt;
+    }
+
+    public void setPinnedAt(Instant value) {
+        this.pinnedAt = value;
+    }
 }

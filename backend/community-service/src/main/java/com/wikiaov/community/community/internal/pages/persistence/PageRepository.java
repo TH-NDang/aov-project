@@ -9,39 +9,65 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
     @Query(value = """
         SELECT * FROM community.page
         WHERE (:kind IS NULL OR kind = :kind) AND (:published = false OR published_content IS NOT NULL)
+          AND (:roles = '' OR (kind IN ('PERSON', 'PLAYER') AND jsonb_exists_any(
+            (CASE WHEN :published THEN published_content ELSE content END)->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR
             lower((CASE WHEN :published THEN published_content ELSE content END)->>'name') LIKE lower(concat('%', :query, '%')))
         ORDER BY updated_at DESC, id
         """, countQuery = """
         SELECT count(*) FROM community.page
         WHERE (:kind IS NULL OR kind = :kind) AND (:published = false OR published_content IS NOT NULL)
+          AND (:roles = '' OR (kind IN ('PERSON', 'PLAYER') AND jsonb_exists_any(
+            (CASE WHEN :published THEN published_content ELSE content END)->'personRoles', string_to_array(:roles, ','))))
           AND (lower(code) LIKE lower(concat('%', :query, '%')) OR
             lower((CASE WHEN :published THEN published_content ELSE content END)->>'name') LIKE lower(concat('%', :query, '%')))
         """, nativeQuery = true)
-    Page<PageRecord> search(String kind, String query, boolean published, Pageable pageable);
+    Page<PageRecord> search(String kind, String query, String roles, boolean published, Pageable pageable);
 
     Optional<PageRecord> findByCode(String code);
 
     @Query(value = """
+        SELECT * FROM community.page
+        WHERE kind = 'TEAM' AND (:published = false OR published_content IS NOT NULL)
+          AND (CASE WHEN :published THEN published_content ELSE content END)->'roster'
+            @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text)))
+        ORDER BY updated_at DESC, id
+        """, nativeQuery = true)
+    List<PageRecord> teamsForMember(String memberId, boolean published);
+
+    @Query(value = """
+        SELECT count(*) FROM community.page WHERE kind = 'TEAM' AND (
+          content->'roster' @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text))) OR
+          published_content->'roster' @> jsonb_build_array(jsonb_build_object('pageId', CAST(:memberId AS text))))
+        """, nativeQuery = true)
+    long countRosterReferences(String memberId);
+
+    @Query(value = """
+        SELECT count(*) FROM community.page WHERE kind = 'CIRCUIT' AND (
+          content->>'channelOrganizationId' = :id OR published_content->>'channelOrganizationId' = :id)
+        """, nativeQuery = true)
+    long countChannelReferences(String id);
+
+    @Query(value = """
         SELECT p.* FROM community.page p JOIN community.follow f ON f.page_id = p.id
-        WHERE f.actor = :actor AND p.published_content IS NOT NULL
+        WHERE f.actor = :actor AND p.published_content IS NOT NULL AND p.kind <> 'CIRCUIT'
         ORDER BY lower(p.published_content->>'name'), p.id
         """, countQuery = """
         SELECT count(*) FROM community.page p JOIN community.follow f ON f.page_id = p.id
-        WHERE f.actor = :actor AND p.published_content IS NOT NULL
+        WHERE f.actor = :actor AND p.published_content IS NOT NULL AND p.kind <> 'CIRCUIT'
         """, nativeQuery = true)
     Page<PageRecord> followedBy(String actor, Pageable pageable);
 
     /** Published pages the account neither follows nor manages, the most followed first. */
     @Query(value = """
         SELECT p.* FROM community.page p
-        WHERE p.published_content IS NOT NULL
+        WHERE p.published_content IS NOT NULL AND p.kind <> 'CIRCUIT'
           AND NOT EXISTS (SELECT 1 FROM community.follow f WHERE f.page_id = p.id AND f.actor = :actor)
           AND NOT EXISTS (SELECT 1 FROM community.page_member m WHERE m.page_id = p.id AND m.actor = :actor)
         ORDER BY (SELECT count(*) FROM community.follow f WHERE f.page_id = p.id) DESC, p.updated_at DESC, p.id
         """, countQuery = """
         SELECT count(*) FROM community.page p
-        WHERE p.published_content IS NOT NULL
+        WHERE p.published_content IS NOT NULL AND p.kind <> 'CIRCUIT'
           AND NOT EXISTS (SELECT 1 FROM community.follow f WHERE f.page_id = p.id AND f.actor = :actor)
           AND NOT EXISTS (SELECT 1 FROM community.page_member m WHERE m.page_id = p.id AND m.actor = :actor)
         """, nativeQuery = true)

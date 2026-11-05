@@ -2,9 +2,11 @@ package com.wikiaov.community.community.internal.social.application;
 
 import com.wikiaov.community.community.internal.application.PageViews.*;
 import com.wikiaov.community.community.internal.domain.PageRules;
+import com.wikiaov.community.community.internal.domain.PostContent;
 import com.wikiaov.community.community.internal.pages.application.*;
 import com.wikiaov.community.community.internal.social.persistence.*;
 import com.wikiaov.community.platform.CommunityActor;
+import com.wikiaov.community.tournament.CompetitionAssets;
 import java.time.Instant;
 import java.util.*;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,10 +24,11 @@ public class PageCommunity {
     private final CommunityReportRepository reports;
     private final PageNotifications notifications;
     private final PageProfiles profiles;
+    private final CompetitionAssets assets;
 
     public PageCommunity(PageAccess access, CommunityPostRepository posts, CommunityCommentRepository comments,
             PageFollowRepository follows, PostLikeRepository likes, CommunityReportRepository reports,
-            PageNotifications notifications, PageProfiles profiles) {
+            PageNotifications notifications, PageProfiles profiles, CompetitionAssets assets) {
         this.access = access;
         this.posts = posts;
         this.comments = comments;
@@ -34,17 +37,19 @@ public class PageCommunity {
         this.reports = reports;
         this.notifications = notifications;
         this.profiles = profiles;
+        this.assets = assets;
     }
 
     @Transactional(readOnly = true)
-    public Slice<Post> posts(UUID pageId, int page, int size, boolean manage) {
+    public Slice<Post> posts(UUID pageId, String kind, int page, int size, boolean manage) {
+        var filter = PageRules.postKindFilter(kind);
         if (manage)
             access.require(pageId, CommunityActor.require(), "OWNER", "EDITOR", "MODERATOR");
         else
-            access.published(pageId);
+            access.social(pageId);
         var result = manage
                 ? posts.findByPageIdOrderByCreatedAtDesc(pageId, PageProfiles.paging(page, size))
-                : posts.findByPageIdAndStatusOrderByCreatedAtDesc(pageId, "PUBLISHED", PageProfiles.paging(page, size));
+                : posts.pagePosts(pageId, filter, PageProfiles.paging(page, size));
         var actor = manage ? CommunityActor.require() : null;
         return Slice.of(views(result, actor));
     }
@@ -52,27 +57,32 @@ public class PageCommunity {
     @Transactional(readOnly = true)
     public Slice<Post> feed(UUID pageId, int page, int size) {
         var actor = CommunityActor.require();
-        access.published(pageId);
+        access.social(pageId);
         return Slice.of(views(posts.visibleTo(pageId, actor.key(), PageProfiles.paging(page, size)), actor));
     }
 
     /** The public feed across published pages; anonymous readers never see their own likes. */
     @Transactional(readOnly = true)
-    public Slice<FeedPost> latest(int page, int size) {
-        return feedView(posts.published(null, PageProfiles.paging(page, size)), null);
+    public Slice<FeedPost> latest(String kind, String query, int page, int size) {
+        var filter = PageRules.postKindFilter(kind);
+        var pattern = PageRules.searchPattern(query);
+        return feedView(posts.published(null, filter, pattern, PageProfiles.paging(page, size)), null);
     }
 
     @Transactional(readOnly = true)
-    public Slice<FeedPost> timeline(boolean following, int page, int size) {
+    public Slice<FeedPost> timeline(boolean following, String kind, int page, int size) {
         var actor = CommunityActor.require();
-        return feedView(posts.published(following ? actor.key() : null, PageProfiles.paging(page, size)), actor);
+        var filter = PageRules.postKindFilter(kind);
+        return feedView(posts.published(following ? actor.key() : null, filter, null, PageProfiles.paging(page, size)),
+                actor);
     }
 
-    public Post write(UUID pageId, UUID id, Long version, String body, boolean asPage, boolean publish) {
+    public Post write(UUID pageId, UUID id, Long version, PostContent input, boolean asPage, boolean publish) {
         var actor = CommunityActor.require();
-        PageRules.text(body, 20000, true);
+        var content = PageRules.post(input);
+        assets.acquire(content.imageUrls().toArray(String[]::new));
         access.lock(pageId);
-        var profile = access.published(pageId);
+        var profile = access.social(pageId);
         if (asPage)
             access.require(pageId, actor, "OWNER", "EDITOR");
         var row = id == null ? new CommunityPost() : posts.findById(id).orElseThrow(PageAccess::missing);
@@ -94,13 +104,19 @@ public class PageCommunity {
             row.setAuthorName(asPage ? profile.getPublishedContent().name() : actor.name());
         }
         boolean newlyPublished = publish && !"PUBLISHED".equals(row.getStatus());
-        row.setBody(body.strip());
+        row.setKind(content.kind());
+        row.setTitle(content.title());
+        row.setBody(content.body());
+        row.setVideoUrl(content.videoUrl());
+        row.setImageUrls(content.imageUrls());
         row.setStatus(publish ? "PUBLISHED" : "DRAFT");
+        if (!publish)
+            row.setPinnedAt(null);
         row.setUpdatedAt(Instant.now());
         posts.saveAndFlush(row);
         access.audit(pageId, actor, "PAGE_POST_SAVED");
         if (newlyPublished && asPage)
-            notifyFollowers(pageId, profile.getPublishedContent().name() + " vừa đăng bài mới.");
+            notifications.followers(pageId, profile.getPublishedContent().name() + " vừa đăng bài mới.");
         return postView(row, actor, likes.countByPostId(row.getId()),
                 likes.existsByPostIdAndActor(row.getId(), actor.key()),
                 comments.countByPostIdAndHiddenFalse(row.getId()));
@@ -127,7 +143,7 @@ public class PageCommunity {
         row.setBody(body.strip());
         row.setAsPage(asPage);
         row.setCreatedAt(Instant.now());
-        row.setAuthorName(asPage ? access.published(post.getPageId()).getPublishedContent().name() : actor.name());
+        row.setAuthorName(asPage ? access.social(post.getPageId()).getPublishedContent().name() : actor.name());
         comments.saveAndFlush(row);
         if (!post.getActor().equals(actor.key()))
             notifications.send(post.getActor(), post.getPageId(), "Bài viết của bạn có bình luận mới.");
@@ -138,7 +154,9 @@ public class PageCommunity {
     public void follow(UUID pageId, boolean following) {
         var actor = CommunityActor.require();
         access.lock(pageId);
-        access.published(pageId);
+        var page = access.published(pageId);
+        if (following)
+            PageAccess.requireCommunity(page);
         var previous = follows.findByPageIdAndActor(pageId, actor.key());
         if (following && previous.isEmpty()) {
             var row = new PageFollow();
@@ -147,6 +165,32 @@ public class PageCommunity {
             follows.save(row);
         } else if (!following)
             previous.ifPresent(follows::delete);
+    }
+
+    /** Pins a published page post; the page's previously pinned post loses its pin. */
+    public Post pin(UUID pageId, UUID postId, boolean pinned) {
+        var actor = CommunityActor.require();
+        access.lock(pageId);
+        if (!actor.editor())
+            access.require(pageId, actor, "OWNER", "EDITOR");
+        var post = posts.findById(postId).orElseThrow(PageAccess::missing);
+        if (!post.getPageId().equals(pageId))
+            throw PageAccess.missing();
+        if (pinned && (!post.getAsPage() || !"PUBLISHED".equals(post.getStatus())))
+            throw PageRules.invalid("Only published page posts can be pinned.");
+
+        if (pinned)
+            posts.findByPageIdAndPinnedAtIsNotNull(pageId).filter(other -> !other.getId().equals(postId))
+                    .ifPresent(other -> {
+                        other.setPinnedAt(null);
+                        posts.saveAndFlush(other);
+                    });
+        post.setPinnedAt(pinned ? Instant.now() : null);
+        posts.saveAndFlush(post);
+        access.audit(pageId, actor, pinned ? "PAGE_POST_PINNED" : "PAGE_POST_UNPINNED");
+
+        return postView(post, actor, likes.countByPostId(postId), likes.existsByPostIdAndActor(postId, actor.key()),
+                comments.countByPostIdAndHiddenFalse(postId));
     }
 
     public Liking like(UUID postId, boolean liked) {
@@ -213,6 +257,8 @@ public class PageCommunity {
             if (post.getStatus().equals("DRAFT"))
                 throw PageRules.invalid("Drafts cannot be published by moderation.");
             post.setStatus(hidden ? "HIDDEN" : "PUBLISHED");
+            if (hidden)
+                post.setPinnedAt(null);
         }
         access.audit(pageId, actor, hidden ? "PAGE_CONTENT_HIDDEN" : "PAGE_CONTENT_RESTORED");
     }
@@ -237,7 +283,7 @@ public class PageCommunity {
 
     private CommunityPost publishedPost(UUID id) {
         var post = posts.findById(id).orElseThrow(PageAccess::missing);
-        access.published(post.getPageId());
+        access.social(post.getPageId());
         if (!post.getStatus().equals("PUBLISHED"))
             throw PageAccess.missing();
         return post;
@@ -276,15 +322,7 @@ public class PageCommunity {
     private Post postView(CommunityPost row, CommunityActor actor, long likeCount, boolean liked, long commentCount) {
         return new Post(row.getId(), row.getVersion(), row.getPageId(), row.getAuthorName(), row.getAsPage(),
                 row.getBody(), row.getStatus(), row.getCreatedAt(),
-                actor != null && actor.key().equals(row.getActor()), likeCount, liked, commentCount);
-    }
-
-    private void notifyFollowers(UUID pageId, String message) {
-        int page = 0;
-        org.springframework.data.domain.Page<PageFollow> batch;
-        do {
-            batch = follows.findByPageId(pageId, PageProfiles.paging(page++, 100));
-            batch.forEach(row -> notifications.send(row.getActor(), pageId, message));
-        } while (batch.hasNext());
+                actor != null && actor.key().equals(row.getActor()), likeCount, liked, commentCount, row.getKind(),
+                row.getTitle(), row.getVideoUrl(), List.copyOf(row.getImageUrls()), row.getPinnedAt() != null);
     }
 }

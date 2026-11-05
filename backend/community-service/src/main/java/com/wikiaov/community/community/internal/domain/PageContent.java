@@ -15,7 +15,9 @@ public record PageContent(
         List<Source> sources,
         List<History> history,
         List<Achievement> achievements,
-        List<Member> roster
+        List<Member> roster,
+        List<String> personRoles,
+        UUID channelOrganizationId
 ) {
     public PageContent {
         links = links == null ? List.of() : List.copyOf(links);
@@ -23,12 +25,15 @@ public record PageContent(
         history = history == null ? List.of() : List.copyOf(history);
         achievements = achievements == null ? List.of() : List.copyOf(achievements);
         roster = roster == null ? List.of() : List.copyOf(roster);
+        personRoles = personRoles == null ? List.of() : List.copyOf(personRoles);
     }
 
     public enum Kind {
         ORGANIZATION,
+        CIRCUIT,
         TEAM,
-        PLAYER
+        PLAYER,
+        PERSON
     }
 
     public enum Role {
@@ -97,6 +102,7 @@ public record PageContent(
         if (presentation == null)
             return this;
         return new PageContent(name, shortName, country, presentation.biography(), presentation.avatarUrl(),
-                presentation.coverUrl(), presentation.links(), sources, history, achievements, roster);
+                presentation.coverUrl(), presentation.links(), sources, history, achievements, roster, personRoles,
+                channelOrganizationId);
     }
 }

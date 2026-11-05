@@ -36,7 +36,25 @@ public class PageAccess {
     }
 
     public String role(UUID id, CommunityActor actor) {
+        if (!community(read(id)))
+            return "";
         return members.findByPageIdAndActor(id, actor.key()).map(member -> member.getRole()).orElse("");
+    }
+
+    public PageRecord social(UUID id) {
+        var page = published(id);
+        requireCommunity(page);
+        return page;
+    }
+
+    public static boolean community(PageRecord page) {
+        return !"CIRCUIT".equals(page.getKind());
+    }
+
+    public static void requireCommunity(PageRecord page) {
+        if (!community(page))
+            throw new ApiException(PageErrorCode.PAGE_ACTION_FORBIDDEN,
+                    "Circuit pages are editorial information pages and do not support community accounts.");
     }
 
     public void require(UUID id, CommunityActor actor, String... roles) {

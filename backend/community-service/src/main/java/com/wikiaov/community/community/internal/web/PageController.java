@@ -14,6 +14,7 @@ public class PageController implements PageApi {
     private final PageMemberships memberships;
     private final PageCommunity social;
     private final PageNotifications notifications;
+    private final PageBroadcasts broadcasts;
     private final jakarta.servlet.http.HttpServletRequest request;
 
     private void parameters(String... allowed) {
@@ -41,18 +42,20 @@ public class PageController implements PageApi {
     }
 
     public PageController(PageProfiles profiles, PageMemberships memberships, PageCommunity social,
-            PageNotifications notifications, jakarta.servlet.http.HttpServletRequest request) {
+            PageNotifications notifications, PageBroadcasts broadcasts,
+            jakarta.servlet.http.HttpServletRequest request) {
         this.profiles = profiles;
         this.memberships = memberships;
         this.social = social;
         this.notifications = notifications;
+        this.broadcasts = broadcasts;
         this.request = request;
     }
 
     @Override
-    public Slice<Profile> pages(String kind, String q, int page, int size) {
-        parameters("kind", "q", "page", "size");
-        return profiles.list(kind, q, page, size, false);
+    public Slice<Profile> pages(String kind, String q, String personRole, int page, int size) {
+        parameters("kind", "q", "personRole", "page", "size");
+        return profiles.list(kind, q, personRole, page, size, false);
     }
 
     @Override
@@ -66,13 +69,26 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Profile> adminPages(String kind, String q, int page, int size) {
-        return profiles.list(kind, q, page, size, true);
+    public Slice<Profile> adminPages(String kind, String q, String personRole, int page, int size) {
+        parameters("kind", "q", "personRole", "page", "size");
+        return profiles.list(kind, q, personRole, page, size, true);
     }
 
     @Override
     public Profile adminPage(UUID id) {
         return profiles.read(id, true);
+    }
+
+    @Override
+    public List<TeamAffiliation> adminTeams(UUID id) {
+        parameters();
+        return profiles.teams(id, true);
+    }
+
+    @Override
+    public List<TeamAffiliation> teams(UUID id) {
+        parameters();
+        return profiles.teams(id, false);
     }
 
     @Override
@@ -182,36 +198,72 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Post> posts(UUID id, int page, int size) {
-        parameters("page", "size");
-        return social.posts(id, page, size, false);
+    public Slice<Post> posts(UUID id, String kind, int page, int size) {
+        parameters("kind", "page", "size");
+        return social.posts(id, kind, page, size, false);
     }
 
     @Override
     public Slice<Post> managePosts(UUID id, int page, int size) {
-        return social.posts(id, page, size, true);
+        return social.posts(id, null, page, size, true);
     }
 
     @Override
     public Post writePost(UUID id, PostWrite body) {
-        return social.write(id, null, null, body.body(), body.asPage(), body.publish());
+        return social.write(id, null, null, content(body), body.asPage(), body.publish());
     }
 
     @Override
     public Post updatePost(UUID id, UUID postId, PostWrite body) {
-        return social.write(id, postId, body.version(), body.body(), body.asPage(), body.publish());
+        return social.write(id, postId, body.version(), content(body), body.asPage(), body.publish());
     }
 
     @Override
-    public Slice<FeedPost> latestPosts(int page, int size) {
+    public Post pinPost(UUID id, UUID postId, Pin body) {
+        return social.pin(id, postId, body.pinned());
+    }
+
+    @Override
+    public Slice<FeedPost> latestPosts(String kind, String q, int page, int size) {
+        parameters("kind", "q", "page", "size");
+        return social.latest(kind, q, page, size);
+    }
+
+    @Override
+    public Slice<FeedPost> timeline(boolean following, String kind, int page, int size) {
+        parameters("following", "kind", "page", "size");
+        return social.timeline(following, kind, page, size);
+    }
+
+    @Override
+    public Slice<Profile> live(int page, int size) {
         parameters("page", "size");
-        return social.latest(page, size);
+        return broadcasts.active(page, size);
     }
 
     @Override
-    public Slice<FeedPost> timeline(boolean following, int page, int size) {
-        parameters("following", "page", "size");
-        return social.timeline(following, page, size);
+    public Live startLive(UUID id, LiveWrite body) {
+        return broadcasts.start(id, body.url(), body.title());
+    }
+
+    @Override
+    public void endLive(UUID id) {
+        broadcasts.end(id);
+    }
+
+    @Override
+    public Live startLiveAsEditor(UUID id, LiveWrite body) {
+        return broadcasts.startAsEditor(id, body.url(), body.title());
+    }
+
+    @Override
+    public void endLiveAsEditor(UUID id) {
+        broadcasts.endAsEditor(id);
+    }
+
+    private static com.wikiaov.community.community.internal.domain.PostContent content(PostWrite body) {
+        return new com.wikiaov.community.community.internal.domain.PostContent(body.kind(), body.title(), body.body(),
+                body.videoUrl(), body.imageUrls());
     }
 
     @Override

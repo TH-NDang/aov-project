@@ -58,9 +58,24 @@ public interface PageApi {
 
     record PostWrite(
             Long version,
+            String kind,
+            String title,
             String body,
+            String videoUrl,
+            List<String> imageUrls,
             boolean asPage,
             boolean publish
+    ) {
+    }
+
+    record Pin(
+            boolean pinned
+    ) {
+    }
+
+    record LiveWrite(
+            String url,
+            String title
     ) {
     }
 
@@ -102,6 +117,7 @@ public interface PageApi {
 
     @GetMapping(ApiPaths.ROOT + "/pages")
     Slice<Profile> pages(@RequestParam(required = false) String kind, @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) String personRole,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
 
     @GetMapping(ApiPaths.ROOT + "/pages/{id}")
@@ -112,10 +128,17 @@ public interface PageApi {
 
     @GetMapping(ApiPaths.ROOT + "/admin/pages")
     Slice<Profile> adminPages(@RequestParam(required = false) String kind, @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) String personRole,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
 
     @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}")
     Profile adminPage(@PathVariable UUID id);
+
+    @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}/teams")
+    List<TeamAffiliation> adminTeams(@PathVariable UUID id);
+
+    @GetMapping(ApiPaths.ROOT + "/pages/{id}/teams")
+    List<TeamAffiliation> teams(@PathVariable UUID id);
 
     @PostMapping(ApiPaths.ROOT + "/admin/pages")
     Profile create(@RequestBody CreatePage body);
@@ -183,8 +206,8 @@ public interface PageApi {
     void transfer(@PathVariable UUID id, @PathVariable UUID memberId);
 
     @GetMapping(ApiPaths.ROOT + "/pages/{id}/posts")
-    Slice<Post> posts(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size);
+    Slice<Post> posts(@PathVariable UUID id, @RequestParam(required = false) String kind,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
 
     @GetMapping(ApiPaths.ROOT + "/me/pages/{id}/posts")
     Slice<Post> managePosts(@PathVariable UUID id, @RequestParam(defaultValue = "0") int page,
@@ -196,13 +219,33 @@ public interface PageApi {
     @PutMapping(ApiPaths.ROOT + "/me/pages/{id}/posts/{postId}")
     Post updatePost(@PathVariable UUID id, @PathVariable UUID postId, @RequestBody PostWrite body);
 
+    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/posts/{postId}/pin")
+    Post pinPost(@PathVariable UUID id, @PathVariable UUID postId, @RequestBody Pin body);
+
     @GetMapping(ApiPaths.ROOT + "/posts")
-    Slice<FeedPost> latestPosts(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size);
+    Slice<FeedPost> latestPosts(@RequestParam(required = false) String kind, @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
 
     @GetMapping(ApiPaths.ROOT + "/me/feed")
     Slice<FeedPost> timeline(@RequestParam(defaultValue = "false") boolean following,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size);
+            @RequestParam(required = false) String kind, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size);
+
+    /** Pages broadcasting now; see spec 04, live status. */
+    @GetMapping(ApiPaths.ROOT + "/live")
+    Slice<Profile> live(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "12") int size);
+
+    @PutMapping(ApiPaths.ROOT + "/me/pages/{id}/live")
+    Live startLive(@PathVariable UUID id, @RequestBody LiveWrite body);
+
+    @PostMapping(ApiPaths.ROOT + "/me/pages/{id}/live/end")
+    void endLive(@PathVariable UUID id);
+
+    @PutMapping(ApiPaths.ROOT + "/admin/pages/{id}/live")
+    Live startLiveAsEditor(@PathVariable UUID id, @RequestBody LiveWrite body);
+
+    @PostMapping(ApiPaths.ROOT + "/admin/pages/{id}/live/end")
+    void endLiveAsEditor(@PathVariable UUID id);
 
     @GetMapping(ApiPaths.ROOT + "/me/follows")
     Slice<Profile> follows(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);

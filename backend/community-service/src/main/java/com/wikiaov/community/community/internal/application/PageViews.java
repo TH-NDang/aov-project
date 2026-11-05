@@ -30,7 +30,16 @@ public final class PageViews {
             boolean published,
             boolean represented,
             long followers,
-            Instant updatedAt
+            Instant updatedAt,
+            Live live
+    ) {
+    }
+
+    /** A running broadcast; absent when the page is not live or the last one is older than the live window. */
+    public record Live(
+            String url,
+            String title,
+            Instant startedAt
     ) {
     }
 
@@ -44,6 +53,15 @@ public final class PageViews {
             String status,
             String resolution,
             Instant createdAt
+    ) {
+    }
+
+    public record TeamAffiliation(
+            UUID teamPageId,
+            String teamCode,
+            String teamName,
+            String teamAvatarUrl,
+            PageContent.Member member
     ) {
     }
 
@@ -74,7 +92,12 @@ public final class PageViews {
             boolean own,
             long likes,
             boolean liked,
-            long comments
+            long comments,
+            String kind,
+            String title,
+            String videoUrl,
+            List<String> imageUrls,
+            boolean pinned
     ) {
     }
 

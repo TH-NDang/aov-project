@@ -3,9 +3,67 @@ package com.wikiaov.community.community.internal.domain;
 import com.wikiaov.community.community.internal.application.PageErrorCode;
 import com.wikiaov.community.platform.ApiException;
 import java.net.URI;
+import java.time.Duration;
+import java.util.List;
+import java.util.Set;
 
 public final class PageRules {
     private PageRules() {
+    }
+
+    /** A broadcast older than this counts as ended even if nobody switched it off. */
+    public static final Duration LIVE_WINDOW = Duration.ofHours(12);
+
+    private static final Set<String> POST_KINDS = Set.of("TEXT", "NEWS", "VIDEO");
+
+    /** Checks a post and returns it trimmed, with TEXT as the default kind and no null image list. */
+    public static PostContent post(PostContent input) {
+        if (input == null)
+            throw invalid("Post content is required.");
+        String kind = input.kind() == null || input.kind().isBlank() ? "TEXT" : input.kind();
+        if (!POST_KINDS.contains(kind))
+            throw invalid("Use a TEXT, NEWS or VIDEO post.");
+        List<String> images = input.imageUrls() == null ? List.of() : input.imageUrls();
+        text(input.title(), 200, "NEWS".equals(kind));
+        text(input.body(), 20000, !"VIDEO".equals(kind));
+        text(input.videoUrl(), 2000, "VIDEO".equals(kind));
+        url(input.videoUrl());
+        if (images.size() > 4)
+            throw invalid("Use at most 4 images.");
+        images.forEach(image -> {
+            text(image, 2000, true);
+            url(image);
+        });
+
+        return new PostContent(kind, blankToNull(input.title()), input.body() == null ? "" : input.body().strip(),
+                blankToNull(input.videoUrl()), images.stream().map(String::strip).toList());
+    }
+
+    /** A kind used to filter posts; blank means every kind. */
+    public static String postKindFilter(String kind) {
+        if (kind == null || kind.isBlank())
+            return null;
+        if (!POST_KINDS.contains(kind))
+            throw invalid("Use a TEXT, NEWS or VIDEO post.");
+        return kind;
+    }
+
+    /** An ILIKE pattern for a search text, with its wildcards escaped; blank means no search. */
+    public static String searchPattern(String query) {
+        text(query, 100, false);
+        if (query == null || query.isBlank())
+            return null;
+        return "%" + query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+    }
+
+    public static void live(String url, String title) {
+        text(url, 2000, true);
+        url(url);
+        text(title, 200, true);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     public static void text(String value, int max, boolean required) {

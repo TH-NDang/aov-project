@@ -37,7 +37,7 @@ public class PageMemberships {
         var actor = CommunityActor.require();
         PageRules.text(evidence, 4000, true);
         access.lock(pageId);
-        access.published(pageId);
+        access.social(pageId);
         if (!access.role(pageId, actor).isEmpty())
             throw PageRules.invalid("This account already manages the page.");
         var row = new PageClaim();
@@ -77,6 +77,7 @@ public class PageMemberships {
         if (row.getActor().equals(actor.key()))
             throw PageRules.invalid("A different administrator must review this claim.");
         if (approve) {
+            PageAccess.requireCommunity(access.read(row.getPageId()));
             if (members.existsByPageIdAndRole(row.getPageId(), "OWNER"))
                 throw PageRules.invalid("The page already has an owner. Resolve the ownership dispute first.");
             add(row.getPageId(), row.getActor(), row.getName(), "OWNER");
@@ -133,6 +134,7 @@ public class PageMemberships {
     public Map<String, Object> issueHandover(UUID pageId) {
         var actor = CommunityActor.require();
         var page = access.lock(pageId);
+        PageAccess.requireCommunity(page);
         if (page.getPublishedContent() == null)
             throw PageAccess.conflict("Publish the page before handing it over.");
         if (members.existsByPageIdAndRole(pageId, "OWNER"))
@@ -157,7 +159,7 @@ public class PageMemberships {
         var actor = CommunityActor.require();
         PageRules.text(token, 200, true);
         var initial = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
-        access.lock(initial.getPageId());
+        PageAccess.requireCommunity(access.lock(initial.getPageId()));
         var row = invitations.findByTokenHash(hash(token)).orElseThrow(PageAccess::missing);
         var handover = row.getRole().equals("OWNER");
         var owned = members.existsByPageIdAndRole(row.getPageId(), "OWNER");

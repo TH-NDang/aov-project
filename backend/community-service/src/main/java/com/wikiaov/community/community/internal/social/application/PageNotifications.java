@@ -13,9 +13,21 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class PageNotifications {
     private final PageNotificationRepository notifications;
+    private final PageFollowRepository follows;
 
-    public PageNotifications(PageNotificationRepository notifications) {
+    public PageNotifications(PageNotificationRepository notifications, PageFollowRepository follows) {
         this.notifications = notifications;
+        this.follows = follows;
+    }
+
+    /** Sends the message to every follower of the page, in batches of 100. */
+    public void followers(UUID pageId, String message) {
+        int page = 0;
+        org.springframework.data.domain.Page<PageFollow> batch;
+        do {
+            batch = follows.findByPageId(pageId, PageProfiles.paging(page++, 100));
+            batch.forEach(row -> send(row.getActor(), pageId, message));
+        } while (batch.hasNext());
     }
 
     public void send(String actor, UUID pageId, String message) {
