@@ -44,6 +44,36 @@ Tướng có một working copy theo revision, chứa cả sáu phần và các 
 
 Chuyển trang nội bộ được phép khi nháp đã được giữ trong store. Các thao tác đang gửi request vẫn giữ khóa `busy` hiện có. Khi đóng/tải lại trình duyệt lúc còn ghi IndexedDB hoặc lưu nháp thất bại, `beforeunload` đưa ra cảnh báo. Khi tab trình duyệt chuyển sang nền, hệ thống thử đẩy các lượt ghi đang chờ sớm hơn. Trình duyệt có thể bỏ qua cảnh báo hoặc kết thúc tiến trình đột ngột; nội dung chỉ khôi phục được đến lần ghi thiết bị thành công gần nhất.
 
+## Cảnh báo nguồn và nhập nhanh thông số kỹ năng
+
+Trong bản nháp tướng, mở **Cảnh báo → Xử lý cảnh báo** hoặc **Chỉnh sửa Kỹ năng → Đối chiếu cảnh báo nguồn**.
+Sau khi bổ sung và kiểm tra nội dung, chọn **Đánh dấu đã đối chiếu**, rồi **Lưu phần này**. Có thể **Mở lại cảnh báo**
+trong cùng trình sửa. Thao tác chỉ sửa working copy của phần Kỹ năng cho đến khi lưu; hủy phần này khôi phục cả
+trạng thái đối chiếu. Bản đã xuất bản và tài khoản không có quyền sửa không có thao tác ghi.
+
+Ghi chú nguồn được giữ nguyên; cờ được xử lý có `reviewResolution: "RESOLVED"`. Các bản sao tương ứng trong
+`reviewFlags`, `review_flags` và `heroReviewFlags` được cập nhật cùng nhau. Mở lại bỏ dấu này, giữ nguyên trạng thái
+thu thập nguồn ban đầu. Danh sách cảnh báo đang chờ không tính các cờ đã đối chiếu.
+
+Trong **Sửa bảng**, ô **Tổng quan** của dòng có nhiều cấp cho nhập công thức, ví dụ `315 (+40/cấp chiêu)`,
+`11 (-0,4/cấp chiêu)` hoặc `15% (+3%/cấp chiêu)`. Client hiển thị các giá trị suy ra; **Điền các cấp** hoặc Enter
+áp dụng vào các ô cấp của dòng. Công thức sai không thay dữ liệu đang có. Bản xem trước công thức là tạm thời;
+cần áp dụng trước khi đổi màn hình. Sau khi áp dụng, các ô cấp dùng working copy và nút **Lưu phần này** như các
+chỉnh sửa khác. Chỉ điền nhanh khi các cột liên tiếp từ Cấp 1; không suy đoán cấp tướng hoặc chỉ số chiến đấu.
+
+Các dòng nguồn vốn chỉ có một công thức tiếp tục giữ công thức và suy ra bảng trên client khi hiển thị.
+
+## Bỏ qua tự nhận diện trong một đoạn văn bản
+
+Trong các ô mô tả và nội dung dùng trình sửa rich text, bôi đen đoạn cần giữ dưới dạng chữ thường rồi bấm
+**Bỏ qua** (biểu tượng ngắt liên kết) trên thanh công cụ. Ví dụ chỉ chọn `chiêu 1` trong câu “trúng chiêu 1 giây”.
+Các tên tướng, kỹ năng và thuật ngữ ở vị trí khác tiếp tục được nhận diện bình thường. Đoạn được bỏ qua có viền
+nét đứt trong ô sửa, còn kết quả hiển thị giữ nguyên chữ. Chọn lại đoạn đó và bấm **Bỏ qua** để bật nhận diện lại.
+
+Trạng thái được lưu ngay trong nội dung bằng định dạng `<noauto>…</noauto>` đã được bộ đọc hỗ trợ; áp dụng cùng
+luồng nháp, lưu, hoàn tác và làm lại. Chỉ tắt nhận diện tự động; tham chiếu đã được tác giả chèn bằng nút `@`
+vẫn giữ nguyên. Không thay đổi từ điển hoặc ảnh hưởng các đoạn khác có cùng chữ.
+
 ## Đối chiếu khi backend thay đổi
 
 Nháp lưu ba thông tin: giá trị backend lúc bắt đầu (`base`), giá trị đang nhập (`value`) và version backend. Khi đọc lại dữ liệu hiện tại:
