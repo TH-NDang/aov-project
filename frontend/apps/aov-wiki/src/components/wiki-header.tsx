@@ -17,6 +17,7 @@ import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
 import { wikiSections } from "../layout/wiki-sections"
 import { WikiIcon } from "./wiki-icon"
+import { WikiSearchSuggestions } from "./wiki-search-suggestions"
 import { WikiAccountMenu } from "../features/auth/wiki-account"
 
 type IconName =
@@ -250,6 +251,7 @@ function LibrarySearch({
   const [params] = useSearchParams()
   const [search, setSearch] = useState("")
   const [open, setOpen] = useState(false)
+  const [focused, setFocused] = useState(false)
   const [sectionKey, setSectionKey] = useState<string>("heroes")
   const section = wikiSections.find((entry) => entry.key === sectionKey) ?? wikiSections[0]
   const target = SEARCH_SCOPES[scope]
@@ -270,7 +272,7 @@ function LibrarySearch({
       role="search"
       onSubmit={submit}
       className={cn(
-        "flex h-8 min-w-0 items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 text-header-muted focus-within:border-gold/50",
+        "relative flex h-8 min-w-0 items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 text-header-muted focus-within:border-gold/50",
         !mobile && "col-start-2 w-full max-[860px]:hidden",
       )}
     >
@@ -282,11 +284,13 @@ function LibrarySearch({
           value={sectionKey}
           onChange={(event) => setSectionKey(event.target.value)}
         >
-          {wikiSections.map((entry) => (
-            <option key={entry.key} value={entry.key}>
-              {t(entry.key)}
-            </option>
-          ))}
+          {wikiSections
+            .filter((entry) => entry.key !== "updates")
+            .map((entry) => (
+              <option key={entry.key} value={entry.key}>
+                {t(entry.key)}
+              </option>
+            ))}
         </select>
       )}
       <input
@@ -297,11 +301,22 @@ function LibrarySearch({
         maxLength={120}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         className={cn(
           "h-full min-w-0 flex-1 bg-transparent text-sm text-white/85 outline-none placeholder:text-white/45",
           mobile && "text-base",
         )}
       />
+      {focused && (
+        <WikiSearchSuggestions
+          search={search}
+          onPick={() => {
+            setSearch("")
+            setOpen(false)
+          }}
+        />
+      )}
     </form>
   )
 
