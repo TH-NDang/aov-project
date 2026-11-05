@@ -577,13 +577,26 @@ export function TerminologyPage() {
                       </label>
                       <label className="grid gap-1.5 text-sm font-medium">
                         Màu chữ
-                        <Input
-                          placeholder="#2563eb"
-                          value={entity.display?.color ?? ""}
-                          onChange={(e) =>
-                            update({ ...entity, display: { ...entity.display, color: e.target.value || undefined } })
-                          }
-                        />
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            aria-label="Chọn màu chữ"
+                            className="size-9 shrink-0 cursor-pointer rounded-md border bg-transparent p-1"
+                            value={
+                              /^#[0-9a-f]{6}$/i.test(entity.display?.color ?? "") ? entity.display!.color! : "#2563eb"
+                            }
+                            onChange={(e) =>
+                              update({ ...entity, display: { ...entity.display, color: e.target.value } })
+                            }
+                          />
+                          <Input
+                            placeholder="#2563eb"
+                            value={entity.display?.color ?? ""}
+                            onChange={(e) =>
+                              update({ ...entity, display: { ...entity.display, color: e.target.value || undefined } })
+                            }
+                          />
+                        </span>
                       </label>
                       <div className="flex flex-wrap gap-3 text-sm">
                         <label className="flex items-center gap-2 rounded-lg border bg-background px-3 py-2">

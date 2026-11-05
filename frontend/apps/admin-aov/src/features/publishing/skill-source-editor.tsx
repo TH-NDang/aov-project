@@ -11,6 +11,21 @@ import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "./ski
 import type { Skill } from "./types"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
 
+const SKILL_STAT_NAMES = [
+  "Sát thương vật lý",
+  "Sát thương phép",
+  "Sát thương chuẩn",
+  "Hồi chiêu",
+  "Năng lượng tiêu hao",
+  "Lá chắn",
+  "Hồi máu",
+  "Thời gian làm chậm",
+  "Thời gian choáng",
+  "Tốc chạy",
+  "Tốc đánh",
+  "Tầm xa",
+]
+
 export function SkillTagsEditor({
   tags,
   locale,
@@ -173,11 +188,19 @@ export function SkillTableEditor({
                 return (
                   <tr key={index} className="border-b">
                     <th scope="row" className="min-w-32 p-1">
+                      {index === 0 && (
+                        <datalist id="skill-stat-names">
+                          {SKILL_STAT_NAMES.map((name) => (
+                            <option key={name} value={name} />
+                          ))}
+                        </datalist>
+                      )}
                       <input
                         className={cellInput}
                         required
                         aria-label={`Tên thông số ${index + 1}`}
                         placeholder="Tên thông số"
+                        list="skill-stat-names"
                         value={name}
                         onChange={(event) => writeRow(index, { label: event.target.value })}
                       />
