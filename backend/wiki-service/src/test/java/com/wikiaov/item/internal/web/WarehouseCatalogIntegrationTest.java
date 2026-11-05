@@ -9,12 +9,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.wikiaov.media.*;
 import com.wikiaov.patch.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -132,6 +134,33 @@ class WarehouseCatalogIntegrationTest {
             assertThat(number(send(drafts, null, 200), "totalElements")).isZero();
             send(put(draft), Map.of("expectedVersion", 3, "content", content), 409);
         }
+    }
+
+    @Test
+    void descriptionMigrationCleansDraftsAndPublishedDescriptionsRemainReadableAndImmutable() throws Exception {
+        category();
+        currentWarehouseContext();
+        var first = create("items", "published-sword", itemContent(null));
+        var second = create("items", "draft-sword", itemContent(null));
+        var publishedId = UUID.fromString(map(first.get("revision")).get("id").toString());
+        var draftId = UUID.fromString(map(second.get("revision")).get("id").toString());
+        String description = "+20 Attack\nApplies \"Frost\" on hit.";
+        String imported = "\"" + description + "\"";
+        jdbc.sql("UPDATE item.item_translation SET description=? WHERE revision_id IN (?,?)")
+                .params(imported, publishedId, draftId).update();
+        send(post(draftPath("items", first) + "/publish"), Map.of("expectedVersion", 1), 200);
+
+        var migration = new ClassPathResource("db/migration/V046__unwrap_item_descriptions.sql");
+        assertThat(jdbc.sql(migration.getContentAsString(StandardCharsets.UTF_8)).update()).isOne();
+
+        String stored = "SELECT description FROM item.item_translation WHERE revision_id=?";
+        assertThat(jdbc.sql(stored).param(draftId).query(String.class).single()).isEqualTo(description);
+        assertThat(jdbc.sql(stored).param(publishedId).query(String.class).single()).isEqualTo(imported);
+        var view = send(get("/api/wiki/v1/items/" + first.get("id")), null, 200);
+        var translations = (List<?>) map(view.get("content")).get("translations");
+        assertThat(map(translations.getFirst())).containsEntry("description", description);
+        assertThatThrownBy(() -> jdbc.sql("UPDATE item.item_translation SET description='' WHERE revision_id=?")
+                .param(publishedId).update()).hasMessageContaining("Published catalog translations are immutable");
     }
 
     @Test

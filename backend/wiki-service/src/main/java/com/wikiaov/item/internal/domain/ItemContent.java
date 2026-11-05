@@ -38,6 +38,15 @@ public record ItemContent(
                 copy, notes);
     }
 
+    public static String unwrapDescription(String description) {
+        if (description == null)
+            return null;
+        String value = description.strip();
+        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\""))
+            return value.substring(1, value.length() - 1);
+        return description;
+    }
+
     public record ShopPosition(
             String categoryCode,
             Integer row,

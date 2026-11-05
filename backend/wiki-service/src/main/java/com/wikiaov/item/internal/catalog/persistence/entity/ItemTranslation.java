@@ -1,5 +1,6 @@
 package com.wikiaov.item.internal.catalog.persistence.entity;
 
+import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.platform.CatalogText.*;
 import jakarta.persistence.*;
 import java.util.*;
@@ -32,6 +33,7 @@ public class ItemTranslation {
     private Map<String, String> variantLabels;
 
     public Translation content() {
-        return new Translation(locale, name, summary, description, statLabels, effects, variantLabels);
+        return new Translation(locale, name, summary, ItemContent.unwrapDescription(description), statLabels, effects,
+                variantLabels);
     }
 }

@@ -46,7 +46,7 @@ class ItemRevisionContent {
             row.setLocale(translation.locale());
             row.setName(translation.name());
             row.setSummary(translation.summary());
-            row.setDescription(translation.description());
+            row.setDescription(ItemContent.unwrapDescription(translation.description()));
             row.setStatLabels(translation.statLabels());
             row.setEffects(translation.effects());
             row.setVariantLabels(translation.variantLabels());

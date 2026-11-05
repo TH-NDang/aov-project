@@ -22,6 +22,14 @@ class ItemContentRulesTest {
     private final ItemContentRules rules = new ItemContentRules(mock(ItemIdentityRepository.class),
             mock(MediaAssets.class), mock(ItemCategoryRepository.class));
 
+    @Test
+    void unwrapsImportedDescriptionsAndPreservesInternalQuotesAndNewlines() {
+        String gameplay = "+20 Attack\nTriggers \"Frost\" for 3 seconds.";
+        assertThat(ItemContent.unwrapDescription("\"" + gameplay + "\"")).isEqualTo(gameplay);
+        assertThat(ItemContent.unwrapDescription(gameplay)).isEqualTo(gameplay);
+        assertThat(ItemContent.unwrapDescription(null)).isNull();
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"en", "vi-VN", "de", "fr-FR", "eng"})
     void acceptsSupportedLocaleSyntax(String locale) {
