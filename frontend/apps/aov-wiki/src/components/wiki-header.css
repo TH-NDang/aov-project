@@ -25,15 +25,15 @@
   height: 36px;
   align-items: center;
   gap: 6px;
-  border: 1px solid #ffffff26;
+  border: 1px solid var(--aov-line);
   border-radius: 7px;
   padding: 0 7px;
-  color: #b9c3cf;
+  color: var(--aov-text-soft);
 }
 .wiki-preference-trigger:hover,
 .wiki-preference-trigger[data-state="open"] {
-  border-color: #d9c18b66;
-  color: #ebd4a3;
+  border-color: color-mix(in srgb, var(--aov-accent) 40%, transparent);
+  color: var(--aov-accent);
 }
 .wiki-preference-flag {
   display: block;
@@ -45,18 +45,18 @@
 }
 .wiki-preference-panel[data-slot="popover-content"] {
   width: min(320px, calc(100vw - 24px));
-  border: 1px solid #e3d0a524;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 14%, transparent);
   border-radius: 12px;
   padding: 14px;
   background: #162233f5;
-  color: #ced7e1;
+  color: var(--aov-text);
   box-shadow: 0 15px 45px #0006;
   backdrop-filter: blur(20px);
 }
 .wiki-preference-panel h2 {
   font: var(--wiki-type-section);
   margin-bottom: 10px;
-  color: #e3c995;
+  color: var(--aov-accent);
 }
 .wiki-preference-options {
   display: grid;
@@ -81,21 +81,21 @@
 .wiki-preference-options strong {
   font: var(--wiki-type-body);
   display: block;
-  color: #c4d0db;
+  color: var(--aov-text);
 }
 .wiki-preference-options small {
   font: var(--wiki-type-meta);
   display: block;
   margin-top: 4px;
-  color: #7c91a8;
+  color: var(--aov-muted);
 }
 .wiki-preference-options > button[aria-pressed="true"] {
-  border-color: #dfc18b24;
-  background: #dfc18b0d;
-  color: #e4cb98;
+  border-color: color-mix(in srgb, var(--aov-accent) 14%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 5%, transparent);
+  color: var(--aov-accent);
 }
 .wiki-preference-options > button:hover:not(:disabled) {
-  background: #ffffff07;
+  background: var(--aov-raised);
 }
 .wiki-preference-options > button:disabled {
   cursor: not-allowed;
@@ -108,13 +108,13 @@
 .wiki-preferences-mobile > p {
   font: var(--wiki-type-meta);
   margin-top: 10px;
-  border-top: 1px solid #ffffff0a;
+  border-top: 1px solid var(--aov-line);
   padding-top: 10px;
-  color: #8396aa;
+  color: var(--aov-muted);
 }
 .wiki-preference-retry {
   font: var(--wiki-type-meta);
-  color: #d3b77d;
+  color: var(--aov-accent);
   text-align: left;
 }
 .wiki-preference-language[data-slot="popover-content"] {
@@ -127,9 +127,9 @@
 .public-preferences-body .wiki-preferences-mobile {
   gap: 0;
   padding: 0 12px;
-  border: 1px solid #ffffff0d;
+  border: 1px solid var(--aov-line);
   border-radius: 12px;
-  background: #ffffff03;
+  background: var(--aov-raised);
 }
 .public-preferences-body .wiki-preferences-mobile > .wiki-preference-row {
   min-height: 48px;
@@ -140,8 +140,8 @@
   border-bottom: 0;
 }
 .public-preferences-body .wiki-preferences-mobile > .wiki-preference-row > span {
-  font-size: 12px;
-  color: #c5c2bd;
+  font-size: 0.8125rem;
+  color: var(--aov-text-soft);
 }
 .public-preferences-body .wiki-preferences-mobile .wiki-preference-mobile-select {
   width: 42%;
@@ -149,13 +149,13 @@
   padding: 5px 2px;
   border: 0;
   background: transparent;
-  color: #e3c58e;
-  font-size: 12px;
+  color: var(--aov-accent);
+  font-size: 0.8125rem;
   text-align: right;
 }
 .public-preferences-body .wiki-preferences-mobile .wiki-preference-mobile-select option {
-  background: #232329;
-  color: #eee9df;
+  background: var(--aov-surface);
+  color: var(--aov-text);
 }
 .public-preferences-body .wiki-preference-retry {
   padding-block: 8px;
@@ -165,7 +165,7 @@
   min-height: 44px;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid #ffffff0a;
+  border-bottom: 1px solid var(--aov-line);
   padding: 5px 0;
 }
 .wiki-preferences-mobile > .wiki-preference-row > span {
@@ -173,18 +173,18 @@
   flex: 1;
   align-items: center;
   gap: 9px;
-  color: #b8c4d0;
-  font-size: 12px;
+  color: var(--aov-text-soft);
+  font-size: 0.8125rem;
 }
 .wiki-preferences-mobile .wiki-preference-mobile-select {
   width: 47%;
   min-height: 36px;
-  border: 1px solid #ffffff1a;
+  border: 1px solid var(--aov-line);
   border-radius: 7px;
   padding: 5px;
   background: #1a2737;
-  color: #e0c99e;
-  font-size: 12px;
+  color: var(--aov-accent);
+  font-size: 0.8125rem;
 }
 @media (max-width: 640px) {
   .wiki-preferences-desktop {
@@ -236,7 +236,7 @@
     height: 40px;
     border: 0;
     background: transparent;
-    color: var(--hero-accent, #e4c88e);
+    color: var(--hero-accent, var(--aov-accent));
     touch-action: manipulation;
   }
 

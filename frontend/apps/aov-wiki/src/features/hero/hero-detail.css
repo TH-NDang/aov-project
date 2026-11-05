@@ -1,5 +1,5 @@
 .wiki-hero-detail-shell {
-  background: var(--hero-backdrop, #172a2a);
+  background: var(--hero-backdrop, var(--aov-surface));
 }
 .wiki-hero-detail-main {
   margin-top: -48px;
@@ -9,7 +9,7 @@
   isolation: isolate;
   min-height: clamp(230px, 24vw, 300px);
   overflow: hidden;
-  background: var(--hero-backdrop, #172a2a);
+  background: var(--hero-backdrop, var(--aov-surface));
 }
 .wiki-hero-profile::after {
   content: "";
@@ -79,10 +79,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  color: #f0ead480;
+  color: var(--aov-muted);
 }
 .wiki-hero-profile-breadcrumb a {
-  color: #eee3c6b3;
+  color: var(--aov-muted);
   text-decoration: none;
 }
 .wiki-hero-profile-breadcrumb a:hover {
@@ -107,7 +107,7 @@
   overflow: hidden;
   place-items: center;
   padding: 2px;
-  border: 1px solid color-mix(in srgb, var(--hero-accent, #d6bd8e) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hero-accent, var(--aov-accent)) 45%, transparent);
   border-radius: 50%;
   background: linear-gradient(
     145deg,
@@ -115,7 +115,7 @@
     rgba(var(--hero-surface-rgb, 43, 49, 61), 0.8)
   );
   box-shadow: 0 4px 16px #080b122e;
-  color: var(--hero-accent, #d6bd8e);
+  color: var(--hero-accent, var(--aov-accent));
   font: 700 23px/1 var(--wiki-font-display);
 }
 .wiki-hero-profile-head img {
@@ -137,7 +137,7 @@
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
-  color: #fff4e1;
+  color: var(--aov-text);
   letter-spacing: 0.01em;
   text-wrap: balance;
   text-shadow: 0 2px 12px #080b1266;
@@ -150,7 +150,7 @@
   margin-top: 24px;
   color: var(--hero-accent);
   opacity: 0.6;
-  font-size: 12px;
+  font-size: 0.8125rem;
 }
 .wiki-hero-profile-ornament::after {
   content: "";
@@ -166,7 +166,7 @@
   flex-direction: column;
   align-items: center;
   gap: 18px;
-  color: #eee2cb;
+  color: var(--aov-text);
   font-size: 13px;
 }
 .wiki-hero-profile-placeholder img {
@@ -194,7 +194,7 @@
 }
 .wiki-hero-profile-state a,
 .wiki-hero-profile-state button {
-  color: #dbd0bb;
+  color: var(--aov-accent);
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -238,7 +238,7 @@
     min-height: 40px;
     margin-top: 0;
     color: var(--hero-accent);
-    font-size: 12px;
+    font-size: 0.8125rem;
     text-decoration: none;
   }
   .wiki-hero-profile-identity {
@@ -271,7 +271,7 @@
 }
 .wiki-hero-epithet {
   font: var(--wiki-type-subtitle);
-  color: #eee2cd;
+  color: var(--aov-text);
   margin-top: 10px;
 }
 .wiki-hero-role-strip {

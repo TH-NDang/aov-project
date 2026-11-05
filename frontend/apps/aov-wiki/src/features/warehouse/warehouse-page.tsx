@@ -162,9 +162,6 @@ export default function WarehousePage() {
           </div>
         ) : (
           <>
-            <h2 className="mb-2 type-section-title">
-              {text("Tất cả", "All")} {sectionName.toLocaleLowerCase(scope.locale)}
-            </h2>
             <WarehouseCatalog
               key={kind}
               kind={kind}

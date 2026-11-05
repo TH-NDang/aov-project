@@ -1,16 +1,16 @@
 .wiki-library-shell {
-  --library-surface: #303846;
+  --library-surface: var(--aov-surface);
   position: relative;
   isolation: isolate;
   flex: 1;
   min-height: 100svh;
-  background: radial-gradient(ellipse at 85% 0, #243041 0, transparent 520px), var(--background);
+  background: var(--aov-bg);
 }
 .wiki-library-body {
   display: grid;
   width: min(100%, 1280px);
   min-height: calc(100svh - 48px);
-  grid-template-columns: 204px minmax(0, 1fr);
+  grid-template-columns: 216px minmax(0, 1fr);
   margin-inline: auto;
   padding-inline: var(--wiki-gutter);
 }
@@ -27,8 +27,8 @@
 .wiki-library-sidebar > h2 {
   font: var(--wiki-type-section);
   padding: 14px 16px 12px;
-  border-bottom: 1px solid #ffffff06;
-  color: #c5c6ce;
+  border-bottom: 1px solid var(--aov-line);
+  color: var(--aov-text-soft);
 }
 
 .wiki-library-main {
@@ -41,9 +41,9 @@
   width: min(86vw, 320px);
   max-width: 320px;
   gap: 0;
-  border-color: #ffffff15;
-  background: linear-gradient(145deg, #343d4d, #2c3442);
-  color: #e5d4ad;
+  border-color: var(--aov-line);
+  background: var(--aov-popover);
+  color: var(--aov-text);
 }
 
 .wiki-library-sheet-heading {
@@ -52,12 +52,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px 12px;
-  border-bottom: 1px solid #ffffff09;
+  border-bottom: 1px solid var(--aov-line);
 }
 
 .wiki-library-sheet-heading [data-slot="sheet-title"] {
   font: var(--wiki-type-section);
-  color: #ddd5c3;
+  color: var(--aov-accent-strong);
 }
 
 .wiki-library-sheet-close {
@@ -70,7 +70,7 @@
 }
 
 .wiki-library-sheet-close:hover {
-  background: #ffffff08;
+  background: var(--aov-raised);
 }
 .wiki-library-sheet-scroll {
   min-height: 0;
@@ -80,7 +80,7 @@
 .wiki-hero-detail-shell {
   flex: 1;
   min-height: 100svh;
-  background: #202b31;
+  background: var(--aov-surface);
 }
 .wiki-hero-detail-main {
   min-width: 0;

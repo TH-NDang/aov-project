@@ -9,7 +9,7 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--hero-accent, #d8c28e);
+  color: var(--hero-accent, var(--aov-accent));
 }
 .wiki-hero-switch-trigger::before {
   content: "";
@@ -38,9 +38,9 @@
   height: 100dvh;
   gap: 0;
   overflow: visible;
-  border-color: #ffffff1a;
-  background: linear-gradient(145deg, #343e4d, #28313e 65%);
-  color: #d5d9df;
+  border-color: var(--aov-line);
+  background: var(--aov-surface);
+  color: var(--aov-text);
   box-shadow: 16px 0 80px #080e1955;
 }
 .wiki-hero-switch-controls {
@@ -50,7 +50,7 @@
   align-items: center;
   gap: 6px 16px;
   padding: 12px 16px 8px;
-  border-bottom: 1px solid #ffffff0c;
+  border-bottom: 1px solid var(--aov-line);
 }
 .wiki-hero-switch-heading {
   display: flex;
@@ -65,7 +65,7 @@
 }
 .wiki-hero-switch-heading [data-slot="sheet-title"] {
   font: var(--wiki-type-section);
-  color: #e5cf9e;
+  color: var(--aov-accent);
 }
 .wiki-hero-switch-close {
   position: absolute;
@@ -76,17 +76,17 @@
   width: 44px;
   height: 68px;
   place-items: center;
-  border: 1px solid #d4be8c33;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 20%, transparent);
   border-radius: 0 12px 12px 0;
-  background: #2b3442;
-  color: #d8c79f;
+  background: var(--aov-raised);
+  color: var(--aov-accent);
   box-shadow: 6px 0 18px #11182244;
   transform: translateY(-50%);
   touch-action: manipulation;
 }
 .wiki-hero-switch-close:hover {
-  background: #384352;
-  border-color: #d4be8c88;
+  background: var(--aov-raised);
+  border-color: color-mix(in srgb, var(--aov-accent) 53%, transparent);
 }
 .wiki-hero-switch-tools {
   display: contents;
@@ -98,11 +98,11 @@
   height: 36px;
   align-items: center;
   gap: 9px;
-  border: 1px solid #ffffff0c;
+  border: 1px solid var(--aov-line);
   border-radius: 24px;
   padding-inline: 12px;
   background: #20293699;
-  color: #929faf;
+  color: var(--aov-muted);
 }
 .wiki-hero-switch-search > svg {
   flex-shrink: 0;
@@ -114,14 +114,14 @@
   border: 0;
   outline: none;
   background: transparent;
-  color: #eeeadf;
+  color: var(--aov-text);
   font-size: 13px;
 }
 .wiki-hero-switch-search input::placeholder {
-  color: #97a1af;
+  color: var(--aov-muted);
 }
 .wiki-hero-switch-search:focus-within {
-  border-color: #d8c28e88;
+  border-color: color-mix(in srgb, var(--aov-accent) 53%, transparent);
   box-shadow: 0 0 0 2px #d8c28e1a;
 }
 .wiki-hero-switch-filter-row {
@@ -172,7 +172,7 @@
   border: 1px solid transparent;
   border-radius: 50%;
   background: transparent;
-  color: #aab4c2;
+  color: var(--aov-text-soft);
 }
 .wiki-hero-switch-filters button[data-filter-all="true"] {
   position: relative;
@@ -194,9 +194,9 @@
 }
 .wiki-hero-switch-filters button:hover,
 .wiki-hero-switch-filters button[aria-pressed="true"] {
-  border-color: #d8c28e77;
-  background: #d8c28e14;
-  color: #e8d2a2;
+  border-color: color-mix(in srgb, var(--aov-accent) 47%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 8%, transparent);
+  color: var(--aov-accent);
 }
 .wiki-hero-switch-filters .wiki-hero-glyph {
   width: 20px;
@@ -208,12 +208,12 @@
   border-radius: 12px;
   padding: 2px 6px;
   background: #1b273966;
-  color: #aeb9c7;
+  color: var(--aov-text-soft);
   text-align: center;
 }
 .wiki-hero-switch-active-filters {
   font: var(--wiki-type-meta);
-  color: #b8c0cc;
+  color: var(--aov-text-soft);
 }
 .wiki-hero-switch-workspace {
   display: grid;
@@ -257,7 +257,7 @@
   border: 1px solid transparent;
   border-radius: 50%;
   background: transparent;
-  color: #aab4c2;
+  color: var(--aov-text-soft);
 }
 .wiki-hero-switch-lane-filters button[data-filter-all="true"] {
   position: relative;
@@ -275,9 +275,9 @@
 }
 .wiki-hero-switch-lane-filters button:hover,
 .wiki-hero-switch-lane-filters button[aria-pressed="true"] {
-  border-color: #d8c28e77;
-  background: #d8c28e14;
-  color: #e8d2a2;
+  border-color: color-mix(in srgb, var(--aov-accent) 47%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 8%, transparent);
+  color: var(--aov-accent);
 }
 .wiki-hero-switch-lane-filters .wiki-hero-glyph {
   width: 21px;
@@ -305,8 +305,8 @@
   aspect-ratio: 7 / 10;
   overflow: hidden;
   border-radius: 0 22px 0 0;
-  background: #202b3c;
-  color: #c9d0da;
+  background: var(--aov-raised);
+  color: var(--aov-text);
   text-decoration: none;
 }
 .wiki-hero-switch-choice::before {
@@ -321,7 +321,7 @@
   filter: brightness(1.08);
 }
 .wiki-hero-switch-choice[aria-current="page"] {
-  color: #f0d9a6;
+  color: var(--aov-accent);
 }
 .wiki-hero-switch-choice[aria-current="page"]::after {
   content: "";
@@ -356,7 +356,7 @@
   display: grid;
   height: 100%;
   place-items: center;
-  color: #d9c38e;
+  color: var(--aov-accent);
   font: 32px var(--wiki-font-display);
 }
 .wiki-hero-switch-name {
@@ -364,12 +364,12 @@
   position: absolute;
   z-index: 2;
   inset: auto 8px 11px;
-  color: #f1eadf;
+  color: var(--aov-text);
   text-shadow: 0 1px 5px #0c1424;
   overflow-wrap: anywhere;
 }
 .wiki-hero-switch-choice[aria-current="page"] .wiki-hero-switch-name {
-  color: #f0d9a6;
+  color: var(--aov-accent);
 }
 .wiki-hero-switch-classifications {
   position: absolute;
@@ -394,7 +394,7 @@
   border-radius: 50%;
   background: rgb(14 26 40 / 35%);
   backdrop-filter: blur(2px);
-  color: #efd5a1;
+  color: var(--aov-accent);
   box-shadow: 0 1px 3px #101b2b20;
 }
 .wiki-hero-switch-icon-stack .wiki-hero-glyph {
@@ -412,7 +412,7 @@
   place-items: center;
   border-radius: 50%;
   color: #293240;
-  background: #e5cd95;
+  background: var(--aov-accent);
 }
 .wiki-hero-switch-skeleton {
   position: relative;
@@ -444,15 +444,15 @@
   justify-items: center;
   align-content: center;
   gap: 18px;
-  color: #bdc6d2;
+  color: var(--aov-text-soft);
   text-align: center;
 }
 .wiki-hero-switch-state button {
-  border: 1px solid #d9c38e66;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 40%, transparent);
   border-radius: 20px;
   padding: 8px 18px;
-  color: #e3ce9d;
-  font-size: 12px;
+  color: var(--aov-accent);
+  font-size: 0.8125rem;
 }
 .wiki-hero-switch-state button:disabled {
   opacity: 0.5;

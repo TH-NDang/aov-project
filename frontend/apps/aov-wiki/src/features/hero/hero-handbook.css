@@ -53,8 +53,8 @@
   overflow-wrap: anywhere;
 }
 .wiki-skill-options button[aria-pressed="true"] {
-  border-color: #c6aa70;
-  background: #35332c;
+  border-color: var(--aov-accent);
+  background: var(--aov-raised);
 }
 .wiki-skill-options button > svg {
   color: var(--gold);
@@ -95,7 +95,7 @@
 }
 .wiki-skill-meta > span {
   padding: 4px 8px;
-  background: #ffffff08;
+  background: var(--aov-raised);
   border-radius: 4px;
 }
 .wiki-skill-prose {
@@ -103,7 +103,7 @@
   max-width: 68ch;
   white-space: pre-line;
   overflow-wrap: anywhere;
-  color: #d7dce2;
+  color: var(--aov-text);
 }
 .wiki-skill-read .wiki-skill-prose {
   margin-top: 12px;

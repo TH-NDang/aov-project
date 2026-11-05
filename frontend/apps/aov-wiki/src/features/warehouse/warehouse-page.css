@@ -1,7 +1,7 @@
 .wiki-warehouse-page {
   --warehouse-accent: #dfc18b;
   max-width: 980px;
-  color: #c6d1dd;
+  color: var(--aov-text);
 }
 .wiki-warehouse-enchantments {
   --warehouse-accent: #9acbb0;
@@ -30,14 +30,14 @@
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 14px;
-  border: 1px solid #dbc18b24;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 14%, transparent);
   border-radius: 8px;
   padding: 10px 12px;
-  color: #c1b08d;
-  font-size: 12px;
+  color: var(--aov-accent);
+  font-size: 0.8125rem;
 }
 .wiki-warehouse-notice button {
-  color: #ead19d;
+  color: var(--aov-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -57,20 +57,20 @@
 .wiki-warehouse-empty h2 {
   font: var(--wiki-type-section);
   margin: 6px 0 0;
-  color: #d6c39e;
+  color: var(--aov-accent);
 }
 .wiki-warehouse-empty p {
   font: var(--wiki-type-body);
   max-width: 300px;
-  color: #8c9eaf;
+  color: var(--aov-muted);
 }
 .wiki-warehouse-empty button {
   margin-top: 5px;
-  border: 1px solid #d9c18e45;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 27%, transparent);
   border-radius: 8px;
   padding: 8px 16px;
-  color: #d9c18e;
-  font-size: 12px;
+  color: var(--aov-accent);
+  font-size: 0.8125rem;
 }
 .wiki-warehouse-art {
   display: block;
@@ -106,7 +106,7 @@
   min-height: 100px;
   align-items: center;
   gap: 12px;
-  border: 1px solid #a6b8cc0d;
+  border: 1px solid var(--aov-line);
   border-radius: 12px;
   padding: 16px;
   background: #1120313b;
@@ -238,7 +238,7 @@
   border-radius: 7px;
   padding: 7px 4px;
   background: var(--card);
-  font-size: 12px;
+  font-size: 0.8125rem;
   overflow-wrap: anywhere;
 }
 button.wiki-recipe-node:hover,
@@ -267,7 +267,7 @@ button.wiki-recipe-node:hover,
   padding: 5px 8px;
   background: var(--muted);
   color: var(--wiki-muted);
-  font-size: 12px;
+  font-size: 0.8125rem;
 }
 .wiki-warehouse-detail-section {
   margin-top: 26px;
@@ -275,7 +275,7 @@ button.wiki-recipe-node:hover,
 .wiki-warehouse-detail-section > h3 {
   font: var(--wiki-type-section);
   margin-bottom: 12px;
-  color: #c8b58f;
+  color: var(--aov-accent);
 }
 .wiki-warehouse-stat-grid {
   display: grid;
@@ -292,30 +292,30 @@ button.wiki-recipe-node:hover,
 }
 .wiki-warehouse-stat-grid dt {
   font: var(--wiki-type-meta);
-  color: #91a9bb;
+  color: var(--aov-muted);
 }
 .wiki-warehouse-stat-grid dd {
   font: var(--wiki-type-entry);
-  color: #d8dfdf;
+  color: var(--aov-text);
 }
 .wiki-warehouse-rich-description {
   font: var(--wiki-type-prose);
-  color: #bfcbd6;
+  color: var(--aov-text-soft);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
 .wiki-warehouse-rich-description strong {
-  color: #e7dbc2;
+  color: var(--aov-accent-strong);
 }
 .wiki-warehouse-effect {
   margin-top: 18px;
-  border-left: 2px solid #cfb78057;
+  border-left: 2px solid color-mix(in srgb, var(--aov-accent) 34%, transparent);
   padding: 5px 0 5px 13px;
 }
 .wiki-warehouse-effect > h3 {
   font: var(--wiki-type-category);
   margin-bottom: 7px;
-  color: #ddc99d;
+  color: var(--aov-accent);
 }
 .wiki-warehouse-recipe-list {
   display: grid;
@@ -326,15 +326,15 @@ button.wiki-recipe-node:hover,
   width: 100%;
   align-items: center;
   gap: 11px;
-  border: 1px solid #bac9d61a;
+  border: 1px solid var(--aov-line);
   border-radius: 10px;
   padding: 10px;
   background: #0e1e303d;
   text-align: left;
 }
 .wiki-warehouse-recipe-item:hover {
-  border-color: #d9bd8652;
-  background: #d9bd8606;
+  border-color: color-mix(in srgb, var(--aov-accent) 32%, transparent);
+  background: color-mix(in srgb, var(--aov-accent) 4%, transparent);
 }
 .wiki-warehouse-recipe-item > .wiki-warehouse-art {
   width: 38px;
@@ -343,21 +343,21 @@ button.wiki-recipe-node:hover,
 }
 .wiki-warehouse-recipe-item > span {
   flex: 1;
-  color: #c2cddd;
-  font-size: 12px;
+  color: var(--aov-text);
+  font-size: 0.8125rem;
 }
 .wiki-warehouse-recipe-item small {
-  color: #d9c18d;
+  color: var(--aov-accent);
 }
 .wiki-warehouse-recipe-item > svg {
-  color: #ac9c7d;
+  color: var(--aov-accent);
 }
 .wiki-warehouse-recipe-unavailable {
   border-radius: 9px;
   padding: 12px;
   background: #142235;
-  color: #8a9cae;
-  font-size: 12px;
+  color: var(--aov-muted);
+  font-size: 0.8125rem;
 }
 .wiki-warehouse-state-switch {
   display: flex;
@@ -375,11 +375,11 @@ button.wiki-recipe-node:hover,
   padding: 8px;
   background: var(--background);
   color: var(--wiki-muted);
-  font-size: 12px;
+  font-size: 0.8125rem;
   text-align: left;
 }
 .wiki-warehouse-state-switch button[aria-pressed="true"] {
-  border-color: #d4ba8266;
+  border-color: color-mix(in srgb, var(--aov-accent) 40%, transparent);
   background: var(--muted);
   color: var(--wiki-text);
 }
@@ -390,8 +390,8 @@ button.wiki-recipe-node:hover,
 }
 .wiki-warehouse-detail-muted {
   margin-top: 30px;
-  color: #859aaf;
-  font-size: 12px;
+  color: var(--aov-muted);
+  font-size: 0.8125rem;
 }
 .wiki-warehouse-baseline-note {
   font: var(--wiki-type-meta);
@@ -416,12 +416,12 @@ button.wiki-recipe-node:hover,
   text-align: center;
 }
 .wiki-warehouse-detail-placeholder > svg {
-  color: #a89673;
+  color: var(--aov-accent);
 }
 .wiki-warehouse-detail-placeholder p {
   max-width: 270px;
-  color: #8ea6b9;
-  font-size: 12px;
+  color: var(--aov-muted);
+  font-size: 0.8125rem;
   line-height: 1.7;
 }
 @media (max-width: 900px) {

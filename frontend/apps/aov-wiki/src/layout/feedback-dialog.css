@@ -160,9 +160,9 @@
   width: 82px;
   height: 82px;
   overflow: hidden;
-  border: 1px solid #ffffff14;
+  border: 1px solid var(--aov-line);
   border-radius: 8px;
-  background: #202631;
+  background: var(--aov-surface);
 }
 .wiki-feedback-images figure img {
   width: 100%;
@@ -179,7 +179,7 @@
   border-radius: 50%;
   place-items: center;
   background: #10141dcc;
-  color: #fff;
+  color: var(--aov-text);
   font-size: 18px;
   line-height: 1;
 }
@@ -191,9 +191,9 @@
   justify-content: center;
   flex-direction: column;
   gap: 6px;
-  border: 1px dashed #a9b1be50;
+  border: 1px dashed var(--aov-line-strong);
   border-radius: 8px;
-  color: #b8bfca;
+  color: var(--aov-text-soft);
   cursor: pointer;
 }
 .wiki-feedback-upload svg {
@@ -201,11 +201,11 @@
   height: 24px;
 }
 .wiki-feedback-upload > span {
-  font-size: 12px;
+  font-size: 0.8125rem;
 }
 .wiki-feedback-upload:hover {
   color: var(--gold);
-  border-color: #e4c88e70;
+  border-color: color-mix(in srgb, var(--aov-accent) 44%, transparent);
 }
 .wiki-feedback-upload:focus-within {
   outline: 2px solid var(--ring);
@@ -214,5 +214,5 @@
 .wiki-feedback-image-note {
   font: var(--wiki-type-meta);
   margin-top: 10px;
-  color: #8e99aa;
+  color: var(--aov-muted);
 }

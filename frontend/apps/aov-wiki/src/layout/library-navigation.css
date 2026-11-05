@@ -8,7 +8,7 @@
 .wiki-library-nav-group h3 {
   padding: 0 10px 8px;
   color: var(--wiki-muted);
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .wiki-library-nav-link {
@@ -18,7 +18,7 @@
   gap: 10px;
   min-height: 38px;
   padding: 6px 10px;
-  color: #c7cdd5;
+  color: var(--aov-text);
   text-decoration: none;
   border-radius: 6px;
 }
@@ -26,11 +26,11 @@
   flex: none;
 }
 .wiki-library-nav-link:hover {
-  background: #ffffff09;
+  background: var(--aov-raised);
   color: var(--wiki-text);
 }
 .wiki-library-nav-link[aria-current="page"] {
-  background: #d4b98016;
+  background: color-mix(in srgb, var(--aov-accent) 9%, transparent);
   color: var(--gold);
   box-shadow: inset 2px 0 var(--gold);
 }

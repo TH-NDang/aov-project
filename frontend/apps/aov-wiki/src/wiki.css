@@ -3,35 +3,17 @@
 
 :root.dark {
   color-scheme: dark;
-  --background: #151a22;
-  --wiki-panel: #202732;
-  --wiki-line: #b7c6d524;
-  --wiki-muted: #b0bac6;
-  --wiki-text: #f1eee7;
-  --wiki-gutter: clamp(14px, 3vw, 40px);
-  --foreground: #eeeae2;
-  --card: #22262e;
-  --card-foreground: #eeeae2;
-  --popover: #22262e;
-  --popover-foreground: #eeeae2;
-  --primary: #dbbd80;
-  --primary-foreground: #17191e;
-  --secondary: #2b3039;
-  --secondary-foreground: #eeeae2;
-  --muted: #262b33;
-  --muted-foreground: #a3a6ad;
-  --accent: #31333a;
-  --accent-foreground: #eed6a2;
-  --border: #373b43;
-  --input: #373b43;
-  --ring: #dbbd80;
+  --wiki-panel: var(--aov-surface);
+  --wiki-line: var(--aov-line);
+  --wiki-muted: var(--aov-muted);
+  --wiki-text: var(--aov-text);
+  --wiki-gutter: var(--aov-gutter);
 
-  /* Header, modelled on the HoYoWiki navigation bar */
-  --header-bg: #000000a6;
-  --header-line: #ffffff14;
-  --header-text: #ebebeb;
-  --header-muted: #b2b2b2;
-  --gold: #e4c88e;
+  --header-bg: color-mix(in srgb, var(--aov-bg) 86%, transparent);
+  --header-line: var(--aov-line);
+  --header-text: var(--aov-text);
+  --header-muted: var(--aov-muted);
+  --gold: var(--aov-accent);
   /* Logo background tone; underline of the AOVWiKi wordmark */
   --amber-accent: #c98f45;
 }
@@ -47,8 +29,7 @@
   --font-sans: var(--wiki-font-reading);
   --font-heading: var(--wiki-font-display);
   --font-wordmark: "Arial Black", "Segoe UI", sans-serif;
-  /* Page body width, as on HoYoWiki: max-w-page */
-  --container-page: 1188px;
+  --container-page: var(--aov-page-max);
 }
 
 @layer base {
