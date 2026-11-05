@@ -15,9 +15,10 @@
 .wiki-warehouse-toolbar {
   display: flex;
   min-width: 0;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin: 4px 0 6px;
+  gap: 8px 10px;
+  margin: 4px 0 10px;
 }
 .wiki-warehouse-toolbar > .wiki-version-picker {
   min-width: 0;
@@ -155,7 +156,8 @@
   background: var(--accent);
 }
 .wiki-warehouse-detail-scroll {
-  height: 100%;
+  min-height: 0;
+  flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 20px;
@@ -183,14 +185,146 @@
   color: var(--wiki-text);
   overflow-wrap: anywhere;
 }
-.wiki-warehouse-detail-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 12px 0 18px;
+.wiki-warehouse-detail-price {
+  font: var(--wiki-type-category);
+  margin-top: 4px;
+  color: var(--aov-accent);
 }
-.wiki-warehouse-detail-facts:empty {
+.wiki-warehouse-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-top: 16px;
+}
+.wiki-warehouse-baseline-note {
+  font: var(--wiki-type-meta);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--wiki-muted);
+}
+.wiki-warehouse-baseline-note svg {
+  flex: none;
+}
+.wiki-warehouse-siblings {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 2px 12px;
+}
+.wiki-warehouse-siblings button {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 3px 4px;
+  font: var(--wiki-type-body);
+  text-align: left;
+}
+.wiki-warehouse-siblings button:hover {
+  background: var(--accent);
+}
+.wiki-warehouse-siblings .wiki-warehouse-art {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+.wiki-warehouse-step {
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  border-top: 1px solid var(--wiki-line);
+  padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+}
+.wiki-warehouse-step small {
+  font: var(--wiki-type-meta);
+  color: var(--wiki-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-warehouse-step button {
+  font: var(--wiki-type-meta);
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  gap: 4px;
+  border-radius: var(--aov-radius-control);
+  padding: 4px 6px;
+  color: var(--wiki-text);
+}
+.wiki-warehouse-step button:last-child {
+  justify-content: flex-end;
+}
+.wiki-warehouse-step button:hover {
+  background: var(--accent);
+}
+.wiki-warehouse-step span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-warehouse-step svg {
+  flex: none;
+}
+.wiki-warehouse-search.wiki-hero-search {
+  width: min(100%, 300px);
+  flex: none;
+}
+.wiki-warehouse-panel-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 48px 20px;
+  color: var(--wiki-muted);
+  text-align: center;
+}
+.wiki-warehouse-panel-empty h2 {
+  font: var(--wiki-type-entry);
+  color: var(--wiki-text);
+}
+.wiki-warehouse-panel-empty p {
+  font: var(--wiki-type-body);
+}
+.wiki-warehouse-main {
+  min-width: 0;
+}
+.wiki-warehouse-panel {
   display: none;
+}
+@media (max-width: 640px) {
+  .wiki-warehouse-search.wiki-hero-search {
+    width: auto;
+    max-width: none;
+    flex: 1 1 100%;
+  }
+}
+@media (min-width: 1400px) {
+  .wiki-library-body:has(.wiki-warehouse-page) {
+    width: min(100%, 1560px);
+  }
+  .wiki-warehouse-page {
+    max-width: none;
+  }
+  .wiki-warehouse-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 372px;
+    align-items: start;
+    gap: 20px;
+  }
+  .wiki-warehouse-panel {
+    position: sticky;
+    top: 60px;
+    display: flex;
+    max-height: calc(100svh - 72px);
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--wiki-line);
+    border-radius: var(--aov-radius-card);
+    background: var(--aov-surface);
+  }
 }
 .wiki-warehouse-suggestion {
   margin-top: 16px;
@@ -202,72 +336,6 @@
   bottom: 0;
   padding-block: 8px;
   background: var(--background);
-}
-.wiki-recipe-tree {
-  display: grid;
-  grid-auto-columns: minmax(72px, 1fr);
-  grid-auto-flow: column;
-  gap: 8px;
-  overflow-x: auto;
-  border-block: 1px solid var(--wiki-line);
-  padding-block: 12px;
-}
-.wiki-recipe-column {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 6px;
-  min-width: 0;
-  text-align: center;
-}
-.wiki-recipe-column h4 {
-  border-bottom: 1px solid var(--wiki-line);
-  padding-bottom: 6px;
-}
-.wiki-recipe-column > :last-child {
-  position: relative;
-  display: grid;
-  align-content: start;
-  gap: 6px;
-}
-.wiki-recipe-node {
-  display: grid;
-  width: 100%;
-  justify-items: center;
-  gap: 6px;
-  border: 1px solid var(--wiki-line);
-  border-radius: 7px;
-  padding: 7px 4px;
-  background: var(--card);
-  font-size: 0.8125rem;
-  overflow-wrap: anywhere;
-}
-button.wiki-recipe-node:hover,
-.wiki-recipe-node.current {
-  border-color: var(--primary);
-}
-.wiki-recipe-art {
-  position: relative;
-}
-.wiki-recipe-art .wiki-warehouse-art {
-  width: 36px;
-  height: 36px;
-  border-radius: 5px;
-}
-.wiki-recipe-art .shop-item-price {
-  right: -2px;
-  bottom: -2px;
-  padding: 0 2px;
-  border-radius: 3px;
-  background: var(--background);
-  line-height: 1;
-}
-.wiki-warehouse-detail-facts > span {
-  border: 1px solid var(--wiki-line);
-  border-radius: 6px;
-  padding: 5px 8px;
-  background: var(--muted);
-  color: var(--wiki-muted);
-  font-size: 0.8125rem;
 }
 .wiki-warehouse-detail-section {
   margin-top: 26px;
@@ -392,20 +460,6 @@ button.wiki-recipe-node:hover,
   margin-top: 30px;
   color: var(--aov-muted);
   font-size: 0.8125rem;
-}
-.wiki-warehouse-baseline-note {
-  font: var(--wiki-type-meta);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px 0 16px;
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: var(--muted);
-  color: var(--wiki-muted);
-}
-.wiki-warehouse-baseline-note svg {
-  flex-shrink: 0;
 }
 .wiki-warehouse-detail-placeholder {
   display: grid;

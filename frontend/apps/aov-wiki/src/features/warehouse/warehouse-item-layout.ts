@@ -2,11 +2,11 @@ import type { WarehouseContent, WarehouseEntry } from "./warehouse-types"
 
 type ShopPosition = NonNullable<WarehouseContent["shopPositions"]>[number]
 
-export interface WarehouseItemSection {
+export interface WarehouseItemSection<T extends WarehouseEntry = WarehouseEntry> {
   key: string
   kind: "tier" | "column" | "unplaced"
   value: number
-  entries: WarehouseEntry[]
+  entries: T[]
 }
 
 export function itemMatchesCategory(entry: WarehouseEntry, category: string) {
@@ -37,7 +37,10 @@ function categoryPosition(entry: WarehouseEntry, category: string) {
     )[0]
 }
 
-export function warehouseItemLayout(entries: WarehouseEntry[], category: string): WarehouseItemSection[] {
+export function warehouseItemLayout<T extends WarehouseEntry>(
+  entries: T[],
+  category: string,
+): WarehouseItemSection<T>[] {
   if (!category) {
     const tiers = [...new Set(entries.map((entry) => entry.content.tier ?? 0))].sort((left, right) => left - right)
     return tiers.map((tier) => ({
@@ -56,7 +59,7 @@ export function warehouseItemLayout(entries: WarehouseEntry[], category: string)
     }))
   const placed = positioned.flatMap(({ entry, position }) => (position ? [{ entry, position }] : []))
   const columns = [...new Set(placed.map(({ position }) => position.column))].sort((left, right) => left - right)
-  const sections: WarehouseItemSection[] = columns.map((column) => ({
+  const sections: WarehouseItemSection<T>[] = columns.map((column) => ({
     key: `column-${column}`,
     kind: "column",
     value: column,

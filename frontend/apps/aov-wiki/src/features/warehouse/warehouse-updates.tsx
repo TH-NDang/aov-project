@@ -19,16 +19,18 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
         b.variant.ordinal - a.variant.ordinal,
     )
   const error = changes.failed || scope.optionsError
+  if (!patches.length && !error) return null
   return (
-    <div className="space-y-4 py-3">
+    <section className="space-y-3">
+      <h3 className="type-section-title">{t("Thay đổi theo phiên bản", "Changes by version")}</h3>
       {patches.map(({ variant, rows }) => (
-        <section key={variant.id} className="space-y-2">
+        <div key={variant.id} className="space-y-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <h3 className="type-section-title">
+            <h4 className="type-label">
               <Link to={scope.href(`/updates/${variant.code}`)} className="hover:text-primary">
                 {variant.code}
               </Link>
-            </h3>
+            </h4>
             <span className="type-meta">{seasons.get(variant.seasonId)?.displayName}</span>
           </div>
           <ul className="divide-y border-y">
@@ -48,9 +50,9 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
               </li>
             ))}
           </ul>
-        </section>
+        </div>
       ))}
-      {error ? (
+      {error && (
         <p role="status" className="type-meta">
           {t("Chưa tải được hết ghi chú.", "Some notes could not be loaded.")}{" "}
           <button
@@ -64,20 +66,7 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
             {scope.t("retry")}
           </button>
         </p>
-      ) : changes.pending ? (
-        <p role="status" className="type-meta">
-          {scope.t("loading")}
-        </p>
-      ) : (
-        !patches.length && (
-          <p className="type-body text-muted-foreground">
-            {t(
-              "Chưa có ghi chú gameplay được công bố cho mục này.",
-              "No gameplay notes have been published for this entry.",
-            )}
-          </p>
-        )
       )}
-    </div>
+    </section>
   )
 }

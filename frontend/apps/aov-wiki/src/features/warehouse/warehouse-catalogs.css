@@ -4,8 +4,7 @@
   gap: 7px;
   overflow-x: auto;
   padding: 3px 1px 14px;
-  scrollbar-width: thin;
-  scrollbar-color: #d1b47740 transparent;
+  scrollbar-width: none;
 }
 .wiki-warehouse-catalog-filter {
   --catalog-accent: #dbc18b;
@@ -52,174 +51,140 @@
   border-radius: 50%;
   object-fit: contain;
 }
-.wiki-warehouse-catalog-open {
-  display: inline-grid;
-  width: 19px;
-  height: 19px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 16%, transparent);
-  border-radius: 50%;
-  color: var(--aov-accent);
-}
 .wiki-warehouse-catalog-empty {
   padding: 54px 12px;
   color: var(--aov-muted);
   font-size: 0.8125rem;
   text-align: center;
 }
-.wiki-warehouse-item-tiers {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-.wiki-warehouse-item-tier > h2 {
+.wiki-item-toolbar {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.wiki-item-toolbar > [role="group"]:first-child {
+  min-width: 0;
+  flex: 1 1 320px;
+}
+.wiki-item-toolbar-end {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin: 6px 0 12px;
-  border-bottom: 1px solid var(--aov-line);
-  padding: 0 1px 11px;
+  margin-left: auto;
+}
+.wiki-item-clear {
+  font: var(--wiki-type-meta);
   color: var(--aov-accent);
-  font-size: 0.8125rem;
-  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
-.wiki-warehouse-item-tier > h2 small {
+.wiki-item-sort[data-slot="select-trigger"] {
+  width: 148px;
+}
+.wiki-item-layout {
+  display: inline-flex;
+  flex: none;
+  justify-self: start;
+  gap: 2px;
+  border-radius: var(--aov-radius-control);
+  padding: 2px;
+  background: var(--aov-surface);
+}
+.wiki-item-layout button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 4px;
+  border-radius: calc(var(--aov-radius-control) - 2px);
+  padding: 2px 8px;
   color: var(--aov-muted);
-  font-size: 0.8125rem;
-  font-weight: 400;
 }
-.wiki-warehouse-item-grid {
-  display: grid;
+.wiki-item-layout button[aria-pressed="true"] {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-item-tier {
+  margin-top: 14px;
+}
+.wiki-item-tier > h2 {
+  font: var(--wiki-type-section);
+  display: flex;
+  align-items: baseline;
   gap: 8px;
+  margin-bottom: 8px;
 }
-.wiki-warehouse-item-card {
+.wiki-item-tier > h2 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-item-rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 6px;
+}
+.wiki-item-row {
   display: flex;
   min-width: 0;
-  min-height: 56px;
   align-items: center;
-  gap: 9px;
-  border: 1px solid var(--aov-line);
-  border-radius: 7px;
-  padding: 10px;
-  background: linear-gradient(115deg, #25364a85, #1626385c);
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--aov-radius-card);
+  padding: 8px 10px;
+  background: var(--aov-surface);
   text-align: left;
+  transition: background 140ms;
 }
-.wiki-warehouse-item-card .wiki-warehouse-art {
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
+.wiki-item-row:hover {
+  background: var(--aov-raised);
+}
+.wiki-item-row[data-selected="true"] {
+  border-color: var(--aov-accent);
+}
+.wiki-item-row .wiki-warehouse-art {
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
 }
-.wiki-warehouse-item-caption {
+.wiki-item-row-main {
   display: flex;
   min-width: 0;
   flex: 1;
   flex-direction: column;
-  gap: 5px;
+  gap: 2px;
 }
-.wiki-warehouse-item-caption strong {
+.wiki-item-row-main strong {
+  font: var(--wiki-type-entry);
   color: var(--aov-text);
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  font-weight: 400;
-  overflow-wrap: anywhere;
 }
-.wiki-warehouse-item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 7px;
-}
-.wiki-warehouse-item-tier-mark {
-  border: 1px solid var(--aov-line);
-  border-radius: 4px;
-  padding: 1px 4px;
+.wiki-item-row-main small {
+  font: var(--wiki-type-meta);
   color: var(--aov-muted);
-  font-size: 0.8125rem;
-  line-height: 1.5;
 }
-.wiki-warehouse-item-tier[data-placement="unplaced"] {
-  grid-column: 1 / -1;
+.wiki-item-row-price {
+  font: var(--wiki-type-meta);
+  flex: none;
+  align-self: flex-start;
+  color: var(--aov-accent);
 }
-.wiki-warehouse-item-tier[data-placement="unplaced"] > .wiki-warehouse-item-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.wiki-warehouse-item-card > .wiki-warehouse-catalog-open {
-  width: 16px;
-  height: 16px;
-}
-.wiki-warehouse-item-card > .wiki-warehouse-catalog-open svg {
-  width: 11px;
-  height: 11px;
-}
-.wiki-warehouse-item-card[data-selected="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 47%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 6%, transparent);
+@media (max-width: 767px) {
+  .wiki-item-toolbar > [role="group"]:first-child {
+    flex-basis: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .wiki-item-toolbar > [role="group"]:first-child button {
+    flex: none;
+    white-space: nowrap;
+  }
 }
 @media (hover: hover) and (pointer: fine) {
   .wiki-warehouse-catalog-filter:hover {
     border-color: color-mix(in srgb, var(--catalog-accent) 35%, transparent);
     color: var(--catalog-accent);
   }
-  .wiki-warehouse-item-card:hover {
-    border-color: color-mix(in srgb, var(--aov-accent) 35%, transparent);
-    background-color: color-mix(in srgb, var(--aov-accent) 4%, transparent);
-  }
-}
-@media (max-width: 1000px) {
-  .wiki-warehouse-item-tiers {
-    gap: 10px;
-  }
-  .wiki-warehouse-item-card {
-    flex-wrap: wrap;
-    gap: 7px;
-    padding: 9px;
-  }
-  .wiki-warehouse-item-card .wiki-warehouse-art {
-    width: 34px;
-    height: 34px;
-  }
-  .wiki-warehouse-item-card > .wiki-warehouse-catalog-open {
-    display: none;
-  }
-  .wiki-warehouse-item-caption strong {
-    font-size: 0.8125rem;
-  }
-}
-@media (max-width: 760px) {
-  .wiki-warehouse-item-tiers {
-    grid-template-columns: 1fr;
-    gap: 22px;
-  }
-  .wiki-warehouse-item-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .wiki-warehouse-item-card {
-    flex-direction: column;
-    flex-wrap: nowrap;
-    gap: 8px;
-    padding: 11px 7px;
-    text-align: center;
-  }
-  .wiki-warehouse-item-card .wiki-warehouse-art {
-    width: 42px;
-    height: 42px;
-  }
-  .wiki-warehouse-item-caption {
-    align-items: center;
-  }
-  .wiki-warehouse-item-meta {
-    justify-content: center;
-  }
-  .wiki-warehouse-item-caption strong {
-    min-height: 29px;
-    font-size: 0.8125rem;
-  }
-}
-.wiki-warehouse-undated {
-  display: inline-flex;
-  align-items: center;
-  color: var(--aov-accent);
 }

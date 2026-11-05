@@ -1,4 +1,4 @@
-import { warehouseName } from "@aov/ui/lib/warehouse-content"
+import { warehouseName, warehouseText } from "@aov/ui/lib/warehouse-content"
 import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
 export type PublishedWarehouseRecord = {
   [K in WarehouseKind]: WarehouseEntry<WarehouseContents[K]> & { kind: K }
@@ -91,7 +91,10 @@ export function warehouseImage(entry: WarehouseEntry, assetId = entry.content.ic
 export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, locale = "vi-VN") {
   const normalize = (value: string) =>
     value.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
-  const haystack = normalize(`${warehouseName(entry, locale)} ${entry.code}`)
+  const text = warehouseText(entry.content.translations, locale)
+  const haystack = normalize(
+    `${warehouseName(entry, locale)} ${entry.code} ${text?.summary ?? ""} ${text?.description ?? ""}`,
+  )
   return normalize(query)
     .trim()
     .split(/\s+/)

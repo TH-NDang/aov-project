@@ -108,6 +108,10 @@
     right: 1px;
   }
 
+  [data-warehouse-density="compact"] .shop-item-stats {
+    display: none;
+  }
+
   [data-warehouse-density="compact"] .shop-column-label {
     gap: 4px;
     padding-inline: 4px;

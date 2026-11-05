@@ -19,6 +19,8 @@ import {
 } from "@dnd-kit/core"
 import { Circle, GripVertical, ImageOff, Link2, PanelRightOpen } from "lucide-react"
 import { ItemCategoryIcon, itemCategoryFallback } from "./item-category-icon"
+import { ItemStatChips } from "./item-facts"
+import { itemReaderContent } from "@aov/ui/lib/item-description"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
@@ -104,6 +106,8 @@ interface Props {
   /** Empty rows added below the group so items can be dropped further down; the page header adds them. */
   extraRows?: number
   onExtraRowsChange?: (rows: number) => void
+  /** False when selecting a card is already enough to read it. */
+  showOpenButton?: boolean
 }
 function ShopCardText({ text, summary = false }: { text: string; summary?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null)
@@ -158,6 +162,7 @@ function GraphCard({
   region,
   locked = false,
   dimmed = false,
+  showOpenButton = true,
 }: {
   item: Entry
   index: number
@@ -177,6 +182,7 @@ function GraphCard({
   locked?: boolean
   /** Does not match the current search. */
   dimmed?: boolean
+  showOpenButton?: boolean
 }) {
   const t = useWarehouseText()
   const reference = region === "external"
@@ -186,7 +192,9 @@ function GraphCard({
     disabled: !editable || reference,
   })
   const name = warehouseName(item, locale)
-  const summary = warehouseText(item.content.translations, locale)?.summary?.trim()
+  const text = warehouseText(item.content.translations, locale)
+  const summary = text?.summary?.trim()
+  const stats = useMemo(() => itemReaderContent(item.content, text).stats, [item.content, text])
   const changeKinds = cardChangeKinds(item.changeKinds)
   const hasOutput = column < columns - 1 && !terminal
   const missing = item.missingFields?.length ?? 0
@@ -222,6 +230,7 @@ function GraphCard({
         type="button"
         className="shop-item-select group flex min-w-0 flex-1 cursor-pointer items-center gap-2 text-left focus-visible:outline-2 focus-visible:outline-ring"
         onClick={onSelect}
+        onDoubleClick={showOpenButton ? onOpen : undefined}
         aria-label={`${t("Chọn trang bị", "Select item")} ${name}`}
         aria-pressed={selected}
       >
@@ -242,6 +251,7 @@ function GraphCard({
         <span className="min-w-0 flex-1 space-y-0.5">
           <ShopCardText text={name} />
           {summary && <ShopCardText text={summary} summary />}
+          <ItemStatChips stats={stats} locale={locale} limit={3} className="shop-item-stats" />
           {!!changeKinds.length && <CatalogChangeBadges kinds={changeKinds} compact />}
           <span className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground empty:hidden">
             {region !== "completed" && item.content.tier !== null && item.content.tier !== column + 1 && (
@@ -279,21 +289,23 @@ function GraphCard({
           </span>
         </span>
       </button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        className={cn(
-          "shop-item-open absolute top-0.5 right-0.5 z-30 size-6 bg-card/90",
-          locked &&
-            "opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
-        )}
-        aria-label={`${t("Xem trang bị", "View item")} ${name}`}
-        title={locked ? "Mở chi tiết" : "Mở bản nháp"}
-        onClick={onOpen}
-      >
-        <PanelRightOpen className="size-3.5" />
-      </Button>
+      {showOpenButton && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className={cn(
+            "shop-item-open absolute top-0.5 right-0.5 z-30 size-6 bg-card/90",
+            locked &&
+              "opacity-0 transition-opacity group-hover/card:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
+          )}
+          aria-label={`${t("Xem trang bị", "View item")} ${name}`}
+          title={locked ? "Mở chi tiết" : "Mở bản nháp"}
+          onClick={onOpen}
+        >
+          <PanelRightOpen className="size-3.5" />
+        </Button>
+      )}
       {editable &&
         (["in", "out"] as const)
           .filter((side) => (side === "in" ? column > 0 : hasOutput))
@@ -373,6 +385,7 @@ export function ItemShopGraph({
   matches = null,
   extraRows: more = 0,
   onExtraRowsChange: setMore = () => {},
+  showOpenButton = true,
 }: Props) {
   const t = useWarehouseText()
   const [variant, setVariant] = useState("")
@@ -701,8 +714,9 @@ export function ItemShopGraph({
                 title={matches ? `${count} món khớp tìm kiếm` : undefined}
                 className={cn("[&_svg]:size-5", matches && !count && !active && "opacity-50")}
                 onClick={() => {
-                  onCategory(group.code)
+                  // The category change comes last: both can write to the URL, and it also clears the selection.
                   onFocus(null)
+                  onCategory(group.code)
                   setVariant("")
                   setMore(0)
                 }}
@@ -778,6 +792,11 @@ export function ItemShopGraph({
                       <span aria-hidden className="h-0 w-5 border-t border-dashed border-primary" />
                       {t("Gián tiếp / nâng cấp", "Indirect / upgrade")}
                     </span>
+                    {showOpenButton && (
+                      <Button size="sm" variant="secondary" className="h-7 px-2" onClick={() => onSelect(selectedId)}>
+                        {t("Mở chi tiết", "Open details")}
+                      </Button>
+                    )}
                     <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => onFocus(null)}>
                       {t("Bỏ chọn", "Clear selection")}
                     </Button>
@@ -918,6 +937,7 @@ export function ItemShopGraph({
                       terminal={placement.terminal}
                       region={region}
                       dimmed={!!matches && !matches.has(placement.item.id)}
+                      showOpenButton={showOpenButton}
                     />
                   )
                   return (

@@ -6,15 +6,18 @@ import { useMemo, useRef } from "react"
 import { useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { warehouseCatalogQuery, warehouseGroupsQuery } from "./warehouse-api"
-import { WarehouseCatalog } from "./warehouse-catalogs"
+import { ItemLayoutToggle, WarehouseCatalog } from "./warehouse-catalogs"
 import { WarehouseDetail } from "./warehouse-detail"
 import { WarehouseIcon } from "./warehouse-icon"
 import { WarehouseSkeleton } from "./warehouse-loading"
+import { useDetailPanel, useItemCatalog, warehouseReadingOrder, type WarehouseItem } from "./use-item-catalog"
+import { WikiIcon } from "../../components/wiki-icon"
 import {
   warehouseImage,
   warehouseName,
   matchesWarehouseSearch,
   warehouseKind,
+  type PublishedWarehouseRecord,
   type WarehouseEntry,
 } from "./warehouse-types"
 import "./warehouse-page.css"
@@ -41,13 +44,66 @@ export default function WarehousePage() {
     [entries, search, scope.locale],
   )
 
+  const panel = useDetailPanel()
+  const selectedEntry = entries.find((entry) => entry.id === selectedId || entry.code === selectedId)
+  const items = useMemo(() => entries.filter((entry): entry is WarehouseItem => entry.kind === "items"), [entries])
+  const matchingItems = useMemo(
+    () => filtered.filter((entry): entry is WarehouseItem => entry.kind === "items"),
+    [filtered],
+  )
+  const itemView = useItemCatalog({
+    items,
+    matches: matchingItems,
+    groups,
+    group,
+    selected: selectedEntry?.kind === "items" ? selectedEntry : undefined,
+    locale: scope.locale,
+  })
+  const order: PublishedWarehouseRecord[] =
+    kind === "items" ? itemView.order : warehouseReadingOrder(kind, filtered, group, groups, params, scope.locale)
+
   function select(entry: WarehouseEntry, button?: HTMLButtonElement) {
     if (button) trigger.current = button
-    setParams((current) => {
-      const next = new URLSearchParams(current)
-      next.set("item", entry.id)
-      return next
-    })
+    const positions = entry.content.shopPositions ?? []
+    const board = itemView.category
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        next.set("item", entry.id)
+        // Keep the board on a category that shows the item, so its recipe lines stay visible.
+        if (kind === "items" && itemView.layout === "shop") {
+          const onBoard = positions.some((position) => position.categoryCode === board)
+          const home = onBoard ? board : (entry.content.categoryCode ?? positions[0]?.categoryCode)
+          if (home) next.set("group", home)
+        }
+        return next
+      },
+      // Going from one entry to the next should not fill the back button; opening the sheet still can be undone by it.
+      { replace: panel || !!selectedId },
+    )
+  }
+
+  function clearSelection() {
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        next.delete("item")
+        return next
+      },
+      { replace: true },
+    )
+  }
+
+  function setSearch(value: string) {
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        if (value) next.set("q", value)
+        else next.delete("q")
+        return next
+      },
+      { replace: true },
+    )
   }
 
   const changed = filtered.filter((entry) => changes.subjects.has(entry.id))
@@ -79,15 +135,26 @@ export default function WarehousePage() {
 
   return (
     <PublishedWarehouseView entries={entries} groups={groups} kind={kind}>
-      <div className={`wiki-warehouse-page wiki-warehouse-${kind}`} data-warehouse-density="compact">
+      <div className={`wiki-warehouse-page wiki-warehouse-${kind}`}>
         <CatalogHeading title={sectionName} section={scope.t("warehouse")} />
         <div className="wiki-warehouse-toolbar">
           <WikiVersionPicker changedVariants={changes.changedVariants} />
-          {search && (
-            <button className="text-xs underline" type="button" onClick={clearFilters}>
-              {text("Xóa tìm kiếm", "Clear search")} · {search}
-            </button>
-          )}
+          <label className="wiki-hero-search wiki-warehouse-search">
+            <WikiIcon name="search" size={18} />
+            <span className="sr-only">{text("Tìm trong mục này", "Search this section")}</span>
+            <input
+              type="search"
+              value={search}
+              maxLength={120}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={
+                kind === "items"
+                  ? text("Tìm theo tên, hiệu ứng…", "Search names, effects…")
+                  : text("Tìm trong mục này…", "Search this section…")
+              }
+            />
+          </label>
+          {kind === "items" && groups.length > 0 && <ItemLayoutToggle view={itemView} />}
         </div>
         {metadata.isError && (
           <div className="wiki-warehouse-notice">
@@ -109,102 +176,101 @@ export default function WarehousePage() {
           </div>
         )}
         <PatchChangesRow entries={[...subjects.values()]} failed={changes.failed} retry={changes.retry} />
-        {catalog.isPending ? (
-          <WarehouseSkeleton />
-        ) : catalog.isError && !catalog.data ? (
-          <div className="wiki-warehouse-empty">
-            <WarehouseIcon name={kind} size={46} />
-            <h2>{text("Chưa tải được dữ liệu", "Data could not be loaded")}</h2>
-            <button type="button" onClick={() => void catalog.refetch()}>
-              {scope.t("retry")}
-            </button>
-          </div>
-        ) : !filtered.length ? (
-          <div className="wiki-warehouse-empty">
-            <WarehouseIcon name={search ? "search" : kind} size={46} />
-            <h2>
-              {search
-                ? text("Không có kết quả phù hợp", "No matching results")
-                : text("Chưa có dữ liệu công khai tại mốc này", "No verified public data for this scope")}
-            </h2>
-            <p>
-              {search
-                ? text("Thử tên khác hoặc xóa bộ lọc.", "Try another name or clear filters.")
-                : (scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped
-                  ? text(
-                      "Có thể bật kèm dữ liệu nền chưa rõ mốc để tham khảo.",
-                      "You can include undated baselines for reference.",
+        <div className="wiki-warehouse-body">
+          <div className="wiki-warehouse-main" data-warehouse-density="compact">
+            {catalog.isPending ? (
+              <WarehouseSkeleton />
+            ) : catalog.isError && !catalog.data ? (
+              <div className="wiki-warehouse-empty">
+                <WarehouseIcon name={kind} size={46} />
+                <h2>{text("Chưa tải được dữ liệu", "Data could not be loaded")}</h2>
+                <button type="button" onClick={() => void catalog.refetch()}>
+                  {scope.t("retry")}
+                </button>
+              </div>
+            ) : !filtered.length ? (
+              <div className="wiki-warehouse-empty">
+                <WarehouseIcon name={search ? "search" : kind} size={46} />
+                <h2>
+                  {search
+                    ? text("Không có kết quả phù hợp", "No matching results")
+                    : text("Chưa có dữ liệu công khai tại mốc này", "No verified public data for this scope")}
+                </h2>
+                <p>
+                  {search
+                    ? text("Thử tên khác hoặc xóa bộ lọc.", "Try another name or clear filters.")
+                    : (scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped
+                      ? text(
+                          "Có thể bật kèm dữ liệu nền chưa rõ mốc để tham khảo.",
+                          "You can include undated baselines for reference.",
+                        )
+                      : text(
+                          "Các mục sẽ xuất hiện sau khi được biên tập và xuất bản.",
+                          "Entries appear after editorial publication.",
+                        )}
+                </p>
+                {!search && (scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      scope.setScope({
+                        seasonId: scope.seasonId,
+                        patchVariantId: scope.patchVariantId,
+                        includeUnscoped: true,
+                      })
+                    }
+                  >
+                    {text("Xem thêm dữ liệu chưa rõ patch", "Include undated entries")}
+                  </button>
+                )}
+                {search && (
+                  <button type="button" onClick={clearFilters}>
+                    {text("Xóa bộ lọc", "Clear filters")}
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <WarehouseCatalog
+                  key={kind}
+                  kind={kind}
+                  entries={filtered}
+                  allEntries={entries}
+                  groups={groups}
+                  group={group}
+                  selectedId={selectedEntry?.id ?? selectedId}
+                  onGroupChange={(value) =>
+                    setParams(
+                      (current) => {
+                        const next = new URLSearchParams(current)
+                        if (value) next.set("group", value)
+                        else next.delete("group")
+                        next.delete("item")
+                        return next
+                      },
+                      { replace: true },
                     )
-                  : text(
-                      "Các mục sẽ xuất hiện sau khi được biên tập và xuất bản.",
-                      "Entries appear after editorial publication.",
-                    )}
-            </p>
-            {!search && (scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped && (
-              <button
-                type="button"
-                onClick={() =>
-                  scope.setScope({
-                    seasonId: scope.seasonId,
-                    patchVariantId: scope.patchVariantId,
-                    includeUnscoped: true,
-                  })
-                }
-              >
-                {text("Xem thêm dữ liệu chưa rõ patch", "Include undated entries")}
-              </button>
-            )}
-            {search && (
-              <button type="button" onClick={clearFilters}>
-                {text("Xóa bộ lọc", "Clear filters")}
-              </button>
+                  }
+                  onSelect={select}
+                  onClear={clearSelection}
+                  itemView={itemView}
+                />
+              </>
             )}
           </div>
-        ) : (
-          <>
-            <WarehouseCatalog
-              key={kind}
-              kind={kind}
-              entries={filtered}
-              allEntries={entries}
-              groups={groups}
-              group={group}
-              selectedId={selectedId}
-              onGroupChange={(value) =>
-                setParams(
-                  (current) => {
-                    const next = new URLSearchParams(current)
-                    if (value) next.set("group", value)
-                    else next.delete("group")
-                    next.delete("item")
-                    return next
-                  },
-                  { replace: true },
-                )
-              }
-              onSelect={select}
-            />
-          </>
-        )}
-        <WarehouseDetail
-          selectedId={selectedId}
-          entries={entries}
-          kind={kind}
-          groups={groups}
-          loading={catalog.isPending}
-          onClose={() =>
-            setParams(
-              (current) => {
-                const next = new URLSearchParams(current)
-                next.delete("item")
-                return next
-              },
-              { replace: true },
-            )
-          }
-          onSelect={select}
-          returnFocus={trigger}
-        />
+          <WarehouseDetail
+            selectedId={selectedId}
+            entries={entries}
+            order={order}
+            kind={kind}
+            groups={groups}
+            loading={catalog.isPending}
+            inline={panel}
+            onClose={clearSelection}
+            onSelect={select}
+            returnFocus={trigger}
+          />
+        </div>
       </div>
     </PublishedWarehouseView>
   )

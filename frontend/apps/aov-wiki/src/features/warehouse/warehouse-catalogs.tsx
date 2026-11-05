@@ -1,13 +1,17 @@
 import { SpellFilters } from "@aov/ui/components/warehouse/spell-filters"
 import { ItemCategoryArtwork } from "@aov/ui/components/item-category-icons"
 import { ArcanaFilters } from "@aov/ui/components/warehouse/arcana-filters"
-import { useMemo, useState, type CSSProperties } from "react"
+import { useMemo, type CSSProperties } from "react"
 import { useSearchParams } from "react-router"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiImage } from "../../components/wiki-image"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { WarehouseIcon } from "./warehouse-icon"
 import { itemMatchesCategory, warehouseItemLayout } from "./warehouse-item-layout"
+import type { ItemCatalogView, ItemSort, WarehouseItem } from "./use-item-catalog"
+import { WikiIcon } from "../../components/wiki-icon"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
+import { ItemStatChips, ItemStatFilter } from "@aov/ui/components/warehouse/item-facts"
 import { ArcanaCollection } from "@aov/ui/components/warehouse/arcana-cards"
 import { SpellCollection } from "@aov/ui/components/warehouse/spell-cards"
 import { EnchantmentBranches } from "@aov/ui/components/warehouse/enchantment-branches"
@@ -38,6 +42,8 @@ interface CatalogProps extends CatalogSelection {
   groups: WarehouseGroup[]
   group: string
   onGroupChange: (group: string) => void
+  onClear: () => void
+  itemView: ItemCatalogView
 }
 
 interface FilterOption {
@@ -49,25 +55,6 @@ interface FilterOption {
 }
 
 const roman = (tier: number) => ["I", "II", "III"][tier - 1] ?? String(tier)
-function OpenMark() {
-  return (
-    <span className="wiki-warehouse-catalog-open" aria-hidden="true">
-      <WarehouseIcon name="arrow" size={13} />
-    </span>
-  )
-}
-
-function UndatedMark({ entry, showLabel = false }: { entry: WarehouseEntry; showLabel?: boolean }) {
-  const { locale } = useWikiContext()
-  if (entry.revision.effectiveFromPatchVariantId != null) return null
-  const label = wikiText(locale, "Chưa rõ patch", "Patch unknown")
-  return (
-    <span className="wiki-warehouse-undated" title={label} aria-label={label}>
-      <WarehouseIcon name="clock" size={12} />
-      <span className={showLabel ? undefined : "sr-only"}>{label}</span>
-    </span>
-  )
-}
 
 function Filters({
   options,
@@ -137,88 +124,153 @@ function EmptyGroup() {
   )
 }
 
-function ItemGrid({ entries, groups, group, onGroupChange, selectedId, onSelect }: CatalogProps) {
+function ItemRow({
+  entry,
+  view,
+  selected,
+  onOpen,
+}: {
+  entry: WarehouseItem
+  view: ItemCatalogView
+  selected: boolean
+  onOpen: (button: HTMLButtonElement) => void
+}) {
+  const { locale } = useWikiContext()
+  const text = warehouseText(entry.content.translations, locale)
+  const name = text?.name || entry.code
+  return (
+    <button
+      type="button"
+      className="wiki-item-row"
+      data-selected={selected || undefined}
+      aria-label={wikiText(locale, `Xem ${name}`, `View ${name}`)}
+      onClick={(event) => onOpen(event.currentTarget)}
+    >
+      <WarehouseArtwork entry={entry} kind="items" />
+      <span className="wiki-item-row-main">
+        <strong>{name}</strong>
+        {text?.summary && <small>{text.summary}</small>}
+        <ItemStatChips stats={view.statsOf(entry)} locale={locale} />
+      </span>
+      <span className="wiki-item-row-price">
+        <ItemPrice amount={entry.content.price} locale={locale} />
+      </span>
+    </button>
+  )
+}
+
+function ItemList({
+  view,
+  groups,
+  group,
+  onGroupChange,
+  selectedId,
+  onSelect,
+}: Pick<CatalogProps, "groups" | "group" | "onGroupChange" | "selectedId" | "onSelect"> & { view: ItemCatalogView }) {
   const { locale } = useWikiContext()
   const options = groups.map((category) => ({
     code: category.code,
     name: warehouseText(category.translations, locale)?.name || category.code,
-    count: entries.filter((entry) => itemMatchesCategory(entry, category.code)).length,
+    count: view.visible.filter((entry) => itemMatchesCategory(entry, category.code)).length,
     icon: category.icon?.currentVersion?.url,
   }))
-  const activeGroup = group
-  const sections = warehouseItemLayout(entries, activeGroup)
+  const sections = view.sort === "tier" ? warehouseItemLayout(view.listed, "").reverse() : null
+  const rows = (entries: WarehouseItem[]) => (
+    <div className="wiki-item-rows">
+      {entries.map((entry) => (
+        <ItemRow
+          key={entry.id}
+          entry={entry}
+          view={view}
+          selected={selectedId === entry.id}
+          onOpen={(button) => onSelect(entry, button)}
+        />
+      ))}
+    </div>
+  )
   return (
     <>
-      <Filters options={options} value={activeGroup} onChange={onGroupChange} kind="items" />
-      {sections.length ? (
-        <div className="wiki-warehouse-item-tiers">
-          {sections.map((section) => {
-            const heading =
-              section.kind === "column"
-                ? `${wikiText(locale, "Cột", "Column")} ${roman(section.value + 1)}`
-                : section.kind === "unplaced"
-                  ? wikiText(locale, "Chưa xác định vị trí", "Position not assigned")
-                  : section.value
-                    ? `${wikiText(locale, "Cấp", "Tier")} ${roman(section.value)}`
-                    : wikiText(locale, "Chưa phân cấp", "Tier not assigned")
-            return (
-              <section key={section.key} className="wiki-warehouse-item-tier" data-placement={section.kind}>
-                <h2>
-                  <span>{heading}</span>
-                  <small>{section.entries.length}</small>
-                </h2>
-                <div className="wiki-warehouse-item-grid">
-                  {section.entries.map((entry) => (
-                    <button
-                      type="button"
-                      key={entry.id}
-                      className="wiki-warehouse-item-card"
-                      data-selected={selectedId === entry.id || undefined}
-                      aria-label={wikiText(
-                        locale,
-                        `Xem ${warehouseText(entry.content.translations, locale)?.name || entry.code}`,
-                        `View ${warehouseText(entry.content.translations, locale)?.name || entry.code}`,
-                      )}
-                      onClick={(event) => onSelect(entry, event.currentTarget)}
-                    >
-                      <span className="relative shrink-0">
-                        <WarehouseArtwork entry={entry} kind="items" />
-                        {entry.content.price != null && (
-                          <ItemPrice amount={entry.content.price} locale={locale} badge />
-                        )}
-                      </span>
-                      <span className="wiki-warehouse-item-caption">
-                        <strong>{warehouseText(entry.content.translations, locale)?.name || entry.code}</strong>
-                        <span className="wiki-warehouse-item-meta">
-                          {activeGroup && entry.content.tier != null && (
-                            <small className="wiki-warehouse-item-tier-mark">
-                              {wikiText(locale, "Cấp", "Tier")} {roman(entry.content.tier)}
-                            </small>
-                          )}
-                          <UndatedMark entry={entry} />
-                        </span>
-                      </span>
-                      <OpenMark />
-                    </button>
-                  ))}
-                </div>
-              </section>
-            )
-          })}
-        </div>
-      ) : (
+      <Filters options={options} value={group} onChange={onGroupChange} kind="items" />
+      {!view.listed.length ? (
         <EmptyGroup />
+      ) : sections ? (
+        sections.map((section) => (
+          <section key={section.key} className="wiki-item-tier">
+            <h2>
+              {section.value
+                ? `${wikiText(locale, "Cấp", "Tier")} ${roman(section.value)}`
+                : wikiText(locale, "Chưa phân cấp", "Tier not assigned")}
+              <small>{section.entries.length}</small>
+            </h2>
+            {rows(section.entries)}
+          </section>
+        ))
+      ) : (
+        rows(view.listed)
       )}
     </>
   )
 }
 
+function ItemToolbar({ view }: { view: ItemCatalogView }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  const sorts: [ItemSort, string][] = [
+    ["tier", text("Theo cấp", "By tier")],
+    ["price-desc", text("Giá cao trước", "Highest price")],
+    ["price-asc", text("Giá thấp trước", "Lowest price")],
+    ["name", text("Tên A–Z", "Name A–Z")],
+  ]
+  return (
+    <div className="wiki-item-toolbar">
+      <ItemStatFilter value={view.stats} counts={view.counts} onChange={view.setStats} />
+      <div className="wiki-item-toolbar-end">
+        {view.stats.length > 0 && (
+          <button type="button" className="wiki-item-clear" onClick={() => view.setStats([])}>
+            {text("Bỏ lọc", "Clear")} · {view.listed.length} {text("món", view.listed.length === 1 ? "item" : "items")}
+          </button>
+        )}
+        {view.layout === "list" && (
+          <Select value={view.sort} onValueChange={(value) => view.setSort(value as ItemSort)}>
+            <SelectTrigger className="wiki-item-sort" size="sm" aria-label={text("Sắp xếp", "Sort")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent drawerTitle={text("Sắp xếp", "Sort")} position="popper" align="end">
+              {sorts.map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export function ItemLayoutToggle({ view }: { view: ItemCatalogView }) {
+  const { locale } = useWikiContext()
+  const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  return (
+    <div className="wiki-item-layout" role="group" aria-label={text("Kiểu xem", "View")}>
+      <button type="button" aria-pressed={view.layout === "shop"} onClick={() => view.setLayout("shop")}>
+        <WikiIcon name="board" size={16} />
+        {text("Sơ đồ", "Board")}
+      </button>
+      <button type="button" aria-pressed={view.layout === "list"} onClick={() => view.setLayout("list")}>
+        <WikiIcon name="rows" size={16} />
+        {text("Danh sách", "List")}
+      </button>
+    </div>
+  )
+}
+
 export function WarehouseCatalog(props: CatalogProps) {
-  const { kind, entries, allEntries, group, groups, selectedId, onGroupChange, onSelect } = props
+  const { kind, entries, allEntries, group, groups, selectedId, onGroupChange, onSelect, onClear, itemView } = props
   const scope = useWikiContext()
   const { locale } = scope
   const [params, setParams] = useSearchParams()
-  const [focused, setFocused] = useState<string | null>(null)
   const references = useQuery({ ...wikiReferencesQuery(scope), enabled: kind === "arcana" })
   const statColor = useMemo(() => createArcanaStatColors(references.data?.entities ?? []), [references.data])
   const searching = !!params.get("q")
@@ -336,27 +388,37 @@ export function WarehouseCatalog(props: CatalogProps) {
       />
     )
   }
-  const layout = params.get("layout") === "grid" || !groups.length ? "grid" : "shop"
   const items = allEntries.filter((e) => e.kind === "items")
+  const openItem = (id: string | null) => {
+    const entry = id ? items.find((e) => e.id === id) : undefined
+    if (entry) open(entry)
+    else onClear()
+  }
   return (
     <div className="space-y-3">
-      {layout === "grid" ? (
-        <ItemGrid {...props} />
+      <ItemToolbar view={itemView} />
+      {itemView.layout === "list" ? (
+        <ItemList
+          view={itemView}
+          groups={groups}
+          group={group}
+          onGroupChange={onGroupChange}
+          selectedId={selectedId}
+          onSelect={onSelect}
+        />
       ) : (
         <ItemShopGraph
           items={items}
           categories={metadata}
           locale={locale}
-          category={group || groups[0]?.code || ""}
-          selectedId={focused && items.some((e) => e.id === focused) ? focused : null}
-          onFocus={setFocused}
-          matches={entries.length < allEntries.length ? new Set(entries.map((e) => e.id)) : null}
-          onSelect={(id) => {
-            const entry = items.find((e) => e.id === id)
-            if (entry) open(entry)
-          }}
+          category={itemView.category}
+          selectedId={selectedId && items.some((e) => e.id === selectedId) ? selectedId : null}
+          onFocus={openItem}
+          matches={itemView.visible.length < items.length ? new Set(itemView.visible.map((e) => e.id)) : null}
+          onSelect={openItem}
           onCategory={onGroupChange}
           editable={false}
+          showOpenButton={false}
         />
       )}
     </div>

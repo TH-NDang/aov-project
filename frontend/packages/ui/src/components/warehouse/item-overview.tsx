@@ -1,11 +1,11 @@
 import { useWarehouseText } from "./warehouse-view"
-import { useId, useState, type ReactNode } from "react"
-import { Button } from "@aov/ui/components/button"
+import type { ReactNode } from "react"
 
 import { ItemCategoryIcon } from "./item-category-icon"
-import { ItemRecipeView, RecipeItemLabel } from "./item-recipe"
+import { ItemPassiveList, ItemStatList } from "./item-facts"
+import { ItemRecipeView, ItemSimilarList } from "./item-recipe"
+import { itemReaderContent, similarItems } from "@aov/ui/lib/item-description"
 import {
-  warehouseName,
   warehouseText,
   type ItemContent,
   type WarehouseEntry,
@@ -14,7 +14,6 @@ import {
 
 export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
   renderText,
-  renderRecipe,
   entry,
   items,
   relatedItems,
@@ -25,7 +24,6 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
   readerView = false,
 }: {
   renderText: (value: string, locale: string) => ReactNode
-  renderRecipe?: (upgrades: E[]) => ReactNode
   entry: E
   items: E[]
   relatedItems: E[]
@@ -37,104 +35,56 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
 }) {
   const t = useWarehouseText()
   const { content } = entry
-  const [expanded, setExpanded] = useState(false)
-  const upgradesId = useId()
   const text = warehouseText(content.translations, locale)
   const language = text?.locale ?? locale
+  const reading = itemReaderContent(content, text)
+  const hasEffects = reading.passives.length > 0 || reading.notes.length > 0
   const upgrades = relatedItems.filter(
     (item) =>
       item.revision.state === "PUBLISHED" &&
       item.content.recipeStatus === "VERIFIED" &&
       item.content.components.some((part) => part.itemId === entry.id),
   )
+  const inRecipe = new Set([...content.components.map((part) => part.itemId), ...upgrades.map((item) => item.id)])
+  const similar = readerView
+    ? similarItems(
+        entry,
+        relatedItems.filter((item) => !inRecipe.has(item.id)),
+        (item) => itemReaderContent(item.content, warehouseText(item.content.translations, locale)).stats,
+      )
+    : []
   return (
     <>
-      {(text?.summary || text?.description) && (
-        <section className="space-y-2">
-          {readerView && <h3 className="type-section-title">{t("Mô tả", "Description")}</h3>}
-          {text.summary && <div className="type-body">{renderText(text.summary, language)}</div>}
-          {text.description && text.description !== text.summary && (
-            <div className="type-body">{renderText(text.description, language)}</div>
-          )}
-        </section>
-      )}
-      {(content.stats.length > 0 || pencil) && (
+      {text?.summary && <div className="type-body text-muted-foreground">{renderText(text.summary, language)}</div>}
+      {(reading.stats.length > 0 || pencil) && (
         <section className="space-y-2">
           <div className="flex items-center justify-between">
             <h3 className="type-section-title">{t("Chỉ số", "Stats")}</h3>
             {pencil?.("stats")}
           </div>
-          {!content.stats.length && <p className="type-meta">Chưa có chỉ số.</p>}
-          <dl className="grid gap-x-6 sm:grid-cols-2">
-            {content.stats.map((stat, index) => (
-              <div key={index} className="flex items-baseline justify-between gap-2 border-b py-2">
-                <dt className="text-sm">{text?.statLabels?.[stat.key] || stat.key}</dt>
-                <dd className="text-sm font-semibold tabular-nums">
-                  {stat.value > 0 && "+"}
-                  {stat.value.toLocaleString(locale)}
-                  {stat.unit === "PERCENT"
-                    ? "%"
-                    : stat.unit === "SECONDS"
-                      ? " s"
-                      : stat.unit === "POINT" || stat.unit === "FLAT"
-                        ? ""
-                        : stat.unit}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      )}
-      {!!text?.effects?.length && (
-        <section className="space-y-2">
-          <h3 className="type-section-title">{t("Hiệu ứng", "Effects")}</h3>
-          {text.effects.map((effect) => (
-            <div key={effect.key} className="space-y-1">
-              <h4 className="text-sm font-semibold">{effect.name || effect.key}</h4>
-              {effect.description && <div className="type-body">{renderText(effect.description, language)}</div>}
-            </div>
-          ))}
-        </section>
-      )}
-      {renderRecipe ? (
-        renderRecipe(upgrades)
-      ) : (
-        <ItemRecipeView content={content} items={items} locale={locale} onView={onView} action={pencil?.("recipe")} />
-      )}
-      {!renderRecipe && upgrades.length > 0 && (
-        <section className="space-y-2">
-          <h3 className="type-section-title">
-            {t("Dùng để ghép", "Builds into")} <span className="type-meta">({upgrades.length})</span>
-          </h3>
-          <ul id={upgradesId} className="grid gap-x-4 sm:grid-cols-2">
-            {(expanded ? upgrades : upgrades.slice(0, 4)).map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  aria-label={`${t("Xem", "View")} ${warehouseName(item, locale)}`}
-                  className="flex w-full min-w-0 items-center gap-2 rounded-md py-1.5 px-1 text-left hover:bg-accent"
-                  onClick={() => onView(item)}
-                >
-                  <RecipeItemLabel item={item} locale={locale} />
-                </button>
-              </li>
-            ))}
-          </ul>
-          {upgrades.length > 4 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-expanded={expanded}
-              aria-controls={upgradesId}
-              onClick={() => setExpanded(!expanded)}
-            >
-              {expanded
-                ? t("Thu gọn", "Collapse")
-                : t(`Xem thêm ${upgrades.length - 4} trang bị`, `Show ${upgrades.length - 4} more items`)}
-            </Button>
+          {!reading.stats.length && <p className="type-meta">Chưa có chỉ số.</p>}
+          <ItemStatList stats={reading.stats} locale={locale} />
+          {pencil && !content.stats.length && reading.stats.length > 0 && (
+            <p className="type-meta">Đang đọc từ mô tả, chưa lưu thành chỉ số có cấu trúc.</p>
           )}
         </section>
       )}
+      {hasEffects && (
+        <section className="space-y-2">
+          <h3 className="type-section-title">{t("Hiệu ứng", "Effects")}</h3>
+          <ItemPassiveList content={reading} renderText={renderText} language={language} />
+        </section>
+      )}
+      <ItemRecipeView
+        content={content}
+        items={items}
+        upgrades={upgrades}
+        locale={locale}
+        onView={onView}
+        showStatus={!readerView}
+        action={pencil?.("recipe")}
+      />
+      <ItemSimilarList title={t("Món cùng kiểu", "Similar items")} items={similar} locale={locale} onView={onView} />
       {!readerView && (content.shopPositions.length > 0 || pencil) && (
         <section className="space-y-2">
           <div className="flex items-center justify-between">
@@ -147,7 +97,7 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
               const category = categories.find((group) => group.code === position.categoryCode)
               const groupName = category && warehouseText(category.translations, locale)?.name
               return (
-                <li key={i} className="flex flex-wrap items-center gap-1.5 rounded-md bg-muted/50 px-2 py-1 text-xs">
+                <li key={i} className="flex flex-wrap items-center gap-1.5 rounded-md bg-muted/50 px-2 py-1 text-sm">
                   <ItemCategoryIcon category={category} />
                   <span>{groupName || position.categoryCode || "Chưa xếp nhóm"}</span>
                   <span className="text-muted-foreground">
