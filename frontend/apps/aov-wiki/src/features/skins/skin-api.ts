@@ -1,4 +1,4 @@
-import { infiniteQueryOptions, keepPreviousData } from "@tanstack/react-query"
+import { queryOptions } from "@tanstack/react-query"
 import type { HeroMedia } from "../hero/hero-api"
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
 
@@ -36,28 +36,38 @@ export interface SkinCatalog {
   rarities: SkinFilterOption[]
 }
 
-export interface SkinFilters {
-  q: string
-  hero: string
-  rarity: string
-}
-
-export function skinCatalogQuery(filters: SkinFilters, scope: WikiCatalogScope) {
-  return infiniteQueryOptions({
-    queryKey: ["wiki", "skins", ...wikiScopeKey(scope), filters] as const,
-    initialPageParam: 0,
-    queryFn: async ({ pageParam, signal }): Promise<SkinCatalog> => {
+export function skinCatalogQuery(scope: WikiCatalogScope) {
+  return queryOptions({
+    queryKey: ["wiki", "skin-collection", ...wikiScopeKey(scope)] as const,
+    queryFn: async ({ signal }) => {
       const query = wikiCatalogParameters(scope)
-      query.set("page", String(pageParam))
-      query.set("size", "24")
-      for (const [key, value] of Object.entries(filters)) if (value) query.set(key, value)
-
-      const response = await fetch(`/api/wiki/v1/skins?${query}`, { signal, credentials: "omit" })
-      if (!response.ok) throw new Error("Published skins are unavailable.")
-      return response.json()
+      query.set("size", "60")
+      async function readPage(page: number): Promise<SkinCatalog> {
+        const response = await fetch(`/api/wiki/v1/skins?${query}&page=${page}`, { signal, credentials: "omit" })
+        if (!response.ok) throw new Error("Published skins are unavailable.")
+        return response.json()
+      }
+      const first = await readPage(0)
+      const items = [...first.page.items]
+      const pages = Math.ceil(first.page.totalElements / first.page.size)
+      for (let page = 1; page < pages; page += 3) {
+        const batch = await Promise.all(Array.from({ length: Math.min(3, pages - page) }, (_, i) => readPage(page + i)))
+        for (const result of batch) items.push(...result.page.items)
+      }
+      const heads = new Map<string, string>()
+      const badges = new Map<string, string>()
+      for (const skin of items) {
+        const head = skin.heroHead?.currentVersion?.url
+        const badge = skin.badge
+        if (head) heads.set(skin.heroCode, head)
+        if (badge?.icon?.currentVersion?.url) badges.set(badge.code, badge.icon.currentVersion.url)
+      }
+      return {
+        items,
+        heroes: first.heroes.map((option) => ({ ...option, image: heads.get(option.code) })),
+        rarities: first.rarities.map((option) => ({ ...option, image: badges.get(option.code) })),
+      }
     },
-    getNextPageParam: ({ page }) => ((page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined),
-    placeholderData: keepPreviousData,
     staleTime: 60_000,
     retry: 1,
   })

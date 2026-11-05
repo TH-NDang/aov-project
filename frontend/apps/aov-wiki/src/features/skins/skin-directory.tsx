@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type RefObject } from "react"
-import { useInfiniteQuery } from "@tanstack/react-query"
+import { useMemo, useRef, useState, type RefObject } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { WikiImage } from "../../components/wiki-image"
 import { skinCatalogQuery, type SkinBadge, type SkinEntry, type SkinFilterOption } from "./skin-api"
 import { SkinGridSkeleton } from "./skin-loading"
@@ -11,6 +12,9 @@ import { SkinIcon } from "./skin-icon"
 import "./skin-directory.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
+import { useDragScroll } from "../hero/use-drag-scroll"
+import { groupSkins, type HeroSort, type SkinSort } from "./skin-groups"
+import { normalizedHeroSearch } from "../hero/hero-classifications"
 
 function SkinBadgeImage({ badge }: { badge?: SkinBadge }) {
   const [failed, setFailed] = useState(false)
@@ -101,17 +105,36 @@ function SkinCard({ skin, onOpen }: { skin: SkinEntry; onOpen: (skin: SkinEntry,
       <span className="wiki-skin-card-caption">
         <span className="wiki-skin-card-name">{skin.name}</span>
         {skin.unscopedBaseline && <small>{wikiText(locale, "Chưa rõ mốc", "Undated baseline")}</small>}
-        <span className="wiki-skin-card-bottom">
-          <span className="wiki-skin-card-hero">
-            <HeroHead skin={skin} />
-            <span>{skin.heroName}</span>
-          </span>
-          <span className="wiki-skin-card-open" aria-hidden="true">
-            <SkinIcon name="open" size={16} />
-          </span>
-        </span>
       </span>
     </button>
+  )
+}
+
+function HeroSkinRow({
+  skins,
+  onOpen,
+}: {
+  skins: SkinEntry[]
+  onOpen: (skin: SkinEntry, button: HTMLButtonElement) => void
+}) {
+  const { locale } = useWikiContext()
+  const scroll = useDragScroll("horizontal")
+  const hero = skins[0]
+  return (
+    <section className="wiki-skin-group" aria-labelledby={`skins-${hero.heroId}`}>
+      <div className="wiki-skin-group-heading">
+        <HeroHead skin={hero} />
+        <h2 id={`skins-${hero.heroId}`}>{hero.heroName}</h2>
+        <span>
+          {skins.length} {wikiText(locale, "trang phục", skins.length === 1 ? "skin" : "skins")}
+        </span>
+      </div>
+      <div className="wiki-skin-row" ref={scroll.ref} {...scroll.handlers}>
+        {skins.map((skin) => (
+          <SkinCard key={skin.skinKey} skin={skin} onOpen={onOpen} />
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -184,6 +207,19 @@ function SkinPreview({
   )
 }
 
+function SkinFilterImage({ kind, image }: { kind: "hero" | "badge"; image?: string }) {
+  const [failed, setFailed] = useState<string>()
+  return (
+    <span className={`wiki-skin-filter-art wiki-skin-filter-art-${kind}`} aria-hidden="true">
+      {image && image !== failed ? (
+        <WikiImage src={image} alt="" onError={() => setFailed(image)} />
+      ) : (
+        <SkinIcon name={kind} size={16} />
+      )}
+    </span>
+  )
+}
+
 function FilterSelect({
   label,
   icon,
@@ -194,7 +230,7 @@ function FilterSelect({
   label: string
   icon: "hero" | "badge"
   value: string
-  options: SkinFilterOption[]
+  options: (SkinFilterOption & { image?: string })[]
   onChange: (value: string) => void
 }) {
   const { locale } = useWikiContext()
@@ -215,36 +251,32 @@ function FilterSelect({
         aria-label={`${wikiText(locale, "Lọc", "Filter")} ${label.toLocaleLowerCase(locale)}`}
         size="sm"
       >
-        <SkinIcon name={icon} size={16} />
+        {(!value || !known) && <SkinIcon name={icon} size={16} />}
         <SelectValue placeholder={label}>{value ? undefined : label}</SelectValue>
       </SelectTrigger>
-      <SelectContent className="wiki-skin-select-menu" position="popper" align="start">
+      <SelectContent drawerTitle={label} className="wiki-skin-select-menu" position="popper" align="start">
         <SelectItem value="__all">
           {label}: {wikiText(locale, "Tất cả", "All")}
         </SelectItem>
         {!!value && !known && <SelectItem value={value}>{value}</SelectItem>}
         {choices.map((option) => (
-          <SelectItem value={option.code} key={option.code}>
-            {option.name}
-            {option.variant && (
-              <span className="wiki-skin-select-variant">
-                {wikiText(locale, "Mẫu", "Variant")} {option.variant}
+          <SelectItem value={option.code} key={option.code} textValue={option.name}>
+            <span className="wiki-skin-filter-choice">
+              <SkinFilterImage kind={icon} image={option.image} />
+              <span className="wiki-skin-filter-name">
+                {option.name}
+                {option.variant && (
+                  <span className="wiki-skin-select-variant">
+                    {wikiText(locale, "Mẫu", "Variant")} {option.variant}
+                  </span>
+                )}
               </span>
-            )}
+            </span>
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
   )
-}
-
-function useDebouncedSearch(value: string) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const timer = window.setTimeout(() => setDebounced(value), 250)
-    return () => window.clearTimeout(timer)
-  }, [value])
-  return debounced
 }
 
 export function SkinDirectory() {
@@ -254,31 +286,26 @@ export function SkinDirectory() {
   const search = (parameters.get("q") || "").slice(0, 120)
   const hero = parameters.get("hero") || ""
   const rarity = parameters.get("rarity") || ""
-  const debouncedSearch = useDebouncedSearch(search)
-  const query = useInfiniteQuery(skinCatalogQuery({ q: debouncedSearch.trim(), hero, rarity }, scope))
-  const sentinel = useRef<HTMLDivElement>(null)
+  const heroOrder = parameters.get("heroSort")
+  const heroSort: HeroSort = heroOrder === "fewest" || heroOrder === "name" ? heroOrder : "most"
+  const skinSort: SkinSort = parameters.get("skinSort") === "name" ? "name" : "tier"
+  const query = useQuery(skinCatalogQuery(scope))
   const returnFocus = useRef<HTMLButtonElement | null>(null)
   const [selected, setSelected] = useState<SkinEntry | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
-  const first = query.data?.pages[0]
-  const skins = query.data?.pages.flatMap((page) => page.page.items) || []
-  const filtering = query.isPlaceholderData || search !== debouncedSearch
+  const groups = useMemo(() => {
+    const terms = normalizedHeroSearch(search).split(/\s+/).filter(Boolean)
+    const matches = (query.data?.items ?? []).filter((skin) => {
+      if ((hero && skin.heroCode !== hero) || (rarity && skin.rarityCode !== rarity)) return false
+      if (!terms.length) return true
+      const text = normalizedHeroSearch(`${skin.heroName} ${skin.heroCode} ${skin.name} ${skin.skinKey}`)
+      return terms.every((term) => text.includes(term))
+    })
+    return groupSkins(matches, heroSort, skinSort, scope.locale)
+  }, [query.data, search, hero, rarity, heroSort, skinSort, scope.locale])
   const hasFilters = !!search || !!hero || !!rarity
 
-  useEffect(() => {
-    const target = sentinel.current
-    if (!target || !query.hasNextPage || query.isFetching || query.isFetchNextPageError || filtering) return
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) void query.fetchNextPage()
-      },
-      { rootMargin: "300px" },
-    )
-    observer.observe(target)
-    return () => observer.disconnect()
-  }, [query.hasNextPage, query.isFetching, query.isFetchNextPageError, query.fetchNextPage, filtering])
-
-  function updateFilter(key: "q" | "hero" | "rarity", value: string) {
+  function updateFilter(key: "q" | "hero" | "rarity" | "heroSort" | "skinSort", value: string) {
     const next = new URLSearchParams(parameters)
     if (value) next.set(key, value)
     else next.delete(key)
@@ -292,8 +319,10 @@ export function SkinDirectory() {
   }
 
   return (
-    <div className="wiki-skin-directory" aria-busy={query.isPending || filtering}>
-      <SkinCollectionHeading count={first?.page.totalElements} updating={filtering} />
+    <div className="wiki-skin-directory" aria-busy={query.isPending}>
+      <SkinCollectionHeading
+        count={query.data ? groups.reduce((count, group) => count + group.length, 0) : undefined}
+      />
       <WikiVersionPicker />
       <section className="wiki-skin-toolbar" aria-label={text("Bộ lọc trang phục", "Skin filters")}>
         <label className="wiki-skin-search">
@@ -313,16 +342,69 @@ export function SkinDirectory() {
             label={text("Tướng", "Hero")}
             icon="hero"
             value={hero}
-            options={first?.heroes || []}
+            options={query.data?.heroes || []}
             onChange={(value) => updateFilter("hero", value)}
           />
           <FilterSelect
             label={text("Bậc", "Tier")}
             icon="badge"
             value={rarity}
-            options={first?.rarities || []}
+            options={query.data?.rarities || []}
             onChange={(value) => updateFilter("rarity", value)}
           />
+          <Popover>
+            <PopoverTrigger asChild>
+              <button type="button" className="wiki-skin-sort" aria-label={text("Sắp xếp trang phục", "Sort skins")}>
+                <SkinIcon name="sort" size={16} />
+                {text("Sắp xếp", "Sort")}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              drawerTitle={text("Sắp xếp trang phục", "Sort skins")}
+              className="wiki-skin-sort-menu"
+            >
+              <fieldset>
+                <legend>{text("Thứ tự tướng", "Hero order")}</legend>
+                {(
+                  [
+                    ["most", text("Nhiều trang phục nhất", "Most skins")],
+                    ["fewest", text("Ít trang phục nhất", "Fewest skins")],
+                    ["name", text("Tên tướng A–Z", "Hero name A–Z")],
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      type="radio"
+                      name="hero-sort"
+                      checked={heroSort === value}
+                      onChange={() => updateFilter("heroSort", value === "most" ? "" : value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+              <fieldset>
+                <legend>{text("Trang phục trong hàng", "Skins within each row")}</legend>
+                {(
+                  [
+                    ["tier", text("Bậc cao nhất", "Highest tier")],
+                    ["name", text("Tên trang phục A–Z", "Skin name A–Z")],
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value}>
+                    <input
+                      type="radio"
+                      name="skin-sort"
+                      checked={skinSort === value}
+                      onChange={() => updateFilter("skinSort", value === "tier" ? "" : value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+            </PopoverContent>
+          </Popover>
           {hasFilters && (
             <button
               className="wiki-skin-clear"
@@ -336,7 +418,7 @@ export function SkinDirectory() {
         </div>
       </section>
 
-      {query.isError && !!query.data && !query.isFetchNextPageError && (
+      {query.isError && !!query.data && (
         <div className="wiki-skin-refresh-error" role="status">
           {text("Chưa cập nhật được danh sách.", "The collection could not be refreshed.")}
           <button type="button" onClick={() => void query.refetch()} disabled={query.isFetching}>
@@ -344,7 +426,7 @@ export function SkinDirectory() {
           </button>
         </div>
       )}
-      {query.isPending || filtering ? (
+      {query.isPending ? (
         <SkinGridSkeleton />
       ) : query.isError && !query.data ? (
         <div className="wiki-skin-state" role="status">
@@ -354,7 +436,7 @@ export function SkinDirectory() {
             {scope.t("retry")}
           </button>
         </div>
-      ) : !skins.length ? (
+      ) : !groups.length ? (
         <div className="wiki-skin-state" role="status">
           <h2>
             {hasFilters
@@ -373,33 +455,19 @@ export function SkinDirectory() {
           )}
         </div>
       ) : (
-        <>
-          <div className="wiki-skin-grid">
-            {skins.map((skin) => (
-              <SkinCard
-                skin={skin}
-                key={`${skin.heroId}:${skin.skinKey}`}
-                onOpen={(entry, trigger) => {
-                  returnFocus.current = trigger
-                  setSelected(entry)
-                  setPreviewOpen(true)
-                }}
-              />
-            ))}
-          </div>
-          <div className="wiki-skin-load-more" ref={sentinel} aria-live="polite">
-            {query.isFetchingNextPage ? (
-              <span className="wiki-skin-loading-dot">{text("Đang tải thêm trang phục…", "Loading more skins…")}</span>
-            ) : query.isFetchNextPageError ? (
-              <>
-                <span>{text("Chưa tải được phần tiếp theo.", "The next page could not be loaded.")}</span>
-                <button type="button" onClick={() => void query.fetchNextPage()}>
-                  {scope.t("retry")}
-                </button>
-              </>
-            ) : null}
-          </div>
-        </>
+        <div className="wiki-skin-groups">
+          {groups.map((skins) => (
+            <HeroSkinRow
+              key={`${skins[0].heroId}:${skinSort}`}
+              skins={skins}
+              onOpen={(entry, trigger) => {
+                returnFocus.current = trigger
+                setSelected(entry)
+                setPreviewOpen(true)
+              }}
+            />
+          ))}
+        </div>
       )}
       <SkinPreview skin={selected} open={previewOpen} onClose={() => setPreviewOpen(false)} returnFocus={returnFocus} />
     </div>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 
 const PATHS = {
+  sort: <path d="M6 4v15m-3-3 3 3 3-3M12 5h9m-9 6h6m-6 6h3" />,
   info: (
     <>
       <circle cx="12" cy="12" r="9" />

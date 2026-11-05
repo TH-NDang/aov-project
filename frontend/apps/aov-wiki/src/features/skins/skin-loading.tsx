@@ -7,17 +7,23 @@ export function SkinGridSkeleton() {
   const { locale } = useWikiContext()
   const message = wikiText(locale, "Đang tải trang phục…", "Loading skins…")
   return (
-    <div className="wiki-skin-grid" role="status" aria-label={message} aria-busy="true">
+    <div className="wiki-skin-groups" role="status" aria-label={message} aria-busy="true">
       <span className="sr-only">{message}</span>
-      {Array.from({ length: 12 }, (_, index) => (
-        <div className="wiki-skin-card wiki-skin-skeleton" aria-hidden="true" key={index}>
-          <span className="wiki-skin-frame wiki-skeleton" />
-          <span className="wiki-skin-card-caption">
-            <span className="wiki-skin-name-skeleton wiki-skeleton" />
-            <span className="wiki-skin-card-bottom">
-              <span className="wiki-skin-owner-skeleton wiki-skeleton" />
-            </span>
-          </span>
+      {[0, 1].map((row) => (
+        <div key={row} aria-hidden="true">
+          <div className="wiki-skin-group-heading">
+            <span className="wiki-skeleton wiki-skin-heading-skeleton" />
+          </div>
+          <div className="wiki-skin-row">
+            {Array.from({ length: 7 }, (_, index) => (
+              <div className="wiki-skin-card wiki-skin-skeleton" aria-hidden="true" key={index}>
+                <span className="wiki-skin-frame wiki-skeleton" />
+                <span className="wiki-skin-card-caption">
+                  <span className="wiki-skin-name-skeleton wiki-skeleton" />
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>

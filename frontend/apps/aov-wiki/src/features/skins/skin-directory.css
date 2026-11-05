@@ -4,6 +4,8 @@
     linear-gradient(125deg, #293240, #1b2736 75%);
 }
 .wiki-skin-directory {
+  min-width: 0;
+  width: 100%;
   max-width: 920px;
 }
 .wiki-skin-breadcrumb {
@@ -201,6 +203,49 @@ span.wiki-skin-select {
   min-height: 36px;
   font-size: 12px;
 }
+.wiki-skin-filter-choice {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+.wiki-skin-filter-art {
+  display: grid;
+  flex: none;
+  place-items: center;
+  height: 28px;
+  color: #c1ac83;
+}
+.wiki-skin-filter-art-hero {
+  width: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.wiki-skin-filter-art-badge {
+  width: 48px;
+  object-fit: contain;
+}
+.wiki-skin-filter-art > .wiki-image {
+  object-fit: inherit;
+}
+.wiki-skin-select[data-slot="select-trigger"] .wiki-skin-filter-art-hero {
+  width: 22px;
+  height: 22px;
+}
+.wiki-skin-select[data-slot="select-trigger"] .wiki-skin-filter-art-badge {
+  width: 34px;
+  height: 22px;
+}
+.wiki-skin-select[data-slot="select-trigger"][data-active="true"] {
+  width: auto;
+  max-width: 180px;
+}
+.wiki-skin-select .wiki-skin-filter-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .wiki-skin-select-variant {
   margin-inline-start: 6px;
   color: #8799ab;
@@ -218,11 +263,89 @@ span.wiki-skin-select {
 .wiki-skin-clear:hover {
   background: #d9bd8210;
 }
-.wiki-skin-grid {
+.wiki-skin-sort {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding-inline: 10px;
+  border-radius: 8px;
+  color: #d8c49d;
+  font-size: 12px;
+}
+.wiki-skin-sort:hover,
+.wiki-skin-sort[data-state="open"] {
+  background: #dbc18b14;
+}
+.wiki-skin-sort-menu fieldset {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 16px 12px;
-  margin-top: 14px;
+  gap: 2px;
+  min-width: 0;
+}
+.wiki-skin-sort-menu fieldset + fieldset {
+  margin-top: 12px;
+  border-top: 1px solid var(--wiki-line);
+  padding-top: 8px;
+}
+.wiki-skin-sort-menu legend {
+  margin-bottom: 4px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+.wiki-skin-sort-menu label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.wiki-skin-sort-menu input {
+  accent-color: var(--gold);
+}
+.wiki-skin-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+.wiki-skin-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.wiki-skin-group-heading h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+.wiki-skin-group-heading > span:last-child {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.wiki-skin-group-heading .wiki-skin-hero-head {
+  height: 26px;
+  width: 26px;
+}
+.wiki-skin-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(104px, 12vw, 140px);
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #bec8d244 transparent;
+  padding: 5px 4px 8px;
+}
+.wiki-skin-row[data-dragging] {
+  cursor: grabbing;
+}
+.wiki-skin-heading-skeleton {
+  width: 110px;
+  height: 24px;
 }
 .wiki-skin-card {
   position: relative;
@@ -321,31 +444,6 @@ span.wiki-skin-select {
   text-wrap: balance;
   text-shadow: 0 1px 8px #020a1480;
 }
-.wiki-skin-card-bottom {
-  display: flex;
-  min-width: 0;
-  min-height: 22px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 6px;
-  border-top: 1px solid #bec8d21a;
-  padding-top: 6px;
-}
-.wiki-skin-card-hero {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 6px;
-  color: #a5b4c5;
-  font-size: 10px;
-  line-height: 1.3;
-}
-.wiki-skin-card-hero > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .wiki-skin-hero-head {
   width: 16px;
   height: 16px;
@@ -353,21 +451,6 @@ span.wiki-skin-select {
   border: 1px solid #e5d3aa38;
   border-radius: 50%;
   object-fit: cover;
-}
-.wiki-skin-card-open {
-  display: grid;
-  width: 20px;
-  height: 20px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid #b4c4d329;
-  border-radius: 6px;
-  background: #d3e3f10a;
-  color: #d1c09d;
-  transition:
-    color 180ms,
-    border-color 180ms,
-    background 180ms;
 }
 .wiki-skin-card:focus-visible {
   outline: 2px solid #e4c88e;
@@ -394,16 +477,11 @@ span.wiki-skin-select {
 .wiki-skin-skeleton {
   pointer-events: none;
 }
-.wiki-skin-name-skeleton,
-.wiki-skin-owner-skeleton {
+.wiki-skin-name-skeleton {
   display: block;
   width: 75%;
   height: 36px;
   border-radius: 4px;
-}
-.wiki-skin-owner-skeleton {
-  width: 45%;
-  height: 18px;
 }
 .wiki-skin-state {
   display: grid;
@@ -426,7 +504,6 @@ span.wiki-skin-select {
   line-height: 1.7;
 }
 .wiki-skin-state button,
-.wiki-skin-load-more button,
 .wiki-skin-refresh-error button {
   border: 1px solid #e4c88e55;
   border-radius: 10px;
@@ -437,16 +514,6 @@ span.wiki-skin-select {
 .wiki-skin-state button:disabled,
 .wiki-skin-refresh-error button:disabled {
   opacity: 0.5;
-}
-.wiki-skin-load-more {
-  display: flex;
-  min-height: 62px;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding-block: 16px;
-  color: #9eabba;
-  font-size: 12px;
 }
 .wiki-skin-refresh-error {
   display: flex;
@@ -574,11 +641,6 @@ span.wiki-skin-select {
   .wiki-skin-card:hover .wiki-skin-art > img {
     transform: scale(1.045);
   }
-  .wiki-skin-card:hover .wiki-skin-card-open {
-    border-color: #e3c88e73;
-    background: #e3c88e1a;
-    color: #f4dfb4;
-  }
 }
 @media (min-width: 1600px) {
   .wiki-library-shell:has(.wiki-skin-directory) .wiki-library-body {
@@ -587,30 +649,14 @@ span.wiki-skin-select {
   .wiki-skin-directory {
     max-width: 1024px;
   }
-  .wiki-skin-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-}
-@media (min-width: 900px) and (max-width: 1199px) {
-  .wiki-skin-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
 }
 @media (min-width: 641px) and (max-width: 899px) {
-  .wiki-skin-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px 12px;
-  }
   .wiki-skin-card-caption {
     padding: 10px;
   }
   .wiki-skin-card-name {
     min-height: 32px;
     font-size: 12px;
-  }
-  .wiki-skin-card-open {
-    width: 20px;
-    height: 20px;
   }
   .wiki-skin-search {
     width: 100%;
@@ -686,14 +732,9 @@ span.wiki-skin-select {
   }
   .wiki-skin-select[data-slot="select-trigger"],
   span.wiki-skin-select {
-    width: 124px;
+    width: clamp(84px, 27vw, 124px);
     height: 36px;
     font-size: 11px;
-  }
-  .wiki-skin-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px 9px;
-    margin-top: 12px;
   }
   .wiki-skin-card {
     border-radius: 4px 18px 4px 4px;
@@ -712,28 +753,9 @@ span.wiki-skin-select {
     font-size: 10px;
     line-height: 1.35;
   }
-  .wiki-skin-card-bottom {
-    min-height: 18px;
-    gap: 3px;
-    margin-top: 5px;
-    padding-top: 5px;
-  }
-  .wiki-skin-card-hero {
-    gap: 4px;
-    font-size: 9px;
-  }
   .wiki-skin-hero-head {
     width: 13px;
     height: 13px;
-  }
-  .wiki-skin-card-open {
-    width: 17px;
-    height: 17px;
-    border-radius: 4px;
-  }
-  .wiki-skin-card-open > svg {
-    width: 11px;
-    height: 11px;
   }
   .wiki-skin-frame-corner {
     right: 3px;
@@ -744,9 +766,6 @@ span.wiki-skin-select {
   }
   .wiki-skin-name-skeleton {
     height: 28px;
-  }
-  .wiki-skin-owner-skeleton {
-    height: 13px;
   }
   .wiki-skin-preview[data-slot="dialog-content"] {
     width: calc(100vw - 24px);
@@ -772,13 +791,6 @@ span.wiki-skin-select {
   }
 }
 @media (max-width: 350px) {
-  .wiki-skin-grid {
-    gap: 10px 7px;
-  }
-  .wiki-skin-select[data-slot="select-trigger"],
-  span.wiki-skin-select {
-    width: 119px;
-  }
   .wiki-skin-card-caption {
     padding-inline: 6px;
   }
@@ -790,8 +802,7 @@ span.wiki-skin-select {
 @media (prefers-reduced-motion: reduce) {
   .wiki-skin-card,
   .wiki-skin-frame,
-  .wiki-skin-art > img,
-  .wiki-skin-card-open {
+  .wiki-skin-art > img {
     transition: none;
     transform: none;
   }
