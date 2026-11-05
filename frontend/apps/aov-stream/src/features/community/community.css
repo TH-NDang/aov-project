@@ -697,20 +697,13 @@
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--hub-border);
   border-radius: var(--hub-radius);
   background: var(--hub-surface);
-  box-shadow: var(--hub-shadow);
-  transition:
-    background-color 160ms,
-    box-shadow 160ms,
-    border-color 160ms;
+  transition: background-color 160ms;
 }
 .cp-profile-card:hover,
 .cp-profile-card:focus-within {
-  border-color: var(--hub-accent-border);
-  background: color-mix(in srgb, var(--hub-accent) 3%, var(--hub-surface));
-  box-shadow: var(--hub-shadow-lg);
+  background: var(--hub-raised);
 }
 .cp-card-cover {
   height: 72px;
@@ -767,7 +760,6 @@
   gap: 8px;
   margin-top: auto;
   padding-top: 8px;
-  border-top: 1px solid var(--hub-border);
   color: var(--hub-muted);
   font-size: 12px;
   font-weight: 650;
@@ -2033,7 +2025,8 @@
 }
 .cp-regions {
   display: grid;
-  gap: var(--hub-space-3);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: var(--hub-space-4);
 }
 .cp-region {
   display: grid;
@@ -2586,4 +2579,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.cp-regions > :is(h2, .hub-card-title, .cp-explore-heading) {
+  grid-column: 1 / -1;
 }

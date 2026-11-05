@@ -51,7 +51,7 @@ export function CommunityHome() {
       : filters.find((filter) => filter.value === requested)?.value || "latest"
   const open = (next: Tab) => setParams(next === "latest" ? {} : { tab: next })
   return (
-    <StreamShell aside={<CommunityAside suggestions schedule />}>
+    <StreamShell aside={<CommunityAside guest suggestions schedule />}>
       <title>Bảng tin — AOV Stream</title>
       <div className="cp-container">
         <h1 className="sr-only">Bảng tin cộng đồng</h1>

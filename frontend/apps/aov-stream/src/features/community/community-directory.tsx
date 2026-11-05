@@ -145,18 +145,12 @@ export function ProfileCard({ profile, following }: { profile: CommunityProfile;
           <span>{name}</span>
           {community && profile.represented && <OfficialBadge label="Đại diện đã xác minh" />}
         </strong>
-        <span className="cp-card-meta">
-          {community ? followersLabel(profile.followers) : "Tổng quan · Các mùa giải · Lịch sử"}
-        </span>
-        <span className="cp-card-footer">
-          <span>
-            {!community
-              ? "Trang thông tin"
-              : profile.represented
-                ? "Đại diện đã xác minh"
-                : "Hồ sơ do AthaHub tổng hợp"}
-          </span>
-          {community && following && (
+        {!community && <span className="cp-card-meta">Tổng quan · Các mùa giải · Lịch sử</span>}
+        {community && profile.followers > 0 && (
+          <span className="cp-card-meta">{followersLabel(profile.followers)}</span>
+        )}
+        {community && following && (
+          <span className="cp-card-footer">
             <button
               className={followed ? "cp-follow-chip" : "cp-follow-chip cp-follow-primary"}
               aria-pressed={followed}
@@ -166,8 +160,8 @@ export function ProfileCard({ profile, following }: { profile: CommunityProfile;
               <StreamIcon name={followed ? "check" : "plus"} size={14} />
               {followed ? "Đang theo dõi" : "Theo dõi"}
             </button>
-          )}
-        </span>
+          </span>
+        )}
       </span>
     </article>
   )

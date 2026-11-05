@@ -6,142 +6,60 @@
  */
 :root {
   color-scheme: light;
-  --hub-bg: #f2f4f8;
-  --hub-surface: #ffffff;
-  --hub-raised: #f6f7fb;
-  --hub-sunken: #f0f2f7;
-  --hub-hover: color-mix(in srgb, var(--brand-stream-accent) 8%, var(--hub-surface));
-  --hub-border: #e2e6ee;
-  --hub-border-strong: #cdd4e1;
-  --hub-text: #151b2b;
-  --hub-text-soft: #39435a;
-  --hub-muted: #5d697e;
-  --hub-accent: var(--brand-stream-accent);
-  --hub-accent-strong: #425481;
-  --hub-accent-soft: var(--brand-stream-tint);
-  --brand-wiki-ink: #69462f;
-  --brand-wiki-accent: #94651d;
-  --brand-wiki-tint: #fdf2d9;
-  --brand-stream-ink: #303653;
-  --brand-stream-accent: #526294;
-  --brand-stream-tint: #eef0fa;
-  --hub-on-accent: #fff;
-  --hub-accent-border: color-mix(in srgb, var(--hub-accent) 42%, var(--hub-border));
-  --hub-art-accent: #c4cff0;
-  --hub-indigo: #4c58d0;
-  --hub-indigo-soft: #eceefe;
-  --hub-blue: #2a78c9;
-  --hub-red: #cc4c34;
-  --hub-success: #12804f;
-  --hub-success-soft: #e3f6ec;
-  --hub-danger: #c3313f;
-  --hub-danger-soft: #fdecee;
-  --hub-overlay: rgb(255 255 255 / 88%);
-  --hub-shadow: 0 1px 2px rgb(16 24 40 / 5%), 0 1px 3px rgb(16 24 40 / 4%);
-  --hub-shadow-lg: 0 14px 34px -14px rgb(16 24 40 / 24%);
-  --hub-radius: 12px;
-  --hub-radius-sm: 8px;
-  --hub-topbar: 52px;
+  --hub-bg: var(--aov-bg);
+  --hub-surface: var(--aov-surface);
+  --hub-raised: var(--aov-raised);
+  --hub-sunken: var(--aov-sunken);
+  --hub-hover: var(--aov-raised);
+  --hub-border: var(--aov-line);
+  --hub-border-strong: var(--aov-line-strong);
+  --hub-text: var(--aov-text);
+  --hub-text-soft: var(--aov-text-soft);
+  --hub-muted: var(--aov-muted);
+  --hub-accent: var(--aov-accent);
+  --hub-accent-strong: var(--aov-accent-strong);
+  --hub-accent-soft: var(--aov-accent-soft);
+  --brand-wiki-ink: var(--aov-text);
+  --brand-wiki-accent: var(--aov-accent);
+  --brand-wiki-tint: var(--aov-accent-soft);
+  --brand-stream-ink: var(--aov-text);
+  --brand-stream-accent: var(--aov-accent);
+  --brand-stream-tint: var(--aov-accent-soft);
+  --hub-on-accent: var(--aov-on-accent);
+  --hub-accent-border: color-mix(in srgb, var(--aov-accent) 42%, var(--aov-line));
+  --hub-art-accent: #f0d49c;
+  --hub-indigo: var(--aov-info);
+  --hub-indigo-soft: var(--aov-info-soft);
+  --hub-blue: var(--aov-info);
+  --hub-red: var(--aov-live);
+  --hub-success: var(--aov-success);
+  --hub-success-soft: var(--aov-success-soft);
+  --hub-danger: var(--aov-danger);
+  --hub-danger-soft: var(--aov-danger-soft);
+  --hub-overlay: color-mix(in srgb, var(--aov-bg) 86%, transparent);
+  --hub-shadow: var(--aov-shadow);
+  --hub-shadow-lg: var(--aov-shadow-lg);
+  --hub-radius: var(--aov-radius-card);
+  --hub-radius-sm: var(--aov-radius-control);
+  --hub-topbar: var(--aov-topbar);
   --hub-space-1: 4px;
   --hub-space-2: 8px;
   --hub-space-3: 12px;
   --hub-space-4: 16px;
   --hub-space-5: 24px;
-  --hub-gutter: 20px;
+  --hub-gutter: var(--aov-gutter);
   --hub-panel-padding: 16px;
-  --hub-layout-gap: 16px;
+  --hub-layout-gap: 24px;
   --hub-control-height: 36px;
-  --hub-font:
-    "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
-
-  --background: var(--hub-bg);
-  --foreground: var(--hub-text);
-  --card: var(--hub-surface);
-  --card-foreground: var(--hub-text);
-  --popover: var(--hub-surface);
-  --popover-foreground: var(--hub-text);
-  --primary: var(--hub-accent);
-  --primary-foreground: var(--hub-on-accent);
-  --secondary: var(--hub-raised);
-  --secondary-foreground: var(--hub-text);
-  --muted: var(--hub-raised);
-  --muted-foreground: var(--hub-muted);
-  --accent: var(--hub-hover);
-  --accent-foreground: var(--hub-text);
-  --destructive: var(--hub-danger);
-  --border: var(--hub-border);
-  --input: var(--hub-border-strong);
-  --ring: var(--hub-accent);
+  --hub-font: var(--aov-font-sans);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --hub-bg: #0c111d;
-    --hub-surface: #141b2b;
-    --hub-raised: #1a2234;
-    --hub-sunken: #0f1524;
-    --hub-hover: color-mix(in srgb, var(--brand-stream-accent) 10%, var(--hub-surface));
-    --hub-border: #232d43;
-    --hub-border-strong: #34405a;
-    --hub-text: #eaeef6;
-    --hub-text-soft: #c3cbdc;
-    --hub-muted: #909cb2;
-    --hub-accent: var(--brand-stream-accent);
-    --hub-accent-strong: #c4cff0;
-    --hub-accent-soft: color-mix(in srgb, var(--brand-stream-accent) 13%, transparent);
-    --brand-wiki-ink: #f5e6cc;
-    --brand-wiki-accent: #e5b566;
-    --brand-wiki-tint: #e5b5660d;
-    --brand-stream-ink: #eee0ba;
-    --brand-stream-accent: #aebbe3;
-    --brand-stream-tint: #aebbe314;
-    --hub-on-accent: #202741;
-    --hub-indigo: #959dff;
-    --hub-indigo-soft: rgb(124 136 255 / 15%);
-    --hub-blue: #63a9ef;
-    --hub-red: #f08469;
-    --hub-success: #4fd39a;
-    --hub-success-soft: rgb(79 211 154 / 13%);
-    --hub-danger: #ff7d88;
-    --hub-danger-soft: rgb(255 125 136 / 12%);
-    --hub-overlay: rgb(12 17 29 / 84%);
-    --hub-shadow: 0 1px 2px rgb(0 0 0 / 28%);
-    --hub-shadow-lg: 0 16px 40px -16px rgb(0 0 0 / 65%);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --hub-bg: #0c111d;
-  --hub-surface: #141b2b;
-  --hub-raised: #1a2234;
-  --hub-sunken: #0f1524;
-  --hub-hover: color-mix(in srgb, var(--brand-stream-accent) 10%, var(--hub-surface));
-  --hub-border: #232d43;
-  --hub-border-strong: #34405a;
-  --hub-text: #eaeef6;
-  --hub-text-soft: #c3cbdc;
-  --hub-muted: #909cb2;
-  --hub-accent: var(--brand-stream-accent);
-  --hub-accent-strong: #c4cff0;
-  --hub-accent-soft: color-mix(in srgb, var(--brand-stream-accent) 13%, transparent);
-  --brand-wiki-ink: #f5e6cc;
-  --brand-wiki-accent: #e5b566;
-  --brand-wiki-tint: #e5b5660d;
-  --brand-stream-ink: #eee0ba;
-  --brand-stream-accent: #aebbe3;
-  --brand-stream-tint: #aebbe314;
-  --hub-on-accent: #202741;
-  --hub-indigo: #959dff;
-  --hub-indigo-soft: rgb(124 136 255 / 15%);
-  --hub-blue: #63a9ef;
-  --hub-red: #f08469;
-  --hub-success: #4fd39a;
-  --hub-success-soft: rgb(79 211 154 / 13%);
-  --hub-danger: #ff7d88;
-  --hub-danger-soft: rgb(255 125 136 / 12%);
-  --hub-overlay: rgb(12 17 29 / 84%);
-  --hub-shadow: 0 1px 2px rgb(0 0 0 / 28%);
-  --hub-shadow-lg: 0 16px 40px -16px rgb(0 0 0 / 65%);
 }
 
 * {
@@ -152,7 +70,7 @@ body {
   background: var(--hub-bg);
   color: var(--hub-text);
   font-family: var(--hub-font);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
@@ -406,7 +324,7 @@ button:disabled {
 }
 .hub-body {
   flex: 1;
-  width: min(1200px, 100%);
+  width: min(var(--aov-page-max), 100%);
   margin: 0 auto;
   padding: var(--hub-layout-gap) var(--hub-gutter) var(--hub-space-5);
 }
@@ -418,6 +336,10 @@ button:disabled {
   grid-template-columns: minmax(0, 1fr) 280px;
   align-items: start;
   gap: var(--hub-layout-gap);
+}
+/* The right column only takes space when it has something to show. */
+.hub-content-split:not(:has(.hub-aside > *)) {
+  grid-template-columns: minmax(0, 1fr);
 }
 .hub-main {
   min-width: 0;
@@ -490,10 +412,8 @@ button:disabled {
 /* ---------- Shared building blocks ---------- */
 .hub-card {
   min-width: 0;
-  border: 1px solid var(--hub-border);
   border-radius: var(--hub-radius);
   background: var(--hub-surface);
-  box-shadow: var(--hub-shadow);
 }
 .hub-card-padded {
   padding: var(--hub-panel-padding);
@@ -826,7 +746,6 @@ button:disabled {
   gap: 10px;
   min-height: 180px;
   padding: var(--hub-space-5) var(--hub-panel-padding);
-  border: 1px dashed var(--hub-border-strong);
   border-radius: var(--hub-radius);
   background: var(--hub-surface);
   color: var(--hub-muted);
@@ -1066,14 +985,14 @@ button:disabled {
   width: 22px;
   background: var(--hub-accent);
 }
+/* The feed sits on the page; only the entries inside it are surfaces. */
 .hub-feed {
-  overflow: hidden;
+  background: transparent;
 }
 .hub-feed-header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 var(--hub-panel-padding);
   border-bottom: 1px solid var(--hub-border);
 }
 .hub-feed-header .cp-tabs {
@@ -1082,15 +1001,13 @@ button:disabled {
   border: 0;
 }
 .hub-feed-body {
-  padding: var(--hub-panel-padding);
+  padding: var(--hub-panel-padding) 0 0;
 }
 .hub-feed-body > .game-card-grid {
   margin-top: 16px;
 }
 .hub-feed-body > .hub-state {
   margin: 0;
-  border-style: none;
-  background: var(--hub-raised);
 }
 .hub-feed-body > .hub-skeleton-rows {
   margin-top: 0;

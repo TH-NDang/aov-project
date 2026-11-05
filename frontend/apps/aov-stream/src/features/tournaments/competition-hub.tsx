@@ -63,12 +63,8 @@ export function CompetitionDirectory() {
     <StreamShell aside={<CommunityAside schedule={false} />}>
       <title>Giải đấu & lịch thi đấu — AOV Stream</title>
       <div className="competition-hub cp-container">
-        <header className="competition-hub-header hub-card">
-          <span className="competition-hub-mark">
-            <StreamIcon name="trophy" size={26} />
-          </span>
+        <header className="competition-hub-header">
           <div>
-            <span className="hub-kicker">Đấu trường Liên Quân</span>
             <h1>Giải đấu</h1>
             <p>Theo dõi mùa giải, lịch thi đấu và kết quả từng trận.</p>
           </div>
@@ -77,7 +73,7 @@ export function CompetitionDirectory() {
             Tra cứu ván đấu
           </Link>
         </header>
-        <section className="hub-card competition-hub-body">
+        <section className="competition-hub-body">
           <nav className="cp-tabs" aria-label="Nội dung giải đấu">
             <button
               aria-current={tab === "competitions" ? "page" : undefined}

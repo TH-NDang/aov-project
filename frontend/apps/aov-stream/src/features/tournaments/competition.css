@@ -2,8 +2,6 @@
   display: flex;
   align-items: center;
   gap: var(--hub-space-3);
-  padding: var(--hub-panel-padding);
-  background: linear-gradient(115deg, var(--hub-accent-soft), transparent 70%), var(--hub-surface);
 }
 .competition-hub-mark {
   display: grid;

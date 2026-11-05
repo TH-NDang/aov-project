@@ -10,7 +10,6 @@ import {
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
-import { CommunityAside } from "./community-aside"
 import { PageDirectory } from "./community-directory"
 import { LiveRow } from "./community-live"
 import { PostCard } from "./community-post"
@@ -29,7 +28,7 @@ export function CommunityExplore() {
   const [params] = useSearchParams()
   const query = params.get("q")?.trim() || ""
   return (
-    <StreamShell aside={<CommunityAside suggestions />}>
+    <StreamShell>
       <title>Khám phá — AOV Stream</title>
       <div className="cp-container cp-explore">
         <h1 className="cp-explore-title">{query ? `Kết quả cho “${query}”` : "Khám phá"}</h1>

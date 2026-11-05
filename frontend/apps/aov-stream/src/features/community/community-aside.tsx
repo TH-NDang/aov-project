@@ -3,7 +3,6 @@ import { profileKindLabels } from "@aov/community-contracts"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
-import { ADMIN_URL, WIKI_URL } from "../../components/stream-shell"
 import { AccountAvatar } from "../account/account-profile"
 import { useOwnProfile } from "../account/profile-api"
 import { signIn, useCommunitySession } from "./community-auth"
@@ -19,24 +18,27 @@ import { Avatar, followersLabel, timeAgo } from "./community-ui"
 import { TodaySchedule } from "./community-schedule"
 
 /**
- * The right column of portal pages. Visitors get an invitation to sign in; the account card, notifications and
+ * The right column of portal pages. The invitation to sign in only appears on the feed; the account card, notifications and
  * page suggestions exist only for signed-in viewers.
  */
 export function CommunityAside({
   suggestions = true,
   representative = false,
   schedule = false,
+  guest = false,
 }: {
   suggestions?: boolean
   representative?: boolean
   /** Lists today's matches, or the next ones, from the published competitions. */
   schedule?: boolean
+  /** Invites visitors to sign in. Kept to the feed so it does not repeat on every page. */
+  guest?: boolean
 }) {
   const session = useCommunitySession()
   const signedIn = session.status === "authenticated"
   return (
     <>
-      {signedIn ? <AccountCard /> : <GuestCard />}
+      {signedIn ? <AccountCard /> : guest && <GuestCard />}
       {schedule && <TodaySchedule />}
       {signedIn && <NotificationsCard />}
       {signedIn && suggestions && <FollowingCard />}
@@ -50,29 +52,6 @@ export function CommunityAside({
           </p>
         </section>
       )}
-      <section className="hub-card hub-card-padded">
-        <h2 className="hub-card-title">Khám phá thêm</h2>
-        <a className="hub-link-row" href={WIKI_URL}>
-          <span className="hub-link-icon">
-            <StreamIcon name="spark" size={18} />
-          </span>
-          <span>
-            <strong>AOV WiKi</strong>
-            <small>Tướng, trang bị và phiên bản</small>
-          </span>
-          <StreamIcon name="external" size={14} />
-        </a>
-        <a className="hub-link-row" href={`${ADMIN_URL}/tournaments`}>
-          <span className="hub-link-icon">
-            <StreamIcon name="edit" size={18} />
-          </span>
-          <span>
-            <strong>Đóng góp dữ liệu</strong>
-            <small>Biên tập giải đấu và ván đấu</small>
-          </span>
-          <StreamIcon name="external" size={14} />
-        </a>
-      </section>
     </>
   )
 }
