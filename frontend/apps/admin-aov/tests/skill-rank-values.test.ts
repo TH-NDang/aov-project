@@ -95,6 +95,22 @@ test("recorded rank summaries infer only complete, uniform series and retain the
   assert.equal(rankSummary(["10", "20"], columns), "10 / 20")
 })
 
+test("summary input round trips percentages, decimal cooldowns, large damage and combat coefficients", () => {
+  for (const values of [
+    ["1000", "1250", "1500"],
+    ["15%", "18%", "21%"],
+    ["21%", "18%", "15%"],
+    ["8,5s", "8s", "7,5s"],
+    ["10 (+25% Công phép)", "15 (+25% Công phép)"],
+  ]) {
+    const summary = rankSummary(values)!
+    assert.deepEqual(rankValues(summary, values.length), rankValues(values, values.length), summary)
+  }
+  assert.deepEqual(rankValues("315 (+40/cấp chiêu)", 6), ["315", "355", "395", "435", "475", "515"])
+  assert.deepEqual(rankValues("11 (-0,4/cấp chiêu)", 6), ["11", "10,6", "10,2", "9,8", "9,4", "9"])
+  assert.deepEqual(rankValues("450 + 0,9 × Công phép", 2), ["450 + 0,9 × Công phép", "450 + 0,9 × Công phép"])
+})
+
 test("recorded rank counts override standard slots and unknown or passive slots are not guessed", () => {
   assert.equal(skillRankCount(skill(["Lv 1", "Lv 2", "Lv 3", "Lv 4"])), 4)
   assert.equal(skillRankCount({ ...skill(), skillKey: "skill-3-1" }), 3)

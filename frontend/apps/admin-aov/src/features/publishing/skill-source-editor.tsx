@@ -119,6 +119,9 @@ export function SkillTableEditor({
   }
   return (
     <div className="min-w-0 space-y-2">
+      <p className="type-meta">
+        Nhập công thức ở ô Tổng quan, ví dụ 315 (+40/cấp chiêu) hoặc 11 (-0,4/cấp chiêu), rồi bấm “Điền các cấp”.
+      </p>
       {rows.length > 0 && (
         <div className="max-w-full overflow-x-auto">
           <table className="w-full border-collapse text-left text-sm tabular-nums">
@@ -155,13 +158,13 @@ export function SkillTableEditor({
                       className={cellInput}
                       aria-label={`${name || "Thông số"} · ${label}`}
                       value={String(values[i] ?? "")}
-                      onChange={(event) =>
+                      onChange={(event) => {
                         writeRow(index, {
                           display_values: Array.from({ length: Math.max(i + 1, values.length) }, (_, j) =>
                             j === i ? event.target.value : (values[j] ?? ""),
                           ),
                         })
-                      }
+                      }}
                     />
                   )
                 }
@@ -188,7 +191,13 @@ export function SkillTableEditor({
                         {calculated ? (
                           valueInput(0, "Tổng quan")
                         ) : (
-                          <AdminEntityText text={rankSummary(values, columns) ?? "—"} />
+                          <RankSummaryInput
+                            key={JSON.stringify([values, columns])}
+                            name={name || "Thông số"}
+                            values={values}
+                            columns={columns}
+                            onApply={(display_values) => writeRow(index, { display_values })}
+                          />
                         )}
                       </td>
                     )}
@@ -230,6 +239,67 @@ export function SkillTableEditor({
           </Button>
         )}
       </div>
+    </div>
+  )
+}
+
+function RankSummaryInput({
+  name,
+  values,
+  columns,
+  onApply,
+}: {
+  name: string
+  values: unknown[]
+  columns: string[]
+  onApply: (values: string[]) => void
+}) {
+  const initial = rankSummary(values, columns) ?? ""
+  const [expression, setExpression] = useState(initial)
+  const changed = expression !== initial
+  const sequential = columns.every((column, index) => column === `Cấp ${index + 1}`)
+  const ranks = sequential ? rankValues(expression, columns.length) : null
+  const valid = !!ranks?.every((value) => value !== null)
+  return (
+    <div className="min-w-52 space-y-1 py-1">
+      <input
+        className={cellInput}
+        aria-label={`${name} · Tổng quan`}
+        aria-invalid={changed && !valid}
+        placeholder="315 (+40/cấp chiêu)"
+        value={expression}
+        onChange={(event) => setExpression(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter") return
+          event.preventDefault()
+          if (changed && valid) onApply(ranks as string[])
+        }}
+      />
+      {changed && (
+        <>
+          <p className="type-meta" role="status">
+            {valid
+              ? ranks!.join(" / ")
+              : sequential
+                ? "Công thức chưa hợp lệ; các cấp đang có được giữ nguyên."
+                : "Chỉ điền nhanh khi các cột liên tiếp từ Cấp 1."}
+          </p>
+          <div className="flex gap-1">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={!valid}
+              onClick={() => onApply(ranks as string[])}
+            >
+              Điền các cấp
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setExpression(initial)}>
+              Hủy
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

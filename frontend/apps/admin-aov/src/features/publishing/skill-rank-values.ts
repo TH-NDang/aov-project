@@ -6,7 +6,7 @@ import type { Skill } from "./types"
 type RecordValue = Record<string, unknown>
 const record = (value: unknown): RecordValue | null =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : null
-const numeric = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 6 })
+const numeric = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 6, useGrouping: false })
 const rankColumn = (value: unknown) => /^(?:lv\.?|cấp(?: chiêu)?)\s*(\d+)$/i.exec(String(value).trim())
 const clean = (value: string) =>
   plainComparisonText(value)
@@ -77,7 +77,7 @@ export function skillRankCount(skill?: Skill | null): number | null {
 }
 
 function formula(value: string): string {
-  const text = clean(value).replaceAll("−", "-")
+  const text = clean(value).replaceAll("−", "-").replaceAll("×", "*")
   const shorthand =
     /^(\d+(?:[.,]\d+)?)\s*(?:s|giây)?\s*\(?\s*([+-])\s*(\d+(?:[.,]\d+)?)\s*(?:s|giây)?\s*\/\s*cấp(?: chiêu)?\s*\)?$/i.exec(
       text,
@@ -96,7 +96,11 @@ function formula(value: string): string {
     .replace(/([\d)])\s*\(\s*([+-])/g, "$1$2(")
 }
 
-export const hasRankFormula = (value: unknown) => typeof value === "string" && /\brank\b/.test(formula(value))
+const percentProgression =
+  /^([+−-]?\d+(?:[.,]\d+)?)\s*%\s*\(?\s*([+−-])\s*(\d+(?:[.,]\d+)?)\s*%\s*\/\s*cấp(?: chiêu)?\s*\)?$/i
+
+export const hasRankFormula = (value: unknown) =>
+  typeof value === "string" && (/\brank\b/.test(formula(value)) || percentProgression.test(clean(value)))
 
 type Linear = { constant: number; terms: Record<string, number> }
 const numberValue = (constant: number): Linear => ({ constant, terms: {} })
@@ -184,6 +188,13 @@ export function rankValues(value: unknown, count: number): (string | null)[] | n
     )
   }
   if (typeof value !== "string" && typeof value !== "number") return null
+  const percent = percentProgression.exec(clean(String(value)))
+  if (percent) {
+    const base = Number(percent[1].replace(",", ".").replace("−", "-"))
+    const step = Number(percent[3].replace(",", ".")) * (percent[2] === "+" ? 1 : -1)
+    const values = Array.from({ length: count }, (_, index) => base + step * index)
+    return values.every(Number.isFinite) ? values.map((number) => `${numeric.format(number)}%`) : null
+  }
   const text = formula(String(value))
   const scalar = /^(-?\d+(?:[.,]\d+)?)\s*(s|giây|%)?$/i.exec(text)
   if (scalar)
