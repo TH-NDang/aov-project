@@ -366,7 +366,7 @@ export function DashboardPage() {
                       )
                     }}
                   />
-                  <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={56} />
+                  <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ChartContainer>
             ) : (

@@ -13,7 +13,7 @@ function readSidebarCookie(): boolean {
   return match ? match[1] === "true" : true
 }
 
-/** Content on the left, navigation sidebar docked on the right edge. */
+/** Navigation sidebar docked on the left edge, content on the right. */
 export function AppShell() {
   const { enabled } = useHotkeys()
   const importing = useLocation().pathname === "/hero/import"
@@ -25,6 +25,7 @@ export function AppShell() {
           keyboardShortcutEnabled={enabled}
           style={{ "--sidebar-width": "15rem" } as CSSProperties}
         >
+          <AppSidebar />
           <SidebarInset className="h-svh min-w-0 overflow-hidden">
             <SiteHeader />
             <div className={`${importing ? "hidden" : "flex"} min-h-0 flex-1 flex-col`}>
@@ -32,7 +33,6 @@ export function AppShell() {
             </div>
             <ImportWorkspaceHost />
           </SidebarInset>
-          <AppSidebar />
         </SidebarProvider>
       </PageTabsProvider>
     </BackgroundTasksProvider>

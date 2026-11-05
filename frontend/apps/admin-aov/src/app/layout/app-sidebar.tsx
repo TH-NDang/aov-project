@@ -145,7 +145,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed" && !isMobile
 
   return (
-    <Sidebar side="right" collapsible="icon">
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
