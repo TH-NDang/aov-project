@@ -69,6 +69,30 @@ test("capture excludes rows below the page overview even after nested scrolling"
   }
 })
 
+test("capture skips cross-origin images, which cannot be read without CORS", () => {
+  const { dom, panel, cleanup } = setupDom()
+  const original = Object.getOwnPropertyDescriptor(globalThis, "location")
+  Object.defineProperty(globalThis, "location", {
+    configurable: true,
+    value: { href: "https://admin.example.test/", origin: "https://admin.example.test" },
+  })
+  try {
+    panel.getBoundingClientRect = () => new dom.window.DOMRect(0, 0, 700, 600)
+    const image = dom.window.document.createElement("img")
+    panel.append(image)
+    image.getBoundingClientRect = () => new dom.window.DOMRect(0, 10, 50, 50)
+    const filter = createPreviewFilter(panel, new AbortController().signal)
+    image.src = "https://img.example.test/a.jpg"
+    assert.equal(filter(image), false)
+    image.src = "https://admin.example.test/local.png"
+    assert.equal(filter(image), true)
+  } finally {
+    if (original) Object.defineProperty(globalThis, "location", original)
+    else delete (globalThis as { location?: unknown }).location
+    cleanup()
+  }
+})
+
 test("closing or switching a tab cancels pending capture and rejects late images", async (t) => {
   const { panel, cleanup } = setupDom()
   t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 10000 })

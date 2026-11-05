@@ -22,6 +22,11 @@ export function createPreviewFilter(panel: HTMLElement, signal: AbortSignal) {
     if (!(node instanceof Element)) return true
     if (node.matches('script, style, iframe, video, canvas, input[type="password"], [data-preview-exclude]'))
       return false
+    // Reading a cross-origin image needs CORS on its host; without it the capture only produces failed requests.
+    if (node.matches("img")) {
+      const image = node as HTMLImageElement
+      if (new URL(image.currentSrc || image.src, location.href).origin !== location.origin) return false
+    }
     const rect = node.getBoundingClientRect()
     if (!rect.width && !rect.height) return getComputedStyle(node).display === "contents"
     const offset = node.parentElement ? scrollOffset(node.parentElement) : { x: 0, y: 0 }
