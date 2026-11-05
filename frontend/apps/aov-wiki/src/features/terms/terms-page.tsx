@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useParams, useSearchParams } from "react-router"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
+import { termIcon } from "@aov/ui/components/gameplay-icons"
+import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import {
   createEntityIndex,
   defaultEntityColor,
@@ -104,35 +106,39 @@ export function TermsPage() {
               {visible.map(({ entity, translation }) => {
                 const current = entity.id === termId
                 const color = entity.display?.color ?? defaultEntityColor(entity)
+                const Art = termIcon(entity.id) ?? navArtIcons.glossary
                 return (
                   <li key={entity.id} id={`term-${entity.id}`} ref={current ? (target as never) : undefined}>
                     <article className="wiki-term" aria-current={current ? "true" : undefined}>
-                      <h2>
-                        <Link
-                          to={href(`/terms/${encodeURIComponent(entity.id)}`)}
-                          style={color ? { color } : undefined}
-                        >
-                          {translation.name}
-                        </Link>
-                      </h2>
-                      {translation.aliases.length > 0 && (
-                        <p className="wiki-term-aliases">
-                          {text("Còn gọi là", "Also called")} {translation.aliases.join(", ")}
-                        </p>
-                      )}
-                      <div className="wiki-term-body">
-                        {translation.description ? (
-                          <EntityRichText
-                            text={translation.description}
-                            index={index}
-                            locale={locale}
-                            fallbackLocale={fallback}
-                            autoRecognize={false}
-                            context="wiki"
-                          />
-                        ) : (
-                          text("Chưa có giải thích cho thuật ngữ này.", "This term has no explanation yet.")
+                      <Art size={40} className="wiki-term-art" />
+                      <div className="wiki-term-copy">
+                        <h2>
+                          <Link
+                            to={href(`/terms/${encodeURIComponent(entity.id)}`)}
+                            style={color ? { color } : undefined}
+                          >
+                            {translation.name}
+                          </Link>
+                        </h2>
+                        {translation.aliases.length > 0 && (
+                          <p className="wiki-term-aliases">
+                            {text("Còn gọi là", "Also called")} {translation.aliases.join(", ")}
+                          </p>
                         )}
+                        <div className="wiki-term-body">
+                          {translation.description ? (
+                            <EntityRichText
+                              text={translation.description}
+                              index={index}
+                              locale={locale}
+                              fallbackLocale={fallback}
+                              autoRecognize={false}
+                              context="wiki"
+                            />
+                          ) : (
+                            text("Chưa có giải thích cho thuật ngữ này.", "This term has no explanation yet.")
+                          )}
+                        </div>
                       </div>
                     </article>
                   </li>
@@ -140,7 +146,7 @@ export function TermsPage() {
               })}
             </ul>
           ) : (
-            <p role="status" className="wiki-terms-state">
+            <p role="status" className="wiki-terms-state wiki-mascot-state">
               {terms.length
                 ? text("Không có thuật ngữ phù hợp.", "No matching terms.")
                 : text("Chưa có thuật ngữ được công bố.", "No terms have been published yet.")}

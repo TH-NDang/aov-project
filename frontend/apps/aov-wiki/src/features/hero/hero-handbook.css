@@ -376,3 +376,12 @@
 .wiki-hero-history-more:hover {
   text-decoration: underline;
 }
+.wiki-facts dt,
+.wiki-hero-ratings dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.wiki-fact-icon {
+  flex: none;
+}

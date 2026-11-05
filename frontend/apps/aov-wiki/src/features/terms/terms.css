@@ -32,6 +32,9 @@
   margin-top: 16px;
 }
 .wiki-term {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   height: 100%;
   padding: 14px 16px;
   border: 1px solid transparent;
@@ -61,4 +64,10 @@
   font: var(--wiki-type-body);
   margin-top: 6px;
   color: var(--aov-text-soft);
+}
+.wiki-term-art {
+  flex: none;
+}
+.wiki-term-copy {
+  min-width: 0;
 }

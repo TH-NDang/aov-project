@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { Link, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
+import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { createEntityIndex } from "@aov/ui/lib/entity-rich-text"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
@@ -25,12 +26,12 @@ function skillLabel(skill: PublicSkill, locale: string) {
 }
 
 const baseStats = [
-  ["HP", "Máu", "Health"],
-  ["ATTACK_DAMAGE", "Công vật lý", "Physical attack"],
-  ["ABILITY_POWER", "Công phép", "Ability power"],
-  ["ARMOR", "Giáp", "Armor"],
-  ["MAGIC_DEFENSE", "Giáp phép", "Magic defense"],
-  ["MOVEMENT_SPEED", "Tốc chạy", "Movement speed"],
+  ["HP", "Máu", "Health", gameplayIcons.heart],
+  ["ATTACK_DAMAGE", "Công vật lý", "Physical attack", gameplayIcons.sword],
+  ["ABILITY_POWER", "Công phép", "Ability power", gameplayIcons.orb],
+  ["ARMOR", "Giáp", "Armor", gameplayIcons.shield],
+  ["MAGIC_DEFENSE", "Giáp phép", "Magic defense", gameplayIcons.runeShield],
+  ["MOVEMENT_SPEED", "Tốc chạy", "Movement speed", gameplayIcons.boot],
 ] as const
 
 function SkillIcon({ hero, skill, locale }: { hero: HeroDetail; skill: PublicSkill; locale: string }) {
@@ -130,7 +131,7 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
     ? table.rows.filter((row) => row?.label && Array.isArray(row.display_values) && row.display_values.length)
     : []
   const profile = hero.content.profile
-  const facts = baseStats.flatMap(([key, vi, en]) => {
+  const facts = baseStats.flatMap(([key, vi, en, Icon]) => {
     const roles = profile?.roles ?? []
     if (key === "ATTACK_DAMAGE" && roles.includes("MAGE") && !roles.includes("MARKSMAN")) return []
     if (key === "ABILITY_POWER" && !roles.includes("MAGE") && roles.includes("MARKSMAN")) return []
@@ -140,6 +141,7 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
     return [
       {
         label: text(vi, en),
+        Icon,
         value: stat.baseValue.toLocaleString(locale),
         before: change ? Number(change.before).toLocaleString(locale) : undefined,
       },
@@ -289,7 +291,10 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
           <dl className="wiki-facts">
             {facts.map((fact) => (
               <div key={fact.label}>
-                <dt>{fact.label}</dt>
+                <dt>
+                  <fact.Icon size={18} className="wiki-fact-icon" />
+                  {fact.label}
+                </dt>
                 <dd>
                   {fact.before && <del className="wiki-diff-cell">{fact.before}</del>}
                   {fact.value}

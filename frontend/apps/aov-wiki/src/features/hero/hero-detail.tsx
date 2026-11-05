@@ -181,7 +181,10 @@ export function HeroDetailPage() {
 
   return (
     <HeroDetailLayout title={t("heroes")}>
-      <div className="wiki-hero-profile-state" style={{ "--hero-accent": "#d6bd8e" } as CSSProperties}>
+      <div
+        className="wiki-hero-profile-state wiki-mascot-state"
+        style={{ "--hero-accent": "#d6bd8e" } as CSSProperties}
+      >
         <h1>
           {catalog.isError
             ? wikiText(locale, "Chưa tải được tướng", "Could not load this hero")

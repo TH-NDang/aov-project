@@ -37,13 +37,13 @@ export const wikiSections = [
   },
   {
     key: "updates",
-    icon: "patch",
+    icon: "updates",
     path: "/updates",
     group: "news",
   },
   {
     key: "terms",
-    icon: "book",
+    icon: "terms",
     path: "/terms",
     group: "news",
   },

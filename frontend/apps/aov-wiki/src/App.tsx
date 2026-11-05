@@ -140,7 +140,10 @@ export default function App() {
           element={
             <>
               <WikiHeader />
-              <main id="main" className="mx-auto grid flex-1 content-center gap-4 p-8 text-center">
+              <main
+                id="main"
+                className="wiki-mascot-state mx-auto grid flex-1 content-center justify-items-center gap-4 p-8 text-center"
+              >
                 <h1 className="text-xl text-gold">{wikiText(locale, "Không tìm thấy trang", "Page not found")}</h1>
                 <Link to={href("/")}>{t("backHome")}</Link>
               </main>

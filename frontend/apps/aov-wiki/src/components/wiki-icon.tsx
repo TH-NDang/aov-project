@@ -1,8 +1,9 @@
 import type { ReactNode } from "react"
 import { catalogIcons } from "@aov/ui/components/catalog-icons"
+import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 
 const { heroes: hero, skins: skin, ...warehouseIcons } = catalogIcons
-const sectionIcons = { hero, skin, ...warehouseIcons }
+const sectionIcons = { hero, skin, ...warehouseIcons, updates: navArtIcons.releases, terms: navArtIcons.glossary }
 type SectionIcon = keyof typeof sectionIcons
 
 const PATHS = {
@@ -103,6 +104,9 @@ const PATHS = {
   ),
   chevron: <path d="m8 10 4 4 4-4" />,
   chevronRight: <path d="m10 8 4 4-4 4" />,
+  chevronLeft: <path d="m14 8-4 4 4 4" />,
+  rows: <path d="M4 7h16M4 12h16M4 17h16" />,
+  board: <path d="M4 5h5v5H4zM15 5h5v5h-5zM15 14h5v5h-5zM9 7.5h6M9 7.5l6 9" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   home: <path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4Z" />,
   more: (

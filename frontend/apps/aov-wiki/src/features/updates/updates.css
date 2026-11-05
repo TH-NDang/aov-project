@@ -264,3 +264,28 @@ a.wiki-patch-subject-link:hover strong {
     padding: 12px;
   }
 }
+.wiki-change-kind i {
+  font-style: normal;
+}
+.wiki-patch-section h2 svg,
+.wiki-patch-jump a svg {
+  flex: none;
+  align-self: center;
+}
+.wiki-patch-jump a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.wiki-updates-row {
+  grid-template-columns: 32px 96px minmax(0, 1fr) auto;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .wiki-updates-row {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+  }
+  .wiki-updates-row strong {
+    grid-column: 2 / -1;
+  }
+}

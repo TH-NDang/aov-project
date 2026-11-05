@@ -1,4 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query"
+import { catalogIcons } from "@aov/ui/components/catalog-icons"
 import { Link, useParams } from "react-router"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
@@ -17,12 +18,17 @@ import {
 } from "./updates-api"
 import "./updates.css"
 
-const DOMAINS: { domain: ChangeDomain; title: [string, string]; tab?: string }[] = [
-  { domain: "HERO", title: ["Tướng", "Heroes"] },
-  { domain: "ITEM", title: ["Trang bị", "Equipment"], tab: "items" },
-  { domain: "ENCHANTMENT", title: ["Phù hiệu", "Enchantments"], tab: "enchantments" },
-  { domain: "ARCANA", title: ["Bảng ngọc", "Arcana"], tab: "arcana" },
-  { domain: "SPELL", title: ["Phụ trợ", "Talents"], tab: "spells" },
+const DOMAINS: {
+  domain: ChangeDomain
+  title: [string, string]
+  tab?: string
+  Icon: (typeof catalogIcons)[keyof typeof catalogIcons]
+}[] = [
+  { domain: "HERO", title: ["Tướng", "Heroes"], Icon: catalogIcons.heroes },
+  { domain: "ITEM", title: ["Trang bị", "Equipment"], tab: "items", Icon: catalogIcons.items },
+  { domain: "ENCHANTMENT", title: ["Phù hiệu", "Enchantments"], tab: "enchantments", Icon: catalogIcons.enchantments },
+  { domain: "ARCANA", title: ["Bảng ngọc", "Arcana"], tab: "arcana", Icon: catalogIcons.arcana },
+  { domain: "SPELL", title: ["Phụ trợ", "Talents"], tab: "spells", Icon: catalogIcons.spells },
 ]
 
 const titleCase = (code: string) => code.charAt(0).toUpperCase() + code.slice(1)
@@ -122,6 +128,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
           <nav className="wiki-patch-jump" aria-label={text("Trong bản cập nhật này", "In this update")}>
             {filled.map((section) => (
               <a key={section.domain} href={`#patch-${section.domain.toLowerCase()}`}>
+                <section.Icon size={18} />
                 {text(...section.title)} <span>{section.rows.length}</span>
               </a>
             ))}
@@ -132,6 +139,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
       {filled.map((section) => (
         <section key={section.domain} id={`patch-${section.domain.toLowerCase()}`} className="wiki-patch-section">
           <h2>
+            <section.Icon size={24} />
             {text(...section.title)} <span>{section.rows.length}</span>
           </h2>
           <div className="wiki-patch-subjects">
@@ -160,7 +168,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
         </div>
       )}
       {!pending && !failed && !filled.length && (
-        <p role="status" className="wiki-updates-state">
+        <p role="status" className="wiki-updates-state wiki-mascot-state">
           {text(
             "Bản cập nhật này chưa có ghi chú gameplay được công bố.",
             "This update has no published gameplay notes yet.",
@@ -194,7 +202,7 @@ export function PatchDetailPage() {
           </button>
         </div>
       ) : (
-        <div role="status" className="wiki-updates-state">
+        <div role="status" className="wiki-updates-state wiki-mascot-state">
           <h1>{wikiText(locale, "Không tìm thấy bản cập nhật", "Update not found")}</h1>
           <Link to={href("/updates")}>{wikiText(locale, "Xem tất cả bản cập nhật", "See all updates")}</Link>
         </div>

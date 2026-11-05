@@ -7,12 +7,23 @@ import {
   type HeroChangeItem,
 } from "../../lib/wiki-change-format"
 
+const KIND_MARKS: Record<string, string> = {
+  BUFF: "▲",
+  NERF: "▼",
+  ADJUSTMENT: "⇄",
+  BALANCE: "⇄",
+  REWORK: "✦",
+  ADDED: "✦",
+  REMOVED: "✕",
+  FIX: "✓",
+}
+
 export function ChangeKind({ kind }: { kind?: string | null }) {
   const { locale } = useWikiContext()
   if (!kind) return null
   return (
     <span className="wiki-change-kind" data-kind={kind}>
-      {patchChangeLabel(kind, locale)}
+      {KIND_MARKS[kind] && <i aria-hidden="true">{KIND_MARKS[kind]}</i>} {patchChangeLabel(kind, locale)}
     </span>
   )
 }

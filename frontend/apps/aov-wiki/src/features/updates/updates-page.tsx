@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
+import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { formatReleaseDate, patchReleasesQuery, type PatchRelease } from "./updates-api"
@@ -45,7 +46,7 @@ export function UpdatesPage() {
           </button>
         </div>
       ) : !ordered.length ? (
-        <p role="status" className="wiki-updates-state">
+        <p role="status" className="wiki-updates-state wiki-mascot-state">
           {wikiText(locale, "Chưa có bản cập nhật được công bố.", "No updates have been published yet.")}
         </p>
       ) : (
@@ -60,6 +61,7 @@ export function UpdatesPage() {
                   return (
                     <li key={release.id}>
                       <Link to={href(`/updates/${release.code}`)} className="wiki-updates-row">
+                        <navArtIcons.releases size={28} />
                         <time>{formatReleaseDate(variant?.regionalDate, release.effectiveAt) ?? release.code}</time>
                         <strong>{release.title || release.code}</strong>
                         {variant?.isCurrent && (

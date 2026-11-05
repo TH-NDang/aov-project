@@ -125,3 +125,17 @@
   border-top: 1px solid var(--wiki-line);
   padding-top: 24px;
 }
+
+/* Empty results and missing pages show the wiki mascot, so a dead end still feels like the product. */
+.wiki-mascot-state::before,
+.wiki-hero-list-state::before,
+.wiki-skin-state::before,
+.wiki-warehouse-empty::before {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 4px;
+  border-radius: var(--aov-radius-media);
+  background: url("/images/mole-logo-v4.png") center / cover no-repeat;
+}
