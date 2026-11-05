@@ -193,3 +193,186 @@
 .wiki-hero-scope .wiki-version-picker {
   margin: 0;
 }
+.wiki-hero-history {
+  margin-top: 28px;
+}
+.wiki-hero-ratings {
+  display: grid;
+  gap: 8px;
+  margin-block: 14px;
+}
+.wiki-hero-ratings > div {
+  display: grid;
+  gap: 2px;
+}
+.wiki-hero-ratings dt {
+  font: var(--wiki-type-meta);
+  color: var(--wiki-muted);
+}
+.wiki-hero-ratings dd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wiki-hero-rating-track {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-pill);
+  background: var(--aov-raised);
+}
+.wiki-hero-rating-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--aov-chart);
+}
+.wiki-hero-rating-value {
+  font: var(--wiki-type-category);
+  min-width: 1.25em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-version-changes {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.wiki-version-changes[data-state="changed"] {
+  border-inline-start: 3px solid var(--aov-accent);
+  border-radius: 0 var(--aov-radius-card) var(--aov-radius-card) 0;
+}
+.wiki-version-changes-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+}
+.wiki-handbook .wiki-version-changes h2 {
+  margin: 0;
+}
+.wiki-version-changes p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.wiki-version-changes-head p {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-version-changes-head p button,
+.wiki-version-changes-link {
+  color: var(--aov-accent);
+}
+.wiki-version-changes-head p button:hover,
+.wiki-version-changes-link:hover {
+  text-decoration: underline;
+}
+.wiki-version-changes-link {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.wiki-version-toggle {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-muted);
+  cursor: pointer;
+}
+.wiki-version-toggle input {
+  accent-color: var(--aov-accent);
+}
+.wiki-version-list {
+  display: grid;
+}
+.wiki-version-list > li > :is(button, div) {
+  display: grid;
+  width: 100%;
+  gap: 2px;
+  padding: 8px;
+  margin-inline: -8px;
+  box-sizing: content-box;
+  border-radius: var(--aov-radius-control);
+  text-align: left;
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.wiki-version-list > li > button:is(:hover, :focus-visible) {
+  background: var(--aov-raised);
+}
+.wiki-version-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wiki-version-row-head strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-version-links {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.wiki-version-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--aov-accent);
+  text-decoration: none;
+}
+.wiki-version-links a:hover {
+  text-decoration: underline;
+}
+.wiki-handbook del {
+  color: var(--aov-danger);
+  text-decoration: line-through;
+}
+.wiki-handbook ins {
+  border-radius: 3px;
+  padding-inline: 2px;
+  background: var(--aov-success-soft);
+  color: var(--aov-success);
+  font-weight: 600;
+  text-decoration: none;
+}
+.wiki-diff-legend {
+  font: var(--wiki-type-meta);
+  margin-top: 10px;
+  color: var(--aov-muted);
+}
+.wiki-diff-cell {
+  display: block;
+}
+.wiki-facts dd .wiki-diff-cell {
+  display: inline;
+  margin-inline-end: 6px;
+}
+.wiki-skill-options button {
+  position: relative;
+}
+.wiki-skill-changed {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--aov-accent);
+}
+.wiki-hero-history-more {
+  font: var(--wiki-type-meta);
+  color: var(--aov-accent);
+  text-decoration: none;
+}
+.wiki-hero-history-more:hover {
+  text-decoration: underline;
+}

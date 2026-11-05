@@ -7,6 +7,10 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
+import { HeroHistory } from "./hero-history"
+import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
+import type { DiffSegment } from "./hero-version-diff"
+import { HeroRatings } from "./hero-ratings"
 import { skillIllustration } from "./skill-illustration"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import type { HeroDetail, PublicSkill } from "./hero-api"
@@ -51,6 +55,22 @@ function SkillIcon({ hero, skill, locale }: { hero: HeroDetail; skill: PublicSki
   )
 }
 
+function DiffText({ segments }: { segments: DiffSegment[] }) {
+  return (
+    <>
+      {segments.map((segment, index) =>
+        segment.kind === "del" ? (
+          <del key={index}>{segment.text}</del>
+        ) : segment.kind === "ins" ? (
+          <ins key={index}>{segment.text}</ins>
+        ) : (
+          segment.text
+        ),
+      )}
+    </>
+  )
+}
+
 export function HeroHandbook({ hero }: { hero: HeroDetail }) {
   const scope = useWikiContext()
   const { locale, href } = scope
@@ -59,6 +79,20 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
   const skills = [...(hero.content.skills?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder)
   const active = skills.find((skill) => skill.skillKey === params.get("skill")) ?? skills[0]
   const source = active?.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
+  const version = useHeroVersion(hero)
+  const difference =
+    version.showDiff && active && !version.differences.skills.get(active.skillKey)?.isNew
+      ? version.differences.skills.get(active.skillKey)
+      : undefined
+  const selectSkill = (skillKey: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.set("skill", skillKey)
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
   const references = useQuery(wikiReferencesQuery(scope))
   const settings = references.data
   const index = useMemo(
@@ -101,11 +135,20 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
     if (key === "ATTACK_DAMAGE" && roles.includes("MAGE") && !roles.includes("MARKSMAN")) return []
     if (key === "ABILITY_POWER" && !roles.includes("MAGE") && roles.includes("MARKSMAN")) return []
     const stat = hero.content.combatStats?.values?.find((value) => value.statKey === key)
-    return stat?.baseValue == null ? [] : [{ label: text(vi, en), value: stat.baseValue.toLocaleString(locale) }]
+    if (stat?.baseValue == null) return []
+    const change = version.showDiff ? version.differences.stats.get(key) : undefined
+    return [
+      {
+        label: text(vi, en),
+        value: stat.baseValue.toLocaleString(locale),
+        before: change ? Number(change.before).toLocaleString(locale) : undefined,
+      },
+    ]
   })
   return (
     <div className="wiki-handbook">
       <section className="wiki-handbook-kit" aria-labelledby="wiki-kit-title">
+        <HeroVersionChanges hero={hero} version={version} onSelectSkill={selectSkill} />
         <h2 id="wiki-kit-title">{text("Bộ kỹ năng", "Abilities")}</h2>
         {active ? (
           <>
@@ -115,24 +158,18 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
                   <button
                     type="button"
                     key={skill.skillKey}
-                    aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}`}
+                    aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}${version.changedSkills.has(skill.skillKey) ? ` · ${text("có thay đổi", "changed")}` : ""}`}
                     aria-pressed={skill.skillKey === active.skillKey}
-                    onClick={() =>
-                      setParams(
-                        (prev) => {
-                          const next = new URLSearchParams(prev)
-                          next.set("skill", skill.skillKey)
-                          return next
-                        },
-                        { replace: true, preventScrollReset: true },
-                      )
-                    }
+                    onClick={() => selectSkill(skill.skillKey)}
                   >
                     <SkillIcon hero={hero} skill={skill} locale={locale} />
                     <span>
                       <small>{skillLabel(skill, locale)}</small>
                       <strong>{skill.name || text("Chưa rõ tên", "Unnamed ability")}</strong>
                     </span>
+                    {version.changedSkills.has(skill.skillKey) && (
+                      <i className="wiki-skill-changed" aria-hidden="true" />
+                    )}
                   </button>
                 )
               })}
@@ -158,8 +195,28 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
                 {[source?.tags, source?.cooldown?.display, source?.energyCost?.display].map((value, i) =>
                   typeof value === "string" && value.trim() ? <span key={i}>{rich(value)}</span> : null,
                 )}
+                {difference?.cooldown && (
+                  <span>
+                    {text("Trước đây", "Before")}: <del>{difference.cooldown.before}</del>
+                  </span>
+                )}
+                {difference?.energyCost && (
+                  <span>
+                    {text("Trước đây", "Before")}: <del>{difference.energyCost.before}</del>
+                  </span>
+                )}
               </div>
-              {active.description ? (
+              {difference && version.previous && (
+                <p className="wiki-diff-legend">
+                  {text("Đang đánh dấu khác biệt so với bản", "Marking differences from")} {version.previous.code}:{" "}
+                  <del>{text("nội dung cũ", "old text")}</del> <ins>{text("nội dung mới", "new text")}</ins>
+                </p>
+              )}
+              {difference?.description ? (
+                <div className="wiki-skill-prose">
+                  <DiffText segments={difference.description} />
+                </div>
+              ) : active.description ? (
                 <div className="wiki-skill-prose">{rich(active.description)}</div>
               ) : (
                 <p>{text("Chưa có mô tả được công bố.", "No description has been published.")}</p>
@@ -184,6 +241,13 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
                           <th scope="row">{rich(row.label!)}</th>
                           {columns.map((_, j) => (
                             <td key={j}>
+                              {difference?.rows.get(row.label!) &&
+                                difference.rows.get(row.label!)!.before[j] !==
+                                  difference.rows.get(row.label!)!.after[j] && (
+                                  <del className="wiki-diff-cell">
+                                    {difference.rows.get(row.label!)!.before[j] ?? "—"}
+                                  </del>
+                                )}
                               {row.display_values?.[j] == null ? "—" : rich(String(row.display_values[j]))}
                             </td>
                           ))}
@@ -203,6 +267,7 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
             )}
           </p>
         )}
+        <HeroHistory hero={hero} version={version} />
       </section>
       <aside className="wiki-handbook-profile">
         <div className="wiki-edit-heading">
@@ -219,12 +284,16 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
           />
         </div>
         {profile?.summary && <div className="wiki-skill-prose">{rich(profile.summary)}</div>}
+        {hero.content.overviewRatings && <HeroRatings ratings={hero.content.overviewRatings} />}
         {!!facts.length && (
           <dl className="wiki-facts">
             {facts.map((fact) => (
               <div key={fact.label}>
                 <dt>{fact.label}</dt>
-                <dd>{fact.value}</dd>
+                <dd>
+                  {fact.before && <del className="wiki-diff-cell">{fact.before}</del>}
+                  {fact.value}
+                </dd>
               </div>
             ))}
           </dl>

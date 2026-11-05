@@ -62,3 +62,10 @@
     padding-inline: 6px;
   }
 }
+.wiki-version-changed {
+  width: 5px;
+  height: 5px;
+  margin-inline-start: 5px;
+  border-radius: 50%;
+  background: var(--aov-accent);
+}

@@ -68,6 +68,13 @@ export interface HeroDetail {
   skillMedia?: Record<string, HeroMedia>
   content: {
     profile?: { name: string; roles: HeroRole[]; title?: string | null; summary?: string | null; lore?: string | null }
+    overviewRatings?: {
+      scaleCode?: string | null
+      survivability?: number | null
+      attackDamage?: number | null
+      skillEffects?: number | null
+      difficulty?: number | null
+    } | null
     skills?: { skills?: PublicSkill[] } | null
     combatStats?: { values?: { statKey: string; baseValue: number | null; unit?: string }[] } | null
   }

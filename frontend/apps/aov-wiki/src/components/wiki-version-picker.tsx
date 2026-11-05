@@ -54,8 +54,15 @@ export function WikiVersionPicker({ changedVariants }: { changedVariants?: Reado
                   key={patch.id}
                   type="button"
                   data-patch=""
+                  data-changed={changedVariants?.has(patch.id) || undefined}
                   aria-pressed={patch.id === activePatch}
-                  title={[patch.title || patch.code, patch.isCurrent && text("Hiện tại", "Current")]
+                  title={[
+                    patch.title || patch.code,
+                    patch.isCurrent && text("Hiện tại", "Current"),
+                    changedVariants?.has(patch.id)
+                      ? text("Có thay đổi", "Has changes")
+                      : text("Không có thay đổi", "No changes"),
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                   onClick={() =>
@@ -70,6 +77,7 @@ export function WikiVersionPicker({ changedVariants }: { changedVariants?: Reado
                     <span className="wiki-version-current" aria-label={text("Hiện tại", "Current")} />
                   )}
                   {patch.code}
+                  {changedVariants?.has(patch.id) && <i className="wiki-version-changed" aria-hidden="true" />}
                 </button>
               ))}
           </div>
