@@ -29,7 +29,7 @@ import {
   type EntityIconResolver,
 } from "./entity-rich-text"
 import { Button } from "./button"
-import { AtSign, Paintbrush, Redo2, Table2, Undo2 } from "lucide-react"
+import { AtSign, Link2Off, Paintbrush, Redo2, Table2, Undo2 } from "lucide-react"
 import { cn } from "../lib/utils"
 
 const empty: EntityReference[] = []
@@ -367,7 +367,7 @@ export function EntityRichTextEditor({
       setDismissed(true)
     } else setNotice("Chọn văn bản thuần, bên ngoài thẻ tham chiếu để chèn.")
   }
-  const format = (kind: "b" | "i" | "color") => {
+  const format = (kind: "b" | "i" | "color" | "noauto") => {
     const next = toggleReferenceFormat(current.current, selection.current, kind, color)
     if (next) {
       commit(next)
@@ -552,6 +552,25 @@ export function EntityRichTextEditor({
           >
             {compact ? <AtSign aria-hidden className="size-3.5" /> : "@ Tham chiếu"}
           </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={formatting.noauto ? "secondary" : "ghost"}
+            aria-label="Bỏ qua tự nhận diện"
+            aria-pressed={formatting.noauto}
+            title={
+              formatting.noauto
+                ? "Bật lại tự nhận diện cho đoạn đang chọn"
+                : "Bôi đen đoạn cần bỏ qua tự nhận diện tướng, kỹ năng hoặc thuật ngữ"
+            }
+            className={compact ? "type-label h-7 gap-1 rounded-md px-1.5" : undefined}
+            disabled={disabled || isComposing || caret.start === caret.end}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => format("noauto")}
+          >
+            <Link2Off aria-hidden className="size-3.5" />
+            {compact ? "Bỏ qua" : "Bỏ qua tự nhận diện"}
+          </Button>
         </div>
         <div
           role="group"
@@ -685,8 +704,8 @@ export function EntityRichTextEditor({
       />
       <p id={`${id}-help`} className="text-xs text-muted-foreground">
         {compact
-          ? "Gõ @ để chèn tham chiếu · Ctrl+B / Ctrl+I để định dạng."
-          : "Tên và thuật ngữ đầy đủ được nhận diện tự động. Gõ @ để tìm và chèn thẻ tham chiếu."}
+          ? "Gõ @ để chèn tham chiếu · Bôi đen rồi bấm Bỏ qua để tắt nhận diện một đoạn."
+          : "Tên và thuật ngữ đầy đủ được nhận diện tự động. Gõ @ để chèn tham chiếu; bôi đen rồi bấm Bỏ qua để tắt nhận diện một đoạn."}
       </p>
       <PopoverPrimitive.Root
         open={popupOpen}

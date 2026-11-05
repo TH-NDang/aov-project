@@ -3,7 +3,7 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
-import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
+import { createEntityIndex, parseRichText, type EntityReference, type RichTextNode } from "@aov/ui/lib/entity-rich-text"
 import {
   referenceFormatState,
   styleReferenceParagraph,
@@ -315,6 +315,62 @@ test("formatting toolbar renders bold, italic and color directly while preservin
   } finally {
     await editor.close()
   }
+})
+
+test("authors can exclude just the ambiguous occurrence, undo it and reopen the saved text", async () => {
+  const source = "Chiêu 1 gây choáng những kẻ địch trúng chiêu 1 giây."
+  const catalog: EntityReference[] = [
+    {
+      ...skill,
+      autoMatch: true,
+      translations: [{ locale: "vi-VN", name: "chiêu 1", aliases: [], description: "Skill one" }],
+    },
+  ]
+  const index = createEntityIndex(catalog, "vi-VN", "vi-VN")
+  const refs = (nodes: RichTextNode[]): string[] =>
+    nodes.flatMap((node): string[] =>
+      node.type === "reference" ? [node.label] : "children" in node ? refs(node.children) : [],
+    )
+  const from = source.lastIndexOf("chiêu 1")
+  const expected = source.slice(0, from) + "<noauto>chiêu 1</noauto> giây."
+  const editor = await editorHarness(source, catalog)
+  try {
+    assert.deepEqual(refs(parseRichText(source, index)), ["Chiêu 1", "chiêu 1"])
+    const toggle = () => editor.document.querySelector<HTMLButtonElement>('[aria-label="Bỏ qua tự nhận diện"]')!
+    assert.equal(toggle().disabled, true)
+    await editor.select(from, from + "chiêu 1".length)
+    await editor.click("Bỏ qua tự nhận diện")
+    assert.equal(editor.saved(), expected)
+    assert.equal(editor.input().textContent, source)
+    assert.equal(toggle().getAttribute("aria-pressed"), "true")
+    assert.deepEqual(refs(parseRichText(editor.saved(), index)), ["Chiêu 1"])
+    await editor.click("Hoàn tác")
+    assert.equal(editor.saved(), source)
+    await editor.click("Làm lại")
+    assert.equal(editor.saved(), expected)
+  } finally {
+    await editor.close()
+  }
+  const reopened = await editorHarness(expected, catalog)
+  try {
+    assert.equal(reopened.input().textContent, source)
+    assert.deepEqual(refs(parseRichText(referenceInputValue(reopened.input()), index)), ["Chiêu 1"])
+    const start = expected.indexOf("chiêu 1")
+    await reopened.select(start, start + "chiêu 1".length)
+    await reopened.click("Bỏ qua tự nhận diện")
+    assert.equal(reopened.saved(), source)
+    assert.deepEqual(refs(parseRichText(reopened.saved(), index)), ["Chiêu 1", "chiêu 1"])
+  } finally {
+    await reopened.close()
+  }
+})
+
+test("recognition exclusions can cross formatting boundaries and preserve styles and explicit references", () => {
+  const source = `<b>chiêu</b> 1 ${token}`
+  const next = toggleReferenceFormat(source, { start: 0, end: source.length }, "noauto")!
+  assert.equal(referenceFormatState(next.value, next).noauto, true)
+  assert.ok(next.value.includes(token), "An explicit reference keeps its authored identity")
+  assert.equal(toggleReferenceFormat(next.value, next, "noauto")?.value, source)
 })
 
 test("reopening nested formatting retains chips and source-mapped editing across metadata and IME", async () => {

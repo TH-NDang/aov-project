@@ -2,7 +2,7 @@ import { referenceInputNodes, type ReferenceInputNode } from "./reference-input-
 import type { EditorSnapshot, TextSelection } from "./entity-rich-text-editor"
 import { isParagraphStyle, type ParagraphStyle } from "./rich-text-blocks"
 
-type FormatKind = "b" | "i" | "color" | ParagraphStyle | "normal"
+type FormatKind = "b" | "i" | "color" | "noauto" | ParagraphStyle | "normal"
 type Mark = Pick<Extract<ReferenceInputNode, { type: "format" }>, "tag" | "open" | "close" | "color">
 type Run = { text: string; atom: boolean; marks: Mark[]; start: number; end: number; selected?: boolean }
 const colorPattern = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i
@@ -56,6 +56,7 @@ export function referenceFormatState(value: string, selection: TextSelection) {
     style: style && selected.every((run) => run.marks.some((mark) => mark.tag === style)) ? style : "normal",
     bold: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "b")),
     italic: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "i")),
+    noauto: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "noauto")),
     color: color.length && color.every((value) => value === color[0]) ? color[0] : undefined,
   }
 }
