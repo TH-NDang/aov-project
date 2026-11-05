@@ -2583,3 +2583,40 @@
 .cp-regions > :is(h2, .hub-card-title, .cp-explore-heading) {
   grid-column: 1 / -1;
 }
+.cp-image-link-preview {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin-block: 6px;
+  border-radius: var(--hub-radius-sm);
+  background: var(--hub-raised);
+  object-fit: cover;
+}
+.cp-image-link-wide {
+  width: 100%;
+  height: 72px;
+}
+.cp-image-link-error {
+  display: block;
+  margin-block: 6px;
+  color: var(--hub-danger);
+  font-size: 12px;
+  font-weight: 400;
+}
+/* Small avatars: initials scale with the frame so they never overflow it. */
+.cp-live-meta .cp-initial,
+.cp-following .cp-initial,
+.cp-channel .cp-initial,
+.cp-related .cp-initial,
+.cp-person .cp-initial,
+.hub-suggestion .cp-initial,
+.cp-row-avatar.cp-initial {
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+.hub-feed-body > .cp-live-row {
+  margin-bottom: var(--hub-space-5);
+}

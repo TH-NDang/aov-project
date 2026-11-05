@@ -173,7 +173,7 @@ function FollowSuggestions() {
   const pages = useSuggestions(5)
   const follow = useFollowPage()
   return (
-    <section className="hub-card hub-card-padded">
+    <section className="hub-card hub-card-padded hub-follow-suggestions">
       <div className="hub-card-heading">
         <h2 className="hub-card-title">Gợi ý theo dõi</h2>
         <Link to="/explore" className="hub-card-more">
@@ -195,18 +195,18 @@ function FollowSuggestions() {
                 {profile.represented && <OfficialBadge label="Đại diện đã xác minh" />}
               </strong>
               <small>
-                {profileKindLabels[profile.kind]} · {followersLabel(profile.followers)}
+                {profileKindLabels[profile.kind]}
+                {profile.followers > 0 && ` · ${followersLabel(profile.followers)}`}
               </small>
             </span>
           </Link>
           <button
-            className="cp-follow-chip cp-follow-primary"
+            className="cp-follow-chip cp-follow-primary hub-follow-icon"
             disabled={follow.isPending}
             onClick={() => follow.mutate({ pageId: profile.id, following: true })}
             aria-label={`Theo dõi ${profile.content?.name || profile.code}`}
           >
             <StreamIcon name="plus" size={14} />
-            Theo dõi
           </button>
         </div>
       ))}

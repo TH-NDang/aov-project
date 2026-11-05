@@ -420,16 +420,20 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
             <div className="cp-form-grid">
               <label>
                 Ảnh đại diện
+                <ImageLinkPreview url={presentation.avatarUrl} />
                 <input
                   type="url"
+                  placeholder="https://…"
                   value={presentation.avatarUrl || ""}
                   onChange={(e) => setPresentation({ ...presentation, avatarUrl: e.target.value })}
                 />
               </label>
               <label>
                 Ảnh bìa
+                <ImageLinkPreview url={presentation.coverUrl} wide />
                 <input
                   type="url"
+                  placeholder="https://…"
                   value={presentation.coverUrl || ""}
                   onChange={(e) => setPresentation({ ...presentation, coverUrl: e.target.value })}
                 />
@@ -623,5 +627,22 @@ export function CommunityInvitation() {
         </section>
       </div>
     </StreamShell>
+  )
+}
+
+/** Shows what an image link points to, so a wrong link is noticed before saving. */
+function ImageLinkPreview({ url, wide = false }: { url?: string | null; wide?: boolean }) {
+  const [failed, setFailed] = useState<string | null>(null)
+  const value = url?.trim()
+  if (!value || !/^https?:\/\//i.test(value)) return null
+  if (failed === value) return <span className="cp-image-link-error">Không xem trước được ảnh từ liên kết này.</span>
+  return (
+    <img
+      className={wide ? "cp-image-link-preview cp-image-link-wide" : "cp-image-link-preview"}
+      src={value}
+      alt=""
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(value)}
+    />
   )
 }

@@ -7,8 +7,6 @@ import { StreamAppSwitcher } from "./stream-app-switcher"
 import { StreamIcon, type StreamIconName } from "./stream-icon"
 import { useStreamLocale } from "./stream-locale"
 import { CommunitySessionButton } from "../features/community/community-session"
-import { useCommunitySession } from "../features/community/community-auth"
-import { useUnreadCount } from "../features/community/community-queries"
 import { SignInDialog } from "../features/community/community-signin"
 
 export const WIKI_URL = publicSiteUrl(import.meta.env.VITE_WIKI_URL, 5173, window.location.origin)
@@ -110,7 +108,6 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
             >
               <StreamIcon name="search" size={18} />
             </button>
-            <HeaderNotifications />
             <CommunitySessionButton />
           </div>
         </div>
@@ -143,24 +140,6 @@ export function StreamShell({ children, aside }: { children: ReactNode; aside?: 
 }
 
 /** The bell only exists for signed-in viewers; the dot shows unread notifications. */
-function HeaderNotifications() {
-  const session = useCommunitySession()
-  const unread = useUnreadCount()
-  if (session.status !== "authenticated") return null
-  const count = unread.data?.unread ?? 0
-  return (
-    <Link
-      className="hub-icon-button hub-bell"
-      to="/account?tab=notifications"
-      aria-label={count ? `Thông báo, ${count} chưa đọc` : "Thông báo"}
-    >
-      <StreamIcon name="bell" size={17} />
-      {count > 0 && <span className="hub-bell-count">{count > 99 ? "99+" : count}</span>}
-    </Link>
-  )
-}
-
-/** On smaller screens the search expands into the header's first row, keeping results below it. */
 function HeaderSearch({
   inputRef,
   onDismiss,

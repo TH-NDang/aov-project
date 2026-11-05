@@ -122,9 +122,9 @@ button:disabled {
   isolation: isolate;
   overflow: hidden;
   background:
-    radial-gradient(120% 90% at 88% 0%, hsl(calc(var(--hub-hue) + 40) 85% 62% / 42%), transparent 58%),
-    radial-gradient(80% 80% at 0% 100%, hsl(calc(var(--hub-hue) - 30) 80% 50% / 30%), transparent 60%),
-    linear-gradient(135deg, hsl(var(--hub-hue) 52% 28%), hsl(calc(var(--hub-hue) + 48) 58% 14%));
+    radial-gradient(120% 90% at 88% 0%, hsl(calc(var(--hub-hue) + 40) 30% 55% / 22%), transparent 58%),
+    radial-gradient(80% 80% at 0% 100%, hsl(calc(var(--hub-hue) - 30) 30% 45% / 18%), transparent 60%),
+    linear-gradient(135deg, hsl(var(--hub-hue) 22% 24%), hsl(calc(var(--hub-hue) + 48) 24% 13%));
   color: #fff;
 }
 .hub-art::after {
@@ -583,7 +583,6 @@ button:disabled {
   margin-bottom: var(--hub-layout-gap);
   padding: var(--hub-panel-padding);
   border-radius: var(--hub-radius);
-  box-shadow: var(--hub-shadow);
 }
 .hub-banner-copy {
   flex: 1;
@@ -2566,4 +2565,25 @@ button:disabled {
   .hub-signup {
     display: none;
   }
+}
+
+/* An empty feed already lists the pages to follow in the main column. */
+.hub-content-split:has(.cp-featured) .hub-follow-suggestions {
+  display: none;
+}
+.hub-follow-icon {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+}
+/* Page banners are plain surfaces; generated art is only for covers without an image. */
+.hub-banner.hub-art {
+  background: var(--hub-surface);
+  color: var(--hub-text);
+}
+.hub-banner.hub-art::before,
+.hub-banner.hub-art::after {
+  display: none;
 }
