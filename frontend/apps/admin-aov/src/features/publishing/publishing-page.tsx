@@ -62,7 +62,7 @@ import { TranslationEditor, type TranslatableSection } from "./translation-edito
 import { Box, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
-import { statPatchContext } from "./combat-attributes"
+import { observedAttributes, statPatchContext } from "./combat-attributes"
 import { useStatDefaults } from "./patch-stat-defaults"
 import { replaceProfilePart, type ProfileEditorPart } from "./hero-profile-editor"
 import { sameDraftValue } from "@/app/drafts/draft-store"
@@ -72,6 +72,7 @@ import { usePublicationOverview, useContentLocale } from "./publication-overview
 import { resourceContent } from "./resource-import"
 import {
   SECTIONS,
+  publicationPatchIssue,
   publishIssues,
   type Cause,
   type Content,
@@ -253,9 +254,14 @@ export function PublishingWorkspace({
   const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState<{ text: string } | null>(null)
   const [reviewTarget, setReviewTarget] = useState<HeroReviewItem | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
+  useEffect(() => {
+    if (!message) return
+    const timer = window.setTimeout(() => setMessage(null), 5000)
+    return () => window.clearTimeout(timer)
+  }, [message])
   const [cause, setCause] = useState<Cause>(translationMode ? "TRANSLATION" : "CONTENT_CORRECTION")
   const [importContext, setImportContext] = useState<ImportContext | null>(null)
   const [resourceId, setResourceId] = useState("")
@@ -378,7 +384,16 @@ export function PublishingWorkspace({
     focusedProfile && profilePart === "lore" ? "Cốt truyện" : SECTIONS.find(([key]) => key === section)![2]
   const heroName =
     translatedText(preview?.content.PROFILE?.translations ?? [], location.readLocale, ["name"])?.name || "Hồ sơ tướng"
-  const issues = preview ? publishIssues(preview.content) : []
+  const publicationPatch = overview.data?.variants.find(
+    (variant) => variant.id === revision?.effectiveFromPatchVariantId,
+  )
+  const usesObservedStats =
+    !preview?.content.COMBAT_STATS?.values.length &&
+    !!publicationPatch &&
+    !!observedAttributes(preview?.content.SKILLS, publicationPatch.patchCode)
+  const issues = preview ? publishIssues(preview.content, usesObservedStats) : []
+  const patchIssue = revision && publicationPatchIssue(revision, publicationPatch, overview.isPending)
+  if (patchIssue) issues.unshift(patchIssue)
 
   useEffect(() => {
     if (requestedRevision === selectedId) return
@@ -442,10 +457,10 @@ export function PublishingWorkspace({
   async function run(action: () => Promise<unknown>, success: string) {
     setBusy(true)
     setError("")
-    setMessage("")
+    setMessage(null)
     try {
       await action()
-      setMessage(success)
+      setMessage({ text: success })
       await invalidateHeroCatalogs(queryClient)
       await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
       await revisions.refetch()
@@ -478,7 +493,7 @@ export function PublishingWorkspace({
     })
     setEditing(false)
     setError("")
-    setMessage("")
+    setMessage(null)
   }
   function switchView(next: HeroWorkspaceView) {
     if (busy) return
@@ -517,6 +532,11 @@ export function PublishingWorkspace({
       setEditing(false)
     }, "Đã tải phiên bản mới nhất.")
   }
+  function openManagement() {
+    setError("")
+    setManagementOpen(true)
+  }
+
   // The one action the header offers for this version; the rest stays in its menu.
   const headerAction =
     revision?.state === "DRAFT" && canPublish ? "publish" : revision?.state === "PUBLISHED" && canWrite ? "draft" : null
@@ -689,7 +709,7 @@ export function PublishingWorkspace({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onSelect={() => setManagementOpen(true)}>
+                    <DropdownMenuItem onSelect={openManagement}>
                       <Settings2 />
                       Quản lý phiên bản
                     </DropdownMenuItem>
@@ -762,13 +782,13 @@ export function PublishingWorkspace({
                   />
                 )}
                 {headerAction === "publish" && (
-                  <Button disabled={busy} onClick={() => setManagementOpen(true)}>
+                  <Button disabled={busy} onClick={openManagement}>
                     <Send className="size-4" />
                     Xuất bản
                   </Button>
                 )}
                 {headerAction === "draft" && (
-                  <Button variant="outline" disabled={busy} onClick={() => setManagementOpen(true)}>
+                  <Button variant="outline" disabled={busy} onClick={openManagement}>
                     <Plus className="size-4" />
                     Tạo bản nháp
                   </Button>
@@ -798,20 +818,31 @@ export function PublishingWorkspace({
           {errorMessage(failure)}
         </p>
       ))}
-      {error && (
+      {error && !managementOpen && (
         <div role="alert" className="space-y-1 rounded-xl border border-destructive/30 p-4 text-sm text-destructive">
           <p>{error}</p>
-          <p>Phần đang sửa vẫn được giữ lại. Nếu có xung đột, hủy chỉnh sửa nhóm này rồi tải dữ liệu mới nhất.</p>
+          {(editing || translating) && (
+            <p>Phần đang sửa vẫn được giữ lại. Nếu có xung đột, hủy chỉnh sửa nhóm này rồi tải dữ liệu mới nhất.</p>
+          )}
         </div>
       )}
       {message && (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm"
-        >
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
           <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
-          {message}
-        </p>
+          <span role="status" className="flex-1">
+            {message.text}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            aria-label="Đóng thông báo thành công"
+            onClick={() => setMessage(null)}
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
       )}
       {!heroId ? (
         <>
@@ -855,7 +886,7 @@ export function PublishingWorkspace({
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-4 text-sm">
                   <p>Đang xem bản chỉ đọc. Tạo bản nháp để chỉnh sửa hoặc thêm bản dịch.</p>
                   {canWrite && (
-                    <Button variant="outline" onClick={() => setManagementOpen(true)}>
+                    <Button variant="outline" onClick={openManagement}>
                       Tạo bản nháp
                     </Button>
                   )}
@@ -897,7 +928,7 @@ export function PublishingWorkspace({
                       setProfilePart(part)
                       setEditing(true)
                       setError("")
-                      setMessage("")
+                      setMessage(null)
                     }}
                   />
                 )}
@@ -951,10 +982,7 @@ export function PublishingWorkspace({
                     aria-label="Chỉnh sửa nội dung"
                   >
                     {translating && (
-                      <fieldset
-                        disabled={busy}
-                        className="grid gap-4 rounded-xl border bg-card p-4 @min-[600px]:grid-cols-2"
-                      >
+                      <fieldset disabled={busy} className="grid gap-4 admin-section py-4 @min-[600px]:grid-cols-2">
                         <div className="min-w-0 space-y-2">
                           <p className="type-label">Đọc từ</p>
                           <HeroLanguagePicker
@@ -1091,6 +1119,11 @@ export function PublishingWorkspace({
                   description={`Bản #${revision.revisionNo} · ${STATES[revision.state]} · ${CAUSES[revision.cause]}`}
                 >
                   <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pt-4 pb-6">
+                    {error && (
+                      <p role="alert" className="rounded-xl border border-destructive/30 p-3 text-sm text-destructive">
+                        {error}
+                      </p>
+                    )}
                     {/* The header's publish button opens this sheet, so the publish checks lead. */}
                     {revision.state === "DRAFT" && (
                       <Box title="Kiểm tra trước khi xuất bản">
@@ -1107,6 +1140,35 @@ export function PublishingWorkspace({
                           <p className="flex items-center gap-2 text-sm">
                             <CheckCircle2 className="size-4 text-emerald-600" />
                             Đã đủ nội dung chính. Hệ thống sẽ kiểm tra dữ liệu và ảnh khi xuất bản.
+                          </p>
+                        )}
+                        {publicationPatch?.status === "DRAFT" && publicationPatch.rulesetId === revision.rulesetId && (
+                          <div className="space-y-1">
+                            <Button asChild variant="outline" size="sm">
+                              <Link
+                                to={`/game-configuration?season=${publicationPatch.seasonId ?? ""}&patch=${publicationPatch.id}`}
+                              >
+                                Mở patch {publicationPatch.patchCode}
+                              </Link>
+                            </Button>
+                            {!capabilities.includes("patch:publish") && (
+                              <p className="type-meta">Người có quyền xuất bản patch có thể thực hiện bước này.</p>
+                            )}
+                          </div>
+                        )}
+                        {revision.effectiveFromPatchVariantId && !publicationPatch && !overview.isPending && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={overview.isFetching}
+                            onClick={() => void overview.refetch()}
+                          >
+                            Tải lại trạng thái patch
+                          </Button>
+                        )}
+                        {usesObservedStats && (
+                          <p className="type-meta">
+                            Thuộc tính chiến đấu dùng số liệu ghi nhận từ ảnh của patch {publicationPatch?.patchCode}.
                           </p>
                         )}
                         {dirty.size > 0 && (
@@ -1210,7 +1272,7 @@ export function PublishingWorkspace({
                           await invalidateHeroCatalogs(queryClient)
                           await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
                           await revisions.refetch()
-                          setMessage("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")
+                          setMessage({ text: "Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh." })
                         }}
                       />
                     )}
@@ -1221,7 +1283,7 @@ export function PublishingWorkspace({
                         <PatchChangeForm key={revision.id} revision={revision} locale={locale} />
                       )}
                     {writable && !translating && (
-                      <details className="rounded-xl border bg-card p-4">
+                      <details className="admin-section py-4">
                         <summary className="cursor-pointer text-sm font-medium">
                           Điền dữ liệu từ tài nguyên tham khảo
                         </summary>

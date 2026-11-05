@@ -6,7 +6,7 @@ import { act } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MemoryRouter } from "react-router"
 
-test("hero catalog keeps every loaded row and pins the import code instead of database IDs", async () => {
+test("hero catalog keeps every loaded row and exposes the hero code and actions at all widths", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing" })
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
@@ -49,7 +49,8 @@ test("hero catalog keeps every loaded row and pins the import code instead of da
     })
     const document = dom.window.document
     assert.equal(document.querySelectorAll("tbody tr").length, 25)
-    assert.equal(document.querySelectorAll("tbody td.sticky").length, 25)
+    assert.equal(document.querySelectorAll("thead th[scope=col]").length, 5)
+    assert.ok([...document.querySelectorAll("tbody tr")].every((row) => row.children.length === 5))
     const heroButton = document.querySelector('button[aria-label="Xem tướng hero-24"]')!
     assert.ok(heroButton)
     assert.equal(heroButton.closest("td")!.querySelectorAll("button, a, [tabindex]").length, 1)

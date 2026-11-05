@@ -169,7 +169,7 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       !/1999|2099|2026/.test(lastEdit.textContent ?? ""),
       "Unknown editing history must not use publication, overview or current time",
     )
-    assert.match(lastEdit.textContent?.trim() ?? "", /^(?:—|-|Chưa ghi nhận|Chưa có thông tin|Chưa có lịch sử)$/)
+    assert.equal(lastEdit.querySelector("span:not([aria-hidden])")?.textContent, "Chưa ghi nhận")
     await waitFor(
       () => !!cell("ad-current-change", /chỉnh sửa|sửa.*gần|biên tập/i).querySelector('time[title$="Asia/Tokyo"]'),
       "The editing timestamp uses the signed-in user's configured time zone",

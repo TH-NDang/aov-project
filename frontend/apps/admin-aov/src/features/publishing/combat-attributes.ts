@@ -87,7 +87,7 @@ export function overviewAttackStats(roles: Role[], skills: Skills | null) {
   return both
 }
 
-export function observedAttributes(skills?: Skills | null) {
+export function observedAttributes(skills?: Skills | null, patchCode?: string) {
   for (const skill of skills?.skills ?? []) {
     for (const effect of skill.effects) {
       const observation = effect.metadata.observedAttributes
@@ -96,11 +96,14 @@ export function observedAttributes(skills?: Skills | null) {
         !isRecord(observation) ||
         !isRecord(observation.values) ||
         observation.method !== "MANUAL_VISUAL_TRANSCRIPTION" ||
-        observation.scope !== "DISPLAYED_SNAPSHOT_NOT_LEVEL_ONE"
+        observation.scope !== "DISPLAYED_SNAPSHOT_NOT_LEVEL_ONE" ||
+        (patchCode !== undefined && effect.metadata.patchCode !== patchCode)
       )
         continue
+      const values = observation.values
+      if (!attributes.some(({ key }) => observedStat(key, values))) continue
       return {
-        values: observation.values,
+        values,
         patchCode: typeof effect.metadata.patchCode === "string" ? effect.metadata.patchCode : undefined,
         image:
           isRecord(observation.source) && typeof observation.source.file_name === "string"

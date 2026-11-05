@@ -31,7 +31,7 @@ export function HeroCombatAttributes({
 }) {
   const [analysisOpen, setAnalysisOpen] = useState(false)
   const snapshot = observedAttributes(skills)
-  const observation = patchCode && snapshot?.patchCode !== patchCode ? undefined : snapshot
+  const observation = patchCode && snapshot?.patchCode !== patchCode ? observedAttributes(skills, patchCode) : snapshot
   const rows = combatAttributeRows(stats, observation, defaults ?? [])
   const summary = ["HP", ...overviewAttackStats(roles, skills), "MOVEMENT_SPEED", "ATTACK_RANGE_TYPE"]
     .map((key) => rows.find((r) => r.key === key && r.value !== "—"))

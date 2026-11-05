@@ -8,7 +8,9 @@ import {
   type Request,
 } from "../src/features/publishing/publishing-api"
 import { resourceContent } from "../src/features/publishing/resource-import"
-import { publishIssues, type Content, type Revision } from "../src/features/publishing/types"
+import { publicationPatchIssue, publishIssues, type Content, type Revision } from "../src/features/publishing/types"
+import { observedAttributes } from "../src/features/publishing/combat-attributes"
+import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import type { Hero } from "../src/lib/api/types"
 import { mediaPath } from "../../../tooling/media-proxy.mts"
 
@@ -157,6 +159,43 @@ test("Nakroth resource import preserves sources and missing descriptions instead
     publishIssues({ ...content, OVERVIEW_RATINGS: null, COMBAT_STATS: null, MEDIA_BINDINGS: null } as Content).length >=
       3,
   )
+})
+
+test("publication requires the revision's own patch to be published in its ruleset, independently of market scheduling", () => {
+  const revision = { ...fixtureRevision, effectiveFromPatchVariantId: "october-patch" }
+  const patch = { rulesetId: revision.rulesetId, patchCode: "2026-10-30", status: "DRAFT" }
+  assert.match(publicationPatchIssue(revision, patch, false) ?? "", /xuất bản patch 2026-10-30/)
+  assert.equal(publicationPatchIssue(revision, { ...patch, status: "PUBLISHED" }, false), null)
+  assert.ok(publicationPatchIssue(revision, { ...patch, rulesetId: "other", status: "PUBLISHED" }, false))
+  assert.ok(publicationPatchIssue(revision, undefined, true))
+  assert.ok(publicationPatchIssue(revision, undefined, false))
+  assert.ok(publicationPatchIssue(fixtureRevision, undefined, false))
+  assert.equal(publicationPatchIssue({ ...fixtureRevision, cause: "TRANSLATION" }, undefined, false), null)
+})
+
+test("publication accepts observed stats from the revision patch without a base stat or a known hero level", () => {
+  const content = structuredClone(fixtureContent)
+  content.COMBAT_STATS!.values = []
+  content.MEDIA_BINDINGS!.bindings = { HEAD: "head", PORTRAIT: "portrait", SPLASH: "splash" }
+  const observation = {
+    method: "MANUAL_VISUAL_TRANSCRIPTION",
+    scope: "DISPLAYED_SNAPSHOT_NOT_LEVEL_ONE",
+    heroLevel: null,
+    values: {} as Record<string, unknown>,
+  }
+  content.SKILLS!.skills[0].effects.push({
+    effectType: "SOURCE_SNAPSHOT",
+    metadata: { patchCode: "s4", observedAttributes: observation },
+  })
+  const issues = (patch: string) => publishIssues(content, !!observedAttributes(content.SKILLS, patch))
+  for (const values of [{}, { resourceLabel: "Năng lượng" }, { health: "?" }]) {
+    observation.values = values
+    assert.equal(issues("s4").length, 1)
+  }
+  observation.values = { magicAttack: 0 }
+  assert.deepEqual(issues("s4"), [])
+  assert.equal(issues("s3").length, 1)
+  assert.deepEqual(content.COMBAT_STATS!.values, [])
 })
 
 test("local media proxy exposes only validated asset file paths", () => {

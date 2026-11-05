@@ -60,6 +60,17 @@ test("all heroes keeps identities with no snapshot at the target without substit
   const rows = heroCatalogRows([futureOnly], overview, { seasonId: "season-new", variantId: "patch-current" }, "", true)
   assert.equal(rows.length, 1)
   assert.equal(rows[0].selectedRevision, undefined)
+  assert.equal(rows[0].workingDraft?.id, futureOnly.revisions[0].id)
+  const unplaced = { ...futureOnly.revisions[0], effectiveFromPatchVariantId: null }
+  const draftOnly = heroCatalogRows(
+    [{ ...hero, revisions: [unplaced], gameplayChanges: [] }],
+    overview,
+    { seasonId: "season-new", variantId: "patch-current" },
+    unplaced.rulesetId,
+    true,
+  )
+  assert.equal(draftOnly[0]?.selectedRevision?.id, unplaced.id)
+  assert.deepEqual(draftOnly[0]?.changes, [])
   assert.equal(rows[0].changes.length, 1)
   assert.equal(rows[0].changes[0].patchVariantId, "patch-current")
   const notesOnly = {

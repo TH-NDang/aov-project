@@ -1,6 +1,7 @@
 import type { Content, HeroGameplayChange, HeroRow, Revision } from "./types"
 import type { PublicationOverview, Variant } from "./publication-overview"
 import type { CatalogFilter } from "./catalog-context"
+import { draftInCatalogScope } from "./catalog-scope"
 
 export function targetVariants(data: PublicationOverview, filter: CatalogFilter): Variant[] {
   if (filter.variantId) return data.variants.filter((v) => v.id === filter.variantId)
@@ -45,6 +46,7 @@ export function selectCatalogRevisions(
 
 export type HeroCatalogRow = HeroRow & {
   selectedRevision?: Revision
+  workingDraft?: Revision
   changes: HeroGameplayChange[]
   rowKey: string
 }
@@ -84,14 +86,34 @@ export function heroCatalogRows(
               )[0]
             return revision ? [revision] : []
           })
-        : selectCatalogRevisions(hero.revisions, data, filter, ruleset, includeUnchanged)
+        : selectCatalogRevisions(
+            hero.revisions.filter(
+              (r) =>
+                r.state !== "DRAFT" || draftInCatalogScope(r.effectiveFromPatchVariantId, filter, data?.variants ?? []),
+            ),
+            data,
+            filter,
+            ruleset,
+            includeUnchanged,
+          )
+    const drafts = hero.revisions.filter((r) => r.state === "DRAFT" && (!ruleset || r.rulesetId === ruleset))
+    if (scoped && includeUnchanged) {
+      for (const draft of drafts) {
+        if (
+          !revisions.some((r) => r.rulesetId === draft.rulesetId) &&
+          draftInCatalogScope(draft.effectiveFromPatchVariantId, filter, data?.variants ?? [])
+        )
+          revisions.push(draft)
+      }
+    }
     if (!revisions.length)
       return (scoped && includeUnchanged) || changes.length || (!scoped && !ruleset)
-        ? [{ ...hero, changes, rowKey: hero.id }]
+        ? [{ ...hero, changes, workingDraft: drafts[0], rowKey: hero.id }]
         : []
     return revisions.map((selectedRevision) => ({
       ...hero,
       selectedRevision,
+      workingDraft: drafts.find((draft) => draft.rulesetId === selectedRevision.rulesetId),
       changes: changes.filter((change) => change.rulesetId === selectedRevision.rulesetId),
       rowKey: `${hero.id}:${selectedRevision.rulesetId}`,
     }))

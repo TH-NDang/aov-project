@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ChevronsRight,
   Clock3,
+  FilePenLine,
   Info,
 } from "lucide-react"
 import { useSession } from "@/app/auth/auth-gate"
@@ -176,7 +177,7 @@ export function HeroCatalog({
           cell: ({ row }) => (
             <button
               type="button"
-              className="group/hero-action -mx-1.5 flex w-[calc(100%+0.75rem)] min-w-0 cursor-pointer items-center gap-2 rounded-lg border border-border/60 bg-background/60 p-1.5 text-left transition-colors hover:border-ring/50 hover:bg-accent hover:shadow-xs focus-visible:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="group/hero-action flex min-h-11 w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-md py-1 text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               onClick={() => openHero(row.original)}
               aria-label={`Xem tướng ${row.original.code}`}
               title={`Mở chi tiết ${row.original.code}`}
@@ -193,7 +194,7 @@ export function HeroCatalog({
               </div>
               <ChevronRight
                 aria-hidden="true"
-                className="size-3.5 shrink-0 text-muted-foreground transition-colors group-hover/hero-action:text-foreground group-focus-visible/hero-action:text-foreground"
+                className="size-3.5 shrink-0 text-muted-foreground/60 group-hover/hero-action:text-foreground group-focus-visible/hero-action:text-foreground"
               />
             </button>
           ),
@@ -247,6 +248,23 @@ export function HeroCatalog({
           header: "Trạng thái",
           cell: ({ row }) => {
             const r = row.original.selectedRevision
+            const draft = row.original.workingDraft
+            const draftPatch = overview?.variants.find((variant) => variant.id === draft?.effectiveFromPatchVariantId)
+            const draftContext =
+              draftPatch?.patchCode ?? (draft?.effectiveFromPatchVariantId ? "Đã gắn patch" : "Chưa gắn patch")
+            const draftAction = draft && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-auto max-w-full justify-start whitespace-normal px-1.5 py-0.5 text-xs"
+                aria-label={`Mở bản nháp ${row.original.code} · ${draftContext}`}
+                onClick={() => openHero({ ...row.original, selectedRevision: draft })}
+              >
+                <FilePenLine aria-hidden className="size-3.5 shrink-0" />
+                {draft.id === r?.id ? "Mở bản nháp" : `Mở nháp · ${draftContext}`}
+              </Button>
+            )
             const v = overview?.variants.find((v) => v.id === r?.effectiveFromPatchVariantId)
             const patchLabel = v?.patchCode ?? (r?.state === "PUBLISHED" ? "Chưa rõ patch" : "Chưa gắn patch")
             const markets = r && overview ? appliedMarkets(row.original.revisions, r, overview) : []
@@ -257,18 +275,22 @@ export function HeroCatalog({
             return r ? (
               <div className="min-w-0 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-1">
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium",
-                      r.state === "DRAFT"
-                        ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
-                        : "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-                    )}
-                  >
-                    <span aria-hidden className="size-1.5 rounded-full bg-current" />
-                    {r.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"}
-                  </Badge>
+                  {r.state === "DRAFT" && draftAction ? (
+                    draftAction
+                  ) : (
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium",
+                        r.state === "DRAFT"
+                          ? "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
+                          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+                      )}
+                    >
+                      <span aria-hidden className="size-1.5 rounded-full bg-current" />
+                      {r.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"}
+                    </Badge>
+                  )}
                   {markets.map(({ market, release, variant }) => (
                     <MarketBadge
                       key={market.id}
@@ -291,9 +313,13 @@ export function HeroCatalog({
                     </span>
                   )}
                 </p>
+                {draft && draft.id !== r.id && draftAction}
               </div>
             ) : (
-              <span className="type-meta">{scoped ? "Chưa có dữ liệu tại patch" : "Chưa có phiên bản"}</span>
+              <div className="grid justify-items-start gap-1">
+                <span className="type-meta">{scoped ? "Chưa có dữ liệu tại patch" : "Chưa có phiên bản"}</span>
+                {draftAction}
+              </div>
             )
           },
         }),
@@ -346,17 +372,17 @@ export function HeroCatalog({
     />
   )
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-border/70 bg-card">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-4 py-3">
+    <section className="@container/hero-list admin-panel min-w-0 overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-border/60 px-4 py-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2.5">
           <h2 className="type-section-title">Danh sách tướng</h2>
-          <span className="rounded-md bg-muted/70 px-2 py-1 text-xs text-muted-foreground tabular-nums">
+          <span className="type-meta tabular-nums">
             <span className="sr-only">Đã tải </span>
             {heroes.data?.pages.reduce((n, p) => n + p.items.length, 0) ?? 0} /{" "}
             {heroes.data?.pages[0]?.totalElements ?? 0} tướng{scoped && !showAll ? " có thay đổi" : ""}
           </span>
         </div>
-        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
+        <div className="flex max-w-full flex-wrap items-center gap-2">
           {searchSlot ? createPortal(searchBox, searchSlot) : <div className="min-w-40 flex-1">{searchBox}</div>}
           <HeroCatalogFilters />
           <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
@@ -383,28 +409,26 @@ export function HeroCatalog({
           </label>
         </div>
       </div>
-      <p className="border-b px-4 py-2 text-xs text-muted-foreground sm:hidden">
-        Chạm vào ô tướng để xem chi tiết · vuốt ngang để xem thêm cột.
-      </p>
+
       <div
         className="overflow-x-auto outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         role="region"
-        aria-label="Bảng tướng · cuộn ngang để xem các cột"
+        aria-label="Danh sách tướng theo patch"
         tabIndex={0}
       >
-        <table className="w-full min-w-[720px] table-fixed text-sm">
+        <table className="block w-full text-sm @min-[44rem]/hero-list:table @min-[44rem]/hero-list:table-fixed">
           <caption className="sr-only">
             Danh sách tướng, thay đổi gameplay, phiên bản, thị trường, bản dịch, chỉnh sửa gần nhất và trạng thái. Chọn
             tên tướng để mở chi tiết.
           </caption>
-          <colgroup>
+          <colgroup className="hidden @min-[44rem]/hero-list:table-column-group">
             <col className="w-[24%]" />
             <col className="w-[23%]" />
             <col className="w-[23%]" />
             <col className="w-[14%]" />
             <col className="w-[16%]" />
           </colgroup>
-          <thead className="border-b border-border/60 bg-muted/60">
+          <thead className="sr-only bg-muted @min-[44rem]/hero-list:not-sr-only @min-[44rem]/hero-list:table-header-group">
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
                 {group.headers.map((header) => (
@@ -413,7 +437,6 @@ export function HeroCatalog({
                     scope="col"
                     className={cn(
                       "h-10 px-3 py-2 text-left text-xs font-semibold text-muted-foreground",
-                      header.column.id === "code" && "sticky left-0 z-10 bg-muted",
                       header.column.id === "edited" && "text-right",
                     )}
                   >
@@ -423,7 +446,7 @@ export function HeroCatalog({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-border/50">
+          <tbody className="block divide-y divide-border/60 @min-[44rem]/hero-list:table-row-group">
             {table.getRowModel().rows.map((row) => (
               <HeroTableRow
                 key={row.id}
@@ -498,6 +521,13 @@ export function HeroCatalog({
   )
 }
 
+const mobileColumnLabels: Record<string, string> = {
+  changes: "Thay đổi",
+  revision: "Trạng thái",
+  translations: "Bản dịch",
+  edited: "Sửa gần nhất",
+}
+
 const HeroTableRow = memo(function HeroTableRow({
   active,
   cells,
@@ -508,17 +538,24 @@ const HeroTableRow = memo(function HeroTableRow({
   renderCell: ReactTable<typeof features, CatalogRow>["FlexRender"]
 }) {
   return (
-    <tr data-active={active} className="group/hero-row h-16 data-[active=true]:bg-accent">
+    <tr
+      data-active={active}
+      className="group/hero-row grid grid-cols-2 items-start gap-x-4 gap-y-2 px-3 py-3 hover:bg-muted/35 data-[active=true]:bg-accent @min-[44rem]/hero-list:table-row @min-[44rem]/hero-list:h-16"
+    >
       {cells.map((cell) => (
         <td
           key={cell.id}
           className={cn(
-            "px-3 py-2 align-middle",
-            cell.column.id === "code" &&
-              "sticky left-0 z-10 border-r border-border/40 bg-card group-data-[active=true]/hero-row:bg-accent",
-            cell.column.id === "edited" && "text-right",
+            "min-w-0 align-middle @min-[44rem]/hero-list:px-3 @min-[44rem]/hero-list:py-2",
+            cell.column.id === "code" && "col-span-2",
+            cell.column.id === "edited" && "@min-[44rem]/hero-list:text-right",
           )}
         >
+          {cell.column.id !== "code" && (
+            <span aria-hidden="true" className="type-meta mb-0.5 block @min-[44rem]/hero-list:hidden">
+              {mobileColumnLabels[cell.column.id]}
+            </span>
+          )}
           <RenderCell cell={cell} />
         </td>
       ))}
@@ -643,7 +680,7 @@ function LastEdited({ value, locale, timeZone }: { value?: string | null; locale
   }
   return (
     <time
-      className="inline-flex max-w-full flex-col gap-0.5 text-right text-xs tabular-nums"
+      className="inline-flex max-w-full flex-wrap items-baseline gap-x-1 text-xs tabular-nums @min-[44rem]/hero-list:flex-col @min-[44rem]/hero-list:items-end"
       dateTime={value}
       aria-label={label}
       title={timeZone ? `${label} · ${timeZone}` : label}

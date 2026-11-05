@@ -28,8 +28,7 @@ export function HeroStatsEditor({
   patchCode?: string
   referenceError?: boolean
 }) {
-  const snapshot = observedAttributes(skills)
-  const observation = !patchCode || snapshot?.patchCode === patchCode ? snapshot : undefined
+  const observation = observedAttributes(skills, patchCode)
   const rows = combatAttributeRows(value, observation, defaults)
   const inherited = defaults.filter((rule) => !value.values.some((v) => v.statKey === rule.statKey))
   const add = (statKey: string, unit = statUnit(statKey)) =>
@@ -40,8 +39,9 @@ export function HeroStatsEditor({
   return (
     <div className="space-y-3">
       <p className="type-meta">
-        Nhập giá trị cơ bản hoặc mức tăng mỗi cấp khi có nguồn cho riêng tướng. Các số đọc từ ảnh được giữ riêng để đối
-        chiếu.
+        {observation && patchCode
+          ? "Đã có thuộc tính từ ảnh của patch này. Chỉ thêm giá trị riêng khi có nguồn xác nhận chỉ số cơ bản hoặc mức tăng mỗi cấp."
+          : "Nhập giá trị cơ bản hoặc mức tăng mỗi cấp khi có nguồn cho riêng tướng."}
       </p>
       {referenceError && (
         <p role="status" className="type-meta">
@@ -70,7 +70,7 @@ export function HeroStatsEditor({
         </div>
       )}
       {observation && (
-        <details className="rounded-lg border p-3">
+        <details className="rounded-lg border p-3" open={value.values.length ? undefined : true}>
           <summary className="type-body cursor-pointer">Đối chiếu thuộc tính trên ảnh</summary>
           <p className="type-meta mt-2 break-words">
             {observation.image} · {observation.level == null ? "Chưa xác định cấp tướng" : `Cấp ${observation.level}`}
@@ -87,7 +87,7 @@ export function HeroStatsEditor({
           </dl>
         </details>
       )}
-      {!value.values.length && (
+      {!observation && !value.values.length && (
         <p className="type-body rounded-lg border border-dashed p-4 text-muted-foreground">
           Chưa nhập giá trị riêng cho tướng.
         </p>
@@ -175,7 +175,7 @@ export function HeroStatsEditor({
       ))}
       <Button type="button" variant="outline" onClick={() => add(nextKey)}>
         <Plus className="size-4" />
-        Thêm chỉ số
+        {observation ? "Thêm chỉ số riêng (tùy chọn)" : "Thêm chỉ số"}
       </Button>
     </div>
   )
