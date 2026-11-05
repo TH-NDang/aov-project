@@ -1,5 +1,6 @@
 import { HomeCarousel } from "./home-carousel"
 import { HomeCategories } from "./home-categories"
+import { HomePatchHeroes } from "./home-patch-heroes"
 import { SeasonUpdates } from "./season-updates"
 import "./wiki-home.css"
 
@@ -11,6 +12,7 @@ export function WikiHome() {
         <HomeCategories />
         <SeasonUpdates />
       </div>
+      <HomePatchHeroes />
     </div>
   )
 }
