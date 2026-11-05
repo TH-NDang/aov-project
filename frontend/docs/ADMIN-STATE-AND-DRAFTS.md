@@ -46,8 +46,13 @@ Chuyển trang nội bộ được phép khi nháp đã được giữ trong sto
 
 ## Cảnh báo nguồn và nhập nhanh thông số kỹ năng
 
-Trong bản nháp tướng, mở **Cảnh báo → Xử lý cảnh báo** hoặc **Chỉnh sửa Kỹ năng → Đối chiếu cảnh báo nguồn**.
-Sau khi bổ sung và kiểm tra nội dung, chọn **Đánh dấu đã đối chiếu**, rồi **Lưu phần này**. Có thể **Mở lại cảnh báo**
+Danh sách **Tướng → Bộ lọc** mở popup lọc cảnh báo chưa đối chiếu, đường và vai trò. Có thể chọn nhiều
+giá trị trong một nhóm; các nhóm kết hợp với nhau. Bộ lọc lưu trên URL, giữ khi mở/đóng tướng và lọc trên
+backend trước khi phân trang. Vai trò lấy từ hồ sơ; đường lấy từ nguồn đã nhập, không suy diễn khi thiếu dữ liệu.
+
+Trong bản nháp tướng, mở **Cảnh báo → Xử lý cảnh báo** hoặc **Chỉnh sửa Kỹ năng → Đối chiếu cảnh báo**.
+Danh sách đối chiếu mở trong drawer, không đẩy nội dung kỹ năng xuống. Sau khi bổ sung và kiểm tra nội dung,
+chọn **Đánh dấu đã đối chiếu**, đóng drawer rồi **Lưu phần này**. Có thể **Mở lại cảnh báo**
 trong cùng trình sửa. Thao tác chỉ sửa working copy của phần Kỹ năng cho đến khi lưu; hủy phần này khôi phục cả
 trạng thái đối chiếu. Bản đã xuất bản và tài khoản không có quyền sửa không có thao tác ghi.
 
@@ -56,7 +61,8 @@ Ghi chú nguồn được giữ nguyên; cờ được xử lý có `reviewResol
 thu thập nguồn ban đầu. Danh sách cảnh báo đang chờ không tính các cờ đã đối chiếu.
 
 Trong **Sửa bảng**, ô **Tổng quan** của dòng có nhiều cấp cho nhập công thức, ví dụ `315 (+40/cấp chiêu)`,
-`11 (-0,4/cấp chiêu)` hoặc `15% (+3%/cấp chiêu)`. Client hiển thị các giá trị suy ra; **Điền các cấp** hoặc Enter
+`11 (-0,4/cấp chiêu)` hoặc `15% (+3%/cấp chiêu)`. Client hiển thị các giá trị suy ra trong popup cạnh ô nhập,
+không tăng chiều cao dòng bảng; **Điền các cấp** hoặc Enter
 áp dụng vào các ô cấp của dòng. Công thức sai không thay dữ liệu đang có. Bản xem trước công thức là tạm thời;
 cần áp dụng trước khi đổi màn hình. Sau khi áp dụng, các ô cấp dùng working copy và nút **Lưu phần này** như các
 chỉnh sửa khác. Chỉ điền nhanh khi các cột liên tiếp từ Cấp 1; không suy đoán cấp tướng hoặc chỉ số chiến đấu.

@@ -2158,6 +2158,16 @@ changelog hoặc ngày áp dụng game. Không lấy `published_at` hay giờ se
 dùng JPA để lọc/count và tải revision, classification, translation theo nhóm của trang; không tải
 toàn nội dung section hay gọi lịch sử thay đổi riêng cho từng tướng.
 
+Danh mục tướng hỗ trợ thêm `role` (mã vai trò phân cách dấu phẩy), `position`
+(`top`, `mid`, `rung`, `rong-ad`, `tro-thu`, phân cách dấu phẩy) và `hasWarnings=true|false`.
+Các nhóm kết hợp bằng AND, các lựa chọn trong cùng nhóm kết hợp bằng OR; giá trị vai trò/đường lạ trả 422.
+Lọc và count trước phân trang, trên cùng snapshot mới nhất được chọn theo ruleset/phạm vi như tìm kiếm tên.
+Vai trò lấy từ PROFILE; đường lấy từ `SOURCE_SNAPSHOT.metadata.heroClassification.recommendedPositions`,
+không suy diễn từ vai trò. Cảnh báo đọc `reviewFlags` (dự phòng `review_flags`) và `heroReviewFlags`;
+bỏ qua cờ `reviewResolution=RESOLVED`, cờ nguồn chỉ mô tả cách đo/ảnh trùng/icon chưa gắn nhãn,
+và cờ `not_visible_in_source` của `heroLevel`/`hero.attributes.hero_level` giống giao diện đối chiếu.
+Không truyền bộ lọc thì giữ hành vi cũ.
+
 ### Không gian ảnh và bản dịch bậc trang phục
 
 Các endpoint ngoài dưới đây dùng prefix `/api/wiki/v1`; mapping Java vẫn dùng ApiPaths.ADMIN
