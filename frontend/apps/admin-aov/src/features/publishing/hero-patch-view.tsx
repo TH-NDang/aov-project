@@ -137,7 +137,7 @@ export function HeroPatchTimeline({
         })}
       </nav>
 
-      <section className="space-y-3 rounded-xl border bg-card p-4">
+      <section className="space-y-3 admin-section py-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 space-y-1">
             <h3 className="text-sm font-semibold">Thay đổi ở {variant.patchCode}</h3>
@@ -168,7 +168,7 @@ export function HeroPatchTimeline({
         {recorded && <ChangeLines changes={recorded.changes} content={content} heroId={heroId} locale={locale} />}
       </section>
 
-      <section className="space-y-3 rounded-xl border bg-card p-4">
+      <section className="space-y-3 admin-section py-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-sm font-semibold">Dữ liệu tại {variant.patchCode}</h3>
           {data && (

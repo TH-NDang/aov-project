@@ -153,7 +153,7 @@ export function SkillComparisonCard({
     <article
       data-skill-key={group.skillKey}
       aria-labelledby={heading}
-      className="@container min-w-0 overflow-hidden rounded-xl border bg-card"
+      className="@container min-w-0 overflow-hidden admin-panel"
     >
       <header className="flex flex-wrap items-center gap-3 bg-muted/15 p-4">
         <ComparisonSkillIcon before={group.beforeSkill} after={group.afterSkill} referenceCodes={referenceCodes} />
@@ -261,7 +261,7 @@ export function OtherComparisonCard({
   const numberDelta =
     typeof change.before === "number" && typeof change.after === "number" ? change.after - change.before : null
   return (
-    <article className="@container min-w-0 overflow-hidden rounded-xl border bg-card">
+    <article className="@container min-w-0 overflow-hidden admin-panel">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-4 py-3">
         <h4 className="min-w-0 break-words text-sm font-medium">{labels.join(" / ")}</h4>
         <Badge variant="outline">

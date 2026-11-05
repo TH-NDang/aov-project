@@ -332,7 +332,7 @@ function HeroContentBody({
               key={section}
               className={cn(
                 "min-w-0 scroll-mt-4",
-                section !== "SKILLS" && "rounded-2xl border bg-card p-4 sm:p-5",
+                section !== "SKILLS" && "admin-section py-4 sm:py-5",
                 section === "COMBAT_STATS" && "@min-[900px]:col-span-2",
               )}
               id={`hero-${section}`}

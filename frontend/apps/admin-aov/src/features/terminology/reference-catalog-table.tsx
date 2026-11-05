@@ -265,7 +265,7 @@ export function ReferenceCatalogTable({
         role="region"
         aria-label={termsOnly ? "Bảng thuật ngữ" : "Bảng tham chiếu"}
         tabIndex={0}
-        className="overflow-hidden rounded-xl border bg-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="overflow-hidden admin-panel outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <table className="block w-full text-left text-sm @xl/catalog:table @xl/catalog:table-fixed">
           <colgroup className="hidden @xl/catalog:table-column-group">

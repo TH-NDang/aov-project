@@ -112,7 +112,6 @@ function Hub({ access }: { access: Access }) {
     <EsportsPage>
       <PageHeader
         title="Giải đấu"
-        description="Lịch thi đấu, trạng thái và kết quả của từng giải."
         actions={
           access.canWrite && (
             <>

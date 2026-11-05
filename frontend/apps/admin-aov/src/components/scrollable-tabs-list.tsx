@@ -73,7 +73,7 @@ export function ScrollableTabsList({ activeValue, className, ...props }: Props) 
   }, [measure, reveal])
 
   return (
-    <div className="relative min-w-0 max-w-full rounded-xl border bg-muted/40">
+    <div className="relative min-w-0 max-w-full border-b">
       <div
         ref={viewport}
         data-slot="tabs-scroll-viewport"

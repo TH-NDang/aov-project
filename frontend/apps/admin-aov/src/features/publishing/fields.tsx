@@ -56,7 +56,7 @@ export function Box({ title, children, unframed }: { title: string; children: Re
       </section>
     )
   return (
-    <section className="space-y-4 rounded-xl border bg-card p-4 md:p-6">
+    <section className="space-y-4 admin-section py-4 md:py-6">
       <h2 className="type-section-title">{title}</h2>
       {children}
     </section>

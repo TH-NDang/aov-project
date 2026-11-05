@@ -182,7 +182,7 @@ export function ReferencePreviewWorkspace({ onLocaleChange, context, onContextCh
           <section
             id={editorId}
             aria-label="Soạn nội dung thử"
-            className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-card"
+            className="flex min-h-0 min-w-0 flex-col overflow-hidden admin-panel"
           >
             <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-3 py-1 @xl/preview:min-h-12 @xl/preview:py-2">
               <h2 className="type-section-title">Soạn nội dung thử</h2>
@@ -267,10 +267,7 @@ export function ReferencePreviewWorkspace({ onLocaleChange, context, onContextCh
               onChange={viewport.keyboard ? setKeyboardRatio : setRatio}
             />
           )}
-          <section
-            aria-label="Kết quả hiển thị"
-            className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border bg-card"
-          >
+          <section aria-label="Kết quả hiển thị" className="flex min-h-0 min-w-0 flex-col overflow-hidden admin-panel">
             <div className="flex min-h-9 shrink-0 flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-3 py-1 @xl/preview:min-h-12 @xl/preview:py-2">
               <h2 className="flex items-center gap-2 type-section-title">
                 <Eye aria-hidden className="size-4 text-muted-foreground" />

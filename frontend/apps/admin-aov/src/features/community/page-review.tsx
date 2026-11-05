@@ -39,10 +39,7 @@ function Review({ actorKey }: { actorKey: string }) {
   const active = tab === "claims" ? claims : reports
   return (
     <Page className="mx-auto w-full max-w-[1100px] gap-5">
-      <PageHeader
-        title="Yêu cầu & kiểm duyệt"
-        description="Xác minh người đại diện, xử lý phản hồi và bảo vệ nội dung cộng đồng."
-      />
+      <PageHeader title="Yêu cầu & kiểm duyệt" />
       <div className="flex gap-2">
         <Button
           variant={tab === "claims" ? "secondary" : "ghost"}
@@ -105,7 +102,7 @@ function ReviewCard({ claim, report }: { claim?: PageClaim; report?: CommunityRe
     onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
   })
   return (
-    <article className="space-y-4 rounded-xl border bg-card p-5">
+    <article className="space-y-4 admin-section py-5">
       <div>
         <Link className="type-section-title hover:underline" to={`/pages/${claim?.pageId || report?.pageId}`}>
           {claim?.pageName || "Báo cáo nội dung"}

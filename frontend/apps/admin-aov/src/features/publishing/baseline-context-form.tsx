@@ -41,7 +41,7 @@ export function BaselineContextForm({
   })
   const available = contexts.data?.filter((context) => context.rulesetId === revision.rulesetId) ?? []
   return (
-    <details className="rounded-xl border bg-card p-4">
+    <details className="admin-section py-4">
       <summary className="cursor-pointer text-sm font-medium">Sửa mùa / patch của mốc ban đầu</summary>
       <form
         className="mt-4 space-y-3"

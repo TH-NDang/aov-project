@@ -46,7 +46,7 @@ export function ImportContextPicker({
     queryFn: () => backendRequest<ImportContext[]>(`/admin/heroes/import/contexts?seasonId=${seasonId}`),
   })
   return (
-    <section className="rounded-xl border bg-card p-5">
+    <section className="admin-section py-5">
       <fieldset disabled={disabled} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <label className="grid gap-2 text-sm">
           <span className="flex items-center gap-2">

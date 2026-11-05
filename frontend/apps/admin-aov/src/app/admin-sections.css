@@ -1,0 +1,20 @@
+/* Reading sections share the page surface and use one divider for grouping. */
+.admin-section {
+  border: 0;
+  border-block-start: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.admin-section[data-slot="card"] > :is([data-slot="card-header"], [data-slot="card-content"]) {
+  padding-inline: 0;
+}
+
+/* A toolbar and its tabular results share a single surface. */
+.admin-panel {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--card);
+  color: var(--card-foreground);
+}

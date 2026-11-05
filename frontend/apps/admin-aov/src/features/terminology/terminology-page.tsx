@@ -288,7 +288,7 @@ export function TerminologyPage() {
         {view === "settings" && (
           <fieldset
             disabled={!catalog.canEdit || catalog.settings.isError}
-            className="max-w-3xl space-y-5 rounded-xl border bg-card p-4 sm:p-5"
+            className="max-w-3xl space-y-5 admin-section py-4 sm:py-5"
           >
             <div className="flex items-start gap-3 border-b pb-4">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border bg-muted/40">

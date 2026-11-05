@@ -133,7 +133,7 @@ export function ProfileForm({
   }
 
   return (
-    <form onSubmit={save} className={fullWidth ? "w-full" : "overflow-hidden rounded-2xl border bg-card shadow-sm"}>
+    <form onSubmit={save} className={fullWidth ? "w-full" : "overflow-hidden admin-section"}>
       <div
         aria-hidden="true"
         className="relative h-32 overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-800 sm:h-44"

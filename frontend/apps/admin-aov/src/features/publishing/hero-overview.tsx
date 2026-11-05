@@ -14,7 +14,7 @@ import { HeroCombatAttributes } from "./hero-combat-attributes"
 import type { StatDefault } from "./combat-attributes"
 import type { Content, Profile, Section } from "./types"
 
-const panel = "min-w-0 rounded-xl border bg-card p-4"
+const panel = "min-w-0 admin-section py-4"
 
 function OverviewSummary({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false)

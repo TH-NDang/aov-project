@@ -76,7 +76,7 @@ export function CreateHeroPage() {
             </p>
           )}
           <form
-            className="space-y-5 rounded-xl border bg-card p-6"
+            className="space-y-5 admin-section py-6"
             onSubmit={async (e) => {
               e.preventDefault()
               if (!context || busy) return

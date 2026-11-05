@@ -240,7 +240,7 @@ function Overview({
             Trận sắp tới
           </SectionTitle>
           {upcoming.length ? (
-            <div className="divide-y overflow-hidden rounded-xl border bg-card">
+            <div className="divide-y overflow-hidden admin-section">
               {upcoming.map((record) => (
                 <MatchRow key={record.id} record={record} team={team} onOpen={() => onOpen(record.id)} showStage />
               ))}
@@ -252,7 +252,7 @@ function Overview({
         {!!recent.length && (
           <section className="space-y-3">
             <SectionTitle>Kết quả gần đây</SectionTitle>
-            <div className="divide-y overflow-hidden rounded-xl border bg-card">
+            <div className="divide-y overflow-hidden admin-section">
               {recent.map((record) => (
                 <MatchRow key={record.id} record={record} team={team} onOpen={() => onOpen(record.id)} showStage />
               ))}
@@ -390,7 +390,7 @@ function MatchesTab({
         [...groups.entries()].map(([stage, byDay]) => (
           <div key={stage} className="space-y-2">
             <h3 className="text-sm font-semibold">{stage}</h3>
-            <div className="overflow-hidden rounded-xl border bg-card">
+            <div className="overflow-hidden admin-section">
               {[...byDay.entries()].map(([day, entries]) => (
                 <div key={day}>
                   <p className="border-b bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">

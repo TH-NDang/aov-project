@@ -480,7 +480,7 @@ export function HeroImport({
     (e) => filter === "ALL" || (filter === "ERROR" ? !!e.error : e.plan?.classification === filter),
   )
   return (
-    <section className="overflow-hidden rounded-xl border bg-card" aria-label="Import tướng">
+    <section className="overflow-hidden admin-section" aria-label="Import tướng">
       <div className="border-b bg-muted/30 px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 type-section-title">

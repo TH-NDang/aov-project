@@ -86,10 +86,7 @@ export function EventFeed({
   }, [currentGroup, follow])
 
   return (
-    <section
-      className={cn("flex min-h-0 flex-col overflow-hidden rounded-xl border bg-card", className)}
-      aria-label="Diễn biến"
-    >
+    <section className={cn("flex min-h-0 flex-col overflow-hidden admin-panel", className)} aria-label="Diễn biến">
       <div className="flex items-center gap-1 overflow-x-auto border-b px-2 py-2">
         {(["ALL", "KILL", "OBJECTIVE", "ITEM", "NOTE"] as const).map((value) => (
           <button

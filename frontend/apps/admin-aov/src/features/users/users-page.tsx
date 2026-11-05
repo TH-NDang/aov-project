@@ -93,7 +93,7 @@ export function UsersPage() {
           Bạn chưa có quyền xem danh sách người dùng.
         </div>
       ) : (
-        <section aria-label="Danh sách người dùng" className="overflow-hidden rounded-xl border bg-card">
+        <section aria-label="Danh sách người dùng" className="overflow-hidden admin-panel">
           <div className="flex min-h-16 items-center justify-between gap-3 border-b px-4 py-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">

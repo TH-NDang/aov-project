@@ -53,7 +53,7 @@ export function Scoreboard({
     const used = locks?.byTeam.get(view.team.id) ?? []
     const usedIn = new Map(used.flatMap((use) => heroKeys(use.hero).map((key) => [key, use.gameNumber] as const)))
     return (
-      <section key={code} data-side={code} className="@container min-w-0 overflow-hidden rounded-xl border bg-card">
+      <section key={code} data-side={code} className="@container min-w-0 overflow-hidden admin-panel">
         <header className="flex items-center gap-2.5 border-b bg-[var(--side-soft)] px-3 py-2">
           <span className="h-6 w-1 rounded-full bg-[var(--side)]" aria-hidden="true" />
           <TeamLogo team={view.team} size={28} />

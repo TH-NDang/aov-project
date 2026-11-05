@@ -141,7 +141,7 @@ function RevisionHistoryContent({
   return (
     <AdminReferenceProvider locale={locale}>
       <div className="@container space-y-4" aria-label="Lịch sử và so sánh tướng">
-        <section className="rounded-xl border bg-card p-4">
+        <section className="admin-section py-4">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
             <GitCompareArrows className="size-4" />
             So sánh phiên bản
@@ -272,7 +272,7 @@ function RevisionHistoryContent({
             ))}
           </section>
         )}
-        <details className="group/history rounded-xl border bg-card">
+        <details className="group/history admin-section">
           <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm font-medium">
             <History className="size-4" /> Các bản dữ liệu ({candidates.length})
             <ChevronDown className="ml-auto size-4 transition-transform group-open/history:rotate-180" />

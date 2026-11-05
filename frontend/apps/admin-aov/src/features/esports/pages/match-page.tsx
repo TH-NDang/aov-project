@@ -270,9 +270,7 @@ function MatchView({ access }: { access: Access }) {
         }
       />
       {record.content.note && (
-        <section className="rounded-xl border bg-card px-4 py-3 text-sm text-muted-foreground">
-          {record.content.note}
-        </section>
+        <section className="admin-section px-4 py-3 text-sm text-muted-foreground">{record.content.note}</section>
       )}
       {editing && (
         <RegistryEditor
@@ -589,7 +587,7 @@ function MatchViewer({
   )
 
   const gameCard = focused && focusedView && score && (
-    <div className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2">
+    <div className="flex items-center gap-3 admin-section px-3 py-2">
       <span className="text-xs font-semibold text-muted-foreground">
         {here ? "Đang phát" : "Ván đang chọn"} · Ván {focused.number}
       </span>
@@ -783,7 +781,7 @@ function MatchViewer({
       <div className={cn("esp-viewer", phone && "pb-24")}>
         <div className="esp-area-chips min-w-0">{chips}</div>
         <div className="esp-area-video min-w-0">{player_}</div>
-        <section className="esp-area-timeline min-w-0 space-y-2 rounded-xl border bg-card px-3 pt-3 pb-2">
+        <section className="esp-area-timeline min-w-0 space-y-2 admin-section px-3 pt-3 pb-2">
           <div className="flex flex-wrap items-center gap-2">
             {transport}
             {tools}
@@ -1062,7 +1060,7 @@ function MatchSetupGuide({
     { done: false, text: "Tới 0:00 trong game bấm “Vào trận”, ghi diễn biến, rồi “Kết thúc ván” với đội thắng." },
   ]
   return (
-    <section className="esp-area-side min-w-0 space-y-3 rounded-xl border bg-card p-4 text-sm">
+    <section className="esp-area-side min-w-0 space-y-3 admin-section py-4 text-sm">
       {resultNote && <p className="text-muted-foreground">{resultNote}</p>}
       <ol className="space-y-2">
         {steps.map((step, index) => (

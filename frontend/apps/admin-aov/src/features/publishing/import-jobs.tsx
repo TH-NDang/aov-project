@@ -68,7 +68,7 @@ export function ImportJobHistory() {
       )}
       {jobs.data?.length === 0 && <p className="text-sm text-muted-foreground">Chưa có tác vụ import.</p>}
       {jobs.data?.map((job) => (
-        <details key={job.id} className="rounded-xl border bg-card p-4" open={job.status === "RUNNING"}>
+        <details key={job.id} className="admin-section py-4" open={job.status === "RUNNING"}>
           <summary className="cursor-pointer text-sm font-medium">
             {jobDescription(job)}{" "}
             <span className="ml-2 font-normal text-muted-foreground">

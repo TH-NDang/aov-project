@@ -98,7 +98,7 @@ export function UserDetailPage() {
         </div>
       ) : (
         <div className="grid max-w-6xl items-start gap-6 lg:grid-cols-[minmax(240px,320px)_minmax(0,1fr)]">
-          <section className="min-w-0 overflow-hidden rounded-2xl border bg-card">
+          <section className="admin-panel min-w-0 overflow-hidden">
             <div className="h-20 bg-gradient-to-br from-primary/20 via-primary/5 to-muted" />
             <div className="space-y-5 px-6 pb-6">
               <Avatar className="-mt-12 size-24 border-4 border-card">
@@ -135,13 +135,13 @@ export function UserDetailPage() {
             </div>
           </section>
           <div className="min-w-0 space-y-6">
-            <section className="space-y-4 rounded-2xl border bg-card p-5 sm:p-6">
+            <section className="space-y-4 admin-section py-5 sm:py-6">
               <h2 className="type-section-title">Giới thiệu</h2>
               <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">
                 {query.data.biography.trim() || "Người dùng chưa thêm giới thiệu."}
               </p>
             </section>
-            <section className="space-y-5 rounded-2xl border bg-card p-5 sm:p-6">
+            <section className="space-y-5 admin-section py-5 sm:py-6">
               <h2 className="type-section-title">Thông tin hồ sơ</h2>
               <dl className="grid gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
