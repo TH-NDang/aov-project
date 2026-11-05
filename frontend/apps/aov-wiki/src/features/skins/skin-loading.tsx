@@ -1,7 +1,6 @@
 import { SkinCollectionHeading } from "./skin-collection-heading"
 import "./skin-directory.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { WikiVersionPicker } from "../../components/wiki-version-picker"
 
 export function SkinGridSkeleton() {
   const { locale } = useWikiContext()
@@ -34,7 +33,6 @@ export function SkinDirectoryLoading() {
   return (
     <div className="wiki-skin-directory" aria-busy="true">
       <SkinCollectionHeading />
-      <WikiVersionPicker />
       <div className="wiki-skin-toolbar" aria-hidden="true">
         <span className="wiki-skin-search wiki-skeleton" />
         <div className="wiki-skin-filter-strip">

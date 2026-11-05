@@ -3,18 +3,19 @@ import { useNavigate, useSearchParams } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@aov/ui/components/dropdown-menu"
+} from "@aov/ui/components/public-overlay"
 import { DrawerClose } from "@aov/ui/components/drawer"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import "./wiki-header.css"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
+import { wikiSections } from "../layout/wiki-sections"
 import { WikiIcon } from "./wiki-icon"
 import { WikiAccountMenu } from "../features/auth/wiki-account"
 
@@ -111,6 +112,7 @@ function SectionSelector() {
         alignOffset={-42}
         sideOffset={10}
         className="public-app-theme public-app-menu"
+        drawerTitle={t("application")}
         data-appearance="wiki"
       >
         <div className="public-app-menu-title">{t("application")}</div>
@@ -132,29 +134,6 @@ function SectionSelector() {
         })}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
-
-function HeaderPanel({
-  label,
-  className,
-  trigger,
-  children,
-}: {
-  label: string
-  className?: string
-  trigger: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger className={className} aria-label={label}>
-        {trigger}
-      </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={12} className={cn(PANEL_SURFACE, "w-[min(300px,calc(100vw-24px))] p-5")}>
-        {children}
-      </PopoverContent>
-    </Popover>
   )
 }
 
@@ -251,30 +230,38 @@ function PanelTitle({ children }: { children: ReactNode }) {
   return <h2 className="mb-2.5 type-section-title">{children}</h2>
 }
 
-function PanelText({ children }: { children: ReactNode }) {
-  return <p className="text-[13px] leading-[1.7] text-[#b2b4bc]">{children}</p>
-}
-
 const SEARCH_SCOPES = {
   heroes: { path: "/hero", titleKey: "searchHeroes" },
   skins: { path: "/skins", titleKey: "searchSkins" },
   warehouse: { path: "/warehouse", titleKey: "searchWarehouse" },
 } as const
 
-function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: keyof typeof SEARCH_SCOPES }) {
+function LibrarySearch({
+  mobile = false,
+  chooseSection = false,
+  scope,
+}: {
+  mobile?: boolean
+  chooseSection?: boolean
+  scope: keyof typeof SEARCH_SCOPES
+}) {
   const navigate = useNavigate()
   const { t, href, locale } = useWikiContext()
   const [params] = useSearchParams()
   const [search, setSearch] = useState("")
   const [open, setOpen] = useState(false)
+  const [sectionKey, setSectionKey] = useState<string>("heroes")
+  const section = wikiSections.find((entry) => entry.key === sectionKey) ?? wikiSections[0]
   const target = SEARCH_SCOPES[scope]
+  const title = chooseSection ? t(section.key) : t(target.titleKey)
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const query = new URLSearchParams()
-    if (scope === "warehouse" && params.get("tab")) query.set("tab", params.get("tab")!)
-    if (search.trim()) query.set("q", search.trim())
-    navigate(href(`${target.path}${query.size ? `?${query}` : ""}`))
+    const destination = new URL(chooseSection ? section.path : target.path, window.location.origin)
+    if (!chooseSection && scope === "warehouse" && params.get("tab"))
+      destination.searchParams.set("tab", params.get("tab")!)
+    if (search.trim()) destination.searchParams.set("q", search.trim())
+    navigate(href(destination.pathname + destination.search))
     setOpen(false)
   }
 
@@ -288,11 +275,25 @@ function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: key
       )}
     >
       <Icon name="search" className="size-4" />
+      {chooseSection && (
+        <select
+          className="wiki-search-domain"
+          aria-label={wikiText(locale, "Danh mục tìm kiếm", "Search category")}
+          value={sectionKey}
+          onChange={(event) => setSectionKey(event.target.value)}
+        >
+          {wikiSections.map((entry) => (
+            <option key={entry.key} value={entry.key}>
+              {t(entry.key)}
+            </option>
+          ))}
+        </select>
+      )}
       <input
         type="search"
         enterKeyHint="search"
-        aria-label={`${t(target.titleKey)} ${wikiText(locale, "trong wiki", "in the wiki")}`}
-        placeholder={`${t(target.titleKey)}…`}
+        aria-label={chooseSection ? `${t("search")} · ${title}` : title}
+        placeholder={`${chooseSection ? t("search") : title}…`}
         maxLength={120}
         value={search}
         onChange={(event) => setSearch(event.target.value)}
@@ -314,8 +315,13 @@ function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: key
       >
         <Icon name="search" className="max-[640px]:size-4" />
       </PopoverTrigger>
-      <PopoverContent align="end" sideOffset={12} className={cn(PANEL_SURFACE, "w-[min(320px,calc(100vw-24px))] p-4")}>
-        <PanelTitle>{t(target.titleKey)}</PanelTitle>
+      <PopoverContent
+        drawerTitle={chooseSection ? t("search") : title}
+        align="end"
+        sideOffset={12}
+        className={cn(PANEL_SURFACE, "w-[min(320px,calc(100vw-24px))] p-4")}
+      >
+        <PanelTitle>{chooseSection ? t("search") : title}</PanelTitle>
         {form}
       </PopoverContent>
     </Popover>
@@ -326,18 +332,11 @@ interface WikiHeaderProps {
   variant?: "home" | "library" | "hero"
   pageTitle?: string
   onOpenContents?: () => void
-  feedback?: ReactNode
   searchScope?: keyof typeof SEARCH_SCOPES
 }
 
-export function WikiHeader({
-  variant = "home",
-  pageTitle,
-  onOpenContents,
-  feedback,
-  searchScope = "heroes",
-}: WikiHeaderProps) {
-  const { t, href, locale } = useWikiContext()
+export function WikiHeader({ variant = "home", pageTitle, onOpenContents, searchScope = "heroes" }: WikiHeaderProps) {
+  const { t, href } = useWikiContext()
   // Hero headers on every viewport and the home phone header darken over the first 100px of scroll.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)
@@ -397,46 +396,14 @@ export function WikiHeader({
           </h1>
         )}
 
-        {variant !== "home" ? (
-          <LibrarySearch scope={searchScope} />
-        ) : (
-          <div
-            className="col-start-2 flex h-7 w-full items-center gap-2 rounded-[23px] border border-header-line bg-black/25 pr-3 pl-2.5 text-white/45 transition-colors hover:border-white/15 max-[860px]:hidden"
-            role="search"
-          >
-            <Icon name="search" className="size-4" />
-            <input
-              type="search"
-              className="h-full min-w-0 flex-1 border-0 bg-transparent text-sm text-white/85 outline-none placeholder:text-white/45 disabled:cursor-not-allowed"
-              aria-label={`${t("search")} — ${t("comingSoon")}`}
-              placeholder={t("search")}
-              disabled
-            />
-            <span className="text-[10px] whitespace-nowrap text-white/35 max-[1100px]:hidden">{t("comingSoon")}</span>
-          </div>
-        )}
+        {searchScope !== "warehouse" && <LibrarySearch scope={searchScope} chooseSection={variant === "home"} />}
 
         <nav
           className="col-start-3 flex items-center gap-3 justify-self-end max-[640px]:gap-1"
           aria-label={t("utilities")}
         >
-          {variant !== "home" ? (
-            <LibrarySearch mobile scope={searchScope} />
-          ) : (
-            <HeaderPanel
-              label={t("search")}
-              className={cn(UTILITY_BUTTON, "hidden max-[860px]:grid", MOBILE_ROUND)}
-              trigger={<Icon name="search" className="max-[640px]:size-4" />}
-            >
-              <PanelTitle>{t("search")}</PanelTitle>
-              <PanelText>
-                {wikiText(
-                  locale,
-                  "Tìm kiếm tướng, trang phục và trang bị sẽ sớm có mặt.",
-                  "Global search is coming soon.",
-                )}
-              </PanelText>
-            </HeaderPanel>
+          {searchScope !== "warehouse" && (
+            <LibrarySearch mobile scope={searchScope} chooseSection={variant === "home"} />
           )}
           {onOpenContents && variant !== "hero" && (
             <button
@@ -448,7 +415,6 @@ export function WikiHeader({
               <Icon name="contents" className="size-4" />
             </button>
           )}
-          {feedback && <span className="inline-flex max-[640px]:hidden">{feedback}</span>}
           <WikiPreferenceControls />
           <span className="inline-flex max-[640px]:hidden">
             <WikiAccountMenu />

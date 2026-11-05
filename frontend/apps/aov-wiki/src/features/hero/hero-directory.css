@@ -1,28 +1,5 @@
 .wiki-hero-directory {
-  max-width: 860px;
-}
-.wiki-hero-breadcrumb {
-  display: flex;
-  gap: 5px;
-  align-items: center;
-  color: #8f9aab;
-  font-size: 10px;
-  line-height: 1.5;
-}
-.wiki-hero-breadcrumb a {
-  color: #bdc2cb;
-  text-decoration: none;
-}
-.wiki-hero-breadcrumb a:hover {
-  color: var(--gold);
-}
-.wiki-hero-directory-title {
-  margin-top: 5px;
-  color: var(--gold);
-  font-family: Cambria, "Times New Roman", serif;
-  font-size: 25px;
-  line-height: 1.3;
-  font-weight: 700;
+  max-width: 100%;
 }
 .wiki-hero-filters {
   margin-top: 10px;
@@ -43,17 +20,7 @@
   align-items: start;
   gap: 2px;
   color: #a5afbe;
-  font-size: 11px;
-}
-.wiki-hero-reference-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #8994a5;
-  font-size: 9px;
-}
-.wiki-hero-reference-note span {
-  font-size: 10px;
+  font-size: 12px;
 }
 .wiki-hero-filter-choices {
   display: flex;
@@ -138,7 +105,7 @@
   flex-shrink: 0;
   min-height: 36px;
   color: #cbb98f;
-  font-size: 11px;
+  font-size: 12px;
 }
 .wiki-hero-clear > span {
   font-size: 18px;
@@ -166,30 +133,14 @@
   overflow: hidden;
   padding: 13px;
   border: 1px solid #bdc8d619;
-  background: linear-gradient(135deg, #37404ed9, #29323eeb);
+  background: var(--wiki-panel);
+  border-radius: 9px;
   color: #d8dce3;
   text-decoration: none;
   transition:
     border-color 160ms,
     background 160ms,
     transform 160ms;
-}
-.wiki-hero-card::before {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border: 1px solid #d8dfeb12;
-  pointer-events: none;
-}
-.wiki-hero-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 7px 7px auto;
-  width: 6px;
-  height: 6px;
-  border-right: 1px solid #c6b89470;
-  border-bottom: 1px solid #c6b89470;
-  pointer-events: none;
 }
 .wiki-hero-card[data-role="MAGE"] {
   --hero-card-tint: #796a91;
@@ -210,11 +161,11 @@
   --hero-card-tint: #6a728c;
 }
 .wiki-hero-card-portrait {
-  width: 112px;
+  width: 88px;
   aspect-ratio: 7 / 8;
   overflow: hidden;
   flex-shrink: 0;
-  border-radius: 0 26px 0 0;
+  border-radius: 5px;
   background: linear-gradient(145deg, var(--hero-card-tint), #242d3c);
 }
 .wiki-hero-card-portrait img {
@@ -231,18 +182,18 @@
   object-position: center;
 }
 .wiki-hero-card-placeholder {
-  font-family: var(--wiki-font-display);
   display: grid;
   height: 100%;
   place-items: center;
   color: #e5d2a4;
+  font-family: var(--wiki-font-display);
   font-size: 44px;
 }
 .wiki-hero-card-body {
   position: relative;
   display: flex;
   min-width: 0;
-  min-height: 120px;
+  min-height: 88px;
   flex: 1;
   flex-direction: column;
   justify-content: center;
@@ -278,7 +229,7 @@
   align-items: center;
   gap: 4px;
   color: #bac3d130;
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1;
 }
 .wiki-hero-card-divider i {
@@ -358,6 +309,7 @@
     min-height: 94px;
     gap: 8px;
   }
+
   .wiki-hero-filter-label {
     width: 72px;
   }
@@ -387,11 +339,7 @@
     width: 92px;
   }
 }
-@media (width < 640px) {
-  .wiki-hero-breadcrumb,
-  .wiki-hero-directory-title {
-    display: none;
-  }
+@media (max-width: 640px) {
   .wiki-hero-filters {
     margin-top: 0;
     padding-bottom: 8px;
@@ -402,11 +350,7 @@
   }
   .wiki-hero-filter-label {
     width: 56px;
-    font-size: 10px;
-  }
-  .wiki-hero-reference-note {
-    font-size: 8px;
-    gap: 2px;
+    font-size: 12px;
   }
   .wiki-hero-filter-choices {
     gap: 4px;
@@ -436,6 +380,7 @@
     height: 15px;
     flex-shrink: 0;
   }
+
   .wiki-hero-clear {
     width: 36px;
     justify-content: center;

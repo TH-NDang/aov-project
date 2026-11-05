@@ -1,13 +1,22 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react"
-import { Link, useSearchParams } from "react-router"
+import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
+import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
+import { PublishedWarehouseView } from "./warehouse-view"
+import { CatalogHeading } from "../../layout/catalog-heading"
+import { useMemo, useRef } from "react"
+import { useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { WikiLibraryLayout } from "../../layout/wiki-library-layout"
 import { warehouseCatalogQuery, warehouseGroupsQuery } from "./warehouse-api"
 import { WarehouseCatalog } from "./warehouse-catalogs"
 import { WarehouseDetail } from "./warehouse-detail"
 import { WarehouseIcon } from "./warehouse-icon"
 import { WarehouseSkeleton } from "./warehouse-loading"
-import { matchesWarehouseSearch, WAREHOUSE_SECTIONS, type WarehouseEntry } from "./warehouse-types"
+import {
+  warehouseImage,
+  warehouseName,
+  matchesWarehouseSearch,
+  warehouseKind,
+  type WarehouseEntry,
+} from "./warehouse-types"
 import "./warehouse-page.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
@@ -16,43 +25,21 @@ export default function WarehousePage() {
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
   const [params, setParams] = useSearchParams()
-  const kind = WAREHOUSE_SECTIONS.find((section) => section.kind === params.get("tab"))?.kind ?? "items"
+  const kind = warehouseKind(params.get("tab"))
+  const changes = usePublishedChanges(warehouseChangeDomain[kind])
   const sectionName = scope.t(kind)
-  const query = params.get("q") ?? ""
+  const search = params.get("q") ?? ""
   const group = params.get("group") ?? ""
   const selectedId = params.get("item")
-  const [search, setSearch] = useState(query)
-  const deferredSearch = useDeferredValue(search)
   const trigger = useRef<HTMLButtonElement | null>(null)
   const catalog = useQuery(warehouseCatalogQuery(kind, scope))
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
   const entries = catalog.data ?? []
   const groups = metadata.data ?? []
   const filtered = useMemo(
-    () => entries.filter((entry) => matchesWarehouseSearch(entry, deferredSearch)),
-    [entries, deferredSearch],
+    () => entries.filter((entry) => matchesWarehouseSearch(entry, search, scope.locale)),
+    [entries, search, scope.locale],
   )
-
-  useEffect(() => {
-    setSearch(query)
-  }, [query])
-  useEffect(() => {
-    if (search.trim() === query) return
-    const timeout = window.setTimeout(
-      () =>
-        setParams(
-          (current) => {
-            const next = new URLSearchParams(current)
-            if (search.trim()) next.set("q", search.trim())
-            else next.delete("q")
-            return next
-          },
-          { replace: true },
-        ),
-      250,
-    )
-    return () => window.clearTimeout(timeout)
-  }, [search, query, setParams])
 
   function select(entry: WarehouseEntry, button?: HTMLButtonElement) {
     if (button) trigger.current = button
@@ -63,8 +50,23 @@ export default function WarehousePage() {
     })
   }
 
+  const changed = filtered.filter((entry) => changes.subjects.has(entry.id))
+  const subjects = new Map<string, ChangedSubject>(
+    changed.map((entry) => [
+      entry.id,
+      {
+        id: entry.id,
+        name: warehouseName(entry, scope.locale),
+        kind: changes.subjects.get(entry.id)?.kind,
+        image: warehouseImage(entry),
+        open: (button) => select(entry, button),
+      },
+    ]),
+  )
+  for (const { id, name, kind } of changes.subjects.values()) {
+    if (name && !subjects.has(id) && !entries.some((e) => e.id === id) && !search) subjects.set(id, { id, name, kind })
+  }
   function clearFilters() {
-    setSearch("")
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
@@ -76,72 +78,16 @@ export default function WarehousePage() {
   }
 
   return (
-    <WikiLibraryLayout title={sectionName} searchScope="warehouse">
-      <div className={`wiki-warehouse-page wiki-warehouse-${kind}`}>
-        <nav className="wiki-warehouse-breadcrumb" aria-label={text("Đường dẫn", "Breadcrumb")}>
-          <Link to={scope.href("/")}>{scope.t("home")}</Link>
-          <span>/</span>
-          <span>{scope.t("warehouse")}</span>
-        </nav>
-        <div className="wiki-warehouse-intro">
-          <header className="wiki-warehouse-heading">
-            <div className="wiki-warehouse-heading-title">
-              <span className="wiki-warehouse-heading-emblem">
-                <WarehouseIcon name={kind} size={26} />
-              </span>
-              <div>
-                <span className="wiki-warehouse-eyebrow">{scope.t("warehouse").toLocaleUpperCase(scope.locale)}</span>
-                <h1>{sectionName}</h1>
-              </div>
-            </div>
-            <span className="wiki-warehouse-total" role="status">
-              {catalog.data && <span className="wiki-warehouse-live-dot" />}
-              {catalog.isPending
-                ? scope.t("loading")
-                : catalog.isError && !catalog.data
-                  ? text("Chưa kết nối", "Offline")
-                  : `${entries.length.toLocaleString(scope.locale)} ${text("mục", "entries")}`}
-              <span className="wiki-warehouse-region"> · {scope.region}</span>
-            </span>
-          </header>
-        </div>
+    <PublishedWarehouseView entries={entries} groups={groups} kind={kind}>
+      <div className={`wiki-warehouse-page wiki-warehouse-${kind}`} data-warehouse-density="compact">
+        <CatalogHeading title={sectionName} section={scope.t("warehouse")} />
         <div className="wiki-warehouse-toolbar">
-          <WikiVersionPicker />
-          <div className="wiki-warehouse-tools" data-search-active={search.trim() ? "true" : undefined}>
-            <label className="wiki-warehouse-search">
-              <WarehouseIcon name="search" size={17} />
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                maxLength={120}
-                placeholder={`${text("Tìm", "Search")} ${sectionName.toLocaleLowerCase(scope.locale)}…`}
-                aria-label={`${text("Tìm", "Search")} ${sectionName.toLocaleLowerCase(scope.locale)}`}
-              />
-              {search && (
-                <button type="button" onClick={() => setSearch("")} aria-label={text("Xóa tìm kiếm", "Clear search")}>
-                  <WarehouseIcon name="close" size={15} />
-                </button>
-              )}
-            </label>
-            {(search || group) && (
-              <button
-                className="wiki-warehouse-reset"
-                type="button"
-                onClick={clearFilters}
-                aria-label={text("Xóa bộ lọc", "Clear filters")}
-                title={text("Xóa bộ lọc", "Clear filters")}
-              >
-                <WarehouseIcon name="reset" size={16} />
-                <span>{text("Xóa lọc", "Clear filters")}</span>
-              </button>
-            )}
-            {catalog.isFetching && !catalog.isPending && (
-              <span className="wiki-warehouse-refreshing" role="status">
-                {text("Đang cập nhật…", "Refreshing…")}
-              </span>
-            )}
-          </div>
+          <WikiVersionPicker changedVariants={changes.changedVariants} />
+          {search && (
+            <button className="text-xs underline" type="button" onClick={clearFilters}>
+              {text("Xóa tìm kiếm", "Clear search")} · {search}
+            </button>
+          )}
         </div>
         {metadata.isError && (
           <div className="wiki-warehouse-notice">
@@ -162,6 +108,7 @@ export default function WarehousePage() {
             </button>
           </div>
         )}
+        <PatchChangesRow entries={[...subjects.values()]} failed={changes.failed} retry={changes.retry} />
         {catalog.isPending ? (
           <WarehouseSkeleton />
         ) : catalog.isError && !catalog.data ? (
@@ -183,7 +130,7 @@ export default function WarehousePage() {
             <p>
               {search
                 ? text("Thử tên khác hoặc xóa bộ lọc.", "Try another name or clear filters.")
-                : scope.seasonId || scope.patchVariantId
+                : (scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped
                   ? text(
                       "Có thể bật kèm dữ liệu nền chưa rõ mốc để tham khảo.",
                       "You can include undated baselines for reference.",
@@ -193,6 +140,20 @@ export default function WarehousePage() {
                       "Entries appear after editorial publication.",
                     )}
             </p>
+            {!search && (scope.seasonId || scope.patchVariantId) && !scope.includeUnscoped && (
+              <button
+                type="button"
+                onClick={() =>
+                  scope.setScope({
+                    seasonId: scope.seasonId,
+                    patchVariantId: scope.patchVariantId,
+                    includeUnscoped: true,
+                  })
+                }
+              >
+                {text("Xem thêm dữ liệu chưa rõ patch", "Include undated entries")}
+              </button>
+            )}
             {search && (
               <button type="button" onClick={clearFilters}>
                 {text("Xóa bộ lọc", "Clear filters")}
@@ -200,27 +161,33 @@ export default function WarehousePage() {
             )}
           </div>
         ) : (
-          <WarehouseCatalog
-            kind={kind}
-            entries={filtered}
-            allEntries={entries}
-            groups={groups}
-            group={group}
-            selectedId={selectedId}
-            onGroupChange={(value) =>
-              setParams(
-                (current) => {
-                  const next = new URLSearchParams(current)
-                  if (value) next.set("group", value)
-                  else next.delete("group")
-                  next.delete("item")
-                  return next
-                },
-                { replace: true },
-              )
-            }
-            onSelect={select}
-          />
+          <>
+            <h2 className="mb-2 type-section-title">
+              {text("Tất cả", "All")} {sectionName.toLocaleLowerCase(scope.locale)}
+            </h2>
+            <WarehouseCatalog
+              key={kind}
+              kind={kind}
+              entries={filtered}
+              allEntries={entries}
+              groups={groups}
+              group={group}
+              selectedId={selectedId}
+              onGroupChange={(value) =>
+                setParams(
+                  (current) => {
+                    const next = new URLSearchParams(current)
+                    if (value) next.set("group", value)
+                    else next.delete("group")
+                    next.delete("item")
+                    return next
+                  },
+                  { replace: true },
+                )
+              }
+              onSelect={select}
+            />
+          </>
         )}
         <WarehouseDetail
           selectedId={selectedId}
@@ -242,6 +209,6 @@ export default function WarehousePage() {
           returnFocus={trigger}
         />
       </div>
-    </WikiLibraryLayout>
+    </PublishedWarehouseView>
   )
 }

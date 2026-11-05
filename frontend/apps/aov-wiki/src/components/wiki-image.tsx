@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState, type ComponentPropsWithoutRef } from "react"
 import "./wiki-image.css"
-import { ImageCredit } from "@aov/ui/components/image-credit"
+import { WikiImageCredit as ImageCredit } from "./wiki-image-credit"
 import type { HeroMedia } from "../features/hero/hero-api"
 
 type WikiImageProps = ComponentPropsWithoutRef<"img"> & { media?: HeroMedia }

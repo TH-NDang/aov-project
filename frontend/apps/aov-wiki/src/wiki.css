@@ -83,51 +83,64 @@
   }
 }
 
-/* Bound artwork independently of the viewport-wide ambient wash. */
-.page-backdrop {
-  position: fixed;
-  inset: 0 0 auto;
-  z-index: -10;
-  height: min(540px, 50svh);
-  pointer-events: none;
-  background: radial-gradient(ellipse 1440px 650px at 50% 0%, var(--backdrop-color) 25%, var(--background) 100%);
-}
-.page-backdrop-art {
-  width: 100%;
-  max-width: 1440px;
-  height: 100%;
-  margin-inline: auto;
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
-  opacity: 0.45;
-  mask-image: linear-gradient(to right, transparent, black 14%, black 86%, transparent);
-}
-.page-backdrop::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent 32.6%, var(--background) 100%);
-}
-@media (max-width: 640px) {
-  .page-backdrop {
-    position: absolute;
-    height: min(66.667vw, 25svh);
-  }
-  .page-backdrop-art {
-    opacity: 0.45;
-    mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
-  }
-  .page-backdrop::after {
-    background: linear-gradient(to bottom, transparent 45%, var(--background) 100%);
-  }
-}
 .wiki-search-domain {
   font: var(--wiki-type-meta);
+  max-width: 40%;
+  min-width: 0;
+  cursor: pointer;
+  border: 0;
+  border-right: 1px solid var(--wiki-line);
+  padding-right: 5px;
+  color: var(--gold);
+  background: transparent;
+}
+.wiki-search-domain option {
+  color: var(--wiki-text);
+  background: var(--wiki-panel);
+}
+.wiki-site-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--wiki-line);
+}
+.wiki-site-footer > div {
+  width: min(100%, 1280px);
+  margin: auto;
+  min-height: 62px;
+  padding: 14px var(--wiki-gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 .wiki-site-footer a {
   font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--wiki-muted);
+  text-decoration: none;
+}
+.wiki-site-footer a:hover {
+  color: var(--gold);
+}
+.wiki-site-footer .wiki-footer-brand {
+  font-weight: 700;
+  color: var(--wiki-text);
+}
+.wiki-footer-brand img {
+  border-radius: 6px;
+}
+.wiki-contact-page {
+  margin: 0 auto;
+  width: min(100%, 720px);
+  flex: 1;
+  padding: clamp(24px, 5vw, 60px) var(--wiki-gutter);
 }
 .wiki-contact-page h1 {
   font: var(--wiki-type-page);
+}
+.wiki-contact-page form {
+  border-top: 1px solid var(--wiki-line);
+  padding-top: 24px;
 }

@@ -1,3 +1,9 @@
+import { warehouseName } from "@aov/ui/lib/warehouse-content"
+import type { WarehouseContents } from "@aov/ui/lib/warehouse-content"
+export type PublishedWarehouseRecord = {
+  [K in WarehouseKind]: WarehouseEntry<WarehouseContents[K]> & { kind: K }
+}[WarehouseKind]
+
 import type { HeroMedia } from "../hero/hero-api"
 
 export type WarehouseKind = "items" | "enchantments" | "arcana" | "spells"
@@ -8,6 +14,10 @@ export const WAREHOUSE_SECTIONS = [
   { kind: "arcana", name: "Bảng ngọc" },
   { kind: "spells", name: "Phụ trợ" },
 ] as const
+
+export function warehouseKind(tab: string | null): WarehouseKind {
+  return WAREHOUSE_SECTIONS.find((section) => section.kind === tab)?.kind ?? "items"
+}
 
 export interface WarehouseText {
   locale: string
@@ -50,7 +60,7 @@ export interface WarehouseContent {
   states?: { key: string; iconAssetId: string | null; translations: WarehouseText[] }[]
 }
 
-export interface WarehouseEntry {
+export interface WarehouseEntry<C extends WarehouseContent = WarehouseContent> {
   id: string
   code: string
   revision: {
@@ -60,7 +70,7 @@ export interface WarehouseEntry {
     effectiveFromPatchVariantId: string | null
     publishedAt: string | null
   }
-  content: WarehouseContent
+  content: C
   media?: Record<string, HeroMedia>
 }
 
@@ -73,26 +83,15 @@ export interface WarehouseGroup {
   background?: HeroMedia | null
 }
 
-export function warehouseText<T extends { locale: string }>(translations: T[], locale = "vi-VN"): T | undefined {
-  return (
-    translations.find((text) => text.locale === locale) ??
-    translations.find((text) => text.locale === "vi-VN") ??
-    translations[0]
-  )
-}
-
-export function warehouseName(entry: WarehouseEntry) {
-  return warehouseText(entry.content.translations)?.name || entry.code
-}
-
+export { warehouseText, warehouseName } from "@aov/ui/lib/warehouse-content"
 export function warehouseImage(entry: WarehouseEntry, assetId = entry.content.iconAssetId) {
   return assetId ? entry.media?.[assetId]?.currentVersion?.url : undefined
 }
 
-export function matchesWarehouseSearch(entry: WarehouseEntry, query: string) {
+export function matchesWarehouseSearch(entry: WarehouseEntry, query: string, locale = "vi-VN") {
   const normalize = (value: string) =>
     value.normalize("NFD").replace(/\p{M}/gu, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase()
-  const haystack = normalize(`${warehouseName(entry)} ${entry.code}`)
+  const haystack = normalize(`${warehouseName(entry, locale)} ${entry.code}`)
   return normalize(query)
     .trim()
     .split(/\s+/)
@@ -102,4 +101,18 @@ export function matchesWarehouseSearch(entry: WarehouseEntry, query: string) {
 export function warehouseStatValue(stat: WarehouseStat, locale = "vi-VN") {
   const value = stat.value.toLocaleString(locale, { maximumFractionDigits: 3 })
   return `${stat.value > 0 ? "+" : ""}${value}${stat.unit === "PERCENT" || stat.unit === "%" ? "%" : stat.unit === "SECONDS" ? (locale.startsWith("en") ? " s" : " giây") : ""}`
+}
+
+export function arcanaDetailDescription(text: WarehouseText | undefined, statRows: { label: string; value: string }[]) {
+  const normalize = (line: string) =>
+    line
+      .trim()
+      .toLowerCase()
+      .replace(/(\d),(?=\d)/g, "$1.")
+      .replace(/\s+/g, " ")
+  const rows = new Set(statRows.map(({ label, value }) => normalize(`${label} ${value}`)))
+  return [text?.description, text?.summary].find(
+    (description) =>
+      description?.trim() && description.split(/[;\n]/).some((line) => line.trim() && !rows.has(normalize(line))),
+  )
 }

@@ -7,7 +7,7 @@
 .wiki-hero-profile {
   position: relative;
   isolation: isolate;
-  min-height: max(690px, 100svh);
+  min-height: clamp(230px, 24vw, 300px);
   overflow: hidden;
   background: var(--hero-backdrop, #172a2a);
 }
@@ -59,7 +59,7 @@
 .wiki-hero-profile[data-artwork="SPLASH"] .wiki-hero-profile-art {
   inset: 0 max(0px, calc((100vw - 1500px) / 2)) auto auto;
   width: min(100%, 1500px);
-  height: clamp(570px, 80svh, 850px);
+  height: 100%;
   aspect-ratio: auto;
   object-position: 65% 20%;
   mask-image:
@@ -69,10 +69,10 @@
 }
 .wiki-hero-profile-content {
   position: relative;
-  width: min(100%, 1236px);
+  width: min(100%, 1280px);
   min-height: inherit;
   margin-inline: auto;
-  padding: 78px 24px 80px;
+  padding: 72px var(--wiki-gutter) 24px;
 }
 .wiki-hero-profile-breadcrumb {
   font: var(--wiki-type-meta);
@@ -100,7 +100,6 @@
   margin-top: 38px;
 }
 .wiki-hero-profile-head {
-  font: 700 23px/1 var(--wiki-font-display);
   display: grid;
   width: 52px;
   height: 52px;
@@ -117,6 +116,7 @@
   );
   box-shadow: 0 4px 16px #080b122e;
   color: var(--hero-accent, #d6bd8e);
+  font: 700 23px/1 var(--wiki-font-display);
 }
 .wiki-hero-profile-head img {
   width: 100%;
@@ -150,7 +150,7 @@
   margin-top: 24px;
   color: var(--hero-accent);
   opacity: 0.6;
-  font-size: 8px;
+  font-size: 12px;
 }
 .wiki-hero-profile-ornament::after {
   content: "";
@@ -203,7 +203,7 @@
     margin-top: -44px;
   }
   .wiki-hero-profile {
-    min-height: max(700px, 100svh);
+    min-height: 250px;
   }
   .wiki-hero-profile-art {
     top: 55px;
@@ -215,22 +215,17 @@
   .wiki-hero-profile[data-artwork="SPLASH"] .wiki-hero-profile-art {
     inset: 0 0 auto;
     width: 100%;
-    height: min(135vw, 580px);
+    height: 100%;
     transform: none;
     object-position: 61% top;
     mask-image: linear-gradient(180deg, black 65%, transparent);
   }
   .wiki-hero-profile::after {
-    background: linear-gradient(
-      180deg,
-      transparent 0,
-      transparent min(85vw, 360px),
-      var(--hero-backdrop) min(140vw, 590px)
-    );
+    background: linear-gradient(180deg, transparent 0, transparent 18%, var(--hero-backdrop) 100%);
   }
   .wiki-hero-profile-content {
     min-height: inherit;
-    padding: min(116vw, 500px) 16px 64px;
+    padding: 76px var(--wiki-gutter) 16px;
   }
   .wiki-hero-profile-breadcrumb {
     display: none;
@@ -259,6 +254,7 @@
   .wiki-hero-profile-heading {
     gap: 8px;
   }
+
   .wiki-hero-profile-ornament {
     width: 70%;
     margin-top: 18px;
@@ -270,9 +266,38 @@
     width: 70%;
   }
 }
+.wiki-hero-detail-shell {
+  background: var(--background);
+}
 .wiki-hero-epithet {
   font: var(--wiki-type-subtitle);
+  color: #eee2cd;
+  margin-top: 10px;
+}
+.wiki-hero-role-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 .wiki-hero-role-strip > span {
   font: var(--wiki-type-meta);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 6px;
+  background: #11172199;
+  padding: 5px 9px;
+}
+.wiki-hero-role-strip .wiki-hero-glyph {
+  width: 17px;
+  height: 17px;
+  color: var(--hero-accent);
+}
+.wiki-handbook-notice {
+  padding: 26px var(--wiki-gutter);
+}
+.wiki-handbook-notice button {
+  color: var(--gold);
+  text-decoration: underline;
 }

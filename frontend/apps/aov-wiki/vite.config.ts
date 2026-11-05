@@ -1,4 +1,5 @@
 import { mediaPath } from "../../tooling/media-proxy.mts"
+import { skillArtwork } from "./skill-artwork.mts"
 import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
@@ -43,6 +44,6 @@ export default defineConfig({
       },
     },
   },
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), skillArtwork()],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
 })

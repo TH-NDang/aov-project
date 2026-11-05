@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react"
-import { useSearchParams } from "react-router"
+import { useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { supportedWikiLocale } from "../lib/wiki-catalog"
+import { supportedWikiLocale, wikiScopeHref, wikiSection } from "../lib/wiki-catalog"
 
 export interface WikiRegion {
   code: string
@@ -154,6 +154,8 @@ function normalizeOptions(value: CatalogContextResponse): WikiOptions {
 
 function useWikiState() {
   const [params, setParams] = useSearchParams()
+  const { pathname } = useLocation()
+  const section = wikiSection(pathname, params.get("tab"))
   const [preferences] = useState(readPreferences)
   const region = params.get("region") || preferences.region || "VN"
   const requestedLocale = params.get("locale") || preferences.locale
@@ -257,20 +259,13 @@ function useWikiState() {
     [setParams],
   )
   const href = useCallback(
-    (path: string) => {
-      if (!path.startsWith("/") || path.startsWith("//")) return path
-      const target = new URL(path, "https://wiki.invalid")
-      const values = { region, locale, season: seasonId, patch: patchVariantId, unscoped: includeUnscoped ? "1" : "" }
-      for (const [key, value] of Object.entries(values))
-        if (value && (key === "region" || key === "locale" || !target.searchParams.has(key)))
-          target.searchParams.set(key, value)
-      return `${target.pathname}${target.search}${target.hash}`
-    },
-    [region, locale, seasonId, patchVariantId, includeUnscoped],
+    (path: string) => wikiScopeHref(path, { region, locale, seasonId, patchVariantId, includeUnscoped, section }),
+    [region, locale, seasonId, patchVariantId, includeUnscoped, section],
   )
   const t = useCallback((key: string) => COPY[key]?.[locale.startsWith("en") ? 1 : 0] ?? key, [locale])
   return {
     region,
+    section,
     locale,
     seasonId,
     patchVariantId,

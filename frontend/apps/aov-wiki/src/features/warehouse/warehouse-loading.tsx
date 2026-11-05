@@ -1,4 +1,3 @@
-import { WikiLibraryLayout } from "../../layout/wiki-library-layout"
 import "./warehouse-page.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 
@@ -21,13 +20,10 @@ export function WarehouseSkeleton() {
 }
 
 export function WarehouseRouteLoading() {
-  const { t } = useWikiContext()
   return (
-    <WikiLibraryLayout title={t("warehouse")} searchScope="warehouse">
-      <div className="wiki-warehouse-page" aria-busy="true">
-        <div className="wiki-warehouse-loading-heading wiki-skeleton max-[640px]:hidden" />
-        <WarehouseSkeleton />
-      </div>
-    </WikiLibraryLayout>
+    <div className="wiki-warehouse-page" aria-busy="true">
+      <div className="wiki-warehouse-loading-heading wiki-skeleton max-[640px]:hidden" />
+      <WarehouseSkeleton />
+    </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { formatPatchDate, patchSource, seasonUpdatesQuery, type SeasonPatch } from "./home-api"
+import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 
@@ -64,6 +65,10 @@ export function SeasonUpdates() {
           )}
           {region}
         </span>
+        <FeedbackDialog
+          target={query.data?.season?.displayName || wikiText(locale, "Cập nhật mùa", "Season updates")}
+          identity={query.data?.season?.id}
+        />
       </div>
       {query.isPending ? (
         <div className="wiki-home-updates-loading" role="status">

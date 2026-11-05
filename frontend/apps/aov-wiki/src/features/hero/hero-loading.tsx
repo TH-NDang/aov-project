@@ -1,10 +1,9 @@
+import { CatalogHeading } from "../../layout/catalog-heading"
 import { type CSSProperties } from "react"
-import { Link } from "react-router"
-import { HeroDetailLayout, WikiLibraryLayout } from "../../layout/wiki-library-layout"
+import { HeroDetailLayout } from "../../layout/wiki-library-layout"
 import { HERO_POSITIONS, HERO_ROLES } from "./hero-classifications"
 import { heroAppearance } from "./hero-appearance"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import "./hero-directory.css"
 import "./hero-detail.css"
 import "./hero-loading.css"
@@ -35,39 +34,31 @@ export function HeroGridSkeleton() {
   )
 }
 
-function DirectoryLoading() {
-  const { locale, href, t } = useWikiContext()
+export function HeroDirectoryLoading() {
+  const { locale, t } = useWikiContext()
   return (
-    <WikiLibraryLayout>
-      <div className="wiki-hero-directory">
-        <nav className="wiki-hero-breadcrumb" aria-label={wikiText(locale, "Đường dẫn", "Breadcrumb")}>
-          <Link to={href("/")}>{t("home")}</Link>
-          <span>/</span>
-          <span>{wikiText(locale, "Thư viện Tướng", "Hero library")}</span>
-        </nav>
-        <h1 className="wiki-hero-directory-title">{wikiText(locale, "Thư viện Tướng", "Hero library")}</h1>
-        <WikiVersionPicker />
-        <div className="wiki-hero-filters" aria-hidden="true">
-          {[
-            { label: wikiText(locale, "Vị trí", "Lane"), count: HERO_POSITIONS.length },
-            { label: wikiText(locale, "Vai trò", "Role"), count: HERO_ROLES.length },
-          ].map(({ label, count }) => (
-            <div className="wiki-hero-filter-row" key={label}>
-              <div className="wiki-hero-filter-label">{label}</div>
-              <div className="wiki-hero-filter-choices">
-                {Array.from({ length: count }, (_, index) => (
-                  <span className="wiki-hero-filter-chip wiki-skeleton" key={index} />
-                ))}
-              </div>
+    <div className="wiki-hero-directory">
+      <CatalogHeading title={wikiText(locale, "Thư viện Tướng", "Hero library")} section={t("characters")} />
+      <div className="wiki-hero-filters" aria-hidden="true">
+        {[
+          { label: wikiText(locale, "Vị trí", "Lane"), count: HERO_POSITIONS.length },
+          { label: wikiText(locale, "Vai trò", "Role"), count: HERO_ROLES.length },
+        ].map(({ label, count }) => (
+          <div className="wiki-hero-filter-row" key={label}>
+            <div className="wiki-hero-filter-label">{label}</div>
+            <div className="wiki-hero-filter-choices">
+              {Array.from({ length: count }, (_, index) => (
+                <span className="wiki-hero-filter-chip wiki-skeleton" key={index} />
+              ))}
             </div>
-          ))}
-          <div className="wiki-hero-filter-tools">
-            <span className="wiki-hero-search wiki-skeleton" />
           </div>
+        ))}
+        <div className="wiki-hero-filter-tools">
+          <span className="wiki-hero-search wiki-skeleton" />
         </div>
-        <HeroGridSkeleton />
       </div>
-    </WikiLibraryLayout>
+      <HeroGridSkeleton />
+    </div>
   )
 }
 
@@ -103,9 +94,4 @@ export function HeroDetailLoading({ heroCode }: { heroCode?: string }) {
       </section>
     </HeroDetailLayout>
   )
-}
-
-export function HeroRouteLoading({ pathname }: { pathname: string }) {
-  const heroCode = pathname.split("/").filter(Boolean)[1]
-  return heroCode ? <HeroDetailLoading heroCode={heroCode} /> : <DirectoryLoading />
 }

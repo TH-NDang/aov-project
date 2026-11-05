@@ -1,30 +1,24 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import {
-  routeShopWire,
-  selectedShopEdges,
-  shopColumnSections,
-  shopEdges,
-  warehouseShopLayout,
-  type ShopCardRect,
-  type ShopPoint,
-} from "../src/features/warehouse/warehouse-shop-layout.ts"
-import type { WarehouseContent, WarehouseEntry } from "../src/features/warehouse/warehouse-types.ts"
+import { routeItemWire, selectedItemEdges, itemEdges, type CardRect, type Point } from "@aov/ui/lib/item-graph"
+import { itemShopSections, itemShopLayout, itemShopRowTracks } from "@aov/ui/lib/item-shop-layout"
+import type { ItemContent, WarehouseEntry } from "@aov/ui/lib/warehouse-content"
 
-function item(code: string, content: Partial<WarehouseContent> = {}): WarehouseEntry {
+function item(code: string, content: Partial<ItemContent> = {}): WarehouseEntry<ItemContent> {
   return {
     id: code,
     code,
     revision: {
-      id: `revision-${code}`,
       state: "PUBLISHED",
-      cause: "DATA_BASELINE",
+
       effectiveFromPatchVariantId: null,
-      publishedAt: "2026-10-26T00:00:00Z",
     },
     content: {
       categoryCode: "phep",
       tier: 1,
+      price: null,
+      stats: [],
+      notes: null,
       iconAssetId: null,
       translations: [{ locale: "vi-VN", name: code }],
       shopPositions: [],
@@ -47,10 +41,12 @@ test("shop coordinates remain zero-based and independent from item tiers without
     item("sach-phep", { tier: 1, shopPositions: [position(0, 0)] }),
   ]
   const before = structuredClone(entries)
-  const { placements } = warehouseShopLayout(entries, "phep", null)
+  const { placements } = itemShopLayout(entries, null, "phep")
 
   assert.deepEqual(
-    placements.map(({ entry, column, row }) => [entry.code, column, row]),
+    placements
+      .map(({ item, position }) => [item.code, position.column, position.row])
+      .sort((a, b) => Number(a[1]) - Number(b[1]) || Number(a[2]) - Number(b[2])),
     [
       ["sach-phep", 0, 0],
       ["day-chuyen-luc-bao", 1, 1],
@@ -58,23 +54,23 @@ test("shop coordinates remain zero-based and independent from item tiers without
       ["xuyen-tam-lenh", 1, 3],
     ],
   )
-  assert.equal(placements.find(({ entry }) => entry.id === "cau-chiem-tinh")?.entry.content.tier, 3)
+  assert.equal(placements.find(({ item }) => item.id === "cau-chiem-tinh")?.item.content.tier, 3)
   assert.deepEqual(entries, before)
 })
 
-test("general category placement takes precedence over variants and only places an item once", () => {
+test("the shop preserves both variant and default placements within their own category", () => {
   const hybrid = item("hybrid", {
     tier: 3,
     shopPositions: [position(2, 0, "phep", "support"), position(1, 4), position(0, 2, "thu")],
   })
 
-  const magic = warehouseShopLayout([hybrid], "phep", null)
-  assert.equal(magic.placements.length, 1)
-  assert.deepEqual([magic.placements[0].column, magic.placements[0].row], [1, 4])
+  const magic = itemShopLayout([hybrid], null, "phep")
+  assert.equal(magic.placements.length, 2)
+  assert.deepEqual([magic.placements[1].position.column, magic.placements[1].position.row], [1, 4])
 
-  const defense = warehouseShopLayout([hybrid], "thu", null)
-  assert.deepEqual([defense.placements[0].column, defense.placements[0].row], [0, 2])
-  assert.equal(warehouseShopLayout([hybrid], "cong", null).placements.length, 0)
+  const defense = itemShopLayout([hybrid], null, "thu")
+  assert.deepEqual([defense.placements[0].position.column, defense.placements[0].position.row], [0, 2])
+  assert.equal(itemShopLayout([hybrid], null, "cong").placements.length, 0)
 })
 
 test("missing and invalid placements stay unplaced instead of borrowing tier as the column", () => {
@@ -85,9 +81,11 @@ test("missing and invalid placements stay unplaced instead of borrowing tier as 
     item("fractional-row", { shopPositions: [position(1, 0.5)] }),
     item("other-category", { categoryCode: "thu" }),
   ]
-  const layout = warehouseShopLayout(entries, "phep", null)
+  const layout = itemShopLayout(entries, null, "phep")
 
-  assert.equal(layout.placements.length, 0)
+  assert.ok(
+    itemShopSections(layout.placements, 0).every((section) => section.rows.every((row) => row.placements.length === 0)),
+  )
   assert.deepEqual(
     layout.unplaced.map((entry) => entry.id),
     ["unassigned", "missing-row", "negative-column", "fractional-row"],
@@ -103,8 +101,8 @@ test("complete items in column two form only contiguous regions and retain isola
     item("xuyen-tam-lenh", { tier: 2, shopPositions: [position(1, 3)] }),
     item("separate-complete", { tier: 3, shopPositions: [position(1, 5)] }),
   ]
-  const layout = warehouseShopLayout(entries, "phep", null)
-  const sections = shopColumnSections(layout.placements, 1)
+  const layout = itemShopLayout(entries, null, "phep")
+  const sections = itemShopSections(layout.placements, 1)
 
   assert.deepEqual(
     sections.map((section) => [section.terminal, section.rows.map(({ row }) => row)]),
@@ -115,8 +113,10 @@ test("complete items in column two form only contiguous regions and retain isola
       [true, [5]],
     ],
   )
-  assert.equal(sections[1].rows[0].placements[0].entry.code, "cau-chiem-tinh")
+  assert.equal(sections[1].rows[0].placements[0].item.code, "cau-chiem-tinh")
   assert.equal(sections[2].rows[1].placements.length, 0)
+  const columns = [0, 1, 2].map((column) => itemShopSections(layout.placements, column))
+  assert.deepEqual(itemShopRowTracks(columns, 1), [2, 4, 5, 6, 7, 9, 10])
 })
 
 test("a column-two item with a known upgrade remains outside the complete-item region", () => {
@@ -127,9 +127,9 @@ test("a column-two item with a known upgrade remains outside the complete-item r
     recipeStatus: "VERIFIED",
     components: [{ itemId: ingredient.id, quantity: 1 }],
   })
-  const layout = warehouseShopLayout([ingredient, upgrade], "phep", ingredient.id)
+  const layout = itemShopLayout([ingredient, upgrade], ingredient.id, "phep")
 
-  assert.equal(layout.placements.find(({ entry }) => entry.id === ingredient.id)?.terminal, false)
+  assert.equal(layout.placements.find(({ item }) => item.id === ingredient.id)?.terminal, false)
 })
 
 test("related items from other categories keep their own physical columns and category labels", () => {
@@ -152,17 +152,17 @@ test("related items from other categories keep their own physical columns and ca
     ],
   })
   const unrelated = item("unrelated", { categoryCode: "cong", shopPositions: [position(0, 0, "cong")] })
-  const layout = warehouseShopLayout([selected, attackIngredient, defenseIngredient, unrelated], "phep", selected.id)
+  const layout = itemShopLayout([selected, attackIngredient, defenseIngredient, unrelated], selected.id, "phep")
 
   assert.deepEqual(
-    layout.external.map(({ entry, column, categoryCode }) => [entry.id, column, categoryCode]),
+    layout.external.map(({ item, position, categoryCode }) => [item.id, position?.column, categoryCode]),
     [
       ["attack-ingredient", 1, "cong"],
       ["defense-ingredient", 0, "thu"],
     ],
   )
   assert.equal(layout.placements.length, 1)
-  assert.equal(warehouseShopLayout([selected, attackIngredient], "phep", null).external.length, 0)
+  assert.equal(itemShopLayout([selected, attackIngredient], null, "phep").external.length, 0)
 })
 
 test("only verified recipes produce wires, preserve ingredient quantities and report missing references", () => {
@@ -180,10 +180,10 @@ test("only verified recipes produce wires, preserve ingredient quantities and re
     components: [{ itemId: "stale-ingredient", quantity: 1 }],
   })
 
-  assert.deepEqual(shopEdges([verified, unknown, noRecipe]), [
+  assert.deepEqual(itemEdges([verified, unknown, noRecipe]), [
     { from: "missing-ingredient", to: "verified", quantity: 2 },
   ])
-  assert.deepEqual(warehouseShopLayout([verified, unknown, noRecipe], "phep", verified.id).missingIds, [
+  assert.deepEqual(itemShopLayout([verified, unknown, noRecipe], verified.id, "phep").missingIds, [
     "missing-ingredient",
   ])
 })
@@ -197,7 +197,7 @@ test("selected recipe wires distinguish direct ingredients from ancestors and up
     { from: "upgrade", to: "final", quantity: 1 },
     { from: "basic", to: "sibling", quantity: 1 },
   ]
-  const selected = selectedShopEdges(edges, "selected")
+  const selected = selectedItemEdges(edges, "selected")
 
   assert.deepEqual(
     selected.map(({ from, to, direct }) => [from, to, direct]).sort(),
@@ -209,7 +209,7 @@ test("selected recipe wires distinguish direct ingredients from ancestors and up
       ["upgrade", "final", false],
     ].sort(),
   )
-  assert.deepEqual(selectedShopEdges(edges, null), [])
+  assert.deepEqual(selectedItemEdges(edges, null), [])
 })
 
 test("cycle traversal terminates and returns each relationship once", () => {
@@ -218,7 +218,7 @@ test("cycle traversal terminates and returns each relationship once", () => {
     { from: "b", to: "c", quantity: 1 },
     { from: "c", to: "a", quantity: 1 },
   ]
-  const selected = selectedShopEdges(edges, "a")
+  const selected = selectedItemEdges(edges, "a")
 
   assert.equal(selected.length, 3)
   assert.deepEqual(
@@ -227,16 +227,11 @@ test("cycle traversal terminates and returns each relationship once", () => {
   )
 })
 
-function assertClearOrthogonalRoute(
-  route: ShopPoint[] | null,
-  source: ShopCardRect,
-  target: ShopCardRect,
-  cards: ShopCardRect[],
-) {
+function assertClearOrthogonalRoute(route: Point[] | null, source: CardRect, target: CardRect, cards: CardRect[]) {
   assert.ok(route, "A route should exist through the free lanes")
   assert.ok(route.length >= 2)
   assert.deepEqual(route[0], { x: source.right, y: (source.top + source.bottom) / 2 })
-  assert.deepEqual(route.at(-1), { x: target.left - 3, y: (target.top + target.bottom) / 2 })
+  assert.deepEqual(route.at(-1), { x: target.left, y: (target.top + target.bottom) / 2 })
 
   for (let index = 1; index < route.length; index++) {
     const from = route[index - 1]
@@ -265,7 +260,7 @@ test("routing detours around an intervening item card and ends with a right-faci
   const obstacle = { left: 150, right: 250, top: 10, bottom: 140 }
   const cards = [source, target, obstacle]
 
-  assertClearOrthogonalRoute(routeShopWire(source, target, cards), source, target, cards)
+  assertClearOrthogonalRoute(routeItemWire(source, target, cards), source, target, cards)
 })
 
 test("routing supports ingredients and complete items in the same physical shop column", () => {
@@ -274,5 +269,5 @@ test("routing supports ingredients and complete items in the same physical shop 
   const obstacle = { left: 0, right: 100, top: 100, bottom: 160 }
   const cards = [source, target, obstacle]
 
-  assertClearOrthogonalRoute(routeShopWire(source, target, cards, 2), source, target, cards)
+  assertClearOrthogonalRoute(routeItemWire(source, target, cards, 2), source, target, cards)
 })

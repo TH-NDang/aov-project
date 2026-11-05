@@ -4,10 +4,15 @@ import { useQuery } from "@tanstack/react-query"
 import { HeroDetailLayout } from "../../layout/wiki-library-layout"
 import { heroCatalogQuery, heroDetailQuery, type HeroListItem } from "./hero-api"
 import { heroAppearance } from "./hero-appearance"
+import { WikiVersionPicker } from "../../components/wiki-version-picker"
+import { useHeroChangedVariants } from "../../lib/wiki-patch-changes"
+import { HeroHandbook } from "./hero-handbook"
+import { HERO_ROLES, localizedHeroOptions } from "./hero-classifications"
+import { HeroGlyph } from "./hero-glyph"
 import { HeroQuickSwitch } from "./hero-quick-switch"
 import { HeroDetailLoading } from "./hero-loading"
 import { WikiImage } from "../../components/wiki-image"
-import { ImageCredit } from "@aov/ui/components/image-credit"
+import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
 import "./hero-detail.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 
@@ -15,6 +20,7 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
   const scope = useWikiContext()
   const { locale, t } = scope
   const query = useQuery(heroDetailQuery(hero.id, scope))
+  const history = useHeroChangedVariants(hero.id)
   const [failedUrls, setFailedUrls] = useState<string[]>([])
   const portrait = query.data?.media.PORTRAIT?.currentVersion?.url
   const splash = query.data?.media.SPLASH?.currentVersion?.url
@@ -126,11 +132,36 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
               {wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}
             </span>
           )}
-          <div className="wiki-hero-profile-ornament" aria-hidden="true">
-            <span>◆</span>
+          {query.data?.content.profile?.title && (
+            <p className="wiki-hero-epithet">{query.data.content.profile.title}</p>
+          )}
+          <div className="wiki-hero-role-strip">
+            {localizedHeroOptions(HERO_ROLES, locale)
+              .filter((role) => hero.roles.includes(role.value))
+              .map((role) => (
+                <span key={role.value}>
+                  <HeroGlyph name={role.glyph} />
+                  {role.label}
+                </span>
+              ))}
           </div>
         </div>
       </section>
+      <div className="wiki-hero-scope">
+        <WikiVersionPicker changedVariants={history.data} />
+      </div>
+      {query.data ? (
+        <HeroHandbook hero={query.data} />
+      ) : query.isError ? (
+        <div className="wiki-handbook-notice" role="status">
+          {wikiText(locale, "Chưa tải được hồ sơ tướng.", "The hero profile could not be loaded.")}{" "}
+          <button onClick={() => void query.refetch()}>{t("retry")}</button>
+        </div>
+      ) : (
+        <p className="wiki-handbook-notice" role="status">
+          {t("loading")}
+        </p>
+      )}
     </HeroDetailLayout>
   )
 }

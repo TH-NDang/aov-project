@@ -1,8 +1,36 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { supportedWikiLocale, wikiCatalogParameters, wikiScopeHref, wikiScopeKey } from "../src/lib/wiki-catalog.ts"
+import {
+  supportedWikiLocale,
+  wikiCatalogParameters,
+  wikiScopeHref,
+  wikiScopeKey,
+  wikiSection,
+} from "../src/lib/wiki-catalog.ts"
 
 const scope = { region: "VN", locale: "en-US", seasonId: "s3", patchVariantId: "patch-1", includeUnscoped: true }
+
+test("switching public catalogs returns to the market's current patch while same-section details retain their scope", () => {
+  const fromHero = { ...scope, section: wikiSection("/hero/dolia", null) }
+  const fromItems = { ...scope, section: wikiSection("/warehouse", null) }
+  const target = (path: string, from: typeof fromHero) =>
+    new URL(wikiScopeHref(path, from), "https://wiki.invalid").searchParams
+  for (const [path, from] of [
+    ["/warehouse?tab=items", fromHero],
+    ["/warehouse?tab=spells", fromItems],
+    ["/skins", fromHero],
+  ] as const) {
+    const params = target(path, from)
+    assert.equal(params.get("patch"), null)
+    assert.equal(params.get("season"), null)
+    assert.equal(params.get("unscoped"), null)
+    assert.equal(params.get("region"), "VN")
+    assert.equal(params.get("locale"), "en-US")
+  }
+  assert.equal(target("/hero/dolia", fromHero).get("patch"), "patch-1")
+  assert.equal(target("/warehouse?tab=items&item=sword", fromItems).get("season"), "s3")
+  assert.equal(target("/skins?patch=explicit", fromHero).get("patch"), "explicit")
+})
 
 test("unsupported locale URL values cannot crash localized prices and stats", () => {
   for (const input of ["en_US", "unknown", "", null, undefined]) {

@@ -1,3 +1,6 @@
+import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
+import { usePublishedChanges } from "../../lib/wiki-patch-changes"
+import { CatalogHeading } from "../../layout/catalog-heading"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
@@ -15,7 +18,7 @@ import {
 import { HeroGlyph } from "./hero-glyph"
 import { HeroGridSkeleton } from "./hero-loading"
 import { WikiImage } from "../../components/wiki-image"
-import { ImageCredit } from "@aov/ui/components/image-credit"
+import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
 import { WikiIcon } from "../../components/wiki-icon"
 import "./hero-directory.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
@@ -26,38 +29,17 @@ function FilterChoices<Value extends string>({
   options,
   selected,
   onToggle,
-  reference = false,
 }: {
   label: string
   options: readonly HeroFilterOption<Value>[]
   selected: readonly Value[]
   onToggle: (value: Value) => void
-  reference?: boolean
 }) {
   const { locale } = useWikiContext()
   return (
     <div className="wiki-hero-filter-row">
       <div className="wiki-hero-filter-label">
         <span>{label}</span>
-        {reference && (
-          <Tooltip>
-            <TooltipTrigger
-              className="wiki-hero-reference-note"
-              type="button"
-              aria-label={wikiText(locale, "Thông tin phân loại vị trí", "About lane classifications")}
-            >
-              {wikiText(locale, "Tham khảo", "Reference")}
-              <span aria-hidden="true">ⓘ</span>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={6}>
-              {wikiText(
-                locale,
-                "Phân loại minh họa, chờ biên tập.",
-                "Illustrative classifications, pending editorial review.",
-              )}
-            </TooltipContent>
-          </Tooltip>
-        )}
       </div>
       <div
         className="wiki-hero-filter-choices"
@@ -161,6 +143,7 @@ function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
 export function HeroDirectory() {
   const scope = useWikiContext()
   const query = useQuery(heroCatalogQuery(scope))
+  const changes = usePublishedChanges("HERO")
   const { locale, t } = scope
   const [searchParams, setSearchParams] = useSearchParams()
   const search = (searchParams.get("q") || "").slice(0, 120)
@@ -175,6 +158,24 @@ export function HeroDirectory() {
       !positions.length || positions.some((position) => referencePositions(hero.code).includes(position))
     return matchesSearch && matchesRole && matchesPosition
   })
+  const publishedHeroes = new Map(query.data?.items.map((hero) => [hero.id, hero]))
+  const visibleIds = new Set(visibleHeroes.map((hero) => hero.id))
+  const changed: ChangedSubject[] = []
+  for (const { id, name, kind } of changes.subjects.values()) {
+    const hero = publishedHeroes.get(id)
+    if (hero && visibleIds.has(id)) {
+      changed.push({
+        id,
+        name: hero.name,
+        kind,
+        image: hero.head?.currentVersion?.url ?? hero.portrait?.currentVersion?.url,
+        href: scope.href(`/hero/${hero.code}`),
+      })
+    } else if (!hero && name && !roles.length && !positions.length && normalizedHeroSearch(name).includes(needle)) {
+      // Official notes can precede the first published profile for a hero.
+      changed.push({ id, kind, name: name.charAt(0).toLocaleUpperCase(locale) + name.slice(1) })
+    }
+  }
 
   function updateSearch(value: string) {
     const next = new URLSearchParams(searchParams)
@@ -202,20 +203,14 @@ export function HeroDirectory() {
 
   return (
     <div className="wiki-hero-directory">
-      <nav className="wiki-hero-breadcrumb" aria-label={wikiText(locale, "Đường dẫn", "Breadcrumb")}>
-        <Link to={scope.href("/")}>{t("home")}</Link>
-        <span aria-hidden="true">/</span>
-        <span>{wikiText(locale, "Thư viện Tướng", "Hero library")}</span>
-      </nav>
-      <h1 className="wiki-hero-directory-title">{wikiText(locale, "Thư viện Tướng", "Hero library")}</h1>
-      <WikiVersionPicker />
+      <CatalogHeading title={wikiText(locale, "Thư viện Tướng", "Hero library")} section={t("characters")} />
+      <WikiVersionPicker changedVariants={changes.changedVariants} />
       <section className="wiki-hero-filters" aria-label={wikiText(locale, "Bộ lọc tướng", "Hero filters")}>
         <TooltipProvider delayDuration={180}>
           <FilterChoices
             label={wikiText(locale, "Vị trí", "Lane")}
             options={localizedHeroOptions(HERO_POSITIONS, locale)}
             selected={positions}
-            reference
             onToggle={(value) => toggleFilter("position", value, positions)}
           />
           <FilterChoices
@@ -256,6 +251,7 @@ export function HeroDirectory() {
         </div>
       </section>
 
+      <PatchChangesRow entries={changed} failed={changes.failed} retry={changes.retry} />
       {query.isPending ? (
         <HeroGridSkeleton />
       ) : query.isError && !query.data ? (
@@ -285,11 +281,14 @@ export function HeroDirectory() {
           )}
         </div>
       ) : (
-        <div className="wiki-hero-grid">
-          {visibleHeroes.map((hero) => (
-            <HeroCard hero={hero} from={returnPath} key={hero.id} />
-          ))}
-        </div>
+        <>
+          <h2 className="mb-2 type-section-title">{wikiText(locale, "Tất cả tướng", "All heroes")}</h2>
+          <div className="wiki-hero-grid">
+            {visibleHeroes.map((hero) => (
+              <HeroCard hero={hero} from={returnPath} key={hero.id} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

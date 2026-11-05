@@ -1,8 +1,10 @@
+import { WikiIcon } from "./components/wiki-icon"
+import { FeedbackDialog } from "./layout/feedback-dialog"
 import { WikiHeader } from "./components/wiki-header"
 import { WikiHome } from "./features/home/wiki-home"
-import { Link, Route, Routes, useLocation } from "react-router"
+import { Link, Route, Routes, useLocation, useParams } from "react-router"
 import { lazy, Suspense, useEffect } from "react"
-import { HeroRouteLoading } from "./features/hero/hero-loading"
+import { HeroDirectoryLoading, HeroDetailLoading } from "./features/hero/hero-loading"
 import { WikiLibraryLayout } from "./layout/wiki-library-layout"
 import { SkinDirectoryLoading } from "./features/skins/skin-loading"
 import { WarehouseRouteLoading } from "./features/warehouse/warehouse-loading"
@@ -10,11 +12,25 @@ import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
 import { WikiLoginCallback } from "./features/auth/wiki-account"
 
-const HeroRoutes = lazy(() => import("./features/hero/hero-routes"))
+const HeroDirectory = lazy(() =>
+  import("./features/hero/hero-directory").then((module) => ({ default: module.HeroDirectory })),
+)
+const HeroDetailPage = lazy(() =>
+  import("./features/hero/hero-detail").then((module) => ({ default: module.HeroDetailPage })),
+)
 const SkinDirectory = lazy(() =>
   import("./features/skins/skin-directory").then((module) => ({ default: module.SkinDirectory })),
 )
 const WarehousePage = lazy(() => import("./features/warehouse/warehouse-page"))
+
+function HeroDetailRoute() {
+  const { heroCode } = useParams()
+  return (
+    <Suspense fallback={<HeroDetailLoading heroCode={heroCode} />}>
+      <HeroDetailPage />
+    </Suspense>
+  )
+}
 
 function HomePage() {
   const { locale } = useWikiContext()
@@ -22,7 +38,12 @@ function HomePage() {
     <>
       <title>{wikiText(locale, "AOV WiKi — Khai mở tri thức", "AOV WiKi — Knowledge uncovered")}</title>
       <WikiHeader />
-      <main id="main" tabIndex={-1} className="flex-1 outline-none" aria-label="Nội dung wiki">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="flex-1 outline-none"
+        aria-label={wikiText(locale, "Nội dung wiki", "Wiki content")}
+      >
         <WikiHome />
       </main>
     </>
@@ -48,32 +69,34 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/auth/callback" element={<WikiLoginCallback />} />
-        <Route
-          path="/hero/*"
-          element={
-            <Suspense fallback={<HeroRouteLoading pathname={pathname} />}>
-              <HeroRoutes />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/skins"
-          element={
-            <WikiLibraryLayout title={t("skins")} searchScope="skins">
+        <Route element={<WikiLibraryLayout />}>
+          <Route
+            path="/hero"
+            element={
+              <Suspense fallback={<HeroDirectoryLoading />}>
+                <HeroDirectory />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/skins"
+            element={
               <Suspense fallback={<SkinDirectoryLoading />}>
                 <SkinDirectory />
               </Suspense>
-            </WikiLibraryLayout>
-          }
-        />
-        <Route
-          path="/warehouse"
-          element={
-            <Suspense fallback={<WarehouseRouteLoading />}>
-              <WarehousePage />
-            </Suspense>
-          }
-        />
+            }
+          />
+          <Route
+            path="/warehouse"
+            element={
+              <Suspense fallback={<WarehouseRouteLoading />}>
+                <WarehousePage />
+              </Suspense>
+            }
+          />
+        </Route>
+        <Route path="/hero/:heroCode" element={<HeroDetailRoute />} />
+        <Route path="/hero/*" element={<HeroDetailRoute />} />
         <Route
           path="*"
           element={
@@ -87,10 +110,17 @@ export default function App() {
           }
         />
       </Routes>
-      <footer className="border-t border-white/10 px-5 py-4 text-center text-xs text-white/55">
-        <Link to="/contact" className="underline underline-offset-4">
-          Liên hệ · Nguồn & hình ảnh
-        </Link>
+      <footer className="wiki-site-footer">
+        <div>
+          <Link to={href("/")} className="wiki-footer-brand">
+            <img src="/images/mole-logo-v4.png" width="24" height="24" alt="" /> AOV Wiki
+          </Link>
+          <FeedbackDialog showLabel />
+          <Link to={href("/contact")}>
+            {wikiText(locale, "Liên hệ · Nguồn & hình ảnh", "Contact · Sources & images")}{" "}
+            <WikiIcon name="arrow" size={14} />
+          </Link>
+        </div>
       </footer>
     </>
   )

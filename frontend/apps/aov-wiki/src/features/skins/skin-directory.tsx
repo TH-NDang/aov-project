@@ -1,8 +1,17 @@
+import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { useMemo, useRef, useState, type RefObject } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/components/dialog"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@aov/ui/components/public-overlay"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { WikiImage } from "../../components/wiki-image"
 import { skinCatalogQuery, type SkinBadge, type SkinEntry, type SkinFilterOption } from "./skin-api"
@@ -182,7 +191,17 @@ function SkinPreview({
             </div>
             <div className="wiki-skin-preview-info">
               <span className="wiki-skin-preview-eyebrow">{scope.t("skins").toLocaleUpperCase(scope.locale)}</span>
-              <DialogTitle>{skin.name}</DialogTitle>
+              <div className="wiki-edit-heading">
+                <DialogTitle>{skin.name}</DialogTitle>
+                <FeedbackDialog
+                  target={`${skin.heroName} · ${skin.name}`}
+                  identity={`${skin.heroCode}/${skin.skinKey}`}
+                  fields={[
+                    { label: text("Tên trang phục", "Skin name"), value: skin.name },
+                    { label: text("Bậc trang phục", "Skin tier"), value: skin.badge?.name ?? "" },
+                  ]}
+                />
+              </div>
               <DialogDescription>
                 {text("Trang phục của", "Skin for")} {skin.heroName}
               </DialogDescription>
@@ -320,9 +339,7 @@ export function SkinDirectory() {
 
   return (
     <div className="wiki-skin-directory" aria-busy={query.isPending}>
-      <SkinCollectionHeading
-        count={query.data ? groups.reduce((count, group) => count + group.length, 0) : undefined}
-      />
+      <SkinCollectionHeading />
       <WikiVersionPicker />
       <section className="wiki-skin-toolbar" aria-label={text("Bộ lọc trang phục", "Skin filters")}>
         <label className="wiki-skin-search">

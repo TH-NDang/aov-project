@@ -34,6 +34,30 @@ interface HeroPage {
   totalPages: number
 }
 
+export interface PublicSkill {
+  skillKey: string
+  name?: string | null
+  description?: string | null
+  kind: "PASSIVE" | "ACTIVE" | "OTHER"
+  displayOrder: number
+  effects?: {
+    effectType: string
+    metadata?: {
+      sourceSlot?: string | number
+      sourceHeroCode?: string
+      reviewFlags?: { type?: string }[]
+      heroReviewFlags?: { type?: string }[]
+      tags?: string
+      cooldown?: { display?: string }
+      energyCost?: { display?: string }
+      levelTable?: {
+        column_labels?: string[]
+        rows?: { label?: string; display_values?: (string | number | null)[] }[]
+      }
+    } | null
+  }[]
+}
+
 export interface HeroDetail {
   unscopedBaseline?: boolean
   id: string
@@ -41,7 +65,12 @@ export interface HeroDetail {
   revisionId: string
   context: HeroContext
   media: Partial<Record<"HEAD" | "PORTRAIT" | "SPLASH", HeroMedia>>
-  content: { profile: { name: string; roles: HeroRole[] } }
+  skillMedia?: Record<string, HeroMedia>
+  content: {
+    profile?: { name: string; roles: HeroRole[]; title?: string | null; summary?: string | null; lore?: string | null }
+    skills?: { skills?: PublicSkill[] } | null
+    combatStats?: { values?: { statKey: string; baseValue: number | null; unit?: string }[] } | null
+  }
 }
 
 async function readHeroApi<T>(path: string, signal: AbortSignal): Promise<T> {

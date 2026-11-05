@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { WikiIcon } from "../components/wiki-icon"
 import { useWikiContext, type WikiRegion } from "./wiki-context"
 
@@ -39,31 +40,41 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
   if (mobile)
     return (
       <div className="wiki-preferences-mobile">
-        <label>
+        <div className="wiki-preference-row">
           <span>
             <WikiIcon name="globe" size={16} />
             {t("language")}
           </span>
-          <select value={locale} onChange={(event) => setLocale(event.target.value)}>
-            <option value="vi-VN">Tiếng Việt</option>
-            <option value="en-US">English</option>
-          </select>
-        </label>
-        <label>
+          <Select value={locale} onValueChange={setLocale}>
+            <SelectTrigger className="wiki-preference-mobile-select" aria-label={t("language")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent drawerTitle={t("language")}>
+              <SelectItem value="vi-VN">Tiếng Việt</SelectItem>
+              <SelectItem value="en-US">English</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="wiki-preference-row">
           <span>
             <MarketFlag code={region} />
             {t("market")}
           </span>
-          <select value={region} disabled={regionsPending} onChange={(event) => setRegion(event.target.value)}>
-            {!current && <option value={region}>{region}</option>}
-            {regions.map((market) => (
-              <option key={market.code} value={market.code} disabled={!market.available}>
-                {english ? (MARKET_NAMES[market.code] ?? market.displayName) : market.displayName}
-                {!market.available ? ` · ${t("unavailable")}` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
+          <Select value={region} disabled={regionsPending} onValueChange={setRegion}>
+            <SelectTrigger className="wiki-preference-mobile-select" aria-label={t("market")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent drawerTitle={t("market")}>
+              {!current && <SelectItem value={region}>{region}</SelectItem>}
+              {regions.map((market) => (
+                <SelectItem key={market.code} value={market.code} disabled={!market.available}>
+                  {english ? (MARKET_NAMES[market.code] ?? market.displayName) : market.displayName}
+                  {!market.available ? ` · ${t("unavailable")}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {regionsError && (
           <button className="wiki-preference-retry" type="button" onClick={() => void context.retryRegions()}>
             {t("marketError")} {t("retry")}
@@ -80,7 +91,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
           <span>{region}</span>
           <WikiIcon name="chevron" size={13} />
         </PopoverTrigger>
-        <PopoverContent className="wiki-preference-panel" align="end" sideOffset={12}>
+        <PopoverContent className="wiki-preference-panel" drawerTitle={t("market")} align="end" sideOffset={12}>
           <h2>{t("market")}</h2>
           {regionsPending ? (
             <p role="status">{t("loading")}</p>

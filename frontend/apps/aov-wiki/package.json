@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview --port 5173 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:warehouse": "node --experimental-strip-types --test tests/warehouse-item-layout.test.ts tests/warehouse-shop-layout.test.ts tests/wiki-catalog.test.ts"
   },
   "dependencies": {

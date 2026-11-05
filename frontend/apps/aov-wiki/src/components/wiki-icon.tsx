@@ -7,6 +7,7 @@ type SectionIcon = keyof typeof sectionIcons
 
 const PATHS = {
   sort: <path d="M6 4v15m-3-3 3 3 3-3M12 5h9m-9 6h6m-6 6h3" />,
+  settings: <path d="M4 7h7m4 0h5M4 17h3m4 0h9M11 5v4m-4 6v4" />,
   info: (
     <>
       <circle cx="12" cy="12" r="9" />

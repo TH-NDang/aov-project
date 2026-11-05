@@ -131,19 +131,19 @@
   border-radius: 12px;
   background: #ffffff03;
 }
-.public-preferences-body .wiki-preferences-mobile > label {
+.public-preferences-body .wiki-preferences-mobile > .wiki-preference-row {
   min-height: 48px;
   gap: 8px;
   padding: 4px 0;
 }
-.public-preferences-body .wiki-preferences-mobile > label:last-of-type {
+.public-preferences-body .wiki-preferences-mobile > .wiki-preference-row:last-of-type {
   border-bottom: 0;
 }
-.public-preferences-body .wiki-preferences-mobile > label > span {
+.public-preferences-body .wiki-preferences-mobile > .wiki-preference-row > span {
   font-size: 12px;
   color: #c5c2bd;
 }
-.public-preferences-body .wiki-preferences-mobile select {
+.public-preferences-body .wiki-preferences-mobile .wiki-preference-mobile-select {
   width: 42%;
   min-height: 36px;
   padding: 5px 2px;
@@ -153,14 +153,14 @@
   font-size: 12px;
   text-align: right;
 }
-.public-preferences-body .wiki-preferences-mobile select option {
+.public-preferences-body .wiki-preferences-mobile .wiki-preference-mobile-select option {
   background: #232329;
   color: #eee9df;
 }
 .public-preferences-body .wiki-preference-retry {
   padding-block: 8px;
 }
-.wiki-preferences-mobile > label {
+.wiki-preferences-mobile > .wiki-preference-row {
   display: flex;
   min-height: 44px;
   align-items: center;
@@ -168,7 +168,7 @@
   border-bottom: 1px solid #ffffff0a;
   padding: 5px 0;
 }
-.wiki-preferences-mobile > label > span {
+.wiki-preferences-mobile > .wiki-preference-row > span {
   display: flex;
   flex: 1;
   align-items: center;
@@ -176,7 +176,7 @@
   color: #b8c4d0;
   font-size: 12px;
 }
-.wiki-preferences-mobile select {
+.wiki-preferences-mobile .wiki-preference-mobile-select {
   width: 47%;
   min-height: 36px;
   border: 1px solid #ffffff1a;
