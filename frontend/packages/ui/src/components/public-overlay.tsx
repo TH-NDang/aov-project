@@ -8,7 +8,6 @@ import * as DialogBase from "./dialog"
 import * as PopoverBase from "./popover"
 import * as MenuBase from "./dropdown-menu"
 import { DrawerContent, DrawerHandle, DrawerTitle, DrawerClose, DrawerTrigger } from "./drawer"
-import "./public-overlay.css"
 
 const DrawerDepth = createContext(false)
 const OverlayContext = createContext({ mobile: false, close: () => {} })

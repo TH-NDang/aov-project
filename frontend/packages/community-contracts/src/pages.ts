@@ -8,8 +8,10 @@ export const personRoleLabels = {
   GUEST_ANALYST: "Khách mời phân tích",
 } as const
 export type PersonRole = keyof typeof personRoleLabels
+export type PersonRoleFilter = PersonRole | "COACHING" | "BROADCAST"
 export const isIndividualProfile = (kind: ProfileKind) => kind === "PLAYER" || kind === "PERSON"
 export const isCommunityProfile = (kind: ProfileKind) => kind !== "CIRCUIT"
+export const isCoachingRole = (role: PersonRole) => role === "COACH" || role === "TEAM_ANALYST"
 export type PageRole = "OWNER" | "EDITOR" | "MODERATOR"
 /** `official` marks a channel run by the organization, team or player itself. */
 export type ProfileLink = { label: string; url: string; official?: boolean | null }

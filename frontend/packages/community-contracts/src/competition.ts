@@ -81,6 +81,13 @@ export type CompetitionSnapshot = {
   standings: { stageCode: string; complete: boolean; rows: CompetitionStanding[] }[]
 }
 export type CompetitionView = { id: string; version: number; publishedAt?: string | null; content: CompetitionSnapshot }
+export type CompetitionSummary = {
+  id: string
+  entrants: number
+  matches: number
+  publishedAt?: string | null
+  tournament: TournamentContent
+}
 export function aogStages(sourceUrl = ""): CompetitionStage[] {
   return [
     {

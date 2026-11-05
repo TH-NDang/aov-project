@@ -1,5 +1,6 @@
 import { Info, ExternalLink, Copyright, CircleAlert } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import type { ReactNode } from "react"
+import { Popover, PopoverContent, PopoverTrigger } from "./public-overlay"
 import { creditHttpUrl, needsMediaCredit, type MediaCredit } from "../lib/media-credit"
 
 /** Render as a sibling of image links and preview buttons, never inside an interactive card. */
@@ -9,6 +10,9 @@ export function ImageCredit({
   manageHref,
   flagMissing = false,
   className = "",
+  pageBaseHref,
+  renderPageReference,
+  mobileDrawer = false,
 }: {
   sources?: MediaCredit[]
   contactHref?: string
@@ -17,10 +21,26 @@ export function ImageCredit({
   /** Admin only: highlight the button while the image lacks a verified source or owner. */
   flagMissing?: boolean
   className?: string
+  pageBaseHref?: string
+  renderPageReference?: (id: string, label: string) => ReactNode
+  mobileDrawer?: boolean
 }) {
   const missing = flagMissing && needsMediaCredit(sources)
+  const reference = (id: string, label: string) =>
+    renderPageReference ? (
+      renderPageReference(id, label)
+    ) : pageBaseHref ? (
+      <a
+        className="underline decoration-dotted underline-offset-4"
+        href={`${pageBaseHref.replace(/\/$/, "")}/${encodeURIComponent(id)}`}
+      >
+        {label}
+      </a>
+    ) : (
+      label
+    )
   return (
-    <Popover>
+    <Popover mobileDrawer={mobileDrawer}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -37,6 +57,7 @@ export function ImageCredit({
         </button>
       </PopoverTrigger>
       <PopoverContent
+        drawerTitle="Nguồn ảnh"
         align="end"
         className="z-[100] max-h-[min(30rem,80dvh)] w-80 max-w-[calc(100vw-2rem)] overflow-y-auto text-sm"
         onClick={(event) => event.stopPropagation()}
@@ -53,7 +74,7 @@ export function ImageCredit({
                   {source.ownerName ? (
                     <p className="flex items-center gap-1.5 font-semibold">
                       <Copyright className="size-4 shrink-0" aria-hidden="true" />
-                      {source.ownerName}
+                      {source.ownerPageId ? reference(source.ownerPageId, source.ownerName) : source.ownerName}
                     </p>
                   ) : (
                     <p className="flex items-center gap-1.5 font-medium text-amber-700 dark:text-amber-300">
@@ -62,6 +83,9 @@ export function ImageCredit({
                     </p>
                   )}
                   <p className="text-xs text-muted-foreground">Lấy từ: {source.label}</p>
+                  {source.relatedPageId && (pageBaseHref || renderPageReference) && (
+                    <p>{reference(source.relatedPageId, "Xem hồ sơ nội dung liên quan")}</p>
+                  )}
                   {url && (
                     <a
                       className="flex items-center gap-1 underline underline-offset-4"

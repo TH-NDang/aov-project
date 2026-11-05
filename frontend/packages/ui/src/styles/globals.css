@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "./scrollbar.css";
 @import "./typography.css";
+@import "../components/public-overlay.css";
+@import "./warehouse-compact.css";
 @source "../";
 @source "../../../apps";
 @custom-variant dark (&:is(.dark *));

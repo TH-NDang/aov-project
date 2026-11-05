@@ -5,6 +5,8 @@ export interface MediaCredit {
   ownerName?: string | null
   contactUrl?: string | null
   observedAt?: string | null
+  ownerPageId?: string | null
+  relatedPageId?: string | null
 }
 
 export interface MediaSourceInput extends MediaCredit {
@@ -35,7 +37,15 @@ export function currentMediaSources<T extends MediaCredit & { versionId?: string
   const selected = specific.length ? specific : sources.filter((source) => !source.versionId)
   const seen = new Set<string>()
   return selected.filter((source) => {
-    const key = JSON.stringify([source.type, source.label, source.url, source.ownerName, source.contactUrl])
+    const key = JSON.stringify([
+      source.type,
+      source.label,
+      source.url,
+      source.ownerName,
+      source.contactUrl,
+      source.ownerPageId,
+      source.relatedPageId,
+    ])
     if (seen.has(key)) return false
     seen.add(key)
     return true
