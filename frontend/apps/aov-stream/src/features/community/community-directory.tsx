@@ -12,11 +12,25 @@ import { OfficialBadge } from "@aov/ui/components/official-badge"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { useFollowedIds, useFollowPage } from "./community-queries"
+import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { Avatar, followersLabel, hueOf, kindIcons } from "./community-ui"
 
 const kinds = Object.keys(profileKindLabels) as ProfileKind[]
 
 /** The searchable list of published pages; kind and search live in the URL so the header search can open it. */
+const kindArt = {
+  CIRCUIT: navArtIcons.circuits,
+  ORGANIZATION: navArtIcons.organizations,
+  TEAM: navArtIcons.teams,
+  PLAYER: navArtIcons.players,
+  PERSON: navArtIcons.coaches,
+}
+
+function KindArt({ kind }: { kind: keyof typeof kindArt }) {
+  const Art = kindArt[kind]
+  return <Art size={20} />
+}
+
 export function PageDirectory() {
   const [params, setParams] = useSearchParams()
   const requested = params.get("kind") as ProfileKind | null
@@ -56,7 +70,7 @@ export function PageDirectory() {
           </button>
           {kinds.map((type) => (
             <button key={type} aria-pressed={kind === type} onClick={() => update("kind", type)}>
-              <StreamIcon name={kindIcons[type]} size={16} />
+              <KindArt kind={type} />
               {profileKindLabels[type]}
             </button>
           ))}

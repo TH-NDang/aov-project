@@ -2587,3 +2587,19 @@ button:disabled {
 .hub-banner.hub-art::after {
   display: none;
 }
+/* Empty and error states show the owl, so a dead end still feels like the product. */
+.hub-state > svg {
+  display: none;
+}
+.hub-state::before {
+  content: "";
+  width: 64px;
+  height: 64px;
+  margin-bottom: 4px;
+  background: url("./assets/stream-owl.svg") center / contain no-repeat;
+}
+.hub-pills button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

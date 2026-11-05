@@ -2,6 +2,7 @@ import { Link, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CompetitionView } from "@aov/community-contracts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
+import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { CommunityAside } from "../community/community-aside"
@@ -64,6 +65,7 @@ export function CompetitionDirectory() {
       <title>Giải đấu & lịch thi đấu — AOV Stream</title>
       <div className="competition-hub cp-container">
         <header className="competition-hub-header">
+          <navArtIcons.tournaments size={48} />
           <div>
             <h1>Giải đấu</h1>
             <p>Theo dõi mùa giải, lịch thi đấu và kết quả từng trận.</p>

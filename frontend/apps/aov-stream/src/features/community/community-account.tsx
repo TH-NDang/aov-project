@@ -22,7 +22,10 @@ import {
   useReadNotifications,
   useUnreadCount,
 } from "./community-queries"
+import { SOCIAL_PLATFORM_NAMES, SocialPlatformIcon, socialPlatformName } from "@aov/ui/components/social-platform-icon"
 import { Avatar, followersLabel, hueOf } from "./community-ui"
+
+const accountTabIcons = { profile: "user", follows: "heart", notifications: "bell", pages: "building" } as const
 import { AccountAvatar, AccountProfile } from "../account/account-profile"
 import { useOwnProfile } from "../account/profile-api"
 
@@ -76,6 +79,7 @@ export function CommunityAccount() {
                   aria-current={tab === value ? "page" : undefined}
                   onClick={() => setParams(value === "profile" ? {} : { tab: value })}
                 >
+                  <StreamIcon name={accountTabIcons[value as keyof typeof accountTabIcons] ?? "user"} size={15} />
                   {label}
                   {value === "notifications" && !!unread.data?.unread && (
                     <span className="cp-tab-count">{unread.data.unread}</span>
@@ -439,34 +443,55 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
                 />
               </label>
             </div>
+            <datalist id="cp-channel-names">
+              {SOCIAL_PLATFORM_NAMES.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
             {presentation.links.map((link, i) => (
               <div className="cp-form-grid" key={i}>
                 <label>
-                  Tên kênh
+                  Đường dẫn
                   <input
+                    type="url"
                     required
-                    value={link.label}
+                    placeholder="https://…"
+                    value={link.url}
                     onChange={(e) =>
                       setPresentation({
                         ...presentation,
                         links: presentation.links.map((item, index) =>
-                          i === index ? { ...item, label: e.target.value } : item,
+                          i === index
+                            ? {
+                                ...item,
+                                url: e.target.value,
+                                // The name follows the link until someone writes their own.
+                                label:
+                                  !item.label || item.label === socialPlatformName(item.url)
+                                    ? (socialPlatformName(e.target.value) ?? item.label)
+                                    : item.label,
+                              }
+                            : item,
                         ),
                       })
                     }
                   />
                 </label>
                 <label>
-                  Đường dẫn
+                  <span className="cp-channel-label">
+                    {link.url && <SocialPlatformIcon url={link.url} size={15} />}
+                    Tên kênh
+                  </span>
                   <input
-                    type="url"
                     required
-                    value={link.url}
+                    list="cp-channel-names"
+                    placeholder="Tự điền theo đường dẫn"
+                    value={link.label}
                     onChange={(e) =>
                       setPresentation({
                         ...presentation,
                         links: presentation.links.map((item, index) =>
-                          i === index ? { ...item, url: e.target.value } : item,
+                          i === index ? { ...item, label: e.target.value } : item,
                         ),
                       })
                     }

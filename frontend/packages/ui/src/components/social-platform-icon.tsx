@@ -25,6 +25,26 @@ function brandOf(url: string) {
   }
 }
 
+const platformNames: Record<SocialBrand["id"], string> = {
+  facebook: "Facebook",
+  youtube: "YouTube",
+  tiktok: "TikTok",
+  instagram: "Instagram",
+  x: "X",
+  discord: "Discord",
+  telegram: "Telegram",
+  twitch: "Twitch",
+  zalo: "Zalo",
+}
+
+export const SOCIAL_PLATFORM_NAMES = [...Object.values(platformNames), "Website"]
+
+/** The platform a link belongs to, recognized by its hostname. */
+export function socialPlatformName(url: string) {
+  const brand = brandOf(url)
+  return brand && platformNames[brand.id]
+}
+
 export function SocialPlatformIcon({ url, size = 20 }: { url: string; size?: number }) {
   const brand = brandOf(url)
   if (!brand) return <Globe aria-hidden="true" size={size} />

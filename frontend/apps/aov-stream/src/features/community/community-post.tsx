@@ -41,6 +41,8 @@ const longPost = (body: string) => body.length > 420 || body.split("\n").length 
  * without it, the page is the surrounding profile. `following` is null for signed-out viewers, who see no follow
  * buttons; their likes, comments and reports open the sign-in prompt instead.
  */
+const REPORT_REASONS = ["Spam hoặc quảng cáo", "Thông tin sai", "Ngôn từ xúc phạm", "Nội dung phản cảm", "Mạo danh"]
+
 export function PostCard({
   post,
   role,
@@ -359,6 +361,13 @@ export function PostCard({
         >
           <label>
             {reportedComment ? "Lý do báo cáo bình luận" : "Lý do báo cáo bài viết"}
+            <span className="cp-reason-chips">
+              {REPORT_REASONS.map((option) => (
+                <button type="button" key={option} aria-pressed={reason === option} onClick={() => setReason(option)}>
+                  {option}
+                </button>
+              ))}
+            </span>
             <textarea required maxLength={2000} value={reason} onChange={(event) => setReason(event.target.value)} />
           </label>
           <div className="cp-actions">

@@ -2620,3 +2620,32 @@
 .hub-feed-body > .cp-live-row {
   margin-bottom: var(--hub-space-5);
 }
+.cp-channel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cp-reason-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-block: 6px;
+}
+.cp-reason-chips button {
+  padding: 4px 10px;
+  border: 1px solid var(--hub-border-strong);
+  border-radius: 999px;
+  color: var(--hub-text-soft);
+  font-size: 12px;
+  font-weight: 500;
+}
+.cp-reason-chips button[aria-pressed="true"] {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent-soft);
+  color: var(--hub-accent-strong);
+}
+.cp-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

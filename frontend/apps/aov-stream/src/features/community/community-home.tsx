@@ -22,11 +22,11 @@ import "./community.css"
 
 type Tab = "latest" | "following" | "video" | "news"
 
-const filters: { value: Tab; label: string }[] = [
-  { value: "latest", label: "Tất cả" },
-  { value: "following", label: "Đang theo dõi" },
-  { value: "video", label: "Video" },
-  { value: "news", label: "Tin tức" },
+const filters: { value: Tab; label: string; icon: "feed" | "heart" | "play" | "message" }[] = [
+  { value: "latest", label: "Tất cả", icon: "feed" },
+  { value: "following", label: "Đang theo dõi", icon: "heart" },
+  { value: "video", label: "Video", icon: "play" },
+  { value: "news", label: "Tin tức", icon: "message" },
 ]
 const tabKinds: Partial<Record<Tab, PostKind>> = { video: "VIDEO", news: "NEWS" }
 
@@ -69,6 +69,7 @@ export function CommunityHome() {
                       : open(filter.value)
                   }
                 >
+                  <StreamIcon name={filter.icon} size={15} />
                   {filter.label}
                 </button>
               ))}
