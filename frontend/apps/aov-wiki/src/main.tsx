@@ -1,5 +1,6 @@
 import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
+import { relaySilentLogin } from "@aov/ui/lib/public-auth"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter } from "react-router"
 import "./wiki.css"
@@ -8,14 +9,16 @@ import { WikiContextProvider } from "./context/wiki-context"
 
 const queryClient = new QueryClient()
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <WikiContextProvider>
-          <App />
-        </WikiContextProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  </StrictMode>,
-)
+if (!relaySilentLogin()) {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <WikiContextProvider>
+            <App />
+          </WikiContextProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </StrictMode>,
+  )
+}

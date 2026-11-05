@@ -10,3 +10,4 @@ const auth = createPublicAuth({
   locale: () => document.documentElement.lang || "vi",
 })
 export const { signIn, signOut, completeLogin, useSession: useWikiSession } = auth
+void auth.restoreSession()

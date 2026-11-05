@@ -11,3 +11,4 @@ const auth = createPublicAuth({
   locale: streamLocale,
 })
 export const { signIn, signOut, accessToken, completeLogin, useSession: useCommunitySession } = auth
+void auth.restoreSession()

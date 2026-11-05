@@ -35,9 +35,44 @@ export function publicAuthError(locale = "vi") {
     : "Chưa hoàn tất đăng nhập. Vui lòng thử lại."
 }
 
-/** Each public app owns its PKCE transaction; bearer and refresh tokens stay in memory. */
+const SILENT_MESSAGE = "aov-silent-login"
+
+/**
+ * Runs first in each public app. Inside the hidden frame of a silent login the callback only hands its query to the
+ * parent page, so the app must not render.
+ */
+export function relaySilentLogin() {
+  if (window.parent === window || location.pathname !== "/auth/callback") return false
+  window.parent.postMessage({ type: SILENT_MESSAGE, search: location.search }, location.origin)
+  return true
+}
+
+/**
+ * Each public app owns its PKCE transaction; bearer and refresh tokens stay in memory. A reload therefore starts with
+ * no tokens, and restoreSession asks the identity provider again without showing a page. The stored marker holds no
+ * credential: it only avoids that request for visitors who never signed in.
+ */
 export function createPublicAuth(config: Config) {
-  let session: Session = { status: "anonymous", name: "", revision: 0 }
+  const markerKey = `${config.storageKey}-active`
+  const hasMarker = () => {
+    try {
+      return typeof localStorage !== "undefined" && localStorage.getItem(markerKey) === "1"
+    } catch {
+      return false
+    }
+  }
+  const setMarker = (active: boolean) => {
+    try {
+      if (typeof localStorage === "undefined") return
+      if (active) localStorage.setItem(markerKey, "1")
+      else localStorage.removeItem(markerKey)
+    } catch {
+      // Without storage the session simply ends with the page, as it did before.
+    }
+  }
+  const restorable = () =>
+    hasMarker() && typeof window !== "undefined" && window.parent === window && location.pathname !== "/auth/callback"
+  let session: Session = { status: restorable() ? "loading" : "anonymous", name: "", revision: 0 }
   let credentials: Credentials | null = null
   let renewing: Promise<string> | null = null
   let completing: Promise<string> | null = null
@@ -59,6 +94,20 @@ export function createPublicAuth(config: Config) {
   const getSnapshot = () => session
   const useSession = () => useSyncExternalStore(subscribe, getSnapshot)
 
+  function authorizeParams(state: string, challenge: string) {
+    return new URLSearchParams({
+      client_id: config.clientId,
+      redirect_uri: callback(),
+      response_type: "code",
+      response_mode: "query",
+      scope: "openid profile",
+      state,
+      code_challenge: challenge,
+      code_challenge_method: "S256",
+      ui_locales: config.locale().startsWith("en") ? "en" : "vi",
+    })
+  }
+
   function signIn(register = false): Promise<void> {
     if (starting) return starting
     starting = (async () => {
@@ -77,17 +126,7 @@ export function createPublicAuth(config: Config) {
           returnTo: location.pathname + location.search + location.hash,
         }),
       )
-      const params = new URLSearchParams({
-        client_id: config.clientId,
-        redirect_uri: callback(),
-        response_type: "code",
-        response_mode: "query",
-        scope: "openid profile",
-        state,
-        code_challenge: challenge,
-        code_challenge_method: "S256",
-        ui_locales: config.locale().startsWith("en") ? "en" : "vi",
-      })
+      const params = authorizeParams(state, challenge)
       location.assign(`${issuer}/protocol/openid-connect/${register ? "registrations" : "auth"}?${params}`)
     })().finally(() => {
       starting = null
@@ -122,6 +161,87 @@ export function createPublicAuth(config: Config) {
     return data.access_token
   }
 
+  async function finishLogin(code: string, verifier: string, started: number) {
+    const token = await tokens(
+      { grant_type: "authorization_code", code, code_verifier: verifier, redirect_uri: callback() },
+      started,
+    )
+    const response = await fetch(config.profileUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+      credentials: "omit",
+      signal: AbortSignal.timeout(15000),
+    })
+    if (!response.ok) throw new Error("Profile connection failed.")
+    const me = (await response.json()) as Record<string, unknown>
+    if (started !== generation) throw new Error("Session ended.")
+    setMarker(true)
+    publish({
+      status: "authenticated",
+      name: typeof me[config.nameField] === "string" ? (me[config.nameField] as string) : "AOV",
+      revision: session.revision + 1,
+      error: undefined,
+    })
+  }
+
+  function silentAuthorize(url: string, timeout: number) {
+    return new Promise<URLSearchParams>((resolve, reject) => {
+      const frame = document.createElement("iframe")
+      frame.hidden = true
+      frame.title = "Silent sign-in"
+      const finish = () => {
+        clearTimeout(timer)
+        window.removeEventListener("message", onMessage)
+        frame.remove()
+      }
+      const onMessage = (event: MessageEvent) => {
+        if (event.origin !== location.origin || event.source !== frame.contentWindow) return
+        if (event.data?.type !== SILENT_MESSAGE) return
+        finish()
+        resolve(new URLSearchParams(String(event.data.search)))
+      }
+      const timer = setTimeout(() => {
+        finish()
+        reject(new Error("Silent sign-in timed out."))
+      }, timeout)
+      window.addEventListener("message", onMessage)
+      frame.src = url
+      document.body.appendChild(frame)
+    })
+  }
+
+  /** Restores the session after a reload or in a new tab, if the identity provider still has one. */
+  async function restoreSession(timeout = 8000) {
+    if (!restorable() || credentials || completing) return
+    const started = generation
+    publish({ status: "loading", error: undefined })
+    try {
+      const verifier = encode(crypto.getRandomValues(new Uint8Array(48)))
+      const state = encode(crypto.getRandomValues(new Uint8Array(24)))
+      const challenge = encode(
+        new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier))),
+      )
+      const params = authorizeParams(state, challenge)
+      params.set("prompt", "none")
+      const reply = await silentAuthorize(`${issuer}/protocol/openid-connect/auth?${params}`, timeout)
+      if (started !== generation) return
+      if (reply.get("state") !== state) throw new Error("Invalid silent sign-in response.")
+      const code = reply.get("code")
+      if (!code) {
+        // The provider answered that nobody is signed in; only then is the marker wrong.
+        setMarker(false)
+        publish({ status: "anonymous", name: "", error: undefined })
+        return
+      }
+      await finishLogin(code, verifier, started)
+    } catch {
+      if (started === generation) {
+        credentials = null
+        publish({ status: "anonymous", name: "", error: undefined })
+      }
+    }
+  }
+
   function completeLogin(): Promise<string> {
     if (completing) return completing
     const started = generation
@@ -146,30 +266,7 @@ export function createPublicAuth(config: Config) {
         !params.get("code")
       )
         throw new Error("Invalid or expired login transaction.")
-      const token = await tokens(
-        {
-          grant_type: "authorization_code",
-          code: params.get("code")!,
-          code_verifier: flow.verifier,
-          redirect_uri: callback(),
-        },
-        started,
-      )
-      const response = await fetch(config.profileUrl, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-        credentials: "omit",
-        signal: AbortSignal.timeout(15000),
-      })
-      if (!response.ok) throw new Error("Profile connection failed.")
-      const me = (await response.json()) as Record<string, unknown>
-      if (started !== generation) throw new Error("Session ended.")
-      publish({
-        status: "authenticated",
-        name: typeof me[config.nameField] === "string" ? (me[config.nameField] as string) : "AOV",
-        revision: session.revision + 1,
-        error: undefined,
-      })
+      await finishLogin(params.get("code")!, flow.verifier, started)
       return safeAuthReturnPath(flow.returnTo, config.returnPath)
     })().catch((error: unknown) => {
       if (started === generation) {
@@ -207,11 +304,12 @@ export function createPublicAuth(config: Config) {
     completing = null
     renewing = null
     sessionStorage.removeItem(config.storageKey)
+    setMarker(false)
     publish({ status: "anonymous", name: "", revision: session.revision + 1, error: undefined })
     if (remote && idToken)
       location.assign(
         `${issuer}/protocol/openid-connect/logout?${new URLSearchParams({ id_token_hint: idToken, post_logout_redirect_uri: location.origin + config.returnPath })}`,
       )
   }
-  return { useSession, signIn, signOut, accessToken, completeLogin, getSnapshot }
+  return { useSession, signIn, signOut, accessToken, completeLogin, restoreSession, getSnapshot }
 }
