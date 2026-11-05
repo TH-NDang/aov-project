@@ -7,6 +7,8 @@ import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepo
 import com.wikiaov.patch.internal.context.persistence.GameplayContextRepository;
 import com.wikiaov.patch.internal.ruleset.application.Regions;
 import com.wikiaov.platform.*;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -19,13 +21,17 @@ public class PatchQueries implements PatchCatalog {
     private final GamePatchTranslationRepository translations;
     private final GameplayContextRepository contexts;
     private final Regions regions;
+    private final GameplayContexts gameplay;
+    private final Clock clock;
 
     public PatchQueries(GamePatchRepository patches, GamePatchTranslationRepository translations,
-            GameplayContextRepository contexts, Regions regions) {
+            GameplayContextRepository contexts, Regions regions, GameplayContexts gameplay, Clock clock) {
         this.patches = patches;
         this.translations = translations;
         this.contexts = contexts;
         this.regions = regions;
+        this.gameplay = gameplay;
+        this.clock = clock;
     }
 
     public Map<String, Object> published(UUID id, String region, String locale) {
@@ -33,6 +39,21 @@ public class PatchQueries implements PatchCatalog {
         var release = releases(region).stream().filter(r -> r.patchId().equals(id)).findFirst()
                 .orElseThrow(() -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
                         "No published patch is scheduled for this region."));
+        return view(id, region, locale, release.variantId(), release.rulesetId(), release.effectiveAt());
+    }
+
+    public Map<String, Object> publishedVariant(UUID id, UUID variantId, String region, String locale) {
+        validateLocale(locale);
+        var context = gameplay.resolveCatalog(region, clock.instant(), null, variantId);
+        if (!context.patchId().equals(id))
+            throw new ApiException(PatchErrorCode.PATCH_NOT_FOUND,
+                    "The requested variant does not belong to this patch.");
+
+        return view(id, region, locale, context.patchVariantId(), context.rulesetId(), context.effectiveAt());
+    }
+
+    private Map<String, Object> view(UUID id, String region, String locale, UUID variantId, UUID rulesetId,
+            Instant effectiveAt) {
         var patch = patches.findByIdAndStatus(id, "PUBLISHED").orElseThrow(
                 () -> new ApiException(PatchErrorCode.PATCH_NOT_FOUND, "Patch resource does not exist."));
         Map<String, Object> result = new LinkedHashMap<>();
@@ -49,8 +70,9 @@ public class PatchQueries implements PatchCatalog {
         });
         result.put("region", region);
         result.put("requestedLocale", locale);
-        result.put("variantId", release.variantId());
-        result.put("effectiveAt", release.effectiveAt());
+        result.put("variantId", variantId);
+        result.put("rulesetId", rulesetId);
+        result.put("effectiveAt", effectiveAt);
         return result;
     }
 

@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SpellPatchChangeRepository extends JpaRepository<SpellPatchChange, UUID> {
     List<SpellPatchChange> findByRulesetId(UUID rulesetId);
 
+    List<SpellPatchChange> findByRulesetIdAndPatchVariantId(UUID rulesetId, UUID patchVariantId);
+
     List<SpellPatchChange> findByOwnerId(UUID ownerId);
 
     boolean existsByOwnerIdAndPatchVariantId(UUID ownerId, UUID patchVariantId);

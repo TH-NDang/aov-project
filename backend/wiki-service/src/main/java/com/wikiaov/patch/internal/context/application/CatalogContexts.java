@@ -74,7 +74,7 @@ public class CatalogContexts {
             Map<UUID, String> titles) {
         var first = values.getFirst();
         var patches = values.stream().sorted(Comparator.comparingLong(CatalogPatch::getOrdinal).reversed())
-                .map(value -> new Patch(value.getId(), value.getCode(),
+                .map(value -> new Patch(value.getId(), value.getPatchId(), value.getCode(),
                         titles.getOrDefault(value.getPatchId(), value.getCode()), value.getRulesetId(),
                         value.getOrdinal(),
                         true, dates.get(value.getId()), !dates.containsKey(value.getId())))

@@ -52,16 +52,23 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         return "ARCANA";
     }
 
-    public List<Entry> changes(UUID rulesetId, String locale) {
+    public List<Entry> changes(UUID rulesetId, UUID patchVariantId, String locale) {
         contexts.requireRuleset(rulesetId);
-        var facts = changes.findByRulesetId(rulesetId);
-        var snapshots = revisions.findByStateNot("DISCARDED").stream()
-                .filter(r -> r.getRulesetId().equals(rulesetId) && r.getState().equals("PUBLISHED")).toList();
+        var facts = patchVariantId == null
+                ? changes.findByRulesetId(rulesetId)
+                : changes.findByRulesetIdAndPatchVariantId(rulesetId, patchVariantId);
+        var snapshots = patchVariantId == null
+                ? revisions.findByRulesetIdAndState(rulesetId, "PUBLISHED")
+                : revisions.publishedForChanges(rulesetId, patchVariantId);
+        if (snapshots.isEmpty())
+            return List.of();
+
         var byId = new HashMap<UUID, ArcanaRevision>();
         snapshots.forEach(r -> byId.put(r.getId(), r));
         var names = translations.findByRevisionIdIn(new ArrayList<>(byId.keySet())).stream()
                 .collect(java.util.stream.Collectors.groupingBy(ArcanaTranslation::getRevisionId));
-        var owners = identities.findAll().stream()
+        var owners = identities.findAllById(snapshots.stream().map(ArcanaRevision::getOwnerId).distinct().toList())
+                .stream()
                 .collect(java.util.stream.Collectors.toMap(ArcanaIdentity::getId, i -> i));
         var result = new ArrayList<Entry>();
         for (var fact : facts) {
@@ -81,6 +88,7 @@ public class ArcanaPatchChanges implements CatalogChangeProvider {
         var grouped = new HashMap<String, ArcanaRevision>();
         for (var r : snapshots) {
             if (r.getEffectiveFromPatchVariantId() == null
+                    || (patchVariantId != null && !patchVariantId.equals(r.getEffectiveFromPatchVariantId()))
                     || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.getCause()))
                 continue;
             if (facts.stream().anyMatch(f -> f.getOwnerId().equals(r.getOwnerId())

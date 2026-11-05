@@ -2,9 +2,13 @@ package com.wikiaov.platform;
 
 import java.util.*;
 
-/** Module boundary for the administrative cross-catalog change read model. */
+/** Module boundary for change records backed by published revisions. */
 public interface CatalogChangeProvider {
     String domain();
 
-    List<CatalogChanges.Entry> changes(UUID rulesetId, String locale);
+    default List<CatalogChanges.Entry> changes(UUID rulesetId, String locale) {
+        return changes(rulesetId, null, locale);
+    }
+
+    List<CatalogChanges.Entry> changes(UUID rulesetId, UUID patchVariantId, String locale);
 }

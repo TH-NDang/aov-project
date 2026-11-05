@@ -52,16 +52,23 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         return "ENCHANTMENT";
     }
 
-    public List<Entry> changes(UUID rulesetId, String locale) {
+    public List<Entry> changes(UUID rulesetId, UUID patchVariantId, String locale) {
         contexts.requireRuleset(rulesetId);
-        var facts = changes.findByRulesetId(rulesetId);
-        var snapshots = revisions.findByStateNot("DISCARDED").stream()
-                .filter(r -> r.getRulesetId().equals(rulesetId) && r.getState().equals("PUBLISHED")).toList();
+        var facts = patchVariantId == null
+                ? changes.findByRulesetId(rulesetId)
+                : changes.findByRulesetIdAndPatchVariantId(rulesetId, patchVariantId);
+        var snapshots = patchVariantId == null
+                ? revisions.findByRulesetIdAndState(rulesetId, "PUBLISHED")
+                : revisions.publishedForChanges(rulesetId, patchVariantId);
+        if (snapshots.isEmpty())
+            return List.of();
+
         var byId = new HashMap<UUID, EnchantmentRevision>();
         snapshots.forEach(r -> byId.put(r.getId(), r));
         var names = translations.findByRevisionIdIn(new ArrayList<>(byId.keySet())).stream()
                 .collect(java.util.stream.Collectors.groupingBy(EnchantmentTranslation::getRevisionId));
-        var owners = identities.findAll().stream()
+        var owners = identities.findAllById(snapshots.stream().map(EnchantmentRevision::getOwnerId).distinct().toList())
+                .stream()
                 .collect(java.util.stream.Collectors.toMap(EnchantmentIdentity::getId, i -> i));
         var result = new ArrayList<Entry>();
         for (var fact : facts) {
@@ -82,6 +89,7 @@ public class EnchantmentPatchChanges implements CatalogChangeProvider {
         var grouped = new HashMap<String, EnchantmentRevision>();
         for (var r : snapshots) {
             if (r.getEffectiveFromPatchVariantId() == null
+                    || (patchVariantId != null && !patchVariantId.equals(r.getEffectiveFromPatchVariantId()))
                     || !Set.of("DATA_BASELINE", "GAME_PATCH").contains(r.getCause()))
                 continue;
             if (facts.stream().anyMatch(f -> f.getOwnerId().equals(r.getOwnerId())

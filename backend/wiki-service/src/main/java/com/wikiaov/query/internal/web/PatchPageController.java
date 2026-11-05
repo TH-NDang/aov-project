@@ -3,6 +3,7 @@ package com.wikiaov.query.internal.web;
 import com.wikiaov.hero.HeroChangeQueries;
 import com.wikiaov.patch.PatchCatalog;
 import com.wikiaov.platform.*;
+import com.wikiaov.query.internal.application.PublishedCatalogChanges;
 import com.wikiaov.spell.SpellChangeQueries;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -16,10 +17,14 @@ public class PatchPageController implements PatchPageApi {
     private final HeroChangeQueries heroes;
     private final SpellChangeQueries spells;
 
-    public PatchPageController(PatchCatalog patches, HeroChangeQueries heroes, SpellChangeQueries spells) {
+    private final List<CatalogChangeProvider> catalogs;
+
+    public PatchPageController(PatchCatalog patches, HeroChangeQueries heroes, SpellChangeQueries spells,
+            List<CatalogChangeProvider> catalogs) {
         this.patches = patches;
         this.heroes = heroes;
         this.spells = spells;
+        this.catalogs = catalogs;
     }
 
     @GetMapping(version = "1")
@@ -42,17 +47,29 @@ public class PatchPageController implements PatchPageApi {
     @GetMapping(path = "/{id}/changes", version = "1")
     public ResponseEntity<?> changes(@PathVariable UUID id, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "HERO") String domain,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) UUID patchVariantId, @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request) {
-        QueryParameters.requireOnly(request, Set.of("region", "locale", "domain", "page", "size"));
-        if (!Set.of("HERO", "SPELL").contains(domain))
+        QueryParameters.requireOnly(request, Set.of("region", "locale", "domain", "patchVariantId", "page", "size"));
+        var provider = catalogs.stream().filter(catalog -> domain.equals(catalog.domain())).findFirst();
+        if (!Set.of("HERO", "SPELL").contains(domain) && provider.isEmpty())
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER,
                     "This domain does not have an implemented change provider.");
         if (page < 0 || size < 1 || size > 100)
             throw new ApiException(PlatformErrorCode.INVALID_QUERY_PARAMETER, "Invalid page bounds.");
-        var patch = patches.published(id, region, locale);
+        var patch = patchVariantId == null
+                ? patches.published(id, region, locale)
+                : patches.publishedVariant(id, patchVariantId, region, locale);
         UUID variant = (UUID) patch.get("variantId");
-        var all = domain.equals("SPELL") ? spells.forVariant(variant, locale) : heroes.forVariant(variant, locale);
+        List<Map<String, Object>> all;
+        if (domain.equals("HERO")) {
+            all = heroes.forVariant(variant, locale);
+        } else {
+            List<Map<String, Object>> legacy = domain.equals("SPELL") ? spells.forVariant(variant, locale) : List.of();
+            all = provider.map(catalog -> PublishedCatalogChanges.forVariant(catalog, (UUID) patch.get("rulesetId"),
+                    variant, locale, legacy)).orElse(legacy);
+        }
+
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("patch", patch);
         response.put("variantId", variant);

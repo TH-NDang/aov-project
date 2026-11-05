@@ -29,6 +29,7 @@ public record CatalogContextView(
 
     public record Patch(
             UUID id,
+            UUID patchId,
             String code,
             String title,
             UUID rulesetId,

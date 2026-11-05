@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ArcanaPatchChangeRepository extends JpaRepository<ArcanaPatchChange, UUID> {
     List<ArcanaPatchChange> findByRulesetId(UUID rulesetId);
 
+    List<ArcanaPatchChange> findByRulesetIdAndPatchVariantId(UUID rulesetId, UUID patchVariantId);
+
     List<ArcanaPatchChange> findByOwnerId(UUID ownerId);
 
     boolean existsByOwnerIdAndPatchVariantId(UUID ownerId, UUID patchVariantId);
