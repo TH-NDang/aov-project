@@ -346,13 +346,13 @@ export function WikiHeader({ variant = "home", pageTitle, onOpenContents, search
       data-variant={variant}
       className={cn(
         "wiki-header sticky top-0 z-40 h-12 border-b border-header-line bg-header backdrop-blur-[20px] backdrop-saturate-[1.4] max-[640px]:h-11 max-[640px]:border-transparent max-[640px]:bg-transparent max-[640px]:backdrop-blur-none max-[640px]:backdrop-saturate-100",
-        variant === "library" && "bg-[#2b3340] max-[640px]:bg-[#2b3340]",
+        variant === "library" && "bg-background",
       )}
     >
       {variant !== "hero" && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 hidden border-b border-header-line bg-[#202329] opacity-[var(--header-solid,0)] max-[640px]:block"
+          className="pointer-events-none absolute inset-0 hidden border-b border-header-line bg-background opacity-[var(--header-solid,0)] max-[640px]:block"
         />
       )}
       {/* Three-column grid: equal 1fr side columns keep the search box centered;
