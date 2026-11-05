@@ -1,122 +1,77 @@
-.wiki-categories {
-  border-top: 1px solid rgb(228 200 142 / 10%);
-  padding: 22px 28px 25px;
-}
-
-.wiki-categories-list {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.wiki-categories-item {
-  position: relative;
-  display: flex;
+.wiki-index {
   min-width: 0;
-  flex-direction: column;
+}
+.wiki-index h2 {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+.wiki-index ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 24px;
+  margin-top: 12px;
+}
+.wiki-index li {
+  border-top: 1px solid var(--wiki-line);
+}
+.wiki-index a {
+  display: flex;
   align-items: center;
   gap: 12px;
-  text-align: center;
-}
-
-.wiki-categories-link {
+  min-height: 54px;
+  padding: 10px 3px;
   text-decoration: none;
 }
-.wiki-categories-link::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: 10px;
-}
-.wiki-categories-item-linked:hover .wiki-categories-icon {
-  border-color: #e4c88e80;
-}
-.wiki-categories-link:focus-visible {
-  outline: none;
-}
-.wiki-categories-link:focus-visible::after {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
-}
-
-.wiki-categories-icon {
-  position: relative;
+.wiki-index-icon {
   display: grid;
-  width: 56px;
-  height: 56px;
-  border: 1px solid rgb(228 200 142 / 18%);
-  border-radius: 50%;
-  background: radial-gradient(circle at 45% 30%, #4d5058 0%, #373e49 56%, #2c333d 100%);
-  box-shadow:
-    inset 0 0 0 4px rgb(18 24 34 / 18%),
-    0 3px 8px rgb(9 13 22 / 16%);
+  flex: none;
+  width: 40px;
+  height: 40px;
   place-items: center;
+  background: color-mix(in srgb, var(--category-tone, var(--gold)) 10%, var(--wiki-panel));
+  color: var(--category-tone, var(--gold));
+  border-radius: 11px;
+}
+.wiki-index a[data-section="skins"] {
+  --category-tone: #c3ade6;
+}
+.wiki-index a[data-section="enchantments"] {
+  --category-tone: #9dceb9;
+}
+.wiki-index a[data-section="arcana"] {
+  --category-tone: #caa0cf;
+}
+.wiki-index a[data-section="spells"] {
+  --category-tone: #9abfda;
+}
+.wiki-index a strong {
+  font: var(--wiki-type-category);
+  color: var(--wiki-text);
+}
+.wiki-index-arrow {
+  flex: none;
+  margin-left: auto;
+  color: var(--wiki-muted);
+}
+.wiki-index a:is(:hover, :focus-visible) :is(strong, .wiki-index-arrow) {
   color: var(--gold);
 }
-
-.wiki-categories-icon::before {
-  position: absolute;
-  inset: -5px;
-  border: 1px solid rgb(228 200 142 / 7%);
-  border-radius: 50%;
-  content: "";
-}
-
-.wiki-categories-icon svg {
-  position: relative;
-  width: 34px;
-  height: 34px;
-  filter: drop-shadow(0 2px 1px rgb(10 16 23 / 40%));
-}
-
-.wiki-category-light {
-  fill: #f3e4bc;
-}
-
-.wiki-category-shade {
-  fill: #b4945b;
-}
-
-.wiki-category-cutout {
-  fill: #363d47;
-}
-
-.wiki-categories-name {
-  color: var(--gold);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.5;
-}
-
-@media (max-width: 640px) {
-  .wiki-categories {
-    padding: 20px 8px 18px;
+@media (max-width: 540px) {
+  .wiki-index ul {
+    column-gap: 12px;
+  }
+  .wiki-index a {
+    gap: 7px;
+    min-height: 48px;
+  }
+  .wiki-index-arrow {
+    display: none;
   }
 
-  .wiki-categories-list {
-    gap: 4px;
-  }
-
-  .wiki-categories-item {
-    gap: 10px;
-  }
-
-  .wiki-categories-icon {
-    width: 44px;
-    height: 44px;
-  }
-
-  .wiki-categories-icon svg {
-    width: 28px;
-    height: 28px;
-  }
-
-  .wiki-categories-name {
-    font-size: 11px;
-    line-height: 1.45;
-    text-wrap: balance;
+  .wiki-index-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
   }
 }

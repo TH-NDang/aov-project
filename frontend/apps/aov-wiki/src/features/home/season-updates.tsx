@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
 import { formatPatchDate, patchSource, seasonUpdatesQuery, type SeasonPatch } from "./home-api"
-import { HomeIcon } from "./home-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 
@@ -9,13 +8,15 @@ function PatchRow({ patch }: { patch: SeasonPatch }) {
   const source = patchSource(patch)
   const content = (
     <>
-      <time className="wiki-home-patch-date" dateTime={patch.effectiveOn ?? patch.effectiveAt ?? undefined}>
-        {formatPatchDate(patch)}
-      </time>
-      <span className="wiki-home-patch-copy">
-        <span className="wiki-home-patch-title">{patch.title || patch.code}</span>
-        {patch.isCurrent && <span className="wiki-home-current-tag">{wikiText(locale, "Mới nhất", "Latest")}</span>}
+      <span className="wiki-home-patch-meta">
+        <time className="wiki-home-patch-date" dateTime={patch.effectiveOn ?? patch.effectiveAt ?? undefined}>
+          {formatPatchDate(patch)}
+        </time>
+        {patch.isCurrent && (
+          <span className="wiki-home-current-tag">{wikiText(locale, "Đang áp dụng", "Current")}</span>
+        )}
       </span>
+      <span className="wiki-home-patch-title">{patch.title || patch.code}</span>
       {source && <WikiIcon name="open" className="wiki-home-patch-arrow" />}
     </>
   )
@@ -51,7 +52,10 @@ export function SeasonUpdates() {
   return (
     <aside className="wiki-home-updates" aria-labelledby="season-updates-title" aria-busy={query.isPending}>
       <div className="wiki-home-updates-heading">
-        <span className="wiki-home-eyebrow">{wikiText(locale, "CẬP NHẬT MÙA", "SEASON UPDATES")}</span>
+        <h2 id="season-updates-title">
+          {wikiText(locale, "Cập nhật mùa", "Season updates")}
+          {query.data?.season?.displayName && <small>{query.data.season.displayName}</small>}
+        </h2>
         <span className="wiki-home-market" aria-label={`${t("market")}: ${marketName}`}>
           {["VN", "TH", "TW", "ID"].includes(region) ? (
             <img src={`/icons/flags/${region.toLowerCase()}.svg`} alt="" width="18" height="12" />
@@ -61,16 +65,6 @@ export function SeasonUpdates() {
           {region}
         </span>
       </div>
-      <div className="wiki-home-season-title">
-        <HomeIcon name="season" />
-        <h2 id="season-updates-title">
-          {query.data?.season?.displayName || wikiText(locale, "Mùa hiện tại", "Current season")}
-        </h2>
-      </div>
-      <div className="wiki-home-season-rule" aria-hidden="true">
-        <span>◆</span>
-      </div>
-
       {query.isPending ? (
         <div className="wiki-home-updates-loading" role="status">
           <span className="sr-only">{wikiText(locale, "Đang tải cập nhật mùa", "Loading season updates")}</span>

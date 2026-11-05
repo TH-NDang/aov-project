@@ -257,17 +257,14 @@
   opacity: 0.55;
 }
 .wiki-warehouse-empty h2 {
+  font: var(--wiki-type-section);
   margin: 6px 0 0;
   color: #d6c39e;
-  font:
-    700 23px/1.4 Cambria,
-    serif;
 }
 .wiki-warehouse-empty p {
+  font: var(--wiki-type-body);
   max-width: 300px;
   color: #8c9eaf;
-  font-size: 12px;
-  line-height: 1.7;
 }
 .wiki-warehouse-empty button {
   margin-top: 5px;
@@ -379,17 +376,14 @@
   box-shadow: 0 9px 30px #030c1833;
 }
 .wiki-warehouse-detail-eyebrow {
+  font: var(--wiki-type-meta);
   color: #8fa7ba;
-  font-size: 9px;
   letter-spacing: 0.13em;
 }
 .wiki-warehouse-detail [data-slot="sheet-title"] {
+  font: var(--wiki-type-page);
   margin-top: 6px;
   color: #eddab0;
-  font:
-    700 28px/1.25 Cambria,
-    "Times New Roman",
-    serif;
   overflow-wrap: anywhere;
 }
 .wiki-warehouse-detail-facts {
@@ -410,10 +404,9 @@
   margin-top: 26px;
 }
 .wiki-warehouse-detail-section > h3 {
+  font: var(--wiki-type-section);
   margin-bottom: 12px;
   color: #c8b58f;
-  font-size: 12px;
-  font-weight: 700;
 }
 .wiki-warehouse-stat-grid {
   display: grid;
@@ -429,18 +422,16 @@
   background: #0f1e304d;
 }
 .wiki-warehouse-stat-grid dt {
+  font: var(--wiki-type-meta);
   color: #91a9bb;
-  font-size: 10px;
 }
 .wiki-warehouse-stat-grid dd {
+  font: var(--wiki-type-entry);
   color: #d8dfdf;
-  font-size: 16px;
-  font-weight: 700;
 }
 .wiki-warehouse-rich-description {
+  font: var(--wiki-type-prose);
   color: #bfcbd6;
-  font-size: 13px;
-  line-height: 1.9;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -453,10 +444,9 @@
   padding: 5px 0 5px 13px;
 }
 .wiki-warehouse-effect > h3 {
+  font: var(--wiki-type-category);
   margin-bottom: 7px;
   color: #ddc99d;
-  font-size: 12px;
-  font-weight: 700;
 }
 .wiki-warehouse-recipe-list {
   display: grid;
@@ -535,6 +525,7 @@
   font-size: 12px;
 }
 .wiki-warehouse-baseline-note {
+  font: var(--wiki-type-meta);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -543,8 +534,6 @@
   padding: 10px 12px;
   background: #dac18d0a;
   color: #ac9e83;
-  font-size: 11px;
-  line-height: 1.5;
 }
 .wiki-warehouse-baseline-note svg {
   flex-shrink: 0;
@@ -677,12 +666,6 @@
     width: 65px;
     height: 65px;
     border-radius: 13px;
-  }
-  .wiki-warehouse-detail [data-slot="sheet-title"] {
-    font-size: 25px;
-  }
-  .wiki-warehouse-rich-description {
-    font-size: 13px;
   }
 }
 @keyframes wiki-warehouse-rise {

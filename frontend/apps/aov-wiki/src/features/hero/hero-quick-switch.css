@@ -64,10 +64,8 @@
   gap: 7px;
 }
 .wiki-hero-switch-heading [data-slot="sheet-title"] {
+  font: var(--wiki-type-section);
   color: #e5cf9e;
-  font-family: Cambria, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 700;
 }
 .wiki-hero-switch-close {
   position: absolute;
@@ -164,6 +162,7 @@
   display: none;
 }
 .wiki-hero-switch-filters button {
+  font: var(--wiki-type-meta);
   display: grid;
   width: 32px;
   min-width: 32px;
@@ -174,7 +173,6 @@
   border-radius: 50%;
   background: transparent;
   color: #aab4c2;
-  font-size: 11px;
 }
 .wiki-hero-switch-filters button[data-filter-all="true"] {
   position: relative;
@@ -205,19 +203,17 @@
   height: 20px;
 }
 .wiki-hero-switch-count {
+  font: var(--wiki-type-meta);
   min-width: 24px;
   border-radius: 12px;
   padding: 2px 6px;
   background: #1b273966;
   color: #aeb9c7;
-  font-size: 11px;
-  line-height: 1.5;
   text-align: center;
 }
 .wiki-hero-switch-active-filters {
+  font: var(--wiki-type-meta);
   color: #b8c0cc;
-  font-size: 11px;
-  line-height: 1.5;
 }
 .wiki-hero-switch-workspace {
   display: grid;
@@ -253,6 +249,7 @@
   background: #1e29384d;
 }
 .wiki-hero-switch-lane-filters button {
+  font: var(--wiki-type-meta);
   display: grid;
   width: 34px;
   height: 34px;
@@ -261,7 +258,6 @@
   border-radius: 50%;
   background: transparent;
   color: #aab4c2;
-  font-size: 10px;
 }
 .wiki-hero-switch-lane-filters button[data-filter-all="true"] {
   position: relative;
@@ -361,18 +357,14 @@
   height: 100%;
   place-items: center;
   color: #d9c38e;
-  font:
-    32px Cambria,
-    serif;
+  font: 32px var(--wiki-font-display);
 }
 .wiki-hero-switch-name {
+  font: var(--wiki-type-category);
   position: absolute;
   z-index: 2;
   inset: auto 8px 11px;
   color: #f1eadf;
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 700;
   text-shadow: 0 1px 5px #0c1424;
   overflow-wrap: anywhere;
 }
@@ -446,6 +438,7 @@
   background: #d6e1ef0b;
 }
 .wiki-hero-switch-state {
+  font: var(--wiki-type-body);
   display: grid;
   min-height: 220px;
   justify-items: center;
@@ -453,7 +446,6 @@
   gap: 18px;
   color: #bdc6d2;
   text-align: center;
-  font-size: 13px;
 }
 .wiki-hero-switch-state button {
   border: 1px solid #d9c38e66;
@@ -480,9 +472,7 @@
     gap: 4px 10px;
     padding: max(8px, env(safe-area-inset-top)) 10px 6px;
   }
-  .wiki-hero-switch-heading [data-slot="sheet-title"] {
-    font-size: 18px;
-  }
+
   .wiki-hero-switch-search {
     height: 44px;
   }
@@ -501,9 +491,7 @@
     width: 18px;
     height: 18px;
   }
-  .wiki-hero-switch-count {
-    font-size: 10px;
-  }
+
   .wiki-hero-switch-workspace {
     grid-template-columns: 44px minmax(0, 1fr);
   }
@@ -523,8 +511,6 @@
   }
   .wiki-hero-switch-name {
     inset-inline: 6px;
-    font-size: 12px;
-    line-height: 1.4;
   }
   .wiki-hero-switch-classifications {
     top: 5px;

@@ -1,8 +1,14 @@
 @import "@aov/ui/styles.css";
+@import "./styles/typography.css";
 
 :root.dark {
   color-scheme: dark;
-  --background: #191c22;
+  --background: #151a22;
+  --wiki-panel: #202732;
+  --wiki-line: #b7c6d524;
+  --wiki-muted: #b0bac6;
+  --wiki-text: #f1eee7;
+  --wiki-gutter: clamp(14px, 3vw, 40px);
   --foreground: #eeeae2;
   --card: #22262e;
   --card-foreground: #eeeae2;
@@ -38,9 +44,8 @@
   --color-header-muted: var(--header-muted);
   --color-gold: var(--gold);
   --color-amber-accent: var(--amber-accent);
-  /* System fonts, as HoYoWiki uses for Vietnamese and other Latin-script languages */
-  --font-sans: Tahoma, Helvetica, Arial, sans-serif;
-  --font-heading: var(--font-sans);
+  --font-sans: var(--wiki-font-reading);
+  --font-heading: var(--wiki-font-display);
   --font-wordmark: "Arial Black", "Segoe UI", sans-serif;
   /* Page body width, as on HoYoWiki: max-w-page */
   --container-page: 1188px;
@@ -116,4 +121,13 @@
   .page-backdrop::after {
     background: linear-gradient(to bottom, transparent 45%, var(--background) 100%);
   }
+}
+.wiki-search-domain {
+  font: var(--wiki-type-meta);
+}
+.wiki-site-footer a {
+  font: var(--wiki-type-meta);
+}
+.wiki-contact-page h1 {
+  font: var(--wiki-type-page);
 }

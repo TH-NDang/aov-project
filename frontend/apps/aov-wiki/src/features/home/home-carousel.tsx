@@ -1,3 +1,5 @@
+import { Link } from "react-router"
+import { WikiIcon } from "../../components/wiki-icon"
 import { useState } from "react"
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@aov/ui/components/carousel"
 import { HOME_BANNERS } from "./home-banners"
@@ -5,26 +7,8 @@ import { HomeIcon } from "./home-icon"
 import { useBannerRotation } from "./use-banner-rotation"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 
-const ENGLISH_BANNER_COPY = {
-  athanor: {
-    eyebrow: "THE WORLD OF ATHANOR",
-    title: ["Stories from", "across Athanor"],
-    description: "Discover the world beyond every battle.",
-  },
-  heroes: {
-    eyebrow: "LEGENDS OF ATHANOR",
-    title: ["One hero.", "Endless possibilities."],
-    description: "Explore their strengths. Find your own playstyle.",
-  },
-  discovery: {
-    eyebrow: "TOGETHER WITH AOV WiKi",
-    title: ["Small discoveries.", "Lasting impressions."],
-    description: "Unearth the stories still waiting to be found.",
-  },
-} satisfies Record<(typeof HOME_BANNERS)[number]["id"], { eyebrow: string; title: string[]; description: string }>
-
 export function HomeCarousel() {
-  const { locale } = useWikiContext()
+  const { locale, href } = useWikiContext()
   const [api, setApi] = useState<CarouselApi>()
   const [hovered, setHovered] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -48,7 +32,6 @@ export function HomeCarousel() {
     >
       <CarouselContent className="ml-0">
         {HOME_BANNERS.map((banner, index) => {
-          const copy = locale.startsWith("en") ? ENGLISH_BANNER_COPY[banner.id] : banner
           return (
             <CarouselItem
               className="wiki-home-slide pl-0"
@@ -56,7 +39,7 @@ export function HomeCarousel() {
               aria-label={`${index + 1} / ${HOME_BANNERS.length}`}
               aria-hidden={selected !== index}
             >
-              <article className="wiki-home-banner" data-align={banner.align} data-tone={banner.tone}>
+              <div className="wiki-home-banner">
                 <img
                   src={banner.image}
                   alt={wikiText(locale, `Ảnh tướng ${banner.character}`, `${banner.character} artwork`)}
@@ -67,20 +50,28 @@ export function HomeCarousel() {
                   loading={index === 0 ? "eager" : "lazy"}
                   draggable={false}
                 />
-                <div className="wiki-home-banner-copy">
-                  <span className="wiki-home-eyebrow">{copy.eyebrow}</span>
-                  <h2>
-                    {copy.title[0]}
-                    <span>{copy.title[1]}</span>
-                  </h2>
-                  <p>{copy.description}</p>
-                </div>
-              </article>
+              </div>
             </CarouselItem>
           )
         })}
       </CarouselContent>
 
+      <div className="wiki-home-cover-copy">
+        <h1>{wikiText(locale, "Thư viện Liên Quân", "Arena of Valor Library")}</h1>
+        <p>
+          {wikiText(
+            locale,
+            "Kỹ năng tướng, công thức trang bị và cập nhật theo mùa.",
+            "Hero abilities, item recipes and seasonal updates.",
+          )}
+        </p>
+        <Link className="wiki-cover-cta" to={href("/hero")}>
+          {wikiText(locale, "Khám phá tướng", "Explore heroes")} <WikiIcon name="arrow" size={17} />
+        </Link>
+      </div>
+      <div className="wiki-cover-caption" aria-hidden="true">
+        {HOME_BANNERS[selected]?.character}
+      </div>
       <div className="wiki-home-slide-controls">
         <div className="wiki-home-slide-dots" aria-label={wikiText(locale, "Chọn banner", "Choose a banner")}>
           {HOME_BANNERS.map((banner, index) => (

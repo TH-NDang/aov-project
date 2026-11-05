@@ -1,0 +1,28 @@
+.wiki-handbook h2 {
+  font: var(--wiki-type-section);
+}
+.wiki-skill-options small {
+  font: var(--wiki-type-meta);
+}
+.wiki-skill-options strong {
+  font: var(--wiki-type-category);
+}
+.wiki-skill-read header > div > span {
+  font: var(--wiki-type-meta);
+}
+.wiki-skill-read h3 {
+  font: var(--wiki-type-entry);
+}
+.wiki-skill-meta {
+  font: var(--wiki-type-meta);
+}
+.wiki-skill-prose {
+  font: var(--wiki-type-prose);
+  max-width: 68ch;
+}
+.wiki-facts > div {
+  font: var(--wiki-type-body);
+}
+.wiki-handbook-skins {
+  font: var(--wiki-type-body);
+}

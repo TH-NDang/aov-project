@@ -248,7 +248,7 @@ function MoreMenu({ onOpenContents }: { onOpenContents?: () => void }) {
 }
 
 function PanelTitle({ children }: { children: ReactNode }) {
-  return <h2 className="mb-2.5 font-heading text-base font-bold">{children}</h2>
+  return <h2 className="mb-2.5 type-section-title">{children}</h2>
 }
 
 function PanelText({ children }: { children: ReactNode }) {
@@ -297,7 +297,7 @@ function LibrarySearch({ mobile = false, scope }: { mobile?: boolean; scope: key
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         className={cn(
-          "h-full min-w-0 flex-1 bg-transparent text-[13px] text-white/85 outline-none placeholder:text-white/45",
+          "h-full min-w-0 flex-1 bg-transparent text-sm text-white/85 outline-none placeholder:text-white/45",
           mobile && "text-base",
         )}
       />
@@ -392,7 +392,7 @@ export function WikiHeader({
         </div>
 
         {pageTitle && variant !== "hero" && (
-          <h1 className="wiki-header-page-title absolute left-1/2 hidden max-w-[calc(100%-240px)] -translate-x-1/2 truncate font-[Cambria,serif] text-base font-bold text-gold max-[640px]:block">
+          <h1 className="wiki-header-page-title absolute left-1/2 hidden max-w-[calc(100%-240px)] -translate-x-1/2 truncate text-gold max-[640px]:block">
             {pageTitle.replace(/^Thư viện\s+/u, "")}
           </h1>
         )}

@@ -126,7 +126,7 @@ function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
           <span className="wiki-hero-card-name">
             {hero.name}
             {hero.unscopedBaseline && (
-              <span className="block text-[10px] leading-4 font-normal text-[#b6ad9b]">
+              <span className="block wiki-type-meta text-[#b6ad9b]">
                 {wikiText(locale, "Chưa rõ mốc", "Undated baseline")}
               </span>
             )}

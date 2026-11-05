@@ -145,9 +145,9 @@
   line-height: 1;
 }
 .wiki-hero-result-count {
+  font: var(--wiki-type-meta);
   margin-left: auto;
   color: #909cac;
-  font-size: 11px;
   white-space: nowrap;
 }
 .wiki-hero-grid {
@@ -231,11 +231,11 @@
   object-position: center;
 }
 .wiki-hero-card-placeholder {
+  font-family: var(--wiki-font-display);
   display: grid;
   height: 100%;
   place-items: center;
   color: #e5d2a4;
-  font-family: Cambria, "Times New Roman", serif;
   font-size: 44px;
 }
 .wiki-hero-card-body {
@@ -249,12 +249,10 @@
   gap: 12px;
 }
 .wiki-hero-card-name {
+  font: var(--wiki-type-entry);
   position: relative;
   z-index: 1;
   color: #e5c78d;
-  font-size: 15px;
-  line-height: 1.4;
-  font-weight: 700;
   overflow-wrap: anywhere;
 }
 .wiki-hero-card-roles {
@@ -265,11 +263,11 @@
   gap: 6px 10px;
 }
 .wiki-hero-card-roles > span {
+  font: var(--wiki-type-meta);
   display: inline-flex;
   align-items: center;
   gap: 5px;
   color: #a6b1be;
-  font-size: 11px;
 }
 .wiki-hero-card-roles .wiki-hero-glyph {
   width: 17px;
@@ -325,15 +323,12 @@
   text-align: center;
 }
 .wiki-hero-list-state h2 {
+  font: var(--wiki-type-section);
   color: #d5c49e;
-  font-family: Cambria, "Times New Roman", serif;
-  font-size: 21px;
-  font-weight: 700;
 }
 .wiki-hero-list-state p {
+  font: var(--wiki-type-body);
   max-width: 320px;
-  font-size: 12px;
-  line-height: 1.7;
 }
 .wiki-hero-list-state button {
   margin-top: 6px;
@@ -362,12 +357,6 @@
   .wiki-hero-card-body {
     min-height: 94px;
     gap: 8px;
-  }
-  .wiki-hero-card-name {
-    font-size: 13px;
-  }
-  .wiki-hero-card-roles > span {
-    font-size: 10px;
   }
   .wiki-hero-filter-label {
     width: 72px;
@@ -447,9 +436,6 @@
     height: 15px;
     flex-shrink: 0;
   }
-  .wiki-hero-result-count {
-    font-size: 10px;
-  }
   .wiki-hero-clear {
     width: 36px;
     justify-content: center;
@@ -482,7 +468,6 @@
   }
   .wiki-hero-card-name {
     min-height: 28px;
-    font-size: 10px;
     text-align: center;
   }
   .wiki-hero-card-roles {

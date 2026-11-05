@@ -1,7 +1,6 @@
 .wiki-library-navigation {
+  font: var(--wiki-type-body);
   color: #c0c6d0;
-  font-size: 12px;
-  line-height: 1.5;
 }
 
 .wiki-library-navigation svg {
@@ -35,6 +34,7 @@
 }
 
 .wiki-library-nav-link {
+  font: var(--wiki-type-body);
   position: relative;
   display: flex;
   min-height: 42px;

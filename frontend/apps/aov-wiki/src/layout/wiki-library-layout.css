@@ -46,12 +46,10 @@
 }
 
 .wiki-library-sidebar > h2 {
+  font: var(--wiki-type-section);
   padding: 14px 16px 12px;
   border-bottom: 1px solid #ffffff06;
   color: #c5c6ce;
-  font-family: Cambria, "Times New Roman", serif;
-  font-size: 20px;
-  font-weight: 700;
 }
 
 .wiki-library-main {
@@ -79,10 +77,8 @@
 }
 
 .wiki-library-sheet-heading [data-slot="sheet-title"] {
+  font: var(--wiki-type-section);
   color: #ddd5c3;
-  font-family: Cambria, "Times New Roman", serif;
-  font-size: 22px;
-  font-weight: 700;
 }
 
 .wiki-library-sheet-close {
@@ -146,4 +142,12 @@
   .wiki-library-main {
     padding: 8px 0 32px;
   }
+}
+
+.wiki-catalog-heading nav {
+  font: var(--wiki-type-meta);
+}
+
+.wiki-catalog-heading h1 {
+  font: var(--wiki-type-page);
 }

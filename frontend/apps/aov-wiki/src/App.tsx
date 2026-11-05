@@ -1,4 +1,3 @@
-import { PageBackdrop } from "./components/page-backdrop"
 import { WikiHeader } from "./components/wiki-header"
 import { WikiHome } from "./features/home/wiki-home"
 import { Link, Route, Routes, useLocation } from "react-router"
@@ -17,17 +16,11 @@ const SkinDirectory = lazy(() =>
 )
 const WarehousePage = lazy(() => import("./features/warehouse/warehouse-page"))
 
-const HOME_BACKGROUND = {
-  image: "/images/airi-thu-nguyen-ve-than-1-cover.jpg",
-  color: "#27283f",
-}
-
 function HomePage() {
   const { locale } = useWikiContext()
   return (
     <>
       <title>{wikiText(locale, "AOV WiKi — Khai mở tri thức", "AOV WiKi — Knowledge uncovered")}</title>
-      <PageBackdrop {...HOME_BACKGROUND} />
       <WikiHeader />
       <main id="main" tabIndex={-1} className="flex-1 outline-none" aria-label="Nội dung wiki">
         <WikiHome />

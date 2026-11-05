@@ -318,12 +318,11 @@ span.wiki-skin-select {
   margin-bottom: 4px;
 }
 .wiki-skin-group-heading h2 {
-  font-size: 16px;
-  font-weight: 700;
+  font: var(--wiki-type-section);
 }
 .wiki-skin-group-heading > span:last-child {
+  font: var(--wiki-type-meta);
   color: var(--muted-foreground);
-  font-size: 12px;
 }
 .wiki-skin-group-heading .wiki-skin-hero-head {
   height: 26px;
@@ -433,13 +432,11 @@ span.wiki-skin-select {
   padding: 14px 10px 10px;
 }
 .wiki-skin-card-name {
+  font: var(--wiki-type-entry);
   display: flex;
   min-height: 36px;
   align-items: end;
   color: #f1eadb;
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.35;
   overflow-wrap: anywhere;
   text-wrap: balance;
   text-shadow: 0 1px 8px #020a1480;
@@ -469,9 +466,7 @@ span.wiki-skin-select {
   font-size: 12px;
 }
 .wiki-skin-missing > span:first-child {
-  font:
-    700 48px/1 Cambria,
-    serif;
+  font: 700 48px/1 var(--wiki-font-display);
   opacity: 0.55;
 }
 .wiki-skin-skeleton {
@@ -494,14 +489,11 @@ span.wiki-skin-select {
   text-align: center;
 }
 .wiki-skin-state h2 {
+  font: var(--wiki-type-section);
   color: #d7c59f;
-  font:
-    700 23px/1.4 Cambria,
-    serif;
 }
 .wiki-skin-state p {
-  font-size: 12px;
-  line-height: 1.7;
+  font: var(--wiki-type-body);
 }
 .wiki-skin-state button,
 .wiki-skin-refresh-error button {
@@ -582,20 +574,18 @@ span.wiki-skin-select {
   padding: 56px 28px 32px;
 }
 .wiki-skin-preview-eyebrow {
+  font: var(--wiki-type-meta);
   color: #beaa83;
-  font-size: 10px;
   letter-spacing: 0.15em;
 }
 .wiki-skin-preview-info [data-slot="dialog-title"] {
+  font: var(--wiki-type-page);
   color: #f0dfb9;
-  font:
-    700 clamp(26px, 3vw, 34px)/1.25 Cambria,
-    serif;
   overflow-wrap: anywhere;
 }
 .wiki-skin-preview-info [data-slot="dialog-description"] {
+  font: var(--wiki-type-body);
   color: #91a3b7;
-  font-size: 13px;
 }
 .wiki-skin-preview-badge {
   display: flex;
@@ -656,7 +646,6 @@ span.wiki-skin-select {
   }
   .wiki-skin-card-name {
     min-height: 32px;
-    font-size: 12px;
   }
   .wiki-skin-search {
     width: 100%;
@@ -708,8 +697,6 @@ span.wiki-skin-select {
   }
   .wiki-skin-card-name {
     min-height: 28px;
-    font-size: 10px;
-    line-height: 1.35;
   }
   .wiki-skin-hero-head {
     width: 13px;
@@ -737,12 +724,6 @@ span.wiki-skin-select {
   .wiki-skin-preview-info {
     gap: 11px;
     padding: 20px;
-  }
-  .wiki-skin-preview-eyebrow {
-    font-size: 9px;
-  }
-  .wiki-skin-preview-info [data-slot="dialog-title"] {
-    font-size: 26px;
   }
   .wiki-skin-preview-hero {
     margin-top: 3px;

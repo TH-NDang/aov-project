@@ -38,10 +38,8 @@
   border-bottom: 1px solid #ffffff10;
 }
 .wiki-feedback-heading [data-slot="dialog-title"] {
+  font: var(--wiki-type-section);
   color: var(--gold);
-  font-family: Cambria, "Times New Roman", serif;
-  font-size: 25px;
-  font-weight: 700;
 }
 .wiki-feedback-close {
   display: grid;
@@ -165,10 +163,9 @@
   outline-offset: 3px;
 }
 .wiki-feedback-image-note {
+  font: var(--wiki-type-meta);
   margin-top: 10px;
   color: #8e99aa;
-  font-size: 11px;
-  line-height: 1.6;
 }
 .wiki-feedback-error {
   margin-top: 8px;
@@ -205,4 +202,11 @@
   .wiki-feedback-dialog[data-slot="dialog-content"] {
     padding: 20px;
   }
+}
+
+.wiki-feedback-note,
+.wiki-feedback-original,
+.wiki-feedback-status,
+.wiki-feedback-receipt p {
+  font: var(--wiki-type-body);
 }
