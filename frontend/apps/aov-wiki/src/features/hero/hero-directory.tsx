@@ -108,7 +108,7 @@ function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
           <span className="wiki-hero-card-name">
             {hero.name}
             {hero.unscopedBaseline && (
-              <span className="block wiki-type-meta text-[#b6ad9b]">
+              <span className="block wiki-type-meta text-muted-foreground">
                 {wikiText(locale, "Chưa rõ mốc", "Undated baseline")}
               </span>
             )}
@@ -123,10 +123,6 @@ function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
               ))}
             </span>
           )}
-          <span className="wiki-hero-card-divider" aria-hidden="true">
-            <i />◇<i />
-          </span>
-          {roles[0] && <HeroGlyph name={roles[0].glyph} className="wiki-hero-card-watermark" />}
         </div>
       </Link>
       {imageUrl && media?.currentVersion && (

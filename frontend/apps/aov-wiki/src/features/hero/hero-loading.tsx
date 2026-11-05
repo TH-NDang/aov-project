@@ -24,9 +24,6 @@ export function HeroGridSkeleton() {
           <div className="wiki-hero-card-body">
             <span className="wiki-hero-skeleton-name wiki-skeleton" />
             <span className="wiki-hero-skeleton-role wiki-skeleton" />
-            <span className="wiki-hero-card-divider">
-              <i />◇<i />
-            </span>
           </div>
         </div>
       ))}
