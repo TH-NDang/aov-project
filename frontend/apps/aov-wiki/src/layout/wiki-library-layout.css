@@ -131,7 +131,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (width < 640px) {
   .wiki-library-shell::before {
     top: 44px;
   }

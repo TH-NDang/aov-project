@@ -392,9 +392,9 @@ export function WikiHeader({
         </div>
 
         {pageTitle && variant !== "hero" && (
-          <span className="wiki-header-page-title absolute left-1/2 hidden max-w-[calc(100%-240px)] -translate-x-1/2 truncate font-[Cambria,serif] text-base font-bold text-gold max-[640px]:block">
+          <h1 className="wiki-header-page-title absolute left-1/2 hidden max-w-[calc(100%-240px)] -translate-x-1/2 truncate font-[Cambria,serif] text-base font-bold text-gold max-[640px]:block">
             {pageTitle.replace(/^Thư viện\s+/u, "")}
-          </span>
+          </h1>
         )}
 
         {variant !== "home" ? (

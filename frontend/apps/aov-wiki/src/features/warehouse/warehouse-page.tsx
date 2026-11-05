@@ -104,20 +104,6 @@ export default function WarehousePage() {
               <span className="wiki-warehouse-region"> · {scope.region}</span>
             </span>
           </header>
-          <nav className="wiki-warehouse-tabs" aria-label={text("Các mục trong kho trang bị", "Armory sections")}>
-            {WAREHOUSE_SECTIONS.map((tab) => (
-              <Link
-                key={tab.kind}
-                to={scope.href(`/warehouse?tab=${tab.kind}`)}
-                aria-current={kind === tab.kind ? "page" : undefined}
-                aria-label={scope.t(tab.kind)}
-                title={scope.t(tab.kind)}
-              >
-                <WarehouseIcon name={tab.kind} />
-                <span>{scope.t(tab.kind)}</span>
-              </Link>
-            ))}
-          </nav>
         </div>
         <div className="wiki-warehouse-toolbar">
           <WikiVersionPicker />

@@ -25,8 +25,7 @@ export function WarehouseRouteLoading() {
   return (
     <WikiLibraryLayout title={t("warehouse")} searchScope="warehouse">
       <div className="wiki-warehouse-page" aria-busy="true">
-        <div className="wiki-warehouse-loading-heading wiki-skeleton" />
-        <div className="wiki-warehouse-loading-tabs wiki-skeleton" />
+        <div className="wiki-warehouse-loading-heading wiki-skeleton max-[640px]:hidden" />
         <WarehouseSkeleton />
       </div>
     </WikiLibraryLayout>
