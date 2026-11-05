@@ -12,6 +12,19 @@ import { draftRepository } from "../src/app/drafts/draft-store"
 test("hero links restore a side panel beyond loaded rows, survive reload, and preserve state in full view and browser history", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing", pretendToBeVisual: true })
   const fixture = createHeroFixture(false, true)
+  const heroFlag = { field: "heroLevel", note: "Cần xác nhận cấp tướng." }
+  const skillFlag = { field: "hero.skills[1].description", note: "Ảnh thiếu phần cuối mô tả." }
+  const passive = fixture.content.SKILLS!.skills[0]
+  const heroReviewFlags = [heroFlag, skillFlag]
+  passive.effects = [{ effectType: "SOURCE_SNAPSHOT", metadata: { heroReviewFlags } }]
+  fixture.content.SKILLS!.skills.push({
+    ...passive,
+    skillKey: "skill-1-1",
+    displayOrder: 1,
+    kind: "ACTIVE",
+    translations: [{ locale: "vi-VN", name: "Kiếm khí", description: "Mô tả cần kiểm tra." }],
+    effects: [{ effectType: "SOURCE_SNAPSHOT", metadata: { heroReviewFlags, reviewFlags: [skillFlag] } }],
+  })
   const catalogItems = Array.from({ length: 129 }, (_, index) => ({
     id: `catalog-hero-${index}`,
     code: `catalog-hero-${index}`,
@@ -95,6 +108,40 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.equal(document.querySelectorAll("tbody tr").length, catalogItems.length)
     const catalogButton = document.querySelector('[aria-label="Xem tướng catalog-hero-0"]')
     assert.ok(catalogButton)
+    const warnings = '[aria-label="Xem 2 cảnh báo cần đối chiếu từ nguồn"]'
+    await click(warnings)
+    const reviewButton = () =>
+      [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+        (button) => button.textContent?.trim() === "Xử lý cảnh báo",
+      )!
+    await act(async () => reviewButton().click())
+    await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu cảnh báo nguồn"]'))
+    const warningRow = () =>
+      [...document.querySelectorAll('[aria-label="Đối chiếu cảnh báo nguồn"] li')].find((row) =>
+        row.textContent?.includes(skillFlag.note),
+      )!
+    await act(async () => warningRow().querySelector<HTMLButtonElement>("button")!.click())
+    assert.equal(fixture.writes.length, 0, "Review changes stay in the working copy until saved")
+    assert.ok(document.querySelector('[aria-label="Xem 1 cảnh báo cần đối chiếu từ nguồn"]'))
+    const saveButton = () =>
+      [...document.querySelectorAll<HTMLButtonElement>("button")].find(
+        (button) => button.textContent?.trim() === "Lưu phần này",
+      )!
+    await act(async () => saveButton().click())
+    await waitFor(() => !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
+    assert.equal(fixture.writes.at(-1)?.section, "SKILLS")
+    for (const skill of fixture.content.SKILLS!.skills) {
+      const flags = skill.effects[0].metadata.heroReviewFlags as Record<string, unknown>[]
+      assert.equal(flags.find((flag) => flag.note === skillFlag.note)?.reviewResolution, "RESOLVED")
+    }
+    await click('[aria-label="Xem 1 cảnh báo cần đối chiếu từ nguồn"]')
+    await act(async () => reviewButton().click())
+    await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu cảnh báo nguồn"]'))
+    assert.match(warningRow().textContent!, /Đã đối chiếu/)
+    await act(async () => warningRow().querySelector<HTMLButtonElement>("button")!.click())
+    await act(async () => saveButton().click())
+    await waitFor(() => !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
+    assert.ok(document.querySelector(warnings))
     await click('[aria-controls="hero-content-skills"]')
     assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "skills")
     assert.equal(
@@ -198,7 +245,11 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
       document.querySelector<HTMLSelectElement>('[aria-label="Phiên bản dữ liệu"]')!.value,
       "fixture-previous",
     )
-    assert.equal(fixture.writes.length, 0)
+    assert.equal(
+      fixture.writes.length,
+      2,
+      "Navigation and read-only revisions do not write beyond the two review saves",
+    )
   } finally {
     await act(async () => root.unmount())
     for (const key of Object.keys(draftRepository.store.getState().slots)) await draftRepository.remove(key)

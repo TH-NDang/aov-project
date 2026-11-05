@@ -8,6 +8,29 @@ import { createHeroFixture } from "./hero-workspace-data"
 // All requests are intercepted; this page never reads or writes real account data.
 const fixtureOptions = new URLSearchParams(location.search)
 const fixture = createHeroFixture(fixtureOptions.has("annotations"), fixtureOptions.has("history"))
+if (fixtureOptions.has("review")) {
+  const flag = {
+    field: "hero.skills[0].description",
+    note: "Ảnh nguồn thiếu phần cuối mô tả; cần chụp bổ sung trước khi xuất bản.",
+    status: "visible_text_preserved",
+  }
+  fixture.content.SKILLS!.skills[0].effects = [
+    {
+      effectType: "SOURCE_SNAPSHOT",
+      metadata: {
+        reviewFlags: [flag],
+        heroReviewFlags: [flag],
+        levelTable: {
+          column_labels: Array.from({ length: 6 }, (_, index) => `Lv ${index + 1}`),
+          rows: [
+            { label: "ST gốc", display_values: ["315", "355", "395", "435", "475", "515"] },
+            { label: "Hồi chiêu (giây)", display_values: ["11", "10.6", "10.2", "9.8", "9.4", "9"] },
+          ],
+        },
+      },
+    },
+  ]
+}
 window.fetch = fixture.fetcher
 const { verifySession } = await import("../../src/app/auth/session")
 await verifySession()

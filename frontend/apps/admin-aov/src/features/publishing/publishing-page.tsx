@@ -640,7 +640,19 @@ export function PublishingWorkspace({
                     </p>
                   </div>
                   {quickSwitcher}
-                  {preview && <HeroReviewNotice skills={preview.content.SKILLS?.skills ?? []} />}
+                  {preview && (
+                    <HeroReviewNotice
+                      skills={preview.content.SKILLS?.skills ?? []}
+                      onReview={
+                        writable && !editorDisabled
+                          ? () => {
+                              updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
+                              setEditing(true)
+                            }
+                          : undefined
+                      }
+                    />
+                  )}
                   {writable && (
                     <DraftStatusControl key={revision.id} draft={localDraft} disabled={busy} sections={dirty.size}>
                       <HeroDraftChanges

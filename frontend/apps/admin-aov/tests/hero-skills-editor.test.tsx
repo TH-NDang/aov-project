@@ -354,6 +354,15 @@ test("focused skill editing preserves forms, effects and translations while addi
       column_labels: ["Thông tin công bố"],
       rows: [{ label: "Hồi chiêu", display_values: ["7 - 0.5/cấp chiêu"] }],
     })
+    const beforeReview = structuredClone(current)
+    await act(async () => button("Đánh dấu đã đối chiếu").click())
+    assert.equal(
+      (current.skills[0].effects[0].metadata.reviewFlags as Record<string, unknown>[])[0].reviewResolution,
+      "RESOLVED",
+    )
+    assert.deepEqual(current.skills[0].translations, beforeReview.skills[0].translations)
+    await act(async () => button("Mở lại cảnh báo").click())
+    assert.deepEqual(current, beforeReview)
     await act(async () => setCurrent!({ skills: [], sources: original.sources }))
     assert.match(document.body.textContent!, /Chưa có nội dung kỹ năng/)
     await act(async () => button("Thêm kỹ năng").click())

@@ -14,6 +14,7 @@ import {
 import type { Hero } from "@/lib/api/types"
 import { AdminLiveRichTextField } from "../terminology/rich-text-field"
 import { HeroSkillsView, type HeroSkillsLayout } from "./hero-skills-view"
+import { HeroReviewEditor } from "./hero-review-editor"
 import { SkillSourceDetails } from "./hero-source-details"
 import { AssetPicker } from "./asset-picker"
 import { SkillArtwork } from "./skill-artwork"
@@ -112,153 +113,156 @@ export function HeroSkillsEditor({
     )
     .find((item) => item.key === selected?.skillKey)?.icon
   return (
-    <HeroSkillsView
-      skills={value.skills}
-      locale={locale}
-      heroId={heroId}
-      selectedSkillKey={selected?.skillKey}
-      onSkillChange={(key) => {
-        setSelectedIndex(value.skills.findIndex((skill) => skill.skillKey === key))
-        onSkillChange?.(key)
-      }}
-      layout={layout}
-      onLayoutChange={onLayoutChange}
-      locked={uploading}
-      action={
-        <div className="flex flex-wrap items-center gap-1">
-          <SectionSources
-            sectionLabel="Kỹ năng"
-            sources={value.sources}
-            onChange={(sources) => onChange({ ...value, sources })}
-            disabled={uploading}
-          />
-          <Button type="button" size="sm" variant="outline" onClick={add} disabled={uploading}>
-            <Plus className="size-4" /> Thêm kỹ năng
-          </Button>
-        </div>
-      }
-      activeEditor={
-        selected && (
-          <section key={index} className="@container min-w-0 space-y-5" aria-label="Kỹ năng đang chỉnh sửa">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <Sheet
-                  open={imageOpen}
-                  onOpenChange={(open) => {
-                    if (!uploading) setImageOpen(open)
-                  }}
-                >
-                  <SheetTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Chỉnh sửa ảnh kỹ năng"
-                      title="Chỉnh sửa ảnh kỹ năng"
-                      className="group relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <SkillArtwork skill={selected} heroId={heroId} className="size-14" />
-                      <span className="absolute -top-1 -right-1 grid size-6 place-items-center rounded-full bg-background text-foreground shadow-sm ring-1 ring-border group-hover:bg-muted">
-                        <Pencil aria-hidden className="size-3.5" />
-                      </span>
-                    </button>
-                  </SheetTrigger>
-                  <SheetContent showCloseButton={false} className="w-full gap-0 sm:max-w-lg">
-                    <SheetHeader className="relative shrink-0 pr-14">
-                      <SheetTitle>Chỉnh sửa ảnh kỹ năng</SheetTitle>
-                      <SheetDescription>
-                        {skillLabel(selected)}
-                        {translation?.name && ` · ${translation.name}`}
-                      </SheetDescription>
-                      <SheetClose asChild>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          className="absolute top-3 right-3"
-                          aria-label="Đóng chỉnh sửa ảnh"
-                          disabled={uploading}
-                        >
-                          <X className="size-4" />
-                        </Button>
-                      </SheetClose>
-                    </SheetHeader>
-                    <fieldset disabled={uploading} className="min-h-0 min-w-0 space-y-3 overflow-y-auto px-4 pb-4">
-                      <p className="type-meta">
-                        Chọn ảnh cho chiêu, sau đó bấm “Lưu phần này” trong trình sửa kỹ năng.
-                      </p>
-                      <AssetPicker
-                        semanticType="HERO_SKILL_ICON"
-                        value={selected.iconAssetId}
-                        onChange={(iconAssetId) => patch({ iconAssetId })}
-                        resourcePath={resourcePath}
-                        sourceUrl={resource?.sources.skills}
-                        onBusyChange={changeBusy}
-                        directUpload
+    <div className="space-y-4">
+      <HeroReviewEditor skills={value.skills} locale={locale} onChange={(skills) => onChange({ ...value, skills })} />
+      <HeroSkillsView
+        skills={value.skills}
+        locale={locale}
+        heroId={heroId}
+        selectedSkillKey={selected?.skillKey}
+        onSkillChange={(key) => {
+          setSelectedIndex(value.skills.findIndex((skill) => skill.skillKey === key))
+          onSkillChange?.(key)
+        }}
+        layout={layout}
+        onLayoutChange={onLayoutChange}
+        locked={uploading}
+        action={
+          <div className="flex flex-wrap items-center gap-1">
+            <SectionSources
+              sectionLabel="Kỹ năng"
+              sources={value.sources}
+              onChange={(sources) => onChange({ ...value, sources })}
+              disabled={uploading}
+            />
+            <Button type="button" size="sm" variant="outline" onClick={add} disabled={uploading}>
+              <Plus className="size-4" /> Thêm kỹ năng
+            </Button>
+          </div>
+        }
+        activeEditor={
+          selected && (
+            <section key={index} className="@container min-w-0 space-y-5" aria-label="Kỹ năng đang chỉnh sửa">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <Sheet
+                    open={imageOpen}
+                    onOpenChange={(open) => {
+                      if (!uploading) setImageOpen(open)
+                    }}
+                  >
+                    <SheetTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Chỉnh sửa ảnh kỹ năng"
+                        title="Chỉnh sửa ảnh kỹ năng"
+                        className="group relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <SkillArtwork skill={selected} heroId={heroId} className="size-14" />
+                        <span className="absolute -top-1 -right-1 grid size-6 place-items-center rounded-full bg-background text-foreground shadow-sm ring-1 ring-border group-hover:bg-muted">
+                          <Pencil aria-hidden className="size-3.5" />
+                        </span>
+                      </button>
+                    </SheetTrigger>
+                    <SheetContent showCloseButton={false} className="w-full gap-0 sm:max-w-lg">
+                      <SheetHeader className="relative shrink-0 pr-14">
+                        <SheetTitle>Chỉnh sửa ảnh kỹ năng</SheetTitle>
+                        <SheetDescription>
+                          {skillLabel(selected)}
+                          {translation?.name && ` · ${translation.name}`}
+                        </SheetDescription>
+                        <SheetClose asChild>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="absolute top-3 right-3"
+                            aria-label="Đóng chỉnh sửa ảnh"
+                            disabled={uploading}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </SheetClose>
+                      </SheetHeader>
+                      <fieldset disabled={uploading} className="min-h-0 min-w-0 space-y-3 overflow-y-auto px-4 pb-4">
+                        <p className="type-meta">
+                          Chọn ảnh cho chiêu, sau đó bấm “Lưu phần này” trong trình sửa kỹ năng.
+                        </p>
+                        <AssetPicker
+                          semanticType="HERO_SKILL_ICON"
+                          value={selected.iconAssetId}
+                          onChange={(iconAssetId) => patch({ iconAssetId })}
+                          resourcePath={resourcePath}
+                          sourceUrl={resource?.sources.skills}
+                          onBusyChange={changeBusy}
+                          directUpload
+                        />
+                      </fieldset>
+                    </SheetContent>
+                  </Sheet>
+                  <div className="min-w-0 flex-1">
+                    <label className="block">
+                      <span className="sr-only">Tên chiêu</span>
+                      <input
+                        className="type-section-title w-full rounded-md border-b border-input bg-transparent px-1 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        placeholder="Tên chiêu"
+                        required={!!translation}
+                        value={translation?.name ?? ""}
+                        onChange={(event) => updateText("name", event.target.value)}
                       />
-                    </fieldset>
-                  </SheetContent>
-                </Sheet>
-                <div className="min-w-0 flex-1">
-                  <label className="block">
-                    <span className="sr-only">Tên chiêu</span>
-                    <input
-                      className="type-section-title w-full rounded-md border-b border-input bg-transparent px-1 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      placeholder="Tên chiêu"
-                      required={!!translation}
-                      value={translation?.name ?? ""}
-                      onChange={(event) => updateText("name", event.target.value)}
-                    />
-                  </label>
-                  <div className="mt-1 flex flex-wrap gap-1.5">
-                    <Badge variant="secondary">{skillLabel(selected)}</Badge>
-                    {!translation && <span className="type-meta">Chưa có bản dịch {locale}</span>}
-                    {selected.formKey && (
-                      <Badge variant="outline" className="max-w-full break-all whitespace-normal">
-                        {selected.formKey}
-                      </Badge>
-                    )}
-                    {!selected.formKey && skillVariantLabel(selected, value.skills) && (
-                      <Badge variant="outline">{skillVariantLabel(selected, value.skills)}</Badge>
-                    )}
+                    </label>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      <Badge variant="secondary">{skillLabel(selected)}</Badge>
+                      {!translation && <span className="type-meta">Chưa có bản dịch {locale}</span>}
+                      {selected.formKey && (
+                        <Badge variant="outline" className="max-w-full break-all whitespace-normal">
+                          {selected.formKey}
+                        </Badge>
+                      )}
+                      {!selected.formKey && skillVariantLabel(selected, value.skills) && (
+                        <Badge variant="outline">{skillVariantLabel(selected, value.skills)}</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
+                <SkillSettings
+                  skill={selected}
+                  locale={locale}
+                  disabled={uploading}
+                  onApply={(settings) => {
+                    patch(settings)
+                    if (settings.skillKey !== selected.skillKey) onSkillChange?.(settings.skillKey)
+                  }}
+                  onRemoveTranslation={() =>
+                    patch({ translations: selected.translations.filter((text) => text.locale !== locale) })
+                  }
+                  onRemove={() => {
+                    const remaining = value.skills.filter((_, position) => position !== index)
+                    const next = Math.max(0, index - 1)
+                    setSelectedIndex(next)
+                    onSkillChange?.(remaining[next]?.skillKey ?? "")
+                    onChange({ ...value, skills: remaining })
+                  }}
+                />
               </div>
-              <SkillSettings
-                skill={selected}
+              <AdminLiveRichTextField
+                key={locale}
+                label="Mô tả"
                 locale={locale}
-                disabled={uploading}
-                onApply={(settings) => {
-                  patch(settings)
-                  if (settings.skillKey !== selected.skillKey) onSkillChange?.(settings.skillKey)
-                }}
-                onRemoveTranslation={() =>
-                  patch({ translations: selected.translations.filter((text) => text.locale !== locale) })
-                }
-                onRemove={() => {
-                  const remaining = value.skills.filter((_, position) => position !== index)
-                  const next = Math.max(0, index - 1)
-                  setSelectedIndex(next)
-                  onSkillChange?.(remaining[next]?.skillKey ?? "")
-                  onChange({ ...value, skills: remaining })
-                }}
+                required={!!translation}
+                value={translation?.description ?? ""}
+                onChange={(text) => updateText("description", text)}
               />
-            </div>
-            <AdminLiveRichTextField
-              key={locale}
-              label="Mô tả"
-              locale={locale}
-              required={!!translation}
-              value={translation?.description ?? ""}
-              onChange={(text) => updateText("description", text)}
-            />
-            <SkillSourceDetails
-              skill={selected}
-              collapseSources
-              locale={locale}
-              onChange={(effects) => patch({ effects })}
-            />
-          </section>
-        )
-      }
-    />
+              <SkillSourceDetails
+                skill={selected}
+                collapseSources
+                locale={locale}
+                onChange={(effects) => patch({ effects })}
+              />
+            </section>
+          )
+        }
+      />
+    </div>
   )
 }

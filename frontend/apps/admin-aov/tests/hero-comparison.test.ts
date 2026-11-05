@@ -8,7 +8,12 @@ import {
   comparisonImages,
 } from "../src/features/publishing/hero-comparison"
 import { captureDataset, mergeResourceArtwork } from "../src/features/publishing/hero-source-dataset"
-import { sourceHttpUrl, sourceReviewNotes } from "../src/features/publishing/hero-source-review"
+import {
+  heroReviewItems,
+  setHeroReviewResolved,
+  sourceHttpUrl,
+  sourceReviewNotes,
+} from "../src/features/publishing/hero-source-review"
 
 test("Vietnamese differences reconstruct both texts and do not silently drop words or numbers", () => {
   const before = "Sát thương 120 (+50% công vật lý).\nLàm chậm 1 giây."
@@ -347,6 +352,61 @@ test("skill warning matching handles both array paths and named source slots wit
   assert.deepEqual(skills[0].effects[0].metadata.reviewFlags, [passive])
   assert.deepEqual(skills[1].effects[0].metadata.reviewFlags, [bracket, dotted])
   assert.equal(skills[1].effects[0].metadata.completeness, "NEEDS_REVIEW")
+})
+
+test("review resolution clears all copies of one warning, preserves evidence and can be reopened", () => {
+  const flag = { field: "hero.skills[1].description", note: "Clipped description", status: "visible_text_preserved" }
+  const other = { ...flag, field: "hero.skills[2].description" }
+  const skills: import("../src/features/publishing/types").Skill[] = [1, 2].map((index) => ({
+    skillKey: `skill-${index}-1`,
+    kind: "ACTIVE",
+    displayOrder: index,
+    formKey: null,
+    iconAssetId: null,
+    translations: [{ locale: "vi-VN", name: "Skill", description: "Recorded description" }],
+    effects: [
+      {
+        effectType: "SOURCE_SNAPSHOT",
+        metadata: {
+          [index === 1 ? "review_flags" : "reviewFlags"]: [index === 1 ? flag : other],
+          heroReviewFlags: [flag, other],
+          sourceImage: "source.png",
+        },
+      },
+      { effectType: "DAMAGE", metadata: { value: 100 } },
+    ],
+  }))
+  const before = structuredClone(skills)
+  const selected = heroReviewItems(skills).find((item) => item.skillKey === "skill-1-1")!
+  const resolved = setHeroReviewResolved(skills, selected, true)
+  assert.deepEqual(skills, before)
+  assert.equal(heroReviewItems(resolved).length, 1)
+  assert.equal(heroReviewItems(resolved)[0].skillKey, "skill-2-1")
+  for (const skill of resolved) {
+    const flags = skill.effects[0].metadata.heroReviewFlags as Record<string, unknown>[]
+    assert.deepEqual(flags[0], { ...flag, reviewResolution: "RESOLVED" })
+    assert.deepEqual(flags[1], other)
+    assert.deepEqual(skill.effects[1], before[0].effects[1])
+    assert.equal(skill.effects[0].metadata.sourceImage, "source.png")
+  }
+  assert.deepEqual(sourceReviewNotes(resolved[0].effects[0].metadata.review_flags), [])
+  assert.equal(heroReviewItems(resolved, true).length, 2)
+  assert.deepEqual(setHeroReviewResolved(resolved, selected, false), before)
+})
+
+test("unscoped warnings with identical wording remain independent for each skill", () => {
+  const skills = ["skill-1", "skill-2"].map((skillKey) => ({
+    skillKey,
+    kind: "ACTIVE" as const,
+    displayOrder: 0,
+    formKey: null,
+    iconAssetId: null,
+    translations: [],
+    effects: [{ effectType: "SOURCE_SNAPSHOT", metadata: { reviewFlags: [{ note: "Check source" }] } }],
+  }))
+  const resolved = setHeroReviewResolved(skills, heroReviewItems(skills)[0], true)
+  assert.equal(heroReviewItems(resolved)[0].skillKey, "skill-2")
+  assert.equal(heroReviewItems(resolved).length, 1)
 })
 
 test("skill source details render a safe source link and keep clipped text in hero warnings", async () => {

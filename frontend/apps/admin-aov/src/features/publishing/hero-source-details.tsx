@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { AdminEntityText } from "../terminology/catalog"
 import type { Skill } from "./types"
-import { sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
+import { heroReviewItems, sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
 import { hasRankFormula, skillSourceTable } from "./skill-rank-values"
 import { SkillTagsEditor, SkillTableEditor } from "./skill-source-editor"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
@@ -14,8 +14,6 @@ const record = (value: unknown): RecordValue | null =>
   value !== null && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : null
 const strings = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []
-const records = (value: unknown): RecordValue[] =>
-  Array.isArray(value) ? value.map(record).filter((item): item is RecordValue => item !== null) : []
 const text = (value: unknown): string => (typeof value === "string" ? value : "")
 
 function snapshot(skill: Skill) {
@@ -23,9 +21,7 @@ function snapshot(skill: Skill) {
 }
 
 export function heroReviewNotes(skills: Skill[]): string[] {
-  return sourceReviewNotes(
-    skills.flatMap((skill) => [...records(snapshot(skill)?.heroReviewFlags), ...records(snapshot(skill)?.reviewFlags)]),
-  )
+  return [...new Set(heroReviewItems(skills).map((item) => item.note))]
 }
 
 export function SkillSourceDetails({
@@ -58,7 +54,7 @@ export function SkillSourceDetails({
   const energyText = text(energy?.display) || (typeof energy?.value === "number" ? `Tiêu hao: ${energy.value}` : "")
   const { columns, rows, derived } = skillSourceTable(skill)
   const cooldownText = derived && hasRankFormula(rawCooldownText) ? "" : rawCooldownText
-  const notes = sourceReviewNotes(source?.reviewFlags)
+  const notes = sourceReviewNotes(source?.reviewFlags ?? source?.review_flags)
   const sourceImageUrl = sourceHttpUrl(source?.sourceImageUrl)
   const tags = strings(source?.tags)
   const provenance = (
