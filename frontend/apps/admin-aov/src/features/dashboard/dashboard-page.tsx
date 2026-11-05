@@ -1,8 +1,8 @@
-import { useMemo } from "react"
+import { useMemo, type ComponentType } from "react"
 import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
-import { ArrowUpRight, CalendarClock, ChevronRight, ScrollText, ShieldAlert, type LucideIcon } from "lucide-react"
+import { ArrowUpRight, CalendarClock, ChevronRight, ScrollText, ShieldAlert } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@aov/ui/components/card"
 import { ChartContainer, ChartTooltip, type ChartConfig } from "@aov/ui/components/chart"
@@ -42,7 +42,7 @@ interface StatTile {
   label: string
   value: number | undefined
   hint: string
-  icon: LucideIcon
+  icon: ComponentType<{ className?: string }>
   to: string
 }
 
@@ -56,7 +56,7 @@ interface TodoRow {
   title: string
   description: string
   count: number
-  icon: LucideIcon
+  icon: ComponentType<{ className?: string }>
   to: string
 }
 
@@ -241,7 +241,7 @@ export function DashboardPage() {
               <CardHeader className="gap-1 px-3">
                 <CardDescription className="text-xs">{stat.label}</CardDescription>
                 <CardAction>
-                  <stat.icon className="size-4 text-muted-foreground" />
+                  <stat.icon aria-hidden className="size-5 shrink-0" />
                 </CardAction>
                 <CardTitle className="text-xl tabular-nums">
                   {stat.value === undefined ? <Skeleton className="h-7 w-14" /> : formatNumber(stat.value)}

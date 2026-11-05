@@ -6,7 +6,7 @@ import { X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@aov/ui/components/hover-card"
 import { cn } from "@aov/ui/lib/utils"
-import { MEDIA_NAV, NAV_ITEMS } from "@/app/nav"
+import { pageNavIcon } from "@/app/nav"
 import { NavIcon } from "@/app/nav-icon"
 import { PageTabPreviewImage } from "./page-tab-preview"
 
@@ -15,17 +15,10 @@ export interface TabPresentation {
   to: string
   label: ReactNode
 }
-const TAB_NAV = [...MEDIA_NAV, ...NAV_ITEMS]
-
 function TabLabel({ tab }: { tab: TabPresentation }) {
-  const item = TAB_NAV.find((item) =>
-    (item.activePaths ?? [item.to]).some(
-      (path) => tab.path === path || (path !== "/" && tab.path.startsWith(path + "/")),
-    ),
-  ) ?? { icon: "page" as const }
   return (
     <>
-      <NavIcon item={item} className="size-4" />
+      <NavIcon item={{ icon: pageNavIcon(tab.to) }} className="size-5" />
       <span className="min-w-0 truncate">{tab.label}</span>
     </>
   )

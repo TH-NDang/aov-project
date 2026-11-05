@@ -73,7 +73,7 @@ function NavLink({ item, counts, nested = false }: { item: NavItem; counts: Atte
     <SidebarMenuItem>
       <SidebarMenuButton
         asChild
-        className="h-8 gap-2 group-data-[collapsible=icon]:h-8! group-data-[collapsible=icon]:p-1! [&>svg]:size-5 data-[active=true]:[&>svg]:text-[var(--aov-icon-accent,#b28b44)]"
+        className="h-8 gap-2 group-data-[collapsible=icon]:h-8! group-data-[collapsible=icon]:p-1! [&>svg]:size-6"
         isActive={active}
         tooltip={item.title}
       >
@@ -121,7 +121,7 @@ function NavigationSection({ section, counts }: { section: NavSection; counts: A
     <Collapsible asChild open={open} onOpenChange={setOpen} className="group/nav-section">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton className="h-8 gap-2 font-medium [&>svg:first-child]:size-5" tooltip={section.title}>
+          <SidebarMenuButton className="h-8 gap-2 font-medium [&>svg:first-child]:size-6" tooltip={section.title}>
             <NavIcon item={section} />
             <span>{section.title}</span>
             <ChevronRight className="ml-auto transition-transform duration-200 ease-out group-data-[state=open]/nav-section:rotate-90 motion-reduce:transition-none" />

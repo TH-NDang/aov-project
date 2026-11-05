@@ -16,7 +16,7 @@ const NAV_NAMES = {
 } as const
 
 export function LibraryNavIcon({ name }: { name: keyof typeof NAV_NAMES }) {
-  return <WikiIcon name={NAV_NAMES[name]} />
+  return <WikiIcon name={NAV_NAMES[name]} size={26} />
 }
 const UPCOMING = [
   { label: "map", icon: "map" },

@@ -1,4 +1,9 @@
 import type { ReactNode } from "react"
+import { catalogIcons } from "@aov/ui/components/catalog-icons"
+
+const { heroes: hero, skins: skin, ...warehouseIcons } = catalogIcons
+const sectionIcons = { hero, skin, ...warehouseIcons }
+type SectionIcon = keyof typeof sectionIcons
 
 const PATHS = {
   sort: <path d="M6 4v15m-3-3 3 3 3-3M12 5h9m-9 6h6m-6 6h3" />,
@@ -34,37 +39,6 @@ const PATHS = {
       <circle cx="18" cy="19" r="2" />
     </>
   ),
-  hero: (
-    <>
-      <path d="m12 3 7 6-2 10-5 3-5-3L5 9Z" />
-      <path d="m8 10 4 2 4-2m-4-7v9m-3 2 1 3m5-3-1 3" />
-    </>
-  ),
-  skin: (
-    <>
-      <path d="M3 6c4 2 5 0 9-1 4 1 5 3 9 1l-2 10-7 5-7-5Z" />
-      <path d="m6 10 4 1-1 2-3-1m12-2-4 1 1 2 3-1m-8 4h4" />
-    </>
-  ),
-  items: (
-    <>
-      <path d="m5 3 13 13-2 2L3 5V3Zm10 10 5 5m-7-3 5 5m-2-2 3 3" />
-      <path d="m19 3-6 6m-4 4-6 6m2-4 4 4" />
-    </>
-  ),
-  enchantments: (
-    <>
-      <path d="m12 2 8 8-8 12-8-12Z" />
-      <path d="m12 6 4 4-4 7-4-7Zm-8 4h4m8 0h4M12 2v4" />
-    </>
-  ),
-  arcana: (
-    <>
-      <path d="m12 3 8 5v8l-8 5-8-5V8Z" />
-      <path d="m12 7 4 5-4 5-4-5Zm-8 1 4 4m8 0 4-4m-8 9v4" />
-    </>
-  ),
-  spells: <path d="m14 2-9 12h6l-1 8 9-13h-6Z" />,
   collection: (
     <>
       <rect x="6" y="6" width="13" height="16" rx="2" />
@@ -151,8 +125,17 @@ const PATHS = {
     </>
   ),
 } satisfies Record<string, ReactNode>
-export type WikiIconName = keyof typeof PATHS
+export type WikiIconName = keyof typeof PATHS | SectionIcon
+
+function isSectionIcon(name: WikiIconName): name is SectionIcon {
+  return name in sectionIcons
+}
+
 export function WikiIcon({ name, size = 20, className }: { name: WikiIconName; size?: number; className?: string }) {
+  if (isSectionIcon(name)) {
+    const Icon = sectionIcons[name]
+    return <Icon size={size} className={className} />
+  }
   return (
     <svg
       className={className}

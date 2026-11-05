@@ -8,70 +8,43 @@
 }
 .wiki-index ul {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px 8px;
   margin-top: 12px;
-}
-.wiki-index li {
+  padding-top: 6px;
   border-top: 1px solid var(--wiki-line);
 }
 .wiki-index a {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  min-height: 54px;
-  padding: 10px 3px;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 8px 3px;
+  border-radius: 8px;
+  text-align: center;
   text-decoration: none;
 }
 .wiki-index-icon {
-  display: grid;
   flex: none;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  background: color-mix(in srgb, var(--category-tone, var(--gold)) 10%, var(--wiki-panel));
-  color: var(--category-tone, var(--gold));
-  border-radius: 11px;
-}
-.wiki-index a[data-section="skins"] {
-  --category-tone: #c3ade6;
-}
-.wiki-index a[data-section="enchantments"] {
-  --category-tone: #9dceb9;
-}
-.wiki-index a[data-section="arcana"] {
-  --category-tone: #caa0cf;
-}
-.wiki-index a[data-section="spells"] {
-  --category-tone: #9abfda;
+  width: 54px;
+  height: 54px;
 }
 .wiki-index a strong {
   font: var(--wiki-type-category);
   color: var(--wiki-text);
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
-.wiki-index-arrow {
-  flex: none;
-  margin-left: auto;
-  color: var(--wiki-muted);
+.wiki-index a:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--gold) 6%, transparent);
 }
-.wiki-index a:is(:hover, :focus-visible) :is(strong, .wiki-index-arrow) {
+.wiki-index a:is(:hover, :focus-visible) strong {
   color: var(--gold);
 }
 @media (max-width: 540px) {
-  .wiki-index ul {
-    column-gap: 12px;
-  }
-  .wiki-index a {
-    gap: 7px;
-    min-height: 48px;
-  }
-  .wiki-index-arrow {
-    display: none;
-  }
-
   .wiki-index-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 46px;
+    height: 46px;
   }
 }

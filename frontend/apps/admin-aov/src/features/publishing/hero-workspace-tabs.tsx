@@ -1,16 +1,7 @@
 import type { ComponentType } from "react"
-import {
-  BookOpen,
-  Check,
-  GitCompareArrows,
-  ImageIcon,
-  Languages,
-  Layers,
-  MoreHorizontal,
-  Sparkles,
-  Swords,
-} from "lucide-react"
+import { BookOpen, Check, GitCompareArrows, ImageIcon, Languages, Layers, MoreHorizontal, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { catalogIcons } from "@aov/ui/components/catalog-icons"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +17,7 @@ type OtherView = Exclude<HeroWorkspaceView, "overview">
 const contentTabs: readonly [HeroContentTab, Icon, string][] = [
   ["overview", BookOpen, "Tổng quan"],
   ["skills", Swords, "Kỹ năng"],
-  ["skins", Sparkles, "Trang phục"],
+  ["skins", catalogIcons.skins, "Trang phục"],
   ["media", ImageIcon, "Ảnh"],
 ]
 const otherViews: readonly [OtherView, Icon, string][] = [

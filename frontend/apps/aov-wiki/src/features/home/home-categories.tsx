@@ -12,12 +12,9 @@ export function HomeCategories() {
       <ul>
         {wikiSections.map(({ key, icon, path }) => (
           <li key={key}>
-            <Link to={href(path)} data-section={key}>
-              <span className="wiki-index-icon">
-                <WikiIcon name={icon} size={22} />
-              </span>
+            <Link to={href(path)}>
+              <WikiIcon name={icon} size={54} className="wiki-index-icon" />
               <strong>{t(key)}</strong>
-              <WikiIcon name="chevronRight" size={15} className="wiki-index-arrow" />
             </Link>
           </li>
         ))}

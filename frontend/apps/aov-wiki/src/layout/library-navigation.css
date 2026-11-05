@@ -46,6 +46,10 @@
   color: #acb5c3;
   text-decoration: none;
 }
+.wiki-library-nav-link > svg {
+  width: 26px;
+  height: 26px;
+}
 .wiki-library-nav-link:hover {
   background: #ffffff05;
   color: #e8d9b8;

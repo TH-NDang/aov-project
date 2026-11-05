@@ -6,24 +6,20 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Gem,
   Globe2,
-  Hexagon,
   Languages,
   Layers3,
   Search,
-  Shield,
   Sparkles,
-  Swords,
   UserRound,
   Users,
   X,
-  Zap,
 } from "lucide-react"
 import { useId, useMemo, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { SearchField } from "@/components/search-field"
 import { Button } from "@aov/ui/components/button"
+import { catalogIcons } from "@aov/ui/components/catalog-icons"
 import {
   resolveEntityRoute,
   foldEntitySearch,
@@ -38,12 +34,12 @@ import { Skeleton } from "@aov/ui/components/skeleton"
 const kinds = entityKindLabels
 const fold = foldEntitySearch
 const kindIcons = {
-  hero: Swords,
+  hero: catalogIcons.heroes,
   skill: Sparkles,
-  item: Shield,
-  enchantment: Hexagon,
-  arcana: Gem,
-  spell: Zap,
+  item: catalogIcons.items,
+  enchantment: catalogIcons.enchantments,
+  arcana: catalogIcons.arcana,
+  spell: catalogIcons.spells,
   team: Users,
   player: UserRound,
   country: Globe2,

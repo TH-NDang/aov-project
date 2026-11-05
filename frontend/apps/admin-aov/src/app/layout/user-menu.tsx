@@ -1,5 +1,6 @@
 import { useRef, useState } from "react"
-import { ChevronsUpDown, Keyboard, LogOut, Monitor, Moon, Sun, UserRound } from "lucide-react"
+import { ChevronsUpDown, Keyboard, LogOut, Monitor, Moon, Sun } from "lucide-react"
+import { AovNavIcon } from "@/app/aov-nav-icon"
 import { useNavigate } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { selfProfile, userKeys } from "@/features/users/user-api"
@@ -72,7 +73,7 @@ export function UserMenu() {
                 if (isMobile) setOpenMobile(false)
               }}
             >
-              <UserRound />
+              <AovNavIcon name="profile" className="size-5" />
               Hồ sơ của tôi
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setHotkeyHelpOpen(true)} aria-keyshortcuts="Control+/ Meta+/">

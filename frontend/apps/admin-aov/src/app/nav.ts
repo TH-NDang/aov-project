@@ -154,7 +154,7 @@ export const NAV_GROUPS: NavGroup[] = [
         items: [
           {
             title: "Tổ chức",
-            icon: "teams",
+            icon: "organizations",
             to: "/organizations",
             description: "Đơn vị tổ chức và thương hiệu",
           },
@@ -178,7 +178,7 @@ export const NAV_GROUPS: NavGroup[] = [
           },
           {
             title: "Yêu cầu & kiểm duyệt",
-            icon: "users",
+            icon: "moderation",
             to: "/page-requests",
             description: "Đại diện trang và báo cáo cộng đồng",
           },
@@ -244,4 +244,24 @@ export function activeNavItem(pathname: string, items: NavItem[] = NAV_ITEMS) {
         length = path.length
       }
   return active
+}
+
+const profilePageIcons: Record<string, AovNavIconName> = {
+  "/organizations": "organizations",
+  "/circuits": "circuits",
+  "/teams": "teams",
+  "/players": "players",
+  "/coaches": "coaches",
+  "/broadcast": "broadcast",
+}
+
+export function pageNavIcon(location: string): AovNavIconName {
+  const { pathname, searchParams } = new URL(location, "http://local")
+  if (pathname === "/hero/media") {
+    const media = MEDIA_NAV.find(
+      (item) => new URL(item.to, "http://local").searchParams.get("tab") === searchParams.get("tab"),
+    )
+    return media?.icon ?? "portrait"
+  }
+  return profilePageIcons[pathname] ?? activeNavItem(pathname)?.icon ?? "page"
 }

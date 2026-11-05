@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowRight, Building2, CheckCircle2, FileText, Plus, Search, ShieldCheck, Users } from "lucide-react"
+import { ArrowRight, CheckCircle2, FileText, Plus, Search, ShieldCheck } from "lucide-react"
 import { profileKindLabels, type ProfileKind } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
@@ -9,6 +9,7 @@ import { Page, PageHeader } from "@/components/page-header"
 import { AccessGate, type Access } from "@/features/esports/pages/esports-shell"
 import { pageApi, pageError, pageKeys } from "./page-api"
 import { CreateProfileSheet } from "./create-profile-sheet"
+import { ProfileTypeIcon } from "./profile-icons"
 
 const paths: Partial<Record<ProfileKind, string>> = {
   ORGANIZATION: "/organizations",
@@ -47,7 +48,10 @@ function Directory({ kind, access }: { kind: ProfileKind; access: Access }) {
         <span className="type-label mr-2 text-muted-foreground">DANH BẠ THI ĐẤU</span>
         {(Object.keys(paths) as ProfileKind[]).map((type) => (
           <Button key={type} variant={kind === type ? "secondary" : "ghost"} asChild>
-            <Link to={profileDirectoryPath(type)}>{profileKindLabels[type]}</Link>
+            <Link to={profileDirectoryPath(type)}>
+              <ProfileTypeIcon kind={type} className="size-5 shrink-0" />
+              {profileKindLabels[type]}
+            </Link>
           </Button>
         ))}
       </div>
@@ -78,7 +82,7 @@ function Directory({ kind, access }: { kind: ProfileKind; access: Access }) {
         ) : !query.data.items.length ? (
           <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-14 text-center">
             <div className="rounded-2xl border bg-muted p-4">
-              <Building2 className="size-8 text-muted-foreground" />
+              <ProfileTypeIcon kind={kind} className="size-8 text-muted-foreground" />
             </div>
             <h2 className="type-section-title">
               {search ? "Không tìm thấy hồ sơ" : `Bắt đầu với ${label.toLowerCase()} đầu tiên`}
@@ -123,7 +127,7 @@ function Directory({ kind, access }: { kind: ProfileKind; access: Access }) {
                   <img src={item.content.avatarUrl} alt="" className="size-12 rounded-lg border object-contain" />
                 ) : (
                   <div className="flex size-12 items-center justify-center rounded-lg border bg-muted">
-                    <Users className="size-5 text-muted-foreground" />
+                    <ProfileTypeIcon kind={item.kind} className="size-5 text-muted-foreground" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
