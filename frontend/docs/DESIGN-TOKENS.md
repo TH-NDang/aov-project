@@ -31,6 +31,17 @@ Wiki, Stream và Admin là một họ sản phẩm nên dùng chung màu, phông
 - Thẻ dùng màu nền `--aov-surface`, không thêm viền và bóng. Trạng thái rê chuột dùng `--aov-raised`.
 - Chiều rộng nội dung tối đa `--aov-page-max` (1280px), lề `--aov-gutter`.
 
+## Minh họa
+
+Hình vẽ dùng chung nằm trong hai sprite ở `packages/ui/src/assets`, mỗi hình khung 64×64, cùng một bộ màu và viền tối để nhìn liền nhau:
+
+- `nav-art.svg`: mục điều hướng và các nhóm nội dung, dùng qua `navArtIcons`.
+- `gameplay-art.svg`: chỉ số và thuật ngữ trong game, dùng qua `gameplayIcons`. `termIcon(id)` chọn hình cho thuật ngữ chưa có ảnh riêng.
+
+Còn trống hình thì thêm symbol vào sprite rồi khai báo trong file `*-icons.tsx` tương ứng, không nhúng SVG rời vào từng trang. Chỉ số trang bị lấy icon từ `ITEM_STATS` trong `lib/item-description.ts`.
+
+Trạng thái trống và không tìm thấy dùng linh vật: Wiki gắn class `wiki-mascot-state`, Stream dùng `.hub-state`.
+
 ## Admin
 
 Thanh điều hướng nằm bên trái. Để đổi lại bên phải, thêm `side="right"` cho `Sidebar` trong `app-sidebar.tsx` và đặt
