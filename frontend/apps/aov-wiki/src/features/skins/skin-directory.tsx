@@ -1,5 +1,5 @@
 import { FeedbackDialog } from "../../layout/feedback-dialog"
-import { useMemo, useRef, useState, type RefObject } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import {
@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
 } from "@aov/ui/components/public-overlay"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
+import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { skinCatalogQuery, type SkinBadge, type SkinEntry, type SkinFilterOption } from "./skin-api"
 import { SkinGridSkeleton } from "./skin-loading"
@@ -24,6 +25,8 @@ import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useDragScroll } from "../hero/use-drag-scroll"
 import { groupSkins, type HeroSort, type SkinSort } from "./skin-groups"
 import { normalizedHeroSearch } from "../hero/hero-classifications"
+
+const skinId = (skin: SkinEntry) => `${skin.heroId}:${skin.skinKey}`
 
 function SkinBadgeImage({ badge }: { badge?: SkinBadge }) {
   const [failed, setFailed] = useState(false)
@@ -103,6 +106,7 @@ function SkinCard({ skin, onOpen }: { skin: SkinEntry; onOpen: (skin: SkinEntry,
     <button
       type="button"
       className="wiki-skin-card"
+      data-skin-card={skinId(skin)}
       aria-label={`${wikiText(locale, "Xem", "View")} ${skin.name} — ${skin.heroName}`}
       onClick={(event) => onOpen(skin, event.currentTarget)}
     >
@@ -147,19 +151,67 @@ function HeroSkinRow({
   )
 }
 
+/** The image the viewer opens first; fetched ahead of time so stepping through skins does not flash. */
+function previewSource(skin: SkinEntry) {
+  return skin.art?.currentVersion?.url ?? skin.portrait?.currentVersion?.url ?? skin.head?.currentVersion?.url
+}
+
 function SkinPreview({
   skin,
+  groups,
   open,
   onClose,
-  returnFocus,
+  onMove,
 }: {
   skin: SkinEntry | null
+  groups: SkinEntry[][]
   open: boolean
   onClose: () => void
-  returnFocus: RefObject<HTMLButtonElement | null>
+  onMove: (skin: SkinEntry) => void
 }) {
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const queue = useMemo(() => groups.flat(), [groups])
+  const index = skin ? queue.findIndex((entry) => skinId(entry) === skinId(skin)) : -1
+  const canStep = index >= 0 && queue.length > 1
+  const heroIndex = skin ? groups.findIndex((group) => group[0].heroId === skin.heroId) : -1
+  const heroSkins = groups[heroIndex] ?? []
+  const previousHero = heroIndex >= 0 && groups.length > 1 ? groups.at(heroIndex - 1)?.[0] : undefined
+  const nextHero = heroIndex >= 0 && groups.length > 1 ? groups[(heroIndex + 1) % groups.length][0] : undefined
+  const activeThumb = useRef<HTMLButtonElement>(null)
+  const swipe = useRef<{ x: number; y: number } | null>(null)
+
+  function step(delta: number) {
+    if (canStep) onMove(queue[(index + delta + queue.length) % queue.length])
+  }
+
+  useEffect(() => {
+    if (!open || !canStep) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return
+      const target = event.target as HTMLElement
+      // A nested feedback dialog keeps its own focus, and its text fields need the arrow keys.
+      if (target !== document.body && !target.closest(".wiki-skin-preview")) return
+      if (target.closest("input, textarea, select, [contenteditable='true']")) return
+      event.preventDefault()
+      onMove(queue[(index + (event.key === "ArrowRight" ? 1 : -1) + queue.length) % queue.length])
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open, canStep, index, queue, onMove])
+
+  useEffect(() => {
+    if (!open || !canStep) return
+    for (const delta of [1, -1, 2]) {
+      const source = previewSource(queue[(index + delta + queue.length) % queue.length])
+      if (source) new Image().src = source
+    }
+  }, [open, canStep, index, queue])
+
+  useEffect(() => {
+    activeThumb.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [skin])
+
   return (
     <Dialog
       open={open}
@@ -171,10 +223,12 @@ function SkinPreview({
         className="wiki-skin-preview"
         showCloseButton={false}
         onCloseAutoFocus={(event) => {
-          const trigger = returnFocus.current
-          if (trigger?.isConnected) {
+          // Return to the skin last viewed, which may be several heroes away from the card that opened the viewer.
+          const card = skin && document.querySelector<HTMLElement>(`[data-skin-card="${CSS.escape(skinId(skin))}"]`)
+          if (card?.isConnected) {
             event.preventDefault()
-            trigger.focus()
+            card.focus()
+            card.scrollIntoView({ block: "nearest", inline: "center" })
           }
         }}
       >
@@ -186,8 +240,56 @@ function SkinPreview({
             >
               <SkinIcon name="close" size={18} />
             </DialogClose>
-            <div className="wiki-skin-preview-image">
-              <SkinArtwork key={`${skin.heroId}:${skin.skinKey}`} skin={skin} preview />
+            <div
+              className="wiki-skin-preview-image"
+              onPointerDown={(event) => {
+                swipe.current = event.pointerType === "mouse" ? null : { x: event.clientX, y: event.clientY }
+              }}
+              onPointerCancel={() => {
+                swipe.current = null
+              }}
+              onPointerUp={(event) => {
+                const start = swipe.current
+                swipe.current = null
+                if (!start) return
+                const dx = event.clientX - start.x
+                if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(event.clientY - start.y) * 1.5) step(dx < 0 ? 1 : -1)
+              }}
+            >
+              {previewSource(skin) && (
+                <span
+                  className="wiki-skin-preview-backdrop"
+                  style={{ backgroundImage: `url("${previewSource(skin)}")` }}
+                  aria-hidden="true"
+                />
+              )}
+              <SkinArtwork key={skinId(skin)} skin={skin} preview />
+              {canStep && (
+                <>
+                  <button
+                    type="button"
+                    className="wiki-skin-preview-step"
+                    data-side="previous"
+                    aria-label={text("Trang phục trước", "Previous skin")}
+                    onClick={() => step(-1)}
+                  >
+                    <span>
+                      <WikiIcon name="chevronLeft" size={22} />
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="wiki-skin-preview-step"
+                    data-side="next"
+                    aria-label={text("Trang phục sau", "Next skin")}
+                    onClick={() => step(1)}
+                  >
+                    <span>
+                      <WikiIcon name="chevronRight" size={22} />
+                    </span>
+                  </button>
+                </>
+              )}
             </div>
             <div className="wiki-skin-preview-info">
               <span className="wiki-skin-preview-eyebrow">{scope.t("skins").toLocaleUpperCase(scope.locale)}</span>
@@ -218,6 +320,55 @@ function SkinPreview({
                 </span>
                 <SkinIcon name="open" size={14} />
               </Link>
+              {heroSkins.length > 1 && (
+                <section className="wiki-skin-preview-set" aria-label={text("Các trang phục khác", "Other skins")}>
+                  <h3>
+                    {text("Cùng tướng", "Same hero")}
+                    <span aria-live="polite">
+                      {heroSkins.findIndex((entry) => skinId(entry) === skinId(skin)) + 1}/{heroSkins.length}
+                    </span>
+                  </h3>
+                  <ul>
+                    {heroSkins.map((entry) => {
+                      const active = skinId(entry) === skinId(skin)
+                      return (
+                        <li key={skinId(entry)}>
+                          <button
+                            ref={active ? activeThumb : undefined}
+                            type="button"
+                            className="wiki-skin-thumb"
+                            aria-current={active || undefined}
+                            aria-label={`${text("Xem", "View")} ${entry.name}`}
+                            title={entry.name}
+                            onClick={() => onMove(entry)}
+                          >
+                            <SkinArtwork skin={entry} />
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              )}
+              {previousHero && nextHero && (
+                <nav className="wiki-skin-preview-heroes" aria-label={text("Chuyển tướng", "Switch hero")}>
+                  <button type="button" onClick={() => onMove(previousHero)}>
+                    <WikiIcon name="chevronLeft" size={16} />
+                    <HeroHead skin={previousHero} />
+                    <span>{previousHero.heroName}</span>
+                  </button>
+                  <button type="button" onClick={() => onMove(nextHero)}>
+                    <span>{nextHero.heroName}</span>
+                    <HeroHead skin={nextHero} />
+                    <WikiIcon name="chevronRight" size={16} />
+                  </button>
+                </nav>
+              )}
+              {canStep && (
+                <p className="wiki-skin-preview-hint">
+                  {text("Dùng phím ← → để xem tiếp", "Use the ← → keys to keep browsing")}
+                </p>
+              )}
             </div>
           </>
         )}
@@ -309,7 +460,6 @@ export function SkinDirectory() {
   const heroSort: HeroSort = heroOrder === "fewest" || heroOrder === "name" ? heroOrder : "most"
   const skinSort: SkinSort = parameters.get("skinSort") === "name" ? "name" : "tier"
   const query = useQuery(skinCatalogQuery(scope))
-  const returnFocus = useRef<HTMLButtonElement | null>(null)
   const [selected, setSelected] = useState<SkinEntry | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const groups = useMemo(() => {
@@ -477,8 +627,7 @@ export function SkinDirectory() {
             <HeroSkinRow
               key={`${skins[0].heroId}:${skinSort}`}
               skins={skins}
-              onOpen={(entry, trigger) => {
-                returnFocus.current = trigger
+              onOpen={(entry) => {
                 setSelected(entry)
                 setPreviewOpen(true)
               }}
@@ -486,7 +635,13 @@ export function SkinDirectory() {
           ))}
         </div>
       )}
-      <SkinPreview skin={selected} open={previewOpen} onClose={() => setPreviewOpen(false)} returnFocus={returnFocus} />
+      <SkinPreview
+        skin={selected}
+        groups={groups}
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        onMove={setSelected}
+      />
     </div>
   )
 }
