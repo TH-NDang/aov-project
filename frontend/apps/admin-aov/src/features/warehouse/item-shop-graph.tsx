@@ -199,7 +199,7 @@ function GraphCard({
             </span>
           )}
           <span
-            className="absolute -right-1.5 -bottom-1.5 rounded-md bg-card px-1 text-xs font-semibold leading-4 tabular-nums text-amber-600 shadow-sm ring-1 ring-border dark:text-amber-400"
+            className="item-price-text absolute -right-1.5 -bottom-1.5 rounded-md bg-card px-1 text-xs leading-4 shadow-sm ring-1 ring-border"
             title={`Giá ${price} vàng`}
           >
             {price}

@@ -28,3 +28,7 @@
   line-height: 1rem;
   color: var(--muted-foreground);
 }
+
+@utility item-price-text {
+  @apply font-semibold tabular-nums text-amber-600 dark:text-amber-400;
+}

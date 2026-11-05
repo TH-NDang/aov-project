@@ -282,7 +282,7 @@ function ItemsCatalog({ entries, allEntries, groups, group, onGroupChange, selec
                         <strong>{warehouseText(entry.content.translations, locale)?.name || entry.code}</strong>
                         <span className="wiki-warehouse-item-meta">
                           {entry.content.price != null && (
-                            <span className="wiki-warehouse-item-price">
+                            <span className="wiki-warehouse-item-price item-price-text">
                               <span aria-hidden="true" />
                               {entry.content.price.toLocaleString(locale)}{" "}
                               <small>{wikiText(locale, "vàng", "gold")}</small>

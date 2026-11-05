@@ -66,7 +66,7 @@ function ShopCard({
           <strong>{name}</strong>
           <span className="wiki-warehouse-shop-meta">
             {entry.content.price != null && (
-              <span className="wiki-warehouse-shop-price">
+              <span className="wiki-warehouse-shop-price item-price-text">
                 <i aria-hidden="true" />
                 {entry.content.price.toLocaleString(locale)}
                 <small>{wikiText(locale, "vàng", "gold")}</small>

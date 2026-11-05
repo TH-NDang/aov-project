@@ -40,7 +40,6 @@ function DetailFacts({ entry, groups }: { entry: WarehouseEntry; groups: Warehou
   const chips = [
     group && warehouseText(group.translations)?.name,
     content.tier && `${text("Bậc", "Tier")} ${ROMAN[content.tier] ?? content.tier}`,
-    content.price != null && `${content.price.toLocaleString(locale)} ${text("vàng", "gold")}`,
     content.cooldownSeconds != null &&
       `${text("Hồi", "Cooldown")} ${content.cooldownSeconds.toLocaleString(locale)} ${text("giây", "s")}`,
     (content.legacy || content.availability === "REMOVED") && text("Đã ngừng sử dụng", "Retired"),
@@ -50,6 +49,13 @@ function DetailFacts({ entry, groups }: { entry: WarehouseEntry; groups: Warehou
       {chips.map((chip) => (
         <span key={String(chip)}>{chip}</span>
       ))}
+      {content.price != null && (
+        <span>
+          <span className="item-price-text">
+            {content.price.toLocaleString(locale)} {text("vàng", "gold")}
+          </span>
+        </span>
+      )}
     </div>
   )
 }

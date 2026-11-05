@@ -171,7 +171,7 @@ export function ItemEditor({
               )}
               {value.tier !== null && <span>Cấp {value.tier}</span>}
               {value.price !== null && (
-                <span className="inline-flex items-center gap-1 tabular-nums">
+                <span className="item-price-text inline-flex items-center gap-1">
                   <Coins className="size-3.5 text-amber-600" aria-hidden />
                   {value.price.toLocaleString(locale)} vàng
                 </span>

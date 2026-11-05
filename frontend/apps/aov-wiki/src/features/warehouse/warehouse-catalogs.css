@@ -159,9 +159,7 @@ details[open] > summary .wiki-warehouse-catalog-disclosure {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #d4b77c;
   font-size: 10px;
-  font-variant-numeric: tabular-nums;
 }
 .wiki-warehouse-item-price > span {
   width: 7px;
@@ -171,7 +169,6 @@ details[open] > summary .wiki-warehouse-catalog-disclosure {
   box-shadow: inset 0 0 0 1px #cba85c33;
 }
 .wiki-warehouse-item-price small {
-  color: #8998a7;
   font-size: 9px;
 }
 .wiki-warehouse-item-card > .wiki-warehouse-catalog-open {

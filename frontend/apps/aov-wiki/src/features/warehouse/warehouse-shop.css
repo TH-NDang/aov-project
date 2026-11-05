@@ -212,9 +212,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: #d9bb7b;
   font-size: 10px;
-  font-variant-numeric: tabular-nums;
 }
 .wiki-warehouse-shop-price > i {
   width: 6px;
@@ -223,7 +221,6 @@
   border-radius: 50%;
 }
 .wiki-warehouse-shop-price small {
-  color: #8c9cad;
   font-size: 9px;
 }
 .wiki-warehouse-shop-tier {
