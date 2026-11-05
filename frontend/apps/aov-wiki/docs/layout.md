@@ -59,6 +59,17 @@ Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng kh
 - Chọn mục mở tấm chi tiết bên phải desktop hoặc từ dưới trên mobile, không rời danh mục. Có chỉ số, mô tả, hiệu ứng và các mục ghép liên quan; phụ trợ nhiều trạng thái cho chọn từng trạng thái. Mô tả dùng parser `EntityRichText` dùng chung, không chèn HTML thô. Danh mục tham chiếu chỉ tải khi mở chi tiết và dùng API công khai; liên kết tham chiếu vào đúng tab của kho.
 - Kích thước ảnh, dòng tên và skeleton giữ chỗ trong lúc tải. Header, bộ lọc và danh mục thích ứng mobile; vùng tab cuộn ngang nếu thiếu chỗ. Hiệu ứng tắt khi người dùng bật giảm chuyển động.
 
+## Ghi chú cập nhật
+
+- `/updates` liệt kê các bản cập nhật đã công bố theo mùa, mới nhất lên trước. `/updates/:code` hiển thị thay đổi của một bản, chia theo Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ và chỉ giữ nhóm có dữ liệu. Nguồn lấy từ `GET /patches` và `GET /patches/{id}/changes?domain=&patchVariantId=`.
+- Mỗi thay đổi kỹ năng ghi rõ chiêu, thuộc tính, giá trị cũ và mới. Công thức được đọc thành chữ, ví dụ `21*(rank-1)` thành "21 mỗi cấp" và `0.2*physicalAttack` thành "20% Công vật lý"; công thức chưa nhận dạng được giữ nguyên như nguồn.
+- Trang chủ, dòng thay đổi phía trên danh mục và tab Cập nhật của trang bị đều dẫn tới trang này. Tướng đã có ghi chú nhưng chưa có hồ sơ công khai vẫn được liệt kê, không có liên kết.
+
+## Thuật ngữ
+
+- `/terms` liệt kê thuật ngữ công khai từ `GET /reference-catalog`, sắp theo tên, tìm không dấu theo tên, tên khác và nội dung (`q`). Mô tả có thể liên kết sang thuật ngữ khác.
+- Mọi nhắc tới thuật ngữ trong wiki có đích `/terms/{id}`, trang cuộn tới và đánh dấu mục đó. Liên kết cũ dạng `/?term={id}` tự chuyển sang đây; mã không tồn tại báo rõ và vẫn hiện danh sách.
+
 ## Thị trường, ngôn ngữ và mốc dữ liệu
 
 - `WikiContextProvider` dùng chung cho trang chủ, Tướng, Trang phục và Kho trang bị. Thị trường dữ liệu (`region`) độc lập ngôn ngữ giao diện (`locale`); lựa chọn lưu trong URL và ghi nhớ trên thiết bị. Header desktop có hai bộ chọn riêng; trên mobile nằm trong menu Thêm. Các thị trường chưa hỗ trợ vẫn hiện nhưng khóa theo trạng thái backend, không tự đổi sang VN hoặc coi Global là dữ liệu tổng hợp.
@@ -79,6 +90,11 @@ Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng kh
 - Bảng chọn có thanh lọc đường theo chiều dọc bên trái; phân loại này dùng cùng dữ liệu **tham khảo** với thư viện. Đường, vai trò và tên/mã được kết hợp để lọc. Mọi icon lọc đều có tooltip tên đầy đủ khi hover hoặc focus bằng bàn phím; tooltip vai trò hiện bên dưới, tooltip đường hiện bên phải. Thẻ dùng ảnh toàn khung, lớp chuyển màu dưới tên, không có viền trắng; icon đường và vai trò nằm trên ảnh, cách nhau 4px trên desktop và 3px trên mobile. Điện thoại từ 360px dùng 3 cột thẻ gọn; màn hình hẹp hơn dùng 2 cột để tên vẫn dễ đọc. Icon trên thẻ thu nhỏ theo ảnh; các bộ lọc có vùng cuộn riêng.
 - Bảng màu trong `hero-appearance.ts` hiện được phối riêng theo ảnh của 24 tướng đang xuất bản, gồm màu bề mặt, nền và điểm nhấn. Tướng chưa có cấu hình dùng bảng màu trung tính. Đây là lựa chọn biên tập tại frontend, không phải màu suy ra từ vai trò hoặc lấy bằng canvas trên trình duyệt: CDN hiện không cung cấp CORS để đọc pixel ảnh. Đợt này không thay đổi cấu hình cloud.
 - Khi thay ảnh gốc cần rà soát và cập nhật bảng màu tương ứng; về sau có thể chuyển các màu này thành metadata do backend cung cấp để đi cùng phiên bản ảnh.
+
+- Cột Tổng quan có 4 điểm đánh giá lấy từ `overviewRatings` theo thang của dữ liệu.
+- Trên bộ kỹ năng có khung cho biết bản đang xem thay đổi gì. Bản có thay đổi hiện câu tóm tắt, từng giá trị cũ và mới, nguồn công bố và so với bản nào; bấm một dòng sẽ mở đúng kỹ năng. Bản không đổi ghi rõ điều đó và dẫn tới lần thay đổi gần nhất.
+- Khác biệt lấy từ hai nguồn: ghi chú đã công bố (`GET /heroes/{id}/changes`) là danh sách chính; so sánh hai bản nội dung công khai (`GET /heroes/{id}?patchVariantId=`) đánh dấu ngay trong mô tả, bảng thông số và chỉ số. Phép so sánh chỉ đọc chữ và số, không tính ảnh hay mã màu, và có thể tắt bằng ô đánh dấu. Bản trước là bản liền trước cùng ruleset, không phải bản được chọn trong thanh phiên bản.
+- Thẻ kỹ năng có chấm vàng khi kỹ năng đó đổi ở bản đang xem; thanh phiên bản có chấm vàng ở bản có thay đổi. Mục Các lần thay đổi khác liệt kê những bản còn lại, bấm để chuyển sang bản đó.
 
 ## Ảnh nền đầu trang
 

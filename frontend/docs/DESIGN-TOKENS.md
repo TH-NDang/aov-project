@@ -35,3 +35,11 @@ Wiki, Stream và Admin là một họ sản phẩm nên dùng chung màu, phông
 
 Thanh điều hướng nằm bên trái. Để đổi lại bên phải, thêm `side="right"` cho `Sidebar` trong `app-sidebar.tsx` và đặt
 `AppSidebar` sau `SidebarInset` trong `app-shell.tsx`.
+
+## Trang đăng nhập
+
+Theme Keycloak `aov-public` dùng cùng giá trị màu và phông nhưng phải chép tay vì chạy ngoài ứng dụng React. Khi đổi màu nhấn hoặc màu nền trong `tokens.css`, sửa cả `infra/local/keycloak-themes/aov-public/login/resources/css/aov-login.css` trong `backend/wiki-service`.
+
+## Phiên đăng nhập của Wiki và Stream
+
+Token vẫn chỉ nằm trong bộ nhớ theo ADR-008. Khi tải lại trang hoặc mở tab mới, ứng dụng hỏi lại Keycloak bằng `prompt=none` trong một iframe ẩn và nhận mã qua `/auth/callback`. Người chưa từng đăng nhập không phát sinh yêu cầu này, nhờ một dấu trong `localStorage` không chứa thông tin xác thực.
