@@ -19,7 +19,7 @@ class CompetitionRulesTest {
 
     private CompetitionPlan plan(List<Entry> entrants, Stage stage, List<Match> matches) {
         return new CompetitionPlan("", "", null, null, "", "", "https://example.com", "", null, entrants,
-                List.of(stage), null, matches);
+                List.of(stage), null, matches, null);
     }
 
     @Test
@@ -78,7 +78,7 @@ class CompetitionRulesTest {
         var id = UUID.randomUUID();
         fixtures.set(0, fixtures.getFirst().linked(id));
         var content = new CompetitionPlan("", "", null, null, "", "", "", "", null, entries, List.of(stage), seeds,
-                fixtures);
+                fixtures, null);
         CompetitionRules.validate(content);
         var recorded = new Series("playoff", UUID.randomUUID(), "", "PO", seeds.get(1), seeds.get(4), 7, null, "", "",
                 new SeriesResult(4, 2, "https://example.com", null, null));
@@ -88,7 +88,7 @@ class CompetitionRulesTest {
         assertThat(result.getLast().teamAId()).isNull();
         seeds.put(1, entries.get(1).teamId());
         var changed = new CompetitionPlan("", "", null, null, "", "", "", "", null, entries, List.of(stage), seeds,
-                fixtures);
+                fixtures, null);
         assertThat(CompetitionResults.resolve(changed, Map.of(id, recorded)).getFirst().consistent()).isFalse();
     }
 

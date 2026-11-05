@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.planning.application;
 
+import com.wikiaov.community.tournament.CompetitionCircuits;
 import com.wikiaov.community.tournament.CompetitionOrganizations;
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
@@ -19,19 +20,28 @@ public class CompetitionInputs {
     private final SeriesRepository series;
     private final RosterRepository rosters;
     private final CompetitionOrganizations organizations;
+    private final CompetitionCircuits circuits;
 
     public CompetitionInputs(TournamentRepository tournaments, TeamRepository teams, PlayerRepository players,
-            SeriesRepository series, RosterRepository rosters, CompetitionOrganizations organizations) {
+            SeriesRepository series, RosterRepository rosters, CompetitionOrganizations organizations,
+            CompetitionCircuits circuits) {
         this.tournaments = tournaments;
         this.teams = teams;
         this.players = players;
         this.series = series;
         this.rosters = rosters;
         this.organizations = organizations;
+        this.circuits = circuits;
     }
 
     public CompetitionSnapshot snapshot(UUID id, CompetitionPlan plan) {
         return snapshot(id, plan, false);
+    }
+
+    public Map<UUID, Tournament> tournamentDetails(Collection<UUID> ids) {
+        var details = new LinkedHashMap<UUID, Tournament>();
+        tournaments.findAllById(ids).forEach(row -> details.put(row.getId(), row.getContent()));
+        return details;
     }
 
     public CompetitionSnapshot snapshot(UUID id, CompetitionPlan plan, boolean publishedOrganization) {
@@ -44,6 +54,15 @@ public class CompetitionInputs {
             }
         }
         var resolvedPlan = organizer == null ? plan : plan.organizedBy(organizer.name());
+        CompetitionCircuits.Circuit circuit = null;
+        if (plan.circuitPageId() != null) {
+            try {
+                circuit = circuits.read(plan.circuitPageId(), publishedOrganization);
+            } catch (IllegalArgumentException error) {
+                throw TournamentErrors.invalid(error.getMessage());
+            }
+            resolvedPlan = resolvedPlan.inCircuit(circuit.name());
+        }
 
         var tournament = tournaments.findById(id).orElseThrow(TournamentErrors::missing);
         RegistryArchivePolicy.requireActive(tournament);
@@ -70,6 +89,6 @@ public class CompetitionInputs {
                 .forEach(row -> playerMap.put(row.getId(), row.getContent()));
         var resolved = CompetitionResults.resolve(plan, seriesMap);
         return new CompetitionSnapshot(tournament.getContent(), resolvedPlan, teamMap, playerMap, seriesMap, members,
-                resolved, CompetitionResults.tables(plan, resolved), organizer);
+                resolved, CompetitionResults.tables(plan, resolved), organizer, circuit);
     }
 }

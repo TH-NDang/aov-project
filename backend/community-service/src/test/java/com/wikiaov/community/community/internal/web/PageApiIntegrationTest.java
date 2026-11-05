@@ -49,6 +49,139 @@ class PageApiIntegrationTest {
     static final String ROOT = "/api/community/v1";
 
     @Test
+    void teamAffiliationsFollowRosterEditsWithoutLeakingDraftsOrChangingPersonalHistory() throws Exception {
+        var person = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PLAYER", "code", "member-" + UUID.randomUUID(), "content",
+                        Map.of("name", "Canonical player", "sources",
+                                List.of(Map.of("label", "Source", "url", "https://example.com")),
+                                "history", List.of(Map.of("title", "Existing career milestone")))));
+        String personId = person.path("id").asText();
+        var content = new HashMap<String, Object>();
+        content.put("name", "Linked team");
+        content.put("sources", List.of(Map.of("label", "Source", "url", "https://example.com")));
+        content.put("roster",
+                List.of(Map.of("pageId", personId, "name", "Stale name", "role", "Jungle", "status", "Active")));
+        var team = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "TEAM", "code", "linked-team-" + UUID.randomUUID(), "content", content));
+        String teamId = team.path("id").asText();
+        assertThat(team.path("content").path("roster").get(0).path("name").asText()).isEqualTo("Canonical player");
+        mvc.perform(as(get(ROOT + "/admin/pages/" + personId + "/teams"), "editor", true))
+                .andExpect(jsonPath("$[0].teamPageId").value(teamId))
+                .andExpect(jsonPath("$[0].member.role").value("Jungle"));
+        mvc.perform(get(ROOT + "/pages/" + personId + "/teams")).andExpect(status().isNotFound());
+        mvc.perform(get(ROOT + "/admin/pages/" + personId + "/teams")).andExpect(status().isUnauthorized());
+        send(post(ROOT + "/admin/pages/" + personId + "/publish"), "editor", true, Map.of("version", 0));
+        mvc.perform(get(ROOT + "/pages/" + personId + "/teams")).andExpect(jsonPath("$.length()").value(0));
+        var published = send(post(ROOT + "/admin/pages/" + teamId + "/publish"), "editor", true, Map.of("version", 0));
+
+        content.put("roster",
+                List.of(Map.of("pageId", personId, "name", "Stale name", "role", "Support", "status", "Substitute")));
+        var saved = send(put(ROOT + "/admin/pages/" + teamId), "editor", true,
+                Map.of("version", published.path("version").asLong(), "content", content));
+        mvc.perform(as(get(ROOT + "/admin/pages/" + personId + "/teams"), "editor", true))
+                .andExpect(jsonPath("$[0].member.role").value("Support"));
+        mvc.perform(get(ROOT + "/pages/" + personId + "/teams"))
+                .andExpect(jsonPath("$[0].member.role").value("Jungle"));
+        mvc.perform(as(get(ROOT + "/admin/pages/" + personId), "editor", true))
+                .andExpect(jsonPath("$.content.history[0].title").value("Existing career milestone"))
+                .andExpect(jsonPath("$.version").value(1));
+        send(post(ROOT + "/admin/pages/" + teamId + "/publish"), "editor", true,
+                Map.of("version", saved.path("version").asLong()));
+        mvc.perform(get(ROOT + "/pages/" + personId + "/teams"))
+                .andExpect(jsonPath("$[0].member.role").value("Support"));
+    }
+
+    @Test
+    void linkedDraftPeopleCannotBeDeletedAndRostersRejectNonPersonProfiles() throws Exception {
+        var person = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PERSON", "code", "coach-" + UUID.randomUUID(), "content",
+                        Map.of("name", "Coach", "personRoles", List.of("COACH"))));
+        String personId = person.path("id").asText();
+        var content = new HashMap<String, Object>();
+        content.put("name", "Roster team");
+        content.put("roster", List.of(Map.of("pageId", personId, "name", "Coach", "role", "Coach")));
+        var team = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "TEAM", "code", "roster-team-" + UUID.randomUUID(), "content", content));
+        String teamId = team.path("id").asText();
+        mvc.perform(as(post(ROOT + "/admin/pages/" + personId + "/delete"), "editor", true)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"version\":0}"))
+                .andExpect(status().isConflict());
+        content.put("roster", List.of(Map.of("pageId", teamId, "name", "Wrong kind", "role", "Coach")));
+        mvc.perform(as(put(ROOT + "/admin/pages/" + teamId), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", 0, "content", content))))
+                .andExpect(status().isUnprocessableEntity());
+        content.put("roster", List.of());
+        send(put(ROOT + "/admin/pages/" + teamId), "editor", true, Map.of("version", 0, "content", content));
+        mvc.perform(as(get(ROOT + "/admin/pages/" + personId + "/teams"), "editor", true))
+                .andExpect(jsonPath("$.length()").value(0));
+        send(post(ROOT + "/admin/pages/" + personId + "/delete"), "editor", true, Map.of("version", 0));
+    }
+
+    @Test
+    void personnelRolesShareOneProfileAndPublicFiltersUseOnlyPublishedRoles() throws Exception {
+        String code = "person-" + UUID.randomUUID();
+        var content = new HashMap<String, Object>();
+        content.put("name", "Example Coach and Caster");
+        content.put("personRoles", List.of("COACH", "CASTER"));
+        content.put("sources", List.of(Map.of("label", "Event", "url", "https://example.com/event")));
+        var created = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PERSON", "code", code, "content", content));
+        String id = created.path("id").asText();
+        assertThat(created.path("entityId").isNull()).isTrue();
+        for (String group : List.of("COACHING", "BROADCAST")) {
+            mvc.perform(as(get(ROOT + "/admin/pages").param("personRole", group).param("q", code), "editor", true))
+                    .andExpect(jsonPath("$.totalElements").value(1)).andExpect(jsonPath("$.items[0].id").value(id));
+            mvc.perform(get(ROOT + "/pages").param("personRole", group).param("q", code))
+                    .andExpect(jsonPath("$.totalElements").value(0));
+        }
+        var published = send(post(ROOT + "/admin/pages/" + id + "/publish"), "editor", true, Map.of("version", 0));
+        content.put("personRoles", List.of("HOST"));
+        send(put(ROOT + "/admin/pages/" + id), "editor", true,
+                Map.of("version", published.path("version").asLong(), "content", content));
+        mvc.perform(get(ROOT + "/pages").param("personRole", "COACHING").param("q", code))
+                .andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get(ROOT + "/pages").param("personRole", "HOST").param("q", code))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(as(get(ROOT + "/admin/pages").param("personRole", "HOST").param("q", code), "editor", true))
+                .andExpect(jsonPath("$.items[0].id").value(id));
+        mvc.perform(as(get(ROOT + "/admin/pages").param("personRole", "COACHING").param("q", code), "editor", true))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get(ROOT + "/pages").param("personRole", "OWNER"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void playersCanAlsoHaveBroadcastRolesWithoutAnotherProfile() throws Exception {
+        String code = "player-talent-" + UUID.randomUUID();
+        var created = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PLAYER", "code", code, "content",
+                        Map.of("name", "Guest player", "personRoles", List.of("GUEST_ANALYST"))));
+        assertThat(created.path("entityId").asText()).isNotBlank();
+        for (String filter : List.of("kind=PLAYER", "personRole=BROADCAST"))
+            mvc.perform(as(get(ROOT + "/admin/pages?" + filter).param("q", code), "editor", true))
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.items[0].id").value(created.path("id").asText()));
+    }
+
+    @Test
+    void personnelValidationRejectsMissingUnknownDuplicateAndOrganizationRoles() throws Exception {
+        for (var roles : List.of(List.of(), List.of("UNKNOWN"), List.of("COACH", "COACH")))
+            mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                    .content(json.writeValueAsString(Map.of("kind", "PERSON", "code", "invalid-" + UUID.randomUUID(),
+                            "content", Map.of("name", "Invalid roles", "personRoles", roles)))))
+                    .andExpect(status().isUnprocessableEntity());
+        mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("kind", "ORGANIZATION", "code", "invalid-" + UUID.randomUUID(),
+                        "content", Map.of("name", "Organization", "personRoles", List.of("COACH"))))))
+                .andExpect(status().isUnprocessableEntity());
+        mvc.perform(as(post(ROOT + "/admin/pages"), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("kind", "PERSON", "code", "invalid-" + UUID.randomUUID(),
+                        "entityId", UUID.randomUUID(), "content",
+                        Map.of("name", "Coach", "personRoles", List.of("COACH"))))))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void claimsDoNotExposeDraftsOrGrantUnrelatedAccountsPageAuthority() throws Exception {
         var content = new HashMap<String, Object>();
         content.put("name", "Example Team");
@@ -354,6 +487,115 @@ class PageApiIntegrationTest {
         return id;
     }
 
+    @Test
+    void postsCarryKindsImagesAndOnePinPerPage() throws Exception {
+        String owner = "kinds-owner-" + UUID.randomUUID();
+        String id = ownedOrganization("Kinds " + UUID.randomUUID(), owner);
+        String posts = ROOT + "/me/pages/" + id + "/posts";
+        String word = "kw" + UUID.randomUUID().toString().substring(0, 8);
+        String asset = UUID.randomUUID().toString();
+        String image = "https://cdn.example/assets/" + asset + "/" + UUID.randomUUID() + ".png";
+
+        perform(post(posts), owner, Map.of("kind", "NEWS", "body", "No title", "asPage", true, "publish", true))
+                .andExpect(status().isUnprocessableEntity());
+        perform(post(posts), owner, Map.of("kind", "VIDEO", "body", "", "asPage", true, "publish", true))
+                .andExpect(status().isUnprocessableEntity());
+        perform(post(posts), owner, Map.of("kind", "PODCAST", "body", "Unknown", "asPage", true, "publish", true))
+                .andExpect(status().isUnprocessableEntity());
+        perform(post(posts), owner, Map.of("body", "Too many", "imageUrls", Collections.nCopies(5, image), "asPage",
+                true, "publish", true)).andExpect(status().isUnprocessableEntity());
+
+        var news = send(post(posts), owner, false,
+                Map.of("kind", "NEWS", "title", "Lịch " + word, "body", "Tuần 3", "asPage", true, "publish", true));
+        var video = send(post(posts), owner, false, Map.of("kind", "VIDEO", "body", "", "videoUrl",
+                "https://www.youtube.com/watch?v=example", "imageUrls", List.of(image), "asPage", true, "publish",
+                true));
+        assertThat(news.path("kind").asText()).isEqualTo("NEWS");
+        assertThat(video.path("imageUrls").get(0).asText()).isEqualTo(image);
+        mvc.perform(as(get(ROOT + "/admin/media-assets/" + asset + "/usage"), "editor", true))
+                .andExpect(jsonPath("$.references").value(1));
+
+        mvc.perform(get(ROOT + "/posts?kind=VIDEO&size=100"))
+                .andExpect(jsonPath("$.items[?(@.post.kind != 'VIDEO')]").isEmpty());
+        mvc.perform(get(ROOT + "/posts?q=" + word)).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].post.id").value(news.path("id").asText()));
+        mvc.perform(get(ROOT + "/posts?q=%25")).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get(ROOT + "/posts?kind=PODCAST")).andExpect(status().isUnprocessableEntity());
+
+        String pin = posts + "/%s/pin";
+        send(post(pin.formatted(news.path("id").asText())), owner, false, Map.of("pinned", true));
+        mvc.perform(get(ROOT + "/pages/" + id + "/posts"))
+                .andExpect(jsonPath("$.items[0].id").value(news.path("id").asText()))
+                .andExpect(jsonPath("$.items[0].pinned").value(true));
+        send(post(pin.formatted(video.path("id").asText())), owner, false, Map.of("pinned", true));
+        mvc.perform(get(ROOT + "/pages/" + id + "/posts"))
+                .andExpect(jsonPath("$.items[0].id").value(video.path("id").asText()))
+                .andExpect(jsonPath("$.items[?(@.pinned == true)].id").value(video.path("id").asText()));
+        perform(post(pin.formatted(news.path("id").asText())), "outsider-" + UUID.randomUUID(), Map.of("pinned", true))
+                .andExpect(status().isForbidden());
+        var personal = send(post(posts), "fan-" + UUID.randomUUID(), false,
+                Map.of("body", "Fan post", "asPage", false, "publish", true));
+        perform(post(pin.formatted(personal.path("id").asText())), owner, Map.of("pinned", true))
+                .andExpect(status().isUnprocessableEntity());
+
+        send(post(ROOT + "/me/pages/" + id + "/moderate"), "moderator", true,
+                Map.of("postId", video.path("id").asText(), "hidden", true));
+        mvc.perform(get(ROOT + "/pages/" + id + "/posts"))
+                .andExpect(jsonPath("$.items[?(@.pinned == true)]").isEmpty());
+    }
+
+    @Test
+    void liveBroadcastsNotifyFollowersOnceAndEditorsCanEndThem() throws Exception {
+        String owner = "live-owner-" + UUID.randomUUID();
+        String fan = "live-fan-" + UUID.randomUUID();
+        String id = ownedOrganization("Live " + UUID.randomUUID(), owner);
+        String live = ROOT + "/me/pages/" + id + "/live";
+        send(post(ROOT + "/me/pages/" + id + "/follow"), fan, false, Map.of("following", true));
+
+        perform(put(live), fan, Map.of("url", "https://www.youtube.com/live/abc", "title", "Tuần 3"))
+                .andExpect(status().isForbidden());
+        perform(put(live), owner, Map.of("url", "ftp://example.com/live", "title", "Tuần 3"))
+                .andExpect(status().isUnprocessableEntity());
+        send(put(live), owner, false, Map.of("url", "https://www.youtube.com/live/abc", "title", "Tuần 3"));
+        var started = send(get(ROOT + "/pages/" + id), fan, false, null).path("live");
+        assertThat(started.path("title").asText()).isEqualTo("Tuần 3");
+        mvc.perform(get(ROOT + "/live?size=100"))
+                .andExpect(jsonPath("$.items[?(@.id == '" + id + "')].live.url")
+                        .value("https://www.youtube.com/live/abc"));
+
+        send(put(live), owner, false, Map.of("url", "https://www.youtube.com/live/def", "title", "Tuần 3 · hiệp 2"));
+        var updated = send(get(ROOT + "/pages/" + id), fan, false, null).path("live");
+        assertThat(updated.path("url").asText()).isEqualTo("https://www.youtube.com/live/def");
+        assertThat(updated.path("startedAt").asText()).isEqualTo(started.path("startedAt").asText());
+        mvc.perform(as(get(ROOT + "/me/notifications"), fan, false)).andExpect(jsonPath("$.totalElements").value(1));
+
+        perform(post(ROOT + "/admin/pages/" + id + "/live/end"), "not-editor-" + UUID.randomUUID(), null)
+                .andExpect(status().isForbidden());
+        send(post(ROOT + "/admin/pages/" + id + "/live/end"), "editor", true, null);
+        mvc.perform(get(ROOT + "/pages/" + id)).andExpect(jsonPath("$.live").isEmpty());
+        mvc.perform(get(ROOT + "/live?size=100")).andExpect(jsonPath("$.items[?(@.id == '" + id + "')]").isEmpty());
+
+        send(put(ROOT + "/admin/pages/" + id + "/live"), "editor", true,
+                Map.of("url", "https://www.facebook.com/live/xyz", "title", "Chung kết"));
+        mvc.perform(as(get(ROOT + "/me/notifications"), fan, false)).andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    /** A published organization whose owner received the page through a handover code. */
+    private String ownedOrganization(String name, String owner) throws Exception {
+        String id = publishedOrganization(name);
+        var issued = send(post(ROOT + "/admin/pages/" + id + "/handover"), "publisher", true, null);
+        accept(issued.path("token").asText(), owner).andExpect(status().isOk());
+        return id;
+    }
+
+    private org.springframework.test.web.servlet.ResultActions perform(MockHttpServletRequestBuilder request,
+            String actor, Object body) throws Exception {
+        as(request, actor, false);
+        if (body != null)
+            request.contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body));
+        return mvc.perform(request);
+    }
+
     private org.springframework.test.web.servlet.ResultActions accept(String token, String actor) throws Exception {
         return mvc.perform(as(post(ROOT + "/me/invitations/accept"), actor, false)
                 .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("token", token))));
@@ -407,6 +649,26 @@ class PageApiIntegrationTest {
         var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
                 Map.of("version", 0, "content", content));
         assertThat(saved.path("content").path("plan").path("organizer").asText()).isEqualTo("Original organizer");
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("organizerPageId", organizationId), "editor", true))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(id))
+                .andExpect(jsonPath("$.items[0].tournament.name").value("Test season"))
+                .andExpect(jsonPath("$.items[0].entrants").value(2))
+                .andExpect(jsonPath("$.items[0].publishedAt").isEmpty());
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("organizerPageId", organizationId)
+                .param("page", "1").param("size", "1"), "editor", true))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items").isEmpty());
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("organizerPageId", UUID.randomUUID().toString()),
+                "editor", true))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get(ROOT + "/admin/competitions").param("organizerPageId", organizationId))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("organizerPageId", organizationId), "fan", false))
+                .andExpect(status().isForbidden());
+        mvc.perform(get(ROOT + "/competitions").param("organizerPageId", organizationId))
+                .andExpect(jsonPath("$.totalElements").value(0));
         mvc.perform(as(post(ROOT + "/admin/competitions/" + id + "/publish"), "publisher", true)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(Map.of("version", saved.path("version").asLong()))))
@@ -436,8 +698,22 @@ class PageApiIntegrationTest {
         var preview = send(post(ROOT + "/admin/competitions/preview"), "editor", true,
                 Map.of("content", content, "stageCode", "GROUP", "opponent", 3));
         content.put("matches", preview);
+        var nextOrganization = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "ORGANIZATION", "code", "next-organizer-" + suffix,
+                        "content", Map.of("name", "Next organizer")));
+        String nextOrganizationId = nextOrganization.path("id").asText();
+        content.put("organizerPageId", nextOrganizationId);
         var draft = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
                 Map.of("version", published.path("version").asLong(), "content", content));
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("organizerPageId", organizationId), "editor", true))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("organizerPageId", nextOrganizationId), "editor", true))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].publishedAt").isNotEmpty());
+        mvc.perform(get(ROOT + "/competitions").param("organizerPageId", organizationId))
+                .andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get(ROOT + "/competitions").param("organizerPageId", nextOrganizationId))
+                .andExpect(jsonPath("$.totalElements").value(0));
         mvc.perform(get(ROOT + "/competitions/" + id)).andExpect(jsonPath("$.content.plan.matches.length()").value(0));
         var materialized = send(post(ROOT + "/admin/competitions/" + id + "/materialize"), "editor", true,
                 Map.of("version", draft.path("version").asLong()));
@@ -456,6 +732,156 @@ class PageApiIntegrationTest {
         send(post(ROOT + "/admin/competitions/" + id + "/withdraw"), "publisher", true,
                 Map.of("version", again.path("version").asLong()));
         mvc.perform(get(ROOT + "/competitions/" + id)).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void circuitReferencesResolveNamesAndKeepPublicSeasonsIsolatedFromDrafts() throws Exception {
+        String suffix = UUID.randomUUID().toString();
+        var circuitContent = new HashMap<String, Object>();
+        circuitContent.put("name", "Original circuit");
+        circuitContent.put("sources", List.of(Map.of("label", "Rules", "url", "https://example.com")));
+        var circuit = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "CIRCUIT", "code", "circuit-" + suffix, "content", circuitContent));
+        String circuitId = circuit.path("id").asText();
+        assertThat(circuit.path("entityId").isNull()).isTrue();
+        mvc.perform(
+                as(get(ROOT + "/admin/pages").param("kind", "CIRCUIT").param("q", "Original circuit"), "editor", true))
+                .andExpect(jsonPath("$.items[0].id").value(circuitId));
+        var tournament = send(post(ROOT + "/admin/tournaments"), "editor", true,
+                Map.of("content",
+                        Map.of("code", "circuit-season-" + suffix, "name", "Circuit season", "region", "VN")));
+        String id = tournament.path("id").asText();
+        var a = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "circuit-a-" + suffix, "name", "First")));
+        var b = send(post(ROOT + "/admin/teams"), "editor", true,
+                Map.of("content", Map.of("code", "circuit-b-" + suffix, "name", "Second")));
+        var plan = new HashMap<String, Object>();
+        plan.put("circuit", "Spoofed name");
+        plan.put("sourceUrl", "https://example.com/rules");
+        plan.put("entrants", List.of(Map.of("teamId", a.path("id").asText()), Map.of("teamId", b.path("id").asText())));
+        plan.put("stages", List.of(Map.of("code", "GROUP", "name", "Group", "format", "ROUND_ROBIN", "bestOf", 5,
+                "legs", 1, "winPoints", 1, "lossPoints", 0, "advance", 1)));
+        plan.put("circuitPageId", publishedOrganization("Wrong kind"));
+        mvc.perform(as(put(ROOT + "/admin/competitions/" + id), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", 0, "content", plan))))
+                .andExpect(status().isBadRequest());
+        plan.put("circuitPageId", circuitId);
+        var saved = send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", 0, "content", plan));
+        assertThat(saved.path("content").path("plan").path("circuit").asText()).isEqualTo("Original circuit");
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("circuitPageId", circuitId), "editor", true))
+                .andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(as(post(ROOT + "/admin/pages/" + circuitId + "/delete"), "editor", true)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"version\":0}"))
+                .andExpect(status().isConflict());
+        mvc.perform(as(post(ROOT + "/admin/competitions/" + id + "/publish"), "publisher", true)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", saved.path("version").asLong()))))
+                .andExpect(status().isBadRequest());
+        var publicCircuit = send(post(ROOT + "/admin/pages/" + circuitId + "/publish"), "publisher", true,
+                Map.of("version", circuit.path("version").asLong()));
+        circuitContent.put("name", "Private circuit draft");
+        send(put(ROOT + "/admin/pages/" + circuitId), "editor", true,
+                Map.of("version", publicCircuit.path("version").asLong(), "content", circuitContent));
+        var published = send(post(ROOT + "/admin/competitions/" + id + "/publish"), "publisher", true,
+                Map.of("version", saved.path("version").asLong()));
+        mvc.perform(get(ROOT + "/competitions").param("circuitPageId", circuitId))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].content.circuit.name").value("Original circuit"));
+        plan.remove("circuitPageId");
+        send(put(ROOT + "/admin/competitions/" + id), "editor", true,
+                Map.of("version", published.path("version").asLong(), "content", plan));
+        mvc.perform(as(get(ROOT + "/admin/competitions").param("circuitPageId", circuitId), "editor", true))
+                .andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get(ROOT + "/competitions").param("circuitPageId", circuitId))
+                .andExpect(jsonPath("$.totalElements").value(1));
+    }
+
+    @Test
+    void circuitPagesAllowEditorialContentAndSuggestionsButRejectCommunityActions() throws Exception {
+        String code = "circuit-info-" + UUID.randomUUID();
+        var content = Map.of("name", "Circuit information", "biography", "An editorial competition circuit.",
+                "sources", List.of(Map.of("label", "Rules", "url", "https://example.com")));
+        var page = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "CIRCUIT", "code", code, "content", content));
+        String id = page.path("id").asText();
+        send(post(ROOT + "/admin/pages/" + id + "/publish"), "publisher", true, Map.of("version", 0));
+        mvc.perform(get(ROOT + "/pages/by-code/" + code))
+                .andExpect(jsonPath("$.content.biography").value("An editorial competition circuit."))
+                .andExpect(jsonPath("$.represented").value(false))
+                .andExpect(jsonPath("$.followers").value(0));
+
+        for (var action : List.of(
+                Map.entry("/me/pages/" + id + "/claims", Map.of("evidence", "Official channel")),
+                Map.entry("/me/pages/" + id + "/follow", Map.of("following", true)),
+                Map.entry("/me/pages/" + id + "/posts", Map.of("body", "Fan post", "asPage", false, "publish", true)),
+                Map.entry("/me/pages/" + id + "/invitations", Map.of("role", "EDITOR")),
+                Map.entry("/admin/pages/" + id + "/handover", Map.of()))) {
+            mvc.perform(as(post(ROOT + action.getKey()), "publisher", true)
+                    .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(action.getValue())))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("PAGE_ACTION_FORBIDDEN"));
+        }
+        mvc.perform(get(ROOT + "/pages/" + id + "/posts")).andExpect(status().isForbidden());
+        mvc.perform(as(get(ROOT + "/me/suggestions").param("size", "100"), "fan", false))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.kind == 'CIRCUIT')]").isEmpty());
+        send(post(ROOT + "/me/pages/" + id + "/follow"), "fan", false, Map.of("following", false));
+        send(post(ROOT + "/me/pages/" + id + "/reports"), "fan", false,
+                Map.of("reason", "Please check the circuit introduction against https://example.com"));
+        var current = send(get(ROOT + "/admin/pages/" + id), "editor", true, null);
+        send(put(ROOT + "/admin/pages/" + id), "editor", true,
+                Map.of("version", current.path("version").asLong(), "content", content));
+    }
+
+    @Test
+    void circuitChannelReferencesRequireOrganizationsAndPreservePublishedSelections() throws Exception {
+        var source = List.of(Map.of("label", "Official source", "url", "https://example.com"));
+        var organization = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "ORGANIZATION", "code", "channel-org-" + UUID.randomUUID(), "content",
+                        Map.of("name", "Channel organization", "sources", source)));
+        String organizationId = organization.path("id").asText();
+        var content = new HashMap<String, Object>();
+        content.put("name", "Circuit with shared channels");
+        content.put("sources", source);
+        content.put("channelOrganizationId", organizationId);
+        var circuit = send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "CIRCUIT", "code", "shared-channels-" + UUID.randomUUID(), "content", content));
+        String id = circuit.path("id").asText();
+        assertThat(circuit.path("content").path("channelOrganizationId").asText()).isEqualTo(organizationId);
+        assertThat(circuit.path("content").path("links").size()).isZero();
+        mvc.perform(as(post(ROOT + "/admin/pages/" + organizationId + "/delete"), "editor", true)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"version\":0}"))
+                .andExpect(status().isConflict());
+        mvc.perform(as(post(ROOT + "/admin/pages/" + id + "/publish"), "publisher", true)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"version\":0}"))
+                .andExpect(status().isConflict());
+
+        content.put("channelOrganizationId", id);
+        mvc.perform(as(put(ROOT + "/admin/pages/" + id), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", 0, "content", content))))
+                .andExpect(status().isUnprocessableEntity());
+        content.put("channelOrganizationId", UUID.randomUUID().toString());
+        mvc.perform(as(put(ROOT + "/admin/pages/" + id), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", 0, "content", content))))
+                .andExpect(status().isUnprocessableEntity());
+        content.put("channelOrganizationId", organizationId);
+        mvc.perform(
+                as(put(ROOT + "/admin/pages/" + organizationId), "editor", true).contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("version", 0, "content", content))))
+                .andExpect(status().isUnprocessableEntity());
+
+        send(post(ROOT + "/admin/pages/" + organizationId + "/publish"), "publisher", true, Map.of("version", 0));
+        var published = send(post(ROOT + "/admin/pages/" + id + "/publish"), "publisher", true, Map.of("version", 0));
+        content.remove("channelOrganizationId");
+        var saved = send(put(ROOT + "/admin/pages/" + id), "editor", true,
+                Map.of("version", published.path("version").asLong(), "content", content));
+        mvc.perform(get(ROOT + "/pages/" + id))
+                .andExpect(jsonPath("$.content.channelOrganizationId").value(organizationId));
+        send(post(ROOT + "/admin/pages/" + id + "/publish"), "publisher", true,
+                Map.of("version", saved.path("version").asLong()));
+        mvc.perform(get(ROOT + "/pages/" + id))
+                .andExpect(jsonPath("$.content.channelOrganizationId").isEmpty());
     }
 
     private tools.jackson.databind.JsonNode send(MockHttpServletRequestBuilder request, String actor, boolean admin,

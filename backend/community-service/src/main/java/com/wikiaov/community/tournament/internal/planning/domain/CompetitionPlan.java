@@ -16,7 +16,8 @@ public record CompetitionPlan(
         List<Entry> entrants,
         List<Stage> stages,
         Map<Integer, UUID> playoffSeeds,
-        List<Match> matches
+        List<Match> matches,
+        UUID circuitPageId
 ) {
     public CompetitionPlan {
         timezone = timezone == null || timezone.isBlank() ? "Asia/Ho_Chi_Minh" : timezone;
@@ -98,15 +99,20 @@ public record CompetitionPlan(
 
     public CompetitionPlan schedule(List<Match> value) {
         return new CompetitionPlan(circuit, organizer, organizerPageId, timezone, prizePool, currency, sourceUrl,
-                notes, venues, entrants, stages, playoffSeeds, value);
+                notes, venues, entrants, stages, playoffSeeds, value, circuitPageId);
     }
 
     public CompetitionPlan organizedBy(String name) {
         return new CompetitionPlan(circuit, name, organizerPageId, timezone, prizePool, currency, sourceUrl,
-                notes, venues, entrants, stages, playoffSeeds, matches);
+                notes, venues, entrants, stages, playoffSeeds, matches, circuitPageId);
+    }
+
+    public CompetitionPlan inCircuit(String name) {
+        return new CompetitionPlan(name, organizer, organizerPageId, timezone, prizePool, currency, sourceUrl,
+                notes, venues, entrants, stages, playoffSeeds, matches, circuitPageId);
     }
 
     public static CompetitionPlan empty() {
-        return new CompetitionPlan("", "", null, null, "", "VND", "", "", null, null, null, null, null);
+        return new CompetitionPlan("", "", null, null, "", "VND", "", "", null, null, null, null, null, null);
     }
 }

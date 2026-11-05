@@ -6,6 +6,7 @@ import com.wikiaov.community.tournament.internal.application.TournamentViews.Pag
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
 import com.wikiaov.community.tournament.internal.planning.domain.*;
 import com.wikiaov.community.tournament.internal.planning.persistence.*;
 import java.time.Instant;
@@ -30,18 +31,23 @@ public class CompetitionPlanning {
             UUID id,
             int entrants,
             int matches,
-            Instant publishedAt
+            Instant publishedAt,
+            Tournament tournament
     ) {
     }
 
     @Transactional(readOnly = true)
     @PreAuthorize("hasAuthority('tournament:read')")
-    public PageSlice<Summary> summaries(int page, int size) {
+    public PageSlice<Summary> summaries(int page, int size, UUID organizerPageId, UUID circuitPageId) {
         if (page < 0 || size < 1 || size > 100)
             throw TournamentErrors.invalid("Invalid pagination.");
-        return PageSlice.from(plans.findAll(PageRequest.of(page, size, org.springframework.data.domain.Sort.by("id")))
-                .map(row -> new Summary(row.getId(), row.getContent().entrants().size(),
-                        row.getContent().matches().size(), row.getPublishedAt())));
+
+        var rows = plans.summaries(organizerPageId == null ? "" : organizerPageId.toString(),
+                circuitPageId == null ? "" : circuitPageId.toString(),
+                PageRequest.of(page, size));
+        var details = inputs.tournamentDetails(rows.stream().map(CompetitionPlanRecord::getId).toList());
+        return PageSlice.from(rows.map(row -> new Summary(row.getId(), row.getContent().entrants().size(),
+                row.getContent().matches().size(), row.getPublishedAt(), details.get(row.getId()))));
     }
 
     private final CompetitionPlanRepository plans;
@@ -74,12 +80,14 @@ public class CompetitionPlanning {
     }
 
     @Transactional(readOnly = true)
-    public PageSlice<View> published(int page, int size, UUID teamId, UUID playerId, UUID organizerPageId) {
+    public PageSlice<View> published(int page, int size, UUID teamId, UUID playerId, UUID organizerPageId,
+            UUID circuitPageId) {
         if (page < 0 || size < 1 || size > 100)
             throw TournamentErrors.invalid("Invalid pagination.");
         return PageSlice.from(plans
                 .published(teamId == null ? "" : teamId.toString(), playerId == null ? "" : playerId.toString(),
-                        organizerPageId == null ? "" : organizerPageId.toString(), PageRequest.of(page, size))
+                        organizerPageId == null ? "" : organizerPageId.toString(),
+                        circuitPageId == null ? "" : circuitPageId.toString(), PageRequest.of(page, size))
                 .map(row -> new View(row.getId(), 0, row.getPublishedAt(), row.getPublishedSnapshot())));
     }
 

@@ -39,15 +39,17 @@ public class CompetitionPlanningController {
     public PageSlice<View> list(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "24") int size, @RequestParam(required = false) UUID teamId,
             @RequestParam(required = false) UUID playerId, @RequestParam(required = false) UUID organizerPageId,
+            @RequestParam(required = false) UUID circuitPageId,
             jakarta.servlet.http.HttpServletRequest request) {
-        Parameters.only(request, "page", "size", "teamId", "playerId", "organizerPageId");
-        return planning.published(page, size, teamId, playerId, organizerPageId);
+        Parameters.only(request, "page", "size", "teamId", "playerId", "organizerPageId", "circuitPageId");
+        return planning.published(page, size, teamId, playerId, organizerPageId, circuitPageId);
     }
 
     @GetMapping("/admin/competitions")
     public PageSlice<CompetitionPlanning.Summary> summaries(@RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
-        return planning.summaries(page, size);
+            @RequestParam(defaultValue = "100") int size, @RequestParam(required = false) UUID organizerPageId,
+            @RequestParam(required = false) UUID circuitPageId) {
+        return planning.summaries(page, size, organizerPageId, circuitPageId);
     }
 
     @GetMapping("/competitions/{id}")

@@ -5,6 +5,14 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 
 public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlanRecord, UUID> {
+    @Query(value = """
+        SELECT * FROM tournament.competition_plan
+        WHERE (:organizer = '' OR content->>'organizerPageId' = :organizer)
+          AND (:circuit = '' OR content->>'circuitPageId' = :circuit)
+        ORDER BY id
+        """, nativeQuery = true)
+    Page<CompetitionPlanRecord> summaries(String organizer, String circuit, Pageable pageable);
+
     Page<CompetitionPlanRecord> findByPublishedAtIsNotNullOrderByPublishedAtDesc(Pageable pageable);
 
     @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
@@ -25,7 +33,9 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
           AND (:team = '' OR jsonb_exists(published_snapshot->'teams', :team))
           AND (:player = '' OR jsonb_exists(published_snapshot->'players', :player))
           AND (:organizer = '' OR published_snapshot->'plan'->>'organizerPageId' = :organizer)
+          AND (:circuit = '' OR published_snapshot->'plan'->>'circuitPageId' = :circuit)
         ORDER BY published_at DESC, id
         """, nativeQuery = true)
-    Page<CompetitionPlanRecord> published(String team, String player, String organizer, Pageable pageable);
+    Page<CompetitionPlanRecord> published(String team, String player, String organizer, String circuit,
+            Pageable pageable);
 }

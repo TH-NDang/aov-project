@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.planning.domain;
 
+import com.wikiaov.community.tournament.CompetitionCircuits;
 import com.wikiaov.community.tournament.CompetitionOrganizations;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import java.util.*;
@@ -13,6 +14,7 @@ public record CompetitionSnapshot(
         List<RosterMembership> rosters,
         List<CompetitionResults.Resolved> resolved,
         List<CompetitionResults.Table> standings,
-        CompetitionOrganizations.Organization organizer
+        CompetitionOrganizations.Organization organizer,
+        CompetitionCircuits.Circuit circuit
 ) {
 }
