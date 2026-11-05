@@ -29,6 +29,8 @@ import type { Asset } from "../publishing/types"
 import { invalidateMediaAsset } from "./media-cache"
 import { ImageDeleteAction } from "./image-delete-action"
 import { MediaSourceFields } from "./media-source-fields"
+import { PageReference } from "@/features/community/page-reference"
+import { MediaReferencesEditor } from "./media-references-editor"
 import {
   needsNoCredit,
   ownerCandidate,
@@ -89,6 +91,7 @@ interface Version {
   createdAt: string
 }
 interface Source extends MediaSourceInput {
+  referenceVersion: number
   id: string
   versionId: string | null
 }
@@ -111,6 +114,8 @@ const sourceInput = (source?: MediaSourceInput): MediaSourceInput => ({
   ownerName: source?.ownerName ?? "",
   url: source?.url ?? "",
   contactUrl: source?.contactUrl ?? "",
+  ownerPageId: source?.ownerPageId ?? null,
+  relatedPageId: source?.relatedPageId ?? null,
 })
 function sourceProblem(source: MediaSourceInput) {
   if (!source.label.trim()) return "Điền tên nguồn."
@@ -465,10 +470,22 @@ export function ImageDetailSheet({
                           )}
                         </Fact>
                         <Fact ok={!!source.ownerName?.trim()} label="Chủ sở hữu / người cần credit">
-                          {source.ownerName?.trim() || (
-                            <span className="text-amber-700 dark:text-amber-400">Chưa ghi</span>
+                          {source.ownerPageId ? (
+                            <PageReference
+                              id={source.ownerPageId}
+                              label={source.ownerName?.trim() || "Hồ sơ chủ sở hữu"}
+                            />
+                          ) : (
+                            source.ownerName?.trim() || (
+                              <span className="text-amber-700 dark:text-amber-400">Chưa ghi</span>
+                            )
                           )}
                         </Fact>
+                        {source.relatedPageId && (
+                          <Fact ok label="Nội dung liên quan">
+                            <PageReference id={source.relatedPageId} />
+                          </Fact>
+                        )}
                         {safeUrl(source.contactUrl) && (
                           <Fact ok label="Liên hệ bên cung cấp">
                             <a
@@ -482,6 +499,11 @@ export function ImageDetailSheet({
                           </Fact>
                         )}
                         {source.note && <p className="py-2 text-xs text-muted-foreground">{source.note}</p>}
+                        {writable && active && (
+                          <div className="py-2">
+                            <MediaReferencesEditor assetId={data.id} source={source} />
+                          </div>
+                        )}
                       </div>
                       {writable && source === ownerless && !completing && editing === null && (
                         <div className="border-t py-2">

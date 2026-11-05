@@ -1,3 +1,4 @@
+import { PageReference } from "@/features/community/page-reference"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { ImageCredit } from "@aov/ui/components/image-credit"
@@ -38,7 +39,12 @@ export function ContactImage({ assetId, versionId }: { assetId: string; versionI
               src={version.url}
               alt="Ảnh trong yêu cầu liên hệ"
               className="h-48 w-48"
-              overlay={<ImageCredit sources={currentMediaSources(asset.data?.provenance ?? [], versionId)} />}
+              overlay={
+                <ImageCredit
+                  renderPageReference={(id, label) => <PageReference id={id} label={label} />}
+                  sources={currentMediaSources(asset.data?.provenance ?? [], versionId)}
+                />
+              }
             >
               <img
                 className="h-full w-full rounded-lg object-contain"

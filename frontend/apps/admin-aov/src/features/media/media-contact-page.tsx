@@ -45,7 +45,7 @@ export function MediaContactPage() {
   return (
     <Page>
       <PageHeader
-        title="Liên hệ về nguồn & hình ảnh"
+        title="Góp ý Wiki & liên hệ về ảnh"
         actions={
           <Button variant="outline" asChild>
             <Link to="/image-management">Kho ảnh</Link>

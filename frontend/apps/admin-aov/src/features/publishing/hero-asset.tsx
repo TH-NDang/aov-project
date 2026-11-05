@@ -1,3 +1,4 @@
+import { PageReference } from "@/features/community/page-reference"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Image } from "lucide-react"
@@ -80,6 +81,7 @@ export function HeroAsset({
   )
   const credit = asset.data?.currentUrl ? (
     <ImageCredit
+      renderPageReference={(id, label) => <PageReference id={id} label={label} />}
       sources={sources}
       manageHref={`/image-management?asset=${encodeURIComponent(asset.data.id)}`}
       flagMissing

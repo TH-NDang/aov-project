@@ -273,7 +273,7 @@ export function ImageManagementPage() {
                 <DropdownMenuItem asChild>
                   <Link to="/media-contact-requests">
                     <Mail />
-                    Liên hệ về ảnh
+                    Góp ý Wiki &amp; liên hệ về ảnh
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -456,7 +456,7 @@ export function ImageManagementPage() {
         </ul>
       )}
       {!grid && (
-        <div className="overflow-x-auto rounded-xl border bg-card">
+        <div className="overflow-x-auto admin-panel">
           <table className="w-full table-fixed text-left text-sm" aria-label="Danh sách ảnh">
             <colgroup>
               {writable && <col className="w-10" />}

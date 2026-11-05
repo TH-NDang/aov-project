@@ -1,3 +1,4 @@
+import { PageReference } from "@/features/community/page-reference"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { CircleAlert, Copyright, ExternalLink, Info, RefreshCw, UserRound } from "lucide-react"
@@ -66,10 +67,15 @@ export function HeroImageSource({ assetId }: { assetId: string | null | undefine
             const missing = sourceGap([source])
             return (
               <li key={source.id} className="min-w-0 space-y-1 break-words pt-3 first:pt-0">
+                {source.relatedPageId && (
+                  <p>
+                    <PageReference id={source.relatedPageId} label="Nội dung liên quan" />
+                  </p>
+                )}
                 {owner ? (
                   <p className="flex items-start gap-1.5 font-semibold">
                     <Copyright aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-                    {owner}
+                    {source.ownerPageId ? <PageReference id={source.ownerPageId} label={owner} /> : owner}
                   </p>
                 ) : (
                   <p className="flex items-start gap-1.5 font-semibold text-amber-700 dark:text-amber-300">

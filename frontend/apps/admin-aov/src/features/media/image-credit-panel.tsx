@@ -1,6 +1,7 @@
 import { Link } from "react-router"
 import { CircleAlert, Copyright, ExternalLink, PencilLine } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
+import { PageReference } from "@/features/community/page-reference"
 import { creditHttpUrl, type MediaCredit } from "@aov/ui/lib/media-credit"
 import { primarySource, sourceGap, sourceGapHints, sourceGapLabels, visibleSources } from "./media-source-gaps"
 
@@ -24,7 +25,7 @@ export function ImageCreditPanel({
   const contact = creditHttpUrl(main?.contactUrl)
   return (
     <section
-      aria-label="Bản quyền ảnh"
+      aria-label="Nguồn và ghi công ảnh"
       className={cn(
         "space-y-2 rounded-lg border p-3 text-sm",
         gap === "none" ? "bg-muted/30" : "border-amber-500/40 bg-amber-500/10",
@@ -38,7 +39,7 @@ export function ImageCreditPanel({
             {owner ? (
               <>
                 <Copyright aria-hidden className="size-4 shrink-0" />
-                {owner}
+                {main?.ownerPageId ? <PageReference id={main.ownerPageId} label={owner} /> : owner}
               </>
             ) : (
               <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-300">
@@ -67,6 +68,12 @@ export function ImageCreditPanel({
           </p>
         </div>
       </div>
+      {main?.relatedPageId && (
+        <div className="type-body">
+          <span className="text-muted-foreground">Nội dung liên quan: </span>
+          <PageReference id={main.relatedPageId} />
+        </div>
+      )}
       {gap !== "none" && <p className="text-xs text-amber-800 dark:text-amber-200">{sourceGapHints[gap]}</p>}
       {(contact || others.length > 0 || assetId) && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t pt-2 text-xs text-muted-foreground">

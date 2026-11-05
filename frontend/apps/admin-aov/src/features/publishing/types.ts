@@ -165,6 +165,9 @@ export interface Asset {
   currentUrl: string | null
 }
 export interface AssetProvenance {
+  ownerPageId?: string | null
+  relatedPageId?: string | null
+  referenceVersion?: number
   ownerName?: string | null
   contactUrl?: string | null
   id: string
@@ -179,7 +182,21 @@ export interface AssetDetail extends Asset {
   provenance: AssetProvenance[]
 }
 
-export function publishIssues(content: Content): string[] {
+export function publicationPatchIssue(
+  revision: Revision,
+  patch: { rulesetId: string; patchCode: string; status: string } | undefined,
+  loading: boolean,
+): string | null {
+  if (!revision.effectiveFromPatchVariantId)
+    return revision.cause === "DATA_BASELINE" || revision.cause === "GAME_PATCH"
+      ? "Chọn patch áp dụng cho bản nháp trước khi xuất bản tướng."
+      : null
+  if (!patch) return loading ? "Đang kiểm tra trạng thái patch…" : "Chưa xác minh được patch của bản nháp."
+  if (patch.rulesetId !== revision.rulesetId) return "Patch của bản nháp thuộc bộ quy tắc khác."
+  return patch.status === "PUBLISHED" ? null : `Hãy xuất bản patch ${patch.patchCode} trước khi xuất bản tướng.`
+}
+
+export function publishIssues(content: Content, hasObservedStats = false): string[] {
   const issues: string[] = []
   if (!content.PROFILE?.roles.length || !content.PROFILE.translations.length)
     issues.push("Điền thông tin và vai trò tướng.")
@@ -191,7 +208,8 @@ export function publishIssues(content: Content): string[] {
     )
   )
     issues.push("Bổ sung đánh giá có căn cứ.")
-  if (!content.COMBAT_STATS?.values.length) issues.push("Bổ sung chỉ số đã kiểm tra.")
+  if (!content.COMBAT_STATS || (!content.COMBAT_STATS.values.length && !hasObservedStats))
+    issues.push("Cần có chỉ số riêng của tướng hoặc thuộc tính ghi nhận từ ảnh của patch này.")
   if (
     !content.SKILLS?.skills.length ||
     content.SKILLS.skills.some(

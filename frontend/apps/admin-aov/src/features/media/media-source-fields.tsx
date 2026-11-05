@@ -1,6 +1,8 @@
 import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
 import { control } from "../publishing/fields"
 import { OwnerNameHints, OwnerNameInput } from "./owner-name-field"
+import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
+import { PageReferencePicker } from "@/features/community/page-reference-picker"
 
 export function MediaSourceFields({
   value,
@@ -21,6 +23,7 @@ export function MediaSourceFields({
   form?: string
 }) {
   const ownerMissing = ownerRequired && !value.ownerName?.trim()
+  const access = useTournamentAccess()
   return (
     <fieldset disabled={disabled} className="grid gap-3 rounded-lg border p-3">
       <legend className="px-1 text-sm font-medium">Nguồn & chủ sở hữu ảnh</legend>
@@ -94,6 +97,32 @@ export function MediaSourceFields({
           placeholder="https://…"
         />
       </label>
+      {access.canRead && (
+        <div className="space-y-3">
+          <PageReferencePicker
+            label="Hồ sơ chủ sở hữu"
+            value={value.ownerPageId}
+            actorKey={access.actorKey}
+            canWrite={!disabled}
+            canCreate={access.canWrite && !disabled}
+            onSelect={(profile) =>
+              onChange({
+                ...value,
+                ownerPageId: profile?.id || null,
+                ownerName: value.ownerName?.trim() || profile?.content?.name || null,
+              })
+            }
+          />
+          <PageReferencePicker
+            label="Nội dung liên quan"
+            value={value.relatedPageId}
+            actorKey={access.actorKey}
+            canWrite={!disabled}
+            canCreate={access.canWrite && !disabled}
+            onSelect={(profile) => onChange({ ...value, relatedPageId: profile?.id || null })}
+          />
+        </div>
+      )}
       <label className="grid gap-1 text-sm">
         Trang liên hệ của bên cung cấp (nếu có)
         <input
