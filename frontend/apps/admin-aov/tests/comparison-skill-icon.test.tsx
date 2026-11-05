@@ -83,6 +83,10 @@ test("comparison reference artwork requires an exact unambiguous hero, slot and 
 
 test("comparison skill icons share a reference request, preserve bound images and show honest missing or failed icons", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/publishing/hero" })
+  Object.defineProperty(dom.window, "matchMedia", {
+    configurable: true,
+    value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+  })
   const originals = new Map<string, PropertyDescriptor | undefined>()
   const requests: { url: string; credentials: RequestCredentials | undefined }[] = []
   for (const [key, value] of Object.entries({

@@ -3,7 +3,7 @@ import { cn } from "../lib/utils"
 
 export type HeroLane = "TOP" | "JUNGLE" | "MID" | "DRAGON" | "SUPPORT"
 
-const shapes: Record<HeroLane, ReactNode> = {
+const shapes: () => Record<HeroLane, ReactNode> = () => ({
   TOP: (
     <>
       <path d="M5 5h35l-8 8H13v19l-8 8Z" />
@@ -36,7 +36,7 @@ const shapes: Record<HeroLane, ReactNode> = {
       <path d="m24 13 6 12-6 8-6-8Z" />
     </>
   ),
-}
+})
 
 /** Transparent lane artwork inherits the caller's text color. */
 export function HeroLaneIcon({
@@ -63,7 +63,7 @@ export function HeroLaneIcon({
       className={cn("inline-block shrink-0", className)}
     >
       {label && <title>{label}</title>}
-      {shapes[lane]}
+      {shapes()[lane]}
     </svg>
   )
 }
