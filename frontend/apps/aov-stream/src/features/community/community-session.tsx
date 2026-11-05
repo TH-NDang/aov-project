@@ -28,6 +28,7 @@ export function CommunitySessionButton() {
     theme,
     onThemeChange: setTheme,
     name: session.status === "authenticated" ? profile.data?.displayName || session.name : undefined,
+    avatarUrl: session.status === "authenticated" ? profile.data?.avatarUrl : undefined,
     loading: session.status === "loading",
     onSignIn: () => signIn(),
     onSignOut: () => signOut(),

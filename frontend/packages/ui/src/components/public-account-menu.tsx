@@ -13,6 +13,7 @@ export type PublicAccountOptionsProps = {
   theme?: "light" | "dark"
   onThemeChange?: (theme: "light" | "dark") => void
   name?: string
+  avatarUrl?: string | null
   loading?: boolean
   onSignIn: () => Promise<void>
   onSignOut?: () => void
@@ -22,7 +23,7 @@ type Props = PublicAccountOptionsProps & { triggerClassName?: string }
 
 export function PublicAccountMenu(props: Props) {
   const mobile = useIsMobile()
-  const { product, locale, name, triggerClassName = "" } = props
+  const { product, locale, name, avatarUrl, triggerClassName = "" } = props
   const [open, setOpen] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const hovered = useRef(false)
@@ -72,7 +73,13 @@ export function PublicAccountMenu(props: Props) {
         }}
       >
         <span className="public-account-trigger-user" aria-hidden="true">
-          {name ? Array.from(name.trim())[0]?.toUpperCase() : <UserRound size={19} />}
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" referrerPolicy="no-referrer" />
+          ) : name ? (
+            Array.from(name.trim())[0]?.toUpperCase()
+          ) : (
+            <UserRound size={19} />
+          )}
         </span>
       </PopoverTrigger>
       <PopoverContent
