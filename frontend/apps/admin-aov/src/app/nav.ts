@@ -153,28 +153,17 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: "competition",
         items: [
           {
-            title: "Tổ chức",
-            icon: "organizations",
+            title: "Hồ sơ thi đấu",
+            icon: "competitionProfile",
             to: "/organizations",
-            description: "Đơn vị tổ chức và thương hiệu",
+            description: "Tổ chức, đội tuyển và tuyển thủ",
+            activePaths: ["/organizations", "/circuits", "/teams", "/players", "/coaches", "/broadcast", "/pages"],
           },
           {
             title: "Giải đấu",
             icon: "tournaments",
             to: "/tournaments",
             description: "Giải đấu, lịch thi đấu và kết quả",
-          },
-          {
-            title: "Đội tuyển",
-            icon: "teams",
-            to: "/teams",
-            description: "Hồ sơ đội tuyển và đội hình thi đấu",
-          },
-          {
-            title: "Tuyển thủ",
-            icon: "players",
-            to: "/players",
-            description: "Hồ sơ, tên thi đấu và thông tin tuyển thủ",
           },
           {
             title: "Yêu cầu & kiểm duyệt",

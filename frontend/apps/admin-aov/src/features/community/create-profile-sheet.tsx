@@ -1,12 +1,23 @@
 import { useState } from "react"
+import { useBeforeUnload } from "react-router"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { ArrowRight } from "lucide-react"
-import { emptyProfile, profileKindLabels, type ProfileKind, type CommunityProfile } from "@aov/community-contracts"
+import {
+  emptyProfile,
+  isIndividualProfile,
+  profileKindLabels,
+  type ProfileKind,
+  type CommunityProfile,
+  type PersonRole,
+} from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { pageApi, pageError, pageKeys } from "./page-api"
-import { Field } from "./profile-fields"
+import { Field } from "./profile-form-primitives"
 import { profileSlug } from "./profile-slug"
+import { ProfileImageField } from "./profile-image-field"
+import { ProfileCountryPicker } from "./profile-country-picker"
+import { ProfilePersonRoles } from "./profile-person-roles"
 
 export function CreateProfileSheet({
   kind,
@@ -15,6 +26,7 @@ export function CreateProfileSheet({
   initialName = "",
   initialSource = "",
   submitLabel = "Tạo và tiếp tục",
+  initialRoles = [],
 }: {
   kind: ProfileKind
   onClose: () => void
@@ -22,6 +34,7 @@ export function CreateProfileSheet({
   initialName?: string
   initialSource?: string
   submitLabel?: string
+  initialRoles?: PersonRole[]
 }) {
   const client = useQueryClient()
   const [name, setName] = useState(initialName)
@@ -30,10 +43,17 @@ export function CreateProfileSheet({
   const [codeTyped, setCodeTyped] = useState(false)
   const nonLatin = !!name.trim() && profileSlug(name) === null
   const [source, setSource] = useState(initialSource)
+  const [country, setCountry] = useState("")
+  const [personRoles, setPersonRoles] = useState<PersonRole[]>(initialRoles)
+  const [avatarUrl, setAvatarUrl] = useState("")
+  const [uploading, setUploading] = useState(false)
   const create = useMutation({
     mutationFn: () =>
       pageApi.create(kind, code, {
         ...emptyProfile(name),
+        country: country || null,
+        ...(isIndividualProfile(kind) ? { personRoles } : {}),
+        avatarUrl: avatarUrl || null,
         sources: source ? [{ label: "Nguồn hồ sơ", url: source }] : [],
       }),
     onSuccess: async (entry) => {
@@ -42,14 +62,21 @@ export function CreateProfileSheet({
       onCreated(entry)
     },
   })
+  const busy = uploading || create.isPending
+  useBeforeUnload((event) => {
+    if (busy) {
+      event.preventDefault()
+      event.returnValue = ""
+    }
+  })
   return (
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open && !create.isPending) onClose()
+        if (!open && !busy) onClose()
       }}
     >
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto sm:max-w-lg" showCloseButton={!busy}>
         <SheetHeader>
           <SheetTitle>Tạo hồ sơ {profileKindLabels[kind].toLowerCase()}</SheetTitle>
           <SheetDescription>Lưu nháp trước, bổ sung thông tin và công bố khi đã sẵn sàng.</SheetDescription>
@@ -58,56 +85,96 @@ export function CreateProfileSheet({
           className="space-y-5 px-4 py-6"
           onSubmit={(e) => {
             e.preventDefault()
-            create.mutate()
+            e.stopPropagation()
+            if (!busy && (kind !== "PERSON" || personRoles.length)) create.mutate()
           }}
         >
-          <Field
-            label="Tên hiển thị *"
-            required
-            maxLength={200}
-            autoFocus
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value)
-              if (!codeTyped) setCode(profileSlug(e.target.value) ?? "")
-            }}
-          />
-          <div className="grid gap-2">
+          <fieldset disabled={busy} className="min-w-0 space-y-5">
             <Field
-              label="Đường dẫn hồ sơ *"
+              label="Tên hiển thị *"
               required
-              pattern="[a-z0-9][a-z0-9-]{1,99}"
-              placeholder="garena-aov-taiwan"
-              aria-describedby="profile-code-hint"
-              value={code}
+              maxLength={200}
+              autoFocus
+              value={name}
               onChange={(e) => {
-                setCode(e.target.value)
-                setCodeTyped(true)
+                setName(e.target.value)
+                if (!codeTyped) setCode(profileSlug(e.target.value) ?? "")
               }}
             />
-            <p id="profile-code-hint" className="type-meta">
-              {nonLatin && !codeTyped
-                ? "Tên có chữ không phải Latin nên không tự tạo được đường dẫn. Hãy tự đặt bằng chữ thường không dấu, số và gạch nối."
-                : "Chữ thường không dấu, số và gạch nối; dùng làm địa chỉ trang công khai."}
+            <div className="grid gap-2">
+              <Field
+                label="Đường dẫn hồ sơ *"
+                required
+                pattern="[a-z0-9][a-z0-9-]{1,99}"
+                placeholder={
+                  kind === "CIRCUIT"
+                    ? "dau-truong-danh-vong"
+                    : kind === "TEAM"
+                      ? "team-flash"
+                      : isIndividualProfile(kind)
+                        ? "ten-nhan-su"
+                        : "garena-viet-nam"
+                }
+                aria-describedby="profile-code-hint"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value)
+                  setCodeTyped(true)
+                }}
+              />
+              <p id="profile-code-hint" className="type-meta">
+                {nonLatin && !codeTyped
+                  ? "Tên có chữ không phải Latin nên không tự tạo được đường dẫn. Hãy tự đặt bằng chữ thường không dấu, số và gạch nối."
+                  : "Chữ thường không dấu, số và gạch nối; dùng làm địa chỉ trang công khai."}
+              </p>
+            </div>
+            <ProfileCountryPicker value={country} disabled={busy} onChange={setCountry} />
+            {isIndividualProfile(kind) && (
+              <ProfilePersonRoles
+                value={personRoles}
+                onChange={setPersonRoles}
+                disabled={busy}
+                required={kind === "PERSON"}
+              />
+            )}
+            <Field
+              label="Nguồn tham khảo"
+              type="url"
+              placeholder="https://…"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+            />
+            <ProfileImageField
+              label={isIndividualProfile(kind) ? "Ảnh chân dung" : "Logo"}
+              shape={isIndividualProfile(kind) ? "portrait" : "logo"}
+              subject={
+                kind === "CIRCUIT"
+                  ? "circuit"
+                  : kind === "PERSON"
+                    ? "person"
+                    : kind === "PLAYER"
+                      ? "player"
+                      : kind === "TEAM"
+                        ? "team"
+                        : "organization"
+              }
+              name={name}
+              sourceUrl={source}
+              value={avatarUrl}
+              onChange={setAvatarUrl}
+              onBusyChange={setUploading}
+            />
+            <p className="type-meta">
+              Hồ sơ được tạo độc lập tài khoản đăng nhập. Bạn có thể bổ sung người đại diện sau.
             </p>
-          </div>
-          <Field
-            label="Nguồn tham khảo"
-            type="url"
-            placeholder="https://…"
-            value={source}
-            onChange={(e) => setSource(e.target.value)}
-          />
-          <p className="type-meta">
-            Hồ sơ được tạo độc lập tài khoản đăng nhập. Bạn có thể bổ sung người đại diện sau.
-          </p>
+          </fieldset>
           {create.isError && (
             <p role="alert" className="type-body text-destructive">
               {pageError(create.error)}
             </p>
           )}
-          <Button type="submit" disabled={create.isPending}>
-            {create.isPending ? "Đang tạo…" : submitLabel}
+          <Button type="submit" disabled={busy || (kind === "PERSON" && !personRoles.length)}>
+            {uploading ? "Đang tải ảnh…" : create.isPending ? "Đang tạo…" : submitLabel}
             <ArrowRight className="size-4" />
           </Button>
         </form>

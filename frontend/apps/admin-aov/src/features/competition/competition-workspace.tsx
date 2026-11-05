@@ -1,7 +1,23 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Link, useParams, useSearchParams, useBlocker } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Check, ChevronRight, ExternalLink, Plus, Save, Trash2 } from "lucide-react"
+import {
+  Building2,
+  CalendarDays,
+  Check,
+  ChevronRight,
+  ClipboardCheck,
+  ExternalLink,
+  GitBranch,
+  Info,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+  Trophy,
+  Users,
+  UserRound,
+} from "lucide-react"
 import {
   aogStages,
   slotLabel,
@@ -12,12 +28,14 @@ import {
   type CompetitionSlot,
 } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
-import { Textarea } from "@aov/ui/components/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Field, Section } from "@/features/community/profile-fields"
 import { pageApi, pageKeys, publicSite } from "@/features/community/page-api"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { TeamRosterSheet } from "@/features/tournaments/team-roster-sheet"
 import { tournamentKeys } from "@/features/tournaments/tournament-api"
+import { tournamentDates } from "@/features/tournaments/tournament-metadata"
+import { TeamRegionBadge } from "@/features/tournaments/team-region"
 import { useRecords, useRosters } from "@/features/esports/data/use-esports-data"
 import {
   AccessGate,
@@ -30,8 +48,12 @@ import {
 import { competitionApi, competitionKeys } from "./competition-api"
 import { CompetitionStatistics } from "./competition-statistics"
 import { OrganizationPicker } from "./organization-picker"
+import { CompetitionInformationFields } from "./competition-information-fields"
+import { CompetitionChoiceField } from "./competition-choice-field"
+import { bestOfOptions, stageNameOptions } from "./competition-field-options"
 
 const steps = ["Thông tin", "Đội tham dự", "Đội hình", "Thể thức", "Lịch & kết quả", "Kiểm tra & công bố"]
+const stepIcons = [Info, Users, UserRound, GitBranch, CalendarDays, ClipboardCheck]
 const selectClass = "h-10 w-full rounded-md border bg-background px-3 text-sm"
 export function CompetitionWorkspace() {
   return <AccessGate>{(access) => <Loader access={access} />}</AccessGate>
@@ -60,6 +82,15 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const client = useQueryClient()
   const [params, setParams] = useSearchParams()
   const step = Math.min(5, Math.max(0, Number(params.get("step")) || 0))
+  const stepNavigation = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const navigation = stepNavigation.current
+    const active = navigation?.querySelector<HTMLElement>("[aria-current='step']")
+    if (!navigation || !active) return
+    const left = active.getBoundingClientRect().left - navigation.getBoundingClientRect().left
+    if (left < 0 || left + active.offsetWidth > navigation.clientWidth)
+      navigation.scrollTo({ left: navigation.scrollLeft + left - 8, behavior: "smooth" })
+  }, [step])
   const [plan, setPlan] = useState(entry.content.plan)
   const [baseline, setBaseline] = useState(entry.content.plan)
   const [draftVersion, setDraftVersion] = useState(entry.version)
@@ -152,6 +183,22 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
     },
   ]
   const go = (value: number) => setParams({ step: String(value) })
+  const completeSteps = [
+    checks[0]!.ok && checks[7]!.ok,
+    checks[1]!.ok,
+    checks[2]!.ok,
+    checks[3]!.ok,
+    checks[4]!.ok && checks[5]!.ok,
+    checks.every((check) => check.ok),
+  ]
+  const stepDetails = [
+    plan.organizerPageId ? "Đã liên kết tổ chức" : "Chọn tổ chức",
+    `${plan.entrants.length} đội tham dự`,
+    `${plan.entrants.filter((team) => rosters.data?.some((row) => row.content.teamId === team.teamId)).length}/${plan.entrants.length} đội có đội hình`,
+    `${plan.stages.length} giai đoạn`,
+    `${plan.matches.length} trận đấu`,
+    `${checks.filter((check) => check.ok).length}/${checks.length} mục đã đủ`,
+  ]
   const updateMatch = (key: string, patch: Partial<PlannedMatch>) =>
     change(
       "matches",
@@ -166,9 +213,6 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
         <div>
           <p className="type-meta">KHÔNG GIAN GIẢI ĐẤU · {entry.publishedAt ? "Đã công bố" : "Bản nháp"}</p>
           <h1 className="type-page-title mt-1">{entry.content.tournament.name}</h1>
-          <p className="type-body mt-2 text-muted-foreground">
-            Từ danh sách tham dự đến kết quả, quản lý theo từng bước.
-          </p>
         </div>
         <div className="flex items-center gap-2">
           {entry.publishedAt && (
@@ -188,18 +232,37 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
           )}
         </div>
       </header>
-      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6" aria-label="Tiến trình tạo giải">
-        {steps.map((label, index) => (
-          <button
-            key={label}
-            onClick={() => go(index)}
-            aria-current={step === index ? "step" : undefined}
-            className={`rounded-lg border p-3 text-left text-sm ${step === index ? "border-primary bg-primary/10" : "bg-card hover:bg-muted"}`}
-          >
-            <span className="type-meta block mb-1">BƯỚC {index + 1}</span>
-            {label}
-          </button>
-        ))}
+      <nav
+        ref={stepNavigation}
+        className="sticky top-0 z-20 flex gap-1 overflow-x-auto rounded-xl border bg-background/95 p-1.5 shadow-sm backdrop-blur-sm"
+        aria-label="Tiến trình tạo giải"
+      >
+        {steps.map((label, index) => {
+          const Icon = stepIcons[index]!
+          return (
+            <button
+              key={label}
+              type="button"
+              onClick={() => go(index)}
+              aria-current={step === index ? "step" : undefined}
+              aria-label={`Bước ${index + 1}: ${label}. ${stepDetails[index]}`}
+              className={`min-w-36 flex-1 rounded-lg border p-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${step === index ? "border-primary/30 bg-background shadow-sm" : "border-transparent hover:bg-background/70"}`}
+            >
+              <span
+                className={`type-label flex items-center gap-1.5 whitespace-nowrap ${step === index ? "text-foreground" : "text-muted-foreground"}`}
+              >
+                <Icon aria-hidden className="size-4 shrink-0" />
+                {label}
+              </span>
+              <span className="type-meta mt-1 flex items-center gap-1">
+                {completeSteps[index] ? (
+                  <Check aria-label="Đã đủ thông tin" className="size-3 shrink-0 text-emerald-600" />
+                ) : null}
+                {stepDetails[index]}
+              </span>
+            </button>
+          )
+        })}
       </nav>
       {dirty && (
         <p className="type-meta" role="status">
@@ -234,116 +297,75 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       <fieldset disabled={!access.canWrite || mutate.isPending} className="min-w-0 space-y-5">
         {step === 0 && (
           <>
-            <Section title="Thông tin giải" description="Tên, thời gian, khu vực và hình ảnh của mùa giải.">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="type-body">
-                  {entry.content.tournament.startsOn || "Chưa có ngày bắt đầu"} →{" "}
-                  {entry.content.tournament.endsOn || "Chưa có ngày kết thúc"}
-                </p>
-                <Button variant="outline" onClick={() => setEditing(true)}>
-                  Chỉnh sửa thông tin cơ bản
-                </Button>
-              </div>
-            </Section>
-            <Section title="Đơn vị tổ chức">
-              <OrganizationPicker
-                value={plan.organizerPageId}
-                actorKey={access.actorKey}
-                canWrite={access.canWrite}
-                onSelect={(profile) => {
-                  setPlan((current) => ({
-                    ...current,
-                    organizerPageId: profile?.id || null,
-                    organizer: profile?.content?.name || "",
-                  }))
-                  setNotice("")
-                }}
-              />
-            </Section>
-            <Section title="Hệ thống giải & nguồn thông tin">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field label="Hệ thống giải" value={plan.circuit} onChange={(e) => change("circuit", e.target.value)} />
-                <Field
-                  label="Nguồn kiểm chứng"
-                  type="url"
-                  placeholder="https://…"
-                  value={plan.sourceUrl}
-                  onChange={(e) => change("sourceUrl", e.target.value)}
-                />
-                <Field
-                  label="Quỹ giải thưởng"
-                  value={plan.prizePool}
-                  onChange={(e) => change("prizePool", e.target.value)}
-                />
-                <Field
-                  label="Đơn vị tiền tệ"
-                  value={plan.currency}
-                  onChange={(e) => change("currency", e.target.value)}
-                />
-                <Field
-                  label="Múi giờ của giải"
-                  value={plan.timezone}
-                  onChange={(e) => change("timezone", e.target.value)}
-                />
-              </div>
-              <label className="grid gap-2">
-                <span className="type-label">Giới thiệu & quy định bổ sung</span>
-                <Textarea rows={5} value={plan.notes} onChange={(e) => change("notes", e.target.value)} />
-              </label>
-            </Section>
-            <Section title="Địa điểm theo giai đoạn">
-              {plan.venues.map((venue, index) => (
-                <div key={index} className="grid items-end gap-3 md:grid-cols-4">
-                  <Field
-                    label="Địa điểm"
-                    value={venue.name}
-                    onChange={(e) =>
-                      change(
-                        "venues",
-                        plan.venues.map((v, i) => (i === index ? { ...v, name: e.target.value } : v)),
-                      )
-                    }
-                  />
-                  <Field
-                    label="Thành phố"
-                    value={venue.city}
-                    onChange={(e) =>
-                      change(
-                        "venues",
-                        plan.venues.map((v, i) => (i === index ? { ...v, city: e.target.value } : v)),
-                      )
-                    }
-                  />
-                  <Field
-                    label="Giai đoạn"
-                    value={venue.stageCode}
-                    onChange={(e) =>
-                      change(
-                        "venues",
-                        plan.venues.map((v, i) => (i === index ? { ...v, stageCode: e.target.value } : v)),
-                      )
-                    }
-                  />
+            <div className="grid gap-5 lg:grid-cols-2">
+              <Section
+                title="Thông tin giải"
+                icon={Trophy}
+                action={
                   <Button
+                    type="button"
                     variant="ghost"
-                    onClick={() =>
-                      change(
-                        "venues",
-                        plan.venues.filter((_, i) => i !== index),
-                      )
-                    }
+                    size="icon"
+                    aria-label="Chỉnh sửa thông tin cơ bản"
+                    title="Chỉnh sửa thông tin cơ bản"
+                    onClick={() => setEditing(true)}
                   >
-                    Bỏ địa điểm
+                    <Pencil size={16} />
                   </Button>
-                </div>
-              ))}
-              <Button
-                variant="outline"
-                onClick={() => change("venues", [...plan.venues, { name: "", city: "", stageCode: "" }])}
+                }
               >
-                <Plus size={16} /> Thêm địa điểm
-              </Button>
-            </Section>
+                <div className="flex items-start gap-3">
+                  <Avatar className="size-12 rounded-lg border bg-background">
+                    <AvatarImage
+                      src={entry.content.tournament.logoUrl || undefined}
+                      alt=""
+                      className="object-contain"
+                    />
+                    <AvatarFallback className="rounded-lg">
+                      <Trophy className="size-6" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="type-section-title">{entry.content.tournament.name}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <TeamRegionBadge code={entry.content.tournament.region} />
+                      {entry.content.tournament.tier && entry.content.tournament.tier !== "UNKNOWN" && (
+                        <span className="type-label rounded-md bg-muted px-2 py-1">
+                          {entry.content.tournament.tier}-Tier
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <p className="type-body flex items-center gap-2 border-t pt-3 text-muted-foreground">
+                  <CalendarDays aria-hidden size={16} />
+                  {tournamentDates(entry.content.tournament) || "Chưa có thời gian thi đấu"}
+                </p>
+              </Section>
+              <Section title="Đơn vị tổ chức" icon={Building2}>
+                <OrganizationPicker
+                  value={plan.organizerPageId}
+                  actorKey={access.actorKey}
+                  canWrite={access.canWrite && !mutate.isPending}
+                  onSelect={(profile) => {
+                    setPlan((current) => ({
+                      ...current,
+                      organizerPageId: profile?.id || null,
+                      organizer: profile?.content?.name || "",
+                    }))
+                    setNotice("")
+                  }}
+                />
+              </Section>
+            </div>
+            <CompetitionInformationFields
+              actorKey={access.actorKey}
+              plan={plan}
+              savedPlan={baseline}
+              sourceUrl={entry.content.tournament.sourceUrl}
+              disabled={!access.canWrite || mutate.isPending}
+              onChange={change}
+            />
           </>
         )}
         {(step === 1 || step === 2) && (
@@ -489,6 +511,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
               <StageEditor
                 key={stage.code}
                 stage={stage}
+                disabled={!access.canWrite || mutate.isPending}
                 removable={!plan.matches.some((match) => match.stageCode === stage.code)}
                 onChange={(value) =>
                   change(
@@ -682,15 +705,11 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                           value={match.round}
                           onChange={(event) => updateMatch(match.key, { round: Number(event.target.value) })}
                         />
-                        <Field
+                        <BestOfField
                           label="BO của trận"
-                          type="number"
-                          min={1}
-                          max={9}
-                          step={2}
                           disabled={!!match.seriesId}
                           value={match.bestOf}
-                          onChange={(event) => updateMatch(match.key, { bestOf: Number(event.target.value) })}
+                          onChange={(bestOf) => updateMatch(match.key, { bestOf })}
                         />
                         <SlotEditor
                           label="Đội A"
@@ -887,14 +906,6 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
           seriesIds={entry.content.plan.matches.flatMap((match) => (match.seriesId ? [match.seriesId] : []))}
         />
       )}
-      <footer className="flex justify-between border-t pt-4">
-        <Button variant="outline" disabled={step === 0} onClick={() => go(step - 1)}>
-          Bước trước
-        </Button>
-        <Button variant="outline" disabled={step === 5} onClick={() => go(step + 1)}>
-          Tiếp tục <ChevronRight size={16} />
-        </Button>
-      </footer>
       {editing && event && (
         <RegistryEditor
           open
@@ -921,11 +932,13 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
 }
 function StageEditor({
   stage,
+  disabled,
   onChange,
   onRemove,
   removable,
 }: {
   stage: CompetitionStage
+  disabled: boolean
   onChange: (value: CompetitionStage) => void
   onRemove: () => void
   removable: boolean
@@ -933,10 +946,14 @@ function StageEditor({
   return (
     <Section title={stage.name || "Giai đoạn"}>
       <div className="grid gap-4 md:grid-cols-3">
-        <Field
+        <CompetitionChoiceField
           label="Tên giai đoạn"
           value={stage.name}
-          onChange={(e) => onChange({ ...stage, name: e.target.value })}
+          options={stageNameOptions}
+          allowCustom
+          maxLength={200}
+          disabled={disabled}
+          onChange={(name) => onChange({ ...stage, name })}
         />
         <label className="grid gap-2">
           <span className="type-label">Thể thức</span>
@@ -957,15 +974,7 @@ function StageEditor({
             ))}
           </select>
         </label>
-        <Field
-          label="BO"
-          type="number"
-          min={1}
-          max={9}
-          step={2}
-          value={stage.bestOf}
-          onChange={(e) => onChange({ ...stage, bestOf: Number(e.target.value) })}
-        />
+        <BestOfField label="BO" value={stage.bestOf} onChange={(bestOf) => onChange({ ...stage, bestOf })} />
         {stage.format === "ROUND_ROBIN" && (
           <>
             {(
@@ -1017,6 +1026,35 @@ function StageEditor({
         Bỏ giai đoạn
       </Button>
     </Section>
+  )
+}
+function BestOfField({
+  label,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string
+  value: number
+  disabled?: boolean
+  onChange: (value: number) => void
+}) {
+  return (
+    <label className="grid gap-2">
+      <span className="type-label">{label}</span>
+      <select
+        className={selectClass}
+        value={String(value)}
+        disabled={disabled}
+        onChange={(event) => onChange(Number(event.target.value))}
+      >
+        {bestOfOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
   )
 }
 function SlotEditor({

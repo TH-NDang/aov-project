@@ -1,8 +1,22 @@
-import type { CompetitionPlan, CompetitionView, PlannedMatch, PageSlice } from "@aov/community-contracts"
+import type {
+  CompetitionPlan,
+  CompetitionView,
+  CompetitionSummary,
+  PlannedMatch,
+  PageSlice,
+} from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
 import { tournamentKeys } from "@/features/tournaments/tournament-api"
 export const competitionKeys = [...tournamentKeys.all, "plans"] as const
 export const competitionApi = {
+  inCircuit: (circuitPageId: string, page = 0) =>
+    communityRequest<PageSlice<CompetitionSummary>>(
+      `/admin/competitions?${new URLSearchParams({ circuitPageId, page: String(page), size: "12" })}`,
+    ),
+  organizedBy: (organizationId: string, page = 0) =>
+    communityRequest<PageSlice<CompetitionSummary>>(
+      `/admin/competitions?${new URLSearchParams({ organizerPageId: organizationId, page: String(page), size: "12" })}`,
+    ),
   summaries: async () => {
     const rows: { id: string; entrants: number; matches: number; publishedAt?: string | null }[] = []
     for (let page = 0; page < 100; page++) {

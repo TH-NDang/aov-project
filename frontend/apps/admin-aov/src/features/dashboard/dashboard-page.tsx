@@ -230,32 +230,31 @@ export function DashboardPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
+      <nav
+        aria-label="Danh mục và số lượng"
+        className="admin-panel grid grid-cols-2 overflow-hidden sm:grid-cols-4 xl:grid-cols-7"
+      >
         {stats.map((stat) => (
           <Link
             key={stat.label}
             to={stat.to}
-            className="group rounded-xl focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+            title={stat.hint}
+            className="min-w-0 space-y-1 px-3 py-2.5 shadow-[1px_1px_0_var(--border)] transition-colors hover:bg-accent/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
           >
-            <Card className="h-full gap-1 py-3 transition-colors group-hover:bg-accent/50">
-              <CardHeader className="gap-1 px-3">
-                <CardDescription className="text-xs">{stat.label}</CardDescription>
-                <CardAction>
-                  <stat.icon aria-hidden className="size-5 shrink-0" />
-                </CardAction>
-                <CardTitle className="text-xl tabular-nums">
-                  {stat.value === undefined ? <Skeleton className="h-7 w-14" /> : formatNumber(stat.value)}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="truncate px-3 text-xs text-muted-foreground">{stat.hint}</CardContent>
-            </Card>
+            <span className="type-meta flex items-center gap-1.5">
+              <stat.icon aria-hidden className="size-5 shrink-0" />
+              {stat.label}
+            </span>
+            <div className="type-section-title tabular-nums">
+              {stat.value === undefined ? <Skeleton className="h-5 w-10" /> : formatNumber(stat.value)}
+            </div>
           </Link>
         ))}
-      </div>
+      </nav>
 
       <div className="grid gap-4 xl:grid-cols-5">
         {canReadHeroes && <CurrentPatchCard locale={locale} />}
-        <Card className={canReadHeroes ? "xl:col-span-3" : "xl:col-span-5"}>
+        <Card className={canReadHeroes ? "admin-section xl:col-span-3" : "admin-section xl:col-span-5"}>
           <CardHeader>
             <CardTitle>Việc cần xử lý</CardTitle>
             <CardDescription>Ưu tiên các mục thiếu dữ liệu và công thức chưa xác nhận.</CardDescription>
@@ -306,7 +305,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-5">
-        <Card className="xl:col-span-2">
+        <Card className="admin-section xl:col-span-2">
           <CardHeader>
             <CardTitle>Độ phủ dữ liệu</CardTitle>
             <CardDescription>Tỉ lệ hoàn thiện dữ liệu trang bị đã thu thập.</CardDescription>
@@ -331,7 +330,7 @@ export function DashboardPage() {
             })}
           </CardContent>
         </Card>
-        <Card className="xl:col-span-3">
+        <Card className="admin-section xl:col-span-3">
           <CardHeader>
             <CardTitle>Trang bị theo nhóm shop</CardTitle>
             <CardDescription>Di chuột vào cột để xem phân bổ theo cấp.</CardDescription>
@@ -400,7 +399,7 @@ function CurrentPatchCard({ locale }: { locale: string }) {
   })
   const fromNotes = changes.data?.filter((change) => change.sourceKind === "PATCH_NOTES").length ?? 0
   return (
-    <Card className="xl:col-span-2">
+    <Card className="admin-section xl:col-span-2">
       <CardHeader>
         <CardTitle>Patch hiện tại</CardTitle>
         <CardDescription>
@@ -424,13 +423,13 @@ function CurrentPatchCard({ locale }: { locale: string }) {
               </p>
             </div>
             <dl className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg border p-2.5">
+              <div>
                 <dt className="text-xs text-muted-foreground">Tướng có thay đổi</dt>
                 <dd className="text-lg font-semibold tabular-nums">
                   {changes.data ? formatNumber(changes.data.length) : "…"}
                 </dd>
               </div>
-              <div className="rounded-lg border p-2.5">
+              <div className="border-l pl-3">
                 <dt className="text-xs text-muted-foreground">Ghi từ ghi chú cập nhật</dt>
                 <dd className="text-lg font-semibold tabular-nums">{changes.data ? formatNumber(fromNotes) : "…"}</dd>
               </div>

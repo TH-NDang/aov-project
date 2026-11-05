@@ -206,6 +206,29 @@ const routes: RouteObject[] = [
             },
           },
           {
+            path: "circuits",
+            lazy: async () => {
+              const { PageDirectory } = await import("@/features/community/page-directory")
+              return { Component: () => <PageDirectory kind="CIRCUIT" /> }
+            },
+          },
+          {
+            path: "coaches",
+            handle: title("Ban huấn luyện"),
+            lazy: async () => {
+              const { PageDirectory } = await import("@/features/community/page-directory")
+              return { Component: () => <PageDirectory kind="PERSON" group="COACHING" /> }
+            },
+          },
+          {
+            path: "broadcast",
+            handle: title("Broadcast"),
+            lazy: async () => {
+              const { PageDirectory } = await import("@/features/community/page-directory")
+              return { Component: () => <PageDirectory kind="PERSON" group="BROADCAST" /> }
+            },
+          },
+          {
             path: "pages/:pageId",
             handle: title("Hồ sơ công khai"),
             lazy: async () => ({ Component: (await import("@/features/community/page-editor")).PageEditor }),

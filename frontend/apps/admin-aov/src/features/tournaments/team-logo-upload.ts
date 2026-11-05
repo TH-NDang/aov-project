@@ -9,8 +9,10 @@ export class RegistryLogoUploadError extends Error {
 
 const imageLabels = {
   player: "Ảnh tuyển thủ",
+  person: "Ảnh nhân sự",
   team: "Logo đội tuyển",
   tournament: "Logo giải đấu",
+  circuit: "Logo hệ thống giải",
   organization: "Logo tổ chức",
   cover: "Ảnh bìa",
 } as const
@@ -20,10 +22,12 @@ export async function uploadRegistryLogo(
   request: Request,
   file: File,
   owner: {
-    kind: "team" | "tournament" | "player" | "organization" | "cover"
+    kind: keyof typeof imageLabels
     name: string
     sourceUrl?: string
     ownerName?: string
+    ownerPageId?: string | null
+    relatedPageId?: string | null
   },
   signal: AbortSignal,
   fetcher: typeof fetch = fetch,
@@ -43,6 +47,8 @@ export async function uploadRegistryLogo(
       url: owner.sourceUrl && /^https?:\/\//i.test(owner.sourceUrl) ? owner.sourceUrl : null,
       // Named by the person uploading; never inferred from the team or player name.
       ...(owner.ownerName?.trim() ? { ownerName: owner.ownerName.trim() } : {}),
+      ...(owner.ownerPageId ? { ownerPageId: owner.ownerPageId } : {}),
+      ...(owner.relatedPageId ? { relatedPageId: owner.relatedPageId } : {}),
       note: `Uploaded ${owner.kind} logo: ${file.name}`,
     },
     signedUpload,

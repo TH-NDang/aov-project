@@ -8,6 +8,7 @@ import { backendRequest } from "@/app/auth/session"
 import { ApiError, errorMessage } from "@/lib/api/errors"
 import { RegistryLogoUploadError, uploadRegistryLogo } from "../tournaments/team-logo-upload"
 import { OwnerNameHints, OwnerNameInput } from "../media/owner-name-field"
+import { MediaUploadReferences, type UploadReferences } from "../media/media-upload-references"
 
 type Shape = "logo" | "portrait" | "cover"
 
@@ -30,6 +31,7 @@ export function ProfileImageField({
   shape,
   subject,
   name,
+  sourceUrl,
   value,
   onChange,
   onBusyChange,
@@ -37,8 +39,9 @@ export function ProfileImageField({
   label: string
   shape: Shape
   /** What the image shows, for the image library's source name. */
-  subject: "organization" | "team" | "player" | "cover"
+  subject: "organization" | "team" | "player" | "person" | "cover" | "circuit"
   name: string
+  sourceUrl?: string
   value: string
   onChange: (url: string) => void
   onBusyChange: (busy: boolean) => void
@@ -47,6 +50,7 @@ export function ProfileImageField({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [owner, setOwner] = useState("")
+  const [references, setReferences] = useState<UploadReferences>({})
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const file = useRef<HTMLInputElement>(null)
   const ownerInput = useRef<HTMLInputElement>(null)
@@ -72,7 +76,7 @@ export function ProfileImageField({
       const url = await uploadRegistryLogo(
         backendRequest,
         selected,
-        { kind: subject, name, ownerName: owner },
+        { kind: subject, name, sourceUrl, ownerName: owner, ...references },
         signal.signal,
       )
       if (!signal.signal.aborted) onChange(url)
@@ -175,6 +179,14 @@ export function ProfileImageField({
             />
           </label>
           <OwnerNameHints value={owner} disabled={busy} onPick={setOwner} />
+          <MediaUploadReferences
+            value={references}
+            onChange={setReferences}
+            disabled={busy}
+            onOwnerName={(next) => {
+              if (!owner.trim()) setOwner(next)
+            }}
+          />
         </div>
       )}
       <details className="text-sm">

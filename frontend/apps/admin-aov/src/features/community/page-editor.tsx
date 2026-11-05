@@ -1,19 +1,23 @@
-import { useState, type ComponentType } from "react"
-import { Link, useBeforeUnload, useNavigate, useParams, useBlocker } from "react-router"
+import { useEffect, useRef, useState, type ComponentType } from "react"
+import { Link, useBeforeUnload, useNavigate, useParams, useBlocker, useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import {
   ArrowLeft,
   BookOpenText,
-  Building2,
+  CalendarDays,
   Check,
   Circle,
-  CircleCheck,
   Copy,
   ExternalLink,
   History,
+  ImagePlus,
   Info,
   KeyRound,
+  LoaderCircle,
   MoreHorizontal,
+  Radio,
+  Pencil,
+  Plus,
   Save,
   Send,
   ShieldCheck,
@@ -23,7 +27,13 @@ import {
   UserRound,
   Users,
 } from "lucide-react"
-import { profileKindLabels, type CommunityProfile, type ProfileKind } from "@aov/community-contracts"
+import {
+  isIndividualProfile,
+  isCommunityProfile,
+  personRoleLabels,
+  profileKindLabels,
+  type CommunityProfile,
+} from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -33,6 +43,7 @@ import {
 } from "@aov/ui/components/dropdown-menu"
 import { Input } from "@aov/ui/components/input"
 import { OfficialBadge } from "@aov/ui/components/official-badge"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { cn } from "@aov/ui/lib/utils"
 import { Page } from "@/components/page-header"
 import { AccessGate, type Access } from "@/features/esports/pages/esports-shell"
@@ -40,12 +51,20 @@ import { formatDateTime } from "@/lib/text"
 import { pageApi, pageError, pageKeys, publicSite } from "./page-api"
 import { ProfileFields, Section } from "./profile-fields"
 import { profileDirectoryPath } from "./page-directory"
+import { OrganizationCompetitions } from "./organization-competitions"
+import { PlatformIcon, popularSocialPlatforms, platformOf } from "./platform-icon"
+import { ProfileQuickEditSheet, type ProfileQuickEditTarget } from "./profile-quick-edit-sheet"
+import { ProfileCountry } from "./profile-country"
+import { ProfileTypeIcon } from "./profile-icons"
+import { CircuitChannelsField } from "./circuit-channels-field"
 
 export function PageEditor() {
   return <AccessGate>{(access) => <EditorLoader access={access} />}</AccessGate>
 }
 function EditorLoader({ access }: { access: Access }) {
   const { pageId = "" } = useParams()
+  const [searchParams] = useSearchParams()
+  const [section, setSection] = useState({ pageId: "", tab: "overview" })
   const query = useQuery({
     queryKey: [...pageKeys, access.actorKey, pageId],
     queryFn: () => pageApi.read(pageId),
@@ -60,26 +79,67 @@ function EditorLoader({ access }: { access: Access }) {
         {query.isError && <Button onClick={() => void query.refetch()}>Thử lại</Button>}
       </Page>
     )
-  return <Editor key={`${query.data.id}:${query.data.version}`} entry={query.data} access={access} />
+  return (
+    <Editor
+      key={`${query.data.id}:${query.data.version}`}
+      entry={query.data}
+      access={access}
+      tab={
+        section.pageId === pageId
+          ? section.tab
+          : searchParams.get("tab") === "roster" && query.data.kind === "TEAM"
+            ? "roster"
+            : "overview"
+      }
+      setTab={(tab) => setSection({ pageId, tab })}
+    />
+  )
 }
 type Icon = ComponentType<{ className?: string }>
 type Tab = [string, string, Icon, number | null]
-const kindIcons: Record<ProfileKind, Icon> = {
-  ORGANIZATION: Building2,
-  TEAM: Users,
-  PLAYER: UserRound,
-  PERSON: UserRound,
-  CIRCUIT: Trophy,
-}
 const httpUrl = (value?: string | null) => !!value && /^https?:\/\//i.test(value)
 
-function Editor({ entry, access }: { entry: CommunityProfile; access: Access }) {
+function Editor({
+  entry,
+  access,
+  tab,
+  setTab,
+}: {
+  entry: CommunityProfile
+  access: Access
+  tab: string
+  setTab: (tab: string) => void
+}) {
   const client = useQueryClient()
   const navigate = useNavigate()
   const [content, setContent] = useState(entry.content!)
-  const [tab, setTab] = useState("overview")
   const [uploading, setUploading] = useState(false)
+  const [quickEdit, setQuickEdit] = useState<ProfileQuickEditTarget | null>(null)
+  const sectionNavigation = useRef<HTMLElement>(null)
+  useEffect(() => {
+    const navigation = sectionNavigation.current
+    if (!navigation) return
+    const revealActiveTab = () => {
+      const active = navigation.querySelector<HTMLElement>('[aria-current="page"]')
+      if (!active || navigation.scrollWidth <= navigation.clientWidth) return
+      const container = navigation.getBoundingClientRect()
+      const button = active.getBoundingClientRect()
+      const offset =
+        button.left < container.left + 8
+          ? button.left - container.left - 8
+          : button.right > container.right - 8
+            ? button.right - container.right + 8
+            : 0
+      if (offset) navigation.scrollBy({ left: offset, behavior: "instant" })
+    }
+    revealActiveTab()
+    const observer = new ResizeObserver(revealActiveTab)
+    observer.observe(navigation)
+    return () => observer.disconnect()
+  }, [tab])
   const dirty = JSON.stringify(content) !== JSON.stringify(entry.content)
+  const community = isCommunityProfile(entry.kind)
+  const missingRole = entry.kind === "PERSON" && !content.personRoles?.length
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) => (dirty || uploading) && currentLocation.pathname !== nextLocation.pathname,
   )
@@ -100,54 +160,112 @@ function Editor({ entry, access }: { entry: CommunityProfile; access: Access }) 
     mutationFn: () => pageApi.remove(entry),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: pageKeys })
-      void navigate(profileDirectoryPath(entry.kind))
+      void navigate(profileDirectoryPath(entry.kind, content.personRoles))
     },
   })
   const tabs: Tab[] = [
-    ["overview", "Tổng quan", Info, null],
-    ...(entry.kind === "PLAYER" ? [] : [["roster", "Thành viên", Users, content.roster.length] as Tab]),
-    ["history", entry.kind === "PLAYER" ? "Sự nghiệp" : "Lịch sử", History, content.history.length],
-    ["achievements", "Thành tích", Trophy, content.achievements.length],
+    ["overview", community ? "Thông tin chung" : "Tổng quan", Info, null],
+    ...(entry.kind === "TEAM" ? [["roster", "Đội hình & ban huấn luyện", Users, content.roster.length] as Tab] : []),
+    [
+      "history",
+      isIndividualProfile(entry.kind)
+        ? "Sự nghiệp & hoạt động"
+        : entry.kind === "ORGANIZATION"
+          ? "Lịch sử hoạt động"
+          : "Lịch sử",
+      History,
+      content.history.length,
+    ],
+    ...(entry.kind === "ORGANIZATION" || entry.kind === "CIRCUIT"
+      ? [["competitions", entry.kind === "CIRCUIT" ? "Các mùa giải" : "Giải đấu tổ chức", CalendarDays, null] as Tab]
+      : entry.kind === "PERSON"
+        ? []
+        : [["achievements", "Thành tích", Trophy, content.achievements.length] as Tab]),
     ["sources", "Nguồn thông tin", BookOpenText, content.sources.length],
-    ...(access.canPublish ? [["access", "Quyền đại diện", ShieldCheck, null] as Tab] : []),
+    ...(access.canPublish && community ? [["access", "Quyền đại diện", ShieldCheck, null] as Tab] : []),
   ]
-  const KindIcon = kindIcons[entry.kind]
-  const completed = [!!content.name, !!content.biography, !!content.avatarUrl, content.sources.length > 0].filter(
-    Boolean,
-  ).length
+  const completionItems = [
+    { done: !!content.name, label: "Tên hiển thị", target: "overview", icon: UserRound },
+    { done: !!content.biography, label: "Giới thiệu", target: "overview", icon: Info },
+    {
+      done: !!content.avatarUrl,
+      label: isIndividualProfile(entry.kind) ? "Ảnh chân dung" : "Logo",
+      target: "images",
+      icon: ImagePlus,
+    },
+    { done: content.sources.length > 0, label: "Nguồn đối chiếu", target: "sources", icon: BookOpenText },
+  ]
+  const completed = completionItems.filter((item) => item.done).length
   return (
-    <Page className="mx-auto w-full max-w-[1400px] gap-5">
-      <Link
-        className="type-meta flex w-fit items-center gap-1.5 hover:text-foreground"
-        to={profileDirectoryPath(entry.kind)}
-      >
-        <ArrowLeft className="size-3.5" />
-        {profileKindLabels[entry.kind]}
-      </Link>
-      {/* Previews the public page header: cover, logo, name and who stands behind the page. */}
+    <Page className="@container/profile-editor mx-auto w-full max-w-[1400px] gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Link
+          className="type-body flex w-fit items-center gap-2 text-muted-foreground hover:text-foreground"
+          to={profileDirectoryPath(entry.kind, content.personRoles)}
+        >
+          <ArrowLeft className="size-4" />
+          {entry.kind === "PERSON"
+            ? content.personRoles?.map((role) => personRoleLabels[role]).join(" · ") || "Nhân sự"
+            : profileKindLabels[entry.kind]}
+        </Link>
+        <span className="type-meta">{community ? "Chỉnh sửa hồ sơ" : "Biên tập hệ thống giải"}</span>
+      </div>
       <header className="overflow-hidden rounded-2xl border bg-card">
-        <div className="h-28 bg-gradient-to-r from-muted via-muted/50 to-muted sm:h-40">
-          {httpUrl(content.coverUrl) && <img src={content.coverUrl!} alt="" className="size-full object-cover" />}
+        <div className="relative h-28 bg-gradient-to-r from-muted via-muted/50 to-muted sm:h-40">
+          {httpUrl(content.coverUrl) && (
+            <img src={content.coverUrl!} alt={`Ảnh bìa ${content.name}`} className="size-full object-cover" />
+          )}
+          {access.canWrite && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              className="absolute bottom-3 right-3 border shadow-sm"
+              aria-label="Chỉnh sửa ảnh bìa"
+              title="Chỉnh sửa ảnh bìa"
+              disabled={uploading || update.isPending}
+              onClick={() => setQuickEdit({ type: "image", field: "coverUrl" })}
+            >
+              <Pencil className="size-4" />
+            </Button>
+          )}
         </div>
-        <div className="flex flex-wrap items-end gap-4 px-4 pb-4 sm:px-6">
-          <span className="-mt-10 flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-muted text-muted-foreground sm:-mt-12 sm:size-24">
-            {httpUrl(content.avatarUrl) ? (
-              <img src={content.avatarUrl!} alt="" className="size-full object-contain" />
-            ) : (
-              <KindIcon className="size-8" />
+        <div className="flex flex-wrap items-start gap-4 px-4 pb-4 @3xl/profile-editor:px-5">
+          <div className="relative -mt-10 shrink-0 sm:-mt-12">
+            <span className="flex size-20 items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-muted text-muted-foreground sm:size-24">
+              {httpUrl(content.avatarUrl) ? (
+                <img
+                  src={content.avatarUrl!}
+                  alt={`${isIndividualProfile(entry.kind) ? "Ảnh chân dung" : "Logo"} ${content.name}`}
+                  className="size-full object-contain"
+                />
+              ) : (
+                <ProfileTypeIcon kind={entry.kind} roles={content.personRoles} className="size-6" />
+              )}
+            </span>
+            {access.canWrite && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                className="absolute -bottom-1 -right-1 size-8 rounded-full border shadow-sm"
+                aria-label={isIndividualProfile(entry.kind) ? "Chỉnh sửa ảnh chân dung" : "Chỉnh sửa logo"}
+                title={isIndividualProfile(entry.kind) ? "Chỉnh sửa ảnh chân dung" : "Chỉnh sửa logo"}
+                disabled={uploading || update.isPending}
+                onClick={() => setQuickEdit({ type: "image", field: "avatarUrl" })}
+              >
+                <Pencil className="size-3.5" />
+              </Button>
             )}
-          </span>
-          <div className="min-w-0 grow basis-64 space-y-1.5 pt-3">
+          </div>
+          <div className="min-w-0 flex-1 basis-48 space-y-2 pt-3">
             <h1 className="type-page-title flex min-w-0 items-center gap-2">
               <span className="break-words">{content.name || "Chưa đặt tên"}</span>
-              {entry.represented && <OfficialBadge className="size-5" label="Đại diện đã xác minh" />}
+              {community && entry.represented && <OfficialBadge className="size-5" label="Đại diện đã xác minh" />}
+              <ProfileCountry country={content.country} />
             </h1>
-            <p className="type-meta flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span className="inline-flex items-center gap-1">
-                <KindIcon className="size-3.5" />
-                {profileKindLabels[entry.kind]}
-              </span>
-              <span className="font-mono">/{entry.code}</span>
+            <p className="type-meta flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="break-all">/{entry.code}</span>
               <span
                 className={cn(
                   "rounded-full px-2 leading-5",
@@ -158,33 +276,99 @@ function Editor({ entry, access }: { entry: CommunityProfile; access: Access }) 
               >
                 {entry.published ? "Đã công bố" : "Bản nháp"}
               </span>
-              <span>{entry.represented ? "Đại diện đã xác minh" : "AthaHub tổng hợp"}</span>
             </p>
+            {community && (
+              <div className="flex flex-wrap items-center gap-2 pt-1" role="group" aria-label="Kênh liên hệ công khai">
+                {content.links.map((link, index) => (
+                  <Tooltip key={index}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label={`${access.canWrite ? "Chỉnh sửa" : "Xem"} kênh ${link.label || index + 1}`}
+                        disabled={uploading || update.isPending}
+                        onClick={() => setQuickEdit({ type: "link", index })}
+                        className="relative inline-flex size-8 items-center justify-center rounded-lg border bg-background/60 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                      >
+                        <PlatformIcon url={link.url} className="size-8" />
+                        {link.official && (
+                          <OfficialBadge
+                            className="absolute -right-1 -top-1 size-3.5 rounded-full bg-card"
+                            label={`${link.label} · Kênh chính thức`}
+                          />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {link.label}
+                      {link.official ? " · Kênh chính thức" : ""}
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+                {access.canWrite &&
+                  popularSocialPlatforms
+                    .filter((platform) => !content.links.some((link) => platformOf(link.url).id === platform.id))
+                    .map((platform) => (
+                      <Tooltip key={platform.id}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Thêm ${platform.name}`}
+                            disabled={uploading || update.isPending}
+                            onClick={() => setQuickEdit({ type: "link", index: null, platform: platform.id })}
+                            className="relative flex size-8 items-center justify-center rounded-lg border border-dashed bg-background/40 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                          >
+                            <PlatformIcon url={platform.url} className="size-8" />
+                            <Plus className="absolute -bottom-1 -right-1 size-3.5 rounded-full border bg-card text-muted-foreground" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>Thêm liên kết {platform.name}</TooltipContent>
+                      </Tooltip>
+                    ))}
+                {access.canWrite && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-8 border-dashed"
+                    aria-label="Thêm kênh liên hệ"
+                    title="Thêm kênh liên hệ"
+                    disabled={uploading || update.isPending}
+                    onClick={() => setQuickEdit({ type: "link", index: null, platform: "website" })}
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                )}
+                {!content.links.length && <span className="type-meta">Chưa có kênh liên hệ</span>}
+              </div>
+            )}
           </div>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 self-end pt-3 @4xl/profile-editor:ml-auto @4xl/profile-editor:w-auto">
             {entry.published && (
-              <Button variant="outline" asChild>
+              <Button variant="ghost" asChild>
                 <a href={`${publicSite}/pages/${entry.code}`} target="_blank" rel="noreferrer">
                   <ExternalLink className="size-4" />
-                  Xem trang công khai
+                  Xem trang
                 </a>
               </Button>
             )}
             {access.canWrite && (
-              <Button disabled={!dirty || uploading || update.isPending} onClick={() => update.mutate(undefined)}>
+              <Button
+                disabled={!dirty || missingRole || uploading || update.isPending}
+                onClick={() => update.mutate(undefined)}
+              >
                 <Save className="size-4" />
                 Lưu nháp
               </Button>
             )}
             {access.canPublish && (
               <Button
-                variant="secondary"
+                variant="outline"
                 disabled={dirty || uploading || update.isPending || !content.sources.length}
                 title={content.sources.length ? undefined : "Thêm ít nhất một nguồn trước khi công bố."}
                 onClick={() => update.mutate(true)}
               >
                 <Send className="size-4" />
-                Công bố bản này
+                {entry.published ? "Công bố thay đổi" : "Công bố hồ sơ"}
               </Button>
             )}
             {(access.canWrite || access.canPublish) && (
@@ -226,121 +410,233 @@ function Editor({ entry, access }: { entry: CommunityProfile; access: Access }) 
             )}
           </div>
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t px-4 py-2.5 @3xl/profile-editor:px-5">
+          <p className="type-meta flex items-center gap-2" role="status" aria-live="polite">
+            {uploading || update.isPending ? (
+              <LoaderCircle className="size-3.5 animate-spin" />
+            ) : dirty ? (
+              <Circle className="size-3.5 text-amber-600 dark:text-amber-400" />
+            ) : (
+              <Check className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            )}
+            {uploading ? "Đang tải ảnh…" : update.isPending ? "Đang lưu…" : dirty ? "Có thay đổi chưa lưu" : "Đã lưu"}
+          </p>
+          <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Hoàn thiện hồ sơ">
+            <span className="type-meta mr-1">Hoàn thiện {completed}/4</span>
+            {completionItems.map(({ done, label, target, icon: CompletionIcon }) => (
+              <Tooltip key={label}>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label={`${label}: ${done ? "Đã có" : "Cần bổ sung"}`}
+                    disabled={uploading || (target === "images" && !access.canWrite)}
+                    onClick={() =>
+                      target === "images" ? setQuickEdit({ type: "image", field: "avatarUrl" }) : setTab(target)
+                    }
+                    className={cn(
+                      "relative flex size-7 items-center justify-center rounded-md outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
+                      done
+                        ? "bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 dark:text-emerald-400"
+                        : "bg-muted text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <CompletionIcon className="size-4" />
+                    {done && <Check className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-card" />}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {label} · {done ? "Đã có" : "Cần bổ sung"}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </div>
+        </div>
       </header>
+      {quickEdit && (access.canWrite || quickEdit.type === "link") && (
+        <ProfileQuickEditSheet
+          target={quickEdit}
+          kind={entry.kind}
+          content={content}
+          readOnly={!access.canWrite}
+          onBusyChange={setUploading}
+          onClose={() => setQuickEdit(null)}
+          onApply={(patch) => {
+            setContent((current) => ({ ...current, ...patch }))
+            setQuickEdit(null)
+          }}
+        />
+      )}
       {remove.isError && (
         <p role="alert" className="type-body rounded-lg border border-destructive/30 p-4 text-destructive">
           {pageError(
             remove.error,
-            "Không xóa được: hồ sơ vừa thay đổi, đã từng công bố, hoặc đang có người đại diện, hoạt động cộng đồng hay giải đấu dùng đến.",
+            "Không xóa được: hồ sơ vừa thay đổi, đã từng công bố, hoặc đang có người đại diện, hoạt động cộng đồng, đội tuyển hay giải đấu dùng đến.",
           )}
         </p>
       )}
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
-        {blocker.state === "blocked" && (
-          <div
-            role="alertdialog"
-            aria-label="Thay đổi chưa lưu"
-            className="rounded-lg border bg-card p-4 lg:col-span-2"
-          >
-            <p className="type-body mb-3">
-              {uploading ? "Ảnh đang tải lên, vui lòng chờ." : "Hồ sơ có thay đổi chưa lưu."}
-            </p>
-            <Button variant="outline" onClick={() => blocker.reset()}>
-              Ở lại
-            </Button>{" "}
-            {!uploading && (
-              <Button variant="destructive" onClick={() => blocker.proceed()}>
-                Rời trang, bỏ thay đổi
-              </Button>
-            )}
-          </div>
-        )}
-        <div className="min-w-0 space-y-5">
+      {blocker.state === "blocked" && (
+        <div role="alertdialog" aria-label="Thay đổi chưa lưu" className="rounded-lg border bg-card p-4">
+          <p className="type-body mb-3">
+            {uploading ? "Ảnh đang tải lên, vui lòng chờ." : "Hồ sơ có thay đổi chưa lưu."}
+          </p>
+          <Button variant="outline" onClick={() => blocker.reset()}>
+            Ở lại
+          </Button>{" "}
+          {!uploading && (
+            <Button variant="destructive" onClick={() => blocker.proceed()}>
+              Rời trang, bỏ thay đổi
+            </Button>
+          )}
+        </div>
+      )}
+      <div className="flex flex-col gap-5 @3xl/profile-editor:grid @3xl/profile-editor:items-start @3xl/profile-editor:grid-cols-[208px_minmax(0,1fr)]">
+        <aside className="sticky top-0 z-20 w-full min-w-0 shrink-0 @3xl/profile-editor:static @3xl/profile-editor:z-auto">
           <nav
+            ref={sectionNavigation}
             aria-label="Các phần của hồ sơ"
-            className="flex gap-1 overflow-x-auto border-b [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="overflow-x-auto rounded-xl border bg-card p-1.5 shadow-sm [scrollbar-width:thin] @3xl/profile-editor:overflow-visible @3xl/profile-editor:p-2 @3xl/profile-editor:shadow-none"
           >
-            {tabs.map(([value, label, TabIcon, count]) => (
-              <button
-                key={value}
-                onClick={() => setTab(value)}
-                disabled={uploading}
-                aria-current={tab === value ? "page" : undefined}
-                className={cn(
-                  "type-body flex shrink-0 items-center gap-2 border-b-2 px-3 py-3",
-                  tab === value
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <TabIcon className="size-4" />
-                {label}
-                {count !== null && <span className="type-meta tabular-nums">{count}</span>}
-              </button>
-            ))}
+            <div className="flex w-max min-w-full gap-1 @3xl/profile-editor:w-full @3xl/profile-editor:flex-col">
+              <p className="type-label hidden px-3 pb-2 pt-2 text-muted-foreground @3xl/profile-editor:block">
+                NỘI DUNG HỒ SƠ
+              </p>
+              {tabs.map(([value, label, TabIcon, count]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setTab(value)}
+                  disabled={uploading}
+                  aria-current={tab === value ? "page" : undefined}
+                  className={cn(
+                    "type-body flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 @3xl/profile-editor:w-full @3xl/profile-editor:gap-2.5 @3xl/profile-editor:whitespace-normal",
+                    tab === value
+                      ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/15"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  <TabIcon className="size-4 shrink-0" />
+                  <span className="min-w-0 flex-1">{label}</span>
+                  {count !== null && (
+                    <span className="type-meta min-w-5 rounded bg-muted px-1 text-center tabular-nums">{count}</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </nav>
+        </aside>
+        <div className="min-w-0 space-y-5">
           {update.isError && (
             <p role="alert" className="type-body rounded-lg border border-destructive/30 p-4 text-destructive">
               {pageError(update.error)}
             </p>
           )}
-          {tab === "access" ? (
+          {tab === "access" && community ? (
             <Representatives entry={entry} />
+          ) : tab === "competitions" && (entry.kind === "ORGANIZATION" || entry.kind === "CIRCUIT") ? (
+            <OrganizationCompetitions organizationId={entry.id} actorKey={access.actorKey} kind={entry.kind} />
           ) : (
-            <ProfileFields
-              kind={entry.kind}
-              onBusyChange={setUploading}
-              content={content}
-              onChange={setContent}
-              tab={tab}
-              disabled={!access.canWrite || update.isPending}
-            />
+            <>
+              <ProfileFields
+                pageId={entry.id}
+                kind={entry.kind}
+                content={content}
+                onChange={setContent}
+                tab={tab}
+                disabled={!access.canWrite || update.isPending}
+              />
+              {entry.kind === "CIRCUIT" && tab === "overview" && (
+                <CircuitChannelsField
+                  content={content}
+                  actorKey={access.actorKey}
+                  canWrite={access.canWrite}
+                  busy={uploading || update.isPending}
+                  onOrganizationChange={(channelOrganizationId) =>
+                    setContent((current) => ({ ...current, channelOrganizationId }))
+                  }
+                  onEditLink={(index) => setQuickEdit({ type: "link", index })}
+                />
+              )}
+            </>
           )}
         </div>
-        <aside className="space-y-4 lg:pt-16">
-          <Section title="Hoàn thiện hồ sơ">
-            <p className="type-body">{completed}/4 mục cơ bản</p>
-            <div className="h-1.5 overflow-hidden rounded bg-muted">
-              <div className="h-full bg-primary" style={{ width: `${completed * 25}%` }} />
-            </div>
-            <ul className="type-body space-y-1">
-              {(
-                [
-                  [!!content.name, "Tên hiển thị", "overview"],
-                  [!!content.biography, "Giới thiệu", "overview"],
-                  [!!content.avatarUrl, entry.kind === "PLAYER" ? "Ảnh tuyển thủ" : "Logo", "overview"],
-                  [!!content.sources.length, "Nguồn đối chiếu", "sources"],
-                ] as const
-              ).map(([done, label, target]) => (
-                <li key={label}>
-                  <button
-                    type="button"
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left hover:bg-muted",
-                      done ? "text-foreground" : "text-muted-foreground",
-                    )}
-                    onClick={() => setTab(target)}
-                  >
-                    {done ? (
-                      <CircleCheck className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    ) : (
-                      <Circle className="size-4 shrink-0" />
-                    )}
-                    {label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </Section>
-          <Section title="Trạng thái">
-            <p className="type-body">{dirty ? "Có thay đổi chưa lưu" : "Đã lưu bản nháp"}</p>
-            <p className="type-meta">Lưu nháp không thay đổi nội dung đang công khai.</p>
-          </Section>
-        </aside>
       </div>
     </Page>
   )
 }
+/** Editors can announce a page's broadcast while the page has no representative to do it. */
+function LiveSection({ entry }: { entry: CommunityProfile }) {
+  const client = useQueryClient()
+  const [url, setUrl] = useState(entry.live?.url || "")
+  const [title, setTitle] = useState(entry.live?.title || "")
+  const start = useMutation({
+    mutationFn: () => pageApi.startLive(entry.id, url, title),
+    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+  })
+  const end = useMutation({
+    mutationFn: () => pageApi.endLive(entry.id),
+    onSuccess: () => client.invalidateQueries({ queryKey: pageKeys }),
+  })
+  const failure = start.error || end.error
+  return (
+    <Section
+      title="Phát trực tiếp"
+      icon={Radio}
+      description="Dán link buổi phát trên YouTube, Facebook hoặc TikTok. Người theo dõi nhận thông báo khi bật; trạng thái tự tắt sau 12 giờ."
+    >
+      {entry.live && (
+        <p className="type-body">
+          Đang phát: <strong>{entry.live.title}</strong> · từ {formatDateTime(entry.live.startedAt)}
+        </p>
+      )}
+      <form
+        className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] sm:items-end"
+        onSubmit={(event) => {
+          event.preventDefault()
+          start.mutate()
+        }}
+      >
+        <label className="grid gap-1.5">
+          <span className="type-label">Link buổi phát</span>
+          <Input
+            required
+            type="url"
+            maxLength={2000}
+            value={url}
+            placeholder="https://www.youtube.com/live/…"
+            onChange={(event) => setUrl(event.target.value)}
+          />
+        </label>
+        <label className="grid gap-1.5">
+          <span className="type-label">Tiêu đề</span>
+          <Input
+            required
+            maxLength={200}
+            value={title}
+            placeholder="ĐTDV mùa Đông · Tuần 3"
+            onChange={(event) => setTitle(event.target.value)}
+          />
+        </label>
+        <div className="flex gap-2">
+          <Button type="submit" disabled={start.isPending}>
+            <Radio className="size-4" />
+            {entry.live ? "Cập nhật" : "Bật trực tiếp"}
+          </Button>
+          {entry.live && (
+            <Button type="button" variant="outline" disabled={end.isPending} onClick={() => end.mutate()}>
+              Tắt
+            </Button>
+          )}
+        </div>
+      </form>
+      {failure && (
+        <p role="alert" className="type-body text-destructive">
+          {pageError(failure)}
+        </p>
+      )}
+    </Section>
+  )
+}
+
 function Representatives({ entry }: { entry: CommunityProfile }) {
   const client = useQueryClient()
   const members = useQuery({ queryKey: [...pageKeys, entry.id, "members"], queryFn: () => pageApi.members(entry.id) })
@@ -355,6 +651,7 @@ function Representatives({ entry }: { entry: CommunityProfile }) {
   const owned = members.data?.some((member) => member.role === "OWNER")
   return (
     <>
+      {entry.published && <LiveSection entry={entry} />}
       {members.isSuccess && !owned && <Handover entry={entry} />}
       <Section
         title="Người đại diện"

@@ -7,6 +7,7 @@ import { backendRequest } from "@/app/auth/session"
 import { ApiError, errorMessage } from "@/lib/api/errors"
 import { RegistryLogoUploadError, uploadRegistryLogo } from "./team-logo-upload"
 import { OwnerNameHints, OwnerNameInput } from "../media/owner-name-field"
+import { MediaUploadReferences, type UploadReferences } from "../media/media-upload-references"
 
 /** The same look as the shared text input, for the owner field that needs suggestions. */
 const inputClass =
@@ -54,6 +55,7 @@ export function RegistryLogoField({
   const [error, setError] = useState("")
   // Not inferred from the team or player name: the person uploading says who owns the image.
   const [owner, setOwner] = useState("")
+  const [references, setReferences] = useState<UploadReferences>({})
   const input = useRef<HTMLInputElement>(null)
   const ownerInput = useRef<HTMLInputElement>(null)
   const controller = useRef<AbortController | null>(null)
@@ -80,6 +82,7 @@ export function RegistryLogoField({
           name,
           sourceUrl: value,
           ownerName: owner,
+          ...references,
         },
         upload.signal,
       )
@@ -161,6 +164,14 @@ export function RegistryLogoField({
             />
           </label>
           <OwnerNameHints value={owner} disabled={busy} onPick={setOwner} />
+          <MediaUploadReferences
+            value={references}
+            onChange={setReferences}
+            disabled={busy}
+            onOwnerName={(next) => {
+              if (!owner.trim()) setOwner(next)
+            }}
+          />
         </div>
       )}
       <label>

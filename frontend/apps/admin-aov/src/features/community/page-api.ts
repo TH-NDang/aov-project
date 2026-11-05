@@ -6,20 +6,25 @@ import type {
   PageClaim,
   PageManager,
   PageHandover,
+  PageLive,
   CommunityReport,
+  PersonRoleFilter,
+  TeamAffiliation,
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
 
 export const pageKeys = ["community-pages"] as const
-export const publicSite = import.meta.env.VITE_STREAM_URL || "http://localhost:5174"
+export const publicSite = import.meta.env?.VITE_STREAM_URL || "http://localhost:5174"
 const send = <T>(path: string, method: string, body?: unknown) =>
   communityRequest<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) })
 export const pageApi = {
-  list: (kind: ProfileKind | "", q: string, page = 0) =>
+  readPublic: (id: string) => communityRequest<CommunityProfile>(`/pages/${id}`),
+  list: (kind: ProfileKind | "", q: string, page = 0, personRole?: PersonRoleFilter) =>
     communityRequest<PageSlice<CommunityProfile>>(
-      `/admin/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), q, page: String(page), size: "24" })}`,
+      `/admin/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), ...(personRole ? { personRole } : {}), q, page: String(page), size: "24" })}`,
     ),
   read: (id: string) => communityRequest<CommunityProfile>(`/admin/pages/${id}`),
+  teams: (id: string) => communityRequest<TeamAffiliation[]>(`/admin/pages/${id}/teams`),
   create: (kind: ProfileKind, code: string, content: ProfileContent, entityId?: string) =>
     send<CommunityProfile>("/admin/pages", "POST", { kind, code, content, entityId }),
   save: (entry: CommunityProfile, content: ProfileContent) =>
@@ -39,6 +44,10 @@ export const pageApi = {
   handover: (id: string) => communityRequest<PageHandover>(`/admin/pages/${id}/handover`),
   issueHandover: (id: string) => send<{ token: string; expiresAt: string }>(`/admin/pages/${id}/handover`, "POST"),
   cancelHandover: (id: string) => send<void>(`/admin/pages/${id}/handover/cancel`, "POST"),
+  /** Announces or updates a live broadcast; followers hear about it once when it starts. */
+  startLive: (id: string, url: string, title: string) =>
+    send<PageLive>(`/admin/pages/${id}/live`, "PUT", { url, title }),
+  endLive: (id: string) => send<void>(`/admin/pages/${id}/live/end`, "POST"),
   reports: (page = 0) => communityRequest<PageSlice<CommunityReport>>(`/admin/community-reports?page=${page}&size=30`),
   resolve: (id: string, resolution: string, hide: boolean) =>
     send<void>(`/admin/community-reports/${id}/resolve`, "POST", { resolution, hide }),
