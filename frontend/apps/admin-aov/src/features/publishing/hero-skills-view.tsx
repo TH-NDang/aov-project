@@ -196,6 +196,7 @@ export function HeroSkillsView({
             aria-live={activeEditor ? "off" : "polite"}
             aria-atomic="false"
             className="min-w-0 space-y-5 @min-[760px]/skills:border-l @min-[760px]/skills:pl-6"
+            data-review-skill={current.skillKey}
           >
             <SkillDetail
               onTranslate={onTranslate}
@@ -266,6 +267,7 @@ export function HeroSkillsView({
               <div className="divide-y">
                 {group.skills.map((skill, variantIndex) => (
                   <article
+                    data-review-skill={skill.skillKey}
                     key={activeEditor ? variantIndex : skill.skillKey}
                     aria-label={`${selectSkillTranslation(skill, locale)?.name || skillLabel(skill)}${skill.formKey ? ` · ${skill.formKey}` : skillVariantLabel(skill, skills) ? ` · ${skillVariantLabel(skill, skills)}` : ""}`}
                     className="space-y-5 py-5 first:pt-0 last:pb-0"

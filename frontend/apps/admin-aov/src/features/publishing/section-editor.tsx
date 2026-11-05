@@ -60,6 +60,8 @@ export function SectionEditor({
   onSkillChange,
   heroId,
   onBusyChange,
+  reviewOpen,
+  onReviewOpenChange,
   profilePart = "information",
   statDefaults,
   skills,
@@ -77,6 +79,8 @@ export function SectionEditor({
   onSkillChange?: (skillKey: string) => void
   heroId?: string
   onBusyChange?: (busy: boolean) => void
+  reviewOpen?: boolean
+  onReviewOpenChange?: (open: boolean) => void
   profilePart?: ProfileEditorPart
   statDefaults?: StatDefault[]
   skills?: Skills | null
@@ -144,6 +148,8 @@ export function SectionEditor({
           onChange={onChange}
           resource={resource}
           initialSkillKey={initialSkillKey}
+          reviewOpen={reviewOpen}
+          onReviewOpenChange={onReviewOpenChange}
           layout={skillLayout}
           onLayoutChange={onSkillLayoutChange}
           onSkillChange={onSkillChange}

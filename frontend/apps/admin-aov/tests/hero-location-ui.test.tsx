@@ -109,6 +109,31 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     const catalogButton = document.querySelector('[aria-label="Xem tướng catalog-hero-0"]')
     assert.ok(catalogButton)
     const warnings = '[aria-label="Xem 2 cảnh báo cần đối chiếu từ nguồn"]'
+    const goToWarning = async (label: string) => {
+      await click(warnings)
+      const link = [...document.querySelectorAll<HTMLButtonElement>('[data-slot="popover-content"] button')].find(
+        (button) => button.textContent?.includes(label),
+      )
+      assert.ok(link)
+      await act(async () => link.click())
+    }
+    await goToWarning("Đến Chiêu 1 · Kiếm khí")
+    await waitFor(() => !!document.querySelector('[data-review-skill="skill-1-1"] details[open]'))
+    assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "skill-1-1")
+    await waitFor(() => !!document.activeElement?.closest("details")?.textContent?.includes(skillFlag.note))
+    await click('[aria-label="Chọn kỹ năng"] button')
+    await goToWarning("Đến Chiêu 1 · Kiếm khí")
+    await waitFor(
+      () => document.activeElement?.closest("[data-review-skill]")?.getAttribute("data-review-skill") === "skill-1-1",
+    )
+    await click('[aria-controls="workspace-history"]')
+    await goToWarning("Đến Chiêu 1 · Kiếm khí")
+    await waitFor(
+      () => document.activeElement?.closest("[data-review-skill]")?.getAttribute("data-review-skill") === "skill-1-1",
+    )
+    await goToWarning("Đến Thuộc tính chiến đấu")
+    await waitFor(() => !!document.querySelector("#hero-COMBAT_STATS details[data-review-attributes][open]"))
+    assert.equal(new URLSearchParams(router.state.location.search).get("revision"), "fixture-draft")
     await click(warnings)
     const reviewButton = () =>
       [...document.querySelectorAll<HTMLButtonElement>("button")].find(
@@ -116,6 +141,10 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
       )!
     await act(async () => reviewButton().click())
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu cảnh báo nguồn"]'))
+    assert.ok(
+      document.querySelector('[aria-label="Đối chiếu cảnh báo nguồn"]')?.closest('[role="dialog"]'),
+      "Review controls open in a drawer",
+    )
     const warningRow = () =>
       [...document.querySelectorAll('[aria-label="Đối chiếu cảnh báo nguồn"] li')].find((row) =>
         row.textContent?.includes(skillFlag.note),
@@ -123,6 +152,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await act(async () => warningRow().querySelector<HTMLButtonElement>("button")!.click())
     assert.equal(fixture.writes.length, 0, "Review changes stay in the working copy until saved")
     assert.ok(document.querySelector('[aria-label="Xem 1 cảnh báo cần đối chiếu từ nguồn"]'))
+    await click('[aria-label="Đóng đối chiếu cảnh báo"]')
     const saveButton = () =>
       [...document.querySelectorAll<HTMLButtonElement>("button")].find(
         (button) => button.textContent?.trim() === "Lưu phần này",
@@ -139,6 +169,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu cảnh báo nguồn"]'))
     assert.match(warningRow().textContent!, /Đã đối chiếu/)
     await act(async () => warningRow().querySelector<HTMLButtonElement>("button")!.click())
+    await click('[aria-label="Đóng đối chiếu cảnh báo"]')
     await act(async () => saveButton().click())
     await waitFor(() => !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
     assert.ok(document.querySelector(warnings))

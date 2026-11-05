@@ -50,6 +50,7 @@ import { HeroPatchTimeline } from "./hero-patch-view"
 import { HeroTranslationStatus } from "./hero-translation-status"
 import { HeroLanguagePicker } from "./hero-language-picker"
 import { HeroReviewNotice } from "./hero-review-notice"
+import { reviewTab, type HeroReviewItem } from "./hero-source-review"
 import {
   missingTranslationFields,
   translatedText,
@@ -253,6 +254,8 @@ export function PublishingWorkspace({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [message, setMessage] = useState("")
+  const [reviewTarget, setReviewTarget] = useState<HeroReviewItem | null>(null)
+  const [reviewOpen, setReviewOpen] = useState(false)
   const [cause, setCause] = useState<Cause>(translationMode ? "TRANSLATION" : "CONTENT_CORRECTION")
   const [importContext, setImportContext] = useState<ImportContext | null>(null)
   const [resourceId, setResourceId] = useState("")
@@ -643,14 +646,28 @@ export function PublishingWorkspace({
                   {preview && (
                     <HeroReviewNotice
                       skills={preview.content.SKILLS?.skills ?? []}
+                      locale={location.readLocale}
+                      disabled={busy}
                       onReview={
                         writable && !editorDisabled
                           ? () => {
                               updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
                               setEditing(true)
+                              setReviewOpen(true)
                             }
                           : undefined
                       }
+                      onNavigate={(item) => {
+                        if (!item.section) return
+                        setEditing(false)
+                        setReviewTarget(item)
+                        updateLocation({
+                          view: "overview",
+                          section: item.section,
+                          tab: reviewTab(item.section),
+                          skill: item.skillKey,
+                        })
+                      }}
                     />
                   )}
                   {writable && (
@@ -852,6 +869,8 @@ export function PublishingWorkspace({
                     referenceError={statDefaults.isError}
                     patchCode={statPatch?.patchCode}
                     showTabs={false}
+                    reviewTarget={reviewTarget}
+                    onReviewShown={() => setReviewTarget(null)}
                     content={preview.content}
                     locale={locale}
                     editable={!!writable}
@@ -1055,6 +1074,8 @@ export function PublishingWorkspace({
                               }
                               onSkillChange={(skill) => updateLocation({ skill })}
                               onBusyChange={setBusy}
+                              reviewOpen={reviewOpen}
+                              onReviewOpenChange={setReviewOpen}
                             />
                           )}
                         </fieldset>

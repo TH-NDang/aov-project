@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react"
-import { useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
@@ -12,6 +12,7 @@ import { translatedText, sectionTextFields, type TranslationTarget } from "./her
 import { HeroContentSources } from "./hero-content-sources"
 import { AdminEntityText, AdminReferenceProvider } from "../terminology/catalog"
 import { HeroReviewNotice } from "./hero-review-notice"
+import { reviewTab, type HeroReviewItem } from "./hero-source-review"
 import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
@@ -108,9 +109,13 @@ function HeroContentBody({
   skillLayout,
   onSkillLayoutChange,
   showTabs = true,
+  reviewTarget,
+  onReviewShown,
 }: {
   /** The hero page shows the content sections in its own tab row. */
   showTabs?: boolean
+  reviewTarget?: HeroReviewItem | null
+  onReviewShown?: () => void
   content: Content
   statDefaults?: StatDefault[]
   variantId?: string
@@ -133,11 +138,38 @@ function HeroContentBody({
   // The base appearance repeats the hero's own images, which the Images tab already shows.
   const skins = visibleSkins(content.SKINS?.skins ?? [])
   const [localTab, setLocalTab] = useState<HeroContentTab>("overview")
+  const [localSkill, setLocalSkill] = useState<string>()
+  const [localReview, setLocalReview] = useState<HeroReviewItem | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const tab = selectedTab ?? localTab
+  const activeSkill = selectedSkillKey ?? localSkill
+  const target = reviewTarget ?? localReview
+  useLayoutEffect(() => {
+    if (!target?.section || tab !== reviewTab(target.section) || (target.skillKey && activeSkill !== target.skillKey))
+      return
+    const section = contentRef.current?.querySelector<HTMLElement>(`#hero-${target.section}`)
+    if (!section) return
+    const skill = target.skillKey
+      ? [...section.querySelectorAll<HTMLElement>("[data-review-skill]")].find(
+          (el) => el.dataset.reviewSkill === target.skillKey,
+        )
+      : undefined
+    if (target.skillKey && !skill) return
+    const details =
+      skill?.querySelector<HTMLDetailsElement>("details[data-review-source]") ??
+      section.querySelector<HTMLDetailsElement>("details[data-review-attributes]")
+    if (details) details.open = true
+    const element = details?.querySelector("summary") ?? skill ?? section
+    if (!element.matches("summary")) element.tabIndex = -1
+    element.focus({ preventScroll: true })
+    element.scrollIntoView?.({ block: "center" })
+    if (reviewTarget) onReviewShown?.()
+    else setLocalReview(null)
+  }, [target, reviewTarget, tab, activeSkill, onReviewShown])
   const visibleSections: Section[] =
     tab === "overview" ? [] : tab === "skills" ? ["SKILLS"] : tab === "skins" ? ["SKINS"] : ["MEDIA_BINDINGS"]
   return (
-    <div className="space-y-4" aria-label="Nội dung tướng">
+    <div ref={contentRef} className="space-y-4" aria-label="Nội dung tướng">
       <div
         className={cn("flex gap-1 overflow-x-auto border-b pb-2", !showTabs && "hidden")}
         role="tablist"
@@ -166,7 +198,20 @@ function HeroContentBody({
             {count !== null && <span className="text-xs tabular-nums text-muted-foreground">{count}</span>}
           </Button>
         ))}
-        {showTabs && <HeroReviewNotice skills={content.SKILLS?.skills ?? []} />}
+        {showTabs && (
+          <HeroReviewNotice
+            skills={content.SKILLS?.skills ?? []}
+            locale={locale}
+            disabled={busy}
+            onNavigate={(item) => {
+              if (!item.section) return
+              const selectTab = onTabChange ?? setLocalTab
+              selectTab(reviewTab(item.section))
+              if (item.skillKey) (onSkillChange ?? setLocalSkill)(item.skillKey)
+              setLocalReview(item)
+            }}
+          />
+        )}
       </div>
       <div className="grid items-start gap-4" role="tabpanel" id={`hero-content-${tab}`}>
         {tab === "overview" && (
@@ -205,8 +250,8 @@ function HeroContentBody({
                 skills={content.SKILLS?.skills ?? []}
                 locale={locale}
                 heroId={heroId}
-                selectedSkillKey={selectedSkillKey}
-                onSkillChange={onSkillChange}
+                selectedSkillKey={activeSkill}
+                onSkillChange={onSkillChange ?? setLocalSkill}
                 layout={skillLayout}
                 onLayoutChange={onSkillLayoutChange}
               />

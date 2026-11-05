@@ -20,6 +20,7 @@ if (fixtureOptions.has("review")) {
       metadata: {
         reviewFlags: [flag],
         heroReviewFlags: [flag],
+        heroClassification: { recommendedPositions: ["top", "rung"] },
         levelTable: {
           column_labels: Array.from({ length: 6 }, (_, index) => `Lv ${index + 1}`),
           rows: [
@@ -30,6 +31,21 @@ if (fixtureOptions.has("review")) {
       },
     },
   ]
+  if (fixtureOptions.has("navigation")) {
+    const passive = fixture.content.SKILLS!.skills[0]
+    const active = structuredClone(passive)
+    active.skillKey = "skill-1-1"
+    active.kind = "ACTIVE"
+    active.displayOrder = 1
+    active.translations = [
+      { locale: "vi-VN", name: "Phi tiêu", description: "Mô tả chiêu dùng riêng để kiểm tra đích cảnh báo." },
+    ]
+    active.effects[0].metadata.reviewFlags = [{ ...flag, field: "description" }]
+    active.effects[0].metadata.heroReviewFlags = []
+    passive.effects[0].metadata.reviewFlags = []
+    passive.effects[0].metadata.heroReviewFlags = []
+    fixture.content.SKILLS!.skills.push(active)
+  }
 }
 window.fetch = fixture.fetcher
 const { verifySession } = await import("../../src/app/auth/session")

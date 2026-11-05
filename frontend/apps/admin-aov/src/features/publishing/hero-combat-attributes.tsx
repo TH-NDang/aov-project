@@ -90,7 +90,11 @@ export function HeroCombatAttributes({
         </details>
       )}
       {rows.length ? (
-        <details className="group/stats rounded-lg border" open={summary.length ? undefined : true}>
+        <details
+          data-review-attributes
+          className="group/stats rounded-lg border"
+          open={summary.length ? undefined : true}
+        >
           <summary className="type-body flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2">
             Xem toàn bộ thuộc tính <ChevronDown className="size-4 transition-transform group-open/stats:rotate-180" />
           </summary>

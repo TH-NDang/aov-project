@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Check, Pencil, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
+import { Popover, PopoverAnchor, PopoverContent } from "@aov/ui/components/popover"
 import { AdminEntityText } from "../terminology/catalog"
 import { AdminLiveRichTextField } from "../terminology/rich-text-field"
 import { plainComparisonText } from "./hero-comparison"
@@ -256,50 +257,61 @@ function RankSummaryInput({
 }) {
   const initial = rankSummary(values, columns) ?? ""
   const [expression, setExpression] = useState(initial)
+  const [open, setOpen] = useState(false)
   const changed = expression !== initial
   const sequential = columns.every((column, index) => column === `Cấp ${index + 1}`)
   const ranks = sequential ? rankValues(expression, columns.length) : null
   const valid = !!ranks?.every((value) => value !== null)
   return (
-    <div className="min-w-52 space-y-1 py-1">
-      <input
-        className={cellInput}
-        aria-label={`${name} · Tổng quan`}
-        aria-invalid={changed && !valid}
-        placeholder="315 (+40/cấp chiêu)"
-        value={expression}
-        onChange={(event) => setExpression(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key !== "Enter") return
-          event.preventDefault()
-          if (changed && valid) onApply(ranks as string[])
-        }}
-      />
-      {changed && (
-        <>
-          <p className="type-meta" role="status">
-            {valid
-              ? ranks!.join(" / ")
-              : sequential
-                ? "Công thức chưa hợp lệ; các cấp đang có được giữ nguyên."
-                : "Chỉ điền nhanh khi các cột liên tiếp từ Cấp 1."}
-          </p>
-          <div className="flex gap-1">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!valid}
-              onClick={() => onApply(ranks as string[])}
-            >
-              Điền các cấp
-            </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={() => setExpression(initial)}>
-              Hủy
-            </Button>
-          </div>
-        </>
-      )}
-    </div>
+    <Popover open={changed && open} onOpenChange={setOpen}>
+      <PopoverAnchor asChild>
+        <input
+          className={`${cellInput} min-w-52`}
+          aria-label={`${name} · Tổng quan`}
+          aria-invalid={changed && !valid}
+          placeholder="315 (+40/cấp chiêu)"
+          value={expression}
+          onFocus={() => setOpen(true)}
+          onChange={(event) => {
+            setExpression(event.target.value)
+            setOpen(true)
+          }}
+          onKeyDown={(event) => {
+            if (event.key !== "Enter") return
+            event.preventDefault()
+            if (changed && valid) onApply(ranks as string[])
+          }}
+        />
+      </PopoverAnchor>
+      <PopoverContent
+        align="end"
+        className="w-80 max-w-[calc(100vw-2rem)] space-y-3"
+        aria-label={`Điền nhanh ${name}`}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        onCloseAutoFocus={(event) => event.preventDefault()}
+      >
+        <p className="type-meta" role="status">
+          {valid
+            ? ranks!.join(" / ")
+            : sequential
+              ? "Công thức chưa hợp lệ; các cấp đang có được giữ nguyên."
+              : "Chỉ điền nhanh khi các cột liên tiếp từ Cấp 1."}
+        </p>
+        <div className="flex gap-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={!valid}
+            onClick={() => onApply(ranks as string[])}
+          >
+            Điền các cấp
+          </Button>
+          <Button type="button" size="sm" variant="ghost" onClick={() => setExpression(initial)}>
+            Hủy
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   )
 }

@@ -246,7 +246,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     assert.equal(button("Điền các cấp").disabled, true)
     assert.deepEqual(current, beforeFormula, "An incomplete formula must not replace recorded cells")
     await type(summaryInput(), "120 (+40/cấp chiêu)")
-    assert.match(editor().textContent!, /120 \/ 160/)
+    assert.match(document.querySelector('[aria-label="Điền nhanh ST gốc"]')!.textContent!, /120 \/ 160/)
     assert.deepEqual(current, beforeFormula, "Preview remains local until explicitly applied")
     await act(async () => button("Điền các cấp").click())
     assert.equal(editor().querySelector<HTMLInputElement>('[aria-label="ST gốc · Cấp 2"]')!.value, "160")
@@ -367,6 +367,7 @@ test("focused skill editing preserves forms, effects and translations while addi
       rows: [{ label: "Hồi chiêu", display_values: ["7 - 0.5/cấp chiêu"] }],
     })
     const beforeReview = structuredClone(current)
+    await act(async () => button("Đối chiếu cảnh báo").click())
     await act(async () => button("Đánh dấu đã đối chiếu").click())
     assert.equal(
       (current.skills[0].effects[0].metadata.reviewFlags as Record<string, unknown>[])[0].reviewResolution,
@@ -375,6 +376,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     assert.deepEqual(current.skills[0].translations, beforeReview.skills[0].translations)
     await act(async () => button("Mở lại cảnh báo").click())
     assert.deepEqual(current, beforeReview)
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Đóng đối chiếu cảnh báo"]')!.click())
     await act(async () => setCurrent!({ skills: [], sources: original.sources }))
     assert.match(document.body.textContent!, /Chưa có nội dung kỹ năng/)
     await act(async () => button("Thêm kỹ năng").click())

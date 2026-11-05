@@ -57,6 +57,13 @@ export interface HeroReviewItem {
   resolved?: boolean
 }
 
+export function reviewTab(section: Section) {
+  if (section === "SKILLS") return "skills"
+  if (section === "SKINS") return "skins"
+  if (section === "MEDIA_BINDINGS") return "media"
+  return "overview"
+}
+
 function reviewSection(field: string): Section | undefined {
   switch (field.replace(/^hero\./, "").split(/[.\[]/)[0]) {
     case "attributes":

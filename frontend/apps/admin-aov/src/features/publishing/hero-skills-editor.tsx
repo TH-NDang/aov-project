@@ -41,6 +41,8 @@ export function HeroSkillsEditor({
   onSkillChange,
   heroId,
   onBusyChange,
+  reviewOpen,
+  onReviewOpenChange,
 }: {
   value: Skills
   locale: string
@@ -52,6 +54,8 @@ export function HeroSkillsEditor({
   onSkillChange?: (key: string) => void
   heroId?: string
   onBusyChange?: (busy: boolean) => void
+  reviewOpen?: boolean
+  onReviewOpenChange?: (open: boolean) => void
 }) {
   const [selectedIndex, setSelectedIndex] = useState(() => {
     const initial =
@@ -114,7 +118,6 @@ export function HeroSkillsEditor({
     .find((item) => item.key === selected?.skillKey)?.icon
   return (
     <div className="space-y-4">
-      <HeroReviewEditor skills={value.skills} locale={locale} onChange={(skills) => onChange({ ...value, skills })} />
       <HeroSkillsView
         skills={value.skills}
         locale={locale}
@@ -129,6 +132,14 @@ export function HeroSkillsEditor({
         locked={uploading}
         action={
           <div className="flex flex-wrap items-center gap-1">
+            <HeroReviewEditor
+              skills={value.skills}
+              locale={locale}
+              onChange={(skills) => onChange({ ...value, skills })}
+              open={reviewOpen}
+              onOpenChange={onReviewOpenChange}
+              disabled={uploading}
+            />
             <SectionSources
               sectionLabel="Kỹ năng"
               sources={value.sources}

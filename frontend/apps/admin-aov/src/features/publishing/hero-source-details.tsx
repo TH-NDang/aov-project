@@ -194,7 +194,7 @@ export function SkillSourceDetails({
         )
       )}
       {collapseSources && (notes.length > 0 || sourceImageUrl) ? (
-        <details className="group/source border-t pt-3">
+        <details data-review-source className="group/source border-t pt-3">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-xs text-muted-foreground [&::-webkit-details-marker]:hidden">
             {notes.length > 0 ? (
               <AlertTriangle className="size-3.5 text-amber-600" />
