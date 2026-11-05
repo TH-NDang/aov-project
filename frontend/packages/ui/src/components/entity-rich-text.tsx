@@ -14,6 +14,7 @@ import {
   type RichTextNode,
 } from "../lib/entity-rich-text"
 import { Slot } from "radix-ui"
+import { termIcon } from "./gameplay-icons"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { ExampleTable, RichParagraph } from "./rich-text-blocks"
 import { observeReferenceIcon } from "../lib/observe-reference-icon"
@@ -140,6 +141,9 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
 }
 
 export function EntityReferenceArtwork(props: ReferenceIconProps) {
+  const TermArt = props.entity.kind === "term" && !props.entity.icon ? termIcon(props.entity.id) : undefined
+  if (TermArt)
+    return <TermArt aria-hidden="true" className={`inline shrink-0 align-text-bottom ${props.className ?? "size-5"}`} />
   if (props.entity.kind !== "skill" || !validSkillReference(props.entity)) return <EntityReferenceIcon {...props} />
   return (
     <span
