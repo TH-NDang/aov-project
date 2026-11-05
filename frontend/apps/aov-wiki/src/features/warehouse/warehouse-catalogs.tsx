@@ -1,3 +1,4 @@
+import { ItemCategoryArtwork } from "@aov/ui/components/item-category-icons"
 import { useEffect, type CSSProperties } from "react"
 import { useSearchParams } from "react-router"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
@@ -132,6 +133,8 @@ function Filters({
         >
           {option.icon ? (
             <WikiImage className="wiki-warehouse-catalog-filter-art" src={option.icon} alt="" width="28" height="28" />
+          ) : kind === "items" ? (
+            <ItemCategoryArtwork code={option.code} />
           ) : (
             <WarehouseIcon name={kind} size={18} />
           )}

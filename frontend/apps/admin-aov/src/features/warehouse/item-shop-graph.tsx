@@ -658,7 +658,7 @@ export function ItemShopGraph({
                 active={active}
                 count={count}
                 title={matches ? `${count} món khớp tìm kiếm` : undefined}
-                className={cn(matches && !count && !active && "opacity-50")}
+                className={cn("[&_svg]:size-5", matches && !count && !active && "opacity-50")}
                 onClick={() => {
                   onCategory(group.code)
                   onFocus(null)
