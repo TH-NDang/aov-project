@@ -8,7 +8,7 @@ export function LibraryNavigation({ active, onNavigate }: { active: WikiSectionK
   const { t, href } = useWikiContext()
   return (
     <nav className="wiki-library-navigation" aria-label={t("contents")}>
-      {(["characters", "warehouse"] as const).map((group) => (
+      {(["characters", "warehouse", "news"] as const).map((group) => (
         <div className="wiki-library-nav-group" key={group}>
           <h3>{t(group)}</h3>
           {wikiSections

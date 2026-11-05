@@ -1,45 +1,25 @@
 import { useQuery } from "@tanstack/react-query"
-import { formatPatchDate, patchSource, seasonUpdatesQuery, type SeasonPatch } from "./home-api"
+import { Link } from "react-router"
+import { formatPatchDate, seasonUpdatesQuery, type SeasonPatch } from "./home-api"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 
 function PatchRow({ patch }: { patch: SeasonPatch }) {
-  const { locale } = useWikiContext()
-  const source = patchSource(patch)
-  const content = (
-    <>
-      <span className="wiki-home-patch-meta">
-        <time className="wiki-home-patch-date" dateTime={patch.effectiveOn ?? patch.effectiveAt ?? undefined}>
-          {formatPatchDate(patch)}
-        </time>
-        {patch.isCurrent && (
-          <span className="wiki-home-current-tag">{wikiText(locale, "Đang áp dụng", "Current")}</span>
-        )}
-      </span>
-      <span className="wiki-home-patch-title">{patch.title || patch.code}</span>
-      {source && <WikiIcon name="open" className="wiki-home-patch-arrow" />}
-    </>
-  )
+  const { locale, href } = useWikiContext()
   return (
     <li>
-      {source ? (
-        <a
-          href={source}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="wiki-home-patch-row"
-          aria-label={wikiText(
-            locale,
-            `${patch.title || patch.code} — xem nguồn, mở tab mới`,
-            `${patch.title || patch.code} — view source in a new tab`,
+      <Link to={href(`/updates/${patch.code}`)} className="wiki-home-patch-row">
+        <span className="wiki-home-patch-meta">
+          <time className="wiki-home-patch-date" dateTime={patch.effectiveOn ?? patch.effectiveAt ?? undefined}>
+            {formatPatchDate(patch)}
+          </time>
+          {patch.isCurrent && (
+            <span className="wiki-home-current-tag">{wikiText(locale, "Đang áp dụng", "Current")}</span>
           )}
-        >
-          {content}
-        </a>
-      ) : (
-        <div className="wiki-home-patch-row">{content}</div>
-      )}
+        </span>
+        <span className="wiki-home-patch-title">{patch.title || patch.code}</span>
+      </Link>
     </li>
   )
 }
@@ -97,11 +77,16 @@ export function SeasonUpdates() {
           )}
         </p>
       ) : (
-        <ol className="wiki-home-patch-list">
-          {query.data.patches.map((patch) => (
-            <PatchRow key={patch.id} patch={patch} />
-          ))}
-        </ol>
+        <>
+          <ol className="wiki-home-patch-list">
+            {query.data.patches.map((patch) => (
+              <PatchRow key={patch.id} patch={patch} />
+            ))}
+          </ol>
+          <Link className="wiki-home-updates-all" to={scope.href("/updates")}>
+            {wikiText(locale, "Xem tất cả ghi chú cập nhật", "See all patch notes")}
+          </Link>
+        </>
       )}
     </aside>
   )

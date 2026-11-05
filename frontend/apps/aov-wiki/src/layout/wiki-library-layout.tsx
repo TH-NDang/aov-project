@@ -56,8 +56,9 @@ export function WikiLibraryLayout() {
   const [params] = useSearchParams()
   const isWarehouse = useMatch("/warehouse")
   const isSkins = useMatch("/skins")
+  const isUpdates = useMatch("/updates/*")
   const searchScope = isWarehouse ? "warehouse" : isSkins ? "skins" : "heroes"
-  const active = searchScope === "warehouse" ? warehouseKind(params.get("tab")) : searchScope
+  const active = isUpdates ? "updates" : searchScope === "warehouse" ? warehouseKind(params.get("tab")) : searchScope
   const pageTitle = t(active)
   const [contentsOpen, setContentsOpen] = useState(false)
 

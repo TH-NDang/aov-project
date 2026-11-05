@@ -35,6 +35,12 @@ export const wikiSections = [
     path: "/warehouse?tab=spells",
     group: "warehouse",
   },
+  {
+    key: "updates",
+    icon: "patch",
+    path: "/updates",
+    group: "news",
+  },
 ] as const
 
 export type WikiSectionKey = (typeof wikiSections)[number]["key"]

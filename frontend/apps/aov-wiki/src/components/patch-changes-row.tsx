@@ -34,8 +34,9 @@ export function PatchChangesRow({
   failed?: boolean
   retry?: () => void
 }) {
-  const { locale, patchVariantId, seasonId } = useWikiContext()
+  const { locale, patchVariantId, seasonId, options, href } = useWikiContext()
   if (!entries.length && !failed) return null
+  const notes = options?.patches.find((patch) => (patchVariantId ? patch.id === patchVariantId : patch.isCurrent))?.code
   const title =
     seasonId && !patchVariantId
       ? wikiText(locale, "Thay đổi trong mùa", "Changed this season")
@@ -45,6 +46,11 @@ export function PatchChangesRow({
       <h2 className="mb-2 flex items-center gap-2 type-section-title">
         {title}
         {entries.length > 0 && <span className="type-meta">{entries.length}</span>}
+        {notes && (
+          <Link to={href(`/updates/${notes}`)} className="ml-auto type-meta font-normal text-primary hover:underline">
+            {wikiText(locale, "Xem ghi chú đầy đủ", "See full notes")}
+          </Link>
+        )}
       </h2>
       {entries.length > 0 && (
         <div className="flex gap-2 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden sm:[scrollbar-width:thin]">

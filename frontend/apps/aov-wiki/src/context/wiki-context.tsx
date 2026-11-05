@@ -93,6 +93,8 @@ const COPY: Record<string, [string, string]> = {
   enchantments: ["Phù hiệu", "Enchantments"],
   arcana: ["Bảng ngọc", "Arcana"],
   spells: ["Phụ trợ", "Talents"],
+  news: ["Tham khảo", "Reference"],
+  updates: ["Ghi chú cập nhật", "Patch notes"],
   map: ["Bản đồ", "Maps"],
   mode: ["Chế độ chơi", "Game modes"],
   backHome: ["Về trang chủ", "Back home"],

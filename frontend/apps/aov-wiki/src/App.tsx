@@ -12,6 +12,12 @@ import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
 import { WikiLoginCallback } from "./features/auth/wiki-account"
 
+const UpdatesPage = lazy(() =>
+  import("./features/updates/updates-page").then((module) => ({ default: module.UpdatesPage })),
+)
+const PatchDetailPage = lazy(() =>
+  import("./features/updates/patch-detail-page").then((module) => ({ default: module.PatchDetailPage })),
+)
 const HeroDirectory = lazy(() =>
   import("./features/hero/hero-directory").then((module) => ({ default: module.HeroDirectory })),
 )
@@ -91,6 +97,22 @@ export default function App() {
             element={
               <Suspense fallback={<WarehouseRouteLoading />}>
                 <WarehousePage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/updates"
+            element={
+              <Suspense fallback={null}>
+                <UpdatesPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/updates/:patchCode"
+            element={
+              <Suspense fallback={null}>
+                <PatchDetailPage />
               </Suspense>
             }
           />

@@ -52,13 +52,3 @@ export function formatPatchDate(patch: SeasonPatch) {
   const parts = patchDate.formatToParts(date)
   return `${parts.find((part) => part.type === "day")?.value}/${parts.find((part) => part.type === "month")?.value}`
 }
-
-export function patchSource(patch: SeasonPatch) {
-  if (!patch.sourceUrl) return null
-  try {
-    const url = new URL(patch.sourceUrl)
-    return url.protocol === "https:" && !url.username && !url.password ? url.href : null
-  } catch {
-    return null
-  }
-}

@@ -242,10 +242,6 @@
   border-radius: 50%;
   background: currentColor;
 }
-.wiki-home-patch-arrow {
-  width: 13px;
-  flex: none;
-}
 a.wiki-home-patch-row:hover {
   color: var(--gold);
 }
@@ -402,4 +398,14 @@ a.wiki-home-patch-row:hover {
   .wiki-home-heroes li:nth-child(n + 5) {
     display: none;
   }
+}
+.wiki-home-updates-all {
+  font: var(--wiki-type-meta);
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--aov-accent);
+  text-decoration: none;
+}
+.wiki-home-updates-all:hover {
+  text-decoration: underline;
 }

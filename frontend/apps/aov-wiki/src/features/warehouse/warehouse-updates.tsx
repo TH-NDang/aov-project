@@ -1,3 +1,4 @@
+import { Link } from "react-router"
 import { patchChangeLabel } from "../../components/patch-changes-row"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { changeKind, publishedNotesForSubject } from "../../lib/published-change-subjects"
@@ -23,7 +24,11 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
       {patches.map(({ variant, rows }) => (
         <section key={variant.id} className="space-y-2">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <h3 className="type-section-title">{variant.code}</h3>
+            <h3 className="type-section-title">
+              <Link to={scope.href(`/updates/${variant.code}`)} className="hover:text-primary">
+                {variant.code}
+              </Link>
+            </h3>
             <span className="type-meta">{seasons.get(variant.seasonId)?.displayName}</span>
           </div>
           <ul className="divide-y border-y">
