@@ -82,6 +82,9 @@ export interface CatalogRequest {
   rulesetId: string
   locale: string
   sort: string
+  role?: string
+  position?: string
+  hasWarnings?: string
 }
 
 function revision(heroId: string, patch: string, revisionNo = 1, rulesetId = "standard"): Revision {
@@ -168,6 +171,9 @@ export function createHeroCatalogFixture() {
     rulesetId: params.get("rulesetId") ?? "",
     locale: params.get("locale") ?? "vi-VN",
     sort: params.get("sort") ?? "code",
+    ...Object.fromEntries(
+      ["role", "position", "hasWarnings"].filter((key) => params.has(key)).map((key) => [key, params.get(key)!]),
+    ),
   })
   const response = (query: CatalogRequest): PageSlice<HeroRow> => {
     let found = heroes
@@ -186,6 +192,9 @@ export function createHeroCatalogFixture() {
     if (query.seasonId || query.patchVariantId) found = found.filter((hero) => hero.gameplayChanges.length > 0)
     if (query.q)
       found = found.filter((hero) => `${hero.code} ${hero.displayName}`.toLowerCase().includes(query.q.toLowerCase()))
+    if (query.role) found = found.filter((hero) => hero.id === far.id && query.role!.split(",").includes("MAGE"))
+    if (query.position) found = found.filter((hero) => hero.id === far.id && query.position!.split(",").includes("mid"))
+    if (query.hasWarnings === "true") found = found.filter((hero) => hero.id === far.id)
     found.sort((left, right) =>
       query.sort === "edited-desc"
         ? (Date.parse(right.lastEditedAt ?? "") || 0) - (Date.parse(left.lastEditedAt ?? "") || 0) ||

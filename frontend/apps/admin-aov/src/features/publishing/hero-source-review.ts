@@ -18,7 +18,10 @@ export function sourceContentWarning(flag: Record<string, unknown>): boolean {
 
 function sourceReviewFlag(flag: Record<string, unknown>): boolean {
   if (provenanceTypes.has(String(flag.type))) return false
-  return !(flag.type === "not_visible_in_source" && flag.field === "hero.attributes.hero_level")
+  return !(
+    flag.type === "not_visible_in_source" &&
+    (flag.field === "hero.attributes.hero_level" || flag.field === "heroLevel")
+  )
 }
 
 function reviewFlags(flags: unknown): { field: string; note: string; resolved: boolean }[] {

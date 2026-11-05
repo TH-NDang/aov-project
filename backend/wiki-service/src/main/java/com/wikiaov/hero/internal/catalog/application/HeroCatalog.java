@@ -5,11 +5,13 @@ import com.wikiaov.hero.internal.application.response.HeroCatalogView.GameplayCh
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
+import com.wikiaov.hero.internal.catalog.domain.HeroCatalogFacets;
 import com.wikiaov.hero.internal.catalog.persistence.HeroCatalogRepository;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTranslation;
 import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
+import com.wikiaov.hero.internal.domain.HeroContent.Role;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.PageSlice;
@@ -45,11 +47,21 @@ public class HeroCatalog {
     @PreAuthorize("hasAuthority('catalog:read')")
     public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
             UUID rulesetId, String locale, String sort, boolean includeUnchanged) {
+        return list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort, includeUnchanged, "", "", null);
+    }
+
+    @PreAuthorize("hasAuthority('catalog:read')")
+    public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
+            UUID rulesetId, String locale, String sort, boolean includeUnchanged, String role, String position,
+            Boolean hasWarnings) {
         if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)
             throw HeroValidation.invalid("Invalid page bounds.");
         if (q.trim().length() > 100 || !Set.of("code", "edited-desc").contains(sort))
             throw HeroValidation.invalid("Invalid hero catalog search or sort.");
         HeroValidation.locale(locale);
+        var facets = new HeroCatalogFacets(
+                choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())),
+                choices(position, Set.of("top", "mid", "rung", "rong-ad", "tro-thu")), hasWarnings);
         if (rulesetId != null)
             contexts.requireRuleset(rulesetId);
 
@@ -82,7 +94,7 @@ public class HeroCatalog {
             return new PageSlice<>(List.of(), page, size, 0);
 
         var identities = catalog.page(new HeroCatalogRepository.Filter(q.trim().toLowerCase(Locale.ROOT), rulesetId,
-                variants.keySet(), scopeOrdinals, filtered && !includeUnchanged, snapshotVariants), page, size,
+                variants.keySet(), scopeOrdinals, filtered && !includeUnchanged, snapshotVariants, facets), page, size,
                 sort.equals("edited-desc"));
         if (identities.items().isEmpty())
             return new PageSlice<>(List.of(), page, size, identities.totalElements());
@@ -154,5 +166,14 @@ public class HeroCatalog {
 
     private static Instant latest(Instant a, Instant b) {
         return a == null ? b : b == null || a.isAfter(b) ? a : b;
+    }
+
+    private static Set<String> choices(String value, Set<String> allowed) {
+        if (value == null || value.isBlank())
+            return Set.of();
+        var selected = Arrays.stream(value.split(",", -1)).map(String::trim).collect(Collectors.toSet());
+        if (!allowed.containsAll(selected))
+            throw HeroValidation.invalid("Invalid hero catalog role or position.");
+        return Set.copyOf(selected);
     }
 }

@@ -48,6 +48,7 @@ import { HeroQuickViewBody } from "./hero-quick-view-body"
 import { useHeroEntries } from "./patch-notes-sheet"
 import { showAllCatalogEntries } from "./catalog-scope"
 import { useHeroScopeChanges } from "./use-hero-scope-changes"
+import { HeroCatalogFilters, heroCatalogFacets } from "./hero-catalog-filters"
 const HeroWorkspace = lazy(() =>
   import("./publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
 )
@@ -131,6 +132,7 @@ export function HeroCatalog({
     )
   }, [])
   const query: HeroCatalogQuery = {
+    ...heroCatalogFacets(params),
     q,
     includeUnchanged: "false",
     sort,
@@ -356,6 +358,7 @@ export function HeroCatalog({
         </div>
         <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-3">
           {searchSlot ? createPortal(searchBox, searchSlot) : <div className="min-w-40 flex-1">{searchBox}</div>}
+          <HeroCatalogFilters />
           <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <ArrowDownWideNarrow aria-hidden className="size-3.5" />
             <span className="sr-only">Sắp xếp</span>
@@ -438,8 +441,8 @@ export function HeroCatalog({
           <p>
             {scoped && !showAll
               ? "Chưa ghi nhận thay đổi gameplay phù hợp với bộ lọc."
-              : q
-                ? "Không tìm thấy tướng theo tên hoặc mã này."
+              : q || query.role || query.position || query.hasWarnings
+                ? "Không tìm thấy tướng phù hợp với tìm kiếm và bộ lọc."
                 : "Chưa có tướng trong kho."}
           </p>
           {scoped && !showAll && (

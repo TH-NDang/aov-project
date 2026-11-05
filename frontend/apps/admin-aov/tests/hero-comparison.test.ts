@@ -289,6 +289,7 @@ test("warning counts include clipped and missing forms but exclude routine captu
   const common = [
     { type: "unlabeled_icons", status: "not_inferred", field: "hero.roles", note: "Unlabeled roles" },
     { type: "not_visible_in_source", status: "left_null", field: "hero.attributes.hero_level" },
+    { type: "not_visible_in_source", field: "heroLevel", note: "Ảnh chưa xác nhận cấp tướng." },
     { type: "screenshot_color_sampling", field: "color_metadata" },
     { type: "visual_bar_measurement", field: "hero.overview_ratings" },
     { type: "raw_labels_and_values", field: "hero.skills[].skill_level_table" },

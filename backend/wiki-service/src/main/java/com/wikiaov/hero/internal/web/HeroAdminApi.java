@@ -36,6 +36,9 @@ public interface HeroAdminApi {
             @Parameter(description = "Requested translation locale.") String locale,
             @Parameter(description = "Sort expression accepted by this endpoint.") String sort,
             @Parameter(description = "Include entries that have no changes in the selected context.") boolean includeUnchanged,
+            @Parameter(description = "Comma-separated role codes; matches any selected role.") String role,
+            @Parameter(description = "Comma-separated captured positions: top, mid, rung, rong-ad, tro-thu.") String position,
+            @Parameter(description = "Filter the selected snapshot by unresolved source warnings.") Boolean hasWarnings,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroAdminApi_status", summary = "Status - hero admin", description = "Status for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {

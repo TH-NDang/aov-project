@@ -24,7 +24,7 @@ import {
 
 test("opening and closing a hero retain list filters without mutating the current URL", () => {
   const original = new URLSearchParams(
-    "season=s3&patch=baseline&hero=old&tab=media&skill=skill-1-1&skillLayout=flat&target=th-TH&compare=previous&translationKey=skill-1-1&translationField=description",
+    "season=s3&patch=baseline&role=MAGE&position=mid&hasWarnings=true&hero=old&tab=media&skill=skill-1-1&skillLayout=flat&target=th-TH&compare=previous&translationKey=skill-1-1&translationField=description",
   )
   const next = openHeroLocation(original, "hero-42", "revision-2")
   assert.equal(next.get("hero"), "hero-42")
@@ -37,7 +37,7 @@ test("opening and closing a hero retain list filters without mutating the curren
   assert.equal(next.get("translationKey"), null)
   assert.equal(next.get("translationField"), null)
   assert.equal(original.get("hero"), "old")
-  assert.equal(closeHeroLocation(next).toString(), "season=s3&patch=baseline")
+  assert.equal(closeHeroLocation(next).toString(), "season=s3&patch=baseline&role=MAGE&position=mid&hasWarnings=true")
 })
 
 test("hero URL restores both tab levels and independent reading and translation languages", () => {

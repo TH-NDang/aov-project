@@ -34,11 +34,14 @@ public class HeroAdminController implements HeroAdminApi {
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(required = false) UUID rulesetId, @RequestParam(defaultValue = "vi-VN") String locale,
             @RequestParam(defaultValue = "code") String sort,
-            @RequestParam(defaultValue = "false") boolean includeUnchanged, HttpServletRequest request) {
+            @RequestParam(defaultValue = "false") boolean includeUnchanged,
+            @RequestParam(defaultValue = "") String role, @RequestParam(defaultValue = "") String position,
+            @RequestParam(required = false) Boolean hasWarnings, HttpServletRequest request) {
         QueryParameters.requireOnly(request,
                 Set.of("page", "size", "q", "seasonId", "patchVariantId", "rulesetId", "locale", "sort",
-                        "includeUnchanged"));
-        return catalog.list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort, includeUnchanged);
+                        "includeUnchanged", "role", "position", "hasWarnings"));
+        return catalog.list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort, includeUnchanged,
+                role, position, hasWarnings);
     }
 
     @GetMapping(path = "/{heroId}", version = "1")

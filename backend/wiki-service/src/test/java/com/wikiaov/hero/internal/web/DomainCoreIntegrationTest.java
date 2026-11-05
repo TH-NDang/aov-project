@@ -716,6 +716,60 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void heroCatalogFacetsFilterTheSelectedSnapshotBeforePagination() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), revisionId = id(draft);
+        draft = complete(hero, revisionId, draft);
+        draft = catalogSource(draft,
+                Map.of("heroClassification", Map.of("recommendedPositions", List.of("rung", "top")),
+                        "reviewFlags", List.of(Map.of("field", "description", "note", "Source is incomplete."))));
+        send(post(ROOT + "/admin/heroes"), Map.of("code", "airi", "initialLocale", "vi-VN", "name", "Airi",
+                "rulesetId", ruleset, "releaseId", releaseId(variant)), 201);
+
+        String filtered = ROOT + "/admin/heroes?role=MAGE,ASSASSIN&position=mid,rung&hasWarnings=true&size=1";
+        var first = send(get(filtered), null, 200);
+        assertThat(first.get("totalElements")).isEqualTo(1);
+        assertThat(((List<Map<String, Object>>) first.get("items")).getFirst().get("id")).isEqualTo(hero.toString());
+        assertThat((List<?>) send(get(filtered + "&page=1"), null, 200).get("items")).isEmpty();
+        assertThat(send(get(ROOT + "/admin/heroes?position=mid"), null, 200).get("totalElements")).isEqualTo(0);
+        assertThat(send(get(ROOT + "/admin/heroes?role=MAGE"), null, 200).get("totalElements")).isEqualTo(0);
+        send(get(ROOT + "/admin/heroes?role=UNKNOWN"), null, 422);
+        send(get(ROOT + "/admin/heroes?position=unknown"), null, 422);
+
+        draft = send(post(path(hero, revisionId) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
+        var newer = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("sourceRevisionId", revisionId,
+                "cause", "CONTENT_CORRECTION", "rulesetId", ruleset), 201);
+        newer = catalogSource(newer, Map.of("heroClassification", Map.of("recommendedPositions", List.of("mid")),
+                "reviewFlags",
+                List.of(Map.of("field", "description", "note", "Source is incomplete.", "reviewResolution",
+                        "RESOLVED")),
+                "heroReviewFlags", List.of(Map.of("type", "not_visible_in_source", "field", "heroLevel"),
+                        Map.of("type", "visual_bar_measurement"))));
+        assertThat(send(get(ROOT + "/admin/heroes?hasWarnings=true"), null, 200).get("totalElements")).isEqualTo(0);
+        assertThat(send(get(ROOT + "/admin/heroes?role=ASSASSIN&position=mid&hasWarnings=false"), null, 200)
+                .get("totalElements")).isEqualTo(1);
+        assertThat(send(get(ROOT + "/admin/heroes?position=rung"), null, 200).get("totalElements")).isEqualTo(0);
+
+        newer = catalogSource(newer, Map.of("review_flags", List.of(Map.of("note", "Legacy warning."))));
+        assertThat(send(get(ROOT + "/admin/heroes?hasWarnings=true"), null, 200).get("totalElements")).isEqualTo(1);
+        catalogSource(newer,
+                Map.of("reviewFlags", List.of(), "review_flags", List.of(Map.of("note", "Superseded alias.")),
+                        "heroReviewFlags", List.of()));
+        assertThat(send(get(ROOT + "/admin/heroes?hasWarnings=true"), null, 200).get("totalElements")).isEqualTo(0);
+    }
+
+    private Map<String, Object> catalogSource(Map<String, Object> draft, Map<String, Object> metadata)
+            throws Exception {
+        return send(put(path(uuid(draft, "heroId"), id(draft)) + "/skills"),
+                Map.of("expectedDraftVersion", draft.get("version"),
+                        "skills", List.of(Map.of("skillKey", "skill-1", "kind", "ACTIVE", "displayOrder", 0,
+                                "iconAssetId", assets.get(MediaSemanticType.HERO_SKILL_ICON), "translations",
+                                List.of(Map.of("locale", "vi-VN", "name", "Skill", "description", "Verified text")),
+                                "effects", List.of(Map.of("effectType", "SOURCE_SNAPSHOT", "metadata", metadata))))),
+                200);
+    }
+
+    @Test
     void importsPreviewWithoutWritesAndRejectStaleConfirmation() throws Exception {
         seedImportSeason();
         Map<String, Object> request = new HashMap<>();

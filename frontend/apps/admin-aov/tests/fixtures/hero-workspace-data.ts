@@ -1,4 +1,6 @@
 import { SECTIONS, type Content, type Revision } from "../../src/features/publishing/types"
+import { heroReviewItems } from "../../src/features/publishing/hero-source-review"
+import { recommendedHeroPositions } from "../../src/features/publishing/hero-classifications"
 
 export const fixtureContent: Content = {
   PROFILE: {
@@ -227,21 +229,32 @@ export function createHeroFixture(annotations = false, history = false) {
         releases: [],
         assignments: [],
       })
-    if (path.startsWith("/admin/heroes?page="))
+    if (path.startsWith("/admin/heroes?page=")) {
+      const filters = new URL(path, "http://localhost").searchParams
+      const roles = filters.get("role")?.split(",")
+      const positions = filters.get("position")?.split(",")
+      const included =
+        (!roles || content.PROFILE?.roles.some((role) => roles.includes(role))) &&
+        (!positions ||
+          recommendedHeroPositions(content.SKILLS?.skills ?? []).some((position) => positions.includes(position))) &&
+        (filters.get("hasWarnings") !== "true" || heroReviewItems(content.SKILLS?.skills ?? []).length > 0)
       return Response.json({
-        items: [
-          {
-            id: revision.heroId,
-            code: "airi",
-            revisions: annotations
-              ? [revision, { ...revision, id: "fixture-published", state: "PUBLISHED" }]
-              : [revision],
-          },
-        ],
+        items: included
+          ? [
+              {
+                id: revision.heroId,
+                code: "airi",
+                revisions: annotations
+                  ? [revision, { ...revision, id: "fixture-published", state: "PUBLISHED" }]
+                  : [revision],
+              },
+            ]
+          : [],
         page: 0,
         size: 20,
-        totalElements: 1,
+        totalElements: included ? 1 : 0,
       })
+    }
     const comparisonMatch = path.match(/\/revisions\/(fixture-draft|fixture-previous)\/comparison(?:\?|$)/)
     if (comparisonMatch) {
       const target = comparisonMatch[1] === revision.id ? revision : fixturePreviousRevision

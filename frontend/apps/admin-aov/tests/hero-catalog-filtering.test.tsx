@@ -23,6 +23,9 @@ test("catalog transport encodes search and keeps every server filter in its cach
     rulesetId: "standard",
     locale: "vi-VN",
     sort: "edited-desc" as const,
+    role: "MAGE,SUPPORT",
+    position: "mid,tro-thu",
+    hasWarnings: "true",
   }
   await api.heroes(2, query)
   const params = new URL(requested, "http://localhost").searchParams
@@ -36,6 +39,9 @@ test("catalog transport encodes search and keeps every server filter in its cach
     { ...query, rulesetId: "alternate" },
     { ...query, locale: "en-US" },
     { ...query, sort: "code" as const },
+    { ...query, role: "MAGE" },
+    { ...query, position: "mid" },
+    { ...query, hasWarnings: "" },
   ])
     assert.notDeepEqual(heroCatalogKey(variant), original)
   assert.deepEqual(
@@ -58,6 +64,13 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
     document: dom.window.document,
     navigator: dom.window.navigator,
     HTMLElement: dom.window.HTMLElement,
+    Element: dom.window.Element,
+    Node: dom.window.Node,
+    NodeFilter: dom.window.NodeFilter,
+    DocumentFragment: dom.window.DocumentFragment,
+    HTMLInputElement: dom.window.HTMLInputElement,
+    MutationObserver: dom.window.MutationObserver,
+    CustomEvent: dom.window.CustomEvent,
     getComputedStyle: dom.window.getComputedStyle,
     fetch: fixture.fetcher,
     BroadcastChannel: undefined,
@@ -132,6 +145,24 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
     await waitFor(() => codes().length === 20, "The initial catalog shows only the first server page")
     assert.ok(codes().includes("aa-baseline-only"), "An unfiltered catalog retains heroes with no curated change")
     assert.ok(!codes().includes("zz-search-target"), "The search target starts beyond the loaded page")
+    const button = (label: string) =>
+      [...document.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === label)!
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Lọc tướng"]')!.click())
+    await act(async () => button("Pháp sư").click())
+    await act(async () => button("Đường giữa").click())
+    await act(async () =>
+      document.querySelector<HTMLInputElement>('[aria-label="Bộ lọc tướng"] input[type="checkbox"]')!.click(),
+    )
+    await waitFor(
+      () => fixture.requests.at(-1)?.hasWarnings === "true" && codes().length === 1,
+      "All facets are sent to the server before pagination",
+    )
+    assert.deepEqual(codes(), ["zz-search-target"])
+    assert.equal(fixture.requests.at(-1)?.role, "MAGE")
+    assert.equal(fixture.requests.at(-1)?.position, "mid")
+    await act(async () => button("Xóa bộ lọc").click())
+    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Lọc tướng"]')!.click())
+    await waitFor(() => codes().length === 20, "Clearing facets restores the original catalog")
     const lastEdit = cell("af-no-edit", /chỉnh sửa|sửa.*gần|biên tập/i)
     assert.ok(!lastEdit.querySelector("time"))
     assert.ok(

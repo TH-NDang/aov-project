@@ -1,9 +1,11 @@
 import type { ReactNode } from "react"
 import { Badge } from "@aov/ui/components/badge"
-import { HeroLaneIcon, type HeroLane } from "@aov/ui/components/hero-lane-icon"
+import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { MediaImage } from "@/components/media-image"
 import { ROLES, type Role, type Skill } from "./types"
+import { positions, positionLanes, recommendedHeroPositions } from "./hero-classifications"
+export { recommendedHeroPositions } from "./hero-classifications"
 
 const roleIcons: Record<Role, string> = {
   TANK: "do-don",
@@ -12,40 +14,6 @@ const roleIcons: Record<Role, string> = {
   MAGE: "phap-su",
   MARKSMAN: "xa-thu",
   SUPPORT: "tro-thu",
-}
-
-const positions = {
-  top: "Đường Tà thần Caesar",
-  mid: "Đường giữa",
-  rung: "Rừng",
-  "rong-ad": "Đường Rồng",
-  "tro-thu": "Hỗ trợ",
-} as const
-type Position = keyof typeof positions
-
-const positionLanes: Record<Position, HeroLane> = {
-  top: "TOP",
-  mid: "MID",
-  rung: "JUNGLE",
-  "rong-ad": "DRAGON",
-  "tro-thu": "SUPPORT",
-}
-
-/** Read only captured recommendations; roles alone do not establish a lane. */
-export function recommendedHeroPositions(skills: Skill[]): Position[] {
-  const found = new Set<Position>()
-  for (const skill of skills) {
-    for (const effect of skill.effects) {
-      if (effect.effectType !== "SOURCE_SNAPSHOT") continue
-      const classification = effect.metadata.heroClassification
-      if (!classification || typeof classification !== "object") continue
-      const values = (classification as Record<string, unknown>).recommendedPositions
-      if (!Array.isArray(values)) continue
-      for (const value of values)
-        if (typeof value === "string" && Object.hasOwn(positions, value)) found.add(value as Position)
-    }
-  }
-  return [...found]
 }
 
 function ClassificationBadge({

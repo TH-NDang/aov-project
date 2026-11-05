@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.catalog.persistence;
 import com.wikiaov.hero.internal.authoring.persistence.HeroIdentityRepository;
 import com.wikiaov.hero.internal.authoring.persistence.HeroRevisionRepository;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
+import com.wikiaov.hero.internal.catalog.domain.HeroCatalogFacets;
 import com.wikiaov.hero.internal.change.persistence.HeroChangeClassificationRepository;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeTranslationRepository;
@@ -30,7 +31,8 @@ public class HeroCatalogRepository {
             Set<UUID> variants,
             Map<UUID, Long> ordinals,
             boolean changesOnly,
-            Set<UUID> snapshotVariants
+            Set<UUID> snapshotVariants,
+            HeroCatalogFacets facets
     ) {
     }
 

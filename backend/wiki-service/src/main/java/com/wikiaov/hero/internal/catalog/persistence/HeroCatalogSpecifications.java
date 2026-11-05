@@ -5,7 +5,9 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.catalog.persistence.HeroCatalogRepository.Filter;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
+import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRoleRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
+import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
 import jakarta.persistence.criteria.*;
 import java.time.Instant;
 import java.util.*;
@@ -46,6 +48,8 @@ public final class HeroCatalogSpecifications {
             result.add(hasCuratedChange(filter, query, hero, cb));
         if (!filter.q().isEmpty())
             result.add(matchesSearch(filter, query, hero, cb));
+        if (filter.facets().active())
+            result.add(matchesFacets(filter, query, hero, cb));
 
         return result.toArray(Predicate[]::new);
     }
@@ -122,6 +126,49 @@ public final class HeroCatalogSpecifications {
                         cb.greaterThan(other.<Long>get("revisionNo"), revision.get("revisionNo")))));
 
         return newer.select(other.get("id")).where(predicates.toArray(Predicate[]::new));
+    }
+
+    private static Predicate matchesFacets(Filter filter, CriteriaQuery<?> query, Root<HeroIdentity> hero,
+            CriteriaBuilder cb) {
+        var matching = query.subquery(UUID.class);
+        var revision = matching.from(HeroRevision.class);
+        var predicates = searchRevisionPredicates(filter, revision, matching, cb);
+        predicates.add(cb.equal(revision.get("heroId"), hero.get("id")));
+        predicates.add(cb.not(cb.exists(newerSearchRevision(filter, matching, revision, cb))));
+        if (filter.rulesetId() != null)
+            predicates.add(cb.equal(revision.get("rulesetId"), filter.rulesetId()));
+        if (!filter.facets().roles().isEmpty()) {
+            var roles = matching.subquery(UUID.class);
+            var role = roles.from(ProfileRoleRow.class);
+            roles.select(role.get("profileRevisionId")).where(
+                    cb.equal(role.get("profileRevisionId"), revision.get("profileRevisionId")),
+                    role.get("roleCode").in(filter.facets().roles()));
+            predicates.add(cb.exists(roles));
+        }
+        if (!filter.facets().positions().isEmpty()) {
+            var condition = filter.facets().positions().stream().sorted()
+                    .map(value -> "@ == \"" + value + "\"").collect(java.util.stream.Collectors.joining(" || "));
+            predicates.add(hasSourceEffect(matching, revision, cb,
+                    "$.heroClassification.recommendedPositions[*] ? (" + condition + ")"));
+        }
+        if (filter.facets().hasWarnings() != null) {
+            var pending = hasSourceEffect(matching, revision, cb, HeroCatalogWarningPaths.PENDING);
+            predicates.add(filter.facets().hasWarnings() ? pending : cb.not(pending));
+        }
+        matching.select(revision.get("id")).where(predicates.toArray(Predicate[]::new));
+        return cb.exists(matching);
+    }
+
+    private static Predicate hasSourceEffect(Subquery<UUID> matching, Root<HeroRevision> revision,
+            CriteriaBuilder cb, String... paths) {
+        var effects = matching.subquery(UUID.class);
+        var effect = effects.from(SkillEffectRow.class);
+        var pathsMatch = Arrays.stream(paths).map(path -> cb.isTrue(cb.function("jsonb_path_exists", Boolean.class,
+                effect.get("metadata"), cb.literal(path)))).toArray(Predicate[]::new);
+        effects.select(effect.get("skillSetRevisionId")).where(
+                cb.equal(effect.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
+                cb.equal(effect.get("effectType"), "SOURCE_SNAPSHOT"), cb.or(pathsMatch));
+        return cb.exists(effects);
     }
 
     private static String containsPattern(String text) {
