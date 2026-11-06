@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gold" x2=".8" y2="1">
+      <stop stop-color="#fff1bc"/><stop offset=".48" stop-color="#efc379"/><stop offset="1" stop-color="#ae713c"/>
+    </linearGradient>
+    <linearGradient id="paper" x2=".7" y2="1">
+      <stop stop-color="#fff7db"/><stop offset="1" stop-color="#dfc29b"/>
+    </linearGradient>
+    <linearGradient id="steel" x2=".8" y2="1">
+      <stop stop-color="#f5f7eb"/><stop offset=".5" stop-color="#bfd3dc"/><stop offset="1" stop-color="#667d9a"/>
+    </linearGradient>
+    <linearGradient id="jade" x2=".9" y2="1">
+      <stop stop-color="#c3f2c7"/><stop offset=".4" stop-color="#6fc5a6"/><stop offset="1" stop-color="#377682"/>
+    </linearGradient>
+    <linearGradient id="blue" x2=".8" y2="1">
+      <stop stop-color="#c4f8ff"/><stop offset=".48" stop-color="#73c3de"/><stop offset="1" stop-color="#577ba7"/>
+    </linearGradient>
+    <linearGradient id="plum" x2=".8" y2="1">
+      <stop stop-color="#e9c5ff"/><stop offset=".5" stop-color="#a986db"/><stop offset="1" stop-color="#66528e"/>
+    </linearGradient>
+    <linearGradient id="coral" x2=".9" y2="1">
+      <stop stop-color="#ffd5bd"/><stop offset=".45" stop-color="#ee8a8e"/><stop offset="1" stop-color="#ad536c"/>
+    </linearGradient>
+  </defs>
+
+  <symbol id="buff" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#jade)" d="M30 5 52 30H40v27H20V30H8z"/>
+    <path fill="none" stroke="#e3fbe0" stroke-width="3" d="M30 14 19 26m6 8v17"/>
+    <path fill="url(#gold)" stroke-width="2" d="m51 6 2.6 6.4L60 15l-6.4 2.6L51 24l-2.6-6.4L42 15l6.4-2.6z"/>
+  </symbol>
+
+  <symbol id="nerf" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#coral)" d="M34 59 12 34h12V7h20v27h12z"/>
+    <path fill="none" stroke="#ffe3d6" stroke-width="3" d="M30 13v17"/>
+    <path fill="url(#steel)" stroke-width="2" d="m5 10 8-3 3 7-8 3z"/>
+    <path fill="url(#steel)" stroke-width="2" d="m6 23 5-1 1 5-5 1z"/>
+  </symbol>
+
+  <symbol id="balance" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="none" stroke-width="2" d="m13 16-8 22m8-22 8 22m30-22-8 22m8-22 8 22"/>
+    <path fill="url(#gold)" d="M29 10h6v40h-6z"/>
+    <path fill="url(#gold)" d="M8 12h48v6H8z"/>
+    <circle cx="32" cy="10" r="5" fill="url(#paper)"/>
+    <path fill="url(#blue)" d="M3 38h20q-2 9-10 9T3 38z"/>
+    <path fill="url(#coral)" d="M41 38h20q-2 9-10 9t-10-9z"/>
+    <path fill="url(#gold)" d="M18 58q2-8 14-8t14 8z"/>
+  </symbol>
+
+  <symbol id="adjustment" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="6" y="15" width="52" height="9" rx="4.5" fill="url(#steel)"/>
+    <rect x="6" y="40" width="52" height="9" rx="4.5" fill="url(#steel)"/>
+    <circle cx="22" cy="19.5" r="10" fill="url(#gold)"/>
+    <circle cx="43" cy="44.5" r="10" fill="url(#blue)"/>
+    <circle cx="19.5" cy="17" r="2.5" fill="#fff4cf" stroke="none"/>
+    <circle cx="40.5" cy="42" r="2.5" fill="#e3fbff" stroke="none"/>
+  </symbol>
+
+  <symbol id="rework" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <g transform="rotate(38 38 26)">
+      <path fill="url(#gold)" d="M33 24h9v38h-9z"/>
+      <path fill="url(#steel)" d="M18 6h36l5 8-5 9H18z"/>
+      <path fill="none" stroke="#f6fbff" stroke-width="3" d="M24 11h24"/>
+    </g>
+    <path fill="url(#plum)" stroke-width="2" d="m14 38 3.4 8.6L26 50l-8.6 3.4L14 62l-3.4-8.6L2 50l8.6-3.4z"/>
+  </symbol>
+
+  <symbol id="fix" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#steel)" d="M43 4a15 15 0 0 0-17 20L6 44a7.5 7.5 0 0 0 10.6 10.6L37 34.5a15 15 0 0 0 19-17l-9 9-9-3-3-9z"/>
+    <circle cx="11.5" cy="49" r="2.5" fill="#667d9a" stroke="none"/>
+    <circle cx="47" cy="47" r="14" fill="url(#jade)"/>
+    <path fill="none" stroke="#f2fff0" stroke-width="4.5" d="m40 47 5 5 9-10"/>
+  </symbol>
+
+  <symbol id="added" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#gold)" d="m28 3 7 19 19 7-19 7-7 19-7-19-19-7 19-7z"/>
+    <path fill="none" stroke="#fff4cf" stroke-width="3" d="m27 14-2 8"/>
+    <circle cx="48" cy="48" r="13" fill="url(#jade)"/>
+    <path fill="none" stroke="#f2fff0" stroke-width="4.5" d="M48 41v14m-7-7h14"/>
+  </symbol>
+
+  <symbol id="removed" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#paper)" d="m24 13 2-8h12l2 8z"/>
+    <path fill="url(#steel)" d="M13 20h38l-4 39H17z"/>
+    <path fill="url(#steel)" d="M7 12h50v8H7z"/>
+    <path fill="url(#coral)" stroke-width="2" d="m23 32 4-4 5 5 5-5 4 4-5 5 5 5-4 4-5-5-5 5-4-4 5-5z"/>
+  </symbol>
+
+  <symbol id="updated" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="none" stroke-width="11" stroke-linecap="butt" d="M12 28a21 21 0 0 1 36-9"/>
+    <path fill="none" stroke="url(#blue)" stroke-width="6" stroke-linecap="butt" d="M12 28a21 21 0 0 1 36-9"/>
+    <path fill="url(#blue)" d="M56 7v20H37z"/>
+    <path fill="none" stroke-width="11" stroke-linecap="butt" d="M52 36a21 21 0 0 1-36 9"/>
+    <path fill="none" stroke="url(#gold)" stroke-width="6" stroke-linecap="butt" d="M52 36a21 21 0 0 1-36 9"/>
+    <path fill="url(#gold)" d="M8 57V37h19z"/>
+  </symbol>
+
+  <symbol id="baseline" viewBox="0 0 64 64" stroke="#393640" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#steel)" d="M10 14v36q0 9 22 9t22-9V14z"/>
+    <ellipse cx="32" cy="14" rx="22" ry="9" fill="url(#paper)"/>
+    <path fill="none" d="M10 26q0 9 22 9t22-9M10 38q0 9 22 9t22-9"/>
+  </symbol>
+</svg>
