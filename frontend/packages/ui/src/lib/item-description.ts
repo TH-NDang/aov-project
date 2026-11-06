@@ -90,6 +90,8 @@ export interface ItemTextPassive {
   name: string | null
   text: string
   unique: boolean
+  /** Used on demand by the player rather than always on. */
+  active?: boolean
 }
 
 export interface ItemTextContent {
@@ -112,6 +114,7 @@ function folded(value: string) {
 const UNIQUE = /n[oộ]i\s+t[aạ]i\s+duy\s+nh[aấ]t/i
 const STAT_LINE = /^["'“”\s]*(\+)?\s*(\d[\d.,]*)\s*(%?)\s+(.+)$/
 const SEPARATOR = /\s+[–—-]\s+/
+const ACTIVE = /k[ií]ch\s+ho[aạ]t\s+(?:duy\s+nh[aấ]t|ch[uủ]\s+đ[oộ]ng)/i
 
 function numberFrom(text: string) {
   if (/^\d{1,3}(\.\d{3})+$/.test(text)) return Number(text.replaceAll(".", ""))
@@ -154,19 +157,32 @@ function statFrom(line: string): ItemTextStat | null {
   }
 }
 
+/** Removes a marker such as "unique passive" from the line, together with the dash or colon that joined it. */
+function withoutMarker(line: string, marker: RegExp) {
+  return line
+    .replace(new RegExp(`\\s*[–—-]?\\s*${marker.source}\\s*[.:–—-]?\\s*`, "gi"), " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 function passiveFrom(line: string): ItemTextPassive {
   const unique = UNIQUE.test(line)
-  const text = unique
-    ? line
-        .replace(new RegExp(`\\s*[–—-]?\\s*${UNIQUE.source}\\s*[.:–—-]?\\s*`, "i"), " ")
-        .replace(/\s+/g, " ")
-        .trim()
-    : line
+  const active = ACTIVE.test(line)
+  let text = withoutMarker(withoutMarker(line, UNIQUE), ACTIVE)
+    // A bare "passive" prefix says nothing the section heading does not; the real name, if any, follows it.
+    .replace(/^n[oộ]i\s+t[aạ]i\s*[:–—-]\s*/i, "")
+  const flags = { unique, ...(active ? { active } : {}) }
+
+  // Some entries put the name last, in angle brackets.
+  const tagged = /^(.*?)\s*<([^<>]{2,40})>\s*\.?$/s.exec(text)
+  if (tagged) return { name: tagged[2].trim(), text: tagged[1].trim(), ...flags }
+
+  text = text.trim()
   const label = /^([^:.,;()\d]{2,40}?)(?:\s*:\s*|\s+[–—-]\s+)(.+)$/s.exec(text)
   if (label && label[1].trim().split(/\s+/).length <= 5) {
-    return { name: label[1].trim(), text: label[2].trim(), unique }
+    return { name: label[1].trim(), text: label[2].trim(), ...flags }
   }
-  return { name: null, text, unique }
+  return { name: null, text, ...flags }
 }
 
 export function parseItemDescription(description: string | null | undefined): ItemTextContent {
@@ -286,30 +302,166 @@ export function itemStatsFromDescription(description: string | null | undefined)
 }
 
 /**
- * Items of the same tier that give most of the same stats, closest in price first: the alternatives a reader weighs
- * against the item they are looking at.
+ * What a passive does, recognised from its wording so that items with differently named passives can still be matched.
+ * Patterns run on accent-free, lowercase text and only list effects specific enough to say something about the item.
+ */
+export const ITEM_EFFECTS: { key: string; vi: string; en: string; pattern: RegExp }[] = [
+  {
+    key: "anti-heal",
+    vi: "Giảm hồi máu",
+    en: "Healing reduction",
+    pattern: /giam (?:\d+% )?(?:hieu (?:ung|qua) )?hoi mau/,
+  },
+  {
+    key: "heal",
+    vi: "Hồi máu",
+    en: "Healing",
+    pattern: /(?<!giam (?:\d+% )?(?:hieu (?:ung|qua) )?)hoi (?:mau|phuc)|hoi \d+[^.;]{0,20} mau/,
+  },
+  { key: "shield", vi: "Lá chắn", en: "Shield", pattern: /la chan/ },
+  { key: "slow", vi: "Làm chậm", en: "Slow", pattern: /lam cham/ },
+  { key: "burn", vi: "Thiêu đốt", en: "Burn", pattern: /thieu dot/ },
+  { key: "revive", vi: "Hồi sinh", en: "Revive", pattern: /hoi sinh|phuc sinh|song lai/ },
+  {
+    key: "invulnerable",
+    vi: "Miễn thương",
+    en: "Damage immunity",
+    pattern: /mien thuong|mien nhiem sat thuong|vo dich|bat kha xam pham/,
+  },
+  { key: "cleanse", vi: "Giải khống chế", en: "Cleanse", pattern: /mien khong|giai khong|hoa giai khong che/ },
+  { key: "reflect", vi: "Phản sát thương", en: "Damage reflection", pattern: /phan (?:sat thuong|lai|don)/ },
+  { key: "true-damage", vi: "Sát thương chuẩn", en: "True damage", pattern: /sat thuong chuan/ },
+  {
+    key: "percent-health",
+    vi: "Sát thương theo % máu",
+    en: "Damage based on health",
+    pattern: /tuong duong[^.;]{0,10}\d+% mau|\d+% mau hien tai|gay \d+% mau toi da thanh sat thuong/,
+  },
+  {
+    key: "on-hit",
+    vi: "Đánh thường gây thêm sát thương",
+    en: "On-hit damage",
+    pattern: /danh thuong[^.;]{0,30}gay them/,
+  },
+  { key: "shred", vi: "Giảm giáp mục tiêu", en: "Armor reduction", pattern: /giam [^.;]{0,16}giap|pha giap/ },
+  {
+    key: "attack-speed-down",
+    vi: "Giảm tốc đánh địch",
+    en: "Attack speed reduction",
+    pattern: /giam (?:\d+% )?toc danh/,
+  },
+  { key: "stealth", vi: "Chống tàng hình", en: "Stealth detection", pattern: /tang hinh/ },
+]
+
+const GENERIC_PASSIVE_NAMES = new Set(["noi tai", "kich hoat", "chu dong"])
+
+/** Everything used to tell whether two items play alike. */
+export interface ItemProfile {
+  stats: ItemStatKey[]
+  /** Named passives, keyed without accents: the same name means the same mechanic across items. */
+  passives: Map<string, string>
+  effects: string[]
+  active: boolean
+  summary: string
+  category: string | null
+  damage: "physical" | "magic" | null
+}
+
+export function itemProfile(
+  reading: ItemTextContent,
+  { summary, category = null }: { summary?: string | null; category?: string | null } = {},
+): ItemProfile {
+  const stats = [...new Set(reading.stats.flatMap((stat) => (stat.key ? [stat.key] : [])))]
+  const hasPhysical = stats.includes("physicalAttack")
+  const hasMagic = stats.includes("magicAttack")
+  const passives = new Map<string, string>()
+  for (const { name } of reading.passives) {
+    const key = name && folded(name)
+    if (key && !GENERIC_PASSIVE_NAMES.has(key)) passives.set(key, name)
+  }
+  const text = folded(
+    [summary ?? "", ...reading.passives.map((passive) => `${passive.name ?? ""} ${passive.text}`)].join(". "),
+  )
+  return {
+    stats,
+    passives,
+    effects: ITEM_EFFECTS.filter((effect) => effect.pattern.test(text)).map((effect) => effect.key),
+    active: reading.passives.some((passive) => passive.active),
+    summary: folded(summary ?? ""),
+    category,
+    damage: hasPhysical === hasMagic ? null : hasPhysical ? "physical" : "magic",
+  }
+}
+
+export interface ItemSimilarity<T> {
+  item: T
+  /** Why the item was picked, strongest reason first. */
+  reasons: { vi: string; en: string }[]
+}
+
+const SIMILAR_MINIMUM_SCORE = 4
+const MISMATCH_PENALTY = 4
+/** Only one item of these can be carried, by the role that needs it, so they rarely replace an ordinary item. */
+const ROLE_LIMITED_CATEGORIES = new Set(["phu-tro", "di-rung"])
+const isRoleLimited = (profile: ItemProfile) => ROLE_LIMITED_CATEGORIES.has(profile.category ?? "")
+
+/**
+ * Items of the same tier that play alike, the alternatives a reader weighs against the one they are looking at.
+ * What an item does counts for more than the stats it gives: the same named passive or written purpose is the strongest
+ * sign, then a passive with the same effect, then the same shop category, then each shared stat. A passive that a large
+ * share of the catalog carries says little, so it counts like a stat. An item for the other damage type, or a role item
+ * set against an ordinary one, is rarely a real alternative and needs a strong reason to appear. Ties go to the closest
+ * price.
  */
 export function similarItems<T extends { id: string; content: { tier: number | null; price: number | null } }>(
   entry: T,
   candidates: readonly T[],
-  statsOf: (item: T) => Pick<ItemTextStat, "key">[],
+  profileOf: (item: T) => ItemProfile,
   limit = 4,
-) {
-  const keys = new Set(statsOf(entry).flatMap((stat) => (stat.key ? [stat.key] : [])))
-  if (!keys.size) return []
-  const required = Math.min(2, keys.size)
-  return candidates
-    .flatMap((item) => {
+): ItemSimilarity<T>[] {
+  const own = profileOf(entry)
+  const others = candidates.map((item) => ({ item, profile: profileOf(item) }))
+  const carriers = new Map<string, number>()
+  for (const { profile } of others)
+    for (const key of profile.passives.keys()) carriers.set(key, (carriers.get(key) ?? 0) + 1)
+  const isCommon = (key: string) => (carriers.get(key) ?? 0) > Math.max(12, others.length * 0.15)
+
+  return others
+    .flatMap(({ item, profile }) => {
       if (item.id === entry.id || item.content.tier !== entry.content.tier) return []
-      const shared = new Set(statsOf(item).flatMap((stat) => (stat.key && keys.has(stat.key) ? [stat.key] : []))).size
-      return shared >= required ? [{ item, shared }] : []
+      const passives = [...own.passives].filter(([key]) => profile.passives.has(key))
+      const distinctive = passives.filter(([key]) => !isCommon(key)).map(([, name]) => name)
+      const effects = ITEM_EFFECTS.filter(
+        (effect) => own.effects.includes(effect.key) && profile.effects.includes(effect.key),
+      )
+      const stats = own.stats.filter((stat) => profile.stats.includes(stat))
+      const score =
+        distinctive.length * 4 +
+        (passives.length - distinctive.length) +
+        (own.summary && own.summary === profile.summary ? 4 : 0) +
+        effects.length * 3 +
+        (own.category && own.category === profile.category ? 2 : 0) +
+        (own.active && profile.active ? 1 : 0) +
+        stats.length -
+        (own.damage && profile.damage && own.damage !== profile.damage ? MISMATCH_PENALTY : 0) -
+        (isRoleLimited(own) !== isRoleLimited(profile) ? MISMATCH_PENALTY : 0)
+      if (score < SIMILAR_MINIMUM_SCORE) return []
+      const reasons = [
+        ...distinctive.map((name) => ({ vi: name, en: name })),
+        ...effects.map(({ vi, en }) => ({ vi, en })),
+        ...stats.flatMap((stat) => {
+          const definition = itemStatDefinition(stat)
+          return definition ? [{ vi: definition.vi, en: definition.en }] : []
+        }),
+      ]
+      return [{ item, score, reasons }]
     })
     .sort(
       (a, b) =>
-        b.shared - a.shared ||
+        b.score - a.score ||
         Math.abs((a.item.content.price ?? 0) - (entry.content.price ?? 0)) -
           Math.abs((b.item.content.price ?? 0) - (entry.content.price ?? 0)),
     )
     .slice(0, limit)
-    .map(({ item }) => item)
+    .map(({ item, reasons }) => ({ item, reasons }))
 }

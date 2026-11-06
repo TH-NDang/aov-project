@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   formatItemStatValue,
+  itemProfile,
   itemMatchesStatFilters,
   itemReaderContent,
   itemStatFilterCounts,
@@ -133,34 +134,124 @@ test("stat filters require every chip and count what each chip would leave", () 
   assert.equal(counts.magic, 0)
 })
 
-test("similar items share the tier and most stats, closest in price first", () => {
+const profile = (description: string, summary?: string, category?: string) =>
+  itemProfile(itemReaderContent({}, { description }), { summary, category })
+
+function ranked(
+  own: ReturnType<typeof profile>,
+  others: Record<string, ReturnType<typeof profile>>,
+  { tier = 3, prices = {} as Record<string, number> } = {},
+) {
+  const item = (id: string) => ({ id, content: { tier, price: prices[id] ?? 2000 } })
+  const profiles: Record<string, ReturnType<typeof profile>> = { self: own, ...others }
+  return similarItems(item("self"), Object.keys(others).map(item), (entry) => profiles[entry.id])
+}
+
+test("a shared passive counts for more than a list of shared stats", () => {
+  const found = ranked(profile("+60 Công vật lý\n+10% Tốc đánh\n+5% Tốc chạy\nTróc nã: Giảm 40% hiệu ứng hồi máu"), {
+    statsOnly: profile("+60 Công vật lý\n+10% Tốc đánh\n+5% Tốc chạy\nLốc xoáy: Gây thêm sát thương"),
+    samePassive: profile("+50 Công vật lý\n+200 Giáp\nTróc nã: Giảm 40% hiệu ứng hồi máu"),
+  })
+
+  assert.deepEqual(
+    found.map(({ item }) => item.id),
+    ["samePassive"],
+  )
+  assert.deepEqual(found[0].reasons[0], { vi: "Tróc nã", en: "Tróc nã" })
+})
+
+test("passives with different names match when they do the same thing", () => {
+  const found = ranked(profile("+200 Giáp\nBăng giá: Đòn đánh làm chậm mục tiêu"), {
+    sameEffect: profile("+400 Máu tối đa\nLính gác: Tung chiêu làm chậm kẻ địch\n+200 Giáp"),
+    otherEffect: profile("+200 Giáp\nLính gác: Nhận lá chắn khi ít máu"),
+  })
+
+  assert.deepEqual(
+    found.map(({ item }) => item.id),
+    ["sameEffect"],
+  )
+  assert.ok(found[0].reasons.some((reason) => reason.vi === "Làm chậm"))
+})
+
+test("reducing healing is not read as healing", () => {
+  assert.deepEqual(profile("Tróc nã: Mục tiêu bị giảm 40% hiệu quả hồi máu").effects, ["anti-heal"])
+  assert.deepEqual(profile("Hồi phục: Khi chịu sát thương, tướng hồi 4% máu tối đa").effects, ["heal"])
+})
+
+test("an item for the other damage type needs a strong reason to appear", () => {
+  const physical = profile("+60 Công vật lý\n+500 Máu tối đa\nCuồng phong: Đòn đánh làm chậm mục tiêu", "", "cong")
+
+  assert.deepEqual(
+    ranked(physical, {
+      magicSameEffect: profile("+60 Công phép\n+500 Máu tối đa\nGiá băng: Tung chiêu làm chậm mục tiêu"),
+    }),
+    [],
+  )
+  assert.deepEqual(
+    ranked(physical, {
+      magicSamePassive: profile("+60 Công phép\n+500 Máu tối đa\nCuồng phong: Đòn đánh làm chậm mục tiêu"),
+    }).map(({ item }) => item.id),
+    ["magicSamePassive"],
+  )
+})
+
+test("stats alone are enough only within the same shop category", () => {
+  const own = profile("+100 Công vật lý\n+25% Tỷ lệ chí mạng", "", "cong")
+
+  assert.deepEqual(
+    ranked(own, {
+      sameCategory: profile("+80 Công vật lý\n+15% Tỷ lệ chí mạng", "", "cong"),
+      otherCategory: profile("+80 Công vật lý\n+15% Tỷ lệ chí mạng", "", "di-rung"),
+    }).map(({ item }) => item.id),
+    ["sameCategory"],
+  )
+})
+
+test("role items do not stand in for ordinary items on a shared effect alone", () => {
+  const mage = profile("+200 Công phép\n+500 Máu tối đa\nGiá băng: Tung chiêu làm chậm mục tiêu", "", "phep")
+
+  assert.deepEqual(
+    ranked(mage, {
+      support: profile("+500 Máu tối đa\nMa nhãn: Tung chiêu làm chậm mục tiêu", "", "phu-tro"),
+      tank: profile("+500 Máu tối đa\nLính gác: Tung chiêu làm chậm mục tiêu", "", "thu"),
+    }).map(({ item }) => item.id),
+    ["tank"],
+  )
+})
+
+test("a passive most of the catalog carries does not make items alike", () => {
+  const common = "Khiêm nhường: Nhận vàng khi đi cùng đồng đội"
+  const others: Record<string, ReturnType<typeof profile>> = {}
+  for (let index = 0; index < 13; index++) others[`filler${index}`] = profile(common)
+
+  assert.deepEqual(ranked(profile(`+200 Giáp\n${common}`), others), [])
+})
+
+test("items of another tier are never alternatives, and ties go to the closest price", () => {
+  const stats = "Tróc nã: Giảm hồi máu"
   const item = (id: string, tier: number, price: number) => ({ id, content: { tier, price } })
-  const stats: Record<string, { key: "physicalAttack" | "lifesteal" | "armor" }[]> = {
-    self: [{ key: "physicalAttack" }, { key: "lifesteal" }],
-    near: [{ key: "physicalAttack" }, { key: "lifesteal" }],
-    far: [{ key: "physicalAttack" }, { key: "lifesteal" }],
-    lower: [{ key: "physicalAttack" }, { key: "lifesteal" }],
-    single: [{ key: "physicalAttack" }],
-    other: [{ key: "armor" }],
-  }
-  const self = item("self", 3, 2000)
   const found = similarItems(
-    self,
-    [
-      item("far", 3, 2900),
-      item("near", 3, 2100),
-      item("lower", 2, 2000),
-      item("single", 3, 2000),
-      item("other", 3, 2000),
-      self,
-    ],
-    (entry) => stats[entry.id],
+    item("self", 3, 2000),
+    [item("far", 3, 2900), item("near", 3, 2100), item("lower", 2, 2000)],
+    () => profile(stats),
   )
 
   assert.deepEqual(
-    found.map((entry) => entry.id),
+    found.map((entry) => entry.item.id),
     ["near", "far"],
   )
+})
+
+test("active items are marked, and names may come last in angle brackets", () => {
+  const { passives } = parseItemDescription(
+    "Nhận 35% miễn thương trong 3 giây. <Bất khuất>– Kích hoạt duy nhất\nKích hoạt chủ động – Hồi huyết: Hồi máu cho đồng minh\nNội tại – Nguyên lực: Tăng giáp cho đồng đội",
+  )
+
+  assert.deepEqual(passives, [
+    { name: "Bất khuất", text: "Nhận 35% miễn thương trong 3 giây.", unique: false, active: true },
+    { name: "Hồi huyết", text: "Hồi máu cho đồng minh", unique: false, active: true },
+    { name: "Nguyên lực", text: "Tăng giáp cho đồng đội", unique: false },
+  ])
 })
 
 test("values read as gains, except a stat stored as a penalty", () => {

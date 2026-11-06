@@ -16,13 +16,17 @@ function StatArt({ stat, size }: { stat: Pick<ItemTextStat, "key">; size: number
   return Art ? <Art size={size} className="shrink-0" /> : <span className="shrink-0" style={{ width: size }} />
 }
 
-function UniqueTag() {
-  const t = useWarehouseText()
+function PassiveTag({ children }: { children: ReactNode }) {
   return (
     <span className="rounded bg-muted px-1 text-xs font-normal whitespace-nowrap text-muted-foreground">
-      {t("Duy nhất", "Unique")}
+      {children}
     </span>
   )
+}
+
+function UniqueTag() {
+  const t = useWarehouseText()
+  return <PassiveTag>{t("Duy nhất", "Unique")}</PassiveTag>
 }
 
 /** Every stat with its icon and value, one to a row so numbers line up for comparison. */
@@ -91,9 +95,10 @@ export function ItemPassiveList({
     <div className="space-y-3">
       {content.passives.map((passive, index) => (
         <div key={index} className="space-y-0.5">
-          {(passive.name || passive.unique) && (
+          {(passive.name || passive.unique || passive.active) && (
             <h4 className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
               {passive.name}
+              {passive.active && <PassiveTag>{t("Kích hoạt", "Active")}</PassiveTag>}
               {passive.unique && <UniqueTag />}
             </h4>
           )}

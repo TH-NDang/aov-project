@@ -1,10 +1,10 @@
 import { useWarehouseText } from "./warehouse-view"
-import type { ReactNode } from "react"
+import { useMemo, type ReactNode } from "react"
 
 import { ItemCategoryIcon } from "./item-category-icon"
 import { ItemPassiveList, ItemStatList } from "./item-facts"
 import { ItemRecipeView, ItemSimilarList } from "./item-recipe"
-import { itemReaderContent, similarItems } from "@aov/ui/lib/item-description"
+import { itemProfile, itemReaderContent, similarItems } from "@aov/ui/lib/item-description"
 import {
   warehouseText,
   type ItemContent,
@@ -45,14 +45,24 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
       item.content.recipeStatus === "VERIFIED" &&
       item.content.components.some((part) => part.itemId === entry.id),
   )
-  const inRecipe = new Set([...content.components.map((part) => part.itemId), ...upgrades.map((item) => item.id)])
-  const similar = readerView
-    ? similarItems(
-        entry,
-        relatedItems.filter((item) => !inRecipe.has(item.id)),
-        (item) => itemReaderContent(item.content, warehouseText(item.content.translations, locale)).stats,
-      )
-    : []
+  const similar = useMemo(() => {
+    if (!readerView) return []
+    // Items already listed as ingredients or upgrades have a place of their own on the page.
+    const listed = new Set(content.components.map((part) => part.itemId))
+    for (const item of relatedItems)
+      if (item.content.components.some((part) => part.itemId === entry.id)) listed.add(item.id)
+    return similarItems(
+      entry,
+      relatedItems.filter((item) => !listed.has(item.id)),
+      (item) => {
+        const itemText = warehouseText(item.content.translations, locale)
+        return itemProfile(itemReaderContent(item.content, itemText), {
+          summary: itemText?.summary,
+          category: item.content.categoryCode,
+        })
+      },
+    )
+  }, [readerView, entry, content.components, relatedItems, locale])
   return (
     <>
       {text?.summary && <div className="type-body text-muted-foreground">{renderText(text.summary, language)}</div>}
@@ -84,7 +94,7 @@ export function ItemOverview<E extends WarehouseEntry<ItemContent>>({
         showStatus={!readerView}
         action={pencil?.("recipe")}
       />
-      <ItemSimilarList title={t("Món cùng kiểu", "Similar items")} items={similar} locale={locale} onView={onView} />
+      <ItemSimilarList title={t("Món cùng kiểu", "Similar items")} entries={similar} locale={locale} onView={onView} />
       {!readerView && (content.shopPositions.length > 0 || pencil) && (
         <section className="space-y-2">
           <div className="flex items-center justify-between">

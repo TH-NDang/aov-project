@@ -1,6 +1,7 @@
 import { useId, useState, type ReactNode } from "react"
 import { useWarehouseText, WarehouseAsset } from "./warehouse-view"
 import { warehouseName, type ItemContent, type WarehouseEntry } from "@aov/ui/lib/warehouse-content"
+import type { ItemSimilarity } from "@aov/ui/lib/item-description"
 import { cn } from "@aov/ui/lib/utils"
 
 type Item = WarehouseEntry<ItemContent>
@@ -9,7 +10,7 @@ export const recipeStatusNames = { UNKNOWN: "Chưa xác nhận", NONE: "Không c
 const MAX_DEPTH = 3
 const UPGRADES_SHOWN = 6
 
-export function RecipeItemLabel({ item, locale }: { item?: Item; locale: string }) {
+export function RecipeItemLabel({ item, locale, note }: { item?: Item; locale: string; note?: string }) {
   const t = useWarehouseText()
   return (
     <>
@@ -23,6 +24,7 @@ export function RecipeItemLabel({ item, locale }: { item?: Item; locale: string 
             {item.content.price.toLocaleString(locale)} {t("vàng", "gold")}
           </span>
         )}
+        {note && <span className="type-meta block">{note}</span>}
       </span>
     </>
   )
@@ -32,17 +34,19 @@ function ItemNode<E extends Item>({
   item,
   quantity = 1,
   locale,
+  note,
   onView,
 }: {
   item?: E
   quantity?: number
   locale: string
+  note?: string
   onView?: (item: E) => void
 }) {
   const t = useWarehouseText()
   const body = (
     <>
-      <RecipeItemLabel item={item} locale={locale} />
+      <RecipeItemLabel item={item} locale={locale} note={note} />
       {quantity > 1 && <span className="text-sm tabular-nums">×{quantity}</span>}
     </>
   )
@@ -204,26 +208,39 @@ export function ItemRecipeView<E extends Item>({
   )
 }
 
-/** A short list of other items worth comparing against the one on screen. */
+/** A short list of other items worth comparing against the one on screen, each saying what it has in common. */
 export function ItemSimilarList<E extends Item>({
   title,
-  items,
+  entries,
   locale,
   onView,
 }: {
   title: string
-  items: E[]
+  entries: ItemSimilarity<E>[]
   locale: string
   onView?: (item: E) => void
 }) {
-  if (!items.length) return null
+  const t = useWarehouseText()
+  if (!entries.length) return null
   return (
     <section className="space-y-2">
       <h3 className="type-section-title">{title}</h3>
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-x-3 gap-y-0.5">
-        {items.map((item) => (
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-x-3 gap-y-1">
+        {entries.map(({ item, reasons }) => (
           <li key={item.id}>
-            <ItemNode item={item} locale={locale} onView={onView} />
+            <ItemNode
+              item={item}
+              locale={locale}
+              note={
+                reasons.length
+                  ? `${t("Cùng", "Shares")}: ${reasons
+                      .slice(0, 3)
+                      .map((reason) => t(reason.vi, reason.en))
+                      .join(" · ")}`
+                  : undefined
+              }
+              onView={onView}
+            />
           </li>
         ))}
       </ul>
