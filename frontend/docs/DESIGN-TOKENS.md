@@ -13,6 +13,9 @@ Wiki, Stream và Admin là một họ sản phẩm nên dùng chung màu, phông
   thái, không dùng để trang trí.
 - Các cặp chữ/nền chính đạt tỉ lệ tương phản AA (từ 4.5:1) ở cả hai chế độ. Khi đổi màu phải kiểm tra lại.
 - Màu cố định chỉ còn ở phần phủ lên ảnh: banner, ảnh bìa, gradient nền tướng. Ảnh là nội dung nên giữ tông riêng.
+- Wiki và Stream mỗi app có bộ màu riêng: `--aov-wiki-*` (xanh than và vàng nhạt) và `--aov-stream-*` (màu logo cú). `wiki.css` và
+  `stream.css` gán bộ màu này vào các token chung, nên các thành phần dùng chung tự theo. Admin giữ bảng màu gốc. Lớp
+  `.public-panel` trên Wiki cho nội dung trong bảng thấp hơn bảng một bậc.
 - Biểu đồ một chuỗi số liệu dùng `--chart-1` (lấy từ `--aov-chart`). Màu này tối hơn màu nhấn vì màu nhấn quá sáng cho
   mảng đặc trên nền tối.
 
@@ -26,7 +29,8 @@ Wiki, Stream và Admin là một họ sản phẩm nên dùng chung màu, phông
 ## Hình khối và bề mặt
 
 - Bo góc: 6px cho điều khiển, 10px cho thẻ, 14px cho ảnh lớn; chỉ chip mới bo tròn hẳn.
-- Không lồng khung trong khung. Một mục gồm tiêu đề và nội dung nằm thẳng trên nền trang; chỉ thứ bấm được hoặc nhóm cần
+- Không lồng khung trong khung, và không dùng một khung cho mọi chỗ. Cách trình bày từng loại nội dung nằm trong `RESPONSIVE.md`.
+- Một mục gồm tiêu đề và nội dung nằm thẳng trên nền trang; chỉ thứ bấm được hoặc nhóm cần
   tách biệt mới là thẻ.
 - Thẻ dùng màu nền `--aov-surface`, không thêm viền và bóng. Trạng thái rê chuột dùng `--aov-raised`.
 - Chiều rộng nội dung tối đa `--aov-page-max` (1280px), lề `--aov-gutter`.

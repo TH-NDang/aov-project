@@ -19,8 +19,13 @@ Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng kh
 - Bên dưới là 6 ô danh mục Tướng, Trang phục, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, lấy từ `wiki-sections.ts`. Desktop dùng 2 cột thẻ gồm icon, tên và một dòng mô tả; từ 540px trở xuống dùng 3 cột, chỉ còn icon và tên.
 - Cuối trang là dải 8 tướng đã xuất bản, không cần API mới. Tướng có thay đổi ở patch đang đọc đứng trước và ghi rõ loại thay đổi; mobile hiện 4 tướng.
 
+## Hai bố cục
+
+Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. Hai bố cục là các component riêng, chọn bằng `usePageLayout`; nguyên tắc nằm ở `frontend/docs/RESPONSIVE.md`. Trên compact, đầu trang là một hàng gồm nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục và nút Thêm. Không có thanh điều hướng ở đáy màn hình.
+
 ## Thư viện Tướng
 
+- Trên compact, ô tìm và nút Lọc dính dưới đầu trang; bộ lọc Vị trí và Vai trò nằm trong drawer dưới, có ghi tên từng lựa chọn và số tướng tìm được. Trên wide, ô tìm nằm một hàng, Vị trí và Vai trò nằm hàng dưới.
 - `/hero` dùng cùng màu nền với toàn sản phẩm, nội dung căn giữa và giới hạn chiều ngang. Desktop có mục lục bên trái, ghim dưới header; phần danh sách bên phải. Từ 640px trở xuống, mục lục chuyển thành tấm trượt từ phải qua (`Sheet` của `@aov/ui`), mở bằng icon trên header. Nhóm **Sổ tay nhân vật** gồm **Danh sách tướng** dẫn đến `/hero` và **Trang phục** dẫn đến `/skins`; Kho trang bị, Bản đồ, Chế độ chơi là các mục ngang hàng bên ngoài nhóm và chưa mở nội dung. Chỉ mục đang xem có nền và viền đánh dấu.
 - Danh sách lấy các tướng đã xuất bản từ API public `GET /api/wiki/v1/heroes?region=VN&locale=vi-VN&size=100&page=0`. Nếu có nhiều trang, chương trình đọc tiếp trước khi lọc; số lượng kết quả được tính từ dữ liệu thực tế, không cố định theo một bộ mẫu. Mỗi mục có thể kèm trường `portrait` để dùng ảnh `PORTRAIT` ngay từ API danh sách, không cần tải chi tiết từng tướng chỉ để lấy ảnh.
 - TanStack Query giữ dữ liệu danh sách và chi tiết ở trạng thái mới trong 60 giây, dùng chung danh sách khi chuyển giữa thư viện và chi tiết. Khi lỗi có nút thử lại; khi chưa có dữ liệu hoặc không khớp bộ lọc có trạng thái riêng, không thay bằng tướng mẫu.
@@ -39,7 +44,7 @@ Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng kh
 
 ## Thư viện Trang phục
 
-- `/skins` dùng chung bố cục thư viện, mục lục và tiện ích desktop. Header mobile hiện “Trang phục”; tìm kiếm trên header điều hướng đến `/skins?q=...`.
+- `/skins` dùng chung bố cục thư viện, mục lục và tiện ích desktop. Đầu trang compact hiện “Trang phục” và không lặp ô tìm kiếm vì trang đã có ô riêng.
 - Dữ liệu lấy từ API public `GET /api/wiki/v1/skins?region=VN&locale=vi-VN&page=0&size=24`. API chọn bản tướng đã xuất bản theo gameplay context hiện hành, trả trang phục, tên tướng, ảnh và nhãn bậc đã bản địa hóa. Không gọi API admin hay tải detail riêng của từng tướng để dựng danh sách.
 - Ảnh gốc của tướng được lưu dưới trang phục “Mặc định” không xuất hiện trong danh mục này. Backend loại trước khi tính số kết quả, bộ lọc và phân trang; các ảnh đó vẫn dùng trong trang Tướng.
 - Đầu danh mục dùng tiêu đề, biểu tượng bộ sưu tập, số kết quả và họa tiết thẻ rất mờ. Thanh tìm kiếm và hai bộ chọn có icon nằm trên một bề mặt tối gọn; mobile đưa ô tìm kiếm lên hàng riêng.
@@ -52,6 +57,7 @@ Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng kh
 ## Kho trang bị
 
 - `/warehouse?tab=items|enchantments|arcana|spells` dùng chung bố cục thư viện. Trang chủ mở Kho trang bị; mục lục có bốn mục con. Tab, bộ lọc nhóm (`group`), tìm kiếm (`q`) và mục đang xem (`item`) lưu trong query để chia sẻ hoặc mở lại. Tìm kiếm trên header giữ tab hiện tại; mỗi mục cũng có ô tìm riêng, tìm không dấu cả theo tên, tóm tắt và mô tả nên gõ tên hiệu ứng cũng ra.
+- Trên compact, đầu trang ghi Kho trang bị và bốn phần Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ là dãy tab dính bên dưới.
 - Chỉ đọc dữ liệu công khai từ bốn API `/items`, `/enchantments`, `/arcana`, `/spells`; phụ trợ cũ đọc thêm `/spells/archived`. Không gọi API admin, không đưa bản nháp vào danh mục. Mục chưa xuất bản có trạng thái trống rõ ràng.
 - Trang bị/phụ trợ chưa biết patch gốc có thể được xuất bản như dữ liệu nền chưa rõ patch khi nội dung đã đủ. Chi tiết hiển thị rõ trạng thái này, không ghi nhận thành thay đổi mới của mùa hiện tại. Bản cập nhật gắn patch thật được ưu tiên hơn dữ liệu nền; mục còn thiếu nội dung vẫn giữ nháp.
 - TanStack Query giữ cache danh mục 60 giây, metadata nhóm 5 phút, hủy request khi không còn dùng. Danh mục hiện nhỏ nên tải tiếp các trang 100 mục rồi lọc không dấu ở client. Dữ liệu đã tải vẫn giữ nếu cập nhật nền lỗi; có nút thử lại. Metadata ảnh có ngay trong map `media` của từng mục; ảnh byte tiếp tục tải lười qua URL phiên bản CDN.
@@ -127,6 +133,16 @@ Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có v
 - Trên bộ kỹ năng có khung cho biết bản đang xem thay đổi gì. Bản có thay đổi hiện câu tóm tắt, từng giá trị cũ và mới, nguồn công bố và so với bản nào; bấm một dòng sẽ mở đúng kỹ năng. Bản không đổi ghi rõ điều đó và dẫn tới lần thay đổi gần nhất.
 - Khác biệt lấy từ hai nguồn: ghi chú đã công bố (`GET /heroes/{id}/changes`) là danh sách chính; so sánh hai bản nội dung công khai (`GET /heroes/{id}?patchVariantId=`) đánh dấu ngay trong mô tả, bảng thông số và chỉ số. Phép so sánh chỉ đọc chữ và số, không tính ảnh hay mã màu, và có thể tắt bằng ô đánh dấu. Bản trước là bản liền trước cùng ruleset, không phải bản được chọn trong thanh phiên bản.
 - Thẻ kỹ năng có chấm vàng khi kỹ năng đó đổi ở bản đang xem; thanh phiên bản có chấm vàng ở bản có thay đổi. Mục Các lần thay đổi khác liệt kê những bản còn lại, bấm để chuyển sang bản đó.
+- Mục Trang phục nằm dưới bộ kỹ năng, lấy từ `GET /api/wiki/v1/skins?hero=<mã tướng>` theo đúng mốc dữ liệu đang xem. Một ảnh lớn tỉ lệ 16:9 kèm tên, bậc và số thứ tự; bên dưới là hàng ảnh nhỏ để chọn, xếp từ bậc cao xuống. Đổi ảnh bằng nút trái/phải, phím ← → trong hàng ảnh nhỏ hoặc vuốt ngang. Bấm ảnh lớn mở hộp xem đầy đủ dùng chung với thư viện Trang phục, không có liên kết Xem tướng vì người đọc đang ở chính trang đó. Tướng chưa có trang phục thì mục này và dòng tương ứng trong mục lục đều ẩn.
+- Mục lục trang tướng liệt kê các phần thực sự có: Thay đổi ở bản này, Bộ kỹ năng, Trang phục, Video, Các lần thay đổi khác, Tổng quan, Chỉ số, Cốt truyện. Từ 1180px trở lên là cột thứ ba bên phải, dính theo khi cuộn và tô sáng phần đang đọc; các phần ở cột Tổng quan không được tô sáng vì luôn hiện song song với cột chính. Dưới 1180px là nút tròn nổi ở góc dưới bên phải, bấm mở drawer từ dưới lên; chọn một dòng thì drawer đóng rồi trang mới cuộn tới phần đó.
+- Nút Về thay đổi chỉ hiện khi vừa bấm Xem kỹ năng đầy đủ từ một thay đổi, nằm cạnh nút mục lục và tự mất khi đã quay lại. Từ 1180px trở lên không có nút này vì mục lục đã là đường quay về.
+- Video kỹ năng hiện ngay trong phần kỹ năng đang đọc, dưới dòng thời gian hồi chiêu và trên phần mô tả; thẻ kỹ năng có video mang dấu tam giác nhỏ. Bấm một video là phát tại chỗ. Trong lúc đang xem, chọn kỹ năng khác sẽ phát video của kỹ năng đó ở đúng chỗ ấy, nên so sánh các kỹ năng chỉ tốn một lần bấm cho mỗi kỹ năng. Nút Xem lớn mở trình xem có danh sách phát; link chia sẻ tới một video kỹ năng sẽ tự chuyển sang đúng kỹ năng đó.
+
+## Chân trang
+
+- `WikiFooter` dùng chung cho mọi trang: giới thiệu ngắn ở bên trái và bốn nhóm liên kết. Ba nhóm đầu lấy từ `wikiSections` nên khớp với mục lục thư viện; nhóm Hỗ trợ gồm góp ý, liên hệ và nguồn ảnh, AOV Stream.
+- Dòng cuối ghi thuộc về Garena / Liên Quân Mobile và mốc dữ liệu đang xem kèm thị trường.
+- Dưới 900px phần giới thiệu nằm trên các nhóm liên kết; dưới 560px các nhóm xếp hai cột. Trang có nút mục lục nổi chừa thêm khoảng trống cuối chân trang để nút không che liên kết.
 
 ## Ảnh nền đầu trang
 
