@@ -1,21 +1,109 @@
 @import "@aov/ui/styles.css";
 @import "./styles/typography.css";
+@import "./styles/motion.css";
+@import "./components/ornate-panel.css";
 
 :root.dark {
   color-scheme: dark;
+  --aov-bg: var(--aov-wiki-night);
+  --aov-surface: var(--aov-wiki-panel);
+  --aov-raised: var(--aov-wiki-panel-high);
+  --aov-sunken: var(--aov-wiki-panel-deep);
+  --aov-popover: var(--aov-wiki-panel);
+  --aov-line: var(--aov-wiki-line);
+  --aov-line-strong: var(--aov-wiki-line-strong);
+  --aov-text: var(--aov-wiki-text);
+  --aov-text-soft: var(--aov-wiki-text-soft);
+  --aov-success: var(--aov-wiki-success);
+  --aov-danger: var(--aov-wiki-danger);
+  --aov-warning: var(--aov-wiki-warning);
+  --aov-info: var(--aov-wiki-info);
+  --aov-muted: var(--aov-wiki-text-muted);
+  --aov-accent: var(--aov-wiki-gold);
+  --aov-accent-strong: var(--aov-wiki-gold-bright);
+  --aov-accent-soft: rgb(211 188 142 / 15%);
+  --aov-on-accent: var(--aov-wiki-night);
+  --aov-chart: var(--aov-wiki-gold);
   --wiki-panel: var(--aov-surface);
   --wiki-line: var(--aov-line);
   --wiki-muted: var(--aov-muted);
   --wiki-text: var(--aov-text);
   --wiki-gutter: var(--aov-gutter);
 
-  --header-bg: color-mix(in srgb, var(--aov-bg) 86%, transparent);
-  --header-line: var(--aov-line);
+  --header-bg: color-mix(in srgb, var(--aov-wiki-bar) 94%, transparent);
+  --header-line: color-mix(in srgb, var(--aov-wiki-gold) 18%, transparent);
   --header-text: var(--aov-text);
   --header-muted: var(--aov-muted);
   --gold: var(--aov-accent);
   /* Logo background tone; underline of the AOVWiKi wordmark */
   --amber-accent: #c98f45;
+}
+
+/* Inside a panel the Wiki's names follow the panel's tokens. */
+.public-panel {
+  --gold: var(--aov-accent);
+  --wiki-panel: var(--aov-surface);
+  --wiki-line: var(--aov-line);
+  --wiki-muted: var(--aov-muted);
+  --wiki-text: var(--aov-text);
+}
+/* Rows inside a framed sheet run to the sheet's own edge. */
+.ornate-panel {
+  --wiki-gutter: var(--ornate-pad, clamp(16px, 2.4vw, 28px));
+}
+/* A plain panel: no frame or corners, just the slate surface. */
+.wiki-slip {
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: var(--aov-bg);
+  box-shadow: 0 16px 34px -26px rgb(0 0 0 / 90%);
+  color: var(--aov-text);
+}
+/* A page to read: one wide panel with a gold rule above its title. */
+.wiki-document {
+  border-top: 2px solid var(--aov-wiki-gold);
+  border-radius: 4px 4px 12px 12px;
+  padding: clamp(16px, 2.4vw, 28px);
+  background: var(--aov-bg);
+  color: var(--aov-text);
+}
+/* A section's heading: soft gold, with a thin line and a small diamond at each end below it. */
+.wiki-night-title,
+.type-section-title,
+.wiki-handbook h2:not(.sr-only),
+.wiki-index h2,
+.wiki-home-heroes-heading h2,
+.wiki-skin-group-heading h2,
+.wiki-updates-season h2 {
+  color: var(--aov-wiki-gold);
+}
+/* Game data colors its terms for a near-black screen, and the deepest of them fade on a slate panel. */
+.public-panel :is(.wiki-skill-prose, .wiki-skill-meta) [style*="color"] {
+  filter: brightness(1.3);
+}
+.wiki-night-title {
+  font: var(--wiki-type-section);
+}
+.wiki-rule {
+  position: relative;
+  border-bottom: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
+  padding-bottom: 10px;
+}
+.wiki-rule::before,
+.wiki-rule::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  width: 5px;
+  height: 5px;
+  background: color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
+  transform: rotate(45deg);
+}
+.wiki-rule::before {
+  left: 0;
+}
+.wiki-rule::after {
+  right: 0;
 }
 
 /* Exposes the tokens above as utilities: bg-header, border-header-line, text-header-muted, text-gold, bg-amber-accent, font-heading… */
@@ -40,6 +128,16 @@
   }
   body {
     min-width: 280px;
+    background: var(--aov-wiki-night);
+  }
+  /* The backdrop stays still behind the page. */
+  body::before {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    background: var(--aov-wiki-backdrop);
+    pointer-events: none;
   }
   button,
   input,
@@ -79,38 +177,24 @@
   color: var(--wiki-text);
   background: var(--wiki-panel);
 }
-.wiki-site-footer {
-  margin-top: auto;
-  border-top: 1px solid var(--wiki-line);
-}
-.wiki-site-footer > div {
-  width: min(100%, 1280px);
-  margin: auto;
-  min-height: 62px;
-  padding: 14px var(--wiki-gutter);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-.wiki-site-footer a {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--wiki-muted);
-  text-decoration: none;
-}
-.wiki-site-footer a:hover {
-  color: var(--gold);
-}
-.wiki-site-footer .wiki-footer-brand {
-  font-weight: 700;
-  color: var(--wiki-text);
-}
-.wiki-footer-brand img {
-  border-radius: 6px;
+@media (max-width: 760px) {
+  /* Below 16px, iPhones zoom the whole page when a field takes focus. */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+  .wiki-change-skill-link,
+  .wiki-patch-expand,
+  .wiki-hero-video-button,
+  .wiki-footer-brand {
+    min-height: 36px;
+  }
+  .wiki-home-slide-dot,
+  .wiki-home-icon-button {
+    min-width: 36px;
+    height: 36px;
+  }
 }
 .wiki-contact-page {
   margin: 0 auto;

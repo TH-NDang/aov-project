@@ -1,0 +1,58 @@
+/* Where the Wiki uses the shared motion. Only animation goes here, so it can never change a layout. */
+@media (prefers-reduced-motion: no-preference) {
+  /* Lists come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+  @supports (animation-timeline: view()) {
+    .wiki-hero-grid > *,
+    .wiki-index li,
+    .wiki-updates-season li,
+    .wiki-patch-subject,
+    .wiki-skin-group,
+    .wiki-item-row,
+    .wiki-warehouse-page .arcana-card,
+    .wiki-warehouse-page [data-spell-card] {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 26%;
+    }
+  }
+
+  /* The hero's artwork falls behind the page a little as it scrolls away. */
+  @supports (animation-timeline: scroll()) {
+    .wiki-hero-profile[data-artwork="SPLASH"] .wiki-hero-profile-art {
+      animation: wiki-hero-parallax linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 460px;
+    }
+  }
+
+  .wiki-home-banner img {
+    animation: public-drift 16s ease-in-out infinite alternate;
+  }
+
+  .wiki-hero-rating-track > span > span {
+    transform-origin: left;
+    animation: public-grow-x 520ms ease-out both;
+  }
+  .wiki-hero-rating-track > span:nth-child(2) > span {
+    animation-delay: 70ms;
+  }
+  .wiki-hero-rating-track > span:nth-child(3) > span {
+    animation-delay: 140ms;
+  }
+  .wiki-hero-rating-track > span:nth-child(4) > span {
+    animation-delay: 210ms;
+  }
+  .wiki-hero-rating-track > span:nth-child(5) > span {
+    animation-delay: 280ms;
+  }
+
+  .wiki-skill-read .wiki-skill-prose {
+    animation: public-fade 240ms ease-out both;
+  }
+}
+
+@keyframes wiki-hero-parallax {
+  to {
+    transform: translateY(44px) scale(1.05);
+  }
+}

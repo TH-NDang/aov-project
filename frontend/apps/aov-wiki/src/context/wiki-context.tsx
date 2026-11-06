@@ -86,7 +86,7 @@ const COPY: Record<string, [string, string]> = {
     "Game market and display language are independent.",
   ],
   characters: ["Sổ tay nhân vật", "Character handbook"],
-  heroes: ["Danh sách tướng", "Heroes"],
+  heroes: ["Tướng", "Heroes"],
   skins: ["Trang phục", "Skins"],
   warehouse: ["Kho trang bị", "Armory"],
   items: ["Trang bị", "Equipment"],

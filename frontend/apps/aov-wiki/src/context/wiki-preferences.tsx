@@ -120,8 +120,7 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
                     </strong>
                     {!market.available && (
                       <small>
-                        {t("unavailable")}
-                        {!english && market.unavailableReason ? ` · ${market.unavailableReason}` : ""}
+                        {!english && market.unavailableReason ? market.unavailableReason : t("unavailable")}
                       </small>
                     )}
                   </span>

@@ -65,6 +65,7 @@ const PATHS = {
       <path d="m16 16 4 4" />
     </>
   ),
+  expand: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
   close: <path d="m6 6 12 12M18 6 6 18" />,
   play: <path d="m8 5 11 7-11 7Z" />,
   external: <path d="M14 4h6v6m0-6-9 9m7 1v6H4V6h6" />,
