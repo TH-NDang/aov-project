@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQueries, useQuery } from "@tanstack/react-query"
 import type {
   CareerStatus,
   CommunityProfile,
@@ -63,15 +63,23 @@ export const directoryApi = {
 
 export const directoryKeys = ["community-directory"] as const
 
-/** Pages of the identities on screen, so a row can open its profile and show whether it is published. */
+/**
+ * Pages of the identities on screen, so a row can open its profile and show whether it is published. Asked for one
+ * batch at a time: a list that keeps growing would otherwise repeat every earlier id and outgrow the request URL.
+ */
 export function useProfilesOf(actorKey: string, kind: ProfileKind, entityIds: string[]) {
-  const query = useQuery({
-    queryKey: [...directoryKeys, actorKey, "profiles-of", kind, entityIds],
-    queryFn: ({ signal }) => directoryApi.profiles({ kind, entityIds, size: entityIds.length }, signal),
-    enabled: entityIds.length > 0,
-    staleTime: 30_000,
+  const batches = Array.from({ length: Math.ceil(entityIds.length / DIRECTORY_PAGE_SIZE) }, (_, index) =>
+    entityIds.slice(index * DIRECTORY_PAGE_SIZE, (index + 1) * DIRECTORY_PAGE_SIZE),
+  )
+  const results = useQueries({
+    queries: batches.map((ids) => ({
+      queryKey: [...directoryKeys, actorKey, "profiles-of", kind, ids],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        directoryApi.profiles({ kind, entityIds: ids, size: ids.length }, signal),
+      staleTime: 30_000,
+    })),
   })
-  return new Map((query.data?.items ?? []).map((page) => [page.entityId, page]))
+  return new Map(results.flatMap((result) => result.data?.items ?? []).map((page) => [page.entityId, page]))
 }
 
 const foldName = (name: string) =>

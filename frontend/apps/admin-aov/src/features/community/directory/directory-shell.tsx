@@ -1,7 +1,7 @@
-import { useState, type ReactNode } from "react"
+import { useState, type ComponentProps, type ReactNode } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router"
 import { useQueries } from "@tanstack/react-query"
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 import type { PersonRole, ProfileKind } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
@@ -12,7 +12,8 @@ import { CreateProfileSheet } from "../create-profile-sheet"
 import { ProfileCountry } from "../profile-country"
 import { findProfileCountry } from "../profile-country-options"
 import { profileKindIcons, profileRoleIcons } from "../profile-icons"
-import { DIRECTORY_PAGE_SIZE, directoryApi, directoryKeys } from "./directory-api"
+import { directoryApi, directoryKeys } from "./directory-api"
+import { InfiniteScroll } from "@/components/infinite-scroll"
 
 export type PersonnelGroup = "COACHING" | "BROADCAST"
 
@@ -49,7 +50,10 @@ function DirectoryNav({ current, actorKey }: { current: DirectorySection; actorK
     })),
   })
   return (
-    <nav aria-label="Loại hồ sơ" className="flex flex-wrap items-center gap-1 border-b pb-2">
+    <nav
+      aria-label="Loại hồ sơ"
+      className="@container/directory-nav flex items-center gap-1 overflow-x-auto border-b pb-2 [scrollbar-width:thin]"
+    >
       {directorySections.map((section, index) => {
         const Icon = sectionIcon(section)
         const active = section.path === current.path
@@ -60,11 +64,11 @@ function DirectoryNav({ current, actorKey }: { current: DirectorySection; actorK
             to={section.path}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "type-body inline-flex h-9 items-center gap-2 rounded-md px-3 transition hover:bg-muted",
+              "type-body inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-2 whitespace-nowrap transition hover:bg-muted @5xl/directory-nav:gap-2 @5xl/directory-nav:px-3",
               active ? "bg-muted text-foreground" : "text-muted-foreground",
             )}
           >
-            <Icon aria-hidden="true" className="size-5 shrink-0" />
+            <Icon aria-hidden="true" className="hidden size-5 shrink-0 @5xl/directory-nav:block" />
             {section.label}
             {total !== undefined && <span className="type-meta tabular-nums">{total.toLocaleString("vi-VN")}</span>}
           </Link>
@@ -121,76 +125,36 @@ export function DirectoryShell({
 export function useDirectoryFilters<K extends string>(names: readonly K[]) {
   const [params, setParams] = useSearchParams()
   const values = Object.fromEntries(names.map((name) => [name, params.get(name) ?? ""])) as Record<K, string>
-  const page = Math.max(0, Number(params.get("page") ?? 0) || 0)
   const setFilter = (name: K, value: string) =>
     setParams(
       (current) => {
         const next = new URLSearchParams(current)
         if (value) next.set(name, value)
         else next.delete(name)
-        next.delete("page")
         return next
       },
       { replace: true },
     )
-  const setPage = (value: number) =>
-    setParams((current) => {
-      const next = new URLSearchParams(current)
-      if (value) next.set("page", String(value))
-      else next.delete("page")
-      return next
-    })
   const reset = () => setParams(new URLSearchParams(), { replace: true })
-  return { values, page, setFilter, setPage, reset, filtered: names.some((name) => name !== "sort" && !!values[name]) }
+  return { values, setFilter, reset, filtered: names.some((name) => name !== "sort" && !!values[name]) }
 }
 
 export function DirectoryFooter({
   total,
-  page,
   noun,
-  onPage,
+  query,
 }: {
   total: number
-  page: number
   noun: string
-  onPage: (page: number) => void
+  query: ComponentProps<typeof InfiniteScroll>["query"]
 }) {
-  const pages = Math.max(1, Math.ceil(total / DIRECTORY_PAGE_SIZE))
-  const change = (next: number) => {
-    onPage(next)
-    window.scrollTo?.({ top: 0 })
-  }
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-3 py-3 @3xl:px-4">
-      <p className="type-meta tabular-nums" role="status">
+    <>
+      <InfiniteScroll query={query} label={`Đang tải thêm ${noun}`} />
+      <p className="type-meta border-t px-3 py-3 tabular-nums @3xl:px-4" role="status">
         {total.toLocaleString("vi-VN")} {noun}
       </p>
-      {pages > 1 && (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Trang trước"
-            disabled={!page}
-            onClick={() => change(page - 1)}
-          >
-            <ChevronLeft />
-          </Button>
-          <span className="type-meta tabular-nums">
-            Trang {page + 1}/{pages}
-          </span>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Trang sau"
-            disabled={page + 1 >= pages}
-            onClick={() => change(page + 1)}
-          >
-            <ChevronRight />
-          </Button>
-        </div>
-      )}
-    </div>
+    </>
   )
 }
 
@@ -198,17 +162,26 @@ export function DirectoryFooter({
 export function DirectoryBody({
   query,
   empty,
+  toolbar,
   children,
 }: {
-  query: { isPending: boolean; error: unknown; refetch: () => unknown; data?: unknown }
+  query: { isPending: boolean; isLoadingError: boolean; error: unknown; refetch: () => unknown }
   empty: { title: string; description: string; isEmpty: boolean }
+  /** Stays on screen through loading and empty results, so a search can always be changed. */
+  toolbar: ReactNode
   children: ReactNode
 }) {
-  if (query.error) return <LoadError error={query.error} onRetry={() => void query.refetch()} />
-  if (query.isPending) return <ManagementLoading />
+  if (query.isLoadingError) return <LoadError error={query.error} onRetry={() => void query.refetch()} />
   return (
     <ManagementPanel>
-      {empty.isEmpty ? <ManagementEmpty title={empty.title} description={empty.description} /> : children}
+      {toolbar}
+      {query.isPending ? (
+        <ManagementLoading />
+      ) : empty.isEmpty ? (
+        <ManagementEmpty title={empty.title} description={empty.description} />
+      ) : (
+        children
+      )}
     </ManagementPanel>
   )
 }

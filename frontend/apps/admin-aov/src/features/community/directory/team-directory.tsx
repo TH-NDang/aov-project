@@ -1,5 +1,5 @@
 import { Link } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import type { TeamDirectoryEntry } from "@aov/community-contracts"
 import type { Access } from "@/features/esports/pages/esports-shell"
 import { tournamentPath } from "@/features/esports/pages/esports-shell"
@@ -26,6 +26,7 @@ import {
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const section = directorySections[0]
 const SORTS: Record<TeamSort, string> = {
@@ -42,14 +43,17 @@ export function TeamDirectory({ access }: { access: Access }) {
   const { q, country } = filters.values
   const sort = (filters.values.sort || "RECENT") as TeamSort
   const search = useDebounced(q)
-  const teams = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, "teams", search, country, sort, filters.page],
-    queryFn: ({ signal }) => directoryApi.teams({ q: search, country, sort, page: filters.page }, signal),
+  const teams = useInfiniteQuery({
+    queryKey: [...directoryKeys, access.actorKey, "teams", search, country, sort],
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => directoryApi.teams({ q: search, country, sort, page: pageParam }, signal),
+    getNextPageParam: nextPageOf,
   })
+  const rows = teams.data?.pages.flatMap((page) => page.items) ?? []
   const profiles = useProfilesOf(
     access.actorKey,
     "TEAM",
-    (teams.data?.items ?? []).map((team) => team.id),
+    rows.map((team) => team.id),
   )
 
   return (
@@ -57,58 +61,55 @@ export function TeamDirectory({ access }: { access: Access }) {
       <DirectoryBody
         query={teams}
         empty={{
-          isEmpty: !teams.data?.items.length,
+          isEmpty: !rows.length,
           title: filters.filtered ? "Không tìm thấy đội tuyển" : "Chưa có đội tuyển",
           description: filters.filtered
             ? "Thử bỏ bớt bộ lọc hoặc tìm theo tên khác."
             : "Tạo đội tuyển đầu tiên, rồi thêm đội hình và thành tích.",
         }}
+        toolbar={
+          <ManagementToolbar
+            search={q}
+            onSearchChange={(value) => filters.setFilter("q", value)}
+            searchLabel="Tìm đội tuyển"
+            placeholder="Tên đội, tên viết tắt hoặc mã…"
+            onReset={filters.filtered ? filters.reset : undefined}
+          >
+            <select
+              aria-label="Khu vực đội tuyển"
+              value={country}
+              onChange={(event) => filters.setFilter("country", event.target.value)}
+              className={managementSelectClassName}
+            >
+              <option value="">Mọi khu vực</option>
+              {TEAM_REGIONS.map((region) => (
+                <option key={region.id} value={region.id}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Sắp xếp đội tuyển"
+              value={sort}
+              onChange={(event) => filters.setFilter("sort", event.target.value)}
+              className={managementSelectClassName}
+            >
+              {Object.entries(SORTS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </ManagementToolbar>
+        }
       >
-        <ManagementToolbar
-          search={q}
-          onSearchChange={(value) => filters.setFilter("q", value)}
-          searchLabel="Tìm đội tuyển"
-          placeholder="Tên đội, tên viết tắt hoặc mã…"
-          onReset={filters.filtered ? filters.reset : undefined}
-        >
-          <select
-            aria-label="Khu vực đội tuyển"
-            value={country}
-            onChange={(event) => filters.setFilter("country", event.target.value)}
-            className={managementSelectClassName}
-          >
-            <option value="">Mọi khu vực</option>
-            {TEAM_REGIONS.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Sắp xếp đội tuyển"
-            value={sort}
-            onChange={(event) => filters.setFilter("sort", event.target.value)}
-            className={managementSelectClassName}
-          >
-            {Object.entries(SORTS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </ManagementToolbar>
         <ul className="grid gap-3 p-3 @3xl:grid-cols-2 @3xl:p-4 @6xl:grid-cols-3">
-          {teams.data?.items.map((team) => {
+          {rows.map((team) => {
             const profile = profiles.get(team.id)
             return <TeamCard key={team.id} team={team} pageId={profile?.id} published={profile?.published} />
           })}
         </ul>
-        <DirectoryFooter
-          total={teams.data?.totalElements ?? 0}
-          page={filters.page}
-          noun="đội tuyển"
-          onPage={filters.setPage}
-        />
+        <DirectoryFooter total={teams.data?.pages[0]?.totalElements ?? 0} noun="đội tuyển" query={teams} />
       </DirectoryBody>
     </DirectoryShell>
   )

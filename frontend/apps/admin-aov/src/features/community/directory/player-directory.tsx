@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { Trophy } from "lucide-react"
 import type { CareerStatus, Lane, PlayerDirectoryEntry } from "@aov/community-contracts"
 import { FilterTab, FilterTabs } from "@/components/filter-tabs"
@@ -28,6 +28,7 @@ import {
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const section = directorySections[1]
 const SORTS: Record<PlayerSort, string> = {
@@ -50,12 +51,14 @@ export function PlayerDirectory({ access }: { access: Access }) {
   const status = filters.values.status as CareerStatus | ""
   const sort = (filters.values.sort || "RECENT") as PlayerSort
   const search = useDebounced(q)
-  const players = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, "players", search, country, lane, status, sort, filters.page],
-    queryFn: ({ signal }) =>
-      directoryApi.players({ q: search, country, lane, status, sort, page: filters.page }, signal),
+  const players = useInfiniteQuery({
+    queryKey: [...directoryKeys, access.actorKey, "players", search, country, lane, status, sort],
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) =>
+      directoryApi.players({ q: search, country, lane, status, sort, page: pageParam }, signal),
+    getNextPageParam: nextPageOf,
   })
-  const rows = players.data?.items ?? []
+  const rows = players.data?.pages.flatMap((page) => page.items) ?? []
   const profiles = useProfilesOf(
     access.actorKey,
     "PLAYER",
@@ -85,65 +88,67 @@ export function PlayerDirectory({ access }: { access: Access }) {
             ? "Thử bỏ bớt bộ lọc hoặc tìm theo tên khác."
             : "Tạo tuyển thủ đầu tiên hoặc thêm từ đội hình của một giải.",
         }}
+        toolbar={
+          <ManagementToolbar
+            search={q}
+            onSearchChange={(value) => filters.setFilter("q", value)}
+            searchLabel="Tìm tuyển thủ"
+            placeholder="Tên thi đấu, tên thật hoặc mã…"
+            onReset={filters.filtered ? filters.reset : undefined}
+          >
+            <select
+              aria-label="Quốc gia tuyển thủ"
+              value={country}
+              onChange={(event) => filters.setFilter("country", event.target.value)}
+              className={managementSelectClassName}
+            >
+              <option value="">Mọi quốc gia</option>
+              {TEAM_REGIONS.map((region) => (
+                <option key={region.id} value={region.id}>
+                  {region.name}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Trạng thái thi đấu"
+              value={status}
+              onChange={(event) => filters.setFilter("status", event.target.value)}
+              className={managementSelectClassName}
+            >
+              <option value="">Mọi trạng thái</option>
+              {Object.entries(CAREER_STATUSES).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Sắp xếp tuyển thủ"
+              value={sort}
+              onChange={(event) => filters.setFilter("sort", event.target.value)}
+              className={managementSelectClassName}
+            >
+              {Object.entries(SORTS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </ManagementToolbar>
+        }
       >
-        <ManagementToolbar
-          search={q}
-          onSearchChange={(value) => filters.setFilter("q", value)}
-          searchLabel="Tìm tuyển thủ"
-          placeholder="Tên thi đấu, tên thật hoặc mã…"
-          onReset={filters.filtered ? filters.reset : undefined}
-        >
-          <select
-            aria-label="Quốc gia tuyển thủ"
-            value={country}
-            onChange={(event) => filters.setFilter("country", event.target.value)}
-            className={managementSelectClassName}
-          >
-            <option value="">Mọi quốc gia</option>
-            {TEAM_REGIONS.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Trạng thái thi đấu"
-            value={status}
-            onChange={(event) => filters.setFilter("status", event.target.value)}
-            className={managementSelectClassName}
-          >
-            <option value="">Mọi trạng thái</option>
-            {Object.entries(CAREER_STATUSES).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Sắp xếp tuyển thủ"
-            value={sort}
-            onChange={(event) => filters.setFilter("sort", event.target.value)}
-            className={managementSelectClassName}
-          >
-            {Object.entries(SORTS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </ManagementToolbar>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-left">
+          <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="type-label border-b text-muted-foreground">
+              <tr className="type-label border-b whitespace-nowrap text-muted-foreground">
                 <th className="px-4 py-2 font-[inherit]">Tuyển thủ</th>
                 <th className="px-3 py-2 font-[inherit]">Vị trí</th>
-                <th className="px-3 py-2 font-[inherit]">Đội gần nhất</th>
+                <th className="hidden px-3 py-2 font-[inherit] @2xl:table-cell">Đội gần nhất</th>
                 <th className="hidden px-3 py-2 font-[inherit] @5xl:table-cell">Tướng tủ</th>
-                <th className="px-3 py-2 text-right font-[inherit]">Giải</th>
-                <th className="px-3 py-2 text-right font-[inherit]">Vô địch</th>
+                <th className="hidden px-3 py-2 text-right font-[inherit] @2xl:table-cell">Giải</th>
+                <th className="hidden px-3 py-2 text-right font-[inherit] @2xl:table-cell">Vô địch</th>
                 <th className="hidden px-3 py-2 font-[inherit] @4xl:table-cell">Giải gần nhất</th>
-                <th className="px-4 py-2 font-[inherit]">Trạng thái</th>
+                <th className="hidden px-4 py-2 font-[inherit] @4xl:table-cell">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -163,12 +168,7 @@ export function PlayerDirectory({ access }: { access: Access }) {
             </tbody>
           </table>
         </div>
-        <DirectoryFooter
-          total={players.data?.totalElements ?? 0}
-          page={filters.page}
-          noun="tuyển thủ"
-          onPage={filters.setPage}
-        />
+        <DirectoryFooter total={players.data?.pages[0]?.totalElements ?? 0} noun="tuyển thủ" query={players} />
       </DirectoryBody>
     </DirectoryShell>
   )
@@ -214,6 +214,7 @@ function PlayerRow({
               <span className="max-w-48 truncate">{player.fullName || "Chưa có tên thật"}</span>
               {years !== null && <span className="shrink-0">· {years} tuổi</span>}
             </p>
+            {player.latestTeam && <p className="type-meta truncate @2xl:hidden">{player.latestTeam.name}</p>}
           </div>
         </div>
       </td>
@@ -227,7 +228,7 @@ function PlayerRow({
           <span className="text-muted-foreground">–</span>
         )}
       </td>
-      <td className="type-body px-3 py-2.5">
+      <td className="type-body hidden px-3 py-2.5 @2xl:table-cell">
         {player.latestTeam ? (
           <span className="flex min-w-0 items-center gap-2">
             <Monogram
@@ -258,8 +259,10 @@ function PlayerRow({
           })}
         </span>
       </td>
-      <td className="type-body esp-num px-3 py-2.5 text-right tabular-nums">{player.tournaments}</td>
-      <td className="type-body esp-num px-3 py-2.5 text-right tabular-nums">
+      <td className="type-body esp-num hidden px-3 py-2.5 text-right tabular-nums @2xl:table-cell">
+        {player.tournaments}
+      </td>
+      <td className="type-body esp-num hidden px-3 py-2.5 text-right tabular-nums @2xl:table-cell">
         {player.titles ? (
           <span className="inline-flex items-center gap-1">
             <Trophy size={14} className="text-[var(--esp-gold-text)]" aria-hidden="true" />
@@ -281,7 +284,7 @@ function PlayerRow({
           </Link>
         )}
       </td>
-      <td className="type-meta px-4 py-2.5 whitespace-nowrap">
+      <td className="type-meta hidden px-4 py-2.5 whitespace-nowrap @4xl:table-cell">
         {player.careerStatus === "UNKNOWN" ? "–" : CAREER_STATUSES[player.careerStatus]}
       </td>
     </tr>

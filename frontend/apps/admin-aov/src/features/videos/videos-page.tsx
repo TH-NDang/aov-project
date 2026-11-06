@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
-import { keepPreviousData, useQuery } from "@tanstack/react-query"
-import { ChevronLeft, ChevronRight, FileUp, Plus } from "lucide-react"
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { FileUp, Plus } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
@@ -23,6 +23,8 @@ import {
   type VideoStatus,
   type VideoSubjectKind,
 } from "./video-model"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const ALL = "ALL"
 const PAGE_SIZE = 30
@@ -36,17 +38,13 @@ export function VideosPage() {
   const [purpose, setPurpose] = useState<VideoPurpose | typeof ALL>(ALL)
   const [search, setSearch] = useState("")
   const [query, setQuery] = useState("")
-  const [page, setPage] = useState(0)
   const [form, setForm] = useState<{ video: AdminVideo | null } | null>(null)
   const [importing, setImporting] = useState(false)
   const capabilities = useSession().actor?.capabilities ?? []
   const canWrite = WRITE_CAPABILITIES.some((capability) => capabilities.includes(capability))
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setQuery(search.trim())
-      setPage(0)
-    }, 250)
+    const timer = setTimeout(() => setQuery(search.trim()), 250)
     return () => clearTimeout(timer)
   }, [search])
 
@@ -55,14 +53,16 @@ export function VideosPage() {
     subjectKind: kind === ALL ? undefined : kind,
     purpose: purpose === ALL ? undefined : purpose,
     q: query || undefined,
-    page,
     size: PAGE_SIZE,
   }
-  const list = useQuery({
+  const list = useInfiniteQuery({
     queryKey: videoKeys.list(filter),
-    queryFn: ({ signal }) => videoApi.list(filter, signal),
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) => videoApi.list({ ...filter, page: pageParam }, signal),
+    getNextPageParam: nextPageOf,
     placeholderData: keepPreviousData,
   })
+  const videos = list.data?.pages.flatMap((page) => page.items) ?? []
   const waitingFilter: VideoFilter = { status: "DRAFT", size: 1 }
   const waiting = useQuery({
     queryKey: videoKeys.list(waitingFilter),
@@ -72,7 +72,6 @@ export function VideosPage() {
   const patchCodes = usePatchCodes()
   const actions = useVideoActions()
   const subjects = useMemo(() => directory.data ?? [], [directory.data])
-  const totalPages = list.data?.totalPages ?? 0
 
   const heroCounts = useMemo(() => {
     const counts = { heroes: 0, skins: 0 }
@@ -116,31 +115,16 @@ export function VideosPage() {
               key={option}
               active={status === option}
               count={option === "DRAFT" ? waiting.data?.totalElements : undefined}
-              onClick={() => {
-                setStatus(option)
-                setPage(0)
-              }}
+              onClick={() => setStatus(option)}
             >
               {STATUS_LABELS[option]}
             </FilterTab>
           ))}
-          <FilterTab
-            active={status === ALL}
-            onClick={() => {
-              setStatus(ALL)
-              setPage(0)
-            }}
-          >
+          <FilterTab active={status === ALL} onClick={() => setStatus(ALL)}>
             Tất cả
           </FilterTab>
         </FilterTabs>
-        <Select
-          value={kind}
-          onValueChange={(value) => {
-            setKind(value as VideoSubjectKind | typeof ALL)
-            setPage(0)
-          }}
-        >
+        <Select value={kind} onValueChange={(value) => setKind(value as VideoSubjectKind | typeof ALL)}>
           <SelectTrigger className="w-40" aria-label="Loại mục">
             <SelectValue />
           </SelectTrigger>
@@ -153,13 +137,7 @@ export function VideosPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={purpose}
-          onValueChange={(value) => {
-            setPurpose(value as VideoPurpose | typeof ALL)
-            setPage(0)
-          }}
-        >
+        <Select value={purpose} onValueChange={(value) => setPurpose(value as VideoPurpose | typeof ALL)}>
           <SelectTrigger className="w-48" aria-label="Loại video">
             <SelectValue />
           </SelectTrigger>
@@ -172,7 +150,7 @@ export function VideosPage() {
             ))}
           </SelectContent>
         </Select>
-        {list.data && <p className="type-meta ml-auto self-center">{list.data.totalElements} video</p>}
+        {list.data && <p className="type-meta ml-auto self-center">{list.data.pages[0]?.totalElements ?? 0} video</p>}
       </div>
 
       {[list.error, actions.error, directory.error].filter(Boolean).map((failure, index) => (
@@ -181,14 +159,14 @@ export function VideosPage() {
         </p>
       ))}
       {list.isPending && <p className="type-meta">Đang tải video…</p>}
-      {list.isSuccess && !list.data.items.length && (
+      {list.isSuccess && !videos.length && (
         <p className="rounded-lg border border-dashed p-8 text-center type-body">
           {status === "DRAFT" && !query ? "Không có video nào đang chờ duyệt." : "Không có video khớp bộ lọc."}
         </p>
       )}
 
       <ul className="grid gap-2">
-        {list.data?.items.map((video) => (
+        {videos.map((video) => (
           <VideoRow
             key={video.id}
             video={video}
@@ -202,33 +180,7 @@ export function VideosPage() {
         ))}
       </ul>
 
-      {totalPages > 1 && (
-        <nav aria-label="Trang" className="flex items-center justify-center gap-2">
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            aria-label="Trang trước"
-            disabled={page === 0}
-            onClick={() => setPage(page - 1)}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="type-meta tabular-nums">
-            {page + 1}/{totalPages}
-          </span>
-          <Button
-            type="button"
-            size="icon"
-            variant="outline"
-            aria-label="Trang sau"
-            disabled={page + 1 >= totalPages}
-            onClick={() => setPage(page + 1)}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </nav>
-      )}
+      <InfiniteScroll query={list} label="Đang tải thêm video" />
 
       <VideoFormDialog
         open={!!form}

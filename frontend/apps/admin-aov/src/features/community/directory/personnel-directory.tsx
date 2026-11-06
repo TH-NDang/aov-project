@@ -1,5 +1,5 @@
 import { Link } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import {
   isCoachingRole,
   personRoleLabels,
@@ -24,6 +24,7 @@ import {
   useDirectoryFilters,
   type PersonnelGroup,
 } from "./directory-shell"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const ROLES = Object.keys(personRoleLabels) as PersonRole[]
 const rolesOf = (group: PersonnelGroup) => ROLES.filter((role) => isCoachingRole(role) === (group === "COACHING"))
@@ -36,12 +37,15 @@ function usePersonnel(group: PersonnelGroup, access: Access) {
   const filters = useDirectoryFilters(["q", "role"] as const)
   const role = (filters.values.role || group) as PersonRoleFilter
   const search = useDebounced(filters.values.q)
-  const people = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, "people", group, role, search, filters.page],
-    queryFn: ({ signal }) =>
-      directoryApi.profiles({ personRole: role, q: search, sort: "ACTIVITY", page: filters.page }, signal),
+  const people = useInfiniteQuery({
+    queryKey: [...directoryKeys, access.actorKey, "people", group, role, search],
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) =>
+      directoryApi.profiles({ personRole: role, q: search, sort: "ACTIVITY", page: pageParam }, signal),
+    getNextPageParam: nextPageOf,
   })
-  return { filters, role, people }
+  const rows = people.data?.pages.flatMap((page) => page.items) ?? []
+  return { filters, role, people, rows }
 }
 
 function RoleTabs({
@@ -82,7 +86,7 @@ const RoleLabels = ({ roles }: { roles?: PersonRole[] }) => (
 
 /** Coaches are looked up by where they work, so their latest team and how long they have been at it come first. */
 export function CoachDirectory({ access }: { access: Access }) {
-  const { filters, role, people } = usePersonnel("COACHING", access)
+  const { filters, role, people, rows } = usePersonnel("COACHING", access)
   return (
     <DirectoryShell
       section={directorySections[2]}
@@ -93,22 +97,24 @@ export function CoachDirectory({ access }: { access: Access }) {
       <DirectoryBody
         query={people}
         empty={{
-          isEmpty: !people.data?.items.length,
+          isEmpty: !rows.length,
           title: filters.filtered ? "Không tìm thấy thành viên" : "Chưa có ban huấn luyện",
           description: "Thêm huấn luyện viên và chuyên viên phân tích đi cùng các đội.",
         }}
+        toolbar={
+          <ManagementToolbar
+            search={filters.values.q}
+            onSearchChange={(value) => filters.setFilter("q", value)}
+            searchLabel="Tìm thành viên ban huấn luyện"
+            placeholder="Tên hoặc mã hồ sơ…"
+            onReset={filters.filtered ? filters.reset : undefined}
+          >
+            {null}
+          </ManagementToolbar>
+        }
       >
-        <ManagementToolbar
-          search={filters.values.q}
-          onSearchChange={(value) => filters.setFilter("q", value)}
-          searchLabel="Tìm thành viên ban huấn luyện"
-          placeholder="Tên hoặc mã hồ sơ…"
-          onReset={filters.filtered ? filters.reset : undefined}
-        >
-          {null}
-        </ManagementToolbar>
         <ul className="divide-y">
-          {people.data?.items.map((person) => {
+          {rows.map((person) => {
             const stint = latestStint(person)
             return (
               <li key={person.id}>
@@ -151,12 +157,7 @@ export function CoachDirectory({ access }: { access: Access }) {
             )
           })}
         </ul>
-        <DirectoryFooter
-          total={people.data?.totalElements ?? 0}
-          page={filters.page}
-          noun="thành viên"
-          onPage={filters.setPage}
-        />
+        <DirectoryFooter total={people.data?.pages[0]?.totalElements ?? 0} noun="thành viên" query={people} />
       </DirectoryBody>
     </DirectoryShell>
   )
@@ -164,7 +165,7 @@ export function CoachDirectory({ access }: { access: Access }) {
 
 /** Broadcast talent is booked by face and channel, so the photo and social links lead. */
 export function BroadcastDirectory({ access }: { access: Access }) {
-  const { filters, role, people } = usePersonnel("BROADCAST", access)
+  const { filters, role, people, rows } = usePersonnel("BROADCAST", access)
   return (
     <DirectoryShell
       section={directorySections[3]}
@@ -175,22 +176,24 @@ export function BroadcastDirectory({ access }: { access: Access }) {
       <DirectoryBody
         query={people}
         empty={{
-          isEmpty: !people.data?.items.length,
+          isEmpty: !rows.length,
           title: filters.filtered ? "Không tìm thấy thành viên" : "Chưa có ê-kíp broadcast",
           description: "Thêm bình luận viên, MC và khách mời phân tích của các giải.",
         }}
+        toolbar={
+          <ManagementToolbar
+            search={filters.values.q}
+            onSearchChange={(value) => filters.setFilter("q", value)}
+            searchLabel="Tìm thành viên broadcast"
+            placeholder="Tên hoặc mã hồ sơ…"
+            onReset={filters.filtered ? filters.reset : undefined}
+          >
+            {null}
+          </ManagementToolbar>
+        }
       >
-        <ManagementToolbar
-          search={filters.values.q}
-          onSearchChange={(value) => filters.setFilter("q", value)}
-          searchLabel="Tìm thành viên broadcast"
-          placeholder="Tên hoặc mã hồ sơ…"
-          onReset={filters.filtered ? filters.reset : undefined}
-        >
-          {null}
-        </ManagementToolbar>
         <ul className="grid gap-3 p-3 @2xl:grid-cols-2 @3xl:p-4 @5xl:grid-cols-3 @7xl:grid-cols-4">
-          {people.data?.items.map((person) => {
+          {rows.map((person) => {
             const name = person.content?.name ?? person.code
             const stint = latestStint(person)
             return (
@@ -230,12 +233,7 @@ export function BroadcastDirectory({ access }: { access: Access }) {
             )
           })}
         </ul>
-        <DirectoryFooter
-          total={people.data?.totalElements ?? 0}
-          page={filters.page}
-          noun="thành viên"
-          onPage={filters.setPage}
-        />
+        <DirectoryFooter total={people.data?.pages[0]?.totalElements ?? 0} noun="thành viên" query={people} />
       </DirectoryBody>
     </DirectoryShell>
   )

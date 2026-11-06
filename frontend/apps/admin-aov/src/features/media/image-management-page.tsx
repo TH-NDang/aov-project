@@ -312,74 +312,77 @@ export function ImageManagementPage() {
             )}
           </FilterTab>
         </FilterTabs>
-        <label className="flex min-w-40 flex-1 items-center sm:min-w-0 sm:flex-none">
-          <span className="sr-only">Loại ảnh</span>
-          <select
-            aria-label="Loại ảnh"
-            className="h-10 w-full min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
-            value={type}
-            onChange={(e) => {
-              setType(e.target.value)
-              setMarked(new Map())
-            }}
-          >
-            <option value="">Tất cả loại ảnh</option>
-            {Object.entries(types).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        {(type || needsCredit) && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-10 gap-1 px-2"
-            onClick={() => {
-              setType("")
-              setNeedsCredit(false)
-              setMarked(new Map())
-            }}
-          >
-            <X aria-hidden className="size-3.5" />
-            Bỏ bộ lọc
-          </Button>
-        )}
-        {/* Phones keep the view switch beside the type filter and move the count to a short line below. */}
-        <span
-          className="order-last w-full text-xs text-muted-foreground tabular-nums sm:order-none sm:ml-auto sm:w-auto sm:text-sm"
-          role="status"
-        >
-          {assets.isPending ? "Đang tải ảnh…" : `Đã tải ${rows.length} / ${total} ảnh`}
-        </span>
-        <FilterTabs label="Kiểu xem ảnh" className="ml-auto sm:ml-0">
-          {(
-            [
-              [false, List, "Bảng"],
-              [true, LayoutGrid, "Lưới"],
-            ] as const
-          ).map(([isGrid, Icon, label]) => (
-            <FilterTab
-              key={label}
-              active={grid === isGrid}
-              onClick={() =>
-                setParams(
-                  (current) => {
-                    const next = new URLSearchParams(current)
-                    if (isGrid) next.set("view", "grid")
-                    else next.delete("view")
-                    return next
-                  },
-                  { replace: true, preventScrollReset: true },
-                )
-              }
+        {/* The rest moves below the source filter as one group, so the view switch never ends up alone. */}
+        <div className="flex min-w-0 flex-auto flex-wrap items-center gap-2 sm:flex-nowrap">
+          <label className="flex min-w-40 flex-1 items-center sm:min-w-0 sm:flex-none">
+            <span className="sr-only">Loại ảnh</span>
+            <select
+              aria-label="Loại ảnh"
+              className="h-10 w-full min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-48"
+              value={type}
+              onChange={(e) => {
+                setType(e.target.value)
+                setMarked(new Map())
+              }}
             >
-              <Icon aria-hidden />
-              <span className="sr-only sm:not-sr-only">{label}</span>
-            </FilterTab>
-          ))}
-        </FilterTabs>
+              <option value="">Tất cả loại ảnh</option>
+              {Object.entries(types).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {(type || needsCredit) && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-10 gap-1 px-2"
+              onClick={() => {
+                setType("")
+                setNeedsCredit(false)
+                setMarked(new Map())
+              }}
+            >
+              <X aria-hidden className="size-3.5" />
+              Bỏ bộ lọc
+            </Button>
+          )}
+          {/* Phones keep the view switch beside the type filter and move the count to a short line below. */}
+          <span
+            className="order-last w-full text-xs text-muted-foreground tabular-nums sm:order-none sm:ml-auto sm:w-auto sm:text-sm"
+            role="status"
+          >
+            {assets.isPending ? "Đang tải ảnh…" : `Đã tải ${rows.length} / ${total} ảnh`}
+          </span>
+          <FilterTabs label="Kiểu xem ảnh" className="ml-auto sm:ml-0">
+            {(
+              [
+                [false, List, "Bảng"],
+                [true, LayoutGrid, "Lưới"],
+              ] as const
+            ).map(([isGrid, Icon, label]) => (
+              <FilterTab
+                key={label}
+                active={grid === isGrid}
+                onClick={() =>
+                  setParams(
+                    (current) => {
+                      const next = new URLSearchParams(current)
+                      if (isGrid) next.set("view", "grid")
+                      else next.delete("view")
+                      return next
+                    },
+                    { replace: true, preventScrollReset: true },
+                  )
+                }
+              >
+                <Icon aria-hidden />
+                <span className="sr-only sm:not-sr-only">{label}</span>
+              </FilterTab>
+            ))}
+          </FilterTabs>
+        </div>
       </div>
       {assets.error && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm">

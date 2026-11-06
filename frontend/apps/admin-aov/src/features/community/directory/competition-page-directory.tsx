@@ -84,16 +84,18 @@ export function OrganizationDirectory({ access }: { access: Access }) {
           title: filters.filtered ? "Không tìm thấy tổ chức" : "Chưa có tổ chức",
           description: "Tổ chức là đơn vị đứng ra tổ chức các giải đấu.",
         }}
+        toolbar={
+          <ManagementToolbar
+            search={filters.values.q}
+            onSearchChange={(value) => filters.setFilter("q", value)}
+            searchLabel="Tìm tổ chức"
+            placeholder="Tên hoặc mã hồ sơ…"
+            onReset={filters.filtered ? filters.reset : undefined}
+          >
+            {null}
+          </ManagementToolbar>
+        }
       >
-        <ManagementToolbar
-          search={filters.values.q}
-          onSearchChange={(value) => filters.setFilter("q", value)}
-          searchLabel="Tìm tổ chức"
-          placeholder="Tên hoặc mã hồ sơ…"
-          onReset={filters.filtered ? filters.reset : undefined}
-        >
-          {null}
-        </ManagementToolbar>
         <ul className="divide-y">
           {rows.map(({ page, stats }) => {
             const name = page.content?.name ?? page.code
@@ -167,16 +169,18 @@ export function CircuitDirectory({ access }: { access: Access }) {
           title: filters.filtered ? "Không tìm thấy hệ thống giải" : "Chưa có hệ thống giải",
           description: "Hệ thống giải gom các mùa của cùng một thương hiệu, như Đấu Trường Danh Vọng.",
         }}
+        toolbar={
+          <ManagementToolbar
+            search={filters.values.q}
+            onSearchChange={(value) => filters.setFilter("q", value)}
+            searchLabel="Tìm hệ thống giải"
+            placeholder="Tên hoặc mã hồ sơ…"
+            onReset={filters.filtered ? filters.reset : undefined}
+          >
+            {null}
+          </ManagementToolbar>
+        }
       >
-        <ManagementToolbar
-          search={filters.values.q}
-          onSearchChange={(value) => filters.setFilter("q", value)}
-          searchLabel="Tìm hệ thống giải"
-          placeholder="Tên hoặc mã hồ sơ…"
-          onReset={filters.filtered ? filters.reset : undefined}
-        >
-          {null}
-        </ManagementToolbar>
         <ul className="grid gap-3 p-3 @3xl:grid-cols-2 @3xl:p-4 @6xl:grid-cols-3">
           {rows.map(({ page, stats }) => {
             const name = page.content?.name ?? page.code
