@@ -36,7 +36,6 @@
   min-width: 0;
   overflow: clip;
   padding: var(--ornate-pad, clamp(16px, 2.4vw, 28px));
-  padding-bottom: calc(var(--ornate-pad, clamp(16px, 2.4vw, 28px)) + 12px);
   border-radius: inherit;
 }
 .ornate-panel-body::before {
@@ -51,17 +50,6 @@
   opacity: 0.07;
   pointer-events: none;
   mask: var(--ornate-emblem) center / contain no-repeat;
-}
-.ornate-panel-body::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: auto 14px 5px;
-  height: 12px;
-  background: var(--aov-wiki-gold);
-  opacity: 0.22;
-  pointer-events: none;
-  mask: var(--ornate-strip) left center / 28px 12px repeat-x;
 }
 .ornate-corner {
   position: absolute;

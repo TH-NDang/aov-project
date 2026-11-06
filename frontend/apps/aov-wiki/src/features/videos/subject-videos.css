@@ -53,40 +53,15 @@
   padding: 0;
   list-style: none;
 }
-/* One column of videos would bury everything below them on a phone, so they become a row to swipe. */
-@media (max-width: 760px) {
-  .wiki-video-list {
-    display: flex;
-    gap: 10px;
-    padding-bottom: 4px;
-    overflow-x: auto;
-    scroll-snap-type: x proximity;
-    scrollbar-width: thin;
-  }
-  .wiki-video-list > .wiki-video-card {
-    flex: 0 0 min(74%, 270px);
-    scroll-snap-align: start;
-  }
-}
 .wiki-video-card {
   position: relative;
   min-width: 0;
-  padding: 7px 7px 18px;
+  padding: 7px 7px 10px;
   border-radius: 8px;
   background: var(--aov-bg);
   box-shadow: inset 0 0 0 1px var(--aov-line);
   color: var(--aov-text);
   transition: transform 200ms ease-out;
-}
-.wiki-video-card::after {
-  content: "";
-  position: absolute;
-  inset: auto 7px 4px;
-  height: 10px;
-  background: var(--aov-wiki-gold);
-  opacity: 0.22;
-  pointer-events: none;
-  mask: var(--ornate-strip) left center / 23px 10px repeat-x;
 }
 @media (hover: hover) {
   .wiki-video-card:hover {
@@ -470,6 +445,29 @@
 }
 .wiki-video-theater-list li > button {
   grid-template-columns: 112px minmax(0, 1fr);
+}
+/* On a phone each video is a row beside its picture, the same as the list inside the player. */
+@media (max-width: 760px) {
+  .wiki-video-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .wiki-video-card {
+    padding: 6px;
+  }
+  .wiki-video-card > :is(button, a) {
+    grid-template-columns: 124px minmax(0, 1fr);
+    grid-auto-rows: min-content;
+    column-gap: 10px;
+    row-gap: 4px;
+    align-items: start;
+  }
+  .wiki-video-card .wiki-video-thumb {
+    grid-row: 1 / span 3;
+  }
+  .wiki-video-card > :is(button, a) > :not(.wiki-video-thumb) {
+    grid-column: 2;
+  }
 }
 @media (max-width: 899px) {
   .wiki-video-theater[data-slot="dialog-content"] {

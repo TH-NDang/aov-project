@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useLocation, useNavigate, useSearchParams } from "react-router"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 import { orderedPatches } from "../hero/hero-version-diff"
@@ -138,7 +139,7 @@ export function VideoGallery({
   videos,
   heading,
   patchCode,
-  limit = 6,
+  limit: wideLimit = 6,
   filters = true,
   headingLevel = 2,
   id,
@@ -153,6 +154,8 @@ export function VideoGallery({
 }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  // Rows take more height than cards, so a phone starts from fewer of them.
+  const limit = usePageLayout() === "compact" ? Math.min(wideLimit, 3) : wideLimit
   const [purpose, setPurpose] = useState<VideoPurpose | null>(null)
   const [expanded, setExpanded] = useState(false)
   const videoParam = useVideoParam()
