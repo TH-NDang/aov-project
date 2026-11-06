@@ -2412,3 +2412,20 @@ Theo phạm vi người dùng chấp nhận ngày 01/11/2026, bổ sung luồng 
 tuyển thủ độc lập tài khoản, nhận quyền đại diện và cộng đồng. Hành vi chi tiết tại
 [04-QUAN-LY-THI-DAU-VA-PAGE.md](04-QUAN-LY-THI-DAU-VA-PAGE.md), phần Luồng sử dụng và Page.
 Không thay cơ chế snapshot ván của ADR-015; không tự nhận quyền đại diện từ tên.
+
+## Video theo đối tượng (ADR-019)
+
+Người biên tập gắn được nhiều video cho một tướng, một kỹ năng, một trang phục, một trang bị, phù hiệu,
+bảng ngọc hoặc phụ trợ. Mỗi video có loại (cách chơi cơ bản, combo và nâng cao, minh họa kỹ năng, hiệu
+ứng hoặc trailer trang phục, cốt truyện, thay đổi theo bản, giới thiệu, khác) và có thể ghi "áp dụng từ
+bản". Video chỉ là liên kết: YouTube, Facebook, TikTok, Twitch và tệp video được phát ngay trong trang, player chỉ tải
+khi người đọc bấm phát; liên kết không nhúng được thì mở ở tab mới. Thêm, sửa, ẩn video có hiệu lực ngay, không tạo revision và không cần xuất bản lại mục.
+
+Trạng thái: `Đang hiện` thì công khai, `Chờ duyệt` thì chỉ thấy trong admin, `Đã ẩn` là đã bác và không
+quay lại khi nhập lại dữ liệu. Sửa video cần quyền ghi của mục; đưa video vào hoặc ra khỏi trạng thái
+`Đang hiện` cần thêm quyền công bố của mục. Không thêm role mới.
+
+Trang công khai ẩn video có bản áp dụng mới hơn phiên bản đang xem và video gắn với bản chưa công bố.
+
+Dữ liệu thu thập từ kênh YouTube được nhập qua màn hình Video trong admin. Chỉ phần khớp chắc chắn mới
+công khai ngay, phần còn lại vào `Chờ duyệt` hoặc được liệt kê là không khớp; quy tắc đầy đủ ở ADR-019.

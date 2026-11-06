@@ -2662,3 +2662,42 @@ PUT `/api/wiki/v1/admin/media/assets/{assetId}/sources/{sourceId}/references`
 
 Community bổ sung loại page `CIRCUIT` và bộ lọc `circuitPageId` ở danh sách kế hoạch/mùa giải; chi tiết
 hợp đồng và tính bất biến của snapshot theo đặc tả 04.
+
+## Video theo đối tượng (ADR-019)
+
+GET `/api/wiki/v1/videos` (công khai)
+- Query: `subjectKind` và `subjectId` bắt buộc, `subjectKey` tùy chọn; tham số khác trả 400.
+- `subjectKind=HERO` trả cả video của kỹ năng và trang phục của tướng đó. `SKILL`, `SKIN` kèm
+  `subjectKey` thu về một mục. `subjectKey` với loại khác trả 422 `VIDEO_INVALID`.
+- Trả `{items: [...]}`, tối đa 200 dòng `PUBLISHED`, theo `displayOrder` rồi ngày đăng mới nhất. Mỗi dòng
+  không có `status`, `origin`, `version`. Cache: `no-cache`, `public`. Lọc theo patch do client thực hiện.
+
+Các API quản trị đều cần `catalog:read`. Ghi cần `hero:write` (tướng, kỹ năng, trang phục), `item:write`,
+`enchantment:write`, `arcana:write` hoặc `spell:write`. Đưa video vào hoặc ra khỏi `PUBLISHED` cần thêm
+capability `:publish` tương ứng; thiếu quyền trả 403.
+
+GET `/api/wiki/v1/admin/videos`
+- Query: `subjectKind`, `subjectId`, `subjectKey`, `status`, `purpose`, `origin`, `q`, `page`, `size` (1 đến 100,
+  mặc định 24). `HERO` kèm `subjectId` gồm cả kỹ năng và trang phục của tướng. Trả `PageSlice`.
+
+GET `/api/wiki/v1/admin/videos/subjects`
+- Query: `locale`, mặc định `vi-VN`. Trả `{items: [{kind, id, key, code, name, aliases}]}` cho mọi mục có thể
+  gắn video. `aliases` gồm tên cũ và mã cũ, dùng để so khớp dữ liệu nhập.
+
+POST `/api/wiki/v1/admin/videos` và PUT `/api/wiki/v1/admin/videos/{id}`
+- Body: `subjectKind`, `subjectId`, `subjectKey`, `purpose`, `title`, `note`, `url`, `startSeconds`,
+  `durationSeconds`, `channelName`, `publishedOn`, `patchVariantId`, `displayOrder`, `status`,
+  `expectedVersion` (bắt buộc với PUT). POST trả 201.
+- `url` chỉ nhận `http`, `https`. Mọi dạng link YouTube đổi về `https://www.youtube.com/watch?v=ID`; `startSeconds`
+  null thì lấy từ `t=` hoặc `start=` của link. Thiếu `displayOrder` khi tạo thì xếp cuối.
+- Lỗi: 422 `VIDEO_INVALID`, 422 `VIDEO_SUBJECT_NOT_FOUND`, 404 `PATCH_NOT_FOUND` khi patch không tồn tại,
+  404 `VIDEO_NOT_FOUND`, 409 `VIDEO_DUPLICATE`, 409 `VIDEO_CONFLICT`. Audit `VIDEO_CREATED`, `VIDEO_UPDATED`.
+
+DELETE `/api/wiki/v1/admin/videos/{id}?expectedVersion=`
+- Trả 204. Audit `VIDEO_DELETED`. Video nhập từ dữ liệu thu thập nên ẩn thay vì xóa để không quay lại.
+
+POST `/api/wiki/v1/admin/videos/import`
+- Body: `{items: [{subjectKind, subjectId, subjectKey, purpose, title, url, durationSeconds, publishedOn,
+  displayOrder, status}]}`, 1 đến 500 dòng; kiểm tra quyền của mọi dòng trước khi ghi.
+- Trả `{created, skipped, rejected: [{index, reason}]}`. Dòng đã có bị bỏ qua và giữ nguyên; dòng sai được báo
+  mà không làm hỏng cả lô. Audit `VIDEOS_IMPORTED` nếu có dòng được thêm.
