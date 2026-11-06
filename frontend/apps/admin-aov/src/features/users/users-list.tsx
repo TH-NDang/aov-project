@@ -1,13 +1,15 @@
 import { Link } from "react-router"
 import { ChevronRight, Clock3, Globe2, UserRound } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { formatInZone } from "@aov/ui/lib/time-zone"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import type { UserProfile } from "./user-api"
 
 const columns = "sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_7.5rem]"
 const languages = new Intl.DisplayNames(["vi"], { type: "language" })
-const dateFormat = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
-const timeFormat = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" })
+const dateFormat: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
+const timeFormat: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" }
 
 function languageName(locale: string) {
   try {
@@ -18,13 +20,18 @@ function languageName(locale: string) {
 }
 
 function UpdatedAt({ value }: { value: string | null }) {
-  const date = value ? new Date(value) : null
-  if (!date || Number.isNaN(date.getTime())) return <span className="text-muted-foreground">Chưa có thông tin</span>
   return (
-    <time dateTime={value ?? undefined} className="flex gap-2 tabular-nums sm:flex-col sm:gap-1">
-      <span className="font-medium">{dateFormat.format(date)}</span>
-      <span className="text-muted-foreground">{timeFormat.format(date)}</span>
-    </time>
+    <LocalTime
+      value={value}
+      className="flex gap-2 tabular-nums sm:flex-col sm:gap-1"
+      fallback={<span className="text-muted-foreground">Chưa có thông tin</span>}
+      label={(zone) => (
+        <>
+          <span className="font-medium">{formatInZone(value, zone, dateFormat)}</span>
+          <span className="text-muted-foreground">{formatInZone(value, zone, timeFormat)}</span>
+        </>
+      )}
+    />
   )
 }
 

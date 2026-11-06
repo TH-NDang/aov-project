@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { ProfilePreferencePicker, languageOptions, timeZoneOptions } from "./profile-preference-picker"
 import { uploadAvatar } from "./avatar-upload"
 import { initialProfileDraft, readBrowserPreferences } from "./profile-preferences"
+import { canonicalTimeZone, currentTimeZone } from "@aov/ui/lib/time-zone"
 import { profileError, saveProfile, userKeys, type UserProfile } from "./user-api"
 import { z } from "zod"
 import { useSession } from "@/app/auth/auth-gate"
@@ -50,7 +51,9 @@ export function ProfileForm({
   useEffect(() => setServer(profile), [profile])
   const localDraft = useLocalDraft({
     form: admin ? `profile:${profile.id}` : "profile:me",
-    initialValue: profileFields(initialProfileDraft(server, admin, readBrowserPreferences())),
+    initialValue: profileFields(
+      initialProfileDraft(server, admin, { ...readBrowserPreferences(), timeZone: currentTimeZone() }),
+    ),
     schema: profileDraftSchema,
     baseVersion: server.version,
     enabled: !readOnly,
@@ -309,7 +312,7 @@ export function ProfileForm({
             label="Múi giờ"
             showTime
             icon={Clock3}
-            value={draft.timeZone}
+            value={canonicalTimeZone(draft.timeZone)}
             options={timeZoneOptions}
             disabled={locked}
             onChange={(value) => change("timeZone", value)}

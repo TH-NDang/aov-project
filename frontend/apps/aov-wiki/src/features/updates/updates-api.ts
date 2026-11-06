@@ -76,10 +76,6 @@ export const heroChangesQuery = (scope: WikiCatalogScope, heroId: string) =>
     retry: 1,
   })
 
-const dayFormat = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
-
 /** Patch dates are calendar days chosen per region; a timestamp only stands in when no day is known. */
-export function formatReleaseDate(regionalDate: string | null | undefined, effectiveAt: string | null | undefined) {
-  if (regionalDate) return dayFormat.format(new Date(`${regionalDate}T00:00:00`))
-  return effectiveAt ? dayFormat.format(new Date(effectiveAt)) : null
-}
+export const releaseDateValue = (regionalDate: string | null | undefined, effectiveAt: string | null | undefined) =>
+  regionalDate || effectiveAt || null

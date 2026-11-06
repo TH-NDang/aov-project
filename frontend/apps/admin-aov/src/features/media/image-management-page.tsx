@@ -1,3 +1,5 @@
+import { LocalTime } from "@aov/ui/components/local-time"
+import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
 import { useEffect, useMemo, useState } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
@@ -44,7 +46,6 @@ type Row = Asset & { createdAt: string; updatedAt: string }
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, Row>()
 const empty: Row[] = []
-const date = (value: string) => new Date(value).toLocaleString("vi-VN")
 /** Columns that narrow screens drop; phones show the owner under the image name instead. */
 const narrowHidden: Record<string, string> = {
   owner: "hidden sm:table-cell",
@@ -242,16 +243,20 @@ export function ImageManagementPage() {
         helper.accessor("updatedAt", {
           header: "Cập nhật",
           cell: ({ row, getValue }) => (
-            <time
-              dateTime={getValue()}
-              className="block whitespace-nowrap text-xs tabular-nums"
-              title={`Cập nhật ${date(getValue())} · Tạo lúc ${date(row.original.createdAt)}`}
-            >
-              {new Date(getValue()).toLocaleDateString("vi-VN")}
-              <span className="mt-1 block text-xs text-muted-foreground">
-                {new Date(getValue()).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-              </span>
-            </time>
+            <span title={`Tạo lúc ${formatInZone(row.original.createdAt, currentTimeZone())}`}>
+              <LocalTime
+                value={getValue()}
+                className="block whitespace-nowrap text-xs tabular-nums"
+                label={(zone) => (
+                  <>
+                    {formatInZone(getValue(), zone, { day: "numeric", month: "numeric", year: "numeric" })}
+                    <span className="mt-1 block text-xs text-muted-foreground">
+                      {formatInZone(getValue(), zone, { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </>
+                )}
+              />
+            </span>
           ),
         }),
       ]),

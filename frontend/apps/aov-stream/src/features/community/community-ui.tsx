@@ -10,6 +10,8 @@ import type {
 import type { StreamIconName } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
 
 export const kindIcons: Record<ProfileKind, StreamIconName> = {
   CIRCUIT: "trophy",
@@ -128,15 +130,19 @@ export function CardAvatar({ name, url, className = "" }: { name: string; url?: 
 }
 
 const relativeTime = new Intl.RelativeTimeFormat("vi-VN", { numeric: "auto" })
-const postDate = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
 
 /** Recent moments read as relative minutes, hours or days; anything older than a week shows its date. */
-export function timeAgo(value: string, now = Date.now()) {
+export function timeAgo(value: string, now = Date.now(), timeZone = currentTimeZone()) {
   const seconds = Math.round((new Date(value).getTime() - now) / 1000)
   if (Number.isNaN(seconds)) return ""
   if (seconds > -60) return "Vừa xong"
   if (seconds > -3600) return relativeTime.format(Math.round(seconds / 60), "minute")
   if (seconds > -86400) return relativeTime.format(Math.round(seconds / 3600), "hour")
   if (seconds > -7 * 86400) return relativeTime.format(Math.round(seconds / 86400), "day")
-  return postDate.format(new Date(value))
+  return formatInZone(value, timeZone, { day: "2-digit", month: "2-digit", year: "numeric" })
+}
+
+/** The relative time of a post or notification, which opens its exact time. These moments have no zone of their own. */
+export function TimeAgo({ value, className }: { value: string; className?: string }) {
+  return <LocalTime value={value} className={className} label={(zone) => timeAgo(value, Date.now(), zone)} />
 }

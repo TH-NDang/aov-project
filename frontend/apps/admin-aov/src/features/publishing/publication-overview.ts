@@ -30,9 +30,6 @@ function useContentProfile() {
 export function useContentLocale() {
   return useContentProfile()?.locale || "vi-VN"
 }
-export function useContentTimeZone() {
-  return useContentProfile()?.timeZone
-}
 export const phaseLabels: Record<string, string> = {
   RECORDED: "Đã ghi nhận",
   AWAITING_CONFIRMATION: "Chờ xác nhận áp dụng",

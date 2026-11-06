@@ -144,6 +144,12 @@
   font-size: 0.8125rem;
   text-align: right;
 }
+.wiki-preferences-mobile > .wiki-preference-row:has(> .public-time-zone-error) {
+  flex-wrap: wrap;
+}
+.public-preferences-body .wiki-preferences-mobile .wiki-preference-time-zone-select {
+  width: 60%;
+}
 .public-preferences-body .wiki-preferences-mobile .wiki-preference-mobile-select option {
   background: var(--aov-surface);
   color: var(--aov-text);

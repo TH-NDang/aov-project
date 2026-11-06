@@ -16,7 +16,7 @@ import { communityApi } from "./community-api"
 import { useCommunitySession } from "./community-auth"
 import { useFollowPage } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
-import { CardAvatar, hueOf, timeAgo } from "./community-ui"
+import { CardAvatar, hueOf, TimeAgo } from "./community-ui"
 import { PostImages, PostVideo } from "./post-media"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
@@ -178,9 +178,7 @@ export function PostCard({
               </strong>
               <span className="cp-meta">
                 {post.asPage ? profileKindLabels[page.kind] : `${post.authorName} · Thành viên cộng đồng`} ·{" "}
-                <time dateTime={post.createdAt} title={new Date(post.createdAt).toLocaleString("vi-VN")}>
-                  {timeAgo(post.createdAt)}
-                </time>
+                <TimeAgo value={post.createdAt} />
               </span>
             </>
           ) : (
@@ -190,10 +188,7 @@ export function PostCard({
                 {post.asPage && represented && <OfficialBadge label="Bài đăng của đại diện đã xác minh" />}
               </strong>
               <span className="cp-meta">
-                {post.asPage ? "Đăng bởi đại diện trang" : "Thành viên cộng đồng"} ·{" "}
-                <time dateTime={post.createdAt} title={new Date(post.createdAt).toLocaleString("vi-VN")}>
-                  {timeAgo(post.createdAt)}
-                </time>
+                {post.asPage ? "Đăng bởi đại diện trang" : "Thành viên cộng đồng"} · <TimeAgo value={post.createdAt} />
               </span>
             </>
           )}
@@ -418,9 +413,7 @@ export function PostCard({
                   <p className="cp-prose">{comment.body}</p>
                 </div>
                 <div className="cp-comment-tools">
-                  <time className="cp-meta" dateTime={comment.createdAt}>
-                    {timeAgo(comment.createdAt)}
-                  </time>
+                  <TimeAgo className="cp-meta" value={comment.createdAt} />
                   <button className="cp-text-button" onClick={() => startReport(comment.id)}>
                     Báo cáo
                   </button>

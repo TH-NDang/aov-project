@@ -1,8 +1,10 @@
+import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
+
 export function dateLabel(value: string | null | undefined, locale = "vi-VN") {
   if (!value) return "—"
   if (/^\d{4}-\d{2}-\d{2}$/.test(value))
     return new Date(`${value}T00:00:00Z`).toLocaleDateString(locale, { dateStyle: "medium", timeZone: "UTC" })
-  return new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" })
+  return formatInZone(value, currentTimeZone(), { dateStyle: "medium", timeStyle: "short" }, locale) || "—"
 }
 
 export function scheduleDate(date: string, time: string) {

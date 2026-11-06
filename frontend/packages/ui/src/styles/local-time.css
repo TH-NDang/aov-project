@@ -1,0 +1,54 @@
+/* Text color is inherited, so the mark and the dashes follow whatever palette surrounds the time. */
+.local-time[role="button"] {
+  text-decoration: underline dashed currentColor 1px;
+  text-underline-offset: 0.2em;
+  cursor: help;
+}
+.local-time[role="button"]:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.local-time-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.local-time-popup {
+  /* Above drawers and the account panel, which this can open from. */
+  z-index: 100;
+  display: grid;
+  gap: 8px;
+  max-width: min(320px, calc(100vw - 24px));
+  padding: 8px 12px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-popover);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+  font-family: var(--aov-font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  text-align: left;
+  white-space: normal;
+}
+.local-time-popup-row {
+  display: grid;
+  gap: 2px;
+}
+.local-time-popup-row span {
+  color: var(--aov-muted);
+}
+.local-time-popup-row strong {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+}

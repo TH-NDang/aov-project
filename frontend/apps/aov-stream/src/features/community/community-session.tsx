@@ -1,23 +1,33 @@
 import { useEffect, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Link, useNavigate } from "react-router"
 import { PublicAccountMenu, PublicAccountSettings, PublicAccountSummary } from "@aov/ui/components/public-account-menu"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
 import { publicAuthError } from "@aov/ui/lib/public-auth"
+import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { useStreamTheme } from "../../components/stream-theme"
 import { useStreamLocale } from "../../components/stream-locale"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { completeLogin, signIn, signOut, useCommunitySession } from "./community-auth"
 import { useNotifications, useReadNotifications, useUnreadCount } from "./community-queries"
-import { timeAgo } from "./community-ui"
+import { TimeAgo } from "./community-ui"
 import { StreamShell, WIKI_URL } from "../../components/stream-shell"
 import owlMark from "../../assets/stream-owl.svg"
 import { StreamIcon, type StreamIconName } from "../../components/stream-icon"
-import { useOwnProfile } from "../account/profile-api"
+import { profileKey, saveProfile, useOwnProfile, wikiRequest } from "../account/profile-api"
+import { profileDraft, profileRequest, type UserProfile } from "../account/profile-model"
 
 export function CommunitySessionButton() {
   const session = useCommunitySession()
   const profile = useOwnProfile()
+  const client = useQueryClient()
+  useAccountTimeZone(profile.data, async (timeZone) => {
+    // Wiki and Admin share this profile, so the copy on this page may be out of date.
+    const latest = await wikiRequest<UserProfile>("/users/me")
+    const saved = await saveProfile(profileRequest({ ...profileDraft(latest), timeZone }, latest.version))
+    client.setQueryData(profileKey(session.revision), saved)
+  })
   const { locale, setLocale, text } = useStreamLocale()
   const { theme, setTheme } = useStreamTheme()
   const mobile = useIsMobile()
@@ -130,7 +140,7 @@ function NotificationBell() {
               }}
             >
               <span>{item.message}</span>
-              <time dateTime={item.createdAt}>{timeAgo(item.createdAt)}</time>
+              <TimeAgo value={item.createdAt} />
             </button>
           ))}
         </div>

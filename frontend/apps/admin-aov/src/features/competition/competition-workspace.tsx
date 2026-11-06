@@ -1,3 +1,4 @@
+import { LocalTime } from "@aov/ui/components/local-time"
 import { useEffect, useRef, useState } from "react"
 import { Link, useParams, useSearchParams, useBlocker } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -660,9 +661,11 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                           {slotLabel(match.b, teamMap)}
                         </span>
                         <span className="type-meta">
-                          {match.scheduledAt
-                            ? new Date(match.scheduledAt).toLocaleString("vi-VN")
-                            : "Chưa có giờ thi đấu"}{" "}
+                          <LocalTime
+                            value={match.scheduledAt}
+                            sourceTimeZone={plan.timezone}
+                            fallback="Chưa có giờ thi đấu"
+                          />{" "}
                           · Mở để chỉnh sửa{match.seriesId ? " / nhập kết quả" : ""}
                         </span>
                       </summary>

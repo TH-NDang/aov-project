@@ -1,10 +1,12 @@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { isCalendarDate } from "@aov/ui/lib/time-zone"
 import { cn } from "@aov/ui/lib/utils"
 import { exactDate, formatTime, relativeDay } from "../model/labels"
 
 /**
- * A date written the way people say it (yesterday, in 3 days), with the full date and time on hover. It brings its
- * own tooltip provider so pages outside the admin shell can use it too.
+ * A date written the way people say it (yesterday, in 3 days). A moment opens its original time; a label that stands
+ * for a whole day has no time to convert, so it shows the full date in a tooltip with its own provider.
  */
 export function RelativeDate({
   value,
@@ -25,6 +27,8 @@ export function RelativeDate({
   if (!label) return fallback ? <span className={className}>{fallback}</span> : null
   const exact = exactDate(value, !dayOnly)
   const time = withTime ? formatTime(value) : ""
+  if (!dayOnly && !isCalendarDate(value))
+    return <LocalTime value={value} className={className} label={() => (time ? `${label} · ${time}` : label)} />
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>

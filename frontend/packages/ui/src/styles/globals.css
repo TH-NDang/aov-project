@@ -7,6 +7,7 @@
 @import "./tokens.css";
 @import "./scrollbar.css";
 @import "./typography.css";
+@import "./local-time.css";
 @import "../components/public-overlay.css";
 @import "../components/public-compact.css";
 @import "./public-motion.css";

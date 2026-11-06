@@ -3,7 +3,8 @@ import { Link } from "react-router"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
-import { formatReleaseDate, patchReleasesQuery, type PatchRelease } from "./updates-api"
+import { patchReleasesQuery, type PatchRelease } from "./updates-api"
+import { ReleaseDate } from "./release-date"
 import "./updates.css"
 
 export function UpdatesPage() {
@@ -66,7 +67,11 @@ export function UpdatesPage() {
                         data-current={variant?.isCurrent || undefined}
                       >
                         <navArtIcons.releases size={28} />
-                        <time>{formatReleaseDate(variant?.regionalDate, release.effectiveAt) ?? release.code}</time>
+                        <ReleaseDate
+                          regionalDate={variant?.regionalDate}
+                          effectiveAt={release.effectiveAt}
+                          fallback={<time>{release.code}</time>}
+                        />
                         <strong>{release.title || release.code}</strong>
                         {variant?.isCurrent && (
                           <span className="wiki-updates-current">{wikiText(locale, "Đang áp dụng", "Current")}</span>
