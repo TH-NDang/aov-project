@@ -658,8 +658,11 @@ ARCANA_ICON
 SPELL_ICON
 ENCHANTMENT_ICON
 PATCH_ART
+CHIBI_STICKER
 OTHER
 ```
+
+`CHIBI_STICKER` là sticker chibi do AI tạo cho tướng hoặc trang phục; tướng, trang phục, biểu cảm và ảnh tham chiếu được ghi trong nguồn của ảnh.
 
 Semantic type không chứa owner ID. Không đặt CHECK cho cột này: thêm loại mới chỉ cần sửa enum `MediaSemanticType`.
 
