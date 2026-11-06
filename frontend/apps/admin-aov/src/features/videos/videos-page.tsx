@@ -1,0 +1,249 @@
+import { useEffect, useMemo, useState } from "react"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
+import { ChevronLeft, ChevronRight, FileUp, Plus } from "lucide-react"
+import { Button } from "@aov/ui/components/button"
+import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
+import { useSession } from "@/app/auth/auth-gate"
+import { Page, PageHeader } from "@/components/page-header"
+import { SearchField } from "@/components/search-field"
+import { errorMessage } from "@/lib/api/errors"
+import { CrawlImportDialog } from "./crawl-import-dialog"
+import { videoApi, videoKeys, type VideoFilter } from "./video-api"
+import { VideoFormDialog } from "./video-form-dialog"
+import { VideoRow } from "./video-row"
+import { usePatchCodes, useVideoActions, useVideoSubjects } from "./use-video-actions"
+import {
+  KIND_LABELS,
+  PURPOSE_LABELS,
+  STATUS_LABELS,
+  subjectLabel,
+  type AdminVideo,
+  type VideoPurpose,
+  type VideoStatus,
+  type VideoSubjectKind,
+} from "./video-model"
+
+const ALL = "ALL"
+const PAGE_SIZE = 30
+const STATUSES: VideoStatus[] = ["DRAFT", "PUBLISHED", "HIDDEN"]
+const WRITE_CAPABILITIES = ["hero:write", "item:write", "enchantment:write", "arcana:write", "spell:write"]
+
+/** Reviews what is waiting, finds any video across the catalog, and brings in collected data. */
+export function VideosPage() {
+  const [status, setStatus] = useState<VideoStatus | typeof ALL>("DRAFT")
+  const [kind, setKind] = useState<VideoSubjectKind | typeof ALL>(ALL)
+  const [purpose, setPurpose] = useState<VideoPurpose | typeof ALL>(ALL)
+  const [search, setSearch] = useState("")
+  const [query, setQuery] = useState("")
+  const [page, setPage] = useState(0)
+  const [form, setForm] = useState<{ video: AdminVideo | null } | null>(null)
+  const [importing, setImporting] = useState(false)
+  const capabilities = useSession().actor?.capabilities ?? []
+  const canWrite = WRITE_CAPABILITIES.some((capability) => capabilities.includes(capability))
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQuery(search.trim())
+      setPage(0)
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  const filter: VideoFilter = {
+    status: status === ALL ? undefined : status,
+    subjectKind: kind === ALL ? undefined : kind,
+    purpose: purpose === ALL ? undefined : purpose,
+    q: query || undefined,
+    page,
+    size: PAGE_SIZE,
+  }
+  const list = useQuery({
+    queryKey: videoKeys.list(filter),
+    queryFn: ({ signal }) => videoApi.list(filter, signal),
+    placeholderData: keepPreviousData,
+  })
+  const waitingFilter: VideoFilter = { status: "DRAFT", size: 1 }
+  const waiting = useQuery({
+    queryKey: videoKeys.list(waitingFilter),
+    queryFn: ({ signal }) => videoApi.list(waitingFilter, signal),
+  })
+  const directory = useVideoSubjects()
+  const patchCodes = usePatchCodes()
+  const actions = useVideoActions()
+  const subjects = useMemo(() => directory.data ?? [], [directory.data])
+  const totalPages = list.data?.totalPages ?? 0
+
+  const heroCounts = useMemo(() => {
+    const counts = { heroes: 0, skins: 0 }
+    for (const subject of subjects) {
+      if (subject.kind === "HERO") counts.heroes++
+      if (subject.kind === "SKIN") counts.skins++
+    }
+    return counts
+  }, [subjects])
+
+  return (
+    <Page>
+      <PageHeader
+        title="Video"
+        description="Video gắn vào tướng, kỹ năng, trang phục và kho trang bị."
+        search={
+          <SearchField
+            placement="header"
+            label="Tìm theo tiêu đề hoặc liên kết"
+            placeholder="Tìm theo tiêu đề hoặc liên kết…"
+            value={search}
+            onChange={setSearch}
+          />
+        }
+        actions={
+          <>
+            <Button type="button" variant="outline" disabled={!canWrite} onClick={() => setImporting(true)}>
+              <FileUp className="size-4" /> Nhập dữ liệu thu thập
+            </Button>
+            <Button type="button" disabled={!canWrite || !subjects.length} onClick={() => setForm({ video: null })}>
+              <Plus className="size-4" /> Thêm video
+            </Button>
+          </>
+        }
+      />
+
+      <div className="flex flex-wrap items-end gap-3">
+        <FilterTabs label="Trạng thái">
+          {STATUSES.map((option) => (
+            <FilterTab
+              key={option}
+              active={status === option}
+              count={option === "DRAFT" ? waiting.data?.totalElements : undefined}
+              onClick={() => {
+                setStatus(option)
+                setPage(0)
+              }}
+            >
+              {STATUS_LABELS[option]}
+            </FilterTab>
+          ))}
+          <FilterTab
+            active={status === ALL}
+            onClick={() => {
+              setStatus(ALL)
+              setPage(0)
+            }}
+          >
+            Tất cả
+          </FilterTab>
+        </FilterTabs>
+        <Select
+          value={kind}
+          onValueChange={(value) => {
+            setKind(value as VideoSubjectKind | typeof ALL)
+            setPage(0)
+          }}
+        >
+          <SelectTrigger className="w-40" aria-label="Loại mục">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Mọi loại mục</SelectItem>
+            {(Object.keys(KIND_LABELS) as VideoSubjectKind[]).map((option) => (
+              <SelectItem key={option} value={option}>
+                {KIND_LABELS[option]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={purpose}
+          onValueChange={(value) => {
+            setPurpose(value as VideoPurpose | typeof ALL)
+            setPage(0)
+          }}
+        >
+          <SelectTrigger className="w-48" aria-label="Loại video">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Mọi loại video</SelectItem>
+            {(Object.keys(PURPOSE_LABELS) as VideoPurpose[]).map((option) => (
+              <SelectItem key={option} value={option}>
+                {PURPOSE_LABELS[option]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {list.data && <p className="type-meta ml-auto self-center">{list.data.totalElements} video</p>}
+      </div>
+
+      {[list.error, actions.error, directory.error].filter(Boolean).map((failure, index) => (
+        <p key={index} role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
+          {errorMessage(failure)}
+        </p>
+      ))}
+      {list.isPending && <p className="type-meta">Đang tải video…</p>}
+      {list.isSuccess && !list.data.items.length && (
+        <p className="rounded-lg border border-dashed p-8 text-center type-body">
+          {status === "DRAFT" && !query ? "Không có video nào đang chờ duyệt." : "Không có video khớp bộ lọc."}
+        </p>
+      )}
+
+      <ul className="grid gap-2">
+        {list.data?.items.map((video) => (
+          <VideoRow
+            key={video.id}
+            video={video}
+            context={`${KIND_LABELS[video.subjectKind]} · ${subjectLabel(directory.data, video)}`}
+            patchCode={video.patchVariantId ? patchCodes.get(video.patchVariantId) : undefined}
+            busy={actions.busy}
+            onEdit={() => setForm({ video })}
+            onStatus={(next) => actions.setStatus.mutate({ video, status: next })}
+            onDelete={() => actions.remove.mutate(video)}
+          />
+        ))}
+      </ul>
+
+      {totalPages > 1 && (
+        <nav aria-label="Trang" className="flex items-center justify-center gap-2">
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            aria-label="Trang trước"
+            disabled={page === 0}
+            onClick={() => setPage(page - 1)}
+          >
+            <ChevronLeft className="size-4" />
+          </Button>
+          <span className="type-meta tabular-nums">
+            {page + 1}/{totalPages}
+          </span>
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            aria-label="Trang sau"
+            disabled={page + 1 >= totalPages}
+            onClick={() => setPage(page + 1)}
+          >
+            <ChevronRight className="size-4" />
+          </Button>
+        </nav>
+      )}
+
+      <VideoFormDialog
+        open={!!form}
+        video={form?.video ?? null}
+        subjects={subjects}
+        initialSubject={null}
+        onClose={() => setForm(null)}
+        showHero
+      />
+      <CrawlImportDialog
+        open={importing}
+        onClose={() => setImporting(false)}
+        subjects={subjects}
+        subjectSummary={`${heroCounts.heroes} tướng và ${heroCounts.skins} trang phục`}
+      />
+    </Page>
+  )
+}

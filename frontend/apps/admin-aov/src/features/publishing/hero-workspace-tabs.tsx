@@ -1,5 +1,15 @@
 import type { ComponentType } from "react"
-import { BookOpen, Check, GitCompareArrows, ImageIcon, Languages, Layers, MoreHorizontal, Swords } from "lucide-react"
+import {
+  BookOpen,
+  Check,
+  Clapperboard,
+  GitCompareArrows,
+  ImageIcon,
+  Languages,
+  Layers,
+  MoreHorizontal,
+  Swords,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { catalogIcons } from "@aov/ui/components/catalog-icons"
 import {
@@ -19,6 +29,7 @@ const contentTabs: readonly [HeroContentTab, Icon, string][] = [
   ["skills", Swords, "Kỹ năng"],
   ["skins", catalogIcons.skins, "Trang phục"],
   ["media", ImageIcon, "Ảnh"],
+  ["videos", Clapperboard, "Video"],
 ]
 const otherViews: readonly [OtherView, Icon, string][] = [
   ["translations", Languages, "Bản dịch"],

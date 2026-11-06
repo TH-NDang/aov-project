@@ -1,6 +1,6 @@
 import type { Section } from "./types"
 
-export type HeroContentTab = "overview" | "skills" | "skins" | "media"
+export type HeroContentTab = "overview" | "skills" | "skins" | "media" | "videos"
 export type HeroWorkspaceView = "overview" | "translations" | "history" | "patch"
 const heroKeys = [
   "hero",
@@ -22,7 +22,7 @@ const heroKeys = [
   "atPatch",
   "anchorRevision",
 ] as const
-const contentTabs: HeroContentTab[] = ["overview", "skills", "skins", "media"]
+const contentTabs: HeroContentTab[] = ["overview", "skills", "skins", "media", "videos"]
 const sections: Section[] = ["PROFILE", "OVERVIEW_RATINGS", "COMBAT_STATS", "SKILLS", "SKINS", "MEDIA_BINDINGS"]
 const locales = ["vi-VN", "en-US", "th-TH", "zh-TW", "id-ID"]
 const localeValue = (value: string | null, fallback: string) => (value && locales.includes(value) ? value : fallback)

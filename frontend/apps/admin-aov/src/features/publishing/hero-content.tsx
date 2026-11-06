@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from "react"
 import { useLayoutEffect, useRef, useState } from "react"
-import { BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords } from "lucide-react"
+import { BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords, Clapperboard } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
@@ -9,6 +9,7 @@ import { HeroOverview } from "./hero-overview"
 import type { StatDefault } from "./combat-attributes"
 import { HeroTranslationNotice } from "./hero-translation-notice"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
+import { SubjectVideosPanel } from "../videos/subject-videos-panel"
 import { HeroContentSources } from "./hero-content-sources"
 import { AdminEntityText, AdminReferenceProvider } from "../terminology/catalog"
 import { HeroReviewNotice } from "./hero-review-notice"
@@ -167,7 +168,13 @@ function HeroContentBody({
     else setLocalReview(null)
   }, [target, reviewTarget, tab, activeSkill, onReviewShown])
   const visibleSections: Section[] =
-    tab === "overview" ? [] : tab === "skills" ? ["SKILLS"] : tab === "skins" ? ["SKINS"] : ["MEDIA_BINDINGS"]
+    tab === "overview" || tab === "videos"
+      ? []
+      : tab === "skills"
+        ? ["SKILLS"]
+        : tab === "skins"
+          ? ["SKINS"]
+          : ["MEDIA_BINDINGS"]
   return (
     <div ref={contentRef} className="space-y-4" aria-label="Nội dung tướng">
       <div
@@ -181,6 +188,7 @@ function HeroContentBody({
             ["skills", Swords, "Kỹ năng", content.SKILLS?.skills.length ?? 0],
             ["skins", Sparkles, "Trang phục", skins.length],
             ["media", Image, "Ảnh tướng", null],
+            ...(heroId ? ([["videos", Clapperboard, "Video", null]] as const) : []),
           ] as const
         ).map(([key, Icon, label, count]) => (
           <Button
@@ -230,6 +238,7 @@ function HeroContentBody({
             onTranslate={onTranslate}
           />
         )}
+        {tab === "videos" && heroId && <SubjectVideosPanel kind="HERO" id={heroId} name={profile?.name || "Tướng"} />}
         {SECTIONS.filter(([key]) => visibleSections.includes(key)).map(([section, , label]) => {
           const Icon = icons[section]
           const data = content[section]

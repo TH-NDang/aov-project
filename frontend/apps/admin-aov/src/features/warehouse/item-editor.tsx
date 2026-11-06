@@ -5,7 +5,7 @@ import { ItemRowPicker } from "./item-row-picker"
 import { shopColumns } from "./item-shop-position"
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useState } from "react"
-import { History, Languages, ArrowLeft, Plus, Settings2, Sparkles, Trash2 } from "lucide-react"
+import { Clapperboard, History, Languages, ArrowLeft, Plus, Settings2, Sparkles, Trash2 } from "lucide-react"
 import { ITEM_STATS, itemStatsFromDescription } from "@aov/ui/lib/item-description"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
 import { SectionPencil, type WarehouseSection } from "./warehouse-edit-section"
@@ -22,6 +22,7 @@ import { WarehousePatchContext } from "./warehouse-patch-context"
 import { warehouseMissingFieldLabel } from "./warehouse-labels"
 import { WarehouseStatsEditor } from "./warehouse-stats-editor"
 import { WarehouseNotes } from "./warehouse-notes"
+import { SubjectVideosPanel } from "../videos/subject-videos-panel"
 import {
   warehouseName,
   warehouseText,
@@ -201,7 +202,7 @@ export function ItemEditor({
           )}
           {translationOnly && <p className="type-meta">Nháp bản dịch cho phép sửa nội dung dịch và ghi chú.</p>}
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList aria-label="Trang bị" className="sticky top-0 z-10 grid w-full grid-cols-3 bg-muted">
+            <TabsList aria-label="Trang bị" className="sticky top-0 z-10 grid w-full grid-cols-4 bg-muted">
               <TabsTrigger value="gameplay">
                 <Settings2 className="size-4" /> Thông tin
               </TabsTrigger>
@@ -210,6 +211,9 @@ export function ItemEditor({
               </TabsTrigger>
               <TabsTrigger value="history">
                 <History className="size-4" /> Lịch sử
+              </TabsTrigger>
+              <TabsTrigger value="videos">
+                <Clapperboard className="size-4" /> Video
               </TabsTrigger>
             </TabsList>
             <TabsContent value="gameplay" className="space-y-5 pt-3">
@@ -465,6 +469,9 @@ export function ItemEditor({
                   ...new Set(value.shopPositions.map((position) => position.variant).filter((v): v is string => !!v)),
                 ]}
               />
+            </TabsContent>
+            <TabsContent value="videos" className="pt-3">
+              <SubjectVideosPanel kind="ITEM" id={entry.id} name={warehouseName(entry, locale)} />
             </TabsContent>
             <TabsContent value="history" className="pt-3">
               <WarehouseChangeHistory
