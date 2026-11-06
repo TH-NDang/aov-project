@@ -1,5 +1,6 @@
 package com.wikiaov.media.internal.application.response;
 
+import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.internal.domain.model.MediaVersionState;
 
 import java.time.Instant;
@@ -19,6 +20,7 @@ public record MediaVersionDetails(
         String url,
         boolean current,
         Instant createdAt,
-        @Nullable Instant activatedAt
+        @Nullable Instant activatedAt,
+        MediaAssetReference.@Nullable FocalPoint focalPoint
 ) {
 }

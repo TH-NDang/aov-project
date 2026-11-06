@@ -10,6 +10,7 @@ import com.wikiaov.media.internal.application.response.UploadTicket;
 import com.wikiaov.media.internal.asset.application.ActivateMediaAssetVersion;
 import com.wikiaov.media.internal.asset.application.CreateMediaAsset;
 import com.wikiaov.media.internal.asset.application.DeprecateMediaAsset;
+import com.wikiaov.media.internal.asset.application.SetMediaFocalPoint;
 import com.wikiaov.media.internal.ingestion.application.RegisterExistingObject;
 import com.wikiaov.media.internal.provenance.application.AddMediaSource;
 import com.wikiaov.media.internal.query.application.FindMediaUsages;
@@ -19,6 +20,7 @@ import com.wikiaov.media.internal.upload.application.RequestMediaUpload;
 import com.wikiaov.media.internal.web.request.CreateAssetRequest;
 import com.wikiaov.media.internal.web.request.DeprecateRequest;
 import com.wikiaov.media.internal.web.request.ExpectedVersionRequest;
+import com.wikiaov.media.internal.web.request.FocalPointRequest;
 import com.wikiaov.media.internal.web.request.RegisterImportRequest;
 import com.wikiaov.media.internal.web.request.SourceRequest;
 import com.wikiaov.media.internal.web.request.UploadRequest;
@@ -32,9 +34,11 @@ import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -54,11 +58,13 @@ class MediaAdminController implements MediaAdminApi {
     private final FindMediaUsages findMediaUsages;
     private final MediaAssetQueries queries;
     private final AddMediaSource addMediaSource;
+    private final SetMediaFocalPoint setMediaFocalPoint;
 
     MediaAdminController(CreateMediaAsset createMediaAsset, RequestMediaUpload requestMediaUpload,
             CompleteMediaUpload completeMediaUpload, RegisterExistingObject registerExistingObject,
             ActivateMediaAssetVersion activateMediaAssetVersion, DeprecateMediaAsset deprecateMediaAsset,
-            FindMediaUsages findMediaUsages, MediaAssetQueries queries, AddMediaSource addMediaSource) {
+            FindMediaUsages findMediaUsages, MediaAssetQueries queries, AddMediaSource addMediaSource,
+            SetMediaFocalPoint setMediaFocalPoint) {
         this.createMediaAsset = createMediaAsset;
         this.requestMediaUpload = requestMediaUpload;
         this.completeMediaUpload = completeMediaUpload;
@@ -68,12 +74,24 @@ class MediaAdminController implements MediaAdminApi {
         this.findMediaUsages = findMediaUsages;
         this.queries = queries;
         this.addMediaSource = addMediaSource;
+        this.setMediaFocalPoint = setMediaFocalPoint;
     }
 
     @PostMapping(path = "/assets/{assetId}/versions/{versionId}/sources", version = "1")
     public MediaAssetDetails addSource(@PathVariable UUID assetId, @PathVariable UUID versionId,
             @RequestBody SourceRequest source) {
         return addMediaSource.execute(assetId, versionId, source.toInput());
+    }
+
+    @PutMapping(path = "/assets/{assetId}/versions/{versionId}/focal-point", version = "1")
+    public MediaAssetDetails setFocalPoint(@PathVariable UUID assetId, @PathVariable UUID versionId,
+            @RequestBody FocalPointRequest point) {
+        return setMediaFocalPoint.execute(assetId, versionId, point.toPoint());
+    }
+
+    @DeleteMapping(path = "/assets/{assetId}/versions/{versionId}/focal-point", version = "1")
+    public MediaAssetDetails clearFocalPoint(@PathVariable UUID assetId, @PathVariable UUID versionId) {
+        return setMediaFocalPoint.execute(assetId, versionId, null);
     }
 
     @PostMapping(path = "/assets", version = "1")

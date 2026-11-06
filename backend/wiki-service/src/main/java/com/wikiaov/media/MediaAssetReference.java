@@ -37,6 +37,7 @@ public record MediaAssetReference(
      * @param width     width in pixels
      * @param height    height in pixels
      * @param url       public, immutable URL of the bytes
+     * @param focalPoint the point to keep in view when the picture is cropped, or {@code null} when not chosen
      */
     public record CurrentVersion(
             UUID versionId,
@@ -44,15 +45,34 @@ public record MediaAssetReference(
             int width,
             int height,
             String url,
-            List<MediaCredit> sources
+            List<MediaCredit> sources,
+            @Nullable FocalPoint focalPoint
     ) {
 
         public CurrentVersion(UUID versionId, String mimeType, int width, int height, String url) {
-            this(versionId, mimeType, width, height, url, List.of());
+            this(versionId, mimeType, width, height, url, List.of(), null);
+        }
+
+        public CurrentVersion(UUID versionId, String mimeType, int width, int height, String url,
+                List<MediaCredit> sources) {
+            this(versionId, mimeType, width, height, url, sources, null);
         }
 
         public CurrentVersion {
             sources = List.copyOf(sources);
+        }
+    }
+
+    /** The point of a picture that matters most, usually a face, as fractions of its width and height from the top left. */
+    public record FocalPoint(
+            double x,
+            double y
+    ) {
+
+        public FocalPoint {
+            if (x < 0 || x > 1 || y < 0 || y > 1) {
+                throw new IllegalArgumentException("A focal point lies inside the picture.");
+            }
         }
     }
 }

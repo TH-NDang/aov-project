@@ -1,5 +1,6 @@
 package com.wikiaov.media.internal.asset.persistence.entity;
 
+import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.internal.domain.model.ActorRef;
 import com.wikiaov.media.internal.domain.model.MediaVersionState;
 import com.wikiaov.media.internal.ingestion.domain.image.ImageInspection;
@@ -68,6 +69,14 @@ public class MediaAssetVersion extends AssignedIdEntity {
     @Column(name = "activated_at")
     private @Nullable Instant activatedAt;
 
+    @Getter(AccessLevel.NONE)
+    @Column(name = "focal_x")
+    private @Nullable Double focalX;
+
+    @Getter(AccessLevel.NONE)
+    @Column(name = "focal_y")
+    private @Nullable Double focalY;
+
     /** Version that was current when this one was last activated. */
     @Column(name = "supersedes_version_id")
     private @Nullable UUID supersedesVersionId;
@@ -103,6 +112,15 @@ public class MediaAssetVersion extends AssignedIdEntity {
         version.createdByIssuer = createdBy.issuer();
         version.createdBySubject = createdBy.subject();
         return version;
+    }
+
+    public MediaAssetReference.@Nullable FocalPoint focalPoint() {
+        return focalX == null || focalY == null ? null : new MediaAssetReference.FocalPoint(focalX, focalY);
+    }
+
+    public void focusOn(MediaAssetReference.@Nullable FocalPoint point) {
+        this.focalX = point == null ? null : point.x();
+        this.focalY = point == null ? null : point.y();
     }
 
     public boolean isReady() {

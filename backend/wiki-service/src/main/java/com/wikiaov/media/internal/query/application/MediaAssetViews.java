@@ -46,7 +46,7 @@ public class MediaAssetViews {
         return new MediaVersionDetails(version.getId(), version.getVersionNo(), version.getState(),
                 version.getMimeType(), version.getWidth(), version.getHeight(), version.getSizeBytes(),
                 version.getSha256(), urls.publicUrl(version), version.getId().equals(asset.getCurrentVersionId()),
-                version.getCreatedAt(), version.getActivatedAt());
+                version.getCreatedAt(), version.getActivatedAt(), version.focalPoint());
     }
 
     public MediaVersionResult result(MediaAsset asset, MediaAssetVersion version, boolean duplicate) {

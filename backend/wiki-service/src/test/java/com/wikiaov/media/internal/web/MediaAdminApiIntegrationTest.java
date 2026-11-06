@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -704,6 +705,29 @@ class MediaAdminApiIntegrationTest {
         mvc.perform(post("/api/wiki/v1/media/contact-requests").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"A\",\"email\":\"invalid\",\"topic\":\"SOURCE\",\"message\":\"hello\"}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void aFocalPointBelongsToOneVersionAndReachesOtherModules() throws Exception {
+        String assetId = createAsset("HERO_SPLASH");
+        String versionId = JsonPath.read(uploadVersion(assetId, TestImages.png(32, 18), "image/png"), "$.versionId");
+        String path = BASE + "/assets/" + assetId + "/versions/" + versionId + "/focal-point";
+        String body = "{\"x\":0.62,\"y\":0.2}";
+
+        mvc.perform(put(path).with(reader()).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(path).with(editor()).contentType(MediaType.APPLICATION_JSON).content("{\"x\":1.2,\"y\":0.2}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put(path).with(editor()).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.versions[0].focalPoint.x").value(0.62))
+                .andExpect(jsonPath("$.versions[0].focalPoint.y").value(0.2));
+        assertThat(mediaAssets.find(UUID.fromString(assetId)).orElseThrow().currentVersion().focalPoint())
+                .isEqualTo(new MediaAssetReference.FocalPoint(0.62, 0.2));
+
+        mvc.perform(delete(path).with(editor())).andExpect(status().isOk())
+                .andExpect(jsonPath("$.versions[0].focalPoint").isEmpty());
+        assertThat(mediaAssets.find(UUID.fromString(assetId)).orElseThrow().currentVersion().focalPoint()).isNull();
     }
 
     private String createAsset(String semanticType) throws Exception {

@@ -96,6 +96,7 @@ class MediaAssetLookup implements MediaAssets {
 
     private MediaAssetReference.CurrentVersion reference(MediaAssetVersion version, List<MediaProvenance> credits) {
         return new MediaAssetReference.CurrentVersion(version.getId(), version.getMimeType(), version.getWidth(),
-                version.getHeight(), urls.publicUrl(version), MediaCredits.forVersion(credits, version.getId()));
+                version.getHeight(), urls.publicUrl(version), MediaCredits.forVersion(credits, version.getId()),
+                version.focalPoint());
     }
 }
