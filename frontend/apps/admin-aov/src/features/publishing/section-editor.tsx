@@ -5,7 +5,6 @@ import { HeroProfileEditor, type ProfileEditorPart } from "./hero-profile-editor
 import { HeroStatsEditor } from "./hero-stats-editor"
 import type { StatDefault } from "./combat-attributes"
 import { Button } from "@aov/ui/components/button"
-import type { Hero } from "@/lib/api/types"
 import { AssetPicker } from "./asset-picker"
 import { SkinBadgePicker } from "../media/skin-badge-picker"
 import { retainImageOptions } from "./image-options"
@@ -58,7 +57,6 @@ export function SectionEditor({
   value,
   locale,
   onChange,
-  resource,
   initialSkillKey,
   skillLayout,
   onSkillLayoutChange,
@@ -77,7 +75,6 @@ export function SectionEditor({
   value: Content[Section]
   locale: string
   onChange: (value: NonNullable<Content[Section]>) => void
-  resource?: Hero
   initialSkillKey?: string
   skillLayout?: HeroSkillsLayout
   onSkillLayoutChange?: (layout: HeroSkillsLayout) => void
@@ -151,7 +148,6 @@ export function SectionEditor({
           value={data as Skills}
           locale={locale}
           onChange={onChange}
-          resource={resource}
           initialSkillKey={initialSkillKey}
           reviewOpen={reviewOpen}
           onReviewOpenChange={onReviewOpenChange}
@@ -248,10 +244,10 @@ export function SectionEditor({
               <div className="grid gap-3 lg:grid-cols-2">
                 {(
                   [
-                    ["PORTRAIT", "portraitAssetId", "Portrait", "portrait"],
-                    ["SPLASH", "artAssetId", "Cover", "cover"],
+                    ["PORTRAIT", "portraitAssetId", "Portrait"],
+                    ["SPLASH", "artAssetId", "Cover"],
                   ] as const
-                ).map(([role, key, title, resourceKey]) => (
+                ).map(([role, key, title]) => (
                   <div key={role} className="space-y-2">
                     <h4 className="text-sm font-medium">{title}</h4>
                     <AssetPicker
@@ -267,8 +263,6 @@ export function SectionEditor({
                           ),
                         })
                       }
-                      resourcePath={resource?.skins.find((skin) => skin.id === s.skinKey)?.[resourceKey]}
-                      sourceUrl={resource?.sources.portraits}
                     />
                   </div>
                 ))}
@@ -334,10 +328,6 @@ export function SectionEditor({
                   images: retainImageOptions(p.images, role, p.bindings[role], assetId),
                 })
               }
-              resourcePath={
-                role === "HEAD" ? resource?.head : role === "PORTRAIT" ? resource?.portrait : resource?.cover
-              }
-              sourceUrl={resource?.sources.portraits}
             />
           </div>
         ))}

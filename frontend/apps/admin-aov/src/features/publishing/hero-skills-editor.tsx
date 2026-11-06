@@ -11,7 +11,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@aov/ui/components/sheet"
-import type { Hero } from "@/lib/api/types"
 import { AdminLiveRichTextField } from "../terminology/rich-text-field"
 import { HeroSkillsView, type HeroSkillsLayout } from "./hero-skills-view"
 import { HeroReviewEditor } from "./hero-review-editor"
@@ -34,7 +33,6 @@ export function HeroSkillsEditor({
   value,
   locale,
   onChange,
-  resource,
   initialSkillKey,
   layout,
   onLayoutChange,
@@ -47,7 +45,6 @@ export function HeroSkillsEditor({
   value: Skills
   locale: string
   onChange: (value: Skills) => void
-  resource?: Hero
   initialSkillKey?: string
   layout?: HeroSkillsLayout
   onLayoutChange?: (layout: HeroSkillsLayout) => void
@@ -108,14 +105,6 @@ export function HeroSkillsEditor({
     onSkillChange?.(skill.skillKey)
     onChange({ ...value, skills: [...value.skills, skill] })
   }
-  const resourcePath = resource?.skills
-    .flatMap((skill) =>
-      skill.variants.map((variant) => ({
-        key: skill.variants.length > 1 ? `skill-${skill.slot}-variant-${variant.index}` : `skill-${skill.slot}`,
-        icon: variant.icon,
-      })),
-    )
-    .find((item) => item.key === selected?.skillKey)?.icon
   return (
     <div className="space-y-4">
       <HeroSkillsView
@@ -203,8 +192,6 @@ export function HeroSkillsEditor({
                           semanticType="HERO_SKILL_ICON"
                           value={selected.iconAssetId}
                           onChange={(iconAssetId) => patch({ iconAssetId })}
-                          resourcePath={resourcePath}
-                          sourceUrl={resource?.sources.skills}
                           onBusyChange={changeBusy}
                           directUpload
                         />

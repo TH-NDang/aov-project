@@ -25,8 +25,9 @@ export function ImportContextPicker({
   value: ImportContext | null
   onChange: (value: ImportContext | null) => void
   disabled: boolean
-  locale: string
-  onLocaleChange: (value: string) => void
+  /** Left out where the language does not matter for what is being chosen. */
+  locale?: string
+  onLocaleChange?: (value: string) => void
 }) {
   const [setup, setSetup] = useState<"region" | "season" | "patch" | null>(null)
   const capabilities = useSession().actor?.capabilities ?? []
@@ -101,7 +102,7 @@ export function ImportContextPicker({
             ))}
           </select>
         </label>
-        <DataLanguage value={locale} onChange={onLocaleChange} />
+        {locale && onLocaleChange && <DataLanguage value={locale} onChange={onLocaleChange} />}
       </fieldset>
       {(seasons.error || patches.error) && (
         <p role="alert" className="mt-3 text-sm text-destructive">

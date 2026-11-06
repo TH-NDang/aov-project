@@ -5,9 +5,6 @@ import { Button } from "@aov/ui/components/button"
 import { backendRequest, getSession } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, uploadHeroImage, upgradeHeroImage } from "./publishing-api"
-import { resourceImage } from "./resource-import"
-import { importMediaSources } from "./import-media-sources"
-import { findResourceMediaSource } from "@aov/ui/lib/resource-media-sources"
 import { imageFromUrl } from "./image-url"
 import { control, Field } from "./fields"
 import { invalidateMediaAsset } from "../media/media-cache"
@@ -20,8 +17,6 @@ export function AssetPicker({
   semanticType,
   value,
   onChange,
-  resourcePath,
-  sourceUrl,
   onUploaded,
   onBusyChange,
   directUpload = false,
@@ -29,8 +24,6 @@ export function AssetPicker({
   semanticType: string
   value: string | null
   onChange: (value: string) => void
-  resourcePath?: string | null
-  sourceUrl?: string
   onUploaded?: (assetId: string, fileName: string) => void
   onBusyChange?: (busy: boolean) => void
   directUpload?: boolean
@@ -62,10 +55,9 @@ export function AssetPicker({
   const [source, setSource] = useState<MediaSourceInput>({
     type: "OTHER",
     label: "Ảnh do biên tập viên cung cấp",
-    url: sourceUrl ?? null,
+    url: null,
   })
   const [downloadUrl, setDownloadUrl] = useState("")
-  const [sourceEdited, setSourceEdited] = useState(false)
   // A new image names its owner up front, so it never starts out missing credit.
   const linkProblem = !source.label.trim()
     ? "Điền tên nguồn trước khi tải ảnh."
@@ -107,25 +99,15 @@ export function AssetPicker({
       setBusy(false)
     }
   }
-  async function upload(file: File | Promise<File>, fromResources = false) {
+  async function upload(file: File | Promise<File>) {
     setBusy(true)
     setError("")
     try {
-      // Resource images take their source and owner from the resource manifest.
-      const automatic = fromResources && !!resourcePath && !sourceEdited
-      if (automatic ? linkProblem : sourceProblem) throw new Error(automatic ? linkProblem : sourceProblem)
+      if (sourceProblem) throw new Error(sourceProblem)
       const selectedFile = await file
-      let credit = source
-      if (fromResources && resourcePath && !sourceEdited) {
-        const index = await importMediaSources(new Map(), "", true)
-        const hash = await crypto.subtle.digest("SHA-256", await selectedFile.arrayBuffer())
-        const digest = [...new Uint8Array(hash)].map((byte) => byte.toString(16).padStart(2, "0")).join("")
-        credit = findResourceMediaSource(index, resourcePath, digest)
-        setSource(credit)
-      }
       const id = await uploadHeroImage(backendRequest, selectedFile, semanticType, {
-        ...credit,
-        note: credit.note ?? (fromResources ? resourcePath : null),
+        ...source,
+        note: source.note ?? null,
       })
       await invalidateMediaAsset(queryClient, id)
       if (!alive.current) return
@@ -139,18 +121,7 @@ export function AssetPicker({
   }
   return (
     <div className="space-y-2 rounded-lg border p-3">
-      {writable && (
-        <MediaSourceFields
-          form=""
-          value={source}
-          onChange={(value) => {
-            setSource(value)
-            setSourceEdited(true)
-          }}
-          disabled={busy}
-          ownerRequired
-        />
-      )}
+      {writable && <MediaSourceFields form="" value={source} onChange={setSource} disabled={busy} ownerRequired />}
       {value && (
         <div className="flex min-h-16 items-center gap-3">
           {selectedAsset.data?.currentUrl && !imageFailed ? (
@@ -283,11 +254,6 @@ export function AssetPicker({
                   }}
                 />
               </label>
-              {resourcePath && (
-                <Button type="button" variant="outline" onClick={() => void upload(resourceImage(resourcePath), true)}>
-                  Nhập ảnh từ tài nguyên
-                </Button>
-              )}
             </fieldset>
           )}
         </div>

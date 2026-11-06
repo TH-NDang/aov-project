@@ -1,17 +1,14 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { readFileSync } from "node:fs"
 import {
   createPublishingApi,
   uploadHeroImage,
   upgradeHeroImage,
   type Request,
 } from "../src/features/publishing/publishing-api"
-import { resourceContent } from "../src/features/publishing/resource-import"
 import { publicationPatchIssue, publishIssues, type Content, type Revision } from "../src/features/publishing/types"
 import { observedAttributes } from "../src/features/publishing/combat-attributes"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
-import type { Hero } from "../src/lib/api/types"
 import { mediaPath } from "../../../tooling/media-proxy.mts"
 
 test("admin preview maps backend section keys and retains imported head bindings", async () => {
@@ -141,24 +138,6 @@ test("failed storage upload never completes or binds an asset", async () => {
     ),
   )
   assert.equal(paths.length, 2)
-})
-
-test("Nakroth resource import preserves sources and missing descriptions instead of inventing gameplay data", () => {
-  const raw = JSON.parse(
-    readFileSync(new URL("../../../../resources/Lien-Quan-v3/data/heroes.json", import.meta.url), "utf8"),
-  ) as { heroes: Hero[] }
-  const nakroth = raw.heroes.find((hero) => hero.id === "nakroth")!
-  const content = resourceContent(nakroth, "vi-VN")
-  assert.equal(content.PROFILE!.translations[0].name, "Nakroth")
-  assert.ok(content.SKILLS!.skills.some((skill) => skill.translations[0].description === ""))
-  assert.equal(content.PROFILE!.sources[0].sourceUrl, nakroth.sources.portraits)
-  assert.equal(content.PROFILE!.sources[0].verificationState, "UNVERIFIED")
-  assert.equal(content.SKINS!.skins.length, nakroth.skins.filter((skin) => !skin.isDefault).length)
-  assert.equal("COMBAT_STATS" in content, false)
-  assert.ok(
-    publishIssues({ ...content, OVERVIEW_RATINGS: null, COMBAT_STATS: null, MEDIA_BINDINGS: null } as Content).length >=
-      3,
-  )
 })
 
 test("publication requires the revision's own patch to be published in its ruleset, independently of market scheduling", () => {

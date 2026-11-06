@@ -6,19 +6,7 @@ import { revisionSkillReferences } from "./revision-skill-references"
 import { useHeroSkillImages } from "./skill-artwork"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-  ArrowLeft,
-  CheckCircle2,
-  FileUp,
-  MoreHorizontal,
-  Plus,
-  RefreshCw,
-  Save,
-  Send,
-  Settings2,
-  Trash2,
-  X,
-} from "lucide-react"
+import { ArrowLeft, FileUp, MoreHorizontal, Plus, RefreshCw, Save, Settings2, Trash2, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -35,7 +23,6 @@ import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage, isApiError } from "@/lib/api/errors"
-import type { Hero } from "@/lib/api/types"
 import { languageOptions } from "../users/profile-preference-picker"
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
 import { invalidateHeroCatalogs } from "./publishing-cache"
@@ -68,7 +55,6 @@ import { replaceProfilePart, type ProfileEditorPart } from "./hero-profile-edito
 import { ImportContextPicker, type ImportContext } from "./import-context"
 import { type CatalogFilter } from "./catalog-context"
 import { usePublicationOverview, useContentLocale } from "./publication-overview"
-import { resourceContent } from "./resource-import"
 import {
   SECTIONS,
   publicationPatchIssue,
@@ -93,6 +79,7 @@ import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatusControl } from "@/app/drafts/draft-status"
 import { HeroDraftChanges } from "./hero-draft-changes"
+import { PublishButton } from "./publish-button"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { visibleSkins } from "./hero-skins"
 import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
@@ -103,10 +90,10 @@ import {
   dirtyHeroSections,
   emptyHeroContent,
   heroWorkingConflict,
+  type HeroWorkingCopy,
   heroWorkingSchema,
   mergeHeroWorkingCopy,
   sameHeroSection,
-  type HeroWorkingCopy,
 } from "./hero-working-copy"
 import { toast } from "sonner"
 
@@ -279,8 +266,8 @@ export function PublishingWorkspace({
   const [reviewOpen, setReviewOpen] = useState(false)
   const [cause, setCause] = useState<Cause>(translationMode ? "TRANSLATION" : "CONTENT_CORRECTION")
   const [importContext, setImportContext] = useState<ImportContext | null>(null)
-  const [resourceId, setResourceId] = useState("")
-  const [showResources, setShowResources] = useState(false)
+  const [publishFailure, setPublishFailure] = useState("")
+  const [publishing, setPublishing] = useState(false)
   const requestedFilter: CatalogFilter = {
     seasonId: heroLocationId(urlParams.get("season")),
     variantId: heroLocationId(urlParams.get("patch")),
@@ -354,17 +341,6 @@ export function PublishingWorkspace({
     else delete notes[noteKey]
     localDraft.update({ ...localDraft.value, notes })
   }
-  const resources = useQuery({
-    queryKey: ["publishing-resources"],
-    queryFn: async () => {
-      const response = await fetch("/__resources/data/heroes.json", { cache: "no-store" })
-      if (!response.ok || !response.headers.get("content-type")?.includes("application/json"))
-        throw new Error("Resource import requires the Vite resource endpoint.")
-      return ((await response.json()) as { heroes: Hero[] }).heroes
-    },
-    enabled: showResources,
-  })
-  const resource = resources.data?.find((hero) => hero.id === resourceId)
   const revision = preview?.revision
   const statPatch = statPatchContext(
     overview.data?.variants ?? [],
@@ -432,7 +408,6 @@ export function PublishingWorkspace({
     if (requestedRevision === selectedId) return
     setSelectedId(requestedRevision)
     setEditing(false)
-    setResourceId("")
     setError("")
   }, [heroId, requestedRevision])
   useEffect(() => {
@@ -487,7 +462,7 @@ export function PublishingWorkspace({
     />
   ) : null
 
-  async function run(action: () => Promise<unknown>, success: string) {
+  async function run(action: () => Promise<unknown>, success: string, onFailure: (message: string) => void = setError) {
     setBusy(true)
     setError("")
     try {
@@ -497,7 +472,7 @@ export function PublishingWorkspace({
       await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
       await revisions.refetch()
     } catch (failure) {
-      setError(errorMessage(failure))
+      onFailure(errorMessage(failure))
     } finally {
       setBusy(false)
     }
@@ -567,6 +542,46 @@ export function PublishingWorkspace({
     setError("")
     setManagementOpen(true)
   }
+  function openUnsavedSection(next: Section) {
+    updateLocation({ view: "overview" })
+    setSection(next)
+    setProfilePart("information")
+    setEditing(true)
+    setError("")
+  }
+  function publishRevision() {
+    if (!revision) return
+    setPublishing(true)
+    void run(
+      async () => {
+        const published = await api.publish(revision, note)
+        await localDraft.discard()
+        await openRevision(published)
+      },
+      "Đã xuất bản phiên bản tướng.",
+      setPublishFailure,
+    ).finally(() => setPublishing(false))
+  }
+  // One ruleset holds one draft, so a second one can only fail: offer the one that exists instead.
+  const openDraft = revisions.data?.find((row) => row.state === "DRAFT" && row.rulesetId === revision?.rulesetId)
+  const startDraftLabel = openDraft ? `Mở bản nháp #${openDraft.revisionNo}` : "Tạo bản nháp"
+  function startDraft() {
+    if (!openDraft) return openManagement()
+    setSelectedId(openDraft.id)
+    updateLocation({ revision: openDraft.id, compare: null, changes: null })
+    setEditing(false)
+  }
+  const canMoveBaseline =
+    !!writable &&
+    revision?.cause === "DATA_BASELINE" &&
+    !revision.sourceRevisionId &&
+    !revisions.data?.some((row) => row.state === "PUBLISHED" && row.rulesetId === revision.rulesetId)
+  const canFork = revision?.state === "PUBLISHED" && canWrite && !openDraft
+  const canRecordChanges =
+    revision?.state === "PUBLISHED" &&
+    revision.cause === "GAME_PATCH" &&
+    !!revision.effectiveFromPatchVariantId &&
+    capabilities.includes("patch:write")
 
   // The one action the header offers for this version; the rest stays in its menu.
   const headerAction =
@@ -784,16 +799,37 @@ export function PublishingWorkspace({
                     onChange={setContentLocale}
                   />
                 )}
-                {headerAction === "publish" && (
-                  <Button disabled={busy} onClick={openManagement}>
-                    <Send className="size-4" />
-                    Xuất bản
-                  </Button>
+                {headerAction === "publish" && revision && (
+                  <PublishButton
+                    busy={busy}
+                    publishing={publishing}
+                    issues={issues}
+                    unsaved={SECTIONS.filter(([key]) => dirty.has(key)).map(([key, , label]) => ({ key, label }))}
+                    patch={
+                      publicationPatch?.status === "DRAFT" && publicationPatch.rulesetId === revision.rulesetId
+                        ? {
+                            to: `/game-configuration?season=${publicationPatch.seasonId ?? ""}&patch=${publicationPatch.id}`,
+                            code: publicationPatch.patchCode,
+                            canPublish: capabilities.includes("patch:publish"),
+                          }
+                        : undefined
+                    }
+                    onReloadPatch={
+                      revision.effectiveFromPatchVariantId && !publicationPatch && !overview.isPending
+                        ? () => void overview.refetch()
+                        : undefined
+                    }
+                    reloadingPatch={overview.isFetching}
+                    failure={publishFailure}
+                    onDismissFailure={() => setPublishFailure("")}
+                    onOpenSection={(key) => openUnsavedSection(key as Section)}
+                    onPublish={publishRevision}
+                  />
                 )}
                 {headerAction === "draft" && (
-                  <Button variant="outline" disabled={busy} onClick={openManagement}>
-                    <Plus className="size-4" />
-                    Tạo bản nháp
+                  <Button variant="outline" disabled={busy} onClick={startDraft}>
+                    {!openDraft && <Plus className="size-4" />}
+                    {startDraftLabel}
                   </Button>
                 )}
                 <DropdownMenu>
@@ -808,10 +844,12 @@ export function PublishingWorkspace({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onSelect={openManagement}>
-                      <Settings2 />
-                      Quản lý phiên bản
-                    </DropdownMenuItem>
+                    {(canMoveBaseline || canFork || canRecordChanges) && (
+                      <DropdownMenuItem onSelect={openManagement}>
+                        <Settings2 />
+                        Quản lý phiên bản
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem disabled={busy} onSelect={() => void refresh()}>
                       <RefreshCw />
                       Tải dữ liệu mới nhất
@@ -819,11 +857,7 @@ export function PublishingWorkspace({
                     {writable && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          variant="destructive"
-                          disabled={busy || !!dirty.size}
-                          onSelect={() => discardDraft()}
-                        >
+                        <DropdownMenuItem variant="destructive" disabled={busy} onSelect={() => discardDraft()}>
                           <Trash2 />
                           Hủy bản nháp
                         </DropdownMenuItem>
@@ -906,8 +940,8 @@ export function PublishingWorkspace({
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-4 text-sm">
                   <p>Đang xem bản chỉ đọc. Tạo bản nháp để chỉnh sửa hoặc thêm bản dịch.</p>
                   {canWrite && (
-                    <Button variant="outline" onClick={openManagement}>
-                      Tạo bản nháp
+                    <Button variant="outline" onClick={startDraft}>
+                      {startDraftLabel}
                     </Button>
                   )}
                 </div>
@@ -934,7 +968,7 @@ export function PublishingWorkspace({
                     onSkillChange={(skill) => updateLocation({ skill })}
                     onTabChange={(tab) => updateLocation({ tab })}
                     onTranslate={canWrite ? openTranslation : undefined}
-                    onNeedsDraft={canWrite && revision?.state === "PUBLISHED" ? openManagement : undefined}
+                    onNeedsDraft={canWrite && revision?.state === "PUBLISHED" ? startDraft : undefined}
                     canWrite={canWrite}
                     issues={writable ? issues : undefined}
                     onEdit={(next, part = "information") => {
@@ -1115,7 +1149,6 @@ export function PublishingWorkspace({
                               locale={editorLocale}
                               profilePart={profilePart}
                               onChange={update}
-                              resource={resource}
                               heroId={heroId}
                               initialSkillKey={heroLocationId(urlParams.get("skill"))}
                               skillLayout={urlParams.get("skillLayout") === "flat" ? "flat" : "focus"}
@@ -1146,78 +1179,7 @@ export function PublishingWorkspace({
                         {error}
                       </p>
                     )}
-                    {/* The header's publish button opens this sheet, so the publish checks lead. */}
-                    {revision.state === "DRAFT" && (
-                      <Box title="Kiểm tra trước khi xuất bản">
-                        {issues.length ? (
-                          <ul className="space-y-2 text-sm text-muted-foreground">
-                            {issues.map((issue) => (
-                              <li key={issue} className="flex gap-2">
-                                <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" />
-                                {issue}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="flex items-center gap-2 text-sm">
-                            <CheckCircle2 className="size-4 text-emerald-600" />
-                            Đã đủ nội dung chính. Hệ thống sẽ kiểm tra dữ liệu và ảnh khi xuất bản.
-                          </p>
-                        )}
-                        {publicationPatch?.status === "DRAFT" && publicationPatch.rulesetId === revision.rulesetId && (
-                          <div className="space-y-1">
-                            <Button asChild variant="outline" size="sm">
-                              <Link
-                                to={`/game-configuration?season=${publicationPatch.seasonId ?? ""}&patch=${publicationPatch.id}`}
-                              >
-                                Mở patch {publicationPatch.patchCode}
-                              </Link>
-                            </Button>
-                            {!capabilities.includes("patch:publish") && (
-                              <p className="type-meta">Người có quyền xuất bản patch có thể thực hiện bước này.</p>
-                            )}
-                          </div>
-                        )}
-                        {revision.effectiveFromPatchVariantId && !publicationPatch && !overview.isPending && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={overview.isFetching}
-                            onClick={() => void overview.refetch()}
-                          >
-                            Tải lại trạng thái patch
-                          </Button>
-                        )}
-                        {usesObservedStats && (
-                          <p className="type-meta">
-                            Thuộc tính chiến đấu dùng số liệu ghi nhận từ ảnh của patch {publicationPatch?.patchCode}.
-                          </p>
-                        )}
-                        {dirty.size > 0 && (
-                          <p className="text-sm text-amber-600">
-                            Lưu {dirty.size} nhóm đang chỉnh sửa trước khi xuất bản.
-                          </p>
-                        )}
-                        <div className="flex flex-wrap gap-3">
-                          {revision.state === "DRAFT" && canPublish && (
-                            <Button
-                              disabled={busy || !!dirty.size || !!issues.length}
-                              onClick={() =>
-                                void run(async () => {
-                                  const published = await api.publish(revision, note)
-                                  await localDraft.discard()
-                                  await openRevision(published)
-                                  setManagementOpen(false)
-                                }, "Đã xuất bản phiên bản tướng.")
-                              }
-                            >
-                              {busy ? "Đang xuất bản…" : "Xuất bản tướng"}
-                            </Button>
-                          )}
-                        </div>
-                      </Box>
-                    )}
-                    {revision.state === "PUBLISHED" && canWrite && (
+                    {canFork && (
                       <Box title="Tạo bản nháp kế thừa">
                         <form
                           className="space-y-4"
@@ -1258,8 +1220,6 @@ export function PublishingWorkspace({
                                 value={importContext}
                                 onChange={setImportContext}
                                 disabled={busy}
-                                locale={locale}
-                                onLocaleChange={translating ? setTargetLocale : setContentLocale}
                               />
                               {importContext && importContext.rulesetId !== revision.rulesetId && (
                                 <p className="text-sm text-destructive">Chọn patch thuộc cùng bộ quy tắc gameplay.</p>
@@ -1279,13 +1239,7 @@ export function PublishingWorkspace({
                         </form>
                       </Box>
                     )}
-                    {revision.cause === "DATA_BASELINE" && (
-                      <p className="rounded-xl border bg-card p-4 text-sm leading-6 text-muted-foreground">
-                        Đây là mốc dữ liệu đã thu thập. Khi chưa có bản trước để đối chiếu, lịch sử không thể kết luận
-                        tướng đã thay đổi gì ở patch này. Bạn có thể bổ sung mốc cũ rồi so sánh sau.
-                      </p>
-                    )}
-                    {writable && revision.cause === "DATA_BASELINE" && !revision.sourceRevisionId && (
+                    {canMoveBaseline && (
                       <BaselineContextForm
                         revision={revision}
                         disabled={busy || !!dirty.size}
@@ -1300,79 +1254,7 @@ export function PublishingWorkspace({
                         }}
                       />
                     )}
-                    {revision.state === "PUBLISHED" &&
-                      revision.cause === "GAME_PATCH" &&
-                      revision.effectiveFromPatchVariantId &&
-                      capabilities.includes("patch:write") && (
-                        <PatchChangeForm key={revision.id} revision={revision} locale={locale} />
-                      )}
-                    {writable && !translating && (
-                      <details className="admin-section py-4">
-                        <summary className="cursor-pointer text-sm font-medium">
-                          Điền dữ liệu từ tài nguyên tham khảo
-                        </summary>
-                        <div className="mt-4 space-y-4">
-                          <Button variant="outline" onClick={() => setShowResources(!showResources)}>
-                            {showResources ? "Đóng danh mục" : "Mở danh mục resources"}
-                          </Button>
-                          {showResources && (
-                            <>
-                              {resources.isError && <p role="alert">{errorMessage(resources.error)}</p>}
-                              <label className="grid gap-2 text-sm">
-                                Tướng nguồn
-                                <select
-                                  className={control}
-                                  value={resourceId}
-                                  onChange={(event) => setResourceId(event.target.value)}
-                                >
-                                  <option value="">Chọn tướng để đối chiếu</option>
-                                  {resources.data?.map((hero) => (
-                                    <option value={hero.id} key={hero.id}>
-                                      {hero.name} · {hero.id}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                              {resource && (
-                                <>
-                                  <p className="text-sm text-muted-foreground">
-                                    Điền tên, kỹ năng và trang phục vào bản đang sửa. Dữ liệu còn thiếu có thể bổ sung
-                                    sau trong bản nháp.
-                                  </p>
-                                  <Button
-                                    disabled={busy || !!dirty.size}
-                                    onClick={() => {
-                                      localDraft.update({
-                                        ...localDraft.value,
-                                        content: { ...preview.content, ...resourceContent(resource, locale) },
-                                      })
-                                      updateLocation({ view: "overview" })
-                                      setEditing(true)
-                                      setManagementOpen(false)
-                                    }}
-                                  >
-                                    Điền vào bản nháp
-                                  </Button>
-                                </>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </details>
-                    )}
-                    <details className="text-xs text-muted-foreground">
-                      <summary className="cursor-pointer">Mã định danh hệ thống</summary>
-                      <dl className="mt-3 space-y-2 break-all font-mono">
-                        <div>
-                          <dt>Tướng</dt>
-                          <dd>{heroId}</dd>
-                        </div>
-                        <div>
-                          <dt>Phiên bản</dt>
-                          <dd>{revision.id}</dd>
-                        </div>
-                      </dl>
-                    </details>
+                    {canRecordChanges && <PatchChangeForm key={revision.id} revision={revision} locale={locale} />}
                   </div>
                 </ManagementSheet>
               )}
