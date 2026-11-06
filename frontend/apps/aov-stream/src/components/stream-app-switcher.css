@@ -13,7 +13,7 @@
     padding-inline: 4px;
   }
 }
-@media (max-width: 420px) {
+@media (max-width: 340px) {
   .hub-brand-group .public-app-wordmark-prefix {
     display: none;
   }

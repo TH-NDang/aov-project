@@ -4,7 +4,9 @@ import "./public-app-brand.css"
 export function PublicAppWordmark({ product, className }: { product: "Wiki" | "Stream"; className?: string }) {
   return (
     <span className={cn("public-app-wordmark", className)} data-product={product.toLowerCase()}>
-      <span className="public-app-wordmark-prefix">AOV</span>
+      <span className="public-app-wordmark-prefix">
+        A<span className="public-app-wordmark-o">O</span>V
+      </span>
       <span className="public-app-wordmark-product">{product}</span>
     </span>
   )

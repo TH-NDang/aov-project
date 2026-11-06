@@ -693,22 +693,36 @@
   gap: var(--hub-space-3);
 }
 .cp-profile-card {
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
   border-radius: var(--hub-radius);
   background: var(--hub-surface);
-  transition: background-color 160ms;
+  transition:
+    background-color 160ms,
+    transform 200ms ease-out,
+    box-shadow 200ms ease-out;
+}
+@media (hover: hover) {
+  .cp-profile-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--aov-shadow-lg);
+  }
+  .cp-profile-card:hover .cp-card-cover {
+    transform: scale(1.05);
+  }
 }
 .cp-profile-card:hover,
 .cp-profile-card:focus-within {
   background: var(--hub-raised);
 }
 .cp-card-cover {
-  height: 72px;
+  height: 84px;
   background-position: center;
   background-size: cover;
+  transition: transform 420ms ease-out;
 }
 .cp-card-content {
   position: relative;

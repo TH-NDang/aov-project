@@ -11,6 +11,8 @@ import { CompetitionEvent } from "../community/public-competitions"
 import { competitionCatalogQuery } from "./tournament-api"
 import { competitionMatches } from "./match-model"
 import { CompetitionSchedule } from "./competition-schedule"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 
 const normalized = (value: string) =>
   value
@@ -21,6 +23,7 @@ const normalized = (value: string) =>
 
 export function CompetitionDirectory() {
   const query = useQuery(competitionCatalogQuery)
+  const layout = usePageLayout()
   const [params, setParams] = useSearchParams()
   const tab = params.get("tab") === "schedule" ? "schedule" : "competitions"
   const region = params.get("region") || "all"
@@ -50,6 +53,32 @@ export function CompetitionDirectory() {
       (!search.trim() ||
         normalized(`${tournament.name} ${plan.circuit} ${plan.organizer}`).includes(normalized(search.trim()))),
   )
+  const clearFilters = () => setParams(tab === "schedule" ? { tab: "schedule" } : {})
+  const filters = (
+    <>
+      <Filter
+        label="Khu vực"
+        value={region}
+        onChange={(value) => update("region", value)}
+        all="Mọi khu vực"
+        options={regions.map((value) => [value, value])}
+      />
+      <Filter
+        label="Năm"
+        value={year}
+        onChange={(value) => update("year", value)}
+        all="Mọi năm"
+        options={years.map((value) => [String(value), String(value)])}
+      />
+      <Filter
+        label="Trạng thái giải"
+        value={status}
+        onChange={(value) => update("status", value)}
+        all="Mọi trạng thái"
+        options={Object.entries(competitionStatusLabels)}
+      />
+    </>
+  )
   const groups = new Map<string, CompetitionView[]>()
   const order = ["ONGOING", "UPCOMING", "ANNOUNCED", null, "FINISHED"]
   for (const entry of [...visible].sort(
@@ -65,10 +94,10 @@ export function CompetitionDirectory() {
       <title>Giải đấu & lịch thi đấu — AOV Stream</title>
       <div className="competition-hub cp-container">
         <header className="competition-hub-header">
-          <navArtIcons.tournaments size={48} />
+          {layout === "wide" && <navArtIcons.tournaments size={48} />}
           <div>
             <h1>Giải đấu</h1>
-            <p>Theo dõi mùa giải, lịch thi đấu và kết quả từng trận.</p>
+            {layout === "wide" && <p>Theo dõi mùa giải, lịch thi đấu và kết quả từng trận.</p>}
           </div>
           <Link className="cp-button competition-lookup" to="/games">
             <StreamIcon name="search" size={15} />
@@ -97,34 +126,26 @@ export function CompetitionDirectory() {
                 onChange={(event) => update("q", event.target.value)}
               />
             </label>
-            <Filter
-              label="Khu vực"
-              value={region}
-              onChange={(value) => update("region", value)}
-              all="Mọi khu vực"
-              options={regions.map((value) => [value, value])}
-            />
-            <Filter
-              label="Năm"
-              value={year}
-              onChange={(value) => update("year", value)}
-              all="Mọi năm"
-              options={years.map((value) => [String(value), String(value)])}
-            />
-            <Filter
-              label="Trạng thái giải"
-              value={status}
-              onChange={(value) => update("status", value)}
-              all="Mọi trạng thái"
-              options={Object.entries(competitionStatusLabels)}
-            />
-            {(region !== "all" || year !== "all" || status !== "all" || search) && (
-              <button
-                className="competition-clear"
-                onClick={() => setParams(tab === "schedule" ? { tab: "schedule" } : {})}
+            {layout === "compact" ? (
+              <PublicFilterSheet
+                title="Lọc giải đấu"
+                triggerLabel="Lọc"
+                count={[region, year, status].filter((value) => value !== "all").length}
+                resetLabel="Xóa lọc"
+                onReset={clearFilters}
+                resultLabel={`Xem ${visible.length} giải đấu`}
               >
-                Xóa bộ lọc
-              </button>
+                <div className="competition-sheet-filters">{filters}</div>
+              </PublicFilterSheet>
+            ) : (
+              <div className="competition-filter-group">
+                {filters}
+                {(region !== "all" || year !== "all" || status !== "all" || search) && (
+                  <button className="competition-clear" onClick={clearFilters}>
+                    Xóa bộ lọc
+                  </button>
+                )}
+              </div>
             )}
           </div>
           <div className="competition-hub-results">

@@ -6,6 +6,21 @@
  */
 :root {
   color-scheme: light;
+  --aov-bg: light-dark(var(--aov-stream-mist), var(--aov-stream-night));
+  --aov-surface: light-dark(#fff, var(--aov-stream-dusk));
+  --aov-raised: light-dark(var(--aov-stream-mist-sunken), var(--aov-stream-indigo));
+  --aov-sunken: light-dark(var(--aov-stream-mist-sunken), var(--aov-stream-night));
+  --aov-popover: light-dark(#fff, var(--aov-stream-dusk));
+  --aov-line: light-dark(var(--aov-stream-mist-line), var(--aov-stream-indigo-line));
+  --aov-line-strong: light-dark(var(--aov-stream-feather-light), var(--aov-stream-feather));
+  --aov-text: light-dark(var(--aov-stream-ink), var(--aov-stream-cream));
+  --aov-text-soft: light-dark(var(--aov-stream-ink-soft), var(--aov-stream-text-soft));
+  --aov-muted: light-dark(var(--aov-stream-feather), var(--aov-stream-text-muted));
+  /* On a light page what is chosen is the owl's indigo; on a dark one it is the gold of its eyes. */
+  --aov-accent: light-dark(var(--aov-stream-periwinkle-deep), var(--aov-stream-gold));
+  --aov-accent-strong: light-dark(var(--aov-stream-indigo), var(--aov-stream-tan));
+  --aov-accent-soft: light-dark(rgb(85 95 142 / 14%), rgb(211 168 87 / 16%));
+  --aov-on-accent: light-dark(var(--aov-stream-cream), var(--aov-stream-night));
   --hub-bg: var(--aov-bg);
   --hub-surface: var(--aov-surface);
   --hub-raised: var(--aov-raised);
@@ -39,8 +54,8 @@
   --hub-overlay: color-mix(in srgb, var(--aov-bg) 86%, transparent);
   --hub-shadow: var(--aov-shadow);
   --hub-shadow-lg: var(--aov-shadow-lg);
-  --hub-radius: var(--aov-radius-card);
-  --hub-radius-sm: var(--aov-radius-control);
+  --hub-radius: var(--aov-radius-media);
+  --hub-radius-sm: var(--aov-radius-card);
   --hub-topbar: var(--aov-topbar);
   --hub-space-1: 4px;
   --hub-space-2: 8px;
@@ -138,9 +153,36 @@ button:disabled {
 
 /* ---------- Shell ---------- */
 .hub-shell {
+  isolation: isolate;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
+}
+/* The dusk behind the owl, with a field of feathers fading out from the top of the page. */
+.hub-shell::before {
+  content: "";
+  position: fixed;
+  z-index: -2;
+  inset: 0;
+  background:
+    radial-gradient(50% 320px at 20% 0, color-mix(in srgb, var(--aov-stream-feather) 26%, transparent), transparent),
+    radial-gradient(40% 280px at 88% 0, color-mix(in srgb, var(--aov-stream-gold) 12%, transparent), transparent),
+    var(--hub-bg);
+  pointer-events: none;
+}
+.hub-shell::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 460px;
+  background: var(--aov-stream-feather);
+  opacity: 0.16;
+  pointer-events: none;
+  mask-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='28' fill='none' stroke='%23000' stroke-width='1.2'%3E%3Cpath d='M0 28a28 28 0 0 1 56 0M-28 14a28 28 0 0 1 56 0M28 14a28 28 0 0 1 56 0'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, black, transparent);
+  mask-composite: intersect;
 }
 .hub-topbar {
   position: sticky;
@@ -2578,6 +2620,55 @@ button:disabled {
 .hub-banner.hub-art::after {
   display: none;
 }
+/* A page's title band: a soft wash of the accent with the owl large in the corner. */
+.hub-banner.hub-art,
+.competition-hub-header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--hub-radius);
+  background: linear-gradient(115deg, var(--hub-accent-soft), var(--hub-surface) 62%);
+}
+.hub-banner.hub-art::after,
+.competition-hub-header::after,
+.cp-explore-title::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 50% -14px auto auto;
+  display: block;
+  width: 128px;
+  height: 128px;
+  background: url("./assets/stream-owl.svg") center / contain no-repeat;
+  opacity: 0.16;
+  pointer-events: none;
+  transform: translateY(-50%) rotate(-8deg);
+  mask-image: radial-gradient(closest-side, black 45%, transparent);
+}
+.hub-banner.hub-art h1 {
+  color: var(--hub-text);
+}
+.hub-banner.hub-art p {
+  color: var(--hub-text-soft);
+}
+.hub-banner.hub-art .hub-kicker {
+  color: var(--hub-accent-strong);
+}
+.hub-banner.hub-art .hub-banner-stats > span {
+  background: var(--hub-accent-soft, var(--aov-accent-soft));
+  color: var(--hub-text);
+}
+/* Lists come up as they scroll into view, in browsers that can drive an animation from scrolling. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .cp-profile-card,
+    .cp-post {
+      animation: public-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 24%;
+    }
+  }
+}
 /* Empty and error states show the owl, so a dead end still feels like the product. */
 .hub-state > svg {
   display: none;
@@ -2593,4 +2684,140 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ---------- The owl: night bars, gold eyes, feathers ---------- */
+.hub-shell {
+  position: relative;
+}
+.hub-topbar,
+.hub-footer,
+.competition-hub-header,
+.hub-banner.hub-art,
+.cp-explore-title {
+  color-scheme: dark;
+  color: var(--hub-text);
+}
+.hub-topbar {
+  border-bottom: 1px solid color-mix(in srgb, var(--aov-stream-gold) 55%, transparent);
+  background: var(--aov-stream-night);
+  backdrop-filter: none;
+}
+/* The place you are in catches the owl's light: a gold line along the bar's edge and a glow rising from it. */
+.hub-topnav > a {
+  isolation: isolate;
+  transition: color 160ms;
+}
+.hub-topnav > a:hover::before,
+.hub-topnav > a[aria-current]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(to top, rgb(255 255 255 / 7%), transparent 80%);
+}
+.hub-topnav > a[aria-current]::before {
+  background: linear-gradient(to top, color-mix(in srgb, var(--aov-stream-gold) 30%, transparent), transparent 85%);
+}
+.hub-topnav > a[aria-current] {
+  color: var(--aov-stream-cream);
+  font-weight: 700;
+}
+.hub-topnav > a[aria-current]::after {
+  right: 0;
+  left: 0;
+  background: var(--aov-stream-gold);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--aov-stream-gold) 70%, transparent);
+}
+.hub-footer {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: max(var(--hub-gutter), calc((100% - 1200px) / 2));
+  border-top: 1px solid color-mix(in srgb, var(--aov-stream-gold) 55%, transparent);
+  background: var(--aov-stream-night);
+}
+
+/* A page's title sits on a band of the logo's dusk, with the owl keeping watch at the end of it. */
+.competition-hub-header,
+.hub-banner.hub-art,
+.cp-explore-title {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--hub-radius);
+  padding: 14px 18px;
+  padding-right: 96px;
+  background: linear-gradient(115deg, var(--aov-stream-indigo), var(--aov-stream-night) 72%);
+}
+.competition-hub-header {
+  margin-bottom: var(--hub-space-3);
+}
+.hub-banner.hub-art::after,
+.competition-hub-header::after,
+.cp-explore-title::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  right: -10px;
+  display: block;
+  width: 120px;
+  height: 120px;
+  background: url("./assets/stream-owl.svg") center / contain no-repeat;
+  opacity: 0.5;
+  pointer-events: none;
+  transform: translateY(-50%) rotate(-8deg);
+}
+.competition-lookup {
+  position: relative;
+  z-index: 1;
+}
+
+/* Section headings carry one gold eye. */
+.hub-card-title::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border-radius: 50%;
+  background: var(--hub-accent);
+  box-shadow: 0 0 0 3px var(--hub-accent-soft);
+  vertical-align: 0.05em;
+}
+
+/* What is chosen: filled with the accent, with one gold eye so it reads at a glance. */
+.hub-pills > [aria-pressed="true"],
+.hub-pills > [aria-current] {
+  border-color: var(--hub-accent);
+  background: var(--hub-accent);
+  color: var(--hub-on-accent);
+  font-weight: 700;
+  box-shadow: 0 6px 14px -8px var(--hub-accent);
+}
+.hub-pills > [aria-pressed="true"] small,
+.hub-pills > [aria-current] small {
+  color: inherit;
+}
+/* A tab keeps plain text and takes a line of gold, whatever the mode. */
+.cp-tabs button[aria-current] {
+  color: var(--hub-text);
+  font-weight: 700;
+}
+.cp-tabs button[aria-current]::after {
+  background: var(--aov-stream-gold);
+}
+.hub-shell :focus-visible {
+  outline-color: var(--aov-stream-gold);
+}
+
+/* Directory tiles: a gold line of light comes up around the one in focus. */
+.cp-profile-card {
+  box-shadow: inset 0 0 0 1px var(--hub-border);
+}
+.cp-profile-card:is(:hover, :focus-within) {
+  box-shadow:
+    inset 0 0 0 1px var(--hub-accent),
+    0 14px 26px -18px var(--hub-accent);
 }

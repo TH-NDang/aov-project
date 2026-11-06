@@ -6,8 +6,10 @@ import { StreamShell } from "../../components/stream-shell"
 import { gamesQuery, tournamentsQuery } from "./tournament-api"
 import { GameCard } from "./game-card"
 import { CommunityAside } from "../community/community-aside"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 
 export function TournamentDirectory() {
+  const layout = usePageLayout()
   const [params, setParams] = useSearchParams()
   const tournament = params.get("tournament") || ""
   const seriesId = params.get("series") || ""
@@ -66,9 +68,9 @@ export function TournamentDirectory() {
       </Link>
       <header className="hub-banner hub-art" style={{ "--hub-hue": 252 } as CSSProperties}>
         <div className="hub-banner-copy">
-          <span className="hub-kicker">Đấu trường trong tầm ngắm</span>
+          {layout === "wide" && <span className="hub-kicker">Đấu trường trong tầm ngắm</span>}
           <h1>Tra cứu ván đấu</h1>
-          <p>Theo dấu đội hình, cách lên đồ và những lựa chọn làm nên ván đấu.</p>
+          {layout === "wide" && <p>Theo dấu đội hình, cách lên đồ và những lựa chọn làm nên ván đấu.</p>}
           <div className="hub-banner-stats">
             <span>
               <StreamIcon name="gamepad" size={14} />
