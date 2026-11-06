@@ -187,11 +187,8 @@ def normalize_placeholders(content):
 def apply_overrides(content, overrides, side):
     for override in overrides:
         slot = override["slot"]
+        # A note about the hero as a whole is a patch change, recorded with the others. It is not part of the profile.
         if slot is None:
-            translation = next(item for item in content["profile"]["translations"] if item["locale"] == "vi-VN")
-            base = translation["summary"] or ""
-            observation = override[side + "Observation"]
-            translation["summary"] = base.split("\n\nGhi chú gameplay (Garena):")[0] + "\n\nGhi chú gameplay (Garena): " + observation
             continue
         key = override.get("skillKey", f"skill-{slot}-1")
         skills = content["skills"]["skills"]
