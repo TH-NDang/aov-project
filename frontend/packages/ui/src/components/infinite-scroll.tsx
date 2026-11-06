@@ -39,17 +39,28 @@ export function InfiniteScroll({ query, label, enabled = true, rootRef }: Infini
     if (!node || !enabled || !hasNextPage || isFetching || isError || typeof IntersectionObserver === "undefined")
       return
     let requested = false
+    let closed = false
     const observer = new IntersectionObserver(
       (entries) => {
         if (requested || !entries.some((entry) => entry.isIntersecting)) return
         requested = true
-        void fetchNextPage().catch(() => undefined)
+        void fetchNextPage().then(
+          (result) => {
+            // A page can finish before React renders it as fetching, so this effect never runs again. Without this
+            // the observer stays spent and the list stops loading. Observing again reports a sentinel still in view.
+            if (closed || (result as { isError?: boolean } | undefined)?.isError) return
+            requested = false
+            observer.unobserve(node)
+            observer.observe(node)
+          },
+          () => undefined,
+        )
       },
       { root: rootRef?.current ?? scrollParent(node), rootMargin: "240px 0px" },
     )
     observer.observe(node)
     return () => {
-      requested = true
+      closed = true
       observer.disconnect()
     }
   }, [enabled, hasNextPage, isFetching, isError, fetchNextPage, rootRef])

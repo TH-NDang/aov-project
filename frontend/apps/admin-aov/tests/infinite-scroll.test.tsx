@@ -157,6 +157,41 @@ test("repeated intersections cannot overlap requests and the final page disconne
   })
 })
 
+test("a page that finishes before it renders as fetching does not stop the list", async () => {
+  await withUi(async ({ InfiniteScroll, intersections, render, sentinel }) => {
+    let calls = 0
+    let finish: (() => void) | undefined
+    const query = pagingQuery(async () => {
+      calls++
+      await new Promise<void>((resolve) => (finish = resolve))
+    })
+    await render(<InfiniteScroll query={query} label="Loading more" />)
+    const target = sentinel()
+    await act(async () => intersections.intersect(target))
+    await act(async () => intersections.intersect(target))
+    assert.equal(calls, 1, "Requests still never overlap")
+
+    await act(async () => finish?.())
+    assert.equal(intersections.observing(target), true, "Nothing rendered, so the same observer is still there")
+    await act(async () => intersections.intersect(target))
+    assert.equal(calls, 2, "The next intersection loads the next page")
+  })
+})
+
+test("a failed result does not re-arm the sentinel before its error renders", async () => {
+  await withUi(async ({ InfiniteScroll, intersections, render, sentinel }) => {
+    let calls = 0
+    const query = pagingQuery(async () => {
+      calls++
+      return { isError: true }
+    })
+    await render(<InfiniteScroll query={query} label="Loading more" />)
+    await act(async () => intersections.intersect(sentinel()))
+    await act(async () => intersections.intersect(sentinel()))
+    assert.equal(calls, 1)
+  })
+})
+
 test("a failed page halts automatic loading until the query has recovered", async () => {
   await withUi(async ({ InfiniteScroll, intersections, render, sentinel }) => {
     let calls = 0
