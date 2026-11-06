@@ -68,7 +68,7 @@ export function HeroWorkspaceTabs({
       selected ? "border-primary text-primary" : "border-transparent text-muted-foreground",
     )
   return (
-    <nav aria-label="Các phần của tướng" className="z-10 flex border-b bg-background @max-2xl:sticky @max-2xl:top-12">
+    <nav aria-label="Các phần của tướng" className="sticky top-12 z-10 flex border-b bg-background">
       <div
         role="tablist"
         aria-label="Không gian quản lý tướng"
