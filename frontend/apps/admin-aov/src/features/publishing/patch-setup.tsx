@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
@@ -12,6 +12,8 @@ import type { PageSlice, Region, Ruleset } from "./types"
 import { z } from "zod"
 import { useDraftForm } from "@/app/drafts/use-draft-form"
 import { DraftStatus } from "@/app/drafts/draft-status"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 const assignmentDraftSchema = z.object({
   regionId: z.string(),
   rulesetId: z.string(),
@@ -47,12 +49,14 @@ export function PatchSetup({
   const Container = mode === "all" ? Box : SetupPanel
   const queryClient = useQueryClient()
   const capabilities = useSession().actor?.capabilities ?? []
-  const [page, setPage] = useState(0)
-  const patches = useQuery({
-    queryKey: ["publishing-patches", page],
-    queryFn: () => backendRequest<PageSlice<Patch>>(`/admin/patches?page=${page}&size=20`),
+  const patches = useInfiniteQuery({
+    queryKey: ["publishing-patches"],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => backendRequest<PageSlice<Patch>>(`/admin/patches?page=${pageParam}&size=20`),
+    getNextPageParam: nextPageOf,
     enabled: mode === "all" || mode === "patch",
   })
+  const patchRows = patches.data?.pages.flatMap((page) => page.items) ?? []
   const assignmentDraft = useDraftForm({
     form: `ruleset:assignment:${initialRegion || "any"}`,
     initialValue: { regionId: initialRegion, rulesetId: "", validFrom: "", validTo: "" },
@@ -259,7 +263,7 @@ export function PatchSetup({
       {(mode === "all" || mode === "patch") && (
         <>
           {patches.isError && <p role="alert">{errorMessage(patches.error)}</p>}
-          {patches.data?.items.map((patch) => (
+          {patchRows.map((patch) => (
             <div key={patch.id} className="space-y-3 rounded-lg border p-4">
               <h3 className="font-medium">
                 {patch.code} · {patch.status}
@@ -295,7 +299,7 @@ export function PatchSetup({
                     Chèn patch lịch sử trước
                     <select className={control} name="beforeVariantId" defaultValue="">
                       <option value="">Dùng thứ tự đã nhập</option>
-                      {patches.data?.items.flatMap((p) =>
+                      {patchRows.flatMap((p) =>
                         p.variants.map((v) => (
                           <option key={v.id} value={v.id}>
                             {p.code} · {v.variantCode}
@@ -376,19 +380,7 @@ export function PatchSetup({
               ))}
             </div>
           ))}
-          <div className="flex gap-2">
-            <Button variant="outline" disabled={!page || busy} onClick={() => setPage(page - 1)}>
-              Trước
-            </Button>
-            <span>Trang {page + 1}</span>
-            <Button
-              variant="outline"
-              disabled={!patches.data || (page + 1) * 20 >= patches.data.totalElements || busy}
-              onClick={() => setPage(page + 1)}
-            >
-              Sau
-            </Button>
-          </div>
+          <InfiniteScroll query={patches} enabled={!busy} label="Đang tải thêm patch" />
         </>
       )}
     </Container>

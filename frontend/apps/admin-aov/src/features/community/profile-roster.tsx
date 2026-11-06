@@ -1,15 +1,6 @@
 import { useDeferredValue, useState } from "react"
-import { useQueries, useQuery } from "@tanstack/react-query"
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  Gamepad2,
-  Plus,
-  Search,
-  UsersRound,
-} from "lucide-react"
+import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
+import { CalendarDays, ClipboardList, Gamepad2, Plus, Search, UsersRound } from "lucide-react"
 import { personRoleLabels, type CommunityProfile, type ProfileMember } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
@@ -17,9 +8,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { pageApi, pageKeys } from "./page-api"
 import { CreateProfileSheet } from "./create-profile-sheet"
-import { Field, ProfileIconButton, Section } from "./profile-form-primitives"
+import { Field, Section } from "./profile-form-primitives"
 import { ProfileRosterMemberChoice } from "./profile-roster-member-choice"
 import { ProfileRosterLineup, RosterAvatar as PersonAvatar } from "./profile-roster-lineup"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const positions = [
   "Đường Tà thần",
@@ -313,14 +306,21 @@ function PersonResults({
   onSelect: (profile: CommunityProfile) => void
   disabled?: boolean
 }) {
-  const [page, setPage] = useState(0)
   const deferred = useDeferredValue(search)
   const access = useTournamentAccess()
-  const query = useQuery({
-    queryKey: [...pageKeys, access.actorKey, "roster-picker", group, deferred, page],
-    queryFn: () =>
-      pageApi.list(group === "PLAYER" ? "PLAYER" : "", deferred, page, group === "COACHING" ? "COACHING" : undefined),
+  const query = useInfiniteQuery({
+    queryKey: [...pageKeys, access.actorKey, "roster-picker", group, deferred],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      pageApi.list(
+        group === "PLAYER" ? "PLAYER" : "",
+        deferred,
+        pageParam,
+        group === "COACHING" ? "COACHING" : undefined,
+      ),
+    getNextPageParam: nextPageOf,
   })
+  const profiles = query.data?.pages.flatMap((page) => page.items) ?? []
   return (
     <div className="space-y-2">
       {query.isPending && (
@@ -328,7 +328,7 @@ function PersonResults({
           Đang tìm hồ sơ…
         </p>
       )}
-      {query.isError && (
+      {query.isLoadingError && (
         <div role="alert" className="type-body text-destructive">
           Chưa tải được danh sách.{" "}
           <Button type="button" variant="ghost" size="sm" onClick={() => void query.refetch()}>
@@ -336,9 +336,9 @@ function PersonResults({
           </Button>
         </div>
       )}
-      {query.data && !query.data.items.length && <p className="type-meta py-3">Không tìm thấy hồ sơ phù hợp.</p>}
+      {query.data && !profiles.length && <p className="type-meta py-3">Không tìm thấy hồ sơ phù hợp.</p>}
       <div className="max-h-72 overflow-y-auto rounded-lg border empty:hidden">
-        {query.data?.items.map((profile) => (
+        {profiles.map((profile) => (
           <button
             type="button"
             key={profile.id}
@@ -357,28 +357,8 @@ function PersonResults({
             </span>
           </button>
         ))}
+        <InfiniteScroll query={query} label="Đang tải thêm hồ sơ" />
       </div>
-      {query.data && query.data.totalElements > 24 && (
-        <div className="flex items-center justify-between">
-          <p className="type-meta">
-            Trang {page + 1} / {Math.ceil(query.data.totalElements / 24)}
-          </p>
-          <div className="flex gap-1">
-            <ProfileIconButton
-              label="Trang trước"
-              icon={ChevronLeft}
-              disabled={page === 0}
-              onClick={() => setPage(page - 1)}
-            />
-            <ProfileIconButton
-              label="Trang sau"
-              icon={ChevronRight}
-              disabled={(page + 1) * 24 >= query.data.totalElements}
-              onClick={() => setPage(page + 1)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   )
 }

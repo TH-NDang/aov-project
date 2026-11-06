@@ -13,7 +13,7 @@ import {
   ManagementTable,
   ManagementToolbar,
   managementSelectClassName,
-  useManagementPagination,
+  useManagementRows,
 } from "./management-list"
 
 export function TeamRegistry({
@@ -51,7 +51,7 @@ export function TeamRegistry({
         ).includes(query),
     )
     .sort((a, b) => a.content.name.localeCompare(b.content.name, "vi") * (order === "asc" ? 1 : -1))
-  const pagination = useManagementPagination(shown, JSON.stringify([search, country, order]), selectedId)
+  const listing = useManagementRows(shown, JSON.stringify([search, country, order]), selectedId)
   const reset = () => {
     onCountryChange("")
     onSearchChange?.("")
@@ -60,7 +60,7 @@ export function TeamRegistry({
 
   useEffect(() => {
     if (selectedId) document.getElementById(`tournament-team-${selectedId}`)?.scrollIntoView?.({ block: "nearest" })
-  }, [selectedId, teams, pagination.page])
+  }, [selectedId, teams])
 
   return (
     <ManagementPanel>
@@ -107,7 +107,7 @@ export function TeamRegistry({
             ...(onRoster ? [{ label: "Đội hình", className: "w-20 text-right @xl:w-32" }] : []),
           ]}
         >
-          {pagination.rows.map((entry) => {
+          {listing.rows.map((entry) => {
             const body = (
               <>
                 <RegistryLogo url={entry.content.logoUrl} name={entry.content.shortName || entry.content.name} />
@@ -195,7 +195,7 @@ export function TeamRegistry({
           onReset={filtered ? reset : undefined}
         />
       )}
-      <ManagementFooter count={shown.length} total={teams.length} noun="đội tuyển" {...pagination} />
+      <ManagementFooter count={shown.length} total={teams.length} noun="đội tuyển" {...listing} />
     </ManagementPanel>
   )
 }

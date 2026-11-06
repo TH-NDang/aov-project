@@ -19,6 +19,7 @@ import {
   type BadgeGroupKind,
   type BadgeGroupTranslation,
 } from "./skin-badge-groups-api"
+import { InfiniteScroll } from "@/components/infinite-scroll"
 
 export function BadgeGroupSelect({
   value,
@@ -63,17 +64,8 @@ export function BadgeGroupSelect({
           ))}
         </select>
       </label>
-      {groups.hasNextPage && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={disabled || groups.isFetchingNextPage}
-          onClick={() => groups.fetchNextPage()}
-        >
-          Tải thêm nhóm
-        </Button>
-      )}
+      {/* A native select cannot report scrolling, so every group loads while the field is on screen. */}
+      <InfiniteScroll query={groups} enabled={!disabled} label="Đang tải thêm nhóm nhãn" />
       {groups.isError && (
         <p role="alert" className="text-sm text-destructive">
           {errorMessage(groups.error)}

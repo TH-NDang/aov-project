@@ -13,6 +13,8 @@ import {
 } from "@aov/ui/components/warehouse/item-recipe"
 import { recipeConnectionError } from "./item-graph"
 import { warehouseName, type ItemContent, type WarehouseEntry } from "./warehouse-types"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 type Item = WarehouseEntry<ItemContent>
 
@@ -39,15 +41,14 @@ function IngredientPicker({
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const [limit, setLimit] = useState(12)
   const matches = open ? options.filter((item) => matchesQuery(query, warehouseName(item, locale), item.code)) : []
+  const revealed = useRevealedRows(matches, `${open}:${query}`, 12)
   return (
     <Popover
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
         setQuery("")
-        setLimit(12)
       }}
     >
       <PopoverTrigger asChild>
@@ -82,12 +83,11 @@ function IngredientPicker({
             value={query}
             onValueChange={(value) => {
               setQuery(value)
-              setLimit(12)
             }}
           />
           <CommandList className="max-h-[min(18rem,35dvh)] p-1">
             <CommandEmpty>Không tìm thấy nguyên liệu phù hợp.</CommandEmpty>
-            {matches.slice(0, limit).map((item) => (
+            {revealed.rows.map((item) => (
               <CommandItem
                 key={item.id}
                 value={item.id}
@@ -99,12 +99,8 @@ function IngredientPicker({
                 <RecipeItemLabel item={item} locale={locale} />
               </CommandItem>
             ))}
+            <InfiniteScroll query={revealed.loader} label="Đang tải thêm nguyên liệu" />
           </CommandList>
-          {matches.length > limit && (
-            <Button type="button" size="sm" variant="ghost" onClick={() => setLimit(limit + 12)}>
-              Xem thêm nguyên liệu ({matches.length - limit})
-            </Button>
-          )}
         </Command>
       </PopoverContent>
     </Popover>

@@ -14,6 +14,8 @@ import {
   type StorageRow,
   type StorageTable,
 } from "./storage-model"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 export const SELECT_CLASS =
   "h-9 w-full rounded-md border bg-background px-2 text-sm outline-none focus:ring-2 focus:ring-ring"
@@ -39,7 +41,6 @@ export function ImportDialog({
   const [busy, setBusy] = useState(false)
   const [filename, setFilename] = useState("")
   const [filter, setFilter] = useState("all")
-  const [page, setPage] = useState(0)
   const [result, setResult] = useState<{ added: number; updated: number; skipped: number } | null>(null)
   const rows = arrays[arrayName] ?? []
   const columns = useMemo(() => [...new Set(rows.flatMap((row) => Object.keys(row)))], [rows])
@@ -51,6 +52,7 @@ export function ImportDialog({
       }
     : null
   const entries = plan?.entries.filter((entry) => filter === "all" || entry.kind === filter) ?? []
+  const revealed = useRevealedRows(entries, `${filter}:${entries.length}`, 30)
 
   const chooseArray = (name: string, data = arrays) => {
     setArrayName(name)
@@ -89,7 +91,6 @@ export function ImportDialog({
       setPlan(planImport(table, rows, sourceId, mapping))
       setUpdates(new Set())
       setError("")
-      setPage(0)
       setFilter("all")
     } catch (cause) {
       setError(cause instanceof Error ? storageErrorMessage(cause.message) : "Không thể chuẩn bị import.")
@@ -258,7 +259,6 @@ export function ImportDialog({
                 value={filter}
                 onChange={(event) => {
                   setFilter(event.target.value)
-                  setPage(0)
                 }}
               >
                 <option value="all">Tất cả</option>
@@ -289,7 +289,7 @@ export function ImportDialog({
                   </tr>
                 </thead>
                 <tbody>
-                  {entries.slice(page * 30, (page + 1) * 30).map((entry) => (
+                  {revealed.rows.map((entry) => (
                     <tr key={entry.id} className="border-t align-top">
                       <td className="p-3">
                         {entry.kind === "update" ? (
@@ -334,25 +334,9 @@ export function ImportDialog({
                   ))}
                 </tbody>
               </table>
+              <InfiniteScroll query={revealed.loader} label="Đang tải thêm dòng" />
             </div>
-            <div className="flex items-center justify-between gap-2 text-sm">
-              <span>
-                {entries.length} dòng · trang {page + 1}/{Math.max(1, Math.ceil(entries.length / 30))}
-              </span>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={busy || page === 0} onClick={() => setPage(page - 1)}>
-                  Trước
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={busy || (page + 1) * 30 >= entries.length}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Sau
-                </Button>
-              </div>
-            </div>
+            <p className="text-sm">{entries.length} dòng</p>
             <div className="flex justify-between gap-2">
               <Button variant="outline" disabled={busy} onClick={() => setPlan(null)}>
                 <ArrowLeft />

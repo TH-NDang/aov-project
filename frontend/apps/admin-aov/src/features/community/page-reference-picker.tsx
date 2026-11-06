@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { Check, Link2, Pencil, Plus, Search, X } from "lucide-react"
 import { profileKindLabels, type CommunityProfile, type ProfileKind } from "@aov/community-contracts"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
@@ -10,6 +10,8 @@ import { CreateProfileSheet } from "./create-profile-sheet"
 import { pageApi, pageError, pageKeys } from "./page-api"
 import { PageReference } from "./page-reference"
 import { ProfileTypeIcon } from "./profile-icons"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 export function PageReferencePicker({
   value,
@@ -34,17 +36,19 @@ export function PageReferencePicker({
   const [creating, setCreating] = useState<ProfileKind | null>(null)
   const [filter, setFilter] = useState<ProfileKind | "">(kind || "")
   const [search, setSearch] = useState("")
-  const [page, setPage] = useState(0)
   const selected = useQuery({
     queryKey: [...pageKeys, actorKey, value],
     queryFn: () => pageApi.read(value!),
     enabled: !!value,
   })
-  const results = useQuery({
-    queryKey: [...pageKeys, actorKey, "reference-picker", kind || filter, search, page],
-    queryFn: () => pageApi.list(kind || filter, search, page),
+  const results = useInfiniteQuery({
+    queryKey: [...pageKeys, actorKey, "reference-picker", kind || filter, search],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => pageApi.list(kind || filter, search, pageParam),
+    getNextPageParam: nextPageOf,
     enabled: open && canWrite,
   })
+  const profiles = results.data?.pages.flatMap((page) => page.items) ?? []
   const select = (profile: CommunityProfile | null) => {
     if (!canWrite) return
     onSelect(profile)
@@ -106,7 +110,6 @@ export function PageReferencePicker({
                 className="pl-9"
                 onChange={(event) => {
                   setSearch(event.target.value)
-                  setPage(0)
                 }}
               />
             </div>
@@ -117,7 +120,6 @@ export function PageReferencePicker({
                 value={filter}
                 onChange={(event) => {
                   setFilter(event.target.value as ProfileKind | "")
-                  setPage(0)
                 }}
               >
                 <option value="">Tất cả loại</option>
@@ -133,18 +135,18 @@ export function PageReferencePicker({
             <p role="status" className="type-body">
               Đang tìm hồ sơ…
             </p>
-          ) : results.isError ? (
+          ) : results.isLoadingError ? (
             <div role="alert" className="space-y-2">
               <p className="type-body text-destructive">{pageError(results.error)}</p>
               <Button variant="outline" onClick={() => void results.refetch()}>
                 Thử lại
               </Button>
             </div>
-          ) : !results.data.items.length ? (
+          ) : !profiles.length ? (
             <p className="type-body py-4 text-muted-foreground">Chưa có hồ sơ phù hợp.</p>
           ) : (
             <div className="max-h-72 divide-y overflow-y-auto">
-              {results.data.items.map((profile) => (
+              {profiles.map((profile) => (
                 <button
                   key={profile.id}
                   type="button"
@@ -166,22 +168,7 @@ export function PageReferencePicker({
                   {value === profile.id && <Check className="size-4" />}
                 </button>
               ))}
-            </div>
-          )}
-          {results.data && results.data.totalElements > 24 && (
-            <div className="flex items-center justify-end gap-3">
-              <Button type="button" variant="outline" disabled={!page} onClick={() => setPage(page - 1)}>
-                Trước
-              </Button>
-              <span className="type-meta">Trang {page + 1}</span>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={(page + 1) * 24 >= results.data.totalElements}
-                onClick={() => setPage(page + 1)}
-              >
-                Tiếp
-              </Button>
+              <InfiniteScroll query={results} label="Đang tải thêm hồ sơ" />
             </div>
           )}
           <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">

@@ -1,12 +1,14 @@
 import { useState } from "react"
 import { Link } from "react-router"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CommunityReport, PageClaim } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { Page, PageHeader } from "@/components/page-header"
 import { AccessGate } from "@/features/esports/pages/esports-shell"
 import { pageApi, pageError, pageKeys } from "./page-api"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 export function PageReview() {
   return (
@@ -25,69 +27,51 @@ export function PageReview() {
 }
 function Review({ actorKey }: { actorKey: string }) {
   const [tab, setTab] = useState("claims")
-  const [page, setPage] = useState(0)
-  const claims = useQuery({
-    queryKey: [...pageKeys, actorKey, "claims", page],
-    queryFn: () => pageApi.claims(page),
+  const claims = useInfiniteQuery({
+    queryKey: [...pageKeys, actorKey, "claims"],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => pageApi.claims(pageParam),
+    getNextPageParam: nextPageOf,
     enabled: tab === "claims",
   })
-  const reports = useQuery({
-    queryKey: [...pageKeys, actorKey, "reports", page],
-    queryFn: () => pageApi.reports(page),
+  const reports = useInfiniteQuery({
+    queryKey: [...pageKeys, actorKey, "reports"],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => pageApi.reports(pageParam),
+    getNextPageParam: nextPageOf,
     enabled: tab === "reports",
   })
   const active = tab === "claims" ? claims : reports
+  const claimRows = claims.data?.pages.flatMap((page) => page.items) ?? []
+  const reportRows = reports.data?.pages.flatMap((page) => page.items) ?? []
   return (
     <Page className="mx-auto w-full max-w-[1100px] gap-5">
       <PageHeader title="Yêu cầu & kiểm duyệt" />
       <div className="flex gap-2">
-        <Button
-          variant={tab === "claims" ? "secondary" : "ghost"}
-          onClick={() => {
-            setTab("claims")
-            setPage(0)
-          }}
-        >
+        <Button variant={tab === "claims" ? "secondary" : "ghost"} onClick={() => setTab("claims")}>
           Nhận quyền quản lý
         </Button>
-        <Button
-          variant={tab === "reports" ? "secondary" : "ghost"}
-          onClick={() => {
-            setTab("reports")
-            setPage(0)
-          }}
-        >
+        <Button variant={tab === "reports" ? "secondary" : "ghost"} onClick={() => setTab("reports")}>
           Báo cáo nội dung
         </Button>
       </div>
       {active.isPending ? (
         <p className="type-body">Đang tải…</p>
-      ) : active.isError ? (
+      ) : active.isLoadingError ? (
         <p role="alert" className="type-body">
           {pageError(active.error)}
         </p>
-      ) : !active.data?.items.length ? (
+      ) : !(tab === "claims" ? claimRows : reportRows).length ? (
         <div className="rounded-xl border py-16 text-center">
           <h2 className="type-section-title">Không có yêu cầu chờ xử lý</h2>
           <p className="type-meta mt-2">Các yêu cầu mới sẽ xuất hiện tại đây.</p>
         </div>
       ) : tab === "claims" ? (
-        claims.data?.items.map((entry) => <ReviewCard key={entry.id} claim={entry} />)
+        claimRows.map((entry) => <ReviewCard key={entry.id} claim={entry} />)
       ) : (
-        reports.data?.items.map((entry) => <ReviewCard key={entry.id} report={entry} />)
+        reportRows.map((entry) => <ReviewCard key={entry.id} report={entry} />)
       )}
-      <div className="flex justify-end gap-3">
-        <Button variant="outline" disabled={!page} onClick={() => setPage(page - 1)}>
-          Trước
-        </Button>
-        <Button
-          variant="outline"
-          disabled={!active.data || (page + 1) * 30 >= active.data.totalElements}
-          onClick={() => setPage(page + 1)}
-        >
-          Tiếp
-        </Button>
-      </div>
+      <InfiniteScroll query={active} label="Đang tải thêm yêu cầu" />
     </Page>
   )
 }

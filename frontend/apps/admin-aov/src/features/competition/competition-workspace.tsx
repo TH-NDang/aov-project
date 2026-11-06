@@ -51,6 +51,8 @@ import { OrganizationPicker } from "./organization-picker"
 import { CompetitionInformationFields } from "./competition-information-fields"
 import { CompetitionChoiceField } from "./competition-choice-field"
 import { bestOfOptions, stageNameOptions } from "./competition-field-options"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 const steps = ["Thông tin", "Đội tham dự", "Đội hình", "Thể thức", "Lịch & kết quả", "Kiểm tra & công bố"]
 const stepIcons = [Info, Users, UserRound, GitBranch, CalendarDays, ClipboardCheck]
@@ -101,7 +103,6 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const [preview, setPreview] = useState<PlannedMatch[] | null>(null)
   const [opponent, setOpponent] = useState(3)
   const [matchStage, setMatchStage] = useState("")
-  const [matchPage, setMatchPage] = useState(0)
   const teams = useRecords("teams"),
     players = useRecords("players"),
     tournaments = useRecords("tournaments")
@@ -205,7 +206,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       plan.matches.map((match) => (match.key === key ? { ...match, ...patch } : match)),
     )
   const matchingFixtures = plan.matches.filter((match) => !matchStage || match.stageCode === matchStage)
-  const safeMatchPage = Math.min(matchPage, Math.max(0, Math.ceil(matchingFixtures.length / 12) - 1))
+  const revealedFixtures = useRevealedRows(matchingFixtures, matchStage, 12)
   return (
     <EsportsPage>
       <Crumbs items={[{ label: "Giải đấu", to: "/tournaments" }, { label: entry.content.tournament.name }]} />
@@ -630,10 +631,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                 <select
                   className={selectClass}
                   value={matchStage}
-                  onChange={(event) => {
-                    setMatchStage(event.target.value)
-                    setMatchPage(0)
-                  }}
+                  onChange={(event) => setMatchStage(event.target.value)}
                 >
                   <option value="">Tất cả giai đoạn</option>
                   {plan.stages.map((stage) => (
@@ -644,7 +642,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                 </select>
               </label>
               <div className="max-h-[650px] overflow-auto space-y-3">
-                {matchingFixtures.slice(safeMatchPage * 12, (safeMatchPage + 1) * 12).map((match) => {
+                {revealedFixtures.rows.map((match) => {
                   const index = plan.matches.findIndex((row) => row.key === match.key)
                   const resolved = entry.content.resolved.find((row) => row.key === match.key)
                   const actual = series.data?.find((row) => row.id === match.seriesId)
@@ -765,24 +763,9 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
                     </details>
                   )
                 })}
+                <InfiniteScroll query={revealedFixtures.loader} label="Đang tải thêm trận" />
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="type-meta">
-                  {matchingFixtures.length} trận · Trang {safeMatchPage + 1}
-                </span>
-                <div className="flex gap-2">
-                  <Button variant="outline" disabled={!safeMatchPage} onClick={() => setMatchPage(safeMatchPage - 1)}>
-                    Trước
-                  </Button>
-                  <Button
-                    variant="outline"
-                    disabled={(safeMatchPage + 1) * 12 >= matchingFixtures.length}
-                    onClick={() => setMatchPage(safeMatchPage + 1)}
-                  >
-                    Sau
-                  </Button>
-                </div>
-              </div>
+              <p className="type-meta">{matchingFixtures.length} trận</p>
               <Button
                 variant="outline"
                 disabled={!plan.stages.length}

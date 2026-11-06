@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import React, { act, useState } from "react"
 import { JSDOM } from "jsdom"
+import { intersectionHarness } from "./fixtures/intersection-observer"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Catalog, GameContent, Participant, SeriesContent } from "@aov/community-contracts"
 import {
@@ -87,8 +88,10 @@ async function withUi(
     render: (node: React.ReactNode) => Promise<void>
     click: (text: string) => Promise<void>
     change: (selector: string, value: string) => Promise<void>
+    intersections: ReturnType<typeof intersectionHarness>
   }) => Promise<void>,
 ) {
+  const intersections = intersectionHarness()
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost:5175/tournaments" })
   const values = {
     React,
@@ -110,6 +113,7 @@ async function withUi(
       unobserve() {}
       disconnect() {}
     },
+    IntersectionObserver: intersections.Observer,
     IS_REACT_ACT_ENVIRONMENT: true,
   }
   const originals = new Map<string, PropertyDescriptor | undefined>()
@@ -123,6 +127,7 @@ async function withUi(
   try {
     await run({
       document,
+      intersections,
       render: async (node) => {
         await act(async () => root.render(node))
       },
@@ -399,8 +404,8 @@ test("player identities support alias search, optional photos and country badges
   })
 })
 
-test("registry pagination resets for sorting and filters, and empty searches can be cleared without editing", async () => {
-  await withUi(async ({ render, document, change, click }) => {
+test("registry rows load on scroll and start over for sorting and filters, and empty searches can be cleared without editing", async () => {
+  await withUi(async ({ render, document, change, click, intersections }) => {
     const { PlayerRegistry } = await import("../src/features/tournaments/player-registry")
     const players = Array.from({ length: 31 }, (_, index) => ({
       id: `player-${index}`,
@@ -430,17 +435,21 @@ test("registry pagination resets for sorting and filters, and empty searches can
         />
       )
     }
-    const next = () => act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Trang sau"]')!.click())
+    const scrollToEnd = () =>
+      act(async () => intersections.intersect(document.querySelector('[aria-label="Đang tải thêm tuyển thủ"]')!))
     await render(<Host search="" />)
     assert.equal(document.querySelectorAll("tbody tr").length, 25)
-    await next()
-    assert.equal(document.querySelectorAll("tbody tr").length, 6)
-    assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 25/)
+    assert.match(document.body.textContent ?? "", /25 trong 31 tuyển thủ/)
+    await scrollToEnd()
+    assert.equal(document.querySelectorAll("tbody tr").length, 31)
+    assert.match(document.body.textContent ?? "", /31 tuyển thủ/)
+    assert.equal(document.querySelector('[aria-label="Đang tải thêm tuyển thủ"]'), null)
 
     await change('[aria-label="Sắp xếp tuyển thủ"]', "desc")
     assert.equal(document.querySelectorAll("tbody tr").length, 25)
     assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 30/)
-    await next()
+    await scrollToEnd()
+    assert.equal(document.querySelectorAll("tbody tr").length, 31)
     await render(<Host search="tuyen thu cuoi" />)
     assert.equal(document.querySelectorAll("tbody tr").length, 1)
     assert.match(document.querySelector("tbody tr")?.textContent ?? "", /Player 30/)

@@ -109,7 +109,6 @@ export function StorageDataTable({
         matchesQuery(query, ...Object.values(row).map((value) => String(displayValue(value))))
       }
       searchPlaceholder="Tìm trong bảng…"
-      pageSizes={[10, 25, 50, 100]}
       emptyMessage={
         table.columns.length
           ? "Chưa có dòng phù hợp. Thêm dòng hoặc import dữ liệu."

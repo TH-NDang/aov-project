@@ -12,7 +12,7 @@ import {
   ManagementTable,
   ManagementToolbar,
   managementSelectClassName,
-  useManagementPagination,
+  useManagementRows,
 } from "./management-list"
 
 export function PlayerRegistry({
@@ -48,7 +48,7 @@ export function PlayerRegistry({
         ).includes(query),
     )
     .sort((a, b) => a.content.nickname.localeCompare(b.content.nickname, "vi") * (order === "asc" ? 1 : -1))
-  const pagination = useManagementPagination(shown, JSON.stringify([search, country, order]), selectedId)
+  const listing = useManagementRows(shown, JSON.stringify([search, country, order]), selectedId)
   const filtered = !!country || !!search.trim()
   const reset = () => {
     onCountryChange("")
@@ -99,7 +99,7 @@ export function PlayerRegistry({
             { label: "Tên khác", className: "hidden w-1/4 @4xl:table-cell" },
           ]}
         >
-          {pagination.rows.map((entry) => {
+          {listing.rows.map((entry) => {
             const body = (
               <>
                 <RegistryLogo url={entry.content.photoUrl} name={entry.content.nickname} portrait />
@@ -166,7 +166,7 @@ export function PlayerRegistry({
           onReset={filtered ? reset : undefined}
         />
       )}
-      <ManagementFooter count={shown.length} total={players.length} noun="tuyển thủ" {...pagination} />
+      <ManagementFooter count={shown.length} total={players.length} noun="tuyển thủ" {...listing} />
     </ManagementPanel>
   )
 }

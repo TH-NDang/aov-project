@@ -3,7 +3,6 @@ import {
   ArrowUpRight,
   BookOpenText,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   ChevronUp,
   Globe2,
@@ -30,6 +29,8 @@ import {
 import { EntityReferenceIcon, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 import { Skeleton } from "@aov/ui/components/skeleton"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 const kinds = entityKindLabels
 const fold = foldEntitySearch
@@ -100,7 +101,6 @@ export function ReferenceCatalogTable({
   const [search, setSearch] = useState("")
   const [kind, setKind] = useState("all")
   const [missingTranslation, setMissingTranslation] = useState(false)
-  const [page, setPage] = useState(0)
   const [expandedKinds, setExpandedKinds] = useState(false)
   const kindsId = useId()
   const termsOnly = variant ? variant === "terms" : entities.every((entity) => entity.kind === "term")
@@ -113,7 +113,6 @@ export function ReferenceCatalogTable({
       value={search}
       onChange={(value) => {
         setSearch(value)
-        setPage(0)
       }}
     />
   )
@@ -146,13 +145,12 @@ export function ReferenceCatalogTable({
     (entity) => !entity.translations.some((text) => text.locale.toLowerCase() === locale.toLowerCase()),
   )
   const rows = missingTranslation ? missing : matching
-  const currentPage = Math.min(page, Math.max(0, Math.ceil(rows.length / 25) - 1))
+  const revealed = useRevealedRows(rows, JSON.stringify([search, kind, missingTranslation]))
   const filtered = !!search || kind !== "all" || missingTranslation
   function resetFilters() {
     setSearch("")
     setKind("all")
     setMissingTranslation(false)
-    setPage(0)
   }
 
   return (
@@ -188,7 +186,6 @@ export function ReferenceCatalogTable({
                     aria-pressed={kind === key}
                     onClick={() => {
                       setKind(key)
-                      setPage(0)
                     }}
                   >
                     <Icon aria-hidden className="size-3.5" />
@@ -243,7 +240,6 @@ export function ReferenceCatalogTable({
               aria-pressed={missingTranslation}
               onClick={() => {
                 setMissingTranslation((value) => !value)
-                setPage(0)
               }}
             >
               <Languages className="size-3.5" />
@@ -293,7 +289,7 @@ export function ReferenceCatalogTable({
           </thead>
           <tbody className="block @xl/catalog:table-row-group">
             {!loading &&
-              rows.slice(currentPage * 25, currentPage * 25 + 25).map((entity) => {
+              revealed.rows.map((entity) => {
                 const key = `${entity.kind}:${entity.id}`
                 const text =
                   entity.translations.find((text) => text.locale === locale) ??
@@ -457,33 +453,7 @@ export function ReferenceCatalogTable({
           </div>
         )}
       </div>
-      {rows.length > 25 && (
-        <div className="flex items-center justify-between gap-2 px-0.5">
-          <span className="text-xs text-muted-foreground tabular-nums">
-            Trang {currentPage + 1} / {Math.ceil(rows.length / 25)}
-          </span>
-          <div className="flex gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 0}
-              onClick={() => setPage(currentPage - 1)}
-            >
-              <ChevronLeft aria-hidden className="size-4" /> Trước
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={(currentPage + 1) * 25 >= rows.length}
-              onClick={() => setPage(currentPage + 1)}
-            >
-              Sau <ChevronRight aria-hidden className="size-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+      <InfiniteScroll query={revealed.loader} label="Đang tải thêm danh mục" />
     </section>
   )
 }

@@ -1,10 +1,12 @@
-import { useRef, useState, type ReactNode } from "react"
-import { ChevronLeft, ChevronRight, SearchX, X } from "lucide-react"
+import { type ComponentProps, type ReactNode } from "react"
+import { SearchX, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Table, TableBody, TableCaption, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
 import { cn } from "@aov/ui/lib/utils"
 import { SearchField } from "@/components/search-field"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 export const managementSelectClassName =
   "type-body h-9 min-w-0 max-w-full rounded-md border bg-background px-3 outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
@@ -81,85 +83,35 @@ export function ManagementTable({
 
 const PAGE_SIZE = 25
 
-export function useManagementPagination<T extends { id: string }>(
-  entries: T[],
-  filterKey: string,
-  selectedId?: string,
-) {
-  const key = `${filterKey}:${selectedId ?? ""}`
-  const initialPage = Math.floor(
-    Math.max(
-      0,
-      entries.findIndex((entry) => entry.id === selectedId),
-    ) / PAGE_SIZE,
-  )
-  const [selection, setSelection] = useState({ key, page: initialPage })
-  // Remember each filter change so clearing filters cannot restore an outdated page.
-  if (selection.key !== key) setSelection({ key, page: initialPage })
-  const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE))
-  const page = Math.min(selection.key === key ? selection.page : initialPage, pageCount - 1)
-  return {
-    page,
-    pageCount,
-    rows: entries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
-    onPageChange: (next: number) => setSelection({ key, page: Math.max(0, Math.min(next, pageCount - 1)) }),
-  }
+/** Rows on screen; a selected record stays among them, however far down the list it sits. */
+export function useManagementRows<T extends { id: string }>(entries: T[], filterKey: string, selectedId?: string) {
+  const selected = entries.findIndex((entry) => entry.id === selectedId)
+  return useRevealedRows(entries, filterKey, PAGE_SIZE, selected + 1)
 }
 
 export function ManagementFooter({
   count,
   total,
   noun,
-  page,
-  pageCount,
-  onPageChange,
+  rows,
+  loader,
 }: {
   count: number
   total: number
   noun: string
-  page: number
-  pageCount: number
-  onPageChange: (page: number) => void
+  rows: readonly unknown[]
+  loader: ComponentProps<typeof InfiniteScroll>["query"]
 }) {
-  const footer = useRef<HTMLDivElement>(null)
-  const changePage = (next: number) => {
-    onPageChange(next)
-    footer.current?.parentElement?.scrollIntoView?.({ block: "start" })
-  }
   return (
-    <div ref={footer} className="flex flex-wrap items-center justify-between gap-3 border-t px-3 py-3 @3xl:px-4">
-      <p className="type-meta tabular-nums" role="status">
-        {count
-          ? `${page * PAGE_SIZE + 1}–${Math.min((page + 1) * PAGE_SIZE, count)} trong ${count} ${noun}`
-          : `0 ${noun}`}
-        {count !== total && <span> · Tổng {total}</span>}
-      </p>
-      {pageCount > 1 && (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Trang trước"
-            disabled={page === 0}
-            onClick={() => changePage(page - 1)}
-          >
-            <ChevronLeft />
-          </Button>
-          <span className="type-meta tabular-nums">
-            Trang {page + 1}/{pageCount}
-          </span>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            aria-label="Trang sau"
-            disabled={page === pageCount - 1}
-            onClick={() => changePage(page + 1)}
-          >
-            <ChevronRight />
-          </Button>
-        </div>
-      )}
-    </div>
+    <>
+      <InfiniteScroll query={loader} label={`Đang tải thêm ${noun}`} />
+      <div className="border-t px-3 py-3 @3xl:px-4">
+        <p className="type-meta tabular-nums" role="status">
+          {rows.length < count ? `${rows.length} trong ${count} ${noun}` : `${count} ${noun}`}
+          {count !== total && <span> · Tổng {total}</span>}
+        </p>
+      </div>
+    </>
   )
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Upload } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { backendRequest, getSession } from "@/app/auth/session"
@@ -13,6 +13,8 @@ import { control, Field } from "./fields"
 import { invalidateMediaAsset } from "../media/media-cache"
 import { MediaSourceFields } from "../media/media-source-fields"
 import { creditHttpUrl, type MediaSourceInput } from "@aov/ui/lib/media-credit"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 const api = createPublishingApi(backendRequest)
 export function AssetPicker({
   semanticType,
@@ -49,7 +51,6 @@ export function AssetPicker({
       alive.current = false
     }
   }, [])
-  const [page, setPage] = useState(0)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   useEffect(() => {
@@ -74,9 +75,11 @@ export function AssetPicker({
   const sourceProblem = linkProblem || (source.ownerName?.trim() ? "" : "Điền chủ sở hữu trước khi tải ảnh.")
   const validSource = !sourceProblem
   const writable = getSession().actor?.capabilities.includes("media:write")
-  const assets = useQuery({
-    queryKey: ["publishing-assets", semanticType, page],
-    queryFn: () => api.assets(semanticType, page),
+  const assets = useInfiniteQuery({
+    queryKey: ["publishing-assets", semanticType],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => api.assets(semanticType, pageParam),
+    getNextPageParam: nextPageOf,
     enabled: open,
   })
   const selectedAsset = useQuery({
@@ -222,46 +225,35 @@ export function AssetPicker({
         <div className="space-y-3">
           {assets.isPending && <p role="status">Đang tải ảnh…</p>}
           {assets.isError && <p role="alert">{errorMessage(assets.error)}</p>}
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {assets.data?.items
-              .filter((a) => a.state === "ACTIVE" && a.currentVersionId)
-              .map((asset) => (
-                <button
-                  type="button"
-                  key={asset.id}
-                  aria-label={`Chọn ảnh ${asset.id}`}
-                  aria-pressed={value === asset.id}
-                  className={
-                    "overflow-hidden rounded-md border p-1 " + (value === asset.id ? "ring-2 ring-primary" : "")
-                  }
-                  onClick={() => onChange(asset.id)}
-                >
-                  {asset.currentUrl && (
-                    <img
-                      className={`aspect-square w-full object-cover ${thumbnailShape}`}
-                      src={asset.currentUrl}
-                      alt=""
-                      loading="lazy"
-                    />
-                  )}
-                  <span className="block truncate text-xs">{asset.id.slice(0, 8)}</span>
-                </button>
-              ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button type="button" size="sm" variant="outline" disabled={!page} onClick={() => setPage(page - 1)}>
-              Trước
-            </Button>
-            <span className="text-xs">Trang {page + 1}</span>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!assets.data || (page + 1) * 20 >= assets.data.totalElements}
-              onClick={() => setPage(page + 1)}
-            >
-              Sau
-            </Button>
+          <div className="max-h-80 overflow-y-auto">
+            <div className="grid grid-cols-3 gap-2 p-0.5 sm:grid-cols-5">
+              {assets.data?.pages
+                .flatMap((page) => page.items)
+                .filter((a) => a.state === "ACTIVE" && a.currentVersionId)
+                .map((asset) => (
+                  <button
+                    type="button"
+                    key={asset.id}
+                    aria-label={`Chọn ảnh ${asset.id}`}
+                    aria-pressed={value === asset.id}
+                    className={
+                      "overflow-hidden rounded-md border p-1 " + (value === asset.id ? "ring-2 ring-primary" : "")
+                    }
+                    onClick={() => onChange(asset.id)}
+                  >
+                    {asset.currentUrl && (
+                      <img
+                        className={`aspect-square w-full object-cover ${thumbnailShape}`}
+                        src={asset.currentUrl}
+                        alt=""
+                        loading="lazy"
+                      />
+                    )}
+                    <span className="block truncate text-xs">{asset.id.slice(0, 8)}</span>
+                  </button>
+                ))}
+            </div>
+            <InfiniteScroll query={assets} label="Đang tải thêm ảnh" />
           </div>
           {writable && (
             <fieldset disabled={busy} className="space-y-3 border-t pt-3">

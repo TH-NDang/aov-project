@@ -182,6 +182,89 @@ test("a failed page halts automatic loading until the query has recovered", asyn
   })
 })
 
+test("a failed page offers a way to retry, because scrolling will not", async () => {
+  await withUi(async ({ document, InfiniteScroll, render }) => {
+    let calls = 0
+    const query = pagingQuery(async () => {
+      calls++
+    })
+    await render(<InfiniteScroll query={query} label="Loading more" />)
+    assert.equal(document.querySelector("button"), null)
+    await render(<InfiniteScroll query={{ ...query, isError: true }} label="Loading more" />)
+    await act(async () => document.querySelector("button")!.click())
+    assert.equal(calls, 1)
+    await render(<InfiniteScroll query={{ ...query, isError: true, isFetching: true }} label="Loading more" />)
+    assert.equal(document.querySelector("button"), null)
+  })
+})
+
+test("rows in memory appear a batch at a time and a new scope starts over", async () => {
+  await withUi(async ({ document, InfiniteScroll, intersections, render, sentinel }) => {
+    const { useRevealedRows } = await import("@aov/ui/hooks/use-revealed-rows")
+    const rows = Array.from({ length: 7 }, (_, index) => index)
+    function List({ scope, minimum = 0 }: { scope: string; minimum?: number }) {
+      const revealed = useRevealedRows(rows, scope, 3, minimum)
+      return (
+        <div>
+          <output>{revealed.rows.length}</output>
+          <InfiniteScroll query={revealed.loader} label="Loading more" />
+        </div>
+      )
+    }
+    const shown = () => Number(document.querySelector("output")?.textContent)
+    await render(<List scope="all" />)
+    assert.equal(shown(), 3)
+    await act(async () => intersections.intersect(sentinel()))
+    assert.equal(shown(), 6)
+    // Each batch observes again, so the list keeps filling a screen that still has room.
+    assert.equal(intersections.observing(sentinel()), true)
+    await act(async () => intersections.intersect(sentinel()))
+    assert.equal(shown(), 7)
+    assert.equal(document.querySelector('[aria-label="Loading more"]'), null)
+    await render(<List scope="filtered" />)
+    assert.equal(shown(), 3)
+    await render(<List scope="filtered" minimum={5} />)
+    assert.equal(shown(), 5)
+    await act(async () => intersections.intersect(sentinel()))
+    assert.equal(shown(), 7)
+  })
+})
+
+test("the data table reveals rows on scroll and starts over when the search changes", async () => {
+  await withUi(async ({ document, intersections, render }) => {
+    const { DataTable } = await import("../src/components/data-table/data-table")
+    const data = Array.from({ length: 60 }, (_, index) => ({ id: String(index), name: `Row ${index}` }))
+    const columns = [{ accessorKey: "name" as const, header: "Name" }]
+    const table = (search: string) => (
+      <DataTable
+        columns={columns}
+        data={data}
+        getRowId={(row) => row.id}
+        matchesSearch={(row, query) => row.name.includes(query)}
+        searchPlaceholder="Find"
+        search={search}
+      />
+    )
+    const shown = () => document.querySelectorAll("tbody tr").length
+    const scrollToEnd = () =>
+      act(async () => intersections.intersect(document.querySelector('[aria-label="Đang tải thêm dòng"]')!))
+    await render(table(""))
+    assert.equal(shown(), 25)
+    assert.match(document.body.textContent ?? "", /25 trên 60 kết quả/)
+    await scrollToEnd()
+    assert.equal(shown(), 50)
+    await scrollToEnd()
+    assert.equal(shown(), 60)
+    assert.equal(document.querySelector('[aria-label="Đang tải thêm dòng"]'), null)
+    assert.match(document.body.textContent ?? "", /60 kết quả/)
+    await render(table("Row 5"))
+    assert.equal(shown(), 11)
+    assert.match(document.body.textContent ?? "", /11 kết quả \(lọc từ 60\)/)
+    await render(table("Row"))
+    assert.equal(shown(), 25)
+  })
+})
+
 test("an explicit scrolling container takes precedence and unmounting disconnects it", async () => {
   await withUi(async ({ document, InfiniteScroll, intersections, render, sentinel }) => {
     let calls = 0

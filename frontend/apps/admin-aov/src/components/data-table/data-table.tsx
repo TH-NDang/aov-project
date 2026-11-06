@@ -9,7 +9,7 @@ import {
   type SortingState,
   type ColumnVisibilityState,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Search, Settings2, X } from "lucide-react"
+import { Search, Settings2, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -20,13 +20,16 @@ import {
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@aov/ui/components/input-group"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
 import { cn } from "@aov/ui/lib/utils"
 import { formatNumber } from "@/lib/text"
 import { FacetedFilter, type FacetOption } from "./faceted-filter"
 import { dataTableFeatures, EMPTY_TABLE_DATA, type DataColumnDef } from "./table-features"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { useRevealedCount } from "@aov/ui/hooks/use-revealed-rows"
+
+const ROW_BATCH = 25
 
 export interface DataTableFacet {
   columnId: string
@@ -52,7 +55,6 @@ interface DataTableProps<TData extends RowData> {
   onRowClick?: (row: TData) => void
   selectedRowId?: string | null
   emptyMessage?: string
-  pageSizes?: number[]
   filters?: ColumnFiltersState
   onFiltersChange?: (filters: ColumnFiltersState) => void
 }
@@ -74,7 +76,6 @@ export function DataTable<TData extends RowData>({
   onRowClick,
   selectedRowId,
   emptyMessage = "Không có dữ liệu phù hợp.",
-  pageSizes = [10, 20, 50, 100],
   filters,
   onFiltersChange,
 }: DataTableProps<TData>) {
@@ -86,13 +87,21 @@ export function DataTable<TData extends RowData>({
   const [localSearch, setLocalSearch] = useState("")
   const globalFilter = search ?? localSearch
   const setGlobalFilter = onSearchChange ?? setLocalSearch
+  const reveal = useRevealedCount(JSON.stringify([sorting, columnFilters, globalFilter]), ROW_BATCH)
 
   const table = useTable({
     features: dataTableFeatures,
     data: data ?? EMPTY_TABLE_DATA,
     columns,
     getRowId: (row) => getRowId(row),
-    state: { sorting, columnFilters, columnVisibility, globalFilter },
+    // The page is the rows revealed so far; there is only ever this one.
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      globalFilter,
+      pagination: { pageIndex: 0, pageSize: reveal.count },
+    },
     onSortingChange: setSorting,
     onColumnFiltersChange: (updater) => {
       const next = functionalUpdate(updater, columnFilters)
@@ -102,13 +111,11 @@ export function DataTable<TData extends RowData>({
     onColumnVisibilityChange: setColumnVisibility,
     onGlobalFilterChange: (value: string) => setGlobalFilter(value ?? ""),
     globalFilterFn: (row, _columnId, value: string) => matchesSearch(row.original, value),
-    autoResetPageIndex: true,
-    initialState: { pagination: { pageIndex: 0, pageSize: pageSizes[1] ?? pageSizes[0] } },
+    autoResetPageIndex: false,
   })
 
   const filtered = table.getFilteredRowModel().rows.length
   const isFiltered = columnFilters.length > 0 || globalFilter.length > 0
-  const { pageIndex, pageSize } = table.state.pagination
   const visibleColumns = table.getVisibleLeafColumns().length
 
   return (
@@ -257,74 +264,13 @@ export function DataTable<TData extends RowData>({
         </Table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-        <span className="text-muted-foreground">
-          {filtered === 0
-            ? "0 kết quả"
-            : `${formatNumber(pageIndex * pageSize + 1)}–${formatNumber(Math.min((pageIndex + 1) * pageSize, filtered))} trên ${formatNumber(filtered)}`}
-          {data && filtered !== data.length && ` (lọc từ ${formatNumber(data.length)})`}
-        </span>
-        <div className="flex items-center gap-4">
-          <div className="hidden items-center gap-2 sm:flex">
-            <span className="text-muted-foreground">Mỗi trang</span>
-            <Select value={String(pageSize)} onValueChange={(value) => table.setPageSize(Number(value))}>
-              <SelectTrigger size="sm" className="w-18">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent side="top">
-                {pageSizes.map((size) => (
-                  <SelectItem key={size} value={String(size)}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <span className="tabular-nums">
-            Trang {pageIndex + 1}/{Math.max(table.getPageCount(), 1)}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              className="hidden lg:inline-flex"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="Trang đầu"
-            >
-              <ChevronsLeft />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-              aria-label="Trang trước"
-            >
-              <ChevronLeft />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-              aria-label="Trang sau"
-            >
-              <ChevronRight />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              className="hidden lg:inline-flex"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-              aria-label="Trang cuối"
-            >
-              <ChevronsRight />
-            </Button>
-          </div>
-        </div>
-      </div>
+      <InfiniteScroll query={reveal.loader(filtered)} label="Đang tải thêm dòng" />
+      <p className="text-sm text-muted-foreground tabular-nums">
+        {filtered > reveal.count
+          ? `${formatNumber(reveal.count)} trên ${formatNumber(filtered)} kết quả`
+          : `${formatNumber(filtered)} kết quả`}
+        {data && filtered !== data.length && ` (lọc từ ${formatNumber(data.length)})`}
+      </p>
     </div>
   )
 }

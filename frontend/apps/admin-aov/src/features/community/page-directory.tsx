@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { ArrowRight, CheckCircle2, FileText, Plus, Search, ShieldCheck } from "lucide-react"
 import {
   isCoachingRole,
@@ -18,6 +18,8 @@ import { pageApi, pageError, pageKeys } from "./page-api"
 import { CreateProfileSheet } from "./create-profile-sheet"
 import { ProfileCountry } from "./profile-country"
 import { profileKindIcons, profileRoleIcons, ProfileRoleIcon, ProfileTypeIcon } from "./profile-icons"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const directories = [
   { kind: "CIRCUIT", path: "/circuits", label: "Hệ thống giải", group: undefined, icon: profileKindIcons.CIRCUIT },
@@ -50,13 +52,15 @@ export function PageDirectory({ kind, group }: { kind: ProfileKind; group?: Pers
 function Directory({ kind, group, access }: { kind: ProfileKind; group?: PersonnelGroup; access: Access }) {
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
-  const [page, setPage] = useState(0)
   const [creating, setCreating] = useState(false)
   const [roleFilter, setRoleFilter] = useState<PersonRoleFilter | undefined>(group)
-  const query = useQuery({
-    queryKey: [...pageKeys, access.actorKey, kind, roleFilter, search, page],
-    queryFn: () => pageApi.list(group ? "" : kind, search, page, roleFilter),
+  const query = useInfiniteQuery({
+    queryKey: [...pageKeys, access.actorKey, kind, roleFilter, search],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => pageApi.list(group ? "" : kind, search, pageParam, roleFilter),
+    getNextPageParam: nextPageOf,
   })
+  const profiles = query.data?.pages.flatMap((page) => page.items) ?? []
   const label = directories.find((item) => item.kind === kind && item.group === group)?.label || profileKindLabels[kind]
   const roles = (Object.keys(personRoleLabels) as PersonRole[]).filter((role) =>
     group === "COACHING" ? isCoachingRole(role) : !isCoachingRole(role),
@@ -94,7 +98,6 @@ function Directory({ kind, group, access }: { kind: ProfileKind; group?: Personn
               aria-pressed={roleFilter === role}
               onClick={() => {
                 setRoleFilter(role)
-                setPage(0)
               }}
             >
               <ProfileRoleIcon role={role} className="size-4 shrink-0" />
@@ -112,22 +115,21 @@ function Directory({ kind, group, access }: { kind: ProfileKind; group?: Personn
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
-              setPage(0)
             }}
             className="max-w-md"
           />
-          <span className="type-meta ml-auto">{query.data?.totalElements ?? 0} hồ sơ</span>
+          <span className="type-meta ml-auto">{query.data?.pages[0]?.totalElements ?? 0} hồ sơ</span>
         </div>
         {query.isPending ? (
           <p className="type-body p-8">Đang tải hồ sơ…</p>
-        ) : query.isError ? (
+        ) : query.isLoadingError ? (
           <div role="alert" className="space-y-3 p-8">
             <p className="type-body">{pageError(query.error)}</p>
             <Button variant="outline" onClick={() => void query.refetch()}>
               Thử lại
             </Button>
           </div>
-        ) : !query.data.items.length ? (
+        ) : !profiles.length ? (
           <div className="mx-auto flex max-w-xl flex-col items-center gap-4 px-6 py-14 text-center">
             <div className="rounded-2xl border bg-muted p-4">
               {group ? (
@@ -169,7 +171,7 @@ function Directory({ kind, group, access }: { kind: ProfileKind; group?: Personn
           </div>
         ) : (
           <div className="divide-y">
-            {query.data.items.map((item) => (
+            {profiles.map((item) => (
               <Link
                 key={item.id}
                 to={`/pages/${item.id}`}
@@ -214,21 +216,7 @@ function Directory({ kind, group, access }: { kind: ProfileKind; group?: Personn
             ))}
           </div>
         )}
-        {query.data && query.data.totalElements > 24 && (
-          <div className="flex items-center justify-end gap-3 border-t p-4">
-            <Button variant="outline" disabled={!page} onClick={() => setPage(page - 1)}>
-              Trước
-            </Button>
-            <span className="type-meta">Trang {page + 1}</span>
-            <Button
-              variant="outline"
-              disabled={(page + 1) * 24 >= query.data.totalElements}
-              onClick={() => setPage(page + 1)}
-            >
-              Tiếp
-            </Button>
-          </div>
-        )}
+        <InfiniteScroll query={query} label="Đang tải thêm hồ sơ" />
       </div>
       {creating && (
         <CreateProfileSheet

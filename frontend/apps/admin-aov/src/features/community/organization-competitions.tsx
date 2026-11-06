@@ -1,10 +1,11 @@
-import { useState } from "react"
 import { Link } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import { ArrowRight, CalendarDays } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { Section } from "./profile-fields"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 export function OrganizationCompetitions({
   organizationId,
@@ -16,12 +17,16 @@ export function OrganizationCompetitions({
   kind?: "ORGANIZATION" | "CIRCUIT"
 }) {
   const circuit = kind === "CIRCUIT"
-  const [page, setPage] = useState(0)
-  const query = useQuery({
-    queryKey: [...competitionKeys, actorKey, kind, organizationId, page],
-    queryFn: () =>
-      circuit ? competitionApi.inCircuit(organizationId, page) : competitionApi.organizedBy(organizationId, page),
+  const query = useInfiniteQuery({
+    queryKey: [...competitionKeys, actorKey, kind, organizationId],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      circuit
+        ? competitionApi.inCircuit(organizationId, pageParam)
+        : competitionApi.organizedBy(organizationId, pageParam),
+    getNextPageParam: nextPageOf,
   })
+  const competitions = query.data?.pages.flatMap((page) => page.items) ?? []
   return (
     <Section
       title={circuit ? "Các mùa giải" : "Giải đấu tổ chức"}
@@ -36,14 +41,14 @@ export function OrganizationCompetitions({
         <p className="type-body" role="status">
           Đang tải giải đấu…
         </p>
-      ) : query.isError ? (
+      ) : query.isLoadingError ? (
         <div className="space-y-3" role="alert">
           <p className="type-body">Chưa tải được giải đấu. Hãy kiểm tra kết nối và thử lại.</p>
           <Button variant="outline" onClick={() => void query.refetch()}>
             Thử lại
           </Button>
         </div>
-      ) : !query.data.items.length ? (
+      ) : !competitions.length ? (
         <div className="space-y-2 rounded-lg border border-dashed p-6">
           <h3 className="type-section-title">Chưa có giải đấu liên kết</h3>
           <p className="type-body text-muted-foreground">
@@ -54,9 +59,9 @@ export function OrganizationCompetitions({
         </div>
       ) : (
         <>
-          <p className="type-meta">{query.data.totalElements} mùa giải</p>
+          <p className="type-meta">{query.data.pages[0].totalElements} mùa giải</p>
           <div className="divide-y rounded-lg border">
-            {query.data.items.map((entry) => (
+            {competitions.map((entry) => (
               <Link
                 key={entry.id}
                 to={`/tournaments/${entry.id}?step=0`}
@@ -86,21 +91,7 @@ export function OrganizationCompetitions({
               </Link>
             ))}
           </div>
-          {query.data.totalElements > 12 && (
-            <nav aria-label="Phân trang giải đấu tổ chức" className="flex items-center justify-between gap-3">
-              <Button variant="outline" disabled={!page} onClick={() => setPage(page - 1)}>
-                Trước
-              </Button>
-              <span className="type-meta">Trang {page + 1}</span>
-              <Button
-                variant="outline"
-                disabled={(page + 1) * 12 >= query.data.totalElements}
-                onClick={() => setPage(page + 1)}
-              >
-                Sau
-              </Button>
-            </nav>
-          )}
+          <InfiniteScroll query={query} label="Đang tải thêm giải đấu" />
         </>
       )}
       <Button variant="outline" asChild>

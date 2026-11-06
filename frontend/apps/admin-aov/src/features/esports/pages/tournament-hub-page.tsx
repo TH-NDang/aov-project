@@ -22,7 +22,7 @@ import {
   ManagementPanel,
   ManagementToolbar,
   managementSelectClassName,
-  useManagementPagination,
+  useManagementRows,
 } from "@/features/tournaments/management-list"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
@@ -87,7 +87,7 @@ function Hub({ access }: { access: Access }) {
         : (STATUS_ORDER[a.content.status ?? "UNKNOWN"] ?? 3) - (STATUS_ORDER[b.content.status ?? "UNKNOWN"] ?? 3) ||
           (b.content.startsOn ?? "").localeCompare(a.content.startsOn ?? ""),
     )
-  const pagination = useManagementPagination(visible, JSON.stringify([search, status, tier, order]))
+  const listing = useManagementRows(visible, JSON.stringify([search, status, tier, order]))
   const filtered = !!search.trim() || status !== "all" || !!tier
   const resetFilters = () => {
     setSearch("")
@@ -182,7 +182,7 @@ function Hub({ access }: { access: Access }) {
             </select>
           </ManagementToolbar>
           {visible.length ? (
-            <TournamentList entries={pagination.rows} stats={stats} onOpen={open} />
+            <TournamentList entries={listing.rows} stats={stats} onOpen={open} />
           ) : (
             <ManagementEmpty
               title={filtered ? "Không tìm thấy giải đấu" : "Chưa có giải đấu"}
@@ -194,12 +194,7 @@ function Hub({ access }: { access: Access }) {
               onReset={filtered ? resetFilters : undefined}
             />
           )}
-          <ManagementFooter
-            count={visible.length}
-            total={tournaments.data?.length ?? 0}
-            noun="giải đấu"
-            {...pagination}
-          />
+          <ManagementFooter count={visible.length} total={tournaments.data?.length ?? 0} noun="giải đấu" {...listing} />
         </ManagementPanel>
       )}
 

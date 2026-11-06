@@ -21,6 +21,8 @@ import { HeroAsset } from "./hero-asset"
 import { PatchChangeEditor, compactControl } from "./patch-change-editor"
 import { createPublishingApi } from "./publishing-api"
 import type { Revision } from "./types"
+import { InfiniteScroll } from "@/components/infinite-scroll"
+import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
 
 const api = createPublishingApi(backendRequest)
 
@@ -324,8 +326,8 @@ function NoteEntryPicker({
   onChoose: (id: string) => void
 }) {
   const [query, setQuery] = useState("")
-  const [limit, setLimit] = useState(24)
   const matches = entries.filter((entry) => matchesQuery(query, entry.name, entry.code))
+  const revealed = useRevealedRows(matches, query, 24)
   const label = patchNoteDomains[domain].toLocaleLowerCase("vi")
   return (
     <div className="space-y-3">
@@ -337,10 +339,7 @@ function NoteEntryPicker({
           className={cn(compactControl, "pl-8")}
           placeholder={`Tìm ${label}…`}
           value={query}
-          onChange={(event) => {
-            setQuery(event.target.value)
-            setLimit(24)
-          }}
+          onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => {
             if (
               event.key === "Enter" &&
@@ -355,7 +354,7 @@ function NoteEntryPicker({
         />
       </label>
       <ul className="grid grid-cols-2 gap-1 sm:grid-cols-3" aria-label={`Chọn ${label}`}>
-        {matches.slice(0, limit).map((entry) => {
+        {revealed.rows.map((entry) => {
           const taken = recorded?.has(entry.id) ?? false
           return (
             <li key={entry.id}>
@@ -375,11 +374,7 @@ function NoteEntryPicker({
           )
         })}
       </ul>
-      {matches.length > limit && (
-        <Button type="button" size="sm" variant="ghost" onClick={() => setLimit(limit + 24)}>
-          Xem thêm ({matches.length - limit})
-        </Button>
-      )}
+      <InfiniteScroll query={revealed.loader} label={`Đang tải thêm ${label}`} />
       {!matches.length && <p className="type-meta">Không tìm thấy {label} phù hợp.</p>}
     </div>
   )
