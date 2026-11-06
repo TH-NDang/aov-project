@@ -141,7 +141,7 @@ function ResolvedReferenceIcon({ entity, resolveIcon, className = "size-4" }: Re
 }
 
 export function EntityReferenceArtwork(props: ReferenceIconProps) {
-  const TermArt = props.entity.kind === "term" && !props.entity.icon ? termIcon(props.entity.id) : undefined
+  const TermArt = props.entity.kind === "term" ? termIcon(props.entity) : undefined
   if (TermArt)
     return <TermArt aria-hidden="true" className={`inline shrink-0 align-text-bottom ${props.className ?? "size-5"}`} />
   if (props.entity.kind !== "skill" || !validSkillReference(props.entity)) return <EntityReferenceIcon {...props} />

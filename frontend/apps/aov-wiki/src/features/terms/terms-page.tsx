@@ -106,7 +106,7 @@ export function TermsPage() {
               {visible.map(({ entity, translation }) => {
                 const current = entity.id === termId
                 const color = entity.display?.color ?? defaultEntityColor(entity)
-                const Art = termIcon(entity.id) ?? navArtIcons.glossary
+                const Art = termIcon(entity) ?? navArtIcons.glossary
                 return (
                   <li key={entity.id} id={`term-${entity.id}`} ref={current ? (target as never) : undefined}>
                     <article className="wiki-term" aria-current={current ? "true" : undefined}>

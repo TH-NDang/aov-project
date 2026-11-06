@@ -54,7 +54,7 @@ export const ITEM_STATS: ItemStatDefinition[] = [
     key: "criticalDamage",
     vi: "Sát thương chí mạng",
     en: "Critical damage",
-    icon: "crit",
+    icon: "critDamage",
     spellings: ["sat thuong chi mang"],
   },
   { key: "lifesteal", vi: "Hút máu", en: "Lifesteal", icon: "vamp", spellings: ["hut mau"] },

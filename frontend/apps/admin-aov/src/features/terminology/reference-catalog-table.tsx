@@ -26,7 +26,7 @@ import {
   defaultEntityColor,
   type EntityReference,
 } from "@aov/ui/lib/entity-rich-text"
-import { EntityReferenceIcon, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
+import { EntityReferenceArtwork, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 import { Skeleton } from "@aov/ui/components/skeleton"
 import { InfiniteScroll } from "@/components/infinite-scroll"
@@ -328,7 +328,7 @@ export function ReferenceCatalogTable({
                             style={color ? { backgroundColor: color } : undefined}
                           />
                         ) : (
-                          <EntityReferenceIcon
+                          <EntityReferenceArtwork
                             entity={entity}
                             resolveIcon={resolveIcon}
                             className="size-9 shrink-0 overflow-hidden rounded-lg ring-1 ring-foreground/10"

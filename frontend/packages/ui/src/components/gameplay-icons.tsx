@@ -2,7 +2,10 @@ import { createArtworkIcon } from "./artwork-icon"
 
 const artwork = new URL("../assets/gameplay-art.svg?no-inline", import.meta.url).href
 
-/** Illustrated glyphs for gameplay concepts: terms, stats and ratings share them so a concept always looks the same. */
+/**
+ * Single-color silhouettes for gameplay concepts: terms, stats and ratings share them so a concept always looks the same.
+ * They take the color of the text around them, so a reference can tint one without a second drawing.
+ */
 export const gameplayIcons = {
   sword: createArtworkIcon(artwork, "sword"),
   orb: createArtworkIcon(artwork, "orb"),
@@ -10,10 +13,12 @@ export const gameplayIcons = {
   shield: createArtworkIcon(artwork, "shield"),
   runeShield: createArtworkIcon(artwork, "rune-shield"),
   heart: createArtworkIcon(artwork, "heart"),
+  heal: createArtworkIcon(artwork, "heal"),
   barrier: createArtworkIcon(artwork, "barrier"),
   boot: createArtworkIcon(artwork, "boot"),
   bolt: createArtworkIcon(artwork, "bolt"),
   crit: createArtworkIcon(artwork, "crit"),
+  critDamage: createArtworkIcon(artwork, "crit-damage"),
   slow: createArtworkIcon(artwork, "slow"),
   stun: createArtworkIcon(artwork, "stun"),
   cooldown: createArtworkIcon(artwork, "cooldown"),
@@ -35,7 +40,7 @@ const termArtwork: Record<string, GameplayIconName> = {
   "sat-thuong-chuan": "pierce",
   giap: "shield",
   "giap-phep": "runeShield",
-  "hoi-mau": "heart",
+  "hoi-mau": "heal",
   "la-chan": "barrier",
   "toc-chay": "boot",
   "toc-danh": "bolt",
@@ -47,8 +52,29 @@ const termArtwork: Record<string, GameplayIconName> = {
   "thong-so-theo-cap-chieu": "table",
 }
 
+const GLYPH_PREFIX = "glyph:"
+
+/** How a term stores a chosen silhouette in its icon field, next to the URLs of uploaded pictures. */
+export const glyphIcon = (name: GameplayIconName) => `${GLYPH_PREFIX}${name}`
+
+export const gameplayIconNames = Object.keys(gameplayIcons) as GameplayIconName[]
+
+function chosenGlyph(icon: string | null | undefined): GameplayIconName | undefined {
+  if (!icon?.startsWith(GLYPH_PREFIX)) return undefined
+  const name = icon.slice(GLYPH_PREFIX.length)
+  return Object.hasOwn(gameplayIcons, name) ? (name as GameplayIconName) : undefined
+}
+
+/** A term's own default silhouette, whatever it has chosen since. */
+export const defaultTermGlyph = (termId: string): GameplayIconName | undefined => termArtwork[termId]
+
+/** The glyph a term should show: its chosen one, or the default unless it has its own picture. */
+export function termGlyphName(term: { id: string; icon?: string | null }): GameplayIconName | undefined {
+  return chosenGlyph(term.icon) ?? (term.icon ? undefined : termArtwork[term.id])
+}
+
 /** Artwork for a glossary term, or undefined so the caller keeps its own fallback. */
-export function termIcon(termId: string) {
-  const name = termArtwork[termId]
+export function termIcon(term: { id: string; icon?: string | null }) {
+  const name = termGlyphName(term)
   return name ? gameplayIcons[name] : undefined
 }

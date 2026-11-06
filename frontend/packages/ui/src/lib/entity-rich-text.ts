@@ -266,7 +266,9 @@ export function validateRichTextSettings(value: unknown): RichTextSettings {
     const result: EntityReference = { id, kind, translations }
     if (entity.autoMatch !== undefined) result.autoMatch = boolean(entity.autoMatch)
     if (entity.icon != null) {
-      const icon = safeLinkUrl(entity.icon)
+      // A chosen silhouette is stored by name; anything else must be a picture's address.
+      const glyph = typeof entity.icon === "string" && /^glyph:[a-zA-Z]{1,32}$/.test(entity.icon)
+      const icon = glyph ? (entity.icon as string) : safeLinkUrl(entity.icon)
       if (!icon) throw new Error("Invalid icon URL")
       result.icon = icon
     }

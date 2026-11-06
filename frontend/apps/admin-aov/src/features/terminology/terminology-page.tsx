@@ -43,6 +43,7 @@ import { EntityRichTextEditor } from "@aov/ui/components/entity-rich-text-editor
 import { useSkillReferences } from "./use-skill-references"
 import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
 import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
+import { TermIconPicker } from "./term-icon-picker"
 import { mergeReferenceCatalog, updateHeroAliases } from "./hero-aliases"
 import { HeroAliasEditor } from "./hero-alias-editor"
 import { invalidateReferenceCatalog } from "./reference-api"
@@ -568,13 +569,7 @@ export function TerminologyPage() {
                         Hiển thị & nhận diện
                         <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
                       </summary>
-                      <label className="grid gap-1.5 text-sm font-medium">
-                        Ảnh biểu tượng
-                        <Input
-                          value={entity.icon ?? ""}
-                          onChange={(e) => update({ ...entity, icon: e.target.value || null })}
-                        />
-                      </label>
+                      <TermIconPicker entity={entity} onChange={(icon) => update({ ...entity, icon })} />
                       <label className="grid gap-1.5 text-sm font-medium">
                         Màu chữ
                         <span className="flex items-center gap-2">
