@@ -1235,6 +1235,23 @@ Lỗi:
 
 ---
 
+## 33a. Điểm chính của ảnh
+
+```http
+PUT /api/wiki/v1/admin/media/assets/{assetId}/versions/{versionId}/focal-point
+DELETE /api/wiki/v1/admin/media/assets/{assetId}/versions/{versionId}/focal-point
+```
+
+Request của `PUT`:
+
+```json
+{ "x": 0.62, "y": 0.2 }
+```
+
+`x`, `y` là tỉ lệ 0–1 tính từ góc trên trái của ảnh, thường đặt vào khuôn mặt chính. Điểm thuộc về từng version vì version khác có thể bố cục khác. Bytes của ảnh không đổi. `DELETE` bỏ điểm đã chọn. Kết quả (`200`) là asset detail, mỗi phần tử `versions[]` có thêm `focalPoint`.
+
+`currentVersion` của mọi ảnh trong API public có thêm `focalPoint` (`{ "x", "y" }` hoặc `null`). Nơi hiển thị ảnh trong khung cố định dùng điểm này để khuôn mặt luôn nằm trong khung.
+
 ## 33. Activate MediaAssetVersion
 
 ```http

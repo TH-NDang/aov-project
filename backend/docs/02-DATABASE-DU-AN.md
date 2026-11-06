@@ -687,6 +687,7 @@ Source bytes version.
 | height | INTEGER |
 | size_bytes | BIGINT |
 | activated_at | TIMESTAMPTZ NULL |
+| focal_x, focal_y | DOUBLE PRECISION NULL — điểm chính của ảnh (thường là khuôn mặt), tính theo tỉ lệ 0–1 từ góc trên trái; cùng có hoặc cùng trống |
 | supersedes_version_id | UUID NULL — version đang dùng ngay trước lần activate gần nhất |
 | lock_version | BIGINT |
 | created_at | TIMESTAMPTZ |
