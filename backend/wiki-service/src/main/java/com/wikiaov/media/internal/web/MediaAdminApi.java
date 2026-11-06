@@ -42,10 +42,20 @@ public interface MediaAdminApi {
             @ApiResponse(responseCode = "200", description = "Asset with recorded attribution.", useReturnTypeSchema = true)})
     MediaAssetDetails addSource(UUID assetId, UUID versionId, @Valid SourceRequest source);
 
-    @Operation(operationId = "mediaAdminApi_setFocalPoint", summary = "Choose the point to keep in view when cropping")
+    @Operation(operationId = "mediaAdminApi_setFocalPoint", summary = "Choose the point to keep in view when cropping", description = "Marks the main subject of a version, usually a face, so fixed-size crops keep it in view. Requires a valid bearer token with hero:write.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "200", description = "Asset with the saved point.", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+    })
     MediaAssetDetails setFocalPoint(UUID assetId, UUID versionId, @Valid FocalPointRequest point);
 
-    @Operation(operationId = "mediaAdminApi_clearFocalPoint", summary = "Forget the chosen focal point")
+    @Operation(operationId = "mediaAdminApi_clearFocalPoint", summary = "Forget the chosen focal point", description = "Crops of this version return to their default position. Requires a valid bearer token with hero:write.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "200", description = "Asset without a saved point.", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+    })
     MediaAssetDetails clearFocalPoint(UUID assetId, UUID versionId);
 
     @Operation(operationId = "mediaAdminApi_createAsset", summary = "Create asset - media admin", description = "Create asset for media admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
