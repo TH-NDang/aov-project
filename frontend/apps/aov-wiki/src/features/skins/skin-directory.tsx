@@ -25,7 +25,8 @@ import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useDragScroll } from "../hero/use-drag-scroll"
 import { groupSkins, type HeroSort, type SkinSort } from "./skin-groups"
 import { normalizedHeroSearch } from "../hero/hero-classifications"
-import { SkinVideoList, useSkinVideos, VideoPlayer } from "../videos/subject-videos"
+import { SkinVideoList, useSkinVideos } from "../videos/subject-videos"
+import { VideoPlayer } from "../videos/video-player"
 
 const skinId = (skin: SkinEntry) => `${skin.heroId}:${skin.skinKey}`
 
@@ -266,7 +267,7 @@ function SkinPreview({
                 />
               )}
               {skinVideos.playing ? (
-                <VideoPlayer key={skinVideos.playing.id} video={skinVideos.playing} />
+                <VideoPlayer key={skinVideos.playing.id} video={skinVideos.playing} onEnded={skinVideos.onEnded} />
               ) : (
                 <SkinArtwork key={skinId(skin)} skin={skin} preview />
               )}

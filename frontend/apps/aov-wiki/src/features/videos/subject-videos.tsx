@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
+import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 import { orderedPatches } from "../hero/hero-version-diff"
@@ -7,18 +8,19 @@ import { subjectVideosQuery } from "./video-api"
 import {
   byPurpose,
   formatDuration,
+  neighbours,
   providerName,
   purposeLabel,
   purposesIn,
   splitHeroVideos,
-  videoPlayback,
   videosAtVersion,
-  videoThumbnail,
   videoWatchUrl,
   type PublicVideo,
   type VideoPurpose,
   type VideoSubjectKind,
 } from "./video-model"
+import { canPlayHere, VideoThumbnail } from "./video-player"
+import { VideoTheater } from "./video-theater"
 import "./subject-videos.css"
 
 /** Keeps only videos that apply at the version being read, and resolves the patch name for their label. */
@@ -35,111 +37,74 @@ function useVersionedVideos(videos: readonly PublicVideo[] | undefined, selected
   }, [options, scope.patchVariantId, selectedId, videos])
 }
 
-const canPlayHere = (video: PublicVideo) => !!videoPlayback(video, window.location.hostname)
-
-/** The player is only created when the reader asks for it, so a page with many videos stays light. */
-export function VideoPlayer({ video }: { video: PublicVideo }) {
-  const playback = videoPlayback(video, window.location.hostname)
-  if (!playback) return null
-  if (playback.kind === "file")
-    return <video className="wiki-video-frame" src={playback.src} title={video.title} controls autoPlay playsInline />
-  return (
-    <iframe
-      className="wiki-video-frame"
-      data-portrait={playback.portrait || undefined}
-      src={playback.src}
-      title={video.title}
-      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-      allowFullScreen
-      referrerPolicy="strict-origin-when-cross-origin"
-    />
-  )
-}
-
-function VideoThumbnail({ video, compact }: { video: PublicVideo; compact?: boolean }) {
-  const thumbnail = videoThumbnail(video)
-  const playable = canPlayHere(video)
-  return (
-    <span className="wiki-video-thumb" data-compact={compact || undefined}>
-      {thumbnail ? (
-        <img src={thumbnail} alt="" loading="lazy" referrerPolicy="no-referrer" />
-      ) : (
-        <span className="wiki-video-thumb-provider">{providerName(video) || "Video"}</span>
-      )}
-      <span className="wiki-video-thumb-action" data-icon={playable ? "play" : "link"} aria-hidden="true">
-        <WikiIcon name={playable ? "play" : "external"} size={compact ? 16 : 22} />
-      </span>
-      {!compact && video.durationSeconds && (
-        <span className="wiki-video-duration">{formatDuration(video.durationSeconds)}</span>
-      )}
-    </span>
-  )
+/**
+ * Keeps the open video in the address so it can be shared and the Back button closes it. Opening adds one history entry
+ * and moving between videos replaces it, so Back always returns to the page.
+ */
+export function useVideoParam() {
+  const [params, setParams] = useSearchParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const set = (video: PublicVideo | null, replace: boolean) =>
+    setParams(
+      (previous) => {
+        const next = new URLSearchParams(previous)
+        if (video) next.set("video", video.id)
+        else next.delete("video")
+        return next
+      },
+      { replace, preventScrollReset: true, state: video ? { openedVideo: true } : undefined },
+    )
+  return {
+    id: params.get("video"),
+    open: (video: PublicVideo) => set(video, false),
+    select: (video: PublicVideo) => set(video, true),
+    close: () => {
+      if ((location.state as { openedVideo?: boolean } | null)?.openedVideo) navigate(-1)
+      else set(null, true)
+    },
+  }
 }
 
 function VideoCard({
   video,
   patchCode,
-  playing,
   showPurpose,
-  onToggle,
+  onOpen,
 }: {
   video: PublicVideo
   patchCode?: string
-  playing: boolean
   showPurpose: boolean
-  onToggle: () => void
+  onOpen: () => void
 }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  const embeddable = canPlayHere(video)
   const provider = providerName(video)
-  const meta = (
-    <span className="wiki-video-meta">
-      {showPurpose && <span>{purposeLabel(video.purpose, locale)}</span>}
-      {patchCode && (
-        <span className="wiki-video-patch">
-          {text("Từ bản", "From")} {patchCode}
-        </span>
-      )}
-      {video.channelName && <span>{video.channelName}</span>}
-    </span>
-  )
-
-  if (playing)
-    return (
-      <li className="wiki-video-card" data-playing>
-        <VideoPlayer video={video} />
-        <div className="wiki-video-playing">
-          <div>
-            <h4 className="wiki-video-title">{video.title}</h4>
-            {meta}
-            {video.note && <p className="wiki-video-note">{video.note}</p>}
-          </div>
-          <div className="wiki-video-actions">
-            <a href={videoWatchUrl(video)} target="_blank" rel="noreferrer">
-              <WikiIcon name="external" size={14} />
-              {provider ? `${text("Mở trên", "Open on")} ${provider}` : text("Mở liên kết gốc", "Open original link")}
-            </a>
-            <button type="button" onClick={onToggle}>
-              {text("Đóng", "Close")}
-            </button>
-          </div>
-        </div>
-      </li>
-    )
-
   const body = (
     <>
       <VideoThumbnail video={video} />
       <span className="wiki-video-title">{video.title}</span>
-      {meta}
+      <span className="wiki-video-meta">
+        {showPurpose && <span>{purposeLabel(video.purpose, locale)}</span>}
+        {patchCode && (
+          <span className="wiki-video-patch">
+            {text("Từ bản", "From")} {patchCode}
+          </span>
+        )}
+        {video.channelName && <span>{video.channelName}</span>}
+      </span>
       {video.note && <span className="wiki-video-note">{video.note}</span>}
     </>
   )
   return (
     <li className="wiki-video-card">
-      {embeddable ? (
-        <button type="button" onClick={onToggle} aria-label={`${text("Phát", "Play")}: ${video.title}`}>
+      {canPlayHere(video) ? (
+        <button
+          type="button"
+          data-video-card={video.id}
+          onClick={onOpen}
+          aria-label={`${text("Phát", "Play")}: ${video.title}`}
+        >
           {body}
         </button>
       ) : (
@@ -157,7 +122,7 @@ function VideoCard({
 }
 
 /**
- * A row of videos that opens each one in place. Filters appear only when the videos have more than one purpose, and a
+ * A row of videos that opens each one in the theater. Filters appear only when the videos have more than one purpose, and a
  * long list stays short until the reader asks for the rest.
  */
 export function VideoGallery({
@@ -187,8 +152,8 @@ export function VideoGallery({
   const [ownPurpose, setOwnPurpose] = useState<VideoPurpose | null>(null)
   const purpose = chosenPurpose === undefined ? ownPurpose : chosenPurpose
   const setPurpose = onPurposeChange ?? setOwnPurpose
-  const [playing, setPlaying] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
+  const videoParam = useVideoParam()
   const Heading = headingLevel === 2 ? "h2" : "h3"
 
   const purposes = purposesIn(videos)
@@ -196,6 +161,11 @@ export function VideoGallery({
   const matching = byPurpose(active ? videos.filter((video) => video.purpose === active) : videos)
   const shown = expanded ? matching : matching.slice(0, limit)
   if (!videos.length) return null
+
+  const playing = videos.find((video) => video.id === videoParam.id && canPlayHere(video)) ?? null
+  // A shared link can name a video the current filter hides, and then the whole list plays.
+  const filtered = !playing || matching.some((video) => video.id === playing.id)
+  const playlist = (filtered ? matching : byPurpose(videos)).filter(canPlayHere)
 
   return (
     <section className="wiki-videos" id={id} aria-label={heading}>
@@ -221,9 +191,8 @@ export function VideoGallery({
             key={video.id}
             video={video}
             patchCode={patchCode?.(video)}
-            playing={playing === video.id}
             showPurpose={purposes.length > 1}
-            onToggle={() => setPlaying((current) => (current === video.id ? null : video.id))}
+            onOpen={() => videoParam.open(video)}
           />
         ))}
       </ul>
@@ -232,6 +201,14 @@ export function VideoGallery({
           {expanded ? text("Thu gọn", "Show less") : `${text("Xem thêm", "Show")} ${matching.length - limit} video`}
         </button>
       )}
+      <VideoTheater
+        video={playing}
+        playlist={playlist}
+        heading={filtered && active ? purposeLabel(active, locale) : heading}
+        patchCode={patchCode}
+        onSelect={videoParam.select}
+        onClose={videoParam.close}
+      />
     </section>
   )
 }
@@ -240,7 +217,31 @@ export function VideoGallery({
 export function useHeroVideos(heroId: string, selectedId?: string | null) {
   const query = useQuery(subjectVideosQuery("HERO", heroId))
   const versioned = useVersionedVideos(query.data, selectedId)
-  return useMemo(() => ({ ...splitHeroVideos(versioned.videos), patchCode: versioned.patchCode }), [versioned])
+  return useMemo(() => {
+    const split = splitHeroVideos(versioned.videos)
+    return {
+      ...split,
+      firstLore: split.general.find((video) => video.purpose === "LORE" && canPlayHere(video)) ?? null,
+      patchCode: versioned.patchCode,
+    }
+  }, [versioned])
+}
+
+/** A shortcut in the hero banner, because the gallery sits below the skills. */
+export function HeroVideoJump({ heroId }: { heroId: string }) {
+  const { locale } = useWikiContext()
+  const { general } = useHeroVideos(heroId)
+  if (!general.length) return null
+  return (
+    <button
+      type="button"
+      className="wiki-hero-video-jump"
+      onClick={() => document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })}
+    >
+      <WikiIcon name="play" size={14} />
+      {wikiText(locale, "Video", "Videos")} · {general.length}
+    </button>
+  )
 }
 
 /** The block for one catalog entry; it renders nothing while the entry has no video. */
@@ -272,11 +273,14 @@ export function useSkinVideos(skin: { heroId: string; skinKey: string } | null) 
   const current = skin ? `${skin.heroId}:${skin.skinKey}` : ""
   const [choice, setChoice] = useState<{ skin: string; video: string } | null>(null)
   const playing = choice?.skin === current ? (videos.find((video) => video.id === choice.video) ?? null) : null
+  const { next } = neighbours(videos.filter(canPlayHere), playing?.id)
   return {
     videos,
     playing,
     play: (video: PublicVideo) => setChoice({ skin: current, video: video.id }),
     stop: () => setChoice(null),
+    // The last video returns to the artwork rather than leaving a finished player on screen.
+    onEnded: () => setChoice(next ? { skin: current, video: next.id } : null),
   }
 }
 

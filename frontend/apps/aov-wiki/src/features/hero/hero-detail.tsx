@@ -7,6 +7,7 @@ import { heroAppearance } from "./hero-appearance"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useHeroChangedVariants } from "../../lib/wiki-patch-changes"
 import { HeroHandbook } from "./hero-handbook"
+import { HeroVideoJump } from "../videos/subject-videos"
 import { HERO_ROLES, localizedHeroOptions } from "./hero-classifications"
 import { HeroGlyph } from "./hero-glyph"
 import { HeroQuickSwitch } from "./hero-quick-switch"
@@ -144,6 +145,7 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
                   {role.label}
                 </span>
               ))}
+            <HeroVideoJump heroId={hero.id} />
           </div>
         </div>
       </section>

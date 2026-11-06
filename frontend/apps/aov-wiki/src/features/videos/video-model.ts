@@ -103,6 +103,34 @@ const PURPOSE_ORDER: readonly VideoPurpose[] = [
   "OTHER",
 ]
 
+/** The videos on either side of one in a list. */
+export function neighbours<T extends { id: string }>(playlist: readonly T[], id: string | null | undefined) {
+  const index = playlist.findIndex((video) => video.id === id)
+  return {
+    index,
+    previous: index > 0 ? playlist[index - 1] : null,
+    next: index >= 0 && index < playlist.length - 1 ? playlist[index + 1] : null,
+  }
+}
+
+export function formatVideoDate(date: string, locale: string) {
+  const parsed = new Date(`${date}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime())) return date
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(parsed)
+}
+
+/** Reads the status messages the YouTube player posts to the page; state 0 means the video has finished. */
+export function isVideoEndedMessage(data: unknown) {
+  if (typeof data !== "string") return false
+  try {
+    const message = JSON.parse(data) as { event?: unknown; info?: unknown }
+    if (message.event === "onStateChange") return message.info === 0
+    return message.event === "infoDelivery" && (message.info as { playerState?: unknown } | null)?.playerState === 0
+  } catch {
+    return false
+  }
+}
+
 /** Purposes present, so filters only offer what would show something. */
 export function purposesIn(videos: readonly Pick<PublicVideo, "purpose">[]) {
   const present = new Set(videos.map((video) => video.purpose))

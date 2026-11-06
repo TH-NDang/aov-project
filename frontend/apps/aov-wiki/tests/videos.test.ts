@@ -4,6 +4,9 @@ import { readVideoLink, videoCanSeek } from "@aov/ui/lib/video-playback"
 import {
   byPurpose,
   formatDuration,
+  formatVideoDate,
+  isVideoEndedMessage,
+  neighbours,
   purposeLabel,
   purposesIn,
   splitHeroVideos,
@@ -218,4 +221,29 @@ test("labels follow the locale and durations read as a clock", () => {
   assert.equal(purposeLabel("LORE", "en-US"), "Lore")
   assert.equal(formatDuration(47), "0:47")
   assert.equal(formatDuration(3723), "1:02:03")
+})
+
+test("a playlist knows the videos on either side, and stops at its ends", () => {
+  const list = [{ id: "a" }, { id: "b" }, { id: "c" }]
+  assert.deepEqual(neighbours(list, "b"), { index: 1, previous: { id: "a" }, next: { id: "c" } })
+  assert.deepEqual(neighbours(list, "a"), { index: 0, previous: null, next: { id: "b" } })
+  assert.deepEqual(neighbours(list, "c"), { index: 2, previous: { id: "b" }, next: null })
+  assert.deepEqual(neighbours(list, "x"), { index: -1, previous: null, next: null })
+  assert.deepEqual(neighbours(list, null), { index: -1, previous: null, next: null })
+})
+
+test("the end of a YouTube video is read from its status messages", () => {
+  assert.equal(isVideoEndedMessage(JSON.stringify({ event: "onStateChange", info: 0 })), true)
+  assert.equal(isVideoEndedMessage(JSON.stringify({ event: "infoDelivery", info: { playerState: 0 } })), true)
+  assert.equal(isVideoEndedMessage(JSON.stringify({ event: "onStateChange", info: 1 })), false)
+  assert.equal(isVideoEndedMessage(JSON.stringify({ event: "infoDelivery", info: { playerState: 1 } })), false)
+  assert.equal(isVideoEndedMessage(JSON.stringify({ event: "infoDelivery", info: null })), false)
+  assert.equal(isVideoEndedMessage(JSON.stringify({ event: "initialDelivery", info: { playerState: 0 } })), false)
+  assert.equal(isVideoEndedMessage("not json"), false)
+  assert.equal(isVideoEndedMessage({ event: "onStateChange", info: 0 }), false)
+})
+
+test("a published date reads the same in every time zone", () => {
+  assert.equal(formatVideoDate("2026-07-27", "en-US"), "Jul 27, 2026")
+  assert.equal(formatVideoDate("not a date", "en-US"), "not a date")
 })
