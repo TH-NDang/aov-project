@@ -26,17 +26,25 @@ import {
 import { SOCIAL_PLATFORM_NAMES, SocialPlatformIcon, socialPlatformName } from "@aov/ui/components/social-platform-icon"
 import { Avatar, followersLabel, hueOf } from "./community-ui"
 
-const accountTabIcons = { profile: "user", follows: "heart", notifications: "bell", pages: "building" } as const
+const accountTabIcons = {
+  profile: "user",
+  settings: "sliders",
+  follows: "heart",
+  notifications: "bell",
+  pages: "building",
+} as const
 import { AccountAvatar, AccountProfile } from "../account/account-profile"
+import { AccountSettings } from "../account/account-settings"
 import { useOwnProfile } from "../account/profile-api"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 
 const roleLabels = { OWNER: "Quản trị chính", EDITOR: "Biên tập viên", MODERATOR: "Kiểm duyệt viên" } as const
 const claimLabels = { PENDING: "Đang chờ xét duyệt", APPROVED: "Đã chấp thuận", REJECTED: "Chưa được chấp thuận" }
 
-type AccountTab = "profile" | "follows" | "notifications" | "pages"
+type AccountTab = "profile" | "settings" | "follows" | "notifications" | "pages"
 const accountTabs: [AccountTab, string][] = [
   ["profile", "Hồ sơ"],
+  ["settings", "Cài đặt"],
   ["follows", "Đang theo dõi"],
   ["notifications", "Thông báo"],
   ["pages", "Trang & yêu cầu"],
@@ -93,6 +101,8 @@ export function CommunityAccount() {
         </header>
         {!enabled ? (
           <SignInPrompt />
+        ) : tab === "settings" ? (
+          <AccountSettings />
         ) : tab === "follows" ? (
           <FollowedPages />
         ) : tab === "notifications" ? (

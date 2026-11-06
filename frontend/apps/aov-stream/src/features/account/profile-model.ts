@@ -5,6 +5,7 @@ export interface UserProfile {
   biography: string
   locale: string
   timeZone: string
+  dateFormat?: string
   avatarAssetId: string | null
   avatarUrl: string | null
   version: number
@@ -12,7 +13,7 @@ export interface UserProfile {
   updatedAt: string | null
 }
 export type ProfileDraft = Pick<UserProfile, "displayName" | "biography" | "locale" | "timeZone" | "avatarAssetId">
-export type ProfileRequest = ProfileDraft & { expectedVersion: number }
+export type ProfileRequest = ProfileDraft & { expectedVersion: number; dateFormat?: string }
 export interface BrowserPreferences {
   languages: readonly string[]
   timeZone?: string

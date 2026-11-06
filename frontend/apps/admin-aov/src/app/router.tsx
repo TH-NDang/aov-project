@@ -32,6 +32,11 @@ const routes: RouteObject[] = [
         lazy: async () => ({ Component: (await import("@/features/users/users-page")).ProfilePage }),
       },
       {
+        path: "settings",
+        handle: title("Cài đặt"),
+        lazy: async () => ({ Component: (await import("@/features/users/settings-page")).SettingsPage }),
+      },
+      {
         path: "users",
         handle: title("Người dùng"),
         lazy: async () => ({ Component: (await import("@/features/users/users-page")).UsersPage }),

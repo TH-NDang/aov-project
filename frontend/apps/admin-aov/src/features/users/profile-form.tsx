@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Camera, Check, Clock3, Languages, LoaderCircle, Pencil, UserRound } from "lucide-react"
+import { Camera, Check, LoaderCircle, Pencil, UserRound } from "lucide-react"
+import { Link } from "react-router"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { backendRequest } from "@/app/auth/session"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
-import { ProfilePreferencePicker, languageOptions, timeZoneOptions } from "./profile-preference-picker"
+import { languageOptions } from "./profile-preference-picker"
 import { uploadAvatar } from "./avatar-upload"
 import { initialProfileDraft, readBrowserPreferences } from "./profile-preferences"
-import { canonicalTimeZone, currentTimeZone } from "@aov/ui/lib/time-zone"
+import { currentTimeZone } from "@aov/ui/lib/time-zone"
 import { profileError, saveProfile, userKeys, type UserProfile } from "./user-api"
 import { z } from "zod"
 import { useSession } from "@/app/auth/auth-gate"
@@ -299,24 +300,18 @@ export function ProfileForm({
           />
           <span className="block text-right text-xs text-muted-foreground">{draft.biography.length}/1000</span>
         </label>
-        <div className="grid min-w-0 gap-5 border-t pt-6 sm:grid-cols-2">
-          <ProfilePreferencePicker
-            label="Ngôn ngữ"
-            icon={Languages}
-            value={draft.locale}
-            options={languageOptions}
-            disabled={locked}
-            onChange={(value) => change("locale", value)}
-          />
-          <ProfilePreferencePicker
-            label="Múi giờ"
-            showTime
-            icon={Clock3}
-            value={canonicalTimeZone(draft.timeZone)}
-            options={timeZoneOptions}
-            disabled={locked}
-            onChange={(value) => change("timeZone", value)}
-          />
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-6">
+          <div className="min-w-0">
+            <p className="type-label">Ngôn ngữ và khu vực</p>
+            <p className="type-body">
+              {languageOptions.find((option) => option.value === draft.locale)?.label ?? draft.locale}
+            </p>
+          </div>
+          {!admin && (
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/settings">Đổi trong Cài đặt</Link>
+            </Button>
+          )}
         </div>
         {error && (
           <div role="alert" className="space-y-2 rounded-md border border-destructive/40 p-3 text-sm text-destructive">

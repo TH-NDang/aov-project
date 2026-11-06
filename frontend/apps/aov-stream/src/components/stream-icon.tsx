@@ -35,6 +35,7 @@ const paths = {
   chevronLeft: "m15 5-7 7 7 7",
   chevronRight: "m9 5 7 7-7 7",
   check: "m5 12 5 5L20 7",
+  sliders: "M3 7h9m6 0h3M3 17h3m6 0h9M18 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm-6 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z",
   link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1",
   compass: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-5-4-2 6-6 2 2-6 6-2Z",
   grid: "M4 4h7v7H4V4Zm9 0h7v7h-7V4ZM4 13h7v7H4v-7Zm9 0h7v7h-7v-7Z",

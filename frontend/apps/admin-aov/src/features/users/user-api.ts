@@ -7,13 +7,17 @@ export interface UserProfile {
   biography: string
   locale: string
   timeZone: string
+  dateFormat?: string
   avatarAssetId: string | null
   avatarUrl: string | null
   version: number
   createdAt: string | null
   updatedAt: string | null
 }
-export type ProfileInput = Pick<UserProfile, "displayName" | "biography" | "locale" | "timeZone" | "avatarAssetId"> & {
+export type ProfileInput = Pick<
+  UserProfile,
+  "displayName" | "biography" | "locale" | "timeZone" | "dateFormat" | "avatarAssetId"
+> & {
   expectedVersion: number
 }
 export interface UserPage {

@@ -1,0 +1,63 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { PublicDateFormatSelect } from "@aov/ui/components/public-date-format-select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
+import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
+import { languageLabel } from "./account-profile"
+import { LANGUAGE_CODES, profileDraft, profileRequest, type UserProfile } from "./profile-model"
+import { profileKey, saveProfile, useOwnProfile, wikiRequest } from "./profile-api"
+import { useCommunitySession } from "../community/community-auth"
+import { useStreamLocale } from "../../components/stream-locale"
+
+/** How the app reads for this person. These are not part of who they are, so they live apart from the profile. */
+export function AccountSettings() {
+  const session = useCommunitySession()
+  const client = useQueryClient()
+  const profile = useOwnProfile()
+  const { locale } = useStreamLocale()
+
+  const saveLanguage = useMutation({
+    mutationFn: async (next: string) => {
+      // Wiki and Admin share this profile, so the copy on this page may be out of date.
+      const latest = await wikiRequest<UserProfile>("/users/me")
+      return saveProfile(profileRequest({ ...profileDraft(latest), locale: next }, latest.version))
+    },
+    onSuccess: (saved) => client.setQueryData(profileKey(session.revision), saved),
+  })
+
+  return (
+    <section className="cp-panel account-settings" aria-labelledby="account-settings-title">
+      <h2 id="account-settings-title">Cài đặt</h2>
+      <p>Ngôn ngữ, múi giờ và cách hiển thị ngày áp dụng trên cả Wiki, Stream và Admin.</p>
+      <div className="cp-form-grid">
+        <label>
+          Ngôn ngữ
+          <Select
+            value={profile.data?.locale ?? ""}
+            disabled={!profile.data || saveLanguage.isPending}
+            onValueChange={(next) => saveLanguage.mutate(next)}
+          >
+            <SelectTrigger className="account-settings-select" aria-label="Ngôn ngữ">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent drawerTitle="Ngôn ngữ" data-product="stream" position="popper" align="end" sideOffset={4}>
+              {LANGUAGE_CODES.map((code) => (
+                <SelectItem key={code} value={code}>
+                  {languageLabel(code)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </label>
+        <label>
+          Múi giờ
+          <PublicTimeZoneSelect locale={locale} product="stream" triggerClassName="account-settings-select" />
+        </label>
+        <label>
+          Định dạng ngày
+          <PublicDateFormatSelect locale={locale} product="stream" triggerClassName="account-settings-select" />
+        </label>
+      </div>
+      {saveLanguage.isError && <p role="alert">Chưa lưu được ngôn ngữ. Hãy thử lại.</p>}
+    </section>
+  )
+}

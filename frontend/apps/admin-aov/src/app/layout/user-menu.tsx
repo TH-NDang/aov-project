@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { ChevronsUpDown, Keyboard, LogOut, Monitor, Moon, Sun } from "lucide-react"
+import { ChevronsUpDown, Keyboard, LogOut, Monitor, Moon, Settings, Sun } from "lucide-react"
 import { AovNavIcon } from "@/app/aov-nav-icon"
 import { useNavigate } from "react-router"
 import { useQuery } from "@tanstack/react-query"
@@ -23,6 +23,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@aov/ui/components/sidebar"
 import { Kbd } from "@aov/ui/components/kbd"
 import { HotkeyHelp } from "./hotkey-help"
+import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
 
 export function UserMenu() {
   const [hotkeyHelpOpen, setHotkeyHelpOpen] = useState(false)
@@ -36,6 +37,7 @@ export function UserMenu() {
     refetchInterval: 600000,
   })
   useAccountTimeZone(profile.data)
+  useAccountDateFormat(profile.data)
   const displayName = profile.data?.displayName || actor?.displayName || "Tài khoản quản trị"
   const { isMobile, setOpenMobile } = useSidebar()
   const { theme, setTheme } = useTheme()
@@ -77,6 +79,15 @@ export function UserMenu() {
             >
               <AovNavIcon name="profile" className="size-5" />
               Hồ sơ của tôi
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                navigate("/settings")
+                if (isMobile) setOpenMobile(false)
+              }}
+            >
+              <Settings />
+              Cài đặt
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => setHotkeyHelpOpen(true)} aria-keyshortcuts="Control+/ Meta+/">
               <Keyboard />

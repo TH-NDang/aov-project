@@ -17,6 +17,7 @@ import owlMark from "../../assets/stream-owl.svg"
 import { StreamIcon, type StreamIconName } from "../../components/stream-icon"
 import { profileKey, saveProfile, useOwnProfile, wikiRequest } from "../account/profile-api"
 import { profileDraft, profileRequest, type UserProfile } from "../account/profile-model"
+import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
 
 export function CommunitySessionButton() {
   const session = useCommunitySession()
@@ -26,6 +27,11 @@ export function CommunitySessionButton() {
     // Wiki and Admin share this profile, so the copy on this page may be out of date.
     const latest = await wikiRequest<UserProfile>("/users/me")
     const saved = await saveProfile(profileRequest({ ...profileDraft(latest), timeZone }, latest.version))
+    client.setQueryData(profileKey(session.revision), saved)
+  })
+  useAccountDateFormat(profile.data, async (dateFormat) => {
+    const latest = await wikiRequest<UserProfile>("/users/me")
+    const saved = await saveProfile({ ...profileRequest(profileDraft(latest), latest.version), dateFormat })
     client.setQueryData(profileKey(session.revision), saved)
   })
   const { locale, setLocale, text } = useStreamLocale()

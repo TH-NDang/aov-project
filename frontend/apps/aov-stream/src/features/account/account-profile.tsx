@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useQueryClient } from "@tanstack/react-query"
-import { COMMON_TIME_ZONES, canonicalTimeZone, currentTimeZone, timeZoneLabel } from "@aov/ui/lib/time-zone"
+import { currentTimeZone } from "@aov/ui/lib/time-zone"
 import { useCommunitySession } from "../community/community-auth"
 import { AVATAR_TYPES, uploadAvatar } from "./avatar-upload"
 import { profileKey, saveProfile, useOwnProfile, wikiRequest } from "./profile-api"
 import {
-  LANGUAGE_CODES,
   PROFILE_LIMITS,
   WikiApiError,
   initialDraft,
@@ -15,21 +14,20 @@ import {
   profileRequest,
   readBrowserPreferences,
   sameDraft,
-  withCurrent,
   type ProfileDraft,
   type UserProfile,
 } from "./profile-model"
 import "./account.css"
+import { Link } from "react-router"
 
 const languageNames = new Intl.DisplayNames(["vi"], { type: "language" })
-const languageLabel = (code: string) => {
+export const languageLabel = (code: string) => {
   try {
     return languageNames.of(code) || code
   } catch {
     return code
   }
 }
-const timeZones = COMMON_TIME_ZONES.map((option) => option.value)
 const fieldLabels: Record<keyof ProfileDraft, string> = {
   displayName: "tên hiển thị",
   biography: "giới thiệu",
@@ -276,29 +274,11 @@ function ProfileEditor({
           </span>
         </label>
         <div className="cp-form-grid">
-          <label>
-            Ngôn ngữ
-            <select value={draft.locale} onChange={(event) => change({ locale: event.target.value })}>
-              {withCurrent(LANGUAGE_CODES, draft.locale).map((code) => (
-                <option key={code} value={code}>
-                  {languageLabel(code)} ({code})
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Múi giờ
-            <select
-              value={canonicalTimeZone(draft.timeZone)}
-              onChange={(event) => change({ timeZone: event.target.value })}
-            >
-              {withCurrent(timeZones, canonicalTimeZone(draft.timeZone)).map((zone) => (
-                <option key={zone} value={zone}>
-                  {timeZoneLabel(zone)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="account-profile-fact">
+            <span>Ngôn ngữ và khu vực</span>
+            <strong>{languageLabel(draft.locale)}</strong>
+            <Link to="/account?tab=settings">Đổi trong Cài đặt</Link>
+          </div>
         </div>
       </fieldset>
       {newer && (
