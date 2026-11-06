@@ -173,7 +173,7 @@ test("admin authors natural skill mentions and restores saved references with th
   }
   const mentions = () => [
     ...(document.querySelector('[data-testid="live-preview"]') ?? container).querySelectorAll<HTMLButtonElement>(
-      'button[aria-label^="Kỹ năng: Airi ·"]',
+      '[role="button"][aria-label^="Kỹ năng: Airi ·"]',
     ),
   ]
   const assertArtwork = (element: Element) => {
@@ -269,7 +269,7 @@ test("admin authors natural skill mentions and restores saved references with th
       1,
       "Reloading saved references resolves identities without repeating a natural-language search",
     )
-    const restored = document.querySelector<HTMLButtonElement>('[data-testid="saved-preview"] button')!
+    const restored = document.querySelector<HTMLButtonElement>('[data-testid="saved-preview"] [role="button"]')!
     await waitFor(
       () => restored.querySelectorAll("img").length === 2,
       "Restored reference loads the owner and skill artwork after a cold query cache",

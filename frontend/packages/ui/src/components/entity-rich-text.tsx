@@ -12,6 +12,7 @@ import {
   defaultEntityColor,
   type EntityReference,
   type RichTextNode,
+  type ReferenceScope,
 } from "../lib/entity-rich-text"
 import { Slot } from "radix-ui"
 import { termIcon } from "./gameplay-icons"
@@ -28,6 +29,7 @@ export interface EntityRichTextProps {
   fallbackLocale?: string
   autoRecognize?: boolean
   firstOccurrenceOnly?: boolean
+  referenceScope?: ReferenceScope
   icons?: boolean
   resolveIcon?: EntityIconResolver
   context: "admin" | "wiki"
@@ -242,6 +244,8 @@ export function EntityReferencePopover({
   const titleId = React.useId()
   const descriptionId = React.useId()
   const suppressFocus = React.useRef(false)
+  // Pressing may be the start of selecting text, so only a finished click opens the card.
+  const pressed = React.useRef(false)
   React.useEffect(() => () => clearTimeout(closeTimer.current), [])
   const cancelClose = () => clearTimeout(closeTimer.current)
   const show = () => {
@@ -274,16 +278,23 @@ export function EntityReferencePopover({
         <Slot.Root
           ref={trigger}
           onPointerEnter={(event: React.PointerEvent) => {
-            if (event.pointerType !== "touch") show()
+            if (event.pointerType !== "touch" && event.buttons === 0) show()
+          }}
+          onPointerDown={() => {
+            pressed.current = true
+            cancelClose()
+            setOpen(false)
           }}
           onPointerLeave={scheduleClose}
           onFocus={() => {
-            if (!suppressFocus.current) show()
+            if (!suppressFocus.current && !pressed.current) show()
           }}
           onBlur={scheduleClose}
-          onClick={(event: React.MouseEvent) => {
+          onClick={(event: React.MouseEvent<HTMLElement>) => {
             event.preventDefault()
-            show()
+            pressed.current = false
+            const selection = event.currentTarget.ownerDocument.getSelection()
+            if (selection?.isCollapsed !== false) show()
           }}
           onKeyDown={(event: React.KeyboardEvent) => {
             if (event.key === "Escape") {
@@ -394,8 +405,8 @@ function EntityMention({
     fontWeight: "inherit",
     fontStyle: "inherit",
     textAlign: "inherit",
-    ...(validColor ? { color: validColor } : {}),
-    ...(entity.display?.underline === false ? {} : { borderBottom: "1px dotted currentColor" }),
+    color: validColor ?? "var(--primary)",
+    ...(entity.display?.underline === true ? { borderBottom: "1px dotted currentColor" } : {}),
   }
   return (
     <EntityReferencePopover
@@ -407,11 +418,18 @@ function EntityMention({
       resolveIcon={resolveIcon}
       label={node.label}
     >
-      <button
-        type="button"
+      {/* Plain inline text, not a button: it wraps with its sentence and a reader can select across it. */}
+      <span
+        role="button"
+        tabIndex={0}
         aria-label={`${kind}: ${skill && node.manual ? `${skill.ownerName} · ` : ""}${node.label}${skill?.detail ? ` · ${skill.detail}` : ""}`}
-        className="inline-block max-w-full cursor-pointer rounded-sm align-baseline hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="cursor-pointer rounded-sm hover:underline focus-visible:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         style={style}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return
+          event.preventDefault()
+          event.currentTarget.click()
+        }}
       >
         {icons && entity.display?.showIcon !== false && entity.kind !== "term" && (
           <EntityReferenceArtwork
@@ -429,7 +447,7 @@ function EntityMention({
           </>
         )}
         {node.label}
-      </button>
+      </span>
     </EntityReferencePopover>
   )
 }
@@ -442,16 +460,17 @@ export function EntityRichText({
   fallbackLocale = "vi-VN",
   autoRecognize = true,
   firstOccurrenceOnly = true,
+  referenceScope = "game",
   icons = true,
   resolveIcon,
   context,
   className,
 }: EntityRichTextProps) {
   const resolvedIndex = React.useMemo(() => {
-    const base = index ?? createEntityIndex(entities, locale, fallbackLocale)
+    const base = index ?? createEntityIndex(entities, locale, fallbackLocale, { scope: referenceScope })
     const countries = createEntityIndex(countryReferences, locale, fallbackLocale)
     return { ...base, byId: new Map([...countries.byId, ...base.byId]) }
-  }, [index, entities, locale, fallbackLocale])
+  }, [index, entities, locale, fallbackLocale, referenceScope])
   const nodes = React.useMemo(
     () => parseRichText(text, resolvedIndex, { autoRecognize, firstOccurrenceOnly }),
     [text, resolvedIndex, autoRecognize, firstOccurrenceOnly],

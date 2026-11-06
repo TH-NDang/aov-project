@@ -25,18 +25,18 @@ async function verifyAllowlistedFormatting() {
     ).window.document
   const name = entity.translations[0]!.name
   const nested = render(`<b><i><color=#2563eb><ref=hero:hero-1>${name}</ref></color></i></b>`, false)
-  assert.equal(nested.querySelectorAll("strong > em > span > button").length, 1)
-  assert.equal(nested.querySelector("button")?.textContent, name)
-  assert.equal(nested.querySelector("button")?.style.color, "rgb(37, 99, 235)")
-  assert.equal(nested.querySelector("button")?.style.fontWeight, "inherit")
-  assert.equal(nested.querySelector("button")?.style.fontStyle, "inherit")
+  assert.equal(nested.querySelectorAll('strong > em > span > [role="button"]').length, 1)
+  assert.equal(nested.querySelector('[role="button"]')?.textContent, name)
+  assert.equal(nested.querySelector('[role="button"]')?.style.color, "rgb(37, 99, 235)")
+  assert.equal(nested.querySelector('[role="button"]')?.style.fontWeight, "inherit")
+  assert.equal(nested.querySelector('[role="button"]')?.style.fontStyle, "inherit")
   assert.equal(nested.querySelectorAll("button button, a a").length, 0)
 
   const inherited = render(`<color=#12ab34><b><i>${name}</i></b></color>`)
-  assert.equal(inherited.querySelector("strong > em > button")?.style.color, "rgb(18, 171, 52)")
+  assert.equal(inherited.querySelector('strong > em > [role="button"]')?.style.color, "rgb(18, 171, 52)")
   const automatic = render(`<b>${name}</b> <i>${name}</i>`)
-  assert.equal(automatic.querySelectorAll("strong > button").length, 1)
-  assert.equal(automatic.querySelectorAll("em > button").length, 0)
+  assert.equal(automatic.querySelectorAll('strong > [role="button"]').length, 1)
+  assert.equal(automatic.querySelectorAll('em > [role="button"]').length, 0)
   assert.equal(automatic.querySelector("em")?.textContent, name)
   const every = new JSDOM(
     renderToStaticMarkup(
@@ -49,10 +49,10 @@ async function verifyAllowlistedFormatting() {
       />,
     ),
   ).window.document
-  assert.equal(every.querySelectorAll("strong > button, em > button").length, 2)
+  assert.equal(every.querySelectorAll('strong > [role="button"], em > [role="button"]').length, 2)
   const noauto = render(`<noauto><b>${name}</b> <i>${name}</i></noauto>`)
   assert.equal(noauto.querySelectorAll("strong, em").length, 2)
-  assert.equal(noauto.querySelectorAll("button").length, 0)
+  assert.equal(noauto.querySelectorAll('[role="button"]').length, 0)
   assert.equal(noauto.body.textContent, `${name} ${name}`)
 
   const unsafe = render('<b onclick="alert(1)">bad</b> <i style="color:red">bad</i> <script>alert(1)</script>')
@@ -146,14 +146,17 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
         context="admin"
       />,
     )
-    assert.equal(new JSDOM(manualColor).window.document.querySelector("button")?.style.color, "rgb(37, 99, 235)")
+    assert.equal(
+      new JSDOM(manualColor).window.document.querySelector('[role="button"]')?.style.color,
+      "rgb(37, 99, 235)",
+    )
     assert.match(markup, /color:#ff0000/)
     assert.match(markup, /alt=""/)
     assert.match(markup, /aria-label="Tướng: Lữ Bố"/)
     assert.equal(new JSDOM(markup).window.document.querySelector("a a"), null)
 
     await mount()
-    let trigger = document.querySelector<HTMLButtonElement>("button")!
+    let trigger = document.querySelector<HTMLElement>('[role="button"]')!
     await act(async () => trigger.dispatchEvent(new dom.window.MouseEvent("pointerover", { bubbles: true })))
     await settle()
     assert.ok(document.querySelector('[role="dialog"]'), "Pointer hover opens the card")
@@ -179,7 +182,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     assert.equal(document.querySelector('[role="dialog"]'), null)
 
     await mount("wiki", "en-US")
-    trigger = document.querySelector<HTMLButtonElement>("button")!
+    trigger = document.querySelector<HTMLElement>('[role="button"]')!
     await act(async () => trigger.click())
     await settle()
     assert.equal(document.querySelector("a")?.getAttribute("href"), "/heroes/lu-bo")
@@ -197,7 +200,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     }
     const ally = { ...entity, id: "hero-2", translations: [{ ...entity.translations[0]!, name: "Ally hero" }] }
     await mount("admin", "vi-VN", [described, ally])
-    await act(async () => document.querySelector<HTMLButtonElement>("button")!.click())
+    await act(async () => document.querySelector<HTMLElement>('[role="button"]')!.click())
     await settle()
     const description = document.querySelector<HTMLParagraphElement>('[role="dialog"] p')!
     assert.equal(description.querySelector("strong > em")?.textContent, "Formatted")
@@ -208,7 +211,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     assert.ok(description.textContent?.includes("<script>alert(1)</script>"))
     assert.equal(description.querySelectorAll("button, a, img, script").length, 0)
     assert.equal(document.querySelectorAll('[role="dialog"]').length, 1)
-    assert.equal(document.querySelectorAll("button").length, 2)
+    assert.equal(document.querySelectorAll('[role="button"]').length, 1)
     const close = document.querySelector<HTMLButtonElement>(
       `[aria-label="Đóng thông tin ${entity.translations[0]!.name}"]`,
     )!
@@ -249,7 +252,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
       destinations: { admin: "javascript:alert(1)" },
     }
     await mount("admin", "vi-VN", [unsafe])
-    await act(async () => document.querySelector<HTMLButtonElement>("button")!.click())
+    await act(async () => document.querySelector<HTMLElement>('[role="button"]')!.click())
     await settle()
     assert.equal(document.querySelector("a")?.getAttribute("href"), "/hero/hero-1")
     assert.equal(document.querySelector("img"), null)
@@ -270,7 +273,7 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
     const disabled = renderToStaticMarkup(
       <EntityRichText text="Lữ Bố" entities={[entity]} locale="vi-VN" context="admin" autoRecognize={false} />,
     )
-    assert.equal(new JSDOM(disabled).window.document.querySelector("button"), null)
+    assert.equal(new JSDOM(disabled).window.document.querySelector('[role="button"]'), null)
     const manual = renderToStaticMarkup(
       <EntityRichText
         text="<ref=hero:hero-1>Tên hiển thị</ref> <ref=hero:missing>Không tồn tại</ref>"
@@ -281,8 +284,8 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
       />,
     )
     const manualDocument = new JSDOM(manual).window.document
-    assert.equal(manualDocument.querySelectorAll("button").length, 1)
-    assert.equal(manualDocument.querySelector("button")?.textContent, "Tên hiển thị")
+    assert.equal(manualDocument.querySelectorAll('[role="button"]').length, 1)
+    assert.equal(manualDocument.querySelector('[role="button"]')?.textContent, "Tên hiển thị")
     assert.ok(manualDocument.body.textContent?.includes("Không tồn tại"))
     assert.equal(manualDocument.querySelectorAll("a").length, 0)
     const malformedColor = renderToStaticMarkup(
@@ -303,4 +306,25 @@ test("entity rich text renders safely and supports focus, keyboard, touch and ro
       else Reflect.deleteProperty(globalThis, key)
     }
   }
+})
+
+test("game text only recognizes the game by itself and never turns a number into a name", async () => {
+  const { createEntityIndex, parseRichText } = await import("@aov/ui/lib/entity-rich-text")
+  const entity = (kind: "team" | "term", id: string, name: string, aliases: string[]): EntityReference => ({
+    id,
+    kind,
+    autoMatch: true,
+    translations: [{ locale: "vi-VN", name, aliases, description: "" }],
+  })
+  const entities = [entity("team", "one-hundred", "1Hundred", ["100"]), entity("term", "giap", "Giáp", [])]
+  const labels = (scope: "game" | "all", text: string) =>
+    parseRichText(text, createEntityIndex(entities, "vi-VN", "vi-VN", { scope }), { autoRecognize: true }).flatMap(
+      (node) => (node.type === "reference" ? [node.label] : []),
+    )
+  assert.deepEqual(labels("game", "Gây 100% Giáp cho 1Hundred"), ["Giáp"])
+  assert.deepEqual(labels("all", "Gây 100% Giáp cho 1Hundred"), ["Giáp", "1Hundred"])
+  const explicit = parseRichText("Đội <ref=team:one-hundred>100</ref>", createEntityIndex(entities, "vi-VN", "vi-VN"), {
+    autoRecognize: true,
+  }).flatMap((node) => (node.type === "reference" ? [node.label] : []))
+  assert.deepEqual(explicit, ["100"])
 })

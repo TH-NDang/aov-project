@@ -14,6 +14,21 @@ export const entityKindLabels = {
 } as const
 export type EntityKind = keyof typeof entityKindLabels
 
+/**
+ * What text may recognize by itself. Game text only names the game, where a number like "100%" must never become a team;
+ * a message can name anything. A reference made on purpose with "@" works in both.
+ */
+export type ReferenceScope = "game" | "all"
+const gameReferenceKinds: ReadonlySet<EntityKind> = new Set([
+  "hero",
+  "skill",
+  "item",
+  "enchantment",
+  "arcana",
+  "spell",
+  "term",
+])
+
 export function managedCommunityReference(kind: EntityKind) {
   return kind === "team" || kind === "player" || kind === "country"
 }
@@ -361,7 +376,7 @@ export function createEntityIndex(
   entities: EntityReference[],
   language: string,
   fallbackLocale: string,
-  options: { accentInsensitive?: boolean } = {},
+  options: { accentInsensitive?: boolean; scope?: ReferenceScope } = {},
 ): EntityIndex {
   const root: Trie = { children: new Map() }
   const byId = new Map<string, Match>()
@@ -423,6 +438,7 @@ export function createEntityIndex(
         }
       }
     }
+    if ((options.scope ?? "game") === "game" && !gameReferenceKinds.has(entity.kind)) continue
     if (entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)) continue
     const slots = entity.kind === "skill" ? skillSlotNames(entity) : []
     if (slots.length) {
@@ -438,7 +454,8 @@ export function createEntityIndex(
         : [translation.name, ...translation.aliases.slice(0, 20)]
     for (const alias of names) {
       const name = fold(alias.trim(), accentInsensitive)
-      if (!name || name.length > 200) continue
+      // A code made only of digits reads as a number in running text, so only "@" can reach it.
+      if (!name || name.length > 200 || !/\p{L}/u.test(name)) continue
       let node = root
       for (const character of name) {
         let child = node.children.get(character)

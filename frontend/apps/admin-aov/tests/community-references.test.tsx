@@ -125,7 +125,7 @@ test("semantic term colors adapt by theme and custom colors win over defaults", 
     <EntityRichText text="Sát thương phép" entities={[magic]} locale="vi-VN" context="admin" />,
   )
   assert.match(markup, /color:light-dark/)
-  assert.match(markup, /border-bottom:1px dotted currentColor/)
+  assert.ok(!markup.includes("border-bottom"))
   const customized = renderToStaticMarkup(
     <EntityRichText
       text="Sát thương phép"

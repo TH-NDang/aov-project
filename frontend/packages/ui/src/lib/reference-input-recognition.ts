@@ -40,7 +40,7 @@ export function passiveReferenceHighlights(root: HTMLElement, index: ReturnType<
           color: parent.closest('[data-format-open^="<color="]')
             ? undefined
             : (part.entity.display?.color ?? defaultEntityColor(part.entity)),
-          underline: part.entity.display?.underline !== false,
+          underline: part.entity.display?.underline === true,
         })
       }
     }

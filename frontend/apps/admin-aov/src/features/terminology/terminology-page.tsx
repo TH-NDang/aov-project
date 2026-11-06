@@ -598,7 +598,7 @@ export function TerminologyPage() {
                           <input
                             type="checkbox"
                             className="size-4 accent-primary"
-                            checked={entity.display?.underline !== false}
+                            checked={entity.display?.underline === true}
                             onChange={(e) =>
                               update({ ...entity, display: { ...entity.display, underline: e.target.checked } })
                             }

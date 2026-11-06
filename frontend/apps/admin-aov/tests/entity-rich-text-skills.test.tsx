@@ -283,11 +283,11 @@ test("remote skill suggestions debounce, page on inner scroll, retain lazy paire
         />,
       ),
     )
-    await act(async () => document.querySelector<HTMLButtonElement>("button")!.focus())
+    await act(async () => document.querySelector<HTMLElement>('[role="button"]')!.focus())
     assert.ok(document.body.textContent?.includes("Edras"))
     assert.ok(document.body.textContent?.includes("Biến thể 2"))
     assert.equal(document.querySelector("a")?.getAttribute("href"), resolveEntityRoute(skill, "admin"))
-    assert.equal(document.querySelectorAll("button button, button a").length, 0)
+    assert.equal(document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
   } finally {
     await act(async () => {
       root.unmount()
@@ -313,10 +313,10 @@ test("skill rendering pairs the correct owner with the specific skill and keeps 
   )
   const dom = new JSDOM(html)
   assert.match(
-    dom.window.document.querySelector("button")!.getAttribute("aria-label")!,
+    dom.window.document.querySelector('[role="button"]')!.getAttribute("aria-label")!,
     /Edras.*Tung hoành.*Chiêu 1.*Biến thể 2/,
   )
   assert.equal(dom.window.document.querySelectorAll("img").length, 2)
-  assert.equal(dom.window.document.querySelectorAll("button button, button a").length, 0)
+  assert.equal(dom.window.document.querySelectorAll('[role="button"] [role="button"], [role="button"] a').length, 0)
   dom.window.close()
 })
