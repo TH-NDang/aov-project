@@ -373,6 +373,15 @@ function skillSlotNames(entity: EntityReference) {
   return slot === 0 ? ["nội tại"] : slot === 3 ? ["chiêu 3", "chiêu cuối"] : [`chiêu ${slot}`]
 }
 
+/** Editors write a skill's later forms in any of these ways. */
+function skillVariantNames(entity: EntityReference) {
+  const variant = entity.variantNo
+  if (variant == null || !Number.isInteger(variant) || variant < 1) return []
+  return skillSlotNames(entity).flatMap((slot) =>
+    ["giai đoạn", "biến thể", "dạng"].map((word) => `${slot} ${word} ${variant}`),
+  )
+}
+
 export function createEntityIndex(
   entities: EntityReference[],
   language: string,
@@ -442,16 +451,22 @@ export function createEntityIndex(
     if ((options.scope ?? "game") === "game" && !gameReferenceKinds.has(entity.kind)) continue
     if (entity.autoMatch === false || (!["hero", "term"].includes(entity.kind) && entity.autoMatch !== true)) continue
     const slots = entity.kind === "skill" ? skillSlotNames(entity) : []
+    const variants = entity.kind === "skill" && !entity.qualifiedSkillAliases ? skillVariantNames(entity) : []
     if (slots.length) {
       const key = `${entity.heroId}:${entity.sourceSlot}`
       const previous = ownerSlots.get(key)
-      ownerSlots.set(key, previous === undefined || previous?.entity.id === entity.id ? match : null)
+      // A later form means the slot has several, so the bare slot can no longer name just one of them.
+      const shared = (entity.variantNo ?? 0) > 1
+      ownerSlots.set(key, !shared && (previous === undefined || previous?.entity.id === entity.id) ? match : null)
+      if (entity.variantNo != null) ownerSlots.set(`${key}:${entity.variantNo}`, match)
     }
     const owner = entity.owner && referenceTranslation(entity.owner, language, fallbackLocale)
     const names =
       entity.kind === "skill"
         ? (entity.qualifiedSkillAliases ??
-          slots.flatMap((label) => (owner ? [label, `${label} ${owner.name}`, `${label} của ${owner.name}`] : [label])))
+          [...slots, ...variants].flatMap((label) =>
+            owner ? [label, `${label} ${owner.name}`, `${label} của ${owner.name}`] : [label],
+          ))
         : [translation.name, ...translation.aliases.slice(0, 20)]
     for (const alias of names) {
       const name = fold(alias.trim(), accentInsensitive)
@@ -466,7 +481,7 @@ export function createEntityIndex(
         }
         node = child
       }
-      const property = slots.includes(alias) ? "localSkill" : "match"
+      const property = slots.includes(alias) || variants.includes(alias) ? "localSkill" : "match"
       const existing = node[property]
       if (existing === undefined) node[property] = match
       else if (existing && (existing.entity.id !== entity.id || existing.entity.kind !== entity.kind))
@@ -474,6 +489,13 @@ export function createEntityIndex(
     }
   }
   return { root, byId, ownerSlots, bracketedSkills, accentInsensitive }
+}
+
+const secondsAfterNumber = /^(?:[.,]\d+)?\s*(?:gi[âa]y|s)(?![\p{L}\p{M}\p{N}_])/iu
+
+/** A skill number followed by seconds is an amount of cooldown, and does not name that skill. */
+function skillNumberCountsSeconds(label: string, after: string) {
+  return /^chi[eê]u\s+\d+$/iu.test(label.normalize("NFC")) && secondsAfterNumber.test(after.normalize("NFC"))
 }
 
 export function parseRichText(
@@ -485,7 +507,7 @@ export function parseRichText(
     maxLength?: number
     maxDepth?: number
     maxReferences?: number
-    onOwnerFirstSkill?: (heroId: string, slot: number) => void
+    onOwnerFirstSkill?: (heroId: string, slot: number, variant?: number) => void
   } = {},
 ): RichTextNode[] {
   const limit = (value: number | undefined, maximum: number) =>
@@ -575,6 +597,13 @@ export function parseRichText(
         if (match) best = { match, end }
       }
       if (!best) continue
+      if (
+        skillNumberCountsSeconds(
+          text.slice(chars[start]!.start, chars[best.end]!.end),
+          text.slice(chars[best.end]!.end),
+        )
+      )
+        continue
       if (best.match.entity.kind === "hero" && (index.ownerSlots.size || options.onOwnerFirstSkill)) {
         best = ownerFirstSkill(best.match.entity.id, best.end) ?? best
       }
@@ -596,12 +625,19 @@ export function parseRichText(
       const tail = text.slice(afterOwner, afterOwner + 201).normalize("NFC")
       const suffix = tail.match(/^\s+(?:chiêu\s+(cuối|[1-9]\d?)|nội\s+tại)(?![\p{L}\p{M}\p{N}_])/iu)
       if (!suffix) return
+      const rest = tail.slice(suffix[0].length)
+      if (secondsAfterNumber.test(rest)) return
+      const form = rest.match(/^\s+(?:giai\s+đoạn|biến\s+thể|dạng)\s+([1-9]\d?)(?![\p{L}\p{M}\p{N}_])/iu)
       const number = suffix[1]?.toLowerCase()
       const slot = number === "cuối" ? 3 : Number(number ?? 0)
       // The normalized suffix and the folded character array each count one position per letter.
       end += Array.from(suffix[0]).length
       if (end >= chars.length || hasFollowingOwner(end)) return
-      options.onOwnerFirstSkill?.(heroId, slot)
+      const variant = form ? Number(form[1]) : undefined
+      options.onOwnerFirstSkill?.(heroId, slot, variant)
+      // The longer phrase is only a reference when that form exists; otherwise the words after the slot stay plain text.
+      const named = variant ? index.ownerSlots.get(`${heroId}:${slot}:${variant}`) : undefined
+      if (named) return { match: named, end: end + Array.from(form![0]).length }
       const match = index.ownerSlots.get(`${heroId}:${slot}`)
       if (match) return { match, end }
     }

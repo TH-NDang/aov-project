@@ -15,14 +15,14 @@ import {
   skillReferenceSlotOptions,
 } from "./skill-reference-api"
 
-type SkillMention = { heroId: string; slot: number; aliases: string[] }
+type SkillMention = { heroId: string; slot: number; variant?: number; aliases: string[] }
 
 function namedSkillMentions(text: string, owners?: EntityIndex): SkillMention[] {
   if (!owners || !/(?:chiêu|nội)\s/iu.test(text.normalize("NFC"))) return []
   const mentions = new Map<string, SkillMention>()
-  function add(heroId: string, slot: number, alias?: string) {
-    const key = `${heroId}:${slot}`
-    const mention = mentions.get(key) ?? { heroId, slot, aliases: [] }
+  function add(heroId: string, slot: number, alias?: string, variant?: number) {
+    const key = `${heroId}:${slot}:${variant ?? ""}`
+    const mention = mentions.get(key) ?? { heroId, slot, variant, aliases: [] }
     if (alias && !mention.aliases.includes(alias)) mention.aliases.push(alias)
     mentions.set(key, mention)
   }
@@ -33,16 +33,25 @@ function namedSkillMentions(text: string, owners?: EntityIndex): SkillMention[] 
       if (node.type !== "reference" || node.manual || node.entity.kind !== "hero" || previous?.type !== "text") return
       const prefix = previous.text
         .normalize("NFC")
-        .match(/(?:^|[^\p{L}\p{M}\p{N}_])((?:chiêu\s+(cuối|[1-9]\d?)|nội\s+tại)(?:\s+của)?\s+)$/iu)
+        .match(
+          /(?:^|[^\p{L}\p{M}\p{N}_])((?:chiêu\s+(cuối|[1-9]\d?)|nội\s+tại)(?:\s+(?:giai\s+đoạn|biến\s+thể|dạng)\s+([1-9]\d?))?(?:\s+của)?\s+)$/iu,
+        )
       if (!prefix) return
       const alias = prefix[1]! + node.label
       if (alias.length > 200) return
       const number = prefix[2]?.toLowerCase()
       const slot = number === "cuối" ? 3 : Number(number ?? 0)
-      add(node.entity.id, slot, alias)
+      add(node.entity.id, slot, alias, prefix[3] ? Number(prefix[3]) : undefined)
     })
   }
-  visit(parseRichText(text, owners, { onOwnerFirstSkill: add }))
+  visit(
+    parseRichText(text, owners, {
+      onOwnerFirstSkill: (heroId, slot, variant) => {
+        add(heroId, slot, undefined, variant)
+        if (variant) add(heroId, slot)
+      },
+    }),
+  )
   return [...mentions.values()]
 }
 
@@ -65,7 +74,7 @@ export function useSkillReferences(
   return useQueries({
     queries: [
       ...ids.map((id) => skillReferenceEntryOptions(client, scope, id)),
-      ...mentions.map(({ heroId, slot }) => skillReferenceSlotOptions(client, scope, heroId, slot)),
+      ...mentions.map(({ heroId, slot, variant }) => skillReferenceSlotOptions(client, scope, heroId, slot, variant)),
     ].map((options) => ({
       ...options,
       enabled: !!session.actor,

@@ -318,7 +318,7 @@ test("formatting toolbar renders bold, italic and color directly while preservin
 })
 
 test("authors can exclude just the ambiguous occurrence, undo it and reopen the saved text", async () => {
-  const source = "Chiêu 1 gây choáng những kẻ địch trúng chiêu 1 giây."
+  const source = "Chiêu 1 gây choáng những kẻ địch trúng chiêu 1 lâu hơn."
   const catalog: EntityReference[] = [
     {
       ...skill,
@@ -332,7 +332,7 @@ test("authors can exclude just the ambiguous occurrence, undo it and reopen the 
       node.type === "reference" ? [node.label] : "children" in node ? refs(node.children) : [],
     )
   const from = source.lastIndexOf("chiêu 1")
-  const expected = source.slice(0, from) + "<noauto>chiêu 1</noauto> giây."
+  const expected = source.slice(0, from) + "<noauto>chiêu 1</noauto> lâu hơn."
   const editor = await editorHarness(source, catalog)
   try {
     assert.deepEqual(refs(parseRichText(source, index)), ["Chiêu 1", "chiêu 1"])

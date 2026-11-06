@@ -24,8 +24,8 @@ const scopeKey = (scope: SkillReferenceScope) => [scope.issuer, scope.subject, s
 export const skillReferenceKeys = {
   all: prefix,
   entry: (scope: SkillReferenceScope, id: string) => [...prefix, "entry", ...scopeKey(scope), id] as const,
-  slot: (scope: SkillReferenceScope, heroId: string, slot: number) =>
-    [...prefix, "slot", ...scopeKey(scope), heroId, slot] as const,
+  slot: (scope: SkillReferenceScope, heroId: string, slot: number, variant?: number) =>
+    [...prefix, "slot", ...scopeKey(scope), heroId, slot, variant ?? null] as const,
   search: (scope: SkillReferenceScope, owner: string, query: string, page: number) =>
     [...prefix, "search", ...scopeKey(scope), owner, query, page] as const,
 }
@@ -37,10 +37,10 @@ export function createSkillReferenceApi(request: Request = backendRequest) {
     return values
   }
   return {
-    async uniqueSlot(heroId: string, slot: number, scope: SkillReferenceScope, signal: AbortSignal) {
+    async uniqueSlot(heroId: string, slot: number, scope: SkillReferenceScope, signal: AbortSignal, variant?: number) {
       const values = params(scope.locale, scope.rulesetId)
       values.set("heroId", heroId)
-      values.set("q", `chiêu ${slot}`)
+      values.set("q", variant ? `chiêu ${slot} biến thể ${variant}` : `chiêu ${slot}`)
       values.set("size", "2")
       const page = await request<ReferenceSearchPage>(`/admin/reference-skills?${values}`, { signal })
       const [skill] = page.items
@@ -49,6 +49,7 @@ export function createSkillReferenceApi(request: Request = backendRequest) {
         skill?.kind === "skill" &&
         skill.heroId === heroId &&
         skill.sourceSlot === slot &&
+        (!variant || skill.variantNo === variant) &&
         validSkillReference(skill)
         ? skill
         : null
@@ -169,11 +170,13 @@ export function skillReferenceSlotOptions(
   scope: SkillReferenceScope,
   heroId: string,
   slot: number,
+  variant?: number,
 ) {
   configureCache(client)
   return {
-    queryKey: skillReferenceKeys.slot(scope, heroId, slot),
-    queryFn: ({ signal }: { signal: AbortSignal }) => skillReferenceApi.uniqueSlot(heroId, slot, scope, signal),
+    queryKey: skillReferenceKeys.slot(scope, heroId, slot, variant),
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      skillReferenceApi.uniqueSlot(heroId, slot, scope, signal, variant),
   }
 }
 

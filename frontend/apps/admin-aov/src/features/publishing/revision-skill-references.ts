@@ -44,7 +44,8 @@ export function revisionSkillReferences(
       iconSource: skill.iconAssetId ? "REVISION" : libraryImage ? "LIBRARY" : undefined,
       translations: skill.translations.map((text) => ({ ...text, aliases: [] })),
       matchBracketedName: true,
-      autoMatch: slot != null && slots.indexOf(slot) === slots.lastIndexOf(slot),
+      // Forms sharing a slot still match by their own name; the index leaves the bare slot unresolved.
+      autoMatch: slot != null,
       destinations: { admin: `/hero/${owner.id}?${params}` },
     }
   })
