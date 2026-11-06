@@ -18,6 +18,14 @@ class SkillReferenceSearchTest {
     }
 
     @Test
+    void aVariantCanBeWrittenAsAPhaseAFormOrAVariant() {
+        var expected = new SkillReferenceSearch(java.util.List.of("edras"), 2, 2);
+        assertThat(SkillReferenceSearch.parse("edras chiêu 2 giai đoạn 2")).isEqualTo(expected);
+        assertThat(SkillReferenceSearch.parse("edras chiêu 2 biến thể 2")).isEqualTo(expected);
+        assertThat(SkillReferenceSearch.parse("edras chiêu 2 dạng 2")).isEqualTo(expected);
+    }
+
+    @Test
     void neverInventsVariantFromCaptureNamesOrListOrder() {
         assertThat(SkillReferenceSearch.sourceSlot("skill-2-3")).isEqualTo(2);
         assertThat(SkillReferenceSearch.variantNo("skill-2-3")).isEqualTo(3);

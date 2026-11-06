@@ -11,7 +11,8 @@ public record SkillReferenceSearch(
         Integer variantNo
 ) {
     private static final Pattern SLOT = Pattern
-            .compile("\\b(?:chieu(?:\\s+thuc)?|ky\\s+nang|skills?)\\s*([0-9]{1,2})(?:\\s+([0-9]{1,3}))?\\b");
+            .compile(
+                    "\\b(?:chieu(?:\\s+thuc)?|ky\\s+nang|skills?)\\s*([0-9]{1,2})(?:\\s+(?:(?:giai\\s+doan|bien\\s+the|dang)\\s+)?([0-9]{1,3}))?\\b");
     private static final Pattern PASSIVE = Pattern.compile("\\b(?:noi\\s*tai|passive)\\b");
     private static final Pattern CATEGORY = Pattern.compile("\\b(?:ky\\s+nang|chieu\\s+thuc|chieu|skills?)\\b");
     private static final Pattern SOURCE_KEY = Pattern.compile("skill-([0-9]+)-([0-9]+)");
