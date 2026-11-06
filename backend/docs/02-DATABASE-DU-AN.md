@@ -499,12 +499,12 @@ Giá/cách sở hữu có cấu trúc nằm ở `hero.hero_shop_price` và `hero
 
 ### `hero.hero_shop_price` và `hero.hero_skin_acquisition`
 
-Giá và cách nhận đi theo cửa hàng trong game, không đi theo patch, nên nằm ngoài snapshot có phiên bản: sửa là áp dụng ngay, không cần bản nháp. Mỗi thị trường có một dòng.
+Giá và cách nhận đi theo cửa hàng trong game, không đi theo patch, nên nằm ngoài snapshot có phiên bản: sửa là áp dụng ngay, không cần bản nháp. Mỗi thị trường có nhiều mốc theo ngày: một dòng nói cửa hàng hiển thị gì từ `captured_on` cho tới mốc kế tiếp, nên xem lại một thời điểm cũ vẫn biết giá lúc đó.
 
 | Bảng | Cột |
 |---|---|
-| `hero_shop_price` | hero_id, region_code (khóa chính); availability `ON_SALE`, `NOT_OPEN`, `COMING_SOON`, `UNKNOWN`; gold_price, voucher_price (quân huy); captured_on; needs_review; note; updated_at |
-| `hero_skin_acquisition` | hero_id, skin_key, region_code (khóa chính, FK `hero_skin`); method `VOUCHER`, `EVENT`, `NOT_OPEN`, `OTHER`, `UNKNOWN`; voucher_price (giá gốc, không tính giảm giá; chỉ có khi method là `VOUCHER`); event_name; captured_on; needs_review; note; updated_at |
+| `hero_shop_price` | hero_id, region_code, captured_on (khóa chính); availability `ON_SALE`, `NOT_OPEN`, `COMING_SOON`, `UNKNOWN`; gold_price, voucher_price (quân huy); needs_review; note; updated_at |
+| `hero_skin_acquisition` | hero_id, skin_key, region_code, captured_on (khóa chính, FK `hero_skin`); method `VOUCHER`, `EVENT`, `NOT_OPEN`, `OTHER`, `UNKNOWN`; voucher_price (giá gốc, không tính giảm giá; chỉ có khi method là `VOUCHER`); event_name; needs_review; note; updated_at |
 
 Dòng `needs_review = true` không hiện ra API public cho tới khi biên tập viên xác nhận. V052 nhập dữ liệu đọc từ ảnh cửa hàng ngày 2026-09-16.
 
@@ -1250,6 +1250,7 @@ Migration `V003__create_user_profiles.sql`; module `user` sở hữu. Thay phư�
 | biography | VARCHAR(1000), mặc định rỗng |
 | locale | VARCHAR(35), BCP 47 với mã ngôn ngữ ISO |
 | time_zone | VARCHAR(64), IANA time zone |
+| date_format | VARCHAR(8) NOT NULL, mặc định `AUTO`; một trong `AUTO`, `DMY`, `MDY`, `YMD`: cách người dùng muốn đọc ngày |
 | avatar_asset_id | UUID nullable; tham chiếu qua contract media, không FK chéo module |
 | version | BIGINT > 0, optimistic version |
 | created_at, updated_at | TIMESTAMPTZ |

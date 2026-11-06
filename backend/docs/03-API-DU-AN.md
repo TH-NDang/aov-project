@@ -165,10 +165,10 @@ Base `/api/wiki/v1`, Bearer JWT đã xác minh. Tất cả response `no-store`.
 | POST /users/me/avatar-uploads | HUMAN | `{fileName, contentType, sizeBytes}` → ticket PUT tới storage |
 | POST /users/me/avatar-uploads/{uploadId}/complete | Chủ upload, HUMAN | `{assetId, avatarUrl}` sau khi media xác minh |
 
-Body PUT: `{displayName, biography, locale, timeZone, avatarAssetId, expectedVersion}`.
+Body PUT: `{displayName, biography, locale, timeZone, dateFormat?, avatarAssetId, expectedVersion}`. `dateFormat` nhận `AUTO`, `DMY`, `MDY`, `YMD`; bỏ trống thì giữ nguyên giá trị đang lưu.
 Avatar null để gỡ. `expectedVersion` bắt buộc; 0 chỉ khi tạo. Không nhận issuer, subject hay capability từ body.
 Tên tối đa 80 ký tự, giới thiệu 1000, locale 35, múi giờ 64. Response hồ sơ gồm
-`id, displayName, biography, locale, timeZone, avatarAssetId, avatarUrl, version, createdAt, updatedAt`.
+`id, displayName, biography, locale, timeZone, dateFormat, avatarAssetId, avatarUrl, version, createdAt, updatedAt`.
 Không có hồ sơ: id và thời gian null; GET không ghi DB. Avatar URL ký sẵn hết hạn sau 15 phút, không lưu bền.
 
 Ticket: `{uploadId, assetId, method, uploadUrl, headers, expiresAt}`. Browser gửi đúng headers tới storage,
@@ -2190,23 +2190,26 @@ Không truyền bộ lọc thì giữ hành vi cũ.
 ### Giá tướng và cách nhận trang phục
 
 ```http
-GET /api/wiki/v1/heroes/{heroId}/shop?region=VN
+GET /api/wiki/v1/heroes/{heroId}/shop?region=VN&at=2026-09-20
 GET /api/wiki/v1/admin/heroes/{heroId}/shop?region=VN
 PUT /api/wiki/v1/admin/heroes/{heroId}/shop?region=VN
 PUT /api/wiki/v1/admin/heroes/{heroId}/shop/skins/{skinKey}?region=VN
+DELETE /api/wiki/v1/admin/heroes/{heroId}/shop/prices/{capturedOn}?region=VN
+DELETE /api/wiki/v1/admin/heroes/{heroId}/shop/skins/{skinKey}/{capturedOn}?region=VN
 ```
 
-Đi theo cửa hàng trong game nên áp dụng ngay, không cần bản nháp. Bản public bỏ các mục còn chờ xem lại và bỏ `note`, `needsReview`. Đọc admin cần `catalog:read`, ghi cần `hero:write`.
+Đi theo cửa hàng trong game nên áp dụng ngay, không cần bản nháp. Mỗi ngày là một mốc: lưu với `capturedOn` mới sẽ thêm mốc và giữ mốc cũ, lưu với ngày đã có sẽ sửa mốc đó, DELETE chỉ dành cho mốc ghi nhầm. `at` là ngày muốn xem, mặc định hôm nay: `price` và `skins` là mốc gần nhất không sau ngày đó, chưa có mốc thì `price` là `null`. Bản public bỏ các mốc còn chờ xem lại, bỏ `note`, `needsReview` và lịch sử; một mốc chờ xem lại không che mốc đã xác nhận trước đó. Bản admin thêm `priceHistory` và `skinHistory` gồm mọi mốc, mới nhất trước. Đọc admin cần `catalog:read`, ghi cần `hero:write`.
 
 ```json
 {
   "region": "VN",
+  "at": "2026-09-20",
   "price": { "availability": "ON_SALE", "goldPrice": 13888, "voucherPrice": 359, "capturedOn": "2026-09-16", "needsReview": false, "note": null },
   "skins": [{ "skinKey": "airi-kiemono", "method": "VOUCHER", "voucherPrice": 799, "eventName": null, "capturedOn": "2026-09-16", "needsReview": false, "note": null }]
 }
 ```
 
-`price` là `null` khi chưa có thông tin. PUT giá nhận `availability` (bắt buộc), `goldPrice`, `voucherPrice`, `capturedOn`, `needsReview`, `note`. PUT trang phục nhận `method` (bắt buộc), `voucherPrice` (chỉ giữ khi `VOUCHER`), `eventName` (chỉ giữ khi `EVENT`), `capturedOn`, `needsReview`, `note`. Giá trị lạ trả 422, tướng hoặc trang phục không tồn tại trả 404.
+`price` là `null` khi chưa có thông tin. PUT giá nhận `availability` (bắt buộc), `goldPrice`, `voucherPrice`, `capturedOn` (mặc định hôm nay), `needsReview`, `note`. PUT trang phục nhận `method` (bắt buộc), `voucherPrice` (chỉ giữ khi `VOUCHER`), `eventName` (chỉ giữ khi `EVENT`), `capturedOn`, `needsReview`, `note`. Giá trị lạ trả 422, tướng hoặc trang phục không tồn tại trả 404.
 
 ### Không gian ảnh và bản dịch bậc trang phục
 
