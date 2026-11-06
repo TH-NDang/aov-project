@@ -207,6 +207,7 @@ const routes: RouteObject[] = [
           },
           {
             path: "circuits",
+            handle: title("Hệ thống giải"),
             lazy: async () => {
               const { PageDirectory } = await import("@/features/community/page-directory")
               return { Component: () => <PageDirectory kind="CIRCUIT" /> }

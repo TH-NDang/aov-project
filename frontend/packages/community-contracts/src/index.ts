@@ -28,6 +28,67 @@ export type PlayerContent = {
   signatureHeroes?: string[]
 }
 export type RosterStatus = "ACTIVE" | "SUBSTITUTE" | "INACTIVE" | "UNKNOWN"
+export type DirectoryTeamRef = { id: string; name: string; shortName?: string | null; logoUrl?: string | null }
+export type DirectoryTournamentRef = {
+  id: string
+  name: string
+  logoUrl?: string | null
+  tier?: TournamentTier
+  year?: number | null
+  startsOn?: string | null
+  endsOn?: string | null
+}
+export type DirectoryLineupMember = {
+  playerId: string
+  name: string
+  photoUrl?: string | null
+  lane?: Lane | null
+  status: RosterStatus
+}
+/** A team with figures derived from its tournaments, series and most recent roster. */
+export type TeamDirectoryEntry = {
+  id: string
+  code: string
+  name: string
+  shortName?: string | null
+  country?: string | null
+  logoUrl?: string | null
+  tournaments: number
+  matches: number
+  wins: number
+  losses: number
+  titles: number
+  prizeUsd?: number | null
+  latestTournament?: DirectoryTournamentRef | null
+  lineup: DirectoryLineupMember[]
+  lineupTournament?: DirectoryTournamentRef | null
+}
+/** `latestTeam` is the team of the most recent roster line, not a claim about today's contract. */
+export type PlayerDirectoryEntry = {
+  id: string
+  code: string
+  nickname: string
+  fullName?: string | null
+  country?: string | null
+  photoUrl?: string | null
+  birthDate?: string | null
+  lane?: Lane | null
+  careerStatus: CareerStatus
+  signatureHeroes: string[]
+  tournaments: number
+  titles: number
+  latestTeam?: DirectoryTeamRef | null
+  latestTournament?: DirectoryTournamentRef | null
+}
+/** Tournaments gathered under an organizer's or a circuit's page. */
+export type CompetitionPageEntry = {
+  pageId: string
+  tournaments: number
+  firstYear?: number | null
+  lastYear?: number | null
+  tiers: TournamentTier[]
+  latestTournament?: DirectoryTournamentRef | null
+}
 export type RosterMembershipContent = {
   tournamentId: string
   teamId: string
