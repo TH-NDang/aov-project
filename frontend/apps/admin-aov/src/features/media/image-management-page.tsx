@@ -1,7 +1,7 @@
 import { LocalTime } from "@aov/ui/components/local-time"
 import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
 import { useEffect, useMemo, useState } from "react"
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQueries, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import {
   ArrowUpRight,
@@ -31,7 +31,21 @@ import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../publishing/asset-picker"
 import { control } from "../publishing/fields"
 import type { Asset, PageSlice } from "../publishing/types"
-import { LibraryImage, LibraryOwner, LibrarySource, LibraryStateBadge } from "./image-library-presentation"
+import {
+  LibraryImage,
+  LibraryOwner,
+  LibrarySource,
+  LibraryStateBadge,
+  LibraryUsage,
+} from "./image-library-presentation"
+import {
+  usageStateHints,
+  usageStateLabels,
+  usageStates,
+  type MediaUsageState,
+  type MediaUsageSummary,
+  type MediaUsageTotals,
+} from "./media-usage"
 import { MediaBulkSourceEditor } from "./media-bulk-source-editor"
 import { ImageDetailSheet, imageStates, imageTypes } from "./image-detail-sheet"
 import { creditSummary, needsNoCredit, ownerCandidate, sourceGap, sourceGapLabels } from "./media-source-gaps"
@@ -42,7 +56,7 @@ import { Link, useSearchParams } from "react-router"
 
 const types = imageTypes
 const states = imageStates
-type Row = Asset & { createdAt: string; updatedAt: string }
+type Row = Asset & { createdAt: string; updatedAt: string; usage?: MediaUsageSummary | null }
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, Row>()
 const empty: Row[] = []
@@ -50,6 +64,7 @@ const empty: Row[] = []
 const narrowHidden: Record<string, string> = {
   owner: "hidden sm:table-cell",
   source: "hidden md:table-cell",
+  usage: "hidden md:table-cell",
   updatedAt: "hidden sm:table-cell",
 }
 const canSelect = (row: Row) => row.state === "ACTIVE" && !!row.currentVersionId
@@ -63,6 +78,7 @@ const sourceTarget = (row: Row): MediaSourceTarget => ({
 export function ImageManagementPage() {
   const [type, setType] = useState("")
   const [needsCredit, setNeedsCredit] = useState(false)
+  const [usage, setUsage] = useState<MediaUsageState | "">("")
   const [marked, setMarked] = useState<Map<string, MediaSourceTarget>>(() => new Map())
   const [bulkTargets, setBulkTargets] = useState<MediaSourceTarget[] | null>(null)
   const [ownerTargets, setOwnerTargets] = useState<OwnerTarget[] | null>(null)
@@ -86,22 +102,38 @@ export function ImageManagementPage() {
   const grid = params.get("view") === "grid"
   const writable = useSession().actor?.capabilities.includes("media:write")
   const assets = useInfiniteQuery({
-    queryKey: ["managed-images", "infinite", type, needsCredit],
+    queryKey: ["managed-images", "infinite", type, needsCredit, usage],
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
       backendRequest<PageSlice<Row>>(
-        `/admin/media/assets?page=${pageParam}&size=20${type ? `&semanticType=${type}` : ""}${needsCredit ? "&needsCredit=true" : ""}`,
+        `/admin/media/assets?page=${pageParam}&size=20${type ? `&semanticType=${type}` : ""}${needsCredit ? "&needsCredit=true" : ""}${usage ? `&usage=${usage}` : ""}`,
         { signal },
       ),
     getNextPageParam: (page) =>
       page.items.length && (page.page + 1) * page.size < page.totalElements ? page.page + 1 : undefined,
   })
+  // The rows appear at once and where each image is used follows, because that answer asks every module.
+  const usageById = useQueries({
+    queries: usage
+      ? []
+      : (assets.data?.pages ?? []).map((_, page) => ({
+          queryKey: ["managed-images", "usage-page", type, needsCredit, page],
+          staleTime: 30_000,
+          queryFn: ({ signal }: { signal: AbortSignal }) =>
+            backendRequest<PageSlice<Row>>(
+              `/admin/media/assets?page=${page}&size=20&withUsage=true${type ? `&semanticType=${type}` : ""}${needsCredit ? "&needsCredit=true" : ""}`,
+              { signal },
+            ),
+        })),
+    combine: (pages) => new Map(pages.flatMap((page) => page.data?.items.map((row) => [row.id, row.usage]) ?? [])),
+  })
   const rows = useMemo(() => {
     if (!assets.data) return empty
     const unique = new Map<string, Row>()
-    for (const page of assets.data.pages) for (const row of page.items) unique.set(row.id, row)
+    for (const page of assets.data.pages)
+      for (const row of page.items) unique.set(row.id, { ...row, usage: row.usage ?? usageById.get(row.id) })
     return [...unique.values()]
-  }, [assets.data])
+  }, [assets.data, usageById])
   const total = assets.data?.pages[0]?.totalElements ?? 0
   // One-row count of images that still need a source or owner, for the reminder above the filters.
   const missing = useQuery({
@@ -115,6 +147,19 @@ export function ImageManagementPage() {
     staleTime: 30_000,
   })
   const missingCount = needsCredit ? (assets.data ? total : undefined) : missing.data?.totalElements
+  const usageTotals = useQuery({
+    queryKey: ["managed-images", "usage-totals", type, needsCredit],
+    queryFn: ({ signal }) =>
+      backendRequest<MediaUsageTotals>(
+        `/admin/media/usage-totals?needsCredit=${needsCredit}${type ? `&semanticType=${type}` : ""}`,
+        { signal },
+      ),
+    staleTime: 30_000,
+  })
+  function showUsage(next: MediaUsageState | "") {
+    setUsage(next)
+    setMarked(new Map())
+  }
   function showMissing(next: boolean) {
     if (next === needsCredit) return
     setNeedsCredit(next)
@@ -206,6 +251,8 @@ export function ImageManagementPage() {
                     userImage={needsNoCredit(row.original.semanticType)}
                   />
                 </span>
+                {/* The usage column is hidden on narrow screens, and it is why many people open this list. */}
+                <LibraryUsage usage={row.original.usage} className="md:hidden" />
               </div>
             </div>
           ),
@@ -239,6 +286,20 @@ export function ImageManagementPage() {
             row.original.currentVersionId && !needsNoCredit(row.original.semanticType) ? (
               <LibrarySource sources={row.original.sources} className="text-sm" />
             ) : null,
+        }),
+        helper.display({
+          id: "usage",
+          header: "Nơi dùng",
+          cell: ({ row }) => (
+            <button
+              type="button"
+              className="block w-full min-w-0 rounded text-left outline-none transition-opacity hover:opacity-70 focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => setSelected(row.original.id)}
+              aria-label={`Nơi dùng ảnh ${row.original.id}`}
+            >
+              <LibraryUsage usage={row.original.usage} />
+            </button>
+          ),
         }),
         helper.accessor("updatedAt", {
           header: "Cập nhật",
@@ -338,7 +399,24 @@ export function ImageManagementPage() {
               ))}
             </select>
           </label>
-          {(type || needsCredit) && (
+          <label className="flex min-w-40 flex-1 items-center sm:min-w-0 sm:flex-none">
+            <span className="sr-only">Nơi dùng</span>
+            <select
+              aria-label="Nơi dùng"
+              className="h-10 w-full min-w-0 rounded-xl border bg-background px-3 text-sm font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/20 sm:w-52"
+              value={usage}
+              onChange={(event) => showUsage(event.target.value as MediaUsageState | "")}
+            >
+              <option value="">Mọi nơi dùng</option>
+              {usageStates.map((state) => (
+                <option key={state} value={state}>
+                  {usageStateLabels[state]}
+                  {usageTotals.data ? ` (${usageTotals.data.states[state].toLocaleString("vi-VN")})` : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+          {(type || needsCredit || usage) && (
             <Button
               size="sm"
               variant="ghost"
@@ -346,6 +424,7 @@ export function ImageManagementPage() {
               onClick={() => {
                 setType("")
                 setNeedsCredit(false)
+                setUsage("")
                 setMarked(new Map())
               }}
             >
@@ -389,6 +468,14 @@ export function ImageManagementPage() {
           </FilterTabs>
         </div>
       </div>
+      {(usage || usageTotals.data?.competitionChecked === false) && (
+        <p role="note" className="type-meta">
+          {usage && usageStateHints[usage]}
+          {usage && usageTotals.data?.competitionChecked === false && " "}
+          {usageTotals.data?.competitionChecked === false &&
+            "Chưa tính giải đấu và trang cộng đồng vì chưa đọc được dữ liệu của chúng, nên ảnh chỉ dùng ở đó có thể bị xếp vào nhóm chưa dùng."}
+        </p>
+      )}
       {assets.error && (
         <div className="flex flex-wrap items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm">
           <p role="alert" className="text-destructive">
@@ -439,6 +526,7 @@ export function ImageManagementPage() {
                     />
                   </span>
                   <span className="block font-mono text-xs text-muted-foreground">{row.id.slice(0, 8)}</span>
+                  <LibraryUsage usage={row.usage} />
                   {/* Only a gap is worth a line; complete credits show on hover and in the details. */}
                   {row.currentVersionId &&
                     !needsNoCredit(row.semanticType) &&
@@ -468,9 +556,10 @@ export function ImageManagementPage() {
           <table className="w-full table-fixed text-left text-sm" aria-label="Danh sách ảnh">
             <colgroup>
               {writable && <col className="w-10" />}
-              <col className="sm:w-[55%] md:w-[34%]" />
-              <col className="hidden sm:table-column md:w-[26%]" />
+              <col className="sm:w-[55%] md:w-[30%]" />
+              <col className="hidden sm:table-column md:w-[20%]" />
               <col className="hidden md:table-column" />
+              <col className="hidden md:table-column md:w-[17%]" />
               <col className="hidden w-28 sm:table-column" />
             </colgroup>
             <thead className="border-b bg-muted/30 text-xs text-muted-foreground">
@@ -556,7 +645,7 @@ export function ImageManagementPage() {
           <p className="text-xs text-muted-foreground">
             {needsCredit ? "Không có ảnh thiếu nguồn hoặc credit trong bộ lọc này." : "Chưa có ảnh thuộc loại này."}
           </p>
-          {(type || needsCredit) && (
+          {(type || needsCredit || usage) && (
             <Button
               variant="outline"
               size="sm"
@@ -564,6 +653,7 @@ export function ImageManagementPage() {
               onClick={() => {
                 setType("")
                 setNeedsCredit(false)
+                setUsage("")
                 setMarked(new Map())
               }}
             >
@@ -573,7 +663,7 @@ export function ImageManagementPage() {
         </div>
       )}
       <InfiniteScroll
-        key={`${type}:${needsCredit}`}
+        key={`${type}:${needsCredit}:${usage}`}
         query={assets}
         enabled={!selected && !upload && !bulkTargets && !ownerTargets}
         label="Đang tải thêm ảnh…"
