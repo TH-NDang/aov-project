@@ -1,0 +1,27 @@
+/* Animations for the public apps. Each app starts them only for readers who have not asked for less motion. */
+
+@keyframes public-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@keyframes public-fade {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes public-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes public-drift {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}

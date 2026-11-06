@@ -8,11 +8,14 @@
 @import "./scrollbar.css";
 @import "./typography.css";
 @import "../components/public-overlay.css";
+@import "../components/public-compact.css";
+@import "./public-motion.css";
 @import "./warehouse-compact.css";
 @source "../";
 @source "../../../apps";
 @custom-variant dark (&:is(.dark *));
-:root {
+:root,
+.public-panel {
   color-scheme: light;
   --chart-1: var(--aov-chart);
   --chart-2: oklch(0.6 0.118 184.704);

@@ -1,0 +1,117 @@
+/* Shared parts of the compact layout of the public apps. The width is the one in `use-page-layout.ts`. */
+.public-tab-bar {
+  position: sticky;
+  z-index: 20;
+  top: var(--public-tab-bar-top, 0);
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--aov-line);
+  background: var(--aov-bg);
+  scrollbar-width: none;
+}
+.public-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+.public-tab-bar > button {
+  position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  flex: 1 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border-bottom: 2px solid transparent;
+  padding-inline: 12px;
+  color: var(--aov-muted);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+.public-tab-bar > button[aria-selected="true"] {
+  border-bottom-color: var(--aov-accent);
+  color: var(--aov-accent);
+  font-weight: 600;
+}
+.public-tab-bar > button[data-marked]::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--aov-accent);
+}
+.public-tab-count {
+  color: var(--aov-muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.public-filter-button {
+  display: inline-flex;
+  height: 40px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding-inline: 12px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  font-size: 14px;
+  line-height: 20px;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+.public-filter-button[data-active] {
+  border-color: var(--aov-accent);
+  color: var(--aov-accent);
+}
+.public-filter-count {
+  display: grid;
+  min-width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 9px;
+  padding-inline: 4px;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent, var(--aov-bg));
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.public-filter-body {
+  display: grid;
+  gap: 18px;
+  padding-block: 4px 16px;
+}
+.public-filter-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  padding-block: 10px calc(4px + env(safe-area-inset-bottom));
+  background: var(--drawer-surface);
+}
+.public-filter-actions > button {
+  min-height: 44px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding-inline: 14px;
+  color: var(--aov-text);
+  font-size: 14px;
+  line-height: 20px;
+}
+.public-filter-actions > button:disabled {
+  opacity: 0.45;
+}
+.public-filter-actions > button[data-primary] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent);
+  color: var(--aov-on-accent, var(--aov-bg));
+  font-weight: 600;
+}

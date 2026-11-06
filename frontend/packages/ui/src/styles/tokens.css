@@ -29,6 +29,43 @@
 
   --aov-chart: light-dark(#8a6414, #b98c35);
 
+  /* AOV Wiki: slate panels on a deep navy page, headings and marks in a soft gold. Fixed, not themed. */
+  --aov-wiki-night: #171e2c;
+  --aov-wiki-bar: #10141e;
+  --aov-wiki-panel: #364156;
+  --aov-wiki-panel-high: #435068;
+  --aov-wiki-panel-deep: #2b3447;
+  --aov-wiki-line: #4b566c;
+  --aov-wiki-line-strong: #68728a;
+  --aov-wiki-gold: #d3bc8e;
+  --aov-wiki-gold-bright: #efdfba;
+  --aov-wiki-text: #eeeae1;
+  --aov-wiki-text-soft: #d5d4d0;
+  --aov-wiki-text-muted: #c1c5ce;
+  --aov-wiki-success: #74dcae;
+  --aov-wiki-danger: #ff9f9f;
+  --aov-wiki-warning: #f2c474;
+  --aov-wiki-info: #a9c9ff;
+
+  /* AOV Stream, from its owl logo: night indigo, periwinkle feathers, gold eyes, cream face. */
+  --aov-stream-night: #141d31;
+  --aov-stream-dusk: #1e2742;
+  --aov-stream-indigo: #2a3354;
+  --aov-stream-indigo-line: #3a4570;
+  --aov-stream-feather: #555f8e;
+  --aov-stream-feather-light: #7d87b1;
+  --aov-stream-gold: #d3a857;
+  --aov-stream-periwinkle-deep: #38427a;
+  --aov-stream-tan: #eac98f;
+  --aov-stream-cream: #fff4d7;
+  --aov-stream-text-soft: #d3d6e6;
+  --aov-stream-text-muted: #a9b0cf;
+  --aov-stream-mist: #eff0f7;
+  --aov-stream-mist-sunken: #e3e5f1;
+  --aov-stream-mist-line: #d3d7e8;
+  --aov-stream-ink: #1c2a3b;
+  --aov-stream-ink-soft: #353654;
+
   /* Status colors carry meaning only; they are not decoration. */
   --aov-success: light-dark(#12804f, #4cc38a);
   --aov-success-soft: light-dark(#e3f6ec, rgb(76 195 138 / 14%));
