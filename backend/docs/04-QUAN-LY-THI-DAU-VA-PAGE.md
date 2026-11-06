@@ -177,6 +177,40 @@ hồ sơ nhanh. Tên/ảnh lấy từ hồ sơ đã chọn; vị trí, trạng t
 Vai trò kiêm nhiệm của tuyển thủ là tùy chọn; vị trí thi đấu chỉ chọn trong đội. Các mục lịch sử,
 thành tích và nguồn thu gọn thành dòng tóm tắt, mở ô nhập qua icon sửa.
 
+## Dữ liệu giải lịch sử (06/11/2026)
+
+Giải đã kết thúc được nhập từ nguồn ngoài (Liquipedia, kho phân tích YouTube) nên mô hình nhận thêm những gì
+chúng ghi nhận, không suy diễn số liệu:
+
+- Hạng giải thêm `D` (Liquipedia tier 5); loại giải thêm `SHOWMATCH` và `OTHER`. Tier 1–4 tương ứng S, A, B, C.
+- Giải có `placements` (hạng dạng chữ vì có thể đồng hạng "5-8", đội, tiền thưởng USD và nội tệ, trận cuối),
+  `awards` (giải cá nhân, người nhận, đội), `links` (nhãn, URL) và `localCurrency`. `teamId`/`playerId` trong
+  các dòng này là tham chiếu mềm: tên vẫn đọc được khi chưa có hoặc đã xóa bản ghi liên kết.
+- Trận nhận BO2, BO4 là thể thức đấu đủ số ván: tổng hai vế bằng BO, được hòa. BO lẻ giữ quy tắc cũ.
+- Trận có `repeatPicksAllowed` khi được đấu không có luật cấm chọn lại tướng; chỉ khi đó backend và Admin mới
+  bỏ qua luật này. Mặc định vẫn áp dụng luật.
+- Tuyển thủ thêm `birthDate`, `lane` (vị trí thường đánh; vị trí trong từng giải vẫn ở đội hình),
+  `careerStatus`, `signatureHeroes`.
+- Link video: `sourceUrl` của trận là video cả trận hoặc cả buổi nếu có, nếu không là trang nguồn; `sourceUrl` của
+  ván là video ván. Nguồn của kết quả nằm ở `result.sourceUrl`.
+
+## Danh bạ thi đấu trong Admin (06/11/2026)
+
+Mỗi mục có cách hiển thị riêng thay vì một dòng chung, vì người dùng tra mỗi loại hồ sơ theo những thông tin khác nhau:
+
+| Mục | Cách hiển thị | Thông tin chính |
+|---|---|---|
+| Đội tuyển | Thẻ | Logo, khu vực, số giải, thắng-thua, chức vô địch, tiền thưởng, đội hình gần nhất, giải gần nhất |
+| Tuyển thủ | Bảng so sánh, lọc theo vị trí, quốc gia, trạng thái | Ảnh, tên thi đấu, tên thật, tuổi, vị trí, đội gần nhất, tướng tủ, số giải, chức vô địch, giải gần nhất, trạng thái |
+| Ban huấn luyện | Dòng, lọc theo vai trò | Vai trò, đội và giải gần nhất, số giải đã làm việc |
+| Broadcast | Thẻ theo ảnh, lọc theo vai trò | Ảnh, vai trò, giải gần nhất, kênh mạng xã hội |
+| Tổ chức | Dòng | Khu vực, website, số giải đã tổ chức, số năm, các hạng giải, giải gần nhất |
+| Hệ thống giải | Thẻ theo logo | Số mùa, số năm, các hạng giải, mùa gần nhất |
+
+"Đội gần nhất" của tuyển thủ là đội ở dòng đội hình của giải gần nhất, không khẳng định hợp đồng hiện tại. Vị trí lấy từ hồ sơ tuyển thủ, nếu trống thì lấy từ dòng đội hình gần nhất có ghi vị trí. Đội hình của đội bỏ qua thành viên đã rời (INACTIVE) và lấy giải gần nhất có đội hình, vì giải mới nhất có thể chưa nhập.
+
+Số liệu được tính từ giải, trận và đội hình khi đọc, nên không cần lưu riêng và không lệch khi sửa dữ liệu.
+
 ## Cơ sở dữ liệu
 
 V006 tạo schema community và các bảng page, page_audit, page_member, page_claim, page_invitation,
@@ -200,9 +234,13 @@ V010 thêm vào post: kind varchar(20) mặc định TEXT, title, video_url, ima
 pinned_at, kèm unique một bài ghim mỗi page. Bảng page_live (page_id PK/FK page, url, title, started_at) giữ
 trạng thái trực tiếp riêng để bật/tắt không đổi version bản nháp của page.
 
+V011 thêm cột sinh tournament.series.tournament_id (lấy từ content) và index (tournament_id, deleted_at) để lọc
+trận theo giải mà không đọc toàn bộ.
+
 ## API
 
-Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100. /admin cần
+Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
+thủ, giải, trận, ván, đội hình ở /admin là 1–500). /admin cần
 tournament:read; ghi cần thêm tournament:write; công bố/duyệt cần tournament:publish. /me cần tài khoản
 người dùng và kiểm tra quyền page tại thời điểm thao tác. Body sửa có version để chống ghi đè.
 
@@ -210,7 +248,12 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 |---|---|
 | GET /pages?kind=&q=&page=&size= | Chỉ bản công bố; tìm theo tên công bố |
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
-| GET /admin/pages, /admin/pages/{id} | Bản nháp |
+| GET /admin/series?tournamentId=, /admin/games?tournamentId= | Trận/ván của một giải |
+| GET /admin/tournaments/stats | [{tournamentId,teams,matches,played}], không tải từng trận |
+| GET /admin/teams/directory?q=&country=&sort=&page=&size= | Danh bạ đội: số giải, trận, thắng-thua, chức vô địch, tiền thưởng, giải gần nhất và đội hình gần nhất có trên hồ sơ. sort: RECENT, TOURNAMENTS, TITLES, PRIZE, NAME |
+| GET /admin/players/directory?q=&country=&lane=&status=&sort=&page=&size= | Danh bạ tuyển thủ: vị trí, đội và giải của dòng đội hình gần nhất, số giải, chức vô địch, tướng tủ. sort: RECENT, TOURNAMENTS, TITLES, NAME |
+| GET /admin/competitions/page-stats | [{pageId,tournaments,firstYear,lastYear,tiers,latestTournament}] theo trang tổ chức và hệ thống giải |
+| GET /admin/pages, /admin/pages/{id} | Bản nháp. Danh sách nhận thêm country, entityIds (tối đa 100 định danh) và sort: RECENT, NAME, ACTIVITY (nhiều mục lịch sử nhất) |
 | POST /admin/pages | {kind,code,entityId?,content} |
 | PUT /admin/pages/{id} | {version,content} |
 | POST /admin/pages/{id}/publish hoặc /withdraw | {version} |
