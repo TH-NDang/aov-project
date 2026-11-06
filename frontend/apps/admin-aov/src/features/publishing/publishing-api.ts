@@ -36,6 +36,16 @@ export interface HeroComparison {
   changes: { section: string; path: string; kind: "ADDED" | "REMOVED" | "CHANGED"; before: unknown; after: unknown }[]
   warnings: string[]
 }
+export interface HeroDraftChangeSet {
+  source: Revision | null
+  startedAt: string
+  before: Partial<Record<Section, unknown>>
+  after: Partial<Record<Section, unknown>>
+}
+const contentFromWire = (content: Record<string, unknown>) =>
+  Object.fromEntries(
+    Object.entries(sectionKeys).map(([key, wire]) => [key, content[wire] ?? content[key]]),
+  ) as HeroDraftChangeSet["before"]
 export const heroPreviewKey = (heroId: string, revisionId: string) =>
   ["publishing-preview", heroId, revisionId] as const
 export interface HeroCatalogQuery {
@@ -146,6 +156,15 @@ export function createPublishingApi(request: Request) {
       request<HeroComparison>(
         `/admin/heroes/${heroId}/revisions/${revisionId}/comparison${fromRevisionId ? `?fromRevisionId=${encodeURIComponent(fromRevisionId)}` : ""}`,
       ),
+    draftChanges: async (heroId: string, revisionId: string): Promise<HeroDraftChangeSet> => {
+      const changes = await request<
+        Omit<HeroDraftChangeSet, "before" | "after"> & {
+          before: Record<string, unknown>
+          after: Record<string, unknown>
+        }
+      >(`/admin/heroes/${heroId}/revisions/${revisionId}/draft-changes`)
+      return { ...changes, before: contentFromWire(changes.before), after: contentFromWire(changes.after) }
+    },
     rulesets: () => request<Ruleset[]>("/admin/rulesets"),
     regions: () => request<Region[]>("/regions"),
     create: (code: string, name: string, locale: string, rulesetId: string, contextId: string) =>

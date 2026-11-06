@@ -145,3 +145,13 @@ test("baseline contexts are read season by season, because the endpoint needs a 
     ["a", "b"],
   )
 })
+
+test("a saved change counts per section, and listing roles in another order is not one", async () => {
+  const { savedHeroSections } = await import("../src/features/publishing/hero-draft-changes")
+  const { fixtureContent } = await import("./fixtures/hero-workspace-data")
+  const changed = structuredClone(fixtureContent)
+  changed.PROFILE!.roles = [...changed.PROFILE!.roles].reverse()
+  assert.deepEqual(savedHeroSections({ before: fixtureContent, after: changed }), [])
+  changed.SKILLS!.skills[0]!.translations[0]!.name = "Edited"
+  assert.deepEqual(savedHeroSections({ before: fixtureContent, after: changed }), ["SKILLS"])
+})

@@ -78,7 +78,7 @@ import { useHeroLocation } from "./use-hero-location"
 import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { useLocalDraft } from "@/app/drafts/use-local-draft"
 import { DraftStatusControl } from "@/app/drafts/draft-status"
-import { HeroDraftChanges } from "./hero-draft-changes"
+import { HeroDraftChanges, savedHeroSections } from "./hero-draft-changes"
 import { PublishButton } from "./publish-button"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { visibleSkins } from "./hero-skins"
@@ -350,6 +350,13 @@ export function PublishingWorkspace({
   )
   const statDefaults = useStatDefaults(statPatch?.id)
   const writable = canWrite && revision?.state === "DRAFT"
+  const savedChanges = useQuery({
+    queryKey: ["hero-draft-changes", heroId, revision?.id, revision?.version],
+    queryFn: () => api.draftChanges(heroId, revision!.id),
+    enabled: !!writable,
+    retry: false,
+  })
+  const savedSections = savedChanges.data ? savedHeroSections(savedChanges.data) : []
   const translating = view === "translations"
   const locale = translating ? targetLocale : location.readLocale
   const focusedProfile = !translating && section === "PROFILE"
@@ -738,10 +745,20 @@ export function PublishingWorkspace({
                   />
                 )}
                 {writable && (
-                  <DraftStatusControl key={revision.id} draft={localDraft} disabled={busy} sections={dirty.size}>
+                  <DraftStatusControl
+                    key={revision.id}
+                    draft={localDraft}
+                    disabled={busy}
+                    sections={dirty.size}
+                    changed={new Set([...dirty, ...savedSections]).size}
+                    alwaysShown
+                    discardLabel="Bỏ thay đổi chưa lưu"
+                  >
                     <HeroDraftChanges
                       before={initialCopy}
                       after={localDraft.value}
+                      saved={savedChanges.data}
+                      savedFailed={savedChanges.isError}
                       locale={locale}
                       name={heroName}
                       revisionNo={revision.revisionNo}

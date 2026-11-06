@@ -189,7 +189,9 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.ok(draftControl)
     assert.equal(document.querySelector('[aria-label="Trạng thái bản nháp"]'), null)
     await click(draftControl)
-    assert.ok(document.querySelector('[aria-label="Trạng thái bản nháp"]')?.textContent?.includes("Bỏ bản nháp"))
+    assert.ok(
+      document.querySelector('[aria-label="Trạng thái bản nháp"]')?.textContent?.includes("Bỏ thay đổi chưa lưu"),
+    )
     await click(button("Xem thay đổi"))
     const review = Array.from(document.querySelectorAll('[role="dialog"]')).find((el) => el.querySelector("dl"))!
     assert.ok(review.textContent!.includes("Bản #"))
