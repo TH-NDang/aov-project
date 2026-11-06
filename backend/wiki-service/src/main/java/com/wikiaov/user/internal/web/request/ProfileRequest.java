@@ -12,12 +12,14 @@ public record ProfileRequest(
         @NotNull @Size(max = 1000) String biography,
         @NotBlank @Size(max = 35) String locale,
         @NotBlank @Size(max = 64) String timeZone,
+        @Nullable String dateFormat,
         @Nullable UUID avatarAssetId,
         @NotNull @Min(0) Long expectedVersion
 ) {
     public ProfileInput toInput() {
         try {
-            return new ProfileInput(displayName, biography, locale, timeZone, avatarAssetId, expectedVersion);
+            return new ProfileInput(displayName, biography, locale, timeZone, dateFormat, avatarAssetId,
+                    expectedVersion);
         } catch (IllegalArgumentException ex) {
             throw new ApiException(UserErrorCode.USER_PROFILE_INVALID,
                     "Invalid profile language, time zone or content.");

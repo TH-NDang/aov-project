@@ -11,6 +11,7 @@ public record ProfileInput(
         String biography,
         String locale,
         String timeZone,
+        @Nullable String dateFormat,
         @Nullable UUID avatarAssetId,
         long expectedVersion
 ) {
@@ -31,6 +32,9 @@ public record ProfileInput(
         if (parsed.getLanguage().isEmpty()
                 || !java.util.Set.of(Locale.getISOLanguages()).contains(parsed.getLanguage())) {
             throw new IllegalArgumentException("Unsupported profile language.");
+        }
+        if (dateFormat != null && !java.util.Set.of("AUTO", "DMY", "MDY", "YMD").contains(dateFormat)) {
+            throw new IllegalArgumentException("Unknown date format.");
         }
         locale = parsed.toLanguageTag();
         if (!ZoneId.getAvailableZoneIds().contains(timeZone)) {

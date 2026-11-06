@@ -65,6 +65,29 @@ class UserProfileIntegrationTest {
     }
 
     @Test
+    void dateFormatIsSavedAndAClientThatOmitsItLeavesItAlone() throws Exception {
+        String subject = UUID.randomUUID().toString();
+        String withFormat = """
+                {"displayName":"Test user","biography":"","locale":"vi-VN","timeZone":"Asia/Ho_Chi_Minh",
+                 "dateFormat":"%s","avatarAssetId":null,"expectedVersion":%d}""";
+        String withoutFormat = """
+                {"displayName":"Renamed","biography":"","locale":"vi-VN","timeZone":"Asia/Ho_Chi_Minh",
+                 "avatarAssetId":null,"expectedVersion":%d}""";
+
+        mvc.perform(get(BASE + "/users/me").with(person(subject))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.dateFormat").value("AUTO"));
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
+                .content(withFormat.formatted("YMD", 0))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.dateFormat").value("YMD"));
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
+                .content(withoutFormat.formatted(1))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.displayName").value("Renamed"))
+                .andExpect(jsonPath("$.dateFormat").value("YMD"));
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
+                .content(withFormat.formatted("WEEKDAY", 2))).andExpect(status().is4xxClientError());
+    }
+
+    @Test
     void profilesAreIsolatedAndStaleWritesDoNotOverwrite() throws Exception {
         String subject = UUID.randomUUID().toString();
         String saved = mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
