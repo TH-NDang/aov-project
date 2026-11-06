@@ -402,7 +402,7 @@ class TournamentApiIntegrationTest {
         create("teams", new Team("other-" + key, "50XXboost " + key, null, null, null));
         mvc.perform(authorized(get(ADMIN + "/reference-catalog")).param("q", "%_boost " + key))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
-        mvc.perform(authorized(get(ADMIN + "/reference-catalog")).param("size", "101"))
+        mvc.perform(authorized(get(ADMIN + "/reference-catalog")).param("size", "501"))
                 .andExpect(status().isBadRequest());
         mvc.perform(authorized(get(ADMIN + "/reference-catalog")).param("q", "x".repeat(121)))
                 .andExpect(status().isBadRequest());
@@ -612,7 +612,7 @@ class TournamentApiIntegrationTest {
             mvc.perform(authorized(post(ADMIN + "/roster-memberships")).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("content", invalid)))).andExpect(status().isBadRequest());
         }
-        mvc.perform(authorized(get(ADMIN + "/roster-memberships")).param("size", "101"))
+        mvc.perform(authorized(get(ADMIN + "/roster-memberships")).param("size", "501"))
                 .andExpect(status().isBadRequest());
         mvc.perform(authorized(get(ADMIN + "/roster-memberships")).param("unexpected", "true"))
                 .andExpect(status().isBadRequest());
@@ -761,6 +761,62 @@ class TournamentApiIntegrationTest {
                 3, null, null, null, new SeriesResult(3, 1, "https://example.test/result", null, null));
         mvc.perform(authorized(post(ADMIN + "/series")).contentType(MediaType.APPLICATION_JSON)
                 .content(json.writeValueAsString(Map.of("content", invalid)))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void fixedLengthSeriesMayEndLevelAndMustScoreEveryGame() throws Exception {
+        var fixture = fixture();
+        var sides = fixture.game().sides();
+        var level = new Series("draw-" + UUID.randomUUID(), fixture.tournamentId(), "Draw", null, sides.get(0).teamId(),
+                sides.get(1).teamId(), 2, null, null, null,
+                new SeriesResult(1, 1, "https://example.test/draw", Verification.SECONDARY_CAPTURE, null));
+        create("series", level);
+
+        var partial = new Series("partial-" + UUID.randomUUID(), fixture.tournamentId(), "Partial", null,
+                sides.get(0).teamId(), sides.get(1).teamId(), 2, null, null, null,
+                new SeriesResult(1, 0, "https://example.test/partial", null, null));
+        mvc.perform(authorized(post(ADMIN + "/series")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("content", partial)))).andExpect(status().isBadRequest());
+
+        var six = new Series("six-" + UUID.randomUUID(), fixture.tournamentId(), "Six", null, sides.get(0).teamId(),
+                sides.get(1).teamId(), 6, null, null, null);
+        mvc.perform(authorized(post(ADMIN + "/series")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("content", six)))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void seriesAndGamesFilterByTournamentAndStatsCountWithoutLoadingMatches() throws Exception {
+        var fixture = fixture();
+        var other = fixture();
+        create("games", other.game());
+        mvc.perform(authorized(get(ADMIN + "/series")).param("tournamentId", fixture.tournamentId().toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(fixture.seriesId().toString()));
+        mvc.perform(authorized(get(ADMIN + "/games")).param("tournamentId", other.tournamentId().toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].content.seriesId")
+                        .value(other.seriesId().toString()));
+        mvc.perform(authorized(get(ADMIN + "/tournaments/stats"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.tournamentId == '%s')].matches", fixture.tournamentId()).value(1))
+                .andExpect(jsonPath("$[?(@.tournamentId == '%s')].teams", fixture.tournamentId()).value(2));
+        mvc.perform(authorized(get(ADMIN + "/tournaments/stats")).param("unexpected", "true"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void repeatedPicksAreOnlyAcceptedWhenTheMatchWasPlayedWithoutThatRule() throws Exception {
+        var fixture = fixture();
+        var sides = fixture.game().sides();
+        var free = create("series",
+                new Series("free-" + UUID.randomUUID(), fixture.tournamentId(), "Free", null, sides.get(0).teamId(),
+                        sides.get(1).teamId(), 5, null, null, null, null, true));
+        UUID seriesId = UUID.fromString(free.get("id").toString());
+        for (int number = 1; number <= 2; number++) {
+            var game = new Game(seriesId, number, "VN", "vi", null, null, null, null, null, null, null, null,
+                    sides, false, null, null);
+            create("games", game);
+        }
+        mvc.perform(authorized(get(ADMIN + "/games")).param("seriesId", seriesId.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2));
     }
 
     private record Fixture(

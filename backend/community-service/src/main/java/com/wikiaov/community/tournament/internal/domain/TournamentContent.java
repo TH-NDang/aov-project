@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.domain;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -70,17 +71,37 @@ public final class TournamentContent {
             String fullName,
             String country,
             String photoUrl,
-            List<String> aliases
+            List<String> aliases,
+            LocalDate birthDate,
+            Lane lane,
+            CareerStatus careerStatus,
+            List<String> signatureHeroes
     ) {
         public Player {
             aliases = aliases == null
                     ? List.of()
                     : aliases.stream().map(value -> value == null ? null : value.strip()).toList();
+            careerStatus = careerStatus == null ? CareerStatus.UNKNOWN : careerStatus;
+            signatureHeroes = signatureHeroes == null
+                    ? List.of()
+                    : signatureHeroes.stream().map(value -> value == null ? null : value.strip()).toList();
+        }
+
+        public Player(String code, String nickname, String fullName, String country, String photoUrl,
+                List<String> aliases) {
+            this(code, nickname, fullName, country, photoUrl, aliases, null, null, null, null);
         }
 
         public Player(String code, String nickname, String fullName, String country) {
             this(code, nickname, fullName, country, null, List.of());
         }
+    }
+
+    public enum CareerStatus {
+        ACTIVE,
+        INACTIVE,
+        RETIRED,
+        UNKNOWN
     }
 
     public enum RosterStatus {
@@ -124,13 +145,28 @@ public final class TournamentContent {
             CompetitionType competitionType,
             VenueMode venueMode,
             TournamentStatus status,
-            TournamentResult result
+            TournamentResult result,
+            String localCurrency,
+            List<TournamentPlacement> placements,
+            List<TournamentAward> awards,
+            List<TournamentLink> links
     ) {
         public Tournament {
             tier = tier == null ? TournamentTier.UNKNOWN : tier;
             competitionType = competitionType == null ? CompetitionType.UNKNOWN : competitionType;
             venueMode = venueMode == null ? VenueMode.UNKNOWN : venueMode;
             status = status == null ? TournamentStatus.UNKNOWN : status;
+            placements = placements == null ? List.of() : List.copyOf(placements);
+            awards = awards == null ? List.of() : List.copyOf(awards);
+            links = links == null ? List.of() : List.copyOf(links);
+        }
+
+        public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,
+                LocalDate endsOn, String sourceUrl, String note, String logoUrl, TournamentTier tier,
+                CompetitionType competitionType, VenueMode venueMode, TournamentStatus status,
+                TournamentResult result) {
+            this(code, name, region, year, startsOn, endsOn, sourceUrl, note, logoUrl, tier, competitionType,
+                    venueMode, status, result, null, null, null, null);
         }
 
         public Tournament(String code, String name, String region, Integer year, LocalDate startsOn,
@@ -144,13 +180,48 @@ public final class TournamentContent {
         A,
         B,
         C,
+        D,
         UNKNOWN
+    }
+
+    /**
+     * One line of a tournament's final table. {@code teamId} links a registered team when one is known;
+     * {@code teamName} stays readable either way. {@code place} is text because a line can be shared ("5-8").
+     */
+    public record TournamentPlacement(
+            String place,
+            UUID teamId,
+            String teamName,
+            BigDecimal prizeUsd,
+            BigDecimal prizeLocal,
+            String lastOpponent,
+            String lastScore
+    ) {
+    }
+
+    /** An individual or team prize such as MVP; {@code playerId} links a registered player when one is known. */
+    public record TournamentAward(
+            String title,
+            UUID playerId,
+            String recipientName,
+            String teamName,
+            BigDecimal prizeUsd,
+            BigDecimal prizeLocal
+    ) {
+    }
+
+    public record TournamentLink(
+            String label,
+            String url
+    ) {
     }
 
     public enum CompetitionType {
         LEAGUE,
         CUP,
         QUALIFIER,
+        SHOWMATCH,
+        OTHER,
         UNKNOWN
     }
 
@@ -204,8 +275,16 @@ public final class TournamentContent {
             Instant scheduledAt,
             String sourceUrl,
             String note,
-            SeriesResult result
+            SeriesResult result,
+            boolean repeatPicksAllowed
     ) {
+        /** {@code repeatPicksAllowed}: this match was played without the rule against re-picking a hero. */
+        public Series(String code, UUID tournamentId, String name, String stage, UUID teamAId, UUID teamBId,
+                Integer bestOf, Instant scheduledAt, String sourceUrl, String note, SeriesResult result) {
+            this(code, tournamentId, name, stage, teamAId, teamBId, bestOf, scheduledAt, sourceUrl, note, result,
+                    false);
+        }
+
         public Series(String code, UUID tournamentId, String name, String stage, UUID teamAId, UUID teamBId,
                 Integer bestOf, Instant scheduledAt, String sourceUrl, String note) {
             this(code, tournamentId, name, stage, teamAId, teamBId, bestOf, scheduledAt, sourceUrl, note, null);

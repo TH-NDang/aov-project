@@ -115,8 +115,13 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public PageSlice<View<Series>> series(String q, RecordState state, Pageable page) {
-        return series.list(q, state, page);
+    public PageSlice<View<Series>> series(String q, UUID tournamentId, RecordState state, Pageable page) {
+        return series.list(q, tournamentId, state, page);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    public java.util.List<TournamentStats> tournamentStats() {
+        return series.stats();
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -139,8 +144,8 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public PageSlice<View<Game>> games(UUID seriesId, RecordState state, Pageable page) {
-        return games.list(seriesId, state, page);
+    public PageSlice<View<Game>> games(UUID seriesId, UUID tournamentId, RecordState state, Pageable page) {
+        return games.list(seriesId, tournamentId, state, page);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")

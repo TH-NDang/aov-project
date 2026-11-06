@@ -45,6 +45,25 @@ class TournamentMetadataRulesTest {
         assertThat(TournamentMetadataRules.violations(old)).isEmpty();
     }
 
+    @Test
+    void finalTableKeepsSharedPlacesAndRejectsBrokenLines() {
+        var valid = new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null, null, TournamentTier.D,
+                CompetitionType.SHOWMATCH, VenueMode.ONLINE, TournamentStatus.FINISHED, null, "VND",
+                java.util.List
+                        .of(new TournamentPlacement("5-8", null, "Team", java.math.BigDecimal.TEN, null, null, null)),
+                java.util.List.of(new TournamentAward("MVP", null, "Player", null, null, null)),
+                java.util.List.of(new TournamentLink("Liquipedia", "https://liquipedia.net/honorofkings/Event")));
+        assertThat(TournamentMetadataRules.violations(valid)).isEmpty();
+
+        var broken = new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null, null, null, null, null,
+                null, null, "x".repeat(31),
+                java.util.List.of(
+                        new TournamentPlacement(" ", null, "", java.math.BigDecimal.ONE.negate(), null, null, null)),
+                java.util.List.of(new TournamentAward("", null, "", null, null, null)),
+                java.util.List.of(new TournamentLink("", "javascript:alert(1)")));
+        assertThat(TournamentMetadataRules.violations(broken)).hasSizeGreaterThanOrEqualTo(6);
+    }
+
     private static Tournament tournament(TournamentResult result) {
         return new Tournament("event", "Event", "GLOBAL", 2026, null, null, null, null,
                 "https://img.example.test/event.png", TournamentTier.S, CompetitionType.CUP, VenueMode.OFFLINE,

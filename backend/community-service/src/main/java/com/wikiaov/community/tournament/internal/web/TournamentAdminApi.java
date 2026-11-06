@@ -63,8 +63,12 @@ public interface TournamentAdminApi {
     @PutMapping(ApiPaths.ADMIN + "/tournaments/{id}")
     View<Tournament> updateTournament(@PathVariable UUID id, @RequestBody Update<Tournament> request);
 
+    @GetMapping(ApiPaths.ADMIN + "/tournaments/stats")
+    java.util.List<TournamentStats> tournamentStats(HttpServletRequest request);
+
     @GetMapping(ApiPaths.ADMIN + "/series")
     PageSlice<View<Series>> series(@RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) UUID tournamentId,
             @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request);
@@ -80,6 +84,7 @@ public interface TournamentAdminApi {
 
     @GetMapping(ApiPaths.ADMIN + "/games")
     PageSlice<View<Game>> games(@RequestParam(required = false) UUID seriesId,
+            @RequestParam(required = false) UUID tournamentId,
             @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request);

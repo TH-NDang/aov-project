@@ -97,10 +97,17 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public PageSlice<View<Series>> series(String q, RecordState state, int page, int size, HttpServletRequest request) {
-        Parameters.only(request, "q", "state", "page", "size");
+    public PageSlice<View<Series>> series(String q, UUID tournamentId, RecordState state, int page, int size,
+            HttpServletRequest request) {
+        Parameters.only(request, "q", "tournamentId", "state", "page", "size");
         Parameters.search(q);
-        return administration.series(q, state, Parameters.page(page, size, "updatedAt"));
+        return administration.series(q, tournamentId, state, Parameters.page(page, size, "updatedAt"));
+    }
+
+    @Override
+    public List<TournamentStats> tournamentStats(HttpServletRequest request) {
+        Parameters.only(request);
+        return administration.tournamentStats();
     }
 
     @Override
@@ -119,10 +126,10 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public PageSlice<View<Game>> games(UUID seriesId, RecordState state, int page, int size,
+    public PageSlice<View<Game>> games(UUID seriesId, UUID tournamentId, RecordState state, int page, int size,
             HttpServletRequest request) {
-        Parameters.only(request, "seriesId", "state", "page", "size");
-        return administration.games(seriesId, state, Parameters.page(page, size, "updatedAt"));
+        Parameters.only(request, "seriesId", "tournamentId", "state", "page", "size");
+        return administration.games(seriesId, tournamentId, state, Parameters.page(page, size, "updatedAt"));
     }
 
     @Override

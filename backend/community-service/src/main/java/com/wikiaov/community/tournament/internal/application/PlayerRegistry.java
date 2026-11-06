@@ -71,6 +71,10 @@ public class PlayerRegistry {
             throw TournamentErrors.invalid("content is required.");
         TournamentErrors.code(content.code());
         TournamentErrors.required(content.nickname(), "nickname");
+        if (content.signatureHeroes().size() > 20
+                || content.signatureHeroes().stream()
+                        .anyMatch(name -> name == null || name.isBlank() || name.length() > 100))
+            throw TournamentErrors.invalid("signatureHeroes allows 20 names of at most 100 characters.");
         if (!SourceUrls.valid(content.photoUrl()))
             throw TournamentErrors
                     .invalid("photoUrl must be an absolute HTTP or HTTPS URL without embedded credentials.");

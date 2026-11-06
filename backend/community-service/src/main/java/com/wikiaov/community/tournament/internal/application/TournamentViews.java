@@ -41,6 +41,14 @@ public final class TournamentViews {
         }
     }
 
+    public record TournamentStats(
+            UUID tournamentId,
+            long teams,
+            long matches,
+            long played
+    ) {
+    }
+
     public record PageSlice<T>(
             List<T> items,
             long totalElements,
