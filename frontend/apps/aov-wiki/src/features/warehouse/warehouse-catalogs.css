@@ -64,9 +64,28 @@
   justify-content: space-between;
   gap: 8px 12px;
 }
-.wiki-item-toolbar > [role="group"]:first-child {
+.wiki-item-toolbar > [role="group"]:not(.wiki-item-layout) {
   min-width: 0;
   flex: 1 1 320px;
+}
+/* On a phone the view switch and the sort share one line, with the stat filters under them. */
+@media (max-width: 640px) {
+  .wiki-item-toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+  }
+  .wiki-item-toolbar > .wiki-item-layout {
+    grid-area: 1 / 1;
+  }
+  .wiki-item-toolbar > .wiki-item-toolbar-end {
+    grid-area: 1 / 2;
+    justify-content: flex-end;
+  }
+  .wiki-item-toolbar > :not(.wiki-item-layout, .wiki-item-toolbar-end) {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
 }
 .wiki-item-toolbar-end {
   display: flex;
@@ -171,13 +190,13 @@
   color: var(--aov-accent);
 }
 @media (max-width: 767px) {
-  .wiki-item-toolbar > [role="group"]:first-child {
+  .wiki-item-toolbar > [role="group"]:not(.wiki-item-layout) {
     flex-basis: 100%;
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
   }
-  .wiki-item-toolbar > [role="group"]:first-child button {
+  .wiki-item-toolbar > [role="group"]:not(.wiki-item-layout) button {
     flex: none;
     white-space: nowrap;
   }

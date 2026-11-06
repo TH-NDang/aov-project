@@ -94,7 +94,8 @@ export function ArcanaFilters({
         <SelectTrigger
           aria-label={t("Lọc chỉ số ngọc", "Filter arcana stats")}
           className={cn(
-            "h-10! w-full gap-2 rounded-xl text-sm shadow-none sm:w-52",
+            // Fills what the row has left, so on a line of its own it reads as a full-width field.
+            "h-10! w-full gap-2 rounded-xl text-sm shadow-none sm:w-auto sm:min-w-52 sm:flex-1",
             stat && "border-primary/40 bg-primary/5",
           )}
         >

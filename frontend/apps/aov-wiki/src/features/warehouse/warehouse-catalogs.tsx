@@ -22,11 +22,11 @@ import { useQuery } from "@tanstack/react-query"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { warehouseViewGroups } from "./warehouse-view"
 import {
-  warehouseText,
-  type WarehouseEntry,
   type PublishedWarehouseRecord,
+  type WarehouseEntry,
   type WarehouseGroup,
   type WarehouseKind,
+  warehouseText,
 } from "./warehouse-types"
 import "./warehouse-catalogs.css"
 
@@ -212,7 +212,7 @@ function ItemList({
   )
 }
 
-function ItemToolbar({ view }: { view: ItemCatalogView }) {
+function ItemToolbar({ view, showLayout }: { view: ItemCatalogView; showLayout: boolean }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const sorts: [ItemSort, string][] = [
@@ -223,6 +223,7 @@ function ItemToolbar({ view }: { view: ItemCatalogView }) {
   ]
   return (
     <div className="wiki-item-toolbar">
+      {showLayout && <ItemLayoutToggle view={view} />}
       <ItemStatFilter value={view.stats} counts={view.counts} onChange={view.setStats} />
       <div className="wiki-item-toolbar-end">
         {view.stats.length > 0 && (
@@ -249,7 +250,7 @@ function ItemToolbar({ view }: { view: ItemCatalogView }) {
   )
 }
 
-export function ItemLayoutToggle({ view }: { view: ItemCatalogView }) {
+function ItemLayoutToggle({ view }: { view: ItemCatalogView }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   return (
@@ -396,7 +397,7 @@ export function WarehouseCatalog(props: CatalogProps) {
   }
   return (
     <div className="space-y-3">
-      <ItemToolbar view={itemView} />
+      <ItemToolbar view={itemView} showLayout={groups.length > 0} />
       {itemView.layout === "list" ? (
         <ItemList
           view={itemView}

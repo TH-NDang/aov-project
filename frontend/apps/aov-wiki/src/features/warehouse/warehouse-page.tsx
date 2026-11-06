@@ -3,10 +3,10 @@ import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch
 import { PublishedWarehouseView } from "./warehouse-view"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { useMemo, useRef } from "react"
-import { useSearchParams } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { warehouseCatalogQuery, warehouseGroupsQuery } from "./warehouse-api"
-import { ItemLayoutToggle, WarehouseCatalog } from "./warehouse-catalogs"
+import { WarehouseCatalog } from "./warehouse-catalogs"
 import { WarehouseDetail } from "./warehouse-detail"
 import { WarehouseIcon } from "./warehouse-icon"
 import { WarehouseSkeleton } from "./warehouse-loading"
@@ -23,11 +23,17 @@ import {
 import "./warehouse-page.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { PublicTabBar } from "@aov/ui/components/public-tab-bar"
+
+const WAREHOUSE_KINDS = ["items", "enchantments", "arcana", "spells"] as const
 
 export default function WarehousePage() {
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
   const [params, setParams] = useSearchParams()
+  const navigate = useNavigate()
+  const layout = usePageLayout()
   const kind = warehouseKind(params.get("tab"))
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
   const sectionName = scope.t(kind)
@@ -137,6 +143,15 @@ export default function WarehousePage() {
     <PublishedWarehouseView entries={entries} groups={groups} kind={kind}>
       <div className={`wiki-warehouse-page wiki-warehouse-${kind}`}>
         <CatalogHeading title={sectionName} section={scope.t("warehouse")} />
+        {/* The armory's four parts stay a tap apart without opening the contents. */}
+        {layout === "compact" && (
+          <PublicTabBar
+            label={scope.t("warehouse")}
+            tabs={WAREHOUSE_KINDS.map((key) => ({ key, label: scope.t(key) }))}
+            active={kind}
+            onSelect={(key) => navigate(scope.href(`/warehouse?tab=${key}`))}
+          />
+        )}
         <div className="wiki-warehouse-toolbar">
           <WikiVersionPicker changedVariants={changes.changedVariants} />
           <label className="wiki-hero-search wiki-warehouse-search">
@@ -154,7 +169,6 @@ export default function WarehousePage() {
               }
             />
           </label>
-          {kind === "items" && groups.length > 0 && <ItemLayoutToggle view={itemView} />}
         </div>
         {metadata.isError && (
           <div className="wiki-warehouse-notice">

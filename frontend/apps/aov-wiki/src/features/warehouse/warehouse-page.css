@@ -3,6 +3,10 @@
   max-width: 980px;
   color: var(--aov-text);
 }
+.wiki-warehouse-enchantments .enchantment-node:not([aria-pressed="true"]) {
+  border-color: transparent;
+  background: var(--aov-wiki-panel);
+}
 .wiki-warehouse-enchantments {
   --warehouse-accent: #9acbb0;
 }
@@ -133,9 +137,9 @@
   width: min(480px, 100vw);
   max-width: 480px;
   gap: 0;
-  border-left: 1px solid var(--wiki-line);
+  border-left: 1px solid var(--aov-wiki-gold);
   padding: 0;
-  background: var(--background);
+  background: var(--aov-wiki-panel);
   color: var(--wiki-text);
 }
 .wiki-warehouse-detail-close {
@@ -168,11 +172,13 @@
   gap: 12px;
   padding-right: 40px;
 }
+/* The item is lit by the same amber light as the logo. */
 .wiki-warehouse-detail-identity > .wiki-warehouse-art {
-  width: 56px;
-  height: 56px;
-  border: 1px solid var(--wiki-line);
-  border-radius: 10px;
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--aov-wiki-gold);
+  border-radius: 12px;
+  box-shadow: 0 0 26px -6px rgb(211 188 142 / 55%);
 }
 .wiki-warehouse-detail-eyebrow {
   font: var(--wiki-type-meta);
@@ -294,6 +300,10 @@
 .wiki-warehouse-panel {
   display: none;
 }
+/* Runs edge to edge under the header on the compact layout. */
+.wiki-warehouse-page > .public-tab-bar {
+  margin: -12px calc(-1 * var(--wiki-gutter)) 10px;
+}
 @media (max-width: 640px) {
   .wiki-warehouse-search.wiki-hero-search {
     width: auto;
@@ -339,6 +349,15 @@
 }
 .wiki-warehouse-detail-section {
   margin-top: 26px;
+}
+.wiki-warehouse-detail-section > h3::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  background: var(--aov-wiki-gold);
+  transform: rotate(45deg) translateY(-1px);
 }
 .wiki-warehouse-detail-section > h3 {
   font: var(--wiki-type-section);

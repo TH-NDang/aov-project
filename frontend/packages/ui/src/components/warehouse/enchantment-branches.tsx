@@ -168,7 +168,7 @@ export function EnchantmentBranches<E extends WarehouseEntry<EnchantmentContent>
                         <span className="text-xs font-medium tracking-widest text-muted-foreground uppercase">
                           {t("Cấp", "Tier")}
                         </span>
-                        <span className="grid size-6 place-items-center rounded-full border border-[var(--branch-border)] bg-[var(--branch-tint)] font-serif text-xs font-semibold text-[var(--branch-color)]">
+                        <span className="grid size-6 place-items-center rounded-full border border-[var(--branch-border)] bg-[var(--branch-tint)] font-serif text-xs font-semibold text-foreground">
                           {["I", "II", "III"][tier - 1]}
                         </span>
                       </div>
