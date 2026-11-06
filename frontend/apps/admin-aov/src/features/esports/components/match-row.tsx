@@ -1,8 +1,9 @@
+import { LocalTime } from "@aov/ui/components/local-time"
 import type { ReactNode } from "react"
 import { ChevronRight, PlayCircle } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { seriesWinner, type SeriesRecord } from "../model/competition"
-import { formatTime, stageInfo } from "../model/labels"
+import { stageInfo } from "../model/labels"
 import { RelativeDate } from "./relative-date"
 import type { TeamView } from "../model/game-view"
 import { youtubeVideoId } from "../model/vod"
@@ -49,7 +50,9 @@ export function MatchRow({
     <>
       <span className="hidden w-[92px] shrink-0 flex-col text-xs text-muted-foreground @lg:flex">
         <RelativeDate value={content.scheduledAt} fallback="Chưa lịch" className="w-fit" />
-        <span className="esp-num">{formatTime(content.scheduledAt)}</span>
+        <span className="esp-num">
+          <LocalTime value={content.scheduledAt} format={{ hour: "2-digit", minute: "2-digit" }} />
+        </span>
       </span>
       {side(a, "start", winner === "A")}
       <span className="flex shrink-0 flex-col items-center gap-1">

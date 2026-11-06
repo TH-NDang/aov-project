@@ -7,6 +7,7 @@ import { selfProfile, userKeys } from "@/features/users/user-api"
 import { useSession } from "@/app/auth/auth-gate"
 import { logout } from "@/app/auth/session"
 import { useTheme, type Theme } from "@/app/theme"
+import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import {
   DropdownMenu,
@@ -34,6 +35,7 @@ export function UserMenu() {
     enabled: !!actor,
     refetchInterval: 600000,
   })
+  useAccountTimeZone(profile.data)
   const displayName = profile.data?.displayName || actor?.displayName || "Tài khoản quản trị"
   const { isMobile, setOpenMobile } = useSidebar()
   const { theme, setTheme } = useTheme()

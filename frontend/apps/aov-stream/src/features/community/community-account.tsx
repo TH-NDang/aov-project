@@ -9,6 +9,7 @@ import {
   type PageViewer,
   type ProfilePresentation,
 } from "@aov/community-contracts"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamBrand } from "../../components/stream-brand"
 import { StreamIcon } from "../../components/stream-icon"
@@ -172,7 +173,9 @@ function NotificationInbox() {
           <Link to={`/pages/${item.pageId}`} onClick={() => !item.read && read.one.mutate(item.id)}>
             {item.message}
           </Link>
-          <small>{new Date(item.createdAt).toLocaleString("vi-VN")}</small>
+          <small>
+            <LocalTime value={item.createdAt} />
+          </small>
           {!item.read && (
             <button className="cp-text-button" disabled={read.one.isPending} onClick={() => read.one.mutate(item.id)}>
               Đánh dấu đã đọc

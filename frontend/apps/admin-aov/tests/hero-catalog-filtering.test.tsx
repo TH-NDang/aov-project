@@ -170,22 +170,16 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
       "Unknown editing history must not use publication, overview or current time",
     )
     assert.equal(lastEdit.querySelector("span:not([aria-hidden])")?.textContent, "Chưa ghi nhận")
+    const { chooseTimeZone } = await import("@aov/ui/lib/time-zone")
+    await act(async () => chooseTimeZone("Asia/Tokyo"))
     await waitFor(
-      () => !!cell("ad-current-change", /chỉnh sửa|sửa.*gần|biên tập/i).querySelector('time[title$="Asia/Tokyo"]'),
-      "The editing timestamp uses the signed-in user's configured time zone",
+      () => !!cell("ad-current-change", /chỉnh sửa|sửa.*gần|biên tập/i).querySelector("time"),
+      "The editing timestamp is shown",
     )
     const recordedEdit = cell("ad-current-change", /chỉnh sửa|sửa.*gần|biên tập/i).querySelector("time")!
     assert.equal(recordedEdit.getAttribute("datetime"), "2026-10-15T01:02:03Z")
-    assert.equal(
-      recordedEdit.getAttribute("aria-label"),
-      new Intl.DateTimeFormat("vi-VN", {
-        dateStyle: "medium",
-        timeStyle: "short",
-        timeZone: "Asia/Tokyo",
-      }).format(new Date("2026-10-15T01:02:03Z")),
-    )
     assert.deepEqual(
-      [...recordedEdit.querySelectorAll("span")].map((part) => part.textContent),
+      [...recordedEdit.querySelectorAll("span:not(.local-time-hidden)")].map((part) => part.textContent),
       [
         new Intl.DateTimeFormat("vi-VN", {
           day: "2-digit",

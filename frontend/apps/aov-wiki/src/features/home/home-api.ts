@@ -40,15 +40,3 @@ export const seasonUpdatesQuery = (scope: WikiCatalogScope) =>
     refetchInterval: 5 * 60_000,
     retry: 1,
   })
-
-const patchDate = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", timeZone: "Asia/Ho_Chi_Minh" })
-
-export function formatPatchDate(patch: SeasonPatch) {
-  const value = patch.effectiveOn ?? patch.effectiveAt
-  if (!value) return "—"
-
-  const date = new Date(patch.effectiveOn ? `${value}T00:00:00+07:00` : value)
-  if (Number.isNaN(date.getTime())) return "—"
-  const parts = patchDate.formatToParts(date)
-  return `${parts.find((part) => part.type === "day")?.value}/${parts.find((part) => part.type === "month")?.value}`
-}

@@ -1,3 +1,4 @@
+import { LocalTime } from "@aov/ui/components/local-time"
 import { useState } from "react"
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router"
@@ -79,7 +80,7 @@ export function MediaContactPage() {
                   <span className="text-sm">{entry.status === "OPEN" ? "Chờ xử lý" : "Đã xử lý"}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {entry.email} · {new Date(entry.createdAt).toLocaleString("vi-VN")}
+                  {entry.email} · <LocalTime value={entry.createdAt} />
                 </p>
                 <p className="whitespace-pre-wrap break-words text-sm">{entry.message}</p>
                 {entry.assetId && entry.versionId && (

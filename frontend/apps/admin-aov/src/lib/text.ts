@@ -33,12 +33,6 @@ export function formatNumber(value: number): string {
   return numberFormat.format(value)
 }
 
-const dateTimeFormat = new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" })
-
-export function formatDateTime(value: string | number | Date): string {
-  return dateTimeFormat.format(new Date(value))
-}
-
 const relativeFormat = new Intl.RelativeTimeFormat("vi-VN", { numeric: "auto" })
 
 export function formatRelative(value: string | number | Date): string {

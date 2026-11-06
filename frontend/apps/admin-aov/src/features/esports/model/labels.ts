@@ -1,3 +1,11 @@
+import {
+  calendarDaysBetween,
+  currentTimeZone,
+  dayKeyInZone,
+  formatCalendarDate,
+  formatInZone,
+  isCalendarDate,
+} from "@aov/ui/lib/time-zone"
 import type { Lane, Side, TournamentContent } from "@aov/community-contracts"
 
 export type StagePhase = "GROUP" | "UPPER" | "LOWER" | "FINAL" | "OTHER"
@@ -105,9 +113,9 @@ const REGION_NAMES: Record<string, string> = {
 }
 export const regionName = (code?: string | null) => (code && REGION_NAMES[code]) || code || "Chưa rõ khu vực"
 
-const dateFormat = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
-const dayFormat = new Intl.DateTimeFormat("vi-VN", { weekday: "short", day: "2-digit", month: "2-digit" })
-const timeFormat = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" })
+const dateFormat: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
+const dayFormat: Intl.DateTimeFormatOptions = { weekday: "short", day: "2-digit", month: "2-digit" }
+const timeFormat: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" }
 
 function parseDate(value?: string | null) {
   if (!value) return null
@@ -115,51 +123,46 @@ function parseDate(value?: string | null) {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-export const formatDate = (value?: string | null) => {
-  const date = parseDate(value)
-  return date ? dateFormat.format(date) : ""
-}
-export const formatDay = (value?: string | null) => {
-  const date = parseDate(value)
-  return date ? dayFormat.format(date) : ""
-}
-export const formatTime = (value?: string | null) => {
-  const date = parseDate(value)
-  return date ? timeFormat.format(date) : ""
+/** Moments read in the user's chosen zone; a calendar date stays the day it says. */
+function formatLabel(value: string | null | undefined, options: Intl.DateTimeFormatOptions) {
+  if (!value) return ""
+  return isCalendarDate(value) ? formatCalendarDate(value, options) : formatInZone(value, currentTimeZone(), options)
 }
 
-const exactDateFormat = new Intl.DateTimeFormat("vi-VN", {
+export const formatDate = (value?: string | null) => formatLabel(value, dateFormat)
+export const formatDay = (value?: string | null) => formatLabel(value, dayFormat)
+export const formatTime = (value?: string | null) =>
+  value && !isCalendarDate(value) ? formatInZone(value, currentTimeZone(), timeFormat) : ""
+
+const exactDateFormat: Intl.DateTimeFormatOptions = {
   weekday: "long",
   day: "numeric",
   month: "long",
   year: "numeric",
-})
-const DAY_MS = 86_400_000
-const dateOnly = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value)
+}
 
 /**
  * Calendar-day words for dates near today (today, yesterday, 3 days ago, tomorrow); further away the short
  * date, with the year only when it is not this year.
  */
 export function relativeDay(value?: string | null, now = new Date()) {
-  const date = parseDate(value)
-  if (!date) return ""
-  const day = (moment: Date) => new Date(moment.getFullYear(), moment.getMonth(), moment.getDate()).getTime()
-  const days = Math.round((day(date) - day(now)) / DAY_MS)
+  if (!value || !parseDate(value)) return ""
+  const timeZone = currentTimeZone()
+  const days = calendarDaysBetween(now, value, timeZone)
   if (days === 0) return "Hôm nay"
   if (days === -1) return "Hôm qua"
   if (days === 1) return "Ngày mai"
   if (days < 0 && days > -7) return `${-days} ngày trước`
   if (days > 0 && days < 7) return `${days} ngày nữa`
-  return date.getFullYear() === now.getFullYear() ? dayFormat.format(date) : dateFormat.format(date)
+  const year = isCalendarDate(value) ? value.slice(0, 4) : dayKeyInZone(value, timeZone).slice(0, 4)
+  return year === dayKeyInZone(now, timeZone).slice(0, 4) ? formatDay(value) : formatDate(value)
 }
 
 /** The full date, plus the time when the value carries one and it is wanted, for tooltips under relative dates. */
 export function exactDate(value?: string | null, withTime = true) {
-  const date = parseDate(value)
-  if (!date) return ""
-  const text = exactDateFormat.format(date)
-  return withTime && value && !dateOnly(value) ? `${text}, ${timeFormat.format(date)}` : text
+  if (!value || !parseDate(value)) return ""
+  const text = formatLabel(value, exactDateFormat)
+  return withTime && !isCalendarDate(value) ? `${text}, ${formatTime(value)}` : text
 }
 
 export function dateRange(startsOn?: string, endsOn?: string) {

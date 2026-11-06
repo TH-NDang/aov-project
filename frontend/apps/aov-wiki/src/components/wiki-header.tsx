@@ -19,6 +19,7 @@ import { wikiSections } from "../layout/wiki-sections"
 import { WikiIcon } from "./wiki-icon"
 import { WikiSearchSuggestions } from "./wiki-search-suggestions"
 import { WikiAccountMenu } from "../features/auth/wiki-account"
+import { useWikiAccountTimeZone } from "../features/auth/wiki-auth"
 
 type IconName =
   "search" | "globe" | "user" | "chevron" | "check" | "home" | "more" | "close" | "chevronRight" | "contents"
@@ -352,6 +353,7 @@ interface WikiHeaderProps {
 
 export function WikiHeader({ variant = "home", pageTitle, onOpenContents, searchScope = "heroes" }: WikiHeaderProps) {
   const { t, href } = useWikiContext()
+  useWikiAccountTimeZone()
   // Hero headers on every viewport and the home phone header darken over the first 100px of scroll.
   const headerRef = useRef<HTMLElement>(null)
   useScrollProgressVar(headerRef, 100)

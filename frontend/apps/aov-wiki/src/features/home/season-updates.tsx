@@ -1,19 +1,26 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
-import { formatPatchDate, seasonUpdatesQuery, type SeasonPatch } from "./home-api"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { seasonUpdatesQuery, type SeasonPatch } from "./home-api"
+import { patchDayLabel } from "./patch-day-label"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 
 function PatchRow({ patch }: { patch: SeasonPatch }) {
-  const { locale, href } = useWikiContext()
+  const { locale, href, region, regions } = useWikiContext()
+  const date = patch.effectiveOn ?? patch.effectiveAt ?? ""
   return (
     <li>
       <Link to={href(`/updates/${patch.code}`)} className="wiki-home-patch-row">
         <span className="wiki-home-patch-meta">
-          <time className="wiki-home-patch-date" dateTime={patch.effectiveOn ?? patch.effectiveAt ?? undefined}>
-            {formatPatchDate(patch)}
-          </time>
+          <LocalTime
+            className="wiki-home-patch-date"
+            value={date}
+            sourceTimeZone={regions.find((market) => market.code === region)?.timeZone}
+            label={(zone) => patchDayLabel(date, zone)}
+            fallback={<time className="wiki-home-patch-date">—</time>}
+          />
           {patch.isCurrent && (
             <span className="wiki-home-current-tag">{wikiText(locale, "Đang áp dụng", "Current")}</span>
           )}

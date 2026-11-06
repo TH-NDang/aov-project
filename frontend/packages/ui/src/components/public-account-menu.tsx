@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
-import { Globe2, LogIn, LogOut, Moon, Sun, UserRound } from "lucide-react"
+import { Clock3, Globe2, LogIn, LogOut, Moon, Sun, UserRound } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./public-overlay"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./public-select"
+import { PublicTimeZoneSelect } from "./public-time-zone-select"
 import { useIsMobile } from "../hooks/use-mobile"
 import "./public-account-menu.css"
 
@@ -199,6 +200,7 @@ export function PublicAccountSettings({
   onThemeChange,
 }: Pick<PublicAccountOptionsProps, "product" | "locale" | "onLocaleChange" | "languages" | "theme" | "onThemeChange">) {
   const languageId = useId()
+  const timeZoneId = useId()
   const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
   return (
     <div className="public-account-settings">
@@ -230,6 +232,19 @@ export function PublicAccountSettings({
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="public-account-language">
+        <label htmlFor={timeZoneId}>
+          <Clock3 size={17} aria-hidden="true" />
+          {text("Múi giờ", "Time zone")}
+        </label>
+        <PublicTimeZoneSelect
+          id={timeZoneId}
+          locale={locale}
+          product={product}
+          triggerClassName="public-account-language-trigger public-account-time-zone-trigger"
+          contentClassName="public-account-theme public-account-language-menu"
+        />
       </div>
       {theme && onThemeChange && (
         <fieldset className="public-account-appearance">

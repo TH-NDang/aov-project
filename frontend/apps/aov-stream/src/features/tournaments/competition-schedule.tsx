@@ -1,21 +1,18 @@
 import { useSearchParams } from "react-router"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
+import { shownTimeZoneLabel, useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { StreamIcon } from "../../components/stream-icon"
 import { MatchRow } from "./match-components"
-import { groupMatchesByDay, matchState, type CompetitionMatch } from "./match-model"
+import { groupMatchesByDay, knownMatchDay, matchState, type CompetitionMatch } from "./match-model"
 
-export function CompetitionSchedule({
-  entries,
-  timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone,
-}: {
-  entries: CompetitionMatch[]
-  timeZone?: string
-}) {
+export function CompetitionSchedule({ entries }: { entries: CompetitionMatch[] }) {
+  const timeZone = useUserTimeZone()
   const [params, setParams] = useSearchParams()
   const requestedScope = params.get("scope")
   const scope = requestedScope === "upcoming" || requestedScope === "results" ? requestedScope : "all"
   const stage = params.get("stage") || "all"
-  const date = params.get("date") || ""
+  const days = groupMatchesByDay(entries, timeZone)
+  const date = knownMatchDay(days, params.get("date"))
   const stages = [...new Set(entries.map((entry) => entry.match.stageCode))]
   const update = (key: string, value: string) =>
     setParams((current) => {
@@ -74,7 +71,7 @@ export function CompetitionSchedule({
             </SelectTrigger>
             <SelectContent drawerTitle="Ngày thi đấu">
               <SelectItem value="all">Mọi ngày</SelectItem>
-              {groupMatchesByDay(entries, timeZone).map((group) => (
+              {days.map((group) => (
                 <SelectItem key={group.key} value={group.key}>
                   {group.label}
                 </SelectItem>
@@ -83,7 +80,7 @@ export function CompetitionSchedule({
           </Select>
         </div>
       </div>
-      <p className="cp-meta">Giờ hiển thị: {timeZone}</p>
+      <p className="cp-meta">Giờ hiển thị: {shownTimeZoneLabel()}</p>
       {!groups.length && (
         <div className="hub-state">
           <StreamIcon name="calendar" size={28} />
@@ -100,7 +97,7 @@ export function CompetitionSchedule({
           <h3>{group.label}</h3>
           <div className="match-list">
             {group.items.map((entry) => (
-              <MatchRow key={`${entry.competition.id}:${entry.match.key}`} entry={entry} timeZone={timeZone} />
+              <MatchRow key={`${entry.competition.id}:${entry.match.key}`} entry={entry} />
             ))}
           </div>
         </section>

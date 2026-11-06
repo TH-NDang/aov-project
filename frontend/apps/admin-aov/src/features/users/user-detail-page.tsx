@@ -9,12 +9,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { getProfile, profileError, userKeys, type UserProfile } from "./user-api"
 import { ProfileForm } from "./profile-form"
+import { LocalTime } from "@aov/ui/components/local-time"
 
-const dateFormat = new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" })
 function displayDate(value: string | null) {
-  if (!value) return "Chưa có thông tin"
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? "Chưa có thông tin" : dateFormat.format(date)
+  return <LocalTime value={value} format={{ dateStyle: "medium", timeStyle: "short" }} fallback="Chưa có thông tin" />
 }
 function languageName(locale: string) {
   try {

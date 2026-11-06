@@ -47,7 +47,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@aov/ui/components/tool
 import { cn } from "@aov/ui/lib/utils"
 import { Page } from "@/components/page-header"
 import { AccessGate, type Access } from "@/features/esports/pages/esports-shell"
-import { formatDateTime } from "@/lib/text"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { pageApi, pageError, pageKeys, publicSite } from "./page-api"
 import { ProfileFields, Section } from "./profile-fields"
 import { profileDirectoryPath } from "./page-directory"
@@ -585,7 +585,8 @@ function LiveSection({ entry }: { entry: CommunityProfile }) {
     >
       {entry.live && (
         <p className="type-body">
-          Đang phát: <strong>{entry.live.title}</strong> · từ {formatDateTime(entry.live.startedAt)}
+          Đang phát: <strong>{entry.live.title}</strong> · từ{" "}
+          <LocalTime value={entry.live.startedAt} format={{ dateStyle: "short", timeStyle: "short" }} />
         </p>
       )}
       <form
@@ -768,8 +769,9 @@ function Handover({ entry }: { entry: CommunityProfile }) {
         </div>
       ) : pending && status.data?.expiresAt ? (
         <p className="type-body">
-          Đang có một liên kết bàn giao chưa dùng, hết hạn {formatDateTime(status.data.expiresAt)}. Tạo liên kết mới sẽ
-          vô hiệu liên kết cũ.
+          Đang có một liên kết bàn giao chưa dùng, hết hạn{" "}
+          <LocalTime value={status.data.expiresAt} format={{ dateStyle: "short", timeStyle: "short" }} />. Tạo liên kết
+          mới sẽ vô hiệu liên kết cũ.
         </p>
       ) : (
         <p className="type-body text-muted-foreground">Chưa có liên kết bàn giao nào đang hiệu lực.</p>

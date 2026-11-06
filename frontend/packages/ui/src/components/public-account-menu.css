@@ -220,6 +220,9 @@ button.public-account-summary:disabled {
   font: inherit;
   cursor: pointer;
 }
+.public-account-time-zone-trigger[data-slot="select-trigger"] {
+  width: 184px;
+}
 .public-account-language-trigger[data-state="open"],
 .public-account-language-trigger:hover {
   border-color: var(--account-selected-line);
@@ -372,6 +375,13 @@ button.public-account-summary:disabled {
   padding: 4px 10px;
   color: #e89e97;
   font-size: 13px;
+}
+.public-account-language:has(> .public-time-zone-error) {
+  flex-wrap: wrap;
+}
+.public-time-zone-error {
+  flex: 1 0 100%;
+  padding: 0;
 }
 @media (max-width: 640px) {
   .public-account-trigger[data-product="wiki"] {

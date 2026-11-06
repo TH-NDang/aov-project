@@ -1,3 +1,4 @@
+import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
 import { useEffect, useMemo, useState, type MutableRefObject, type ReactNode } from "react"
 import type { Catalog, DocumentView, GameContent, Reference } from "@aov/community-contracts"
 import {
@@ -409,7 +410,7 @@ export function FocusedGame({
   return <>{children(parts)}</>
 }
 
-const savedTime = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+const savedTime: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit", second: "2-digit" }
 
 function SaveStatus({ state, onReload, compact }: { state: SaveState; onReload: () => void; compact?: boolean }) {
   if (state.status === "idle") return null
@@ -423,7 +424,7 @@ function SaveStatus({ state, onReload, compact }: { state: SaveState; onReload: 
     return (
       <span className="flex items-center gap-1.5 text-xs text-muted-foreground" role="status">
         <CircleCheck size={13} className="text-[var(--esp-live)]" />
-        {!compact && `Đã lưu ${state.savedAt ? savedTime.format(state.savedAt) : ""}`}
+        {!compact && `Đã lưu ${formatInZone(state.savedAt, currentTimeZone(), savedTime)}`}
       </span>
     )
   return (

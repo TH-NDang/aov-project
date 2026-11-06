@@ -1,21 +1,19 @@
 import { Link } from "react-router"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { useFeaturedCompetitions } from "./community-ui"
 import { MATCH_WINDOW, matchesToShow, scheduledMatches } from "./schedule-model"
 import { competitionMatchHref } from "../tournaments/match-model"
 
-const time = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit" })
-const dayTime = new Intl.DateTimeFormat("vi-VN", {
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-})
+const time: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" }
+const dayTime: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }
 
 /** The side column's match list: what is on today, scores once entered, and an "under way" marker. */
 export function TodaySchedule() {
   const competitions = useFeaturedCompetitions()
   const now = Date.now()
-  const { today, items } = matchesToShow(scheduledMatches(competitions.data?.items || []), now)
+  const timeZone = useUserTimeZone()
+  const { today, items } = matchesToShow(scheduledMatches(competitions.data?.items || []), now, timeZone)
   if (!items.length) return null
   return (
     <section className="hub-card hub-card-padded" aria-labelledby="today-schedule">
@@ -38,7 +36,7 @@ export function TodaySchedule() {
                   {underway ? (
                     <span className="cp-live-badge">Đang diễn ra</span>
                   ) : (
-                    (today ? time : dayTime).format(match.at)
+                    <LocalTime value={match.at} sourceTimeZone={match.timeZone} format={today ? time : dayTime} />
                   )}
                 </span>
                 <span className="cp-schedule-match">

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@aov/ui/c
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { competitionsQuery, timeAgo } from "./community-ui"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { PostVideo } from "./post-media"
 import { MATCH_WINDOW, scheduledMatches } from "./schedule-model"
 import { competitionMatchHref } from "../tournaments/match-model"
@@ -17,7 +18,10 @@ export function LiveBlock({ live, name }: { live: PageLive; name: string }) {
       <div className="cp-live-heading">
         <span className="cp-live-badge">Trực tiếp</span>
         <h2 id="page-live">{live.title}</h2>
-        <span className="cp-meta">Bắt đầu {timeAgo(live.startedAt).toLowerCase()}</span>
+        <span className="cp-meta">
+          Bắt đầu{" "}
+          <LocalTime value={live.startedAt} label={(zone) => timeAgo(live.startedAt, Date.now(), zone).toLowerCase()} />
+        </span>
       </div>
       <PostVideo url={live.url} title={`${name} · ${live.title}`} />
     </section>
@@ -44,13 +48,13 @@ export function PageUpcoming({ profile }: { profile: CommunityProfile }) {
     .sort((a, b) => a.at - b.at)
     .slice(0, 3)
   if (!upcoming.length) return null
-  const format = new Intl.DateTimeFormat("vi-VN", {
+  const format: Intl.DateTimeFormatOptions = {
     weekday: "short",
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  }
   return (
     <section className="cp-panel" aria-labelledby="page-upcoming">
       <h2 id="page-upcoming">Sắp diễn ra</h2>
@@ -64,7 +68,7 @@ export function PageUpcoming({ profile }: { profile: CommunityProfile }) {
                   {!scored && match.at <= now ? (
                     <span className="cp-live-badge">Đang diễn ra</span>
                   ) : (
-                    format.format(match.at)
+                    <LocalTime value={match.at} sourceTimeZone={match.timeZone} format={format} />
                   )}
                 </span>
                 <span className="cp-schedule-match">

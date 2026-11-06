@@ -18,6 +18,7 @@ import { MatchRow } from "../tournaments/match-components"
 import { competitionMatches, competitionMatchHref } from "../tournaments/match-model"
 import { CompetitionSchedule } from "../tournaments/competition-schedule"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const hue = (name: string) => ({ "--hub-hue": hueOf(name) }) as CSSProperties
@@ -316,7 +317,9 @@ export function PublicCompetitionPage() {
                   Nguồn kiểm chứng
                   <StreamIcon name="external" size={12} />
                 </a>
-                <p className="cp-meta">Cập nhật: {new Date(query.data.publishedAt!).toLocaleString("vi-VN")}</p>
+                <p className="cp-meta">
+                  Cập nhật: <LocalTime value={query.data.publishedAt} />
+                </p>
               </section>
             </aside>
           </div>
@@ -371,7 +374,7 @@ export function PublicCompetitionPage() {
         {tab === "matches" && (
           <section className="cp-section">
             <h2>Lịch & kết quả</h2>
-            <CompetitionSchedule entries={matches} timeZone={plan.timezone} />
+            <CompetitionSchedule entries={matches} />
           </section>
         )}
         {tab === "standings" && (

@@ -1,3 +1,4 @@
+import { LocalTime } from "@aov/ui/components/local-time"
 import { useEffect } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useSession } from "@/app/auth/auth-gate"
@@ -72,7 +73,7 @@ export function ImportJobHistory() {
           <summary className="cursor-pointer text-sm font-medium">
             {jobDescription(job)}{" "}
             <span className="ml-2 font-normal text-muted-foreground">
-              {new Date(job.createdAt).toLocaleString("vi-VN")}
+              <LocalTime value={job.createdAt} />
             </span>
           </summary>
           <progress

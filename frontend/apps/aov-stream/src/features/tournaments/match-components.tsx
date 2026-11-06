@@ -3,6 +3,8 @@ import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { slotLabel, type PublishedGame } from "@aov/community-contracts"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { shownTimeZoneLabel, useUserTimeZone } from "@aov/ui/lib/time-zone"
 import { PublicDrawer, PublicDrawerContent } from "@aov/ui/components/public-overlay"
 import { StreamImage } from "../../components/stream-image"
 import { StreamIcon } from "../../components/stream-icon"
@@ -24,21 +26,13 @@ export const matchStateLabels = {
   UNSCHEDULED: "Chờ lịch",
 }
 
-export function MatchSummary({
-  entry,
-  compact = false,
-  timeZone,
-}: {
-  entry: CompetitionMatch
-  compact?: boolean
-  timeZone?: string
-}) {
+export function MatchSummary({ entry, compact = false }: { entry: CompetitionMatch; compact?: boolean }) {
+  useUserTimeZone()
   const { competition, match, result } = entry
   const { teams, plan } = competition.content
   const a = result?.teamAId || match.a.teamId
   const b = result?.teamBId || match.b.teamId
   const state = matchState(entry)
-  const at = Date.parse(match.scheduledAt || "")
   const team = (id: string | null | undefined, side: "a" | "b") => {
     const name = (id && (teams[id]?.shortName || teams[id]?.name)) || slotLabel(match[side], teams)
     return (
@@ -69,14 +63,13 @@ export function MatchSummary({
       <div className="match-meta">
         <span>{competition.content.tournament.name}</span>
         <span>
-          {Number.isFinite(at)
-            ? new Intl.DateTimeFormat("vi-VN", {
-                dateStyle: "short",
-                timeStyle: "short",
-                timeZone: timeZone || plan.timezone,
-              }).format(at)
-            : "Chưa có giờ thi đấu"}
-          {!compact && ` · ${timeZone || plan.timezone}`}
+          <LocalTime
+            value={match.scheduledAt}
+            sourceTimeZone={plan.timezone}
+            format={{ dateStyle: "short", timeStyle: "short" }}
+            fallback="Chưa có giờ thi đấu"
+          />
+          {!compact && ` · ${shownTimeZoneLabel(match.scheduledAt || Date.now())}`}
         </span>
       </div>
     </div>
@@ -84,7 +77,7 @@ export function MatchSummary({
 }
 
 /** Keep a real link for keyboards and new tabs; a normal phone tap opens the quick preview. */
-export function MatchRow({ entry, timeZone }: { entry: CompetitionMatch; timeZone?: string }) {
+export function MatchRow({ entry }: { entry: CompetitionMatch }) {
   const mobile = useIsMobile()
   const [open, setOpen] = useState(false)
   const trigger = useRef<HTMLAnchorElement>(null)
@@ -110,7 +103,7 @@ export function MatchRow({ entry, timeZone }: { entry: CompetitionMatch; timeZon
           }
         }}
       >
-        <MatchSummary entry={entry} compact timeZone={timeZone} />
+        <MatchSummary entry={entry} compact />
         <StreamIcon name="chevronRight" size={17} />
       </Link>
       <PublicDrawer open={open} onOpenChange={setOpen}>
@@ -124,7 +117,7 @@ export function MatchRow({ entry, timeZone }: { entry: CompetitionMatch; timeZon
         >
           {open && (
             <div className="match-preview">
-              <MatchSummary entry={entry} timeZone={timeZone} />
+              <MatchSummary entry={entry} />
               <MatchGamesPanel seriesId={matchSeriesId(entry)} compact onNavigate={() => setOpen(false)} />
               <Link className="cp-button cp-primary" to={href} onClick={() => setOpen(false)}>
                 Mở trang trận đấu <StreamIcon name="arrow" size={15} />

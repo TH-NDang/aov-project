@@ -32,7 +32,9 @@ import { createPublishingApi, heroPreviewKey, heroCatalogKey, type HeroCatalogQu
 import { type HeroGameplayChange, type HeroRow } from "./types"
 import { heroCatalogRows, appliedMarkets, translationCoverage, type HeroCatalogRow } from "./catalog-data"
 import type { CatalogFilter } from "./catalog-context"
-import { dateLabel, useContentTimeZone, type PublicationOverview } from "./publication-overview"
+import { dateLabel, type PublicationOverview } from "./publication-overview"
+import { LocalTime } from "@aov/ui/components/local-time"
+import { formatInZone } from "@aov/ui/lib/time-zone"
 import { ChangeKindBadges, HeroChangeSummary } from "./hero-change-badges"
 import { MarketBadge } from "./market-badge"
 import { languageOptions } from "../users/profile-preference-picker"
@@ -79,7 +81,6 @@ export function HeroCatalog({
   const [search, setSearch] = useState(q)
   const searchRef = useRef<HTMLInputElement>(null)
   const showAll = showAllCatalogEntries(params)
-  const timeZone = useContentTimeZone()
   const reviewedVariants =
     overview?.variants.filter(
       (v) => (!filter.seasonId || v.seasonId === filter.seasonId) && (!filter.variantId || v.id === filter.variantId),
@@ -339,7 +340,7 @@ export function HeroCatalog({
               Sửa gần nhất
             </span>
           ),
-          cell: ({ row }) => <LastEdited value={row.original.lastEditedAt} locale={locale} timeZone={timeZone} />,
+          cell: ({ row }) => <LastEdited value={row.original.lastEditedAt} locale={locale} />,
         }),
       ]),
     [
@@ -353,7 +354,6 @@ export function HeroCatalog({
       scopeChanges.pending,
       scopeChanges.error,
       entryById,
-      timeZone,
       reviewed,
       filter.seasonId,
       filter.variantId,
@@ -662,32 +662,24 @@ function HeroGameplayChanges({
   )
 }
 
-function LastEdited({ value, locale, timeZone }: { value?: string | null; locale: string; timeZone?: string }) {
-  if (!value || Number.isNaN(Date.parse(value)))
-    return <span className="text-xs text-muted-foreground">Chưa ghi nhận</span>
-  let label = value
-  let date = value
-  let time = ""
-  try {
-    const timestamp = new Date(value)
-    label = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short", timeZone }).format(timestamp)
-    date = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "2-digit", year: "numeric", timeZone }).format(
-      timestamp,
-    )
-    time = new Intl.DateTimeFormat(locale, { timeStyle: "short", timeZone }).format(timestamp)
-  } catch {
-    // Preserve the stored timestamp if a browser cannot format the configured locale or time zone.
-  }
+function LastEdited({ value, locale }: { value?: string | null; locale: string }) {
   return (
-    <time
+    <LocalTime
+      value={value}
+      locale={locale}
       className="inline-flex max-w-full flex-wrap items-baseline gap-x-1 text-xs tabular-nums @min-[44rem]/hero-list:flex-col @min-[44rem]/hero-list:items-end"
-      dateTime={value}
-      aria-label={label}
-      title={timeZone ? `${label} · ${timeZone}` : label}
-    >
-      <span className="font-medium">{date}</span>
-      {time && <span className="text-xs text-muted-foreground">{time}</span>}
-    </time>
+      fallback={<span className="text-xs text-muted-foreground">Chưa ghi nhận</span>}
+      label={(zone) => (
+        <>
+          <span className="font-medium">
+            {formatInZone(value, zone, { day: "2-digit", month: "2-digit", year: "numeric" }, locale)}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {formatInZone(value, zone, { timeStyle: "short" }, locale)}
+          </span>
+        </>
+      )}
+    />
   )
 }
 

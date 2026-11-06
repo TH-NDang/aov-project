@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/public-overlay"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
+import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
 import { WikiIcon } from "../components/wiki-icon"
 import { useWikiContext, type WikiRegion } from "./wiki-context"
 
@@ -54,6 +55,17 @@ export function WikiPreferenceControls({ mobile = false }: { mobile?: boolean })
               <SelectItem value="en-US">English</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="wiki-preference-row">
+          <span>
+            <WikiIcon name="clock" size={16} />
+            {english ? "Time zone" : "Múi giờ"}
+          </span>
+          <PublicTimeZoneSelect
+            locale={locale}
+            product="wiki"
+            triggerClassName="wiki-preference-mobile-select wiki-preference-time-zone-select"
+          />
         </div>
         <div className="wiki-preference-row">
           <span>

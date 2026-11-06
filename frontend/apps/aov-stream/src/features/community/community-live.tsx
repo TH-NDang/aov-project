@@ -3,7 +3,7 @@ import { Link } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import type { CommunityProfile, PageSlice } from "@aov/community-contracts"
 import { communityApi } from "./community-api"
-import { Avatar, hueOf, timeAgo } from "./community-ui"
+import { Avatar, hueOf, TimeAgo } from "./community-ui"
 
 /** Pages broadcasting now; refreshed every minute so ended broadcasts drop out. */
 export function useLivePages(size = 6) {
@@ -49,7 +49,7 @@ export function LiveRow({ title = "Đang trực tiếp" }: { title?: string }) {
                 <span>
                   <strong>{page.live!.title}</strong>
                   <small>
-                    {name} · {timeAgo(page.live!.startedAt)}
+                    {name} · <TimeAgo value={page.live!.startedAt} />
                   </small>
                 </span>
               </span>

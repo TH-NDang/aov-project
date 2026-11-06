@@ -10,10 +10,11 @@ import { changeSetKind, parseChangeSummary } from "../../lib/wiki-change-format"
 import type { ChangeDomain } from "../../lib/wiki-patch-changes"
 import { heroCatalogQuery, heroDetailQuery } from "../hero/hero-api"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "./change-list"
+import { ReleaseDate } from "./release-date"
 import {
-  formatReleaseDate,
   patchChangesQuery,
   patchReleasesQuery,
+  releaseDateValue,
   type PatchChangeRow,
   type PatchRelease,
 } from "./updates-api"
@@ -154,7 +155,6 @@ function PatchContent({ release }: { release: PatchRelease }) {
     })
   const variant = scope.options?.patches.find((patch) => patch.id === release.variantId)
   const season = scope.options?.seasons.find((item) => item.id === variant?.seasonId)
-  const date = formatReleaseDate(variant?.regionalDate, release.effectiveAt)
   const sections = DOMAINS.map((domain, index) => ({ ...domain, rows: results[index].data ?? [] }))
   const filled = sections.filter((section) => section.rows.length)
   const pending = results.some((result) => result.isPending)
@@ -179,7 +179,9 @@ function PatchContent({ release }: { release: PatchRelease }) {
         </nav>
         <h1>{release.title || release.code}</h1>
         <p className="wiki-patch-meta">
-          {[season?.displayName, date].filter(Boolean).join(" · ")}
+          {season?.displayName}
+          {season?.displayName && releaseDateValue(variant?.regionalDate, release.effectiveAt) && " · "}
+          <ReleaseDate regionalDate={variant?.regionalDate} effectiveAt={release.effectiveAt} />
           {variant?.isCurrent && <span className="wiki-updates-current">{text("Đang áp dụng", "Current")}</span>}
           {source && (
             <a href={source} target="_blank" rel="noopener noreferrer">

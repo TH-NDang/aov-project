@@ -1,3 +1,4 @@
+import { LocalTime } from "@aov/ui/components/local-time"
 import { useMemo, useState, type ReactNode } from "react"
 import { Link } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
@@ -107,7 +108,6 @@ interface Usage {
   items: { ownerDomain: string; ownerType: string; ownerId: string; propertyRole: string; scope: string }[]
 }
 
-const date = (value: string) => new Date(value).toLocaleString("vi-VN")
 const safeUrl = (url: string | null | undefined) => (url && /^https?:\/\//i.test(url) ? url : undefined)
 const sourceInput = (source?: MediaSourceInput): MediaSourceInput => ({
   type: source?.type ?? "OTHER",
@@ -626,7 +626,7 @@ export function ImageDetailSheet({
                         <span className="block font-medium">Phiên bản {version.versionNo}</span>
                         <span className="type-meta block">
                           {version.width} × {version.height} · {(version.sizeBytes / 1024).toFixed(1)} KB ·{" "}
-                          {date(version.createdAt)}
+                          <LocalTime value={version.createdAt} />
                         </span>
                       </span>
                       {version.current && <Badge variant="secondary">Đang hiển thị</Badge>}
@@ -641,7 +641,7 @@ export function ImageDetailSheet({
                   ))}
                 </ul>
                 <p className="type-meta">
-                  Tạo lúc {date(data.createdAt)} · Cập nhật {date(data.updatedAt)}
+                  Tạo lúc <LocalTime value={data.createdAt} /> · Cập nhật <LocalTime value={data.updatedAt} />
                 </p>
               </Section>
             </>

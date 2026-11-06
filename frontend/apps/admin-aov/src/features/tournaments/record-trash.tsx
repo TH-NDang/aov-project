@@ -1,3 +1,4 @@
+import { LocalTime } from "@aov/ui/components/local-time"
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { SearchField } from "@/components/search-field"
@@ -123,7 +124,9 @@ export function RecordTrash({
               <div>
                 <strong>{label(entry.content)}</strong>
                 {detail(entry.content) && <small>{detail(entry.content)}</small>}
-                <small>{entry.deletedAt ? new Date(entry.deletedAt).toLocaleString("vi-VN") : "Đã xóa"}</small>
+                <small>
+                  <LocalTime value={entry.deletedAt} fallback="Đã xóa" />
+                </small>
               </div>
               {canWrite && (
                 <RecordLifecycleActions kind={kind} entry={entry} name={label(entry.content)} onChanged={() => {}} />

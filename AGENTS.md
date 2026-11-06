@@ -100,6 +100,10 @@ Do not run concurrent builds against the same output directory or edit shared so
   right after the last row, inside the box that scrolls. Drive it with `useInfiniteQuery` and `nextPageOf`
   (`@aov/ui/lib/page-slice`), or with `useRevealedRows` (`@aov/ui/hooks/use-revealed-rows`) when the rows are already in
   memory. Show a whole-list error only for `isLoadingError`: a later page that fails must keep the rows already loaded.
+- Show a moment in time with `LocalTime` (`@aov/ui/components/local-time`): it reads the user's zone, draws the dashes
+  and reveals the original time. Pass `sourceTimeZone` when the item has a zone of its own, such as `plan.timezone`;
+  without one the original time reads as UTC. Group or compare by day with `dayKeyInZone` from `@aov/ui/lib/time-zone`.
+  A yyyy-mm-dd date has no time and must never go through a time zone: `LocalTime` and `formatCalendarDate` keep it as written.
 - Colors, radius and the font family come from `packages/ui/src/styles/tokens.css` (see `frontend/docs/DESIGN-TOKENS.md`).
   App stylesheets alias those tokens; do not declare new palette values, except for overlays on artwork.
 - Typography (admin) follows a 12/14/16/24 reading scale. Never use text smaller than 12px (`text-xs`), in Tailwind

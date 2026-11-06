@@ -1,3 +1,4 @@
+import { LocalTime } from "@aov/ui/components/local-time"
 import { useState, type ReactNode } from "react"
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
@@ -212,8 +213,14 @@ export function PatchSetup({
                 <Button disabled={assignmentLocked}>Gán ruleset</Button>
                 {assignments.data?.map((a) => (
                   <p key={a.id} className="text-xs">
-                    {rulesets.find((r) => r.id === a.rulesetId)?.code}: {new Date(a.validFrom).toLocaleString("vi-VN")}{" "}
-                    → {a.validTo ? new Date(a.validTo).toLocaleString("vi-VN") : "Không giới hạn"}
+                    {rulesets.find((r) => r.id === a.rulesetId)?.code}:{" "}
+                    <LocalTime value={a.validFrom} sourceTimeZone={regions.find((r) => r.id === regionId)?.timeZone} />{" "}
+                    →{" "}
+                    <LocalTime
+                      value={a.validTo}
+                      sourceTimeZone={regions.find((r) => r.id === regionId)?.timeZone}
+                      fallback="Không giới hạn"
+                    />
                   </p>
                 ))}
               </form>
@@ -368,7 +375,10 @@ export function PatchSetup({
                   {v.releases.map((r) => (
                     <p key={r.id} className="text-sm">
                       {regions.find((region) => region.id === r.regionId)?.code} ·{" "}
-                      {new Date(r.effectiveAt).toLocaleString("vi-VN")}{" "}
+                      <LocalTime
+                        value={r.effectiveAt}
+                        sourceTimeZone={regions.find((region) => region.id === r.regionId)?.timeZone}
+                      />{" "}
                       {r.sourceUrl && (
                         <a className="underline" href={r.sourceUrl} target="_blank" rel="noreferrer">
                           Nguồn

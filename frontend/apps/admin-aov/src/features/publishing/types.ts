@@ -153,6 +153,7 @@ export interface Region {
   id: string
   code: string
   displayName: string
+  timeZone?: string
   available: boolean
 }
 export interface Asset {

@@ -41,6 +41,11 @@ export function orderedMatchGames(games: PublishedGame[], seriesId: string) {
   return games.filter((game) => game.content.seriesId === seriesId).sort((a, b) => a.content.number - b.content.number)
 }
 
+/** A day picked in another zone, or taken from a shared link, may not exist in this zone; then nothing is filtered. */
+export function knownMatchDay(days: { key: string }[], day: string | null) {
+  return day && days.some((group) => group.key === day) ? day : ""
+}
+
 export function groupMatchesByDay(entries: CompetitionMatch[], timeZone: string) {
   const keyFormat = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" })
   const labelFormat = new Intl.DateTimeFormat("vi-VN", {

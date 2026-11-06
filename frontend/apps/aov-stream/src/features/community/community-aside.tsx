@@ -14,7 +14,7 @@ import {
   useSuggestions,
   useUnreadCount,
 } from "./community-queries"
-import { Avatar, followersLabel, timeAgo } from "./community-ui"
+import { Avatar, followersLabel, TimeAgo } from "./community-ui"
 import { TodaySchedule } from "./community-schedule"
 
 /**
@@ -134,7 +134,7 @@ function NotificationsCard() {
           onClick={() => !item.read && read.one.mutate(item.id)}
         >
           <span>{item.message}</span>
-          <time dateTime={item.createdAt}>{timeAgo(item.createdAt)}</time>
+          <TimeAgo value={item.createdAt} />
         </Link>
       ))}
     </section>
