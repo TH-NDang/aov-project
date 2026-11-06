@@ -7,12 +7,18 @@ import "./wiki-home.css"
 export function WikiHome() {
   return (
     <div className="wiki-home">
-      <HomeCarousel />
-      <div className="wiki-home-guide">
-        <HomeCategories />
-        <SeasonUpdates />
+      <div className="wiki-home-top">
+        <HomeCarousel />
+        <div className="public-panel wiki-slip wiki-home-news">
+          <SeasonUpdates />
+        </div>
       </div>
-      <HomePatchHeroes />
+      <div className="public-panel wiki-slip wiki-home-sections">
+        <HomeCategories />
+      </div>
+      <div className="public-panel wiki-slip wiki-home-strip">
+        <HomePatchHeroes />
+      </div>
     </div>
   )
 }

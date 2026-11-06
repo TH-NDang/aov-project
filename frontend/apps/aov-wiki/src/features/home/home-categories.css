@@ -8,25 +8,38 @@
 }
 .wiki-index ul {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 12px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 22px 10px;
+  margin-top: 16px;
+}
+@media (max-width: 1099.98px) {
+  .wiki-index ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 .wiki-index a {
-  display: flex;
+  display: grid;
   height: 100%;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  padding: 4px 6px;
+  text-align: center;
   text-decoration: none;
-  transition: background 160ms;
 }
 .wiki-index-icon {
-  flex: none;
-  width: 44px;
-  height: 44px;
+  width: 76px;
+  height: 76px;
+  padding: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, var(--aov-wiki-panel-high), var(--aov-wiki-panel-deep));
+  box-shadow:
+    0 0 0 1px var(--aov-wiki-gold),
+    0 0 0 4px var(--aov-wiki-panel),
+    0 0 0 5px color-mix(in srgb, var(--aov-wiki-gold) 42%, transparent);
+  transition:
+    box-shadow 240ms ease-out,
+    transform 240ms ease-out;
 }
 .wiki-index-copy {
   display: grid;
@@ -35,15 +48,20 @@
 }
 .wiki-index-copy strong {
   font: var(--wiki-type-entry);
-  color: var(--aov-text);
+  color: var(--aov-wiki-gold);
   transition: color 160ms;
 }
 .wiki-index-copy span {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
-.wiki-index a:is(:hover, :focus-visible) {
-  background: var(--aov-raised);
+.wiki-index a:is(:hover, :focus-visible) .wiki-index-icon {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px var(--aov-wiki-gold),
+    0 0 0 4px var(--aov-wiki-panel),
+    0 0 0 5px var(--aov-wiki-gold),
+    0 10px 26px -6px rgb(211 188 142 / 50%);
 }
 .wiki-index a:is(:hover, :focus-visible) strong {
   color: var(--aov-accent);
@@ -53,11 +71,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
-  .wiki-index a {
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px 6px;
-    text-align: center;
+  .wiki-index-icon {
+    width: 62px;
+    height: 62px;
+    padding: 13px;
   }
   .wiki-index-copy strong {
     font: var(--wiki-type-category);

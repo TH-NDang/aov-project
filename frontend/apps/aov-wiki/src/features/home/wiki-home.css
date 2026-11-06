@@ -3,20 +3,22 @@
   margin-inline: auto;
   padding: clamp(14px, 2vw, 28px) var(--wiki-gutter) 48px;
 }
-.wiki-home-guide {
+.wiki-home-top {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(260px, 1fr);
-  gap: clamp(18px, 3vw, 40px);
-  margin-top: clamp(18px, 2.5vw, 32px);
-  align-items: start;
+  grid-template-columns: minmax(0, 2.6fr) minmax(280px, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+.wiki-home-sections,
+.wiki-home-strip {
+  margin-top: 14px;
 }
 .wiki-home-carousel {
   position: relative;
   isolation: isolate;
   min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--wiki-line);
-  border-radius: var(--aov-radius-media);
+  border-radius: 12px;
   background: #151d29;
   color: #fff;
 }
@@ -32,6 +34,15 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+.wiki-home-carousel .wiki-artwork-embers {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--aov-accent);
+  pointer-events: none;
 }
 .wiki-home-carousel::after {
   content: "";
@@ -196,7 +207,7 @@
 .wiki-home-updates-heading h2,
 .wiki-index h2 {
   font: var(--wiki-type-section);
-  color: var(--wiki-text);
+  color: var(--aov-wiki-gold);
 }
 .wiki-home-updates-heading small {
   font: var(--wiki-type-meta);
@@ -233,7 +244,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #aadcc8;
+  color: var(--aov-success);
 }
 .wiki-home-current-tag::before {
   content: "";
@@ -263,12 +274,11 @@ a.wiki-home-patch-row:hover {
   background: var(--wiki-panel);
 }
 @media (max-width: 800px) {
-  .wiki-home-guide {
-    grid-template-columns: 1fr;
+  .wiki-home-top {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .wiki-home-updates {
-    padding-inline-start: 0;
-    border: 0;
+  .wiki-home-news {
+    order: 3;
   }
 }
 @media (max-width: 640px) {
@@ -304,9 +314,6 @@ a.wiki-home-patch-row:hover {
   .wiki-home-slide-controls {
     right: 6px;
     bottom: 6px;
-  }
-  .wiki-home-guide {
-    gap: 28px;
   }
 }
 
@@ -396,6 +403,13 @@ a.wiki-home-patch-row:hover {
     gap: 10px;
   }
   .wiki-home-heroes li:nth-child(n + 5) {
+    display: none;
+  }
+  /* Four portraits leave no room for the icon, and the label must stay on one line. */
+  .wiki-home-hero-change {
+    white-space: nowrap;
+  }
+  .wiki-home-hero-change svg {
     display: none;
   }
 }

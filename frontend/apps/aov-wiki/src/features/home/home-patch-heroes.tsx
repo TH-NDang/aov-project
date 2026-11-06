@@ -38,7 +38,9 @@ export function HomePatchHeroes() {
           return (
             <li key={hero.id}>
               <Link to={href(`/hero/${hero.code}`)}>
-                <span className="wiki-home-hero-art">{image && <WikiImage src={image} alt="" />}</span>
+                <span className="wiki-home-hero-art">
+                  {image && <WikiImage src={image} alt="" focus={hero.portrait?.currentVersion?.focalPoint} />}
+                </span>
                 <strong>{hero.name}</strong>
                 {kind && (
                   <span className="wiki-home-hero-change">

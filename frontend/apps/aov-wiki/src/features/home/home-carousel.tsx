@@ -6,8 +6,11 @@ import { HOME_BANNERS } from "./home-banners"
 import { HomeIcon } from "./home-icon"
 import { useBannerRotation } from "./use-banner-rotation"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { PublicEmbers } from "@aov/ui/components/public-embers"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 
 export function HomeCarousel() {
+  const layout = usePageLayout()
   const { locale, href } = useWikiContext()
   const [api, setApi] = useState<CarouselApi>()
   const [hovered, setHovered] = useState(false)
@@ -72,6 +75,7 @@ export function HomeCarousel() {
       <div className="wiki-cover-caption" aria-hidden="true">
         {HOME_BANNERS[selected]?.character}
       </div>
+      <PublicEmbers className="wiki-artwork-embers" count={layout === "compact" ? 12 : 22} />
       <div className="wiki-home-slide-controls">
         <div className="wiki-home-slide-dots" aria-label={wikiText(locale, "Chọn banner", "Choose a banner")}>
           {HOME_BANNERS.map((banner, index) => (
