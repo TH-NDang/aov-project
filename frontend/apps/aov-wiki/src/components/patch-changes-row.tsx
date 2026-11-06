@@ -84,7 +84,7 @@ export function PatchChangesRow({
               </>
             )
             const style =
-              "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border bg-card px-2 py-1.5 text-sm hover:border-primary focus-visible:ring-2"
+              "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-[color-mix(in_srgb,var(--aov-wiki-gold)_22%,transparent)] bg-[var(--aov-wiki-panel)] px-2 py-1.5 text-sm hover:border-primary focus-visible:ring-2"
             return e.href ? (
               <Link key={e.id} to={e.href} className={style}>
                 {label}
