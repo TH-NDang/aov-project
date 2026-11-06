@@ -30,6 +30,7 @@ import {
   type CharacterImageEntry,
   type CharacterImageGroup,
 } from "./character-image-api"
+import { FocalPointEditor } from "./focal-point-editor"
 
 export const imageRoleLabels: Record<MediaRole, string> = { HEAD: "Head", PORTRAIT: "Portrait", SPLASH: "Cover" }
 export function imageHeroHref(group: CharacterImageGroup, entry?: CharacterImageEntry) {
@@ -248,6 +249,9 @@ export function CharacterMediaViewer({
           >
             <CharacterMediaImage id={entry.assetId} alt={entry.name} preview role={role} size="detail" />
           </section>
+          {role !== "HEAD" && entry.assetId && (
+            <FocalPointEditor key={entry.assetId} assetId={entry.assetId} writable={canWrite} />
+          )}
           {owner && (
             <section className="space-y-2" aria-label="Loại ảnh chính của đối tượng đang xem">
               <h3 className="text-xs font-medium text-muted-foreground">Ảnh chính của {entry.name}</h3>

@@ -27,6 +27,7 @@ import { useRecords, useTournamentAccess } from "../esports/data/use-esports-dat
 import { upgradeHeroImage } from "../publishing/publishing-api"
 import type { Asset } from "../publishing/types"
 import { invalidateMediaAsset } from "./media-cache"
+import { croppedImageTypes, FocalPointEditor } from "./focal-point-editor"
 import { ImageDeleteAction } from "./image-delete-action"
 import { MediaSourceFields } from "./media-source-fields"
 import { PageReference } from "@/features/community/page-reference"
@@ -364,6 +365,9 @@ export function ImageDetailSheet({
                   <p className="p-6 text-center text-sm text-muted-foreground">Ảnh chưa có phiên bản đang sử dụng.</p>
                 )}
               </div>
+              {current && croppedImageTypes.has(data.semanticType) && (
+                <FocalPointEditor assetId={data.id} writable={writable && active} />
+              )}
               <div className="grid grid-cols-3 gap-2" aria-label="Tóm tắt ảnh">
                 {[
                   {
