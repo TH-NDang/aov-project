@@ -10,7 +10,6 @@ import {
   HERO_ROLES,
   localizedHeroOptions,
   normalizedHeroSearch,
-  referencePositions,
   type HeroPosition,
   type HeroRole,
 } from "./hero-classifications"
@@ -74,7 +73,7 @@ function HeroChoice({
     (url) => url && !failedUrls.includes(url),
   )
   const positions = localizedHeroOptions(HERO_POSITIONS, locale).filter((option) =>
-    referencePositions(hero.code).includes(option.value),
+    hero.positions?.includes(option.value),
   )
   const roles = localizedHeroOptions(HERO_ROLES, locale).filter((option) => hero.roles.includes(option.value))
   const positionLabel = `${wikiText(locale, "Vị trí", "Lane")}: ${positions.map((option) => option.label).join(", ")}`
@@ -176,7 +175,7 @@ function HeroPicker({
   const heroes = (query.data?.items || []).filter(
     (hero) =>
       (!role || hero.roles.includes(role)) &&
-      (!position || referencePositions(hero.code).includes(position)) &&
+      (!position || hero.positions?.includes(position)) &&
       (!needle || normalizedHeroSearch(`${hero.name} ${hero.code}`).includes(needle)),
   )
   const hasFilters = !!search || !!role || !!position

@@ -11,7 +11,6 @@ import {
   HERO_ROLES,
   localizedHeroOptions,
   normalizedHeroSearch,
-  referencePositions,
   selectedHeroFilters,
   type HeroFilterOption,
 } from "./hero-classifications"
@@ -187,8 +186,7 @@ export function HeroDirectory() {
   const visibleHeroes = (query.data?.items || []).filter((hero) => {
     const matchesSearch = !needle || normalizedHeroSearch(`${hero.name} ${hero.code}`).includes(needle)
     const matchesRole = !roles.length || roles.some((role) => hero.roles.includes(role))
-    const matchesPosition =
-      !positions.length || positions.some((position) => referencePositions(hero.code).includes(position))
+    const matchesPosition = !positions.length || positions.some((position) => hero.positions?.includes(position))
     return matchesSearch && matchesRole && matchesPosition
   })
   const publishedHeroes = new Map(query.data?.items.map((hero) => [hero.id, hero]))

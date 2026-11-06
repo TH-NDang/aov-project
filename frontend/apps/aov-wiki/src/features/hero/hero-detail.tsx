@@ -8,7 +8,7 @@ import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useHeroChangedVariants } from "../../lib/wiki-patch-changes"
 import { HeroHandbook, HeroStage } from "./hero-handbook"
 import { HeroVideoButton } from "../videos/subject-videos"
-import { HERO_ROLES, localizedHeroOptions } from "./hero-classifications"
+import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "./hero-classifications"
 import { HeroGlyph } from "./hero-glyph"
 import { HeroQuickSwitch } from "./hero-quick-switch"
 import { HeroDetailLoading } from "./hero-loading"
@@ -77,6 +77,14 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
             <span key={role.value}>
               <HeroGlyph name={role.glyph} />
               {role.label}
+            </span>
+          ))}
+        {localizedHeroOptions(HERO_POSITIONS, locale)
+          .filter((position) => hero.positions?.includes(position.value))
+          .map((position) => (
+            <span key={position.value}>
+              <HeroGlyph name={position.glyph} />
+              {position.label}
             </span>
           ))}
         <HeroVideoButton heroId={hero.id} />

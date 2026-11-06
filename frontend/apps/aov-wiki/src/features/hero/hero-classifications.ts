@@ -1,7 +1,7 @@
 import type { HeroGlyphName } from "./hero-glyph"
 
 export type HeroRole = "TANK" | "WARRIOR" | "ASSASSIN" | "MAGE" | "MARKSMAN" | "SUPPORT"
-export type HeroPosition = "TOP" | "JUNGLE" | "MID" | "DRAGON" | "ROAM"
+export type HeroPosition = "TOP" | "JUNGLE" | "MID" | "DRAGON" | "SUPPORT"
 
 export interface HeroFilterOption<Value extends string> {
   value: Value
@@ -23,7 +23,7 @@ export const HERO_POSITIONS: readonly HeroFilterOption<HeroPosition>[] = [
   { value: "JUNGLE", label: "Rừng", glyph: "jungle" },
   { value: "MID", label: "Đường giữa", glyph: "mid" },
   { value: "DRAGON", label: "Đường Rồng", glyph: "dragon" },
-  { value: "ROAM", label: "Hỗ trợ", glyph: "roam" },
+  { value: "SUPPORT", label: "Hỗ trợ", glyph: "roam" },
 ]
 
 const ENGLISH_LABELS: Record<HeroRole | HeroPosition, string> = {
@@ -37,7 +37,6 @@ const ENGLISH_LABELS: Record<HeroRole | HeroPosition, string> = {
   JUNGLE: "Jungle",
   MID: "Middle lane",
   DRAGON: "Dragon lane",
-  ROAM: "Roam",
 }
 
 export function localizedHeroOptions<Value extends HeroRole | HeroPosition>(
@@ -47,38 +46,6 @@ export function localizedHeroOptions<Value extends HeroRole | HeroPosition>(
   return locale.startsWith("en")
     ? options.map((option) => ({ ...option, label: ENGLISH_LABELS[option.value] }))
     : options
-}
-
-// These provisional assignments demonstrate position filters until editors provide the catalog data.
-const REFERENCE_POSITIONS: Readonly<Record<string, readonly HeroPosition[]>> = {
-  aleister: ["MID"],
-  amily: ["TOP", "JUNGLE"],
-  ata: ["TOP", "ROAM"],
-  baldum: ["ROAM"],
-  celica: ["DRAGON"],
-  "d-arcy": ["MID", "JUNGLE"],
-  dirak: ["MID"],
-  "eland-orr": ["JUNGLE"],
-  errol: ["TOP", "JUNGLE"],
-  "flowborn-ad": ["DRAGON"],
-  gildur: ["MID", "ROAM"],
-  hayate: ["DRAGON"],
-  kriknak: ["JUNGLE"],
-  krizzix: ["ROAM"],
-  lauriel: ["MID"],
-  natalya: ["MID"],
-  raz: ["MID"],
-  roxie: ["TOP"],
-  ryoma: ["TOP", "JUNGLE"],
-  toro: ["ROAM"],
-  volkath: ["TOP", "JUNGLE"],
-  wukong: ["TOP", "JUNGLE"],
-  yorn: ["DRAGON"],
-  zanis: ["JUNGLE"],
-}
-
-export function referencePositions(heroCode: string): readonly HeroPosition[] {
-  return REFERENCE_POSITIONS[heroCode] || []
 }
 
 export function normalizedHeroSearch(value: string) {

@@ -1,6 +1,6 @@
 import { queryOptions } from "@tanstack/react-query"
 import type { MediaCredit } from "@aov/ui/lib/media-credit"
-import type { HeroRole } from "./hero-classifications"
+import type { HeroPosition, HeroRole } from "./hero-classifications"
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
 import { FocalPoint } from "@aov/ui/lib/focal-point"
 
@@ -25,6 +25,7 @@ export interface HeroListItem {
   name: string
   actualLocale: string
   roles: HeroRole[]
+  positions?: HeroPosition[]
   head?: HeroMedia
   portrait?: HeroMedia
 }
