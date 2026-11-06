@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router"
 import { PublicAccountMenu, PublicAccountSettings, PublicAccountSummary } from "@aov/ui/components/public-account-menu"
 import { PublicPreferencesDrawer } from "@aov/ui/components/public-preferences-drawer"
 import { useIsMobile } from "@aov/ui/hooks/use-mobile"
+import { useAccountCurrency } from "@aov/ui/lib/currency"
 import { publicAuthError } from "@aov/ui/lib/public-auth"
 import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { useStreamTheme } from "../../components/stream-theme"
@@ -32,6 +33,11 @@ export function CommunitySessionButton() {
   useAccountDateFormat(profile.data, async (dateFormat) => {
     const latest = await wikiRequest<UserProfile>("/users/me")
     const saved = await saveProfile({ ...profileRequest(profileDraft(latest), latest.version), dateFormat })
+    client.setQueryData(profileKey(session.revision), saved)
+  })
+  useAccountCurrency(profile.data, async (currency) => {
+    const latest = await wikiRequest<UserProfile>("/users/me")
+    const saved = await saveProfile(profileRequest({ ...profileDraft(latest), currency }, latest.version))
     client.setQueryData(profileKey(session.revision), saved)
   })
   const { locale, setLocale, text } = useStreamLocale()

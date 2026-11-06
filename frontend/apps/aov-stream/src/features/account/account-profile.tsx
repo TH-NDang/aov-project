@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { currencyChoice } from "@aov/ui/lib/currency"
 import { currentTimeZone } from "@aov/ui/lib/time-zone"
 import { useCommunitySession } from "../community/community-auth"
 import { AVATAR_TYPES, uploadAvatar } from "./avatar-upload"
@@ -33,6 +34,7 @@ const fieldLabels: Record<keyof ProfileDraft, string> = {
   biography: "giới thiệu",
   locale: "ngôn ngữ",
   timeZone: "múi giờ",
+  currency: "tiền tệ",
   avatarAssetId: "ảnh đại diện",
 }
 
@@ -85,7 +87,7 @@ function ProfileEditor({
   const [seen, setSeen] = useState(profile)
   const [base, setBase] = useState(profile)
   const [draft, setDraft] = useState(() =>
-    initialDraft(profile, { ...readBrowserPreferences(), timeZone: currentTimeZone() }),
+    initialDraft(profile, { ...readBrowserPreferences(), timeZone: currentTimeZone(), currency: currencyChoice() }),
   )
   const [latest, setLatest] = useState<UserProfile | null>(null)
   const [preview, setPreview] = useState<{ assetId: string; url: string } | null>(null)

@@ -81,6 +81,12 @@ const PATHS = {
       <path d="M12 7v5l3 2" />
     </>
   ),
+  coins: (
+    <>
+      <circle cx="9" cy="9" r="6" />
+      <path d="M17.5 10.5a6 6 0 1 1-7 7" />
+    </>
+  ),
   spark: <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z" />,
   reset: <path d="M4 10a8 8 0 1 1 1 8M4 4v6h6" />,
   all: (

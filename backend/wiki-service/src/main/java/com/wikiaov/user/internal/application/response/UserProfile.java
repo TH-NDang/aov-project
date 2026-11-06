@@ -11,6 +11,7 @@ public record UserProfile(
         String locale,
         String timeZone,
         String dateFormat,
+        @Nullable String currency,
         @Nullable UUID avatarAssetId,
         @Nullable String avatarUrl,
         long version,

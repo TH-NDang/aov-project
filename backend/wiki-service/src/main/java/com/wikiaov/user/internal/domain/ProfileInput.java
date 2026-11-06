@@ -5,7 +5,10 @@ import java.util.Locale;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
-/** Validated profile content; never contains identity or privileges supplied by the client. */
+/**
+ * Validated profile content; never contains identity or privileges supplied by the client. A null date format or
+ * currency keeps the one already saved, so a client that does not know the field cannot erase it.
+ */
 public record ProfileInput(
         String displayName,
         String biography,
@@ -13,7 +16,8 @@ public record ProfileInput(
         String timeZone,
         @Nullable String dateFormat,
         @Nullable UUID avatarAssetId,
-        long expectedVersion
+        long expectedVersion,
+        @Nullable String currency
 ) {
     public ProfileInput {
         displayName = displayName == null ? "" : displayName.strip();
@@ -39,6 +43,10 @@ public record ProfileInput(
         locale = parsed.toLanguageTag();
         if (!ZoneId.getAvailableZoneIds().contains(timeZone)) {
             throw new IllegalArgumentException("Unknown IANA time zone.");
+        }
+        if (currency != null && java.util.Currency.getAvailableCurrencies().stream()
+                .noneMatch(known -> known.getCurrencyCode().equals(currency))) {
+            throw new IllegalArgumentException("Unknown ISO currency.");
         }
     }
 }

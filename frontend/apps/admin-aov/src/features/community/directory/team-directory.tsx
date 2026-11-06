@@ -7,15 +7,7 @@ import { LaneIcon, Monogram } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
 import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
 import { TEAM_REGIONS } from "@/features/tournaments/team-region"
-import {
-  directoryApi,
-  directoryKeys,
-  formatPrize,
-  useDebounced,
-  useProfilesOf,
-  winRate,
-  type TeamSort,
-} from "./directory-api"
+import { directoryApi, directoryKeys, useDebounced, useProfilesOf, winRate, type TeamSort } from "./directory-api"
 import {
   CountryLabel,
   DirectoryBody,
@@ -26,6 +18,7 @@ import {
   directorySections,
   useDirectoryFilters,
 } from "./directory-shell"
+import { LocalMoney } from "@aov/ui/components/local-money"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const section = directorySections[0]
@@ -154,7 +147,18 @@ function TeamCard({ team, pageId, published }: { team: TeamDirectoryEntry; pageI
           label={rate === null ? "Trận" : `Thắng ${rate}%`}
         />
         <Figure value={team.titles} label="Vô địch" />
-        <Figure value={formatPrize(team.prizeUsd) ?? "–"} label="Tiền thưởng" />
+        <Figure
+          value={
+            // Lifted above the link that covers the card, so its original amount can be revealed.
+            <LocalMoney
+              amounts={[{ amount: team.prizeUsd || null, currency: "USD" }]}
+              compact
+              fallback="–"
+              className="relative z-10"
+            />
+          }
+          label="Tiền thưởng"
+        />
       </dl>
 
       {starters.length ? (

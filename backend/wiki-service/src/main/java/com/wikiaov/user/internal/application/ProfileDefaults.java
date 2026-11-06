@@ -10,7 +10,7 @@ public record ProfileDefaults(
         String timeZone
 ) {
     public ProfileDefaults {
-        ProfileInput validated = new ProfileInput("Defaults", "", locale, timeZone, null, null, 0);
+        ProfileInput validated = new ProfileInput("Defaults", "", locale, timeZone, null, null, 0, null);
         locale = validated.locale();
         timeZone = validated.timeZone();
     }

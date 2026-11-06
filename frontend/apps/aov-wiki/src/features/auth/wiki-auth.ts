@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useAccountCurrency } from "@aov/ui/lib/currency"
 import { createPublicAuth } from "@aov/ui/lib/public-auth"
 import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
@@ -22,6 +23,7 @@ type WikiProfile = {
   locale: string
   timeZone: string
   dateFormat?: string
+  currency: string | null
   avatarAssetId: string | null
   version: number
 }
@@ -39,8 +41,8 @@ async function requestProfile(init: RequestInit = {}) {
   return (await response.json()) as WikiProfile
 }
 
-/** Keeps the shared account's time zone and this browser's choice in step while someone is signed in. */
-export function useWikiAccountTimeZone() {
+/** Keeps the shared account's time zone and currency in step with this browser's choices while someone is signed in. */
+export function useWikiAccountPreferences() {
   const session = useWikiSession()
   const client = useQueryClient()
   const key = ["wiki", "user-profile", session.revision]
@@ -70,6 +72,22 @@ export function useWikiAccountTimeZone() {
         locale,
         timeZone,
         dateFormat,
+        avatarAssetId,
+        expectedVersion: version,
+      }),
+    })
+    client.setQueryData(key, saved)
+  })
+  useAccountCurrency(profile.data, async (currency) => {
+    const { displayName, biography, locale, timeZone, avatarAssetId, version } = await requestProfile()
+    const saved = await requestProfile({
+      method: "PUT",
+      body: JSON.stringify({
+        displayName,
+        biography,
+        locale,
+        timeZone,
+        currency,
         avatarAssetId,
         expectedVersion: version,
       }),

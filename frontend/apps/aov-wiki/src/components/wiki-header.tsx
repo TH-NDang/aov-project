@@ -20,7 +20,7 @@ import { LibraryContents } from "../layout/library-contents"
 import { WikiIcon } from "./wiki-icon"
 import { WikiSearchSuggestions } from "./wiki-search-suggestions"
 import { WikiAccountMenu } from "../features/auth/wiki-account"
-import { useWikiAccountTimeZone } from "../features/auth/wiki-auth"
+import { useWikiAccountPreferences } from "../features/auth/wiki-auth"
 
 type IconName =
   "search" | "globe" | "user" | "chevron" | "check" | "home" | "more" | "close" | "chevronRight" | "contents"
@@ -414,6 +414,6 @@ function WikiHeaderWide({ variant = "home", searchScope = "heroes" }: WikiHeader
 }
 
 export function WikiHeader(props: WikiHeaderProps) {
-  useWikiAccountTimeZone()
+  useWikiAccountPreferences()
   return usePageLayout() === "compact" ? <WikiHeaderCompact {...props} /> : <WikiHeaderWide {...props} />
 }

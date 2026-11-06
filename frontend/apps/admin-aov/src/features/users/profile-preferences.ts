@@ -3,6 +3,7 @@ import type { UserProfile } from "./user-api"
 export interface BrowserPreferences {
   languages: readonly string[]
   timeZone?: string
+  currency?: string | null
 }
 
 export function readBrowserPreferences(): BrowserPreferences {
@@ -40,7 +41,7 @@ export function suggestPreferences(profile: UserProfile, browser: BrowserPrefere
       // Language and time zone fall back independently.
     }
   }
-  return { ...profile, locale, timeZone }
+  return { ...profile, locale, timeZone, ...(browser.currency ? { currency: browser.currency } : {}) }
 }
 
 export function initialProfileDraft(profile: UserProfile, admin: boolean, browser: BrowserPreferences): UserProfile {

@@ -12,7 +12,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test:auth": "node --experimental-strip-types --test tests/public-auth.test.mjs tests/public-auth-restore.test.mjs",
-    "test:time-zone": "node --experimental-strip-types --test tests/time-zone.test.mjs tests/date-format.test.mjs"
+    "test:time-zone": "node --experimental-strip-types --test tests/time-zone.test.mjs tests/date-format.test.mjs",
+    "test:currency": "node --experimental-strip-types --test tests/currency.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

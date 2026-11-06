@@ -8,6 +8,7 @@ export interface UserProfile {
   locale: string
   timeZone: string
   dateFormat?: string
+  currency: string | null
   avatarAssetId: string | null
   avatarUrl: string | null
   version: number
@@ -16,7 +17,7 @@ export interface UserProfile {
 }
 export type ProfileInput = Pick<
   UserProfile,
-  "displayName" | "biography" | "locale" | "timeZone" | "dateFormat" | "avatarAssetId"
+  "displayName" | "biography" | "locale" | "timeZone" | "dateFormat" | "currency" | "avatarAssetId"
 > & {
   expectedVersion: number
 }

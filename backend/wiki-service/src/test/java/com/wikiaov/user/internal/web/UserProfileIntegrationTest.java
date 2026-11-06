@@ -51,6 +51,13 @@ class UserProfileIntegrationTest {
                 """.formatted(avatar == null ? "null" : "\"" + avatar + "\"", version);
     }
 
+    private static String withCurrency(String currency) {
+        return """
+                {"displayName":"Test user","biography":"","locale":"vi-VN","timeZone":"Asia/Ho_Chi_Minh",
+                 "avatarAssetId":null,"expectedVersion":0,"currency":"%s"}
+                """.formatted(currency);
+    }
+
     @Test
     void selfRequiresAuthenticationAndDoesNotRequireCatalogRole() throws Exception {
         mvc.perform(get(BASE + "/users/me")).andExpect(status().isUnauthorized());
@@ -85,6 +92,36 @@ class UserProfileIntegrationTest {
                 .andExpect(jsonPath("$.dateFormat").value("YMD"));
         mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
                 .content(withFormat.formatted("WEEKDAY", 2))).andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void aSavedCurrencyStaysWhenAClientThatDoesNotKnowTheFieldSavesAgain() throws Exception {
+        String subject = UUID.randomUUID().toString();
+        mvc.perform(get(BASE + "/users/me").with(person(subject))).andExpect(jsonPath("$.currency").isEmpty());
+
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
+                .content(profile(0, null))).andExpect(status().isOk()).andExpect(jsonPath("$.currency").isEmpty());
+
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json").content("""
+                {"displayName":"Test user","biography":"","locale":"vi-VN","timeZone":"Asia/Ho_Chi_Minh",
+                 "avatarAssetId":null,"expectedVersion":1,"currency":"THB"}
+                """)).andExpect(status().isOk()).andExpect(jsonPath("$.currency").value("THB"));
+
+        mvc.perform(put(BASE + "/users/me").with(person(subject)).contentType("application/json")
+                .content(profile(2, null))).andExpect(status().isOk()).andExpect(jsonPath("$.currency").value("THB"));
+        mvc.perform(get(BASE + "/users/me").with(person(subject))).andExpect(jsonPath("$.currency").value("THB"));
+    }
+
+    @Test
+    void anUnknownCurrencyIsRejected() throws Exception {
+        for (String currency : new String[] {"ZZZ", "vnd", ""}) {
+            mvc.perform(put(BASE + "/users/me").with(person(UUID.randomUUID().toString()))
+                    .contentType("application/json").content(withCurrency(currency)))
+                    .andExpect(status().isUnprocessableContent())
+                    .andExpect(jsonPath("$.code").value("USER_PROFILE_INVALID"));
+        }
+        mvc.perform(put(BASE + "/users/me").with(person(UUID.randomUUID().toString())).contentType("application/json")
+                .content(withCurrency("VNDX"))).andExpect(status().isBadRequest());
     }
 
     @Test

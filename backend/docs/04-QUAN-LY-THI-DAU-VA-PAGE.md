@@ -237,6 +237,9 @@ trạng thái trực tiếp riêng để bật/tắt không đổi version bản
 V011 thêm cột sinh tournament.series.tournament_id (lấy từ content) và index (tournament_id, deleted_at) để lọc
 trận theo giải mà không đọc toàn bộ.
 
+V012 tạo schema currency và bảng currency.exchange_rate (currency, rate_date là khóa chính; units_per_usd, source,
+fetched_at). Mỗi đơn vị một dòng mỗi ngày, giữ vĩnh viễn để đọc lại tiền thưởng theo tỷ giá của ngày đó (ADR-020).
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
@@ -286,6 +289,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /me/notifications/unread; POST /me/notifications/read-all | {unread} số chưa đọc / đánh dấu tất cả đã đọc |
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |
+| GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Lỗi EXCHANGE_RATE_INVALID_QUERY 400 |
 | GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |
 | POST /admin/competitions/preview | {content,stageCode,opponent}; lịch xem trước, không ghi DB |

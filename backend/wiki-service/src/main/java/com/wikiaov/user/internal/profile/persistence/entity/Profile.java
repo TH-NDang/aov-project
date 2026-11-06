@@ -32,6 +32,9 @@ public class Profile implements Persistable<UUID> {
 
     @Column(name = "date_format", nullable = false, length = 8)
     private String dateFormat = "AUTO";
+
+    @Column(length = 3)
+    private @Nullable String currency;
     @Column(name = "avatar_asset_id")
     private @Nullable UUID avatarAssetId;
     @Version
@@ -59,9 +62,11 @@ public class Profile implements Persistable<UUID> {
         biography = input.biography();
         locale = input.locale();
         timeZone = input.timeZone();
-        // A client that does not know this preference leaves it as it was.
+        // A client that does not know these preferences leaves them as they were.
         if (input.dateFormat() != null)
             dateFormat = input.dateFormat();
+        if (input.currency() != null)
+            currency = input.currency();
         avatarAssetId = input.avatarAssetId();
         // Every accepted save must dirty the entity, even when a test clock is fixed.
         updatedAt = updatedAt != null && !now.isAfter(updatedAt) ? updatedAt.plusNanos(1000) : now;

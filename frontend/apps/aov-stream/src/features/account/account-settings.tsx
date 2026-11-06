@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { PublicCurrencySelect } from "@aov/ui/components/public-currency-select"
 import { PublicDateFormatSelect } from "@aov/ui/components/public-date-format-select"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/public-select"
 import { PublicTimeZoneSelect } from "@aov/ui/components/public-time-zone-select"
@@ -27,7 +28,7 @@ export function AccountSettings() {
   return (
     <section className="cp-panel account-settings" aria-labelledby="account-settings-title">
       <h2 id="account-settings-title">Cài đặt</h2>
-      <p>Ngôn ngữ, múi giờ và cách hiển thị ngày áp dụng trên cả Wiki, Stream và Admin.</p>
+      <p>Ngôn ngữ, múi giờ, cách hiển thị ngày và tiền tệ áp dụng trên cả Wiki, Stream và Admin.</p>
       <div className="cp-form-grid">
         <label>
           Ngôn ngữ
@@ -55,6 +56,10 @@ export function AccountSettings() {
         <label>
           Định dạng ngày
           <PublicDateFormatSelect locale={locale} product="stream" triggerClassName="account-settings-select" />
+        </label>
+        <label>
+          Tiền tệ
+          <PublicCurrencySelect locale={locale} product="stream" triggerClassName="account-settings-select" />
         </label>
       </div>
       {saveLanguage.isError && <p role="alert">Chưa lưu được ngôn ngữ. Hãy thử lại.</p>}

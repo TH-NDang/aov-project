@@ -165,10 +165,11 @@ Base `/api/wiki/v1`, Bearer JWT đã xác minh. Tất cả response `no-store`.
 | POST /users/me/avatar-uploads | HUMAN | `{fileName, contentType, sizeBytes}` → ticket PUT tới storage |
 | POST /users/me/avatar-uploads/{uploadId}/complete | Chủ upload, HUMAN | `{assetId, avatarUrl}` sau khi media xác minh |
 
-Body PUT: `{displayName, biography, locale, timeZone, dateFormat?, avatarAssetId, expectedVersion}`. `dateFormat` nhận `AUTO`, `DMY`, `MDY`, `YMD`; bỏ trống thì giữ nguyên giá trị đang lưu.
+Body PUT: `{displayName, biography, locale, timeZone, dateFormat?, currency, avatarAssetId, expectedVersion}`. `dateFormat` nhận `AUTO`, `DMY`, `MDY`, `YMD`; bỏ trống thì giữ nguyên giá trị đang lưu.
+`currency` là mã ISO 4217 viết hoa và không bắt buộc; bỏ trống hoặc null thì giữ giá trị đã lưu.
 Avatar null để gỡ. `expectedVersion` bắt buộc; 0 chỉ khi tạo. Không nhận issuer, subject hay capability từ body.
 Tên tối đa 80 ký tự, giới thiệu 1000, locale 35, múi giờ 64. Response hồ sơ gồm
-`id, displayName, biography, locale, timeZone, dateFormat, avatarAssetId, avatarUrl, version, createdAt, updatedAt`.
+`id, displayName, biography, locale, timeZone, dateFormat, currency, avatarAssetId, avatarUrl, version, createdAt, updatedAt`.
 Không có hồ sơ: id và thời gian null; GET không ghi DB. Avatar URL ký sẵn hết hạn sau 15 phút, không lưu bền.
 
 Ticket: `{uploadId, assetId, method, uploadUrl, headers, expiresAt}`. Browser gửi đúng headers tới storage,

@@ -104,6 +104,11 @@ Do not run concurrent builds against the same output directory or edit shared so
   and reveals the original time. Pass `sourceTimeZone` when the item has a zone of its own, such as `plan.timezone`;
   without one the original time reads as UTC. Group or compare by day with `dayKeyInZone` from `@aov/ui/lib/time-zone`.
   A yyyy-mm-dd date has no time and must never go through a time zone: `LocalTime` and `formatCalendarDate` keep it as written.
+- Show real money with `LocalMoney` (`@aov/ui/components/local-money`): it reads the user's currency, draws the dashes and
+  reveals the original amount with the date of the rate. Pass `on` with the day the amount belongs to, such as a
+  tournament's end date, so it reads at the rate of that day. Pass every unit a prize was recorded in; use
+  `LocalPrizeText` for free text such as `plan.prizePool`. A missing rate keeps the original amount. Gold and vouchers
+  are in-game currencies and never go through it.
 - Colors, radius and the font family come from `packages/ui/src/styles/tokens.css` (see `frontend/docs/DESIGN-TOKENS.md`).
   App stylesheets alias those tokens; do not declare new palette values, except for overlays on artwork.
 - Typography (admin) follows a 12/14/16/24 reading scale. Never use text smaller than 12px (`text-xs`), in Tailwind
