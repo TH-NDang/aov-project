@@ -1,15 +1,6 @@
 import { useState, type ComponentType } from "react"
-import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpRight,
-  ChevronDown,
-  Ellipsis,
-  GitCompareArrows,
-  RefreshCw,
-  Scale,
-  Wrench,
-} from "lucide-react"
+import { ArrowUpRight, ChevronDown, Ellipsis, GitCompareArrows } from "lucide-react"
+import { changeKindIcons } from "@aov/ui/components/change-kind-icons"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
@@ -23,21 +14,21 @@ type KindStyle = {
 const kindStyles: Record<ChangeKind, KindStyle> = {
   BUFF: {
     label: "Tăng sức mạnh",
-    icon: ArrowUp,
+    icon: changeKindIcons.BUFF,
   },
   NERF: {
     label: "Giảm sức mạnh",
-    icon: ArrowDown,
+    icon: changeKindIcons.NERF,
   },
   ADJUSTMENT: {
     label: "Điều chỉnh",
-    icon: Scale,
+    icon: changeKindIcons.ADJUSTMENT,
   },
   REWORK: {
     label: "Làm lại",
-    icon: RefreshCw,
+    icon: changeKindIcons.REWORK,
   },
-  FIX: { label: "Sửa lỗi", icon: Wrench },
+  FIX: { label: "Sửa lỗi", icon: changeKindIcons.FIX },
   OTHER: { label: "Khác", icon: Ellipsis },
 }
 
@@ -70,7 +61,7 @@ export function ChangeKindBadge({
       title={normalized === "OTHER" && kind !== "OTHER" ? `${label} · ${kind}` : label}
       className={`type-label inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md border ${compact ? "size-7" : "px-2 py-1"} ${changeTone(normalized, colors)} ${className}`}
     >
-      <Icon className="size-3.5 shrink-0" aria-hidden />
+      <Icon className="size-4 shrink-0" aria-hidden />
       <span className={compact ? "sr-only" : ""}>{label}</span>
     </span>
   )

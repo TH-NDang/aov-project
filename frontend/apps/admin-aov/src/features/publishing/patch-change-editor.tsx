@@ -5,6 +5,7 @@ import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
+import { ChangeKindSelect } from "./change-kind-select"
 import { createPublishingApi } from "./publishing-api"
 import {
   KIND_LABELS,
@@ -328,19 +329,15 @@ function ChangeRowEditor({
             ))}
           </select>
         )}
-        <select
-          aria-label={`${label}: tính chất`}
-          className={cn(compactControl, "w-36 shrink-0", !row.kind && "text-muted-foreground")}
+        <ChangeKindSelect
+          ariaLabel={`${label}: tính chất`}
+          className="w-44 shrink-0"
+          placeholder="Tính chất…"
+          clearLabel="Chưa chọn"
+          options={Object.entries(KIND_LABELS) as [ChangeKind, string][]}
           value={row.kind}
-          onChange={(event) => onChange({ kind: event.target.value as ChangeKind })}
-        >
-          <option value="">Tính chất…</option>
-          {(Object.keys(KIND_LABELS) as ChangeKind[]).map((kind) => (
-            <option key={kind} value={kind}>
-              {KIND_LABELS[kind]}
-            </option>
-          ))}
-        </select>
+          onChange={(kind) => onChange({ kind })}
+        />
         {grouped && (
           <Button
             type="button"

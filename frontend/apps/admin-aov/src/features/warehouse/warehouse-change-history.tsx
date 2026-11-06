@@ -16,6 +16,7 @@ import {
   changeDomain,
   type CatalogChangeKind,
 } from "./catalog-changes"
+import { ChangeKindSelect } from "../publishing/change-kind-select"
 import { warehouseApi, invalidateWarehouseCatalogs } from "./warehouse-api"
 import {
   warehouseBaselineMode,
@@ -133,18 +134,17 @@ export function WarehouseChangeHistory({
   ) : (
     <label className="grid gap-1.5 text-sm">
       Phân loại
-      <select
-        aria-label="Phân loại thay đổi"
-        className={control}
+      <ChangeKindSelect
+        ariaLabel="Phân loại thay đổi"
+        className="w-full"
+        options={Object.entries(catalogChangeKinds).map(
+          ([kind, config]) => [kind as CatalogChangeKind, config.label] as const,
+        )}
         value={classification}
-        onChange={(e) => setClassification(e.target.value as CatalogChangeKind)}
-      >
-        {Object.entries(catalogChangeKinds).map(([kind, config]) => (
-          <option key={kind} value={kind}>
-            {config.label}
-          </option>
-        ))}
-      </select>
+        onChange={(kind) => {
+          if (kind) setClassification(kind)
+        }}
+      />
     </label>
   )
   const rows = (changes.data ?? [])

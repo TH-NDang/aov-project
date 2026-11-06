@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { control } from "./fields"
+import { ChangeKindSelect } from "./change-kind-select"
 import { ChangeKindBadge } from "./hero-change-badges"
 
 export interface HeroAssessment {
@@ -12,14 +12,14 @@ export interface HeroAssessment {
   overallKind?: string | null
   assessmentVersion?: number
 }
-const options = {
-  BUFF: "Tăng sức mạnh",
-  NERF: "Giảm sức mạnh",
-  ADJUSTMENT: "Điều chỉnh",
-  REWORK: "Làm lại",
-  FIX: "Sửa lỗi",
-  OTHER: "Khác",
-}
+const options = [
+  ["BUFF", "Tăng sức mạnh"],
+  ["NERF", "Giảm sức mạnh"],
+  ["ADJUSTMENT", "Điều chỉnh"],
+  ["REWORK", "Làm lại"],
+  ["FIX", "Sửa lỗi"],
+  ["OTHER", "Khác"],
+] as const
 export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
   const client = useQueryClient()
   const canWrite = useSession().actor?.capabilities.includes("patch:write")
@@ -52,20 +52,15 @@ export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
       </p>
       {canWrite && (
         <div className="flex flex-wrap gap-2">
-          <select
-            aria-label="Đánh giá tổng thể tướng"
-            className={control + " w-auto min-w-44"}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
+          <ChangeKindSelect
+            ariaLabel="Đánh giá tổng thể tướng"
+            className="min-w-44"
+            placeholder="Chọn đánh giá"
+            options={options}
+            value={value as (typeof options)[number][0] | ""}
+            onChange={setValue}
             disabled={mutation.isPending}
-          >
-            <option value="">Chọn đánh giá</option>
-            {Object.entries(options).map(([kind, label]) => (
-              <option key={kind} value={kind}>
-                {label}
-              </option>
-            ))}
-          </select>
+          />
           <Button
             size="sm"
             disabled={!value || value === change.overallKind || mutation.isPending}

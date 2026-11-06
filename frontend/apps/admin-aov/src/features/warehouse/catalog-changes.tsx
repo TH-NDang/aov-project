@@ -1,17 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
-import {
-  Check,
-  Copy,
-  ArrowDown,
-  ArrowUp,
-  Database,
-  FilePenLine,
-  Plus,
-  RefreshCw,
-  Scale,
-  Trash2,
-  Wrench,
-} from "lucide-react"
+import { Check, Copy } from "lucide-react"
+import { changeKindIcons } from "@aov/ui/components/change-kind-icons"
 import { backendRequest } from "@/app/auth/session"
 import { cn } from "@aov/ui/lib/utils"
 import { changeTone, useChangeColors } from "../publishing/change-color-preferences"
@@ -21,15 +10,15 @@ import type { TimelineCount } from "../publishing/catalog-timeline"
 import type { WarehouseKind } from "./warehouse-types"
 
 export const catalogChangeKinds = {
-  DATA_BASELINE: { label: "Dữ liệu nền", icon: Database },
-  ADDED: { label: "Thêm mới", icon: Plus },
-  UPDATED: { label: "Chỉnh sửa", icon: FilePenLine },
-  REMOVED: { label: "Loại bỏ", icon: Trash2 },
-  BUFF: { label: "Tăng sức mạnh", icon: ArrowUp },
-  NERF: { label: "Giảm sức mạnh", icon: ArrowDown },
-  BALANCE: { label: "Cân bằng", icon: Scale },
-  REWORK: { label: "Làm lại", icon: RefreshCw },
-  FIX: { label: "Sửa lỗi", icon: Wrench },
+  DATA_BASELINE: { label: "Dữ liệu nền", icon: changeKindIcons.DATA_BASELINE },
+  ADDED: { label: "Thêm mới", icon: changeKindIcons.ADDED },
+  UPDATED: { label: "Chỉnh sửa", icon: changeKindIcons.UPDATED },
+  REMOVED: { label: "Loại bỏ", icon: changeKindIcons.REMOVED },
+  BUFF: { label: "Tăng sức mạnh", icon: changeKindIcons.BUFF },
+  NERF: { label: "Giảm sức mạnh", icon: changeKindIcons.NERF },
+  BALANCE: { label: "Cân bằng", icon: changeKindIcons.BALANCE },
+  REWORK: { label: "Làm lại", icon: changeKindIcons.REWORK },
+  FIX: { label: "Sửa lỗi", icon: changeKindIcons.FIX },
 } as const
 export type CatalogChangeKind = keyof typeof catalogChangeKinds
 export type CatalogBadgeKind = CatalogChangeKind | "UNCHANGED" | "INHERITED"
@@ -138,7 +127,7 @@ export function CatalogChangeBadges({
             data-catalog-change={kind}
             className={cn("inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs leading-4", tone)}
           >
-            <Icon className="size-3" aria-hidden />
+            <Icon className="size-4" aria-hidden />
             <span className={compact ? "sr-only" : ""}>{config.label}</span>
           </span>
         )
