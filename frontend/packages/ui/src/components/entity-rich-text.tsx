@@ -441,7 +441,7 @@ export function EntityRichText({
   locale,
   fallbackLocale = "vi-VN",
   autoRecognize = true,
-  firstOccurrenceOnly = false,
+  firstOccurrenceOnly = true,
   icons = true,
   resolveIcon,
   context,

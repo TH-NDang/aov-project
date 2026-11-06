@@ -35,7 +35,21 @@ async function verifyAllowlistedFormatting() {
   const inherited = render(`<color=#12ab34><b><i>${name}</i></b></color>`)
   assert.equal(inherited.querySelector("strong > em > button")?.style.color, "rgb(18, 171, 52)")
   const automatic = render(`<b>${name}</b> <i>${name}</i>`)
-  assert.equal(automatic.querySelectorAll("strong > button, em > button").length, 2)
+  assert.equal(automatic.querySelectorAll("strong > button").length, 1)
+  assert.equal(automatic.querySelectorAll("em > button").length, 0)
+  assert.equal(automatic.querySelector("em")?.textContent, name)
+  const every = new JSDOM(
+    renderToStaticMarkup(
+      <EntityRichText
+        text={`<b>${name}</b> <i>${name}</i>`}
+        entities={[entity]}
+        locale="vi-VN"
+        context="admin"
+        firstOccurrenceOnly={false}
+      />,
+    ),
+  ).window.document
+  assert.equal(every.querySelectorAll("strong > button, em > button").length, 2)
   const noauto = render(`<noauto><b>${name}</b> <i>${name}</i></noauto>`)
   assert.equal(noauto.querySelectorAll("strong, em").length, 2)
   assert.equal(noauto.querySelectorAll("button").length, 0)
