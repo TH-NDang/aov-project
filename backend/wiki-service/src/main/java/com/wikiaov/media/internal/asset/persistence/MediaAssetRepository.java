@@ -46,6 +46,14 @@ public interface MediaAssetRepository extends Repository<MediaAsset, UUID> {
     @Query("select a from MediaAsset a where a.deletedAt is null and a.semanticType = :semanticType")
     Page<MediaAsset> findBySemanticType(MediaSemanticType semanticType, Pageable pageable);
 
+    /** Ids in list order, so a filter computed elsewhere can pick a page without loading every asset. */
+    @Query("""
+            select a.id from MediaAsset a
+            where a.deletedAt is null and (:semanticType is null or a.semanticType = :semanticType)
+            order by a.createdAt desc, a.id
+            """)
+    List<UUID> findIdsNewestFirst(@Nullable MediaSemanticType semanticType);
+
     /** Match the current version's credits, falling back to asset-wide sources only when none exist. */
     @Query("""
             select a from MediaAsset a

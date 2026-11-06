@@ -21,7 +21,9 @@ import com.wikiaov.platform.CatalogSnapshots;
 import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -185,19 +187,56 @@ class ArcanaCatalogQueries {
 
     List<MediaUsage> usages(UUID assetId) {
         var active = contexts.active(clock.instant());
-        return revisions.findAll().stream()
+        var found = revisions.findAll().stream()
                 .filter(revision -> !revision.getState().equals("DISCARDED")
                         && contentRules.assets(revision.getGameplay()).contains(assetId))
-                .map(revision -> {
-                    boolean current = active.stream().filter(c -> c.rulesetId().equals(revision.getRulesetId()))
-                            .anyMatch(
-                                    c -> current(revision.getOwnerId(), c).map(v -> v.getId().equals(revision.getId()))
-                                            .orElse(false));
-                    return new MediaUsage("ARCANA", "ARCANA", revision.getOwnerId(), revision.getId(), "ICON",
-                            revision.getState().equals("DRAFT")
-                                    ? MediaUsageScope.DRAFT
-                                    : current ? MediaUsageScope.CURRENT : MediaUsageScope.HISTORICAL);
-                }).toList();
+                .toList();
+        var names = usageNames(found);
+
+        return found.stream().map(revision -> usage(revision, active).named(names.get(revision.getId()), null))
+                .toList();
+    }
+
+    Map<UUID, List<MediaUsage>> allUsages() {
+        var active = contexts.active(clock.instant());
+        Map<UUID, List<MediaUsage>> usages = new HashMap<>();
+
+        for (var revision : revisions.findAll()) {
+            var assets = revision.getState().equals("DISCARDED")
+                    ? List.<UUID>of()
+                    : contentRules.assets(revision.getGameplay());
+            if (assets.isEmpty())
+                continue;
+            var usage = usage(revision, active);
+            assets.forEach(asset -> usages.computeIfAbsent(asset, ignored -> new ArrayList<>()).add(usage));
+        }
+
+        return usages;
+    }
+
+    private MediaUsage usage(ArcanaRevision revision, List<GameplayContext> active) {
+        boolean current = revision.getState().equals("PUBLISHED")
+                && active.stream().filter(c -> c.rulesetId().equals(revision.getRulesetId()))
+                        .anyMatch(c -> current(revision.getOwnerId(), c).map(v -> v.getId().equals(revision.getId()))
+                                .orElse(false));
+
+        return new MediaUsage("ARCANA", "ARCANA", revision.getOwnerId(), revision.getId(), "ICON",
+                revision.getState().equals("DRAFT")
+                        ? MediaUsageScope.DRAFT
+                        : current ? MediaUsageScope.CURRENT : MediaUsageScope.HISTORICAL);
+    }
+
+    /** The Vietnamese name of each revision, or another language's when it has none. */
+    private Map<UUID, String> usageNames(List<ArcanaRevision> found) {
+        if (found.isEmpty())
+            return Map.of();
+
+        Map<UUID, String> names = new HashMap<>();
+        translations.findByRevisionIdIn(found.stream().map(ArcanaRevision::getId).toList()).stream()
+                .sorted(Comparator.comparing(row -> row.getLocale().equals("vi-VN")))
+                .forEach(row -> names.put(row.getRevisionId(), row.getName()));
+
+        return names;
     }
 
     PageSlice<ArcanaView> published(String region, String locale, int page, int size) {

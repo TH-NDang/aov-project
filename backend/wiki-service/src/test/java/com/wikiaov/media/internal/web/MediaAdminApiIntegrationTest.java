@@ -31,6 +31,7 @@ import com.wikiaov.media.TestImages;
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.media.internal.deletion.application.port.CompetitionMediaGuard;
 import com.wikiaov.media.internal.deletion.application.port.MediaCachePurge;
+import com.wikiaov.media.internal.query.application.port.CompetitionMediaReferences;
 import com.wikiaov.media.internal.storage.application.port.ObjectStorage;
 import com.wikiaov.platform.ApiException;
 import java.io.ByteArrayInputStream;
@@ -97,6 +98,9 @@ class MediaAdminApiIntegrationTest {
 
     @MockitoBean
     MediaCachePurge mediaCache;
+
+    @MockitoBean
+    CompetitionMediaReferences competitionReferences;
 
     @Test
     void deletionRemovesAllVersionsAndResumesAfterCacheFailure() throws Exception {
@@ -408,6 +412,91 @@ class MediaAdminApiIntegrationTest {
         mvc.perform(get(BASE + "/assets"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
+    }
+
+    @Test
+    void listSaysWhereImagesAreUsedAndFiltersByTheStrongestUse() throws Exception {
+        UUID hero = UUID.randomUUID();
+        UUID shown = UUID.fromString(createAsset("OTHER"));
+        UUID draftOnly = UUID.fromString(createAsset("OTHER"));
+        UUID historyOnly = UUID.fromString(createAsset("OTHER"));
+        UUID storedOnly = UUID.fromString(createAsset("OTHER"));
+        UUID unused = UUID.fromString(createAsset("OTHER"));
+        UUID competition = UUID.fromString(createAsset("OTHER"));
+        var current = new MediaUsage("HERO", "HERO", hero, UUID.randomUUID(), "SKIN_ART:a", MediaUsageScope.CURRENT);
+        var old = new MediaUsage("HERO", "HERO", hero, UUID.randomUUID(), "SKIN_ART:a", MediaUsageScope.HISTORICAL);
+        var draft = new MediaUsage("HERO", "HERO", hero, UUID.randomUUID(), "SKIN_ART:a", MediaUsageScope.DRAFT);
+        var option = new MediaUsage("HERO", "HERO", hero, UUID.randomUUID(), "SKIN_HEAD:b", MediaUsageScope.CURRENT)
+                .storedOnly();
+        usages.byAsset.put(shown, List.of(current, old, draft, option));
+        usages.byAsset.put(draftOnly, List.of(draft));
+        usages.byAsset.put(historyOnly, List.of(old));
+        usages.byAsset.put(storedOnly, List.of(option));
+        org.mockito.Mockito.when(competitionReferences.references())
+                .thenReturn(java.util.Optional.of(Map.of(competition, 2L)));
+
+        var rows = BASE + "/assets";
+        mvc.perform(get(rows).param("withUsage", "true").param("size", "100").with(reader()))
+                .andExpect(status().isOk())
+                // The same place in three revisions counts once, as its strongest use.
+                .andExpect(jsonPath(usageOf(shown) + ".state").value(hasItem("SHOWN")))
+                .andExpect(jsonPath(usageOf(shown) + ".current").value(hasItem(1)))
+                .andExpect(jsonPath(usageOf(shown) + ".draft").value(hasItem(0)))
+                .andExpect(jsonPath(usageOf(shown) + ".historical").value(hasItem(0)))
+                .andExpect(jsonPath(usageOf(shown) + ".stored").value(hasItem(1)))
+                .andExpect(jsonPath(usageOf(draftOnly) + ".state").value(hasItem("DRAFT_ONLY")))
+                .andExpect(jsonPath(usageOf(historyOnly) + ".state").value(hasItem("HISTORY_ONLY")))
+                .andExpect(jsonPath(usageOf(storedOnly) + ".state").value(hasItem("STORED_ONLY")))
+                .andExpect(jsonPath(usageOf(unused) + ".state").value(hasItem("NONE")))
+                .andExpect(jsonPath(usageOf(competition) + ".state").value(hasItem("SHOWN")))
+                .andExpect(jsonPath(usageOf(competition) + ".competition").value(hasItem(2)));
+        mvc.perform(get(rows).param("size", "100").with(reader()))
+                .andExpect(jsonPath("$.items[0].usage").value(nullValue()));
+
+        for (var filter : Map.of("STORED_ONLY", storedOnly, "NONE", unused, "DRAFT_ONLY", draftOnly).entrySet()) {
+            mvc.perform(get(rows).param("usage", filter.getKey()).param("size", "100").with(reader()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items[*].id").value(hasItem(filter.getValue().toString())))
+                    .andExpect(jsonPath("$.items[*].usage.state").value(everyItem(is(filter.getKey()))));
+        }
+        mvc.perform(get(rows).param("usage", "EVERYWHERE").with(reader())).andExpect(status().isBadRequest());
+        mvc.perform(get(BASE + "/usage-totals").param("arbitrary", "x").with(reader()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get(BASE + "/usage-totals").with(reader()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.competitionChecked").value(true))
+                .andExpect(jsonPath("$.states.STORED_ONLY").isNumber())
+                .andExpect(jsonPath("$.states.NONE").isNumber());
+
+        org.mockito.Mockito.when(competitionReferences.references()).thenReturn(java.util.Optional.empty());
+        mvc.perform(get(BASE + "/usage-totals").with(reader()))
+                .andExpect(jsonPath("$.competitionChecked").value(false));
+        mvc.perform(get(rows).param("withUsage", "true").param("size", "100").with(reader()))
+                .andExpect(jsonPath(usageOf(competition) + ".state").value(hasItem("NONE")))
+                .andExpect(jsonPath(usageOf(competition) + ".competition").value(hasItem(nullValue())));
+
+        for (var id : List.of(shown, draftOnly, historyOnly, storedOnly))
+            usages.byAsset.remove(id);
+    }
+
+    @Test
+    void usageReportSaysWhetherAPlaceReallyShowsTheImage() throws Exception {
+        String assetId = createAsset("HERO_SKIN_ART");
+        var stored = new MediaUsage("HERO", "HERO", UUID.randomUUID(), UUID.randomUUID(), "SKIN_HEAD:a",
+                MediaUsageScope.CURRENT).storedOnly().named("Airi", "Celestial Airi");
+        usages.byAsset.put(UUID.fromString(assetId), List.of(stored));
+
+        mvc.perform(get(BASE + "/assets/" + assetId + "/usages").with(reader()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].shown").value(false))
+                .andExpect(jsonPath("$.items[0].ownerName").value("Airi"))
+                .andExpect(jsonPath("$.items[0].partName").value("Celestial Airi"));
+
+        usages.byAsset.remove(UUID.fromString(assetId));
+    }
+
+    private static String usageOf(UUID asset) {
+        return "$.items[?(@.id=='" + asset + "')].usage";
     }
 
     @Test
@@ -916,6 +1005,11 @@ class MediaAdminApiIntegrationTest {
         @Override
         public List<MediaUsage> findUsages(UUID assetId) {
             return byAsset.getOrDefault(assetId, List.of());
+        }
+
+        @Override
+        public Map<UUID, List<MediaUsage>> findAllUsages() {
+            return Map.copyOf(byAsset);
         }
     }
 }

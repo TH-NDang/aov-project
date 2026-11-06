@@ -202,6 +202,10 @@ public class SpellCatalog implements SpellChangeQueries {
         return queries.usages(assetId);
     }
 
+    public Map<UUID, List<MediaUsage>> allUsages() {
+        return queries.allUsages();
+    }
+
     @Transactional(readOnly = true)
     public PageSlice<SpellView> published(String region, String locale, int page, int size) {
         return queries.published(region, locale, page, size);

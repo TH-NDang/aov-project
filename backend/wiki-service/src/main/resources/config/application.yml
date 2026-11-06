@@ -95,6 +95,8 @@ wiki:
     max-dimension: 16384
     upload-url-validity: 15m
     upload-session-validity: 1h
+    # How long the asset list keeps its answer about where every image is used.
+    usage-report-lifetime: 1m
     validation-timeout: 5m
     # Prefix that serves the assets/ prefix of the bucket (reverse proxy or CDN).
     public-base-url: ${MEDIA_PUBLIC_BASE_URL:/media}

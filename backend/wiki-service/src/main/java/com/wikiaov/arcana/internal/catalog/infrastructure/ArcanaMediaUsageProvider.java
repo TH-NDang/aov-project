@@ -18,4 +18,9 @@ public class ArcanaMediaUsageProvider implements MediaUsageProvider {
     public List<MediaUsage> findUsages(UUID id) {
         return catalog.usages(id);
     }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, List<MediaUsage>> findAllUsages() {
+        return catalog.allUsages();
+    }
 }

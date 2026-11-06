@@ -1,6 +1,7 @@
 package com.wikiaov.media;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -13,4 +14,10 @@ public interface MediaUsageProvider {
 
     /** Returns every reference to {@code assetId} held by this module; empty if there is none. */
     List<MediaUsage> findUsages(UUID assetId);
+
+    /**
+     * Returns every reference this module holds, by asset, so the asset list can say where each image is used without
+     * asking once per image. Names may be left out here; every other field must match {@link #findUsages(UUID)}.
+     */
+    Map<UUID, List<MediaUsage>> findAllUsages();
 }

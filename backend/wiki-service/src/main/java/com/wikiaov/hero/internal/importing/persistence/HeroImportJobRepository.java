@@ -23,6 +23,9 @@ public interface HeroImportJobRepository extends JpaRepository<HeroImportJob, UU
     @Query(value = "SELECT * FROM hero.import_job WHERE completed < total AND request_json LIKE :pattern", nativeQuery = true)
     List<HeroImportJob> referencing(String pattern);
 
+    @Query(value = "SELECT * FROM hero.import_job WHERE completed < total", nativeQuery = true)
+    List<HeroImportJob> unfinished();
+
     @Query(value = "SELECT * FROM hero.import_job WHERE completed < total ORDER BY updated_at LIMIT 20", nativeQuery = true)
     List<HeroImportJob> pending();
 

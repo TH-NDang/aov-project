@@ -4,6 +4,8 @@ import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.application.response.MediaAssetSummary;
 import com.wikiaov.media.internal.application.response.MediaUsageReport;
+import com.wikiaov.media.internal.application.response.MediaUsageState;
+import com.wikiaov.media.internal.application.response.MediaUsageTotals;
 import com.wikiaov.media.internal.application.response.MediaVersionResult;
 import com.wikiaov.media.internal.application.response.UploadStatus;
 import com.wikiaov.media.internal.application.response.UploadTicket;
@@ -15,6 +17,7 @@ import com.wikiaov.media.internal.ingestion.application.RegisterExistingObject;
 import com.wikiaov.media.internal.provenance.application.AddMediaSource;
 import com.wikiaov.media.internal.query.application.FindMediaUsages;
 import com.wikiaov.media.internal.query.application.MediaAssetQueries;
+import com.wikiaov.media.internal.query.application.MediaUsageOverview;
 import com.wikiaov.media.internal.upload.application.CompleteMediaUpload;
 import com.wikiaov.media.internal.upload.application.RequestMediaUpload;
 import com.wikiaov.media.internal.web.request.CreateAssetRequest;
@@ -57,14 +60,15 @@ class MediaAdminController implements MediaAdminApi {
     private final DeprecateMediaAsset deprecateMediaAsset;
     private final FindMediaUsages findMediaUsages;
     private final MediaAssetQueries queries;
+    private final MediaUsageOverview usageOverview;
     private final AddMediaSource addMediaSource;
     private final SetMediaFocalPoint setMediaFocalPoint;
 
     MediaAdminController(CreateMediaAsset createMediaAsset, RequestMediaUpload requestMediaUpload,
             CompleteMediaUpload completeMediaUpload, RegisterExistingObject registerExistingObject,
             ActivateMediaAssetVersion activateMediaAssetVersion, DeprecateMediaAsset deprecateMediaAsset,
-            FindMediaUsages findMediaUsages, MediaAssetQueries queries, AddMediaSource addMediaSource,
-            SetMediaFocalPoint setMediaFocalPoint) {
+            FindMediaUsages findMediaUsages, MediaAssetQueries queries, MediaUsageOverview usageOverview,
+            AddMediaSource addMediaSource, SetMediaFocalPoint setMediaFocalPoint) {
         this.createMediaAsset = createMediaAsset;
         this.requestMediaUpload = requestMediaUpload;
         this.completeMediaUpload = completeMediaUpload;
@@ -73,6 +77,7 @@ class MediaAdminController implements MediaAdminApi {
         this.deprecateMediaAsset = deprecateMediaAsset;
         this.findMediaUsages = findMediaUsages;
         this.queries = queries;
+        this.usageOverview = usageOverview;
         this.addMediaSource = addMediaSource;
         this.setMediaFocalPoint = setMediaFocalPoint;
     }
@@ -106,10 +111,22 @@ class MediaAdminController implements MediaAdminApi {
     public PageSlice<MediaAssetSummary> listAssets(HttpServletRequest http,
             @RequestParam(required = false) @Nullable MediaSemanticType semanticType,
             @RequestParam(defaultValue = "false") boolean needsCredit,
+            @RequestParam(required = false) @Nullable MediaUsageState usage,
+            @RequestParam(defaultValue = "false") boolean withUsage,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        QueryParameters.requireOnly(http, Set.of("semanticType", "needsCredit", "page", "size"));
-        return queries.list(semanticType, needsCredit, page, size);
+        QueryParameters.requireOnly(http, Set.of("semanticType", "needsCredit", "usage", "withUsage", "page", "size"));
+        return usage == null && !withUsage
+                ? queries.list(semanticType, needsCredit, page, size)
+                : usageOverview.list(semanticType, needsCredit, usage, page, size);
+    }
+
+    @GetMapping(path = "/usage-totals", version = "1")
+    public MediaUsageTotals usageTotals(HttpServletRequest http,
+            @RequestParam(required = false) @Nullable MediaSemanticType semanticType,
+            @RequestParam(defaultValue = "false") boolean needsCredit) {
+        QueryParameters.requireOnly(http, Set.of("semanticType", "needsCredit"));
+        return usageOverview.totals(semanticType, needsCredit);
     }
 
     @GetMapping(path = "/assets/{assetId}", version = "1")

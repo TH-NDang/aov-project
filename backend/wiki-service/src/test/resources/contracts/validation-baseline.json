@@ -632,7 +632,14 @@
       "@Valid"
     ]
   ],
+  "com.wikiaov.media.internal.web.MediaAdminController#usageTotals": [
+    [],
+    [],
+    []
+  ],
   "com.wikiaov.media.internal.web.MediaAdminController#listAssets": [
+    [],
+    [],
     [],
     [],
     [],

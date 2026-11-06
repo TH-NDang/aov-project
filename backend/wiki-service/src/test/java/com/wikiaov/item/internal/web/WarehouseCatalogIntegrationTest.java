@@ -267,6 +267,10 @@ class WarehouseCatalogIntegrationTest {
                     .filter(u -> u.ownerDomain().equals("SPELL")).toList();
             assertThat(usage).hasSize(1);
             assertThat(usage.getFirst().scope()).isEqualTo(MediaUsageScope.DRAFT);
+            assertThat(usageProviders.stream().flatMap(p -> p.findAllUsages().getOrDefault(asset, List.of()).stream())
+                    .filter(u -> u.ownerDomain().equals("SPELL")).toList())
+                    .usingRecursiveFieldByFieldElementComparatorIgnoringFields("ownerName", "partName")
+                    .containsExactlyElementsOf(usage);
         }
     }
 

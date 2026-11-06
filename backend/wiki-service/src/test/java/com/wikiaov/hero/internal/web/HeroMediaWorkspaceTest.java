@@ -175,6 +175,48 @@ class HeroMediaWorkspaceTest {
     }
 
     @Test
+    void usageReportCountsOnlyPlacesThatReallyShowAnImage() throws Exception {
+        var draft = complete(create("nakroth", "Nakroth"));
+        UUID head = asset(MediaSemanticType.HERO_SKIN_ART);
+        UUID lonelyHead = asset(MediaSemanticType.HERO_SKIN_ART);
+        UUID portrait = asset(MediaSemanticType.HERO_SKIN_ART);
+        UUID alternate = asset(MediaSemanticType.HERO_SKIN_ART);
+        var withPortrait = skin("celestial", "Celestial Airi");
+        withPortrait.put("headAssetId", head);
+        withPortrait.put("portraitAssetId", portrait);
+        withPortrait.put("artAssetId", assets.get(MediaSemanticType.HERO_SKIN_ART));
+        withPortrait.put("images", Map.of("PORTRAIT", List.of(image(portrait, "Main"), image(alternate, "Alternate"))));
+        var withoutPortrait = skin("winter", "Winter Airi");
+        withoutPortrait.put("displayOrder", 1);
+        withoutPortrait.put("headAssetId", lonelyHead);
+        withoutPortrait.put("artAssetId", assets.get(MediaSemanticType.HERO_SKIN_ART));
+        update(draft, "skins", Map.of("skins", List.of(withPortrait, withoutPortrait)));
+
+        assertThat(usages(head)).singleElement().satisfies(usage -> {
+            assertThat(usage.propertyRole()).isEqualTo("SKIN_HEAD:celestial");
+            assertThat(usage.shown()).as("a portrait stands in for this head on the Wiki").isFalse();
+            assertThat(usage.ownerName()).isEqualTo("Nakroth");
+            assertThat(usage.partName()).isEqualTo("Celestial Airi");
+        });
+        assertThat(usages(lonelyHead)).singleElement()
+                .satisfies(usage -> assertThat(usage.shown()).as("the Wiki falls back to this head").isTrue());
+        assertThat(usages(portrait)).singleElement().satisfies(usage -> {
+            assertThat(usage.propertyRole()).isEqualTo("SKIN_PORTRAIT:celestial");
+            assertThat(usage.shown()).as("also listed among the options, yet it is the main image").isTrue();
+        });
+        assertThat(usages(alternate)).singleElement()
+                .satisfies(usage -> assertThat(usage.shown()).as("an unchosen option is not drawn").isFalse());
+
+        var all = new HashMap<UUID, List<MediaUsage>>();
+        usageProviders.forEach(provider -> provider.findAllUsages()
+                .forEach((asset, found) -> all.computeIfAbsent(asset, ignored -> new ArrayList<>()).addAll(found)));
+        for (UUID asset : List.of(head, lonelyHead, portrait, alternate))
+            assertThat(all.get(asset)).as("the whole-module answer matches the one for a single image")
+                    .usingRecursiveFieldByFieldElementComparatorIgnoringFields("ownerName", "partName")
+                    .containsExactlyInAnyOrderElementsOf(usages(asset));
+    }
+
+    @Test
     void publishedImageOptionsRemainImmutableWhileVisualDraftRetainsCollectedAlternates() throws Exception {
         var draft = complete(create("nakroth", "Nakroth"));
         UUID mainHead = assets.get(MediaSemanticType.HERO_HEAD);

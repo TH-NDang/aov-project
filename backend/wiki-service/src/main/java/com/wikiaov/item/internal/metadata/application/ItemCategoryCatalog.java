@@ -90,12 +90,25 @@ public class ItemCategoryCatalog implements MediaUsageProvider {
 
     @Transactional(readOnly = true)
     public List<MediaUsage> findUsages(UUID assetId) {
-        return records.findAll().stream()
-                .filter(r -> assetId.equals(r.getIconAssetId()) || assetId.equals(r.getBackgroundAssetId()))
-                .map(r -> new MediaUsage("ITEM", "ITEM_METADATA",
-                        UUID.nameUUIDFromBytes(r.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8)), null,
-                        assetId.equals(r.getIconAssetId()) ? "ICON" : "BACKGROUND", MediaUsageScope.CURRENT))
-                .toList();
+        return findAllUsages().getOrDefault(assetId, List.of());
+    }
+
+    @Transactional(readOnly = true)
+    public Map<UUID, List<MediaUsage>> findAllUsages() {
+        Map<UUID, List<MediaUsage>> usages = new HashMap<>();
+        for (var record : records.findAll()) {
+            var owner = UUID.nameUUIDFromBytes(record.getCode().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            if (record.getIconAssetId() != null)
+                usages.computeIfAbsent(record.getIconAssetId(), ignored -> new ArrayList<>()).add(new MediaUsage(
+                        "ITEM", "ITEM_METADATA", owner, null, "ICON", MediaUsageScope.CURRENT).named(record.getCode(),
+                                null));
+            if (record.getBackgroundAssetId() != null)
+                usages.computeIfAbsent(record.getBackgroundAssetId(), ignored -> new ArrayList<>()).add(new MediaUsage(
+                        "ITEM", "ITEM_METADATA", owner, null, "BACKGROUND", MediaUsageScope.CURRENT)
+                        .named(record.getCode(), null));
+        }
+
+        return usages;
     }
 
     private ItemCategoryView view(ItemCategory e) {
