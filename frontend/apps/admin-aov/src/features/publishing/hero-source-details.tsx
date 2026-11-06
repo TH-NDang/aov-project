@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink, Pencil } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
@@ -24,16 +24,62 @@ export function heroReviewNotes(skills: Skill[]): string[] {
   return [...new Set(heroReviewItems(skills).map((item) => item.note))]
 }
 
+/** What the skill costs, written on its source, unless its rank table already shows the cooldown formula. */
+function skillCosts(skill: Skill) {
+  const source = snapshot(skill)
+  const cooldown = record(source?.cooldown)
+  const energy = record(source?.energyCost)
+  const rawCooldown =
+    text(cooldown?.display) || (typeof cooldown?.seconds === "number" ? `Hồi chiêu: ${cooldown.seconds} giây` : "")
+  return {
+    cooldownText: skillSourceTable(skill).derived && hasRankFormula(rawCooldown) ? "" : rawCooldown,
+    energyText: text(energy?.display) || (typeof energy?.value === "number" ? `Tiêu hao: ${energy.value}` : ""),
+  }
+}
+
+/** A skill's cost and traits as loose badges, for a row of its own or beside the skill's name. */
+export function SkillSourceBadges({ skill, showTags = true }: { skill: Skill; showTags?: boolean }) {
+  const { cooldownText, energyText } = skillCosts(skill)
+  const tags = showTags ? strings(snapshot(skill)?.tags) : []
+  return (
+    <>
+      {cooldownText && (
+        <Badge variant="secondary" className="gap-1.5">
+          <Clock3 className="size-3" />
+          <AdminEntityText text={cooldownText} />
+        </Badge>
+      )}
+      {energyText && (
+        <Badge variant="secondary" className="gap-1.5">
+          <Droplets className="size-3" />
+          <AdminEntityText text={energyText} />
+        </Badge>
+      )}
+      {tags.map((tag, index) => (
+        <Badge key={index} variant="outline">
+          <AdminEntityText text={tag} />
+        </Badge>
+      ))}
+    </>
+  )
+}
+
 export function SkillSourceDetails({
   skill,
   collapseSources = false,
   locale = "vi-VN",
   onChange,
+  showBadges = true,
+  children,
 }: {
   skill: Skill
   collapseSources?: boolean
   locale?: string
   onChange?: (effects: Skill["effects"]) => void
+  /** Off when the page already shows the badges beside the skill's name. */
+  showBadges?: boolean
+  /** Goes between the rank table and where the data came from. */
+  children?: ReactNode
 }) {
   const [tableOpen, setTableOpen] = useState(false)
   const source = snapshot(skill)
@@ -46,14 +92,9 @@ export function SkillSourceDetails({
         : skill.effects.map((effect, i) => (i === index ? { ...effect, ...next } : effect)),
     )
   }
-  if (!onChange && !source) return null
-  const cooldown = record(source?.cooldown)
-  const energy = record(source?.energyCost)
-  const rawCooldownText =
-    text(cooldown?.display) || (typeof cooldown?.seconds === "number" ? `Hồi chiêu: ${cooldown.seconds} giây` : "")
-  const energyText = text(energy?.display) || (typeof energy?.value === "number" ? `Tiêu hao: ${energy.value}` : "")
-  const { columns, rows, derived } = skillSourceTable(skill)
-  const cooldownText = derived && hasRankFormula(rawCooldownText) ? "" : rawCooldownText
+  if (!onChange && !source && !children) return null
+  const { cooldownText, energyText } = skillCosts(skill)
+  const { columns, rows } = skillSourceTable(skill)
   const notes = sourceReviewNotes(source?.reviewFlags ?? source?.review_flags)
   const sourceImageUrl = sourceHttpUrl(source?.sourceImageUrl)
   const tags = strings(source?.tags)
@@ -84,26 +125,9 @@ export function SkillSourceDetails({
   )
   return (
     <div className="space-y-4">
-      {(cooldownText || energyText || (!onChange && tags.length > 0)) && (
+      {showBadges && (cooldownText || energyText || (!onChange && tags.length > 0)) && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          {cooldownText && (
-            <Badge variant="secondary" className="gap-1.5">
-              <Clock3 className="size-3" />
-              <AdminEntityText text={cooldownText} />
-            </Badge>
-          )}
-          {energyText && (
-            <Badge variant="secondary" className="gap-1.5">
-              <Droplets className="size-3" />
-              <AdminEntityText text={energyText} />
-            </Badge>
-          )}
-          {!onChange &&
-            tags.map((tag, index) => (
-              <Badge key={index} variant="outline">
-                <AdminEntityText text={tag} />
-              </Badge>
-            ))}
+          <SkillSourceBadges skill={skill} showTags={!onChange} />
         </div>
       )}
       {onChange && (
@@ -193,6 +217,7 @@ export function SkillSourceDetails({
           </div>
         )
       )}
+      {children}
       {collapseSources && (notes.length > 0 || sourceImageUrl) ? (
         <details data-review-source className="group/source border-t pt-3">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-xs text-muted-foreground [&::-webkit-details-marker]:hidden">

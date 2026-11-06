@@ -6,13 +6,14 @@ import { AdminEntityText } from "../terminology/catalog"
 import { HeroAsset } from "./hero-asset"
 import { groupHeroSkills, selectSkillTranslation, skillLabel, skillVariantLabel } from "./hero-skills"
 import { SkillArtwork, SkillArtworkStack, skillImageMatch, useHeroSkillImages } from "./skill-artwork"
-import { SkillSourceDetails } from "./hero-source-details"
+import { SkillSourceBadges, SkillSourceDetails } from "./hero-source-details"
 import { ImageCreditSummary } from "./image-credit-summary"
 import type { Skill } from "./types"
 import { HeroTranslationNotice } from "./hero-translation-notice"
 import { PatchCaptureLink } from "./patch-capture-panel"
 import { captureGroupKeys } from "./patch-capture-model"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
+import { SkillVideosSection } from "../videos/skill-videos-section"
 
 export type HeroSkillsLayout = "focus" | "flat"
 
@@ -93,7 +94,11 @@ export function HeroSkillsView({
             <div
               role="group"
               aria-label="Cách hiển thị kỹ năng"
-              className="flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1"
+              className={cn(
+                "flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1",
+                // A flat view stays reachable on a phone so it can be switched back; otherwise the space goes to the skills.
+                layout === "focus" && "hidden @min-[500px]/skills:flex",
+              )}
             >
               {(
                 [
@@ -357,11 +362,15 @@ function SkillDetail({
   onTranslate?: (target: TranslationTarget) => void
 }) {
   const text = translatedText(skill.translations, locale, sectionTextFields.SKILLS)
+  const videos = heroId && (
+    <SkillVideosSection heroId={heroId} skillKey={skill.skillKey} skillName={text?.name || skillLabel(skill)} />
+  )
   if (editor)
     return (
       <>
         {states}
         {editor}
+        {videos}
       </>
     )
   return (
@@ -378,6 +387,7 @@ function SkillDetail({
               </Badge>
             )}
             {variant && <Badge variant="outline">{variant}</Badge>}
+            <SkillSourceBadges skill={skill} />
           </div>
         </div>
         <HeroTranslationNotice
@@ -400,7 +410,9 @@ function SkillDetail({
           Chưa có mô tả kỹ năng{text ? ` bằng ${text.locale}` : ` bằng ${locale}`}.
         </p>
       )}
-      <SkillSourceDetails skill={skill} collapseSources />
+      <SkillSourceDetails skill={skill} collapseSources showBadges={false}>
+        {videos}
+      </SkillSourceDetails>
     </>
   )
 }
