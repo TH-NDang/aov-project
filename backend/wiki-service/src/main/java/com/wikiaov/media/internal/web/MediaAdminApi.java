@@ -4,6 +4,8 @@ import com.wikiaov.media.MediaSemanticType;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.application.response.MediaAssetSummary;
 import com.wikiaov.media.internal.application.response.MediaUsageReport;
+import com.wikiaov.media.internal.application.response.MediaUsageState;
+import com.wikiaov.media.internal.application.response.MediaUsageTotals;
 import com.wikiaov.media.internal.application.response.MediaVersionResult;
 import com.wikiaov.media.internal.application.response.UploadStatus;
 import com.wikiaov.media.internal.application.response.UploadTicket;
@@ -77,8 +79,20 @@ public interface MediaAdminApi {
     PageSlice<MediaAssetSummary> listAssets(@Parameter(hidden = true) HttpServletRequest http,
             @Parameter(description = "Semantic type.") MediaSemanticType semanticType,
             @Parameter(description = "Only uploaded images without a complete current source and owner credit. Defaults to false.") boolean needsCredit,
+            @Parameter(description = "Only images in this usage state. Adds the usage summary to each row.") MediaUsageState usage,
+            @Parameter(description = "Adds the usage summary to each row. Defaults to false.") boolean withUsage,
             @Parameter(description = "Zero-based page index.") @Min(0) int page,
             @Parameter(description = "Maximum number of entries in a page.") @Min(1) @Max(100) int size);
+
+    @Operation(operationId = "mediaAdminApi_usageTotals", summary = "Usage totals - media admin", description = "How many images are in each usage state for the same filters as the asset list. Requires a valid bearer token with catalog:read. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+    })
+    MediaUsageTotals usageTotals(@Parameter(hidden = true) HttpServletRequest http,
+            @Parameter(description = "Semantic type.") MediaSemanticType semanticType,
+            @Parameter(description = "Only uploaded images without a complete current source and owner credit. Defaults to false.") boolean needsCredit);
 
     @Operation(operationId = "mediaAdminApi_getAsset", summary = "Get asset - media admin", description = "Get asset for media admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),

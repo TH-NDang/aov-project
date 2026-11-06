@@ -23,4 +23,13 @@ public interface ProfileRepository extends Repository<Profile, UUID> {
 
     @Query("select p.id from Profile p where p.avatarAssetId = :assetId")
     List<UUID> avatarOwners(@Param("assetId") UUID assetId);
+
+    @Query("select p.id as ownerId,p.avatarAssetId as assetId from Profile p where p.avatarAssetId is not null")
+    List<Avatar> avatars();
+
+    interface Avatar {
+        UUID getOwnerId();
+
+        UUID getAssetId();
+    }
 }

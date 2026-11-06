@@ -245,10 +245,9 @@ export function SectionEditor({
               >
                 Thêm bản dịch trang phục
               </Button>
-              <div className="grid gap-3 lg:grid-cols-3">
+              <div className="grid gap-3 lg:grid-cols-2">
                 {(
                   [
-                    ["HEAD", "headAssetId", "Head", "head"],
                     ["PORTRAIT", "portraitAssetId", "Portrait", "portrait"],
                     ["SPLASH", "artAssetId", "Cover", "cover"],
                   ] as const

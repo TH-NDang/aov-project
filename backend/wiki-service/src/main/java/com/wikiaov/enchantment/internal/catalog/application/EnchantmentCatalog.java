@@ -264,6 +264,10 @@ public class EnchantmentCatalog {
         return queries.usages(assetId);
     }
 
+    public Map<UUID, List<MediaUsage>> allUsages() {
+        return queries.allUsages();
+    }
+
     @Transactional(readOnly = true)
     public PageSlice<EnchantmentView> published(String region, String locale, int page, int size) {
         return queries.published(region, locale, page, size);

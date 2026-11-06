@@ -24,6 +24,15 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, UU
     @Query(value = "select count(*) from community.post where cast(image_urls as text) like concat('%/', :id, '/%')", nativeQuery = true)
     long countMedia(String id);
 
+    @Query(value = """
+        SELECT pairs.asset FROM (
+        SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
+            SELECT id AS owner, image_urls AS body FROM community.post
+        ) found, LATERAL regexp_matches(CAST(found.body AS text), '/(assets|media)/([0-9a-fA-F-]{36})/', 'g') m
+        ) pairs
+        """, nativeQuery = true)
+    List<String> allMedia();
+
     @Query("select p from CommunityPost p where p.pageId = :pageId and (p.asPage = true or p.status <> 'DRAFT') order by p.createdAt desc")
     Page<CommunityPost> findByPageIdOrderByCreatedAtDesc(UUID pageId, Pageable pageable);
 

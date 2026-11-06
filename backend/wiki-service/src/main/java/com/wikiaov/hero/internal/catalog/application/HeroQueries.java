@@ -12,6 +12,7 @@ import com.wikiaov.patch.*;
 import com.wikiaov.platform.*;
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
@@ -41,8 +42,25 @@ public class HeroQueries {
     }
 
     public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at, boolean allowUnscoped) {
+        return select(store.revisions(heroId), context, at, allowUnscoped, new HashMap<>());
+    }
+
+    /** The revisions readers see at {@code at}, in any active context, for many heroes with one read of each. */
+    public Set<UUID> currentRevisionIds(Collection<UUID> heroIds, Instant at) {
+        var byHero = store.revisions(heroIds).stream().collect(Collectors.groupingBy(HeroRevisionView::heroId));
         Map<UUID, Long> ordinals = new HashMap<>();
-        return store.revisions(heroId).stream()
+        Set<UUID> current = new HashSet<>();
+
+        for (var context : contexts.active(at))
+            for (var revisions : byHero.values())
+                select(revisions, context, at, true, ordinals).ifPresent(revision -> current.add(revision.id()));
+
+        return current;
+    }
+
+    private Optional<HeroRevisionView> select(List<HeroRevisionView> revisions, GameplayContext context, Instant at,
+            boolean allowUnscoped, Map<UUID, Long> ordinals) {
+        return revisions.stream()
                 .filter(r -> r.state().equals("PUBLISHED") && r.rulesetId().equals(context.rulesetId())
                         && !r.publishedAt().isAfter(at))
                 .filter(r -> allowUnscoped || r.effectiveFromPatchVariantId() != null)

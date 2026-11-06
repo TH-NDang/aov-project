@@ -1,10 +1,11 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { AlertTriangle, ChevronDown, Pencil, Trash2 } from "lucide-react"
+import { AlertTriangle, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
+import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
+import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import {
@@ -54,7 +55,7 @@ export function useHeroShop(heroId?: string) {
   })
 }
 
-function ReviewMark() {
+export function ReviewMark() {
   return (
     <span
       className="type-meta inline-flex items-center gap-1 text-amber-700 dark:text-amber-400"
@@ -313,235 +314,307 @@ export function skinAcquisitionText(row: SkinAcquisition) {
   return methodLabels[row.method]
 }
 
-/** How a skin is obtained, editable in place from its card. */
-export function SkinAcquisitionRow({
+/** What the form holds for one skin; the tab keeps it, so moving to another skin never loses what was typed. */
+export interface SkinAcquisitionDraft {
+  method: SkinMethod
+  voucherPrice: string
+  eventName: string
+  capturedOn: string
+  needsReview: boolean
+  note: string
+}
+
+export const skinAcquisitionDraft = (value?: SkinAcquisition): SkinAcquisitionDraft => ({
+  method: value?.method ?? "VOUCHER",
+  voucherPrice: value?.voucherPrice?.toString() ?? "",
+  eventName: value?.eventName ?? "",
+  capturedOn: value?.capturedOn ?? today(),
+  needsReview: value?.needsReview ?? false,
+  note: value?.note ?? "",
+})
+
+export const skinDraftChanged = (draft: SkinAcquisitionDraft, value?: SkinAcquisition) =>
+  JSON.stringify(draft) !== JSON.stringify(skinAcquisitionDraft(value))
+
+/** The list price a shop card shows, as read off the screenshot; events and locked cards have none. */
+export function readingVoucherPrice(reading: string | undefined) {
+  const list = /^([\d.]+) quân huy/.exec(reading ?? "")?.[1]
+  return list ? Number(list.replaceAll(".", "")) : null
+}
+
+/**
+ * How a skin is obtained, written straight on the tab with its dated steps below. A new date adds a step and keeps the
+ * old value; the same date corrects that step.
+ */
+export function SkinAcquisitionEditor({
   heroId,
   skinKey,
-  skinName,
   value,
   history = [],
   canWrite,
+  draft,
+  onDraftChange,
+  nextName,
+  onNext,
 }: {
   heroId: string
   skinKey: string
-  skinName: string
   value?: SkinAcquisition
   /** Every dated step of this skin, newest first. */
   history?: SkinAcquisition[]
   canWrite: boolean
+  /** Unsaved changes; absent means the form shows what is stored. */
+  draft?: SkinAcquisitionDraft
+  onDraftChange: (draft: SkinAcquisitionDraft | null) => void
+  /** Offers to save and move on, so a run of skins takes one key per skin. */
+  nextName?: string
+  onNext?: () => void
 }) {
   const client = useQueryClient()
-  const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({
-    method: "VOUCHER" as SkinMethod,
-    voucherPrice: "",
-    eventName: "",
-    capturedOn: "",
-    needsReview: false,
-    note: "",
-  })
+  const form = draft ?? skinAcquisitionDraft(value)
+  const update = (patch: Partial<SkinAcquisitionDraft>) => {
+    const next = { ...form, ...patch }
+    // Typing a value back to what is stored leaves nothing to lose, so the skin stops reading as unsaved.
+    onDraftChange(skinDraftChanged(next, value) ? next : null)
+  }
   const remove = useMutation({
     mutationFn: (capturedOn: string) => api.deleteSkinAcquisition(heroId, skinKey, SHOP_REGION, capturedOn),
     meta: { successMessage: "Đã xóa mốc cách nhận." },
     onSuccess: () => client.invalidateQueries({ queryKey: shopKey(heroId) }),
   })
   const save = useMutation({
-    mutationFn: () =>
+    mutationFn: (_next: boolean) =>
       api.saveSkinAcquisition(heroId, skinKey, SHOP_REGION, {
         method: form.method,
-        voucherPrice: numberOrNull(form.voucherPrice),
-        eventName: form.eventName.trim() || null,
+        voucherPrice: form.method === "VOUCHER" ? numberOrNull(form.voucherPrice) : null,
+        eventName: form.method === "EVENT" ? form.eventName.trim() || null : null,
         capturedOn: form.capturedOn || null,
         needsReview: form.needsReview,
         note: form.note.trim() || null,
       }),
     meta: { successMessage: "Đã lưu cách nhận trang phục." },
-    onSuccess: async () => {
+    onSuccess: async (_saved, next) => {
       await client.invalidateQueries({ queryKey: shopKey(heroId) })
-      setOpen(false)
+      onDraftChange(null)
+      if (next) onNext?.()
     },
   })
-  const start = (next: boolean) => {
-    if (next) {
-      setForm({
-        method: value?.method ?? "VOUCHER",
-        voucherPrice: value?.voucherPrice?.toString() ?? "",
-        eventName: value?.eventName ?? "",
-        capturedOn: value?.capturedOn ?? today(),
-        needsReview: value?.needsReview ?? false,
-        note: value?.note ?? "",
-      })
-      save.reset()
-    }
-    setOpen(next)
-  }
-  return (
-    <div className="flex min-h-8 items-center gap-2 border-t pt-2">
-      <span className="min-w-0 flex-1">
-        <span className="type-body block truncate font-medium" title={value ? skinAcquisitionText(value) : undefined}>
+  const steps = history.length > 1 && (
+    <details className="group/history">
+      <summary className="type-meta flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden">
+        <ChevronDown className="size-3.5 transition-transform group-open/history:rotate-180" aria-hidden="true" />
+        Các mốc cách nhận ({history.length})
+      </summary>
+      <ul className="mt-2 grid gap-1" aria-label="Các mốc cách nhận">
+        {history.map((row) => (
+          <li key={row.capturedOn} className="type-meta flex items-center gap-2">
+            <span className="w-20 shrink-0 tabular-nums">{capturedDate(row.capturedOn)}</span>
+            <span className="min-w-0 flex-1 truncate text-foreground">{skinAcquisitionText(row)}</span>
+            {row.needsReview && <AlertTriangle className="size-3.5 shrink-0 text-amber-600" aria-label="Cần xem lại" />}
+            {canWrite && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0"
+                aria-label={`Xóa mốc ${capturedDate(row.capturedOn)}`}
+                title="Xóa mốc này nếu ghi nhầm"
+                disabled={remove.isPending}
+                onClick={() => {
+                  if (row.capturedOn) remove.mutate(row.capturedOn)
+                }}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
+  )
+  if (!canWrite)
+    return (
+      <div className="grid gap-2">
+        <p className="type-section-title">
           {value ? skinAcquisitionText(value) : <span className="text-muted-foreground">Chưa rõ cách nhận</span>}
-        </span>
-        {value?.needsReview && <ReviewMark />}
-      </span>
-      <PatchCaptureLink groupKey={captureGroupKeys.skins} skinKey={skinKey} name={skinName} />
-      {canWrite && (
-        <Popover open={open} onOpenChange={start}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-8 shrink-0"
-              aria-label="Chỉnh sửa cách nhận trang phục"
-              title="Chỉnh sửa cách nhận trang phục"
-            >
-              <Pencil className="size-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="end" className="w-72">
-            <form
-              className="grid gap-3"
-              onSubmit={(event) => {
-                event.preventDefault()
-                save.mutate()
-              }}
-            >
-              <Field label="Cách nhận">
-                <select
-                  className={control}
-                  value={form.method}
-                  onChange={(event) => setForm({ ...form, method: event.target.value as SkinMethod })}
-                >
-                  {Object.entries(methodLabels).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              {form.method === "VOUCHER" && (
-                <Field label="Giá gốc (quân huy)">
-                  <Input
-                    inputMode="numeric"
-                    type="number"
-                    min={0}
-                    value={form.voucherPrice}
-                    onChange={(event) => setForm({ ...form, voucherPrice: event.target.value })}
-                  />
-                </Field>
-              )}
-              {form.method === "EVENT" && (
-                <Field label="Tên sự kiện">
-                  <Input
-                    value={form.eventName}
-                    maxLength={200}
-                    onChange={(event) => setForm({ ...form, eventName: event.target.value })}
-                  />
-                </Field>
-              )}
-              <Field label="Áp dụng từ ngày">
-                <Input
-                  type="date"
-                  required
-                  value={form.capturedOn}
-                  onChange={(event) => setForm({ ...form, capturedOn: event.target.value })}
-                />
-              </Field>
-              <Field label="Ghi chú nội bộ">
-                <Input
-                  value={form.note}
-                  maxLength={500}
-                  onChange={(event) => setForm({ ...form, note: event.target.value })}
-                />
-              </Field>
-              {history.length > 1 && (
-                <ul className="grid gap-1 border-t pt-2" aria-label="Các mốc cách nhận">
-                  {history.map((row) => (
-                    <li key={row.capturedOn} className="type-meta flex items-center gap-2">
-                      <span className="w-20 shrink-0 tabular-nums">{capturedDate(row.capturedOn)}</span>
-                      <span className="min-w-0 flex-1 truncate text-foreground">{skinAcquisitionText(row)}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 shrink-0"
-                        aria-label={`Xóa mốc ${capturedDate(row.capturedOn)}`}
-                        title="Xóa mốc này nếu ghi nhầm"
-                        disabled={remove.isPending}
-                        onClick={() => {
-                          if (row.capturedOn) remove.mutate(row.capturedOn)
-                        }}
-                      >
-                        <Trash2 className="size-3.5" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <label className="type-body flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  className="size-4 accent-primary"
-                  checked={form.needsReview}
-                  onChange={(event) => setForm({ ...form, needsReview: event.target.checked })}
-                />
-                Cần xem lại, chưa hiện ra Wiki
-              </label>
-              {save.isError && (
-                <p role="alert" className="type-meta text-destructive">
-                  {errorMessage(save.error)}
-                </p>
-              )}
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setOpen(false)}
-                  disabled={save.isPending}
-                >
-                  Hủy
-                </Button>
-                <Button type="submit" size="sm" disabled={save.isPending}>
-                  Lưu
-                </Button>
-              </div>
-            </form>
-          </PopoverContent>
-        </Popover>
+        </p>
+        <p className="type-meta flex flex-wrap items-center gap-x-2 gap-y-1">
+          {capturedDate(value?.capturedOn) && <span>Từ {capturedDate(value?.capturedOn)}</span>}
+          {value?.needsReview && <ReviewMark />}
+        </p>
+        {value?.note && <p className="type-meta">{value.note}</p>}
+        {steps}
+      </div>
+    )
+  const changed = skinDraftChanged(form, value)
+  const busy = save.isPending
+  return (
+    <form
+      className="grid gap-3"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (changed) save.mutate(false)
+      }}
+    >
+      <div role="group" aria-label="Cách nhận" className="flex flex-wrap gap-1">
+        {(Object.entries(methodLabels) as [SkinMethod, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={form.method === key}
+            className={cn(
+              "type-label h-8 rounded-md border px-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              form.method === key
+                ? "border-primary bg-primary/10 text-foreground"
+                : "border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+            onClick={() => update({ method: key })}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-3 @min-[420px]/skin-work:grid-cols-2">
+        {form.method === "VOUCHER" && (
+          <Field label="Giá gốc (quân huy)">
+            <Input
+              inputMode="numeric"
+              type="number"
+              min={0}
+              value={form.voucherPrice}
+              onChange={(event) => update({ voucherPrice: event.target.value })}
+            />
+          </Field>
+        )}
+        {form.method === "EVENT" && (
+          <Field label="Tên sự kiện">
+            <Input
+              value={form.eventName}
+              maxLength={200}
+              onChange={(event) => update({ eventName: event.target.value })}
+            />
+          </Field>
+        )}
+        <Field label="Áp dụng từ ngày">
+          <Input
+            type="date"
+            required
+            value={form.capturedOn}
+            onChange={(event) => update({ capturedOn: event.target.value })}
+          />
+        </Field>
+      </div>
+      <div className="grid items-end gap-3 @min-[420px]/skin-work:grid-cols-2">
+        <Field label="Ghi chú nội bộ">
+          <Input value={form.note} maxLength={500} onChange={(event) => update({ note: event.target.value })} />
+        </Field>
+        <label className="type-body flex min-h-9 items-center gap-2">
+          <input
+            type="checkbox"
+            className="size-4 shrink-0 accent-primary"
+            checked={form.needsReview}
+            onChange={(event) => update({ needsReview: event.target.checked })}
+          />
+          Cần xem lại, chưa hiện ra Wiki
+        </label>
+      </div>
+      {save.isError && (
+        <p role="alert" className="type-meta text-destructive">
+          {errorMessage(save.error)}
+        </p>
       )}
-    </div>
+      <div className="flex flex-wrap justify-end gap-2">
+        {draft && (
+          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => onDraftChange(null)}>
+            Bỏ thay đổi
+          </Button>
+        )}
+        <Button type="submit" size="sm" variant={nextName ? "outline" : "default"} disabled={busy || !changed}>
+          Lưu
+        </Button>
+        {nextName && (
+          <Button
+            type="button"
+            size="sm"
+            disabled={busy}
+            title={changed ? `Lưu rồi mở ${nextName}` : `Mở ${nextName}`}
+            onClick={(event) => {
+              if (!changed) onNext?.()
+              else if (event.currentTarget.form?.reportValidity()) save.mutate(true)
+            }}
+          >
+            {changed ? "Lưu và sang tiếp" : "Sang tiếp"}
+            <ChevronRight className="size-4" />
+          </Button>
+        )}
+      </div>
+      {steps}
+    </form>
   )
 }
 
-/** A line above the skins counting how they are obtained, so gaps show without opening each card. */
-export function SkinAcquisitionSummary({ rows, total }: { rows: SkinAcquisition[]; total: number }) {
-  if (!rows.length) return null
+/** Which skins still need an editor: the summary doubles as the filter of the skin rail. */
+export type SkinWorkFilter = "all" | "review" | "unknown"
+
+export const skinNeedsReview = (row: SkinAcquisition | undefined) => !!row?.needsReview
+export const skinIsUnknown = (row: SkinAcquisition | undefined) => !row || row.method === "UNKNOWN"
+
+/** How skins are obtained at a glance; gaps stay one click from being the only skins shown. */
+export function SkinAcquisitionSummary({
+  rows,
+  total,
+  filter,
+  onFilter,
+}: {
+  rows: SkinAcquisition[]
+  total: number
+  filter: SkinWorkFilter
+  onFilter: (filter: SkinWorkFilter) => void
+}) {
   const count = (method: SkinMethod) => rows.filter((row) => row.method === method).length
-  const review = rows.filter((row) => row.needsReview).length
-  const missing = total - rows.length
+  const review = rows.filter(skinNeedsReview).length
+  const unknown = total - rows.filter((row) => !skinIsUnknown(row)).length
   const parts: [string, number][] = [
     ["quân huy", count("VOUCHER")],
     ["sự kiện", count("EVENT")],
     ["chưa mở", count("NOT_OPEN")],
-    ["cách khác", count("OTHER") + count("UNKNOWN")],
-    ["chưa rõ cách nhận", Math.max(0, missing)],
+    ["cách khác", count("OTHER")],
   ]
   return (
-    <p className="type-meta flex flex-wrap items-center gap-x-3 gap-y-1">
-      {parts
-        .filter(([, value]) => value > 0)
-        .map(([label, value]) => (
-          <span key={label}>
-            <span className="font-semibold text-foreground tabular-nums">{value}</span> {label}
-          </span>
-        ))}
-      {review > 0 && (
-        <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
-          <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
-          {review} cần xem lại
-        </span>
-      )}
-    </p>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <FilterTabs label="Lọc trang phục theo việc cần làm">
+        <FilterTab active={filter === "all"} count={total} onClick={() => onFilter("all")}>
+          Tất cả
+        </FilterTab>
+        <FilterTab
+          active={filter === "review"}
+          count={review}
+          disabled={!review && filter !== "review"}
+          className={review ? "text-amber-700 dark:text-amber-400" : undefined}
+          onClick={() => onFilter("review")}
+        >
+          <AlertTriangle aria-hidden="true" />
+          Cần xem lại
+        </FilterTab>
+        <FilterTab
+          active={filter === "unknown"}
+          count={unknown}
+          disabled={!unknown && filter !== "unknown"}
+          onClick={() => onFilter("unknown")}
+        >
+          Chưa rõ cách nhận
+        </FilterTab>
+      </FilterTabs>
+      {/* Beside the screenshot panel this line would push the form down, and the form matters more there. */}
+      <p className="type-meta hidden flex-wrap items-center gap-x-3 gap-y-1 @min-[640px]/skin-tab:flex">
+        {parts
+          .filter(([, value]) => value > 0)
+          .map(([label, value]) => (
+            <span key={label}>
+              <span className="font-semibold text-foreground tabular-nums">{value}</span> {label}
+            </span>
+          ))}
+      </p>
+    </div>
   )
 }

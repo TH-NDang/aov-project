@@ -27,6 +27,13 @@ test("image management loads on scroll, retries without losing rows and filters 
     if (path === "/admin/me")
       return Response.json({ issuer: "fixture", subject: "reader", type: "HUMAN", capabilities: ["catalog:read"] })
     if (path === "/users/me") return Response.json({ locale: "vi-VN" })
+    if (path === "/admin/media/usage-totals")
+      return Response.json({
+        states: { SHOWN: 0, DRAFT_ONLY: 0, HISTORY_ONLY: 0, STORED_ONLY: 0, NONE: 0 },
+        competitionChecked: true,
+      })
+    if (path === "/admin/media/assets" && url.searchParams.get("withUsage"))
+      return Response.json({ items: [], page: 0, size: 20, totalElements: 0 })
     if (path === "/admin/media/assets") {
       const page = Number(url.searchParams.get("page"))
       const size = Number(url.searchParams.get("size"))

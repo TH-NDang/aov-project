@@ -29,6 +29,16 @@ public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlan
     long countMedia(String id);
 
     @Query(value = """
+        SELECT pairs.asset FROM (
+        SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
+            SELECT id AS owner, published_snapshot AS body FROM tournament.competition_plan
+            UNION ALL SELECT id, content FROM tournament.plan_revision
+        ) found, LATERAL regexp_matches(CAST(found.body AS text), '/(assets|media)/([0-9a-fA-F-]{36})/', 'g') m
+        ) pairs
+        """, nativeQuery = true)
+    List<String> allMedia();
+
+    @Query(value = """
         SELECT * FROM tournament.competition_plan WHERE published_at IS NOT NULL
           AND (:team = '' OR jsonb_exists(published_snapshot->'teams', :team))
           AND (:player = '' OR jsonb_exists(published_snapshot->'players', :player))

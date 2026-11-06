@@ -3,6 +3,7 @@ import { CircleAlert, Copyright, ImageIcon, ImageOff, UserRound } from "lucide-r
 import { cn } from "@aov/ui/lib/utils"
 import type { MediaCredit } from "@aov/ui/lib/media-credit"
 import { primarySource, sourceGap, sourceGapHints, sourceGapLabels } from "./media-source-gaps"
+import { usageStateHints, usageSummaryExtra, usageSummaryLabel, type MediaUsageSummary } from "./media-usage"
 
 export function LibraryImage({ url, className }: { url: string | null; className?: string }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
@@ -95,6 +96,27 @@ export function LibraryStateBadge({ state, label, ready }: { state: string; labe
       )}
     >
       {ready ? label : "Chờ upload"}
+    </span>
+  )
+}
+
+/** Where a row's image is used; a dash until the answer arrives, since an empty cell would read as unused. */
+export function LibraryUsage({ usage, className }: { usage?: MediaUsageSummary | null; className?: string }) {
+  if (!usage) return <span className={cn("type-meta block", className)}>—</span>
+  const extra = usageSummaryExtra(usage)
+  return (
+    <span className={cn("block min-w-0", className)} title={usageStateHints[usage.state]}>
+      <span
+        className={cn(
+          "flex items-center gap-1 text-xs font-medium",
+          usage.state === "STORED_ONLY" && "text-amber-700 dark:text-amber-400",
+          (usage.state === "NONE" || usage.state === "HISTORY_ONLY") && "text-muted-foreground",
+        )}
+      >
+        {usage.state === "STORED_ONLY" && <CircleAlert aria-hidden className="size-3.5 shrink-0" />}
+        <span className="min-w-0 break-words">{usageSummaryLabel(usage)}</span>
+      </span>
+      {extra && <span className="type-meta block">{extra}</span>}
     </span>
   )
 }

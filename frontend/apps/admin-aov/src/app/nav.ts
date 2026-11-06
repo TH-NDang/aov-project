@@ -195,7 +195,7 @@ export const MEDIA_NAV: NavItem[] = [
     title: "Head",
     to: "/hero/media?tab=head",
     icon: "head",
-    description: "Head tướng, trang phục và icon danh sách",
+    description: "Head của tướng và icon danh sách",
   },
   {
     title: "Cover",

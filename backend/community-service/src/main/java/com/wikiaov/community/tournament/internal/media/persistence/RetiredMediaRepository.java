@@ -1,5 +1,6 @@
 package com.wikiaov.community.tournament.internal.media.persistence;
 
+import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
@@ -22,4 +23,19 @@ public interface RetiredMediaRepository extends Repository<RetiredMediaAsset, UU
         ) records WHERE lower(CAST(content AS text)) LIKE '%' || CAST(:id AS text) || '%'
         """, nativeQuery = true)
     long countReferences(UUID id);
+
+    /**
+     * Images of live records. Series, rosters and games hold no image of their own, and game publications only copy
+     * these, so they are left to {@link #countReferences}, which is slow enough to run for one image at a time.
+     */
+    @Query(value = """
+        SELECT pairs.asset FROM (
+        SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
+            SELECT id AS owner, content AS body FROM tournament.team
+            UNION ALL SELECT id, content FROM tournament.player
+            UNION ALL SELECT id, content FROM tournament.tournament
+        ) found, LATERAL regexp_matches(CAST(found.body AS text), '/(assets|media)/([0-9a-fA-F-]{36})/', 'g') m
+        ) pairs
+        """, nativeQuery = true)
+    List<String> allReferences();
 }

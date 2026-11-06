@@ -22,9 +22,17 @@ import { Button } from "@aov/ui/components/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { cn } from "@aov/ui/lib/utils"
 import { creditHttpUrl, currentMediaSources, type MediaSourceInput } from "@aov/ui/lib/media-credit"
-import { backendRequest } from "@/app/auth/session"
+import { backendRequest, communityRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { useRecords, useTournamentAccess } from "../esports/data/use-esports-data"
+import {
+  usagePlaces,
+  usageStateHints,
+  usageStateLabels,
+  usageStateOf,
+  type MediaUsageReport,
+  type UsagePlace,
+} from "./media-usage"
 import { upgradeHeroImage } from "../publishing/publishing-api"
 import type { Asset } from "../publishing/types"
 import { invalidateMediaAsset } from "./media-cache"
@@ -65,21 +73,6 @@ export const imageStates: Record<string, string> = {
   DEPRECATED: "Ngừng sử dụng",
   BLOCKED: "Bị khóa",
 }
-const usageScopes: Record<string, string> = { CURRENT: "Đang dùng", DRAFT: "Bản nháp", HISTORICAL: "Lịch sử" }
-const usageOwners: Record<string, string> = {
-  HERO: "Tướng",
-  HERO_IMPORT: "Phiên nhập tướng",
-  HERO_SKILL_IMAGE: "Ảnh kỹ năng",
-  HERO_UPLOAD_SESSION: "Phiên tải ảnh tướng",
-  SKIN_BADGE: "Nhãn bậc trang phục",
-  ITEM: "Trang bị",
-  ITEM_METADATA: "Nhóm trang bị",
-  ENCHANTMENT: "Phù hiệu",
-  ENCHANTMENT_METADATA: "Hệ phù hiệu",
-  ARCANA: "Ngọc",
-  SPELL: "Phụ trợ",
-  USER_PROFILE: "Hồ sơ người dùng",
-}
 
 interface Version {
   id: string
@@ -103,10 +96,6 @@ interface Details extends Asset {
   updatedAt: string
   versions: Version[]
   provenance: Source[]
-}
-interface Usage {
-  counts: { current: number; draft: number; historical: number }
-  items: { ownerDomain: string; ownerType: string; ownerId: string; propertyRole: string; scope: string }[]
 }
 
 const safeUrl = (url: string | null | undefined) => (url && /^https?:\/\//i.test(url) ? url : undefined)
@@ -152,11 +141,29 @@ function useTournamentUses(assetId: string | null) {
         .map((entry) => ({ id: entry.id, label: `Logo giải ${entry.content.name}`, to: `/tournaments/${entry.id}` })),
     ]
   }, [assetId, teams.data, players.data, tournaments.data])
+  // Plans, pages and posts name images too, without a row of their own here.
+  const references = useQuery({
+    queryKey: ["media-asset-competition-usage", assetId],
+    enabled,
+    retry: false,
+    queryFn: ({ signal }) =>
+      communityRequest<{ references: number }>(`/admin/media-assets/${assetId}/usage`, { signal }),
+  })
   return {
     uses,
-    checked: access.canRead,
+    others: Math.max(0, (references.data?.references ?? 0) - uses.length),
+    checked: access.canRead && !references.isError,
     loading: enabled && (teams.isPending || players.isPending || tournaments.isPending),
+    // This scan takes seconds, so it only holds back the claim that nothing uses the image.
+    checking: enabled && references.isPending,
   }
+}
+
+const placeStateStyles: Record<UsagePlace["state"], "secondary" | "outline"> = {
+  SHOWN: "secondary",
+  DRAFT_ONLY: "outline",
+  HISTORY_ONLY: "outline",
+  STORED_ONLY: "outline",
 }
 
 function Section({ title, aside, children }: { title: string; aside?: ReactNode; children: ReactNode }) {
@@ -269,7 +276,7 @@ export function ImageDetailSheet({
   const usages = useQuery({
     queryKey: ["managed-image-usages", assetId],
     enabled: !!assetId,
-    queryFn: () => backendRequest<Usage>(`/admin/media/assets/${assetId}/usages`),
+    queryFn: () => backendRequest<MediaUsageReport>(`/admin/media/assets/${assetId}/usages`),
   })
   const tournament = useTournamentUses(assetId)
   const data = details.data
@@ -282,8 +289,10 @@ export function ImageDetailSheet({
   const ownerless = ownerCandidate(shown)
   const typeLabel = data ? (imageTypes[data.semanticType] ?? data.semanticType) : ""
   const title = main?.label || typeLabel || "Chi tiết ảnh"
-  const wikiUses = usages.data?.items ?? []
-  const useCount = (usages.data?.counts.current ?? 0) + tournament.uses.length
+  const places = usagePlaces(usages.data?.items ?? [])
+  const competitionCount = tournament.uses.length + tournament.others
+  const shownCount = places.filter((place) => place.state === "SHOWN").length + competitionCount
+  const usageState = usageStateOf(places, competitionCount)
   const active = data?.state === "ACTIVE"
 
   function close() {
@@ -391,11 +400,18 @@ export function ImageDetailSheet({
                       },
                   {
                     label: "Nơi dùng",
-                    value: usages.isPending || tournament.loading ? "…" : useCount ? `${useCount} nơi` : "Chưa dùng",
-                    hint: tournament.checked
-                      ? "Tính nơi dùng trong wiki và ở giải đấu."
-                      : "Chỉ tính nơi dùng trong wiki; cần quyền xem giải đấu để tính cả giải đấu.",
-                    tone: useCount ? "ok" : "muted",
+                    value:
+                      usages.isPending || tournament.loading
+                        ? "…"
+                        : shownCount
+                          ? `${shownCount} nơi`
+                          : usageStateLabels[usageState],
+                    hint: `${usageStateHints[usageState]} ${
+                      tournament.checked
+                        ? "Tính cả Wiki, giải đấu và trang cộng đồng."
+                        : "Chỉ tính trong Wiki vì chưa đọc được dữ liệu giải đấu."
+                    }`,
+                    tone: shownCount ? "ok" : usageState === "STORED_ONLY" ? "warn" : "muted",
                   },
                 ].map((item) => (
                   <div key={item.label} className="rounded-lg border p-2.5" title={item.hint}>
@@ -554,38 +570,58 @@ export function ImageDetailSheet({
               </Section>
 
               <Section title="Nơi dùng">
-                {(usages.isPending || tournament.loading) && (
+                {(usages.isPending || tournament.loading || tournament.checking) && (
                   <p role="status" className="text-sm text-muted-foreground">
                     Đang kiểm tra…
                   </p>
                 )}
                 {usages.error && <p role="alert">{errorMessage(usages.error)}</p>}
-                {!usages.isPending && !tournament.loading && !wikiUses.length && !tournament.uses.length && (
-                  <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                    Chưa có nơi nào dùng ảnh này.
-                    {!tournament.checked && " Chưa kiểm tra giải đấu vì tài khoản chưa có quyền xem giải đấu."}
+                {!usages.isPending && !tournament.loading && (
+                  <p className="type-meta">
+                    Mỗi vị trí đếm một lần dù có trong nhiều bản, và chỉ tính là đang hiển thị khi nơi đó thật sự hiện
+                    ảnh.
                   </p>
                 )}
-                {(!!wikiUses.length || !!tournament.uses.length) && (
+                {!usages.isPending &&
+                  !tournament.loading &&
+                  !tournament.checking &&
+                  !places.length &&
+                  !competitionCount && (
+                    <p className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                      Chưa có nơi nào dùng ảnh này.
+                      {!tournament.checked && " Chưa kiểm tra giải đấu vì chưa đọc được dữ liệu giải đấu."}
+                    </p>
+                  )}
+                {(!!places.length || !!competitionCount) && (
                   <ul className="divide-y rounded-xl border">
-                    {wikiUses.map((usage, index) => (
-                      <li key={`${usage.ownerId}:${index}`} className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                    {places.map((place) => (
+                      <li key={place.key} className="flex items-center gap-3 px-3 py-2.5 text-sm">
                         <Link2 aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                         <span className="min-w-0 flex-1">
-                          <span className="block font-medium">{usageOwners[usage.ownerType] ?? usage.ownerType}</span>
-                          <span className="type-meta block truncate">
-                            {usage.propertyRole} · {usage.ownerId.slice(0, 8)}
+                          <span className="block font-medium break-words">{place.title}</span>
+                          <span className="type-meta block">
+                            {place.detail}
+                            {!!place.draft && ` · ${place.draft} bản nháp`}
+                            {!!place.historical && ` · ${place.historical} bản cũ`}
                           </span>
+                          {place.note && <span className="type-meta block">{place.note}</span>}
                         </span>
-                        <Badge variant={usage.scope === "CURRENT" ? "secondary" : "outline"}>
-                          {usageScopes[usage.scope] ?? usage.scope}
-                        </Badge>
+                        <Badge variant={placeStateStyles[place.state]}>{usageStateLabels[place.state]}</Badge>
+                        {place.href && (
+                          <Button asChild variant="ghost" size="sm" className="h-7 px-2">
+                            <Link to={place.href}>
+                              Mở
+                              <ArrowUpRight className="size-3.5" />
+                            </Link>
+                          </Button>
+                        )}
                       </li>
                     ))}
                     {tournament.uses.map((use) => (
                       <li key={use.id} className="flex items-center gap-3 px-3 py-2.5 text-sm">
                         <Trophy aria-hidden className="size-4 shrink-0 text-muted-foreground" />
                         <span className="min-w-0 flex-1 font-medium">{use.label}</span>
+                        <Badge variant="secondary">{usageStateLabels.SHOWN}</Badge>
                         <Button asChild variant="ghost" size="sm" className="h-7 px-2">
                           <Link to={use.to}>
                             Mở
@@ -594,6 +630,14 @@ export function ImageDetailSheet({
                         </Button>
                       </li>
                     ))}
+                    {tournament.others > 0 && (
+                      <li className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                        <Trophy aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+                        <span className="min-w-0 flex-1 font-medium">
+                          {tournament.others} bản ghi khác ở giải đấu hoặc trang cộng đồng
+                        </span>
+                      </li>
+                    )}
                   </ul>
                 )}
               </Section>

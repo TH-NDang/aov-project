@@ -1332,13 +1332,55 @@ Response:
       "ownerId": "...",
       "revisionId": "...",
       "propertyRole": "PORTRAIT",
-      "scope": "CURRENT"
+      "scope": "CURRENT",
+      "shown": true,
+      "ownerName": "Airi",
+      "partName": null
     }
   ]
 }
 ```
 
 `counts` luôn tính trên toàn bộ usage; `scope` chỉ lọc `items`. Dữ liệu lấy trực tiếp từ các module sở hữu qua `MediaUsageProvider`; trước Phase 3 chưa module nào cung cấp nên kết quả rỗng.
+
+`shown` cho biết nơi đó có thật sự vẽ ảnh không. `false` nghĩa là chỉ còn lưu mã ảnh: ảnh bổ sung (`images`) chưa được chọn làm ảnh chính, ảnh trong thư viện ảnh kỹ năng (Admin dùng làm icon tạm khi kỹ năng chưa gắn icon, người đọc không thấy), phiên nhập đang chờ, và head trang phục (`SKIN_HEAD:<skinKey>`) khi trang phục đã có chân dung. Head trang phục chỉ tính `shown = true` khi trang phục chưa có chân dung, vì khi đó Wiki vẽ head thay chân dung. Mọi tham chiếu, kể cả `shown = false`, vẫn chặn xóa ảnh và `CURRENT` vẫn chặn deprecate như trước. `ownerName` và `partName` là tên đọc được (ưu tiên vi-VN) của đối tượng và phần bên trong nó như trang phục, kỹ năng; có thể `null`.
+
+### 35.1. Nơi dùng trên danh sách ảnh
+
+```http
+GET /api/wiki/v1/admin/media/assets?withUsage=true
+GET /api/wiki/v1/admin/media/assets?usage=STORED_ONLY
+GET /api/wiki/v1/admin/media/usage-totals?semanticType=HERO_SKIN_ART&needsCredit=false
+```
+
+`withUsage=true` thêm `usage` vào từng dòng; `usage=<trạng thái>` lọc theo trạng thái và cũng thêm `usage`. Không truyền hai tham số này thì `usage` là `null` và request không phải hỏi các module khác.
+
+```json
+{
+  "state": "SHOWN",
+  "current": 1,
+  "draft": 0,
+  "historical": 0,
+  "stored": 1,
+  "competition": 0
+}
+```
+
+Một nơi dùng là một vai trò của một đối tượng (`ownerType`, `ownerId`, `propertyRole`), nên cùng ảnh nền trong năm bản cũ chỉ tính một nơi và lấy mức dùng mạnh nhất của nơi đó. `state` là mức mạnh nhất của ảnh:
+
+| `state` | Ý nghĩa |
+|---|---|
+| `SHOWN` | Có nơi đang vẽ ảnh cho người đọc (`CURRENT` và `shown`), hoặc hồ sơ giải đấu, trang cộng đồng đang ghi ảnh này |
+| `DRAFT_ONLY` | Chỉ bản nháp vẽ ảnh; ảnh hiện ra khi bản nháp được xuất bản |
+| `HISTORY_ONLY` | Chỉ các bản đã xuất bản trước đây vẽ ảnh |
+| `STORED_ONLY` | Chỉ còn lưu mã ảnh (`shown = false`). Chưa xóa được cho tới khi các tham chiếu này được bỏ |
+| `NONE` | Không còn tham chiếu nào |
+
+`usage-totals` trả `{states:{SHOWN,DRAFT_ONLY,HISTORY_ONLY,STORED_ONLY,NONE},competitionChecked}` theo cùng bộ lọc `semanticType`, `needsCredit` của danh sách.
+
+`competition` lấy từ Community bằng token của người gọi. Khi Community không trả lời hoặc người gọi không có `tournament:read`, `competition` là `null`, `competitionChecked` là `false` và ảnh chỉ dùng ở giải đấu sẽ rơi vào nhóm chưa dùng. Phép tính này quét hồ sơ đội, tuyển thủ, giải, kế hoạch, trang và bài viết, không quét bản công bố trận đấu vì các bản đó chỉ sao lại ảnh của hồ sơ. Khi xóa ảnh, `requireUnused` vẫn kiểm tra đủ mọi nơi như mục 36.
+
+Kết quả tính từ các module sở hữu qua `MediaUsageProvider.findAllUsages`, không có bảng đếm riêng. Wiki giữ kết quả trong bộ nhớ `wiki.media.usage-report-lifetime` (mặc định 1 phút) vì danh sách cuộn gọi nhiều trang liên tiếp; riêng `/assets/{assetId}/usages` luôn đọc trực tiếp.
 
 ---
 
@@ -1387,8 +1429,10 @@ Thiếu cấu hình CDN trả `503 MEDIA_CACHE_PURGE_NOT_CONFIGURED` trước kh
 `502 MEDIA_CACHE_PURGE_FAILED`; không xác minh được Community trả `502 MEDIA_COMPETITION_CHECK_FAILED` và
 không tiếp tục xóa. Lỗi kho ảnh tiếp tục dùng `STORAGE_UNAVAILABLE`. Các lệnh HTTP/storage chạy ngoài transaction.
 
-Community bổ sung GET `/api/community/v1/admin/media-assets/{assetId}/usage` (`tournament:read`) và POST
-`/api/community/v1/admin/media-assets/{assetId}/retire` (`tournament:write`). Trả `{assetId,references,retired}`;
+Community bổ sung GET `/api/community/v1/admin/media-assets/references` (`tournament:read`) trả
+`{references:{<assetId>:<số bản ghi>}}` cho toàn bộ ảnh mà hồ sơ đội, tuyển thủ, giải, kế hoạch, trang và bài viết đang
+ghi (dùng cho mục 35.1), GET `/api/community/v1/admin/media-assets/{assetId}/usage` (`tournament:read`) và POST
+`/api/community/v1/admin/media-assets/{assetId}/retire` (`tournament:write`). Hai API sau trả `{assetId,references,retired}`;
 retire từ chối khi còn tham chiếu, kể cả hồ sơ đã xóa mềm. Sau khi retire, việc tạo/sửa hồ sơ gắn lại URL ảnh đó
 trả `409 TOURNAMENT_MEDIA_RETIRED`. Thao tác này không xóa hồ sơ hoặc bytes, không đọc DB Wiki.
 
@@ -2238,6 +2282,10 @@ Section MEDIA_BINDINGS giữ `bindings:{HEAD?:UUID,PORTRAIT?:UUID,SPLASH?:UUID}`
 không có images được đọc như bản đồ rỗng. Ảnh tướng theo semantic HERO_HEAD/HERO_PORTRAIT/HERO_SPLASH;
 mọi ảnh trang phục dùng HERO_SKIN_ART. Đổi ảnh chính giữ ứng viên cũ/mới. Các request section vẫn
 cần expectedDraftVersion, chỉ ghi DRAFT; snapshot PUBLISHED bất biến.
+
+`headAssetId` của trang phục vẫn được lưu và trả về như trước nhưng Admin không còn hiển thị hay cho chọn: tab Trang phục,
+form trang phục và tab Head của Không gian ảnh đều bỏ. Lưu trang phục không xóa giá trị đã có. Wiki vẫn đọc `head` từ danh
+sách trang phục công khai để vẽ thay khi trang phục thiếu chân dung; mục 35 nói rõ cách đếm loại tham chiếu này.
 
 SkinBadgeView gồm `{id,code,kind,version,translations,displayName,iconAssetId,actualLocale,
 fallbackApplied,skinCount}`. Mỗi translation có `{locale,displayName,iconAssetId}`; icon nullable,

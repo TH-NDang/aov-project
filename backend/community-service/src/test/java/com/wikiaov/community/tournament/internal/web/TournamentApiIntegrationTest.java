@@ -913,6 +913,8 @@ class TournamentApiIntegrationTest {
         var deleted = write(post(ADMIN + "/teams/" + id(team) + "/delete"), Map.of("version", version(team)));
         mvc.perform(authorized(get(ADMIN + "/media-assets/" + asset + "/usage")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.references").value(1));
+        mvc.perform(authorized(get(ADMIN + "/media-assets/references")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.references['" + asset + "']").value(1));
         mvc.perform(authorized(post(ADMIN + "/media-assets/" + asset + "/retire")))
                 .andExpect(status().isConflict());
         var restored = write(post(ADMIN + "/teams/" + id(team) + "/restore"), Map.of("version", version(deleted)));

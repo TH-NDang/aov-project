@@ -11,6 +11,8 @@ spring:
           issuer-uri: http://localhost:0/realms/test
 
 wiki:
+  media:
+    usage-report-lifetime: 0s
   hero-import:
     worker-enabled: false
   storage:

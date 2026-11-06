@@ -2,6 +2,7 @@ package com.wikiaov.community.community.internal.social.application;
 
 import com.wikiaov.community.community.internal.social.persistence.CommunityPostRepository;
 import com.wikiaov.community.tournament.CompetitionReferences;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -22,5 +23,10 @@ public class PostReferences implements CompetitionReferences {
     @Override
     public long mediaReferences(UUID id) {
         return posts.countMedia(id.toString());
+    }
+
+    @Override
+    public List<String> allMediaReferences() {
+        return posts.allMedia();
     }
 }

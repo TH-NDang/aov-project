@@ -244,9 +244,9 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
       )
     await click(nav("Xem ảnh chính Head của Airi"))
     await waitFor(() => currentImage() === "/hero-head.webp")
-    await click(nav("Xem ảnh chính Head · Trang phục A"))
-    await waitFor(() => currentImage() === "/skin-head.webp")
-    await click(nav("Xem ảnh chính Portrait của Trang phục A"))
+    assert.equal(nav("Xem ảnh chính Head · Trang phục A"), null, "A skin has no head among the related images")
+    await click(nav("Xem ảnh chính Portrait của Airi"))
+    await click(nav("Xem ảnh chính Portrait · Trang phục A"))
     await waitFor(() => currentImage() === "/skin-portrait.webp")
     await click(nav("Xem ảnh chính Portrait · Trang phục B"))
     await waitFor(() => document.querySelector('[aria-label="Ảnh đang xem"] [aria-label="Chưa có ảnh"]') !== null)
@@ -268,11 +268,12 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
       true,
       "Opening a full page cannot silently discard a pending candidate",
     )
-    await click(nav("Xem ảnh chính Head của Trang phục A"))
+    assert.equal(nav("Xem ảnh chính Head của Trang phục A"), null, "A skin has no head to pick any more")
+    await click(nav("Xem ảnh chính Portrait của Trang phục A"))
     assert.equal(currentImage(), "/skin-cover.webp", "Declining discard preserves owner, role and candidate")
     confirmLeave = true
-    await click(nav("Xem ảnh chính Head của Trang phục A"))
-    await waitFor(() => currentImage() === "/skin-head.webp")
+    await click(nav("Xem ảnh chính Portrait của Trang phục A"))
+    await waitFor(() => currentImage() === "/skin-portrait.webp")
     assert.equal((button("Lưu vào bản nháp") as HTMLButtonElement).disabled, true)
     await click(button("Chọn / tải ảnh"))
     await waitFor(() => nav("Chọn ảnh fresh") !== null)
@@ -283,11 +284,13 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
     assert.match(writes[0].path, /\/skins$/)
     assert.equal(writes[0].body.expectedDraftVersion, 7)
     const saved = writes[0].body.skins as NonNullable<typeof preview.content.SKINS>["skins"]
-    assert.equal(saved[0].headAssetId, "fresh")
-    assert.equal(saved[0].portraitAssetId, "skin-portrait")
+    assert.equal(saved[0].headAssetId, "skin-head", "A stored head survives saving another image")
+    assert.equal(saved[0].portraitAssetId, "fresh")
     assert.equal(saved[0].artAssetId, "skin-cover")
-    assert.deepEqual(saved[0].images?.HEAD, [
-      { assetId: "skin-head", label: "skin-head.png" },
+    assert.deepEqual(saved[0].images?.HEAD, [{ assetId: "skin-head", label: "skin-head.png" }])
+    assert.deepEqual(saved[0].images?.PORTRAIT, [
+      { assetId: "skin-portrait", label: "skin-portrait-1.png" },
+      { assetId: "skin-alternate", label: "skin-portrait-2.png" },
       { assetId: "fresh", label: null },
     ])
     assert.deepEqual(saved[1], preview.content.SKINS!.skins[1])

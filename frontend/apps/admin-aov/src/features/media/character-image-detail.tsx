@@ -19,7 +19,7 @@ import { useContentLocale } from "../publishing/publication-overview"
 import type { MediaRole } from "../publishing/types"
 import {
   characterMediaOwners,
-  imageRoles,
+  ownerImageRoles,
   ownerMainEntry,
   type CharacterMediaOwner,
 } from "./character-image-viewer-data"
@@ -255,8 +255,8 @@ export function CharacterMediaViewer({
           {owner && (
             <section className="space-y-2" aria-label="Loại ảnh chính của đối tượng đang xem">
               <h3 className="text-xs font-medium text-muted-foreground">Ảnh chính của {entry.name}</h3>
-              <div className="grid grid-cols-3 gap-2">
-                {imageRoles.map((candidateRole) => (
+              <div className={`grid gap-2 ${owner.ownerType === "SKIN" ? "grid-cols-2" : "grid-cols-3"}`}>
+                {ownerImageRoles(owner.ownerType).map((candidateRole) => (
                   <button
                     key={candidateRole}
                     type="button"
@@ -286,24 +286,31 @@ export function CharacterMediaViewer({
                 Tướng & trang phục · Ảnh chính {imageRoleLabels[role]}
               </h3>
               <div className="flex gap-2 overflow-x-auto pb-2" tabIndex={0}>
-                {owners.map((candidate) => (
-                  <button
-                    key={`${candidate.ownerType}:${candidate.skinKey}`}
-                    type="button"
-                    aria-label={`Xem ảnh chính ${imageRoleLabels[role]} · ${candidate.name}`}
-                    aria-pressed={candidate.ownerType === entry.ownerType && candidate.skinKey === entry.skinKey}
-                    disabled={busy}
-                    className={`grid w-24 shrink-0 gap-1.5 rounded-lg border p-2 text-left text-xs transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50 ${candidate.ownerType === entry.ownerType && candidate.skinKey === entry.skinKey ? "border-primary bg-primary/5" : "border-border"}`}
-                    onClick={() => switchImage(candidate, role)}
-                  >
-                    <span className="flex h-20 items-center justify-center">
-                      <CharacterMediaImage id={candidate.main[role]} alt={candidate.name} role={role} size="related" />
-                    </span>
-                    <span className="truncate" title={candidate.name}>
-                      {candidate.ownerType === "HERO" ? `${candidate.name} · Tướng` : candidate.name}
-                    </span>
-                  </button>
-                ))}
+                {owners
+                  .filter((candidate) => ownerImageRoles(candidate.ownerType).includes(role))
+                  .map((candidate) => (
+                    <button
+                      key={`${candidate.ownerType}:${candidate.skinKey}`}
+                      type="button"
+                      aria-label={`Xem ảnh chính ${imageRoleLabels[role]} · ${candidate.name}`}
+                      aria-pressed={candidate.ownerType === entry.ownerType && candidate.skinKey === entry.skinKey}
+                      disabled={busy}
+                      className={`grid w-24 shrink-0 gap-1.5 rounded-lg border p-2 text-left text-xs transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-ring disabled:opacity-50 ${candidate.ownerType === entry.ownerType && candidate.skinKey === entry.skinKey ? "border-primary bg-primary/5" : "border-border"}`}
+                      onClick={() => switchImage(candidate, role)}
+                    >
+                      <span className="flex h-20 items-center justify-center">
+                        <CharacterMediaImage
+                          id={candidate.main[role]}
+                          alt={candidate.name}
+                          role={role}
+                          size="related"
+                        />
+                      </span>
+                      <span className="truncate" title={candidate.name}>
+                        {candidate.ownerType === "HERO" ? `${candidate.name} · Tướng` : candidate.name}
+                      </span>
+                    </button>
+                  ))}
               </div>
             </section>
           )}

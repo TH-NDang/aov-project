@@ -270,6 +270,26 @@ test("full-width hero groups load on scroll, keep every candidate and separate e
       () => document.querySelector('[aria-label="Ảnh đang xem"] img')?.getAttribute("src") === "/hero-alt.png",
     )
     assert.match(document.querySelector('[role="dialog"]')!.textContent!, /airi-portrait-2\.png/)
+
+    // A skin head is no longer managed in the image space, even when the response still lists one.
+    await act(async () =>
+      root.render(
+        <MemoryRouter>
+          <QueryClientProvider client={client}>
+            <TooltipProvider>
+              <CharacterImagesPage key="head" role="HEAD" request={request} />
+            </TooltipProvider>
+          </QueryClientProvider>
+        </MemoryRouter>,
+      ),
+    )
+    await waitFor(() => !!document.querySelector('[aria-label="Nhóm tướng · Head"] [aria-label="Mở nhóm ảnh Airi"]'))
+    const headGroup = document.querySelector('[aria-label="Mở nhóm ảnh Airi"]')!
+    assert.doesNotMatch(headGroup.textContent!, /trang phục/)
+    await click(headGroup)
+    assert.equal(document.querySelector('table[aria-label="Ảnh trang phục Airi"]'), null)
+    assert.ok(document.querySelector('table[aria-label="Ảnh tướng Airi"]'))
+    assert.doesNotMatch(document.body.textContent!, /Bạch Vân/)
   } finally {
     await act(async () => finishNextPage?.())
     await act(async () => root.unmount())

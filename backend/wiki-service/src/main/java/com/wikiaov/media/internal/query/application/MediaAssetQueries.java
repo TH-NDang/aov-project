@@ -19,6 +19,7 @@ import com.wikiaov.media.internal.upload.persistence.entity.MediaUploadSession;
 import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PageSlice;
 import java.time.Clock;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -74,7 +75,31 @@ public class MediaAssetQueries {
         } else {
             result = semanticType == null ? assets.findAll(request) : assets.findBySemanticType(semanticType, request);
         }
-        List<UUID> currentIds = result.getContent().stream()
+        return new PageSlice<>(summaries(result.getContent()), page, size, result.getTotalElements());
+    }
+
+    /** Ids of the assets a list with these filters would show, newest first. */
+    public List<UUID> ids(@Nullable MediaSemanticType semanticType, boolean needsCredit) {
+        if (!needsCredit)
+            return assets.findIdsNewestFirst(semanticType);
+
+        return assets.findNeedingCredit(semanticType, PageRequest.of(0, Integer.MAX_VALUE, NEWEST_FIRST)).stream()
+                .map(MediaAsset::getId).toList();
+    }
+
+    /** The given assets as list rows, in the given order. */
+    public List<MediaAssetSummary> summaries(Collection<UUID> ids) {
+        if (ids.isEmpty())
+            return List.of();
+
+        Map<UUID, MediaAsset> found = assets.findByIdIn(ids).stream()
+                .collect(Collectors.toMap(MediaAsset::getId, Function.identity()));
+
+        return summaries(ids.stream().map(found::get).filter(Objects::nonNull).toList());
+    }
+
+    private List<MediaAssetSummary> summaries(List<MediaAsset> rows) {
+        List<UUID> currentIds = rows.stream()
                 .map(MediaAsset::getCurrentVersionId)
                 .filter(Objects::nonNull)
                 .toList();
@@ -82,13 +107,13 @@ public class MediaAssetQueries {
                 ? Map.of()
                 : versions.findByIdIn(currentIds).stream()
                         .collect(Collectors.toMap(MediaAssetVersion::getId, Function.identity()));
-        var assetIds = result.getContent().stream().map(MediaAsset::getId).toList();
+        var assetIds = rows.stream().map(MediaAsset::getId).toList();
         var credits = assetIds.isEmpty()
                 ? Map.<UUID, List<MediaProvenance>>of()
                 : provenance.findByAssetIdInOrderByCreatedAtAscIdAsc(assetIds).stream()
                         .collect(Collectors.groupingBy(MediaProvenance::getAssetId));
 
-        List<MediaAssetSummary> items = result.getContent().stream()
+        return rows.stream()
                 .map(asset -> {
                     MediaAssetVersion version = asset.getCurrentVersionId() == null
                             ? null
@@ -99,10 +124,10 @@ public class MediaAssetQueries {
                             asset.getUpdatedAt(), version == null
                                     ? List.of()
                                     : MediaCredits.forVersion(credits.getOrDefault(asset.getId(), List.of()),
-                                            version.getId()));
+                                            version.getId()),
+                            null);
                 })
                 .toList();
-        return new PageSlice<>(items, page, size, result.getTotalElements());
     }
 
     public UploadStatus upload(UUID uploadId) {

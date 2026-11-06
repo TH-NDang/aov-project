@@ -6,6 +6,7 @@ import com.wikiaov.community.tournament.internal.archive.persistence.RegistryWri
 import com.wikiaov.community.tournament.internal.media.persistence.RetiredMediaAsset;
 import com.wikiaov.community.tournament.internal.media.persistence.RetiredMediaRepository;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -39,6 +40,30 @@ public class CompetitionMedia {
     @Transactional(readOnly = true)
     public Usage usage(UUID assetId) {
         return new Usage(assetId, references(assetId), repository.existsById(assetId));
+    }
+
+    public record References(
+            Map<UUID, Long> references
+    ) {
+    }
+
+    /** Which images live records name and how many records name each, so Wiki can label a whole image list. */
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public References references() {
+        Map<UUID, Long> counts = new HashMap<>();
+        repository.allReferences().forEach(asset -> count(counts, asset));
+        additional.forEach(provider -> provider.allMediaReferences().forEach(asset -> count(counts, asset)));
+
+        return new References(counts);
+    }
+
+    private static void count(Map<UUID, Long> counts, String asset) {
+        try {
+            counts.merge(UUID.fromString(asset), 1L, Long::sum);
+        } catch (IllegalArgumentException exception) {
+            // The pattern only looks like an id; anything else in that position is not a managed image.
+        }
     }
 
     @PreAuthorize("hasAuthority('tournament:write')")
