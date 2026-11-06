@@ -2,7 +2,7 @@ import { referenceInputNodes, type ReferenceInputNode } from "./reference-input-
 import type { EditorSnapshot, TextSelection } from "./entity-rich-text-editor"
 import { isParagraphStyle, type ParagraphStyle } from "./rich-text-blocks"
 
-type FormatKind = "b" | "i" | "color" | "noauto" | ParagraphStyle | "normal"
+type FormatKind = "b" | "i" | "muted" | "color" | "noauto" | "plain" | ParagraphStyle | "normal"
 type Mark = Pick<Extract<ReferenceInputNode, { type: "format" }>, "tag" | "open" | "close" | "color">
 type Run = { text: string; atom: boolean; marks: Mark[]; start: number; end: number; selected?: boolean }
 const colorPattern = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i
@@ -56,6 +56,7 @@ export function referenceFormatState(value: string, selection: TextSelection) {
     style: style && selected.every((run) => run.marks.some((mark) => mark.tag === style)) ? style : "normal",
     bold: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "b")),
     italic: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "i")),
+    muted: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "muted")),
     noauto: selected.length > 0 && selected.every((run) => run.marks.some((mark) => mark.tag === "noauto")),
     color: color.length && color.every((value) => value === color[0]) ? color[0] : undefined,
   }
@@ -154,6 +155,13 @@ export function toggleReferenceFormat(
   if (!active.length) return null
   const remove = kind !== "color" && active.every((run) => run.marks.some((mark) => mark.tag === kind))
   for (const run of active) {
+    if (kind === "plain") {
+      run.marks = run.marks.filter((mark) => !["b", "i", "muted", "color"].includes(mark.tag))
+      continue
+    }
+    // A fade and a color answer the same question, so the newest one wins.
+    if (kind === "color") run.marks = run.marks.filter((mark) => mark.tag !== "muted")
+    if (kind === "muted" && !remove) run.marks = run.marks.filter((mark) => mark.tag !== "color")
     if (kind === "normal" || isParagraphStyle(kind)) {
       run.marks = run.marks.filter((mark) => !isParagraphStyle(mark.tag))
       if (kind !== "normal") run.marks.unshift({ tag: kind, open: `<${kind}>`, close: `</${kind}>` })
@@ -181,6 +189,17 @@ export function toggleReferenceFormat(
   }
   for (let index = current.length - 1; index >= 0; index--) output += current[index]!.close
   return { value: output, start: start!, end }
+}
+
+/** Whether a selection leaves other words on its line, so a note there belongs inside the sentence. */
+export function selectsPartOfLine(value: string, { start, end }: TextSelection) {
+  if (start === end || value.slice(start, end).includes("\n")) return false
+  const visible = (text: string) => text.replace(/<[^>]*>/g, "").trim()
+  const lineStart = value.lastIndexOf("\n", start - 1) + 1
+  const nextBreak = value.indexOf("\n", end)
+  return (
+    !!visible(value.slice(lineStart, start)) || !!visible(value.slice(end, nextBreak < 0 ? value.length : nextBreak))
+  )
 }
 
 export function styleReferenceParagraph(value: string, selection: TextSelection, style: ParagraphStyle | "normal") {

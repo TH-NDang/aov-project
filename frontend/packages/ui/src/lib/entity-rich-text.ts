@@ -114,6 +114,7 @@ export type RichTextNode =
   | { type: "color"; color: string; children: RichTextNode[] }
   | { type: "strong"; children: RichTextNode[] }
   | { type: "emphasis"; children: RichTextNode[] }
+  | { type: "muted"; children: RichTextNode[] }
   | { type: "reference"; entity: EntityReference; label: string; actualLocale: string; manual: boolean }
 
 const hex = /^#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})$/i
@@ -497,7 +498,7 @@ export function parseRichText(
   const recognized = new Set<string>()
   const tokens = Array.from(
     source.matchAll(
-      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|team|player|country|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i|note|info|example|exampletable)>|<\/(?:color|ref|noauto|b|i|note|info|example|exampletable)>/gi,
+      /<color=#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8})>|<ref=(?:hero|skill|item|enchantment|arcana|spell|team|player|country|term):[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}>|<(?:noauto|b|i|muted|note|info|example|exampletable)>|<\/(?:color|ref|noauto|b|i|muted|note|info|example|exampletable)>/gi,
     ),
   )
   const pairs = new Map<number, number>()
@@ -686,6 +687,8 @@ export function parseRichText(
           references++
         } else append(nodes, source.slice(token.index, end))
       } else if (tag === "<noauto>") nodes.push(...parse(contentStart, close.index, position + 1, depth + 1, false))
+      else if (tag === "<muted>")
+        nodes.push({ type: "muted", children: parse(contentStart, close.index, position + 1, depth + 1, auto) })
       else if (tag === "<b>" || tag === "<i>")
         nodes.push({
           type: tag === "<b>" ? "strong" : "emphasis",

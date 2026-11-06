@@ -11,7 +11,7 @@ export type ReferenceInputNode =
   | ReferenceInputPart
   | {
       type: "format"
-      tag: "b" | "i" | "color" | "noauto" | ParagraphStyle
+      tag: "b" | "i" | "muted" | "color" | "noauto" | ParagraphStyle
       open: string
       close: string
       color?: string
@@ -23,8 +23,8 @@ const reference =
 const skillId = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}\.[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 const formatting =
-  /<(b|i|noauto|note|info|example)>|<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>|<\/(b|i|color|noauto|note|info|example)>/gi
-const formatOpening = /^<(b|i|noauto|note|info|example)>$|^<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>$/i
+  /<(b|i|muted|noauto|note|info|example)>|<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>|<\/(b|i|muted|color|noauto|note|info|example)>/gi
+const formatOpening = /^<(b|i|muted|noauto|note|info|example)>$|^<color=(#(?:[\da-f]{3}|[\da-f]{6}|[\da-f]{8}))>$/i
 
 function splitReferences(value: string, budget: { references: number }): ReferenceInputPart[] {
   const parts: ReferenceInputPart[] = []

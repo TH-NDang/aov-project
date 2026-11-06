@@ -17,7 +17,7 @@ export type EntityReferenceSearch = (request: {
 export type TextSelection = { start: number; end: number }
 export type EditorSnapshot = TextSelection & { value: string }
 const tag =
-  /<\/?(?:b|i|noauto|note|info|example|exampletable|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|skill|item|enchantment|arcana|spell|term|team|player|country):[a-zA-Z0-9._-]+)?)>/gi
+  /<\/?(?:b|i|muted|noauto|note|info|example|exampletable|color(?:=#[\da-f]{3,8})?|ref(?:=(?:hero|skill|item|enchantment|arcana|spell|term|team|player|country):[a-zA-Z0-9._-]+)?)>/gi
 
 export function safeSelection(value: string, selection: TextSelection) {
   const { start, end } = selection

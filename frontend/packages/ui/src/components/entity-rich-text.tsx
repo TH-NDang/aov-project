@@ -196,6 +196,12 @@ function renderDescriptionNodes(nodes: RichTextNode[]): React.ReactNode {
     if (node.type === "reference") return <React.Fragment key={position}>{node.label}</React.Fragment>
     if (node.type === "strong") return <strong key={position}>{renderDescriptionNodes(node.children)}</strong>
     if (node.type === "emphasis") return <em key={position}>{renderDescriptionNodes(node.children)}</em>
+    if (node.type === "muted")
+      return (
+        <span key={position} className="text-muted-foreground">
+          {renderDescriptionNodes(node.children)}
+        </span>
+      )
     return (
       <span key={position} style={hexColor.test(node.color) ? { color: node.color } : undefined}>
         {renderDescriptionNodes(node.children)}
@@ -487,6 +493,12 @@ export function EntityRichText({
       if (node.type === "text") return <React.Fragment key={position}>{node.text}</React.Fragment>
       if (node.type === "strong") return <strong key={position}>{renderNodes(node.children, explicitColor)}</strong>
       if (node.type === "emphasis") return <em key={position}>{renderNodes(node.children, explicitColor)}</em>
+      if (node.type === "muted")
+        return (
+          <span key={position} className="text-muted-foreground">
+            {renderNodes(node.children, explicitColor)}
+          </span>
+        )
       if (node.type === "color")
         return (
           <span key={position} style={hexColor.test(node.color) ? { color: node.color } : undefined}>

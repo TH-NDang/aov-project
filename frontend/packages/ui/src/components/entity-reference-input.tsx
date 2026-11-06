@@ -252,6 +252,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
             format.setAttribute("data-format-close", part.close)
             if (part.tag === "b") format.className = "font-bold"
             if (part.tag === "i") format.className = "italic"
+            if (part.tag === "muted") format.className = "text-muted-foreground"
             if (part.tag === "noauto") {
               format.className = "rounded-sm bg-muted/70 outline outline-1 outline-dashed outline-border"
               format.title = "Đoạn này bỏ qua tự nhận diện. Bôi đen và bấm Bỏ qua để bật lại."

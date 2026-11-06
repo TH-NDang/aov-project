@@ -1,7 +1,12 @@
 import * as React from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
 import { EntityReferenceInput, type EntityReferenceInputHandle } from "./entity-reference-input"
-import { referenceFormatState, styleReferenceParagraph, toggleReferenceFormat } from "../lib/reference-input-formatting"
+import {
+  referenceFormatState,
+  selectsPartOfLine,
+  styleReferenceParagraph,
+  toggleReferenceFormat,
+} from "../lib/reference-input-formatting"
 import { isParagraphStyle, paragraphStyles, writeExampleTable } from "../lib/rich-text-blocks"
 import { ExampleTableDialog } from "./rich-text-blocks"
 import {
@@ -29,7 +34,9 @@ import {
   type EntityIconResolver,
 } from "./entity-rich-text"
 import { Button } from "./button"
-import { AtSign, Link2Off, Paintbrush, Redo2, Table2, Undo2 } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "./popover"
+import { RichTextColorPalette } from "./rich-text-color-palette"
+import { AtSign, ChevronDown, Eraser, Link2Off, Palette, Redo2, Table2, Undo2 } from "lucide-react"
 import { cn } from "../lib/utils"
 
 const empty: EntityReference[] = []
@@ -188,6 +195,11 @@ export function EntityRichTextEditor({
     setTable({ rows, range, original: current.current })
   }, [])
   const [isComposing, setComposing] = React.useState(false)
+  const [focused, setFocused] = React.useState(false)
+  const [selecting, setSelecting] = React.useState(false)
+  const [barDismissed, setBarDismissed] = React.useState(false)
+  const [barColors, setBarColors] = React.useState(false)
+  const selectionBar = React.useRef<HTMLDivElement>(null)
   const [selectedReferences, setSelectedReferences] = React.useState<EntityReference[]>([])
   const [previewOpen, setPreviewOpen] = React.useState(false)
   const deferredPreview = React.useDeferredValue(renderPreview && previewOpen ? value : "")
@@ -306,6 +318,38 @@ export function EntityRichTextEditor({
     if (renderedSuggestions < options.length) setVisibleSuggestions(renderedSuggestions + suggestionBatchSize)
     else remote.loadMore()
   }
+  // The bar waits for the pointer to let go, so it never jumps around under a selection still being dragged.
+  React.useEffect(() => {
+    if (!selecting) return
+    const done = () => setSelecting(false)
+    window.addEventListener("pointerup", done)
+    window.addEventListener("pointercancel", done)
+    return () => {
+      window.removeEventListener("pointerup", done)
+      window.removeEventListener("pointercancel", done)
+    }
+  }, [selecting])
+  React.useEffect(() => {
+    setBarDismissed(false)
+    setBarColors(false)
+  }, [caret.start, caret.end])
+  const selectionAnchor = React.useMemo(
+    () => ({
+      current: {
+        getBoundingClientRect: () => {
+          const root = area.current!.element!
+          const selected = root.ownerDocument.getSelection()
+          const range = selected?.rangeCount ? selected.getRangeAt(0) : undefined
+          const rect =
+            range && root.contains(range.commonAncestorContainer) && typeof range.getBoundingClientRect === "function"
+              ? range.getBoundingClientRect()
+              : undefined
+          return rect?.width ? rect : root.getBoundingClientRect()
+        },
+      },
+    }),
+    [],
+  )
   const virtualAnchor = React.useMemo(
     () => ({ current: { getBoundingClientRect: () => anchorRect ?? area.current!.element!.getBoundingClientRect() } }),
     [anchorRect],
@@ -367,14 +411,27 @@ export function EntityRichTextEditor({
       setDismissed(true)
     } else setNotice("Chọn văn bản thuần, bên ngoài thẻ tham chiếu để chèn.")
   }
-  const format = (kind: "b" | "i" | "color" | "noauto") => {
-    const next = toggleReferenceFormat(current.current, selection.current, kind, color)
+  const format = (kind: "b" | "i" | "muted" | "color" | "noauto" | "plain", withColor = color) => {
+    const next = toggleReferenceFormat(current.current, selection.current, kind, withColor)
     if (next) {
       commit(next)
       setDismissed(true)
       setPicker(false)
     } else setNotice("Vùng chọn đang cắt qua thẻ hoặc nằm trong tham chiếu. Hãy chọn lại văn bản.")
   }
+  const pickColor = (next: string) => {
+    setColor(next)
+    format("color", next)
+  }
+  const selectionBarOpen =
+    focused &&
+    !selecting &&
+    !barDismissed &&
+    !disabled &&
+    !isComposing &&
+    !picker &&
+    !table &&
+    caret.start !== caret.end
   const listKeys = (event: React.KeyboardEvent) => {
     if (!popupOpen || composing.current || event.nativeEvent.isComposing) return false
     if (event.key === "Escape") {
@@ -406,8 +463,13 @@ export function EntityRichTextEditor({
       ref={editor}
       className={cn("min-w-0 space-y-2", className)}
       data-slot="entity-rich-text-editor"
+      onFocus={() => setFocused(true)}
+      onPointerDown={(event) => {
+        if (area.current?.element?.contains(event.target as Node)) setSelecting(true)
+      }}
       onBlur={(event) => {
         const target = event.relatedTarget as Node | null
+        if (!event.currentTarget.contains(target) && !selectionBar.current?.contains(target)) setFocused(false)
         if (!event.currentTarget.contains(target) && !popup.current?.contains(target)) {
           setPicker(false)
           setDismissed(true)
@@ -434,13 +496,14 @@ export function EntityRichTextEditor({
           <div className="flex items-center border-r pr-1">
             <select
               aria-label="Loại văn bản"
-              title="Đặt kiểu cho đoạn đang viết hoặc văn bản đã chọn"
+              title="Đặt kiểu cho cả đoạn. Bôi đen một phần câu rồi chọn Chú thích thì chữ nhạt đi ngay trong câu, không xuống dòng."
               className="h-7 rounded bg-transparent px-1 text-xs hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
               disabled={disabled || isComposing}
               value={formatting.style}
               onChange={(event) => {
                 const style = event.target.value
                 if (style !== "normal" && !isParagraphStyle(style)) return
+                if (style === "note" && selectsPartOfLine(current.current, selection.current)) return format("muted")
                 const next = styleReferenceParagraph(current.current, selection.current, style)
                 if (next) commit(next)
               }}
@@ -503,30 +566,57 @@ export function EntityRichTextEditor({
           aria-label="Màu chữ"
           className={cn("flex shrink-0 items-center gap-1 border-r px-1 pr-2", compact && "gap-0.5 pr-1")}
         >
-          <label className="flex items-center gap-1 text-xs">
-            <span className={compact ? "sr-only" : undefined}>Màu</span>
-            <input
-              type="color"
-              aria-label={`Màu chữ ${label}`}
-              value={color}
-              disabled={disabled}
-              onChange={(e) => setColor(e.target.value)}
-              title="Chọn màu chữ"
-              className={cn("size-8 cursor-pointer rounded", compact && "size-7 rounded-md border bg-background p-0.5")}
-            />
-          </label>
           <Button
             type="button"
             size="sm"
             variant="ghost"
             aria-label="Áp dụng màu"
-            title="Áp dụng màu cho chữ đang chọn"
-            className={compact ? "size-7 rounded-md p-0" : undefined}
+            title="Tô chữ đang chọn bằng màu này"
+            className={cn("gap-1.5", compact && "size-7 rounded-md p-0")}
             disabled={disabled}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => format("color")}
           >
-            {compact ? <Paintbrush aria-hidden className="size-3.5" /> : "Áp dụng màu"}
+            <span aria-hidden className="size-3.5 rounded-sm border" style={{ backgroundColor: color }} />
+            {!compact && "Màu"}
+          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                aria-label="Chọn màu chữ"
+                title="Chọn màu theo ý nghĩa trong game"
+                className="size-7 rounded-md p-0"
+                disabled={disabled}
+                onMouseDown={(e) => e.preventDefault()}
+              >
+                <ChevronDown aria-hidden className="size-3.5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              className="w-auto p-2"
+              onOpenAutoFocus={(event) => event.preventDefault()}
+              onCloseAutoFocus={(event) => event.preventDefault()}
+            >
+              <RichTextColorPalette text={value} color={color} onPick={pickColor} />
+            </PopoverContent>
+          </Popover>
+          <Button
+            type="button"
+            size="sm"
+            variant={formatting.muted ? "secondary" : "ghost"}
+            aria-label="Chữ nhạt"
+            aria-pressed={formatting.muted}
+            title="Làm chữ đang chọn nhạt đi ngay trong câu, không xuống dòng"
+            className={compact ? "type-label h-7 rounded-md px-1.5" : undefined}
+            disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => format("muted")}
+          >
+            Nhạt
           </Button>
         </div>
         <div
@@ -707,6 +797,124 @@ export function EntityRichTextEditor({
           ? "Gõ @ để chèn tham chiếu · Bôi đen rồi bấm Bỏ qua để tắt nhận diện một đoạn."
           : "Tên và thuật ngữ đầy đủ được nhận diện tự động. Gõ @ để chèn tham chiếu; bôi đen rồi bấm Bỏ qua để tắt nhận diện một đoạn."}
       </p>
+      <PopoverPrimitive.Root open={selectionBarOpen}>
+        <PopoverPrimitive.Anchor virtualRef={selectionAnchor} />
+        {selectionBarOpen && (
+          <PopoverPrimitive.Portal>
+            <PopoverPrimitive.Content
+              ref={selectionBar}
+              role="toolbar"
+              aria-label="Định dạng chữ đang chọn"
+              side="top"
+              align="center"
+              sideOffset={8}
+              collisionPadding={12}
+              updatePositionStrategy="always"
+              className="z-50 max-w-[calc(100vw-1.5rem)] rounded-lg border bg-popover p-1 text-popover-foreground shadow-md"
+              onOpenAutoFocus={(event) => event.preventDefault()}
+              onCloseAutoFocus={(event) => event.preventDefault()}
+              onInteractOutside={(event) => event.preventDefault()}
+              onEscapeKeyDown={() => setBarDismissed(true)}
+            >
+              <div className="flex items-center gap-0.5">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={formatting.bold ? "secondary" : "ghost"}
+                  aria-label="Đậm chữ đang chọn"
+                  aria-pressed={formatting.bold}
+                  title="Đậm (Ctrl+B)"
+                  className="size-7 p-0 font-bold"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => format("b")}
+                >
+                  B
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={formatting.italic ? "secondary" : "ghost"}
+                  aria-label="Nghiêng chữ đang chọn"
+                  aria-pressed={formatting.italic}
+                  title="Nghiêng (Ctrl+I)"
+                  className="size-7 p-0 italic"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => format("i")}
+                >
+                  I
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={formatting.muted ? "secondary" : "ghost"}
+                  aria-label="Làm nhạt chữ đang chọn"
+                  aria-pressed={formatting.muted}
+                  title="Chú thích ngay trong câu, không xuống dòng"
+                  className="h-7 px-1.5 text-xs"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => format("muted")}
+                >
+                  Nhạt
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={barColors ? "secondary" : "ghost"}
+                  aria-label="Màu chữ đang chọn"
+                  aria-expanded={barColors}
+                  title="Chọn màu"
+                  className="size-7 p-0"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => setBarColors(!barColors)}
+                >
+                  <Palette
+                    aria-hidden
+                    className="size-3.5"
+                    style={formatting.color ? { color: formatting.color } : undefined}
+                  />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  aria-label="Chèn tham chiếu vào chữ đang chọn"
+                  title="Chèn tham chiếu (@)"
+                  className="size-7 p-0"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    setPicker(true)
+                    setQuery("")
+                    setActive(0)
+                    setDismissed(true)
+                  }}
+                >
+                  <AtSign aria-hidden className="size-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  aria-label="Bỏ định dạng chữ đang chọn"
+                  title="Bỏ đậm, nghiêng, nhạt và màu"
+                  className="size-7 p-0"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => format("plain")}
+                >
+                  <Eraser aria-hidden className="size-3.5" />
+                </Button>
+              </div>
+              {barColors && (
+                <RichTextColorPalette
+                  text={value}
+                  color={formatting.color ?? color}
+                  onPick={pickColor}
+                  className="mt-1 border-t pt-2"
+                />
+              )}
+            </PopoverPrimitive.Content>
+          </PopoverPrimitive.Portal>
+        )}
+      </PopoverPrimitive.Root>
       <PopoverPrimitive.Root
         open={popupOpen}
         onOpenChange={(next) => {

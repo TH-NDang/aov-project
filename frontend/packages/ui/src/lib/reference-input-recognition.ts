@@ -21,7 +21,7 @@ export function passiveReferenceHighlights(root: HTMLElement, index: ReturnType<
     const parent = node.parentElement
     if (!parent || parent.closest('[data-reference-token], [data-format-open="<noauto>" i]')) continue
     // Literal source tags are editable text, not parsed formatting with matching DOM offsets.
-    if (/<\/?(?:b|i|noauto|color|ref)(?:[=>]|\b)/i.test(text)) continue
+    if (/<\/?(?:b|i|muted|noauto|color|ref)(?:[=>]|\b)/i.test(text)) continue
     let offset = 0
     for (const part of parseRichText(text, index, { maxReferences: 500 - matches.length })) {
       if (part.type === "text") offset += part.text.length
