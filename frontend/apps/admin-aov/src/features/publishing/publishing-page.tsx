@@ -65,7 +65,6 @@ import { SectionEditor, emptySection } from "./section-editor"
 import { observedAttributes, statPatchContext } from "./combat-attributes"
 import { useStatDefaults } from "./patch-stat-defaults"
 import { replaceProfilePart, type ProfileEditorPart } from "./hero-profile-editor"
-import { sameDraftValue } from "@/app/drafts/draft-store"
 import { ImportContextPicker, type ImportContext } from "./import-context"
 import { type CatalogFilter } from "./catalog-context"
 import { usePublicationOverview, useContentLocale } from "./publication-overview"
@@ -106,6 +105,7 @@ import {
   heroWorkingConflict,
   heroWorkingSchema,
   mergeHeroWorkingCopy,
+  sameHeroSection,
   type HeroWorkingCopy,
 } from "./hero-working-copy"
 import { toast } from "sonner"
@@ -394,7 +394,9 @@ export function PublishingWorkspace({
         editorLocale,
       )
     : preview?.content[section]
-  const sectionDirty = focusedProfile ? !sameDraftValue(sectionValue, read.data?.content.PROFILE) : dirty.has(section)
+  const sectionDirty = focusedProfile
+    ? !sameHeroSection("PROFILE", sectionValue, read.data?.content.PROFILE)
+    : dirty.has(section)
   const editorTitle =
     focusedProfile && profilePart === "lore" ? "Cốt truyện" : SECTIONS.find(([key]) => key === section)![2]
   const heroName =

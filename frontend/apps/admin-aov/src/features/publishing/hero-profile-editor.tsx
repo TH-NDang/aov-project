@@ -100,7 +100,7 @@ export function HeroProfileEditor({
                       onChange({
                         ...value,
                         roles: event.target.checked
-                          ? [...value.roles, role as Role]
+                          ? [...value.roles, role as Role].sort()
                           : value.roles.filter((entry) => entry !== role),
                       })
                     }
@@ -127,7 +127,7 @@ export function HeroProfileEditor({
                         onChange({
                           ...value,
                           positions: event.target.checked
-                            ? [...current, position as Position]
+                            ? [...current, position as Position].sort()
                             : current.filter((entry) => entry !== position),
                         })
                       }

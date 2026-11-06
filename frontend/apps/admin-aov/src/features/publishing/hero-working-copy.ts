@@ -102,8 +102,21 @@ export const emptyHeroContent: Content = {
   MEDIA_BINDINGS: null,
 }
 
+/** Roles and positions are sets, so listing them in another order changes nothing that could be saved. */
+export function comparableSection(section: Section, value: Content[Section] | undefined) {
+  if (section !== "PROFILE" || !value) return value
+  const profile = value as NonNullable<Content["PROFILE"]>
+  return { ...profile, roles: [...profile.roles].sort(), positions: [...(profile.positions ?? [])].sort() }
+}
+
+export const sameHeroSection = (
+  section: Section,
+  left: Content[Section] | undefined,
+  right: Content[Section] | undefined,
+) => sameDraftValue(comparableSection(section, left), comparableSection(section, right))
+
 export function dirtyHeroSections(value: HeroWorkingCopy, base: HeroWorkingCopy): Section[] {
-  return SECTIONS.map(([key]) => key).filter((key) => !sameDraftValue(value.content[key], base.content[key]))
+  return SECTIONS.map(([key]) => key).filter((key) => !sameHeroSection(key, value.content[key], base.content[key]))
 }
 export function heroWorkingConflict(base: HeroWorkingCopy, value: HeroWorkingCopy, current: HeroWorkingCopy) {
   return reconcileDraft(base, value, current).conflict

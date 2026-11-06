@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import { reconcileDraft } from "../src/app/drafts/draft-merge"
 import {
+  dirtyHeroSections,
   heroWorkingConflict,
   heroWorkingSchema,
   mergeHeroWorkingCopy,
@@ -60,6 +61,21 @@ test("duplicate identities and overlapping primitive arrays require review rathe
   assert.equal(result.conflict, true)
   assert.equal(reconcileDraft([1], [2], [3]).conflict, true)
   assert.deepEqual(reconcileDraft(NaN, null, NaN), { value: null, conflict: false })
+})
+
+test("listing roles or positions in another order is not an unsaved change, but a different role is", () => {
+  const copy = (roles: string[], positions: string[]) => {
+    const value = structuredClone({ content: fixtureContent, notes: {} }) as never as Parameters<
+      typeof dirtyHeroSections
+    >[0]
+    value.content.PROFILE!.roles = roles as never
+    value.content.PROFILE!.positions = positions as never
+    return value
+  }
+  const saved = copy(["MAGE", "SUPPORT"], ["MID", "SUPPORT"])
+  assert.deepEqual(dirtyHeroSections(copy(["SUPPORT", "MAGE"], ["SUPPORT", "MID"]), saved), [])
+  assert.deepEqual(dirtyHeroSections(copy(["SUPPORT"], ["MID", "SUPPORT"]), saved), ["PROFILE"])
+  assert.deepEqual(dirtyHeroSections(copy(["MAGE", "SUPPORT"], ["MID"]), saved), ["PROFILE"])
 })
 
 test("hero working copies retain remote skills and Vietnamese text while only the English translation is edited", () => {
