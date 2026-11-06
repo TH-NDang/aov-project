@@ -121,7 +121,7 @@ abstract class OpenApiContractChecks {
     }
 
     int expectedHandlerCount() {
-        return 183;
+        return 184;
     }
 
     @Test

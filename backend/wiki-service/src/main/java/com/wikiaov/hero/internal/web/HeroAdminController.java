@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.internal.application.HeroCommands.*;
 import com.wikiaov.hero.internal.application.response.HeroCatalogView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
+import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroAuthoring;
 import com.wikiaov.hero.internal.catalog.application.HeroCatalog;
@@ -80,6 +81,13 @@ public class HeroAdminController implements HeroAdminApi {
             @RequestParam(required = false) UUID fromRevisionId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("fromRevisionId"));
         return comparisons.compare(heroId, revisionId, fromRevisionId);
+    }
+
+    @GetMapping(path = "/{heroId}/revisions/{revisionId}/draft-changes", version = "1")
+    public HeroDraftChangesView draftChanges(@PathVariable UUID heroId, @PathVariable UUID revisionId,
+            HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return comparisons.draftChanges(heroId, revisionId);
     }
 
     @PostMapping(path = "/{heroId}/drafts/{draftId}/publish", version = "1")

@@ -31,6 +31,10 @@ public class HeroSections {
         return snapshots.get(section).content(id);
     }
 
+    public Optional<UUID> lastSavedBetween(HeroSection section, UUID heroId, Instant from, Instant to) {
+        return snapshots.get(section).lastSavedBetween(heroId, from, to);
+    }
+
     public void publish(HeroSection section, UUID id, UUID heroId) {
         snapshots.get(section).publish(id, heroId);
     }

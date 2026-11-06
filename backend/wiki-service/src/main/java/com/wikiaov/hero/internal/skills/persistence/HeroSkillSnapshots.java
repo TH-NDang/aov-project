@@ -35,6 +35,11 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
     }
 
     @Override
+    public com.wikiaov.hero.internal.sections.persistence.SectionRevisionRepository<?> revisions() {
+        return revisions;
+    }
+
+    @Override
     public UUID create(UUID heroId, Object content, Actor actor, Instant at) {
         var revision = lifecycle.create(revisions, new SkillsRevision(), heroId, actor, at);
         if (content != null) {

@@ -2,6 +2,7 @@ package com.wikiaov.hero.internal.sections.persistence;
 
 import com.wikiaov.hero.internal.sections.persistence.entity.SectionRevision;
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,6 @@ public interface SectionRevisionRepository<T extends SectionRevision> extends Jp
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select r from #{#entityName} r where r.id = :id")
     Optional<T> lockById(UUID id);
+
+    Optional<T> findFirstByHeroIdAndCreatedAtBetweenOrderByCreatedAtDesc(UUID heroId, Instant from, Instant to);
 }

@@ -654,6 +654,65 @@ class DomainCoreIntegrationTest {
         return send(post(path(hero, id(draft)) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
     }
 
+    @SuppressWarnings("unchecked")
+    private static String profileName(Map<String, Object> changes, String side) {
+        var profile = (Map<String, Object>) ((Map<String, Object>) changes.get(side)).get("profile");
+        return ((List<Map<String, Object>>) profile.get("translations")).getFirst().get("name").toString();
+    }
+
+    @Test
+    void draftChangesCompareAFirstDraftWithItsImportedContent() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), id = uuid(draft, "id");
+        var changesPath = ROOT + "/admin/heroes/" + hero + "/revisions/" + id + "/draft-changes";
+        clock.set(clock.instant().plusSeconds(5));
+        draft = send(put(path(hero, id) + "/profile"),
+                Map.of("expectedDraftVersion", draft.get("version"), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Imported")), "roles", List.of("MAGE")),
+                200);
+
+        var untouched = send(get(changesPath), null, 200);
+        assertThat(untouched.get("source")).isNull();
+        assertThat(profileName(untouched, "before")).isEqualTo("Imported");
+        assertThat(profileName(untouched, "after")).isEqualTo("Imported");
+
+        clock.set(clock.instant().plusSeconds(600));
+        send(put(path(hero, id) + "/profile"),
+                Map.of("expectedDraftVersion", draft.get("version"), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Edited")), "roles", List.of("MAGE")),
+                200);
+
+        var edited = send(get(changesPath), null, 200);
+        assertThat(profileName(edited, "before")).isEqualTo("Imported");
+        assertThat(profileName(edited, "after")).isEqualTo("Edited");
+        send(get(changesPath + "?unknown=1"), null, 400);
+    }
+
+    @Test
+    void draftChangesCompareAForkWithTheRevisionItCameFrom() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId");
+        draft = complete(hero, id(draft), draft);
+        var published = send(post(path(hero, id(draft)) + "/publish"),
+                Map.of("expectedVersion", number(draft, "version")), 200);
+        var publishedName = profileName(send(get(ROOT + "/admin/heroes/" + hero + "/revisions/" + id(published)
+                + "/draft-changes"), null, 200), "after");
+
+        var fork = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("rulesetId", ruleset,
+                "sourceRevisionId", id(published), "cause", "CONTENT_CORRECTION", "effectiveFromPatchVariantId",
+                variant), 201);
+        send(put(path(hero, id(fork)) + "/profile"),
+                Map.of("expectedDraftVersion", fork.get("version"), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Corrected")), "roles", List.of("ASSASSIN")),
+                200);
+
+        var changes = send(get(ROOT + "/admin/heroes/" + hero + "/revisions/" + id(fork) + "/draft-changes"), null,
+                200);
+        assertThat(((Map<?, ?>) changes.get("source")).get("id")).isEqualTo(id(published).toString());
+        assertThat(profileName(changes, "before")).isEqualTo(publishedName);
+        assertThat(profileName(changes, "after")).isEqualTo("Corrected");
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     void rolesAndPositionsAlwaysReadInTheSameOrder() throws Exception {

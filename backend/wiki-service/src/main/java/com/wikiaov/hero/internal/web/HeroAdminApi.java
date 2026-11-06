@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.web;
 import com.wikiaov.hero.internal.application.HeroCommands.*;
 import com.wikiaov.hero.internal.application.response.HeroCatalogView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
+import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.web.request.HeroSectionRequests.*;
 import com.wikiaov.platform.*;
@@ -96,6 +97,16 @@ public interface HeroAdminApi {
     HeroComparisonView comparison(@Parameter(description = "Hero id identifier.") UUID heroId,
             @Parameter(description = "Revision id identifier.") UUID revisionId,
             @Parameter(description = "From revision id identifier.") UUID fromRevisionId,
+            @Parameter(hidden = true) HttpServletRequest request);
+
+    @Operation(operationId = "heroAdminApi_draftChanges", summary = "Draft changes - hero admin", description = "What a draft has changed so far, compared with its source revision or its own first content. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+    })
+    HeroDraftChangesView draftChanges(@Parameter(description = "Hero id identifier.") UUID heroId,
+            @Parameter(description = "Revision id identifier.") UUID revisionId,
             @Parameter(hidden = true) HttpServletRequest request);
 
     @Operation(operationId = "heroAdminApi_publish", summary = "Publish - hero admin", description = "Publish for hero admin. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Direct authorization checks: hasAuthority('hero:publish').", security = @SecurityRequirement(name = "bearerAuth"), responses = {

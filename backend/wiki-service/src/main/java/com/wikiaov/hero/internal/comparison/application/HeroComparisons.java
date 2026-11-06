@@ -2,12 +2,14 @@ package com.wikiaov.hero.internal.comparison.application;
 
 import com.wikiaov.hero.internal.application.response.HeroComparisonView;
 import com.wikiaov.hero.internal.application.response.HeroComparisonView.Difference;
+import com.wikiaov.hero.internal.application.response.HeroDraftChangesView;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,9 @@ import tools.jackson.databind.json.JsonMapper;
 @Service
 @Transactional(readOnly = true)
 public class HeroComparisons {
+    /** An import fills a new draft right after creating it, so what is saved this soon is its start, not an edit. */
+    private static final Duration INITIAL_CONTENT_WINDOW = Duration.ofMinutes(1);
+
     private final HeroStore store;
     private final HeroSections sections;
     private final JsonMapper json;
@@ -47,6 +52,26 @@ public class HeroComparisons {
         }
         return new HeroComparisonView("AVAILABLE", source, target, before, after, List.copyOf(changes), List.of(
                 "Snapshot differences do not establish which patch caused a change. Review sources before recording a changelog."));
+    }
+
+    @PreAuthorize("hasAuthority('catalog:read')")
+    public HeroDraftChangesView draftChanges(UUID heroId, UUID revisionId) {
+        var target = store.revision(heroId, revisionId);
+        var after = content(target);
+        var startedAt = store.createdAt(revisionId);
+
+        if (target.sourceRevisionId() != null) {
+            var source = store.revision(heroId, target.sourceRevisionId());
+            return new HeroDraftChangesView(source, startedAt, content(source), after);
+        }
+
+        Map<HeroSection, Object> before = new EnumMap<>(HeroSection.class);
+        for (var section : HeroSection.values()) {
+            var start = sections.lastSavedBetween(section, heroId, startedAt,
+                    startedAt.plus(INITIAL_CONTENT_WINDOW));
+            before.put(section, start.map(id -> sections.content(section, id)).orElse(after.get(section)));
+        }
+        return new HeroDraftChangesView(null, startedAt, before, after);
     }
 
     private Map<HeroSection, Object> content(HeroRevisionView revision) {

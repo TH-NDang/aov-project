@@ -59,6 +59,10 @@ public class HeroStore {
         revisions.saveAndFlush(revision);
     }
 
+    public java.time.Instant createdAt(UUID revisionId) {
+        return editableEntity(revisionId).getCreatedAt();
+    }
+
     public HeroRevisionView revision(UUID heroId, UUID id) {
         return revisions.findByHeroIdAndId(heroId, id).map(this::view).orElseThrow(
                 () -> new ApiException(HeroErrorCode.HERO_REVISION_NOT_FOUND, "The hero revision does not exist."));
