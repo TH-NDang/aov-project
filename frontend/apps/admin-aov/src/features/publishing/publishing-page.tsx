@@ -80,6 +80,7 @@ import {
   type Preview,
   type Revision,
   type Section,
+  type Skill,
 } from "./types"
 import {
   heroLocationId,
@@ -96,6 +97,9 @@ import { HeroDraftChanges } from "./hero-draft-changes"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { visibleSkins } from "./hero-skins"
 import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
+import { captureFocus } from "./patch-capture-model"
+import { PatchCapturePanel, PatchCaptureToggle } from "./patch-capture-panel"
+import { PatchCaptureProvider, usePatchCaptureWorkspace, type PatchCaptureWorkspace } from "./use-patch-captures"
 import {
   dirtyHeroSections,
   emptyHeroContent,
@@ -116,14 +120,22 @@ const CAUSES: Record<Cause, string> = {
   OTHER: "Khác",
 }
 const STATES = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
+const noSkills: Skill[] = []
 
 function PublishingFrame({
   detail,
   footer,
   revision,
   heroContent,
+  captures,
   ...props
-}: ComponentProps<typeof Page> & { detail: boolean; footer?: ReactNode; revision?: Revision; heroContent?: Content }) {
+}: ComponentProps<typeof Page> & {
+  detail: boolean
+  footer?: ReactNode
+  revision?: Revision
+  heroContent?: Content
+  captures: PatchCaptureWorkspace
+}) {
   const images = useHeroSkillImages(
     heroContent?.SKILLS?.skills.some((skill) => !skill.iconAssetId) ? revision?.heroId : undefined,
   )
@@ -133,16 +145,24 @@ function PublishingFrame({
   )
   return (
     <ReferenceRulesetProvider rulesetId={revision?.rulesetId} skills={skills}>
-      {detail ? (
-        <div className="@container flex h-full min-h-0 min-w-0 flex-1 flex-col">
-          <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
-            <Page {...props} />
+      <PatchCaptureProvider value={captures}>
+        {detail ? (
+          // A container query cannot style its own container, so the split direction lives one level down.
+          <div className="@container/hero-split flex h-full min-h-0 min-w-0 flex-1 flex-col">
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col @5xl/hero-split:flex-row">
+              <div className="@container flex min-h-0 min-w-0 flex-1 flex-col">
+                <div className="relative min-h-0 flex-1 overflow-y-auto [scrollbar-gutter:stable]">
+                  <Page {...props} />
+                </div>
+                {footer}
+              </div>
+              {captures.open && captures.state.status !== "unavailable" && <PatchCapturePanel captures={captures} />}
+            </div>
           </div>
-          {footer}
-        </div>
-      ) : (
-        <Page {...props} />
-      )}
+        ) : (
+          <Page {...props} />
+        )}
+      </PatchCaptureProvider>
     </ReferenceRulesetProvider>
   )
 }
@@ -384,6 +404,22 @@ export function PublishingWorkspace({
     focusedProfile && profilePart === "lore" ? "Cốt truyện" : SECTIONS.find(([key]) => key === section)![2]
   const heroName =
     translatedText(preview?.content.PROFILE?.translations ?? [], location.readLocale, ["name"])?.name || "Hồ sơ tướng"
+  const captures = usePatchCaptureWorkspace({
+    heroId,
+    heroName: preview?.content.PROFILE ? heroName : "",
+    patchCode: statPatch?.patchCode,
+    skills: preview?.content.SKILLS?.skills ?? noSkills,
+    locale: location.readLocale,
+    ready: !!preview && !overview.isPending,
+    focus: captureFocus({
+      view,
+      tab: location.tab,
+      editing,
+      section,
+      skillKey: heroLocationId(urlParams.get("skill")),
+      skills: preview?.content.SKILLS?.skills ?? noSkills,
+    }),
+  })
   const publicationPatch = overview.data?.variants.find(
     (variant) => variant.id === revision?.effectiveFromPatchVariantId,
   )
@@ -592,6 +628,7 @@ export function PublishingWorkspace({
         )
       }
       revision={revision}
+      captures={captures}
       heroContent={view === "overview" || translating ? preview?.content : undefined}
       className={`@container min-w-0 ${heroId ? "mx-auto w-full max-w-6xl" : ""}`}
     >
@@ -632,9 +669,9 @@ export function PublishingWorkspace({
         <>
           <header>
             {/* Narrow: name and menu on one line, version and the main action on the next. Wide: one line. */}
-            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:gap-2">
+            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:flex-wrap @2xl:items-center @2xl:gap-2">
               <div className="flex min-w-0 items-center gap-2 @2xl:contents">
-                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                <div className="flex min-w-0 flex-1 basis-72 items-center gap-2.5">
                   {!onUnsavedChange && (
                     <Button variant="ghost" size="icon" asChild>
                       <Link
@@ -663,6 +700,7 @@ export function PublishingWorkspace({
                     </p>
                   </div>
                   {quickSwitcher}
+                  <PatchCaptureToggle />
                   {preview && (
                     <HeroReviewNotice
                       skills={preview.content.SKILLS?.skills ?? []}
