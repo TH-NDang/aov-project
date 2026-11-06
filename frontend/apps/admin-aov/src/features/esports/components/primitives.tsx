@@ -224,7 +224,11 @@ export function BestOfBadge({ bestOf, className }: { bestOf: number; className?:
   return (
     <span
       className={cn("esp-bo", BEST_OF_TONES[bestOf] ?? "esp-bo-1", className)}
-      title={`Thể thức Bo${bestOf}: thắng ${Math.floor(bestOf / 2) + 1} ván trước`}
+      title={
+        bestOf % 2
+          ? `Thể thức Bo${bestOf}: thắng ${Math.floor(bestOf / 2) + 1} ván trước`
+          : `Thể thức Bo${bestOf}: đấu đủ ${bestOf} ván`
+      }
     >
       BO{bestOf}
     </span>

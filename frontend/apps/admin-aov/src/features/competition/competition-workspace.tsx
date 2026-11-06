@@ -36,7 +36,7 @@ import { TeamRosterSheet } from "@/features/tournaments/team-roster-sheet"
 import { tournamentKeys } from "@/features/tournaments/tournament-api"
 import { tournamentDates } from "@/features/tournaments/tournament-metadata"
 import { TeamRegionBadge } from "@/features/tournaments/team-region"
-import { useRecords, useRosters } from "@/features/esports/data/use-esports-data"
+import { useRecords, useRosters, useTournamentSeries } from "@/features/esports/data/use-esports-data"
 import {
   AccessGate,
   Crumbs,
@@ -105,7 +105,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
   const teams = useRecords("teams"),
     players = useRecords("players"),
     tournaments = useRecords("tournaments")
-  const series = useRecords("series")
+  const series = useTournamentSeries(entry.id)
   const rosters = useRosters(entry.id)
   const organization = useQuery({
     queryKey: [...pageKeys, access.actorKey, plan.organizerPageId],
@@ -903,6 +903,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
       )}
       {step === 5 && (
         <CompetitionStatistics
+          tournamentId={entry.id}
           seriesIds={entry.content.plan.matches.flatMap((match) => (match.seriesId ? [match.seriesId] : []))}
         />
       )}

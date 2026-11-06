@@ -13,6 +13,7 @@ export type TeamContent = {
   logoUrl?: string
   aliases?: string[]
 }
+export type CareerStatus = "ACTIVE" | "INACTIVE" | "RETIRED" | "UNKNOWN"
 export type PlayerContent = {
   code: string
   nickname: string
@@ -20,6 +21,11 @@ export type PlayerContent = {
   country?: string
   photoUrl?: string
   aliases?: string[]
+  birthDate?: string | null
+  /** Usual position; a position in one tournament stays on its roster entry. */
+  lane?: Lane | null
+  careerStatus?: CareerStatus
+  signatureHeroes?: string[]
 }
 export type RosterStatus = "ACTIVE" | "SUBSTITUTE" | "INACTIVE" | "UNKNOWN"
 export type RosterMembershipContent = {
@@ -35,8 +41,8 @@ export type RosterMembershipContent = {
   verification?: ResultVerification
   note?: string | null
 }
-export type TournamentTier = "S" | "A" | "B" | "C" | "UNKNOWN"
-export type CompetitionType = "LEAGUE" | "CUP" | "QUALIFIER" | "UNKNOWN"
+export type TournamentTier = "S" | "A" | "B" | "C" | "D" | "UNKNOWN"
+export type CompetitionType = "LEAGUE" | "CUP" | "QUALIFIER" | "SHOWMATCH" | "OTHER" | "UNKNOWN"
 export type VenueMode = "ONLINE" | "OFFLINE" | "HYBRID" | "UNKNOWN"
 export type TournamentStatus = "UPCOMING" | "ONGOING" | "FINISHED" | "ANNOUNCED" | "UNKNOWN"
 export type ResultVerification =
@@ -50,6 +56,26 @@ export type TournamentResult = {
   verification: ResultVerification
   verifiedOn?: string | null
 }
+/** One line of a final table; `place` is text because a line can be shared ("5-8"). */
+export type TournamentPlacement = {
+  place: string
+  teamId?: string | null
+  teamName: string
+  prizeUsd?: number | null
+  prizeLocal?: number | null
+  lastOpponent?: string | null
+  lastScore?: string | null
+}
+export type TournamentAward = {
+  title: string
+  playerId?: string | null
+  recipientName: string
+  teamName?: string | null
+  prizeUsd?: number | null
+  prizeLocal?: number | null
+}
+export type TournamentLink = { label: string; url: string }
+export type TournamentStats = { tournamentId: string; teams: number; matches: number; played: number }
 export type TournamentContent = {
   code: string
   name: string
@@ -65,6 +91,10 @@ export type TournamentContent = {
   venueMode?: VenueMode
   status?: TournamentStatus
   result?: TournamentResult | null
+  localCurrency?: string | null
+  placements?: TournamentPlacement[]
+  awards?: TournamentAward[]
+  links?: TournamentLink[]
 }
 export type SeriesContent = {
   code: string
@@ -78,6 +108,8 @@ export type SeriesContent = {
   sourceUrl?: string
   note?: string
   result?: SeriesResult | null
+  /** The match was played without the rule against re-picking a hero in later games. */
+  repeatPicksAllowed?: boolean
 }
 export type SeriesResult = {
   scoreA: number

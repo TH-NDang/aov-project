@@ -22,8 +22,13 @@ const present = (hero: Selection | null | undefined): hero is Selection => heroK
  * Series pick rule: a team cannot pick a hero it already played in an earlier game of the same series. The last
  * possible game of the series (game `bestOf`) opens every hero again. Bans only last for their own game.
  */
-export function seriesLocks(games: { content: GameContent }[], number: number, bestOf: number): HeroLocks {
-  const decider = bestOf > 1 && number >= bestOf
+export function seriesLocks(
+  games: { content: GameContent }[],
+  number: number,
+  bestOf: number,
+  repeatAllowed = false,
+): HeroLocks {
+  const decider = repeatAllowed || (bestOf > 1 && number >= bestOf)
   const byTeam = new Map<string, HeroUse[]>()
   if (decider) return { decider, byTeam }
   const earlier = games

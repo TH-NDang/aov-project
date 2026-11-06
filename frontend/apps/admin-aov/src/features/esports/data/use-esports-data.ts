@@ -39,6 +39,26 @@ export function useRecords<K extends ListKind>(kind: K, enabled = true) {
   })
 }
 
+/** One tournament's matches; a tournament list reads `useTournamentStats` instead of loading every match. */
+export function useTournamentSeries(tournamentId: string, enabled = true) {
+  const actorKey = useActorKey()
+  return useQuery({
+    queryKey: [...tournamentKeys.all, "series", actorKey, "tournament", tournamentId],
+    queryFn: ({ signal }) => tournamentApi.list("series", signal, { tournamentId }),
+    enabled: enabled && !!tournamentId,
+    staleTime: 30_000,
+  })
+}
+
+export function useTournamentStats() {
+  const actorKey = useActorKey()
+  return useQuery({
+    queryKey: [...tournamentKeys.all, "tournament-stats", actorKey],
+    queryFn: ({ signal }) => tournamentApi.tournamentStats(signal),
+    staleTime: 30_000,
+  })
+}
+
 export function useRosters(tournamentId: string, enabled = true) {
   const actorKey = useActorKey()
   return useQuery({
@@ -50,6 +70,17 @@ export function useRosters(tournamentId: string, enabled = true) {
 }
 
 /** Games of one series, or every game when no series is given (used for tournament statistics). */
+/** One tournament's games, for screens that summarize its matches. */
+export function useTournamentGames(tournamentId: string, enabled = true) {
+  const actorKey = useActorKey()
+  return useQuery({
+    queryKey: [...tournamentKeys.all, "games", actorKey, "tournament", tournamentId],
+    queryFn: ({ signal }) => tournamentApi.list("games", signal, { tournamentId }),
+    enabled: enabled && !!tournamentId,
+    staleTime: 15_000,
+  })
+}
+
 export function useGames(seriesId?: string, enabled = true) {
   const actorKey = useActorKey()
   return useQuery({

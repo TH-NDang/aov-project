@@ -64,6 +64,7 @@ export const TIER_LABELS: Record<NonNullable<TournamentContent["tier"]>, string>
   A: "A-Tier",
   B: "B-Tier",
   C: "C-Tier",
+  D: "D-Tier",
   UNKNOWN: "Chưa xếp hạng",
 }
 
@@ -79,6 +80,8 @@ export const FORMAT_LABELS: Record<NonNullable<TournamentContent["competitionTyp
   LEAGUE: "Giải vô địch",
   CUP: "Cúp",
   QUALIFIER: "Vòng loại",
+  SHOWMATCH: "Giao hữu / biểu diễn",
+  OTHER: "Khác",
   UNKNOWN: "Chưa rõ",
 }
 

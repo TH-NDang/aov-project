@@ -18,7 +18,9 @@ import { RecordLifecycleActions } from "./record-lifecycle-actions"
 import { recordLabel } from "./record-lifecycle-model"
 import { initialRegistryValues, registryContent, registryFormIssue, type RegistryKind } from "./registry-form-model"
 import {
+  CAREER_STATUSES,
   COMPETITION_TYPES,
+  PLAYER_LANES,
   RESULT_VERIFICATIONS,
   TOURNAMENT_STATUSES,
   TOURNAMENT_TIERS,
@@ -66,6 +68,18 @@ function registryFields(
       { key: "aliases", label: "Tên khác", placeholder: "Tên thi đấu cũ, cách viết khác" },
       { key: "country", label: "Quốc gia / khu vực", options: TEAM_REGIONS },
       { key: "photoUrl", label: "Đường dẫn ảnh", type: "url" },
+      { key: "birthDate", label: "Ngày sinh", type: "date" },
+      {
+        key: "lane",
+        label: "Vị trí thường đánh",
+        options: Object.entries(PLAYER_LANES).map(([id, name]) => ({ id, name })),
+      },
+      {
+        key: "careerStatus",
+        label: "Trạng thái thi đấu",
+        options: Object.entries(CAREER_STATUSES).map(([id, name]) => ({ id, name })),
+      },
+      { key: "signatureHeroes", label: "Tướng tủ", placeholder: "Capheny, Violet, Elsu" },
     ]
   if (kind === "tournaments")
     return [
@@ -75,14 +89,7 @@ function registryFields(
         key: "region",
         label: "Thị trường",
         required: true,
-        options: [
-          { id: "VN", name: "Việt Nam" },
-          { id: "TH", name: "Thái Lan" },
-          { id: "TW", name: "Đài Loan" },
-          { id: "TW/HK/MO", name: "Đài Loan / Hồng Kông / Ma Cao" },
-          { id: "ID", name: "Indonesia" },
-          { id: "GLOBAL", name: "Quốc tế" },
-        ],
+        options: TEAM_REGIONS,
       },
       { key: "year", label: "Năm", type: "number", group: "extra" },
       { key: "startsOn", label: "Ngày bắt đầu", type: "date" },
@@ -153,7 +160,15 @@ function registryFields(
       key: "bestOf",
       label: "Thể thức",
       required: true,
-      options: [1, 3, 5, 7, 9].map((value) => ({ id: String(value), name: `BO${value}` })),
+      options: [1, 2, 3, 4, 5, 7, 9].map((value) => ({ id: String(value), name: `BO${value}` })),
+    },
+    {
+      key: "repeatPicksAllowed",
+      label: "Luật chọn lại tướng",
+      options: [
+        { id: "", name: "Không được chọn lại tướng đã dùng" },
+        { id: "true", name: "Được chọn lại tướng" },
+      ],
     },
     { key: "scheduledAt", label: "Lịch thi đấu", type: "datetime-local" },
     { key: "sourceUrl", label: "Link video / nguồn", type: "url" },
@@ -196,11 +211,22 @@ function RegistryForm({
   const client = useQueryClient()
   const mutation = useMutation({
     mutationFn: async () => {
-      const content = registryContent(
+      const fields = registryContent(
         kind,
         values,
         registryFields(kind, teams, tournaments).map((field) => field.key),
       )
+      // The form only knows its own fields; what other screens edit stays on the record.
+      const kept = entry && kind === "tournaments" ? (entry.content as TournamentContent) : null
+      const content = kept
+        ? ({
+            ...fields,
+            localCurrency: kept.localCurrency,
+            placements: kept.placements,
+            awards: kept.awards,
+            links: kept.links,
+          } as Content)
+        : fields
       if (entry) await tournamentApi.save(kind, entry, content)
       else await tournamentApi.create(kind, content)
       await client.invalidateQueries({ queryKey: tournamentKeys.all })

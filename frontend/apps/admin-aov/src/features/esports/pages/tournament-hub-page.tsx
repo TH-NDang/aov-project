@@ -11,7 +11,7 @@ import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { RegistryImportSheet } from "@/features/tournaments/registry-import"
-import { useRecords } from "../data/use-esports-data"
+import { useRecords, useTournamentStats } from "../data/use-esports-data"
 import type { TournamentStats } from "../components/tournament-cards"
 import { TournamentList } from "@/features/tournaments/tournament-list"
 import { registrySearchText } from "@/features/tournaments/registry-form-model"
@@ -44,9 +44,12 @@ function Hub({ access }: { access: Access }) {
   const [order, setOrder] = useState("status")
   const status = (STATUS_FILTERS.find((value) => value === params.get("status")) ?? "all") as StatusFilter
   const tier = params.get("tier") ?? ""
+  const region = params.get("region") ?? ""
+  const year = params.get("year") ?? ""
   const tournaments = useRecords("tournaments")
-  const series = useRecords("series")
-  const teams = useRecords("teams")
+  const counters = useTournamentStats()
+  // Only the create form needs the team list; it is too long to load for every visit to this page.
+  const teams = useRecords("teams", creating)
   const plans = useQuery({
     queryKey: [...competitionKeys, access.actorKey, "summaries"],
     queryFn: competitionApi.summaries,
@@ -54,28 +57,20 @@ function Hub({ access }: { access: Access }) {
 
   const stats = useMemo(() => {
     const result = new Map<string, TournamentStats>()
-    for (const entry of series.data ?? []) {
-      const current = result.get(entry.content.tournamentId) ?? { teams: 0, matches: 0, played: 0 }
-      current.matches++
-      if (entry.content.result) current.played++
-      result.set(entry.content.tournamentId, current)
-    }
-    for (const [tournamentId, value] of result)
-      value.teams = new Set(
-        (series.data ?? [])
-          .filter((entry) => entry.content.tournamentId === tournamentId)
-          .flatMap((entry) => [entry.content.teamAId, entry.content.teamBId]),
-      ).size
+    for (const row of counters.data ?? [])
+      result.set(row.tournamentId, { teams: row.teams, matches: row.matches, played: row.played })
     for (const plan of plans.data || []) {
       const previous = result.get(plan.id)
       result.set(plan.id, { teams: plan.entrants, matches: plan.matches, played: previous?.played || 0 })
     }
     return result
-  }, [series.data, plans.data])
+  }, [counters.data, plans.data])
 
   const visible = (tournaments.data ?? [])
     .filter((entry) => status === "all" || (entry.content.status ?? "UNKNOWN") === status)
     .filter((entry) => !tier || (entry.content.tier ?? "UNKNOWN") === tier)
+    .filter((entry) => !region || entry.content.region === region)
+    .filter((entry) => !year || String(entry.content.year ?? "") === year)
     .filter((entry) =>
       registrySearchText(
         `${entry.content.name} ${entry.content.code} ${entry.content.region} ${regionName(entry.content.region)}`,
@@ -87,14 +82,27 @@ function Hub({ access }: { access: Access }) {
         : (STATUS_ORDER[a.content.status ?? "UNKNOWN"] ?? 3) - (STATUS_ORDER[b.content.status ?? "UNKNOWN"] ?? 3) ||
           (b.content.startsOn ?? "").localeCompare(a.content.startsOn ?? ""),
     )
-  const pagination = useManagementPagination(visible, JSON.stringify([search, status, tier, order]))
-  const filtered = !!search.trim() || status !== "all" || !!tier
+  const pagination = useManagementPagination(visible, JSON.stringify([search, status, tier, region, year, order]))
+  const filtered = !!search.trim() || status !== "all" || !!tier || !!region || !!year
+  const regions = useMemo(
+    () => [...new Set((tournaments.data ?? []).map((entry) => entry.content.region))].sort(),
+    [tournaments.data],
+  )
+  const years = useMemo(
+    () =>
+      [...new Set((tournaments.data ?? []).map((entry) => entry.content.year).filter((value) => value != null))]
+        .sort((a, b) => Number(b) - Number(a))
+        .map(String),
+    [tournaments.data],
+  )
   const resetFilters = () => {
     setSearch("")
     setParams((current) => {
       const next = new URLSearchParams(current)
       next.delete("status")
       next.delete("tier")
+      next.delete("region")
+      next.delete("year")
       return next
     })
   }
@@ -106,7 +114,7 @@ function Hub({ access }: { access: Access }) {
       return next
     })
   const open = (entry: DocumentView<TournamentContent>) => navigate(tournamentPath(entry.id))
-  const error = tournaments.error ?? series.error
+  const error = tournaments.error ?? counters.error
 
   return (
     <EsportsPage>
@@ -146,7 +154,7 @@ function Hub({ access }: { access: Access }) {
       </FilterTabs>
 
       {error ? (
-        <LoadError error={error} onRetry={() => void Promise.all([tournaments.refetch(), series.refetch()])} />
+        <LoadError error={error} onRetry={() => void Promise.all([tournaments.refetch(), counters.refetch()])} />
       ) : tournaments.isPending ? (
         <ManagementLoading />
       ) : (
@@ -168,6 +176,32 @@ function Hub({ access }: { access: Access }) {
               {Object.entries(TIER_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Khu vực giải đấu"
+              value={region}
+              onChange={(event) => setFilter("region", event.target.value)}
+              className={managementSelectClassName}
+            >
+              <option value="">Mọi khu vực</option>
+              {regions.map((value) => (
+                <option key={value} value={value}>
+                  {regionName(value)}
+                </option>
+              ))}
+            </select>
+            <select
+              aria-label="Năm giải đấu"
+              value={year}
+              onChange={(event) => setFilter("year", event.target.value)}
+              className={managementSelectClassName}
+            >
+              <option value="">Mọi năm</option>
+              {years.map((value) => (
+                <option key={value} value={value}>
+                  {value}
                 </option>
               ))}
             </select>
