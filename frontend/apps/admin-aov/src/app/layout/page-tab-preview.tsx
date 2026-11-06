@@ -73,6 +73,11 @@ async function capturePagePreview(panel: HTMLElement, signal: AbortSignal) {
   return canvas.toDataURL("image/jpeg", 0.75)
 }
 
+/** Copying the page holds up the browser for a moment, so a capture waits for the reader to stop clicking and scrolling. */
+export const PREVIEW_QUIET_MS = 4000
+const PREVIEW_MIN_GAP_MS = 20000
+const READER_ACTIVITY = ["pointerdown", "pointermove", "keydown", "wheel"] as const
+
 export function observePageTabPreview(
   element: HTMLElement,
   publish: (image: string) => void,
@@ -105,9 +110,8 @@ export function observePageTabPreview(
       if (dirty) schedule()
     }
   }
-  const schedule = () => {
-    dirty = true
-    if (controller.signal.aborted || capturing) return
+  const wait = () => {
+    if (controller.signal.aborted || capturing || !dirty) return
     clearTimeout(timer)
     if (idle !== undefined) window.cancelIdleCallback(idle)
     timer = setTimeout(
@@ -115,13 +119,18 @@ export function observePageTabPreview(
         if ("requestIdleCallback" in window) idle = window.requestIdleCallback(() => void capture(), { timeout: 2000 })
         else void capture()
       },
-      Math.max(1200, lastCapture + 8000 - Date.now()),
+      Math.max(PREVIEW_QUIET_MS, lastCapture + PREVIEW_MIN_GAP_MS - Date.now()),
     )
+  }
+  const schedule = () => {
+    dirty = true
+    wait()
   }
   const observer = new MutationObserver(schedule)
   observer.observe(element, { childList: true, subtree: true, characterData: true })
   element.addEventListener("load", schedule, true)
   document.addEventListener("visibilitychange", schedule)
+  for (const activity of READER_ACTIVITY) document.addEventListener(activity, wait, { capture: true, passive: true })
   schedule()
   return () => {
     controller.abort()
@@ -129,6 +138,7 @@ export function observePageTabPreview(
     observer.disconnect()
     element.removeEventListener("load", schedule, true)
     document.removeEventListener("visibilitychange", schedule)
+    for (const activity of READER_ACTIVITY) document.removeEventListener(activity, wait, { capture: true })
     clearTimeout(timer)
     if (idle !== undefined) window.cancelIdleCallback(idle)
   }

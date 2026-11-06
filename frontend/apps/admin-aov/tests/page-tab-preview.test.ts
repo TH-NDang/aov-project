@@ -95,7 +95,7 @@ test("capture skips cross-origin images, which cannot be read without CORS", () 
 
 test("closing or switching a tab cancels pending capture and rejects late images", async (t) => {
   const { panel, cleanup } = setupDom()
-  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 10000 })
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 100000 })
   const published: string[] = []
   let finish: (image: string) => void = () => {}
   let signal: AbortSignal | undefined
@@ -110,7 +110,7 @@ test("closing or switching a tab cancels pending capture and rejects late images
     },
   )
   try {
-    t.mock.timers.tick(1200)
+    t.mock.timers.tick(4000)
     assert.ok(signal)
     stop()
     assert.equal(signal.aborted, true)
@@ -125,9 +125,36 @@ test("closing or switching a tab cancels pending capture and rejects late images
   }
 })
 
+test("a capture waits until the reader has stopped clicking", async (t) => {
+  const { dom, panel, cleanup } = setupDom()
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 100000 })
+  let renders = 0
+  const stop = observePageTabPreview(
+    panel,
+    () => {},
+    async () => {
+      renders++
+      return "image"
+    },
+  )
+  try {
+    t.mock.timers.tick(3000)
+    dom.window.document.dispatchEvent(new dom.window.Event("pointerdown"))
+    t.mock.timers.tick(3000)
+    assert.equal(renders, 0)
+    t.mock.timers.tick(1000)
+    await Promise.resolve()
+    assert.equal(renders, 1)
+  } finally {
+    stop()
+    t.mock.timers.reset()
+    cleanup()
+  }
+})
+
 test("capture coalesces updates, throttles refreshes and recovers from a render failure", async (t) => {
   const { dom, panel, cleanup } = setupDom()
-  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 10000 })
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"], now: 100000 })
   let renders = 0
   const published: string[] = []
   const stop = observePageTabPreview(
@@ -140,12 +167,12 @@ test("capture coalesces updates, throttles refreshes and recovers from a render 
     },
   )
   try {
-    t.mock.timers.tick(1200)
+    t.mock.timers.tick(4000)
     await Promise.resolve()
     assert.equal(renders, 1)
     panel.dispatchEvent(new dom.window.Event("load"))
     panel.dispatchEvent(new dom.window.Event("load"))
-    t.mock.timers.tick(7999)
+    t.mock.timers.tick(19999)
     assert.equal(renders, 1)
     t.mock.timers.tick(1)
     await Promise.resolve()
