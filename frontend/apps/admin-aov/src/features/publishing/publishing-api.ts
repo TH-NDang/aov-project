@@ -85,6 +85,31 @@ function previewFromApi(value: WirePreview): Preview {
   }
 }
 
+export type HeroAvailability = "ON_SALE" | "NOT_OPEN" | "COMING_SOON" | "UNKNOWN"
+export type SkinMethod = "VOUCHER" | "EVENT" | "NOT_OPEN" | "OTHER" | "UNKNOWN"
+export interface HeroShopPrice {
+  availability: HeroAvailability
+  goldPrice: number | null
+  voucherPrice: number | null
+  capturedOn: string | null
+  needsReview: boolean
+  note: string | null
+}
+export interface SkinAcquisition {
+  skinKey: string
+  method: SkinMethod
+  voucherPrice: number | null
+  eventName: string | null
+  capturedOn: string | null
+  needsReview: boolean
+  note: string | null
+}
+export interface HeroShop {
+  region: string
+  price: HeroShopPrice | null
+  skins: SkinAcquisition[]
+}
+
 export function createPublishingApi(request: Request) {
   const send = <T>(path: string, method: string, value?: unknown) =>
     request<T>(path, { method, body: value === undefined ? undefined : JSON.stringify(value) })
@@ -94,6 +119,15 @@ export function createPublishingApi(request: Request) {
       for (const [key, value] of Object.entries(query)) if (value?.trim()) params.set(key, value.trim())
       return request<PageSlice<HeroRow>>(`/admin/heroes?${params}`, signal ? { signal } : undefined)
     },
+    shop: (heroId: string, region: string) => request<HeroShop>(`/admin/heroes/${heroId}/shop?region=${region}`),
+    saveShopPrice: (heroId: string, region: string, value: HeroShopPrice) =>
+      send<HeroShopPrice>(`/admin/heroes/${heroId}/shop?region=${region}`, "PUT", value),
+    saveSkinAcquisition: (heroId: string, skinKey: string, region: string, value: Omit<SkinAcquisition, "skinKey">) =>
+      send<SkinAcquisition>(
+        `/admin/heroes/${heroId}/shop/skins/${encodeURIComponent(skinKey)}?region=${region}`,
+        "PUT",
+        value,
+      ),
     revisions: (heroId: string) => request<Revision[]>(`/admin/heroes/${heroId}/revisions`),
     read: async (heroId: string, revisionId: string) =>
       previewFromApi(await request<WirePreview>(`/admin/heroes/${heroId}/revisions/${revisionId}`)),

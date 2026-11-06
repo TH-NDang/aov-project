@@ -18,6 +18,7 @@ import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
 import { ImageCreditSummary } from "./image-credit-summary"
+import { SkinAcquisitionRow, SkinAcquisitionSummary, useHeroShop } from "./hero-shop"
 import { SkinCard, skinImageIds } from "./skin-card"
 import { visibleSkins } from "./hero-skins"
 export { HeroAsset } from "./hero-asset"
@@ -103,6 +104,8 @@ function HeroContentBody({
   onEdit,
   onNeedsDraft,
   onTranslate,
+  canWrite = false,
+  issues,
   tab: selectedTab,
   onTabChange,
   heroId,
@@ -128,6 +131,9 @@ function HeroContentBody({
   busy: boolean
   onEdit: (section: Section, profilePart?: "information" | "lore") => void
   onNeedsDraft?: () => void
+  /** Prices and skin acquisition follow the shop, so they only ask for the right to write. */
+  canWrite?: boolean
+  issues?: string[]
   onTranslate?: (target: TranslationTarget) => void
   tab?: HeroContentTab
   onTabChange?: (tab: HeroContentTab) => void
@@ -144,6 +150,7 @@ function HeroContentBody({
   const [localSkill, setLocalSkill] = useState<string>()
   const [localReview, setLocalReview] = useState<HeroReviewItem | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+  const shop = useHeroShop(heroId)
   const tab = selectedTab ?? localTab
   const activeSkill = selectedSkillKey ?? localSkill
   const target = reviewTarget ?? localReview
@@ -239,6 +246,8 @@ function HeroContentBody({
             onEdit={onEdit}
             onNeedsDraft={onNeedsDraft}
             onTranslate={onTranslate}
+            canWrite={canWrite}
+            issues={issues}
           />
         )}
         {tab === "videos" && heroId && <SubjectVideosPanel kind="HERO" id={heroId} name={profile?.name || "Tướng"} />}
@@ -281,6 +290,7 @@ function HeroContentBody({
                   label="ảnh trang phục"
                   assetIds={skins.flatMap((skin) => Object.values(skinImageIds(skin)))}
                 />
+                <SkinAcquisitionSummary rows={shop.data?.skins ?? []} total={skins.length} />
                 <div className="grid grid-cols-1 gap-4 @min-[520px]:grid-cols-2 @min-[1000px]:grid-cols-3">
                   {[...skins]
                     .sort((a, b) => a.displayOrder - b.displayOrder)
@@ -306,6 +316,14 @@ function HeroContentBody({
                         >
                           {text?.description && <Text>{text.description}</Text>}
                           {text?.acquisitionNote && <Text>{text.acquisitionNote}</Text>}
+                          {heroId && (
+                            <SkinAcquisitionRow
+                              heroId={heroId}
+                              skinKey={skin.skinKey}
+                              value={shop.data?.skins.find((row) => row.skinKey === skin.skinKey)}
+                              canWrite={canWrite}
+                            />
+                          )}
                         </SkinCard>
                       )
                     })}

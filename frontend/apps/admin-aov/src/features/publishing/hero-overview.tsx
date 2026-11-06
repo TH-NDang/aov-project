@@ -1,10 +1,11 @@
 import { useId, useState, type ReactNode } from "react"
-import { BookOpen, ChartNoAxesCombined, ChevronDown, Pencil, Shield } from "lucide-react"
+import { BookOpen, ChartNoAxesCombined, ChevronDown, ListChecks, Pencil, Shield } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { AdminEntityText } from "../terminology/catalog"
 import { HeroAsset } from "./hero-asset"
 import { HeroPositionBadges, HeroRoleBadge } from "./hero-classification-badges"
+import { HeroShopPanel } from "./hero-shop"
 import { HeroContentSources } from "./hero-content-sources"
 import { heroRatingScale } from "./hero-rating-scale"
 import type { ProfileEditorPart } from "./hero-profile-editor"
@@ -62,6 +63,8 @@ export function HeroOverview({
   onEdit,
   onNeedsDraft,
   onTranslate,
+  canWrite = false,
+  issues = [],
 }: {
   content: Content
   heroId?: string
@@ -76,6 +79,10 @@ export function HeroOverview({
   onEdit: (section: Section, profilePart?: ProfileEditorPart) => void
   /** A revision that cannot change still offers its pencil to someone who can start a draft from it. */
   onNeedsDraft?: () => void
+  /** Prices follow the shop and change without a draft, so they only ask for the right to write. */
+  canWrite?: boolean
+  /** What still stands in the way of publishing this draft. */
+  issues?: string[]
   onTranslate?: (target: TranslationTarget) => void
 }) {
   const ratings = content.OVERVIEW_RATINGS
@@ -115,7 +122,7 @@ export function HeroOverview({
               <HeroAsset
                 id={content.MEDIA_BINDINGS?.bindings.HEAD}
                 alt={profile?.name ?? "Tướng"}
-                className="size-14 shrink-0 rounded-lg"
+                className="size-20 shrink-0 rounded-xl"
                 frameAspectRatio={1}
               />
               <div className="min-w-0 flex-1">
@@ -172,6 +179,20 @@ export function HeroOverview({
           </section>
         </div>
         <div className="contents @min-[820px]/overview:block @min-[820px]/overview:space-y-3">
+          {issues.length > 0 && (
+            <section className={cn(panel, "order-1")} aria-label="Còn thiếu trước khi xuất bản">
+              <h3 className="type-section-title mb-2 flex items-center gap-2">
+                <ListChecks className="size-4 text-muted-foreground" />
+                Còn thiếu trước khi xuất bản
+              </h3>
+              <ul className="type-body list-disc space-y-1 pl-5 text-muted-foreground">
+                {issues.map((issue) => (
+                  <li key={issue}>{issue}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {heroId && <HeroShopPanel heroId={heroId} canWrite={canWrite} className={cn(panel, "order-2")} />}
           <section id="hero-OVERVIEW_RATINGS" className={cn(panel, "order-2")} aria-label="Đánh giá tướng">
             {header(
               "Đánh giá",
