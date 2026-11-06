@@ -77,6 +77,21 @@ Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng kh
 - `/terms` liệt kê thuật ngữ công khai từ `GET /reference-catalog`, sắp theo tên, tìm không dấu theo tên, tên khác và nội dung (`q`). Mô tả có thể liên kết sang thuật ngữ khác.
 - Mọi nhắc tới thuật ngữ trong wiki có đích `/terms/{id}`, trang cuộn tới và đánh dấu mục đó. Liên kết cũ dạng `/?term={id}` tự chuyển sang đây; mã không tồn tại báo rõ và vẫn hiện danh sách.
 
+## Video
+
+Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có video, nên mục chưa có video không đổi giao diện.
+
+- Chi tiết Tướng: khối `Video` trước lịch sử thay đổi, gồm cả video cốt truyện, có bộ lọc theo loại khi có từ hai loại trở
+  lên. Thứ tự theo loại rồi theo thứ tự đặt trong admin. Dưới Cốt truyện ở cột tổng quan có nút mở thẳng bộ lọc cốt truyện,
+  vì cột này quá hẹp để xem video. `Video kỹ năng` nằm cuối bảng kỹ năng đang chọn.
+- Trang phục: danh sách video nằm trong cột thông tin của trình xem. Bấm phát thì video thay ảnh ở khu vực ảnh; chuyển
+  sang trang phục khác thì quay về ảnh.
+- Kho trang bị: khối `Video` ở chi tiết mục, trước phần thay đổi.
+- Thẻ video chỉ tải ảnh xem trước; player được tạo khi bấm phát và mở rộng hết hàng ngay tại chỗ. Phát được YouTube,
+  Facebook, TikTok, Twitch và tệp video (xem `@aov/ui/lib/video-playback`). Video dọc như TikTok, reel hiển thị theo
+  khung dọc. Liên kết không nhúng được mở ở tab mới. Nhiều hơn số dòng mặc định thì có nút `Xem thêm` mở ngay bên dưới.
+- Video gắn bản áp dụng hiện chip `Từ bản X` và bị ẩn khi đang xem phiên bản cũ hơn.
+
 ## Thị trường, ngôn ngữ và mốc dữ liệu
 
 - `WikiContextProvider` dùng chung cho trang chủ, Tướng, Trang phục và Kho trang bị. Thị trường dữ liệu (`region`) độc lập ngôn ngữ giao diện (`locale`); lựa chọn lưu trong URL và ghi nhớ trên thiết bị. Header desktop có hai bộ chọn riêng; trên mobile nằm trong menu Thêm. Các thị trường chưa hỗ trợ vẫn hiện nhưng khóa theo trạng thái backend, không tự đổi sang VN hoặc coi Global là dữ liệu tổng hợp.
