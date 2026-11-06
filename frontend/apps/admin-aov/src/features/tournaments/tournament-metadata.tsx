@@ -1,4 +1,5 @@
 import type { TournamentContent } from "@aov/community-contracts"
+import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 
 export const TOURNAMENT_TIERS = {
   UNKNOWN: "Chưa xác định",
@@ -46,12 +47,8 @@ export const RESULT_VERIFICATIONS = {
 }
 
 export function tournamentDates(data: TournamentContent) {
-  const format = (value: string) => {
-    const date = new Date(`${value}T00:00:00`)
-    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString("vi-VN")
-  }
-  if (data.startsOn && data.endsOn) return `${format(data.startsOn)} — ${format(data.endsOn)}`
-  if (data.startsOn) return `Từ ${format(data.startsOn)}`
-  if (data.endsOn) return `Đến ${format(data.endsOn)}`
+  if (data.startsOn && data.endsOn) return `${formatCalendarDate(data.startsOn)} — ${formatCalendarDate(data.endsOn)}`
+  if (data.startsOn) return `Từ ${formatCalendarDate(data.startsOn)}`
+  if (data.endsOn) return `Đến ${formatCalendarDate(data.endsOn)}`
   return ""
 }

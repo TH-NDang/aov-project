@@ -1,4 +1,5 @@
 import type { CompetitionView, PlannedMatch, PublishedGame, ResolvedMatch } from "@aov/community-contracts"
+import { formatWithDateChoice } from "@aov/ui/lib/time-zone"
 
 export type CompetitionMatch = {
   competition: CompetitionView
@@ -48,13 +49,15 @@ export function knownMatchDay(days: { key: string }[], day: string | null) {
 
 export function groupMatchesByDay(entries: CompetitionMatch[], timeZone: string) {
   const keyFormat = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" })
-  const labelFormat = new Intl.DateTimeFormat("vi-VN", {
+  const labelOptions: Intl.DateTimeFormatOptions = {
     timeZone,
     weekday: "long",
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
-  })
+  }
+  const labelFormat = new Intl.DateTimeFormat("vi-VN", labelOptions)
+  const dayLabel = (at: number) => formatWithDateChoice(labelFormat, new Date(at), labelOptions)
   const groups = new Map<string, { key: string; label: string; items: CompetitionMatch[] }>()
   const timestamp = (entry: CompetitionMatch) => {
     const at = Date.parse(entry.match.scheduledAt || "")
@@ -64,7 +67,7 @@ export function groupMatchesByDay(entries: CompetitionMatch[], timeZone: string)
     const at = timestamp(entry)
     const key = Number.isFinite(at) ? keyFormat.format(at) : "unscheduled"
     if (!groups.has(key))
-      groups.set(key, { key, label: key === "unscheduled" ? "Chờ xếp lịch" : labelFormat.format(at), items: [] })
+      groups.set(key, { key, label: key === "unscheduled" ? "Chờ xếp lịch" : dayLabel(at), items: [] })
     groups.get(key)!.items.push(entry)
   }
   return [...groups.values()]

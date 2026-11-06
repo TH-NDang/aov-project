@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { createPublicAuth } from "@aov/ui/lib/public-auth"
 import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
+import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
 
 const auth = createPublicAuth({
   issuer: import.meta.env.VITE_AUTH_ISSUER || "http://localhost:8081/realms/wikiaov",
@@ -20,6 +21,7 @@ type WikiProfile = {
   biography: string
   locale: string
   timeZone: string
+  dateFormat?: string
   avatarAssetId: string | null
   version: number
 }
@@ -55,6 +57,22 @@ export function useWikiAccountTimeZone() {
     const saved = await requestProfile({
       method: "PUT",
       body: JSON.stringify({ displayName, biography, locale, timeZone, avatarAssetId, expectedVersion: version }),
+    })
+    client.setQueryData(key, saved)
+  })
+  useAccountDateFormat(profile.data, async (dateFormat) => {
+    const { displayName, biography, locale, timeZone, avatarAssetId, version } = await requestProfile()
+    const saved = await requestProfile({
+      method: "PUT",
+      body: JSON.stringify({
+        displayName,
+        biography,
+        locale,
+        timeZone,
+        dateFormat,
+        avatarAssetId,
+        expectedVersion: version,
+      }),
     })
     client.setQueryData(key, saved)
   })

@@ -11,7 +11,7 @@ import type { StreamIconName } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { LocalTime } from "@aov/ui/components/local-time"
-import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
+import { currentTimeZone, formatCalendarDate, formatInZone } from "@aov/ui/lib/time-zone"
 
 export const kindIcons: Record<ProfileKind, StreamIconName> = {
   CIRCUIT: "trophy",
@@ -28,18 +28,10 @@ export function hueOf(text: string) {
   return Math.abs(hash) % 360
 }
 
-const dayFormat = new Intl.DateTimeFormat("vi-VN", {
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  timeZone: "UTC",
-})
-
 /** Formats an ISO calendar date (yyyy-mm-dd) without shifting it through the viewer's time zone. */
 export function formatDay(value?: string | null) {
   if (!value) return ""
-  const date = new Date(`${value.slice(0, 10)}T00:00:00Z`)
-  return Number.isNaN(date.getTime()) ? value : dayFormat.format(date)
+  return formatCalendarDate(value.slice(0, 10))
 }
 
 export function dayRange(startsOn?: string | null, endsOn?: string | null, fallback = "Chưa xác định lịch") {

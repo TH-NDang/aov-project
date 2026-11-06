@@ -12,9 +12,9 @@ import { tournamentDates } from "../src/features/tournaments/tournament-metadata
 test("partial tournament dates label their known boundary without implying a complete range", () => {
   const base = { code: "event", name: "Event", region: "TH" }
   assert.equal(tournamentDates(base), "")
-  assert.equal(tournamentDates({ ...base, startsOn: "2026-08-09" }), "Từ 9/8/2026")
-  assert.equal(tournamentDates({ ...base, endsOn: "2026-08-09" }), "Đến 9/8/2026")
-  assert.equal(tournamentDates({ ...base, startsOn: "2026-08-09", endsOn: "2026-10-18" }), "9/8/2026 — 18/10/2026")
+  assert.equal(tournamentDates({ ...base, startsOn: "2026-08-09" }), "Từ 09/08/2026")
+  assert.equal(tournamentDates({ ...base, endsOn: "2026-08-09" }), "Đến 09/08/2026")
+  assert.equal(tournamentDates({ ...base, startsOn: "2026-08-09", endsOn: "2026-10-18" }), "09/08/2026 — 18/10/2026")
 })
 
 test("series results round-trip final scores without fabricating games or allowing unfinished scores", () => {

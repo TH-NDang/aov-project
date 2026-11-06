@@ -118,7 +118,7 @@ export function formatInZone(
   locale = "vi-VN",
 ) {
   const date = toInstant(value)
-  return date ? formatter(locale, { ...options, timeZone }).format(date) : ""
+  return date ? formatWithDateChoice(formatter(locale, { ...options, timeZone }), date, options) : ""
 }
 
 const TIME_PARTS = new Set<keyof Intl.DateTimeFormatOptions>([
@@ -147,7 +147,7 @@ export function formatCalendarDate(
   const usable = Object.keys(dateParts).length
     ? dateParts
     : { day: "2-digit" as const, month: "2-digit" as const, year: "numeric" as const }
-  return formatter(locale, { ...usable, timeZone: "UTC" }).format(date)
+  return formatWithDateChoice(formatter(locale, { ...usable, timeZone: "UTC" }), date, usable)
 }
 
 /** The calendar day of a moment in a zone, as yyyy-mm-dd. Use it to group or compare by day. */
@@ -337,4 +337,127 @@ export function useAccountTimeZone(
       publishSaveFailed(false)
     }
   }, [writable])
+}
+
+/** How a user likes dates written. AUTO follows the language they read in. */
+export const DATE_FORMATS = ["AUTO", "DMY", "MDY", "YMD"] as const
+export type DateFormat = (typeof DATE_FORMATS)[number]
+
+const DATE_FORMAT_KEY = "aov-date-format"
+
+export const isDateFormat = (value: unknown): value is DateFormat =>
+  typeof value === "string" && (DATE_FORMATS as readonly string[]).includes(value)
+
+let formatChoice: DateFormat | undefined
+let formatSaver: ((format: DateFormat) => Promise<unknown>) | null = null
+const formatListeners = new Set<() => void>()
+
+function readStoredFormat(): DateFormat {
+  try {
+    const stored = localStorage.getItem(DATE_FORMAT_KEY)
+    return isDateFormat(stored) ? stored : "AUTO"
+  } catch {
+    // Storage can be refused; the format then lasts until the page closes.
+    return "AUTO"
+  }
+}
+
+function storeFormat(next: DateFormat) {
+  if (formatChoice === next) return
+  formatChoice = next
+  try {
+    localStorage.setItem(DATE_FORMAT_KEY, next)
+  } catch {
+    // Same as above.
+  }
+  formatListeners.forEach((listener) => listener())
+}
+
+const subscribeToFormat = (listener: () => void) => {
+  formatListeners.add(listener)
+  return () => {
+    formatListeners.delete(listener)
+  }
+}
+
+export function dateFormatChoice(): DateFormat {
+  if (formatChoice === undefined) formatChoice = readStoredFormat()
+  return formatChoice
+}
+
+export const useDateFormat = () => useSyncExternalStore(subscribeToFormat, dateFormatChoice, dateFormatChoice)
+
+/** Applies a formatChoice at once, keeps it across visits and saves it to a signed-in profile. */
+export async function chooseDateFormat(next: DateFormat) {
+  storeFormat(next)
+  await formatSaver?.(next)
+}
+
+/**
+ * Connects the signed-in profile, shared across the apps: a savedFormat format replaces this browser's when it loads, and a new
+ * formatChoice is written back through `save`. A profile that was never savedFormat holds only a default, so it does not override.
+ */
+export function useAccountDateFormat(
+  profile: { id: string | null; dateFormat?: string | null } | null | undefined,
+  save?: (format: DateFormat) => Promise<unknown>,
+) {
+  const savedFormat = profile?.id ? profile.dateFormat : null
+  const latestFormatSave = useRef(save)
+  latestFormatSave.current = save
+  useEffect(() => {
+    if (isDateFormat(savedFormat)) storeFormat(savedFormat)
+  }, [savedFormat])
+  const formatWritable = !!profile?.id && !!save
+  useEffect(() => {
+    if (!formatWritable) return
+    const formatSaveCall = (format: DateFormat) => latestFormatSave.current?.(format) ?? Promise.resolve()
+    formatSaver = formatSaveCall
+    return () => {
+      if (formatSaver === formatSaveCall) formatSaver = null
+    }
+  }, [formatWritable])
+}
+
+const NUMERIC = new Set(["2-digit", "numeric"])
+const TIME_TYPES = new Set(["hour", "minute", "second", "dayPeriod", "fractionalSecond"])
+
+/**
+ * Writes a formatted date in the chosen order. Only an all-number date can be reordered: a month written as a word already
+ * reads the same everywhere, so it stays as the language has it.
+ */
+export function formatWithDateChoice(
+  formatter: Intl.DateTimeFormat,
+  date: Date,
+  options: Intl.DateTimeFormatOptions,
+  format: DateFormat = dateFormatChoice(),
+) {
+  if (format === "AUTO" || !options.day || !NUMERIC.has(String(options.month))) return formatter.format(date)
+
+  const parts = formatter.formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((entry) => entry.type === type)?.value
+  const day = part("day")
+  const month = part("month")
+  const year = part("year")
+  if (!day || !month) return formatter.format(date)
+
+  const pieces = format === "YMD" ? [year, month, day] : format === "MDY" ? [month, day, year] : [day, month, year]
+  const numbers = pieces.filter(Boolean).join(format === "YMD" ? "-" : "/")
+  const weekday = part("weekday")
+  const written = weekday ? `${weekday}, ${numbers}` : numbers
+
+  const timeAt = parts.flatMap((entry, index) => (TIME_TYPES.has(entry.type) ? [index] : []))
+  if (!timeAt.length) return written
+  const time = parts
+    .slice(timeAt[0], timeAt[timeAt.length - 1] + 1)
+    .map((entry) => entry.value)
+    .join("")
+  const dateAt = parts.findIndex((entry) => entry.type === "day" || entry.type === "month" || entry.type === "year")
+  return timeAt[0] < dateAt ? `${time} ${written}` : `${written} ${time}`
+}
+
+/** An example of each format, so a person can choose by looking rather than by reading a pattern. */
+export function dateFormatLabel(format: DateFormat, locale = "vi-VN") {
+  const english = locale.startsWith("en")
+  if (format === "AUTO") return english ? "Follow my language" : "Theo ngôn ngữ"
+  return format === "YMD" ? "2026-12-31" : format === "MDY" ? "12/31/2026" : "31/12/2026"
 }

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react"
 import { Popover as PopoverPrimitive } from "radix-ui"
+import { useDateFormat } from "../lib/time-zone"
 import {
   DATE_TIME_FORMAT,
   canonicalTimeZone,
@@ -76,6 +77,8 @@ function ConvertedTime({
   className,
 }: Omit<LocalTimeProps, "value" | "fallback"> & { value: string; date: Date; locale: string }) {
   const timeZone = useUserTimeZone()
+  // Written dates follow this choice, so a change has to show at once.
+  useDateFormat()
   const [open, setOpen] = useState(false)
   const pinned = useRef(false)
   const pressing = useRef(false)
