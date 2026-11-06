@@ -1,16 +1,27 @@
+import { useState } from "react"
 import { Link } from "react-router"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { changeSetKind, parseChangeSummary } from "../../lib/wiki-change-format"
-import { ChangeKind, ChangeList } from "../updates/change-list"
+import { ChangeDisclosure, ChangeKind, ChangeList } from "../updates/change-list"
 import "../updates/updates.css"
+import type { HeroChangeItem } from "../../lib/wiki-change-format"
 import type { HeroDetail } from "./hero-api"
 import type { HeroVersion } from "./hero-version-changes"
+
+function HistoryChanges({ changes, hero }: { changes: HeroChangeItem[]; hero: HeroDetail }) {
+  const [open, setOpen] = useState(false)
+  if (!changes.length) return null
+  return (
+    <ChangeDisclosure count={changes.length} open={open} onToggle={() => setOpen(!open)}>
+      <ChangeList changes={changes} hero={hero} />
+    </ChangeDisclosure>
+  )
+}
 
 /** Other patches that changed this hero, newest first; the selected patch is already shown above the abilities. */
 export function HeroHistory({ hero, version }: { hero: HeroDetail; version: HeroVersion }) {
   const scope = useWikiContext()
   const { locale, href } = scope
-  const skills = new Map(hero.content.skills?.skills?.map((skill) => [skill.skillKey, skill.name]))
   const rows = version.rows.filter((row) => row.patchVariantId !== version.selected?.id)
 
   if (!rows.length) return null
@@ -42,7 +53,7 @@ export function HeroHistory({ hero, version }: { hero: HeroDetail; version: Hero
                 <ChangeKind kind={changeSetKind(row)} />
               </header>
               {summary.text && <p lang={row.actualLocale ?? undefined}>{summary.text}</p>}
-              <ChangeList changes={row.changes ?? []} skillName={(key) => skills.get(key)} />
+              <HistoryChanges changes={row.changes ?? []} hero={hero} />
               {row.patch && (
                 <Link className="wiki-hero-history-more" to={href(`/updates/${row.patch.code}`)}>
                   {wikiText(locale, "Xem toàn bộ bản cập nhật", "See the whole update")}

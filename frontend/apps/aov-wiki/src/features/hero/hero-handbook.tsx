@@ -1,18 +1,17 @@
-import { useMemo, useState } from "react"
-import { Link, useSearchParams } from "react-router"
+import { Fragment, useEffect, useMemo, useRef, type ReactNode } from "react"
+import { Link, useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { createEntityIndex } from "@aov/ui/lib/entity-rich-text"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
-import { WikiImage } from "../../components/wiki-image"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
 import type { DiffSegment } from "./hero-version-diff"
 import { HeroRatings } from "./hero-ratings"
-import { skillIllustration } from "./skill-illustration"
+import { SkillIcon } from "./hero-skill-icon"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import type { HeroDetail, PublicSkill } from "./hero-api"
 import "./hero-handbook.css"
@@ -34,38 +33,23 @@ const baseStats = [
   ["MOVEMENT_SPEED", "Tốc chạy", "Movement speed", gameplayIcons.boot],
 ] as const
 
-function SkillIcon({ hero, skill, locale }: { hero: HeroDetail; skill: PublicSkill; locale: string }) {
-  const [failed, setFailed] = useState<string[]>([])
-  const bound = hero.skillMedia?.[skill.skillKey]?.currentVersion?.url
-  const reference = skillIllustration(hero.code, skill)
-  const url = [bound, reference].find((value): value is string => !!value && !failed.includes(value))
-  if (!url) return <WikiIcon name={skill.kind === "PASSIVE" ? "spark" : "items"} size={20} />
-  return (
-    <WikiImage
-      src={url}
-      alt=""
-      width={36}
-      height={36}
-      title={
-        url === bound
-          ? undefined
-          : wikiText(locale, "Ảnh tham khảo · Garena / Liên Quân Mobile", "Reference artwork · Garena / Arena of Valor")
-      }
-      onError={() => setFailed((previous) => [...previous, url])}
-    />
-  )
+function scrollToAbilities() {
+  const title = document.getElementById("wiki-kit-title")
+  // Instant on purpose: an animated scroll stops partway when the content changes at the same moment.
+  title?.scrollIntoView({ block: "start" })
+  title?.focus({ preventScroll: true })
 }
 
-function DiffText({ segments }: { segments: DiffSegment[] }) {
+function DiffText({ segments, render }: { segments: DiffSegment[]; render: (text: string) => ReactNode }) {
   return (
     <>
       {segments.map((segment, index) =>
         segment.kind === "del" ? (
           <del key={index}>{segment.text}</del>
         ) : segment.kind === "ins" ? (
-          <ins key={index}>{segment.text}</ins>
+          <ins key={index}>{render(segment.text)}</ins>
         ) : (
-          segment.text
+          <Fragment key={index}>{render(segment.text)}</Fragment>
         ),
       )}
     </>
@@ -81,10 +65,9 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
   const active = skills.find((skill) => skill.skillKey === params.get("skill")) ?? skills[0]
   const source = active?.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
   const version = useHeroVersion(hero)
-  const difference =
-    version.showDiff && active && !version.differences.skills.get(active.skillKey)?.isNew
-      ? version.differences.skills.get(active.skillKey)
-      : undefined
+  const activeChange = active ? version.differences.skills.get(active.skillKey) : undefined
+  const changedHere = activeChange?.isNew ? undefined : activeChange
+  const difference = version.showDiff ? changedHere : undefined
   const selectSkill = (skillKey: string) =>
     setParams(
       (prev) => {
@@ -94,6 +77,25 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
       },
       { replace: true, preventScrollReset: true },
     )
+  // Waits for the chosen skill to render, so the position is measured against the final layout.
+  const jumpPending = useRef(false)
+  const activeKey = active?.skillKey
+  const openSkill = (skillKey: string) => {
+    if (skillKey === activeKey) return scrollToAbilities()
+    jumpPending.current = true
+    selectSkill(skillKey)
+  }
+  useEffect(() => {
+    if (!jumpPending.current) return
+    jumpPending.current = false
+    scrollToAbilities()
+  }, [activeKey])
+  const { hash } = useLocation()
+  // The changes above the abilities load separately, so a link to the abilities waits for the layout to settle.
+  useEffect(() => {
+    if (hash === "#wiki-kit-title" && !version.pending)
+      document.getElementById("wiki-kit-title")?.scrollIntoView({ block: "start" })
+  }, [hash, version.pending])
   const references = useQuery(wikiReferencesQuery(scope))
   const settings = references.data
   const index = useMemo(
@@ -150,8 +152,10 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
   return (
     <div className="wiki-handbook">
       <section className="wiki-handbook-kit" aria-labelledby="wiki-kit-title">
-        <HeroVersionChanges hero={hero} version={version} onSelectSkill={selectSkill} />
-        <h2 id="wiki-kit-title">{text("Bộ kỹ năng", "Abilities")}</h2>
+        <HeroVersionChanges hero={hero} version={version} onOpenSkill={openSkill} />
+        <h2 id="wiki-kit-title" tabIndex={-1}>
+          {text("Bộ kỹ năng", "Abilities")}
+        </h2>
         {active ? (
           <>
             <div className="wiki-skill-options" role="group" aria-labelledby="wiki-kit-title">
@@ -208,15 +212,27 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
                   </span>
                 )}
               </div>
-              {difference && version.previous && (
+              {changedHere && version.previous && (
                 <p className="wiki-diff-legend">
-                  {text("Đang đánh dấu khác biệt so với bản", "Marking differences from")} {version.previous.code}:{" "}
-                  <del>{text("nội dung cũ", "old text")}</del> <ins>{text("nội dung mới", "new text")}</ins>
+                  {version.showDiff ? (
+                    <>
+                      {text("Đang đánh dấu khác biệt so với bản", "Marking differences from")} {version.previous.code}:{" "}
+                      <del>{text("nội dung cũ", "old text")}</del> <ins>{text("nội dung mới", "new text")}</ins>
+                    </>
+                  ) : (
+                    text(
+                      `Kỹ năng này khác với bản ${version.previous.code}.`,
+                      `This ability differs from ${version.previous.code}.`,
+                    )
+                  )}
+                  <button type="button" onClick={() => version.setShowDiff(!version.showDiff)}>
+                    {version.showDiff ? text("Tắt đánh dấu", "Hide marks") : text("Bật đánh dấu", "Show marks")}
+                  </button>
                 </p>
               )}
               {difference?.description ? (
                 <div className="wiki-skill-prose">
-                  <DiffText segments={difference.description} />
+                  <DiffText segments={difference.description} render={rich} />
                 </div>
               ) : active.description ? (
                 <div className="wiki-skill-prose">{rich(active.description)}</div>

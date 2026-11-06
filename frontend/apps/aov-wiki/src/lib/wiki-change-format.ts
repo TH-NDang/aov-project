@@ -7,6 +7,7 @@ export interface HeroChangeItem {
   changeKind?: string | null
   skillKey?: string | null
   fieldKey?: string | null
+  statKey?: string | null
   oldValue?: string | null
   newValue?: string | null
   mechanicKey?: string | null
@@ -55,7 +56,8 @@ export function changeFieldLabel(key: string | null | undefined, locale: string)
 
 /** Skill keys follow skill-{slot}-{form}; slot 0 is the passive. */
 export function changeSkillLabel(key: string | null | undefined, locale: string) {
-  const slot = /^skill-(\d+)/.exec(key ?? "")?.[1]
+  if (key === "passive" || key === "capture-passive") return text(locale, "Nội tại", "Passive")
+  const slot = /^(?:capture-)?skill-(\d+)/.exec(key ?? "")?.[1]
   if (slot === undefined) return null
   return slot === "0" ? text(locale, "Nội tại", "Passive") : `${text(locale, "Chiêu", "Skill")} ${slot}`
 }
