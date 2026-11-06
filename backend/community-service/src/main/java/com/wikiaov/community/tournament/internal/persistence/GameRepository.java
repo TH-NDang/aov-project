@@ -15,7 +15,9 @@ public interface GameRepository extends JpaRepository<GameRecord, UUID> {
 
     @org.springframework.data.jpa.repository.Query("""
         SELECT game FROM GameRecord game WHERE (:seriesId IS NULL OR game.seriesId=:seriesId)
+          AND (:tournamentId IS NULL OR game.seriesId IN
+                (SELECT series.id FROM SeriesRecord series WHERE series.tournamentId=:tournamentId))
           AND (:state='ALL' OR (:state='ACTIVE' AND game.deletedAt IS NULL) OR (:state='DELETED' AND game.deletedAt IS NOT NULL))
         """)
-    Page<GameRecord> search(UUID seriesId, String state, Pageable page);
+    Page<GameRecord> search(UUID seriesId, UUID tournamentId, String state, Pageable page);
 }

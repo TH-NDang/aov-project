@@ -49,6 +49,42 @@ class PageApiIntegrationTest {
     static final String ROOT = "/api/community/v1";
 
     @Test
+    void adminDirectoryFiltersByIdentityAndCountryAndRanksByActivity() throws Exception {
+        String marker = "listing" + UUID.randomUUID().toString().substring(0, 8);
+        var busy = new HashMap<String, Object>();
+        busy.put("name", marker + " Busy");
+        busy.put("country", "XK");
+        busy.put("personRoles", List.of("COACH"));
+        busy.put("history", List.of(Map.of("title", "First stint"), Map.of("title", "Second stint")));
+        var quiet = new HashMap<String, Object>();
+        quiet.put("name", marker + " Quiet");
+        quiet.put("country", "XY");
+        quiet.put("personRoles", List.of("COACH"));
+        send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PERSON", "code", marker + "-quiet", "content", quiet));
+        send(post(ROOT + "/admin/pages"), "editor", true,
+                Map.of("kind", "PERSON", "code", marker + "-busy", "content", busy));
+
+        var ranked = send(get(ROOT + "/admin/pages").param("q", marker).param("sort", "ACTIVITY"), "editor", true,
+                null);
+        assertThat(ranked.path("items").get(0).path("code").asText()).isEqualTo(marker + "-busy");
+        var named = send(get(ROOT + "/admin/pages").param("q", marker).param("sort", "NAME"), "editor", true, null);
+        assertThat(named.path("items").get(0).path("code").asText()).isEqualTo(marker + "-busy");
+        var country = send(get(ROOT + "/admin/pages").param("q", marker).param("country", "XY"), "editor", true, null);
+        assertThat(country.path("totalElements").asInt()).isEqualTo(1);
+
+        var team = send(post(ROOT + "/admin/pages"), "editor", true, Map.of("kind", "TEAM", "code", marker + "-team",
+                "content", Map.of("name", marker + " Team")));
+        String identity = team.path("entityId").asText();
+        var byIdentity = send(get(ROOT + "/admin/pages").param("entityIds", identity), "editor", true, null);
+        assertThat(byIdentity.path("totalElements").asInt()).isEqualTo(1);
+        assertThat(byIdentity.path("items").get(0).path("id").asText()).isEqualTo(team.path("id").asText());
+
+        mvc.perform(as(get(ROOT + "/admin/pages").param("sort", "NOPE"), "editor", true))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void teamAffiliationsFollowRosterEditsWithoutLeakingDraftsOrChangingPersonalHistory() throws Exception {
         var person = send(post(ROOT + "/admin/pages"), "editor", true,
                 Map.of("kind", "PLAYER", "code", "member-" + UUID.randomUUID(), "content",

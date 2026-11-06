@@ -10,6 +10,7 @@ import type {
   SeriesContent,
   TeamContent,
   TournamentContent,
+  TournamentStats,
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
 import { ApiError } from "@/lib/api/errors"
@@ -39,7 +40,7 @@ export function createTournamentApi(request: Request = communityRequest) {
     ): Promise<DocumentView<TournamentRecords[K]>[]> {
       const rows: DocumentView<TournamentRecords[K]>[] = []
       for (let page = 0; page < 100; page++) {
-        const params = new URLSearchParams({ page: String(page), size: "100" })
+        const params = new URLSearchParams({ page: String(page), size: "500" })
         if (typeof filters === "string") params.set("seriesId", filters)
         else if (filters) for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value)
         const result = await request<PageSlice<DocumentView<TournamentRecords[K]>>>(`/admin/${kind}?${params}`, {
@@ -50,6 +51,7 @@ export function createTournamentApi(request: Request = communityRequest) {
       }
       throw new Error("Danh sách quá lớn. Hãy thu hẹp phạm vi trước khi tải lại.")
     },
+    tournamentStats: (signal?: AbortSignal) => request<TournamentStats[]>("/admin/tournaments/stats", { signal }),
     read: <K extends RecordKind>(kind: K, id: string, signal?: AbortSignal) =>
       request<DocumentView<TournamentRecords[K]>>(`/admin/${kind}/${id}`, { signal }),
     create: <K extends RecordKind>(kind: K, content: TournamentRecords[K]) =>

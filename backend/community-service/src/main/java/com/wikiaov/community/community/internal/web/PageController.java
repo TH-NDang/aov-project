@@ -69,9 +69,10 @@ public class PageController implements PageApi {
     }
 
     @Override
-    public Slice<Profile> adminPages(String kind, String q, String personRole, int page, int size) {
-        parameters("kind", "q", "personRole", "page", "size");
-        return profiles.list(kind, q, personRole, page, size, true);
+    public Slice<Profile> adminPages(String kind, String q, String personRole, String country, List<UUID> entityIds,
+            String sort, int page, int size) {
+        parameters("kind", "q", "personRole", "country", "entityIds", "sort", "page", "size");
+        return profiles.adminDirectory(kind, q, personRole, country, entityIds, sort, page, size);
     }
 
     @Override

@@ -53,6 +53,7 @@ export function GameEditor({
   tournamentRegion,
   seriesGames = [],
   bestOf = 1,
+  repeatPicksAllowed = false,
 }: {
   entry: DocumentView<GameContent>
   teams: DocumentView<TeamContent>[]
@@ -65,6 +66,7 @@ export function GameEditor({
   /** Other games of the series, for the rule that a team cannot pick again a hero it already played. */
   seriesGames?: DocumentView<GameContent>[]
   bestOf?: number
+  repeatPicksAllowed?: boolean
 }) {
   const [saved, setSaved] = useState(entry)
   const [content, setContent] = useState(entry.content)
@@ -100,8 +102,9 @@ export function GameEditor({
         seriesGames.filter((game) => game.id !== entry.id),
         content.number,
         bestOf,
+        repeatPicksAllowed,
       ),
-    [seriesGames, entry.id, content.number, bestOf],
+    [seriesGames, entry.id, content.number, bestOf, repeatPicksAllowed],
   )
   const teamName = (teamId: string) => teams.find((team) => team.id === teamId)?.content.name ?? "Đội"
   // Recorded ban/pick turns own the bans and the drafted heroes; they are edited in the match's draft panel.

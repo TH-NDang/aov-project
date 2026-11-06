@@ -200,6 +200,7 @@ function MatchView({ access }: { access: Access }) {
           tournamentRegion={view.tournament.content.region}
           seriesGames={sorted}
           bestOf={record.content.bestOf}
+          repeatPicksAllowed={record.content.repeatPicksAllowed}
           onBack={() => setParam({ view: null })}
         />
       </div>
@@ -437,8 +438,9 @@ function MatchViewer({
     [games],
   ) as Record<string, RecordingProgress | undefined>
   const locks = useMemo(
-    () => seriesLocks(games, focusedEntry?.content.number ?? 1, series.content.bestOf),
-    [games, focusedEntry?.content.number, series.content.bestOf],
+    () =>
+      seriesLocks(games, focusedEntry?.content.number ?? 1, series.content.bestOf, series.content.repeatPicksAllowed),
+    [games, focusedEntry?.content.number, series.content.bestOf, series.content.repeatPicksAllowed],
   )
   // A new game starts at the playhead, which must lie outside every game already placed on the video.
   const inside = video

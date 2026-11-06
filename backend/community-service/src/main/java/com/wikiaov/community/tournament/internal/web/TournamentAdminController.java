@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.tournament.internal.application.TournamentAdministration;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -48,6 +49,29 @@ public class TournamentAdminController implements TournamentAdminApi {
     @Override
     public View<Team> updateTeam(UUID id, Update<Team> request) {
         return administration.updateTeam(id, request.version(), request.content());
+    }
+
+    @Override
+    public PageSlice<TeamEntry> teamDirectory(String q, String country, String sort, int page, int size,
+            HttpServletRequest request) {
+        Parameters.only(request, "q", "country", "sort", "page", "size");
+        Parameters.search(q);
+        return administration.teamDirectory(q, country, sort, Parameters.page(page, size, "updatedAt"));
+    }
+
+    @Override
+    public PageSlice<PlayerEntry> playerDirectory(String q, String country, String lane, String status, String sort,
+            int page, int size, HttpServletRequest request) {
+        Parameters.only(request, "q", "country", "lane", "status", "sort", "page", "size");
+        Parameters.search(q);
+        return administration.playerDirectory(q, country, lane, status, sort,
+                Parameters.page(page, size, "updatedAt"));
+    }
+
+    @Override
+    public List<CompetitionPageEntry> competitionPageStats(HttpServletRequest request) {
+        Parameters.only(request);
+        return administration.competitionPageStats();
     }
 
     @Override
@@ -97,10 +121,17 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public PageSlice<View<Series>> series(String q, RecordState state, int page, int size, HttpServletRequest request) {
-        Parameters.only(request, "q", "state", "page", "size");
+    public PageSlice<View<Series>> series(String q, UUID tournamentId, RecordState state, int page, int size,
+            HttpServletRequest request) {
+        Parameters.only(request, "q", "tournamentId", "state", "page", "size");
         Parameters.search(q);
-        return administration.series(q, state, Parameters.page(page, size, "updatedAt"));
+        return administration.series(q, tournamentId, state, Parameters.page(page, size, "updatedAt"));
+    }
+
+    @Override
+    public List<TournamentStats> tournamentStats(HttpServletRequest request) {
+        Parameters.only(request);
+        return administration.tournamentStats();
     }
 
     @Override
@@ -119,10 +150,10 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public PageSlice<View<Game>> games(UUID seriesId, RecordState state, int page, int size,
+    public PageSlice<View<Game>> games(UUID seriesId, UUID tournamentId, RecordState state, int page, int size,
             HttpServletRequest request) {
-        Parameters.only(request, "seriesId", "state", "page", "size");
-        return administration.games(seriesId, state, Parameters.page(page, size, "updatedAt"));
+        Parameters.only(request, "seriesId", "tournamentId", "state", "page", "size");
+        return administration.games(seriesId, tournamentId, state, Parameters.page(page, size, "updatedAt"));
     }
 
     @Override

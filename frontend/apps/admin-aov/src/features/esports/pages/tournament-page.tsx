@@ -6,7 +6,8 @@ import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { TeamRosterSheet } from "@/features/tournaments/team-roster-sheet"
-import { useGameCatalog, useGames, useRecords, useRosters } from "../data/use-esports-data"
+import { FinalTableEditButton } from "@/features/tournaments/tournament-final-table-editor"
+import { useGameCatalog, useRecords, useRosters, useTournamentGames } from "../data/use-esports-data"
 import { useTournamentView } from "../data/use-tournament-view"
 import { BracketView } from "../components/bracket-view"
 import { HeroStatistics } from "../components/hero-stats"
@@ -16,6 +17,7 @@ import { MATCH_STATE_LABELS, MatchRecordingStrip } from "../components/match-rec
 import { ParticipantsGrid, type TeamEntry } from "../components/participants-grid"
 import { EmptyState, SectionTitle } from "../components/primitives"
 import { StandingsTable } from "../components/standings-table"
+import { TournamentFinalTable } from "../components/tournament-final-table"
 import { TournamentBanner, TournamentInfobox } from "../components/tournament-cards"
 import { buildBracket, computeStandings, seriesTime, type SeriesRecord } from "../model/competition"
 import { referenceIndex, type TeamView } from "../model/game-view"
@@ -48,7 +50,7 @@ function TournamentView({ access }: { access: Access }) {
   const [rosterTeam, setRosterTeam] = useState<string | null>(null)
   const openMatch = (seriesId: string) => navigate(matchPath(tournamentId, seriesId))
   // Editors see what each match still needs; opening a gap lands on that game in recording mode.
-  const games = useGames(undefined, access.canWrite)
+  const games = useTournamentGames(tournamentId, access.canWrite)
   const recordings = useMemo(() => {
     const bySeries = new Map<string, NonNullable<typeof games.data>>()
     for (const entry of games.data ?? [])
@@ -151,6 +153,8 @@ function TournamentView({ access }: { access: Access }) {
           teamCount={view.teamIds.length}
           onOpen={openMatch}
           onTab={setTab}
+          canWrite={access.canWrite}
+          teamNames={view.teams.map((entry) => ({ id: entry.id, name: entry.content.name }))}
         />
       )}
       {tab === "matches" && (
@@ -181,7 +185,7 @@ function TournamentView({ access }: { access: Access }) {
           onRoster={setRosterTeam}
         />
       )}
-      {tab === "stats" && <StatsTab records={records} />}
+      {tab === "stats" && <StatsTab tournamentId={tournamentId} records={records} />}
 
       {editor && (
         <RegistryEditor
@@ -208,6 +212,8 @@ function Overview({
   teamCount,
   onOpen,
   onTab,
+  canWrite,
+  teamNames,
 }: {
   tournament: DocumentView<TournamentContent>
   records: SeriesRecord[]
@@ -215,6 +221,8 @@ function Overview({
   teamCount: number
   onOpen: (seriesId: string) => void
   onTab: (tab: TabId) => void
+  canWrite: boolean
+  teamNames: { id: string; name: string }[]
 }) {
   const upcoming = records.filter((record) => !record.content.result).slice(0, 4)
   const recent = records
@@ -249,6 +257,11 @@ function Overview({
             <p className="text-sm text-muted-foreground">Không còn trận chưa có kết quả.</p>
           )}
         </section>
+        <TournamentFinalTable
+          content={tournament.content}
+          team={team}
+          action={canWrite ? <FinalTableEditButton tournament={tournament} teamNames={teamNames} /> : undefined}
+        />
         {!!recent.length && (
           <section className="space-y-3">
             <SectionTitle>Kết quả gần đây</SectionTitle>
@@ -475,8 +488,8 @@ function TeamsTab({
   )
 }
 
-function StatsTab({ records }: { records: SeriesRecord[] }) {
-  const games = useGames()
+function StatsTab({ tournamentId, records }: { tournamentId: string; records: SeriesRecord[] }) {
+  const games = useTournamentGames(tournamentId)
   const seriesIds = new Set(records.map((record) => record.id))
   const contents = (games.data ?? [])
     .filter((entry) => seriesIds.has(entry.content.seriesId))

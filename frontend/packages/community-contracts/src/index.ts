@@ -13,6 +13,7 @@ export type TeamContent = {
   logoUrl?: string
   aliases?: string[]
 }
+export type CareerStatus = "ACTIVE" | "INACTIVE" | "RETIRED" | "UNKNOWN"
 export type PlayerContent = {
   code: string
   nickname: string
@@ -20,8 +21,74 @@ export type PlayerContent = {
   country?: string
   photoUrl?: string
   aliases?: string[]
+  birthDate?: string | null
+  /** Usual position; a position in one tournament stays on its roster entry. */
+  lane?: Lane | null
+  careerStatus?: CareerStatus
+  signatureHeroes?: string[]
 }
 export type RosterStatus = "ACTIVE" | "SUBSTITUTE" | "INACTIVE" | "UNKNOWN"
+export type DirectoryTeamRef = { id: string; name: string; shortName?: string | null; logoUrl?: string | null }
+export type DirectoryTournamentRef = {
+  id: string
+  name: string
+  logoUrl?: string | null
+  tier?: TournamentTier
+  year?: number | null
+  startsOn?: string | null
+  endsOn?: string | null
+}
+export type DirectoryLineupMember = {
+  playerId: string
+  name: string
+  photoUrl?: string | null
+  lane?: Lane | null
+  status: RosterStatus
+}
+/** A team with figures derived from its tournaments, series and most recent roster. */
+export type TeamDirectoryEntry = {
+  id: string
+  code: string
+  name: string
+  shortName?: string | null
+  country?: string | null
+  logoUrl?: string | null
+  tournaments: number
+  matches: number
+  wins: number
+  losses: number
+  titles: number
+  prizeUsd?: number | null
+  latestTournament?: DirectoryTournamentRef | null
+  lineup: DirectoryLineupMember[]
+  lineupTournament?: DirectoryTournamentRef | null
+}
+/** `latestTeam` is the team of the most recent roster line, not a claim about today's contract. */
+export type PlayerDirectoryEntry = {
+  id: string
+  code: string
+  nickname: string
+  fullName?: string | null
+  country?: string | null
+  photoUrl?: string | null
+  birthDate?: string | null
+  lane?: Lane | null
+  careerStatus: CareerStatus
+  signatureHeroes: string[]
+  tournaments: number
+  titles: number
+  latestTeam?: DirectoryTeamRef | null
+  latestTournament?: DirectoryTournamentRef | null
+}
+/** Tournaments gathered under an organizer's or a circuit's page. */
+export type CompetitionPageEntry = {
+  pageId: string
+  tournaments: number
+  firstYear?: number | null
+  lastYear?: number | null
+  tiers: TournamentTier[]
+  latestTournament?: DirectoryTournamentRef | null
+}
 export type RosterMembershipContent = {
   tournamentId: string
   teamId: string
@@ -35,8 +102,8 @@ export type RosterMembershipContent = {
   verification?: ResultVerification
   note?: string | null
 }
-export type TournamentTier = "S" | "A" | "B" | "C" | "UNKNOWN"
-export type CompetitionType = "LEAGUE" | "CUP" | "QUALIFIER" | "UNKNOWN"
+export type TournamentTier = "S" | "A" | "B" | "C" | "D" | "UNKNOWN"
+export type CompetitionType = "LEAGUE" | "CUP" | "QUALIFIER" | "SHOWMATCH" | "OTHER" | "UNKNOWN"
 export type VenueMode = "ONLINE" | "OFFLINE" | "HYBRID" | "UNKNOWN"
 export type TournamentStatus = "UPCOMING" | "ONGOING" | "FINISHED" | "ANNOUNCED" | "UNKNOWN"
 export type ResultVerification =
@@ -50,6 +117,26 @@ export type TournamentResult = {
   verification: ResultVerification
   verifiedOn?: string | null
 }
+/** One line of a final table; `place` is text because a line can be shared ("5-8"). */
+export type TournamentPlacement = {
+  place: string
+  teamId?: string | null
+  teamName: string
+  prizeUsd?: number | null
+  prizeLocal?: number | null
+  lastOpponent?: string | null
+  lastScore?: string | null
+}
+export type TournamentAward = {
+  title: string
+  playerId?: string | null
+  recipientName: string
+  teamName?: string | null
+  prizeUsd?: number | null
+  prizeLocal?: number | null
+}
+export type TournamentLink = { label: string; url: string }
+export type TournamentStats = { tournamentId: string; teams: number; matches: number; played: number }
 export type TournamentContent = {
   code: string
   name: string
@@ -65,6 +152,10 @@ export type TournamentContent = {
   venueMode?: VenueMode
   status?: TournamentStatus
   result?: TournamentResult | null
+  localCurrency?: string | null
+  placements?: TournamentPlacement[]
+  awards?: TournamentAward[]
+  links?: TournamentLink[]
 }
 export type SeriesContent = {
   code: string
@@ -78,6 +169,8 @@ export type SeriesContent = {
   sourceUrl?: string
   note?: string
   result?: SeriesResult | null
+  /** The match was played without the rule against re-picking a hero in later games. */
+  repeatPicksAllowed?: boolean
 }
 export type SeriesResult = {
   scoreA: number

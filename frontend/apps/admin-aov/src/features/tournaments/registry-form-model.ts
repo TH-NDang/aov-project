@@ -38,7 +38,7 @@ export function initialRegistryValues(
   if (entry)
     for (const [key, value] of Object.entries(entry.content)) {
       if (value == null) continue
-      if (key === "aliases" && Array.isArray(value)) values[key] = value.join(", ")
+      if ((key === "aliases" || key === "signatureHeroes") && Array.isArray(value)) values[key] = value.join(", ")
       else if (key === "result" && typeof value === "object") {
         for (const [field, detail] of Object.entries(value))
           if (detail != null) values[`result.${field}`] = String(detail)
@@ -49,6 +49,7 @@ export function initialRegistryValues(
     if (!Number.isNaN(date.getTime()))
       values.scheduledAt = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
   }
+  if (values.repeatPicksAllowed === "false") values.repeatPicksAllowed = ""
   if (kind === "tournaments" && !entry) values.year = String(new Date().getFullYear())
   return values
 }
@@ -60,13 +61,15 @@ export function registryContent(kind: RegistryKind, values: Record<string, strin
     const value = values[key]?.trim()
     if (!value) continue
     content[key] =
-      key === "aliases"
-        ? parseTeamAliases(value)
-        : ["year", "bestOf"].includes(key)
-          ? Number(value)
-          : key === "scheduledAt"
-            ? new Date(value).toISOString()
-            : value
+      key === "repeatPicksAllowed"
+        ? value === "true"
+        : key === "aliases" || key === "signatureHeroes"
+          ? parseTeamAliases(value)
+          : ["year", "bestOf"].includes(key)
+            ? Number(value)
+            : key === "scheduledAt"
+              ? new Date(value).toISOString()
+              : value
   }
   if (kind === "tournaments") {
     const resultKeys = ["winnerName", "runnerUpName", "winnerScore", "runnerUpScore", "sourceUrl", "verifiedOn"]
@@ -106,9 +109,16 @@ export function registryFormIssue(kind: RegistryKind, values: Record<string, str
     if (values.teamAId === values.teamBId) return "Hai đội trong cùng một trận phải khác nhau."
     const result = (registryContent(kind, values, []) as SeriesContent).result
     if (!result) return null
-    const winningScore = Math.ceil(Number(values.bestOf || 3) / 2)
+    const bestOf = Number(values.bestOf || 3)
+    const winningScore = Math.ceil(bestOf / 2)
     if (result.scoreA == null || result.scoreB == null || !result.sourceUrl)
       return "Kết quả trận cần đủ hai vế tỷ số và link nguồn kiểm chứng."
+    if (bestOf % 2 === 0) {
+      if ([result.scoreA, result.scoreB].some((score) => !Number.isInteger(score) || score < 0))
+        return "Tỷ số phải là số nguyên không âm."
+      // A fixed-length series plays every game, so it may end level.
+      return result.scoreA + result.scoreB === bestOf ? null : `Thể thức BO${bestOf} cần đủ ${bestOf} ván trong tỷ số.`
+    }
     if ([result.scoreA, result.scoreB].some((score) => !Number.isInteger(score) || score < 0 || score > winningScore))
       return `Tỷ số phải là số nguyên từ 0 đến ${winningScore} với thể thức này.`
     if (Math.max(result.scoreA, result.scoreB) !== winningScore || result.scoreA === result.scoreB)

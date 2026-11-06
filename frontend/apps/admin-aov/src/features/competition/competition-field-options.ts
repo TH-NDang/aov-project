@@ -68,9 +68,9 @@ export const stageNameOptions = textOptions([
   "Playoffs",
   "Chung kết",
 ])
-export const bestOfOptions: CompetitionOption[] = [1, 3, 5, 7, 9].map((value) => ({
+export const bestOfOptions: CompetitionOption[] = [1, 2, 3, 4, 5, 7, 9].map((value) => ({
   value: String(value),
-  label: `BO${value} · Thắng ${Math.ceil(value / 2)} ván`,
+  label: value % 2 ? `BO${value} · Thắng ${Math.ceil(value / 2)} ván` : `BO${value} · Đấu đủ ${value} ván`,
 }))
 
 /** Existing references stay visible until an editor explicitly replaces them. */

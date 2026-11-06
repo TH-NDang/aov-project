@@ -25,7 +25,7 @@ public final class CompetitionRules {
             text(venue.city(), 200);
             text(venue.stageCode(), 100);
         });
-        if (plan.entrants().size() > 64 || plan.stages().size() > 16 || plan.matches().size() > 2048)
+        if (plan.entrants().size() > 128 || plan.stages().size() > 16 || plan.matches().size() > 2048)
             throw new IllegalArgumentException("Competition plan exceeds its limits.");
         var teams = new HashSet<UUID>();
         for (var entrant : plan.entrants()) {
@@ -82,8 +82,8 @@ public final class CompetitionRules {
     }
 
     private static void bestOf(int value) {
-        if (!Set.of(1, 3, 5, 7, 9).contains(value))
-            throw new IllegalArgumentException("Use an odd best-of from 1 to 9.");
+        if (!Set.of(1, 2, 3, 4, 5, 7, 9).contains(value))
+            throw new IllegalArgumentException("Use a best-of of 1, 2, 3, 4, 5, 7 or 9.");
     }
 
     private static void text(String value, int max) {

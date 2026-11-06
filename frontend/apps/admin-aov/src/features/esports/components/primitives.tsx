@@ -38,7 +38,7 @@ export function Monogram({
       aria-label={label}
     >
       {/* Transparent logos must not show the monogram through them once loaded. */}
-      {shown !== src && <span aria-hidden="true">{text}</span>}
+      {(!usable || shown !== src) && <span aria-hidden="true">{text}</span>}
       {usable && <img src={src} alt="" loading="lazy" onLoad={() => setShown(src)} onError={() => setFailed(src)} />}
     </span>
   )
@@ -134,10 +134,11 @@ export function ItemSlot({
   )
 }
 
-export function TierBadge({ tier }: { tier?: TournamentContent["tier"] }) {
+export function TierBadge({ tier, compact }: { tier?: TournamentContent["tier"]; compact?: boolean }) {
   if (!tier || tier === "UNKNOWN") return null
   return (
     <span
+      title={compact ? TIER_LABELS[tier] : undefined}
       className={cn(
         "inline-flex h-5 items-center rounded px-1.5 text-xs font-bold tracking-wide",
         tier === "S"
@@ -147,7 +148,7 @@ export function TierBadge({ tier }: { tier?: TournamentContent["tier"] }) {
             : "bg-muted text-foreground",
       )}
     >
-      {TIER_LABELS[tier]}
+      {compact ? tier : TIER_LABELS[tier]}
     </span>
   )
 }
@@ -224,7 +225,11 @@ export function BestOfBadge({ bestOf, className }: { bestOf: number; className?:
   return (
     <span
       className={cn("esp-bo", BEST_OF_TONES[bestOf] ?? "esp-bo-1", className)}
-      title={`Thể thức Bo${bestOf}: thắng ${Math.floor(bestOf / 2) + 1} ván trước`}
+      title={
+        bestOf % 2
+          ? `Thể thức Bo${bestOf}: thắng ${Math.floor(bestOf / 2) + 1} ván trước`
+          : `Thể thức Bo${bestOf}: đấu đủ ${bestOf} ván`
+      }
     >
       BO{bestOf}
     </span>

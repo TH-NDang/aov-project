@@ -30,9 +30,17 @@ public class SeriesRegistry {
     }
 
     @Transactional(readOnly = true)
-    public PageSlice<View<Series>> list(String q, RecordState state, Pageable page) {
-        return PageSlice.from(repository.search(q, state.name(), page)
+    public PageSlice<View<Series>> list(String q, UUID tournamentId, RecordState state, Pageable page) {
+        return PageSlice.from(repository.search(q, tournamentId, state.name(), page)
                 .map(row -> TournamentViews.view(row, row.getContent())));
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<TournamentStats> stats() {
+        return repository.stats().stream()
+                .map(row -> new TournamentStats(row.getTournamentId(), row.getTeams(), row.getMatches(),
+                        row.getPlayed()))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -75,16 +83,22 @@ public class SeriesRegistry {
         if (content.teamAId() == null || content.teamBId() == null || content.teamAId().equals(content.teamBId())
                 || !teams.existsById(content.teamAId()) || !teams.existsById(content.teamBId()))
             throw TournamentErrors.invalid("Choose two different existing teams.");
-        if (content.bestOf() == null || !java.util.Set.of(1, 3, 5, 7, 9).contains(content.bestOf()))
-            throw TournamentErrors.invalid("bestOf must be an odd number between 1 and 9.");
+        if (content.bestOf() == null || !java.util.Set.of(1, 2, 3, 4, 5, 7, 9).contains(content.bestOf()))
+            throw TournamentErrors.invalid("bestOf must be 1, 2, 3, 4, 5, 7 or 9.");
         if (content.result() != null) {
             var result = content.result();
-            int wins = content.bestOf() / 2 + 1;
-            if (result.scoreA() == null || result.scoreB() == null || result.scoreA() < 0 || result.scoreB() < 0
-                    || result.scoreA() > wins || result.scoreB() > wins
-                    || result.scoreA().equals(result.scoreB())
-                    || Math.max(result.scoreA(), result.scoreB()) != wins)
-                throw TournamentErrors.invalid("A completed series requires one winner at the best-of threshold.");
+            if (result.scoreA() == null || result.scoreB() == null || result.scoreA() < 0 || result.scoreB() < 0)
+                throw TournamentErrors.invalid("A completed series requires both scores.");
+            if (content.bestOf() % 2 == 0) {
+                // A fixed-length series plays every game, so it may end level.
+                if (result.scoreA() + result.scoreB() != content.bestOf())
+                    throw TournamentErrors.invalid("A fixed-length series requires every game to be scored.");
+            } else {
+                int wins = content.bestOf() / 2 + 1;
+                if (result.scoreA() > wins || result.scoreB() > wins || result.scoreA().equals(result.scoreB())
+                        || Math.max(result.scoreA(), result.scoreB()) != wins)
+                    throw TournamentErrors.invalid("A completed series requires one winner at the best-of threshold.");
+            }
             if (result.sourceUrl() == null || result.sourceUrl().isBlank() || !SourceUrls.valid(result.sourceUrl()))
                 throw TournamentErrors.invalid("Series result requires an absolute HTTP or HTTPS source URL.");
         }

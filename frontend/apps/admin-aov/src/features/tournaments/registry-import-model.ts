@@ -26,7 +26,18 @@ export type ImportRow = {
 export type RegistryImport = { rows: ImportRow[]; skipped: number; asOf?: string }
 const FIELDS: Record<ImportKind, string[]> = {
   teams: ["code", "name", "shortName", "country", "logoUrl", "aliases"],
-  players: ["code", "nickname", "fullName", "country", "photoUrl", "aliases"],
+  players: [
+    "code",
+    "nickname",
+    "fullName",
+    "country",
+    "photoUrl",
+    "aliases",
+    "birthDate",
+    "lane",
+    "careerStatus",
+    "signatureHeroes",
+  ],
   tournaments: [
     "code",
     "name",
@@ -42,15 +53,20 @@ const FIELDS: Record<ImportKind, string[]> = {
     "venueMode",
     "status",
     "result",
+    "localCurrency",
+    "placements",
+    "awards",
+    "links",
   ],
-  series: ["code", "name", "stage", "bestOf", "scheduledAt", "sourceUrl", "note", "result"],
+  series: ["code", "name", "stage", "bestOf", "scheduledAt", "sourceUrl", "note", "result", "repeatPicksAllowed"],
   "roster-memberships": ["lane", "jerseyNumber", "status", "startsOn", "endsOn", "sourceUrl", "verification", "note"],
 }
 const ENUMS: Record<string, string[]> = {
   lane: ["TOP", "JUNGLE", "MID", "DRAGON", "SUPPORT"],
-  tier: ["S", "A", "B", "C", "UNKNOWN"],
-  competitionType: ["LEAGUE", "CUP", "QUALIFIER", "UNKNOWN"],
+  tier: ["S", "A", "B", "C", "D", "UNKNOWN"],
+  competitionType: ["LEAGUE", "CUP", "QUALIFIER", "SHOWMATCH", "OTHER", "UNKNOWN"],
   venueMode: ["ONLINE", "OFFLINE", "HYBRID", "UNKNOWN"],
+  careerStatus: ["ACTIVE", "INACTIVE", "RETIRED", "UNKNOWN"],
   verification: ["PRIMARY", "SECONDARY_CORROBORATED", "SECONDARY_CAPTURE", "SECONDARY_PRESS_ONLY", "UNVERIFIED"],
 }
 function object(value: unknown, label: string): Record<string, unknown> {
@@ -72,13 +88,19 @@ function validCalendarDate(value: string) {
   )
 }
 function cleanField(key: string, value: unknown, label: string): unknown {
+  if (["placements", "awards", "links"].includes(key)) {
+    if (value == null) return []
+    if (!Array.isArray(value)) throw new Error(`${label}: cần một danh sách.`)
+    return value.map((item) => object(item, label))
+  }
+  if (key === "repeatPicksAllowed") return value === true
   if (value == null) {
-    if (key === "aliases") return []
+    if (key === "aliases" || key === "signatureHeroes") return []
     if (key === "verification") return "UNVERIFIED"
-    if (["tier", "competitionType", "venueMode", "status"].includes(key)) return "UNKNOWN"
+    if (["tier", "competitionType", "venueMode", "status", "careerStatus"].includes(key)) return "UNKNOWN"
     return null
   }
-  if (key === "aliases") {
+  if (key === "aliases" || key === "signatureHeroes") {
     if (
       !Array.isArray(value) ||
       value.length > 20 ||
@@ -109,7 +131,7 @@ function cleanField(key: string, value: unknown, label: string): unknown {
   if (key === "code") return code(text, label)
   if (key.endsWith("Url") && text && (!safeLinkUrl(text) || !/^https?:\/\//i.test(text)))
     throw new Error(`${label}: cần link http hoặc https hợp lệ.`)
-  if (["startsOn", "endsOn", "verifiedOn"].includes(key) && text && !validCalendarDate(text))
+  if (["startsOn", "endsOn", "verifiedOn", "birthDate"].includes(key) && text && !validCalendarDate(text))
     throw new Error(`${label}: ngày chưa hợp lệ.`)
   if (key === "scheduledAt" && text && (!/T.*(?:Z|[+-]\d{2}:\d{2})$/.test(text) || Number.isNaN(Date.parse(text))))
     throw new Error(`${label}: lịch thi đấu cần thời gian có múi giờ.`)

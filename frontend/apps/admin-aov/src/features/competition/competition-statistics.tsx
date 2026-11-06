@@ -1,11 +1,11 @@
-import { useGames, useGameCatalog } from "@/features/esports/data/use-esports-data"
+import { useGameCatalog, useTournamentGames } from "@/features/esports/data/use-esports-data"
 import { HeroStatistics } from "@/features/esports/components/hero-stats"
 import { gameStatistics } from "@/features/esports/model/statistics"
 import { referenceIndex } from "@/features/esports/model/game-view"
 import { Section } from "@/features/community/profile-fields"
 
-export function CompetitionStatistics({ seriesIds }: { seriesIds: string[] }) {
-  const query = useGames()
+export function CompetitionStatistics({ tournamentId, seriesIds }: { tournamentId: string; seriesIds: string[] }) {
+  const query = useTournamentGames(tournamentId)
   const contents = (query.data || [])
     .filter((row) => seriesIds.includes(row.content.seriesId))
     .map((row) => row.content)

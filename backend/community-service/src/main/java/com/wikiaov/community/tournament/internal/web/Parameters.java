@@ -22,8 +22,8 @@ final class Parameters {
     }
 
     static Pageable page(int page, int size, String sort) {
-        if (page < 0 || page > 100000 || size < 1 || size > 100)
-            throw TournamentErrors.invalid("Use a non-negative page and a size between 1 and 100.");
+        if (page < 0 || page > 100000 || size < 1 || size > 500)
+            throw TournamentErrors.invalid("Use a non-negative page and a size between 1 and 500.");
         return PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, sort));
     }
 }

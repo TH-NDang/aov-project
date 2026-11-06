@@ -39,9 +39,9 @@ public class GameRecords {
     }
 
     @Transactional(readOnly = true)
-    public PageSlice<View<Game>> list(UUID seriesId, RecordState state, Pageable page) {
+    public PageSlice<View<Game>> list(UUID seriesId, UUID tournamentId, RecordState state, Pageable page) {
         return PageSlice
-                .from(games.search(seriesId, state.name(), page).map(this::view));
+                .from(games.search(seriesId, tournamentId, state.name(), page).map(this::view));
     }
 
     @Transactional(readOnly = true)
@@ -138,9 +138,11 @@ public class GameRecords {
             throw TournamentErrors.invalid("Invalid market code.");
         archives.validateParents(content);
         if (match != null) {
-            var others = games.search(content.seriesId(), RecordState.ACTIVE.name(), Pageable.unpaged()).stream()
+            var others = games.search(content.seriesId(), null, RecordState.ACTIVE.name(), Pageable.unpaged()).stream()
                     .filter(row -> !row.getId().equals(id)).map(GameRecord::getContent).toList();
-            var reused = SeriesPickRule.violations(content, match.getContent().bestOf(), others);
+            var reused = match.getContent().repeatPicksAllowed()
+                    ? java.util.List.<String>of()
+                    : SeriesPickRule.violations(content, match.getContent().bestOf(), others);
             if (!reused.isEmpty())
                 throw new ApiException(TournamentErrorCode.TOURNAMENT_INVALID_CONTENT,
                         "A team picked a hero it already played earlier in this series.",
