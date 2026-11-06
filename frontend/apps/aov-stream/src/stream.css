@@ -1101,15 +1101,6 @@ button:disabled {
   background: var(--hub-success-soft);
   color: var(--hub-success);
 }
-.hub-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 16px 0 4px;
-  color: var(--hub-muted);
-  font-size: 14px;
-}
 
 /* ---------- Games directory ---------- */
 .stream-toolbar {

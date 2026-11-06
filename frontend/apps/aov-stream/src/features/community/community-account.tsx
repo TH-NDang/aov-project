@@ -18,7 +18,7 @@ import { CommunityFeed } from "./community-feed"
 import {
   useFollowedPages,
   useFollowPage,
-  useNotifications,
+  useNotificationInbox,
   useReadNotifications,
   useUnreadCount,
 } from "./community-queries"
@@ -28,6 +28,7 @@ import { Avatar, followersLabel, hueOf } from "./community-ui"
 const accountTabIcons = { profile: "user", follows: "heart", notifications: "bell", pages: "building" } as const
 import { AccountAvatar, AccountProfile } from "../account/account-profile"
 import { useOwnProfile } from "../account/profile-api"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 
 const roleLabels = { OWNER: "Quản trị chính", EDITOR: "Biên tập viên", MODERATOR: "Kiểm duyệt viên" } as const
 const claimLabels = { PENDING: "Đang chờ xét duyệt", APPROVED: "Đã chấp thuận", REJECTED: "Chưa được chấp thuận" }
@@ -147,8 +148,8 @@ function FollowedPages() {
 }
 
 function NotificationInbox() {
-  const [page, setPage] = useState(0)
-  const inbox = useNotifications(page, 24)
+  const inbox = useNotificationInbox(24)
+  const notifications = inbox.data?.pages.flatMap((page) => page.items) ?? []
   const unread = useUnreadCount()
   const read = useReadNotifications()
   return (
@@ -164,9 +165,9 @@ function NotificationInbox() {
           Đánh dấu đã đọc tất cả
         </button>
       </div>
-      {inbox.isError && <p className="cp-error">{inbox.error.message}</p>}
-      {inbox.data && !inbox.data.items.length && <p className="cp-muted">Thông báo mới sẽ xuất hiện tại đây.</p>}
-      {inbox.data?.items.map((item) => (
+      {inbox.isLoadingError && <p className="cp-error">{inbox.error.message}</p>}
+      {inbox.data && !notifications.length && <p className="cp-muted">Thông báo mới sẽ xuất hiện tại đây.</p>}
+      {notifications.map((item) => (
         <article className="cp-notification" data-unread={!item.read || undefined} key={item.id}>
           <Link to={`/pages/${item.pageId}`} onClick={() => !item.read && read.one.mutate(item.id)}>
             {item.message}
@@ -179,20 +180,7 @@ function NotificationInbox() {
           )}
         </article>
       ))}
-      {inbox.data && inbox.data.totalElements > 24 && (
-        <div className="hub-pagination">
-          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-            Trước
-          </button>
-          <button
-            className="cp-button"
-            disabled={(page + 1) * 24 >= inbox.data.totalElements}
-            onClick={() => setPage(page + 1)}
-          >
-            Tiếp
-          </button>
-        </div>
-      )}
+      <InfiniteScroll query={inbox} label="Đang tải thêm thông báo" />
     </section>
   )
 }

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
   postKindLabels,
   type CommunityPost,
@@ -11,6 +11,8 @@ import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
 import { useCommunitySession } from "./community-auth"
 import { PostCard } from "./community-post"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const kinds = Object.keys(postKindLabels) as PostKind[]
 
@@ -45,7 +47,6 @@ export function CommunityFeed({
 }) {
   const session = useCommunitySession()
   const client = useQueryClient()
-  const [page, setPage] = useState(0)
   const [body, setBody] = useState("")
   const [postKind, setPostKind] = useState<PostKind>(kind || "TEXT")
   const [title, setTitle] = useState("")
@@ -53,18 +54,22 @@ export function CommunityFeed({
   const [images, setImages] = useState("")
   const [asPage, setAsPage] = useState(manage && ["OWNER", "EDITOR"].includes(role))
   const personal = !manage && session.status === "authenticated"
-  const posts = useQuery({
-    queryKey: ["page-posts", session.revision, pageId, page, manage, kind],
-    queryFn: () =>
+  const posts = useInfiniteQuery({
+    queryKey: ["page-posts", session.revision, pageId, manage, kind],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
       communityApi<PageSlice<CommunityPost>>(
         `${manage || personal ? "/me" : ""}/pages/${pageId}/${personal ? "feed" : "posts"}?${new URLSearchParams({
-          page: String(page),
+          page: String(pageParam),
           size: "20",
           ...(kind && !manage && !personal ? { kind } : {}),
         })}`,
       ),
+    getNextPageParam: nextPageOf,
   })
-  const items = (posts.data?.items || []).filter((post) => !kind || (post.kind || "TEXT") === kind)
+  const items = (posts.data?.pages.flatMap((page) => page.items) || []).filter(
+    (post) => !kind || (post.kind || "TEXT") === kind,
+  )
   const imageUrls = imageLines(images)
   const ready =
     (postKind === "VIDEO" ? !!videoUrl.trim() : !!body.trim()) &&
@@ -86,7 +91,6 @@ export function CommunityFeed({
       setTitle("")
       setVideoUrl("")
       setImages("")
-      setPage(0)
       await client.invalidateQueries({ queryKey: ["page-posts"] })
       await client.invalidateQueries({ queryKey: ["community-feed"] })
     },
@@ -189,7 +193,7 @@ export function CommunityFeed({
       )}
       {posts.isPending ? (
         <div className="hub-skeleton-rows" role="status" aria-label="Đang tải bài viết" />
-      ) : posts.isError ? (
+      ) : posts.isLoadingError ? (
         <div className="hub-state" role="alert">
           <StreamIcon name="reset" size={28} />
           <h3>{posts.error.message}</h3>
@@ -210,21 +214,7 @@ export function CommunityFeed({
           ))}
         </div>
       )}
-      {posts.data && posts.data.totalElements > 20 && (
-        <div className="hub-pagination">
-          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-            Trước
-          </button>
-          <span>Trang {page + 1}</span>
-          <button
-            className="cp-button"
-            disabled={(page + 1) * 20 >= posts.data.totalElements}
-            onClick={() => setPage(page + 1)}
-          >
-            Tiếp
-          </button>
-        </div>
-      )}
+      <InfiniteScroll query={posts} label="Đang tải thêm bài viết" />
     </div>
   )
 }

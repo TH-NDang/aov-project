@@ -1,6 +1,6 @@
-import { useState, type CSSProperties } from "react"
+import type { CSSProperties } from "react"
 import { Link, useSearchParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import {
   isCommunityProfile,
   profileKindLabels,
@@ -14,6 +14,8 @@ import { communityApi } from "./community-api"
 import { useFollowedIds, useFollowPage } from "./community-queries"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 import { Avatar, followersLabel, hueOf, kindIcons } from "./community-ui"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const kinds = Object.keys(profileKindLabels) as ProfileKind[]
 
@@ -36,19 +38,17 @@ export function PageDirectory() {
   const requested = params.get("kind") as ProfileKind | null
   const kind = requested && kinds.includes(requested) ? requested : null
   const search = params.get("q") || ""
-  // Changing the kind or the search starts again from the first page.
-  const [paging, setPaging] = useState({ scope: "", page: 0 })
-  const scope = `${kind}:${search}`
-  const page = paging.scope === scope ? paging.page : 0
-  const setPage = (next: number) => setPaging({ scope, page: next })
   const following = useFollowedIds()
-  const query = useQuery({
-    queryKey: ["public-pages", kind, search, page],
-    queryFn: () =>
+  const query = useInfiniteQuery({
+    queryKey: ["public-pages", kind, search],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
       communityApi<PageSlice<CommunityProfile>>(
-        `/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), q: search, page: String(page), size: "24" })}`,
+        `/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), q: search, page: String(pageParam), size: "24" })}`,
       ),
+    getNextPageParam: nextPageOf,
   })
+  const profiles = query.data?.pages.flatMap((page) => page.items) ?? []
   function update(key: "kind" | "q", value: string) {
     setParams(
       (current) => {
@@ -82,7 +82,7 @@ export function PageDirectory() {
             <div className="hub-skeleton cp-card-skeleton" key={index} />
           ))}
         </div>
-      ) : query.isError ? (
+      ) : query.isLoadingError ? (
         <div className="hub-state" role="alert">
           <StreamIcon name="reset" size={28} />
           <h2>{query.error.message}</h2>
@@ -90,7 +90,7 @@ export function PageDirectory() {
             Thử lại
           </button>
         </div>
-      ) : !query.data.items.length ? (
+      ) : !profiles.length ? (
         <div className="hub-state">
           <StreamIcon name="grid" size={28} />
           <h2>{search ? "Chưa tìm thấy trang phù hợp" : "Danh bạ đang được xây dựng"}</h2>
@@ -103,28 +103,12 @@ export function PageDirectory() {
         </div>
       ) : (
         <div className="cp-grid">
-          {query.data.items.map((profile) => (
+          {profiles.map((profile) => (
             <ProfileCard key={profile.id} profile={profile} following={following} />
           ))}
         </div>
       )}
-      {query.data && query.data.totalElements > 24 && (
-        <div className="hub-pagination">
-          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-            <StreamIcon name="chevronLeft" size={16} />
-            Trước
-          </button>
-          <span>Trang {page + 1}</span>
-          <button
-            className="cp-button"
-            disabled={(page + 1) * 24 >= query.data.totalElements}
-            onClick={() => setPage(page + 1)}
-          >
-            Tiếp
-            <StreamIcon name="chevronRight" size={16} />
-          </button>
-        </div>
-      )}
+      <InfiniteScroll query={query} label="Đang tải thêm trang" />
     </div>
   )
 }

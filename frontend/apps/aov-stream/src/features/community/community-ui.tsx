@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { infiniteQueryOptions, useQuery } from "@tanstack/react-query"
 import type {
   CommunityProfile,
   CompetitionView,
@@ -9,6 +9,7 @@ import type {
 } from "@aov/community-contracts"
 import type { StreamIconName } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 export const kindIcons: Record<ProfileKind, StreamIconName> = {
   CIRCUIT: "trophy",
@@ -73,6 +74,20 @@ export function competitionsQuery(filter: Record<string, string>, page: number, 
       ),
     staleTime: 60_000,
   }
+}
+
+/** Published competitions for a list that keeps loading as the reader scrolls. */
+export function competitionsFeedQuery(filter: Record<string, string>, size = 12) {
+  return infiniteQueryOptions({
+    queryKey: ["published-competitions", "feed", filter, size],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      communityApi<PageSlice<CompetitionView>>(
+        `/competitions?${new URLSearchParams({ ...filter, page: String(pageParam), size: String(size) })}`,
+      ),
+    getNextPageParam: nextPageOf,
+    staleTime: 60_000,
+  })
 }
 
 /** The first published competitions, shared by the home banner, the home list and the side rail. */

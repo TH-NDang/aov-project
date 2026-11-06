@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from "react"
 import { Link } from "react-router"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import type { CommunityComment, CommunityPost, PageCard, PageRole, PageSlice } from "@aov/community-contracts"
 import { profileKindLabels } from "@aov/community-contracts"
 import {
@@ -18,6 +18,8 @@ import { useFollowPage } from "./community-queries"
 import { useSignedInAction } from "./community-signin"
 import { CardAvatar, hueOf, timeAgo } from "./community-ui"
 import { PostImages, PostVideo } from "./post-media"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 /** Lists that show posts; every change to a post or its comments refreshes them all. */
 const postLists = ["page-posts", "community-feed"]
@@ -66,7 +68,6 @@ export function PostCard({
   const [asPage, setAsPage] = useState(false)
   const [reporting, setReporting] = useState(false)
   const [reason, setReason] = useState("")
-  const [commentPage, setCommentPage] = useState(0)
   const [editing, setEditing] = useState(false)
   const [editedBody, setEditedBody] = useState(post.body)
   const [editedTitle, setEditedTitle] = useState(post.title || "")
@@ -107,11 +108,15 @@ export function PostCard({
       await refreshLists()
     },
   })
-  const comments = useQuery({
-    queryKey: ["post-comments", post.id, commentPage],
-    queryFn: () => communityApi<PageSlice<CommunityComment>>(`/posts/${post.id}/comments?page=${commentPage}&size=30`),
+  const comments = useInfiniteQuery({
+    queryKey: ["post-comments", post.id],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      communityApi<PageSlice<CommunityComment>>(`/posts/${post.id}/comments?page=${pageParam}&size=30`),
+    getNextPageParam: nextPageOf,
     enabled: expanded && post.status === "PUBLISHED",
   })
+  const commentRows = comments.data?.pages.flatMap((page) => page.items) ?? []
   const reply = useMutation({
     mutationFn: () => communityApi(`/me/posts/${post.id}/comments`, { body, asPage }),
     onSuccess: async () => {
@@ -392,16 +397,16 @@ export function PostCard({
       )}
       {expanded && (
         <div className="cp-comments">
-          {comments.isError && (
+          {comments.isLoadingError && (
             <p className="cp-error" role="alert">
               {comments.error.message}
             </p>
           )}
           {comments.isLoading && <p className="cp-muted">Đang tải bình luận…</p>}
-          {comments.data && !comments.data.items.length && (
+          {comments.data && !commentRows.length && (
             <p className="cp-muted">Chưa có bình luận. Hãy là người đầu tiên chia sẻ suy nghĩ.</p>
           )}
-          {comments.data?.items.map((comment) => (
+          {commentRows.map((comment) => (
             <div className="cp-comment" key={comment.id}>
               <AuthorMark name={comment.authorName} small />
               <div className="cp-comment-body">
@@ -428,20 +433,7 @@ export function PostCard({
               </div>
             </div>
           ))}
-          {comments.data && comments.data.totalElements > 30 && (
-            <div className="cp-actions">
-              <button className="cp-button" disabled={!commentPage} onClick={() => setCommentPage(commentPage - 1)}>
-                Trước
-              </button>
-              <button
-                className="cp-button"
-                disabled={(commentPage + 1) * 30 >= comments.data.totalElements}
-                onClick={() => setCommentPage(commentPage + 1)}
-              >
-                Tiếp
-              </button>
-            </div>
-          )}
+          <InfiniteScroll query={comments} label="Đang tải thêm bình luận" />
           {session.status === "authenticated" ? (
             <form
               className="cp-reply"

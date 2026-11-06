@@ -1,6 +1,6 @@
-import { useState, type CSSProperties } from "react"
+import type { CSSProperties } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { type CommunityProfile, type CompetitionView, type PageSlice } from "@aov/community-contracts"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
@@ -8,7 +8,7 @@ import { communityApi } from "./community-api"
 import {
   competitionStatus,
   competitionStatusLabels,
-  competitionsQuery,
+  competitionsFeedQuery,
   dayRange,
   hueOf,
   type CompetitionStatus,
@@ -17,6 +17,8 @@ import { competitionQuery } from "../tournaments/tournament-api"
 import { MatchRow } from "../tournaments/match-components"
 import { competitionMatches, competitionMatchHref } from "../tournaments/match-model"
 import { CompetitionSchedule } from "../tournaments/competition-schedule"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 const hue = (name: string) => ({ "--hub-hue": hueOf(name) }) as CSSProperties
 const monogram = (name: string) =>
@@ -36,7 +38,6 @@ function StatusBadge({ status }: { status: CompetitionStatus | null }) {
 }
 
 export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
-  const [page, setPage] = useState(0)
   const filter: Record<string, string> = profile
     ? profile.kind === "CIRCUIT"
       ? { circuitPageId: profile.id }
@@ -46,10 +47,11 @@ export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
           ? { teamId: profile.entityId || "" }
           : { playerId: profile.entityId || "" }
     : {}
-  const query = useQuery(competitionsQuery(filter, page))
+  const query = useInfiniteQuery(competitionsFeedQuery(filter))
+  const competitions = query.data?.pages.flatMap((page) => page.items) ?? []
   const body = query.isPending ? (
     <div className="hub-skeleton-rows" role="status" aria-label="Đang tải giải đấu" />
-  ) : query.isError ? (
+  ) : query.isLoadingError ? (
     <div className="hub-state" role="alert">
       <StreamIcon name="reset" size={28} />
       <h3>{query.error.message}</h3>
@@ -57,7 +59,7 @@ export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
         Thử lại
       </button>
     </div>
-  ) : !query.data.items.length ? (
+  ) : !competitions.length ? (
     <div className="hub-state">
       <StreamIcon name="calendar" size={28} />
       <h3>{profile?.kind === "CIRCUIT" ? "Chưa có mùa giải được công bố" : "Chưa có giải đã công bố"}</h3>
@@ -66,27 +68,11 @@ export function CompetitionList({ profile }: { profile?: CommunityProfile }) {
   ) : (
     <>
       <div className="hub-event-list">
-        {query.data.items.map((entry) => (
+        {competitions.map((entry) => (
           <CompetitionEvent key={entry.id} entry={entry} />
         ))}
       </div>
-      {query.data.totalElements > 12 && (
-        <div className="hub-pagination">
-          <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-            <StreamIcon name="chevronLeft" size={16} />
-            Trước
-          </button>
-          <span>Trang {page + 1}</span>
-          <button
-            className="cp-button"
-            disabled={(page + 1) * 12 >= query.data.totalElements}
-            onClick={() => setPage(page + 1)}
-          >
-            Sau
-            <StreamIcon name="chevronRight" size={16} />
-          </button>
-        </div>
-      )}
+      <InfiniteScroll query={query} label="Đang tải thêm giải đấu" />
     </>
   )
   if (!profile) return body
@@ -181,7 +167,7 @@ export function PublicCompetitionPage() {
         <div className="hub-state" role={query.isError ? "alert" : "status"}>
           <StreamIcon name={query.isError ? "info" : "clock"} size={28} />
           <h1>{query.isError ? query.error.message : "Đang tải giải đấu…"}</h1>
-          {query.isError && (
+          {query.isLoadingError && (
             <button className="cp-button" onClick={() => void query.refetch()}>
               Thử lại
             </button>
@@ -485,15 +471,17 @@ export function PublicCompetitionPage() {
   )
 }
 export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfile }) {
-  const [page, setPage] = useState(0)
   const filter = profile.kind === "TEAM" ? `teamId=${profile.entityId}` : `playerId=${profile.entityId}`
-  const query = useQuery({
-    queryKey: ["profile-results", profile.id, page],
-    queryFn: () => communityApi<PageSlice<CompetitionView>>(`/competitions?${filter}&size=10&page=${page}`),
+  const query = useInfiniteQuery({
+    queryKey: ["profile-results", profile.id],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      communityApi<PageSlice<CompetitionView>>(`/competitions?${filter}&size=10&page=${pageParam}`),
+    getNextPageParam: nextPageOf,
     enabled: !!profile.entityId,
   })
   if (profile.kind === "ORGANIZATION" || profile.kind === "CIRCUIT") return <CompetitionList profile={profile} />
-  const matches = (query.data?.items || []).flatMap((entry) => {
+  const matches = (query.data?.pages.flatMap((page) => page.items) || []).flatMap((entry) => {
     const ids =
       profile.kind === "TEAM"
         ? [profile.entityId]
@@ -536,21 +524,7 @@ export function ProfileCompetitionSummary({ profile }: { profile: CommunityProfi
             </Link>
           </div>
         ))}
-        {query.data && query.data.totalElements > 10 && (
-          <div className="hub-pagination">
-            <button className="cp-button" disabled={!page} onClick={() => setPage(page - 1)}>
-              Trước
-            </button>
-            <span>Nhóm mùa giải {page + 1}</span>
-            <button
-              className="cp-button"
-              disabled={(page + 1) * 10 >= query.data.totalElements}
-              onClick={() => setPage(page + 1)}
-            >
-              Sau
-            </button>
-          </div>
-        )}
+        <InfiniteScroll query={query} label="Đang tải thêm kết quả" />
       </section>
       <CompetitionList profile={profile} />
     </>

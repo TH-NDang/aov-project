@@ -1,7 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { CommunityNotification, CommunityProfile, PageSlice } from "@aov/community-contracts"
 import { communityApi } from "./community-api"
 import { useCommunitySession } from "./community-auth"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 
 /**
  * Account-only community data: follows, suggestions and notifications. Every key carries the session revision, so
@@ -68,6 +69,19 @@ export function useNotifications(page: number, size: number) {
   return useQuery({
     queryKey: ["notifications", revision, page, size],
     queryFn: () => communityApi<PageSlice<CommunityNotification>>(`/me/notifications?page=${page}&size=${size}`),
+    enabled,
+  })
+}
+
+/** The whole inbox, a page at a time; `useNotifications` stays the short list behind the menus. */
+export function useNotificationInbox(size: number) {
+  const { revision, enabled } = useAccountQuery()
+  return useInfiniteQuery({
+    queryKey: ["notifications", revision, "inbox", size],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) =>
+      communityApi<PageSlice<CommunityNotification>>(`/me/notifications?page=${pageParam}&size=${size}`),
+    getNextPageParam: nextPageOf,
     enabled,
   })
 }
