@@ -25,6 +25,7 @@ import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useDragScroll } from "../hero/use-drag-scroll"
 import { groupSkins, type HeroSort, type SkinSort } from "./skin-groups"
 import { normalizedHeroSearch } from "../hero/hero-classifications"
+import { SkinVideoList, useSkinVideos, VideoPlayer } from "../videos/subject-videos"
 
 const skinId = (skin: SkinEntry) => `${skin.heroId}:${skin.skinKey}`
 
@@ -171,6 +172,7 @@ function SkinPreview({
 }) {
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
+  const skinVideos = useSkinVideos(skin)
   const queue = useMemo(() => groups.flat(), [groups])
   const index = skin ? queue.findIndex((entry) => skinId(entry) === skinId(skin)) : -1
   const canStep = index >= 0 && queue.length > 1
@@ -263,8 +265,12 @@ function SkinPreview({
                   aria-hidden="true"
                 />
               )}
-              <SkinArtwork key={skinId(skin)} skin={skin} preview />
-              {canStep && (
+              {skinVideos.playing ? (
+                <VideoPlayer key={skinVideos.playing.id} video={skinVideos.playing} />
+              ) : (
+                <SkinArtwork key={skinId(skin)} skin={skin} preview />
+              )}
+              {canStep && !skinVideos.playing && (
                 <>
                   <button
                     type="button"
@@ -320,6 +326,16 @@ function SkinPreview({
                 </span>
                 <SkinIcon name="open" size={14} />
               </Link>
+              <SkinVideoList
+                videos={skinVideos.videos}
+                playing={skinVideos.playing}
+                onPlay={(video) => {
+                  skinVideos.play(video)
+                  // On a phone the list scrolls the player out of view, so bring it back.
+                  document.querySelector(".wiki-skin-preview-image")?.scrollIntoView({ block: "nearest" })
+                }}
+                onStop={skinVideos.stop}
+              />
               {heroSkins.length > 1 && (
                 <section className="wiki-skin-preview-set" aria-label={text("Các trang phục khác", "Other skins")}>
                   <h3>

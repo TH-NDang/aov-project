@@ -129,6 +129,13 @@ export const NAV_GROUPS: NavGroup[] = [
         capability: "catalog:read",
       },
       {
+        title: "Video",
+        icon: "videos",
+        to: "/videos",
+        description: "Video của tướng, kỹ năng, trang phục, duyệt và nhập dữ liệu thu thập",
+        capability: "catalog:read",
+      },
+      {
         title: "Thuật ngữ & tham chiếu",
         to: "/terminology",
         icon: "glossary",

@@ -18,10 +18,15 @@ class CatalogFacadeBoundaryTest {
     void retainsAuthorizationAndTransactionBoundariesOnPublicFacade(Class<?> catalog) throws Exception {
         assertThat(catalog.getAnnotation(Transactional.class)).isNotNull();
         assertThat(catalog.getAnnotation(Transactional.class).readOnly()).isFalse();
-        var list = catalog.getMethod("list", UUID.class, String.class, String.class, int.class, int.class,
-                UUID.class, UUID.class, boolean.class);
-        assertThat(list.getAnnotation(PreAuthorize.class).value()).isEqualTo("hasAuthority('catalog:read')");
-        assertThat(list.getAnnotation(Transactional.class).readOnly()).isTrue();
+        // Catalogs differ in how many timeline options their widest overload takes, so every overload is checked.
+        var lists = java.util.Arrays.stream(catalog.getMethods()).filter(method -> method.getName().equals("list"))
+                .toList();
+        assertThat(lists).anyMatch(method -> method.getParameterCount() >= 8
+                && method.getParameterTypes()[5] == UUID.class && method.getParameterTypes()[7] == boolean.class);
+        for (var list : lists) {
+            assertThat(list.getAnnotation(PreAuthorize.class).value()).isEqualTo("hasAuthority('catalog:read')");
+            assertThat(list.getAnnotation(Transactional.class).readOnly()).isTrue();
+        }
         var published = catalog.getMethod("published", String.class, String.class, int.class, int.class);
         assertThat(published.getAnnotation(Transactional.class).readOnly()).isTrue();
         assertThat(published.getAnnotation(PreAuthorize.class)).isNull();

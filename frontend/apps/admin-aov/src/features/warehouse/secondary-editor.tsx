@@ -1,6 +1,18 @@
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useEffect, useState, type ReactNode } from "react"
-import { Archive, History, Image, Languages, LoaderCircle, Plus, Save, Settings2, Trash2 } from "lucide-react"
+import {
+  Archive,
+  History,
+  Image,
+  Languages,
+  LoaderCircle,
+  Plus,
+  Save,
+  Settings2,
+  Trash2,
+  Clapperboard,
+} from "lucide-react"
+import { SubjectVideosPanel } from "../videos/subject-videos-panel"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
@@ -346,7 +358,7 @@ export function SecondaryEditor({
           )}
           {translationOnly && <p className="type-meta mb-2">Nháp bản dịch cho phép sửa nội dung dịch và ghi chú.</p>}
           <Tabs value={tab} onValueChange={setTab} className="gap-3">
-            <TabsList className={`grid w-full ${hasHistory ? "grid-cols-4" : "grid-cols-3"}`}>
+            <TabsList className={`grid w-full ${hasHistory ? "grid-cols-5" : "grid-cols-3"}`}>
               <TabsTrigger value="information" disabled={busy || uploading}>
                 <Settings2 className="size-4" /> Thông tin
               </TabsTrigger>
@@ -360,6 +372,12 @@ export function SecondaryEditor({
                 <TabsTrigger value="history" disabled={busy || uploading}>
                   <History className="size-4" />
                   Lịch sử
+                </TabsTrigger>
+              )}
+              {hasHistory && (
+                <TabsTrigger value="videos" disabled={busy || uploading}>
+                  <Clapperboard className="size-4" />
+                  Video
                 </TabsTrigger>
               )}
             </TabsList>
@@ -696,6 +714,15 @@ export function SecondaryEditor({
                 </fieldset>
               )}
             </TabsContent>
+            {hasHistory && (
+              <TabsContent value="videos">
+                <SubjectVideosPanel
+                  kind={kind === "enchantments" ? "ENCHANTMENT" : kind === "arcana" ? "ARCANA" : "SPELL"}
+                  id={entryId!}
+                  name={name}
+                />
+              </TabsContent>
+            )}
             {hasHistory && (
               <TabsContent value="history">
                 <WarehouseChangeHistory

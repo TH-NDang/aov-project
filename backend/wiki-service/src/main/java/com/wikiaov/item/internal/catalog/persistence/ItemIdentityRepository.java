@@ -11,4 +11,13 @@ public interface ItemIdentityRepository extends JpaRepository<ItemIdentity, UUID
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from ItemIdentity e where e.id=:id")
     Optional<ItemIdentity> lockById(UUID id);
+
+    @Query("""
+            select distinct new com.wikiaov.video.VideoSubjectName(
+                e.id, e.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
+            from ItemIdentity e
+            left join ItemRevision r on r.ownerId = e.id and r.state <> 'DISCARDED'
+            left join ItemTranslation t on t.revisionId = r.id
+            """)
+    java.util.List<com.wikiaov.video.VideoSubjectName> videoSubjectNames();
 }

@@ -12,6 +12,7 @@ import { WarehouseUpdates } from "./warehouse-updates"
 import { WarehouseArtwork } from "./warehouse-artwork"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { WarehouseIcon } from "./warehouse-icon"
+import { SubjectVideos } from "../videos/subject-videos"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import {
@@ -64,6 +65,8 @@ function eyebrow(entry: PublishedWarehouseRecord, groups: WarehouseGroup[], loca
     return [groupName(entry.content.branchCode) ?? kindName, tier(entry.content.tier)].filter(Boolean).join(" · ")
   return kindName
 }
+
+const VIDEO_KINDS = { items: "ITEM", enchantments: "ENCHANTMENT", arcana: "ARCANA", spells: "SPELL" } as const
 
 function DetailContent({
   entry,
@@ -282,6 +285,7 @@ function DetailContent({
               )}
             </>
           )}
+          <SubjectVideos kind={VIDEO_KINDS[entry.kind]} id={entry.id} />
           <WarehouseUpdates entry={entry} />
           {!entry.revision.effectiveFromPatchVariantId && (
             <p className="wiki-warehouse-baseline-note">

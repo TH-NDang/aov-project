@@ -29,4 +29,5 @@ export const navArtIcons = {
   circuits: createArtworkIcon(artwork, "circuits"),
   coaches: createArtworkIcon(artwork, "coaches"),
   broadcast: createArtworkIcon(artwork, "broadcast"),
+  videos: createArtworkIcon(artwork, "videos"),
 }

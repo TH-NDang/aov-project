@@ -545,6 +545,7 @@
     [],
     [],
     [],
+    [],
     []
   ],
   "com.wikiaov.item.internal.web.ItemAdminController#latest": [
@@ -799,6 +800,7 @@
     []
   ],
   "com.wikiaov.spell.internal.web.SpellAdminController#list": [
+    [],
     [],
     [],
     [],

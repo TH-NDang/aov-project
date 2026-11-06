@@ -1794,3 +1794,30 @@ sang page Community, không có khóa ngoại chéo dịch vụ. `media.media_up
 Nguồn cũ không có tham chiếu vẫn hợp lệ. Chỉ hai UUID được sửa qua thao tác tham chiếu có kiểm tra
 phiên bản và audit; thông tin nguồn gốc và bytes giữ nguyên. Tham chiếu không xác nhận quyền sở hữu,
 không cấp quyền quản lý page, không tự nối theo tên. Xem ADR-017 và đặc tả 04.
+
+## Video theo đối tượng — V047 (ADR-019)
+
+Migration V047 tạo schema `video` và bảng `video.subject_video`, thuộc module `video`.
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id` | UUID |
+| `subject_kind` | `HERO`, `SKILL`, `SKIN`, `ITEM`, `ENCHANTMENT`, `ARCANA`, `SPELL` |
+| `subject_id` | Định danh mục; với `SKILL` và `SKIN` là định danh tướng |
+| `subject_key` | Khóa kỹ năng hoặc trang phục; bắt buộc với `SKILL`, `SKIN` và phải null với loại khác |
+| `purpose` | `INTRO`, `GUIDE_BASIC`, `GUIDE_ADVANCED`, `SKILL_DEMO`, `SKIN_SHOWCASE`, `SKIN_TRAILER`, `LORE`, `PATCH_CHANGE`, `OTHER` |
+| `title`, `note`, `channel_name`, `published_on` | Thông tin hiển thị |
+| `url`, `provider`, `provider_video_id` | Liên kết đã chuẩn hóa; `provider_video_id` chỉ có khi nhúng được |
+| `start_seconds`, `duration_seconds` | Mốc bắt đầu và thời lượng |
+| `patch_variant_id` | Áp dụng từ patch này; null là mọi phiên bản |
+| `display_order` | Thứ tự trong một mục |
+| `status` | `PUBLISHED`, `DRAFT`, `HIDDEN` |
+| `origin` | `MANUAL`, `IMPORT` |
+| `version`, `created_at`, `updated_at` | Phiên bản lạc quan và thời điểm |
+
+Không có khóa ngoại sang schema khác: `subject_id`, `subject_key`, `patch_variant_id` được module sở hữu
+xác nhận khi ghi qua `VideoSubjectProvider` và `GameplayContexts`.
+
+Ràng buộc `subject_video_unique` là `UNIQUE NULLS NOT DISTINCT (subject_kind, subject_id, subject_key, url,
+start_seconds)`, cần PostgreSQL 15 trở lên. Chỉ mục `subject_video_public_idx (subject_id, status,
+display_order)` phục vụ đọc công khai, `subject_video_review_idx (status, updated_at DESC)` phục vụ hàng chờ.
