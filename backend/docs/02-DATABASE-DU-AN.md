@@ -232,6 +232,17 @@ Content correction sau patch có thể trở thành current mà không tạo pat
 | created_by_issuer | TEXT |
 | created_by_subject | TEXT |
 
+### `hero.hero_profile_position`
+
+Vị trí đi của tướng, thuộc snapshot PROFILE như vai trò và bất biến khi snapshot đã xuất bản.
+
+| Cột | Kiểu |
+|---|---|
+| profile_revision_id | UUID NOT NULL, FK `hero_profile_revision` |
+| position_code | VARCHAR(16) NOT NULL, một trong `TOP`, `MID`, `JUNGLE`, `DRAGON`, `SUPPORT` |
+
+Khóa chính là (profile_revision_id, position_code). Trigger `trg_hero_profile_position_immutable` dùng chung `hero.guard_section_child`.
+
 ### `hero.hero_profile_role`
 
 ```text
@@ -484,7 +495,18 @@ description
 acquisition_note
 ```
 
-Giá/cách sở hữu có cấu trúc nên được model riêng khi nguồn và semantics được chốt; không nhét mọi thứ vào `acquisition_note` lâu dài.
+Giá/cách sở hữu có cấu trúc nằm ở `hero.hero_shop_price` và `hero.hero_skin_acquisition` bên dưới; không nhét mọi thứ vào `acquisition_note` lâu dài.
+
+### `hero.hero_shop_price` và `hero.hero_skin_acquisition`
+
+Giá và cách nhận đi theo cửa hàng trong game, không đi theo patch, nên nằm ngoài snapshot có phiên bản: sửa là áp dụng ngay, không cần bản nháp. Mỗi thị trường có một dòng.
+
+| Bảng | Cột |
+|---|---|
+| `hero_shop_price` | hero_id, region_code (khóa chính); availability `ON_SALE`, `NOT_OPEN`, `COMING_SOON`, `UNKNOWN`; gold_price, voucher_price (quân huy); captured_on; needs_review; note; updated_at |
+| `hero_skin_acquisition` | hero_id, skin_key, region_code (khóa chính, FK `hero_skin`); method `VOUCHER`, `EVENT`, `NOT_OPEN`, `OTHER`, `UNKNOWN`; voucher_price (giá gốc, không tính giảm giá; chỉ có khi method là `VOUCHER`); event_name; captured_on; needs_review; note; updated_at |
+
+Dòng `needs_review = true` không hiện ra API public cho tới khi biên tập viên xác nhận. V052 nhập dữ liệu đọc từ ảnh cửa hàng ngày 2026-09-16.
 
 ---
 

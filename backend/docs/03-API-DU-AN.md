@@ -27,7 +27,8 @@ Admin list phân trang theo code mặc định; bộ lọc thay đổi gameplay/
 
 Section PUT dùng payload phẳng, `expectedDraftVersion` và full section content; publish/discard dùng
 `expectedVersion`. `changeNote` tùy chọn. `sources` có thể bỏ qua và mặc định array rỗng.
-Profile: `{translations:[{locale,name,title?,summary?,lore?}],roles:["ASSASSIN"]}`.
+Profile: `{translations:[{locale,name,title?,summary?,lore?}],roles:["ASSASSIN"],positions?:["DRAGON"]}`.
+`positions` nhận `TOP`, `MID`, `JUNGLE`, `DRAGON`, `SUPPORT`; bỏ trống nghĩa là chưa có vị trí đi.
 Skills: `{skills:[{skillKey,kind,formKey?,displayOrder,iconAssetId?,translations:[{locale,name,description}],effects:[]}]}`.
 Skins: `{skins:[{skinKey,displayOrder,artAssetId?,rarityCode?,translations:[{locale,name,description?,acquisitionNote?}]}]}`.
 Effect gồm effectType và metadata. Source gồm label, sourceUrl?, observedAt?, verificationState
@@ -304,6 +305,7 @@ Response conceptual:
       "code": "nakroth",
       "name": "Nakroth",
       "roles": ["ASSASSIN"],
+      "positions": ["DRAGON"],
       "head": {
         "assetId": "...",
         "semanticType": "HERO_HEAD",
@@ -2179,11 +2181,32 @@ Danh mục tướng hỗ trợ thêm `role` (mã vai trò phân cách dấu ph�
 (`top`, `mid`, `rung`, `rong-ad`, `tro-thu`, phân cách dấu phẩy) và `hasWarnings=true|false`.
 Các nhóm kết hợp bằng AND, các lựa chọn trong cùng nhóm kết hợp bằng OR; giá trị vai trò/đường lạ trả 422.
 Lọc và count trước phân trang, trên cùng snapshot mới nhất được chọn theo ruleset/phạm vi như tìm kiếm tên.
-Vai trò lấy từ PROFILE; đường lấy từ `SOURCE_SNAPSHOT.metadata.heroClassification.recommendedPositions`,
-không suy diễn từ vai trò. Cảnh báo đọc `reviewFlags` (dự phòng `review_flags`) và `heroReviewFlags`;
+Vai trò và đường đều lấy từ PROFILE (`top`→`TOP`, `mid`→`MID`, `rung`→`JUNGLE`, `rong-ad`→`DRAGON`, `tro-thu`→`SUPPORT`),
+không suy diễn đường từ vai trò. Dữ liệu `heroClassification.recommendedPositions` trong snapshot nguồn chỉ còn để đối chiếu; V050 đã chuyển sang PROFILE. Cảnh báo đọc `reviewFlags` (dự phòng `review_flags`) và `heroReviewFlags`;
 bỏ qua cờ `reviewResolution=RESOLVED`, cờ nguồn chỉ mô tả cách đo/ảnh trùng/icon chưa gắn nhãn,
 và cờ `not_visible_in_source` của `heroLevel`/`hero.attributes.hero_level` giống giao diện đối chiếu.
 Không truyền bộ lọc thì giữ hành vi cũ.
+
+### Giá tướng và cách nhận trang phục
+
+```http
+GET /api/wiki/v1/heroes/{heroId}/shop?region=VN
+GET /api/wiki/v1/admin/heroes/{heroId}/shop?region=VN
+PUT /api/wiki/v1/admin/heroes/{heroId}/shop?region=VN
+PUT /api/wiki/v1/admin/heroes/{heroId}/shop/skins/{skinKey}?region=VN
+```
+
+Đi theo cửa hàng trong game nên áp dụng ngay, không cần bản nháp. Bản public bỏ các mục còn chờ xem lại và bỏ `note`, `needsReview`. Đọc admin cần `catalog:read`, ghi cần `hero:write`.
+
+```json
+{
+  "region": "VN",
+  "price": { "availability": "ON_SALE", "goldPrice": 13888, "voucherPrice": 359, "capturedOn": "2026-09-16", "needsReview": false, "note": null },
+  "skins": [{ "skinKey": "airi-kiemono", "method": "VOUCHER", "voucherPrice": 799, "eventName": null, "capturedOn": "2026-09-16", "needsReview": false, "note": null }]
+}
+```
+
+`price` là `null` khi chưa có thông tin. PUT giá nhận `availability` (bắt buộc), `goldPrice`, `voucherPrice`, `capturedOn`, `needsReview`, `note`. PUT trang phục nhận `method` (bắt buộc), `voucherPrice` (chỉ giữ khi `VOUCHER`), `eventName` (chỉ giữ khi `EVENT`), `capturedOn`, `needsReview`, `note`. Giá trị lạ trả 422, tướng hoặc trang phục không tồn tại trả 404.
 
 ### Không gian ảnh và bản dịch bậc trang phục
 
@@ -2453,6 +2476,8 @@ Các đường dẫn dưới đây nằm dưới `/api/wiki/v1`:
 | `GET /reference-catalog?region=VN&locale=vi-VN` | Công khai | Cấu hình kết hợp tướng/trang bị đã xuất bản, có hiệu lực theo thị trường |
 | `GET /admin/reference-settings` | `catalog:read` | Toàn bộ cấu hình tùy chỉnh phục vụ biên tập |
 | `PUT /admin/reference-settings` | `catalog:read`, `hero:write` | Body `{expectedVersion, settings}`, trả cấu hình đã lưu và version mới |
+
+`icon` của một mục là địa chỉ ảnh hoặc `glyph:<tên>` để chọn một hình đơn sắc có sẵn. Khi đọc nội dung game, chỉ tên trong game (tướng, kỹ năng, trang bị, phù hiệu, bảng ngọc, phụ trợ, thuật ngữ) mới tự được nhận diện; đội, tuyển thủ, quốc gia chỉ thành tham chiếu khi người viết chủ động chèn bằng `@`. Mã chỉ gồm chữ số không bao giờ tự nhận diện, để `100%` không thành đội `100`.
 
 `settings`: `{schemaVersion:1, autoRecognize, fallbackLocale, entities}`. Mỗi entity có `id` là khóa
 tham chiếu, `kind` (`term`, `hero`, `item`, `enchantment`, `arcana`, `spell`), `translations:[{locale,name,aliases,description}]`, tùy chọn
