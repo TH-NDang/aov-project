@@ -1,3 +1,4 @@
+import { skillSlot } from "@aov/ui/lib/skill-rank-values"
 import type { Skill } from "./types"
 
 export function selectSkillTranslation(skill: Skill, locale: string) {
@@ -8,16 +9,7 @@ export function selectSkillTranslation(skill: Skill, locale: string) {
   )
 }
 
-export function skillSlot(skill: Skill): number | null {
-  const snapshot = skill.effects.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
-  if (typeof snapshot?.sourceSlot === "number" && Number.isInteger(snapshot.sourceSlot) && snapshot.sourceSlot >= 0)
-    return snapshot.sourceSlot
-  const match = /^skill-(\d+)-(\d+)$/.exec(skill.skillKey)
-  if (match) return Number(match[1])
-  if (skill.skillKey === "capture-passive") return 0
-  const captured = /^capture-skill-(\d+)$/.exec(skill.skillKey)
-  return captured ? Number(captured[1]) : null
-}
+export { skillSlot }
 
 export function skillVariant(skill: Skill): number | null {
   const match = /^skill-(\d+)-(\d+)$/.exec(skill.skillKey)
