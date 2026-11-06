@@ -101,6 +101,7 @@ function HeroContentBody({
   editable,
   busy,
   onEdit,
+  onNeedsDraft,
   onTranslate,
   tab: selectedTab,
   onTabChange,
@@ -126,6 +127,7 @@ function HeroContentBody({
   editable: boolean
   busy: boolean
   onEdit: (section: Section, profilePart?: "information" | "lore") => void
+  onNeedsDraft?: () => void
   onTranslate?: (target: TranslationTarget) => void
   tab?: HeroContentTab
   onTabChange?: (tab: HeroContentTab) => void
@@ -235,6 +237,7 @@ function HeroContentBody({
             editable={editable}
             busy={busy}
             onEdit={onEdit}
+            onNeedsDraft={onNeedsDraft}
             onTranslate={onTranslate}
           />
         )}
@@ -244,10 +247,16 @@ function HeroContentBody({
           const data = content[section]
           const editAction = (
             <IconAction
-              label={editable ? `Chỉnh sửa ${label}` : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`}
+              label={
+                editable
+                  ? `Chỉnh sửa ${label}`
+                  : onNeedsDraft
+                    ? `Chỉnh sửa ${label} · tạo bản nháp trước`
+                    : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`
+              }
               icon={Pencil}
-              disabled={!editable || busy}
-              onClick={() => onEdit(section)}
+              disabled={(!editable && !onNeedsDraft) || busy}
+              onClick={() => (editable ? onEdit(section) : onNeedsDraft?.())}
             />
           )
           let body: ReactNode

@@ -957,6 +957,7 @@ export function PublishingWorkspace({
                     onSkillChange={(skill) => updateLocation({ skill })}
                     onTabChange={(tab) => updateLocation({ tab })}
                     onTranslate={canWrite ? openTranslation : undefined}
+                    onNeedsDraft={canWrite && revision?.state === "PUBLISHED" ? openManagement : undefined}
                     onEdit={(next, part = "information") => {
                       if (next === "PROFILE") {
                         const fields = part === "lore" ? (["lore"] as const) : (["name", "title", "summary"] as const)

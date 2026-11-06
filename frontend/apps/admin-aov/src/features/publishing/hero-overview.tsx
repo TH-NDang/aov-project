@@ -60,6 +60,7 @@ export function HeroOverview({
   editable,
   busy,
   onEdit,
+  onNeedsDraft,
   onTranslate,
 }: {
   content: Content
@@ -73,21 +74,25 @@ export function HeroOverview({
   editable: boolean
   busy: boolean
   onEdit: (section: Section, profilePart?: ProfileEditorPart) => void
+  /** A revision that cannot change still offers its pencil to someone who can start a draft from it. */
+  onNeedsDraft?: () => void
   onTranslate?: (target: TranslationTarget) => void
 }) {
   const ratings = content.OVERVIEW_RATINGS
   const scale = heroRatingScale(ratings?.scaleCode ?? "GAME_OVERVIEW_10")
+  const canStartEditing = editable || !!onNeedsDraft
+  const editLabel = (label: string) => (editable ? `Chỉnh sửa ${label}` : `Chỉnh sửa ${label} · tạo bản nháp trước`)
   const edit = (section: Section, label: string) =>
-    editable && (
+    canStartEditing && (
       <Button
         type="button"
         variant="ghost"
         size="icon"
         className="size-8 shrink-0"
         disabled={busy}
-        aria-label={`Chỉnh sửa ${label}`}
-        title={`Chỉnh sửa ${label}`}
-        onClick={() => onEdit(section)}
+        aria-label={editLabel(label)}
+        title={editLabel(label)}
+        onClick={() => (editable ? onEdit(section) : onNeedsDraft?.())}
       >
         <Pencil className="size-4" />
       </Button>
@@ -215,7 +220,7 @@ export function HeroOverview({
             )}
             <HeroContentSources sources={ratings?.sources ?? []} compact />
           </section>
-          {(profile?.lore || editable) && (
+          {(profile?.lore || canStartEditing) && (
             <details id="hero-lore" className={cn(panel, "group/lore order-4")}>
               <summary className="type-section-title flex cursor-pointer list-none items-center gap-2 [&::-webkit-details-marker]:hidden">
                 <BookOpen className="size-4 text-muted-foreground" />
@@ -241,14 +246,15 @@ export function HeroOverview({
                 ) : (
                   <p className="type-meta">Chưa có cốt truyện.</p>
                 )}
-                {editable && (
+                {canStartEditing && (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="mt-2"
                     disabled={busy}
-                    onClick={() => onEdit("PROFILE", "lore")}
+                    title={editLabel("cốt truyện")}
+                    onClick={() => (editable ? onEdit("PROFILE", "lore") : onNeedsDraft?.())}
                   >
                     <Pencil className="size-4" />
                     Chỉnh sửa cốt truyện
