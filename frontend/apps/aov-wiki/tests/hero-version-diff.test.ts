@@ -40,6 +40,49 @@ test("color markup never counts as a gameplay difference", () => {
   assert.equal(skillDifference(skill("gây <color=#111111>100</color>"), skill("gây <color=#222222>100</color>")), null)
 })
 
+test("color and spacing in cooldowns, table cells and text are not changes", () => {
+  assert.equal(
+    skillDifference(
+      skill("gây 100 sát thương", "395", "<color=#FF8941>H.chiêu: 11s</color>"),
+      skill("gây  100\nsát thương", "  395", "<color=#D07649>H.chiêu: 11s</color>"),
+    ),
+    null,
+  )
+})
+
+test("a changed cooldown is shown without its markup", () => {
+  const difference = skillDifference(
+    skill("x", undefined, "<color=#FF8941>H.chiêu: 11s</color>"),
+    skill("x", undefined, "<color=#D07649>H.chiêu: 9s</color>"),
+  )
+  assert.deepEqual(difference?.cooldown, { before: "H.chiêu: 11s", after: "H.chiêu: 9s" })
+})
+
+test("a number joined to a word is marked alone", () => {
+  assert.deepEqual(diffWords("(+80%Công phép)", "(+90%Công phép)"), [
+    { kind: "same", text: "(+" },
+    { kind: "del", text: "80%" },
+    { kind: "ins", text: "90%" },
+    { kind: "same", text: "Công phép)" },
+  ])
+})
+
+test("edits a space or bracket apart read as one, longer shared text keeps them separate", () => {
+  assert.deepEqual(diffWords("500 (+60 mỗi cấp", "450 (+90 mỗi cấp"), [
+    { kind: "del", text: "500 (+60" },
+    { kind: "ins", text: "450 (+90" },
+    { kind: "same", text: " mỗi cấp" },
+  ])
+  assert.deepEqual(diffWords("hồi 11 giây, giảm 0.6", "hồi 12.5 giây, giảm 0.5"), [
+    { kind: "same", text: "hồi " },
+    { kind: "del", text: "11" },
+    { kind: "ins", text: "12.5" },
+    { kind: "same", text: " giây, giảm " },
+    { kind: "del", text: "0.6" },
+    { kind: "ins", text: "0.5" },
+  ])
+})
+
 test("the Wukong passive shows its description and table change", () => {
   const difference = skillDifference(
     skill("gây 340–508 (tăng theo cấp tướng) sát thương", "340–508 + 1.0 công vật lý"),

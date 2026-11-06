@@ -23,11 +23,45 @@ export function stripSkillMarkup(value: string) {
   return value.replace(/<\/?[a-z][^>]*>/gi, "")
 }
 
+/** Text as a reader sees it: color markup and spacing differences say nothing about gameplay. */
+const readable = (value: string) => stripSkillMarkup(value).replace(/\s+/g, " ").trim()
+
 const MAX_DIFF_CELLS = 1_000_000
+/** Numbers stand apart from the words around them, so "(+80%Attack" to "(+90%Attack" marks only the number. */
+const DIFF_TOKEN = /\s+|\d+(?:[.,]\d+)*%?|[\p{L}\p{M}]+|[^\s\p{L}\p{M}\d]/gu
+const isSpace = (token: string) => !token.trim()
+const sameToken = (left: string, right: string) => left === right || (isSpace(left) && isSpace(right))
+const JOINING_TEXT = /^[\s\p{P}\p{S}]{1,4}$/u
+
+/** Two edits a space or a bracket apart read as one edit, instead of old and new words taking turns. */
+function joinNearbyEdits(segments: DiffSegment[]) {
+  const joined: DiffSegment[] = []
+  let removed = ""
+  let added = ""
+  const flush = () => {
+    if (removed) joined.push({ kind: "del", text: removed })
+    if (added) joined.push({ kind: "ins", text: added })
+    removed = ""
+    added = ""
+  }
+  segments.forEach((segment, index) => {
+    if (segment.kind === "del") removed += segment.text
+    else if (segment.kind === "ins") added += segment.text
+    else if (removed && added && index < segments.length - 1 && JOINING_TEXT.test(segment.text)) {
+      removed += segment.text
+      added += segment.text
+    } else {
+      flush()
+      joined.push(segment)
+    }
+  })
+  flush()
+  return joined
+}
 
 export function diffWords(before: string, after: string): DiffSegment[] {
-  const a = before.match(/\s+|[^\s]+/g) ?? []
-  const b = after.match(/\s+|[^\s]+/g) ?? []
+  const a = before.match(DIFF_TOKEN) ?? []
+  const b = after.match(DIFF_TOKEN) ?? []
   if (a.length * b.length > MAX_DIFF_CELLS) {
     return [
       { kind: "del", text: before },
@@ -39,10 +73,9 @@ export function diffWords(before: string, after: string): DiffSegment[] {
   const lengths = new Uint32Array((a.length + 1) * width)
   for (let i = a.length - 1; i >= 0; i--) {
     for (let j = b.length - 1; j >= 0; j--) {
-      lengths[i * width + j] =
-        a[i] === b[j]
-          ? lengths[(i + 1) * width + j + 1] + 1
-          : Math.max(lengths[(i + 1) * width + j], lengths[i * width + j + 1])
+      lengths[i * width + j] = sameToken(a[i], b[j])
+        ? lengths[(i + 1) * width + j + 1] + 1
+        : Math.max(lengths[(i + 1) * width + j], lengths[i * width + j + 1])
     }
   }
 
@@ -55,8 +88,8 @@ export function diffWords(before: string, after: string): DiffSegment[] {
   let i = 0
   let j = 0
   while (i < a.length || j < b.length) {
-    if (i < a.length && j < b.length && a[i] === b[j]) {
-      push("same", a[i])
+    if (i < a.length && j < b.length && sameToken(a[i], b[j])) {
+      push("same", b[j])
       i++
       j++
     } else if (j >= b.length || (i < a.length && lengths[(i + 1) * width + j] >= lengths[i * width + j + 1])) {
@@ -65,15 +98,18 @@ export function diffWords(before: string, after: string): DiffSegment[] {
       push("ins", b[j++])
     }
   }
-  return segments
+  return joinNearbyEdits(segments)
 }
 
 function snapshot(skill: PublicSkill) {
   return skill.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata ?? undefined
 }
 
-const changed = (before: string | undefined, after: string | undefined): ValueChange | null =>
-  (before ?? "") === (after ?? "") ? null : { before: before ?? "—", after: after ?? "—" }
+function changed(before: string | undefined, after: string | undefined): ValueChange | null {
+  const oldValue = readable(before ?? "")
+  const newValue = readable(after ?? "")
+  return oldValue === newValue ? null : { before: oldValue || "—", after: newValue || "—" }
+}
 
 function tableRows(skill: PublicSkill) {
   const rows = new Map<string, (string | null)[]>()
@@ -81,7 +117,7 @@ function tableRows(skill: PublicSkill) {
     if (row?.label)
       rows.set(
         row.label,
-        (row.display_values ?? []).map((value) => (value == null ? null : String(value))),
+        (row.display_values ?? []).map((value) => (value == null ? null : readable(String(value)))),
       )
   }
   return rows
@@ -92,7 +128,7 @@ export function skillDifference(before: PublicSkill | undefined, after: PublicSk
 
   const oldText = stripSkillMarkup(before.description ?? "")
   const newText = stripSkillMarkup(after.description ?? "")
-  const description = oldText === newText ? null : diffWords(oldText, newText)
+  const description = readable(oldText) === readable(newText) ? null : diffWords(oldText, newText)
 
   const rows: SkillDifference["rows"] = new Map()
   const oldRows = tableRows(before)
