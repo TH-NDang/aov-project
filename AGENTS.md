@@ -96,6 +96,10 @@ Do not run concurrent builds against the same output directory or edit shared so
 - React + TypeScript + Vite. Shared UI from `@aov/ui` (`packages/ui`).
 - Commands: `pnpm dev`, `pnpm typecheck`, `pnpm build`, `pnpm format` (run inside `frontend`).
 - Formatting is owned by Prettier (`frontend/.prettierrc.json`: no semicolons, double quotes, 120 columns).
+- Lists load as the reader scrolls, never with page buttons. Put `InfiniteScroll` (`@aov/ui/components/infinite-scroll`)
+  right after the last row, inside the box that scrolls. Drive it with `useInfiniteQuery` and `nextPageOf`
+  (`@aov/ui/lib/page-slice`), or with `useRevealedRows` (`@aov/ui/hooks/use-revealed-rows`) when the rows are already in
+  memory. Show a whole-list error only for `isLoadingError`: a later page that fails must keep the rows already loaded.
 - Colors, radius and the font family come from `packages/ui/src/styles/tokens.css` (see `frontend/docs/DESIGN-TOKENS.md`).
   App stylesheets alias those tokens; do not declare new palette values, except for overlays on artwork.
 - Typography (admin) follows a 12/14/16/24 reading scale. Never use text smaller than 12px (`text-xs`), in Tailwind
