@@ -510,7 +510,7 @@ Thay một file bằng bản chất lượng cao hơn nhưng cùng artwork khôn
 
 ### FR-MEDIA-003 — Reverse usage
 
-Quản trị phải truy được asset đang được tham chiếu ở đâu, tối thiểu phân biệt current/draft/historical usage.
+Quản trị phải truy được asset đang được tham chiếu ở đâu, tối thiểu phân biệt current/draft/historical usage. Quản trị cũng phải phân biệt nơi thật sự hiện ảnh với nơi chỉ còn lưu mã ảnh, và lọc được danh sách ảnh theo mức dùng để nhìn ra ảnh không còn hiển thị ở đâu.
 
 ### FR-PATCH-001 — Multi-domain patch
 
