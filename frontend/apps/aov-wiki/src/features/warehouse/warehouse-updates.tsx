@@ -1,5 +1,5 @@
 import { Link } from "react-router"
-import { patchChangeLabel } from "../../components/patch-changes-row"
+import { ChangeKindLabel } from "../../components/patch-changes-row"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { changeKind, publishedNotesForSubject } from "../../lib/published-change-subjects"
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
@@ -36,7 +36,9 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
           <ul className="divide-y border-y">
             {rows.map((row, i) => (
               <li key={row.changeSetId ?? row.id ?? i} className="space-y-1 py-2">
-                <strong className="type-label">{patchChangeLabel(changeKind(row) ?? "UPDATED", scope.locale)}</strong>
+                <strong className="type-label">
+                  <ChangeKindLabel kind={changeKind(row) ?? "UPDATED"} />
+                </strong>
                 {row.summary && (
                   <p lang={row.actualLocale ?? undefined} className="type-body whitespace-pre-line">
                     {row.summary}

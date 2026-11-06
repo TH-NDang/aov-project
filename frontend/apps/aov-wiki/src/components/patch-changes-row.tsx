@@ -1,4 +1,5 @@
 import { Link } from "react-router"
+import { changeKindIcon, changeKindIcons } from "@aov/ui/components/change-kind-icons"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiImage } from "./wiki-image"
 
@@ -25,6 +26,18 @@ const labels: Record<string, [string, string]> = {
 export function patchChangeLabel(kind: string, locale: string) {
   return wikiText(locale, ...(labels[kind] ?? labels.UPDATED))
 }
+/** A change kind as readers see it: its drawn mark and its name. */
+export function ChangeKindLabel({ kind, size = 18 }: { kind: string; size?: number }) {
+  const { locale } = useWikiContext()
+  const Art = changeKindIcon(kind) ?? changeKindIcons.UPDATED
+  return (
+    <span className="inline-flex items-center gap-1">
+      <Art size={size} className="shrink-0" />
+      {patchChangeLabel(kind, locale)}
+    </span>
+  )
+}
+
 export function PatchChangesRow({
   entries,
   failed = false,
@@ -63,7 +76,11 @@ export function PatchChangesRow({
                   </span>
                 )}
                 {e.name}
-                {e.kind && <span className="type-meta">{patchChangeLabel(e.kind, locale)}</span>}
+                {e.kind && (
+                  <span className="type-meta">
+                    <ChangeKindLabel kind={e.kind} />
+                  </span>
+                )}
               </>
             )
             const style =

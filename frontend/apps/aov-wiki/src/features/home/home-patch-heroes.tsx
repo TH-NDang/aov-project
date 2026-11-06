@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
-import { patchChangeLabel } from "../../components/patch-changes-row"
+import { ChangeKindLabel } from "../../components/patch-changes-row"
 import { WikiImage } from "../../components/wiki-image"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { usePublishedChanges } from "../../lib/wiki-patch-changes"
@@ -40,7 +40,11 @@ export function HomePatchHeroes() {
               <Link to={href(`/hero/${hero.code}`)}>
                 <span className="wiki-home-hero-art">{image && <WikiImage src={image} alt="" />}</span>
                 <strong>{hero.name}</strong>
-                {kind && <span className="wiki-home-hero-change">{patchChangeLabel(kind, locale)}</span>}
+                {kind && (
+                  <span className="wiki-home-hero-change">
+                    <ChangeKindLabel kind={kind} size={16} />
+                  </span>
+                )}
               </Link>
             </li>
           )
