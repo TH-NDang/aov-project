@@ -60,7 +60,7 @@ export function TermsPage() {
   }
 
   return (
-    <div className="wiki-terms">
+    <div className="wiki-terms wiki-document public-panel">
       <CatalogHeading title={t("terms")} section={t("news")} />
       <p className="wiki-terms-lead">
         {text(

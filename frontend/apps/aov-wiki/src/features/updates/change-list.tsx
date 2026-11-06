@@ -45,8 +45,13 @@ export function ChangeKind({ kind }: { kind?: string | null }) {
 function RankTable({ data, label }: { data: RankComparison; label: string }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  // A table of formulas does not fit a phone at a glance, so narrow screens start from the summary.
-  const [detailed, setDetailed] = useState(() => !window.matchMedia("(max-width: 640px)").matches)
+  // A table of formulas does not fit a phone, and a long formula in every cell takes several lines each anywhere, so both
+  // start from the one-line summary.
+  const [detailed, setDetailed] = useState(
+    () =>
+      !window.matchMedia("(max-width: 640px)").matches &&
+      ![...data.before, ...data.after].some((value) => String(value ?? "").length > 16),
+  )
   const sides = [
     { key: "before", name: text("Trước", "Before"), values: data.before, summary: data.summary.before },
     { key: "after", name: text("Sau", "After"), values: data.after, summary: data.summary.after },
@@ -169,7 +174,7 @@ function ChangeRow({ change, skill }: { change: HeroChangeItem; skill?: PublicSk
 }
 
 /** How much of a change set shows at first: about a skill's worth, enough to tell what the set is about. */
-const PREVIEW_HEIGHT = 280
+const previewHeight = () => (window.matchMedia("(max-width: 640px)").matches ? 190 : 280)
 
 /** Changes show right away. A long set is cut short, with a way to read the rest. */
 export function ChangeDisclosure({
@@ -193,7 +198,7 @@ export function ChangeDisclosure({
     const inner = content.current?.firstElementChild
     if (!inner) return
     // A set only slightly over the limit is not worth hiding a few lines of.
-    const measure = () => setLong(inner.getBoundingClientRect().height > PREVIEW_HEIGHT + 60)
+    const measure = () => setLong(inner.getBoundingClientRect().height > previewHeight() + 60)
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(inner)
@@ -208,7 +213,7 @@ export function ChangeDisclosure({
         id={contentId}
         className="wiki-change-detail"
         data-clipped={clipped || undefined}
-        style={clipped ? { maxHeight: PREVIEW_HEIGHT } : undefined}
+        style={clipped ? { maxHeight: previewHeight() } : undefined}
         // Moving through the page by keyboard must not land on something hidden by the cut.
         onFocus={(event) => {
           if (clipped && event.target.matches(":focus-visible")) onToggle()

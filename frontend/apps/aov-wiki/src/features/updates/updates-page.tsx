@@ -60,7 +60,11 @@ export function UpdatesPage() {
                   const variant = variants.get(release.variantId)
                   return (
                     <li key={release.id}>
-                      <Link to={href(`/updates/${release.code}`)} className="wiki-updates-row">
+                      <Link
+                        to={href(`/updates/${release.code}`)}
+                        className="wiki-updates-row public-panel"
+                        data-current={variant?.isCurrent || undefined}
+                      >
                         <navArtIcons.releases size={28} />
                         <time>{formatReleaseDate(variant?.regionalDate, release.effectiveAt) ?? release.code}</time>
                         <strong>{release.title || release.code}</strong>

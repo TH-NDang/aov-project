@@ -38,8 +38,33 @@
   margin-bottom: 8px;
 }
 .wiki-updates-season ol {
+  position: relative;
   display: grid;
-  gap: 8px;
+  gap: 12px;
+  padding-left: 26px;
+}
+.wiki-updates-season ol::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 7px;
+  width: 1px;
+  background: color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
+}
+.wiki-updates-season li {
+  position: relative;
+}
+.wiki-updates-season li::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: -24px;
+  width: 11px;
+  height: 11px;
+  background: var(--aov-wiki-gold);
+  box-shadow: 0 0 0 3px var(--aov-wiki-night);
+  transform: rotate(45deg);
 }
 .wiki-updates-row {
   display: grid;
@@ -48,12 +73,25 @@
   gap: 12px;
   padding: 14px 16px;
   border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
+  border-radius: 10px;
+  background: var(--aov-bg);
+  color: var(--aov-text);
   text-decoration: none;
-  transition: background 160ms;
+  transition:
+    background 160ms,
+    transform 200ms ease-out;
 }
 .wiki-updates-row:is(:hover, :focus-visible) {
-  background: var(--aov-raised);
+  background: var(--aov-surface);
+}
+.wiki-updates-row[data-current] {
+  padding-block: 20px;
+  box-shadow: 0 0 0 1px var(--aov-wiki-gold);
+}
+@media (hover: hover) {
+  .wiki-updates-row:hover {
+    transform: translateX(3px);
+  }
 }
 .wiki-updates-row time {
   font: var(--wiki-type-meta);
@@ -156,6 +194,35 @@
   padding: 14px 16px;
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
+}
+.wiki-hero-history .wiki-patch-subjects {
+  position: relative;
+  padding-left: 26px;
+}
+.wiki-hero-history .wiki-patch-subjects::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 7px;
+  width: 1px;
+  background: color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
+}
+.wiki-hero-history .wiki-patch-subject {
+  position: relative;
+  border-radius: 10px;
+  background: var(--aov-bg);
+}
+.wiki-hero-history .wiki-patch-subject::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  left: -24px;
+  width: 11px;
+  height: 11px;
+  background: var(--aov-wiki-gold);
+  box-shadow: 0 0 0 3px var(--aov-wiki-night);
+  transform: rotate(45deg);
 }
 .wiki-patch-subject > header {
   display: flex;
@@ -422,17 +489,25 @@ a.wiki-patch-subject-link:hover strong {
   position: sticky;
   left: 0;
   z-index: 1;
-  min-width: 64px;
+  /* Wide enough that a stat name takes one line, or two on a phone, instead of a column of single words. */
+  min-width: 128px;
   background: var(--aov-raised);
   color: var(--aov-text);
   font-weight: 600;
   text-align: left;
 }
+@media (max-width: 640px) {
+  .wiki-change-rank-table tbody th,
+  .wiki-change-rank-table thead th:first-child {
+    min-width: 92px;
+  }
+}
 .wiki-change-rank-table tr[data-side="before"] td[data-changed="true"] {
-  background: var(--aov-warning-soft);
+  background: var(--aov-wiki-panel-deep);
+  color: var(--aov-text-soft);
 }
 .wiki-change-rank-table tr[data-side="after"] td[data-changed="true"] {
-  background: var(--aov-info-soft);
+  background: rgb(211 188 142 / 16%);
   color: var(--aov-text);
   font-weight: 600;
 }

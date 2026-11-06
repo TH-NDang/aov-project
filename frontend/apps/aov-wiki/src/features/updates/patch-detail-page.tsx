@@ -170,7 +170,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
     .find((url) => url && /^https:\/\//i.test(url))
 
   return (
-    <>
+    <div className="wiki-document public-panel">
       <header className="wiki-patch-header">
         <nav aria-label={text("Đường dẫn", "Breadcrumb")}>
           <Link to={href("/updates")}>{t("updates")}</Link>
@@ -255,7 +255,7 @@ function PatchContent({ release }: { release: PatchRelease }) {
           )}
         </p>
       )}
-    </>
+    </div>
   )
 }
 
