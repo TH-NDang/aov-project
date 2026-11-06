@@ -28,8 +28,8 @@
   --wordmark-line: var(--wordmark-accent);
 }
 .public-app-wordmark[data-product="stream"] {
-  --wordmark-ink: var(--brand-stream-ink, #eee0ba);
-  --wordmark-accent: var(--brand-stream-accent, #aebbe3);
+  --wordmark-ink: var(--aov-stream-cream);
+  --wordmark-accent: #b6bfdf;
   --wordmark-line: #d3a857;
 }
 .public-app-option[data-product="wiki"],
@@ -83,45 +83,10 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-/* Stream's wordmark takes after its owl: upright and calm, with the O drawn as the bird's gold eye. */
-.public-app-wordmark[data-product="stream"] {
-  gap: 0.32em;
-  font-family: var(--aov-font-sans);
-}
-.public-app-wordmark[data-product="stream"] .public-app-wordmark-prefix {
-  padding-right: 0;
-  font-family: inherit;
-  font-style: normal;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  transform: none;
-}
-.public-app-wordmark[data-product="stream"] .public-app-wordmark-prefix::after {
-  content: none;
-}
-.public-app-wordmark[data-product="stream"] .public-app-wordmark-o {
-  position: relative;
-  color: transparent;
-}
-.public-app-wordmark[data-product="stream"] .public-app-wordmark-o::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0.74em;
-  height: 0.74em;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--aov-stream-night) 0 32%, var(--aov-stream-gold) 35% 100%);
-  translate: -50% -50%;
-}
-.public-app-wordmark[data-product="stream"] .public-app-wordmark-product {
-  padding-top: 0;
-  font-size: 1em;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
+.public-app-wordmark-art {
+  display: block;
+  width: auto;
+  height: 1.1em;
 }
 .public-app-trigger {
   display: inline-flex;

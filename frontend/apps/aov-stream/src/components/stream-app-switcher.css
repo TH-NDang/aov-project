@@ -13,14 +13,6 @@
     padding-inline: 4px;
   }
 }
-@media (max-width: 340px) {
-  .hub-brand-group .public-app-wordmark-prefix {
-    display: none;
-  }
-  .hub-brand-group .public-app-wordmark-product {
-    font-size: 14px;
-  }
-}
 @media (max-width: 360px) {
   .hub-brand-group .public-app-wordmark {
     display: none;

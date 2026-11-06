@@ -2699,13 +2699,14 @@ button:disabled {
   color: var(--hub-text);
 }
 .hub-topbar {
-  border-bottom: 1px solid color-mix(in srgb, var(--aov-stream-gold) 55%, transparent);
+  border-bottom: 1px solid var(--aov-stream-indigo-line);
   background: var(--aov-stream-night);
   backdrop-filter: none;
 }
-/* The place you are in catches the owl's light: a gold line along the bar's edge and a glow rising from it. */
+/* The place you are in looks like the logo's tile: a rounded indigo block with its small gold spark in the corner. */
 .hub-topnav > a {
   isolation: isolate;
+  padding-inline: 12px;
   transition: color 160ms;
 }
 .hub-topnav > a:hover::before,
@@ -2713,28 +2714,42 @@ button:disabled {
   content: "";
   position: absolute;
   z-index: -1;
-  inset: 0;
-  background: linear-gradient(to top, rgb(255 255 255 / 7%), transparent 80%);
+  inset: 11px 0;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 6%);
 }
 .hub-topnav > a[aria-current]::before {
-  background: linear-gradient(to top, color-mix(in srgb, var(--aov-stream-gold) 30%, transparent), transparent 85%);
+  background: linear-gradient(135deg, var(--aov-stream-periwinkle-deep), var(--aov-stream-indigo));
+  box-shadow: inset 0 0 0 1px var(--aov-stream-indigo-line);
 }
 .hub-topnav > a[aria-current] {
   color: var(--aov-stream-cream);
   font-weight: 700;
 }
 .hub-topnav > a[aria-current]::after {
-  right: 0;
-  left: 0;
-  background: var(--aov-stream-gold);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--aov-stream-gold) 70%, transparent);
+  inset: 7px -1px auto auto;
+  width: 11px;
+  height: 11px;
+  border-radius: 0;
+  background: var(--aov-stream-tan);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+}
+/* On a phone the tabs share a shorter row of their own. */
+@media (max-width: 767px) {
+  .hub-topnav > a:hover::before,
+  .hub-topnav > a[aria-current]::before {
+    inset: 4px 2px;
+  }
+  .hub-topnav > a[aria-current]::after {
+    inset: 1px 1px auto auto;
+  }
 }
 .hub-footer {
   width: 100%;
   max-width: none;
   margin-inline: 0;
   padding-inline: max(var(--hub-gutter), calc((100% - 1200px) / 2));
-  border-top: 1px solid color-mix(in srgb, var(--aov-stream-gold) 55%, transparent);
+  border-top: 1px solid var(--aov-stream-indigo-line);
   background: var(--aov-stream-night);
 }
 
