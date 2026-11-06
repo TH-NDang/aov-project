@@ -70,7 +70,8 @@ public record ReferenceSettings(
                     characters += alias.length();
                 }
             }
-            require(e.icon() == null || safeUrl(e.icon(), false), "Invalid reference icon URL.");
+            require(e.icon() == null || e.icon().matches("glyph:[a-zA-Z]{1,32}") || safeUrl(e.icon(), false),
+                    "Invalid reference icon URL.");
             require(e.display() == null || e.display().color() == null
                     || e.display().color().matches("#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{5})?"),
                     "Invalid reference color.");
