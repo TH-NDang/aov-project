@@ -837,3 +837,15 @@ span.wiki-skin-select {
     transform: none;
   }
 }
+.wiki-skin-preview-acquisition {
+  font: var(--wiki-type-entry);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  color: var(--aov-text);
+}
+.wiki-skin-preview-acquisition > svg {
+  flex: none;
+  color: var(--aov-wiki-gold);
+}

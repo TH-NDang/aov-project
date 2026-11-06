@@ -8,6 +8,7 @@ import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useHeroChangedVariants } from "../../lib/wiki-patch-changes"
 import { HeroHandbook, HeroStage } from "./hero-handbook"
 import { HeroVideoButton } from "../videos/subject-videos"
+import { HeroPriceTag } from "./hero-shop"
 import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "./hero-classifications"
 import { HeroGlyph } from "./hero-glyph"
 import { HeroQuickSwitch } from "./hero-quick-switch"
@@ -87,6 +88,7 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
               {position.label}
             </span>
           ))}
+        <HeroPriceTag heroId={hero.id} />
         <HeroVideoButton heroId={hero.id} />
       </div>
     </>

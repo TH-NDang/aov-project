@@ -276,6 +276,10 @@
   background: #11172199;
   padding: 5px 9px;
 }
+.wiki-hero-role-strip > span > svg {
+  flex: none;
+  color: var(--aov-wiki-gold);
+}
 .wiki-hero-role-strip .wiki-hero-glyph {
   width: 17px;
   height: 17px;

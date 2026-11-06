@@ -7,6 +7,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { SkinVideoList, useSkinVideos } from "../videos/subject-videos"
 import { VideoPlayer } from "../videos/video-player"
+import { SkinAcquisitionText } from "../hero/hero-shop"
 import type { SkinBadge, SkinEntry } from "./skin-api"
 import { SkinIcon } from "./skin-icon"
 import "./skin-directory.css"
@@ -259,6 +260,11 @@ export function SkinPreview({
               <DialogDescription>
                 {text("Trang phục của", "Skin for")} {skin.heroName}
               </DialogDescription>
+              <SkinAcquisitionText
+                heroId={skin.heroId}
+                skinKey={skin.skinKey}
+                className="wiki-skin-preview-acquisition"
+              />
               {skin.badge && (
                 <div className="wiki-skin-preview-badge">
                   <SkinBadgeImage key={skin.badge.icon?.currentVersion?.url} badge={skin.badge} />
