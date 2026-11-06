@@ -7,8 +7,11 @@ import com.wikiaov.hero.internal.shop.application.HeroShop;
 import com.wikiaov.platform.ApiPaths;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -31,6 +34,22 @@ public class HeroShopController implements HeroShopApi {
     public HeroShopView.Price savePrice(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestBody SavePrice body) {
         return shop.savePrice(heroId, region, body);
+    }
+
+    @DeleteMapping(path = "/prices/{capturedOn}", version = "1")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePrice(@PathVariable UUID heroId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate capturedOn,
+            @RequestParam(defaultValue = "VN") String region) {
+        shop.deletePrice(heroId, region, capturedOn);
+    }
+
+    @DeleteMapping(path = "/skins/{skinKey}/{capturedOn}", version = "1")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSkin(@PathVariable UUID heroId, @PathVariable String skinKey,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate capturedOn,
+            @RequestParam(defaultValue = "VN") String region) {
+        shop.deleteSkin(heroId, skinKey, region, capturedOn);
     }
 
     @PutMapping(path = "/skins/{skinKey}", version = "1")

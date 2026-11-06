@@ -761,6 +761,29 @@ class DomainCoreIntegrationTest {
         assertThat((Map<String, Object>) send(get(published), null, 200).get("price"))
                 .containsEntry("voucherPrice", 359).doesNotContainEntry("note", "Check in game.");
 
+        // A later price adds a step, and an older view still sees what held then.
+        send(put(admin), Map.of("availability", "ON_SALE", "goldPrice", 100, "capturedOn", "2020-01-10"), 200);
+        send(put(admin), Map.of("availability", "ON_SALE", "goldPrice", 200, "capturedOn", "2020-06-10"), 200);
+        assertThat((Map<String, Object>) send(get(published + "?at=2020-03-01"), null, 200).get("price"))
+                .containsEntry("goldPrice", 100);
+        assertThat((Map<String, Object>) send(get(published + "?at=2020-06-10"), null, 200).get("price"))
+                .containsEntry("goldPrice", 200);
+        assertThat(send(get(published + "?at=2019-12-31"), null, 200).get("price")).isNull();
+        assertThat((Map<String, Object>) send(get(published), null, 200).get("price"))
+                .containsEntry("goldPrice", 13888);
+        assertThat((List<?>) send(get(admin), null, 200).get("priceHistory")).hasSize(3);
+        assertThat(send(get(published), null, 200).get("priceHistory")).isNull();
+
+        // A step still under review does not hide the last confirmed one.
+        send(put(admin), Map.of("availability", "ON_SALE", "goldPrice", 300, "capturedOn", "2020-07-10", "needsReview",
+                true), 200);
+        assertThat((Map<String, Object>) send(get(published + "?at=2020-08-01"), null, 200).get("price"))
+                .containsEntry("goldPrice", 200);
+
+        send(delete(admin + "/prices/2020-07-10"), null, 204);
+        send(delete(admin + "/prices/2020-07-10"), null, 404);
+        assertThat((List<?>) send(get(admin), null, 200).get("priceHistory")).hasSize(3);
+
         send(put(admin), Map.of("availability", "SOMETIMES"), 422);
         send(put(admin + "/skins/no-such-skin"), Map.of("method", "EVENT"), 404);
         send(put(ROOT + "/admin/heroes/" + UUID.randomUUID() + "/shop"), Map.of("availability", "ON_SALE"), 404);
