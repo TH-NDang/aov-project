@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { AlertTriangle, Pencil } from "lucide-react"
+import { AlertTriangle, ChevronDown, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
@@ -10,10 +10,11 @@ import { errorMessage } from "@/lib/api/errors"
 import {
   createPublishingApi,
   type HeroAvailability,
-  type HeroShop,
+  type HeroShopPrice,
   type SkinAcquisition,
   type SkinMethod,
 } from "./publishing-api"
+import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 
 const api = createPublishingApi(backendRequest)
 
@@ -36,10 +37,10 @@ const methodLabels: Record<SkinMethod, string> = {
 }
 
 const amount = (value: number | null | undefined) => (value == null ? "—" : value.toLocaleString("vi-VN"))
-const capturedDate = (value: string | null | undefined) =>
-  value ? new Date(`${value}T00:00:00`).toLocaleDateString("vi-VN") : null
+const capturedDate = (value: string | null | undefined) => (value ? formatCalendarDate(value) : null)
 const numberOrNull = (value: string) => (value.trim() === "" ? null : Number(value))
 const control = "h-9 w-full rounded-md border bg-background px-2.5 text-sm disabled:opacity-50"
+const today = () => new Date().toLocaleDateString("en-CA")
 
 export function useHeroShop(heroId?: string) {
   return useQuery({
@@ -104,12 +105,9 @@ export function HeroShopPanel({
         needsReview: form.needsReview,
         note: form.note.trim() || null,
       }),
-    onSuccess: (saved) => {
-      client.setQueryData<HeroShop>(shopKey(heroId), (previous) => ({
-        region: SHOP_REGION,
-        skins: previous?.skins ?? [],
-        price: saved,
-      }))
+    meta: { successMessage: "Đã lưu giá tướng." },
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: shopKey(heroId) })
       setEditing(false)
     },
   })
@@ -118,7 +116,7 @@ export function HeroShopPanel({
       availability: price?.availability ?? "ON_SALE",
       goldPrice: price?.goldPrice?.toString() ?? "",
       voucherPrice: price?.voucherPrice?.toString() ?? "",
-      capturedOn: price?.capturedOn ?? "",
+      capturedOn: price?.capturedOn ?? today(),
       needsReview: price?.needsReview ?? false,
       note: price?.note ?? "",
     })
@@ -186,13 +184,17 @@ export function HeroShopPanel({
               />
             </Field>
           </div>
-          <Field label="Ngày ghi nhận">
+          <Field label="Áp dụng từ ngày">
             <Input
               type="date"
+              required
               value={form.capturedOn}
               onChange={(event) => setForm({ ...form, capturedOn: event.target.value })}
             />
           </Field>
+          <p className="type-meta">
+            Giữ ngày cũ để sửa mốc này. Chọn ngày mới để thêm mốc giá, giá cũ vẫn được giữ lại.
+          </p>
           <Field label="Ghi chú nội bộ">
             <Input
               value={form.note}
@@ -237,15 +239,64 @@ export function HeroShopPanel({
           </dl>
           <p className="type-meta flex flex-wrap items-center gap-x-2 gap-y-1">
             <span>{availabilityLabels[price.availability]}</span>
-            {capturedDate(price.capturedOn) && <span>Ghi nhận {capturedDate(price.capturedOn)}</span>}
+            {capturedDate(price.capturedOn) && <span>Từ {capturedDate(price.capturedOn)}</span>}
             {price.needsReview && <ReviewMark />}
           </p>
           {price.note && <p className="type-meta">{price.note}</p>}
+          <PriceHistory heroId={heroId} rows={shop.data?.priceHistory ?? []} canWrite={canWrite} />
         </div>
       ) : (
         <p className="type-meta">{shop.isError ? "Chưa tải được giá tướng." : "Chưa có giá ở thị trường Việt Nam."}</p>
       )}
     </section>
+  )
+}
+
+/** The hero's earlier prices, so an old value can be read together with the day it held. */
+function PriceHistory({ heroId, rows, canWrite }: { heroId: string; rows: HeroShopPrice[]; canWrite: boolean }) {
+  const client = useQueryClient()
+  const remove = useMutation({
+    mutationFn: (capturedOn: string) => api.deleteShopPrice(heroId, SHOP_REGION, capturedOn),
+    meta: { successMessage: "Đã xóa mốc giá." },
+    onSuccess: () => client.invalidateQueries({ queryKey: shopKey(heroId) }),
+  })
+  if (rows.length < 2) return null
+  return (
+    <details className="group/history">
+      <summary className="type-meta flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden">
+        <ChevronDown className="size-3.5 transition-transform group-open/history:rotate-180" aria-hidden="true" />
+        Các mốc giá ({rows.length})
+      </summary>
+      <ul className="mt-2 space-y-1">
+        {rows.map((row) => (
+          <li key={row.capturedOn} className="type-meta flex items-center gap-2">
+            <span className="w-20 shrink-0 tabular-nums">{capturedDate(row.capturedOn)}</span>
+            <span className="min-w-0 flex-1 truncate tabular-nums text-foreground">
+              {row.availability === "ON_SALE"
+                ? `${amount(row.goldPrice)} vàng · ${amount(row.voucherPrice)} quân huy`
+                : availabilityLabels[row.availability]}
+            </span>
+            {row.needsReview && <AlertTriangle className="size-3.5 shrink-0 text-amber-600" aria-label="Cần xem lại" />}
+            {canWrite && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="size-7 shrink-0"
+                aria-label={`Xóa mốc giá ${capturedDate(row.capturedOn)}`}
+                title="Xóa mốc này nếu ghi nhầm"
+                disabled={remove.isPending}
+                onClick={() => {
+                  if (row.capturedOn) remove.mutate(row.capturedOn)
+                }}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+    </details>
   )
 }
 
@@ -262,11 +313,14 @@ export function SkinAcquisitionRow({
   heroId,
   skinKey,
   value,
+  history = [],
   canWrite,
 }: {
   heroId: string
   skinKey: string
   value?: SkinAcquisition
+  /** Every dated step of this skin, newest first. */
+  history?: SkinAcquisition[]
   canWrite: boolean
 }) {
   const client = useQueryClient()
@@ -275,8 +329,14 @@ export function SkinAcquisitionRow({
     method: "VOUCHER" as SkinMethod,
     voucherPrice: "",
     eventName: "",
+    capturedOn: "",
     needsReview: false,
     note: "",
+  })
+  const remove = useMutation({
+    mutationFn: (capturedOn: string) => api.deleteSkinAcquisition(heroId, skinKey, SHOP_REGION, capturedOn),
+    meta: { successMessage: "Đã xóa mốc cách nhận." },
+    onSuccess: () => client.invalidateQueries({ queryKey: shopKey(heroId) }),
   })
   const save = useMutation({
     mutationFn: () =>
@@ -284,16 +344,13 @@ export function SkinAcquisitionRow({
         method: form.method,
         voucherPrice: numberOrNull(form.voucherPrice),
         eventName: form.eventName.trim() || null,
-        capturedOn: value?.capturedOn ?? null,
+        capturedOn: form.capturedOn || null,
         needsReview: form.needsReview,
         note: form.note.trim() || null,
       }),
-    onSuccess: (saved) => {
-      client.setQueryData<HeroShop>(shopKey(heroId), (previous) => ({
-        region: SHOP_REGION,
-        price: previous?.price ?? null,
-        skins: [...(previous?.skins ?? []).filter((row) => row.skinKey !== skinKey), saved],
-      }))
+    meta: { successMessage: "Đã lưu cách nhận trang phục." },
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: shopKey(heroId) })
       setOpen(false)
     },
   })
@@ -303,6 +360,7 @@ export function SkinAcquisitionRow({
         method: value?.method ?? "VOUCHER",
         voucherPrice: value?.voucherPrice?.toString() ?? "",
         eventName: value?.eventName ?? "",
+        capturedOn: value?.capturedOn ?? today(),
         needsReview: value?.needsReview ?? false,
         note: value?.note ?? "",
       })
@@ -373,6 +431,14 @@ export function SkinAcquisitionRow({
                   />
                 </Field>
               )}
+              <Field label="Áp dụng từ ngày">
+                <Input
+                  type="date"
+                  required
+                  value={form.capturedOn}
+                  onChange={(event) => setForm({ ...form, capturedOn: event.target.value })}
+                />
+              </Field>
               <Field label="Ghi chú nội bộ">
                 <Input
                   value={form.note}
@@ -380,6 +446,30 @@ export function SkinAcquisitionRow({
                   onChange={(event) => setForm({ ...form, note: event.target.value })}
                 />
               </Field>
+              {history.length > 1 && (
+                <ul className="grid gap-1 border-t pt-2" aria-label="Các mốc cách nhận">
+                  {history.map((row) => (
+                    <li key={row.capturedOn} className="type-meta flex items-center gap-2">
+                      <span className="w-20 shrink-0 tabular-nums">{capturedDate(row.capturedOn)}</span>
+                      <span className="min-w-0 flex-1 truncate text-foreground">{skinAcquisitionText(row)}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="size-7 shrink-0"
+                        aria-label={`Xóa mốc ${capturedDate(row.capturedOn)}`}
+                        title="Xóa mốc này nếu ghi nhầm"
+                        disabled={remove.isPending}
+                        onClick={() => {
+                          if (row.capturedOn) remove.mutate(row.capturedOn)
+                        }}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <label className="type-body flex items-center gap-2">
                 <input
                   type="checkbox"

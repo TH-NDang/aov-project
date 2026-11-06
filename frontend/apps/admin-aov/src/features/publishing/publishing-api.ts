@@ -106,8 +106,12 @@ export interface SkinAcquisition {
 }
 export interface HeroShop {
   region: string
+  at: string
   price: HeroShopPrice | null
   skins: SkinAcquisition[]
+  /** Every dated step, newest first. */
+  priceHistory: HeroShopPrice[]
+  skinHistory: SkinAcquisition[]
 }
 
 export function createPublishingApi(request: Request) {
@@ -127,6 +131,13 @@ export function createPublishingApi(request: Request) {
         `/admin/heroes/${heroId}/shop/skins/${encodeURIComponent(skinKey)}?region=${region}`,
         "PUT",
         value,
+      ),
+    deleteShopPrice: (heroId: string, region: string, capturedOn: string) =>
+      send<void>(`/admin/heroes/${heroId}/shop/prices/${capturedOn}?region=${region}`, "DELETE"),
+    deleteSkinAcquisition: (heroId: string, skinKey: string, region: string, capturedOn: string) =>
+      send<void>(
+        `/admin/heroes/${heroId}/shop/skins/${encodeURIComponent(skinKey)}/${capturedOn}?region=${region}`,
+        "DELETE",
       ),
     revisions: (heroId: string) => request<Revision[]>(`/admin/heroes/${heroId}/revisions`),
     read: async (heroId: string, revisionId: string) =>
