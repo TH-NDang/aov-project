@@ -2,6 +2,7 @@ package com.wikiaov.community.tournament.internal.planning.application;
 
 import com.wikiaov.community.tournament.CompetitionReferences;
 import com.wikiaov.community.tournament.internal.planning.persistence.CompetitionPlanRepository;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -21,5 +22,10 @@ public class PlanReferences implements CompetitionReferences {
     @Override
     public long mediaReferences(UUID id) {
         return plans.countMedia(id.toString());
+    }
+
+    @Override
+    public List<String> allMediaReferences() {
+        return plans.allMedia();
     }
 }

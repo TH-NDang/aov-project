@@ -102,6 +102,17 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
     @Query(value = "select count(*) from community.page where cast(content as text) like concat('%/', :id, '/%') or cast(published_content as text) like concat('%/', :id, '/%') or cast(presentation as text) like concat('%/', :id, '/%')", nativeQuery = true)
     long countMedia(String id);
 
+    @Query(value = """
+        SELECT pairs.asset FROM (
+        SELECT DISTINCT found.owner, lower(m[2]) AS asset FROM (
+            SELECT id AS owner, content AS body FROM community.page
+            UNION ALL SELECT id, published_content FROM community.page
+            UNION ALL SELECT id, presentation FROM community.page
+        ) found, LATERAL regexp_matches(CAST(found.body AS text), '/(assets|media)/([0-9a-fA-F-]{36})/', 'g') m
+        ) pairs
+        """, nativeQuery = true)
+    List<String> allMedia();
+
     @Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from PageRecord p where p.id = :id")
     Optional<PageRecord> lock(UUID id);
