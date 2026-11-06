@@ -414,6 +414,7 @@ Mô tả tướng dùng parser và renderer chung trong `@aov/ui`, giữ nguyên
 <ref=term:UUID>thuật ngữ</ref>
 <color=#2563eb>nội dung có màu</color>
 <noauto>nội dung không tự nhận diện</noauto>
+<muted>chữ nhạt ngay trong câu, không xuống dòng</muted>
 <b>chữ đậm</b>
 <i>chữ nghiêng</i>
 ```

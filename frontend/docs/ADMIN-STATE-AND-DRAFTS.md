@@ -72,13 +72,20 @@ Các dòng nguồn vốn chỉ có một công thức tiếp tục giữ công t
 ## Bỏ qua tự nhận diện trong một đoạn văn bản
 
 Trong các ô mô tả và nội dung dùng trình sửa rich text, bôi đen đoạn cần giữ dưới dạng chữ thường rồi bấm
-**Bỏ qua** (biểu tượng ngắt liên kết) trên thanh công cụ. Ví dụ chỉ chọn `chiêu 1` trong câu “trúng chiêu 1 giây”.
+**Bỏ qua** (biểu tượng ngắt liên kết) trên thanh công cụ. Ví dụ chỉ chọn `chiêu 1` trong câu “trúng chiêu 1 lâu hơn”.
 Các tên tướng, kỹ năng và thuật ngữ ở vị trí khác tiếp tục được nhận diện bình thường. Đoạn được bỏ qua có viền
 nét đứt trong ô sửa, còn kết quả hiển thị giữ nguyên chữ. Chọn lại đoạn đó và bấm **Bỏ qua** để bật nhận diện lại.
 
 Trạng thái được lưu ngay trong nội dung bằng định dạng `<noauto>…</noauto>` đã được bộ đọc hỗ trợ; áp dụng cùng
 luồng nháp, lưu, hoàn tác và làm lại. Chỉ tắt nhận diện tự động; tham chiếu đã được tác giả chèn bằng nút `@`
 vẫn giữ nguyên. Không thay đổi từ điển hoặc ảnh hưởng các đoạn khác có cùng chữ.
+
+Hai trường hợp về số chiêu được xử lý sẵn, không cần bấm **Bỏ qua**:
+
+- Số chiêu đứng ngay trước `giây` là lượng thời gian: “giảm hồi tất cả chiêu 3 giây” không phải chiêu 3.
+- Dạng khác của một chiêu viết được theo ba cách `chiêu 2 giai đoạn 2`, `chiêu 2 biến thể 2`, `chiêu 2 dạng 2`, kể cả khi có tên
+  tướng đi kèm và khi tìm bằng `@`. Tướng chỉ có một mục cho chiêu đó (ví dụ Aoi) thì chỉ `chiêu 2` là tham chiếu, phần sau giữ
+  nguyên là chữ thường. Tướng có nhiều dạng mà chỉ viết `chiêu 2` thì không nối, vì không rõ là dạng nào.
 
 ## Đối chiếu khi backend thay đổi
 
