@@ -2,11 +2,19 @@ import { queryOptions } from "@tanstack/react-query"
 import type { MediaCredit } from "@aov/ui/lib/media-credit"
 import type { HeroRole } from "./hero-classifications"
 import { wikiCatalogParameters, wikiScopeKey, type WikiCatalogScope } from "../../lib/wiki-catalog"
+import { FocalPoint } from "@aov/ui/lib/focal-point"
 
 export interface HeroMedia {
   assetId: string
   semanticType: string
-  currentVersion?: { versionId: string; url: string; width?: number; height?: number; sources?: MediaCredit[] }
+  currentVersion?: {
+    versionId: string
+    url: string
+    focalPoint?: FocalPoint | null
+    width?: number
+    height?: number
+    sources?: MediaCredit[]
+  }
 }
 
 export interface HeroListItem {

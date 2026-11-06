@@ -2,8 +2,13 @@ import { useCallback, useRef, useState, type ComponentPropsWithoutRef } from "re
 import "./wiki-image.css"
 import { WikiImageCredit as ImageCredit } from "./wiki-image-credit"
 import type { HeroMedia } from "../features/hero/hero-api"
+import { focalPosition, type FocalPoint } from "@aov/ui/lib/focal-point"
 
-type WikiImageProps = ComponentPropsWithoutRef<"img"> & { media?: HeroMedia }
+type WikiImageProps = ComponentPropsWithoutRef<"img"> & {
+  media?: HeroMedia
+  /** The point of the picture to keep in view when the frame crops it. */
+  focus?: FocalPoint | null
+}
 type ImageState = "loading" | "ready" | "error"
 
 function ImageFrame({
@@ -15,6 +20,7 @@ function ImageFrame({
   onError,
   alt,
   media,
+  focus,
   ...imageProps
 }: WikiImageProps) {
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -57,6 +63,7 @@ function ImageFrame({
         ref={attachImage}
         alt={alt}
         className="wiki-image-content"
+        style={focus ? { objectPosition: focalPosition(focus) } : undefined}
         loading={loading}
         decoding={decoding}
         onLoad={(event) => {
