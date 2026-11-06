@@ -7,7 +7,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/u
 import { SECTIONS, type Content, type Section } from "./types"
 import { HeroOverview } from "./hero-overview"
 import type { StatDefault } from "./combat-attributes"
-import { HeroTranslationNotice } from "./hero-translation-notice"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { SubjectVideosPanel } from "../videos/subject-videos-panel"
 import { HeroContentSources } from "./hero-content-sources"
@@ -18,8 +17,7 @@ import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
 import { ImageCreditSummary } from "./image-credit-summary"
-import { SkinAcquisitionRow, SkinAcquisitionSummary, useHeroShop } from "./hero-shop"
-import { SkinCard, skinImageIds } from "./skin-card"
+import { HeroSkinsView } from "./hero-skins-view"
 import { visibleSkins } from "./hero-skins"
 export { HeroAsset } from "./hero-asset"
 
@@ -150,7 +148,6 @@ function HeroContentBody({
   const [localSkill, setLocalSkill] = useState<string>()
   const [localReview, setLocalReview] = useState<HeroReviewItem | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const shop = useHeroShop(heroId)
   const tab = selectedTab ?? localTab
   const activeSkill = selectedSkillKey ?? localSkill
   const target = reviewTarget ?? localReview
@@ -285,52 +282,14 @@ function HeroContentBody({
             )
           else if (section === "SKINS")
             body = skins.length ? (
-              <div className="space-y-4">
-                <ImageCreditSummary
-                  label="ảnh trang phục"
-                  assetIds={skins.flatMap((skin) => Object.values(skinImageIds(skin)))}
-                />
-                <SkinAcquisitionSummary rows={shop.data?.skins ?? []} total={skins.length} />
-                <div className="grid grid-cols-1 gap-4 @min-[520px]:grid-cols-2 @min-[1000px]:grid-cols-3">
-                  {[...skins]
-                    .sort((a, b) => a.displayOrder - b.displayOrder)
-                    .map((skin) => {
-                      const text = translatedText(skin.translations, locale, sectionTextFields.SKINS)
-                      return (
-                        <SkinCard
-                          key={skin.skinKey}
-                          skin={skin}
-                          name={text?.name || skin.skinKey}
-                          locale={locale}
-                          action={
-                            <HeroTranslationNotice
-                              rows={skin.translations}
-                              locale={locale}
-                              fields={sectionTextFields.SKINS}
-                              section="SKINS"
-                              entryKey={skin.skinKey}
-                              onTranslate={onTranslate}
-                              disabled={busy}
-                            />
-                          }
-                        >
-                          {text?.description && <Text>{text.description}</Text>}
-                          {text?.acquisitionNote && <Text>{text.acquisitionNote}</Text>}
-                          {heroId && (
-                            <SkinAcquisitionRow
-                              heroId={heroId}
-                              skinKey={skin.skinKey}
-                              skinName={text?.name || skin.skinKey}
-                              value={shop.data?.skins.find((row) => row.skinKey === skin.skinKey)}
-                              history={shop.data?.skinHistory.filter((row) => row.skinKey === skin.skinKey)}
-                              canWrite={canWrite}
-                            />
-                          )}
-                        </SkinCard>
-                      )
-                    })}
-                </div>
-              </div>
+              <HeroSkinsView
+                skins={skins}
+                locale={locale}
+                heroId={heroId}
+                canWrite={canWrite}
+                busy={busy}
+                onTranslate={onTranslate}
+              />
             ) : (
               <Text>Chưa có trang phục trong bản dữ liệu này.</Text>
             )

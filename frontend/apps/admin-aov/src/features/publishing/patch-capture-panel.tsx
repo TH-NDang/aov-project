@@ -134,9 +134,20 @@ function CaptureCardMark({ box, zoom }: { box: NonNullable<CaptureImage["box"]>;
 }
 
 /** Shows only the card, since a row of whole shop screens would all look the same at this size. */
-function CaptureCardThumbnail({ url, box }: { url: string; box: NonNullable<CaptureImage["box"]> }) {
+export function CaptureCardThumbnail({
+  url,
+  box,
+  className = "w-16",
+}: {
+  url: string
+  box: NonNullable<CaptureImage["box"]>
+  className?: string
+}) {
   return (
-    <span className="relative block w-16 overflow-hidden bg-muted" style={{ aspectRatio: box.width / box.height }}>
+    <span
+      className={cn("relative block overflow-hidden bg-muted", className)}
+      style={{ aspectRatio: box.width / box.height }}
+    >
       <img
         src={url}
         alt=""
