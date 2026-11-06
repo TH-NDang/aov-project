@@ -29,6 +29,8 @@ public class Profile implements Persistable<UUID> {
     private String locale;
     @Column(name = "time_zone", nullable = false, length = 64)
     private String timeZone;
+    @Column(length = 3)
+    private @Nullable String currency;
     @Column(name = "avatar_asset_id")
     private @Nullable UUID avatarAssetId;
     @Version
@@ -56,6 +58,8 @@ public class Profile implements Persistable<UUID> {
         biography = input.biography();
         locale = input.locale();
         timeZone = input.timeZone();
+        if (input.currency() != null)
+            currency = input.currency();
         avatarAssetId = input.avatarAssetId();
         // Every accepted save must dirty the entity, even when a test clock is fixed.
         updatedAt = updatedAt != null && !now.isAfter(updatedAt) ? updatedAt.plusNanos(1000) : now;

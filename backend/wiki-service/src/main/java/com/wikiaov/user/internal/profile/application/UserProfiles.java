@@ -56,7 +56,7 @@ public class UserProfiles {
         return profiles.findByIssuerAndSubject(actor.issuer(), actor.subject()).map(this::view).orElseGet(
                 () -> new UserProfile(null, actor.displayName() == null ? "" : actor.displayName(), "",
                         defaults.locale(),
-                        defaults.timeZone(), null, null, 0, null, null));
+                        defaults.timeZone(), null, null, null, 0, null, null));
     }
 
     @Transactional

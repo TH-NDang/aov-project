@@ -10,6 +10,7 @@ public record UserProfile(
         String biography,
         String locale,
         String timeZone,
+        @Nullable String currency,
         @Nullable UUID avatarAssetId,
         @Nullable String avatarUrl,
         long version,
