@@ -14,5 +14,7 @@ public enum MediaSemanticType {
     SPELL_ICON,
     ENCHANTMENT_ICON,
     PATCH_ART,
+    /** AI-generated chibi sticker of a hero or skin; the provenance note names the subject and expression. */
+    CHIBI_STICKER,
     OTHER
 }
