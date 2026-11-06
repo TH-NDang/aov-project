@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react"
-import { Popover as PopoverPrimitive } from "radix-ui"
+import type { ReactNode } from "react"
+import { ValueReveal } from "./value-reveal"
 import {
   DATE_TIME_FORMAT,
   canonicalTimeZone,
@@ -13,9 +13,6 @@ import {
   useUserTimeZone,
   type TimeValue,
 } from "../lib/time-zone"
-
-const OPEN_DELAY = 120
-const CLOSE_DELAY = 160
 
 type LocalTimeProps = {
   value: TimeValue | null | undefined
@@ -76,13 +73,6 @@ function ConvertedTime({
   className,
 }: Omit<LocalTimeProps, "value" | "fallback"> & { value: string; date: Date; locale: string }) {
   const timeZone = useUserTimeZone()
-  const [open, setOpen] = useState(false)
-  const pinned = useRef(false)
-  const pressing = useRef(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const anchor = useRef<HTMLTimeElement>(null)
-  const popup = useRef<HTMLDivElement>(null)
-  useEffect(() => () => clearTimeout(timer.current), [])
 
   const source = isValidTimeZone(sourceTimeZone) ? canonicalTimeZone(sourceTimeZone) : "UTC"
   const english = locale.startsWith("en")
@@ -91,94 +81,15 @@ function ConvertedTime({
   const sourceName = timeZoneLabel(source, date, locale)
   const originalTitle = english ? "Original time" : "Giờ gốc"
 
-  const later = (next: boolean, delay: number) => {
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => setOpen(next), delay)
-  }
-  const close = () => {
-    clearTimeout(timer.current)
-    pinned.current = false
-    setOpen(false)
-  }
-  /** A first press keeps open what hovering started; the next one closes it. */
-  const press = (event: MouseEvent | KeyboardEvent) => {
-    event.preventDefault()
-    event.stopPropagation()
-    clearTimeout(timer.current)
-    if (pinned.current) close()
-    else {
-      pinned.current = true
-      setOpen(true)
-    }
-  }
-
   return (
-    <PopoverPrimitive.Root
-      open={open}
-      onOpenChange={(next) => {
-        if (next) setOpen(true)
-        else close()
-      }}
-    >
-      <PopoverPrimitive.Anchor asChild>
-        <time
-          ref={anchor}
-          dateTime={value}
-          className={className ? `local-time ${className}` : "local-time"}
-          role="button"
-          tabIndex={0}
-          aria-expanded={open}
-          onPointerDown={() => {
-            pressing.current = true
-          }}
-          onPointerEnter={(event) => {
-            if (event.pointerType === "mouse") later(true, OPEN_DELAY)
-          }}
-          onPointerLeave={(event) => {
-            pressing.current = false
-            if (event.pointerType === "mouse" && !pinned.current) later(false, CLOSE_DELAY)
-          }}
-          onFocus={() => {
-            if (!pressing.current) setOpen(true)
-          }}
-          onBlur={(event) => {
-            pressing.current = false
-            // Pressing the popup, to select its text for example, moves focus there and must not close it.
-            if (!popup.current?.contains(event.relatedTarget)) close()
-          }}
-          onClick={(event) => {
-            pressing.current = false
-            press(event)
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") press(event)
-          }}
-        >
-          {label ? label(timeZone) : formatInZone(date, timeZone, format, locale)}
-          <span className="local-time-hidden">{` (${originalTitle}: ${original}, ${sourceName})`}</span>
-        </time>
-      </PopoverPrimitive.Anchor>
-      <PopoverPrimitive.Portal>
-        <PopoverPrimitive.Content
-          ref={popup}
-          className="local-time-popup"
-          side="top"
-          sideOffset={6}
-          collisionPadding={12}
-          hideWhenDetached
-          aria-label={originalTitle}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          onCloseAutoFocus={(event) => event.preventDefault()}
-          onInteractOutside={(event) => {
-            if (anchor.current?.contains(event.target as Node)) event.preventDefault()
-          }}
-          onPointerEnter={() => clearTimeout(timer.current)}
-          onPointerLeave={(event) => {
-            if (event.pointerType === "mouse" && !pinned.current) later(false, CLOSE_DELAY)
-          }}
-          // React events bubble through the portal, so a click here would still reach a surrounding link.
-          onClick={(event) => event.stopPropagation()}
-        >
+    <ValueReveal
+      as="time"
+      dateTime={value}
+      className={className ? `local-time ${className}` : "local-time"}
+      hiddenText={` (${originalTitle}: ${original}, ${sourceName})`}
+      popupLabel={originalTitle}
+      popup={
+        <>
           <div className="local-time-popup-row">
             <span>{`${originalTitle} · ${sourceName}`}</span>
             <strong>{original}</strong>
@@ -189,8 +100,10 @@ function ConvertedTime({
               <strong>{shown}</strong>
             </div>
           )}
-        </PopoverPrimitive.Content>
-      </PopoverPrimitive.Portal>
-    </PopoverPrimitive.Root>
+        </>
+      }
+    >
+      {label ? label(timeZone) : formatInZone(date, timeZone, format, locale)}
+    </ValueReveal>
   )
 }
