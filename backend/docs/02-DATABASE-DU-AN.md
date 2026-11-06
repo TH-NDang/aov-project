@@ -1250,6 +1250,7 @@ Migration `V003__create_user_profiles.sql`; module `user` sở hữu. Thay phư�
 | biography | VARCHAR(1000), mặc định rỗng |
 | locale | VARCHAR(35), BCP 47 với mã ngôn ngữ ISO |
 | time_zone | VARCHAR(64), IANA time zone |
+| currency | VARCHAR(3) nullable, mã ISO 4217; null là người dùng chưa từng chọn |
 | avatar_asset_id | UUID nullable; tham chiếu qua contract media, không FK chéo module |
 | version | BIGINT > 0, optimistic version |
 | created_at, updated_at | TIMESTAMPTZ |

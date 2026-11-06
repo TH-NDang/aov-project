@@ -25,6 +25,9 @@ Biến môi trường được mô tả trong `.env.example`; ứng dụng đọ
 - Quyền ghi cũng cho xóa có thể khôi phục và khôi phục dữ liệu biên tập; không cho xóa lịch sử xuất bản.
 - `tournament:publish`: xuất bản hoặc thu hồi ván công khai.
 
+`community-service` tự lấy tỷ giá theo ngày từ Frankfurter và giữ lịch sử để đọc lại tiền thưởng theo tỷ giá lúc đó
+(ADR-020). Đặt `COMMUNITY_EXCHANGE_RATES_ENABLED=false` nếu không muốn gọi ra ngoài.
+
 GET công khai không cần đăng nhập. API quản trị chỉ chấp nhận Bearer JWT đúng issuer/audience và quyền client; không dùng cookie đăng nhập Wiki trực tiếp.
 
 ## Mô hình nhập liệu

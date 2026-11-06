@@ -39,6 +39,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [016](adr/ADR-016-patch-note-changes.md) | Ghi thay đổi tướng từ ghi chú cập nhật và suy ra dữ liệu patch cũ |
 | [017](adr/ADR-017-media-owner-catalog.md) | Danh mục chủ sở hữu ảnh: chuẩn hóa tên, đổi tên và gộp |
 | [019](adr/ADR-019-video-theo-doi-tuong.md) | Gắn nhiều video cho tướng, kỹ năng, trang phục và kho trang bị; nhập dữ liệu thu thập |
+| [020](adr/ADR-020-ty-gia-va-hien-thi-tien.md) | Lịch sử tỷ giá theo ngày, job lấy tỷ giá định kỳ và hiển thị tiền theo đơn vị người dùng chọn |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
 đã hoàn thành một tính năng hoặc một lượt kiểm thử chưa thực hiện.
