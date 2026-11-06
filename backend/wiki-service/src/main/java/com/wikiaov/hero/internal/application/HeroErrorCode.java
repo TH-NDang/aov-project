@@ -12,6 +12,7 @@ public enum HeroErrorCode implements ApiErrorCode {
     HERO_IMPORT_JOB_CONFLICT(HttpStatus.CONFLICT),
     HERO_SKILL_IMAGE_CONFLICT(HttpStatus.CONFLICT),
     HERO_NOT_FOUND(HttpStatus.NOT_FOUND),
+    HERO_SKIN_NOT_FOUND(HttpStatus.NOT_FOUND),
     HERO_REVISION_NOT_FOUND(HttpStatus.NOT_FOUND),
     HERO_CODE_EXISTS(HttpStatus.CONFLICT),
     HERO_DRAFT_EXISTS(HttpStatus.CONFLICT),

@@ -745,6 +745,28 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void heroShopAppliesWithoutADraftAndKeepsUnreviewedEntriesOffThePublicSite() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId");
+        String admin = ROOT + "/admin/heroes/" + hero + "/shop";
+        String published = ROOT + "/heroes/" + hero + "/shop";
+
+        send(put(admin), Map.of("availability", "ON_SALE", "goldPrice", 13888, "voucherPrice", 359, "needsReview", true,
+                "note", "Check in game."), 200);
+        assertThat((Map<String, Object>) send(get(admin), null, 200).get("price")).containsEntry("goldPrice", 13888)
+                .containsEntry("needsReview", true).containsEntry("note", "Check in game.");
+        assertThat(send(get(published), null, 200).get("price")).isNull();
+
+        send(put(admin), Map.of("availability", "ON_SALE", "goldPrice", 13888, "voucherPrice", 359), 200);
+        assertThat((Map<String, Object>) send(get(published), null, 200).get("price"))
+                .containsEntry("voucherPrice", 359).doesNotContainEntry("note", "Check in game.");
+
+        send(put(admin), Map.of("availability", "SOMETIMES"), 422);
+        send(put(admin + "/skins/no-such-skin"), Map.of("method", "EVENT"), 404);
+        send(put(ROOT + "/admin/heroes/" + UUID.randomUUID() + "/shop"), Map.of("availability", "ON_SALE"), 404);
+    }
+
+    @Test
     void heroCatalogFacetsFilterTheSelectedSnapshotBeforePagination() throws Exception {
         var draft = create();
         UUID hero = uuid(draft, "heroId"), revisionId = id(draft);
