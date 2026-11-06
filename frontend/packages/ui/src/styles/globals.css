@@ -107,3 +107,54 @@
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
 }
+
+/* Native selects keep their behavior and open a list in the app's own style where the browser allows it. */
+@supports (appearance: base-select) {
+  select:not([multiple]),
+  select:not([multiple])::picker(select) {
+    appearance: base-select;
+  }
+  select:not([multiple]) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  select:not([multiple])::picker-icon {
+    color: var(--muted-foreground);
+    transition: rotate 120ms;
+  }
+  select:not([multiple]):open::picker-icon {
+    rotate: 180deg;
+  }
+  select:not([multiple])::picker(select) {
+    max-height: min(320px, 60dvh);
+    margin-block: 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--aov-radius-control, 8px);
+    padding: 4px;
+    background: var(--popover);
+    color: var(--popover-foreground);
+    box-shadow: 0 12px 28px -12px rgb(0 0 0 / 45%);
+  }
+  select:not([multiple]) option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 14px;
+  }
+  select:not([multiple]) option:is(:hover, :focus-visible) {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+  select:not([multiple]) option:checked {
+    font-weight: 600;
+  }
+  select:not([multiple]) option::checkmark {
+    order: 1;
+    margin-inline-start: auto;
+  }
+}
