@@ -11,4 +11,13 @@ public interface SpellIdentityRepository extends JpaRepository<SpellIdentity, UU
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from SpellIdentity e where e.id=:id")
     Optional<SpellIdentity> lockById(UUID id);
+
+    @Query("""
+            select distinct new com.wikiaov.video.VideoSubjectName(
+                e.id, e.code, t.locale, t.name, coalesce(r.revisionNo, 0L))
+            from SpellIdentity e
+            left join SpellRevision r on r.ownerId = e.id and r.state <> 'DISCARDED'
+            left join SpellTranslation t on t.revisionId = r.id
+            """)
+    java.util.List<com.wikiaov.video.VideoSubjectName> videoSubjectNames();
 }
