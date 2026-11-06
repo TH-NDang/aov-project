@@ -54,6 +54,7 @@ export const imageTypes: Record<string, string> = {
   SPELL_ICON: "Phụ trợ",
   ENCHANTMENT_ICON: "Phù hiệu",
   PATCH_ART: "Ảnh bản cập nhật",
+  CHIBI_STICKER: "Sticker chibi",
   OTHER: "Khác",
 }
 /** Lifecycle of the image record; whether anything shows the image is the separate usage count. */
