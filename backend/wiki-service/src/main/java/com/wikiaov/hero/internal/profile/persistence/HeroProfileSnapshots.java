@@ -56,11 +56,12 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
         var texts = translations.findByProfileRevisionIdIn(ids, Sort.by("locale")).stream()
                 .map(t -> new ProfileTranslation(t.getLocale(), t.getName(), t.getTitle(), t.getSummary(), t.getLore()))
                 .toList();
+        // An enum's hash changes between JVM runs, so only keeping the query's order gives clients a stable answer.
         var selectedRoles = roles.findByProfileRevisionIdIn(ids, Sort.by("roleCode")).stream()
-                .map(row -> Role.valueOf(row.getRoleCode())).collect(Collectors.toCollection(HashSet::new));
+                .map(row -> Role.valueOf(row.getRoleCode())).collect(Collectors.toCollection(LinkedHashSet::new));
         var selectedPositions = positions.findByProfileRevisionIdIn(ids, Sort.by("positionCode")).stream()
                 .map(row -> Position.valueOf(row.getPositionCode()))
-                .collect(Collectors.toCollection(HashSet::new));
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         return new Profile(texts, selectedRoles, selectedPositions, references);
     }
 

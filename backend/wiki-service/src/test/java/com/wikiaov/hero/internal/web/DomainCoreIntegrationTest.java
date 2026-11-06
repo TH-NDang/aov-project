@@ -655,6 +655,25 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void rolesAndPositionsAlwaysReadInTheSameOrder() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), id = uuid(draft, "id");
+        send(put(path(hero, id) + "/profile"),
+                Map.of("expectedDraftVersion", draft.get("version"), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Annette")), "roles",
+                        List.of("WARRIOR", "SUPPORT", "MAGE", "ASSASSIN"), "positions",
+                        List.of("TOP", "SUPPORT", "JUNGLE")),
+                200);
+
+        var read = send(get(ROOT + "/admin/heroes/" + hero + "/revisions/" + id), null, 200);
+        var profile = (Map<String, Object>) ((Map<String, Object>) read.get("content")).get("profile");
+
+        assertThat((List<String>) profile.get("roles")).containsExactly("ASSASSIN", "MAGE", "SUPPORT", "WARRIOR");
+        assertThat((List<String>) profile.get("positions")).containsExactly("JUNGLE", "SUPPORT", "TOP");
+    }
+
+    @Test
     void concurrentEditorsCannotOverwriteEachOther() throws Exception {
         var draft = create();
         UUID hero = uuid(draft, "heroId"), id = uuid(draft, "id");
