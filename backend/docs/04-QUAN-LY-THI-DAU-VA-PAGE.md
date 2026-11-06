@@ -171,7 +171,7 @@ Thông tin đội hiển thị hai chiều từ cùng bản ghi roster, không s
 Mốc có nguồn từ giải trước đây vẫn được giữ riêng, không suy diễn rằng thay đổi đội hiện tại sửa lại lịch sử.
 
 Ở admin, danh sách thành viên hiển thị ảnh, tên, vị trí và trạng thái; icon mở hồ sơ, sửa và gỡ có nhãn
-trợ năng. Thêm thành viên mở bảng chọn tuyển thủ hoặc ban huấn luyện, có tìm kiếm, phân trang và tạo
+trợ năng. Thêm thành viên mở bảng chọn tuyển thủ hoặc ban huấn luyện, có tìm kiếm, kéo để tải thêm và tạo
 hồ sơ nhanh. Tên/ảnh lấy từ hồ sơ đã chọn; vị trí, trạng thái, thời gian và nguồn thuộc lần tham gia đội.
 Áp dụng chỉ cập nhật bản chỉnh sửa tại chỗ, Lưu nháp mới ghi đội hình. Hồ sơ tạo nhanh được lưu độc lập.
 Vai trò kiêm nhiệm của tuyển thủ là tùy chọn; vị trí thi đấu chỉ chọn trong đội. Các mục lịch sử,
