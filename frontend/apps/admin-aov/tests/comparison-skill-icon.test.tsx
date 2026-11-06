@@ -27,10 +27,15 @@ const resources = [
 
 test("comparison reference artwork requires an exact unambiguous hero, slot and variant with safe local paths", async () => {
   const originalChannel = Object.getOwnPropertyDescriptor(globalThis, "BroadcastChannel")
+  const originalReact = Object.getOwnPropertyDescriptor(globalThis, "React")
   Object.defineProperty(globalThis, "BroadcastChannel", { configurable: true, writable: true, value: undefined })
+  // Source modules compile with classic JSX here, so module-level JSX needs a global React while loading.
+  Object.defineProperty(globalThis, "React", { configurable: true, writable: true, value: React })
   const { resolveComparisonReferenceIcon: resolve } = await import("../src/features/publishing/comparison-skill-icon")
   if (originalChannel) Object.defineProperty(globalThis, "BroadcastChannel", originalChannel)
   else Reflect.deleteProperty(globalThis, "BroadcastChannel")
+  if (originalReact) Object.defineProperty(globalThis, "React", originalReact)
+  else Reflect.deleteProperty(globalThis, "React")
   const props = { before: skill(), after: skill(), referenceCodes: ["dirak", "dirak"] }
   assert.equal(resolve(props, resources), "/__resources/assets/skill/dirak-1-1.png")
   assert.equal(

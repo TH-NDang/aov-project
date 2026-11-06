@@ -616,7 +616,8 @@ test("badge artwork previews the exact locale image in place, closes with Escape
       ),
     )
     await waitFor(() => !document.querySelector('[role="dialog"]'))
-    assert.equal(document.activeElement, trigger)
+    // Radix restores focus in a timeout after the dialog unmounts.
+    await waitFor(() => document.activeElement === trigger)
     await click(trigger)
     await waitFor(() => !!document.querySelector('[role="dialog"]'))
     await click(document.querySelector('[role="dialog"] [data-slot="dialog-close"]'))
