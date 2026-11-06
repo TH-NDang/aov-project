@@ -1,6 +1,3 @@
-.wiki-hero-detail-shell {
-  background: var(--hero-backdrop, var(--aov-surface));
-}
 .wiki-hero-detail-main {
   margin-top: -48px;
 }
@@ -9,7 +6,15 @@
   isolation: isolate;
   min-height: clamp(230px, 24vw, 300px);
   overflow: hidden;
-  background: var(--hero-backdrop, var(--aov-surface));
+}
+.wiki-artwork-embers {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--aov-wiki-gold);
+  pointer-events: none;
 }
 .wiki-hero-profile::after {
   content: "";
@@ -18,13 +23,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    linear-gradient(0deg, var(--hero-backdrop) 0%, transparent 70%),
-    linear-gradient(
-      90deg,
-      rgba(var(--hero-surface-rgb), 0.98),
-      rgba(var(--hero-surface-rgb), 0.75) 28%,
-      transparent 74%
-    );
+    linear-gradient(0deg, var(--aov-wiki-night) 0%, transparent 70%),
+    linear-gradient(90deg, rgb(23 30 44 / 72%), transparent 74%);
 }
 .wiki-hero-profile::before {
   content: "";
@@ -198,12 +198,13 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
-@media (max-width: 640px) {
+/* The compact header sits on top of the artwork, so the page starts behind it. */
+@media (max-width: 899.98px) {
   .wiki-hero-detail-main {
-    margin-top: -44px;
+    margin-top: -48px;
   }
   .wiki-hero-profile {
-    min-height: 250px;
+    min-height: 200px;
   }
   .wiki-hero-profile-art {
     top: 55px;
@@ -225,21 +226,10 @@
   }
   .wiki-hero-profile-content {
     min-height: inherit;
-    padding: 76px var(--wiki-gutter) 16px;
+    padding: 60px var(--wiki-gutter) 12px;
   }
   .wiki-hero-profile-breadcrumb {
     display: none;
-  }
-  .wiki-hero-profile-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    width: fit-content;
-    min-height: 40px;
-    margin-top: 0;
-    color: var(--hero-accent);
-    font-size: 0.8125rem;
-    text-decoration: none;
   }
   .wiki-hero-profile-identity {
     min-height: 44px;
@@ -265,9 +255,6 @@
     transform: translateX(50%);
     width: 70%;
   }
-}
-.wiki-hero-detail-shell {
-  background: var(--background);
 }
 .wiki-hero-epithet {
   font: var(--wiki-type-subtitle);

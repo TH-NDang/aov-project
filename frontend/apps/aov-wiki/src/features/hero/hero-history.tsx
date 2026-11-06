@@ -28,7 +28,9 @@ export function HeroHistory({ hero, version }: { hero: HeroDetail; version: Hero
 
   return (
     <section className="wiki-hero-history" aria-labelledby="wiki-hero-history-title">
-      <h2 id="wiki-hero-history-title">{wikiText(locale, "Các lần thay đổi khác", "Other changes")}</h2>
+      <h2 id="wiki-hero-history-title" tabIndex={-1}>
+        {wikiText(locale, "Các lần thay đổi khác", "Other changes")}
+      </h2>
       <div className="wiki-patch-subjects">
         {rows.map((row, index) => {
           const patch = scope.options?.patches.find((item) => item.id === row.patchVariantId)
@@ -41,7 +43,7 @@ export function HeroHistory({ hero, version }: { hero: HeroDetail; version: Hero
             )
           const summary = parseChangeSummary(row.summary)
           return (
-            <article className="wiki-patch-subject" key={row.id ?? index}>
+            <article className="wiki-patch-subject public-panel" key={row.id ?? index}>
               <header>
                 {patch ? (
                   <button type="button" className="wiki-patch-subject-link" onClick={open}>

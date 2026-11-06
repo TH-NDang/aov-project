@@ -1,0 +1,97 @@
+.wiki-skill-videos {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  margin-block: 12px;
+}
+.wiki-skill-video-stage {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.wiki-skill-video-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+.wiki-skill-video-bar strong {
+  font: var(--wiki-type-meta);
+  flex: 1 1 200px;
+  min-width: 0;
+  color: var(--aov-text);
+  font-weight: 600;
+}
+.wiki-skill-video-bar button {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-muted);
+}
+.wiki-skill-video-bar button:is(:hover, :focus-visible) {
+  color: var(--aov-accent);
+}
+.wiki-skill-video-list {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 2px;
+  overflow-x: auto;
+  list-style: none;
+  scrollbar-width: thin;
+}
+.wiki-skill-video-list li {
+  flex: 0 0 min(280px, 85%);
+  min-width: 0;
+}
+.wiki-skill-video-list li > :is(button, a) {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 4px;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+.wiki-skill-video-list li > :is(button, a):hover {
+  border-color: var(--aov-line-strong);
+}
+.wiki-skill-video-list li > button[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+}
+.wiki-skill-videos :is(button, a):focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-skill-video-text {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+.wiki-skill-video-text .wiki-video-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.wiki-skill-video-none {
+  font: var(--wiki-type-meta);
+  margin-block: 12px;
+  color: var(--aov-muted);
+}
+.wiki-skill-options button > svg.wiki-skill-has-video {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  width: 12px;
+  height: 12px;
+  color: var(--aov-accent);
+}

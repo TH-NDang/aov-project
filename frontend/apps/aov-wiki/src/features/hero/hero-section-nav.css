@@ -1,0 +1,96 @@
+.wiki-hero-nav {
+  display: none;
+}
+.wiki-hero-nav-list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wiki-hero-nav-list a {
+  font: var(--wiki-type-meta);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--aov-radius-control);
+  padding: 7px 10px;
+  color: var(--aov-muted);
+  text-decoration: none;
+  transition:
+    background 140ms ease-out,
+    color 140ms ease-out;
+}
+.wiki-hero-nav-list a > svg {
+  flex: none;
+  opacity: 0.8;
+}
+.wiki-hero-nav-list a:is(:hover, :focus-visible) {
+  color: var(--aov-text);
+}
+.wiki-hero-nav-list a[aria-current] {
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent);
+  font-weight: 600;
+}
+.wiki-hero-nav-list a[aria-current] > svg {
+  opacity: 1;
+}
+.wiki-hero-nav-sheet .wiki-hero-nav-list a {
+  font: var(--wiki-type-body);
+  min-height: 48px;
+  gap: 12px;
+  padding-inline: 12px;
+}
+.wiki-hero-nav-sheet .wiki-hero-nav-list a[aria-current] {
+  font-weight: 600;
+}
+.wiki-hero-nav-fab {
+  position: fixed;
+  z-index: 30;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: 50%;
+  background: var(--aov-popover);
+  color: var(--aov-accent);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-hero-nav-fab:is(:hover, :focus-visible) {
+  border-color: var(--aov-accent);
+}
+
+/* Leaves room under the page's last links for the floating button. */
+body:has(.wiki-hero-nav-fab) .wiki-site-footer {
+  padding-bottom: 72px;
+}
+
+@media (min-width: 1180px) {
+  .wiki-handbook {
+    grid-template-columns: minmax(0, 1fr) 168px;
+  }
+  .wiki-hero-nav:not([hidden]) {
+    position: sticky;
+    top: 64px;
+    display: block;
+    align-self: start;
+    max-height: calc(100dvh - 80px);
+    overflow-y: auto;
+  }
+  .wiki-hero-nav-fab {
+    display: none;
+  }
+  body:has(.wiki-hero-nav-fab) .wiki-site-footer {
+    padding-bottom: 0;
+  }
+  .wiki-handbook .wiki-hero-nav h2 {
+    font: var(--wiki-type-label);
+    margin: 0 0 8px;
+    padding-inline: 10px;
+    color: var(--aov-muted);
+  }
+}

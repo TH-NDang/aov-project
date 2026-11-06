@@ -1,12 +1,12 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import type { VideoPurpose } from "../videos/video-model"
-import { Link, useLocation, useSearchParams } from "react-router"
+import { useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
+import { OrnateDivider, OrnatePanel } from "../../components/ornate-panel"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { createEntityIndex } from "@aov/ui/lib/entity-rich-text"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { WikiIcon } from "../../components/wiki-icon"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
@@ -17,6 +17,10 @@ import { SkillIcon } from "./hero-skill-icon"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import type { HeroDetail, PublicSkill } from "./hero-api"
 import "./hero-handbook.css"
+import { HeroSkins } from "./hero-skins"
+import { HeroSectionNav } from "./hero-section-nav"
+import { WikiIcon } from "../../components/wiki-icon"
+import { SkillVideos } from "../videos/skill-videos"
 
 function skillLabel(skill: PublicSkill, locale: string) {
   if (skill.kind === "PASSIVE") return wikiText(locale, "Nội tại", "Passive")
@@ -42,6 +46,24 @@ function scrollToAbilities() {
   title?.focus({ preventScroll: true })
 }
 
+/** Stays short on a compact layout, above the changes; wider screens have room beside the abilities and show it whole. */
+function OverviewSummary({ long, children }: { long: boolean; children: ReactNode }) {
+  const { locale } = useWikiContext()
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <div className="wiki-skill-prose wiki-hero-summary" data-open={open || !long || undefined}>
+        {children}
+      </div>
+      {long && (
+        <button type="button" className="wiki-hero-summary-more" aria-expanded={open} onClick={() => setOpen(!open)}>
+          {open ? wikiText(locale, "Thu gọn", "Show less") : wikiText(locale, "Xem thêm", "Show more")}
+        </button>
+      )}
+    </>
+  )
+}
+
 function DiffText({ segments, render }: { segments: DiffSegment[]; render: (text: string) => ReactNode }) {
   return (
     <>
@@ -58,9 +80,10 @@ function DiffText({ segments, render }: { segments: DiffSegment[]; render: (text
   )
 }
 
-export function HeroHandbook({ hero }: { hero: HeroDetail }) {
+/** What both layouts of the hero page read from: the chosen ability, the version being compared and the videos. */
+function useHandbook(hero: HeroDetail) {
   const scope = useWikiContext()
-  const { locale, href } = scope
+  const { locale } = scope
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [params, setParams] = useSearchParams()
   const skills = [...(hero.content.skills?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder)
@@ -68,7 +91,6 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
   const source = active?.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
   const version = useHeroVersion(hero)
   const videos = useHeroVideos(hero.id, version.selected?.id)
-  const [videoPurpose, setVideoPurpose] = useState<VideoPurpose | null>(null)
   const videoParam = useVideoParam()
   const activeChange = active ? version.differences.skills.get(active.skillKey) : undefined
   const changedHere = activeChange?.isNew ? undefined : activeChange
@@ -82,25 +104,13 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
       },
       { replace: true, preventScrollReset: true },
     )
-  // Waits for the chosen skill to render, so the position is measured against the final layout.
-  const jumpPending = useRef(false)
   const activeKey = active?.skillKey
-  const openSkill = (skillKey: string) => {
-    if (skillKey === activeKey) return scrollToAbilities()
-    jumpPending.current = true
-    selectSkill(skillKey)
-  }
+  // A shared link can name a video of another skill, which then has to be the skill on screen for the video to open.
   useEffect(() => {
-    if (!jumpPending.current) return
-    jumpPending.current = false
-    scrollToAbilities()
-  }, [activeKey])
-  const { hash } = useLocation()
-  // The changes above the abilities load separately, so a link to the abilities waits for the layout to settle.
-  useEffect(() => {
-    if (hash === "#wiki-kit-title" && !version.pending)
-      document.getElementById("wiki-kit-title")?.scrollIntoView({ block: "start" })
-  }, [hash, version.pending])
+    for (const [skillKey, list] of videos.bySkill)
+      if (skillKey !== activeKey && list.some((video) => video.id === videoParam.id)) selectSkill(skillKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoParam.id, videos.bySkill])
   const references = useQuery(wikiReferencesQuery(scope))
   const settings = references.data
   const index = useMemo(
@@ -154,218 +164,374 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
       },
     ]
   })
+  return {
+    scope,
+    locale,
+    text,
+    skills,
+    active,
+    source,
+    version,
+    videos,
+    videoParam,
+    changedHere,
+    difference,
+    selectSkill,
+    rich,
+    columns,
+    tableLabel,
+    rows,
+    profile,
+    facts,
+  }
+}
+
+type Handbook = ReturnType<typeof useHandbook>
+
+/** The ability picker and the chosen ability. */
+function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
+  const { locale, text, skills, active, source, version, videos, changedHere, difference } = handbook
+  const { selectSkill, rich, columns, tableLabel, rows, profile } = handbook
+  if (!active)
+    return (
+      <p>
+        {text("Chưa có kỹ năng được công bố tại phiên bản này.", "No abilities have been published for this version.")}
+      </p>
+    )
   return (
-    <div className="wiki-handbook">
-      <section className="wiki-handbook-kit" aria-labelledby="wiki-kit-title">
-        <HeroVersionChanges hero={hero} version={version} onOpenSkill={openSkill} />
-        <h2 id="wiki-kit-title" tabIndex={-1}>
-          {text("Bộ kỹ năng", "Abilities")}
-        </h2>
-        {active ? (
-          <>
-            <div className="wiki-skill-options" role="group" aria-labelledby="wiki-kit-title">
-              {skills.map((skill) => {
-                return (
-                  <button
-                    type="button"
-                    key={skill.skillKey}
-                    aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}${version.changedSkills.has(skill.skillKey) ? ` · ${text("có thay đổi", "changed")}` : ""}`}
-                    aria-pressed={skill.skillKey === active.skillKey}
-                    onClick={() => selectSkill(skill.skillKey)}
-                  >
-                    <SkillIcon hero={hero} skill={skill} locale={locale} />
-                    <span>
-                      <small>{skillLabel(skill, locale)}</small>
-                      <strong>{skill.name || text("Chưa rõ tên", "Unnamed ability")}</strong>
-                    </span>
-                    {version.changedSkills.has(skill.skillKey) && (
-                      <i className="wiki-skill-changed" aria-hidden="true" />
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-            <article className="wiki-skill-read" aria-label={active.name ?? skillLabel(active, locale)}>
-              <header className="wiki-edit-heading">
-                <div>
-                  <span>{skillLabel(active, locale)}</span>
-                  <h3>{active.name}</h3>
-                </div>
-                <FeedbackDialog
-                  target={`${profile?.name ?? hero.code} · ${skillLabel(active, locale)} · ${active.name ?? ""}`}
-                  identity={`${hero.code}/${active.skillKey}`}
-                  revision={hero.revisionId}
-                  fields={[
-                    { label: text("Mô tả chiêu", "Ability description"), value: active.description ?? "" },
-                    { label: text("Tên kỹ năng", "Ability name"), value: active.name ?? "" },
-                    ...rows.map((row) => ({ label: row.label!, value: row.display_values!.join(" / ") })),
-                  ]}
-                />
-              </header>
-              <div className="wiki-skill-meta">
-                {[source?.tags, source?.cooldown?.display, source?.energyCost?.display].map((value, i) =>
-                  typeof value === "string" && value.trim() ? <span key={i}>{rich(value)}</span> : null,
-                )}
-                {difference?.cooldown && (
-                  <span>
-                    {text("Trước đây", "Before")}: <del>{difference.cooldown.before}</del>
-                  </span>
-                )}
-                {difference?.energyCost && (
-                  <span>
-                    {text("Trước đây", "Before")}: <del>{difference.energyCost.before}</del>
-                  </span>
-                )}
-              </div>
-              {changedHere && version.previous && (
-                <p className="wiki-diff-legend">
-                  {version.showDiff ? (
-                    <>
-                      {text("Đang đánh dấu khác biệt so với bản", "Marking differences from")} {version.previous.code}:{" "}
-                      <del>{text("nội dung cũ", "old text")}</del> <ins>{text("nội dung mới", "new text")}</ins>
-                    </>
-                  ) : (
-                    text(
-                      `Kỹ năng này khác với bản ${version.previous.code}.`,
-                      `This ability differs from ${version.previous.code}.`,
-                    )
-                  )}
-                  <button type="button" onClick={() => version.setShowDiff(!version.showDiff)}>
-                    {version.showDiff ? text("Tắt đánh dấu", "Hide marks") : text("Bật đánh dấu", "Show marks")}
-                  </button>
-                </p>
-              )}
-              {difference?.description ? (
-                <div className="wiki-skill-prose">
-                  <DiffText segments={difference.description} render={rich} />
-                </div>
-              ) : active.description ? (
-                <div className="wiki-skill-prose">{rich(active.description)}</div>
-              ) : (
-                <p>{text("Chưa có mô tả được công bố.", "No description has been published.")}</p>
-              )}
-              {columns.length > 0 && rows.length > 0 && (
-                <div className="wiki-rank-scroll" tabIndex={0} role="region" aria-label={tableLabel}>
-                  <table>
-                    <caption>{tableLabel}</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">{text("Thông số", "Stat")}</th>
-                        {columns.map((label, i) => (
-                          <th scope="col" key={i}>
-                            {String(label).replace(/^(?:Lv\.?|Cấp)\s*(\d+)$/i, text("Cấp $1", "Rank $1"))}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row, i) => (
-                        <tr key={i}>
-                          <th scope="row">{rich(row.label!)}</th>
-                          {columns.map((_, j) => (
-                            <td key={j}>
-                              {difference?.rows.get(row.label!) &&
-                                difference.rows.get(row.label!)!.before[j] !==
-                                  difference.rows.get(row.label!)!.after[j] && (
-                                  <del className="wiki-diff-cell">
-                                    {difference.rows.get(row.label!)!.before[j] ?? "—"}
-                                  </del>
-                                )}
-                              {row.display_values?.[j] == null ? "—" : rich(String(row.display_values[j]))}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              <VideoGallery
-                key={active.skillKey}
-                videos={videos.bySkill.get(active.skillKey) ?? []}
-                heading={text("Video kỹ năng", "Skill videos")}
-                patchCode={videos.patchCode}
-                headingLevel={3}
-                limit={3}
-                filters={false}
-              />
-            </article>
-          </>
-        ) : (
-          <p>
-            {text(
-              "Chưa có kỹ năng được công bố tại phiên bản này.",
-              "No abilities have been published for this version.",
-            )}
-          </p>
-        )}
-        <VideoGallery
-          id="hero-videos"
-          videos={videos.general}
-          heading={text("Video", "Videos")}
-          patchCode={videos.patchCode}
-          purpose={videoPurpose}
-          onPurposeChange={setVideoPurpose}
-        />
-        <HeroHistory hero={hero} version={version} />
-      </section>
-      <aside className="wiki-handbook-profile">
-        <div className="wiki-edit-heading">
-          <h2>{text("Tổng quan", "Overview")}</h2>
+    <>
+      <div className="wiki-skill-options" role="group" aria-labelledby="wiki-kit-title">
+        {skills.map((skill) => {
+          return (
+            <button
+              type="button"
+              key={skill.skillKey}
+              aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}${version.changedSkills.has(skill.skillKey) ? ` · ${text("có thay đổi", "changed")}` : ""}${videos.bySkill.has(skill.skillKey) ? text(" · có video", " · has video") : ""}`}
+              aria-pressed={skill.skillKey === active.skillKey}
+              onClick={() => selectSkill(skill.skillKey)}
+            >
+              <SkillIcon hero={hero} skill={skill} locale={locale} />
+              <span>
+                <small>{skillLabel(skill, locale)}</small>
+                <strong>{skill.name || text("Chưa rõ tên", "Unnamed ability")}</strong>
+              </span>
+              {version.changedSkills.has(skill.skillKey) && <i className="wiki-skill-changed" aria-hidden="true" />}
+              {videos.bySkill.has(skill.skillKey) && <WikiIcon name="play" className="wiki-skill-has-video" />}
+            </button>
+          )
+        })}
+      </div>
+      <article
+        className="wiki-skill-read public-panel wiki-slip"
+        aria-label={active.name ?? skillLabel(active, locale)}
+      >
+        <header className="wiki-edit-heading">
+          <div>
+            <span>{skillLabel(active, locale)}</span>
+            <h3>{active.name}</h3>
+          </div>
           <FeedbackDialog
-            target={`${profile?.name ?? hero.code} · ${text("Tổng quan", "Overview")}`}
-            identity={hero.code}
+            target={`${profile?.name ?? hero.code} · ${skillLabel(active, locale)} · ${active.name ?? ""}`}
+            identity={`${hero.code}/${active.skillKey}`}
             revision={hero.revisionId}
             fields={[
-              { label: text("Giới thiệu", "Summary"), value: profile?.summary ?? "" },
-              { label: text("Tên tướng", "Hero name"), value: profile?.name ?? "" },
-              { label: text("Cốt truyện", "Lore"), value: profile?.lore ?? "" },
+              { label: text("Mô tả chiêu", "Ability description"), value: active.description ?? "" },
+              { label: text("Tên kỹ năng", "Ability name"), value: active.name ?? "" },
+              ...rows.map((row) => ({ label: row.label!, value: row.display_values!.join(" / ") })),
             ]}
           />
+        </header>
+        <div className="wiki-skill-meta">
+          {[source?.tags, source?.cooldown?.display, source?.energyCost?.display].map((value, i) =>
+            typeof value === "string" && value.trim() ? <span key={i}>{rich(value)}</span> : null,
+          )}
+          {difference?.cooldown && (
+            <span>
+              {text("Trước đây", "Before")}: <del>{difference.cooldown.before}</del>
+            </span>
+          )}
+          {difference?.energyCost && (
+            <span>
+              {text("Trước đây", "Before")}: <del>{difference.energyCost.before}</del>
+            </span>
+          )}
         </div>
-        {profile?.summary && <div className="wiki-skill-prose">{rich(profile.summary)}</div>}
-        {hero.content.overviewRatings && <HeroRatings ratings={hero.content.overviewRatings} />}
-        {!!facts.length && (
-          <dl className="wiki-facts">
-            {facts.map((fact) => (
-              <div key={fact.label}>
-                <dt>
-                  <fact.Icon size={18} className="wiki-fact-icon" />
-                  {fact.label}
-                </dt>
-                <dd>
-                  {fact.before && <del className="wiki-diff-cell">{fact.before}</del>}
-                  {fact.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
+        <SkillVideos
+          skillKey={active.skillKey}
+          videos={videos.bySkill.get(active.skillKey) ?? []}
+          patchCode={videos.patchCode}
+        />
+        {changedHere && version.previous && (
+          <p className="wiki-diff-legend">
+            {version.showDiff ? (
+              <>
+                {text("Đang đánh dấu khác biệt so với bản", "Marking differences from")} {version.previous.code}:{" "}
+                <del>{text("nội dung cũ", "old text")}</del> <ins>{text("nội dung mới", "new text")}</ins>
+              </>
+            ) : (
+              text(
+                `Kỹ năng này khác với bản ${version.previous.code}.`,
+                `This ability differs from ${version.previous.code}.`,
+              )
+            )}
+            <button type="button" onClick={() => version.setShowDiff(!version.showDiff)}>
+              {version.showDiff ? text("Tắt đánh dấu", "Hide marks") : text("Bật đánh dấu", "Show marks")}
+            </button>
+          </p>
         )}
-        {profile?.lore && (
-          <details>
-            <summary>{text("Cốt truyện", "Lore")}</summary>
-            <div className="wiki-skill-prose">{rich(profile.lore)}</div>
-          </details>
+        {difference?.description ? (
+          <div className="wiki-skill-prose" key={active.skillKey}>
+            <DiffText segments={difference.description} render={rich} />
+          </div>
+        ) : active.description ? (
+          <div className="wiki-skill-prose" key={active.skillKey}>
+            {rich(active.description)}
+          </div>
+        ) : (
+          <p>{text("Chưa có mô tả được công bố.", "No description has been published.")}</p>
         )}
-        {videos.loreCount > 0 && (
-          <button
-            type="button"
-            className="wiki-handbook-skins"
-            onClick={() => {
-              setVideoPurpose("LORE")
-              if (videos.firstLore) videoParam.open(videos.firstLore)
-              else document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })
-            }}
-          >
-            <WikiIcon name="play" size={18} />
-            {text("Xem video cốt truyện", "Watch lore videos")} · {videos.loreCount} <WikiIcon name="arrow" size={16} />
-          </button>
+        {columns.length > 0 && rows.length > 0 && (
+          <div className="wiki-rank-scroll" tabIndex={0} role="region" aria-label={tableLabel}>
+            <table>
+              <caption>{tableLabel}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">{text("Thông số", "Stat")}</th>
+                  {columns.map((label, i) => (
+                    <th scope="col" key={i}>
+                      {String(label).replace(/^(?:Lv\.?|Cấp)\s*(\d+)$/i, text("Cấp $1", "Rank $1"))}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row, i) => (
+                  <tr key={i}>
+                    <th scope="row">{rich(row.label!)}</th>
+                    {columns.map((_, j) => (
+                      <td key={j}>
+                        {difference?.rows.get(row.label!) &&
+                          difference.rows.get(row.label!)!.before[j] !== difference.rows.get(row.label!)!.after[j] && (
+                            <del className="wiki-diff-cell">{difference.rows.get(row.label!)!.before[j] ?? "—"}</del>
+                          )}
+                        {row.display_values?.[j] == null ? "—" : rich(String(row.display_values[j]))}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-        <Link className="wiki-handbook-skins" to={href(`/skins?hero=${encodeURIComponent(hero.code)}`)}>
-          <WikiIcon name="skin" size={18} />
-          {text("Trang phục của tướng", "Browse hero skins")} <WikiIcon name="arrow" size={16} />
-        </Link>
-      </aside>
+      </article>
+    </>
+  )
+}
+
+/** Who the hero is. */
+function OverviewPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
+  const { text, rich, profile, facts, videos, videoParam } = handbook
+  return (
+    <>
+      <div className="wiki-edit-heading" id="wiki-hero-overview" tabIndex={-1}>
+        <h2>{text("Tổng quan", "Overview")}</h2>
+        <FeedbackDialog
+          target={`${profile?.name ?? hero.code} · ${text("Tổng quan", "Overview")}`}
+          identity={hero.code}
+          revision={hero.revisionId}
+          fields={[
+            { label: text("Giới thiệu", "Summary"), value: profile?.summary ?? "" },
+            { label: text("Tên tướng", "Hero name"), value: profile?.name ?? "" },
+            { label: text("Cốt truyện", "Lore"), value: profile?.lore ?? "" },
+          ]}
+        />
+      </div>
+      {profile?.summary && (
+        <OverviewSummary long={profile.summary.length > 140}>{rich(profile.summary)}</OverviewSummary>
+      )}
+      {hero.content.overviewRatings && <HeroRatings ratings={hero.content.overviewRatings} />}
+      {!!facts.length && (
+        <dl className="wiki-facts" id="wiki-hero-stats" tabIndex={-1}>
+          {facts.map((fact) => (
+            <div key={fact.label}>
+              <dt>
+                <fact.Icon size={18} className="wiki-fact-icon" />
+                {fact.label}
+              </dt>
+              <dd>
+                {fact.before && <del className="wiki-diff-cell">{fact.before}</del>}
+                {fact.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {profile?.lore && (
+        <details id="wiki-hero-lore" tabIndex={-1}>
+          <summary>{text("Cốt truyện", "Lore")}</summary>
+          <div className="wiki-skill-prose">{rich(profile.lore)}</div>
+        </details>
+      )}
+      {/* When every video is about the lore, the Videos button beside the hero's role is already this list. */}
+      {videos.loreCount > 0 && videos.loreCount < videos.general.length && (
+        <button
+          type="button"
+          className="wiki-handbook-action"
+          onClick={() => {
+            if (videos.firstLore) videoParam.open(videos.firstLore, "LORE")
+            else document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })
+          }}
+        >
+          <WikiIcon name="play" size={18} />
+          {text("Video cốt truyện", "Lore videos")} · {videos.loreCount} <WikiIcon name="arrow" size={16} />
+        </button>
+      )}
+    </>
+  )
+}
+
+/** Going from a change to its ability, on either layout. */
+function useAbilityJump({ active, version, selectSkill }: Handbook) {
+  // Waits for the chosen skill to render, so the position is measured against the final layout.
+  const jumpPending = useRef(false)
+  const activeKey = active?.skillKey
+  useEffect(() => {
+    if (!jumpPending.current) return
+    jumpPending.current = false
+    scrollToAbilities()
+  }, [activeKey])
+  const { hash } = useLocation()
+  // The changes above the abilities load separately, so a link to the abilities waits for the layout to settle.
+  useEffect(() => {
+    if (hash === "#wiki-kit-title" && !version.pending)
+      document.getElementById("wiki-kit-title")?.scrollIntoView({ block: "start" })
+  }, [hash, version.pending])
+  return (skillKey: string) => {
+    if (skillKey === activeKey) return scrollToAbilities()
+    jumpPending.current = true
+    selectSkill(skillKey)
+  }
+}
+
+function HeroVideos({ handbook }: { handbook: Handbook }) {
+  const { text, videos } = handbook
+  return (
+    <VideoGallery
+      id="hero-videos"
+      videos={videos.general}
+      heading={text("Video", "Videos")}
+      patchCode={videos.patchCode}
+    />
+  )
+}
+
+/** Wide screens open with the artwork and, beside it, a panel with who the hero is. Compact screens have only the artwork here. */
+export function HeroStage({ art, identity, children }: { art: ReactNode; identity: ReactNode; children: ReactNode }) {
+  if (usePageLayout() === "compact")
+    return (
+      <>
+        {art}
+        {children}
+      </>
+    )
+  return (
+    <div className="wiki-hero-stage">
+      {art}
+      <OrnatePanel className="wiki-hero-stage-panel">
+        {identity}
+        <OrnateDivider />
+        {children}
+      </OrnatePanel>
     </div>
   )
+}
+
+type HandbookLayoutProps = {
+  hero: HeroDetail
+  handbook: Handbook
+  art: ReactNode
+  identity: ReactNode
+  picker: ReactNode
+}
+
+/** A list of abilities on the dark ground beside the chosen one, written on a slip of paper. */
+function AbilitiesSection({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
+  return (
+    <section className="wiki-skillbook" aria-labelledby="wiki-kit-title">
+      <h2 id="wiki-kit-title" className="wiki-night-title" tabIndex={-1}>
+        {handbook.text("Bộ kỹ năng", "Abilities")}
+      </h2>
+      <AbilityPanel hero={hero} handbook={handbook} />
+    </section>
+  )
+}
+
+function HandbookParts({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
+  return (
+    <>
+      <AbilitiesSection hero={hero} handbook={handbook} />
+      <HeroSkins key={hero.id} hero={hero} />
+      <HeroVideos handbook={handbook} />
+      <HeroHistory hero={hero} version={handbook.version} />
+    </>
+  )
+}
+
+function HandbookWide({ hero, handbook, art, identity, picker }: HandbookLayoutProps) {
+  const openSkill = useAbilityJump(handbook)
+  return (
+    <>
+      <HeroStage art={art} identity={identity}>
+        <div className="wiki-handbook-profile">
+          <OverviewPanel hero={hero} handbook={handbook} />
+        </div>
+      </HeroStage>
+      <div className="wiki-hero-scope">{picker}</div>
+      <div className="wiki-handbook">
+        <div className="wiki-handbook-main">
+          <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} />
+          <HandbookParts hero={hero} handbook={handbook} />
+        </div>
+        <HeroSectionNav />
+      </div>
+    </>
+  )
+}
+
+/**
+ * Compact screens: a single column in reading order. What changed in the chosen patch is one line under the patch
+ * picker that opens downward, so who the hero is and the abilities follow without a long list between them.
+ */
+function HandbookCompact({ hero, handbook, art, picker }: HandbookLayoutProps) {
+  const openSkill = useAbilityJump(handbook)
+  return (
+    <>
+      {art}
+      <div className="wiki-hero-scope">{picker}</div>
+      <div className="wiki-handbook wiki-handbook-compact">
+        <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} collapsible />
+        <div className="wiki-handbook-profile public-panel wiki-slip">
+          <OverviewPanel hero={hero} handbook={handbook} />
+        </div>
+        <HandbookParts hero={hero} handbook={handbook} />
+        <HeroSectionNav />
+      </div>
+    </>
+  )
+}
+
+export function HeroHandbook({
+  hero,
+  art,
+  identity,
+  picker,
+}: {
+  hero: HeroDetail
+  art: ReactNode
+  identity: ReactNode
+  picker: ReactNode
+}) {
+  const handbook = useHandbook(hero)
+  const props = { hero, handbook, art, identity, picker }
+  return usePageLayout() === "compact" ? <HandbookCompact {...props} /> : <HandbookWide {...props} />
 }

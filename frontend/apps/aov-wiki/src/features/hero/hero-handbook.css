@@ -1,23 +1,170 @@
 .wiki-handbook {
   width: min(100%, 1280px);
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(210px, 0.85fr);
-  gap: clamp(18px, 3vw, 36px);
-  padding: 20px var(--wiki-gutter) 32px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(18px, 3vw, 32px);
+  padding: 16px var(--aov-gutter) 40px;
   margin: auto;
 }
-.wiki-handbook h2 {
+.wiki-handbook-main {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+}
+.wiki-handbook h2,
+.wiki-handbook-profile h2 {
   font: var(--wiki-type-section);
-  margin: 4px 0 8px;
+  margin: 0 0 12px;
+  color: var(--aov-accent-strong);
+}
+.wiki-handbook-profile h2 {
   color: var(--wiki-text);
 }
-.wiki-handbook-kit,
+
+/* Abilities: the list stands on the ground, the chosen one is written on paper beside it. */
+.wiki-skillbook {
+  display: grid;
+  grid-template-columns: 216px minmax(0, 1fr);
+  gap: 12px 18px;
+  align-items: start;
+  scroll-margin-top: 60px;
+}
+.wiki-skillbook > h2 {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.wiki-skillbook .wiki-skill-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  padding: 0;
+  overflow: visible;
+}
+.wiki-skillbook .wiki-skill-options button {
+  position: relative;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+}
+.wiki-skillbook .wiki-skill-options button[aria-pressed="true"] {
+  background: var(--aov-wiki-panel);
+  box-shadow: inset 3px 0 0 var(--aov-wiki-gold);
+}
+.wiki-skillbook .wiki-skill-read {
+  padding: 16px 18px;
+}
+/* The patch changes stand apart as a band of their own. */
+.wiki-handbook .wiki-version-changes {
+  border-left: 3px solid var(--aov-wiki-gold);
+  border-radius: 0 12px 12px 0;
+  padding: 14px 16px;
+  background: var(--aov-wiki-panel);
+}
 .wiki-handbook-profile {
   min-width: 0;
 }
-.wiki-handbook-profile {
-  border-left: 1px solid var(--wiki-line);
-  padding-left: clamp(18px, 2.6vw, 38px);
+
+/* The hero's first screen: the artwork on the dark ground, the panel about the hero beside it. */
+.wiki-hero-stage {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: min(100%, 1440px);
+  min-height: min(calc(100svh - 48px), 720px);
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 44%);
+  align-items: center;
+  gap: 24px;
+  margin-inline: auto;
+  padding: 64px var(--aov-gutter) 16px;
+}
+.wiki-hero-stage .wiki-hero-profile {
+  position: absolute;
+  z-index: -1;
+  inset: 0 34% 0 0;
+  min-height: 0;
+  overflow: visible;
+  background: none;
+}
+.wiki-hero-stage .wiki-hero-profile::before,
+.wiki-hero-stage .wiki-hero-profile::after {
+  content: none;
+}
+.wiki-hero-stage .wiki-hero-profile[data-artwork="SPLASH"] .wiki-hero-profile-art,
+.wiki-hero-stage .wiki-hero-profile-art {
+  inset: 48px 0 0;
+  width: 100%;
+  height: calc(100% - 48px);
+  object-fit: cover;
+  object-position: 62% 18%;
+  mask-image:
+    linear-gradient(90deg, transparent, black 10%, black 70%, transparent),
+    linear-gradient(180deg, transparent, black 10%, black 78%, transparent);
+  mask-composite: intersect;
+}
+.wiki-hero-stage .wiki-hero-profile-atmosphere {
+  display: none;
+}
+.wiki-hero-stage .wiki-hero-profile-content {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 64px var(--aov-gutter) 0;
+}
+.wiki-hero-stage-panel {
+  grid-column: 2;
+}
+.wiki-hero-stage-panel .wiki-hero-profile-identity {
+  min-height: 0;
+  margin-top: 0;
+}
+.wiki-hero-stage-panel .wiki-hero-profile-heading h1 {
+  font: var(--wiki-type-page);
+  color: var(--aov-wiki-text);
+  text-shadow: none;
+}
+.wiki-hero-stage-panel .wiki-hero-profile-head {
+  border-color: var(--aov-wiki-gold);
+  box-shadow: none;
+}
+.wiki-hero-stage-panel .wiki-hero-epithet {
+  color: var(--aov-wiki-text-soft);
+}
+.wiki-hero-stage-panel .wiki-hero-role-strip > span {
+  background: var(--aov-wiki-panel-deep);
+  box-shadow: inset 0 0 0 1px var(--aov-wiki-line);
+  color: var(--aov-wiki-text);
+}
+.wiki-hero-stage-panel .wiki-hero-video-button {
+  border-color: var(--aov-wiki-line);
+  background: var(--aov-wiki-panel-deep);
+  color: var(--aov-accent);
+}
+.wiki-hero-stage-panel .wiki-hero-switch-trigger {
+  color: var(--aov-wiki-text);
+}
+.wiki-hero-stage-panel .wiki-hero-role-strip .wiki-hero-glyph {
+  color: var(--aov-accent);
+}
+
+/* Facts as rows of label and value. */
+.wiki-hero-stage-panel .wiki-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.wiki-hero-stage-panel .wiki-facts > div {
+  border: 0;
+  border-radius: 2px;
+  padding: 7px 12px;
+  background: var(--aov-surface);
+  box-shadow: inset 0 0 0 1px var(--aov-line);
+}
+.wiki-hero-stage-panel .wiki-facts dd {
+  font-weight: 700;
+}
+.wiki-hero-stage-panel .wiki-hero-ratings {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 18px;
 }
 .wiki-handbook-profile details {
   padding: 14px 0;
@@ -52,9 +199,22 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+.wiki-skill-options button {
+  transition:
+    border-color 160ms,
+    background 160ms,
+    box-shadow 200ms ease-out,
+    transform 200ms ease-out;
+}
 .wiki-skill-options button[aria-pressed="true"] {
-  border-color: var(--aov-accent);
+  border-color: var(--hero-accent, var(--aov-accent));
   background: var(--aov-raised);
+  box-shadow: 0 8px 20px -12px var(--hero-accent, var(--aov-accent));
+}
+@media (hover: hover) {
+  .wiki-skill-options button:hover {
+    transform: translateY(-1px);
+  }
 }
 .wiki-skill-options button > svg {
   color: var(--gold);
@@ -124,11 +284,19 @@
 .wiki-facts dd {
   font-variant-numeric: tabular-nums;
 }
-.wiki-handbook-skins {
+.wiki-hero-summary-more {
+  font: var(--wiki-type-meta);
+  display: none;
+  min-height: 32px;
+  align-items: center;
+  color: var(--aov-accent);
+}
+.wiki-handbook-action {
   font: var(--wiki-type-body);
   display: flex;
   align-items: center;
   gap: 8px;
+  white-space: nowrap;
   color: var(--gold);
   margin-top: 18px;
 }
@@ -162,32 +330,122 @@
 .wiki-rank-scroll thead {
   background: var(--wiki-panel);
 }
-@media (max-width: 760px) {
-  .wiki-skill-options {
-    grid-template-columns: repeat(auto-fit, minmax(min(66px, 100%), 1fr));
-  }
-  .wiki-skill-options button {
-    flex-direction: column;
-    justify-content: center;
-    padding: 6px;
-  }
-  .wiki-skill-options strong {
-    display: none;
-  }
-  .wiki-handbook {
-    grid-template-columns: minmax(0, 1fr);
-    padding-top: 24px;
-  }
-  .wiki-handbook-profile {
-    border: 0;
-    border-top: 1px solid var(--wiki-line);
-    padding: 18px 0 0;
-  }
+/* Compact layout: a single column, in the order written in the component. */
+.wiki-handbook.wiki-handbook-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 10px var(--aov-gutter) 24px;
+}
+.wiki-handbook-compact > * {
+  min-width: 0;
+}
+.wiki-handbook-compact .wiki-skillbook {
+  grid-template-columns: minmax(0, 1fr);
+}
+.wiki-handbook-compact .wiki-skillbook .wiki-skill-options {
+  grid-template-columns: repeat(auto-fit, minmax(min(66px, 100%), 1fr));
+}
+.wiki-handbook-compact .wiki-version-changes {
+  padding-block: 0;
+}
+.wiki-handbook-compact .wiki-version-changes[open] {
+  padding-bottom: 14px;
+}
+.wiki-handbook-compact .wiki-version-changes[data-state="unchanged"] {
+  padding-block: 10px;
+}
+.wiki-handbook-compact .wiki-handbook-profile details,
+.wiki-handbook-compact .wiki-handbook-profile summary {
+  color: inherit;
+}
+.wiki-handbook-compact .wiki-version-changes[data-state="unchanged"] > p {
+  display: none;
+}
+.wiki-version-changes-line {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+.wiki-version-changes-line::-webkit-details-marker {
+  display: none;
+}
+.wiki-version-changes-line > strong {
+  font: var(--wiki-type-category);
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  color: var(--aov-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-version-changes-line > svg:last-child {
+  flex: none;
+  color: var(--aov-muted);
+  transition: transform 160ms ease-out;
+}
+.wiki-version-changes[open] > .wiki-version-changes-line > svg:last-child {
+  transform: rotate(180deg);
+}
+.wiki-version-compared {
+  font: var(--wiki-type-meta);
+}
+.wiki-version-compared > button {
+  color: var(--aov-accent);
+}
+.wiki-handbook-compact .wiki-skill-options {
+  grid-template-columns: repeat(auto-fit, minmax(min(66px, 100%), 1fr));
+}
+.wiki-handbook-compact .wiki-skill-options button {
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px;
+}
+.wiki-handbook-compact .wiki-skill-options strong {
+  display: none;
+}
+.wiki-handbook-compact .wiki-hero-summary:not([data-open]) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+.wiki-handbook-compact .wiki-hero-summary-more {
+  display: inline-flex;
+}
+.wiki-handbook-compact .wiki-hero-ratings {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+}
+.wiki-handbook-compact .wiki-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.wiki-handbook-compact .wiki-facts > div {
+  display: grid;
+  align-content: start;
+  justify-content: stretch;
+  gap: 2px;
+  border: 1px solid var(--wiki-line);
+  border-radius: var(--aov-radius-control);
+  padding: 8px;
+}
+.wiki-handbook-compact .wiki-facts dt {
+  font: var(--wiki-type-meta);
+  white-space: nowrap;
+}
+.wiki-handbook-compact .wiki-fact-icon {
+  display: none;
 }
 
 .wiki-hero-scope {
   width: min(100%, 1280px);
-  padding: 12px var(--wiki-gutter) 0;
+  padding: 12px var(--aov-gutter) 0;
   margin: auto;
 }
 .wiki-hero-scope .wiki-version-picker {
@@ -242,15 +500,7 @@
   display: grid;
   min-width: 0;
   gap: 10px;
-  margin-bottom: 20px;
   scroll-margin-top: 60px;
-  padding: 14px 16px;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
-}
-.wiki-version-changes[data-state="changed"] {
-  border-inline-start: 3px solid var(--aov-accent);
-  border-radius: 0 var(--aov-radius-card) var(--aov-radius-card) 0;
 }
 .wiki-version-changes-head {
   display: flex;
@@ -316,6 +566,20 @@
 .wiki-version-float:is(:hover, :focus-visible) {
   color: var(--aov-accent);
 }
+/* On wide screens the section list beside the page is already the way back. */
+@media (min-width: 1180px) {
+  .wiki-version-float {
+    display: none;
+  }
+}
+/* Beside the floating section button, not on top of it. */
+@media (max-width: 1179px) {
+  .wiki-version-float {
+    right: 76px;
+    bottom: calc(22px + env(safe-area-inset-bottom));
+    max-width: calc(100vw - 92px);
+  }
+}
 .wiki-version-float > svg:last-child {
   transform: rotate(180deg);
 }
@@ -330,10 +594,16 @@
     animation: none;
   }
 }
-#wiki-kit-title {
+#wiki-kit-title,
+#wiki-hero-skins,
+#hero-videos,
+#wiki-hero-history-title,
+#wiki-hero-overview,
+#wiki-hero-stats,
+#wiki-hero-lore {
   scroll-margin-top: 60px;
 }
-#wiki-kit-title:focus {
+:is(#wiki-kit-title, #wiki-hero-history-title, #wiki-hero-overview, #wiki-hero-stats, #wiki-hero-lore):focus {
   outline: none;
 }
 .wiki-version-toggle {

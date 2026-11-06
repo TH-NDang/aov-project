@@ -37,15 +37,22 @@ function useVersionedVideos(videos: readonly PublicVideo[] | undefined, selected
   }, [options, scope.patchVariantId, selectedId, videos])
 }
 
+/** Which videos play in turn when a shortcut on the page opens one, whatever the gallery's own filter shows. */
+export type VideoPlaylist = VideoPurpose | "ALL"
+
+type VideoEntry = { openedVideo?: boolean; playlist?: VideoPlaylist }
+
 /**
  * Keeps the open video in the address so it can be shared and the Back button closes it. Opening adds one history entry
- * and moving between videos replaces it, so Back always returns to the page.
+ * and moving between videos replaces it, so Back always returns to the page. The entry remembers the list it plays, which
+ * therefore ends with it and leaves no filter behind on the page.
  */
 export function useVideoParam() {
   const [params, setParams] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const set = (video: PublicVideo | null, replace: boolean) =>
+  const entry = location.state as VideoEntry | null
+  const set = (video: PublicVideo | null, replace: boolean, state: unknown) =>
     setParams(
       (previous) => {
         const next = new URLSearchParams(previous)
@@ -53,15 +60,17 @@ export function useVideoParam() {
         else next.delete("video")
         return next
       },
-      { replace, preventScrollReset: true, state: video ? { openedVideo: true } : undefined },
+      { replace, preventScrollReset: true, state },
     )
   return {
     id: params.get("video"),
-    open: (video: PublicVideo) => set(video, false),
-    select: (video: PublicVideo) => set(video, true),
+    playlist: entry?.playlist ?? null,
+    open: (video: PublicVideo, playlist?: VideoPlaylist) =>
+      set(video, false, { ...(location.state as object | null), openedVideo: true, playlist }),
+    select: (video: PublicVideo) => set(video, true, location.state),
     close: () => {
-      if ((location.state as { openedVideo?: boolean } | null)?.openedVideo) navigate(-1)
-      else set(null, true)
+      if (entry?.openedVideo) navigate(-1)
+      else set(null, true, location.state)
     },
   }
 }
@@ -97,7 +106,7 @@ function VideoCard({
     </>
   )
   return (
-    <li className="wiki-video-card">
+    <li className="wiki-video-card public-panel">
       {canPlayHere(video) ? (
         <button
           type="button"
@@ -133,8 +142,6 @@ export function VideoGallery({
   filters = true,
   headingLevel = 2,
   id,
-  purpose: chosenPurpose,
-  onPurposeChange,
 }: {
   videos: readonly PublicVideo[]
   heading: string
@@ -143,15 +150,10 @@ export function VideoGallery({
   filters?: boolean
   headingLevel?: 2 | 3
   id?: string
-  /** Lets the page choose a filter from elsewhere; the gallery keeps its own choice otherwise. */
-  purpose?: VideoPurpose | null
-  onPurposeChange?: (purpose: VideoPurpose | null) => void
 }) {
   const { locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  const [ownPurpose, setOwnPurpose] = useState<VideoPurpose | null>(null)
-  const purpose = chosenPurpose === undefined ? ownPurpose : chosenPurpose
-  const setPurpose = onPurposeChange ?? setOwnPurpose
+  const [purpose, setPurpose] = useState<VideoPurpose | null>(null)
   const [expanded, setExpanded] = useState(false)
   const videoParam = useVideoParam()
   const Heading = headingLevel === 2 ? "h2" : "h3"
@@ -163,9 +165,12 @@ export function VideoGallery({
   if (!videos.length) return null
 
   const playing = videos.find((video) => video.id === videoParam.id && canPlayHere(video)) ?? null
-  // A shared link can name a video the current filter hides, and then the whole list plays.
-  const filtered = !playing || matching.some((video) => video.id === playing.id)
-  const playlist = (filtered ? matching : byPurpose(videos)).filter(canPlayHere)
+  // A card plays what the filter shows, and a shortcut on the page plays the list it names.
+  const listed = videoParam.playlist ? (videoParam.playlist === "ALL" ? null : videoParam.playlist) : active
+  const inList = byPurpose(listed ? videos.filter((video) => video.purpose === listed) : videos)
+  // A shared link can name a video the list leaves out, and then the whole list plays.
+  const filtered = !playing || inList.some((video) => video.id === playing.id)
+  const playlist = (filtered ? inList : byPurpose(videos)).filter(canPlayHere)
 
   return (
     <section className="wiki-videos" id={id} aria-label={heading}>
@@ -204,7 +209,7 @@ export function VideoGallery({
       <VideoTheater
         video={playing}
         playlist={playlist}
-        heading={filtered && active ? purposeLabel(active, locale) : heading}
+        heading={filtered && listed ? purposeLabel(listed, locale) : heading}
         patchCode={patchCode}
         onSelect={videoParam.select}
         onClose={videoParam.close}
@@ -219,24 +224,33 @@ export function useHeroVideos(heroId: string, selectedId?: string | null) {
   const versioned = useVersionedVideos(query.data, selectedId)
   return useMemo(() => {
     const split = splitHeroVideos(versioned.videos)
+    const playable = byPurpose(split.general).filter(canPlayHere)
     return {
       ...split,
-      firstLore: split.general.find((video) => video.purpose === "LORE" && canPlayHere(video)) ?? null,
+      firstVideo: playable[0] ?? null,
+      firstLore: playable.find((video) => video.purpose === "LORE") ?? null,
       patchCode: versioned.patchCode,
     }
   }, [versioned])
 }
 
-/** A shortcut in the hero banner, because the gallery sits below the skills. */
-export function HeroVideoJump({ heroId }: { heroId: string }) {
+/**
+ * A shortcut in the hero banner: it plays the hero's videos where the reader is, because the gallery sits below the
+ * skills. The gallery is the place to go only when none of them can play here.
+ */
+export function HeroVideoButton({ heroId }: { heroId: string }) {
   const { locale } = useWikiContext()
-  const { general } = useHeroVideos(heroId)
+  const { general, firstVideo } = useHeroVideos(heroId)
+  const videoParam = useVideoParam()
   if (!general.length) return null
   return (
     <button
       type="button"
-      className="wiki-hero-video-jump"
-      onClick={() => document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })}
+      className="wiki-hero-video-button"
+      onClick={() => {
+        if (firstVideo) videoParam.open(firstVideo, "ALL")
+        else document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })
+      }}
     >
       <WikiIcon name="play" size={14} />
       {wikiText(locale, "Video", "Videos")} · {general.length}

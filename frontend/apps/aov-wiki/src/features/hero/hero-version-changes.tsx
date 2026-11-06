@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
@@ -79,17 +79,20 @@ export function useHeroVersion(hero: HeroDetail) {
 
 export type HeroVersion = ReturnType<typeof useHeroVersion>
 
-/** Stays in reach once the changes have scrolled away, so a reader can go back after reading a skill in full. */
+/** Shown after jumping from a change to its skill, so a reader can go back; it leaves once they have. */
 function BackToChanges({
   target,
   label,
   onBack,
+  onReturned,
 }: {
   target: RefObject<HTMLElement | null>
   label: string
   onBack: () => void
+  onReturned: () => void
 }) {
   const [away, setAway] = useState(false)
+  const wasAway = useRef(false)
   useEffect(() => {
     const node = target.current
     if (!node) return
@@ -98,13 +101,16 @@ function BackToChanges({
       // Several changes can arrive together while the page is busy, and only the latest one counts.
       (entries) => {
         const entry = entries[entries.length - 1]
-        setAway(!entry.isIntersecting && entry.boundingClientRect.top < window.innerHeight / 2)
+        const isAway = !entry.isIntersecting && entry.boundingClientRect.top < window.innerHeight / 2
+        if (wasAway.current && !isAway) onReturned()
+        wasAway.current = isAway
+        setAway(isAway)
       },
       { rootMargin: "-56px 0px 0px 0px" },
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [target])
+  }, [target, onReturned])
   if (!away) return null
   return (
     <button type="button" className="wiki-version-float" onClick={onBack}>
@@ -119,18 +125,27 @@ export function HeroVersionChanges({
   hero,
   version,
   onOpenSkill,
+  collapsible = false,
 }: {
   hero: HeroDetail
   version: HeroVersion
   onOpenSkill: (skillKey: string) => void
+  /** One line that opens downward, for a single column where the full list would stand in the way of the abilities. */
+  collapsible?: boolean
 }) {
   const scope = useWikiContext()
   const { locale, href } = scope
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const { selected, previous, notes, lastChange, differences, showDiff, setShowDiff } = version
-  const section = useRef<HTMLElement>(null)
-  const heading = useRef<HTMLDivElement>(null)
+  const section = useRef<HTMLElement & { open?: boolean }>(null)
+  const heading = useRef<HTMLElement>(null)
   const [expanded, setExpanded] = useState(false)
+  const [jumped, setJumped] = useState(false)
+  const settle = useCallback(() => setJumped(false), [])
+  const jumpToSkill = (skillKey: string) => {
+    setJumped(true)
+    onOpenSkill(skillKey)
+  }
   const open = (patch: WikiPatch) =>
     scope.setScope(
       patch.isCurrent
@@ -150,6 +165,8 @@ export function HeroVersionChanges({
     if (!lastChange && !previous) return null
     return (
       <section
+        id="wiki-version-changes"
+        tabIndex={-1}
         className="wiki-version-changes"
         data-state="unchanged"
         aria-label={text("Thay đổi ở bản này", "Changes in this version")}
@@ -183,113 +200,149 @@ export function HeroVersionChanges({
   const count = officialChanges.length || differences.skills.size + differences.stats.size
   const backToChanges = () => {
     setExpanded(true)
+    if (section.current && collapsible) section.current.open = true
     section.current?.scrollIntoView({ block: "start" })
     section.current?.focus({ preventScroll: true })
   }
 
+  const body = (
+    <>
+      {summaries.map(
+        (summary, index) =>
+          summary.text && (
+            <p className="wiki-version-summary" lang={notes[index].actualLocale ?? undefined} key={index}>
+              {summary.text}
+            </p>
+          ),
+      )}
+      {!officialChanges.length && (
+        <p className="wiki-version-note">
+          {text(
+            "Chưa có ghi chú chính thức cho bản này. Đây là khác biệt giữa hai bản dữ liệu, có thể gồm cả chỉnh sửa câu chữ.",
+            "No official notes for this version. These are differences between two data versions and may include wording edits.",
+          )}
+        </p>
+      )}
+
+      <div className="wiki-version-actions">
+        <ChangeDisclosure count={count} open={expanded} onToggle={() => setExpanded(!expanded)}>
+          {officialChanges.length > 0 ? (
+            <ChangeList
+              changes={officialChanges}
+              hero={hero}
+              skillAction={(key, skill) =>
+                skill && (
+                  <button
+                    type="button"
+                    className="wiki-change-skill-link"
+                    aria-label={`${text("Xem kỹ năng đầy đủ", "See the full ability")}: ${skillName(key)}`}
+                    onClick={() => jumpToSkill(key)}
+                  >
+                    {text("Xem kỹ năng đầy đủ", "See full ability")}
+                    <WikiIcon name="chevron" size={14} />
+                  </button>
+                )
+              }
+            />
+          ) : (
+            <ul className="wiki-version-list">
+              {[...differences.skills.entries()].map(([key, difference]) => (
+                <li key={key}>
+                  <button type="button" onClick={() => jumpToSkill(key)}>
+                    <span className="wiki-version-row-head">
+                      <strong>{skillName(key)}</strong>
+                    </span>
+                    <span>
+                      {difference.isNew
+                        ? text("Kỹ năng mới ở bản này", "New ability in this version")
+                        : text("Nội dung kỹ năng có thay đổi", "The ability text changed")}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </ChangeDisclosure>
+        <div className="wiki-version-links">
+          {source && (
+            <a href={source} target="_blank" rel="noopener noreferrer">
+              {text("Nguồn công bố", "Publication source")} <WikiIcon name="open" size={14} />
+            </a>
+          )}
+          <Link to={href(`/updates/${selected.code}`)}>{text("Xem toàn bộ bản cập nhật", "See the whole update")}</Link>
+        </div>
+        {hasCompared && (
+          <label className="wiki-version-toggle">
+            <input type="checkbox" checked={showDiff} onChange={(event) => setShowDiff(event.target.checked)} />
+            {text("Đánh dấu trong kỹ năng", "Mark inside abilities")}
+          </label>
+        )}
+      </div>
+    </>
+  )
+
   return (
     <>
-      <section
-        ref={section}
-        tabIndex={-1}
-        className="wiki-version-changes"
-        data-state="changed"
-        aria-label={text("Thay đổi ở bản này", "Changes in this version")}
-      >
-        <div ref={heading} className="wiki-version-changes-head">
-          <div>
-            <h2>{text(`Thay đổi ở bản ${selected.code}`, `Changes in ${selected.code}`)}</h2>
-            {previous && (
-              <p>
-                {text("So với ", "Compared with ")}
-                <button type="button" onClick={() => open(previous)}>
-                  {previous.code}
-                </button>
-              </p>
-            )}
-          </div>
-          {overall && <ChangeKind kind={overall} />}
-        </div>
-
-        {summaries.map(
-          (summary, index) =>
-            summary.text && (
-              <p className="wiki-version-summary" lang={notes[index].actualLocale ?? undefined} key={index}>
-                {summary.text}
-              </p>
-            ),
-        )}
-        {!officialChanges.length && (
-          <p className="wiki-version-note">
-            {text(
-              "Chưa có ghi chú chính thức cho bản này. Đây là khác biệt giữa hai bản dữ liệu, có thể gồm cả chỉnh sửa câu chữ.",
-              "No official notes for this version. These are differences between two data versions and may include wording edits.",
-            )}
-          </p>
-        )}
-
-        <div className="wiki-version-actions">
-          <ChangeDisclosure count={count} open={expanded} onToggle={() => setExpanded(!expanded)}>
-            {officialChanges.length > 0 ? (
-              <ChangeList
-                changes={officialChanges}
-                hero={hero}
-                skillAction={(key, skill) =>
-                  skill && (
-                    <button
-                      type="button"
-                      className="wiki-change-skill-link"
-                      aria-label={`${text("Xem kỹ năng đầy đủ", "See the full ability")}: ${skillName(key)}`}
-                      onClick={() => onOpenSkill(key)}
-                    >
-                      {text("Xem kỹ năng đầy đủ", "See full ability")}
-                      <WikiIcon name="chevron" size={14} />
-                    </button>
-                  )
-                }
-              />
-            ) : (
-              <ul className="wiki-version-list">
-                {[...differences.skills.entries()].map(([key, difference]) => (
-                  <li key={key}>
-                    <button type="button" onClick={() => onOpenSkill(key)}>
-                      <span className="wiki-version-row-head">
-                        <strong>{skillName(key)}</strong>
-                      </span>
-                      <span>
-                        {difference.isNew
-                          ? text("Kỹ năng mới ở bản này", "New ability in this version")
-                          : text("Nội dung kỹ năng có thay đổi", "The ability text changed")}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </ChangeDisclosure>
-          <div className="wiki-version-links">
-            {source && (
-              <a href={source} target="_blank" rel="noopener noreferrer">
-                {text("Nguồn công bố", "Publication source")} <WikiIcon name="open" size={14} />
-              </a>
-            )}
-            <Link to={href(`/updates/${selected.code}`)}>
-              {text("Xem toàn bộ bản cập nhật", "See the whole update")}
-            </Link>
-          </div>
-          {hasCompared && (
-            <label className="wiki-version-toggle">
-              <input type="checkbox" checked={showDiff} onChange={(event) => setShowDiff(event.target.checked)} />
-              {text("Đánh dấu trong kỹ năng", "Mark inside abilities")}
-            </label>
+      {collapsible ? (
+        <details
+          ref={section as RefObject<HTMLDetailsElement>}
+          tabIndex={-1}
+          id="wiki-version-changes"
+          className="wiki-version-changes"
+          data-state="changed"
+        >
+          <summary ref={heading as RefObject<HTMLElement>} className="wiki-version-changes-line">
+            <strong>{text("Thay đổi ở bản này", "Changes in this version")}</strong>
+            {overall && <ChangeKind kind={overall} />}
+            <WikiIcon name="chevron" size={16} />
+          </summary>
+          {previous && (
+            <p className="wiki-version-compared">
+              {text("So với ", "Compared with ")}
+              <button type="button" onClick={() => open(previous)}>
+                {previous.code}
+              </button>
+            </p>
           )}
-        </div>
-      </section>
-      <BackToChanges
-        target={heading}
-        label={text(`Về thay đổi bản ${selected.code}`, `Back to ${selected.code} changes`)}
-        onBack={backToChanges}
-      />
+          {body}
+        </details>
+      ) : (
+        <section
+          ref={section}
+          tabIndex={-1}
+          id="wiki-version-changes"
+          className="wiki-version-changes"
+          data-state="changed"
+          aria-label={text("Thay đổi ở bản này", "Changes in this version")}
+        >
+          <div ref={heading as RefObject<HTMLDivElement>} className="wiki-version-changes-head">
+            <div>
+              <h2>{text(`Thay đổi ở bản ${selected.code}`, `Changes in ${selected.code}`)}</h2>
+              {previous && (
+                <p>
+                  {text("So với ", "Compared with ")}
+                  <button type="button" onClick={() => open(previous)}>
+                    {previous.code}
+                  </button>
+                </p>
+              )}
+            </div>
+            {overall && <ChangeKind kind={overall} />}
+          </div>
+          {body}
+        </section>
+      )}
+      {jumped && (
+        <BackToChanges
+          target={heading}
+          label={text(`Về thay đổi bản ${selected.code}`, `Back to ${selected.code} changes`)}
+          onBack={() => {
+            setJumped(false)
+            backToChanges()
+          }}
+          onReturned={settle}
+        />
+      )}
     </>
   )
 }

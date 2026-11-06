@@ -58,6 +58,7 @@ export function VideoTheater({
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const [autoNext, setAutoNext] = useAutoNext()
   const activeRow = useRef<HTMLButtonElement>(null)
+  const opener = useRef<Element | null>(null)
 
   // The title stays readable while the dialog animates away, after the player itself has gone.
   const [shown, setShown] = useState(video)
@@ -95,8 +96,13 @@ export function VideoTheater({
         className="wiki-video-theater"
         data-single={playlist.length < 2 || undefined}
         showCloseButton={false}
+        onOpenAutoFocus={() => {
+          opener.current = document.activeElement
+        }}
         onCloseAutoFocus={(event) => {
-          // Return to the video last watched, which may not be the card that opened the player.
+          // A shortcut elsewhere on the page gets focus back by default, which does not scroll: the reader stays put.
+          if (!opener.current?.closest("[data-video-card]")) return
+          // A card returns to the video last watched, which may be another card in the same gallery.
           const card = shown && document.querySelector<HTMLElement>(`[data-video-card="${CSS.escape(shown.id)}"]`)
           if (!card) return
           event.preventDefault()

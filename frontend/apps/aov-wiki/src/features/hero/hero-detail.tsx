@@ -6,8 +6,8 @@ import { heroCatalogQuery, heroDetailQuery, type HeroListItem } from "./hero-api
 import { heroAppearance } from "./hero-appearance"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useHeroChangedVariants } from "../../lib/wiki-patch-changes"
-import { HeroHandbook } from "./hero-handbook"
-import { HeroVideoJump } from "../videos/subject-videos"
+import { HeroHandbook, HeroStage } from "./hero-handbook"
+import { HeroVideoButton } from "../videos/subject-videos"
 import { HERO_ROLES, localizedHeroOptions } from "./hero-classifications"
 import { HeroGlyph } from "./hero-glyph"
 import { HeroQuickSwitch } from "./hero-quick-switch"
@@ -16,12 +16,15 @@ import { WikiImage } from "../../components/wiki-image"
 import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
 import "./hero-detail.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { PublicEmbers } from "@aov/ui/components/public-embers"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 
 function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string }) {
   const scope = useWikiContext()
   const { locale, t } = scope
   const query = useQuery(heroDetailQuery(hero.id, scope))
   const history = useHeroChangedVariants(hero.id)
+  const layout = usePageLayout()
   const [failedUrls, setFailedUrls] = useState<string[]>([])
   const portrait = query.data?.media.PORTRAIT?.currentVersion?.url
   const splash = query.data?.media.SPLASH?.currentVersion?.url
@@ -38,131 +41,127 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
     "--hero-accent": appearance.accent,
   } as CSSProperties
 
-  return (
-    <HeroDetailLayout title={hero.name} style={style}>
-      <section className="wiki-hero-profile" data-artwork={kind} aria-labelledby="hero-profile-title">
-        {artwork && query.data?.media[kind]?.currentVersion && (
-          <ImageCredit
-            className="right-4 bottom-4"
-            sources={query.data.media[kind].currentVersion?.sources}
-            contactHref={`/contact?assetId=${query.data.media[kind].assetId}&versionId=${query.data.media[kind].currentVersion?.versionId}`}
-          />
-        )}
-        {splash && (
-          <div
-            className="wiki-hero-profile-atmosphere"
-            style={{ backgroundImage: `url(${JSON.stringify(splash)})` }}
-            aria-hidden="true"
-          />
-        )}
-        {artwork ? (
-          <WikiImage
-            key={artwork}
-            className="wiki-hero-profile-art"
-            src={artwork}
-            alt={wikiText(locale, `Ảnh tướng ${hero.name}`, `${hero.name} artwork`)}
-            fetchPriority="high"
-            loading="eager"
-            onError={() => setFailedUrls((current) => [...current, artwork])}
-          />
-        ) : query.isPending ? (
-          <>
-            <div className="wiki-hero-profile-art wiki-hero-art-skeleton wiki-skeleton" aria-hidden="true" />
-            <span className="sr-only" role="status">
-              {wikiText(locale, "Đang tải ảnh tướng…", "Loading hero artwork…")}
-            </span>
-          </>
-        ) : (
-          <div className="wiki-hero-profile-placeholder">
-            {query.isError && (
-              <button type="button" onClick={() => void query.refetch()}>
-                {wikiText(locale, "Tải lại ảnh", "Retry artwork")}
-              </button>
-            )}
-            {query.isSuccess && !artwork && (
-              <span>{wikiText(locale, "Chưa có ảnh lớn", "Artwork is not available yet")}</span>
-            )}
-          </div>
-        )}
-
-        <div className="wiki-hero-profile-content">
-          <nav className="wiki-hero-profile-breadcrumb" aria-label={wikiText(locale, "Đường dẫn", "Breadcrumb")}>
-            <Link to={scope.href("/")}>{t("home")}</Link>
-            <span>/</span>
-            <Link to={scope.href(returnTo)}>{wikiText(locale, "Thư viện Tướng", "Hero library")}</Link>
-            <span>/</span>
-            <span aria-current="page">{hero.name}</span>
-          </nav>
-          <Link className="wiki-hero-profile-back" to={scope.href(returnTo)}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              aria-hidden="true"
-            >
-              <path d="m14 5-7 7 7 7" />
-            </svg>
-            {wikiText(locale, "Thư viện Tướng", "Hero library")}
-          </Link>
-          <div className="wiki-hero-profile-identity">
-            <span className="wiki-hero-profile-head" aria-hidden="true">
-              {identityImage ? (
-                <WikiImage
-                  src={identityImage}
-                  alt=""
-                  width="52"
-                  height="52"
-                  loading="eager"
-                  decoding="async"
-                  onError={() => setFailedUrls((current) => [...current, identityImage])}
-                />
-              ) : (
-                <span>{hero.name.charAt(0)}</span>
-              )}
-            </span>
-            <div className="wiki-hero-profile-heading">
-              <h1 id="hero-profile-title">{hero.name}</h1>
-              <HeroQuickSwitch currentHeroId={hero.id} returnTo={returnTo} />
-            </div>
-          </div>
-          {(query.data?.unscopedBaseline ?? hero.unscopedBaseline) && (
-            <span className="mt-2 inline-flex rounded-full bg-black/20 px-2 py-1 text-xs text-white/70">
-              {wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}
-            </span>
+  const identity = (
+    <>
+      <div className="wiki-hero-profile-identity">
+        <span className="wiki-hero-profile-head" aria-hidden="true">
+          {identityImage ? (
+            <WikiImage
+              src={identityImage}
+              alt=""
+              width="52"
+              height="52"
+              loading="eager"
+              decoding="async"
+              onError={() => setFailedUrls((current) => [...current, identityImage])}
+            />
+          ) : (
+            <span>{hero.name.charAt(0)}</span>
           )}
-          {query.data?.content.profile?.title && (
-            <p className="wiki-hero-epithet">{query.data.content.profile.title}</p>
-          )}
-          <div className="wiki-hero-role-strip">
-            {localizedHeroOptions(HERO_ROLES, locale)
-              .filter((role) => hero.roles.includes(role.value))
-              .map((role) => (
-                <span key={role.value}>
-                  <HeroGlyph name={role.glyph} />
-                  {role.label}
-                </span>
-              ))}
-            <HeroVideoJump heroId={hero.id} />
-          </div>
+        </span>
+        <div className="wiki-hero-profile-heading">
+          <h1 id="hero-profile-title">{hero.name}</h1>
+          <HeroQuickSwitch currentHeroId={hero.id} returnTo={returnTo} />
         </div>
-      </section>
-      <div className="wiki-hero-scope">
-        <WikiVersionPicker changedVariants={history.data} />
       </div>
-      {query.data ? (
-        <HeroHandbook hero={query.data} />
-      ) : query.isError ? (
-        <div className="wiki-handbook-notice" role="status">
-          {wikiText(locale, "Chưa tải được hồ sơ tướng.", "The hero profile could not be loaded.")}{" "}
-          <button onClick={() => void query.refetch()}>{t("retry")}</button>
-        </div>
+      {(query.data?.unscopedBaseline ?? hero.unscopedBaseline) && (
+        <span className="mt-2 inline-flex rounded-full bg-black/20 px-2 py-1 text-xs text-white/70">
+          {wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}
+        </span>
+      )}
+      {query.data?.content.profile?.title && <p className="wiki-hero-epithet">{query.data.content.profile.title}</p>}
+      <div className="wiki-hero-role-strip">
+        {localizedHeroOptions(HERO_ROLES, locale)
+          .filter((role) => hero.roles.includes(role.value))
+          .map((role) => (
+            <span key={role.value}>
+              <HeroGlyph name={role.glyph} />
+              {role.label}
+            </span>
+          ))}
+        <HeroVideoButton heroId={hero.id} />
+      </div>
+    </>
+  )
+  const art = (
+    <section className="wiki-hero-profile" data-artwork={kind} aria-labelledby="hero-profile-title">
+      {artwork && query.data?.media[kind]?.currentVersion && (
+        <ImageCredit
+          className="right-4 bottom-4"
+          sources={query.data.media[kind].currentVersion?.sources}
+          contactHref={`/contact?assetId=${query.data.media[kind].assetId}&versionId=${query.data.media[kind].currentVersion?.versionId}`}
+        />
+      )}
+      {splash && (
+        <div
+          className="wiki-hero-profile-atmosphere"
+          style={{ backgroundImage: `url(${JSON.stringify(splash)})` }}
+          aria-hidden="true"
+        />
+      )}
+      {artwork ? (
+        <WikiImage
+          key={artwork}
+          className="wiki-hero-profile-art"
+          src={artwork}
+          focus={query.data?.media[kind]?.currentVersion?.focalPoint}
+          alt={wikiText(locale, `Ảnh tướng ${hero.name}`, `${hero.name} artwork`)}
+          fetchPriority="high"
+          loading="eager"
+          onError={() => setFailedUrls((current) => [...current, artwork])}
+        />
+      ) : query.isPending ? (
+        <>
+          <div className="wiki-hero-profile-art wiki-hero-art-skeleton wiki-skeleton" aria-hidden="true" />
+          <span className="sr-only" role="status">
+            {wikiText(locale, "Đang tải ảnh tướng…", "Loading hero artwork…")}
+          </span>
+        </>
       ) : (
-        <p className="wiki-handbook-notice" role="status">
-          {t("loading")}
-        </p>
+        <div className="wiki-hero-profile-placeholder">
+          {query.isError && (
+            <button type="button" onClick={() => void query.refetch()}>
+              {wikiText(locale, "Tải lại ảnh", "Retry artwork")}
+            </button>
+          )}
+          {query.isSuccess && !artwork && (
+            <span>{wikiText(locale, "Chưa có ảnh lớn", "Artwork is not available yet")}</span>
+          )}
+        </div>
+      )}
+
+      <PublicEmbers className="wiki-artwork-embers" count={layout === "compact" ? 14 : 28} />
+      <div className="wiki-hero-profile-content">
+        <nav className="wiki-hero-profile-breadcrumb" aria-label={wikiText(locale, "Đường dẫn", "Breadcrumb")}>
+          <Link to={scope.href("/")}>{t("home")}</Link>
+          <span>/</span>
+          <Link to={scope.href(returnTo)}>{wikiText(locale, "Thư viện Tướng", "Hero library")}</Link>
+          <span>/</span>
+          <span aria-current="page">{hero.name}</span>
+        </nav>
+        {layout === "compact" && identity}
+      </div>
+    </section>
+  )
+  const picker = <WikiVersionPicker changedVariants={history.data} />
+
+  return (
+    <HeroDetailLayout title={hero.name} backTo={returnTo} style={style}>
+      {query.data ? (
+        <HeroHandbook hero={query.data} art={art} identity={identity} picker={picker} />
+      ) : (
+        <HeroStage art={art} identity={identity}>
+          {query.isError ? (
+            <div className="wiki-handbook-notice" role="status">
+              {wikiText(locale, "Chưa tải được hồ sơ tướng.", "The hero profile could not be loaded.")}{" "}
+              <button onClick={() => void query.refetch()}>{t("retry")}</button>
+            </div>
+          ) : (
+            <p className="wiki-handbook-notice" role="status">
+              {t("loading")}
+            </p>
+          )}
+        </HeroStage>
       )}
     </HeroDetailLayout>
   )
