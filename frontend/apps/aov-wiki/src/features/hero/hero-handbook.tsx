@@ -13,7 +13,7 @@ import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
 import type { DiffSegment } from "./hero-version-diff"
 import { HeroRatings } from "./hero-ratings"
-import { useHeroVideos, VideoGallery } from "../videos/subject-videos"
+import { useHeroVideos, useVideoParam, VideoGallery } from "../videos/subject-videos"
 import { skillIllustration } from "./skill-illustration"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import type { HeroDetail, PublicSkill } from "./hero-api"
@@ -85,6 +85,7 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
   const version = useHeroVersion(hero)
   const videos = useHeroVideos(hero.id, version.selected?.id)
   const [videoPurpose, setVideoPurpose] = useState<VideoPurpose | null>(null)
+  const videoParam = useVideoParam()
   const difference =
     version.showDiff && active && !version.differences.skills.get(active.skillKey)?.isNew
       ? version.differences.skills.get(active.skillKey)
@@ -336,7 +337,8 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
             className="wiki-handbook-skins"
             onClick={() => {
               setVideoPurpose("LORE")
-              document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })
+              if (videos.firstLore) videoParam.open(videos.firstLore)
+              else document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })
             }}
           >
             <WikiIcon name="play" size={18} />
