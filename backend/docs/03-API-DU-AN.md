@@ -2154,6 +2154,11 @@ Không nhận query khác. Không truyền fromRevisionId thì dùng sourceRevis
 trả `{status:"BASELINE_ONLY",from:null,to,before:{},after,changes:[],warnings}`. Không tự chọn snapshot
 mới nhất hoặc dựng dữ liệu trước đó từ một trạng thái rỗng.
 
+`GET /admin/heroes/{heroId}/revisions/{revisionId}/draft-changes` cần `catalog:read`, không nhận query. Trả
+`{source, startedAt, before, after}` để xem bản nháp đã đổi gì so với lúc bắt đầu. Có `sourceRevisionId` thì so với bản đó.
+Không có thì `source` là null và `before` là nội dung từng phần được lưu trong một phút đầu của bản nháp, vì lúc nhập dữ
+liệu các phần được điền ngay sau khi tạo; đây là cách đọc lại từ các lần lưu đã giữ, không phải bản chụp riêng.
+
 Khi có nguồn cùng hero/ruleset, trả `{status:"AVAILABLE",from,to,before,after,changes,warnings}`;
 from/to là metadata HeroRevisionView; before/after có sáu section theo key JSON camelCase. Mỗi change
 gồm `{section,path,kind,before,after}`, kind ADDED/REMOVED/CHANGED; path là JSON Pointer tương đối với
