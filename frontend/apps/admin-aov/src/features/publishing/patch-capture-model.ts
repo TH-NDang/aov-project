@@ -51,6 +51,7 @@ export function captureFocus({
     skills: "SKILLS",
     skins: "SKINS",
     media: "MEDIA_BINDINGS",
+    videos: "MEDIA_BINDINGS",
   }
   const current = editing || view === "translations" ? section : tabSections[tab]
   if (current === "COMBAT_STATS") return captureGroupKeys.attributes
