@@ -160,7 +160,7 @@ final class HeroImportContent {
                 (String) values.get("summary"), (String) values.get("lore")));
         return new Profile(translations,
                 new LinkedHashSet<>(Arrays.asList(json.convertValue(values.get("roles"), Role[].class))),
-                old == null ? List.of() : old.sources());
+                old == null ? Set.of() : old.positions(), old == null ? List.of() : old.sources());
     }
 
     static boolean empty(Object value) {

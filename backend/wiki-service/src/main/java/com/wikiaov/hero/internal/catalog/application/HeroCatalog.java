@@ -25,6 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class HeroCatalog {
+    /** The catalog's query keeps its published values; a profile stores the code each one stands for. */
+    private static final Map<String, String> POSITION_CODES = Map.of("top", "TOP", "mid", "MID", "rung", "JUNGLE",
+            "rong-ad", "DRAGON", "tro-thu", "SUPPORT");
+
     private final com.wikiaov.hero.internal.change.persistence.HeroPatchAssessmentRepository assessments;
     private final HeroCatalogRepository catalog;
     private final HeroStore store;
@@ -61,7 +65,9 @@ public class HeroCatalog {
         HeroValidation.locale(locale);
         var facets = new HeroCatalogFacets(
                 choices(role, Arrays.stream(Role.values()).map(Enum::name).collect(Collectors.toSet())),
-                choices(position, Set.of("top", "mid", "rung", "rong-ad", "tro-thu")), hasWarnings);
+                choices(position, POSITION_CODES.keySet()).stream().map(POSITION_CODES::get)
+                        .collect(Collectors.toSet()),
+                hasWarnings);
         if (rulesetId != null)
             contexts.requireRuleset(rulesetId);
 

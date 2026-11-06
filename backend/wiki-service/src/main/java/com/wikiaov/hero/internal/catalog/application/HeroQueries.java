@@ -200,6 +200,7 @@ public class HeroQueries {
             item.put("name", translated.name());
             item.put("actualLocale", actual);
             item.put("roles", profile.roles());
+            item.put("positions", profile.positions().stream().sorted().toList());
 
             all.add(new ListEntry(item, rev.sections().get(HeroSection.MEDIA_BINDINGS)));
         }

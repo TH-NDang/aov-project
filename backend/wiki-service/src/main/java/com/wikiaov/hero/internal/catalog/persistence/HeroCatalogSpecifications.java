@@ -5,6 +5,7 @@ import com.wikiaov.hero.internal.authoring.persistence.entity.HeroRevision;
 import com.wikiaov.hero.internal.catalog.persistence.HeroCatalogRepository.Filter;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.domain.HeroChanges.ChangeSource;
+import com.wikiaov.hero.internal.profile.persistence.entity.ProfilePositionRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRoleRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
@@ -146,10 +147,12 @@ public final class HeroCatalogSpecifications {
             predicates.add(cb.exists(roles));
         }
         if (!filter.facets().positions().isEmpty()) {
-            var condition = filter.facets().positions().stream().sorted()
-                    .map(value -> "@ == \"" + value + "\"").collect(java.util.stream.Collectors.joining(" || "));
-            predicates.add(hasSourceEffect(matching, revision, cb,
-                    "$.heroClassification.recommendedPositions[*] ? (" + condition + ")"));
+            var positions = matching.subquery(UUID.class);
+            var position = positions.from(ProfilePositionRow.class);
+            positions.select(position.get("profileRevisionId")).where(
+                    cb.equal(position.get("profileRevisionId"), revision.get("profileRevisionId")),
+                    position.get("positionCode").in(filter.facets().positions()));
+            predicates.add(cb.exists(positions));
         }
         if (filter.facets().hasWarnings() != null) {
             var pending = hasSourceEffect(matching, revision, cb, HeroCatalogWarningPaths.PENDING);

@@ -67,11 +67,27 @@ public final class HeroContent {
     ) {
     }
 
+    public enum Position {
+        TOP,
+        MID,
+        JUNGLE,
+        DRAGON,
+        SUPPORT
+    }
+
     public record Profile(
             @NotEmpty @Size(max = 30) List<@Valid ProfileTranslation> translations,
             @NotNull @NotEmpty(groups = Publication.class) Set<@NotNull Role> roles,
+            @NotNull Set<@NotNull Position> positions,
             @NotNull @Size(max = 30) List<@Valid Source> sources
     ) {
+        public Profile {
+            positions = positions == null ? Set.of() : positions;
+        }
+
+        public Profile(List<ProfileTranslation> translations, Set<Role> roles, List<Source> sources) {
+            this(translations, roles, Set.of(), sources);
+        }
     }
 
     public record Ratings(

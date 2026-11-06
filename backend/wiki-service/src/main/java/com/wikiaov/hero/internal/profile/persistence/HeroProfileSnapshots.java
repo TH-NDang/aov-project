@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.profile.persistence;
 import com.wikiaov.access.Actor;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.profile.persistence.entity.ProfilePositionRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRevision;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileRoleRow;
 import com.wikiaov.hero.internal.profile.persistence.entity.ProfileTranslationRow;
@@ -22,6 +23,7 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
     private final ProfileRevisionRepository revisions;
     private final ProfileTranslationRepository translations;
     private final ProfileRoleRepository roles;
+    private final ProfilePositionRepository positions;
     private final HeroSectionLifecycle lifecycle;
     private final HeroSectionSources sources;
 
@@ -39,6 +41,8 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
                     t.locale(), t.name(), t.title(), t.summary(), t.lore())).toList());
             roles.saveAll(
                     value.roles().stream().map(role -> new ProfileRoleRow(revision.getId(), role.name())).toList());
+            positions.saveAll(value.positions().stream()
+                    .map(position -> new ProfilePositionRow(revision.getId(), position.name())).toList());
             sources.save(section(), revision.getId(), value.sources());
         }
         revisions.flush();
@@ -54,7 +58,10 @@ public class HeroProfileSnapshots implements HeroSectionSnapshots {
                 .toList();
         var selectedRoles = roles.findByProfileRevisionIdIn(ids, Sort.by("roleCode")).stream()
                 .map(row -> Role.valueOf(row.getRoleCode())).collect(Collectors.toCollection(HashSet::new));
-        return new Profile(texts, selectedRoles, references);
+        var selectedPositions = positions.findByProfileRevisionIdIn(ids, Sort.by("positionCode")).stream()
+                .map(row -> Position.valueOf(row.getPositionCode()))
+                .collect(Collectors.toCollection(HashSet::new));
+        return new Profile(texts, selectedRoles, selectedPositions, references);
     }
 
     @Override

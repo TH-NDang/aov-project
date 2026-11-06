@@ -14,11 +14,12 @@ public final class HeroSectionRequests {
             @NotNull @Positive Long expectedDraftVersion,
             List<ProfileTranslation> translations,
             Set<Role> roles,
+            Set<Position> positions,
             List<Source> sources,
             String changeNote
     ) {
         public Profile content() {
-            return new Profile(translations, roles, sources == null ? List.of() : sources);
+            return new Profile(translations, roles, positions, sources == null ? List.of() : sources);
         }
     }
 

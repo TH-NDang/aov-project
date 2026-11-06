@@ -749,9 +749,9 @@ class DomainCoreIntegrationTest {
         var draft = create();
         UUID hero = uuid(draft, "heroId"), revisionId = id(draft);
         draft = complete(hero, revisionId, draft);
+        draft = catalogPositions(draft, "JUNGLE", "TOP");
         draft = catalogSource(draft,
-                Map.of("heroClassification", Map.of("recommendedPositions", List.of("rung", "top")),
-                        "reviewFlags", List.of(Map.of("field", "description", "note", "Source is incomplete."))));
+                Map.of("reviewFlags", List.of(Map.of("field", "description", "note", "Source is incomplete."))));
         send(post(ROOT + "/admin/heroes"), Map.of("code", "airi", "initialLocale", "vi-VN", "name", "Airi",
                 "rulesetId", ruleset, "releaseId", releaseId(variant)), 201);
 
@@ -768,8 +768,8 @@ class DomainCoreIntegrationTest {
         draft = send(post(path(hero, revisionId) + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
         var newer = send(post(ROOT + "/admin/heroes/" + hero + "/drafts"), Map.of("sourceRevisionId", revisionId,
                 "cause", "CONTENT_CORRECTION", "rulesetId", ruleset), 201);
-        newer = catalogSource(newer, Map.of("heroClassification", Map.of("recommendedPositions", List.of("mid")),
-                "reviewFlags",
+        newer = catalogPositions(newer, "MID");
+        newer = catalogSource(newer, Map.of("reviewFlags",
                 List.of(Map.of("field", "description", "note", "Source is incomplete.", "reviewResolution",
                         "RESOLVED")),
                 "heroReviewFlags", List.of(Map.of("type", "not_visible_in_source", "field", "heroLevel"),
@@ -785,6 +785,14 @@ class DomainCoreIntegrationTest {
                 Map.of("reviewFlags", List.of(), "review_flags", List.of(Map.of("note", "Superseded alias.")),
                         "heroReviewFlags", List.of()));
         assertThat(send(get(ROOT + "/admin/heroes?hasWarnings=true"), null, 200).get("totalElements")).isEqualTo(0);
+    }
+
+    private Map<String, Object> catalogPositions(Map<String, Object> draft, String... positions) throws Exception {
+        return send(put(path(uuid(draft, "heroId"), id(draft)) + "/profile"),
+                Map.of("expectedDraftVersion", draft.get("version"), "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Catalog hero")), "roles", List.of("ASSASSIN"),
+                        "positions", List.of(positions)),
+                200);
     }
 
     private Map<String, Object> catalogSource(Map<String, Object> draft, Map<String, Object> metadata)
