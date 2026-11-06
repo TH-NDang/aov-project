@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react"
 import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink, Pencil } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
+import { Input } from "@aov/ui/components/input"
 import { AdminEntityText } from "../terminology/catalog"
 import type { Skill } from "./types"
 import { heroReviewItems, sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
@@ -125,14 +126,36 @@ export function SkillSourceDetails({
   )
   return (
     <div className="space-y-4">
-      {showBadges && (cooldownText || energyText || (!onChange && tags.length > 0)) && (
+      {showBadges && !onChange && (cooldownText || energyText || tags.length > 0) && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <SkillSourceBadges skill={skill} showTags={!onChange} />
+          <SkillSourceBadges skill={skill} />
         </div>
       )}
       {onChange && (
         <>
           <p className="type-meta">Đặc tính và thông số dùng chung cho các ngôn ngữ của chiêu.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="grid gap-1.5">
+              <span className="type-label">Hồi chiêu</span>
+              <Input
+                value={text(record(source?.cooldown)?.display)}
+                placeholder="H.chiêu: 5s"
+                onChange={(event) =>
+                  updateSource({ cooldown: { ...record(source?.cooldown), display: event.target.value } })
+                }
+              />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="type-label">Tiêu hao</span>
+              <Input
+                value={text(record(source?.energyCost)?.display)}
+                placeholder="Nội năng cần: 50"
+                onChange={(event) =>
+                  updateSource({ energyCost: { ...record(source?.energyCost), display: event.target.value } })
+                }
+              />
+            </label>
+          </div>
           <SkillTagsEditor tags={tags} locale={locale} onChange={(tags) => updateSource({ tags })} />
         </>
       )}
