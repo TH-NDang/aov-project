@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react"
-import { Clock3, Globe2, LogIn, LogOut, Moon, Sun, UserRound } from "lucide-react"
+import { Clock3, Coins, Globe2, LogIn, LogOut, Moon, Sun, UserRound } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "./public-overlay"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./public-select"
+import { PublicCurrencySelect } from "./public-currency-select"
 import { PublicTimeZoneSelect } from "./public-time-zone-select"
 import { useIsMobile } from "../hooks/use-mobile"
 import "./public-account-menu.css"
@@ -201,6 +202,7 @@ export function PublicAccountSettings({
 }: Pick<PublicAccountOptionsProps, "product" | "locale" | "onLocaleChange" | "languages" | "theme" | "onThemeChange">) {
   const languageId = useId()
   const timeZoneId = useId()
+  const currencyId = useId()
   const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
   return (
     <div className="public-account-settings">
@@ -240,6 +242,19 @@ export function PublicAccountSettings({
         </label>
         <PublicTimeZoneSelect
           id={timeZoneId}
+          locale={locale}
+          product={product}
+          triggerClassName="public-account-language-trigger public-account-time-zone-trigger"
+          contentClassName="public-account-theme public-account-language-menu"
+        />
+      </div>
+      <div className="public-account-language">
+        <label htmlFor={currencyId}>
+          <Coins size={17} aria-hidden="true" />
+          {text("Tiền tệ", "Currency")}
+        </label>
+        <PublicCurrencySelect
+          id={currencyId}
           locale={locale}
           product={product}
           triggerClassName="public-account-language-trigger public-account-time-zone-trigger"

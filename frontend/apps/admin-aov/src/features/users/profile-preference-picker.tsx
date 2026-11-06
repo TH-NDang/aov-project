@@ -3,6 +3,7 @@ import { Check, ChevronsUpDown, Languages, type LucideIcon } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Command, CommandEmpty, CommandInput, CommandItem, CommandList } from "@aov/ui/components/command"
+import { COMMON_CURRENCIES, currencyLabel } from "@aov/ui/lib/currency"
 import { COMMON_TIME_ZONES, timeZoneLabel } from "@aov/ui/lib/time-zone"
 
 interface Option {
@@ -26,6 +27,10 @@ export const languageOptions: Option[] = languageCodes.map((value) => ({
   language: true,
 }))
 export const timeZoneOptions: Option[] = COMMON_TIME_ZONES.map(({ value }) => ({ value, label: timeZoneLabel(value) }))
+export const currencyOptions: Option[] = COMMON_CURRENCIES.map(({ code }) => ({
+  value: code,
+  label: currencyLabel(code),
+}))
 
 const flagRegions = new Set(["VN", "US", "GB", "TH", "TW", "CN", "ID", "JP", "KR"])
 const timeFormatters = new Map<string, Intl.DateTimeFormat>()

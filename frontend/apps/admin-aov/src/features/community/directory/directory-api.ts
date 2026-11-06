@@ -115,13 +115,6 @@ export function useDebounced<T>(value: T, delay = 250) {
   return settled
 }
 
-const compactUsd = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  notation: "compact",
-  maximumFractionDigits: 1,
-})
-export const formatPrize = (value?: number | null) => (value ? compactUsd.format(value) : null)
 export const winRate = (wins: number, losses: number) =>
   wins + losses ? Math.round((wins / (wins + losses)) * 100) : null
 export const yearRange = (first?: number | null, last?: number | null) =>

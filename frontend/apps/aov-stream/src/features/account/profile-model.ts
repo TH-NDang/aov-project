@@ -5,17 +5,22 @@ export interface UserProfile {
   biography: string
   locale: string
   timeZone: string
+  currency: string | null
   avatarAssetId: string | null
   avatarUrl: string | null
   version: number
   createdAt: string | null
   updatedAt: string | null
 }
-export type ProfileDraft = Pick<UserProfile, "displayName" | "biography" | "locale" | "timeZone" | "avatarAssetId">
+export type ProfileDraft = Pick<
+  UserProfile,
+  "displayName" | "biography" | "locale" | "timeZone" | "currency" | "avatarAssetId"
+>
 export type ProfileRequest = ProfileDraft & { expectedVersion: number }
 export interface BrowserPreferences {
   languages: readonly string[]
   timeZone?: string
+  currency?: string | null
 }
 
 export const PROFILE_LIMITS = { displayName: 80, biography: 1000 } as const
@@ -59,6 +64,7 @@ export const profileDraft = (profile: UserProfile): ProfileDraft => ({
   biography: profile.biography,
   locale: profile.locale,
   timeZone: profile.timeZone,
+  currency: profile.currency ?? null,
   avatarAssetId: profile.avatarAssetId,
 })
 
@@ -67,6 +73,7 @@ export const sameDraft = (left: ProfileDraft, right: ProfileDraft) =>
   left.biography === right.biography &&
   left.locale === right.locale &&
   left.timeZone === right.timeZone &&
+  left.currency === right.currency &&
   left.avatarAssetId === right.avatarAssetId
 
 /** The token subject identifies the profile, so the body never carries issuer, subject or capabilities. */
@@ -75,6 +82,7 @@ export const profileRequest = (draft: ProfileDraft, expectedVersion: number): Pr
   biography: draft.biography,
   locale: draft.locale,
   timeZone: draft.timeZone,
+  currency: draft.currency,
   avatarAssetId: draft.avatarAssetId,
   expectedVersion,
 })
@@ -136,6 +144,7 @@ export function initialDraft(profile: UserProfile, browser: BrowserPreferences):
       // Language and time zone fall back independently.
     }
   }
+  if (browser.currency) draft.currency = browser.currency
   return draft
 }
 

@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Camera, Check, Clock3, Languages, LoaderCircle, Pencil, UserRound } from "lucide-react"
+import { Camera, Check, Clock3, Coins, Languages, LoaderCircle, Pencil, UserRound } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { backendRequest } from "@/app/auth/session"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
-import { ProfilePreferencePicker, languageOptions, timeZoneOptions } from "./profile-preference-picker"
+import { ProfilePreferencePicker, currencyOptions, languageOptions, timeZoneOptions } from "./profile-preference-picker"
 import { uploadAvatar } from "./avatar-upload"
 import { initialProfileDraft, readBrowserPreferences } from "./profile-preferences"
+import { currencyChoice, currentCurrency } from "@aov/ui/lib/currency"
 import { canonicalTimeZone, currentTimeZone } from "@aov/ui/lib/time-zone"
 import { profileError, saveProfile, userKeys, type UserProfile } from "./user-api"
 import { z } from "zod"
@@ -21,6 +22,8 @@ const profileDraftSchema = z.object({
   biography: z.string(),
   locale: z.string(),
   timeZone: z.string(),
+  // Drafts kept in this browser before this field existed still open.
+  currency: z.string().nullable().default(null),
   avatarAssetId: z.string().nullable(),
 })
 const profileFields = (profile: UserProfile) => ({
@@ -28,6 +31,7 @@ const profileFields = (profile: UserProfile) => ({
   biography: profile.biography,
   locale: profile.locale,
   timeZone: profile.timeZone,
+  currency: profile.currency ?? null,
   avatarAssetId: profile.avatarAssetId,
 })
 
@@ -52,7 +56,11 @@ export function ProfileForm({
   const localDraft = useLocalDraft({
     form: admin ? `profile:${profile.id}` : "profile:me",
     initialValue: profileFields(
-      initialProfileDraft(server, admin, { ...readBrowserPreferences(), timeZone: currentTimeZone() }),
+      initialProfileDraft(server, admin, {
+        ...readBrowserPreferences(),
+        timeZone: currentTimeZone(),
+        currency: currencyChoice(),
+      }),
     ),
     schema: profileDraftSchema,
     baseVersion: server.version,
@@ -120,6 +128,7 @@ export function ProfileForm({
         biography: draft.biography,
         locale: draft.locale,
         timeZone: draft.timeZone,
+        currency: draft.currency,
         avatarAssetId: draft.avatarAssetId,
         expectedVersion: server.version,
       })
@@ -316,6 +325,16 @@ export function ProfileForm({
             options={timeZoneOptions}
             disabled={locked}
             onChange={(value) => change("timeZone", value)}
+          />
+          <ProfilePreferencePicker
+            label="Tiền tệ"
+            icon={Coins}
+            value={draft.currency ?? (admin ? "" : currentCurrency())}
+            options={
+              draft.currency || !admin ? currencyOptions : [{ value: "", label: "Chưa chọn" }, ...currencyOptions]
+            }
+            disabled={locked}
+            onChange={(value) => localDraft.update({ ...draft, currency: value || null })}
           />
         </div>
         {error && (

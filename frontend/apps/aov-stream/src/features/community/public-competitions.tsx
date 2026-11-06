@@ -2,6 +2,7 @@ import type { CSSProperties } from "react"
 import { Link, useParams, useSearchParams } from "react-router"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { type CommunityProfile, type CompetitionView, type PageSlice } from "@aov/community-contracts"
+import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { StreamShell } from "../../components/stream-shell"
 import { StreamIcon } from "../../components/stream-icon"
 import { communityApi } from "./community-api"
@@ -119,7 +120,11 @@ export function CompetitionEvent({ entry }: { entry: CompetitionView }) {
           {plan.prizePool && (
             <span className="hub-chip">
               <StreamIcon name="trophy" size={14} />
-              {plan.prizePool} {plan.currency}
+              <LocalPrizeText
+                text={plan.prizePool}
+                currency={plan.currency}
+                on={tournament.endsOn ?? tournament.startsOn}
+              />
             </span>
           )}
         </span>
@@ -298,7 +303,17 @@ export function PublicCompetitionPage() {
                   </div>
                   <div>
                     <dt>Quỹ giải thưởng</dt>
-                    <dd>{plan.prizePool ? `${plan.prizePool} ${plan.currency}` : "Chưa công bố"}</dd>
+                    <dd>
+                      {plan.prizePool ? (
+                        <LocalPrizeText
+                          text={plan.prizePool}
+                          currency={plan.currency}
+                          on={tournament.endsOn ?? tournament.startsOn}
+                        />
+                      ) : (
+                        "Chưa công bố"
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt>Múi giờ</dt>

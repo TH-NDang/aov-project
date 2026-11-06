@@ -1,5 +1,10 @@
 import type { CSSProperties } from "react"
 import { useLocation } from "react-router"
+import { useQuery } from "@tanstack/react-query"
+import { useSession } from "@/app/auth/auth-gate"
+import { selfProfile, userKeys } from "@/features/users/user-api"
+import { useAccountCurrency } from "@aov/ui/lib/currency"
+import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { BackgroundTasksProvider } from "../background-tasks"
 import { ImportWorkspaceHost } from "./import-workspace-host"
 import { SidebarInset, SidebarProvider } from "@aov/ui/components/sidebar"
@@ -13,12 +18,27 @@ function readSidebarCookie(): boolean {
   return match ? match[1] === "true" : true
 }
 
+/** Lives in the shell because the sidebar and its account menu are not mounted on phones until opened. */
+function AccountPreferences() {
+  const { actor } = useSession()
+  const profile = useQuery({
+    queryKey: [...userKeys.self, actor?.issuer, actor?.subject],
+    queryFn: ({ signal }) => selfProfile(signal),
+    enabled: !!actor,
+    refetchInterval: 600000,
+  })
+  useAccountTimeZone(profile.data)
+  useAccountCurrency(profile.data)
+  return null
+}
+
 /** Navigation sidebar docked on the left edge, content on the right. */
 export function AppShell() {
   const { enabled } = useHotkeys()
   const importing = useLocation().pathname === "/hero/import"
   return (
     <BackgroundTasksProvider>
+      <AccountPreferences />
       <PageTabsProvider>
         <SidebarProvider
           defaultOpen={readSidebarCookie()}

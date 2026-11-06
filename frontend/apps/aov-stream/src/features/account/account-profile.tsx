@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { COMMON_CURRENCIES, currencyChoice, currencyLabel, currentCurrency } from "@aov/ui/lib/currency"
 import { COMMON_TIME_ZONES, canonicalTimeZone, currentTimeZone, timeZoneLabel } from "@aov/ui/lib/time-zone"
 import { useCommunitySession } from "../community/community-auth"
 import { AVATAR_TYPES, uploadAvatar } from "./avatar-upload"
@@ -35,6 +36,7 @@ const fieldLabels: Record<keyof ProfileDraft, string> = {
   biography: "giới thiệu",
   locale: "ngôn ngữ",
   timeZone: "múi giờ",
+  currency: "tiền tệ",
   avatarAssetId: "ảnh đại diện",
 }
 
@@ -87,7 +89,7 @@ function ProfileEditor({
   const [seen, setSeen] = useState(profile)
   const [base, setBase] = useState(profile)
   const [draft, setDraft] = useState(() =>
-    initialDraft(profile, { ...readBrowserPreferences(), timeZone: currentTimeZone() }),
+    initialDraft(profile, { ...readBrowserPreferences(), timeZone: currentTimeZone(), currency: currencyChoice() }),
   )
   const [latest, setLatest] = useState<UserProfile | null>(null)
   const [preview, setPreview] = useState<{ assetId: string; url: string } | null>(null)
@@ -295,6 +297,19 @@ function ProfileEditor({
               {withCurrent(timeZones, canonicalTimeZone(draft.timeZone)).map((zone) => (
                 <option key={zone} value={zone}>
                   {timeZoneLabel(zone)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Tiền tệ
+            <select
+              value={draft.currency ?? currentCurrency()}
+              onChange={(event) => change({ currency: event.target.value })}
+            >
+              {COMMON_CURRENCIES.map((option) => (
+                <option key={option.code} value={option.code}>
+                  {currencyLabel(option.code)}
                 </option>
               ))}
             </select>

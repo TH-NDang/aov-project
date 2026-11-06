@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { Banknote, Clock3, Link2, MapPin, Pencil, Plus, Trash2, Trophy, type LucideIcon } from "lucide-react"
 import type { CompetitionPlan } from "@aov/community-contracts"
 import { Button } from "@aov/ui/components/button"
+import { LocalPrizeText } from "@aov/ui/components/local-money"
 import { Textarea } from "@aov/ui/components/textarea"
 import { Field, Section } from "@/features/community/profile-form-primitives"
 import { CompetitionChoiceField } from "./competition-choice-field"
@@ -29,7 +30,7 @@ function sourceHost(value: string) {
   }
 }
 
-function SummaryDetail({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
+function SummaryDetail({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: ReactNode }) {
   return (
     <div className="flex min-w-0 items-start gap-3">
       <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
@@ -47,6 +48,7 @@ export function CompetitionInformationFields({
   plan,
   savedPlan,
   sourceUrl,
+  prizeDay,
   disabled,
   actorKey,
   onChange,
@@ -54,6 +56,8 @@ export function CompetitionInformationFields({
   plan: CompetitionPlan
   savedPlan: CompetitionPlan
   sourceUrl?: string | null
+  /** The day whose exchange rate the prize pool reads at. */
+  prizeDay?: string | null
   disabled: boolean
   actorKey: string
   onChange: <K extends keyof CompetitionPlan>(key: K, value: CompetitionPlan[K]) => void
@@ -62,10 +66,6 @@ export function CompetitionInformationFields({
   const [editingVenue, setEditingVenue] = useState<number | null>(null)
   const circuit = circuitOptions.find((option) => option.value === plan.circuit)?.label || plan.circuit
   const timezone = competitionTimezoneOptions.find((option) => option.value === plan.timezone)?.label || plan.timezone
-  const amount =
-    /^\d+$/.test(plan.prizePool) && Number.isSafeInteger(Number(plan.prizePool))
-      ? Number(plan.prizePool).toLocaleString("vi-VN")
-      : plan.prizePool
   const host = sourceHost(plan.sourceUrl)
   return (
     <div className="grid items-start gap-5 lg:grid-cols-2">
@@ -104,7 +104,9 @@ export function CompetitionInformationFields({
           <SummaryDetail
             icon={Banknote}
             label="Quỹ giải thưởng"
-            value={amount ? `${amount} ${plan.currency}`.trim() : ""}
+            value={
+              plan.prizePool ? <LocalPrizeText text={plan.prizePool} currency={plan.currency} on={prizeDay} /> : ""
+            }
           />
           <SummaryDetail icon={Clock3} label="Múi giờ" value={timezone} />
           <div className="flex min-w-0 items-start gap-3">

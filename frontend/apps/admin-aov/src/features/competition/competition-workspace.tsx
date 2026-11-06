@@ -365,6 +365,7 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
               plan={plan}
               savedPlan={baseline}
               sourceUrl={entry.content.tournament.sourceUrl}
+              prizeDay={entry.content.tournament.endsOn ?? entry.content.tournament.startsOn}
               disabled={!access.canWrite || mutate.isPending}
               onChange={change}
             />

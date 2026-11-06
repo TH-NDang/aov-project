@@ -1,12 +1,10 @@
 import type { ReactNode } from "react"
 import type { TournamentContent } from "@aov/community-contracts"
 import { ExternalLink, Trophy } from "lucide-react"
+import { LocalMoney } from "@aov/ui/components/local-money"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@aov/ui/components/table"
 import type { TeamView } from "../model/game-view"
 import { SectionTitle } from "./primitives"
-
-const money = (value: number | null | undefined, unit: string) =>
-  value == null ? "" : `${value.toLocaleString("vi-VN")} ${unit}`
 
 /** Final standings, prizes and related links of a tournament. */
 export function TournamentFinalTable({
@@ -20,6 +18,8 @@ export function TournamentFinalTable({
 }) {
   const { placements = [], awards = [], links = [], localCurrency } = content
   const currency = localCurrency || "nội tệ"
+  // Prizes read at the rate of the day they were awarded.
+  const prizeDay = content.endsOn ?? content.startsOn
   const hasPrize = placements.some((line) => line.prizeUsd != null || line.prizeLocal != null)
   const hasLastMatch = placements.some((line) => line.lastOpponent)
   const empty = !placements.length && !awards.length && !links.length
@@ -57,7 +57,13 @@ export function TournamentFinalTable({
                     </TableCell>
                     {hasPrize && (
                       <TableCell className="type-body">
-                        {[money(line.prizeUsd, "USD"), money(line.prizeLocal, currency)].filter(Boolean).join(" · ")}
+                        <LocalMoney
+                          amounts={[
+                            { amount: line.prizeUsd, currency: "USD" },
+                            { amount: line.prizeLocal, currency },
+                          ]}
+                          on={prizeDay}
+                        />
                       </TableCell>
                     )}
                     {hasLastMatch && (
@@ -83,7 +89,13 @@ export function TournamentFinalTable({
               </p>
               {(award.prizeUsd != null || award.prizeLocal != null) && (
                 <p className="type-meta">
-                  {[money(award.prizeUsd, "USD"), money(award.prizeLocal, currency)].filter(Boolean).join(" · ")}
+                  <LocalMoney
+                    amounts={[
+                      { amount: award.prizeUsd, currency: "USD" },
+                      { amount: award.prizeLocal, currency },
+                    ]}
+                    on={prizeDay}
+                  />
                 </p>
               )}
             </li>

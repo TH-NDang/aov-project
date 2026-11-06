@@ -127,6 +127,7 @@ test("saving sends only editable fields with the expected version and a trimmed 
   assert.deepEqual(Object.keys(body).sort(), [
     "avatarAssetId",
     "biography",
+    "currency",
     "displayName",
     "expectedVersion",
     "locale",
@@ -136,6 +137,15 @@ test("saving sends only editable fields with the expected version and a trimmed 
   assert.equal(body.expectedVersion, 3)
   assert.ok(sameDraft(profileDraft(saved), profileDraft({ ...saved, avatarUrl: "http://renewed.test/a.png" })))
   assert.ok(!sameDraft(profileDraft(saved), { ...profileDraft(saved), biography: "Mới" }))
+  assert.ok(!sameDraft(profileDraft(saved), { ...profileDraft(saved), currency: "THB" }))
+})
+
+test("a currency chosen in this browser fills only a profile that was never saved", () => {
+  const browser = { languages: [], currency: "THB" }
+
+  assert.equal(initialDraft(unsaved, browser).currency, "THB")
+  assert.equal(initialDraft(saved, browser).currency, profileDraft(saved).currency)
+  assert.equal(initialDraft(unsaved, { languages: [] }).currency, null)
 })
 
 test("browser language and time zone are suggested only before the first save", () => {
