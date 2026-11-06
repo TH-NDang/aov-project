@@ -17,6 +17,7 @@ import { useSession } from "@/app/auth/auth-gate"
 import { ApiError } from "@/lib/api/errors"
 import { lifecycleErrorUsages, lifecycleUsages } from "./record-lifecycle-model"
 import { tournamentApi, tournamentError, tournamentKeys, type RecordKind } from "./tournament-api"
+import { toast } from "sonner"
 
 export function RecordUsageList({
   usages,
@@ -97,6 +98,7 @@ export function RecordLifecycleActions({
         predicate: (query) => query.queryKey[2] !== "deletion-impact",
       })
       setOpen(false)
+      toast.success(entry.deletedAt ? "Đã khôi phục." : "Đã xóa.")
       onChanged()
     } catch (cause) {
       setError(cause)

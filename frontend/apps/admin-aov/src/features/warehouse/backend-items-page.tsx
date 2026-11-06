@@ -261,9 +261,10 @@ export function BackendItemsPage() {
     setBusy(true)
     setError("")
     try {
-      const published = await warehouseApi.publish("items", entry)
+      await warehouseApi.publish("items", entry)
       await refresh()
-      openEntry(published)
+      setSelectedId(null)
+      setEditTarget(null)
       toast.success("Đã xuất bản trang bị.")
     } catch (cause) {
       setError(errorMessage(cause))

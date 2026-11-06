@@ -10,7 +10,7 @@ import { DraftPersistenceGuard } from "./drafts/draft-persistence-guard"
 
 declare module "@tanstack/react-query" {
   interface Register {
-    mutationMeta: { silent?: boolean }
+    mutationMeta: { silent?: boolean; successMessage?: string }
   }
 }
 
@@ -24,6 +24,9 @@ export const queryClient: QueryClient = new QueryClient({
     },
   },
   mutationCache: new MutationCache({
+    onSuccess: (_data, _variables, _context, mutation) => {
+      if (mutation.meta?.successMessage) toast.success(mutation.meta.successMessage)
+    },
     onError: (error, _variables, _context, mutation) => {
       if (mutation.meta?.silent) return
       if (isApiError(error, "VERSION_CONFLICT")) {

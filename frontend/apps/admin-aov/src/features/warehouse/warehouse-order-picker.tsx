@@ -20,6 +20,7 @@ import {
 } from "@aov/ui/components/dialog"
 import { errorMessage } from "@/lib/api/errors"
 import { HeroAsset } from "../publishing/hero-content"
+import { toast } from "sonner"
 
 export interface OrderItem {
   id: string
@@ -155,6 +156,7 @@ export function WarehouseOrderPicker({
     try {
       await onSave(ordered.map((item) => item.id))
       setOpen(false)
+      toast.success("Đã lưu thứ tự.")
     } catch (cause) {
       setError(errorMessage(cause))
     } finally {

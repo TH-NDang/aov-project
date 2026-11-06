@@ -108,6 +108,7 @@ import {
   mergeHeroWorkingCopy,
   type HeroWorkingCopy,
 } from "./hero-working-copy"
+import { toast } from "sonner"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = {
@@ -274,14 +275,8 @@ export function PublishingWorkspace({
   const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
-  const [message, setMessage] = useState<{ text: string } | null>(null)
   const [reviewTarget, setReviewTarget] = useState<HeroReviewItem | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
-  useEffect(() => {
-    if (!message) return
-    const timer = window.setTimeout(() => setMessage(null), 5000)
-    return () => window.clearTimeout(timer)
-  }, [message])
   const [cause, setCause] = useState<Cause>(translationMode ? "TRANSLATION" : "CONTENT_CORRECTION")
   const [importContext, setImportContext] = useState<ImportContext | null>(null)
   const [resourceId, setResourceId] = useState("")
@@ -493,10 +488,9 @@ export function PublishingWorkspace({
   async function run(action: () => Promise<unknown>, success: string) {
     setBusy(true)
     setError("")
-    setMessage(null)
     try {
       await action()
-      setMessage({ text: success })
+      toast.success(success)
       await invalidateHeroCatalogs(queryClient)
       await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
       await revisions.refetch()
@@ -529,7 +523,6 @@ export function PublishingWorkspace({
     })
     setEditing(false)
     setError("")
-    setMessage(null)
   }
   function switchView(next: HeroWorkspaceView) {
     if (busy) return
@@ -869,24 +862,6 @@ export function PublishingWorkspace({
           )}
         </div>
       )}
-      {message && (
-        <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm">
-          <CheckCircle2 className="size-4 shrink-0 text-emerald-600" />
-          <span role="status" className="flex-1">
-            {message.text}
-          </span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-8 shrink-0"
-            aria-label="Đóng thông báo thành công"
-            onClick={() => setMessage(null)}
-          >
-            <X className="size-4" />
-          </Button>
-        </div>
-      )}
       {!heroId ? (
         <>
           {overview.data ? (
@@ -974,7 +949,6 @@ export function PublishingWorkspace({
                       setProfilePart(part)
                       setEditing(true)
                       setError("")
-                      setMessage(null)
                     }}
                   />
                 )}
@@ -1231,10 +1205,11 @@ export function PublishingWorkspace({
                                   const published = await api.publish(revision, note)
                                   await localDraft.discard()
                                   await openRevision(published)
+                                  setManagementOpen(false)
                                 }, "Đã xuất bản phiên bản tướng.")
                               }
                             >
-                              Xuất bản tướng
+                              {busy ? "Đang xuất bản…" : "Xuất bản tướng"}
                             </Button>
                           )}
                         </div>
@@ -1318,7 +1293,8 @@ export function PublishingWorkspace({
                           await invalidateHeroCatalogs(queryClient)
                           await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
                           await revisions.refetch()
-                          setMessage({ text: "Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh." })
+                          setManagementOpen(false)
+                          toast.success("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")
                         }}
                       />
                     )}

@@ -16,6 +16,7 @@ import {
   useMediaOwners,
   type MediaOwner,
 } from "./media-owners"
+import { toast } from "sonner"
 
 type Editing = { owner: MediaOwner; mode: "edit" | "merge" }
 
@@ -166,6 +167,7 @@ function OwnerEditForm({ owner, onDone }: { owner: MediaOwner; onDone: () => voi
         try {
           await updateMediaOwner(owner, name.trim(), url)
           await refreshAfterOwnerChange(client)
+          toast.success("Đã lưu chủ sở hữu.")
           onDone()
         } catch (cause) {
           setError(errorMessage(cause))

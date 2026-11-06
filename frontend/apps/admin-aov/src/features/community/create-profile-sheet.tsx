@@ -56,6 +56,7 @@ export function CreateProfileSheet({
         avatarUrl: avatarUrl || null,
         sources: source ? [{ label: "Nguồn hồ sơ", url: source }] : [],
       }),
+    meta: { successMessage: "Đã tạo hồ sơ." },
     onSuccess: async (entry) => {
       await client.invalidateQueries({ queryKey: pageKeys })
       onClose()

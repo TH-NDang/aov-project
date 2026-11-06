@@ -30,6 +30,7 @@ import { LANES } from "./tournament-model"
 import { tournamentApi, tournamentError, tournamentKeys } from "./tournament-api"
 import "./roster.css"
 import { RecordLifecycleActions } from "./record-lifecycle-actions"
+import { toast } from "sonner"
 
 type Action =
   | { type: "close" | "cancel" }
@@ -215,6 +216,7 @@ export function TeamRosterSheet({
                   onSaved={() => {
                     setEditor(null)
                     setDirty(false)
+                    toast.success("Đã lưu đội hình.")
                   }}
                   onCancel={() => request({ type: "cancel" })}
                   onDirtyChange={setDirty}

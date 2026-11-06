@@ -57,6 +57,7 @@ import { ProfileQuickEditSheet, type ProfileQuickEditTarget } from "./profile-qu
 import { ProfileCountry } from "./profile-country"
 import { ProfileTypeIcon } from "./profile-icons"
 import { CircuitChannelsField } from "./circuit-channels-field"
+import { toast } from "sonner"
 
 export function PageEditor() {
   return <AccessGate>{(access) => <EditorLoader access={access} />}</AccessGate>
@@ -152,8 +153,9 @@ function Editor({
   const update = useMutation({
     mutationFn: (publish?: boolean) =>
       publish === undefined ? pageApi.save(entry, content) : pageApi.publish(entry, publish),
-    onSuccess: async () => {
+    onSuccess: async (_saved, publish) => {
       await client.invalidateQueries({ queryKey: pageKeys })
+      toast.success(publish === undefined ? "Đã lưu hồ sơ." : publish ? "Đã công bố hồ sơ." : "Đã gỡ công bố hồ sơ.")
     },
   })
   const remove = useMutation({

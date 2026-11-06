@@ -241,10 +241,6 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(fixture.writes[0].section, "PROFILE")
     assert.equal(fixture.writes[0].body.expectedDraftVersion, 1)
     assert.deepEqual(fixture.content.SKILLS, fixtureContent.SKILLS)
-    const successClose = () => document.querySelector<HTMLButtonElement>('[aria-label="Đóng thông báo thành công"]')
-    await waitFor(() => !!successClose())
-    await click(successClose()!)
-    assert.equal(successClose(), null)
     assert.equal(fixture.content.PROFILE!.translations[0].name, "Saved hero")
 
     await click(document.querySelector<HTMLButtonElement>('button[aria-label="Chỉnh sửa Thông tin"]')!)
@@ -299,11 +295,9 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(input("Ghi chú thay đổi").disabled, false)
     await click(button("Lưu phần này"))
     await waitFor(() => fixture.writes.length === 3 && !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
-    await waitFor(() => !!successClose())
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 5050))
     })
-    assert.equal(successClose(), null, "A subsequent section save gets its own temporary confirmation")
     assert.equal(
       fixture.content.PROFILE!.translations[0].name,
       "Saved hero",

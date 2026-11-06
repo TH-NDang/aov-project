@@ -20,6 +20,7 @@ import {
   type BadgeGroupTranslation,
 } from "./skin-badge-groups-api"
 import { InfiniteScroll } from "@/components/infinite-scroll"
+import { toast } from "sonner"
 
 export function BadgeGroupSelect({
   value,
@@ -134,6 +135,7 @@ export function SkinBadgeGroupEditor({
         group,
       )
       await client.invalidateQueries({ queryKey: characterImageKeys.badges })
+      toast.success("Đã lưu nhóm.")
       onClose()
     } catch (failure) {
       setError(errorMessage(failure))
@@ -281,6 +283,7 @@ export function SkinBadgeGroupAssignment({
     try {
       await createSkinBadgeGroupsApi(request).moveBadge(badge, groupId)
       await client.invalidateQueries({ queryKey: characterImageKeys.badges })
+      toast.success("Đã chuyển nhãn sang nhóm.")
       onClose()
     } catch (failure) {
       setError(errorMessage(failure))

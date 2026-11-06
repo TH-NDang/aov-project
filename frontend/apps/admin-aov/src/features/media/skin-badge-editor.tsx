@@ -18,6 +18,7 @@ import {
   type SkinBadgeTranslation,
 } from "./character-image-api"
 import { BadgeGroupSelect } from "./skin-badge-group-editor"
+import { toast } from "sonner"
 
 export const badgeKindLabels: Record<BadgeKind, string> = {
   UNKNOWN: "Chưa phân loại",
@@ -92,6 +93,7 @@ export function SkinBadgeEditor({
       }
       await createCharacterImageApi(request).saveBadge(value, badge)
       await client.invalidateQueries({ queryKey: characterImageKeys.badges })
+      toast.success("Đã lưu nhãn.")
       onClose()
     } catch (error) {
       setError(errorMessage(error))

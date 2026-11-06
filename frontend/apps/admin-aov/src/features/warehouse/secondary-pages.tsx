@@ -2,6 +2,7 @@ import { SpellFilters } from "@aov/ui/components/warehouse/spell-filters"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { Gem, GitBranch, Languages, ListOrdered, Plus, Sparkles, Zap } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { DropdownMenuItem, DropdownMenuSeparator } from "@aov/ui/components/dropdown-menu"
@@ -190,8 +191,10 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
     await mutation.mutateAsync(async () => {
       const saved = await warehouseApi[type](kind, selected!)
       await refresh()
-      if (type === "discard") close()
-      else open(saved, section)
+      // Publishing and discarding finish the work in this panel; a new draft opens for editing.
+      if (type === "fork") open(saved, section)
+      else close()
+      toast.success(type === "publish" ? "Đã xuất bản." : type === "discard" ? "Đã hủy bản nháp." : "Đã tạo bản nháp.")
     })
   }
   const issue =
