@@ -10,6 +10,8 @@ import { SkillSourceDetails } from "./hero-source-details"
 import { ImageCreditSummary } from "./image-credit-summary"
 import type { Skill } from "./types"
 import { HeroTranslationNotice } from "./hero-translation-notice"
+import { PatchCaptureLink } from "./patch-capture-panel"
+import { captureGroupKeys } from "./patch-capture-model"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 
 export type HeroSkillsLayout = "focus" | "flat"
@@ -386,6 +388,7 @@ function SkillDetail({
           entryKey={skill.skillKey}
           onTranslate={onTranslate}
         />
+        <PatchCaptureLink groupKey={captureGroupKeys.skill(skill.skillKey)} name={text?.name || skillLabel(skill)} />
       </header>
       {states}
       {text?.description ? (

@@ -11,6 +11,8 @@ import type { ProfileEditorPart } from "./hero-profile-editor"
 import { HeroTranslationNotice } from "./hero-translation-notice"
 import type { TranslationTarget } from "./hero-translation-model"
 import { HeroCombatAttributes } from "./hero-combat-attributes"
+import { PatchCaptureLink } from "./patch-capture-panel"
+import { captureGroupKeys } from "./patch-capture-model"
 import type { StatDefault } from "./combat-attributes"
 import type { Content, Profile, Section } from "./types"
 
@@ -125,6 +127,7 @@ export function HeroOverview({
                   onTranslate={onTranslate}
                   disabled={busy}
                 />
+                <PatchCaptureLink groupKey={captureGroupKeys.overview} name="Tổng quan" />
                 {edit("PROFILE", "Thông tin")}
               </div>
             </div>
@@ -145,7 +148,10 @@ export function HeroOverview({
             {header(
               "Thuộc tính chiến đấu",
               <ChartNoAxesCombined className="size-4 text-muted-foreground" />,
-              edit("COMBAT_STATS", "Chỉ số"),
+              <span className="flex shrink-0 items-center gap-1">
+                <PatchCaptureLink groupKey={captureGroupKeys.attributes} name="Chỉ số" />
+                {edit("COMBAT_STATS", "Chỉ số")}
+              </span>,
             )}
             <HeroCombatAttributes
               heroId={heroId}
@@ -165,7 +171,10 @@ export function HeroOverview({
             {header(
               "Đánh giá",
               <Shield className="size-4 text-muted-foreground" />,
-              edit("OVERVIEW_RATINGS", "Đánh giá"),
+              <span className="flex shrink-0 items-center gap-1">
+                <PatchCaptureLink groupKey={captureGroupKeys.overview} name="Đánh giá" />
+                {edit("OVERVIEW_RATINGS", "Đánh giá")}
+              </span>,
             )}
             {ratings ? (
               <dl className="space-y-3">

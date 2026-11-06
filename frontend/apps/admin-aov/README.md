@@ -100,6 +100,20 @@ Auth nối backend thật. Các trang tướng/trang phục/trang bị vẫn dù
 JSON storage vẫn là công cụ phát triển cục bộ, không phải API production có phân quyền.
 Khi chuyển dữ liệu sang backend, dùng `backendRequest` để gửi Bearer token.
 
+## Ảnh gốc của patch
+
+Nút **Ảnh gốc** ở đầu trang tướng mở khung xem ảnh chụp gốc nằm cạnh dữ liệu đã nhập, tự theo mục đang xem.
+Middleware `/__patch-captures` trong `server/patch-captures.ts` chỉ chạy ở Vite dev/preview và chỉ đọc `resources/`.
+Không có middleware này (bản build triển khai) thì nút tự ẩn.
+
+- Bộ ảnh của một patch là `resources/extracted/<mùa>/<patch>/`, ảnh lấy từ ZIP lồng trong `resources/raw/`.
+  Worktree không có `resources/raw` sẽ tìm ở thư mục cha, hoặc đặt `AOV_RESOURCES_DIR`.
+- Mỗi ảnh nối theo bản rà soát (`manual/import-rows.json`, `manual-attribute-sources.json`, `manual/source-gaps.json`),
+  chỉ ảnh tổng quan nối theo tên tệp. Ảnh bị loại hoặc chưa rõ mục không bao giờ gắn vào kỹ năng trùng tên.
+- Lần đầu đọc một ZIP con mất vài giây vì phải giải nén cả ZIP đó vào `%TEMP%/aov-patch-captures`
+  (tổng khoảng 1,6 GB, xóa được bất cứ lúc nào, đổi nơi lưu bằng `AOV_CAPTURE_CACHE`).
+- `GET /__patch-captures/<patch>/coverage.json` trả về tỉ lệ nối và danh sách ảnh chưa nối.
+
 ## Kiểm tra sau thay đổi
 
 Trong `frontend`:
