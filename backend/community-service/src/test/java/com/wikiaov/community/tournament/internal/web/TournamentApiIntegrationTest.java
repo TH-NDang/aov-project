@@ -15,6 +15,7 @@ import com.wikiaov.community.tournament.internal.application.WikiCatalog;
 import com.wikiaov.community.tournament.internal.archive.application.RecordLifecycleViews.Action;
 import com.wikiaov.community.tournament.internal.archive.application.RegistryArchivePolicy;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
+import java.math.BigDecimal;
 import java.sql.DriverManager;
 import java.time.LocalDate;
 import java.util.*;
@@ -817,6 +818,81 @@ class TournamentApiIntegrationTest {
         }
         mvc.perform(authorized(get(ADMIN + "/games")).param("seriesId", seriesId.toString()))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2));
+    }
+
+    @Test
+    void directoriesDeriveTeamAndPlayerRecordsFromTournamentsSeriesAndRosters() throws Exception {
+        String marker = "dir" + UUID.randomUUID().toString().substring(0, 8);
+        var champions = create("teams", new Team(marker + "-champions", marker + " Champions", "CHP", "XK", null));
+        var rivals = create("teams", new Team(marker + "-rivals", marker + " Rivals", "RVL", "XK", null));
+        var starter = create("players", new Player(marker + "-starter", marker + " Starter", "Real Name", "XK", null,
+                List.of(), LocalDate.of(2002, 3, 4), null, CareerStatus.ACTIVE, List.of("Nakroth")));
+        var former = create("players", new Player(marker + "-former", marker + " Former", null, "XK"));
+
+        var title = create("tournaments", new Tournament(marker + "-title", marker + " Title", "XK", 2025,
+                LocalDate.of(2025, 3, 1), LocalDate.of(2025, 3, 9), null, null, null, TournamentTier.A, null, null,
+                null, null, null,
+                List.of(new TournamentPlacement("1", id(champions), marker + " Champions", new BigDecimal("1500"),
+                        null, null, null),
+                        new TournamentPlacement("2", id(rivals), marker + " Rivals", new BigDecimal("500"), null, null,
+                                null)),
+                null, null));
+        create("roster-memberships", new RosterMembership(id(title), id(champions), id(starter), Lane.JUNGLE, null,
+                RosterStatus.ACTIVE, null, null, null, null, null));
+        create("roster-memberships", new RosterMembership(id(title), id(champions), id(former), Lane.MID, null,
+                RosterStatus.INACTIVE, null, null, null, null, null));
+        create("series", new Series(marker + "-final", id(title), "Final", null, id(champions), id(rivals), 3, null,
+                null, null,
+                new SeriesResult(2, 1, "https://example.com/result", Verification.PRIMARY, LocalDate.of(2026, 1, 6)),
+                false));
+        var newest = create("tournaments", new Tournament(marker + "-newest", marker + " Newest", "XK", 2026,
+                LocalDate.of(2026, 1, 5), null, null, null));
+        create("series", new Series(marker + "-opener", id(newest), "Opener", null, id(rivals), id(champions), 3, null,
+                null, null,
+                new SeriesResult(2, 0, "https://example.com/result", Verification.PRIMARY, LocalDate.of(2026, 1, 6)),
+                false));
+
+        mvc.perform(authorized(get(ADMIN + "/teams/directory")).param("q", marker).param("sort", "PRIZE"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.items[0].code").value(marker + "-champions"))
+                .andExpect(jsonPath("$.items[0].tournaments").value(2))
+                .andExpect(jsonPath("$.items[0].matches").value(2))
+                .andExpect(jsonPath("$.items[0].wins").value(1))
+                .andExpect(jsonPath("$.items[0].losses").value(1))
+                .andExpect(jsonPath("$.items[0].titles").value(1))
+                .andExpect(jsonPath("$.items[0].prizeUsd").value(1500))
+                .andExpect(jsonPath("$.items[0].latestTournament.name").value(marker + " Newest"))
+                // The newest tournament has no roster yet, and former members are not part of a lineup.
+                .andExpect(jsonPath("$.items[0].lineupTournament.name").value(marker + " Title"))
+                .andExpect(jsonPath("$.items[0].lineup.length()").value(1))
+                .andExpect(jsonPath("$.items[0].lineup[0].name").value(marker + " Starter"))
+                .andExpect(jsonPath("$.items[0].lineup[0].lane").value("JUNGLE"));
+        mvc.perform(authorized(get(ADMIN + "/teams/directory")).param("q", marker).param("country", "ZZ"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+
+        mvc.perform(authorized(get(ADMIN + "/players/directory")).param("q", marker).param("sort", "NAME"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.items[1].nickname").value(marker + " Starter"))
+                .andExpect(jsonPath("$.items[1].lane").value("JUNGLE"))
+                .andExpect(jsonPath("$.items[1].titles").value(1))
+                .andExpect(jsonPath("$.items[1].tournaments").value(1))
+                .andExpect(jsonPath("$.items[1].birthDate").value("2002-03-04"))
+                .andExpect(jsonPath("$.items[1].signatureHeroes[0]").value("Nakroth"))
+                .andExpect(jsonPath("$.items[1].latestTeam.name").value(marker + " Champions"));
+        // A position known only from a roster line still filters.
+        mvc.perform(authorized(get(ADMIN + "/players/directory")).param("q", marker).param("lane", "MID"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].nickname").value(marker + " Former"));
+        mvc.perform(authorized(get(ADMIN + "/players/directory")).param("q", marker).param("status", "ACTIVE"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].nickname").value(marker + " Starter"));
+
+        mvc.perform(authorized(get(ADMIN + "/players/directory")).param("lane", "NOPE"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(authorized(get(ADMIN + "/players/directory")).param("sort", "PRIZE"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(authorized(get(ADMIN + "/teams/directory")).param("unexpected", "1"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(authorized(get(ADMIN + "/competitions/page-stats"))).andExpect(status().isOk());
     }
 
     private record Fixture(

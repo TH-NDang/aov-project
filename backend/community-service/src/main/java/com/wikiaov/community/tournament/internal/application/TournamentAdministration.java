@@ -2,6 +2,8 @@ package com.wikiaov.community.tournament.internal.application;
 
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
+import com.wikiaov.community.tournament.internal.directory.application.CompetitionDirectory;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import java.util.*;
 import org.springframework.data.domain.Pageable;
@@ -19,15 +21,17 @@ public class TournamentAdministration {
     private final SeriesRegistry series;
     private final GameRecords games;
     private final WikiCatalog catalog;
+    private final CompetitionDirectory directory;
 
     public TournamentAdministration(TeamRegistry teams, PlayerRegistry players, TournamentRegistry tournaments,
-            SeriesRegistry series, GameRecords games, WikiCatalog catalog) {
+            SeriesRegistry series, GameRecords games, WikiCatalog catalog, CompetitionDirectory directory) {
         this.teams = teams;
         this.players = players;
         this.tournaments = tournaments;
         this.series = series;
         this.games = games;
         this.catalog = catalog;
+        this.directory = directory;
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -39,6 +43,25 @@ public class TournamentAdministration {
     @PreAuthorize("hasAuthority('tournament:read')")
     public Catalog catalog(String region, String locale, UUID season, UUID patch, boolean unscoped) {
         return catalog.read(region, locale, season, patch, unscoped);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public PageSlice<TeamEntry> teamDirectory(String q, String country, String sort, Pageable page) {
+        return directory.teams(q, country, sort, page);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public PageSlice<PlayerEntry> playerDirectory(String q, String country, String lane, String status, String sort,
+            Pageable page) {
+        return directory.players(q, country, lane, status, sort, page);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public List<CompetitionPageEntry> competitionPageStats() {
+        return directory.competitionPages();
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")

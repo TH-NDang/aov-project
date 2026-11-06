@@ -129,6 +129,9 @@ public interface PageApi {
     @GetMapping(ApiPaths.ROOT + "/admin/pages")
     Slice<Profile> adminPages(@RequestParam(required = false) String kind, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) String personRole,
+            @RequestParam(defaultValue = "") String country,
+            @RequestParam(defaultValue = "") List<UUID> entityIds,
+            @RequestParam(defaultValue = "RECENT") String sort,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
 
     @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}")

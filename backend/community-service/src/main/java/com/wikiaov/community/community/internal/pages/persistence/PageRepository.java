@@ -24,6 +24,28 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
         """, nativeQuery = true)
     Page<PageRecord> search(String kind, String query, String roles, boolean published, Pageable pageable);
 
+    /** Admin directory listing: drafts included, with the country, identity and ordering a directory asks for. */
+    @Query(value = """
+        SELECT * FROM community.page
+        WHERE (:kind IS NULL OR kind = :kind)
+          AND (:roles = '' OR (kind IN ('PERSON', 'PLAYER') AND jsonb_exists_any(content->'personRoles', string_to_array(:roles, ','))))
+          AND (lower(code) LIKE lower(concat('%', :query, '%')) OR lower(content->>'name') LIKE lower(concat('%', :query, '%')))
+          AND (:country = '' OR content->>'country' = :country)
+          AND (:entityIds = '' OR CAST(entity_id AS text) = ANY(string_to_array(:entityIds, ',')))
+        ORDER BY CASE WHEN :sort = 'NAME' THEN lower(content->>'name') END,
+                 CASE WHEN :sort = 'ACTIVITY' THEN jsonb_array_length(coalesce(content->'history', '[]')) END DESC,
+                 updated_at DESC, id
+        """, countQuery = """
+        SELECT count(*) FROM community.page
+        WHERE (:kind IS NULL OR kind = :kind)
+          AND (:roles = '' OR (kind IN ('PERSON', 'PLAYER') AND jsonb_exists_any(content->'personRoles', string_to_array(:roles, ','))))
+          AND (lower(code) LIKE lower(concat('%', :query, '%')) OR lower(content->>'name') LIKE lower(concat('%', :query, '%')))
+          AND (:country = '' OR content->>'country' = :country)
+          AND (:entityIds = '' OR CAST(entity_id AS text) = ANY(string_to_array(:entityIds, ',')))
+        """, nativeQuery = true)
+    Page<PageRecord> adminDirectory(String kind, String query, String roles, String country, String entityIds,
+            String sort, Pageable pageable);
+
     Optional<PageRecord> findByCode(String code);
 
     @Query(value = """

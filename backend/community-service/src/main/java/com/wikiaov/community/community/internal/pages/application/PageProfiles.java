@@ -62,6 +62,26 @@ public class PageProfiles {
     }
 
     @Transactional(readOnly = true)
+    public Slice<Profile> adminDirectory(String kind, String query, String personRole, String country,
+            List<UUID> entityIds, String sort, int page, int size) {
+        if (!CommunityActor.require().capabilities().contains("tournament:read"))
+            throw PageAccess.forbidden();
+        if (kind != null && !Set.of("TEAM", "PLAYER", "ORGANIZATION", "PERSON", "CIRCUIT").contains(kind))
+            throw PageRules.invalid("Invalid page kind.");
+        if (query == null || query.length() > 200)
+            throw PageRules.invalid("Search is too long.");
+        if (!Set.of("RECENT", "NAME", "ACTIVITY").contains(sort))
+            throw PageRules.invalid("Invalid page order.");
+        if (entityIds.size() > 100)
+            throw PageRules.invalid("Too many identities.");
+
+        var identities = entityIds.stream().map(UUID::toString).collect(java.util.stream.Collectors.joining(","));
+        var rows = pages.adminDirectory(kind, query, PagePersonRoles.filter(personRole), country, identities, sort,
+                paging(page, size));
+        return Slice.of(rows.map(row -> view(row, true)));
+    }
+
+    @Transactional(readOnly = true)
     public Profile read(UUID id, boolean admin) {
         if (admin && !CommunityActor.require().capabilities().contains("tournament:read"))
             throw PageAccess.forbidden();

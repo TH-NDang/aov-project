@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.platform.ApiPaths;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -24,6 +25,14 @@ public interface TournamentAdminApi {
             @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size, HttpServletRequest request);
 
+    @GetMapping(ApiPaths.ADMIN + "/teams/directory")
+    PageSlice<TeamEntry> teamDirectory(@RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "") String country,
+            @RequestParam(defaultValue = "RECENT") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size,
+            HttpServletRequest request);
+
     @GetMapping(ApiPaths.ADMIN + "/teams/{id}")
     View<Team> getTeam(@PathVariable UUID id);
 
@@ -37,6 +46,16 @@ public interface TournamentAdminApi {
     PageSlice<View<Player>> players(@RequestParam(defaultValue = "") String q,
             @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
+            HttpServletRequest request);
+
+    @GetMapping(ApiPaths.ADMIN + "/players/directory")
+    PageSlice<PlayerEntry> playerDirectory(@RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "") String country,
+            @RequestParam(defaultValue = "") String lane,
+            @RequestParam(defaultValue = "") String status,
+            @RequestParam(defaultValue = "RECENT") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "24") int size,
             HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/players/{id}")
@@ -62,6 +81,9 @@ public interface TournamentAdminApi {
 
     @PutMapping(ApiPaths.ADMIN + "/tournaments/{id}")
     View<Tournament> updateTournament(@PathVariable UUID id, @RequestBody Update<Tournament> request);
+
+    @GetMapping(ApiPaths.ADMIN + "/competitions/page-stats")
+    java.util.List<CompetitionPageEntry> competitionPageStats(HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/stats")
     java.util.List<TournamentStats> tournamentStats(HttpServletRequest request);

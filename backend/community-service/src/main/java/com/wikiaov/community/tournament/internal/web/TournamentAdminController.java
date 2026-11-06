@@ -3,6 +3,7 @@ package com.wikiaov.community.tournament.internal.web;
 import com.wikiaov.community.tournament.internal.application.TournamentAdministration;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.*;
 import com.wikiaov.community.tournament.internal.archive.domain.RecordState;
+import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -48,6 +49,29 @@ public class TournamentAdminController implements TournamentAdminApi {
     @Override
     public View<Team> updateTeam(UUID id, Update<Team> request) {
         return administration.updateTeam(id, request.version(), request.content());
+    }
+
+    @Override
+    public PageSlice<TeamEntry> teamDirectory(String q, String country, String sort, int page, int size,
+            HttpServletRequest request) {
+        Parameters.only(request, "q", "country", "sort", "page", "size");
+        Parameters.search(q);
+        return administration.teamDirectory(q, country, sort, Parameters.page(page, size, "updatedAt"));
+    }
+
+    @Override
+    public PageSlice<PlayerEntry> playerDirectory(String q, String country, String lane, String status, String sort,
+            int page, int size, HttpServletRequest request) {
+        Parameters.only(request, "q", "country", "lane", "status", "sort", "page", "size");
+        Parameters.search(q);
+        return administration.playerDirectory(q, country, lane, status, sort,
+                Parameters.page(page, size, "updatedAt"));
+    }
+
+    @Override
+    public List<CompetitionPageEntry> competitionPageStats(HttpServletRequest request) {
+        Parameters.only(request);
+        return administration.competitionPageStats();
     }
 
     @Override
