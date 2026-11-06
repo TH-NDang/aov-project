@@ -221,6 +221,12 @@
     <path fill="none" stroke="#ffdba6" d="M17 36c1-3 4-5 7-5"/>
   </symbol>
 
+  <symbol id="videos" viewBox="0 0 64 64" stroke="#3d3440" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#plum)" d="m6 14 50-4 3 4 1 36-4 4-49 3-3-4-1-35z"/>
+    <path fill="#544973" d="m17 18 29-2 1 30-29 2z"/>
+    <path fill="url(#gold)" d="m26 24 14 8-13 9z"/>
+    <path fill="url(#paper)" d="m9 19 4-.4.3 4.6-4 .3zm.4 10 4-.3.3 4.6-4 .3zm.4 10 4-.3.3 4.6-4 .3zm40-22.800 4-.3.3 4.600-4 .3zm.5 10 4-.3.3 4.600-4 .3zm.5 10 4-.3.3 4.600-4 .3z"/>
+  </symbol>
   <symbol id="broadcast" viewBox="0 0 64 64" stroke="#393544" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
     <rect x="22" y="5" width="21" height="34" rx="10" fill="url(#plum)"/>
     <path fill="none" stroke="#ebd7f2" stroke-width="3" d="M27 15h8m-8 7h8"/>
