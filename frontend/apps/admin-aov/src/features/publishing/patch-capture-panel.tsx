@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react"
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+  type RefObject,
+} from "react"
 import {
   AlertTriangle,
   ChevronLeft,
@@ -35,6 +44,100 @@ import {
 import { usePatchCaptureContext, type CaptureState, type PatchCaptureWorkspace } from "./use-patch-captures"
 
 const ZOOM_STEP = 1.25
+const SIZE_KEY = "aov-admin:hero-capture-size"
+/** Width as a percentage of the split and height as dvh, so a saved size still fits another window. */
+const defaultSize = { width: 50, height: 52 }
+const clampWidth = (value: number) => Math.round(Math.min(75, Math.max(30, value)))
+const clampHeight = (value: number) => Math.round(Math.min(80, Math.max(25, value)))
+
+function readSize() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SIZE_KEY) ?? "{}") as Partial<typeof defaultSize>
+    return {
+      width: clampWidth(typeof saved.width === "number" ? saved.width : defaultSize.width),
+      height: clampHeight(typeof saved.height === "number" ? saved.height : defaultSize.height),
+    }
+  } catch {
+    return defaultSize
+  }
+}
+
+function saveSize(size: typeof defaultSize) {
+  try {
+    localStorage.setItem(SIZE_KEY, JSON.stringify(size))
+  } catch {
+    /* The size still lasts for this page. */
+  }
+}
+
+/** The edge the panel shares with the page. Beside the page it moves sideways; under it, up and down. */
+function CaptureResizeHandle({
+  direction,
+  value,
+  min,
+  max,
+  onChange,
+  onCommit,
+  onReset,
+  className,
+}: {
+  direction: "width" | "height"
+  value: number
+  min: number
+  max: number
+  onChange: (point: { x: number; y: number }) => void
+  onCommit: () => void
+  onReset: () => void
+  className: string
+}) {
+  const [dragging, setDragging] = useState(false)
+  const label = direction === "width" ? "Kéo để đổi độ rộng khung ảnh" : "Kéo để đổi chiều cao khung ảnh"
+  return (
+    <div
+      role="separator"
+      tabIndex={0}
+      aria-label={label}
+      title={`${label} · bấm đúp để về cỡ ban đầu`}
+      aria-orientation={direction === "width" ? "vertical" : "horizontal"}
+      aria-valuenow={value}
+      aria-valuemin={min}
+      aria-valuemax={max}
+      data-dragging={dragging || undefined}
+      className={cn(
+        "group/handle absolute z-20 flex touch-none items-center justify-center outline-none select-none",
+        direction === "width"
+          ? "inset-y-0 -left-1.5 w-3 cursor-col-resize"
+          : "inset-x-0 -top-1.5 h-3 cursor-row-resize",
+        className,
+      )}
+      onPointerDown={(event) => {
+        event.preventDefault()
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+        setDragging(true)
+      }}
+      onPointerMove={(event) => {
+        if (dragging) onChange({ x: event.clientX, y: event.clientY })
+      }}
+      onPointerUp={() => {
+        setDragging(false)
+        onCommit()
+      }}
+      onPointerCancel={() => {
+        setDragging(false)
+        onCommit()
+      }}
+      onDoubleClick={onReset}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "rounded-full bg-border transition-colors group-hover/handle:bg-primary group-focus-visible/handle:bg-primary group-data-dragging/handle:bg-primary",
+          direction === "width" ? "h-10 w-1" : "h-1 w-10",
+        )}
+      />
+    </div>
+  )
+}
 
 /** Header toggle for the whole panel; hidden where the capture endpoint does not exist. */
 export function PatchCaptureToggle() {
@@ -219,7 +322,7 @@ function CaptureViewer({
       ref={frame}
       data-testid="capture-frame"
       className={cn(
-        "relative aspect-[20/9] max-h-[calc(52dvh-8.5rem)] w-full shrink-0 touch-none overflow-hidden bg-muted/60 select-none @5xl/hero-split:max-h-[60dvh]",
+        "relative aspect-[20/9] max-h-[calc(var(--capture-height)-8.5rem)] w-full shrink-0 touch-none overflow-hidden bg-muted/60 select-none @5xl/hero-split:max-h-[60dvh]",
         zoom.scale > 1 ? (drag ? "cursor-grabbing" : "cursor-grab") : "cursor-zoom-in",
       )}
       onPointerDown={onPointerDown}
@@ -346,7 +449,19 @@ function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: Cap
 export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspace }) {
   const { state, patchCode, viewedPatchCode, otherPatches, groups, activeKey, imageId, focusRequest } = captures
   const panel = useRef<HTMLElement>(null)
-  const [wide, setWide] = useState(false)
+  const [size, setSize] = useState(readSize)
+  const wide = size.width >= 60
+  const latestSize = useRef(size)
+  latestSize.current = size
+  const changeSize = (next: Partial<typeof defaultSize>) => setSize((current) => ({ ...current, ...next }))
+  const keepSize = () => saveSize(latestSize.current)
+  const dragTo = ({ x, y }: { x: number; y: number }) => {
+    const split = panel.current?.parentElement?.getBoundingClientRect()
+    if (!split) return
+    if (panel.current && getComputedStyle(panel.current.parentElement!).flexDirection === "row")
+      changeSize({ width: clampWidth(((split.right - x) / split.width) * 100) })
+    else changeSize({ height: clampHeight(((split.bottom - y) / window.innerHeight) * 100) })
+  }
   const [zoom, setZoom] = useState<CaptureZoom>(captureFit)
   const frame = useRef<HTMLDivElement>(null)
   const thumbnails = useRef<HTMLDivElement>(null)
@@ -402,12 +517,38 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
       tabIndex={-1}
       aria-label="Ảnh gốc của tướng"
       onKeyDown={onKeyDown}
+      style={{ "--capture-width": `${size.width}%`, "--capture-height": `${size.height}dvh` } as CSSProperties}
       className={cn(
-        "flex h-[52dvh] min-h-0 w-full min-w-0 shrink-0 flex-col border-t bg-background outline-none",
-        "@5xl/hero-split:h-full @5xl/hero-split:border-t-0 @5xl/hero-split:border-l",
-        wide ? "@5xl/hero-split:w-[68%]" : "@5xl/hero-split:w-1/2",
+        "relative flex h-(--capture-height) min-h-0 w-full min-w-0 shrink-0 flex-col border-t bg-background outline-none",
+        "@5xl/hero-split:h-full @5xl/hero-split:w-(--capture-width) @5xl/hero-split:border-t-0 @5xl/hero-split:border-l",
       )}
     >
+      <CaptureResizeHandle
+        direction="width"
+        value={size.width}
+        min={30}
+        max={75}
+        className="hidden @5xl/hero-split:flex"
+        onChange={dragTo}
+        onCommit={keepSize}
+        onReset={() => {
+          changeSize({ width: defaultSize.width })
+          saveSize({ ...size, width: defaultSize.width })
+        }}
+      />
+      <CaptureResizeHandle
+        direction="height"
+        value={size.height}
+        min={25}
+        max={80}
+        className="@5xl/hero-split:hidden"
+        onChange={dragTo}
+        onCommit={keepSize}
+        onReset={() => {
+          changeSize({ height: defaultSize.height })
+          saveSize({ ...size, height: defaultSize.height })
+        }}
+      />
       <header className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
         <Images className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div className="min-w-0 flex-1">
@@ -430,7 +571,11 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
           aria-pressed={wide}
           aria-label={wide ? "Thu hẹp khung ảnh" : "Mở rộng khung ảnh"}
           title={wide ? "Thu hẹp khung ảnh" : "Mở rộng khung ảnh"}
-          onClick={() => setWide(!wide)}
+          onClick={() => {
+            const next = { ...size, width: wide ? defaultSize.width : 68 }
+            setSize(next)
+            saveSize(next)
+          }}
         >
           {wide ? <PanelRightClose /> : <PanelRightOpen />}
         </Button>
