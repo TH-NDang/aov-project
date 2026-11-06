@@ -82,10 +82,12 @@ Nền trang xanh than, bảng xám xanh, tiêu đề và dấu nhấn vàng nh�
 | Danh sách kỹ năng | Đặt thẳng trên nền, kỹ năng đang chọn có vạch vàng |
 | Trang phục | Ảnh lớn đặt thẳng trên nền, viền vàng mảnh |
 | Thẻ tướng | Khung xám xanh có góc vàng nhỏ, tên dưới ảnh |
-| Thẻ video | Khung bo góc, dải hoa văn mờ ở đáy |
+| Video | Máy tính: thẻ bo góc theo lưới. Điện thoại: hàng dọc, ảnh bên trái như danh sách trong trình phát, hiện 3 mục đầu |
 | Ghi chú cập nhật, Các lần thay đổi khác | Dòng thời gian: đường vàng dọc và các bảng nhỏ |
 | Trang một bản cập nhật, Thuật ngữ | `.wiki-document`: một trang đọc có đường vàng ở trên |
 | Danh mục ở trang chủ | Huy hiệu tròn viền vàng, nhãn vàng nhạt |
+| Tham chiếu trong đoạn văn | Chữ thường cùng cỡ, chỉ khác màu, gạch chân khi rê chuột. Bôi đen được cả câu đi qua tham chiếu; thẻ thông tin chỉ mở khi bấm xong hoặc rê chuột |
+| Icon thuật ngữ và chỉ số | Hình đơn sắc lấy màu chữ xung quanh |
 
 ### AOV Stream: màu của logo cú
 
@@ -98,8 +100,8 @@ Chàm đêm, lông xanh tím, mắt vàng, mặt kem. Màu nằm trong `tokens.c
 | Tiêu đề trang | Dải chàm bo góc, hình cú ở cuối dải |
 | Tiêu đề mục | Một chấm vàng như mắt cú |
 | Mục đang chọn | Trang sáng: nền chàm, chữ kem. Trang tối: nền vàng, chữ chàm. Tab giữ chữ thường và có vạch vàng |
-| Chữ logo | Chữ đứng, không nghiêng như Wiki. Chữ O trong AOV vẽ thành mắt cú màu vàng |
-| Mục đang ở trên đầu trang | Vạch vàng sát mép dưới thanh, ánh vàng nhẹ hắt lên, chữ kem đậm |
+| Chữ logo | Vẽ bằng nét tròn đậm cho hợp con cú: AOV màu kem của mặt cú, Stream màu xanh tím của lông, kèm ngôi sao nhỏ của logo |
+| Mục đang ở trên đầu trang | Khối bo góc màu chàm giống nền logo, chữ kem đậm, ngôi sao nhỏ ở góc |
 | Thẻ hồ sơ | Ảnh bìa phía trên, viền sáng lên khi rê chuột |
 
 Chưa dùng Three.js và ảnh tạo bằng AI, vì SVG và CSS đủ cho các họa tiết hiện có. Chỉ thêm khi có cảnh hoặc hình mà SVG không vẽ được.

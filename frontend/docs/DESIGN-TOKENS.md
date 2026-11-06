@@ -40,7 +40,7 @@ Wiki, Stream và Admin là một họ sản phẩm nên dùng chung màu, phông
 Hình vẽ dùng chung nằm trong ba sprite ở `packages/ui/src/assets`, mỗi hình khung 64×64, cùng một bộ màu và viền tối để nhìn liền nhau:
 
 - `nav-art.svg`: mục điều hướng và các nhóm nội dung, dùng qua `navArtIcons`.
-- `gameplay-art.svg`: chỉ số và thuật ngữ trong game, dùng qua `gameplayIcons`. `termIcon(id)` chọn hình cho thuật ngữ chưa có ảnh riêng.
+- `gameplay-art.svg`: chỉ số và thuật ngữ trong game, dùng qua `gameplayIcons`. Hình đơn sắc lấy màu chữ xung quanh (`currentColor`), nên muốn đổi màu chỉ cần đặt `color` ở nơi dùng; đừng vẽ thêm bản có màu. `termIcon(term)` chọn hình cho một thuật ngữ: hình đã chọn lưu dạng `glyph:<tên>` trong trường `icon`, không chọn thì theo mặc định của thuật ngữ đó.
 - `change-art.svg`: loại thay đổi của một phiên bản, dùng qua `changeKindIcons`. Hiển thị từ 16px trở lên, nhỏ hơn thì viền lấn mất hình.
 
 Còn trống hình thì thêm symbol vào sprite rồi khai báo trong file `*-icons.tsx` tương ứng, không nhúng SVG rời vào từng trang. Chỉ số trang bị lấy icon từ `ITEM_STATS` trong `lib/item-description.ts`.
