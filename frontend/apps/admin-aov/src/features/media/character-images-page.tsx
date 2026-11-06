@@ -249,7 +249,8 @@ export function CharacterImagesPage({
             rarityCode: null,
           }
           const heroImages = [heroMain, ...base.filter((entry) => entry !== heroMain)]
-          const skins = group.entries.filter((entry) => entry.ownerType === "SKIN")
+          // A skin head is no longer managed here; it stays in the data and shows up as image usage.
+          const skins = role === "HEAD" ? [] : group.entries.filter((entry) => entry.ownerType === "SKIN")
           const open = expanded.has(group.heroId)
           return {
             group,
@@ -261,7 +262,7 @@ export function CharacterImagesPage({
             skinCount: new Set(skins.map((entry) => entry.skinKey)).size,
           }
         }) ?? [],
-    [images.data, expanded],
+    [images.data, expanded, role],
   )
   return (
     <Page className="min-h-0 min-w-0 gap-3 overflow-hidden">
@@ -314,7 +315,7 @@ export function CharacterImagesPage({
                         <Images className="size-3.5" />
                         {row.imageCount} ảnh
                       </span>
-                      <span>{row.skinCount} trang phục</span>
+                      {role !== "HEAD" && <span>{row.skinCount} trang phục</span>}
                       {!row.heroMain.assetId && <span>Chưa chọn ảnh chính</span>}
                     </span>
                   </span>
@@ -353,22 +354,28 @@ export function CharacterImagesPage({
                       />
                     </section>
                   )}
-                  <section aria-label={`Nhóm ảnh trang phục ${row.group.name}`}>
-                    <h3 className="sr-only">Trang phục · {row.skinCount}</h3>
-                    {row.skins.length ? (
-                      <ImageRowsTable
-                        group={row.group}
-                        entries={row.skins}
-                        role={role}
-                        skins
-                        locale={locale}
-                        request={request}
-                        onOpen={openImage}
-                      />
-                    ) : (
-                      <p className="px-3 pb-3 text-sm text-muted-foreground">Chưa có trang phục trong bản này.</p>
-                    )}
-                  </section>
+                  {role === "HEAD" ? (
+                    row.heroImages.length < 2 && (
+                      <p className="px-3 pb-3 text-sm text-muted-foreground">Tướng này chưa có ảnh Head bổ sung.</p>
+                    )
+                  ) : (
+                    <section aria-label={`Nhóm ảnh trang phục ${row.group.name}`}>
+                      <h3 className="sr-only">Trang phục · {row.skinCount}</h3>
+                      {row.skins.length ? (
+                        <ImageRowsTable
+                          group={row.group}
+                          entries={row.skins}
+                          role={role}
+                          skins
+                          locale={locale}
+                          request={request}
+                          onOpen={openImage}
+                        />
+                      ) : (
+                        <p className="px-3 pb-3 text-sm text-muted-foreground">Chưa có trang phục trong bản này.</p>
+                      )}
+                    </section>
+                  )}
                 </div>
               )}
             </section>

@@ -2,6 +2,9 @@ import type { Bindings, MediaRole, Preview, Skin } from "../publishing/types"
 import type { CharacterImageEntry } from "./character-image-api"
 
 export const imageRoles: MediaRole[] = ["HEAD", "PORTRAIT", "SPLASH"]
+/** Skins no longer have a head to manage; one stored earlier stays in the data and is reported as image usage. */
+export const ownerImageRoles = (ownerType: CharacterMediaOwner["ownerType"]) =>
+  ownerType === "SKIN" ? imageRoles.filter((role) => role !== "HEAD") : imageRoles
 export interface CharacterMediaOwner {
   ownerType: "HERO" | "SKIN"
   skinKey: string | null
@@ -32,7 +35,7 @@ export function characterMediaOwners(preview: Preview, locale: string, heroName:
       skinKey: skin.skinKey,
       name: translatedName(skin.translations, locale) ?? skin.skinKey,
       rarityCode: skin.rarityCode,
-      main: { HEAD: skin.headAssetId ?? null, PORTRAIT: skin.portraitAssetId ?? null, SPLASH: skin.artAssetId },
+      main: { PORTRAIT: skin.portraitAssetId ?? null, SPLASH: skin.artAssetId },
       images: skin.images ?? {},
     })),
   ]
