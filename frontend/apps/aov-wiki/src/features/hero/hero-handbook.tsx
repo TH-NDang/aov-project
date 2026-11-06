@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import type { VideoPurpose } from "../videos/video-model"
 import { Link, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
@@ -12,6 +13,7 @@ import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
 import type { DiffSegment } from "./hero-version-diff"
 import { HeroRatings } from "./hero-ratings"
+import { useHeroVideos, VideoGallery } from "../videos/subject-videos"
 import { skillIllustration } from "./skill-illustration"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
 import type { HeroDetail, PublicSkill } from "./hero-api"
@@ -81,6 +83,8 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
   const active = skills.find((skill) => skill.skillKey === params.get("skill")) ?? skills[0]
   const source = active?.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
   const version = useHeroVersion(hero)
+  const videos = useHeroVideos(hero.id, version.selected?.id)
+  const [videoPurpose, setVideoPurpose] = useState<VideoPurpose | null>(null)
   const difference =
     version.showDiff && active && !version.differences.skills.get(active.skillKey)?.isNew
       ? version.differences.skills.get(active.skillKey)
@@ -259,6 +263,15 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
                   </table>
                 </div>
               )}
+              <VideoGallery
+                key={active.skillKey}
+                videos={videos.bySkill.get(active.skillKey) ?? []}
+                heading={text("Video kỹ năng", "Skill videos")}
+                patchCode={videos.patchCode}
+                headingLevel={3}
+                limit={3}
+                filters={false}
+              />
             </article>
           </>
         ) : (
@@ -269,6 +282,14 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
             )}
           </p>
         )}
+        <VideoGallery
+          id="hero-videos"
+          videos={videos.general}
+          heading={text("Video", "Videos")}
+          patchCode={videos.patchCode}
+          purpose={videoPurpose}
+          onPurposeChange={setVideoPurpose}
+        />
         <HeroHistory hero={hero} version={version} />
       </section>
       <aside className="wiki-handbook-profile">
@@ -308,6 +329,19 @@ export function HeroHandbook({ hero }: { hero: HeroDetail }) {
             <summary>{text("Cốt truyện", "Lore")}</summary>
             <div className="wiki-skill-prose">{rich(profile.lore)}</div>
           </details>
+        )}
+        {videos.loreCount > 0 && (
+          <button
+            type="button"
+            className="wiki-handbook-skins"
+            onClick={() => {
+              setVideoPurpose("LORE")
+              document.getElementById("hero-videos")?.scrollIntoView({ block: "start" })
+            }}
+          >
+            <WikiIcon name="play" size={18} />
+            {text("Xem video cốt truyện", "Watch lore videos")} · {videos.loreCount} <WikiIcon name="arrow" size={16} />
+          </button>
         )}
         <Link className="wiki-handbook-skins" to={href(`/skins?hero=${encodeURIComponent(hero.code)}`)}>
           <WikiIcon name="skin" size={18} />
