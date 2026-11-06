@@ -1,5 +1,3 @@
-import { WikiIcon } from "./components/wiki-icon"
-import { FeedbackDialog } from "./layout/feedback-dialog"
 import { WikiHeader } from "./components/wiki-header"
 import { WikiHome } from "./features/home/wiki-home"
 import { Link, Navigate, Route, Routes, useLocation, useParams, useSearchParams } from "react-router"
@@ -11,6 +9,7 @@ import { WarehouseRouteLoading } from "./features/warehouse/warehouse-loading"
 import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
 import { WikiLoginCallback } from "./features/auth/wiki-account"
+import { WikiFooter } from "./components/wiki-footer"
 
 const TermsPage = lazy(() => import("./features/terms/terms-page").then((module) => ({ default: module.TermsPage })))
 const UpdatesPage = lazy(() =>
@@ -151,18 +150,7 @@ export default function App() {
           }
         />
       </Routes>
-      <footer className="wiki-site-footer">
-        <div>
-          <Link to={href("/")} className="wiki-footer-brand">
-            <img src="/images/mole-logo-v4.png" width="24" height="24" alt="" /> AOV Wiki
-          </Link>
-          <FeedbackDialog showLabel />
-          <Link to={href("/contact")}>
-            {wikiText(locale, "Liên hệ · Nguồn & hình ảnh", "Contact · Sources & images")}{" "}
-            <WikiIcon name="arrow" size={14} />
-          </Link>
-        </div>
-      </footer>
+      <WikiFooter />
     </>
   )
 }

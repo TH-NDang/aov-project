@@ -4,7 +4,7 @@ import { useWikiContext } from "../context/wiki-context"
 import { wikiSections, type WikiSectionKey } from "./wiki-sections"
 import "./library-navigation.css"
 
-export function LibraryNavigation({ active, onNavigate }: { active: WikiSectionKey; onNavigate?: () => void }) {
+export function LibraryNavigation({ active, onNavigate }: { active?: WikiSectionKey; onNavigate?: () => void }) {
   const { t, href } = useWikiContext()
   return (
     <nav className="wiki-library-navigation" aria-label={t("contents")}>
