@@ -320,6 +320,7 @@ function HeroContentBody({
                             <SkinAcquisitionRow
                               heroId={heroId}
                               skinKey={skin.skinKey}
+                              skinName={text?.name || skin.skinKey}
                               value={shop.data?.skins.find((row) => row.skinKey === skin.skinKey)}
                               history={shop.data?.skinHistory.filter((row) => row.skinKey === skin.skinKey)}
                               canWrite={canWrite}

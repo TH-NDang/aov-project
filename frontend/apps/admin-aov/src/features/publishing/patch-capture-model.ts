@@ -1,9 +1,26 @@
-import type { CaptureImage, CaptureLink } from "../../../server/patch-capture-manifest.ts"
+import type { CaptureImage as PatchImage, CaptureLink as PatchLink } from "../../../server/patch-capture-manifest.ts"
+import type { ShopCaptureImage, ShopCardBox } from "../../../server/shop-capture-manifest.ts"
 import type { HeroContentTab, HeroWorkspaceView } from "./hero-location"
 import { selectSkillTranslation, skillLabel, skillSlot } from "./hero-skills"
 import type { Section, Skill } from "./types"
 
-export type { CaptureImage, CaptureLink }
+/** SHOP: the results name this card as where a price or an acquisition was read, but nobody has confirmed it in game. */
+export type CaptureLink = PatchLink | "SHOP"
+
+/** A screenshot from a patch set, or one card of a shop screenshot together with what was read from it. */
+export interface CaptureImage extends Omit<PatchImage, "section" | "link"> {
+  section: PatchImage["section"] | "SHOP"
+  link: CaptureLink
+  /** Shop screenshots are not addressed through a patch set. */
+  url?: string
+  kind?: ShopCaptureImage["kind"]
+  skinKey?: string | null
+  entryName?: string
+  reading?: string
+  card?: number
+  box?: ShopCardBox | null
+  capturedOn?: string
+}
 
 export interface CaptureGroup {
   key: string
@@ -13,11 +30,14 @@ export interface CaptureGroup {
   images: CaptureImage[]
   /** Why this item has no image, shown instead of a viewer. */
   empty?: string
+  /** Comes from a visit to the game's shop, not from the patch set. */
+  shop?: boolean
 }
 
 export const captureGroupKeys = {
   overview: "overview",
   attributes: "attributes",
+  shopPrice: "shop-price",
   skins: "skins",
   media: "media",
   patchNotes: "patch-notes",
@@ -177,8 +197,35 @@ export function buildCaptureGroups({
   return groups
 }
 
+/** The shop answers for price and skins whichever patch is open, so these groups do not depend on a patch set. */
+export function withShopGroups(groups: CaptureGroup[], images: readonly CaptureImage[]): CaptureGroup[] {
+  if (!images.length) return groups
+  const price: CaptureGroup = {
+    key: captureGroupKeys.shopPrice,
+    label: "Giá tướng",
+    title: "Giá tướng",
+    images: images.filter((image) => image.kind === "price"),
+    empty: "Ảnh cửa hàng không có thẻ giá của tướng này.",
+    shop: true,
+  }
+  const skins: CaptureGroup = {
+    key: captureGroupKeys.skins,
+    label: "Trang phục",
+    title: "Trang phục",
+    images: images.filter((image) => image.kind === "skin"),
+    empty: "Ảnh cửa hàng không có trang phục nào của tướng này.",
+    shop: true,
+  }
+  if (!groups.length) return [price, skins]
+  return groups.flatMap((group) => {
+    if (group.key === captureGroupKeys.skins) return [skins]
+    return group.key === captureGroupKeys.attributes ? [group, price] : [group]
+  })
+}
+
 /** A rejected image is still findable by the skill its file was named after, without claiming it shows that skill. */
 export function captureImageTitle(group: CaptureGroup, image: CaptureImage) {
+  if (image.kind === "skin" && image.entryName) return `${group.title} · ${image.entryName}`
   return image.section === "WITHHELD" && image.skillKey
     ? `${group.title} · tệp mang tên ${manifestSkillLabel(image.skillKey)}`
     : group.title
@@ -189,6 +236,7 @@ export const captureLinkLabels: Record<CaptureLink, string> = {
   FILENAME: "Chỉ theo tên tệp",
   WITHHELD: "Không nhập",
   UNLINKED: "Chưa nối mục",
+  SHOP: "Đọc từ ảnh",
 }
 
 export const captureLinkHints: Record<CaptureLink, string> = {
@@ -196,10 +244,11 @@ export const captureLinkHints: Record<CaptureLink, string> = {
   FILENAME: "Chỉ dựa vào tên tệp, chưa có bản rà soát nào xác nhận riêng ảnh này.",
   WITHHELD: "Bản rà soát đã loại ảnh này khỏi dữ liệu nhập.",
   UNLINKED: "Ảnh thuộc tướng này nhưng chưa nối được với mục đã nhập nào.",
+  SHOP: "Giá trị này được đọc từ thẻ đang đánh dấu trên ảnh chụp cửa hàng, chưa ai xác nhận lại trong game.",
 }
 
-export const captureImageUrl = (patchCode: string, image: Pick<CaptureImage, "id">) =>
-  `/__patch-captures/${encodeURIComponent(patchCode)}/images/${image.id}.png`
+export const captureImageUrl = (patchCode: string, image: Pick<CaptureImage, "id" | "url">) =>
+  image.url ?? `/__patch-captures/${encodeURIComponent(patchCode)}/images/${image.id}.png`
 
 export interface CaptureZoom {
   scale: number
@@ -218,6 +267,19 @@ export function clampCaptureZoom(zoom: CaptureZoom, width: number, height: numbe
     x: Math.min(0, Math.max(width - width * scale, zoom.x)),
     y: Math.min(0, Math.max(height - height * scale, zoom.y)),
   }
+}
+
+/** Opens a shop screenshot on the card in question, since a whole screen of cards is too small to read. */
+export function captureCardZoom(box: ShopCardBox, width: number, height: number): CaptureZoom {
+  if (!width || !height) return captureFit
+  // The picture is fitted inside the frame, keeping its shape and staying centred.
+  const fit = Math.min(width / box.imageWidth, height / box.imageHeight)
+  const left = (width - box.imageWidth * fit) / 2
+  const top = (height - box.imageHeight * fit) / 2
+  const scale = 0.92 * Math.min(width / (box.width * fit), height / (box.height * fit))
+  const centerX = left + (box.x + box.width / 2) * fit
+  const centerY = top + (box.y + box.height / 2) * fit
+  return clampCaptureZoom({ scale, x: width / 2 - centerX * scale, y: height / 2 - centerY * scale }, width, height)
 }
 
 /** Zooms around a point in the frame; that point stays under the pointer. */

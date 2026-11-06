@@ -8,10 +8,15 @@ import { TooltipProvider } from "@aov/ui/components/tooltip"
 import type { CaptureImage } from "../server/patch-capture-manifest"
 import {
   buildCaptureGroups,
+  captureCardZoom,
   captureFit,
   captureFocus,
   captureGroupKeys,
+  type CaptureImage,
+  captureImageTitle,
+  captureImageUrl,
   clampCaptureZoom,
+  withShopGroups,
   zoomCaptureAt,
 } from "../src/features/publishing/patch-capture-model"
 import type { Skill } from "../src/features/publishing/types"
@@ -145,6 +150,73 @@ test("variants of one slot are told apart in the chip label", () => {
   )
 })
 
+const shopBox = { x: 615, y: 217, width: 279, height: 509, imageWidth: 2400, imageHeight: 1080 }
+const shopImage = (
+  kind: "price" | "skin",
+  skinKey: string | null,
+  link: "SHOP" | "UNLINKED" = "SHOP",
+): CaptureImage => ({
+  id: `shop:${kind}:${skinKey}`,
+  fileName: "Screenshot.jpg",
+  archive: "raw/shop/2026-09-16",
+  member: "tuong/Screenshot.jpg",
+  section: "SHOP",
+  link,
+  skillKey: null,
+  skillName: null,
+  notes: [],
+  kind,
+  skinKey,
+  entryName: skinKey ?? "Giá",
+  reading: "28.888 vàng · 599 quân huy",
+  card: 1,
+  box: shopBox,
+  capturedOn: "2026-09-16",
+  url: "/__shop-captures/images/x.jpg",
+})
+
+test("shop images take the skins group's place and sit beside the stats, even without a patch set", () => {
+  const base = buildCaptureGroups({
+    images: [],
+    skills: [],
+    locale: "vi-VN",
+    patchCode: "2026-10-30",
+    focus: "overview",
+  })
+  assert.equal(withShopGroups(base, []), base, "nothing changes when the shop has no card for this hero")
+
+  const shop = [shopImage("price", null), shopImage("skin", "a"), shopImage("skin", null, "UNLINKED")]
+  const merged = withShopGroups(base, shop)
+  assert.deepEqual(
+    merged.map((group) => group.key),
+    ["overview", "attributes", "shop-price", "skins"],
+  )
+  const skins = merged.find((group) => group.key === captureGroupKeys.skins)!
+  assert.equal(skins.images.length, 2)
+  assert.equal(skins.shop, true)
+  assert.equal(captureImageTitle(skins, skins.images[0]!), "Trang phục · a")
+  assert.deepEqual(
+    withShopGroups([], shop).map((group) => group.key),
+    ["shop-price", "skins"],
+  )
+  assert.equal(captureImageUrl("2026-10-30", shop[0]!), "/__shop-captures/images/x.jpg")
+})
+
+test("a shop image opens on its own card, whole inside the frame", () => {
+  const width = 560
+  const height = 252
+  const zoom = captureCardZoom(shopBox, width, height)
+  assert.ok(zoom.scale > 1.5, `scale ${zoom.scale}`)
+  const fit = Math.min(width / shopBox.imageWidth, height / shopBox.imageHeight)
+  const left = (shopBox.x * fit + (width - shopBox.imageWidth * fit) / 2) * zoom.scale + zoom.x
+  const right = left + shopBox.width * fit * zoom.scale
+  const top = shopBox.y * fit * zoom.scale + zoom.y
+  const bottom = top + shopBox.height * fit * zoom.scale
+  assert.ok(left >= 0 && right <= width, `${left}..${right}`)
+  assert.ok(top >= 0 && bottom <= height, `${top}..${bottom}`)
+  assert.deepEqual(captureCardZoom(shopBox, 0, 0), captureFit, "a frame not laid out yet shows the whole picture")
+})
+
 test("zooming keeps the pointed spot in place and panning can never leave the picture", () => {
   const zoomed = zoomCaptureAt(captureFit, 2, { x: 100, y: 50 }, 400, 200)
   assert.deepEqual(zoomed, { scale: 2, x: -100, y: -50 })
@@ -244,17 +316,22 @@ async function mount() {
     viewedPatch,
     otherPatches = [],
     onChoosePatch = () => {},
+    shop = [],
   }: {
     state: never
     initial?: string
     viewedPatch?: string
     otherPatches?: string[]
     onChoosePatch?: (patch: string) => void
+    shop?: CaptureImage[]
   }) {
     const [open, setOpen] = useState(true)
     const [active, setActive] = useState(select(initial))
     const list = (state as { status: string; images?: CaptureImage[] }).images ?? []
-    const groups = groupsFor(initial, list)
+    const groups = withShopGroups(
+      (state as { status: string }).status === "ready" ? groupsFor(initial, list) : [],
+      shop,
+    )
     const captures = {
       state,
       patchCode: "2026-10-30",
@@ -268,8 +345,8 @@ async function mount() {
       focusRequest: 1,
       toggle: () => setOpen(!open),
       close: () => setOpen(false),
-      reveal: (key: string) => {
-        setActive(select(key))
+      reveal: (key: string, imageId?: string) => {
+        setActive(select(key, { imageId: imageId ?? null }))
         setOpen(true)
       },
       select: (key: string, imageId?: string) => setActive(select(key, { imageId: imageId ?? null })),
@@ -281,6 +358,9 @@ async function mount() {
             <PatchCaptureToggle />
             <PatchCaptureLink groupKey="skill:skill-1-1" name="Lôi đình" />
             <PatchCaptureLink groupKey="skill:skill-2-1" name="Phong thần" />
+            <PatchCaptureLink groupKey={captureGroupKeys.shopPrice} name="giá tướng" />
+            <PatchCaptureLink groupKey={captureGroupKeys.skins} skinKey="skin-b" name="Trang phục B" />
+            <PatchCaptureLink groupKey={captureGroupKeys.skins} skinKey="skin-none" name="Trang phục C" />
             {open && <PatchCapturePanel captures={captures as never} />}
           </PatchCaptureProvider>
         </TooltipProvider>
@@ -296,7 +376,12 @@ async function mount() {
     render: (
       state: unknown,
       initial?: string,
-      options: { viewedPatch?: string; otherPatches?: string[]; onChoosePatch?: (patch: string) => void } = {},
+      options: {
+        viewedPatch?: string
+        otherPatches?: string[]
+        onChoosePatch?: (patch: string) => void
+        shop?: CaptureImage[]
+      } = {},
     ) => act(async () => root.render(<Harness state={state as never} initial={initial} {...options} />)),
     click: (element: Element | null | undefined) =>
       act(async () => {
@@ -414,6 +499,49 @@ test("a revision from a patch without captures can open the set that exists, and
       ui.document.querySelector("aside [role=note]")!.textContent!,
       /Bản đang xem thuộc patch s3-2026-observed; các ảnh này của patch 2026-10-30/,
     )
+  })
+})
+
+test("a shop card opens from its own button, marked on the screenshot, with what was read from it", async () => {
+  await withPanel(async (ui) => {
+    await ui.render(ready, "overview", {
+      shop: [shopImage("price", null), shopImage("skin", "skin-a"), shopImage("skin", "skin-b")],
+    })
+    assert.equal(ui.byLabel("Trang phục C không có ảnh gốc")?.textContent, "Không có ảnh")
+    await ui.click(ui.byLabel("Xem 1 ảnh gốc của Trang phục B"))
+    const aside = ui.document.querySelector("aside")!
+    assert.match(aside.querySelector("h2")!.textContent!, /cửa hàng 16\/09\/2026/)
+    assert.equal(aside.querySelector("h3")!.textContent, "Trang phục · skin-b")
+    assert.match(aside.textContent!, /Đọc từ thẻ số 1: 28\.888 vàng/)
+    assert.match(aside.textContent!, /chưa ai xác nhận lại trong game/)
+    assert.equal(ui.picture()?.getAttribute("src"), "/__shop-captures/images/x.jpg")
+
+    assert.equal(ui.document.querySelector("[data-testid=capture-card-mark]"), null, "no mark before the picture loads")
+    await act(async () => {
+      ui.picture()!.dispatchEvent(new ui.dom.window.Event("load"))
+    })
+    assert.ok(ui.document.querySelector("[data-testid=capture-card-mark]"))
+    assert.equal(ui.chip("Trang phục")?.textContent, "Trang phục2", "the chip counts this hero's shop cards")
+
+    await ui.click(ui.byLabel("Xem 1 ảnh gốc của giá tướng"))
+    assert.equal(aside.querySelector("h3")!.textContent, "Giá tướng")
+  })
+})
+
+test("shop cards still open when the patch being viewed has no capture set", async () => {
+  await withPanel(async (ui) => {
+    await ui.render({ status: "no-patch" }, "overview", {
+      otherPatches: ["2026-10-30"],
+      shop: [shopImage("price", null), shopImage("skin", "skin-a")],
+    })
+    const aside = ui.document.querySelector("aside")!
+    assert.ok(ui.chip("Giá tướng"))
+    assert.ok(ui.chip("Trang phục"))
+    assert.equal(ui.chip("Tổng quan"), undefined)
+    assert.match(aside.querySelector("h2")!.textContent!, /cửa hàng/)
+    assert.doesNotMatch(aside.textContent!, /chưa có bộ ảnh gốc/)
+    assert.match(aside.textContent!, /Xem bộ ảnh patch 2026-10-30/, "the set that exists can still be opened")
+    assert.equal(ui.picture()?.getAttribute("src"), "/__shop-captures/images/x.jpg")
   })
 })
 

@@ -114,6 +114,25 @@ Không có middleware này (bản build triển khai) thì nút tự ẩn.
   (tổng khoảng 1,6 GB, xóa được bất cứ lúc nào, đổi nơi lưu bằng `AOV_CAPTURE_CACHE`).
 - `GET /__patch-captures/<patch>/coverage.json` trả về tỉ lệ nối và danh sách ảnh chưa nối.
 
+### Ảnh cửa hàng
+
+Giá tướng và cách nhận trang phục đọc từ ảnh chụp cửa hàng trong game cũng đối chiếu trong khung **Ảnh gốc**, ở nhóm
+**Giá tướng** và **Trang phục**, kể cả khi patch đang xem chưa có bộ ảnh. Nút ảnh cạnh giá và cạnh từng trang phục mở đúng
+thẻ đó: phần còn lại của ảnh được làm tối, **Vừa khung** để xem cả màn hình. Middleware `/__shop-captures` trong
+`server/shop-captures.ts` cũng chỉ chạy ở Vite dev/preview và chỉ đọc `resources/`.
+
+- Ảnh nằm ở `resources/raw/shop/<ngày chụp>/{tuong,trang-phuc}/`, kết quả đọc và bảng nối nằm ở
+  `resources/extracted/shop/<ngày chụp>/` (`shop-manifest.json`). Giống bộ ảnh patch, hai thư mục này không commit.
+- Sau một lần chụp mới, chạy trong `apps/admin-aov`:
+
+  ```powershell
+  pnpm run shop-captures:import <thư mục> --date yyyy-mm-dd --rows <crop-results.csv>
+  ```
+
+  `<thư mục>` có `ket-qua/` (`tuong-gia-vang.json`, `trang-phuc-cach-nhan.json`), `tuong/` và `trang-phuc/`. Chỉ ảnh được
+  nêu trong kết quả mới được copy. Tệp đã có được so khớp, không ghi đè. `--rows` (cột `File`, `X`, `Y`) cho biết hàng thẻ đầu
+  tiên bắt đầu ở đâu trên từng ảnh; ảnh không có thông tin này vẫn xem được nhưng không đánh dấu thẻ.
+
 ## Kiểm tra sau thay đổi
 
 Trong `frontend`:

@@ -15,6 +15,8 @@ import {
   type SkinMethod,
 } from "./publishing-api"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
+import { captureGroupKeys } from "./patch-capture-model"
+import { PatchCaptureLink } from "./patch-capture-panel"
 
 const api = createPublishingApi(backendRequest)
 
@@ -135,19 +137,22 @@ export function HeroShopPanel({
           <Gold className="size-4 text-muted-foreground" />
           Giá tướng
         </h3>
-        {canWrite && !editing && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-8 shrink-0"
-            aria-label="Chỉnh sửa giá tướng"
-            title="Chỉnh sửa giá tướng"
-            onClick={open}
-          >
-            <Pencil className="size-4" />
-          </Button>
-        )}
+        <div className="flex shrink-0 items-center gap-1">
+          <PatchCaptureLink groupKey={captureGroupKeys.shopPrice} name="giá tướng" />
+          {canWrite && !editing && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0"
+              aria-label="Chỉnh sửa giá tướng"
+              title="Chỉnh sửa giá tướng"
+              onClick={open}
+            >
+              <Pencil className="size-4" />
+            </Button>
+          )}
+        </div>
       </div>
       {editing ? (
         <form className="grid gap-3" onSubmit={submit}>
@@ -312,12 +317,14 @@ export function skinAcquisitionText(row: SkinAcquisition) {
 export function SkinAcquisitionRow({
   heroId,
   skinKey,
+  skinName,
   value,
   history = [],
   canWrite,
 }: {
   heroId: string
   skinKey: string
+  skinName: string
   value?: SkinAcquisition
   /** Every dated step of this skin, newest first. */
   history?: SkinAcquisition[]
@@ -376,6 +383,7 @@ export function SkinAcquisitionRow({
         </span>
         {value?.needsReview && <ReviewMark />}
       </span>
+      <PatchCaptureLink groupKey={captureGroupKeys.skins} skinKey={skinKey} name={skinName} />
       {canWrite && (
         <Popover open={open} onOpenChange={start}>
           <PopoverTrigger asChild>

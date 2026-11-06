@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import { useQuery } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { buildCaptureGroups, type CaptureGroup, type CaptureImage } from "./patch-capture-model"
+import { buildCaptureGroups, withShopGroups, type CaptureGroup, type CaptureImage } from "./patch-capture-model"
 import { createPublishingApi, type HeroCatalogQuery } from "./publishing-api"
 import type { HeroRow, PageSlice, Skill } from "./types"
 
@@ -61,6 +61,13 @@ export async function fetchCaptureSets(): Promise<string[]> {
   return ((await response.json()) as { patches: string[] }).patches
 }
 
+/** Empty where the endpoint does not exist or this hero has no shop screenshot. */
+export async function fetchShopCaptures(heroCode: string): Promise<CaptureImage[]> {
+  const response = await fetch(`/__shop-captures/heroes/${encodeURIComponent(heroCode)}.json`, { credentials: "omit" })
+  if (!response.ok || !response.headers.get("content-type")?.includes("application/json")) return []
+  return ((await response.json()) as { images?: CaptureImage[] }).images ?? []
+}
+
 function readOpen() {
   try {
     return localStorage.getItem(OPEN_KEY) === "true"
@@ -93,7 +100,7 @@ export interface PatchCaptureWorkspace {
   toggle: () => void
   close: () => void
   /** From a button next to an item: opens the panel on that item and hands it the keyboard. */
-  reveal: (key: string) => void
+  reveal: (key: string, imageId?: string) => void
   select: (key: string, imageId?: string) => void
 }
 
@@ -133,6 +140,13 @@ export function usePatchCaptureWorkspace({
     staleTime: Infinity,
     retry: false,
   })
+  const shop = useQuery({
+    queryKey: ["shop-captures", code.data],
+    queryFn: () => fetchShopCaptures(code.data!),
+    enabled: !!code.data,
+    staleTime: Infinity,
+    retry: false,
+  })
   const sets = useQuery({
     queryKey: ["patch-capture-sets"],
     queryFn: fetchCaptureSets,
@@ -151,8 +165,12 @@ export function usePatchCaptureWorkspace({
           : (captures.data ?? { status: "loading" })
   const images = state.status === "ready" ? state.images : undefined
   const groups = useMemo(
-    () => (images ? buildCaptureGroups({ images, skills, locale, patchCode: capturePatch ?? "", focus }) : []),
-    [images, skills, locale, capturePatch, focus],
+    () =>
+      withShopGroups(
+        images ? buildCaptureGroups({ images, skills, locale, patchCode: capturePatch ?? "", focus }) : [],
+        shop.data ?? [],
+      ),
+    [images, skills, locale, capturePatch, focus, shop.data],
   )
   // A manual choice lasts until the editor moves on, then the panel follows the editor again.
   const following = !manual || manual.focus !== focus
@@ -177,8 +195,8 @@ export function usePatchCaptureWorkspace({
       change(!open)
     },
     close: () => change(false),
-    reveal: (key) => {
-      setManual({ key, focus })
+    reveal: (key, imageId) => {
+      setManual({ key, focus, imageId })
       setFocusRequest((count) => count + 1)
       change(true)
     },

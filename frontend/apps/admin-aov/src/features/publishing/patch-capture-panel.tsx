@@ -15,10 +15,12 @@ import {
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
 import { Kbd } from "@aov/ui/components/kbd"
+import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { cn } from "@aov/ui/lib/utils"
 import { CopyButton } from "@/components/copy-button"
 import {
   CAPTURE_MAX_SCALE,
+  captureCardZoom,
   captureFit,
   captureImageTitle,
   captureImageUrl,
@@ -38,7 +40,7 @@ const ZOOM_STEP = 1.25
 export function PatchCaptureToggle() {
   const captures = usePatchCaptureContext()
   if (!captures || captures.state.status === "idle" || captures.state.status === "unavailable") return null
-  const count = captures.state.status === "ready" ? captures.state.images.length : null
+  const count = captures.groups.length ? captures.groups.flatMap((group) => group.images).length : null
   const label = captures.open ? "Đóng khung ảnh gốc" : "Mở khung ảnh gốc của tướng"
   return (
     <Button
@@ -59,10 +61,12 @@ export function PatchCaptureToggle() {
 }
 
 /** Sits beside one item so its own screenshots are a single click away; says so plainly when there are none. */
-export function PatchCaptureLink({ groupKey, name }: { groupKey: string; name: string }) {
+export function PatchCaptureLink({ groupKey, name, skinKey }: { groupKey: string; name: string; skinKey?: string }) {
   const captures = usePatchCaptureContext()
-  if (captures?.state.status !== "ready") return null
-  const count = captures.groups.find((group) => group.key === groupKey)?.images.length ?? 0
+  const group = captures?.groups.find((item) => item.key === groupKey)
+  if (!captures || !group) return null
+  const own = skinKey ? group.images.filter((image) => image.skinKey === skinKey) : group.images
+  const count = own.length
   const label = count ? `Xem ${count} ảnh gốc của ${name}` : `${name} không có ảnh gốc`
   return (
     <Button
@@ -72,7 +76,7 @@ export function PatchCaptureLink({ groupKey, name }: { groupKey: string; name: s
       className="shrink-0 text-muted-foreground"
       aria-label={label}
       title={label}
-      onClick={() => captures.reveal(groupKey)}
+      onClick={() => captures.reveal(groupKey, own[0]?.id)}
     >
       <Images />
       {count ? <span className="tabular-nums">{count}</span> : "Không có ảnh"}
@@ -97,6 +101,57 @@ function stateMessage(state: CaptureState, patchCode: string | undefined) {
     default:
       return null
   }
+}
+
+/** Dims everything but the card, in the picture's own coordinates so it fits and zooms exactly as the picture does. */
+function CaptureCardMark({ box, zoom }: { box: NonNullable<CaptureImage["box"]>; zoom: CaptureZoom }) {
+  const { x, y, width, height, imageWidth, imageHeight } = box
+  return (
+    <svg
+      data-testid="capture-card-mark"
+      aria-hidden="true"
+      viewBox={`0 0 ${imageWidth} ${imageHeight}`}
+      className="pointer-events-none absolute inset-0 size-full origin-top-left"
+      style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` }}
+    >
+      <path
+        fill="rgb(0 0 0 / 0.5)"
+        fillRule="evenodd"
+        d={`M0 0H${imageWidth}V${imageHeight}H0Z M${x} ${y}H${x + width}V${y + height}H${x}Z`}
+      />
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth={2}
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
+  )
+}
+
+/** Shows only the card, since a row of whole shop screens would all look the same at this size. */
+function CaptureCardThumbnail({ url, box }: { url: string; box: NonNullable<CaptureImage["box"]> }) {
+  return (
+    <span className="relative block w-16 overflow-hidden bg-muted" style={{ aspectRatio: box.width / box.height }}>
+      <img
+        src={url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="absolute max-w-none"
+        style={{
+          width: `${(box.imageWidth / box.width) * 100}%`,
+          height: `${(box.imageHeight / box.height) * 100}%`,
+          left: `${(-box.x / box.width) * 100}%`,
+          top: `${(-box.y / box.height) * 100}%`,
+        }}
+      />
+    </span>
+  )
 }
 
 function CaptureViewer({
@@ -176,9 +231,10 @@ function CaptureViewer({
         onLoad={() => setStatus("ready")}
         onError={() => setStatus("error")}
       />
+      {image.box && status === "ready" && <CaptureCardMark box={image.box} zoom={zoom} />}
       {status === "loading" && (
         <p role="status" className="type-meta absolute inset-0 flex items-center justify-center p-4 text-center">
-          Đang mở ảnh gốc từ ZIP… Lần đầu mở mỗi bộ ZIP mất vài giây.
+          {image.url ? "Đang mở ảnh gốc…" : "Đang mở ảnh gốc từ ZIP… Lần đầu mở mỗi bộ ZIP mất vài giây."}
         </p>
       )}
       {status === "error" && (
@@ -234,6 +290,12 @@ function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: Cap
           {captureLinkLabels[image.link]}
         </Badge>
       </div>
+      {image.reading && (
+        <p className="type-body">
+          {image.card ? `Đọc từ thẻ số ${image.card}: ` : "Đọc được: "}
+          <span className="font-semibold">{image.reading}</span>
+        </p>
+      )}
       <p className="type-meta">{captureLinkHints[image.link]}</p>
       {image.notes.length > 0 && (
         <div
@@ -252,7 +314,10 @@ function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: Cap
         <code className="min-w-0 flex-1 truncate font-mono" title={`${image.archive} › ${image.member}`}>
           {image.fileName}
         </code>
-        <CopyButton value={`${image.archive}/${image.member}`} label="Sao chép đường dẫn trong ZIP" />
+        <CopyButton
+          value={`${image.archive}/${image.member}`}
+          label={image.url ? "Sao chép đường dẫn ảnh" : "Sao chép đường dẫn trong ZIP"}
+        />
         <Button variant="ghost" size="icon-xs" asChild>
           <a href={url} target="_blank" rel="noreferrer" aria-label="Mở ảnh gốc trong thẻ mới">
             <ExternalLink />
@@ -273,13 +338,22 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
   const [wide, setWide] = useState(false)
   const [zoom, setZoom] = useState<CaptureZoom>(captureFit)
   const frame = useRef<HTMLDivElement>(null)
+  const thumbnails = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (focusRequest) panel.current?.focus({ preventScroll: true })
   }, [focusRequest])
-  const group = groups.find((item) => item.key === activeKey)
+  // Without a patch set the item being viewed may have no group, and only the shop's are left to show.
+  const group = groups.find((item) => item.key === activeKey) ?? (state.status === "ready" ? undefined : groups[0])
   const image = group?.images.find((item) => item.id === imageId) ?? group?.images[0]
   const imageKey = image?.id
-  useEffect(() => setZoom(captureFit), [imageKey])
+  const imageBox = image?.box
+  useEffect(() => {
+    const bounds = frame.current?.getBoundingClientRect()
+    setZoom(imageBox && bounds ? captureCardZoom(imageBox, bounds.width, bounds.height) : captureFit)
+    thumbnails.current
+      ?.querySelector('[aria-current="true"]')
+      ?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
+  }, [imageKey, imageBox])
   const applyZoom = useCallback((update: (zoom: CaptureZoom, width: number, height: number) => CaptureZoom) => {
     const bounds = frame.current?.getBoundingClientRect()
     setZoom((current) => update(current, bounds?.width ?? 0, bounds?.height ?? 0))
@@ -309,8 +383,8 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
     event.preventDefault()
     action()
   }
-  const url = image && patchCode ? captureImageUrl(patchCode, image) : ""
-  const message = stateMessage(state, patchCode)
+  const url = image ? captureImageUrl(patchCode ?? "", image) : ""
+  const message = group?.shop ? null : stateMessage(state, patchCode)
   return (
     <aside
       ref={panel}
@@ -326,8 +400,12 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
       <header className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
         <Images className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          <h2 className="type-label truncate">Ảnh gốc · patch {patchCode ?? "chưa rõ"}</h2>
-          {state.status === "ready" && (
+          <h2 className="type-label truncate">
+            {group?.shop
+              ? `Ảnh gốc · cửa hàng${image?.capturedOn ? ` ${formatCalendarDate(image.capturedOn)}` : ""}`
+              : `Ảnh gốc · patch ${patchCode ?? "chưa rõ"}`}
+          </h2>
+          {groups.length > 0 && (
             <p className="type-meta truncate">
               {sequence.length ? `${position + 1 || "–"}/${sequence.length} ảnh của tướng` : "Tướng này không có ảnh"}
             </p>
@@ -377,24 +455,24 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
           </div>
         </div>
       )}
-      {state.status === "ready" && viewedPatchCode !== patchCode && (
+      {state.status === "ready" && viewedPatchCode !== patchCode && !group?.shop && (
         <p role="note" className="flex shrink-0 gap-2 border-b bg-amber-500/5 px-3 py-2 text-xs leading-5">
           <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-600" />
           Bản đang xem thuộc patch {viewedPatchCode ?? "chưa rõ"}; các ảnh này của patch {patchCode}.
         </p>
       )}
-      {state.status === "ready" && (
+      {groups.length > 0 && (
         <div className="min-h-0 flex-1 overflow-y-auto">
           <div role="group" aria-label="Chọn mục cần xem ảnh" className="flex flex-wrap gap-1 px-3 py-2">
             {groups.map((item) => (
               <button
                 key={item.key}
                 type="button"
-                aria-pressed={item.key === activeKey}
+                aria-pressed={item.key === group?.key}
                 title={`${item.title} · ${item.images.length} ảnh`}
                 className={cn(
                   "inline-flex min-h-7 items-center gap-1 rounded-md border px-2 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  item.key === activeKey
+                  item.key === group?.key
                     ? "border-primary/40 bg-primary/8 font-medium"
                     : "border-transparent bg-muted/40 hover:bg-muted",
                   !item.images.length && item.key !== activeKey && "text-muted-foreground",
@@ -461,27 +539,37 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                 </span>
               </div>
               {group.images.length > 1 && (
-                <div role="group" aria-label={`Các ảnh của ${group.title}`} className="flex gap-2 overflow-x-auto p-3">
+                <div
+                  ref={thumbnails}
+                  role="group"
+                  aria-label={`Các ảnh của ${group.title}`}
+                  className="flex items-start gap-2 overflow-x-auto p-3"
+                >
                   {group.images.map((member, index) => (
                     <button
                       key={member.id}
                       type="button"
                       aria-current={member.id === image.id}
-                      aria-label={`Ảnh ${index + 1}: ${member.fileName}`}
-                      title={member.fileName}
+                      aria-label={`Ảnh ${index + 1}: ${member.entryName ?? member.fileName}`}
+                      title={member.entryName ?? member.fileName}
                       className={cn(
-                        "w-28 shrink-0 overflow-hidden rounded-md border-2 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        "shrink-0 overflow-hidden rounded-md border-2 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        !member.box && "w-28",
                         member.id === image.id ? "border-primary" : "border-transparent opacity-80 hover:opacity-100",
                       )}
                       onClick={() => captures.select(group.key, member.id)}
                     >
-                      <img
-                        src={captureImageUrl(patchCode!, member)}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        className="aspect-[20/9] w-full bg-muted object-cover"
-                      />
+                      {member.box ? (
+                        <CaptureCardThumbnail url={captureImageUrl(patchCode ?? "", member)} box={member.box} />
+                      ) : (
+                        <img
+                          src={captureImageUrl(patchCode ?? "", member)}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="aspect-[20/9] w-full bg-muted object-cover"
+                        />
+                      )}
                     </button>
                   ))}
                 </div>
