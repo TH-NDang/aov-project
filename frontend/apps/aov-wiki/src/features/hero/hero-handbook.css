@@ -215,21 +215,26 @@
   gap: 10px;
 }
 .wiki-hero-rating-track {
-  flex: 1;
+  display: flex;
   height: 6px;
-  overflow: hidden;
-  border-radius: var(--aov-radius-pill);
-  background: var(--aov-raised);
+  flex: 1;
+  gap: 2px;
 }
 .wiki-hero-rating-track > span {
   display: block;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--aov-raised);
+}
+.wiki-hero-rating-track > span > span {
+  display: block;
   height: 100%;
-  border-radius: inherit;
   background: var(--aov-chart);
 }
 .wiki-hero-rating-value {
   font: var(--wiki-type-category);
-  min-width: 1.25em;
+  min-width: 2.25em;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }

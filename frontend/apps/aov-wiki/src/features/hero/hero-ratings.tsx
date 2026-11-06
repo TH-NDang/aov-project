@@ -1,10 +1,11 @@
 import { gameplayIcons, type GameplayIconName } from "@aov/ui/components/gameplay-icons"
+import { heroRatingScale } from "@aov/ui/lib/hero-rating-scale"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import type { HeroDetail } from "./hero-api"
 
 const RATINGS = [
   ["survivability", "Sinh tồn", "Survivability", "shield"],
-  ["attackDamage", "Sát thương", "Damage", "sword"],
+  ["attackDamage", "Đánh thường", "Basic attack", "sword"],
   ["skillEffects", "Hiệu ứng kỹ năng", "Skill effects", "orb"],
   ["difficulty", "Độ khó", "Difficulty", "flame"],
 ] as const satisfies readonly (readonly [string, string, string, GameplayIconName])[]
@@ -12,16 +13,18 @@ const RATINGS = [
 /** The summary ratings from the hero profile. They describe the hero in general and are not raw combat stats. */
 export function HeroRatings({ ratings }: { ratings: NonNullable<HeroDetail["content"]["overviewRatings"]> }) {
   const { locale } = useWikiContext()
-  const scale = Number(/_(\d+)$/.exec(ratings.scaleCode ?? "")?.[1]) || 10
+  const scale = heroRatingScale(ratings.scaleCode ?? "GAME_OVERVIEW_10")
   const rows = RATINGS.flatMap(([key, vi, en, icon]) => {
     const value = ratings[key]
-    return typeof value === "number" ? [{ key, label: wikiText(locale, vi, en), value, Icon: gameplayIcons[icon] }] : []
+    return typeof value === "number"
+      ? [{ key, label: wikiText(locale, vi, en), value: value / scale.factor, Icon: gameplayIcons[icon] }]
+      : []
   })
   if (!rows.length) return null
   return (
     <dl
       className="wiki-hero-ratings"
-      aria-label={wikiText(locale, `Đánh giá trên thang ${scale}`, `Rated out of ${scale}`)}
+      aria-label={wikiText(locale, `Đánh giá trên thang ${scale.maximum}`, `Rated out of ${scale.maximum}`)}
     >
       {rows.map((row) => (
         <div key={row.key}>
@@ -34,13 +37,19 @@ export function HeroRatings({ ratings }: { ratings: NonNullable<HeroDetail["cont
               role="meter"
               aria-label={row.label}
               aria-valuemin={0}
-              aria-valuemax={scale}
+              aria-valuemax={scale.maximum}
               aria-valuenow={row.value}
               className="wiki-hero-rating-track"
             >
-              <span style={{ width: `${Math.min(100, (row.value / scale) * 100)}%` }} />
+              {Array.from({ length: scale.maximum }, (_, index) => (
+                <span key={index}>
+                  <span style={{ width: `${Math.max(0, Math.min(1, row.value - index)) * 100}%` }} />
+                </span>
+              ))}
             </span>
-            <span className="wiki-hero-rating-value">{row.value}</span>
+            <span className="wiki-hero-rating-value">
+              {row.value.toLocaleString(locale)}/{scale.maximum}
+            </span>
           </dd>
         </div>
       ))}
