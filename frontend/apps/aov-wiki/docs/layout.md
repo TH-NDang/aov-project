@@ -81,13 +81,18 @@ Trang chủ giữ header, ảnh nền, câu chào, banner tự chuyển cùng kh
 
 Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có video, nên mục chưa có video không đổi giao diện.
 
-- Chi tiết Tướng: khối `Video` trước lịch sử thay đổi, gồm cả video cốt truyện, có bộ lọc theo loại khi có từ hai loại trở
-  lên. Thứ tự theo loại rồi theo thứ tự đặt trong admin. Dưới Cốt truyện ở cột tổng quan có nút mở thẳng bộ lọc cốt truyện,
-  vì cột này quá hẹp để xem video. `Video kỹ năng` nằm cuối bảng kỹ năng đang chọn.
+- Chi tiết Tướng: nút `Video · N` trên banner đưa xuống khối `Video` trước lịch sử thay đổi, gồm cả video cốt truyện, có bộ
+  lọc theo loại khi có từ hai loại trở lên. Thứ tự theo loại rồi theo thứ tự đặt trong admin. Nút dưới Cốt truyện mở thẳng
+  video đầu tiên của cốt truyện. `Video kỹ năng` nằm cuối bảng kỹ năng đang chọn.
 - Trang phục: danh sách video nằm trong cột thông tin của trình xem. Bấm phát thì video thay ảnh ở khu vực ảnh; chuyển
   sang trang phục khác thì quay về ảnh.
 - Kho trang bị: khối `Video` ở chi tiết mục, trước phần thay đổi.
-- Thẻ video chỉ tải ảnh xem trước; player được tạo khi bấm phát và mở rộng hết hàng ngay tại chỗ. Phát được YouTube,
+- Bấm một thẻ mở trình xem lớn phủ lên trang: player, thông tin, nút Trước/Tiếp, phím ← → và danh sách phát gồm các video
+  đang lọc. Trang bên dưới không xê dịch. Trên điện thoại là drawer với player giữ ở trên cùng. Khi YouTube hoặc tệp video
+  phát hết thì tự sang video kế, tắt được ở danh sách phát và được nhớ trên trình duyệt. Trình xem trang phục vẫn phát ở
+  khu vực ảnh và sang video kế tương tự.
+- Video đang mở nằm trong địa chỉ dạng `?video=<id>`, nên chia sẻ được liên kết và nút Back đóng trình xem.
+- Thẻ video chỉ tải ảnh xem trước; player được tạo khi bấm phát. Phát được YouTube,
   Facebook, TikTok, Twitch và tệp video (xem `@aov/ui/lib/video-playback`). Video dọc như TikTok, reel hiển thị theo
   khung dọc. Liên kết không nhúng được mở ở tab mới. Nhiều hơn số dòng mặc định thì có nút `Xem thêm` mở ngay bên dưới.
 - Video gắn bản áp dụng hiện chip `Từ bản X` và bị ẩn khi đang xem phiên bản cũ hơn.
