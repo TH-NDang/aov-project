@@ -1,6 +1,13 @@
-import { SECTIONS, type Content, type Revision } from "../../src/features/publishing/types"
+import { SECTIONS, type Content, type Position, type Revision } from "../../src/features/publishing/types"
 import { heroReviewItems } from "../../src/features/publishing/hero-source-review"
-import { recommendedHeroPositions } from "../../src/features/publishing/hero-classifications"
+
+const positionCodes: Record<string, Position> = {
+  top: "TOP",
+  mid: "MID",
+  rung: "JUNGLE",
+  "rong-ad": "DRAGON",
+  "tro-thu": "SUPPORT",
+}
 
 export const fixtureContent: Content = {
   PROFILE: {
@@ -235,8 +242,7 @@ export function createHeroFixture(annotations = false, history = false) {
       const positions = filters.get("position")?.split(",")
       const included =
         (!roles || content.PROFILE?.roles.some((role) => roles.includes(role))) &&
-        (!positions ||
-          recommendedHeroPositions(content.SKILLS?.skills ?? []).some((position) => positions.includes(position))) &&
+        (!positions || positions.some((position) => content.PROFILE?.positions?.includes(positionCodes[position]))) &&
         (filters.get("hasWarnings") !== "true" || heroReviewItems(content.SKILLS?.skills ?? []).length > 0)
       return Response.json({
         items: included

@@ -1,4 +1,5 @@
 import { formatPatchValue } from "./patch-value"
+import { POSITIONS } from "./types"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 
 export type DiffSegment = { type: "same" | "removed" | "added"; text: string }
@@ -82,6 +83,7 @@ export const comparisonFieldLabels: Record<string, string> = {
   lore: "Cốt truyện",
   description: "Mô tả",
   roles: "Vai trò",
+  positions: "Vị trí đi",
   statKey: "Chỉ số",
   baseValue: "Giá trị ghi nhận",
   growthPerLevel: "Tăng mỗi cấp",
@@ -150,6 +152,7 @@ const comparisonEnumLabels: Record<string, Record<string, string>> = {
     MARKSMAN: "Xạ thủ",
     SUPPORT: "Trợ thủ",
   },
+  positions: POSITIONS,
 }
 
 /** Resolve saved image references; arbitrary text must never be treated as an asset identifier. */

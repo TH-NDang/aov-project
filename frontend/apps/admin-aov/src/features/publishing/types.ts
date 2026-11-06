@@ -16,6 +16,14 @@ export const ROLES = {
   SUPPORT: "Trợ thủ",
 } as const
 export type Role = keyof typeof ROLES
+export const POSITIONS = {
+  TOP: "Đường Tà thần Caesar",
+  MID: "Đường giữa",
+  JUNGLE: "Rừng",
+  DRAGON: "Đường Rồng",
+  SUPPORT: "Hỗ trợ",
+} as const
+export type Position = keyof typeof POSITIONS
 export interface Source {
   label: string
   sourceUrl: string | null
@@ -30,6 +38,8 @@ export interface Translation {
 export interface Profile {
   translations: (Translation & { title: string | null; summary: string | null; lore: string | null })[]
   roles: Role[]
+  /** Missing in drafts saved in this browser before lanes became part of the profile. */
+  positions?: Position[]
   sources: Source[]
 }
 export interface Ratings {

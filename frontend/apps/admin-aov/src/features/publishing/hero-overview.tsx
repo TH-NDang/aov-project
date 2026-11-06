@@ -144,7 +144,7 @@ export function HeroOverview({
                   ))}
                 </div>
               )}
-              <HeroPositionBadges skills={content.SKILLS?.skills ?? []} />
+              <HeroPositionBadges positions={content.PROFILE?.positions ?? []} />
             </div>
             {profile?.summary && <OverviewSummary key={profile.summary} text={profile.summary} />}
             <HeroContentSources sources={content.PROFILE?.sources ?? []} compact />

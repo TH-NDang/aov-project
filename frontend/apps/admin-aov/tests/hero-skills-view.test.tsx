@@ -364,22 +364,14 @@ test("a hero can override a shared stat and switch back without storing a copy",
   })
 })
 
-test("hero overview shows captured positions and five-point ratings without changing stored content", async () => {
+test("hero overview shows the hero's positions and five-point ratings without changing stored content", async () => {
   await withView(async ({ document, render, click }) => {
     const { HeroContent } = await import("../src/features/publishing/hero-content")
-    const { recommendedHeroPositions } = await import("../src/features/publishing/hero-classification-badges")
     const content = structuredClone(fixtureContent)
     content.PROFILE!.translations[0].summary = "Giới thiệu dài cần giữ đầy đủ khi người xem mở rộng. ".repeat(10)
     Object.assign(content.OVERVIEW_RATINGS!, { survivability: null })
-    content.SKILLS!.skills[0].effects = [
-      {
-        effectType: "SOURCE_SNAPSHOT",
-        metadata: { heroClassification: { recommendedPositions: ["top", "rung", "top", "invalid", "__proto__"] } },
-      },
-    ]
+    content.PROFILE!.positions = ["TOP", "JUNGLE"]
     const original = JSON.stringify(content)
-    assert.deepEqual(recommendedHeroPositions(content.SKILLS!.skills), ["top", "rung"])
-    assert.deepEqual(recommendedHeroPositions(fixtureContent.SKILLS!.skills), [])
     await render(
       <MemoryRouter>
         <HeroContent content={content} locale="vi-VN" editable={false} busy={false} onEdit={() => {}} />
@@ -387,7 +379,7 @@ test("hero overview shows captured positions and five-point ratings without chan
     )
     const role = document.querySelector('[aria-label="Vai trò: Sát thủ"]')!
     assert.match(role.querySelector("img")!.getAttribute("src")!, /images\/hero\/vai-tro\/sat-thu.png$/)
-    const position = document.querySelector('[aria-label="Vị trí game gợi ý: Rừng"]')!
+    const position = document.querySelector('[aria-label="Vị trí đi: Rừng"]')!
     assert.equal(position.querySelector("img"), null)
     assert.equal(position.querySelector("svg")!.getAttribute("fill"), "currentColor")
     assert.equal(position.querySelector("svg")!.getAttribute("aria-hidden"), "true")

@@ -24,6 +24,7 @@ const contentSchema = z.object({
     .object({
       translations: z.array(translation.extend({ title: nullableText, summary: nullableText, lore: nullableText })),
       roles: z.array(z.enum(["TANK", "WARRIOR", "ASSASSIN", "MAGE", "MARKSMAN", "SUPPORT"])),
+      positions: z.array(z.enum(["TOP", "MID", "JUNGLE", "DRAGON", "SUPPORT"])).optional(),
       sources: z.array(source),
     })
     .nullable(),

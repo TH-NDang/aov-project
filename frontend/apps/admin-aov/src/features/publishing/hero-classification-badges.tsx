@@ -3,9 +3,7 @@ import { Badge } from "@aov/ui/components/badge"
 import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { MediaImage } from "@/components/media-image"
-import { ROLES, type Role, type Skill } from "./types"
-import { positions, positionLanes, recommendedHeroPositions } from "./hero-classifications"
-export { recommendedHeroPositions } from "./hero-classifications"
+import { POSITIONS, ROLES, type Position, type Role } from "./types"
 
 const roleIcons: Record<Role, string> = {
   TANK: "do-don",
@@ -68,17 +66,16 @@ export function HeroRoleBadge({ role, children }: { role: Role; children?: React
   )
 }
 
-export function HeroPositionBadges({ skills }: { skills: Skill[] }) {
-  const values = recommendedHeroPositions(skills)
-  if (!values.length) return null
+export function HeroPositionBadges({ positions }: { positions: Position[] }) {
+  if (!positions.length) return null
   return (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Vị trí game gợi ý">
-      {values.map((position) => (
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Vị trí đi">
+      {positions.map((position) => (
         <ClassificationBadge
           key={position}
-          group="Vị trí game gợi ý"
-          label={positions[position]}
-          icon={<HeroLaneIcon lane={positionLanes[position]} />}
+          group="Vị trí đi"
+          label={POSITIONS[position]}
+          icon={<HeroLaneIcon lane={position} />}
         />
       ))}
     </div>

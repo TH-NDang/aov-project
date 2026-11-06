@@ -27,7 +27,12 @@ import {
 export function emptySection(section: Section, locale: string): NonNullable<Content[Section]> {
   switch (section) {
     case "PROFILE":
-      return { translations: [{ locale, name: "", title: null, summary: null, lore: null }], roles: [], sources: [] }
+      return {
+        translations: [{ locale, name: "", title: null, summary: null, lore: null }],
+        roles: [],
+        positions: [],
+        sources: [],
+      }
     case "OVERVIEW_RATINGS":
       return {
         scaleCode: "GAME_OVERVIEW_10",

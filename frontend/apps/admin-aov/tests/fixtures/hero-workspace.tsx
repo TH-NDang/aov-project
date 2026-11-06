@@ -20,7 +20,6 @@ if (fixtureOptions.has("review")) {
       metadata: {
         reviewFlags: [flag],
         heroReviewFlags: [flag],
-        heroClassification: { recommendedPositions: ["top", "rung"] },
         levelTable: {
           column_labels: Array.from({ length: 6 }, (_, index) => `Lv ${index + 1}`),
           rows: [

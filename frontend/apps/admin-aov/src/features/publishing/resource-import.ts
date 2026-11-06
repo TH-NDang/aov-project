@@ -14,6 +14,7 @@ export function resourceContent(hero: Hero, locale: string): Pick<Content, "PROF
     PROFILE: {
       translations: [{ locale, name: hero.name, title: null, summary: null, lore: null }],
       roles: [],
+      positions: [],
       sources: [source("Danh mục tài nguyên tướng", hero.sources.portraits)],
     },
     SKILLS: {

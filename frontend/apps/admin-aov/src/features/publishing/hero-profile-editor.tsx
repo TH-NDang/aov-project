@@ -1,6 +1,7 @@
 import { Field } from "./fields"
 import { languageOptions } from "../users/profile-preference-picker"
-import { ROLES, type Profile, type Role } from "./types"
+import { HeroLaneIcon } from "@aov/ui/components/hero-lane-icon"
+import { POSITIONS, ROLES, type Position, type Profile, type Role } from "./types"
 
 export type ProfileEditorPart = "information" | "lore"
 
@@ -30,7 +31,9 @@ export function replaceProfilePart(
   const result = {
     ...base,
     translations,
-    ...(part === "information" ? { roles: source?.roles ?? [], sources: source?.sources ?? [] } : {}),
+    ...(part === "information"
+      ? { roles: source?.roles ?? [], positions: source?.positions ?? base.positions, sources: source?.sources ?? [] }
+      : {}),
   }
   return !source && !result.translations.length && !result.roles.length && !result.sources.length ? null : result
 }
@@ -105,6 +108,35 @@ export function HeroProfileEditor({
                   {label}
                 </label>
               ))}
+            </div>
+          </fieldset>
+          <fieldset className="space-y-2">
+            <legend className="type-label mb-2">Vị trí đi</legend>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(POSITIONS).map(([position, label]) => {
+                const current = value.positions ?? []
+                return (
+                  <label
+                    key={position}
+                    className="type-body flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={current.includes(position as Position)}
+                      onChange={(event) =>
+                        onChange({
+                          ...value,
+                          positions: event.target.checked
+                            ? [...current, position as Position]
+                            : current.filter((entry) => entry !== position),
+                        })
+                      }
+                    />
+                    <HeroLaneIcon lane={position as Position} />
+                    {label}
+                  </label>
+                )
+              })}
             </div>
           </fieldset>
         </>
