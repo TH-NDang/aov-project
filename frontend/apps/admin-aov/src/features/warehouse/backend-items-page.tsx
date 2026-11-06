@@ -453,7 +453,12 @@ export function BackendItemsPage() {
         (scope.showAll || scope.changes.isSuccess) && <WarehouseScopeEmpty scope={scope} />
       ) : (
         <>
-          <ItemStatFilter value={activeStats} counts={statCounts} onChange={(value) => setStatParam(value.join(","))} />
+          <ItemStatFilter
+            className="max-sm:shrink-0 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:[&>button]:shrink-0 max-sm:[&>button]:whitespace-nowrap"
+            value={activeStats}
+            counts={statCounts}
+            onChange={(value) => setStatParam(value.join(","))}
+          />
           <ItemShopGraph
             items={rows}
             categories={categories}

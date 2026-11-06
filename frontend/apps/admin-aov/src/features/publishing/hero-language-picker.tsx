@@ -66,12 +66,14 @@ export function HeroLanguagePicker({
           aria-label={label}
           aria-description={`${selected}${status ? ` · ${status}` : ""}`}
           title={`${label} · ${selected}${status ? ` · ${status}` : ""}`}
-          className={`h-10 min-w-0 gap-2 bg-background px-3 font-normal ${compact ? "shrink-0" : "w-full justify-between"}`}
+          className={`min-w-0 gap-2 bg-background font-normal ${compact ? "h-9 shrink-0 px-2.5" : "h-10 w-full justify-between px-3"}`}
         >
           <span className="flex min-w-0 items-center gap-2">
             <HeroLanguageIcon locale={locale} />
-            <span className={`type-body truncate ${compact ? "hidden max-w-40 sm:inline" : ""}`}>{selected}</span>
-            {compact && <span className="type-body sm:hidden">{locale.split("-")[0].toUpperCase()}</span>}
+            {/* A header line has no room for the region: the tooltip and the list keep the full name, a phone the flag. */}
+            <span className={`type-body truncate ${compact ? "hidden max-w-40 sm:inline" : ""}`}>
+              {compact ? selected.split(" (")[0] : selected}
+            </span>
           </span>
           <span className="flex shrink-0 items-center gap-2">
             {!!progress?.missing.length && (

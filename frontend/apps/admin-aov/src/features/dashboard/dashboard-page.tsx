@@ -31,6 +31,7 @@ import { defaultRulesetId } from "../publishing/default-ruleset"
 import { Button } from "@aov/ui/components/button"
 import { useWarehouseCatalog, warehouseApi, warehouseKeys } from "../warehouse/warehouse-api"
 import { warehouseText } from "../warehouse/warehouse-types"
+import { cn } from "@aov/ui/lib/utils"
 
 const publishing = createPublishingApi(backendRequest)
 
@@ -232,17 +233,17 @@ export function DashboardPage() {
 
       <nav
         aria-label="Danh mục và số lượng"
-        className="admin-panel grid grid-cols-2 overflow-hidden sm:grid-cols-4 xl:grid-cols-7"
+        className="admin-panel grid grid-cols-3 overflow-hidden sm:grid-cols-4 xl:grid-cols-7"
       >
         {stats.map((stat) => (
           <Link
             key={stat.label}
             to={stat.to}
             title={stat.hint}
-            className="min-w-0 space-y-1 px-3 py-2.5 shadow-[1px_1px_0_var(--border)] transition-colors hover:bg-accent/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+            className="min-w-0 space-y-1 px-2 py-2.5 shadow-[1px_1px_0_var(--border)] sm:px-3 transition-colors hover:bg-accent/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
           >
             <span className="type-meta flex items-center gap-1.5">
-              <stat.icon aria-hidden className="size-5 shrink-0" />
+              <stat.icon aria-hidden className="size-5 shrink-0 max-lg:hidden" />
               {stat.label}
             </span>
             <div className="type-section-title tabular-nums">
@@ -254,7 +255,14 @@ export function DashboardPage() {
 
       <div className="grid gap-4 xl:grid-cols-5">
         {canReadHeroes && <CurrentPatchCard locale={locale} />}
-        <Card className={canReadHeroes ? "admin-section xl:col-span-3" : "admin-section xl:col-span-5"}>
+        <Card
+          className={cn(
+            "admin-section",
+            canReadHeroes ? "xl:col-span-3" : "xl:col-span-5",
+            // Work waiting for an editor matters more than the patch summary when the two are stacked.
+            todos.length > 0 && "max-xl:order-first",
+          )}
+        >
           <CardHeader>
             <CardTitle>Việc cần xử lý</CardTitle>
             <CardDescription>Ưu tiên các mục thiếu dữ liệu và công thức chưa xác nhận.</CardDescription>

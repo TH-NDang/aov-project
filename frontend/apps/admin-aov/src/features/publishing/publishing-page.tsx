@@ -667,82 +667,148 @@ export function PublishingWorkspace({
         />
       ) : (
         <>
-          <header>
-            {/* Narrow: name and menu on one line, version and the main action on the next. Wide: one line. */}
-            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:flex-wrap @2xl:items-center @2xl:gap-2">
-              <div className="flex min-w-0 items-center gap-2 @2xl:contents">
-                <div className="flex min-w-0 flex-1 basis-72 items-center gap-2.5">
-                  {!onUnsavedChange && (
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link
-                        to="/hero"
-                        aria-label="Danh sách tướng"
-                        onClick={(event) => {
-                          if (!canLeave()) event.preventDefault()
-                        }}
-                      >
-                        <ArrowLeft className="size-4" />
-                      </Link>
-                    </Button>
-                  )}
-                  <HeroAsset
-                    id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
-                    alt={`Ảnh tướng ${heroName}`}
-                    className="size-9 shrink-0 rounded-full"
-                    frameAspectRatio={1}
-                  />
-                  <div className="min-w-0">
-                    <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
-                      {heroName}
-                    </h1>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
-                    </p>
-                  </div>
-                  {quickSwitcher}
-                  <PatchCaptureToggle />
-                  {preview && (
-                    <HeroReviewNotice
-                      skills={preview.content.SKILLS?.skills ?? []}
-                      locale={location.readLocale}
-                      disabled={busy}
-                      onReview={
-                        writable && !editorDisabled
-                          ? () => {
-                              updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
-                              setEditing(true)
-                              setReviewOpen(true)
-                            }
-                          : undefined
-                      }
-                      onNavigate={(item) => {
-                        if (!item.section) return
-                        setEditing(false)
-                        setReviewTarget(item)
-                        updateLocation({
-                          view: "overview",
-                          section: item.section,
-                          tab: reviewTab(item.section),
-                          skill: item.skillKey,
-                        })
+          <header className="relative">
+            {/* The name and the controls wrap as two whole groups, so no button can end up alone on a line. */}
+            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:flex-wrap @2xl:items-center @2xl:justify-end @2xl:gap-x-4">
+              <div className="flex min-w-0 items-center gap-2.5 @max-2xl:pr-11 @2xl:flex-auto">
+                {!onUnsavedChange && (
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link
+                      to="/hero"
+                      aria-label="Danh sách tướng"
+                      onClick={(event) => {
+                        if (!canLeave()) event.preventDefault()
                       }}
-                    />
-                  )}
-                  {writable && (
-                    <DraftStatusControl key={revision.id} draft={localDraft} disabled={busy} sections={dirty.size}>
-                      <HeroDraftChanges
-                        before={initialCopy}
-                        after={localDraft.value}
-                        locale={locale}
-                        name={heroName}
-                        revisionNo={revision.revisionNo}
-                      />
-                    </DraftStatusControl>
-                  )}
+                    >
+                      <ArrowLeft className="size-4" />
+                    </Link>
+                  </Button>
+                )}
+                <HeroAsset
+                  id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                  alt={`Ảnh tướng ${heroName}`}
+                  className="size-9 shrink-0 rounded-full"
+                  frameAspectRatio={1}
+                />
+                <div className="min-w-0">
+                  <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
+                    {heroName}
+                  </h1>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
+                  </p>
                 </div>
+                {quickSwitcher}
+                <PatchCaptureToggle />
+                {preview && (
+                  <HeroReviewNotice
+                    skills={preview.content.SKILLS?.skills ?? []}
+                    locale={location.readLocale}
+                    disabled={busy}
+                    onReview={
+                      writable && !editorDisabled
+                        ? () => {
+                            updateLocation({ view: "overview", section: "SKILLS", tab: "skills" })
+                            setEditing(true)
+                            setReviewOpen(true)
+                          }
+                        : undefined
+                    }
+                    onNavigate={(item) => {
+                      if (!item.section) return
+                      setEditing(false)
+                      setReviewTarget(item)
+                      updateLocation({
+                        view: "overview",
+                        section: item.section,
+                        tab: reviewTab(item.section),
+                        skill: item.skillKey,
+                      })
+                    }}
+                  />
+                )}
+                {writable && (
+                  <DraftStatusControl key={revision.id} draft={localDraft} disabled={busy} sections={dirty.size}>
+                    <HeroDraftChanges
+                      before={initialCopy}
+                      after={localDraft.value}
+                      locale={locale}
+                      name={heroName}
+                      revisionNo={revision.revisionNo}
+                    />
+                  </DraftStatusControl>
+                )}
+              </div>
+              <div className="flex min-w-0 items-center gap-2 @2xl:shrink-0">
+                {revision && (revisions.data?.length ?? 0) > 1 ? (
+                  <label className="flex min-w-0 flex-1 items-center text-sm @2xl:flex-none">
+                    <span className="sr-only">Phiên bản dữ liệu</span>
+                    <select
+                      aria-label="Phiên bản dữ liệu"
+                      className="h-9 w-full rounded-md border bg-background px-2.5 text-sm disabled:opacity-50 @2xl:w-44"
+                      value={selectedId}
+                      disabled={busy}
+                      onChange={(event) => {
+                        setSelectedId(event.target.value)
+                        updateLocation({
+                          revision: event.target.value,
+                          compare: null,
+                          changes: null,
+                          translationKey: null,
+                          translationField: null,
+                        })
+                        setEditing(false)
+                      }}
+                    >
+                      {revisions.data?.map((row) => (
+                        <option key={row.id} value={row.id}>
+                          #{row.revisionNo} · {STATES[row.state]}
+                          {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
+                            ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  // Most heroes have a single version; there is nothing to switch to.
+                  revision && (
+                    <span className="inline-flex h-9 min-w-0 flex-1 items-center rounded-md border bg-muted/40 px-2.5 text-sm @2xl:flex-none">
+                      <span className="truncate">
+                        #{revision.revisionNo} · {STATES[revision.state]}
+                      </span>
+                    </span>
+                  )
+                )}
+                {preview && revision && !translating && (
+                  <HeroLanguagePicker
+                    content={preview.content}
+                    locale={location.readLocale}
+                    revisionNo={revision.revisionNo}
+                    disabled={busy || (editing && section !== "SKILLS")}
+                    onChange={setContentLocale}
+                  />
+                )}
+                {headerAction === "publish" && (
+                  <Button disabled={busy} onClick={openManagement}>
+                    <Send className="size-4" />
+                    Xuất bản
+                  </Button>
+                )}
+                {headerAction === "draft" && (
+                  <Button variant="outline" disabled={busy} onClick={openManagement}>
+                    <Plus className="size-4" />
+                    Tạo bản nháp
+                  </Button>
+                )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon" aria-label="Thao tác tướng" className="@2xl:order-last">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label="Thao tác tướng"
+                      className="shrink-0 @max-2xl:absolute @max-2xl:top-0 @max-2xl:right-0"
+                    >
                       <MoreHorizontal className="size-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -770,67 +836,6 @@ export function PublishingWorkspace({
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
-              <div className="flex min-w-0 items-center gap-2 @2xl:contents">
-                {revision && (revisions.data?.length ?? 0) > 1 ? (
-                  <label className="flex min-w-0 flex-1 items-center text-sm @2xl:flex-none">
-                    <span className="sr-only">Phiên bản dữ liệu</span>
-                    <select
-                      aria-label="Phiên bản dữ liệu"
-                      className={`${control} @2xl:w-auto @2xl:max-w-60`}
-                      value={selectedId}
-                      disabled={busy}
-                      onChange={(event) => {
-                        setSelectedId(event.target.value)
-                        updateLocation({
-                          revision: event.target.value,
-                          compare: null,
-                          changes: null,
-                          translationKey: null,
-                          translationField: null,
-                        })
-                        setEditing(false)
-                      }}
-                    >
-                      {revisions.data?.map((row) => (
-                        <option key={row.id} value={row.id}>
-                          Bản #{row.revisionNo} · {STATES[row.state]}
-                          {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
-                            ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  // Most heroes have a single version; there is nothing to switch to.
-                  revision && (
-                    <span className="inline-flex h-9 min-w-0 flex-1 items-center rounded-md border bg-muted/40 px-3 text-sm whitespace-nowrap @2xl:flex-none">
-                      Bản #{revision.revisionNo} · {STATES[revision.state]}
-                    </span>
-                  )
-                )}
-                {preview && revision && !translating && (
-                  <HeroLanguagePicker
-                    content={preview.content}
-                    locale={location.readLocale}
-                    revisionNo={revision.revisionNo}
-                    disabled={busy || (editing && section !== "SKILLS")}
-                    onChange={setContentLocale}
-                  />
-                )}
-                {headerAction === "publish" && (
-                  <Button disabled={busy} onClick={openManagement}>
-                    <Send className="size-4" />
-                    Xuất bản
-                  </Button>
-                )}
-                {headerAction === "draft" && (
-                  <Button variant="outline" disabled={busy} onClick={openManagement}>
-                    <Plus className="size-4" />
-                    Tạo bản nháp
-                  </Button>
-                )}
               </div>
             </div>
           </header>

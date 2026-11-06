@@ -31,10 +31,10 @@ export function ManagementToolbar({
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b p-3 @3xl:p-4">
+    <div className="grid grid-cols-2 gap-2 border-b p-3 @xl:flex @xl:flex-wrap @xl:items-center @3xl:p-4">
       {onSearchChange && (
         <SearchField
-          className="w-full @xl:w-64 @xl:flex-1 @3xl:max-w-sm [&_input]:rounded-md"
+          className="col-span-2 w-full @xl:w-auto @xl:flex-[999_1_16rem] [&_input]:rounded-md"
           label={searchLabel}
           placeholder={placeholder}
           value={search}
@@ -42,12 +42,15 @@ export function ManagementToolbar({
           shortcut
         />
       )}
-      {children}
-      {onReset && (
-        <Button variant="ghost" size="sm" onClick={onReset}>
-          <X aria-hidden="true" /> Xóa bộ lọc
-        </Button>
-      )}
+      {/* The filters move below the search together, so the search keeps its width and no filter ends up alone. */}
+      <div className="contents @xl:grid @xl:flex-auto @xl:grid-flow-col @xl:items-center @xl:gap-2 [&>select]:w-full [&>select]:min-w-0 @max-xl:[&>select:last-of-type:nth-of-type(odd)]:col-span-2">
+        {children}
+        {onReset && (
+          <Button variant="ghost" size="sm" className="justify-self-start @max-xl:col-span-2" onClick={onReset}>
+            <X aria-hidden="true" /> Xóa bộ lọc
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

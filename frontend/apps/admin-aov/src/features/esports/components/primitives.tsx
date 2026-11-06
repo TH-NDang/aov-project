@@ -33,7 +33,7 @@ export function Monogram({
     <span
       className={cn("esp-logo", portrait && "esp-portrait", className)}
       data-empty={!usable || undefined}
-      style={{ width: size, height: size, fontSize: Math.max(9, size * 0.32) }}
+      style={{ width: size, height: size, fontSize: Math.max(12, size * 0.32) }}
       role="img"
       aria-label={label}
     >

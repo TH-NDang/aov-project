@@ -112,7 +112,7 @@ export function SiteHeader() {
             <Button
               variant="ghost"
               size="icon"
-              className="size-7"
+              className="size-9 md:size-7"
               onClick={() => setCommandOpen(true)}
               aria-label="Tìm kiếm (Ctrl K)"
             >
@@ -122,7 +122,7 @@ export function SiteHeader() {
           <TooltipContent>Tìm kiếm · Ctrl K</TooltipContent>
         </Tooltip>
         {isMobile && (
-          <Button variant="ghost" size="icon" className="size-7" onClick={toggleSidebar} aria-label="Mở menu">
+          <Button variant="ghost" size="icon" className="size-9 md:size-7" onClick={toggleSidebar} aria-label="Mở menu">
             <PanelRight />
           </Button>
         )}

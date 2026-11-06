@@ -257,12 +257,13 @@ export function HeroCatalog({
                 type="button"
                 size="sm"
                 variant="outline"
-                className="h-auto max-w-full justify-start whitespace-normal px-1.5 py-0.5 text-xs"
+                className="h-auto max-w-full justify-start px-1.5 py-0.5 text-xs"
                 aria-label={`Mở bản nháp ${row.original.code} · ${draftContext}`}
+                title={draftContext}
                 onClick={() => openHero({ ...row.original, selectedRevision: draft })}
               >
                 <FilePenLine aria-hidden className="size-3.5 shrink-0" />
-                {draft.id === r?.id ? "Mở bản nháp" : `Mở nháp · ${draftContext}`}
+                <span className="truncate">{draft.id === r?.id ? "Mở bản nháp" : `Mở nháp · ${draftContext}`}</span>
               </Button>
             )
             const v = overview?.variants.find((v) => v.id === r?.effectiveFromPatchVariantId)
@@ -332,7 +333,7 @@ export function HeroCatalog({
           id: "edited",
           header: () => (
             <span
-              className="flex items-center justify-end gap-1.5"
+              className="flex items-center justify-end gap-1.5 whitespace-nowrap"
               title="Lần sửa hồ sơ tướng gần nhất, khác với ngày phát hành patch."
             >
               <Clock3 className="size-3" />

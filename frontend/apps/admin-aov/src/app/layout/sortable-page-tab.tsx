@@ -104,7 +104,7 @@ export function SortablePageTab({
             <Button
               variant="ghost"
               size="icon"
-              className="mr-1 size-5 shrink-0 cursor-pointer"
+              className="mr-1 size-7 shrink-0 cursor-pointer md:size-5"
               onClick={onClose}
               onMouseDown={(event) => event.stopPropagation()}
               onTouchStart={(event) => event.stopPropagation()}
