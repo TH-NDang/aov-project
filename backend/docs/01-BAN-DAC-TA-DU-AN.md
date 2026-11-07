@@ -705,6 +705,11 @@ Số đọc thủ công từ ảnh trong một patch giữ kèm nguồn và cấ
 admin hiển thị số quan sát để đối chiếu và chỉ lưu giá trị cơ bản riêng khi biên tập viên nhập cho tướng.
 Thay đổi mặc định chung được ghi ở patch. Lịch sử cân bằng của từng tướng chỉ ghi thay đổi riêng.
 
+Giáp, giáp phép, xuyên giáp và xuyên giáp phép được game hiển thị dạng `số | phần trăm`, ví dụ `150 | 20%`.
+Phần trăm là số đọc từ game và được lưu riêng, không suy ra từ số: ảnh patch 2026-10-30 có đồng thời `137 | 0%`,
+`150 | 20%` và `171 | 0%`, nên không có công thức nào được giả định. Chưa ghi phần trăm khác với `0%`: khi chưa có thì
+chỉ hiển thị số. Admin, so sánh phiên bản và Wiki đều đọc chỉ số này đúng dạng game hiển thị.
+
 ### 7.6 Skills
 
 Skill identity phải ổn định theo hero và không dựa vào localized name.

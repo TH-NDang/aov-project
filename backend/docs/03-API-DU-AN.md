@@ -945,6 +945,12 @@ PUT /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/combat-stats
       "baseValue": 3600,
       "growthPerLevel": 250,
       "unit": "POINT"
+    },
+    {
+      "statKey": "ARMOR",
+      "baseValue": 150,
+      "percentValue": 20,
+      "unit": "POINT"
     }
   ],
   "changeNote": "..."
@@ -952,6 +958,10 @@ PUT /api/wiki/v1/admin/heroes/{heroId}/drafts/{draftId}/combat-stats
 ```
 
 Full replace của section trong draft; không merge field mơ hồ.
+
+`percentValue` tùy chọn, là phần trăm game hiển thị sau dấu `|` (`150 | 20%`). Chỉ `ARMOR`, `MAGIC_DEFENSE`,
+`ARMOR_PIERCE` và `MAGIC_PIERCE` có giá trị này, phải có `baseValue` và nằm trong khoảng 0–100; sai trả 422. Bỏ trống
+hoặc `null` nghĩa là chưa ghi, khác với `0`.
 
 ---
 
@@ -1535,11 +1545,12 @@ GET /api/wiki/v1/admin/heroes/{heroId}/patch-view?patchVariantId=...
 ```
 
 Quyền `catalog:read`. Trả `anchor` (revision dùng làm mốc, `direction`: `EXACT`, `FORWARD`,
-`BACKWARD` hoặc `NONE`), `stats` (statKey, unit, baseValue, growthPerLevel, `provenance`:
+`BACKWARD` hoặc `NONE`), `stats` (statKey, unit, baseValue, percentValue, growthPerLevel, `provenance`:
 `OBSERVED`, `DERIVED`, `CARRIED`, changeSetId, patchVariantId), `roles` (roleCode, provenance,
 changeSetId, patchVariantId), `skillFields` (skillKey, fieldKey, value, provenance, changeSetId,
 patchVariantId) và `appliedChangeSetIds`. Giá trị suy ra ghi change set và patch đã đặt giá trị đó. Suy ra theo
-[ADR-016](adr/ADR-016-patch-note-changes.md); không lưu kết quả.
+[ADR-016](adr/ADR-016-patch-note-changes.md); không lưu kết quả. Change set chỉ ghi số, nên giá trị suy ra để
+`percentValue` rỗng.
 
 Tham số tùy chọn `anchorRevisionId` chọn mốc thay cho thuật toán tự động. Mốc phải đã xuất bản,
 thuộc đúng tướng/ruleset và có patch xác định trong ruleset. Không hợp lệ trả HTTP 422
@@ -2176,7 +2187,8 @@ vẹn; không sửa snapshot đã lưu. Khi bổ sung trường gameplay capture
 `GET /admin/heroes/import/fields` thêm overviewRatings và combatStats, type=json.
 `values.overviewRatings` nhận `{scaleCode,survivability,attackDamage,skillEffects,difficulty,derived,sources}`;
 scale đã có GAME_OVERVIEW_10 giới hạn 0–10, derived bắt buộc có nguồn. `values.combatStats` nhận
-`{values:[{statKey,baseValue?,growthPerLevel?,unit}],sources}`; mỗi dòng phải có ít nhất một số đã biết.
+`{values:[{statKey,baseValue?,percentValue?,growthPerLevel?,unit}],sources}`; mỗi dòng phải có ít nhất một số đã biết,
+`percentValue` theo cùng quy tắc của cập nhật chỉ số chiến đấu.
 Đây là field cấp object: OVERWRITE thay cả object, FILL_EMPTY chỉ điền nếu section chưa có dữ liệu,
 SKIP giữ nguyên. Bỏ field khỏi values không xóa section. Tên field/kiểu không hợp lệ trả 422.
 Thứ tự chỉ số được chuẩn hóa theo statKey nên import lại cùng dữ liệu không tạo sửa đổi do thứ tự dòng.
@@ -2508,7 +2520,7 @@ giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay s�
 
 - `GET /admin/patch-variants/{id}/hero-stat-samples` cần quyền `catalog:read`. Mỗi tướng có tối đa một mẫu,
   lấy revision mới nhất còn hiệu lực gắn trực tiếp với variant và bộ luật. Mẫu có trạng thái nháp, vai trò,
-  chỉ số cơ bản đã nhập và các giá trị đọc thủ công từ ảnh kèm patch và cấp tướng nếu biết.
+  chỉ số cơ bản đã nhập (`value`, `unit`, `percent`) và các giá trị đọc thủ công từ ảnh kèm patch và cấp tướng nếu biết.
   Mặc định kế thừa không được tính như một lần quan sát.
 
 - `GET /admin/patch-variants/{id}/stat-defaults` cần quyền `catalog:read`. Mỗi dòng trả mã thuộc tính,
