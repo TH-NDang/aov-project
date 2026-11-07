@@ -31,12 +31,18 @@ class CommunityMediaClient implements CompetitionMediaGuard {
         URI uri = URI.create(properties.communityBaseUrl());
         if (uri.getHost() == null || uri.getRawUserInfo() != null || uri.getRawQuery() != null
                 || uri.getRawFragment() != null || !Set.of("", "/").contains(uri.getPath())
-                || !("https".equals(uri.getScheme()) || "http".equals(uri.getScheme())
-                        && Set.of("localhost", "127.0.0.1", "::1", "[::1]").contains(uri.getHost()))) {
-            throw new IllegalArgumentException("Community media checks require HTTPS or a loopback HTTP origin.");
+                || !("https".equals(uri.getScheme())
+                        || "http".equals(uri.getScheme()) && isPrivateHost(uri.getHost()))) {
+            throw new IllegalArgumentException(
+                    "Community media checks require HTTPS, or HTTP to a loopback address or a private service name.");
         }
         this.base = properties.communityBaseUrl().replaceAll("/+$", "") + "/api/community/v1/admin/media-assets/";
         this.client = builder.build();
+    }
+
+    /** The caller's token travels on this request. A name without dots only resolves on a private network. */
+    private static boolean isPrivateHost(String host) {
+        return Set.of("127.0.0.1", "::1", "[::1]").contains(host) || host.matches("[A-Za-z0-9-]+");
     }
 
     @Override

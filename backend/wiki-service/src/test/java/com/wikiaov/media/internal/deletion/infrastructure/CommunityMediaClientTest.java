@@ -6,6 +6,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.wikiaov.media.internal.application.MediaErrorCode;
 import com.wikiaov.platform.ApiException;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,25 @@ class CommunityMediaClientTest {
                     error -> assertThat(error.getErrorCode()).isEqualTo(MediaErrorCode.MEDIA_COMPETITION_CHECK_FAILED));
         }
         server.verify();
+    }
+
+    @Test
+    void sendsTheCallerTokenOnlyOverHttpsOrAPrivateNetwork() {
+        for (String allowed : List.of("https://community.example.test", "http://localhost:8082",
+                "http://127.0.0.1:8082", "http://community-service:8082")) {
+            assertThatCode(() -> new CommunityMediaClient(address(allowed), RestClient.builder()))
+                    .as(allowed).doesNotThrowAnyException();
+        }
+        for (String rejected : List.of("http://community.example.test", "http://203.0.113.10:8082",
+                "ftp://community-service", "https://user:secret@community.example.test",
+                "http://community-service:8082/path")) {
+            assertThatThrownBy(() -> new CommunityMediaClient(address(rejected), RestClient.builder()))
+                    .as(rejected).isInstanceOf(IllegalArgumentException.class);
+        }
+    }
+
+    private static MediaDeletionProperties address(String communityBaseUrl) {
+        return new MediaDeletionProperties(false, "", "", communityBaseUrl);
     }
 
     private static void authenticate() {
