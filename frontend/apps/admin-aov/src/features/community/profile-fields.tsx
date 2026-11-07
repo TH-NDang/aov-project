@@ -14,6 +14,7 @@ export { Field, Section } from "./profile-form-primitives"
 export function ProfileFields({
   content,
   pageId,
+  entityId,
   onChange,
   tab,
   disabled,
@@ -21,6 +22,8 @@ export function ProfileFields({
 }: {
   content: ProfileContent
   pageId: string
+  /** The team or player this page stands for: their own tournaments come first when linking one. */
+  entityId?: string | null
   onChange: (value: ProfileContent) => void
   tab: string
   disabled?: boolean
@@ -28,6 +31,12 @@ export function ProfileFields({
 }) {
   const set = <K extends keyof ProfileContent>(key: K, value: ProfileContent[K]) =>
     onChange({ ...content, [key]: value })
+  const tournamentContext =
+    entityId && kind === "TEAM"
+      ? { teamId: entityId }
+      : entityId && kind === "PLAYER"
+        ? { playerId: entityId }
+        : undefined
   const input = (key: "name" | "shortName", label: string, type = "text") => (
     <Field label={label} type={type} value={content[key] || ""} onChange={(event) => set(key, event.target.value)} />
   )
@@ -70,7 +79,12 @@ export function ProfileFields({
         </Section>
       )}
       {tab === "roster" && kind === "TEAM" && (
-        <ProfileRoster value={content.roster} disabled={disabled} onChange={(value) => set("roster", value)} />
+        <ProfileRoster
+          value={content.roster}
+          pageId={pageId}
+          disabled={disabled}
+          onChange={(value) => set("roster", value)}
+        />
       )}
       {tab === "history" && isIndividualProfile(kind) && <ProfileTeams pageId={pageId} />}
       {tab === "history" && (
@@ -185,7 +199,11 @@ export function ProfileFields({
                     value={item.placement}
                     onChange={(e) => update("placement", e.target.value)}
                   />
-                  <TournamentPicker value={item.tournamentId} onChange={(value) => update("tournamentId", value)} />
+                  <TournamentPicker
+                    value={item.tournamentId}
+                    context={tournamentContext}
+                    onChange={(value) => update("tournamentId", value)}
+                  />
                   <Field
                     label="Ngày"
                     type="date"

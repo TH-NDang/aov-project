@@ -17,7 +17,6 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Service
 public class EditorReferences {
-    private static final UUID EMPTY_ID = new UUID(0, 0);
     private final EditorReferenceRepository repository;
     private final JsonMapper json;
 
@@ -62,9 +61,11 @@ public class EditorReferences {
             throw TournamentErrors.invalid("Reference lookup accepts between 1 and 50 UUIDs.");
 
         String escaped = ReferenceLabels.literalSearch(query);
-        var selectedIds = ids == null ? List.of(EMPTY_ID) : ids.stream().distinct().toList();
         var unsorted = PageRequest.of(page.getPageNumber(), page.getPageSize());
-        var rows = repository.search(escaped, kind == null ? "" : kind.name(), ids != null, selectedIds, unsorted);
+        var scope = kind == null ? "" : kind.name();
+        var rows = ids == null
+                ? repository.ranked(escaped, query, scope, unsorted)
+                : repository.search(escaped, scope, true, ids.stream().distinct().toList(), unsorted);
 
         return PageSlice.from(rows.map(this::entry));
     }

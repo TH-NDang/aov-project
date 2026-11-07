@@ -1,8 +1,11 @@
 import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Input } from "@aov/ui/components/input"
+import { formatDate } from "@/features/esports/model/labels"
 import { pageApi, pageKeys } from "./page-api"
-import { useRecords, useTournamentAccess } from "@/features/esports/data/use-esports-data"
+import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
+import { RecordPicker } from "@/features/tournaments/record-picker"
+import type { PickerContext } from "@/features/tournaments/tournament-api"
 
 export function ProfilePicker({
   label,
@@ -50,6 +53,7 @@ export function ProfilePicker({
         {options.map((row) => (
           <option value={row.id} key={row.id}>
             {row.content?.name || row.code}
+            {row.lastActiveOn ? ` · ${formatDate(row.lastActiveOn)}` : ""}
           </option>
         ))}
       </select>
@@ -57,23 +61,20 @@ export function ProfilePicker({
     </div>
   )
 }
-export function TournamentPicker({ value, onChange }: { value?: string | null; onChange: (value: string) => void }) {
-  const query = useRecords("tournaments")
+/** `context` names the team or player whose page this is: their own tournaments come first. */
+export function TournamentPicker({
+  value,
+  context,
+  onChange,
+}: {
+  value?: string | null
+  context?: PickerContext
+  onChange: (value: string) => void
+}) {
   return (
-    <label className="grid gap-2">
+    <div className="grid gap-2">
       <span className="type-label">Liên kết mùa giải</span>
-      <select
-        className="h-10 rounded-md border bg-background px-3 text-sm"
-        value={value || ""}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        <option value="">Chưa liên kết</option>
-        {query.data?.map((row) => (
-          <option value={row.id} key={row.id}>
-            {row.content.name}
-          </option>
-        ))}
-      </select>
-    </label>
+      <RecordPicker kind="tournaments" label="Liên kết mùa giải" value={value} context={context} onChange={onChange} />
+    </div>
   )
 }

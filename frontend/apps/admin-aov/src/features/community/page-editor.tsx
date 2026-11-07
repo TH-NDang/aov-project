@@ -542,6 +542,7 @@ function Editor({
           ) : (
             <>
               <ProfileFields
+                entityId={entry.entityId}
                 pageId={entry.id}
                 kind={entry.kind}
                 content={content}

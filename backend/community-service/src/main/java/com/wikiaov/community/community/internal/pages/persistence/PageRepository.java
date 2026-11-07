@@ -46,6 +46,50 @@ public interface PageRepository extends JpaRepository<PageRecord, UUID> {
     Page<PageRecord> adminDirectory(String kind, String query, String roles, String country, String entityIds,
             String sort, Pageable pageable);
 
+    /**
+     * Pages for a picker or directory ordered by activity. An exact name comes first, then pages tied to the page in
+     * context by their history, then the strength of the name match and the last activity. Activity is read from the
+     * one view the tournament module publishes for this; {@code kinds} tells it which of its parts are needed.
+     */
+    @Query(value = """
+        SELECT p.id AS id,
+               coalesce(a.active_on, CASE WHEN p.history_last_on IS NOT NULL THEN LEAST(p.history_last_on, CURRENT_DATE) END)
+                   AS "lastActiveOn",
+               :relatedPageId <> '' AND p.content->'history'
+                   @> jsonb_build_array(jsonb_build_object('relatedPageId', :relatedPageId)) AS related
+        FROM community.page p
+        LEFT JOIN tournament.page_activity a
+          ON a.kind = p.kind AND a.kind = ANY(string_to_array(:kinds, ','))
+         AND a.key_id = CASE WHEN p.kind IN ('TEAM', 'PLAYER') THEN p.entity_id ELSE p.id END
+        WHERE (:kind IS NULL OR p.kind = :kind)
+          AND (:roles = '' OR (p.kind IN ('PERSON', 'PLAYER') AND jsonb_exists_any(p.content->'personRoles', string_to_array(:roles, ','))))
+          AND strpos(p.search_names, tournament.search_key(:query)) > 0
+          AND (:country = '' OR p.content->>'country' = :country)
+        ORDER BY tournament.name_match_rank(tournament.search_key(:query), p.search_names) > 0,
+                 :relatedPageId <> '' AND p.content->'history'
+                     @> jsonb_build_array(jsonb_build_object('relatedPageId', :relatedPageId)) DESC,
+                 tournament.name_match_rank(tournament.search_key(:query), p.search_names),
+                 "lastActiveOn" DESC NULLS LAST,
+                 lower(p.content->>'name'),
+                 p.id
+        """, countQuery = """
+        SELECT count(*) FROM community.page p
+        WHERE (:kind IS NULL OR p.kind = :kind)
+          AND (:roles = '' OR (p.kind IN ('PERSON', 'PLAYER') AND jsonb_exists_any(p.content->'personRoles', string_to_array(:roles, ','))))
+          AND strpos(p.search_names, tournament.search_key(:query)) > 0
+          AND (:country = '' OR p.content->>'country' = :country)
+        """, nativeQuery = true)
+    Page<ActiveRow> byActivity(String kind, String kinds, String query, String roles, String country,
+            String relatedPageId, Pageable pageable);
+
+    interface ActiveRow {
+        UUID getId();
+
+        java.time.LocalDate getLastActiveOn();
+
+        boolean getRelated();
+    }
+
     Optional<PageRecord> findByCode(String code);
 
     @Query(value = """

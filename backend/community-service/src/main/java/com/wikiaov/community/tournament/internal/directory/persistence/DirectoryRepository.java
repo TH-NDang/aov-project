@@ -2,6 +2,7 @@ package com.wikiaov.community.tournament.internal.directory.persistence;
 
 import com.wikiaov.community.tournament.internal.persistence.TeamRecord;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -10,20 +11,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 
 /**
- * Derived figures for the directories of teams, players, organizers and circuits, computed from tournaments, series
- * and rosters. Dates inside tournament documents are stored as [year, month, day], so a tournament's order is read
- * from those parts, falling back to its year.
+ * Derived figures and ranked lists for teams, players, tournaments, organizers and circuits, computed from tournaments,
+ * series and rosters when read. Recency comes from the views of migration V013; spec 04 states the rules.
  */
 public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
     String DAYS = """
         days AS (
-            SELECT id,
-                   coalesce(
-                       CAST(content->'startsOn'->>0 AS int) * 10000
-                           + CAST(content->'startsOn'->>1 AS int) * 100
-                           + CAST(content->'startsOn'->>2 AS int),
-                       CAST(content->>'year' AS int) * 10000,
-                       0) AS day
+            SELECT id, coalesce(CAST(to_char(starts_on, 'YYYYMMDD') AS int), season_year * 10000, 0) AS day
               FROM tournament.tournament
              WHERE deleted_at IS NULL
         )
@@ -38,19 +32,20 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         )
         """;
 
-    String PLAYER_ACTIVITY = """
-        played AS (
-            SELECT m.player_id, m.team_id, m.tournament_id, m.content->>'lane' AS lane, d.day
-              FROM tournament.roster_membership m
-              JOIN days d ON d.id = m.tournament_id
-             WHERE m.deleted_at IS NULL
-        ),
-        lanes AS (
-            SELECT DISTINCT ON (player_id) player_id, lane
-              FROM played
-             WHERE lane IS NOT NULL
-             ORDER BY player_id, day DESC, tournament_id
+    String PLAYER_LINES = """
+        lines AS (
+            SELECT player_id, team_id, tournament_id, lane, active_on FROM tournament.player_tournament_activity
         )
+        """;
+
+    String TOURNAMENT_FILTER = """
+        t.deleted_at IS NULL
+        AND (strpos(t.search_names, tournament.search_key(:wanted)) > 0
+             OR t.content->>'region' = ANY(string_to_array(:alsoRegions, ',')))
+        AND (:status = '' OR t.status = :status)
+        AND (:tier = '' OR coalesce(t.content->>'tier', 'UNKNOWN') = :tier)
+        AND (:region = '' OR t.content->>'region' = :region)
+        AND (:year = '' OR t.season_year = CAST(NULLIF(:year, '') AS int))
         """;
 
     String PLAYER_FILTER = """
@@ -61,28 +56,34 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         AND (:status = '' OR coalesce(p.content->>'careerStatus', 'UNKNOWN') = :status)
         """;
 
-    @Query(nativeQuery = true, value = "WITH " + DAYS + ", " + PLACEMENTS + ", " + PLAYER_ACTIVITY + """
+    @Query(nativeQuery = true, value = "WITH " + PLACEMENTS + ", " + PLAYER_LINES + """
         ,
+        lanes AS (
+            SELECT DISTINCT ON (player_id) player_id, lane
+              FROM lines
+             WHERE lane IS NOT NULL
+             ORDER BY player_id, active_on DESC NULLS LAST, tournament_id
+        ),
         totals AS (
             SELECT g.player_id, count(DISTINCT g.tournament_id) AS tournaments,
-                   count(DISTINCT g.tournament_id) FILTER (WHERE w.team_id IS NOT NULL) AS titles,
-                   max(g.day) AS last_day
-              FROM played g
+                   count(DISTINCT g.tournament_id) FILTER (WHERE w.team_id IS NOT NULL) AS titles
+              FROM lines g
               LEFT JOIN placements w
                 ON w.place = '1' AND w.tournament_id = g.tournament_id AND w.team_id = CAST(g.team_id AS text)
              GROUP BY g.player_id
         ),
         latest AS (
-            SELECT DISTINCT ON (player_id) player_id, team_id, tournament_id
-              FROM played
-             ORDER BY player_id, day DESC, tournament_id
+            SELECT DISTINCT ON (player_id) player_id, team_id, tournament_id, active_on
+              FROM lines
+             ORDER BY player_id, active_on DESC NULLS LAST, tournament_id
         )
         SELECT p.id AS id,
                coalesce(t.tournaments, 0) AS tournaments,
                coalesce(t.titles, 0) AS titles,
                coalesce(p.content->>'lane', l.lane) AS lane,
                x.team_id AS teamId,
-               x.tournament_id AS tournamentId
+               x.tournament_id AS tournamentId,
+               x.active_on AS lastActiveOn
           FROM tournament.player p
           LEFT JOIN totals t ON t.player_id = p.id
           LEFT JOIN latest x ON x.player_id = p.id
@@ -92,31 +93,39 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
          ORDER BY CASE WHEN :sort = 'NAME' THEN lower(p.content->>'nickname') END,
                   CASE WHEN :sort = 'TITLES' THEN coalesce(t.titles, 0) END DESC,
                   CASE WHEN :sort IN ('TITLES', 'TOURNAMENTS') THEN coalesce(t.tournaments, 0) END DESC,
-                  coalesce(t.last_day, 0) DESC,
+                  CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), p.search_names) END,
+                  x.active_on DESC NULLS LAST,
                   lower(p.content->>'nickname'),
                   p.id
-        """, countQuery = "WITH " + DAYS + ", " + PLAYER_ACTIVITY + """
+        """, countQuery = """
+        WITH lanes AS (
+            SELECT DISTINCT ON (player_id) player_id, lane
+              FROM tournament.player_tournament_activity
+             WHERE lane IS NOT NULL AND :lane <> ''
+             ORDER BY player_id, active_on DESC NULLS LAST, tournament_id
+        )
         SELECT count(*)
           FROM tournament.player p
           LEFT JOIN lanes l ON l.player_id = p.id
          WHERE
         """ + PLAYER_FILTER)
-    Page<PlayerRow> players(String query, String country, String lane, String status, String sort, Pageable page);
+    Page<PlayerRow> players(String query, String wanted, String country, String lane, String status, String sort,
+            Pageable page);
 
-    @Query(nativeQuery = true, value = "WITH " + DAYS + ", " + PLACEMENTS + """
+    @Query(nativeQuery = true, value = "WITH " + PLACEMENTS + """
         ,
         sides AS (
-            SELECT CAST(s.content->>'teamAId' AS uuid) AS team_id, s.tournament_id,
+            SELECT s.team_a_id AS team_id,
                    CAST(s.content->'result'->>'scoreA' AS int) AS own,
                    CAST(s.content->'result'->>'scoreB' AS int) AS rival
               FROM tournament.series s
-             WHERE s.deleted_at IS NULL AND s.content->>'teamAId' IS NOT NULL
+             WHERE s.deleted_at IS NULL AND s.team_a_id IS NOT NULL
             UNION ALL
-            SELECT CAST(s.content->>'teamBId' AS uuid), s.tournament_id,
+            SELECT s.team_b_id,
                    CAST(s.content->'result'->>'scoreB' AS int),
                    CAST(s.content->'result'->>'scoreA' AS int)
               FROM tournament.series s
-             WHERE s.deleted_at IS NULL AND s.content->>'teamBId' IS NOT NULL
+             WHERE s.deleted_at IS NULL AND s.team_b_id IS NOT NULL
         ),
         records AS (
             SELECT team_id,
@@ -126,24 +135,16 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
               FROM sides
              GROUP BY team_id
         ),
-        entered AS (
-            SELECT team_id, tournament_id FROM sides WHERE tournament_id IS NOT NULL
-            UNION
-            SELECT team_id, tournament_id FROM tournament.roster_membership WHERE deleted_at IS NULL
-            UNION
-            SELECT CAST(team_id AS uuid), tournament_id FROM placements
+        activity AS (
+            SELECT team_id, tournament_id, active_on FROM tournament.team_tournament_activity
         ),
         entries AS (
-            SELECT e.team_id, count(*) AS tournaments, max(d.day) AS last_day
-              FROM entered e
-              JOIN days d ON d.id = e.tournament_id
-             GROUP BY e.team_id
+            SELECT team_id, count(*) AS tournaments FROM activity GROUP BY team_id
         ),
         latest AS (
-            SELECT DISTINCT ON (e.team_id) e.team_id, e.tournament_id
-              FROM entered e
-              JOIN days d ON d.id = e.tournament_id
-             ORDER BY e.team_id, d.day DESC, e.tournament_id
+            SELECT DISTINCT ON (team_id) team_id, tournament_id, active_on
+              FROM activity
+             ORDER BY team_id, active_on DESC NULLS LAST, tournament_id
         ),
         honours AS (
             SELECT CAST(team_id AS uuid) AS team_id, count(*) FILTER (WHERE place = '1') AS titles, sum(prize) AS prize
@@ -157,7 +158,8 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
                coalesce(r.losses, 0) AS losses,
                coalesce(h.titles, 0) AS titles,
                h.prize AS prizeUsd,
-               x.tournament_id AS tournamentId
+               x.tournament_id AS tournamentId,
+               x.active_on AS lastActiveOn
           FROM tournament.team t
           LEFT JOIN entries e ON e.team_id = t.id
           LEFT JOIN records r ON r.team_id = t.id
@@ -170,7 +172,8 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
                   CASE WHEN :sort = 'PRIZE' THEN coalesce(h.prize, 0) END DESC,
                   CASE WHEN :sort = 'TITLES' THEN coalesce(h.titles, 0) END DESC,
                   CASE WHEN :sort IN ('TITLES', 'TOURNAMENTS') THEN coalesce(e.tournaments, 0) END DESC,
-                  coalesce(e.last_day, 0) DESC,
+                  CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), t.search_names) END,
+                  x.active_on DESC NULLS LAST,
                   lower(t.content->>'name'),
                   t.id
         """, countQuery = """
@@ -180,7 +183,116 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
            AND t.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
            AND (:country = '' OR t.content->>'country' = :country)
         """)
-    Page<TeamRow> teams(String query, String country, String sort, Pageable page);
+    Page<TeamRow> teams(String query, String wanted, String country, String sort, Pageable page);
+
+    /**
+     * Teams for a list or picker. An exact name comes first, then the teams of the tournament in context, then the
+     * strength of the name match and the last activity. Paging is safe: the id ends every order.
+     */
+    @Query(nativeQuery = true, value = """
+        SELECT t.id AS id, a.active_on AS lastActiveOn,
+               CASE WHEN c.team_id IS NOT NULL THEN 'TOURNAMENT' END AS context
+          FROM tournament.team t
+          LEFT JOIN tournament.team_activity a ON a.team_id = t.id
+          LEFT JOIN (SELECT DISTINCT team_id FROM tournament.tournament_team
+                      WHERE tournament_id = CAST(NULLIF(:tournamentId, '') AS uuid)) c ON c.team_id = t.id
+         WHERE t.deleted_at IS NULL
+           AND t.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
+         ORDER BY CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), t.search_names) > 0 END,
+                  CASE WHEN :sort = 'RECENT' THEN c.team_id IS NULL END,
+                  CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), t.search_names) END,
+                  CASE WHEN :sort = 'RECENT' THEN a.active_on END DESC NULLS LAST,
+                  lower(t.name),
+                  t.id
+        """, countQuery = """
+        SELECT count(*)
+          FROM tournament.team t
+         WHERE t.deleted_at IS NULL
+           AND t.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
+        """)
+    Page<RankedRow> rankedTeams(String query, String wanted, String sort, String tournamentId, Pageable page);
+
+    /**
+     * Players for a list or picker, ordered like {@link #rankedTeams}. The context is closest for the roster of the same
+     * team in the same tournament, then that team's other rosters, then other rosters of the tournament.
+     */
+    @Query(nativeQuery = true, value = """
+        SELECT p.id AS id, a.active_on AS lastActiveOn,
+               CASE c.closeness WHEN 0 THEN 'TEAM_IN_TOURNAMENT' WHEN 1 THEN 'TEAM' WHEN 2 THEN 'TOURNAMENT' END AS context
+          FROM tournament.player p
+          LEFT JOIN tournament.player_activity a ON a.player_id = p.id
+          LEFT JOIN (SELECT player_id,
+                            min(CASE WHEN team_id = CAST(NULLIF(:teamId, '') AS uuid)
+                                          AND tournament_id = CAST(NULLIF(:tournamentId, '') AS uuid) THEN 0
+                                     WHEN team_id = CAST(NULLIF(:teamId, '') AS uuid) THEN 1
+                                     ELSE 2 END) AS closeness
+                       FROM tournament.roster_membership
+                      WHERE deleted_at IS NULL
+                        AND (team_id = CAST(NULLIF(:teamId, '') AS uuid)
+                             OR tournament_id = CAST(NULLIF(:tournamentId, '') AS uuid))
+                      GROUP BY player_id) c ON c.player_id = p.id
+         WHERE p.deleted_at IS NULL
+           AND p.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
+         ORDER BY CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), p.search_names) > 0 END,
+                  CASE WHEN :sort = 'RECENT' THEN c.closeness END NULLS LAST,
+                  CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), p.search_names) END,
+                  CASE WHEN :sort = 'RECENT' THEN a.active_on END DESC NULLS LAST,
+                  lower(p.name),
+                  p.id
+        """, countQuery = """
+        SELECT count(*)
+          FROM tournament.player p
+         WHERE p.deleted_at IS NULL
+           AND p.reference_search LIKE '%' || tournament.normalize_reference_search(:query) || '%' ESCAPE '\\'
+        """)
+    Page<RankedRow> rankedPlayers(String query, String wanted, String sort, String teamId, String tournamentId,
+            Pageable page);
+
+    /**
+     * Tournaments for a list or picker: RECENT runs from what is in progress outwards in time (V013), STATUS keeps the
+     * older grouping by status, and the tournaments of a team or player in context come first in a picker.
+     */
+    @Query(nativeQuery = true, value = """
+        SELECT t.id AS id, CAST(NULL AS date) AS lastActiveOn,
+               CASE WHEN c.tournament_id IS NOT NULL THEN 'PARTICIPANT' END AS context
+          FROM tournament.tournament t
+          JOIN tournament.tournament_window w ON w.id = t.id
+          LEFT JOIN (SELECT tournament_id FROM tournament.tournament_team
+                      WHERE team_id = CAST(NULLIF(:teamId, '') AS uuid)
+                     UNION
+                     SELECT tournament_id FROM tournament.roster_membership
+                      WHERE deleted_at IS NULL AND player_id = CAST(NULLIF(:playerId, '') AS uuid)) c
+            ON c.tournament_id = t.id
+         WHERE
+        """ + TOURNAMENT_FILTER + """
+         ORDER BY CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), t.search_names) > 0 END,
+                  CASE WHEN :sort = 'RECENT' THEN c.tournament_id IS NULL END,
+                  CASE WHEN :sort = 'RECENT' THEN tournament.name_match_rank(tournament.search_key(:wanted), t.search_names) END,
+                  CASE WHEN :sort = 'RECENT' THEN w.recency_rank END,
+                  CASE WHEN :sort = 'RECENT' THEN w.recency_distance END,
+                  CASE WHEN :sort = 'STATUS' THEN
+                      CASE t.status WHEN 'ONGOING' THEN 0 WHEN 'UPCOMING' THEN 1 WHEN 'ANNOUNCED' THEN 2
+                                    WHEN 'FINISHED' THEN 4 ELSE 3 END END,
+                  CASE WHEN :sort = 'STATUS' THEN t.starts_on END DESC NULLS LAST,
+                  CASE WHEN :sort = 'UPDATED' THEN t.updated_at END DESC,
+                  lower(t.name),
+                  t.id
+        """, countQuery = "SELECT count(*) FROM tournament.tournament t WHERE " + TOURNAMENT_FILTER)
+    Page<RankedRow> rankedTournaments(String wanted, String alsoRegions, String status, String tier, String region,
+            String year, String sort, String teamId, String playerId, Pageable page);
+
+    /** What a list of tournaments can be narrowed by: its statuses with their counts, its regions and years. */
+    @Query(nativeQuery = true, value = """
+        SELECT 'STATUS' AS facet, status AS value, count(*) AS rows
+          FROM tournament.tournament WHERE deleted_at IS NULL GROUP BY status
+        UNION ALL
+        SELECT 'REGION', content->>'region', count(*)
+          FROM tournament.tournament WHERE deleted_at IS NULL AND content->>'region' IS NOT NULL GROUP BY content->>'region'
+        UNION ALL
+        SELECT 'YEAR', CAST(season_year AS text), count(*)
+          FROM tournament.tournament WHERE deleted_at IS NULL AND season_year IS NOT NULL GROUP BY season_year
+        """)
+    List<FacetRow> tournamentFacets();
 
     /** Roster lines of the given teams in every tournament; callers keep the tournament they want to show. */
     @Query(nativeQuery = true, value = "WITH " + DAYS + """
@@ -195,9 +307,9 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
     @Query(nativeQuery = true, value = "WITH " + DAYS + """
         ,
         plans AS (
-            SELECT p.id AS tournament_id, p.content->>'organizerPageId' AS organizer,
-                   p.content->>'circuitPageId' AS circuit, t.content->>'tier' AS tier,
-                   CAST(t.content->>'year' AS int) AS year, d.day
+            SELECT p.id AS tournament_id, p.organizer_page_id AS organizer,
+                   p.circuit_page_id AS circuit, t.content->>'tier' AS tier,
+                   t.season_year AS year, d.day
               FROM tournament.competition_plan p
               JOIN tournament.tournament t ON t.id = p.id AND t.deleted_at IS NULL
               JOIN days d ON d.id = t.id
@@ -207,7 +319,7 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
             UNION ALL
             SELECT circuit, tournament_id, tier, year, day FROM plans WHERE circuit IS NOT NULL
         )
-        SELECT CAST(page_id AS uuid) AS pageId,
+        SELECT page_id AS pageId,
                count(DISTINCT tournament_id) AS tournaments,
                min(year) AS firstYear,
                max(year) AS lastYear,
@@ -230,6 +342,8 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         UUID getTeamId();
 
         UUID getTournamentId();
+
+        LocalDate getLastActiveOn();
     }
 
     interface TeamRow {
@@ -248,6 +362,24 @@ public interface DirectoryRepository extends Repository<TeamRecord, UUID> {
         BigDecimal getPrizeUsd();
 
         UUID getTournamentId();
+
+        LocalDate getLastActiveOn();
+    }
+
+    interface RankedRow {
+        UUID getId();
+
+        LocalDate getLastActiveOn();
+
+        String getContext();
+    }
+
+    interface FacetRow {
+        String getFacet();
+
+        String getValue();
+
+        long getRows();
     }
 
     interface LineupRow {

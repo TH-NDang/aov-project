@@ -5,6 +5,7 @@ import { StatusPill } from "@/features/esports/components/primitives"
 import type { TournamentStats } from "@/features/esports/components/tournament-cards"
 import { dateRange, TIER_LABELS } from "@/features/esports/model/labels"
 import { ManagementTable } from "./management-list"
+import { tournamentTiming } from "./record-reason"
 import { RegistryLogo } from "./registry-logo"
 import { TeamRegionBadge } from "./team-region"
 
@@ -52,6 +53,7 @@ export function TournamentList({
                   <span className="type-meta flex items-start gap-1.5">
                     <CalendarDays className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
                     {dateRange(content.startsOn, content.endsOn)}
+                    {tournamentTiming(content) && <span className="shrink-0">· {tournamentTiming(content)}</span>}
                   </span>
                   <span className="flex flex-wrap items-center gap-2 @4xl:hidden">
                     <TeamRegionBadge code={content.region} />

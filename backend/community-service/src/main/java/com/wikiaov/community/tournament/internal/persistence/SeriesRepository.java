@@ -8,13 +8,29 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface SeriesRepository extends JpaRepository<SeriesRecord, UUID> {
-    @Query("""
-        SELECT row FROM SeriesRecord row
-         WHERE (lower(row.name) LIKE lower(concat('%',:query,'%')) OR lower(row.code) LIKE lower(concat('%',:query,'%')))
-           AND (:tournamentId IS NULL OR row.tournamentId=:tournamentId)
-           AND (:state='ALL' OR (:state='ACTIVE' AND row.deletedAt IS NULL) OR (:state='DELETED' AND row.deletedAt IS NOT NULL))
+    /**
+     * Inside a tournament matches run in schedule order, undated ones last. Across tournaments the stronger name match
+     * comes first, then the most recent. The id ends both orders so that paging never repeats or skips a match.
+     */
+    @Query(nativeQuery = true, value = """
+        SELECT s.* FROM tournament.series s
+         WHERE strpos(s.search_names, tournament.search_key(:query)) > 0
+           AND (:tournamentId = '' OR s.tournament_id = CAST(NULLIF(:tournamentId, '') AS uuid))
+           AND (:state = 'ALL' OR (:state = 'ACTIVE' AND s.deleted_at IS NULL)
+                OR (:state = 'DELETED' AND s.deleted_at IS NOT NULL))
+         ORDER BY CASE WHEN :tournamentId <> '' THEN s.scheduled_at END NULLS LAST,
+                  tournament.name_match_rank(tournament.search_key(:query), s.search_names),
+                  s.scheduled_at DESC NULLS LAST,
+                  s.code,
+                  s.id
+        """, countQuery = """
+        SELECT count(*) FROM tournament.series s
+         WHERE strpos(s.search_names, tournament.search_key(:query)) > 0
+           AND (:tournamentId = '' OR s.tournament_id = CAST(NULLIF(:tournamentId, '') AS uuid))
+           AND (:state = 'ALL' OR (:state = 'ACTIVE' AND s.deleted_at IS NULL)
+                OR (:state = 'DELETED' AND s.deleted_at IS NOT NULL))
         """)
-    Page<SeriesRecord> search(String query, UUID tournamentId, String state, Pageable page);
+    Page<SeriesRecord> search(String query, String tournamentId, String state, Pageable page);
 
     /** Per-tournament counters, so a list of tournaments never has to load every match. */
     @Query(nativeQuery = true, value = """

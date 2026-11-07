@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { competitionApi, competitionKeys } from "@/features/competition/competition-api"
 import { useNavigate, useSearchParams } from "react-router"
 import type { DocumentView, TournamentContent } from "@aov/community-contracts"
@@ -14,7 +15,9 @@ import { RegistryImportSheet } from "@/features/tournaments/registry-import"
 import { useRecords, useTournamentStats } from "../data/use-esports-data"
 import type { TournamentStats } from "../components/tournament-cards"
 import { TournamentList } from "@/features/tournaments/tournament-list"
-import { registrySearchText } from "@/features/tournaments/registry-form-model"
+import { regionsNamedBy } from "@/features/tournaments/record-reason"
+import { tournamentApi, tournamentKeys, type TournamentSort } from "@/features/tournaments/tournament-api"
+import { useDebounced } from "@/features/community/directory/directory-api"
 import {
   ManagementEmpty,
   ManagementFooter,
@@ -22,14 +25,17 @@ import {
   ManagementPanel,
   ManagementToolbar,
   managementSelectClassName,
-  useManagementRows,
 } from "@/features/tournaments/management-list"
 import { STATUS_LABELS, TIER_LABELS, regionName } from "../model/labels"
 import { AccessGate, EsportsPage, LoadError, tournamentPath, type Access } from "./esports-shell"
 
 type StatusFilter = "all" | NonNullable<TournamentContent["status"]>
 const STATUS_FILTERS: StatusFilter[] = ["all", "ONGOING", "UPCOMING", "FINISHED", "ANNOUNCED", "UNKNOWN"]
-const STATUS_ORDER: Record<string, number> = { ONGOING: 0, UPCOMING: 1, ANNOUNCED: 2, UNKNOWN: 3, FINISHED: 4 }
+const SORTS: Record<TournamentSort, string> = {
+  RECENT: "Gần đây trước",
+  STATUS: "Ưu tiên trạng thái",
+  NAME: "Tên A–Z",
+}
 
 export function TournamentHubPage() {
   return <AccessGate>{(access) => <Hub access={access} />}</AccessGate>
@@ -41,12 +47,38 @@ function Hub({ access }: { access: Access }) {
   const [search, setSearch] = useState("")
   const [creating, setCreating] = useState(false)
   const [importing, setImporting] = useState(false)
-  const [order, setOrder] = useState("status")
+  const [order, setOrder] = useState<TournamentSort>("RECENT")
   const status = (STATUS_FILTERS.find((value) => value === params.get("status")) ?? "all") as StatusFilter
   const tier = params.get("tier") ?? ""
   const region = params.get("region") ?? ""
   const year = params.get("year") ?? ""
-  const tournaments = useRecords("tournaments")
+  const settled = useDebounced(search)
+  const tournaments = useInfiniteQuery({
+    queryKey: [...tournamentKeys.all, "hub", access.actorKey, settled, status, tier, region, year, order],
+    initialPageParam: 0,
+    queryFn: ({ pageParam, signal }) =>
+      tournamentApi.searchTournaments(
+        {
+          q: settled,
+          status: status === "all" ? "" : status,
+          tier,
+          region,
+          year,
+          alsoRegions: regionsNamedBy(settled),
+          sort: order,
+          page: pageParam,
+        },
+        signal,
+      ),
+    getNextPageParam: nextPageOf,
+    // Keeps the toolbar and the rows on screen while a new search is on its way.
+    placeholderData: keepPreviousData,
+  })
+  const facets = useQuery({
+    queryKey: [...tournamentKeys.all, "hub-facets", access.actorKey],
+    queryFn: ({ signal }) => tournamentApi.tournamentFacets(signal),
+    staleTime: 30_000,
+  })
   const counters = useTournamentStats()
   // Only the create form needs the team list; it is too long to load for every visit to this page.
   const teams = useRecords("teams", creating)
@@ -66,35 +98,11 @@ function Hub({ access }: { access: Access }) {
     return result
   }, [counters.data, plans.data])
 
-  const visible = (tournaments.data ?? [])
-    .filter((entry) => status === "all" || (entry.content.status ?? "UNKNOWN") === status)
-    .filter((entry) => !tier || (entry.content.tier ?? "UNKNOWN") === tier)
-    .filter((entry) => !region || entry.content.region === region)
-    .filter((entry) => !year || String(entry.content.year ?? "") === year)
-    .filter((entry) =>
-      registrySearchText(
-        `${entry.content.name} ${entry.content.code} ${entry.content.region} ${regionName(entry.content.region)}`,
-      ).includes(registrySearchText(search)),
-    )
-    .sort((a, b) =>
-      order === "name"
-        ? a.content.name.localeCompare(b.content.name, "vi")
-        : (STATUS_ORDER[a.content.status ?? "UNKNOWN"] ?? 3) - (STATUS_ORDER[b.content.status ?? "UNKNOWN"] ?? 3) ||
-          (b.content.startsOn ?? "").localeCompare(a.content.startsOn ?? ""),
-    )
-  const listing = useManagementRows(visible, JSON.stringify([search, status, tier, region, year, order]))
+  const visible = useMemo(() => tournaments.data?.pages.flatMap((page) => page.items) ?? [], [tournaments.data])
+  const matching = tournaments.data?.pages[0]?.totalElements ?? 0
   const filtered = !!search.trim() || status !== "all" || !!tier || !!region || !!year
-  const regions = useMemo(
-    () => [...new Set((tournaments.data ?? []).map((entry) => entry.content.region))].sort(),
-    [tournaments.data],
-  )
-  const years = useMemo(
-    () =>
-      [...new Set((tournaments.data ?? []).map((entry) => entry.content.year).filter((value) => value != null))]
-        .sort((a, b) => Number(b) - Number(a))
-        .map(String),
-    [tournaments.data],
-  )
+  const regions = facets.data?.regions ?? []
+  const years = (facets.data?.years ?? []).map(String)
   const resetFilters = () => {
     setSearch("")
     setParams((current) => {
@@ -114,7 +122,7 @@ function Hub({ access }: { access: Access }) {
       return next
     })
   const open = (entry: DocumentView<TournamentContent>) => navigate(tournamentPath(entry.id))
-  const error = tournaments.error ?? counters.error
+  const error = (tournaments.isLoadingError ? tournaments.error : null) ?? counters.error
 
   return (
     <EsportsPage>
@@ -142,10 +150,7 @@ function Hub({ access }: { access: Access }) {
           <FilterTab
             key={value}
             active={status === value}
-            count={
-              tournaments.data?.filter((entry) => value === "all" || (entry.content.status ?? "UNKNOWN") === value)
-                .length
-            }
+            count={facets.data && (value === "all" ? facets.data.total : (facets.data.statuses[value] ?? 0))}
             onClick={() => setFilter("status", value)}
           >
             {value === "all" ? "Tất cả" : STATUS_LABELS[value]}
@@ -208,15 +213,18 @@ function Hub({ access }: { access: Access }) {
             <select
               aria-label="Sắp xếp giải đấu"
               value={order}
-              onChange={(event) => setOrder(event.target.value)}
+              onChange={(event) => setOrder(event.target.value as TournamentSort)}
               className={managementSelectClassName}
             >
-              <option value="status">Ưu tiên trạng thái</option>
-              <option value="name">Tên A–Z</option>
+              {Object.entries(SORTS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </ManagementToolbar>
           {visible.length ? (
-            <TournamentList entries={listing.rows} stats={stats} onOpen={open} />
+            <TournamentList entries={visible} stats={stats} onOpen={open} />
           ) : (
             <ManagementEmpty
               title={filtered ? "Không tìm thấy giải đấu" : "Chưa có giải đấu"}
@@ -228,18 +236,18 @@ function Hub({ access }: { access: Access }) {
               onReset={filtered ? resetFilters : undefined}
             />
           )}
-          <ManagementFooter count={visible.length} total={tournaments.data?.length ?? 0} noun="giải đấu" {...listing} />
+          <ManagementFooter
+            count={matching}
+            total={facets.data?.total ?? matching}
+            noun="giải đấu"
+            rows={visible}
+            loader={tournaments}
+          />
         </ManagementPanel>
       )}
 
       {creating && (
-        <RegistryEditor
-          kind="tournaments"
-          open
-          onClose={() => setCreating(false)}
-          teams={teams.data ?? []}
-          tournaments={tournaments.data ?? []}
-        />
+        <RegistryEditor kind="tournaments" open onClose={() => setCreating(false)} teams={teams.data ?? []} />
       )}
       {importing && <RegistryImportSheet key={access.actorKey} onClose={() => setImporting(false)} />}
     </EsportsPage>

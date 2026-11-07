@@ -132,6 +132,7 @@ public interface PageApi {
             @RequestParam(defaultValue = "") String country,
             @RequestParam(defaultValue = "") List<UUID> entityIds,
             @RequestParam(defaultValue = "RECENT") String sort,
+            @RequestParam(required = false) UUID relatedPageId,
             @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "24") int size);
 
     @GetMapping(ApiPaths.ROOT + "/admin/pages/{id}")

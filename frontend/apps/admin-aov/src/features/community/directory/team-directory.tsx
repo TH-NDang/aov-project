@@ -7,6 +7,7 @@ import { LaneIcon, Monogram } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
 import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
 import { TEAM_REGIONS } from "@/features/tournaments/team-region"
+import { activityLabel } from "@/features/tournaments/record-reason"
 import { directoryApi, directoryKeys, useDebounced, useProfilesOf, winRate, type TeamSort } from "./directory-api"
 import {
   CountryLabel,
@@ -186,14 +187,17 @@ function TeamCard({ team, pageId, published }: { team: TeamDirectoryEntry; pageI
         <p className="type-meta">Chưa có đội hình trên hồ sơ.</p>
       )}
 
-      {team.latestTournament && (
-        <Link
-          to={tournamentPath(team.latestTournament.id)}
-          className="type-meta relative z-10 mt-auto truncate underline-offset-2 hover:text-foreground hover:underline"
-        >
-          Gần nhất: {team.latestTournament.name}
-        </Link>
-      )}
+      <div className="mt-auto min-w-0 space-y-0.5">
+        <p className="type-meta">{activityLabel(team.lastActiveOn)}</p>
+        {team.latestTournament && (
+          <Link
+            to={tournamentPath(team.latestTournament.id)}
+            className="type-meta relative z-10 block truncate underline-offset-2 hover:text-foreground hover:underline"
+          >
+            Gần nhất: {team.latestTournament.name}
+          </Link>
+        )}
+      </div>
     </li>
   )
 }

@@ -1,7 +1,9 @@
 package com.wikiaov.community.community.internal.application;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.wikiaov.community.community.internal.domain.PageContent;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import org.springframework.data.domain.Page;
 
@@ -31,8 +33,21 @@ public final class PageViews {
             boolean represented,
             long followers,
             Instant updatedAt,
-            Live live
+            Live live,
+            @JsonInclude(JsonInclude.Include.NON_NULL) LocalDate lastActiveOn,
+            @JsonInclude(JsonInclude.Include.NON_NULL) Boolean related
     ) {
+        public Profile(UUID id, Long version, String code, String kind, UUID entityId, PageContent content,
+                boolean published, boolean represented, long followers, Instant updatedAt, Live live) {
+            this(id, version, code, kind, entityId, content, published, represented, followers, updatedAt, live, null,
+                    null);
+        }
+
+        /** The same page with what explains its place in a list ordered by activity; only admin lists fill these. */
+        public Profile ranked(LocalDate activeOn, Boolean relatedToContext) {
+            return new Profile(id, version, code, kind, entityId, content, published, represented, followers, updatedAt,
+                    live, activeOn, relatedToContext);
+        }
     }
 
     /** A running broadcast; absent when the page is not live or the last one is older than the live window. */

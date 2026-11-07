@@ -30,10 +30,11 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public PageSlice<View<Team>> teams(String q, RecordState state, int page, int size, HttpServletRequest request) {
-        Parameters.only(request, "q", "state", "page", "size");
+    public PageSlice<Ranked<Team>> teams(String q, RecordState state, String sort, UUID tournamentId, int page,
+            int size, HttpServletRequest request) {
+        Parameters.only(request, "q", "state", "sort", "tournamentId", "page", "size");
         Parameters.search(q);
-        return administration.teams(q, state, Parameters.page(page, size, "updatedAt"));
+        return administration.teams(q, state, sort, tournamentId, Parameters.page(page, size, "updatedAt"));
     }
 
     @Override
@@ -75,11 +76,11 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public PageSlice<View<Player>> players(String q, RecordState state, int page, int size,
-            HttpServletRequest request) {
-        Parameters.only(request, "q", "state", "page", "size");
+    public PageSlice<Ranked<Player>> players(String q, RecordState state, String sort, UUID teamId, UUID tournamentId,
+            int page, int size, HttpServletRequest request) {
+        Parameters.only(request, "q", "state", "sort", "teamId", "tournamentId", "page", "size");
         Parameters.search(q);
-        return administration.players(q, state, Parameters.page(page, size, "updatedAt"));
+        return administration.players(q, state, sort, teamId, tournamentId, Parameters.page(page, size, "updatedAt"));
     }
 
     @Override
@@ -98,11 +99,20 @@ public class TournamentAdminController implements TournamentAdminApi {
     }
 
     @Override
-    public PageSlice<View<Tournament>> tournaments(String q, RecordState state, int page, int size,
+    public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
+            String tier, String region, Integer year, String sort, UUID teamId, UUID playerId, int page, int size,
             HttpServletRequest request) {
-        Parameters.only(request, "q", "state", "page", "size");
+        Parameters.only(request, "q", "alsoRegions", "state", "status", "tier", "region", "year", "sort", "teamId",
+                "playerId", "page", "size");
         Parameters.search(q);
-        return administration.tournaments(q, state, Parameters.page(page, size, "updatedAt"));
+        return administration.tournaments(q, alsoRegions, state, status, tier, region, year, sort, teamId, playerId,
+                Parameters.page(page, size, "updatedAt"));
+    }
+
+    @Override
+    public TournamentFacets tournamentFacets(HttpServletRequest request) {
+        Parameters.only(request);
+        return administration.tournamentFacets();
     }
 
     @Override

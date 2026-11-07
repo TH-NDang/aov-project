@@ -10,6 +10,7 @@ import type {
   SeriesContent,
   TeamContent,
   TournamentContent,
+  TournamentFacets,
   TournamentStats,
 } from "@aov/community-contracts"
 import { communityRequest } from "@/app/auth/session"
@@ -26,6 +27,30 @@ export interface TournamentRecords {
 export type RecordKind = keyof TournamentRecords
 type Request = <T>(path: string, init?: RequestInit) => Promise<T>
 export const tournamentKeys = { all: ["community", "tournaments"] as const }
+export type TournamentSort = "RECENT" | "STATUS" | "NAME"
+export type TournamentFilters = {
+  q?: string
+  status?: string
+  tier?: string
+  region?: string
+  year?: string
+  /** Regions whose name holds the search, so that typing a place still finds its tournaments. */
+  alsoRegions?: string[]
+  sort?: TournamentSort
+  teamId?: string
+  playerId?: string
+  page?: number
+  size?: number
+}
+/** What a picker was opened in: rows belonging to it come first. */
+export type PickerContext = { tournamentId?: string; teamId?: string; playerId?: string }
+type RankedKind = "teams" | "players" | "tournaments"
+const searchParams = (values: Record<string, string | number | string[] | undefined>) => {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(values))
+    if (Array.isArray(value) ? value.length : value !== undefined && value !== "") params.set(key, String(value))
+  return params
+}
 
 export function createTournamentApi(request: Request = communityRequest) {
   const send = <T>(path: string, method: string, body: unknown) =>
@@ -41,6 +66,8 @@ export function createTournamentApi(request: Request = communityRequest) {
       const rows: DocumentView<TournamentRecords[K]>[] = []
       for (let page = 0; page < 100; page++) {
         const params = new URLSearchParams({ page: String(page), size: "500" })
+        // This walks the whole list to look rows up by id: ranking every page would only make that slower.
+        if (kind === "teams" || kind === "players" || kind === "tournaments") params.set("sort", "UPDATED")
         if (typeof filters === "string") params.set("seriesId", filters)
         else if (filters) for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value)
         const result = await request<PageSlice<DocumentView<TournamentRecords[K]>>>(`/admin/${kind}?${params}`, {
@@ -52,6 +79,25 @@ export function createTournamentApi(request: Request = communityRequest) {
       throw new Error("Danh sách quá lớn. Hãy thu hẹp phạm vi trước khi tải lại.")
     },
     tournamentStats: (signal?: AbortSignal) => request<TournamentStats[]>("/admin/tournaments/stats", { signal }),
+    tournamentFacets: (signal?: AbortSignal) => request<TournamentFacets>("/admin/tournaments/facets", { signal }),
+    /** One page of tournaments in the server's order, with every filter applied there. */
+    searchTournaments: (filters: TournamentFilters, signal?: AbortSignal) =>
+      request<PageSlice<DocumentView<TournamentContent>>>(
+        `/admin/tournaments?${searchParams({ size: 30, ...filters })}`,
+        { signal },
+      ),
+    /** One page for a picker. Asks for no order of its own: the default puts what is recent and relevant first. */
+    pick: <K extends RankedKind>(
+      kind: K,
+      filters: PickerContext & { q?: string; page?: number },
+      signal?: AbortSignal,
+    ) =>
+      request<PageSlice<DocumentView<TournamentRecords[K]>>>(
+        `/admin/${kind}?${searchParams({ size: 30, ...filters })}`,
+        {
+          signal,
+        },
+      ),
     read: <K extends RecordKind>(kind: K, id: string, signal?: AbortSignal) =>
       request<DocumentView<TournamentRecords[K]>>(`/admin/${kind}/${id}`, { signal }),
     create: <K extends RecordKind>(kind: K, content: TournamentRecords[K]) =>

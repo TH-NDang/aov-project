@@ -19,9 +19,10 @@ const send = <T>(path: string, method: string, body?: unknown) =>
   communityRequest<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) })
 export const pageApi = {
   readPublic: (id: string) => communityRequest<CommunityProfile>(`/pages/${id}`),
-  list: (kind: ProfileKind | "", q: string, page = 0, personRole?: PersonRoleFilter) =>
+  /** Pages for a picker: an exact name, then those tied to `relatedPageId`, then whoever was active last. */
+  list: (kind: ProfileKind | "", q: string, page = 0, personRole?: PersonRoleFilter, relatedPageId?: string) =>
     communityRequest<PageSlice<CommunityProfile>>(
-      `/admin/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), ...(personRole ? { personRole } : {}), q, page: String(page), size: "24" })}`,
+      `/admin/pages?${new URLSearchParams({ ...(kind ? { kind } : {}), ...(personRole ? { personRole } : {}), ...(relatedPageId ? { relatedPageId } : {}), q, sort: "ACTIVE", page: String(page), size: "24" })}`,
     ),
   read: (id: string) => communityRequest<CommunityProfile>(`/admin/pages/${id}`),
   teams: (id: string) => communityRequest<TeamAffiliation[]>(`/admin/pages/${id}/teams`),

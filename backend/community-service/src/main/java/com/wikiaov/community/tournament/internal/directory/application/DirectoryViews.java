@@ -7,6 +7,7 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tourna
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public final class DirectoryViews {
@@ -57,7 +58,8 @@ public final class DirectoryViews {
             long tournaments,
             long titles,
             TeamRef latestTeam,
-            TournamentRef latestTournament
+            TournamentRef latestTournament,
+            LocalDate lastActiveOn
     ) {
     }
 
@@ -76,7 +78,17 @@ public final class DirectoryViews {
             BigDecimal prizeUsd,
             TournamentRef latestTournament,
             List<LineupMember> lineup,
-            TournamentRef lineupTournament
+            TournamentRef lineupTournament,
+            LocalDate lastActiveOn
+    ) {
+    }
+
+    /** What a list of tournaments can be narrowed by. */
+    public record TournamentFacets(
+            long total,
+            Map<String, Long> statuses,
+            List<String> regions,
+            List<Integer> years
     ) {
     }
 

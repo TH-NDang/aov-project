@@ -17,7 +17,7 @@ export const DIRECTORY_PAGE_SIZE = 24
 
 export type TeamSort = "RECENT" | "TOURNAMENTS" | "TITLES" | "PRIZE" | "NAME"
 export type PlayerSort = "RECENT" | "TOURNAMENTS" | "TITLES" | "NAME"
-export type ProfileSort = "RECENT" | "NAME" | "ACTIVITY"
+export type ProfileSort = "RECENT" | "NAME" | "ACTIVITY" | "ACTIVE"
 
 const query = (values: Record<string, string | number | undefined>) => {
   const params = new URLSearchParams()

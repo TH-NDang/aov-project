@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react"
-import type {
-  DocumentView,
-  PlayerContent,
-  RosterMembershipContent,
-  TeamContent,
-  TournamentContent,
-} from "@aov/community-contracts"
+import type { DocumentView, PlayerContent, RosterMembershipContent, TeamContent } from "@aov/community-contracts"
 import { useQuery } from "@tanstack/react-query"
 import { Edit3, ExternalLink, Info, Plus, Users } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -22,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@aov/ui/components/alert-dialog"
 import { RegistryLogo } from "./registry-logo"
+import { RecordPicker } from "./record-picker"
 import { RosterMembershipForm } from "./roster-membership-form"
 import { ROSTER_STATUSES } from "./roster-model"
 import { TeamRegionBadge } from "./team-region"
@@ -75,7 +70,6 @@ function RosterSource({ content }: { content: RosterMembershipContent }) {
 
 export function TeamRosterSheet({
   team,
-  tournaments,
   players,
   initialTournamentId,
   canWrite,
@@ -83,7 +77,6 @@ export function TeamRosterSheet({
   onClose,
 }: {
   team: DocumentView<TeamContent>
-  tournaments: DocumentView<TournamentContent>[]
   players: DocumentView<PlayerContent>[]
   initialTournamentId?: string
   canWrite: boolean
@@ -155,19 +148,14 @@ export function TeamRosterSheet({
           <div className="tournament-roster-scope">
             <label>
               Giải đấu
-              <select
-                aria-label="Giải đấu của đội hình"
+              <RecordPicker
+                kind="tournaments"
+                label="Giải đấu của đội hình"
                 value={tournamentId}
                 disabled={busy}
-                onChange={(event) => request({ type: "tournament", id: event.target.value })}
-              >
-                <option value="">Chọn giải đấu</option>
-                {tournaments.map((tournament) => (
-                  <option key={tournament.id} value={tournament.id}>
-                    {tournament.content.name}
-                  </option>
-                ))}
-              </select>
+                context={{ teamId: team.id }}
+                onChange={(id) => request({ type: "tournament", id })}
+              />
             </label>
             {canWrite && (
               <Button

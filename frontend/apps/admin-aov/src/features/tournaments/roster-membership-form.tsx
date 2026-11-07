@@ -3,7 +3,7 @@ import type { DocumentView, PlayerContent, RosterMembershipContent } from "@aov/
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Save, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { CatalogPicker } from "./catalog-picker"
+import { RecordPicker } from "./record-picker"
 import { initialRosterMembership, ROSTER_STATUSES, rosterFormIssue } from "./roster-model"
 import { LANES } from "./tournament-model"
 import { RESULT_VERIFICATIONS } from "./tournament-metadata"
@@ -70,14 +70,7 @@ export function RosterMembershipForm({
       setError(tournamentError(cause))
     }
   }
-  const options = players
-    .filter((player) => !existingPlayerIds.includes(player.id) || player.id === entry?.content.playerId)
-    .map((player) => ({
-      id: player.id,
-      code: player.content.code,
-      name: player.content.nickname,
-      iconUrl: player.content.photoUrl,
-    }))
+  const taken = existingPlayerIds.filter((id) => id !== entry?.content.playerId)
   return (
     <form className="tournament-roster-form" onSubmit={submit}>
       <div className="tournament-roster-form-heading">
@@ -95,18 +88,13 @@ export function RosterMembershipForm({
       <fieldset disabled={busy}>
         <label className="tournament-roster-player-field">
           Tuyển thủ
-          <CatalogPicker
-            value={{ id: content.playerId }}
-            options={options}
-            searchAliases={Object.fromEntries(
-              players.map((player) => [
-                player.id,
-                [player.content.fullName, ...(player.content.aliases ?? [])].filter(Boolean).join(" "),
-              ]),
-            )}
-            allowManual={false}
+          <RecordPicker
+            kind="players"
+            value={content.playerId}
             label="Tuyển thủ của đội hình"
-            onChange={(player) => setContent((current) => ({ ...current, playerId: player.id || "" }))}
+            context={{ teamId, tournamentId }}
+            exclude={taken}
+            onChange={(playerId) => setContent((current) => ({ ...current, playerId }))}
           />
         </label>
         <label>

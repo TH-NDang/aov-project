@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@aov/ui/compo
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { ClipboardCheck, Info, Save } from "lucide-react"
+import { RecordPicker } from "./record-picker"
 import { tournamentApi, tournamentError, tournamentKeys } from "./tournament-api"
 import { RegistryLogoField } from "./registry-logo"
 import { TEAM_REGIONS } from "./team-region"
@@ -41,15 +42,13 @@ type Field = {
   type?: string
   required?: boolean
   options?: { id: string; name: string }[]
+  /** Too many rows to list: picked from the server's ranking instead. */
+  picker?: "teams" | "tournaments"
   placeholder?: string
   group?: "extra" | "result"
 }
 
-function registryFields(
-  kind: RegistryKind,
-  teams: DocumentView<TeamContent>[],
-  tournaments: DocumentView<TournamentContent>[],
-): Field[] {
+function registryFields(kind: RegistryKind): Field[] {
   const common = [{ key: "code", label: "Mã", required: true, placeholder: "Ví dụ: aog-2026-s4" }]
   if (kind === "teams")
     return [
@@ -140,7 +139,7 @@ function registryFields(
       key: "tournamentId",
       label: "Giải đấu",
       required: true,
-      options: tournaments.map((entry) => ({ id: entry.id, name: entry.content.name })),
+      picker: "tournaments",
     },
     { key: "name", label: "Tên trận" },
     { key: "stage", label: "Vòng đấu", placeholder: "Ví dụ: Chung kết" },
@@ -148,13 +147,13 @@ function registryFields(
       key: "teamAId",
       label: "Đội A",
       required: true,
-      options: teams.map((entry) => ({ id: entry.id, name: entry.content.name })),
+      picker: "teams",
     },
     {
       key: "teamBId",
       label: "Đội B",
       required: true,
-      options: teams.map((entry) => ({ id: entry.id, name: entry.content.name })),
+      picker: "teams",
     },
     {
       key: "bestOf",
@@ -190,7 +189,6 @@ function RegistryForm({
   kind,
   entry,
   teams,
-  tournaments,
   tournamentId,
   onSaved,
   onBusyChange,
@@ -198,7 +196,6 @@ function RegistryForm({
   kind: RegistryKind
   entry?: DocumentView<Content>
   teams: DocumentView<TeamContent>[]
-  tournaments: DocumentView<TournamentContent>[]
   tournamentId?: string
   onSaved: () => void
   onBusyChange: (busy: boolean) => void
@@ -214,7 +211,7 @@ function RegistryForm({
       const fields = registryContent(
         kind,
         values,
-        registryFields(kind, teams, tournaments).map((field) => field.key),
+        registryFields(kind).map((field) => field.key),
       )
       // The form only knows its own fields; what other screens edit stays on the record.
       const kept = entry && kind === "tournaments" ? (entry.content as TournamentContent) : null
@@ -252,7 +249,7 @@ function RegistryForm({
       .then(onSaved)
       .catch((error) => setError(tournamentError(error)))
   }
-  const fields = registryFields(kind, teams, tournaments)
+  const fields = registryFields(kind)
   function renderField(field: Field) {
     return (
       <label key={field.key}>
@@ -260,7 +257,16 @@ function RegistryForm({
           {field.label}
           {field.required && <b aria-hidden="true"> *</b>}
         </span>
-        {field.options ? (
+        {field.picker ? (
+          <RecordPicker
+            kind={field.picker}
+            label={field.label}
+            value={values[field.key] ?? ""}
+            required={field.required}
+            context={field.picker === "teams" ? { tournamentId: values.tournamentId || undefined } : undefined}
+            onChange={(id) => setValues((current) => ({ ...current, [field.key]: id }))}
+          />
+        ) : field.options ? (
           <select
             aria-label={field.label}
             value={values[field.key] ?? ""}
@@ -393,7 +399,6 @@ export function RegistryEditor({
   open,
   onClose,
   teams,
-  tournaments,
   tournamentId,
 }: {
   kind: RegistryKind
@@ -401,7 +406,6 @@ export function RegistryEditor({
   open: boolean
   onClose: () => void
   teams: DocumentView<TeamContent>[]
-  tournaments: DocumentView<TournamentContent>[]
   tournamentId?: string
 }) {
   const [busy, setBusy] = useState(false)
@@ -421,7 +425,7 @@ export function RegistryEditor({
         </SheetDescription>
         <RegistryForm
           key={`${kind}-${entry?.id ?? "new"}-${entry?.version ?? 0}`}
-          {...{ kind, entry, teams, tournaments, tournamentId }}
+          {...{ kind, entry, teams, tournamentId }}
           onSaved={onClose}
           onBusyChange={setBusy}
         />

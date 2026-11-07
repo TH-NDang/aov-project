@@ -48,7 +48,6 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
   const [rosterTeamId, setRosterTeamId] = useState<string | null>(null)
   const teams = useRecords("teams")
   const players = useRecords("players")
-  const tournaments = useRecords("tournaments")
   const rosterTeam = teams.data?.find((entry) => entry.id === rosterTeamId)
   const navigate = (values: Record<string, string | null>) =>
     setParams((current) => {
@@ -140,7 +139,6 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
           open
           onClose={() => setEditor(null)}
           teams={teams.data ?? []}
-          tournaments={tournaments.data ?? []}
         />
       )}
       {importing && canWrite && <RegistryImportSheet key={actorKey} onClose={() => setImporting(false)} />}
@@ -148,7 +146,6 @@ function Registry({ kind, canWrite, actorKey }: { kind: RegistryKind; canWrite: 
         <TeamRosterSheet
           key={rosterTeam.id}
           team={rosterTeam}
-          tournaments={tournaments.data ?? []}
           players={players.data ?? []}
           {...{ canWrite, actorKey }}
           onClose={() => setRosterTeamId(null)}

@@ -62,6 +62,7 @@ export type TeamDirectoryEntry = {
   latestTournament?: DirectoryTournamentRef | null
   lineup: DirectoryLineupMember[]
   lineupTournament?: DirectoryTournamentRef | null
+  lastActiveOn?: string | null
 }
 /** `latestTeam` is the team of the most recent roster line, not a claim about today's contract. */
 export type PlayerDirectoryEntry = {
@@ -79,6 +80,7 @@ export type PlayerDirectoryEntry = {
   titles: number
   latestTeam?: DirectoryTeamRef | null
   latestTournament?: DirectoryTournamentRef | null
+  lastActiveOn?: string | null
 }
 /** Tournaments gathered under an organizer's or a circuit's page. */
 export type CompetitionPageEntry = {
@@ -271,6 +273,17 @@ export type DocumentView<T> = {
   missingFields: string[]
   publishedAt?: string | null
   deletedAt?: string | null
+  /** The day of the last activity of a team or player, in a list ordered by recency. */
+  lastActiveOn?: string | null
+  /** How the row relates to what its picker was opened in; absent when it does not. */
+  context?: RankContext
+}
+export type RankContext = "TEAM_IN_TOURNAMENT" | "TEAM" | "TOURNAMENT" | "PARTICIPANT"
+export type TournamentFacets = {
+  total: number
+  statuses: Record<string, number>
+  regions: string[]
+  years: number[]
 }
 export type RegistryRecordState = "ACTIVE" | "DELETED" | "ALL"
 export type DeletionUsage = { type: string; count: number; adminPath: string }

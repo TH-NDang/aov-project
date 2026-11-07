@@ -6,7 +6,8 @@ import type { CommunityProfile, CompetitionPageEntry } from "@aov/community-cont
 import { tournamentPath, type Access } from "@/features/esports/pages/esports-shell"
 import { Monogram, TierBadge } from "@/features/esports/components/primitives"
 import { initials } from "@/features/esports/model/game-view"
-import { ManagementToolbar } from "@/features/tournaments/management-list"
+import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
+import { activityLabel } from "@/features/tournaments/record-reason"
 import { directoryApi, directoryKeys, useDebounced, yearRange } from "./directory-api"
 import {
   CountryLabel,
@@ -17,13 +18,21 @@ import {
   useDirectoryFilters,
 } from "./directory-shell"
 
-/** Organizers and circuits are few, so the whole list is ranked here by how many tournaments each one gathers. */
+const COMPETITION_PAGE_SORTS = { ACTIVE: "Gần đây trước", TOURNAMENTS: "Nhiều giải nhất", NAME: "Tên A–Z" }
+type CompetitionPageSort = keyof typeof COMPETITION_PAGE_SORTS
+
+/**
+ * Organizers and circuits run from the one with the most recent tournament. They are few enough that asking for most
+ * tournaments is answered here, from the counts already on screen.
+ */
 function useCompetitionPages(kind: "ORGANIZATION" | "CIRCUIT", access: Access) {
-  const filters = useDirectoryFilters(["q"] as const)
+  const filters = useDirectoryFilters(["q", "sort"] as const)
+  const sort = (filters.values.sort || "ACTIVE") as CompetitionPageSort
   const search = useDebounced(filters.values.q)
   const pages = useQuery({
-    queryKey: [...directoryKeys, access.actorKey, kind, search],
-    queryFn: ({ signal }) => directoryApi.profiles({ kind, q: search, sort: "NAME", size: 100 }, signal),
+    queryKey: [...directoryKeys, access.actorKey, kind, search, sort === "NAME" ? "NAME" : "ACTIVE"],
+    queryFn: ({ signal }) =>
+      directoryApi.profiles({ kind, q: search, sort: sort === "NAME" ? "NAME" : "ACTIVE", size: 100 }, signal),
   })
   const stats = useQuery({
     queryKey: [...directoryKeys, access.actorKey, "competition-page-stats"],
@@ -32,12 +41,22 @@ function useCompetitionPages(kind: "ORGANIZATION" | "CIRCUIT", access: Access) {
   })
   const rows = useMemo(() => {
     const byPage = new Map((stats.data ?? []).map((entry) => [entry.pageId, entry]))
-    return (pages.data?.items ?? [])
-      .map((page) => ({ page, stats: byPage.get(page.id) }))
-      .sort((a, b) => (b.stats?.tournaments ?? 0) - (a.stats?.tournaments ?? 0))
-  }, [pages.data, stats.data])
-  return { filters, pages, rows, totalTournaments: rows.reduce((sum, row) => sum + (row.stats?.tournaments ?? 0), 0) }
+    const entries = (pages.data?.items ?? []).map((page) => ({ page, stats: byPage.get(page.id) }))
+    return sort === "TOURNAMENTS"
+      ? entries.sort((a, b) => (b.stats?.tournaments ?? 0) - (a.stats?.tournaments ?? 0))
+      : entries
+  }, [pages.data, stats.data, sort])
+  return {
+    filters,
+    sort,
+    pages,
+    rows,
+    totalTournaments: rows.reduce((sum, row) => sum + (row.stats?.tournaments ?? 0), 0),
+  }
 }
+
+const ActiveOn = ({ page }: { page: CommunityProfile }) =>
+  page.lastActiveOn ? <span className="type-meta block truncate">{activityLabel(page.lastActiveOn)}</span> : null
 
 const LatestTournament = ({ stats }: { stats?: CompetitionPageEntry }) =>
   stats?.latestTournament ? (
@@ -68,9 +87,34 @@ const Tiers = ({ stats }: { stats?: CompetitionPageEntry }) => (
 
 const websiteOf = (page: CommunityProfile) => page.content?.links[0]
 
+function CompetitionPageSortSelect({
+  label,
+  sort,
+  onChange,
+}: {
+  label: string
+  sort: CompetitionPageSort
+  onChange: (value: string) => void
+}) {
+  return (
+    <select
+      aria-label={label}
+      value={sort}
+      onChange={(event) => onChange(event.target.value)}
+      className={managementSelectClassName}
+    >
+      {Object.entries(COMPETITION_PAGE_SORTS).map(([value, name]) => (
+        <option key={value} value={value}>
+          {name}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 /** Organizers: who runs what, and how to reach them. */
 export function OrganizationDirectory({ access }: { access: Access }) {
-  const { filters, pages, rows, totalTournaments } = useCompetitionPages("ORGANIZATION", access)
+  const { filters, sort, pages, rows, totalTournaments } = useCompetitionPages("ORGANIZATION", access)
   return (
     <DirectoryShell
       section={directorySections[4]}
@@ -92,7 +136,11 @@ export function OrganizationDirectory({ access }: { access: Access }) {
             placeholder="Tên hoặc mã hồ sơ…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            {null}
+            <CompetitionPageSortSelect
+              label="Sắp xếp tổ chức"
+              sort={sort}
+              onChange={(value) => filters.setFilter("sort", value)}
+            />
           </ManagementToolbar>
         }
       >
@@ -143,7 +191,10 @@ export function OrganizationDirectory({ access }: { access: Access }) {
                   </span>
                   <Tiers stats={stats} />
                 </div>
-                <LatestTournament stats={stats} />
+                <div className="min-w-0 space-y-0.5">
+                  <LatestTournament stats={stats} />
+                  <ActiveOn page={page} />
+                </div>
               </li>
             )
           })}
@@ -155,7 +206,7 @@ export function OrganizationDirectory({ access }: { access: Access }) {
 
 /** Circuits: a brand that returns season after season, so the seasons and the latest one lead. */
 export function CircuitDirectory({ access }: { access: Access }) {
-  const { filters, pages, rows, totalTournaments } = useCompetitionPages("CIRCUIT", access)
+  const { filters, sort, pages, rows, totalTournaments } = useCompetitionPages("CIRCUIT", access)
   return (
     <DirectoryShell
       section={directorySections[5]}
@@ -177,7 +228,11 @@ export function CircuitDirectory({ access }: { access: Access }) {
             placeholder="Tên hoặc mã hồ sơ…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            {null}
+            <CompetitionPageSortSelect
+              label="Sắp xếp hệ thống giải"
+              sort={sort}
+              onChange={(value) => filters.setFilter("sort", value)}
+            />
           </ManagementToolbar>
         }
       >
@@ -214,6 +269,7 @@ export function CircuitDirectory({ access }: { access: Access }) {
                 <div className="mt-auto min-w-0 space-y-1 border-t pt-2">
                   <p className="type-meta">Mùa gần nhất</p>
                   <LatestTournament stats={stats} />
+                  <ActiveOn page={page} />
                 </div>
               </li>
             )
