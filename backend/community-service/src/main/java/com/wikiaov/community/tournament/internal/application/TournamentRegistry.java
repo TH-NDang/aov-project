@@ -11,7 +11,9 @@ import com.wikiaov.community.tournament.internal.domain.TournamentMetadataRules;
 import com.wikiaov.community.tournament.internal.media.application.CompetitionMedia;
 import com.wikiaov.community.tournament.internal.persistence.*;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +32,10 @@ public class TournamentRegistry {
 
     @Transactional(readOnly = true)
     public PageSlice<View<Tournament>> list(String q, RecordState state, Pageable page) {
-        return PageSlice.from(repository.search(q, state.name(), page)
+        var ordered = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+                Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.asc("id")));
+
+        return PageSlice.from(repository.search(q, state.name(), ordered)
                 .map(row -> TournamentViews.view(row, row.getContent())));
     }
 

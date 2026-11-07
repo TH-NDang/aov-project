@@ -9,6 +9,7 @@ import com.wikiaov.community.tournament.internal.domain.SourceUrls;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Series;
 import com.wikiaov.community.tournament.internal.persistence.*;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +32,10 @@ public class SeriesRegistry {
 
     @Transactional(readOnly = true)
     public PageSlice<View<Series>> list(String q, UUID tournamentId, RecordState state, Pageable page) {
-        return PageSlice.from(repository.search(q, tournamentId, state.name(), page)
-                .map(row -> TournamentViews.view(row, row.getContent())));
+        var unsorted = PageRequest.of(page.getPageNumber(), page.getPageSize());
+
+        return PageSlice.from(repository.search(q, tournamentId == null ? "" : tournamentId.toString(), state.name(),
+                unsorted).map(row -> TournamentViews.view(row, row.getContent())));
     }
 
     @Transactional(readOnly = true)

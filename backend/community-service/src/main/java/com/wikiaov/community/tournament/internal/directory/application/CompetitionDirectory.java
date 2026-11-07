@@ -1,7 +1,9 @@
 package com.wikiaov.community.tournament.internal.directory.application;
 
 import com.wikiaov.community.tournament.internal.application.TournamentErrors;
+import com.wikiaov.community.tournament.internal.application.TournamentViews;
 import com.wikiaov.community.tournament.internal.application.TournamentViews.PageSlice;
+import com.wikiaov.community.tournament.internal.application.TournamentViews.Ranked;
 import com.wikiaov.community.tournament.internal.directory.application.DirectoryViews.*;
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository;
 import com.wikiaov.community.tournament.internal.directory.persistence.DirectoryRepository.*;
@@ -10,6 +12,9 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.Career
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Lane;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.Player;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.RosterStatus;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Team;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.Tournament;
+import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentStatus;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.TournamentTier;
 import com.wikiaov.community.tournament.internal.persistence.*;
 import java.util.*;
@@ -27,6 +32,8 @@ import org.springframework.stereotype.Service;
 public class CompetitionDirectory {
     private static final Set<String> TEAM_SORTS = Set.of("RECENT", "TOURNAMENTS", "TITLES", "PRIZE", "NAME");
     private static final Set<String> PLAYER_SORTS = Set.of("RECENT", "TOURNAMENTS", "TITLES", "NAME");
+    private static final Set<String> RECORD_SORTS = Set.of("RECENT", "NAME");
+    private static final Set<String> TOURNAMENT_SORTS = Set.of("RECENT", "STATUS", "NAME", "UPDATED");
     private static final int LINEUP_LIMIT = 7;
 
     private final DirectoryRepository directory;
@@ -48,7 +55,7 @@ public class CompetitionDirectory {
         requireEnum("lane", lane, Lane.class);
         requireEnum("status", status, CareerStatus.class);
 
-        var rows = directory.players(ReferenceLabels.literalSearch(q), country, lane, status, sort, unsorted(page));
+        var rows = directory.players(ReferenceLabels.literalSearch(q), q, country, lane, status, sort, unsorted(page));
         var people = byId(players.findAllById(rows.map(PlayerRow::getId).toList()), PlayerRecord::getId);
         var latestTeams = byId(teams.findAllById(rows.map(PlayerRow::getTeamId).filter(Objects::nonNull).toSet()),
                 TeamRecord::getId);
@@ -61,14 +68,15 @@ public class CompetitionDirectory {
             return new PlayerEntry(row.getId(), content.code(), content.nickname(), content.fullName(),
                     content.country(), content.photoUrl(), content.birthDate(), parseLane(row.getLane()),
                     content.careerStatus(), content.signatureHeroes(), row.getTournaments(), row.getTitles(),
-                    teamRef(latestTeams.get(row.getTeamId())), tournamentRef(latest.get(row.getTournamentId())));
+                    teamRef(latestTeams.get(row.getTeamId())), tournamentRef(latest.get(row.getTournamentId())),
+                    row.getLastActiveOn());
         }));
     }
 
     public PageSlice<TeamEntry> teams(String q, String country, String sort, Pageable page) {
         requireOneOf("sort", sort, TEAM_SORTS);
 
-        var rows = directory.teams(ReferenceLabels.literalSearch(q), country, sort, unsorted(page));
+        var rows = directory.teams(ReferenceLabels.literalSearch(q), q, country, sort, unsorted(page));
         var records = byId(teams.findAllById(rows.map(TeamRow::getId).toList()), TeamRecord::getId);
         var latest = byId(tournaments.findAllById(rows.map(TeamRow::getTournamentId).filter(Objects::nonNull).toSet()),
                 TournamentRecord::getId);
@@ -80,8 +88,66 @@ public class CompetitionDirectory {
             return new TeamEntry(row.getId(), content.code(), content.name(), content.shortName(), content.country(),
                     content.logoUrl(), row.getTournaments(), row.getMatches(), row.getWins(), row.getLosses(),
                     row.getTitles(), row.getPrizeUsd(), tournamentRef(latest.get(row.getTournamentId())),
-                    lineup == null ? List.of() : lineup.members(), lineup == null ? null : lineup.tournament());
+                    lineup == null ? List.of() : lineup.members(), lineup == null ? null : lineup.tournament(),
+                    row.getLastActiveOn());
         }));
+    }
+
+    public PageSlice<Ranked<Team>> rankedTeams(String q, String sort, UUID tournamentId, Pageable page) {
+        requireOneOf("sort", sort, RECORD_SORTS);
+
+        var rows = directory.rankedTeams(ReferenceLabels.literalSearch(q), q, sort, text(tournamentId), unsorted(page));
+        var records = byId(teams.findAllById(rows.map(RankedRow::getId).toList()), TeamRecord::getId);
+
+        return PageSlice.from(rows.map(row -> {
+            var record = records.get(row.getId());
+            return new Ranked<>(TournamentViews.view(record, record.getContent()), row.getLastActiveOn(),
+                    row.getContext());
+        }));
+    }
+
+    public PageSlice<Ranked<Player>> rankedPlayers(String q, String sort, UUID teamId, UUID tournamentId,
+            Pageable page) {
+        requireOneOf("sort", sort, RECORD_SORTS);
+
+        var rows = directory.rankedPlayers(ReferenceLabels.literalSearch(q), q, sort, text(teamId), text(tournamentId),
+                unsorted(page));
+        var records = byId(players.findAllById(rows.map(RankedRow::getId).toList()), PlayerRecord::getId);
+
+        return PageSlice.from(rows.map(row -> {
+            var record = records.get(row.getId());
+            return new Ranked<>(TournamentViews.view(record, record.getContent()), row.getLastActiveOn(),
+                    row.getContext());
+        }));
+    }
+
+    public PageSlice<Ranked<Tournament>> rankedTournaments(String q, String alsoRegions, String status, String tier,
+            String region, Integer year, String sort, UUID teamId, UUID playerId, Pageable page) {
+        requireOneOf("sort", sort, TOURNAMENT_SORTS);
+        requireEnum("status", status, TournamentStatus.class);
+        requireEnum("tier", tier, TournamentTier.class);
+
+        var rows = directory.rankedTournaments(q, alsoRegions, status, tier, region,
+                year == null ? "" : year.toString(), sort, text(teamId), text(playerId), unsorted(page));
+        var records = byId(tournaments.findAllById(rows.map(RankedRow::getId).toList()), TournamentRecord::getId);
+
+        return PageSlice.from(rows.map(row -> {
+            var record = records.get(row.getId());
+            return new Ranked<>(TournamentViews.view(record, record.getContent()), null, row.getContext());
+        }));
+    }
+
+    public TournamentFacets tournamentFacets() {
+        var rows = directory.tournamentFacets();
+        var statuses = rows.stream().filter(row -> row.getFacet().equals("STATUS"))
+                .collect(Collectors.toMap(FacetRow::getValue, FacetRow::getRows));
+        var regions = rows.stream().filter(row -> row.getFacet().equals("REGION")).map(FacetRow::getValue).sorted()
+                .toList();
+        var years = rows.stream().filter(row -> row.getFacet().equals("YEAR"))
+                .map(row -> Integer.valueOf(row.getValue())).sorted(Comparator.reverseOrder()).toList();
+
+        return new TournamentFacets(statuses.values().stream().mapToLong(Long::longValue).sum(), statuses, regions,
+                years);
     }
 
     public List<CompetitionPageEntry> competitionPages() {
@@ -140,6 +206,10 @@ public class CompetitionDirectory {
             .comparing((LineupMember member) -> member.status() == RosterStatus.SUBSTITUTE)
             .thenComparing(LineupMember::lane, Comparator.nullsLast(Comparator.naturalOrder()))
             .thenComparing(LineupMember::name, String.CASE_INSENSITIVE_ORDER);
+
+    private static String text(UUID id) {
+        return id == null ? "" : id.toString();
+    }
 
     private static Pageable unsorted(Pageable page) {
         return PageRequest.of(page.getPageNumber(), page.getPageSize());

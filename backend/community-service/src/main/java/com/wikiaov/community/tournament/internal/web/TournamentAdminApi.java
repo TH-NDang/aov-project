@@ -21,8 +21,11 @@ public interface TournamentAdminApi {
             @RequestParam(defaultValue = "false") boolean includeUnscoped, HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/teams")
-    PageSlice<View<Team>> teams(@RequestParam(defaultValue = "") String q,
-            @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
+    PageSlice<Ranked<Team>> teams(@RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "ACTIVE") RecordState state,
+            @RequestParam(defaultValue = "RECENT") String sort,
+            @RequestParam(required = false) UUID tournamentId,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size, HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/teams/directory")
@@ -43,8 +46,12 @@ public interface TournamentAdminApi {
     View<Team> updateTeam(@PathVariable UUID id, @RequestBody Update<Team> request);
 
     @GetMapping(ApiPaths.ADMIN + "/players")
-    PageSlice<View<Player>> players(@RequestParam(defaultValue = "") String q,
-            @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
+    PageSlice<Ranked<Player>> players(@RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "ACTIVE") RecordState state,
+            @RequestParam(defaultValue = "RECENT") String sort,
+            @RequestParam(required = false) UUID teamId,
+            @RequestParam(required = false) UUID tournamentId,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request);
 
@@ -68,10 +75,22 @@ public interface TournamentAdminApi {
     View<Player> updatePlayer(@PathVariable UUID id, @RequestBody Update<Player> request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments")
-    PageSlice<View<Tournament>> tournaments(@RequestParam(defaultValue = "") String q,
-            @RequestParam(defaultValue = "ACTIVE") RecordState state, @RequestParam(defaultValue = "0") int page,
+    PageSlice<Ranked<Tournament>> tournaments(@RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "") String alsoRegions,
+            @RequestParam(defaultValue = "ACTIVE") RecordState state,
+            @RequestParam(defaultValue = "") String status,
+            @RequestParam(defaultValue = "") String tier,
+            @RequestParam(defaultValue = "") String region,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(defaultValue = "RECENT") String sort,
+            @RequestParam(required = false) UUID teamId,
+            @RequestParam(required = false) UUID playerId,
+            @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size,
             HttpServletRequest request);
+
+    @GetMapping(ApiPaths.ADMIN + "/tournaments/facets")
+    TournamentFacets tournamentFacets(HttpServletRequest request);
 
     @GetMapping(ApiPaths.ADMIN + "/tournaments/{id}")
     View<Tournament> getTournament(@PathVariable UUID id);

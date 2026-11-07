@@ -12,7 +12,9 @@ import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import com.wikiaov.community.tournament.internal.persistence.*;
 import java.time.Instant;
 import java.util.*;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,8 +42,10 @@ public class GameRecords {
 
     @Transactional(readOnly = true)
     public PageSlice<View<Game>> list(UUID seriesId, UUID tournamentId, RecordState state, Pageable page) {
-        return PageSlice
-                .from(games.search(seriesId, tournamentId, state.name(), page).map(this::view));
+        var ordered = PageRequest.of(page.getPageNumber(), page.getPageSize(),
+                Sort.by(Sort.Order.desc("updatedAt"), Sort.Order.asc("id")));
+
+        return PageSlice.from(games.search(seriesId, tournamentId, state.name(), ordered).map(this::view));
     }
 
     @Transactional(readOnly = true)

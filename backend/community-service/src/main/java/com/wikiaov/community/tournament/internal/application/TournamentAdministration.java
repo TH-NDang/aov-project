@@ -66,8 +66,11 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public PageSlice<View<Team>> teams(String q, RecordState state, Pageable page) {
-        return teams.list(q, state, page);
+    public PageSlice<Ranked<Team>> teams(String q, RecordState state, String sort, UUID tournamentId, Pageable page) {
+        if (state != RecordState.ACTIVE || sort.equals("UPDATED"))
+            return Ranked.unranked(teams.list(q, state, page));
+
+        return directory.rankedTeams(q, sort, tournamentId, page);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -90,8 +93,12 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public PageSlice<View<Player>> players(String q, RecordState state, Pageable page) {
-        return players.list(q, state, page);
+    public PageSlice<Ranked<Player>> players(String q, RecordState state, String sort, UUID teamId, UUID tournamentId,
+            Pageable page) {
+        if (state != RecordState.ACTIVE || sort.equals("UPDATED"))
+            return Ranked.unranked(players.list(q, state, page));
+
+        return directory.rankedPlayers(q, sort, teamId, tournamentId, page);
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")
@@ -114,8 +121,18 @@ public class TournamentAdministration {
 
     @PreAuthorize("hasAuthority('tournament:read')")
     @Transactional(readOnly = true)
-    public PageSlice<View<Tournament>> tournaments(String q, RecordState state, Pageable page) {
-        return tournaments.list(q, state, page);
+    public PageSlice<Ranked<Tournament>> tournaments(String q, String alsoRegions, RecordState state, String status,
+            String tier, String region, Integer year, String sort, UUID teamId, UUID playerId, Pageable page) {
+        if (state != RecordState.ACTIVE)
+            return Ranked.unranked(tournaments.list(q, state, page));
+
+        return directory.rankedTournaments(q, alsoRegions, status, tier, region, year, sort, teamId, playerId, page);
+    }
+
+    @PreAuthorize("hasAuthority('tournament:read')")
+    @Transactional(readOnly = true)
+    public TournamentFacets tournamentFacets() {
+        return directory.tournamentFacets();
     }
 
     @PreAuthorize("hasAuthority('tournament:read')")

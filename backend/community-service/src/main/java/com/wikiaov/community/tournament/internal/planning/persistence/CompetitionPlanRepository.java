@@ -5,11 +5,18 @@ import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 
 public interface CompetitionPlanRepository extends JpaRepository<CompetitionPlanRecord, UUID> {
+    /** The seasons of an organizer or circuit, in the order of the tournament list. */
     @Query(value = """
-        SELECT * FROM tournament.competition_plan
-        WHERE (:organizer = '' OR content->>'organizerPageId' = :organizer)
-          AND (:circuit = '' OR content->>'circuitPageId' = :circuit)
-        ORDER BY id
+        SELECT p.* FROM tournament.competition_plan p
+          JOIN tournament.tournament t ON t.id = p.id
+          JOIN tournament.tournament_window w ON w.id = p.id
+        WHERE (:organizer = '' OR p.organizer_page_id = CAST(NULLIF(:organizer, '') AS uuid))
+          AND (:circuit = '' OR p.circuit_page_id = CAST(NULLIF(:circuit, '') AS uuid))
+        ORDER BY w.recency_rank, w.recency_distance, lower(t.name), p.id
+        """, countQuery = """
+        SELECT count(*) FROM tournament.competition_plan p
+        WHERE (:organizer = '' OR p.organizer_page_id = CAST(NULLIF(:organizer, '') AS uuid))
+          AND (:circuit = '' OR p.circuit_page_id = CAST(NULLIF(:circuit, '') AS uuid))
         """, nativeQuery = true)
     Page<CompetitionPlanRecord> summaries(String organizer, String circuit, Pageable pageable);
 

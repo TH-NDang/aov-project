@@ -1,7 +1,10 @@
 package com.wikiaov.community.tournament.internal.application;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.wikiaov.community.tournament.internal.persistence.VersionedRecord;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import org.springframework.data.domain.Page;
 
@@ -38,6 +41,22 @@ public final class TournamentViews {
         public View(UUID id, long version, Instant createdAt, Instant updatedAt, T content,
                 List<String> missingFields, Instant publishedAt) {
             this(id, version, createdAt, updatedAt, content, missingFields, publishedAt, null);
+        }
+    }
+
+    /**
+     * A row of a ranked list with what explains its place: the day of its last activity and how it relates to the
+     * context the picker was opened in. Both are left out when they do not apply.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record Ranked<T>(
+            @JsonUnwrapped View<T> view,
+            LocalDate lastActiveOn,
+            String context
+    ) {
+        public static <T> PageSlice<Ranked<T>> unranked(PageSlice<View<T>> page) {
+            return new PageSlice<>(page.items().stream().map(row -> new Ranked<>(row, null, null)).toList(),
+                    page.totalElements(), page.page(), page.size());
         }
     }
 
