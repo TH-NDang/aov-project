@@ -272,6 +272,20 @@ class CompetitionRecencyIntegrationTest {
     }
 
     @Test
+    void aPlayerIsFoundByTheirRealName() throws Exception {
+        var marker = marker("real-name");
+        var realName = "Nguyễn Văn " + marker;
+        create("players", new Player(marker + "-player", "Stage" + marker, realName, null));
+
+        for (var search : List.of(realName, "nguyen van " + marker)) {
+            assertThat(contentCodes(read(get(ADMIN + "/players").param("q", search))))
+                    .containsExactly(marker + "-player");
+            assertThat(flatCodes(read(get(ADMIN + "/players/directory").param("q", search))))
+                    .containsExactly(marker + "-player");
+        }
+    }
+
+    @Test
     void aStrongNameMatchBeatsARecentWeakOne() throws Exception {
         var marker = marker("names");
         var old = tournament(marker, "old", -2000, -1990);
