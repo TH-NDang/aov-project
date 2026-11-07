@@ -21,9 +21,11 @@
 - **Keycloak ở `/idp/`, cùng origin**, không rewrite (`KC_HTTP_RELATIVE_PATH=/idp`). Proxy chỉ mở `/idp/realms/*` và
   `/idp/resources/*`, chặn realm `master`. Console quản trị chỉ nghe trên `127.0.0.1:<KEYCLOAK_ADMIN_PORT>`.
 - **Tách địa chỉ công khai và địa chỉ nội bộ bằng cấu hình.** `wiki.auth.identity-backchannel-uri`
-  (`JWT_BACKCHANNEL_ISSUER_URI`) cho token/revoke và JWKS qua mạng nội bộ; issuer trong token và URL đưa trình duyệt đi vẫn
-  là địa chỉ công khai. `wiki.storage.public-endpoint` (`STORAGE_PUBLIC_ENDPOINT`) chỉ dùng cho presigned URL. Bỏ trống thì
-  mọi thứ như cũ, local không đổi.
+  (`JWT_BACKCHANNEL_ISSUER_URI`) cho token/revoke qua mạng nội bộ, JWKS đặt qua `jwk-set-uri` chuẩn của Spring; issuer trong
+  token và URL đưa trình duyệt đi vẫn là địa chỉ công khai. `wiki.storage.public-endpoint` (`STORAGE_PUBLIC_ENDPOINT`) chỉ dùng
+  cho presigned URL. Bỏ trống thì mọi thứ như cũ, local không đổi.
+- **Kiểm tra media với `community-service` được dùng HTTP tới tên service nội bộ** (không có dấu chấm), ngoài HTTPS và loopback,
+  vì request này mang token của người gọi. Host công khai qua HTTP vẫn bị từ chối.
 - **Presigned upload đi qua proxy cùng origin**, tại đường dẫn path-style `/{bucket}/*`, chỉ khi có `X-Amz-Signature`. Không
   rewrite và giữ nguyên `Host` nên chữ ký S3 vẫn đúng; không cần CORS và không cần thêm cổng. Bucket vẫn đóng với request
   không có chữ ký, nên quy tắc "chỉ mở `assets/`, `incoming/` không public" của 01 mục 3.6 vẫn giữ: đường này không đọc được
