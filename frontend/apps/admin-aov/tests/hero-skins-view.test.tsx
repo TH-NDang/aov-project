@@ -93,6 +93,19 @@ async function view(
       return Response.json(saved)
     }
     if (path.startsWith("/admin/heroes/hero-1/shop")) return Response.json(shop)
+    const batch = /^\/admin\/media\/assets\/batch\?ids=([^&]+)$/.exec(path)
+    if (batch)
+      return Response.json({
+        items: batch[1].split(",").map((id) => ({
+          id,
+          semanticType: "HERO_SKIN_ART",
+          state: "ACTIVE",
+          version: 1,
+          currentVersionId: `version-${id}`,
+          versions: [{ id: `version-${id}`, url: `/media/${id}.webp` }],
+          provenance: [],
+        })),
+      })
     const asset = /^\/admin\/media\/assets\/([^/?]+)$/.exec(path)
     if (asset)
       return Response.json({
@@ -243,6 +256,31 @@ test("skins read like the public page: one stage, a rail, arrows, and no skin he
       "A skin head is neither shown nor counted in the credit line",
     )
   } finally {
+    await ui.close()
+  }
+})
+
+test("opening the tab reads all its images in one request and each image finds its own", async () => {
+  const originals = skins.map((one) => ({ ...one }))
+  const id = (skinIndex: number, role: number) =>
+    `00000000-0000-4000-8000-${String(skinIndex * 10 + role).padStart(12, "0")}`
+  skins.forEach((one, skinIndex) => {
+    one.artAssetId = id(skinIndex, 1)
+    one.portraitAssetId = id(skinIndex, 2)
+  })
+  const ui = await view()
+  try {
+    await ui.waitFor(() => !!ui.document.querySelector(`img[src="/media/${id(0, 1)}.webp"]`))
+    await ui.waitFor(() => !!ui.document.querySelector(`img[src="/media/${id(2, 2)}.webp"]`))
+
+    const reads = ui.requests.filter((path) => path.startsWith("/admin/media/assets"))
+    assert.equal(reads.length, 1, reads.join("\n"))
+    assert.deepEqual(
+      new Set(new URLSearchParams(reads[0].split("?")[1]).get("ids")!.split(",")),
+      new Set(skins.flatMap((one) => [one.artAssetId, one.portraitAssetId])),
+    )
+  } finally {
+    skins.forEach((one, skinIndex) => Object.assign(one, originals[skinIndex]))
     await ui.close()
   }
 })

@@ -7,7 +7,6 @@ import { Kbd } from "@aov/ui/components/kbd"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 import { cn } from "@aov/ui/lib/utils"
-import { backendRequest } from "@/app/auth/session"
 import type { LightboxImage } from "@/components/image-lightbox"
 import { AdminEntityText } from "../terminology/catalog"
 import { ImageCreditPanel } from "../media/image-credit-panel"
@@ -15,6 +14,7 @@ import { MediaCode } from "../media/media-code"
 import { visibleSources } from "../media/media-source-gaps"
 import { useSkinBadge } from "../media/skin-badge-label"
 import { HeroAsset } from "./hero-asset"
+import { heroContentAssetQuery } from "./hero-content-asset"
 import { patchHeroLocation } from "./hero-location"
 import {
   readingVoucherPrice,
@@ -32,16 +32,10 @@ import { HeroTranslationNotice } from "./hero-translation-notice"
 import { ImageCreditSummary } from "./image-credit-summary"
 import { captureGroupKeys, captureImageUrl, captureLinkLabels, type CaptureImage } from "./patch-capture-model"
 import { CaptureCardThumbnail, PatchCaptureLink } from "./patch-capture-panel"
-import { createPublishingApi, type SkinAcquisition } from "./publishing-api"
+import type { SkinAcquisition } from "./publishing-api"
 import type { Skin } from "./types"
 import { usePatchCaptureContext } from "./use-patch-captures"
 
-const api = createPublishingApi(backendRequest)
-const assetQuery = (id: string) => ({
-  queryKey: ["hero-content-asset", id],
-  queryFn: () => api.asset(id),
-  staleTime: 60000,
-})
 /** Arrow keys belong to the form while the editor is in it. */
 const insideForm = (target: EventTarget) => target instanceof HTMLElement && !!target.closest("form")
 
@@ -128,7 +122,7 @@ export function HeroSkinsView({
     for (const id of neighbourImage) {
       if (!id) continue
       void client
-        .fetchQuery(assetQuery(id))
+        .fetchQuery(heroContentAssetQuery(id))
         .then((asset) => {
           if (asset.currentUrl) new Image().src = asset.currentUrl
         })
@@ -333,7 +327,8 @@ function SkinThumbMark({ unsaved, review, unknown }: { unsaved: boolean; review:
 
 function SkinTier({ code, locale, className }: { code: string | null; locale: string; className?: string }) {
   const { result, badge } = useSkinBadge(code, locale)
-  const icon = useQuery({ ...assetQuery(badge?.iconAssetId ?? ""), enabled: !!badge?.iconAssetId }).data?.currentUrl
+  const icon = useQuery({ ...heroContentAssetQuery(badge?.iconAssetId ?? ""), enabled: !!badge?.iconAssetId }).data
+    ?.currentUrl
   const name = badge?.displayName && badge.displayName !== badge.code ? badge.displayName : null
   const tier = name ?? (code && !result.isPending ? code : null)
   if (!tier) return null
@@ -366,7 +361,7 @@ function SkinStage({
     ["portrait", skin.portraitAssetId, "Chân dung"],
   ] as const
   const assets = useQueries({
-    queries: roles.map(([, id]) => ({ ...assetQuery(id ?? ""), enabled: !!id })),
+    queries: roles.map(([, id]) => ({ ...heroContentAssetQuery(id ?? ""), enabled: !!id })),
   })
   // The arrows of the large view move between the skin's own images.
   const images: LightboxImage[] = []

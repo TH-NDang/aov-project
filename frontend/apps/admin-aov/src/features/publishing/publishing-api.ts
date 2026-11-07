@@ -124,6 +124,14 @@ export interface HeroShop {
   skinHistory: SkinAcquisition[]
 }
 
+type AssetResponse = Omit<AssetDetail, "currentUrl"> & { versions: { id: string; url: string }[] }
+
+const assetDetail = (detail: AssetResponse): AssetDetail => ({
+  ...detail,
+  provenance: detail.provenance ?? [],
+  currentUrl: detail.versions.find((version) => version.id === detail.currentVersionId)?.url ?? null,
+})
+
 export function createPublishingApi(request: Request) {
   const send = <T>(path: string, method: string, value?: unknown) =>
     request<T>(path, { method, body: value === undefined ? undefined : JSON.stringify(value) })
@@ -193,15 +201,11 @@ export function createPublishingApi(request: Request) {
       }),
     assets: (semanticType: string, page = 0) =>
       request<PageSlice<Asset>>(`/admin/media/assets?semanticType=${semanticType}&page=${page}&size=20`),
-    asset: async (id: string): Promise<AssetDetail> => {
-      const detail = await request<Omit<AssetDetail, "currentUrl"> & { versions: { id: string; url: string }[] }>(
-        `/admin/media/assets/${id}`,
-      )
-      return {
-        ...detail,
-        provenance: detail.provenance ?? [],
-        currentUrl: detail.versions.find((version) => version.id === detail.currentVersionId)?.url ?? null,
-      }
+    asset: async (id: string) => assetDetail(await request<AssetResponse>(`/admin/media/assets/${id}`)),
+    /** Leaves out ids the backend does not know. Screens of images read through `createAssetLoader`. */
+    assetsById: async (ids: readonly string[]) => {
+      const { items } = await request<{ items: AssetResponse[] }>(`/admin/media/assets/batch?ids=${ids.join(",")}`)
+      return items.map(assetDetail)
     },
     send,
   }

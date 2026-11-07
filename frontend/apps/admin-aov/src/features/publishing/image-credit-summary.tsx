@@ -2,11 +2,9 @@ import { useQueries } from "@tanstack/react-query"
 import { CircleAlert, Copyright } from "lucide-react"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { cn } from "@aov/ui/lib/utils"
-import { backendRequest } from "@/app/auth/session"
-import { createPublishingApi } from "./publishing-api"
+import { heroContentAssetQuery } from "./hero-content-asset"
 import { primarySource, sourceGap, visibleSources } from "../media/media-source-gaps"
 
-const api = createPublishingApi(backendRequest)
 const shownOwners = 3
 
 /**
@@ -24,13 +22,7 @@ export function ImageCreditSummary({
   className?: string
 }) {
   const ids = [...new Set(assetIds.filter((id): id is string => !!id))]
-  const assets = useQueries({
-    queries: ids.map((id) => ({
-      queryKey: ["hero-content-asset", id],
-      queryFn: () => api.asset(id),
-      staleTime: 60000,
-    })),
-  })
+  const assets = useQueries({ queries: ids.map((id) => heroContentAssetQuery(id)) })
   const loaded = assets.flatMap((asset) => (asset.data?.currentUrl ? [asset.data] : []))
   if (!loaded.length) return null
 
