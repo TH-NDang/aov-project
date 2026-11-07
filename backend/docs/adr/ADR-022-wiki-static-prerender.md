@@ -91,10 +91,16 @@ Không chặn `/api/`, vì Google cần gọi API để render trang.
 - Làm mới: chạy `pnpm prerender` như một **job một lần** theo lịch hoặc sau khi xuất bản, ghi vào thư mục mà máy chủ tĩnh
   đang phục vụ. Đây không phải service thường trực. Tần suất do người vận hành quyết định; nội dung mới trễ tối đa bằng
   một chu kỳ, trong thời gian đó người dùng vẫn đọc được qua app.
+- Trong Docker Compose, việc này do service một lần `wiki-prerender` làm (`scripts/prerender-job.mts`), chạy mỗi lần `up` sau khi
+  `wiki-service` healthy và chạy tay bằng `docker compose run --rm wiki-prerender`. Xem `infra/README.md`.
 - Dùng chung thư mục qua named volume: Docker chỉ chép nội dung image vào volume khi tạo volume lần đầu, nên sau khi build
   lại, proxy vẫn phục vụ bundle cũ. Mỗi lần chạy, job phải chạy `prerender` trên `dist` của chính image trước, thành công
   mới thay **toàn bộ** nội dung volume bằng `dist` đó. Làm theo thứ tự này thì API lỗi không chạm vào volume, site tiếp tục
   chạy bản cũ cho tới khi job thành công. Chỉ chép đè thì trang vừa gỡ xuất bản vẫn còn trong volume.
+- File mới được chép trước, file cũ xóa sau, và mỗi file thay bằng thao tác đổi tên, nên trong lúc thay, trang nào người đọc nhận được
+  cũng còn đủ bundle nó trỏ tới.
+- Hệ thống mới chưa xuất bản tướng nào, hoặc chưa có patch nên API trả `PATCH_CONTEXT_UNAVAILABLE`: job vẫn đưa bundle hiện tại ra và
+  thoát thành công để `up --wait` qua. Site đã có trang tướng mà API trả về như vậy thì bị coi là lỗi, trang cũ được giữ.
 
 ## Hệ quả và giới hạn
 
@@ -112,12 +118,16 @@ vượt chu kỳ làm mới. Bộ dựng meta trong `src/lib/seo` dùng lại đ
 ## Kiểm chứng
 
 `tests/seo-meta.test.ts` và `tests/seo-prerender.test.ts` kiểm tra meta, escape, sitemap, robots và chạy script thật với
-API giả (kể cả API lỗi, API rỗng, gỡ xuất bản). Trên dữ liệu dev: tải trang không chạy JS trả đúng tiêu đề, mô tả, ảnh;
+API giả (kể cả API lỗi, API rỗng, chưa có patch, gỡ xuất bản), cùng job thay nội dung volume. Trên dữ liệu dev: tải trang không chạy JS trả đúng tiêu đề, mô tả, ảnh;
 sitemap có đúng 33 tướng đã xuất bản và không có tướng nào trong 97 tướng chỉ có nháp, đối chiếu trực tiếp với database.
 
 Đã thử quy tắc `try_files` ở trên bằng Caddy thật với thư mục `dist` thật, kể cả khối Wiki của nhánh triển khai (thêm
 `/index.html` ở cuối, không ảnh hưởng vì build luôn tạo `200.html`). Các test của prerender cũng chạy đạt trên Node 22,
 phiên bản của image proxy; riêng điểm vào của script (đọc biến môi trường qua Vite) mới chạy trên Node 26.
 
+Đã chạy job trong chồng Docker Compose đầy đủ (07/11/2026). Hệ thống trống: `up --wait` thành công và site chạy không có trang riêng.
+Trỏ job sang API dev: 586 trang, sitemap 307 địa chỉ, trang tướng trả đúng tiêu đề qua proxy, địa chỉ không tồn tại có `noindex`. API
+không kết nối được: job thoát mã lỗi, trang cũ vẫn phục vụ. Khởi động lại proxy không mất trang.
+
 Chưa kiểm chứng được khi chưa có tên miền thật: công cụ debug của Facebook, Zalo, X; Google Search Console; canonical và
-sitemap trên địa chỉ thật; HTTPS. Chưa chạy trong chồng Docker Compose đầy đủ.
+sitemap trên địa chỉ thật; HTTPS.
