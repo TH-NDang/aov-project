@@ -1,10 +1,11 @@
 import assert from "node:assert/strict"
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from "node:fs/promises"
 import { createServer, type RequestListener } from "node:http"
 import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { test, type TestContext } from "node:test"
+import { publishSite, runPrerenderJob } from "../scripts/prerender-job.mts"
 import { prerender } from "../scripts/prerender.mts"
 import { renderRobots } from "../src/lib/seo/head-tags.ts"
 import {
@@ -297,4 +298,140 @@ test("the step refuses to run on a folder that was never built", async (t) => {
   t.after(() => rm(distDir, { recursive: true, force: true }))
   await assert.rejects(prerender({ distDir, siteUrl: SITE, apiBase: api.url }), /Run the Wiki build first/)
   assert.equal(api.requests.length, 0)
+})
+
+async function liveSite(t: TestContext, files: Record<string, string> = {}) {
+  const siteDir = await mkdtemp(path.join(tmpdir(), "wiki-site-"))
+  t.after(() => rm(siteDir, { recursive: true, force: true }))
+  for (const [file, content] of Object.entries(files)) {
+    await mkdir(path.dirname(path.join(siteDir, file)), { recursive: true })
+    await writeFile(path.join(siteDir, file), content)
+  }
+  return siteDir
+}
+
+const NO_HEROES = JSON.stringify({
+  items: [],
+  totalElements: 0,
+  page: { items: [], totalElements: 0 },
+  settings: { entities: [] },
+})
+const failing: RequestListener = (_request, response) => void response.writeHead(500).end("{}")
+const noHeroes: RequestListener = (_request, response) =>
+  void response.writeHead(200, { "Content-Type": "application/json" }).end(NO_HEROES)
+
+test("the job replaces the whole live site, so an unpublished page and an old bundle do not stay", async (t) => {
+  const api = await publicApi(t)
+  const distDir = await builtSite(t)
+  await mkdir(path.join(distDir, "assets"))
+  await writeFile(path.join(distDir, "assets/app-new.js"), "new")
+  const siteDir = await liveSite(t, {
+    "200.html": "old",
+    "assets/app-old.js": "old",
+    "hero/removed/index.html": "old",
+  })
+
+  const pages = await runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 })
+
+  assert.ok(pages > 0)
+  assert.match(await readFile(path.join(siteDir, "hero/airi/index.html"), "utf8"), /<title>[^<]*Airi/)
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), TEMPLATE)
+  assert.equal(await readFile(path.join(siteDir, "assets/app-new.js"), "utf8"), "new")
+  assert.equal(await exists(path.join(siteDir, "assets/app-old.js")), false)
+  assert.equal(await exists(path.join(siteDir, "hero/removed")), false)
+  assert.equal(await exists(path.join(siteDir, "sitemap.xml")), true)
+})
+
+test("a failing API leaves the live site alone and the job reports it", async (t) => {
+  const api = await publicApi(t, failing)
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t, { "200.html": "old", "hero/airi/index.html": "old" })
+
+  await assert.rejects(runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }))
+
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), "old")
+  assert.equal(await readFile(path.join(siteDir, "hero/airi/index.html"), "utf8"), "old")
+})
+
+test("the first run leaves a working site even when the API cannot answer yet", async (t) => {
+  const api = await publicApi(t, failing)
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t)
+
+  await assert.rejects(runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }))
+
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), TEMPLATE)
+})
+
+test("a new system with nothing published comes up without pages, on the current bundle", async (t) => {
+  const api = await publicApi(t, noHeroes)
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t, { "200.html": "old" })
+
+  assert.equal(await runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }), 0)
+
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), TEMPLATE)
+})
+
+const noGameplayContext: RequestListener = (_request, response) =>
+  void response
+    .writeHead(422, { "Content-Type": "application/json" })
+    .end(JSON.stringify({ code: "PATCH_CONTEXT_UNAVAILABLE" }))
+
+test("before any patch is live the API refuses to answer, which is a new system and not a fault", async (t) => {
+  const api = await publicApi(t, noGameplayContext)
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t)
+
+  assert.equal(await runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }), 0)
+
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), TEMPLATE)
+})
+
+test("losing the live patch on a site that had pages is a fault, and its pages stay", async (t) => {
+  const api = await publicApi(t, noGameplayContext)
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t, { "200.html": "old", "hero/airi/index.html": "old" })
+
+  await assert.rejects(runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }))
+
+  assert.equal(await readFile(path.join(siteDir, "hero/airi/index.html"), "utf8"), "old")
+})
+
+test("another 422 from the API stays an error", async (t) => {
+  const api = await publicApi(t, (_request, response) => {
+    response.writeHead(422, { "Content-Type": "application/json" }).end(JSON.stringify({ code: "SOMETHING_ELSE" }))
+  })
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t, { "200.html": "old" })
+
+  await assert.rejects(runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }), /422/)
+
+  assert.equal(await readFile(path.join(siteDir, "200.html"), "utf8"), "old")
+})
+
+test("no heroes on a site that had some is a fault, and its pages stay", async (t) => {
+  const api = await publicApi(t, noHeroes)
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t, { "200.html": "old", "hero/airi/index.html": "old" })
+
+  await assert.rejects(
+    runPrerenderJob({ distDir, siteDir, siteUrl: SITE, apiBase: api.url, retryDelayMs: 1 }),
+    /no published heroes/,
+  )
+
+  assert.equal(await readFile(path.join(siteDir, "hero/airi/index.html"), "utf8"), "old")
+})
+
+test("publishing again touches nothing that did not change and leaves no temporary files", async (t) => {
+  const distDir = await builtSite(t)
+  const siteDir = await liveSite(t)
+  await publishSite(distDir, siteDir)
+  const before = await stat(path.join(siteDir, "200.html"))
+
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  await publishSite(distDir, siteDir)
+
+  assert.equal((await stat(path.join(siteDir, "200.html"))).mtimeMs, before.mtimeMs)
+  assert.deepEqual(await readdir(siteDir), ["200.html"])
 })

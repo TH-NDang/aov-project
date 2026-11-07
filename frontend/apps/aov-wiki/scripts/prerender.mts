@@ -26,10 +26,15 @@ const DETAIL_CONCURRENCY = 4
 const PAGE_SIZE = 100
 const ATTEMPTS = 3
 const REQUEST_TIMEOUT_MS = 30_000
+/** How the public API answers before any patch is live: a new system has no market data to read yet. */
+const NO_GAMEPLAY_CONTEXT = "PATCH_CONTEXT_UNAVAILABLE"
 /** Directories written only by this script; removing them is how unpublished content disappears. */
 const OWNED_DIRECTORIES = ["hero", "skins", "warehouse", "terms", "updates", "contact"]
 
 class NotPublic extends Error {}
+
+/** The API answered, with no hero at all: a new system, or a fault that must not wipe the pages already online. */
+export class NothingPublished extends Error {}
 
 function apiReader(apiBase: string, retryDelayMs: number) {
   return async function read<T>(apiPath: string, params: Record<string, string> = {}): Promise<T> {
@@ -42,10 +47,14 @@ function apiReader(apiBase: string, retryDelayMs: number) {
         const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
         if (response.ok) return (await response.json()) as T
         if (response.status === 404) throw new NotPublic(url)
+        if (response.status === 422) {
+          const { code } = (await response.json().catch(() => ({}))) as { code?: string }
+          if (code === NO_GAMEPLAY_CONTEXT) throw new NothingPublished(`The public API has no gameplay context: ${url}`)
+        }
         failure = new Error(`${url} answered ${response.status}`)
         if (response.status !== 429 && response.status < 500) break
       } catch (error) {
-        if (error instanceof NotPublic) throw error
+        if (error instanceof NotPublic || error instanceof NothingPublished) throw error
         failure = error
       }
       if (attempt < ATTEMPTS) await new Promise((resolve) => setTimeout(resolve, retryDelayMs * attempt))
@@ -199,7 +208,7 @@ export async function prerender({ distDir, siteUrl, apiBase, retryDelayMs }: Pre
 
   // Everything is prepared before anything is touched, so a failing API leaves the previous pages online.
   const catalog = await readPublishedCatalog(apiBase, retryDelayMs)
-  if (!catalog.heroes.length) throw new Error("The public API returned no published heroes.")
+  if (!catalog.heroes.length) throw new NothingPublished("The public API returned no published heroes.")
   const pages = buildStaticPages(catalog)
   const files = pages.map((page) => ({
     file: staticFile(distDir, page),
