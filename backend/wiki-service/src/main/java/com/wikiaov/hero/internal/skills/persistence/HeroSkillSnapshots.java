@@ -68,23 +68,41 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
 
     @Override
     public Skills content(UUID id) {
-        var references = sources.find(section(), id);
-        var ids = Collections.singletonList(id);
-        var skills = snapshots.findBySkillSetRevisionIdIn(ids, Sort.by("displayOrder"));
-        if (skills.isEmpty())
-            return new Skills(List.of(), references);
-        var texts = translations.findBySkillSetRevisionIdIn(ids, Sort.by("locale")).stream()
-                .collect(Collectors.groupingBy(SkillTranslationRow::getSkillKey));
-        var skillEffects = effects.findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder")).stream()
-                .collect(Collectors.groupingBy(SkillEffectRow::getSkillKey));
-        return new Skills(skills.stream().map(skill -> new Skill(skill.getSkillKey(),
-                SkillKind.valueOf(skill.getKind()), skill.getFormKey(), skill.getDisplayOrder(), skill.getIconAssetId(),
-                texts.getOrDefault(skill.getSkillKey(), List.of()).stream()
-                        .map(t -> new SkillTranslation(t.getLocale(), t.getName(), t.getDescription())).toList(),
-                skillEffects.getOrDefault(skill.getSkillKey(), List.of()).stream()
-                        .map(effect -> new Effect(effect.getEffectType(), effect.getMetadata())).toList()))
-                .toList(),
-                references);
+        return contents(Collections.singletonList(id)).get(id);
+    }
+
+    /** Reads many snapshots in a bounded number of queries, for lists that cover every hero. */
+    public Map<UUID, Skills> contents(Collection<UUID> ids) {
+        var references = sources.find(section(), ids);
+        var skills = snapshots.findBySkillSetRevisionIdIn(ids, Sort.by("displayOrder")).stream()
+                .collect(Collectors.groupingBy(SkillSnapshotRow::getSkillSetRevisionId));
+        // Without a skill there are no child rows, so those tables need no query.
+        Map<UUID, Map<String, List<SkillTranslationRow>>> texts = skills.isEmpty()
+                ? Collections.emptyMap()
+                : translations.findBySkillSetRevisionIdIn(ids, Sort.by("locale")).stream()
+                        .collect(Collectors.groupingBy(SkillTranslationRow::getSkillSetRevisionId,
+                                Collectors.groupingBy(SkillTranslationRow::getSkillKey)));
+        Map<UUID, Map<String, List<SkillEffectRow>>> skillEffects = skills.isEmpty()
+                ? Collections.emptyMap()
+                : effects.findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder")).stream()
+                        .collect(Collectors.groupingBy(SkillEffectRow::getSkillSetRevisionId,
+                                Collectors.groupingBy(SkillEffectRow::getSkillKey)));
+
+        Map<UUID, Skills> result = new HashMap<>();
+        for (UUID id : ids) {
+            var skillTexts = texts.getOrDefault(id, Map.of());
+            var effectRows = skillEffects.getOrDefault(id, Map.of());
+            result.put(id, new Skills(skills.getOrDefault(id, List.of()).stream().map(skill -> new Skill(
+                    skill.getSkillKey(), SkillKind.valueOf(skill.getKind()), skill.getFormKey(),
+                    skill.getDisplayOrder(), skill.getIconAssetId(),
+                    skillTexts.getOrDefault(skill.getSkillKey(), List.of()).stream()
+                            .map(t -> new SkillTranslation(t.getLocale(), t.getName(), t.getDescription())).toList(),
+                    effectRows.getOrDefault(skill.getSkillKey(), List.of()).stream()
+                            .map(effect -> new Effect(effect.getEffectType(), effect.getMetadata())).toList()))
+                    .toList(),
+                    references.getOrDefault(id, List.of())));
+        }
+        return result;
     }
 
     @Override

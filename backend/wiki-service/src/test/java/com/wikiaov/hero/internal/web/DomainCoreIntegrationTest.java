@@ -91,6 +91,8 @@ class DomainCoreIntegrationTest {
 
     @Autowired
     MutableClock clock;
+    @Autowired
+    jakarta.persistence.EntityManagerFactory entityManagers;
     @MockitoBean
     MediaAssets media;
     @Autowired
@@ -857,6 +859,121 @@ class DomainCoreIntegrationTest {
                                 assets.get(MediaSemanticType.HERO_PORTRAIT), "SPLASH",
                                 assets.get(MediaSemanticType.HERO_SPLASH))),
                 200);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> publishReadiness() throws Exception {
+        var response = mvc.perform(get(ROOT + "/admin/heroes/publish-readiness")
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read")))).andExpect(status().isOk())
+                .andReturn().getResponse();
+        return json.readValue(response.getContentAsString(), List.class);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void publishReadinessReportsWhatThePublishRulesReadForEveryHero() throws Exception {
+        String list = ROOT + "/admin/heroes/publish-readiness";
+        assertThat(publishReadiness()).isEmpty();
+        mvc.perform(get(list).with(jwt().authorities(new SimpleGrantedAuthority("hero:write"))))
+                .andExpect(status().isForbidden());
+        send(get(list).param("unknown", "1"), null, 400);
+
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), draftId = id(draft);
+        UUID head = assets.get(MediaSemanticType.HERO_HEAD);
+        when(media.findAll(any())).thenAnswer(call -> ((Collection<UUID>) call.getArgument(0)).contains(head)
+                ? Map.of(head, media.find(head).orElseThrow())
+                : Map.of());
+
+        var row = publishReadiness().getFirst();
+        var open = ((List<Map<String, Object>>) row.get("drafts")).getFirst();
+        assertThat(row).containsEntry("code", "nakroth").containsEntry("headUrl", null);
+        assertThat(open).containsEntry("revisionId", draftId.toString()).containsEntry("observedStats", false)
+                .containsEntry("skinsSaved", true);
+        assertThat((List<?>) ((Map<String, Object>) open.get("profile")).get("roles")).isEmpty();
+        assertThat(((Map<String, Object>) open.get("overviewRatings")).get("scaleCode")).isNull();
+
+        draft = complete(hero, draftId, draft);
+        send(put(path(hero, draftId) + "/profile"), Map.of("expectedDraftVersion", number(draft, "version"),
+                "translations", List.of(Map.of("locale", "vi-VN", "name", "Nakroth", "lore", "Never in this list.")),
+                "roles", List.of("ASSASSIN")), 200);
+        row = publishReadiness().getFirst();
+        open = ((List<Map<String, Object>>) row.get("drafts")).getFirst();
+        assertThat(row).containsEntry("headUrl", "/media/" + head + "/v1.webp");
+        assertThat(row.get("names")).isEqualTo(List.of(Map.of("locale", "vi-VN", "name", "Nakroth")));
+        assertThat((Map<String, Object>) open.get("profile"))
+                .containsEntry("translations", List.of(Map.of("locale", "vi-VN", "name", "Nakroth")))
+                .containsEntry("roles", List.of("ASSASSIN"));
+        assertThat((Map<String, Object>) open.get("overviewRatings")).containsEntry("scaleCode", "GAME_OVERVIEW_10")
+                .containsEntry("difficulty", 8);
+        assertThat((Map<String, Object>) open.get("combatStats")).containsEntry("values", List.of("HP"));
+        assertThat((Map<String, Object>) open.get("skills")).containsEntry("skills",
+                List.of(Map.of("skillKey", "skill-1", "translations",
+                        List.of(Map.of("locale", "vi-VN", "name", "Chiêu 1", "description", "Mô tả đã kiểm chứng")))));
+        assertThat((Map<String, Object>) ((Map<String, Object>) open.get("mediaBindings")).get("bindings"))
+                .containsOnlyKeys("HEAD", "PORTRAIT", "SPLASH");
+
+        // A published revision stays listed once its draft is gone, and it still names the hero.
+        draft = send(get(path(hero, draftId)), null, 200);
+        var revision = (Map<String, Object>) draft.get("revision");
+        send(post(path(hero, draftId) + "/publish"), Map.of("expectedVersion", number(revision, "version")), 200);
+        var published = publishReadiness().getFirst();
+        assertThat((List<?>) published.get("drafts")).isEmpty();
+        assertThat(((List<Map<String, Object>>) published.get("revisions")).getFirst())
+                .containsEntry("state", "PUBLISHED");
+        assertThat((List<?>) published.get("names")).hasSize(1);
+        assertThat(published).containsEntry("headUrl", "/media/" + head + "/v1.webp");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void publishReadinessReadsObservedStatsAtTheDraftPatchAndLeavesDiscardedRevisionsOut() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), draftId = id(draft);
+        draft = complete(hero, draftId, draft);
+        String path = path(hero, draftId);
+        var capture = Map.of("method", "MANUAL_VISUAL_TRANSCRIPTION", "scope", "DISPLAYED_SNAPSHOT_NOT_LEVEL_ONE",
+                "values", Map.of("health", 3500));
+        for (String code : List.of("another-patch", "patch-test-1")) {
+            var effect = Map.of("effectType", "SOURCE_SNAPSHOT", "metadata",
+                    Map.of("patchCode", code, "observedAttributes", capture));
+            var skill = Map.of("skillKey", "skill-1", "kind", "ACTIVE", "displayOrder", 0,
+                    "translations", List.of(Map.of("locale", "vi-VN", "name", "Wave", "description", "Wave")),
+                    "effects", List.of(effect));
+            draft = send(put(path + "/skills"), Map.of("expectedDraftVersion", number(draft, "version"),
+                    "skills", List.of(skill)), 200);
+            var open = ((List<Map<String, Object>>) publishReadiness().getFirst().get("drafts")).getFirst();
+            assertThat(open).containsEntry("observedStats", "patch-test-1".equals(code));
+            assertThat(open.toString()).doesNotContain("SOURCE_SNAPSHOT");
+        }
+
+        send(post(path + "/discard"), Map.of("expectedVersion", number(draft, "version")), 200);
+        var row = publishReadiness().getFirst();
+        assertThat(row).containsEntry("code", "nakroth").containsEntry("names", List.of());
+        assertThat((List<?>) row.get("revisions")).isEmpty();
+        assertThat((List<?>) row.get("drafts")).isEmpty();
+    }
+
+    @Test
+    void publishReadinessRunsTheSameQueriesWhateverTheNumberOfHeroes() throws Exception {
+        var statistics = entityManagers.unwrap(org.hibernate.SessionFactory.class).getStatistics();
+        statistics.setStatisticsEnabled(true);
+        try {
+            create();
+            statistics.clear();
+            assertThat(publishReadiness()).hasSize(1);
+            long one = statistics.getPrepareStatementCount();
+
+            for (String code : List.of("airi", "butterfly", "capheny"))
+                send(post(ROOT + "/admin/heroes"), Map.of("code", code, "initialLocale", "vi-VN", "name", code,
+                        "rulesetId", ruleset, "releaseId", releaseId(variant)), 201);
+            statistics.clear();
+            assertThat(publishReadiness()).hasSize(4);
+
+            assertThat(statistics.getPrepareStatementCount()).isEqualTo(one);
+        } finally {
+            statistics.setStatisticsEnabled(false);
+        }
     }
 
     @Test

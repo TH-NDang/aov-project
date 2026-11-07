@@ -36,7 +36,7 @@ class OpenApiIntegrationTest extends OpenApiContractChecks {
 
     @Override
     int expectedHandlerCount() {
-        return 204;
+        return 205;
     }
 
     @Override

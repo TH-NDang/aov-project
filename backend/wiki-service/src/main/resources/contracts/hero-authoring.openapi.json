@@ -855,6 +855,26 @@
         }
       }
     },
+    "/api/wiki/v1/admin/heroes/publish-readiness": {
+      "get": {
+        "operationId": "heroPublishReadiness",
+        "responses": {
+          "200": {
+            "description": "Every hero, ordered by code, with what the Admin publish rules read from each open draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HeroPublishReadiness"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/wiki/v1/admin/hero-media": {
       "get": {
         "operationId": "heroMediaGroups",
@@ -3767,6 +3787,268 @@
           "size",
           "totalElements"
         ]
+      },
+      "HeroPublishName": {
+        "type": "object",
+        "required": [
+          "locale",
+          "name"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "HeroPublishDraftSkill": {
+        "type": "object",
+        "required": [
+          "skillKey",
+          "translations"
+        ],
+        "properties": {
+          "skillKey": {
+            "type": "string"
+          },
+          "translations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "locale",
+                "name",
+                "description"
+              ],
+              "properties": {
+                "locale": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "HeroPublishDraftProfile": {
+        "type": "object",
+        "required": [
+          "translations",
+          "roles"
+        ],
+        "properties": {
+          "translations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroPublishName"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "HeroPublishDraftRatings": {
+        "type": "object",
+        "required": [
+          "scaleCode",
+          "survivability",
+          "attackDamage",
+          "skillEffects",
+          "difficulty"
+        ],
+        "properties": {
+          "scaleCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "survivability": {
+            "type": "number",
+            "nullable": true
+          },
+          "attackDamage": {
+            "type": "number",
+            "nullable": true
+          },
+          "skillEffects": {
+            "type": "number",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "number",
+            "nullable": true
+          }
+        }
+      },
+      "HeroPublishDraftStats": {
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "properties": {
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "HeroPublishDraftSkills": {
+        "type": "object",
+        "required": [
+          "skills"
+        ],
+        "properties": {
+          "skills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroPublishDraftSkill"
+            }
+          }
+        }
+      },
+      "HeroPublishDraftMedia": {
+        "type": "object",
+        "required": [
+          "bindings"
+        ],
+        "properties": {
+          "bindings": {
+            "type": "object",
+            "properties": {
+              "HEAD": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "PORTRAIT": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "SPLASH": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        }
+      },
+      "HeroPublishDraft": {
+        "type": "object",
+        "required": [
+          "revisionId",
+          "observedStats",
+          "skinsSaved",
+          "profile",
+          "overviewRatings",
+          "combatStats",
+          "skills",
+          "mediaBindings"
+        ],
+        "properties": {
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "observedStats": {
+            "type": "boolean"
+          },
+          "skinsSaved": {
+            "type": "boolean"
+          },
+          "profile": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeroPublishDraftProfile"
+              }
+            ],
+            "nullable": true
+          },
+          "overviewRatings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeroPublishDraftRatings"
+              }
+            ],
+            "nullable": true
+          },
+          "combatStats": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeroPublishDraftStats"
+              }
+            ],
+            "nullable": true
+          },
+          "skills": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeroPublishDraftSkills"
+              }
+            ],
+            "nullable": true
+          },
+          "mediaBindings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeroPublishDraftMedia"
+              }
+            ],
+            "nullable": true
+          }
+        }
+      },
+      "HeroPublishReadiness": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "names",
+          "headUrl",
+          "revisions",
+          "drafts"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroPublishName"
+            }
+          },
+          "headUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroComparisonRevision"
+            }
+          },
+          "drafts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroPublishDraft"
+            }
+          }
+        }
       }
     },
     "securitySchemes": {

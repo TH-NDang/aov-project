@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSectionSnapshots;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
@@ -54,16 +55,29 @@ public class HeroMediaSnapshots implements HeroSectionSnapshots {
 
     @Override
     public Bindings content(UUID id) {
-        var references = sources.find(section(), id);
-        var ids = Collections.singletonList(id);
-        Map<MediaRole, UUID> assets = new EnumMap<>(MediaRole.class);
-        bindings.findByMediaBindingRevisionIdIn(ids, Sort.by("mediaRole"))
-                .forEach(binding -> assets.put(MediaRole.valueOf(binding.getMediaRole()), binding.getAssetId()));
-        Map<MediaRole, List<ImageOption>> images = new EnumMap<>(MediaRole.class);
-        options.findByMediaBindingRevisionIdIn(ids, Sort.by("imageOrder")).forEach(option -> images
-                .computeIfAbsent(MediaRole.valueOf(option.getMediaRole()), ignored -> new ArrayList<>())
-                .add(new ImageOption(option.getAssetId(), option.getLabel())));
-        return new Bindings(assets, references, images);
+        return contents(Collections.singletonList(id)).get(id);
+    }
+
+    /** Reads many snapshots in a bounded number of queries, for lists that cover every hero. */
+    public Map<UUID, Bindings> contents(Collection<UUID> ids) {
+        var references = sources.find(section(), ids);
+        var boundAssets = bindings.findByMediaBindingRevisionIdIn(ids, Sort.by("mediaRole")).stream()
+                .collect(Collectors.groupingBy(MediaBindingRow::getMediaBindingRevisionId));
+        var imageOptions = options.findByMediaBindingRevisionIdIn(ids, Sort.by("imageOrder")).stream()
+                .collect(Collectors.groupingBy(HeroImageOption::getMediaBindingRevisionId));
+
+        Map<UUID, Bindings> result = new HashMap<>();
+        for (UUID id : ids) {
+            Map<MediaRole, UUID> assets = new EnumMap<>(MediaRole.class);
+            boundAssets.getOrDefault(id, List.of())
+                    .forEach(binding -> assets.put(MediaRole.valueOf(binding.getMediaRole()), binding.getAssetId()));
+            Map<MediaRole, List<ImageOption>> images = new EnumMap<>(MediaRole.class);
+            imageOptions.getOrDefault(id, List.of()).forEach(option -> images
+                    .computeIfAbsent(MediaRole.valueOf(option.getMediaRole()), ignored -> new ArrayList<>())
+                    .add(new ImageOption(option.getAssetId(), option.getLabel())));
+            result.put(id, new Bindings(assets, references.getOrDefault(id, List.of()), images));
+        }
+        return result;
     }
 
     @Override

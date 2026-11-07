@@ -89,6 +89,13 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/publishing/publishing-page")).PublishingPage }),
           },
           {
+            path: "hero/publish-readiness",
+            handle: title("Sẵn sàng xuất bản"),
+            lazy: async () => ({
+              Component: (await import("@/features/publishing/publish-readiness-page")).PublishReadinessPage,
+            }),
+          },
+          {
             path: "hero/import",
             handle: title("Import tướng"),
             element: null,

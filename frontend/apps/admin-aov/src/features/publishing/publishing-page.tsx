@@ -49,16 +49,15 @@ import { TranslationEditor, type TranslatableSection } from "./translation-edito
 import { Box, control } from "./fields"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
-import { observedAttributes, statPatchContext } from "./combat-attributes"
+import { statPatchContext } from "./combat-attributes"
 import { useStatDefaults } from "./patch-stat-defaults"
 import { replaceProfilePart, type ProfileEditorPart } from "./hero-profile-editor"
 import { ImportContextPicker, type ImportContext } from "./import-context"
 import { type CatalogFilter } from "./catalog-context"
 import { usePublicationOverview, useContentLocale } from "./publication-overview"
+import { publicationPatchLink, publishBlockers, usesObservedStats } from "./publish-rules"
 import {
   SECTIONS,
-  publicationPatchIssue,
-  publishIssues,
   type Cause,
   type Content,
   type HeroRow,
@@ -404,13 +403,15 @@ export function PublishingWorkspace({
   const publicationPatch = overview.data?.variants.find(
     (variant) => variant.id === revision?.effectiveFromPatchVariantId,
   )
-  const usesObservedStats =
-    !preview?.content.COMBAT_STATS?.values.length &&
-    !!publicationPatch &&
-    !!observedAttributes(preview?.content.SKILLS, publicationPatch.patchCode)
-  const issues = preview ? publishIssues(preview.content, usesObservedStats) : []
-  const patchIssue = revision && publicationPatchIssue(revision, publicationPatch, overview.isPending)
-  if (patchIssue) issues.unshift(patchIssue)
+  const issues = preview
+    ? publishBlockers({
+        revision: preview.revision,
+        content: preview.content,
+        patch: publicationPatch,
+        patchLoading: overview.isPending,
+        observedStats: usesObservedStats(preview.content, publicationPatch),
+      }).map((blocker) => blocker.message)
+    : []
 
   useEffect(() => {
     if (requestedRevision === selectedId) return
@@ -590,6 +591,24 @@ export function PublishingWorkspace({
     revision.cause === "GAME_PATCH" &&
     !!revision.effectiveFromPatchVariantId &&
     capabilities.includes("patch:write")
+
+  const patchLink = revision && publicationPatchLink(revision, publicationPatch)
+
+  // A link from the overview of all heroes lands on the part to fix, once the draft is here to open it.
+  const fix = urlParams.get("fix")
+  const fixReady = !!fix && !!preview && !revisions.isPending && (!writable || localDraft.ready)
+  useEffect(() => {
+    if (!fixReady) return
+    updateLocation({ fix: null })
+    if (fix === "PATCH") {
+      if (canMoveBaseline) openManagement()
+    } else if (SECTIONS.some(([key]) => key === fix)) {
+      if (writable) {
+        setProfilePart("information")
+        setEditing(true)
+      } else setReviewTarget({ note: "", section: fix as Section })
+    }
+  }, [fixReady])
 
   // The one action the header offers for this version; the rest stays in its menu.
   const headerAction =
@@ -832,13 +851,10 @@ export function PublishingWorkspace({
                     issues={issues}
                     unsaved={SECTIONS.filter(([key]) => dirty.has(key)).map(([key, , label]) => ({ key, label }))}
                     patch={
-                      publicationPatch?.status === "DRAFT" && publicationPatch.rulesetId === revision.rulesetId
-                        ? {
-                            to: `/game-configuration?season=${publicationPatch.seasonId ?? ""}&patch=${publicationPatch.id}`,
-                            code: publicationPatch.patchCode,
-                            canPublish: capabilities.includes("patch:publish"),
-                          }
-                        : undefined
+                      patchLink && {
+                        ...patchLink,
+                        canPublish: capabilities.includes("patch:publish"),
+                      }
                     }
                     onReloadPatch={
                       revision.effectiveFromPatchVariantId && !publicationPatch && !overview.isPending

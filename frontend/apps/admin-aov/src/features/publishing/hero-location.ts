@@ -1,3 +1,4 @@
+import type { PublishBlockerKey } from "./publish-rules"
 import type { Section } from "./types"
 
 export type HeroContentTab = "overview" | "skills" | "skins" | "media" | "videos"
@@ -22,6 +23,7 @@ const heroKeys = [
   "changes",
   "atPatch",
   "anchorRevision",
+  "fix",
 ] as const
 const contentTabs: HeroContentTab[] = ["overview", "skills", "skins", "media", "videos"]
 const sections: Section[] = ["PROFILE", "OVERVIEW_RATINGS", "COMBAT_STATS", "SKILLS", "SKINS", "MEDIA_BINDINGS"]
@@ -69,6 +71,22 @@ export function closeHeroLocation(params: URLSearchParams) {
 
 export function openHeroLocation(params: URLSearchParams, heroId: string, revisionId?: string) {
   return patchHeroLocation(closeHeroLocation(params), { hero: heroId, revision: revisionId })
+}
+
+const fixTabs: Partial<Record<PublishBlockerKey, HeroContentTab>> = {
+  SKILLS: "skills",
+  SKINS: "skins",
+  MEDIA_BINDINGS: "media",
+}
+
+/** Opens a draft on the part a publish blocker points at; the workspace reads `fix` once and drops it. */
+export function heroFixLocation(params: URLSearchParams, heroId: string, revisionId: string, key: PublishBlockerKey) {
+  return patchHeroLocation(openHeroLocation(params, heroId, revisionId), {
+    view: "overview",
+    tab: fixTabs[key],
+    section: key === "PATCH" ? null : key,
+    fix: key,
+  })
 }
 
 /** Keep the working context while dropping identities that belong to the previous hero. */

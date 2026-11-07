@@ -4,6 +4,8 @@
 
 `/publishing` mở danh sách có cột tên cố định, bản dịch dạng biểu tượng ngôn ngữ kèm số ngôn ngữ có nội dung thật (không tính fallback). Bấm tên/mũi tên để mở drawer trên desktop hoặc bottom sheet trên mobile; có thể mở toàn trang.
 
+`/hero/publish-readiness` cho biết với mọi tướng: đã xuất bản chưa, có bản nháp không và bản nháp còn thiếu gì. Lọc theo chưa xuất bản, sẵn sàng xuất bản hoặc còn thiếu. Bấm một mục còn thiếu để mở tướng đúng phần cần sửa; đợi patch thì mở patch đó. Trang dùng chung điều kiện với nút Xuất bản (`publish-rules.ts`) và không xuất bản hàng loạt; máy chủ vẫn kiểm tra lại khi xuất bản.
+
 `/publishing/:heroId` ưu tiên đọc hồ sơ, kỹ năng, chỉ số, trang phục và ảnh. Bút trên từng nhóm mở trình sửa nhóm đó; Lưu gọi API draft thật với version, Hủy chỉ bỏ thay đổi của nhóm đang sửa. Metadata, nhập tài nguyên và xuất bản nằm trong các mục mở rộng. Đóng drawer/tab có thay đổi cần xác nhận; thao tác lưu đang chạy chặn đóng. Đổi tab vẫn giữ bản đang sửa; tải lại trình duyệt không tự lưu nội dung chưa gửi.
 
 `/publishing/:heroId/translations?revision=...&locale=en-US` đối chiếu nguồn–đích cho hồ sơ, kỹ năng và trang phục. Chỉ cập nhật văn bản locale đích, giữ nguyên ngôn ngữ khác, ảnh và gameplay; cần quyền `hero:write` và revision DRAFT. Bản published cần tạo draft (lý do Bản dịch) trong phần thao tác nâng cao. Đây là dịch nội dung, không phải dịch giao diện; chưa có quy trình duyệt bản dịch riêng hay dịch tự động.

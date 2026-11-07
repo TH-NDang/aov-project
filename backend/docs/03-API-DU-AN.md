@@ -14,7 +14,7 @@ Các mục bên dưới vẫn mô tả đích toàn backend; bảng này xác đ
 |---|---|
 | Patch authoring | POST admin/rulesets, admin/regions/{id}/ruleset-assignments, admin/patches, admin/patches/{id}/variants, admin/patch-variants/{id}/publish, admin/patch-variants/{id}/releases |
 | Ruleset đọc | GET admin/rulesets |
-| Hero admin | GET/POST admin/heroes; GET admin/heroes/{id}; GET admin/heroes/{id}/revisions; GET revision/draft detail; POST drafts; PUT sáu section; POST publish/discard |
+| Hero admin | GET/POST admin/heroes; GET admin/heroes/publish-readiness; GET admin/heroes/{id}; GET admin/heroes/{id}/revisions; GET revision/draft detail; POST drafts; PUT sáu section; POST publish/discard |
 | Hero public | GET heroes; heroes/{id}; heroes/{id}/manifest; heroes/{id}/changes |
 | Immutable section | hero-profile-revisions, hero-overview-rating-revisions, hero-stats-revisions, hero-skills-revisions, hero-skins-revisions, hero-media-binding-revisions |
 | Patch history | POST admin/patch-variants/{id}/hero-changes; GET patches, patches/{id}, patches/{id}/changes |
@@ -804,6 +804,32 @@ actor metadata
 ```
 
 Không dùng public endpoint để preview draft.
+
+### Tình trạng xuất bản của mọi tướng
+
+```http
+GET /api/wiki/v1/admin/heroes/publish-readiness
+```
+
+Quyền `catalog:read`, không nhận query parameter. Trả mảng mọi tướng theo `code`, không phân trang: số tướng có giới hạn và Admin cần đủ danh sách để đếm và lọc. Số truy vấn không tăng theo số tướng. Contract nằm trong `hero-authoring.openapi.json`.
+
+Mỗi phần tử gồm:
+
+```text
+id, code
+names           tên theo locale, lấy từ revision mới nhất chưa hủy
+headUrl         ảnh Head của revision đó; null khi chưa có hoặc asset chưa dùng được
+revisions       mọi revision chưa hủy, mới nhất trước
+drafts[]        mỗi bản nháp đang mở, tối đa một bản cho mỗi ruleset
+  revisionId
+  observedStats  có thuộc tính ghi nhận từ ảnh đúng patch của bản nháp
+  skinsSaved     bản nháp đã gắn section trang phục
+  profile, overviewRatings, combatStats, skills, mediaBindings
+```
+
+Các section trong `drafts[]` chỉ giữ trường mà điều kiện xuất bản ở Admin đọc: không có cốt truyện, effect của kỹ năng, ảnh phụ hay nguồn. Section chưa gắn vào bản nháp trả `null`.
+
+Endpoint không kết luận bản nháp đủ điều kiện hay chưa. Admin tự áp dụng cùng điều kiện với nút Xuất bản, còn `POST .../publish` (mục 27) vẫn kiểm tra lại và có quyết định cuối cùng.
 
 ---
 
