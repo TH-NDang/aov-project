@@ -18,7 +18,7 @@ public interface MediaProvenanceRepository extends Repository<MediaProvenance, U
 
     void flush();
 
-    List<MediaProvenance> findByAssetIdOrderByCreatedAtAsc(UUID assetId);
+    List<MediaProvenance> findByAssetIdOrderByCreatedAtAscIdAsc(UUID assetId);
 
     List<MediaProvenance> findByAssetIdInOrderByCreatedAtAscIdAsc(Collection<UUID> assetIds);
 

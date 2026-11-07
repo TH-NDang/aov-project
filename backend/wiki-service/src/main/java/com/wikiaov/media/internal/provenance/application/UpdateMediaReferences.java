@@ -40,7 +40,7 @@ public class UpdateMediaReferences {
             @Nullable UUID ownerPageId, @Nullable UUID relatedPageId) {
         var actor = actors.require();
         var asset = assets.requireActiveAsset(assetId);
-        var source = sources.findByAssetIdOrderByCreatedAtAsc(assetId).stream()
+        var source = sources.findByAssetIdOrderByCreatedAtAscIdAsc(assetId).stream()
                 .filter(row -> sourceId.equals(row.getId())).findFirst()
                 .orElseThrow(
                         () -> new ApiException(MediaErrorCode.MEDIA_SOURCE_NOT_FOUND, "Media source does not exist."));

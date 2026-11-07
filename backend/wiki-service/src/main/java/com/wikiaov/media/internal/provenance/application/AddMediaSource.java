@@ -55,7 +55,7 @@ public class AddMediaSource {
                         "Media version does not exist."));
         SourceInput source = owners.attach(requested);
 
-        boolean exists = provenance.findByAssetIdOrderByCreatedAtAsc(assetId).stream()
+        boolean exists = provenance.findByAssetIdOrderByCreatedAtAscIdAsc(assetId).stream()
                 .anyMatch(record -> versionId.equals(record.getAssetVersionId())
                         && source.type() == record.getSourceType()
                         && source.label().equals(record.getSourceLabel())

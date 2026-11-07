@@ -30,7 +30,7 @@ public class MediaAssetViews {
 
     public MediaAssetDetails details(MediaAsset asset) {
         return details(asset, versions.findByAssetIdOrderByVersionNoDesc(asset.getId()),
-                provenance.findByAssetIdOrderByCreatedAtAsc(asset.getId()));
+                provenance.findByAssetIdOrderByCreatedAtAscIdAsc(asset.getId()));
     }
 
     /** Details of several assets in the given order, reading each table once rather than once per asset. */
