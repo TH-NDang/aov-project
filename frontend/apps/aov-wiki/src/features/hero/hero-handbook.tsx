@@ -10,7 +10,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
-import type { DiffSegment } from "./hero-version-diff"
+import { localizedStatText, statText, type DiffSegment } from "./hero-version-diff"
 import { HeroRatings } from "./hero-ratings"
 import { useHeroVideos, useVideoParam, VideoGallery } from "../videos/subject-videos"
 import { SkillIcon } from "./hero-skill-icon"
@@ -159,8 +159,8 @@ function useHandbook(hero: HeroDetail) {
       {
         label: text(vi, en),
         Icon,
-        value: stat.baseValue.toLocaleString(locale),
-        before: change ? Number(change.before).toLocaleString(locale) : undefined,
+        value: localizedStatText(statText(stat), locale),
+        before: change ? localizedStatText(change.before, locale) : undefined,
       },
     ]
   })

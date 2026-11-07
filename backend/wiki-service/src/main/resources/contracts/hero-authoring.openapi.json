@@ -2750,6 +2750,10 @@
                 },
                 "unit": {
                   "type": "string"
+                },
+                "percent": {
+                  "type": "number",
+                  "nullable": true
                 }
               }
             }
@@ -2883,6 +2887,13 @@
                 "baseValue": {
                   "type": "number",
                   "nullable": true
+                },
+                "percentValue": {
+                  "type": "number",
+                  "nullable": true,
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "The percent the game shows after the bar, as in 150 | 20%. Only ARMOR, MAGIC_DEFENSE, ARMOR_PIERCE and MAGIC_PIERCE have one, and it needs baseValue."
                 },
                 "growthPerLevel": {
                   "type": "number",

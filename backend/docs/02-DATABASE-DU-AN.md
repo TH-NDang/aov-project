@@ -331,11 +331,15 @@ created_at
 | stats_revision_id | UUID | FK |
 | stat_key | VARCHAR(64) | canonical key |
 | base_value | NUMERIC NULL | |
+| percent_value | NUMERIC NULL | phần trăm game hiển thị sau dấu `\|`, từ 0 đến 100; cần có `base_value` |
 | growth_per_level | NUMERIC NULL | |
 | unit_code | VARCHAR(32) | HP/POINT/PERCENT/... |
 | metadata | JSONB NULL | chỉ metadata mở, không thay canonical columns |
 
 PK `(stats_revision_id, stat_key)`.
+
+`percent_value` chỉ dùng cho `ARMOR`, `MAGIC_DEFENSE`, `ARMOR_PIERCE` và `MAGIC_PIERCE`. `NULL` nghĩa là chưa ghi, khác
+với `0`. Giá trị là số đọc từ game, không tính từ `base_value`.
 
 `patch.stat_default` lưu giá trị chung có nguồn theo `(variant_id, stat_key)`, gồm `base_value`,
 `unit`, `source_url` và `version`. Mỗi thuộc tính lấy bản gần nhất theo `ruleset_ordinal` trong

@@ -7,7 +7,10 @@ function comparableReading(row: AttributeRow, peer: StatSample, patchCode: strin
     const resource = row.reading?.resource
     if (!resource || !fromPatch || observedStat(row.key, capture.values)?.resource !== resource) return
   }
-  if (row.kind === "Giá trị riêng") return peer.baseStats[row.key]
+  if (row.kind === "Giá trị riêng") {
+    const stat = peer.baseStats[row.key]
+    return stat && { ...stat, percent: stat.percent ?? undefined }
+  }
   if (row.kind === "Ghi nhận từ ảnh" && fromPatch && capture.level === level)
     return observedStat(row.key, capture.values)
 }

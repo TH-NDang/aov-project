@@ -27,6 +27,7 @@ import { formatPatchValue } from "./patch-value"
 import { SkillChangeList } from "./skill-change-list"
 import { compareSkillRanks } from "./skill-rank-values"
 import { SkillRankValues } from "./skill-rank-table"
+import { formatStatReading } from "./stat-reading"
 
 const provenanceTone: Record<Provenance, string> = {
   OBSERVED: "text-emerald-700 dark:text-emerald-300",
@@ -232,8 +233,14 @@ export function HeroPatchTimeline({
                       <tr key={stat.statKey}>
                         <td className="px-3 py-1.5">{statLabel(stat.statKey)}</td>
                         <td className="px-3 py-1.5 text-right font-medium tabular-nums">
-                          {stat.baseValue ?? "—"}
-                          {stat.baseValue !== null ? (UNIT_LABELS[stat.unit] ?? "") : ""}
+                          {stat.percentValue != null ? (
+                            formatStatReading(stat.baseValue, stat.percentValue)
+                          ) : (
+                            <>
+                              {stat.baseValue ?? "—"}
+                              {stat.baseValue !== null ? (UNIT_LABELS[stat.unit] ?? "") : ""}
+                            </>
+                          )}
                         </td>
                         <td className="px-3 py-1.5 text-right text-muted-foreground tabular-nums">
                           {stat.growthPerLevel ?? "—"}

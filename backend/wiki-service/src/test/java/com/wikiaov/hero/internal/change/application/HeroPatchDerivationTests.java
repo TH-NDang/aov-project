@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.change.persistence.HeroPatchChangeSetRepository
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory.Entry;
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
+import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
@@ -48,7 +49,7 @@ class HeroPatchDerivationTests {
         for (var variant : List.of(past, middle, current))
             when(contexts.variant(variant.id())).thenReturn(variant);
         when(sections.content(eq(HeroSection.COMBAT_STATS), any())).thenReturn(new Stats(
-                List.of(new Stat("HP", new BigDecimal("3500"), new BigDecimal("100"), "POINT")), List.of()));
+                List.of(new Stat("HP", new BigDecimal("3500"), null, new BigDecimal("100"), "POINT")), List.of()));
         when(sections.content(eq(HeroSection.PROFILE), any()))
                 .thenReturn(new Profile(List.of(), Set.of(Role.ASSASSIN), List.of()));
 
@@ -105,6 +106,28 @@ class HeroPatchDerivationTests {
         assertThat(exact.skillFields()).isEmpty();
         assertThat(exact.stats()).singleElement()
                 .satisfies(stat -> assertThat(stat.provenance()).isEqualTo(Provenance.OBSERVED));
+    }
+
+    @Test
+    void aChangeSetKeepsThePercentUnknownBecauseItOnlyRecordsTheNumber() {
+        when(sections.content(eq(HeroSection.COMBAT_STATS), any())).thenReturn(new Stats(
+                List.of(new Stat("ARMOR", new BigDecimal("150"), new BigDecimal("20"), null, "POINT")), List.of()));
+        var armor = new StatChangeClassification();
+        armor.setStatKey("ARMOR");
+        armor.setUnitCode("POINT");
+        armor.setOldValue(new BigDecimal("150"));
+        armor.setNewValue(new BigDecimal("160"));
+        var header = mock(Header.class);
+        when(header.getId()).thenReturn(UUID.randomUUID());
+        when(header.getPatchVariantId()).thenReturn(current.id());
+        when(history.forHero(hero, "vi-VN")).thenReturn(List.of(new Entry(header, null, null, List.of(armor))));
+
+        assertThat(derivation.at(hero, current.id(), baseline.id()).stats()).singleElement()
+                .satisfies(stat -> assertThat(stat.percentValue()).isEqualByComparingTo("20"));
+        assertThat(derivation.at(hero, current.id(), old.id()).stats()).singleElement().satisfies(stat -> {
+            assertThat(stat.baseValue()).isEqualByComparingTo("160");
+            assertThat(stat.percentValue()).isNull();
+        });
     }
 
     @Test

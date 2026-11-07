@@ -156,7 +156,7 @@ public class HeroPatchDerivation {
 
         void start(Stats anchorStats, Profile anchorProfile) {
             anchorStats.values().forEach(stat -> stats.put(stat.statKey(), new StatValue(stat.statKey(), stat.unit(),
-                    stat.baseValue(), stat.growthPerLevel(), carried, null, null)));
+                    stat.baseValue(), stat.percentValue(), stat.growthPerLevel(), carried, null, null)));
             anchorProfile.roles().forEach(role -> roles.put(role, new RoleValue(role, carried, null, null)));
         }
 
@@ -188,7 +188,7 @@ public class HeroPatchDerivation {
             if (value == null)
                 stats.remove(stat.getStatKey());
             else
-                stats.put(stat.getStatKey(), new StatValue(stat.getStatKey(), stat.getUnitCode(), value,
+                stats.put(stat.getStatKey(), new StatValue(stat.getStatKey(), stat.getUnitCode(), value, null,
                         previous == null ? null : previous.growthPerLevel(), Provenance.DERIVED, changeSetId,
                         patchVariantId));
         }

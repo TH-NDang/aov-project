@@ -47,12 +47,14 @@ public record HeroPatchView(
 
     /**
      * Change sets record base values only, so the provenance describes {@code baseValue}. A derived value names the change
-     * set and the patch that set it.
+     * set and the patch that set it, and leaves {@code percentValue} empty: a change set does not say what the game shows
+     * beside the new number.
      */
     public record StatValue(
             String statKey,
             String unit,
             BigDecimal baseValue,
+            BigDecimal percentValue,
             BigDecimal growthPerLevel,
             Provenance provenance,
             UUID changeSetId,

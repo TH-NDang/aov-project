@@ -7,11 +7,16 @@ import com.wikiaov.hero.internal.ratings.persistence.RatingScaleRepository;
 import com.wikiaov.media.*;
 import com.wikiaov.platform.ApiException;
 import jakarta.validation.Validator;
+import java.math.BigDecimal;
 import java.util.*;
 import org.springframework.stereotype.Component;
 
 @Component
 public class HeroValidation {
+    /** The stats the game shows as "number | percent". */
+    private static final Set<String> PERCENT_STATS = Set.of("ARMOR", "MAGIC_DEFENSE", "ARMOR_PIERCE", "MAGIC_PIERCE");
+    private static final BigDecimal ONE_HUNDRED = BigDecimal.valueOf(100);
+
     private final MediaAssets media;
     private final Validator validator;
     private final RatingScaleRepository scales;
@@ -63,6 +68,19 @@ public class HeroValidation {
 
         if (stats.values().stream().anyMatch(value -> value.baseValue() == null && value.growthPerLevel() == null))
             throw invalid("A stat must have a numeric value.");
+
+        stats.values().stream().filter(value -> value.percentValue() != null).forEach(HeroValidation::validatePercent);
+    }
+
+    private static void validatePercent(Stat stat) {
+        if (!PERCENT_STATS.contains(stat.statKey()))
+            throw invalid("The game shows no percent beside this stat.");
+
+        if (stat.baseValue() == null)
+            throw invalid("A stat percent needs the number shown before it.");
+
+        if (stat.percentValue().signum() < 0 || stat.percentValue().compareTo(ONE_HUNDRED) > 0)
+            throw invalid("A stat percent must be between 0 and 100.");
     }
 
     private void validateSkills(Skills skills) {

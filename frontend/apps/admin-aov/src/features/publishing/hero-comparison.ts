@@ -1,4 +1,5 @@
 import { formatPatchValue } from "./patch-value"
+import { statReadingChange, type StatNumbers } from "./stat-reading"
 import { POSITIONS } from "./types"
 import { referenceInputPlainText } from "@aov/ui/lib/reference-input-dom"
 
@@ -65,9 +66,38 @@ export function comparisonValue(value: unknown, field?: string): string {
     return label || formatPatchValue(value) || "Trống"
   }
   if (Array.isArray(value)) return value.map((item) => comparisonValue(item, field)).join(" · ") || "Trống"
-  return Object.entries(value as Record<string, unknown>)
-    .map(([key, item]) => `${comparisonFieldLabels[key] ?? "Thông tin khác"}: ${comparisonValue(item, key)}`)
+  const row = value as Record<string, unknown>
+  const isStat = typeof row.statKey === "string"
+  const reading = isStat ? statReadingChange(row.statKey as string, null, row as StatNumbers)?.after : null
+  return Object.entries(row)
+    .filter(([key]) => !(isStat && key === "percentValue"))
+    .map(
+      ([key, item]) =>
+        `${comparisonFieldLabels[key] ?? "Thông tin khác"}: ${key === "baseValue" && reading ? reading : comparisonValue(item, key)}`,
+    )
     .join("\n")
+}
+
+const statRow = (snapshot: Record<string, unknown>, statKey: string) => {
+  const stats = snapshot.combatStats as { values?: (StatNumbers & { statKey: string })[] } | null | undefined
+  return stats?.values?.find((stat) => stat.statKey === statKey)
+}
+
+/** The server reports a stat's number and percent as two paths; a reader expects the one reading the game shows. */
+export function joinStatReadings<
+  T extends { section: string; path: string; kind: string; before: unknown; after: unknown },
+>(changes: T[], before: Record<string, unknown>, after: Record<string, unknown>): T[] {
+  const joined = new Set<string>()
+  return changes.flatMap((change) => {
+    const statKey =
+      change.section === "combatStats" ? /^\/values\/([^/]+)\/(?:baseValue|percentValue)$/.exec(change.path)?.[1] : null
+    const reading = statKey ? statReadingChange(statKey, statRow(before, statKey), statRow(after, statKey)) : null
+    if (!statKey || !reading) return [change]
+    if (joined.has(statKey)) return []
+    joined.add(statKey)
+    const kind = reading.before && reading.after ? "CHANGED" : change.kind
+    return [{ ...change, path: `/values/${statKey}/baseValue`, kind, before: reading.before, after: reading.after }]
+  })
 }
 
 export const comparisonFieldLabels: Record<string, string> = {
@@ -86,6 +116,7 @@ export const comparisonFieldLabels: Record<string, string> = {
   positions: "Vị trí đi",
   statKey: "Chỉ số",
   baseValue: "Giá trị ghi nhận",
+  percentValue: "Phần trăm",
   growthPerLevel: "Tăng mỗi cấp",
   unit: "Đơn vị",
   kind: "Loại",

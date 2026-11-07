@@ -69,6 +69,17 @@ chỉnh sửa khác. Chỉ điền nhanh khi các cột liên tiếp từ Cấp 
 
 Các dòng nguồn vốn chỉ có một công thức tiếp tục giữ công thức và suy ra bảng trên client khi hiển thị.
 
+## Chỉ số có số và phần trăm
+
+Giáp, Giáp phép, Xuyên giáp và Xuyên giáp phép được game hiển thị dạng `150 | 20%`. Trình sửa chỉ số dùng một ô
+**Số và phần trăm trong game** cho các chỉ số này: gõ hoặc dán đúng như game hiện, bên dưới đọc lại “số 150, phần trăm
+20%”. Khoảng trắng và dấu `%` có thể thiếu (`150|20`), dấu thập phân là chấm hoặc phẩy. Chỉ gõ số thì phần trăm là chưa
+ghi, không hiểu thành `0%`. Giá trị sai hiện lý do ngay dưới ô và **Lưu phần này** không gửi đi.
+
+Phần trăm do người nhập đọc từ game, không tính từ số: `137 | 0%`, `150 | 20%` và `171 | 0%` cùng xuất hiện trong ảnh.
+So sánh phiên bản, thay đổi của nháp và Wiki đều hiện cả cụm như game. Phần trăm thay đổi mà số giữ nguyên vẫn hiện
+trong so sánh, nhưng không tạo dòng thay đổi patch vì dòng STAT chỉ ghi số.
+
 ## Bỏ qua tự nhận diện trong một đoạn văn bản
 
 Trong các ô mô tả và nội dung dùng trình sửa rich text, bôi đen đoạn cần giữ dưới dạng chữ thường rồi bấm

@@ -85,7 +85,9 @@ export interface HeroDetail {
       difficulty?: number | null
     } | null
     skills?: { skills?: PublicSkill[] } | null
-    combatStats?: { values?: { statKey: string; baseValue: number | null; unit?: string }[] } | null
+    combatStats?: {
+      values?: { statKey: string; baseValue: number | null; percentValue?: number | null; unit?: string }[]
+    } | null
   }
 }
 

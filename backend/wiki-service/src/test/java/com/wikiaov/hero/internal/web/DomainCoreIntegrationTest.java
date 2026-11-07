@@ -223,6 +223,43 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void keepsThePercentTheGameShowsBesideArmorAndRefusesAMalformedOne() throws Exception {
+        var draft = create();
+        var hero = uuid(draft, "heroId");
+        var draftId = id(draft);
+        var path = path(hero, draftId);
+        var version = number(draft, "version");
+
+        send(put(path + "/combat-stats"),
+                statBody(version, Map.of("statKey", "HP", "baseValue", 3500, "percentValue", 5,
+                        "unit", "POINT")),
+                422);
+        send(put(path + "/combat-stats"), statBody(version, Map.of("statKey", "ARMOR", "growthPerLevel", 1,
+                "percentValue", 5, "unit", "POINT")), 422);
+        send(put(path + "/combat-stats"), statBody(version, Map.of("statKey", "ARMOR", "baseValue", 150,
+                "percentValue", 101, "unit", "POINT")), 422);
+
+        draft = send(put(path + "/combat-stats"), statBody(version, Map.of("statKey", "ARMOR", "baseValue", 150,
+                "percentValue", 20, "unit", "POINT")), 200);
+
+        mvc.perform(get(ROOT + "/admin/heroes/" + hero + "/revisions/" + draftId)
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content.combatStats.values[0].baseValue").value(150))
+                .andExpect(jsonPath("$.content.combatStats.values[0].percentValue").value(20));
+
+        assertThatThrownBy(() -> jdbc.sql("""
+                INSERT INTO hero.hero_combat_stat_value (stats_revision_id, stat_key, percent_value, unit_code)
+                VALUES (?, 'MAGIC_DEFENSE', 1, 'POINT')
+                """).param(UUID.randomUUID()).update())
+                .isInstanceOf(org.springframework.dao.DataAccessException.class);
+    }
+
+    private static Map<String, Object> statBody(Number version, Map<String, Object> stat) {
+        return Map.of("expectedDraftVersion", version, "values", List.of(stat));
+    }
+
+    @Test
     void completeHeroLifecycleReusesSectionsAndKeepsImmutableResourcesStable() throws Exception {
         var draft = create();
         UUID hero = uuid(draft, "heroId"), draftId = uuid(draft, "id");

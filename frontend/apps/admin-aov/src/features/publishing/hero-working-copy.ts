@@ -42,7 +42,13 @@ const contentSchema = z.object({
   COMBAT_STATS: z
     .object({
       values: z.array(
-        z.object({ statKey: text, baseValue: number.nullable(), growthPerLevel: number.nullable(), unit: text }),
+        z.object({
+          statKey: text,
+          baseValue: number.nullable(),
+          percentValue: number.nullable().optional(),
+          growthPerLevel: number.nullable(),
+          unit: text,
+        }),
       ),
       sources: z.array(source),
     })

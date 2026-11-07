@@ -11,6 +11,7 @@ import type { HeroDraftChangeSet } from "./publishing-api"
 import { skillFieldLabel } from "./skill-field-labels"
 import { SkillRankComparison } from "./skill-rank-table"
 import { compareSkillRanks } from "./skill-rank-values"
+import { statReadingChange, type StatNumbers } from "./stat-reading"
 import { SECTIONS, type Section } from "./types"
 
 type Row = { label: string; field: string; before: unknown; after: unknown }
@@ -53,14 +54,28 @@ function itemLabel(item: unknown, locale: string, index: number): string {
 }
 
 /** Match identified rows before comparing fields so removing a skill does not rename the following ones. */
-function changedRows(before: unknown, after: unknown, locale: string): Row[] {
+export function changedRows(before: unknown, after: unknown, locale: string): Row[] {
   const rows: Row[] = []
   function visit(left: unknown, right: unknown, field: string, path: string[]) {
-    if (sameDraftValue(left, right)) return
+    if (sameDraftValue(left, right) || (left == null && right == null)) return
     if ((record(left) || left == null) && (record(right) || right == null) && (record(left) || record(right))) {
       const a = record(left) ? left : {}
       const b = record(right) ? right : {}
       const keys = new Set([...Object.keys(a), ...Object.keys(b)])
+      const statKey = a.statKey ?? b.statKey
+      const reading =
+        typeof statKey === "string" ? statReadingChange(statKey, a as StatNumbers, b as StatNumbers) : null
+      if (reading) {
+        keys.delete("baseValue")
+        keys.delete("percentValue")
+        if (reading.before !== reading.after)
+          rows.push({
+            label: [...path, fieldLabels.baseValue].join(" · "),
+            field: "baseValue",
+            before: reading.before,
+            after: reading.after,
+          })
+      }
       if (keys.size) {
         for (const key of keys) visit(a[key], b[key], key, [...path, fieldLabels[key] ?? skillFieldLabel(key)])
         return

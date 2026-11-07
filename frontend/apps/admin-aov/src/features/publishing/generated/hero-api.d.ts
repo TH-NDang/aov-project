@@ -867,6 +867,7 @@ export interface components {
         [key: string]: {
           value: number
           unit: string
+          percent?: number | null
         }
       }
       capture: {
@@ -904,6 +905,8 @@ export interface components {
         statKey: string
         unit: string
         baseValue?: number | null
+        /** @description The percent the game shows after the bar, as in 150 | 20%. Only ARMOR, MAGIC_DEFENSE, ARMOR_PIERCE and MAGIC_PIERCE have one, and it needs baseValue. */
+        percentValue?: number | null
         growthPerLevel?: number | null
       }[]
       sources: components["schemas"]["HeroSource"][]

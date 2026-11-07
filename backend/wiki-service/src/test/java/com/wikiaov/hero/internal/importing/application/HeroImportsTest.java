@@ -77,8 +77,8 @@ class HeroImportsTest {
 
     @Test
     void normalizingJsonCollectionsAndStatOrderKeepsRepeatedImportsUnchanged() {
-        var armor = new Stat("ARMOR", BigDecimal.TEN, null, "POINT");
-        var health = new Stat("HP", new BigDecimal("3500"), null, "POINT");
+        var armor = new Stat("ARMOR", BigDecimal.TEN, null, null, "POINT");
+        var health = new Stat("HP", new BigDecimal("3500"), null, null, "POINT");
         sections.put(HeroSection.COMBAT_STATS, new Stats(List.of(armor, health), List.of()));
         var result = imports.preview(request(Mode.CORRECTION,
                 Map.of("roles", List.of("ASSASSIN"), "combatStats", new Stats(List.of(health, armor), List.of())),
