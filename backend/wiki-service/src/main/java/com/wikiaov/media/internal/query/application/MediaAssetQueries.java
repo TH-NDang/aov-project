@@ -66,6 +66,14 @@ public class MediaAssetQueries {
         return assetViews.details(assetAccess.requireAsset(assetId));
     }
 
+    /** Unknown ids are left out, so one stale reference does not take the other images of a screen with it. */
+    public List<MediaAssetDetails> getAll(List<UUID> assetIds) {
+        Map<UUID, MediaAsset> found = assets.findByIdIn(assetIds).stream()
+                .collect(Collectors.toMap(MediaAsset::getId, Function.identity()));
+
+        return assetViews.details(assetIds.stream().distinct().map(found::get).filter(Objects::nonNull).toList());
+    }
+
     public PageSlice<MediaAssetSummary> list(@Nullable MediaSemanticType semanticType, boolean needsCredit, int page,
             int size) {
         PageRequest request = PageRequest.of(page, size, NEWEST_FIRST);
