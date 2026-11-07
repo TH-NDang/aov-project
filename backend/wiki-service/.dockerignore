@@ -1,0 +1,8 @@
+target/
+.local-state/
+.env
+.env.*
+infra/
+scripts/
+compose.yaml
+*.md

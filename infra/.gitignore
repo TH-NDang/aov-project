@@ -1,0 +1,2 @@
+# Database dumps and media copies; they contain password hashes and all user data.
+/backups/

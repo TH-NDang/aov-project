@@ -1,0 +1,6 @@
+target/
+.local-state/
+.env
+.env.*
+scripts/
+*.md

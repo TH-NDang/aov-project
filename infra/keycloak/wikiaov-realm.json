@@ -1,0 +1,406 @@
+{
+  "realm": "wikiaov",
+  "displayName": "AOV",
+  "enabled": true,
+  "registrationAllowed": true,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "vi",
+    "en"
+  ],
+  "defaultLocale": "vi",
+  "sslRequired": "external",
+  "accessTokenLifespan": 900,
+  "roles": {
+    "realm": [
+      {
+        "name": "wiki-editor",
+        "description": "Edits drafts and uploads media",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wiki-service": [
+              "catalog:read",
+              "hero:write",
+              "item:write",
+              "arcana:write",
+              "spell:write",
+              "enchantment:write",
+              "media:write"
+            ]
+          }
+        }
+      },
+      {
+        "name": "wiki-publisher",
+        "description": "Editor plus publish/discard",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "wiki-editor"
+          ],
+          "client": {
+            "wiki-service": [
+              "hero:publish",
+              "item:publish",
+              "arcana:publish",
+              "spell:publish",
+              "enchantment:publish"
+            ]
+          }
+        }
+      },
+      {
+        "name": "wiki-patch-manager",
+        "description": "Manages patches and releases",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wiki-service": [
+              "catalog:read",
+              "patch:write",
+              "patch:publish"
+            ]
+          }
+        }
+      },
+      {
+        "name": "wiki-admin",
+        "description": "Everything, including regions and rulesets",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "wiki-publisher",
+            "wiki-patch-manager",
+            "community-admin"
+          ],
+          "client": {
+            "wiki-service": [
+              "region:admin",
+              "user:read",
+              "user:write"
+            ]
+          }
+        }
+      },
+      {
+        "name": "community-editor",
+        "description": "Edits tournament drafts",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wiki-service": [
+              "catalog:read"
+            ],
+            "community-service": [
+              "tournament:read",
+              "tournament:write"
+            ]
+          }
+        }
+      },
+      {
+        "name": "community-publisher",
+        "description": "Publishes tournament observations",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "community-editor"
+          ],
+          "client": {
+            "community-service": [
+              "tournament:publish"
+            ]
+          }
+        }
+      },
+      {
+        "name": "community-admin",
+        "description": "Manages community tournament data",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "community-publisher"
+          ]
+        }
+      }
+    ],
+    "client": {
+      "wiki-service": [
+        {
+          "name": "user:read",
+          "description": "Read user profiles"
+        },
+        {
+          "name": "user:write",
+          "description": "Edit user profiles"
+        },
+        {
+          "name": "catalog:read",
+          "description": "Capability catalog:read"
+        },
+        {
+          "name": "hero:write",
+          "description": "Capability hero:write"
+        },
+        {
+          "name": "item:write",
+          "description": "Capability item:write"
+        },
+        {
+          "name": "arcana:write",
+          "description": "Capability arcana:write"
+        },
+        {
+          "name": "spell:write",
+          "description": "Capability spell:write"
+        },
+        {
+          "name": "enchantment:write",
+          "description": "Capability enchantment:write"
+        },
+        {
+          "name": "media:write",
+          "description": "Capability media:write"
+        },
+        {
+          "name": "hero:publish",
+          "description": "Capability hero:publish"
+        },
+        {
+          "name": "item:publish",
+          "description": "Capability item:publish"
+        },
+        {
+          "name": "arcana:publish",
+          "description": "Capability arcana:publish"
+        },
+        {
+          "name": "spell:publish",
+          "description": "Capability spell:publish"
+        },
+        {
+          "name": "enchantment:publish",
+          "description": "Capability enchantment:publish"
+        },
+        {
+          "name": "patch:write",
+          "description": "Capability patch:write"
+        },
+        {
+          "name": "patch:publish",
+          "description": "Capability patch:publish"
+        },
+        {
+          "name": "region:admin",
+          "description": "Capability region:admin"
+        }
+      ],
+      "community-service": [
+        {
+          "name": "tournament:read",
+          "description": "Capability tournament:read"
+        },
+        {
+          "name": "tournament:write",
+          "description": "Capability tournament:write"
+        },
+        {
+          "name": "tournament:publish",
+          "description": "Capability tournament:publish"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "aov-wiki",
+      "name": "AOV Wiki",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "${PUBLIC_ORIGIN}/auth/callback"
+      ],
+      "webOrigins": [
+        "${PUBLIC_ORIGIN}"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${PUBLIC_ORIGIN}/",
+        "login_theme": "aov-public"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "rootUrl": "${PUBLIC_ORIGIN}",
+      "baseUrl": "${PUBLIC_ORIGIN}/"
+    },
+    {
+      "clientId": "aov-stream",
+      "name": "AOV Stream",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "${PUBLIC_ORIGIN}/stream/auth/callback"
+      ],
+      "webOrigins": [
+        "${PUBLIC_ORIGIN}"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${PUBLIC_ORIGIN}/stream/##${PUBLIC_ORIGIN}/stream/pages",
+        "login_theme": "aov-public"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-community-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "community-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ],
+      "rootUrl": "${PUBLIC_ORIGIN}",
+      "baseUrl": "${PUBLIC_ORIGIN}/stream/pages"
+    },
+    {
+      "clientId": "wiki-service",
+      "name": "wiki-service (resource server)",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "community-service",
+      "name": "community-service (resource server)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false
+    },
+    {
+      "clientId": "wiki-importer",
+      "name": "Data import script",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "${WIKI_IMPORTER_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "admin-aov-backend",
+      "name": "Admin backend authentication gateway",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "${ADMIN_AUTH_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "${PUBLIC_ORIGIN}/api/wiki/v1/auth/google/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "access.token.lifespan": "300"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-wiki-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "wiki-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience-community-service",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "community-service",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-wiki-importer",
+      "enabled": true,
+      "serviceAccountClientId": "wiki-importer",
+      "clientRoles": {
+        "wiki-service": [
+          "catalog:read",
+          "hero:write",
+          "item:write",
+          "arcana:write",
+          "spell:write",
+          "enchantment:write",
+          "media:write",
+          "hero:publish",
+          "item:publish",
+          "arcana:publish",
+          "spell:publish",
+          "enchantment:publish"
+        ]
+      }
+    }
+  ],
+  "bruteForceProtected": true,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0
+}
