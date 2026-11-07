@@ -10,6 +10,9 @@ import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
 import { WikiLoginCallback } from "./features/auth/wiki-account"
 import { WikiFooter } from "./components/wiki-footer"
+import { legacyWarehouseTarget, WAREHOUSE_TABS, wikiScrollKey } from "./lib/wiki-catalog"
+import { homeMeta, notFoundMeta } from "./lib/seo/page-meta"
+import { usePageHead } from "./lib/seo/use-page-head"
 
 const TermsPage = lazy(() => import("./features/terms/terms-page").then((module) => ({ default: module.TermsPage })))
 const UpdatesPage = lazy(() =>
@@ -38,15 +41,49 @@ function HeroDetailRoute() {
   )
 }
 
+function WarehouseRoute() {
+  const { tab } = useParams()
+  const { search } = useLocation()
+  if (!WAREHOUSE_TABS.some((known) => known === tab)) return <Navigate to={legacyWarehouseTarget(search)} replace />
+  return (
+    <Suspense fallback={<WarehouseRouteLoading />}>
+      <WarehousePage />
+    </Suspense>
+  )
+}
+
+function LegacyWarehouseRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={legacyWarehouseTarget(search)} replace />
+}
+
+function NotFoundPage() {
+  const { t, href, locale } = useWikiContext()
+  const { pathname } = useLocation()
+  usePageHead(notFoundMeta(locale, pathname))
+  return (
+    <>
+      <WikiHeader />
+      <main
+        id="main"
+        className="wiki-mascot-state mx-auto grid flex-1 content-center justify-items-center gap-4 p-8 text-center"
+      >
+        <h1 className="text-xl text-gold">{wikiText(locale, "Không tìm thấy trang", "Page not found")}</h1>
+        <Link to={href("/")}>{t("backHome")}</Link>
+      </main>
+    </>
+  )
+}
+
 /** Term links used to point at the home page; they now open the glossary. */
 function HomePage() {
   const { locale, href } = useWikiContext()
   const [params] = useSearchParams()
   const term = params.get("term")
+  usePageHead(term ? null : homeMeta(locale))
   if (term) return <Navigate to={href(`/terms/${encodeURIComponent(term)}`)} replace />
   return (
     <>
-      <title>{wikiText(locale, "AOV WiKi — Khai mở tri thức", "AOV WiKi — Knowledge uncovered")}</title>
       <WikiHeader />
       <main
         id="main"
@@ -61,11 +98,12 @@ function HomePage() {
 }
 
 export default function App() {
-  const { t, href, locale } = useWikiContext()
+  const { locale } = useWikiContext()
   const { pathname } = useLocation()
+  const scrollKey = wikiScrollKey(pathname)
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [pathname])
+  }, [scrollKey])
 
   return (
     <>
@@ -96,14 +134,8 @@ export default function App() {
               </Suspense>
             }
           />
-          <Route
-            path="/warehouse"
-            element={
-              <Suspense fallback={<WarehouseRouteLoading />}>
-                <WarehousePage />
-              </Suspense>
-            }
-          />
+          <Route path="/warehouse" element={<LegacyWarehouseRedirect />} />
+          <Route path="/warehouse/:tab/:entryCode?" element={<WarehouseRoute />} />
           {["/terms", "/terms/:termId"].map((path) => (
             <Route
               key={path}
@@ -134,21 +166,7 @@ export default function App() {
         </Route>
         <Route path="/hero/:heroCode" element={<HeroDetailRoute />} />
         <Route path="/hero/*" element={<HeroDetailRoute />} />
-        <Route
-          path="*"
-          element={
-            <>
-              <WikiHeader />
-              <main
-                id="main"
-                className="wiki-mascot-state mx-auto grid flex-1 content-center justify-items-center gap-4 p-8 text-center"
-              >
-                <h1 className="text-xl text-gold">{wikiText(locale, "Không tìm thấy trang", "Page not found")}</h1>
-                <Link to={href("/")}>{t("backHome")}</Link>
-              </main>
-            </>
-          }
-        />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <WikiFooter />
     </>

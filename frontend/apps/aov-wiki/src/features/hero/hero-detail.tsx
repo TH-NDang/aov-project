@@ -17,6 +17,7 @@ import { WikiImage } from "../../components/wiki-image"
 import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
 import "./hero-detail.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { heroMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { PublicEmbers } from "@aov/ui/components/public-embers"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 
@@ -156,7 +157,19 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
   const picker = <WikiVersionPicker changedVariants={history.data} />
 
   return (
-    <HeroDetailLayout title={hero.name} backTo={returnTo} style={style}>
+    <HeroDetailLayout
+      meta={heroMeta(
+        {
+          ...hero,
+          title: query.data?.content.profile?.title,
+          summary: query.data?.content.profile?.summary,
+          media: query.data?.media,
+        },
+        locale,
+      )}
+      backTo={returnTo}
+      style={style}
+    >
       {query.data ? (
         <HeroHandbook hero={query.data} art={art} identity={identity} picker={picker} />
       ) : (
@@ -191,7 +204,7 @@ export function HeroDetailPage() {
   if (catalog.isPending) return <HeroDetailLoading heroCode={heroCode} />
 
   return (
-    <HeroDetailLayout title={t("heroes")}>
+    <HeroDetailLayout meta={notFoundMeta(locale, location.pathname, "heroes")}>
       <div
         className="wiki-hero-profile-state wiki-mascot-state"
         style={{ "--hero-accent": "#d6bd8e" } as CSSProperties}

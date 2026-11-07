@@ -14,6 +14,8 @@ import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { wikiReferencesQuery } from "../../lib/wiki-references"
+import { notFoundMeta, termMeta } from "../../lib/seo/page-meta"
+import { usePageHead } from "../../lib/seo/use-page-head"
 import "./terms.css"
 
 /** The public glossary. Term mentions anywhere in the wiki link to /terms/{id}. */
@@ -48,6 +50,14 @@ export function TermsPage() {
   )
   const target = useRef<HTMLElement>(null)
   const known = !termId || terms.some(({ entity }) => entity.id === termId)
+  const opened = terms.find(({ entity }) => entity.id === termId)
+  usePageHead(
+    opened
+      ? termMeta({ id: opened.entity.id, ...opened.translation }, locale)
+      : termId && references.isSuccess
+        ? notFoundMeta(locale, `/terms/${encodeURIComponent(termId)}`, "terms")
+        : null,
+  )
   useEffect(() => {
     if (termId && terms.length) target.current?.scrollIntoView({ block: "center" })
   }, [termId, terms.length])

@@ -2,8 +2,8 @@ import { PatchChangesRow, type ChangedSubject } from "../../components/patch-cha
 import { usePublishedChanges, warehouseChangeDomain } from "../../lib/wiki-patch-changes"
 import { PublishedWarehouseView } from "./warehouse-view"
 import { CatalogHeading } from "../../layout/catalog-heading"
-import { useMemo, useRef } from "react"
-import { useNavigate, useSearchParams } from "react-router"
+import { useEffect, useMemo, useRef } from "react"
+import { useNavigate, useParams, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { warehouseCatalogQuery, warehouseGroupsQuery } from "./warehouse-api"
 import { WarehouseCatalog } from "./warehouse-catalogs"
@@ -24,6 +24,9 @@ import "./warehouse-page.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { notFoundMeta, warehouseEntryMeta } from "../../lib/seo/page-meta"
+import { usePageHead } from "../../lib/seo/use-page-head"
+import { warehousePath } from "../../lib/wiki-catalog"
 import { PublicTabBar } from "@aov/ui/components/public-tab-bar"
 
 const WAREHOUSE_KINDS = ["items", "enchantments", "arcana", "spells"] as const
@@ -34,12 +37,13 @@ export default function WarehousePage() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const layout = usePageLayout()
-  const kind = warehouseKind(params.get("tab"))
+  const { tab, entryCode } = useParams()
+  const kind = warehouseKind(tab ?? null)
   const changes = usePublishedChanges(warehouseChangeDomain[kind])
   const sectionName = scope.t(kind)
   const search = params.get("q") ?? ""
   const group = params.get("group") ?? ""
-  const selectedId = params.get("item")
+  const selectedId = entryCode ?? null
   const trigger = useRef<HTMLButtonElement | null>(null)
   const catalog = useQuery(warehouseCatalogQuery(kind, scope))
   const metadata = useQuery(warehouseGroupsQuery(kind, scope.locale))
@@ -52,6 +56,21 @@ export default function WarehousePage() {
 
   const panel = useDetailPanel()
   const selectedEntry = entries.find((entry) => entry.id === selectedId || entry.code === selectedId)
+  const selectedCode = selectedEntry?.code
+
+  // Rich text and patch notes link entries by id, but the page for sharing and indexing is the one named by code.
+  useEffect(() => {
+    if (selectedCode && selectedId !== selectedCode)
+      navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
+  }, [kind, navigate, selectedCode, selectedId])
+
+  usePageHead(
+    selectedEntry
+      ? warehouseEntryMeta(kind, selectedEntry, scope.locale)
+      : selectedId && catalog.isSuccess
+        ? notFoundMeta(scope.locale, warehousePath(kind, selectedId), kind)
+        : null,
+  )
   const items = useMemo(() => entries.filter((entry): entry is WarehouseItem => entry.kind === "items"), [entries])
   const matchingItems = useMemo(
     () => filtered.filter((entry): entry is WarehouseItem => entry.kind === "items"),
@@ -72,32 +91,22 @@ export default function WarehousePage() {
     if (button) trigger.current = button
     const positions = entry.content.shopPositions ?? []
     const board = itemView.category
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        next.set("item", entry.id)
-        // Keep the board on a category that shows the item, so its recipe lines stay visible.
-        if (kind === "items" && itemView.layout === "shop") {
-          const onBoard = positions.some((position) => position.categoryCode === board)
-          const home = onBoard ? board : (entry.content.categoryCode ?? positions[0]?.categoryCode)
-          if (home) next.set("group", home)
-        }
-        return next
-      },
+    const next = new URLSearchParams(params)
+    // Keep the board on a category that shows the item, so its recipe lines stay visible.
+    if (kind === "items" && itemView.layout === "shop") {
+      const onBoard = positions.some((position) => position.categoryCode === board)
+      const home = onBoard ? board : (entry.content.categoryCode ?? positions[0]?.categoryCode)
+      if (home) next.set("group", home)
+    }
+    navigate(
+      { pathname: warehousePath(kind, entry.code), search: `?${next}` },
       // Going from one entry to the next should not fill the back button; opening the sheet still can be undone by it.
       { replace: panel || !!selectedId },
     )
   }
 
   function clearSelection() {
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        next.delete("item")
-        return next
-      },
-      { replace: true },
-    )
+    navigate({ pathname: warehousePath(kind), search: `?${params}` }, { replace: true })
   }
 
   function setSearch(value: string) {
@@ -129,14 +138,9 @@ export default function WarehousePage() {
     if (name && !subjects.has(id) && !entries.some((e) => e.id === id) && !search) subjects.set(id, { id, name, kind })
   }
   function clearFilters() {
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        for (const key of ["q", "group", "item"]) next.delete(key)
-        return next
-      },
-      { replace: true },
-    )
+    const next = new URLSearchParams(params)
+    for (const key of ["q", "group"]) next.delete(key)
+    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
 
   return (
@@ -149,7 +153,7 @@ export default function WarehousePage() {
             label={scope.t("warehouse")}
             tabs={WAREHOUSE_KINDS.map((key) => ({ key, label: scope.t(key) }))}
             active={kind}
-            onSelect={(key) => navigate(scope.href(`/warehouse?tab=${key}`))}
+            onSelect={(key) => navigate(scope.href(warehousePath(key)))}
           />
         )}
         <div className="wiki-warehouse-toolbar">
@@ -253,18 +257,12 @@ export default function WarehousePage() {
                   groups={groups}
                   group={group}
                   selectedId={selectedEntry?.id ?? selectedId}
-                  onGroupChange={(value) =>
-                    setParams(
-                      (current) => {
-                        const next = new URLSearchParams(current)
-                        if (value) next.set("group", value)
-                        else next.delete("group")
-                        next.delete("item")
-                        return next
-                      },
-                      { replace: true },
-                    )
-                  }
+                  onGroupChange={(value) => {
+                    const next = new URLSearchParams(params)
+                    if (value) next.set("group", value)
+                    else next.delete("group")
+                    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
+                  }}
                   onSelect={select}
                   onClear={clearSelection}
                   itemView={itemView}

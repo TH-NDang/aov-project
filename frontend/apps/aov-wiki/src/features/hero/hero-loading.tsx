@@ -69,7 +69,7 @@ export function HeroDetailLoading({ heroCode }: { heroCode?: string }) {
   } as CSSProperties
 
   return (
-    <HeroDetailLayout title={t("heroes")} style={style}>
+    <HeroDetailLayout meta={null} style={style}>
       <section className="wiki-hero-profile" data-artwork="SPLASH" aria-busy="true" role="status">
         <span className="sr-only">{wikiText(locale, "Đang tải tướng…", "Loading hero…")}</span>
         <div className="wiki-hero-profile-art wiki-hero-art-skeleton wiki-skeleton" aria-hidden="true" />

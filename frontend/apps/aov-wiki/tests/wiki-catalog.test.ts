@@ -1,14 +1,49 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
+  legacyWarehouseTarget,
   supportedWikiLocale,
+  warehouseListPath,
+  warehousePath,
   wikiCatalogParameters,
   wikiScopeHref,
   wikiScopeKey,
+  wikiScrollKey,
   wikiSection,
 } from "../src/lib/wiki-catalog.ts"
 
 const scope = { region: "VN", locale: "en-US", seasonId: "s3", patchVariantId: "patch-1", includeUnscoped: true }
+
+test("armory tabs and entries live in the path and older query links open the same view", () => {
+  assert.equal(warehousePath("items"), "/warehouse/items")
+  assert.equal(warehousePath("arcana", "do 1"), "/warehouse/arcana/do%201")
+  assert.equal(warehouseListPath("/warehouse/items/ao-choang"), "/warehouse/items")
+  assert.equal(warehouseListPath("/warehouse/items"), "/warehouse/items")
+  assert.equal(warehouseListPath("/hero/airi"), "/hero/airi")
+
+  assert.equal(legacyWarehouseTarget(""), "/warehouse/items")
+  assert.equal(legacyWarehouseTarget("?tab=unknown"), "/warehouse/items")
+  assert.equal(legacyWarehouseTarget("?tab=arcana"), "/warehouse/arcana")
+  assert.equal(
+    legacyWarehouseTarget("?tab=spells&item=boc-pha&q=x&region=VN&locale=en-US"),
+    "/warehouse/spells/boc-pha?q=x&region=VN&locale=en-US",
+  )
+})
+
+test("each armory tab is its own catalog section, whichever form its address takes", () => {
+  assert.equal(wikiSection("/warehouse", null), "warehouse/items")
+  assert.equal(wikiSection("/warehouse/", "spells"), "warehouse/spells")
+  assert.equal(wikiSection("/warehouse/arcana", null), "warehouse/arcana")
+  assert.equal(wikiSection("/warehouse/arcana/do-1", null), "warehouse/arcana")
+  assert.equal(wikiSection("/hero/dolia", null), "hero")
+  assert.equal(wikiSection("/", null), "")
+})
+
+test("opening armory entries keeps the scroll position while other pages start at the top", () => {
+  assert.equal(wikiScrollKey("/warehouse/items"), wikiScrollKey("/warehouse/items/ao-choang"))
+  assert.equal(wikiScrollKey("/warehouse/items"), wikiScrollKey("/warehouse/arcana"))
+  assert.notEqual(wikiScrollKey("/hero/airi"), wikiScrollKey("/hero/alice"))
+})
 
 test("switching public catalogs returns to the market's current patch while same-section details retain their scope", () => {
   const fromHero = { ...scope, section: wikiSection("/hero/dolia", null) }

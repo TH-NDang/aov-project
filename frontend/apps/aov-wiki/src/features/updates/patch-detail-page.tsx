@@ -8,6 +8,9 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { changeKind } from "../../lib/published-change-subjects"
 import { changeSetKind, parseChangeSummary } from "../../lib/wiki-change-format"
 import type { ChangeDomain } from "../../lib/wiki-patch-changes"
+import { notFoundMeta, patchMeta } from "../../lib/seo/page-meta"
+import { usePageHead } from "../../lib/seo/use-page-head"
+import { warehousePath } from "../../lib/wiki-catalog"
 import { heroCatalogQuery, heroDetailQuery } from "../hero/hero-api"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "./change-list"
 import { ReleaseDate } from "./release-date"
@@ -126,7 +129,7 @@ function CatalogRow({ row, tab }: { row: PatchChangeRow; tab?: string }) {
     <article className="wiki-patch-subject">
       <header>
         {id && tab ? (
-          <Link to={href(`/warehouse?tab=${tab}&item=${id}`)} className="wiki-patch-subject-link">
+          <Link to={href(warehousePath(tab, id))} className="wiki-patch-subject-link">
             <strong>{name}</strong>
           </Link>
         ) : (
@@ -267,6 +270,13 @@ export function PatchDetailPage() {
   const { patchCode } = useParams()
   const releases = useQuery(patchReleasesQuery(scope))
   const release = releases.data?.find((item) => item.code === patchCode || item.id === patchCode)
+  usePageHead(
+    release
+      ? patchMeta(release, locale)
+      : releases.isSuccess
+        ? notFoundMeta(locale, `/updates/${encodeURIComponent(patchCode ?? "")}`, "updates")
+        : null,
+  )
 
   return (
     <div className="wiki-updates">

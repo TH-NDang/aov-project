@@ -1,7 +1,13 @@
 import { queryOptions } from "@tanstack/react-query"
 import type { EntityReference, RichTextSettings } from "@aov/ui/lib/entity-rich-text"
 import type { WarehouseKind } from "../features/warehouse/warehouse-types"
-import { wikiCatalogParameters, wikiScopeHref, wikiScopeKey, type WikiCatalogScope } from "./wiki-catalog"
+import {
+  warehousePath,
+  wikiCatalogParameters,
+  wikiScopeHref,
+  wikiScopeKey,
+  type WikiCatalogScope,
+} from "./wiki-catalog"
 
 const REFERENCE_TABS: Partial<Record<EntityReference["kind"], WarehouseKind>> = {
   item: "items",
@@ -25,7 +31,7 @@ export const wikiReferencesQuery = (scope: WikiCatalogScope) =>
         entities: settings.entities.map((entity) => {
           const tab = REFERENCE_TABS[entity.kind]
           const destination = tab
-            ? `/warehouse?${new URLSearchParams({ tab, item: entity.id })}`
+            ? warehousePath(tab, entity.id)
             : entity.kind === "hero"
               ? `/hero/${encodeURIComponent(entity.id)}`
               : entity.kind === "skill" && entity.heroId

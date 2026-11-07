@@ -1,17 +1,19 @@
 import { type CSSProperties, type ReactNode } from "react"
-import { Outlet, useMatch, useSearchParams } from "react-router"
+import { Outlet, useLocation, useMatch } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiHeader } from "../components/wiki-header"
 import { LibraryNavigation } from "./library-navigation"
 import { warehouseKind } from "../features/warehouse/warehouse-types"
 import "./wiki-library-layout.css"
 import { useWikiContext } from "../context/wiki-context"
+import { libraryPageMeta, type PageMeta } from "../lib/seo/page-meta"
+import { usePageHead } from "../lib/seo/use-page-head"
 
 export function WikiLibraryLayout() {
-  const { t } = useWikiContext()
+  const { t, locale } = useWikiContext()
   const layout = usePageLayout()
-  const [params] = useSearchParams()
-  const isWarehouse = useMatch("/warehouse")
+  const { pathname } = useLocation()
+  const isWarehouse = useMatch("/warehouse/*")
   const isSkins = useMatch("/skins")
   const isUpdates = useMatch("/updates/*")
   const isTerms = useMatch("/terms/*")
@@ -22,13 +24,13 @@ export function WikiLibraryLayout() {
     : isUpdates
       ? "updates"
       : searchScope === "warehouse"
-        ? warehouseKind(params.get("tab"))
+        ? warehouseKind(pathname.split("/")[2] ?? null)
         : searchScope
   const pageTitle = t(active)
+  usePageHead(libraryPageMeta(pathname, locale))
 
   return (
     <div className="wiki-library-shell">
-      <title>{`${pageTitle} | AOV WiKi`}</title>
       {/* On the compact layout the armory's parts are tabs below the header, which names the whole armory. */}
       <WikiHeader
         variant="library"
@@ -57,19 +59,19 @@ export function WikiLibraryLayout() {
 }
 
 export function HeroDetailLayout({
-  title,
+  meta,
   backTo,
   children,
   style,
 }: {
-  title: string
+  meta: PageMeta | null
   backTo?: string
   children: ReactNode
   style?: CSSProperties
 }) {
+  usePageHead(meta)
   return (
     <div className="wiki-hero-detail-shell" style={style}>
-      <title>{`${title} | AOV WiKi`}</title>
       <WikiHeader variant="hero" backTo={backTo} section="heroes" />
       <main id="main" className="wiki-hero-detail-main" tabIndex={-1}>
         {children}

@@ -2,7 +2,7 @@
 
 - Tham khảo bố cục: https://wiki.hoyolab.com/pc/hsr/home (xem mục "Bố cục theo HoYoWiki")
 - Phạm vi: header, logo, theme tối cố định và responsive; dùng chung cho trang chủ, thư viện Tướng/Trang phục, Kho trang bị và chi tiết Tướng qua các biến thể `home`, `library`, `hero`.
-- Trên thư viện và chi tiết Tướng, tìm kiếm điều hướng đến `/hero?q=...` để lọc danh sách thật. Thư viện Trang phục dùng `/skins?q=...`, Kho trang bị dùng `/warehouse?tab=...&q=...` và giữ tab hiện tại; cùng form và popup với nhãn tương ứng. Tìm kiếm chung trên trang chủ vẫn ghi rõ trạng thái sắp ra mắt; tài khoản đã có luồng đăng nhập thật.
+- Trên thư viện và chi tiết Tướng, tìm kiếm điều hướng đến `/hero?q=...` để lọc danh sách thật. Thư viện Trang phục dùng `/skins?q=...`, Kho trang bị dùng `/warehouse/<tab>?q=...` và giữ tab hiện tại; cùng form và popup với nhãn tương ứng. Tìm kiếm chung trên trang chủ vẫn ghi rõ trạng thái sắp ra mắt; tài khoản đã có luồng đăng nhập thật.
 - Logo hiện tại: `public/images/mole-logo-v4.png`, tạo bằng công cụ imagegen tích hợp; các phiên bản trước và prompt được lưu lại bên dưới.
 - Đã kiểm tra trên trình duyệt ở chiều rộng 320, 390, 768 và 1440 px; không tràn ngang. Popup tài khoản đóng bằng Escape.
 
