@@ -91,6 +91,10 @@ Không chặn `/api/`, vì Google cần gọi API để render trang.
 - Làm mới: chạy `pnpm prerender` như một **job một lần** theo lịch hoặc sau khi xuất bản, ghi vào thư mục mà máy chủ tĩnh
   đang phục vụ. Đây không phải service thường trực. Tần suất do người vận hành quyết định; nội dung mới trễ tối đa bằng
   một chu kỳ, trong thời gian đó người dùng vẫn đọc được qua app.
+- Dùng chung thư mục qua named volume: Docker chỉ chép nội dung image vào volume khi tạo volume lần đầu, nên sau khi build
+  lại, proxy vẫn phục vụ bundle cũ. Mỗi lần chạy, job phải chạy `prerender` trên `dist` của chính image trước, thành công
+  mới thay **toàn bộ** nội dung volume bằng `dist` đó. Làm theo thứ tự này thì API lỗi không chạm vào volume, site tiếp tục
+  chạy bản cũ cho tới khi job thành công. Chỉ chép đè thì trang vừa gỡ xuất bản vẫn còn trong volume.
 
 ## Hệ quả và giới hạn
 
@@ -111,7 +115,9 @@ vượt chu kỳ làm mới. Bộ dựng meta trong `src/lib/seo` dùng lại đ
 API giả (kể cả API lỗi, API rỗng, gỡ xuất bản). Trên dữ liệu dev: tải trang không chạy JS trả đúng tiêu đề, mô tả, ảnh;
 sitemap có đúng 33 tướng đã xuất bản và không có tướng nào trong 97 tướng chỉ có nháp, đối chiếu trực tiếp với database.
 
-Đã thử quy tắc `try_files` ở trên bằng Caddy thật với thư mục `dist` thật.
+Đã thử quy tắc `try_files` ở trên bằng Caddy thật với thư mục `dist` thật, kể cả khối Wiki của nhánh triển khai (thêm
+`/index.html` ở cuối, không ảnh hưởng vì build luôn tạo `200.html`). Các test của prerender cũng chạy đạt trên Node 22,
+phiên bản của image proxy; riêng điểm vào của script (đọc biến môi trường qua Vite) mới chạy trên Node 26.
 
 Chưa kiểm chứng được khi chưa có tên miền thật: công cụ debug của Facebook, Zalo, X; Google Search Console; canonical và
 sitemap trên địa chỉ thật; HTTPS. Chưa chạy trong chồng Docker Compose đầy đủ.
