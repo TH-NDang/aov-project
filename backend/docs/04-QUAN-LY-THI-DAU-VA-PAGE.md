@@ -300,6 +300,9 @@ hàm và view tính khi đọc (tournament_window, tournament_team, team_tournam
 player_tournament_activity, player_activity, page_activity). `tournament.page_activity` là phần duy nhất module community
 được đọc từ schema tournament; hàm `search_names`, `search_key`, `name_match_rank` dùng chung.
 
+Migration `V014` đưa tên thật (`fullName`) vào phần tìm kiếm của tuyển thủ: ô tìm trong danh bạ và ô chọn tuyển thủ đều tìm được
+theo tên thi đấu, tên thật, biệt danh hoặc mã.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
