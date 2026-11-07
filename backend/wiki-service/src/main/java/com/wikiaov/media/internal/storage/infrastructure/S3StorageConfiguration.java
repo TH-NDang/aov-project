@@ -46,8 +46,8 @@ class S3StorageConfiguration {
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(properties.pathStyleAccess())
                         .build());
-        if (properties.endpoint() != null) {
-            builder.endpointOverride(properties.endpoint());
+        if (properties.presignEndpoint() != null) {
+            builder.endpointOverride(properties.presignEndpoint());
         }
         return builder.build();
     }
