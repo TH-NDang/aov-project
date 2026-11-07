@@ -19,7 +19,8 @@ public interface HeroStatSampleRepository extends Repository<StatRow, StatRow.Ke
                 'heroId', r.hero_id, 'draft', r.state = 'DRAFT',
                 'roles', coalesce((select jsonb_agg(role_code order by role_code) from hero.hero_profile_role
                     where profile_revision_id = r.profile_revision_id), '[]'),
-                'baseStats', coalesce((select jsonb_object_agg(stat_key, jsonb_build_object('value',base_value,'unit',unit_code))
+                'baseStats', coalesce((select jsonb_object_agg(stat_key,
+                        jsonb_build_object('value',base_value,'unit',unit_code,'percent',percent_value))
                     from hero.hero_combat_stat_value where stats_revision_id = r.combat_stats_revision_id and base_value is not null), '{}'),
                 'capture', capture.data
             ) as text)

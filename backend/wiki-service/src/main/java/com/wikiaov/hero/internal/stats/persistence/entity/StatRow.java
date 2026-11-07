@@ -23,6 +23,8 @@ public class StatRow extends AssignedIdentifierEntity<StatRow.Key> {
 
     private BigDecimal baseValue;
 
+    private BigDecimal percentValue;
+
     private BigDecimal growthPerLevel;
 
     private String unitCode;

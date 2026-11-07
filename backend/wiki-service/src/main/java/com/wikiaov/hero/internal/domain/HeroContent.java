@@ -104,6 +104,7 @@ public final class HeroContent {
     public record Stat(
             @NotBlank @Pattern(regexp = "[A-Z][A-Z0-9_]{0,63}") String statKey,
             BigDecimal baseValue,
+            BigDecimal percentValue,
             BigDecimal growthPerLevel,
             @NotBlank @Size(max = 32) String unit
     ) {

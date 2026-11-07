@@ -38,7 +38,7 @@ public class HeroStatSnapshots implements HeroSectionSnapshots {
         if (content != null) {
             var value = (Stats) content;
             stats.saveAll(value.values().stream().map(v -> new StatRow(revision.getId(), v.statKey(),
-                    v.baseValue(), v.growthPerLevel(), v.unit())).toList());
+                    v.baseValue(), v.percentValue(), v.growthPerLevel(), v.unit())).toList());
             sources.save(section(), revision.getId(), value.sources());
         }
         revisions.flush();
@@ -49,8 +49,9 @@ public class HeroStatSnapshots implements HeroSectionSnapshots {
     public Stats content(UUID id) {
         var references = sources.find(section(), id);
         return new Stats(stats.findByStatsRevisionIdIn(Collections.singletonList(id), Sort.by("statKey")).stream()
-                .map(v -> new Stat(v.getStatKey(), v.getBaseValue(), v.getGrowthPerLevel(), v.getUnitCode())).toList(),
-                references);
+                .map(v -> new Stat(v.getStatKey(), v.getBaseValue(), v.getPercentValue(), v.getGrowthPerLevel(),
+                        v.getUnitCode()))
+                .toList(), references);
     }
 
     @Override

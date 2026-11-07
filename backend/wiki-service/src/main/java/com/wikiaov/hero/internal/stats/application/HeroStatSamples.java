@@ -19,7 +19,8 @@ public class HeroStatSamples {
 
     public record BaseStat(
             BigDecimal value,
-            String unit
+            String unit,
+            BigDecimal percent
     ) {
     }
 
