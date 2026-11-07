@@ -593,6 +593,22 @@ export function PublishingWorkspace({
 
   const patchLink = revision && publicationPatchLink(revision, publicationPatch)
 
+  // A link from the overview of all heroes lands on the part to fix, once the draft is here to open it.
+  const fix = urlParams.get("fix")
+  const fixReady = !!fix && !!preview && !revisions.isPending && (!writable || localDraft.ready)
+  useEffect(() => {
+    if (!fixReady) return
+    updateLocation({ fix: null })
+    if (fix === "PATCH") {
+      if (canMoveBaseline) openManagement()
+    } else if (SECTIONS.some(([key]) => key === fix)) {
+      if (writable) {
+        setProfilePart("information")
+        setEditing(true)
+      } else setReviewTarget({ note: "", section: fix as Section })
+    }
+  }, [fixReady])
+
   // The one action the header offers for this version; the rest stays in its menu.
   const headerAction =
     revision?.state === "DRAFT" && canPublish ? "publish" : revision?.state === "PUBLISHED" && canWrite ? "draft" : null

@@ -5,6 +5,7 @@ import { createColumnHelper, tableFeatures, useTable, type Cell, type ReactTable
 import {
   ArrowDownWideNarrow,
   ArrowUpRight,
+  ListChecks,
   UserRound,
   BookOpen,
   Languages,
@@ -386,6 +387,11 @@ export function HeroCatalog({
         <div className="flex max-w-full flex-wrap items-center gap-2">
           {searchSlot ? createPortal(searchBox, searchSlot) : <div className="min-w-40 flex-1">{searchBox}</div>}
           <HeroCatalogFilters />
+          <Button asChild variant="outline" size="sm">
+            <Link to="/hero/publish-readiness">
+              <ListChecks className="size-4" /> Sẵn sàng xuất bản
+            </Link>
+          </Button>
           <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
             <ArrowDownWideNarrow aria-hidden className="size-3.5" />
             <span className="sr-only">Sắp xếp</span>
@@ -684,7 +690,7 @@ function LastEdited({ value, locale }: { value?: string | null; locale: string }
   )
 }
 
-function HeroQuickView({
+export function HeroQuickView({
   heroId,
   hero,
   ruleset,

@@ -143,6 +143,10 @@ test("hero catalog uses server changes-only filters, global search, edited sorti
     await verifySession()
     await mount()
     await waitFor(() => codes().length === 20, "The initial catalog shows only the first server page")
+    assert.ok(
+      document.querySelector('a[href="/hero/publish-readiness"]'),
+      "The catalog leads to the readiness overview",
+    )
     assert.ok(codes().includes("aa-baseline-only"), "An unfiltered catalog retains heroes with no curated change")
     assert.ok(!codes().includes("zz-search-target"), "The search target starts beyond the loaded page")
     const button = (label: string) =>

@@ -13,6 +13,7 @@ import type {
 } from "./types"
 import { SECTIONS } from "./types"
 import type { UploadTicket } from "../users/avatar-upload"
+import type { HeroPublishReadiness } from "./publish-readiness"
 export type Request = <T>(path: string, init?: RequestInit) => Promise<T>
 
 const sectionKeys = {
@@ -60,6 +61,8 @@ export interface HeroCatalogQuery {
   locale?: string
   sort?: "code" | "edited-desc"
 }
+/** Sits under the catalog's key, so saving or publishing a hero refreshes it with the other lists. */
+export const publishReadinessKey = ["publishing-heroes", "publish-readiness"] as const
 export const heroCatalogKey = (query: HeroCatalogQuery) =>
   [
     "publishing-heroes",
@@ -133,6 +136,8 @@ export function createPublishingApi(request: Request) {
       for (const [key, value] of Object.entries(query)) if (value?.trim()) params.set(key, value.trim())
       return request<PageSlice<HeroRow>>(`/admin/heroes?${params}`, signal ? { signal } : undefined)
     },
+    publishReadiness: (signal?: AbortSignal) =>
+      request<HeroPublishReadiness[]>("/admin/heroes/publish-readiness", signal ? { signal } : undefined),
     shop: (heroId: string, region: string) => request<HeroShop>(`/admin/heroes/${heroId}/shop?region=${region}`),
     saveShopPrice: (heroId: string, region: string, value: HeroShopPrice) =>
       send<HeroShopPrice>(`/admin/heroes/${heroId}/shop?region=${region}`, "PUT", value),
