@@ -88,7 +88,7 @@ export function ConfirmDialogHost() {
       >
         <AlertDialogHeader>
           {/* Forced because the shared title brings its own size and weight, which would otherwise win. */}
-          <AlertDialogTitle className="type-section-title!">{request?.title}</AlertDialogTitle>
+          <AlertDialogTitle>{request?.title}</AlertDialogTitle>
           <AlertDialogDescription>{request?.description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
