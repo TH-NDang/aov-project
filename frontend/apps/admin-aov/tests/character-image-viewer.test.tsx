@@ -77,8 +77,6 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: wide, addEventListener() {}, removeEventListener() {} }),
   })
-  let confirmLeave = false
-  dom.window.confirm = () => confirmLeave
   const originals = new Map<string, PropertyDescriptor | undefined>()
   const preview = viewerFixture()
   let published = false
@@ -175,6 +173,7 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
   }
   const { verifySession, logout } = await import("../src/app/auth/session")
+  const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
   const { CharacterImageDetail } = await import("../src/features/media/character-image-detail")
   const { SkinMediaDetail } = await import("../src/features/media/skin-media-detail")
   const { SkinBadgeLabel } = await import("../src/features/media/skin-badge-label")
@@ -187,6 +186,7 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
       root.render(
         <MemoryRouter>
           <QueryClientProvider client={client}>{element}</QueryClientProvider>
+          <ConfirmDialogHost />
         </MemoryRouter>,
       ),
     )
@@ -268,11 +268,19 @@ test("one-preview media viewer preserves clicked alternatives, switches only mai
       true,
       "Opening a full page cannot silently discard a pending candidate",
     )
+    const question = () => document.querySelector('[role="alertdialog"]')
+    await waitFor(() => question() !== null)
+    await click(button("Ở lại chỉnh sửa"))
+    await waitFor(() => question() === null)
     assert.equal(nav("Xem ảnh chính Head của Trang phục A"), null, "A skin has no head to pick any more")
     await click(nav("Xem ảnh chính Portrait của Trang phục A"))
+    await waitFor(() => question() !== null)
+    await click(button("Ở lại chỉnh sửa"))
+    await waitFor(() => question() === null)
     assert.equal(currentImage(), "/skin-cover.webp", "Declining discard preserves owner, role and candidate")
-    confirmLeave = true
     await click(nav("Xem ảnh chính Portrait của Trang phục A"))
+    await waitFor(() => question() !== null)
+    await click(button("Bỏ ảnh và chuyển"))
     await waitFor(() => currentImage() === "/skin-portrait.webp")
     assert.equal((button("Lưu vào bản nháp") as HTMLButtonElement).disabled, true)
     await click(button("Chọn / tải ảnh"))

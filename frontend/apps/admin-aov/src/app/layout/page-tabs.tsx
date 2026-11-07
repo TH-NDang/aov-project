@@ -26,6 +26,9 @@ import { catalogTabTarget, useSavedCatalogScope } from "@/features/publishing/ca
 import { createPageTabPreviewStore } from "./page-tab-preview-store"
 import { PageTabPreviewContext, usePageTabCapture } from "./page-tab-preview"
 
+/** May ask the user, so closing waits for its answer. */
+type PageCloseGuard = () => boolean | Promise<boolean>
+
 interface PageSession {
   path: string
   to: string
@@ -41,7 +44,7 @@ interface PageTabsContextValue {
   transientOutlet: ReactNode
   closeTab: (path: string) => void
   moveTab: (path: string, targetPath: string) => void
-  registerCloseGuard: (path: string, guard: () => boolean) => () => void
+  registerCloseGuard: (path: string, guard: PageCloseGuard) => () => void
 }
 
 const PageTabsContext = createContext<PageTabsContextValue | null>(null)
@@ -86,9 +89,9 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
   }, [location, locationContext, routerState, outlet, matches])
   const [saved, setSaved] = useState<PageSession[]>(() => (transient ? [] : [active]))
   const [previews] = useState(createPageTabPreviewStore)
-  const closeGuards = useRef(new Map<string, Set<() => boolean>>())
-  const registerCloseGuard = React.useCallback((path: string, guard: () => boolean) => {
-    const guards = closeGuards.current.get(path) ?? new Set<() => boolean>()
+  const closeGuards = useRef(new Map<string, Set<PageCloseGuard>>())
+  const registerCloseGuard = React.useCallback((path: string, guard: PageCloseGuard) => {
+    const guards = closeGuards.current.get(path) ?? new Set<PageCloseGuard>()
     guards.add(guard)
     closeGuards.current.set(path, guards)
     return () => {
@@ -113,8 +116,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => previews.retain(sessions.map((session) => session.path)), [previews, sessions])
 
-  const closeTab = (path: string) => {
-    if ([...(closeGuards.current.get(path) ?? [])].some((guard) => !guard())) return
+  const removeTab = (path: string) => {
     closeGuards.current.delete(path)
     const index = sessions.findIndex((session) => session.path === path)
     const remaining = sessions.filter((session) => session.path !== path)
@@ -123,6 +125,21 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
       setClosingPath(path)
       void navigate(catalogTabTarget(remaining[Math.max(0, index - 1)]?.to ?? "/", savedScope), { replace: true })
     }
+  }
+
+  // Tabs and the active page can change while a guard waits for its answer.
+  const latestRemoveTab = useRef(removeTab)
+  useLayoutEffect(() => {
+    latestRemoveTab.current = removeTab
+  })
+
+  const closeTab = async (path: string) => {
+    // One at a time, so a guard never asks after an earlier one was refused.
+    for (const guard of [...(closeGuards.current.get(path) ?? [])]) {
+      if (!(await guard())) return
+    }
+
+    latestRemoveTab.current(path)
   }
 
   const moveTab = (path: string, targetPath: string) => {
@@ -164,7 +181,7 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
         if (destination && destination.path !== active.path) void navigate(catalogTabTarget(destination.to, savedScope))
       } else if (event.key.toLowerCase() === "w") {
         event.preventDefault()
-        if (sessions.length > 1 || active.path !== "/") closeTab(active.path)
+        if (sessions.length > 1 || active.path !== "/") void closeTab(active.path)
       }
     }
     window.addEventListener("keydown", onKeyDown)
@@ -193,7 +210,7 @@ export function usePageTabs() {
   return context
 }
 
-export function usePageCloseGuard(guard: () => boolean, enabled = true) {
+export function usePageCloseGuard(guard: PageCloseGuard, enabled = true) {
   const context = useContext(PageTabsContext)
   const { pathname } = useLocation()
   const latest = useRef(guard)

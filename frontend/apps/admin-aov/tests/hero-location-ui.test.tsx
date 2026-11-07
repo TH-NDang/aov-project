@@ -68,6 +68,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
   }
   const { verifySession, logout } = await import("../src/app/auth/session")
+  const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
   const { PublishingPage } = await import("../src/features/publishing/publishing-page")
   const { createRoot } = await import("react-dom/client")
   let root = createRoot(dom.window.document.getElementById("root")!)
@@ -88,6 +89,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
       root.render(
         <QueryClientProvider client={client}>
           <RouterProvider router={router} />
+          <ConfirmDialogHost />
         </QueryClientProvider>,
       ),
     )
@@ -237,17 +239,16 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
       )
       nameInput.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
-    let confirmations = 0
-    dom.window.confirm = () => {
-      confirmations++
-      return false
-    }
     const beforeBack = router.state.location.pathname + router.state.location.search
     await act(async () => {
       await router.navigate(-1)
     })
     await waitFor(() => router.state.location.pathname === "/hero")
-    assert.equal(confirmations, 0, "A recoverable draft should not block internal navigation")
+    assert.equal(
+      document.querySelector('[role="alertdialog"]'),
+      null,
+      "A recoverable draft should not block internal navigation",
+    )
     await waitFor(() => [...document.querySelectorAll("input")].some((input) => input.value === "Unsaved translation"))
     await act(async () => {
       await router.navigate(1)

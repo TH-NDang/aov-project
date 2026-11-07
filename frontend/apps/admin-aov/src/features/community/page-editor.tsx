@@ -58,6 +58,7 @@ import { ProfileCountry } from "./profile-country"
 import { ProfileTypeIcon } from "./profile-icons"
 import { CircuitChannelsField } from "./circuit-channels-field"
 import { toast } from "sonner"
+import { confirmAction } from "@/components/confirm-dialog"
 
 export function PageEditor() {
   return <AccessGate>{(access) => <EditorLoader access={access} />}</AccessGate>
@@ -394,13 +395,15 @@ function Editor({
                     <DropdownMenuItem
                       variant="destructive"
                       disabled={remove.isPending || uploading}
-                      onSelect={() => {
+                      onSelect={async () => {
                         const name = entry.content?.name || entry.code
-                        const message =
-                          "Xóa bản nháp \u201c" +
-                          name +
-                          "\u201d? Chỉ xóa được hồ sơ chưa từng công bố và chưa có người đại diện. Không hoàn tác được."
-                        if (window.confirm(message)) remove.mutate()
+                        const confirmed = await confirmAction({
+                          title: `Xóa bản nháp \u201c${name}\u201d?`,
+                          description:
+                            "Chỉ xóa được hồ sơ chưa từng công bố và chưa có người đại diện. Không hoàn tác được.",
+                          confirmLabel: "Xóa bản nháp",
+                        })
+                        if (confirmed) remove.mutate()
                       }}
                     >
                       <Trash2 />

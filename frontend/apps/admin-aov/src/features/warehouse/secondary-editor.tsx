@@ -46,6 +46,7 @@ import {
   type WarehouseEntry,
   type WarehouseRevision,
 } from "./warehouse-types"
+import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 
 export type SecondaryKind = "arcana" | "spells" | "enchantments"
 export interface SecondaryContent extends WarehouseContent {
@@ -202,8 +203,10 @@ export function SecondaryEditor({
     setContent((current) => ({ ...current, ...patch }))
     setDirty(true)
   }
-  function close() {
-    if (!busy && !uploading && (!dirty || window.confirm("Có thay đổi chưa lưu. Đóng phần chỉnh sửa?"))) onClose()
+  async function close() {
+    if (busy || uploading) return
+    if (!dirty || (await confirmDiscard({ title: "Đóng phần chỉnh sửa?", description: "Có thay đổi chưa lưu." })))
+      onClose()
   }
   useEffect(() => {
     if (!dirty && !busy && !uploading) return
@@ -292,7 +295,7 @@ export function SecondaryEditor({
     .filter((entry) => entry.content.branchCode === content.branchCode && entry.content.tier === content.tier)
     .sort((a, b) => (a.content.position ?? 999) - (b.content.position ?? 999) || a.code.localeCompare(b.code))
   return (
-    <Sheet open onOpenChange={(open) => !open && close()}>
+    <Sheet open onOpenChange={(open) => !open && void close()}>
       <SheetContent
         side={wide ? "right" : "bottom"}
         className={
@@ -757,8 +760,14 @@ export function SecondaryEditor({
                 variant="ghost"
                 className="mr-auto"
                 disabled={busy || uploading}
-                onClick={() => {
-                  if (window.confirm("Bỏ bản nháp này?")) void act(onDiscard)
+                onClick={async () => {
+                  const confirmed = await confirmAction({
+                    title: "Bỏ bản nháp này?",
+                    description: "Nội dung trong bản nháp sẽ bị hủy.",
+                    confirmLabel: "Bỏ nháp",
+                    cancelLabel: "Giữ bản nháp",
+                  })
+                  if (confirmed) void act(onDiscard)
                 }}
               >
                 <Archive className="size-4" /> Bỏ nháp
@@ -1076,8 +1085,12 @@ export function EnchantmentBranchEditor({
     setValue((current) => ({ ...current, ...patch }))
     setDirty(true)
   }
-  function close() {
-    if (!busy && !uploading && (!dirty || window.confirm(`Có thay đổi ${entityName} chưa lưu. Đóng phần chỉnh sửa?`)))
+  async function close() {
+    if (busy || uploading) return
+    if (
+      !dirty ||
+      (await confirmDiscard({ title: "Đóng phần chỉnh sửa?", description: `Có thay đổi ${entityName} chưa lưu.` }))
+    )
       onClose()
   }
   useEffect(() => {
@@ -1117,7 +1130,7 @@ export function EnchantmentBranchEditor({
     }
   }
   return (
-    <Sheet open onOpenChange={(open) => !open && close()}>
+    <Sheet open onOpenChange={(open) => !open && void close()}>
       <SheetContent
         side={wide ? "right" : "bottom"}
         className={

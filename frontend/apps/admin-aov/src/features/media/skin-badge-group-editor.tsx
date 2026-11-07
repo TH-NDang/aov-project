@@ -21,6 +21,7 @@ import {
 } from "./skin-badge-groups-api"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { toast } from "sonner"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 export function BadgeGroupSelect({
   value,
@@ -102,8 +103,10 @@ export function SkinBadgeGroupEditor({
   const languages = Array.from(
     new Set([...languageOptions.map((option) => option.value), ...translations.map((text) => text.locale), locale]),
   )
-  const close = () => {
-    if (!busy && (!dirty || window.confirm("Có thay đổi nhóm chưa lưu. Đóng phần chỉnh sửa?"))) onClose()
+  const close = async () => {
+    if (busy) return
+    if (!dirty || (await confirmDiscard({ title: "Đóng phần chỉnh sửa?", description: "Có thay đổi nhóm chưa lưu." })))
+      onClose()
   }
   useEffect(() => {
     if (!dirty && !busy) return
@@ -147,7 +150,7 @@ export function SkinBadgeGroupEditor({
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) close()
+        if (!open) void close()
       }}
     >
       <SheetContent

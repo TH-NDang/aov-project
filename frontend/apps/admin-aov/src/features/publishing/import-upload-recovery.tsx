@@ -7,6 +7,7 @@ import { readImportZip } from "./import-archive"
 import { indexImportFiles, normalizeImportPath } from "./import-files"
 import { resumeUploadSession, uploadSessionsPath, type UploadSession } from "./import-upload-session"
 import { useBackgroundTasks } from "@/app/background-tasks"
+import { confirmAction } from "@/components/confirm-dialog"
 
 export function ImportUploadRecovery({
   disabled,
@@ -114,9 +115,12 @@ export function ImportUploadRecovery({
   }
   async function discard(session: UploadSession) {
     if (
-      !window.confirm(
-        "Bỏ phiên upload này? Các ảnh đã tải vẫn ở thư viện media; dữ liệu tướng chưa được nhập sẽ không tiếp tục.",
-      )
+      !(await confirmAction({
+        title: "Bỏ phiên upload này?",
+        description: "Các ảnh đã tải vẫn ở thư viện media; dữ liệu tướng chưa được nhập sẽ không tiếp tục.",
+        confirmLabel: "Bỏ phiên upload",
+        cancelLabel: "Giữ phiên upload",
+      }))
     )
       return
     setBusy(true)

@@ -117,6 +117,9 @@ Do not run concurrent builds against the same output directory or edit shared so
   sizes: `type-page-title` (24/32 bold, used by `PageHeader`), `type-section-title` (16/24 bold, section `h2`),
   `type-body` (14/20), `type-label` (12/16 semibold, column headers and field labels), `type-meta` (12/16 muted).
   Do not combine a `type-*` style with `text-{size}` or `font-{weight}` on the same element.
+- Admin asks before destructive actions with `confirmAction` or `confirmDiscard` from `@/components/confirm-dialog`, never
+  `window.confirm`. Both resolve with the answer, so a handler awaits them; a link click that asks must prevent the
+  default first and navigate itself once accepted.
 
 ## Git
 
