@@ -74,6 +74,10 @@ export type CommunityProfile = {
   represented: boolean
   followers: number
   updatedAt: string
+  /** The day of the last activity, in a list ordered by it. */
+  lastActiveOn?: string | null
+  /** Tied by its history to the page a picker was opened from. */
+  related?: boolean
   /** Present while the page is broadcasting. */
   live?: PageLive | null
 }

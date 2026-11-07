@@ -33,6 +33,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@aov/ui/components/avatar"
 import { Field, Section } from "@/features/community/profile-fields"
 import { pageApi, pageKeys, publicSite } from "@/features/community/page-api"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
+import { RecordPicker } from "@/features/tournaments/record-picker"
 import { TeamRosterSheet } from "@/features/tournaments/team-roster-sheet"
 import { tournamentKeys } from "@/features/tournaments/tournament-api"
 import { tournamentDates } from "@/features/tournaments/tournament-metadata"
@@ -446,24 +447,18 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
             )}
             {step === 1 && (
               <div className="flex flex-wrap items-center gap-3">
-                <select
-                  aria-label="Thêm đội tham dự"
-                  className={`${selectClass} max-w-md`}
-                  value=""
-                  onChange={(e) =>
-                    e.target.value &&
-                    change("entrants", [...plan.entrants, { teamId: e.target.value, status: "REGISTERED", note: "" }])
-                  }
-                >
-                  <option value="">Chọn đội để thêm…</option>
-                  {teams.data
-                    ?.filter((team) => !plan.entrants.some((row) => row.teamId === team.id))
-                    .map((team) => (
-                      <option key={team.id} value={team.id}>
-                        {team.content.name}
-                      </option>
-                    ))}
-                </select>
+                <div className="max-w-md min-w-64">
+                  <RecordPicker
+                    kind="teams"
+                    value=""
+                    label="Thêm đội tham dự"
+                    context={{ tournamentId: entry.id }}
+                    exclude={plan.entrants.map((row) => row.teamId)}
+                    onChange={(teamId) =>
+                      teamId && change("entrants", [...plan.entrants, { teamId, status: "REGISTERED", note: "" }])
+                    }
+                  />
+                </div>
                 <Link className="text-sm underline" to="/teams">
                   Tạo hồ sơ đội
                 </Link>
@@ -900,14 +895,12 @@ function Workspace({ entry, access }: { entry: CompetitionView; access: Access }
           kind="tournaments"
           entry={event}
           teams={teams.data || []}
-          tournaments={tournaments.data || []}
           onClose={() => setEditing(false)}
         />
       )}
       {selectedTeam && (
         <TeamRosterSheet
           team={selectedTeam}
-          tournaments={tournaments.data || []}
           players={players.data || []}
           initialTournamentId={entry.id}
           canWrite={access.canWrite}

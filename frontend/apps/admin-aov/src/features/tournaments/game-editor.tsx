@@ -33,6 +33,7 @@ import {
   AlertDialogTrigger,
 } from "@aov/ui/components/alert-dialog"
 import { CatalogPicker } from "./catalog-picker"
+import { RecordPicker } from "./record-picker"
 import { GameScope } from "./game-scope"
 import { ParticipantEditor } from "./participant-editor"
 import { LANES, missingFieldLabel } from "./tournament-model"
@@ -51,6 +52,7 @@ export function GameEditor({
   onBack,
   actorKey,
   tournamentRegion,
+  tournamentId,
   seriesGames = [],
   bestOf = 1,
   repeatPicksAllowed = false,
@@ -63,6 +65,8 @@ export function GameEditor({
   onBack: () => void
   actorKey: string
   tournamentRegion?: string
+  /** Puts this tournament's rosters first when picking a player. */
+  tournamentId?: string
   /** Other games of the series, for the rule that a team cannot pick again a hero it already played. */
   seriesGames?: DocumentView<GameContent>[]
   bestOf?: number
@@ -435,21 +439,16 @@ export function GameEditor({
                       <span className="tournament-lane" title={LANES.find((lane) => lane.code === player.lane)?.name}>
                         {LANES.find((lane) => lane.code === player.lane)?.short ?? player.lane}
                       </span>
-                      <select
+                      <RecordPicker
+                        kind="players"
                         disabled={disabled}
-                        aria-label={`Tuyển thủ ${side.side} ${LANES[index]?.name}`}
+                        label={`Tuyển thủ ${side.side} ${LANES[index]?.name}`}
                         value={player.playerId ?? ""}
-                        onChange={(event) =>
-                          updateParticipant(sideIndex, index, { ...player, playerId: event.target.value || null })
+                        context={{ teamId: side.teamId, tournamentId }}
+                        onChange={(playerId) =>
+                          updateParticipant(sideIndex, index, { ...player, playerId: playerId || null })
                         }
-                      >
-                        <option value="">Chọn tuyển thủ</option>
-                        {players.map((player) => (
-                          <option key={player.id} value={player.id}>
-                            {player.content.nickname}
-                          </option>
-                        ))}
-                      </select>
+                      />
                       <CatalogPicker
                         value={player.hero}
                         options={allowedOptions(

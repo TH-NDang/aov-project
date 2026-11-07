@@ -10,6 +10,7 @@ import { initials } from "@/features/esports/model/game-view"
 import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
 import { CAREER_STATUSES } from "@/features/tournaments/tournament-metadata"
 import { TEAM_REGIONS } from "@/features/tournaments/team-region"
+import { activityLabel } from "@/features/tournaments/record-reason"
 import { ProfileCountry } from "../profile-country"
 import {
   directoryApi,
@@ -215,6 +216,7 @@ function PlayerRow({
               {years !== null && <span className="shrink-0">· {years} tuổi</span>}
             </p>
             {player.latestTeam && <p className="type-meta truncate @2xl:hidden">{player.latestTeam.name}</p>}
+            <p className="type-meta truncate @4xl:hidden">{activityLabel(player.lastActiveOn)}</p>
           </div>
         </div>
       </td>
@@ -283,6 +285,7 @@ function PlayerRow({
             {!/\b20\d\d\b/.test(latest.name) && latest.year ? ` · ${yearRange(latest.year, latest.year)}` : ""}
           </Link>
         )}
+        <span className="block truncate">{activityLabel(player.lastActiveOn)}</span>
       </td>
       <td className="type-meta hidden px-4 py-2.5 whitespace-nowrap @4xl:table-cell">
         {player.careerStatus === "UNKNOWN" ? "–" : CAREER_STATUSES[player.careerStatus]}

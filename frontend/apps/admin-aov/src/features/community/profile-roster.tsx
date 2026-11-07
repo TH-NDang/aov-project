@@ -9,6 +9,7 @@ import { useTournamentAccess } from "@/features/esports/data/use-esports-data"
 import { pageApi, pageKeys } from "./page-api"
 import { CreateProfileSheet } from "./create-profile-sheet"
 import { Field, Section } from "./profile-form-primitives"
+import { activityLabel } from "@/features/tournaments/record-reason"
 import { ProfileRosterMemberChoice } from "./profile-roster-member-choice"
 import { ProfileRosterLineup, RosterAvatar as PersonAvatar } from "./profile-roster-lineup"
 import { InfiniteScroll } from "@/components/infinite-scroll"
@@ -27,10 +28,13 @@ const statuses = ["Chính thức", "Dự bị", "Đã rời đội", "Cho mượ
 
 export function ProfileRoster({
   value,
+  pageId,
   onChange,
   disabled,
 }: {
   value: ProfileMember[]
+  /** The team page this roster belongs to: people who have worked with it come first when adding someone. */
+  pageId?: string
   onChange: (value: ProfileMember[]) => void
   disabled?: boolean
 }) {
@@ -71,6 +75,7 @@ export function ProfileRoster({
       )}
       {editing !== null && (
         <MemberSheet
+          teamPageId={pageId}
           member={value[editing]}
           disabled={disabled}
           onClose={() => setEditing(null)}
@@ -88,11 +93,13 @@ export function ProfileRoster({
 
 function MemberSheet({
   member,
+  teamPageId,
   disabled,
   onClose,
   onApply,
 }: {
   member?: ProfileMember
+  teamPageId?: string
   disabled?: boolean
   onClose: () => void
   onApply: (member: ProfileMember) => void
@@ -191,6 +198,7 @@ function MemberSheet({
                 key={`${group}:${search}`}
                 group={group}
                 search={search}
+                teamPageId={teamPageId}
                 onSelect={choose}
                 disabled={disabled}
               />
@@ -298,18 +306,20 @@ function MemberSheet({
 function PersonResults({
   group,
   search,
+  teamPageId,
   onSelect,
   disabled,
 }: {
   group: "PLAYER" | "COACHING"
   search: string
+  teamPageId?: string
   onSelect: (profile: CommunityProfile) => void
   disabled?: boolean
 }) {
   const deferred = useDeferredValue(search)
   const access = useTournamentAccess()
   const query = useInfiniteQuery({
-    queryKey: [...pageKeys, access.actorKey, "roster-picker", group, deferred],
+    queryKey: [...pageKeys, access.actorKey, "roster-picker", group, deferred, teamPageId],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       pageApi.list(
@@ -317,6 +327,7 @@ function PersonResults({
         deferred,
         pageParam,
         group === "COACHING" ? "COACHING" : undefined,
+        teamPageId,
       ),
     getNextPageParam: nextPageOf,
   })
@@ -353,6 +364,10 @@ function PersonResults({
                 {profile.kind === "PLAYER"
                   ? "Tuyển thủ"
                   : profile.content?.personRoles?.map((role) => personRoleLabels[role]).join(" · ")}
+              </span>
+              <span className="type-meta block">
+                {profile.related && "Từng ở đội này · "}
+                {activityLabel(profile.lastActiveOn)}
               </span>
             </span>
           </button>

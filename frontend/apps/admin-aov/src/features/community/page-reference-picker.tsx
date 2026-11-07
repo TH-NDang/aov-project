@@ -10,6 +10,7 @@ import { CreateProfileSheet } from "./create-profile-sheet"
 import { pageApi, pageError, pageKeys } from "./page-api"
 import { PageReference } from "./page-reference"
 import { ProfileTypeIcon } from "./profile-icons"
+import { activityLabel } from "@/features/tournaments/record-reason"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { nextPageOf } from "@aov/ui/lib/page-slice"
 
@@ -161,9 +162,12 @@ export function PageReferencePicker({
                   </Avatar>
                   <span className="min-w-0 flex-1">
                     <span className="type-body block">{profile.content?.name || profile.code}</span>
-                    <span className="type-meta">
+                    <span className="type-meta block">
                       {profileKindLabels[profile.kind]} · {profile.published ? "Đã công bố" : "Bản nháp"}
                     </span>
+                    {profile.lastActiveOn && (
+                      <span className="type-meta block">{activityLabel(profile.lastActiveOn)}</span>
+                    )}
                   </span>
                   {value === profile.id && <Check className="size-4" />}
                 </button>

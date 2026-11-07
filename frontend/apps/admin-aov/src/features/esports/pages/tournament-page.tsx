@@ -194,7 +194,6 @@ function TournamentView({ access }: { access: Access }) {
           open
           onClose={() => setEditor(null)}
           teams={view.teams}
-          tournaments={[tournament]}
           tournamentId={tournamentId}
         />
       )}
@@ -529,7 +528,6 @@ function RosterSheet({
   return (
     <TeamRosterSheet
       team={entry}
-      tournaments={[tournament]}
       players={players.data ?? []}
       initialTournamentId={tournament.id}
       canWrite={access.canWrite}

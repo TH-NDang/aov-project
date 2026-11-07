@@ -198,6 +198,7 @@ function MatchView({ access }: { access: Access }) {
           canPublish={access.canPublish}
           actorKey={access.actorKey}
           tournamentRegion={view.tournament.content.region}
+          tournamentId={tournamentId}
           seriesGames={sorted}
           bestOf={record.content.bestOf}
           repeatPicksAllowed={record.content.repeatPicksAllowed}
@@ -280,7 +281,6 @@ function MatchView({ access }: { access: Access }) {
           open
           onClose={() => setEditing(false)}
           teams={view.teams}
-          tournaments={[view.tournament]}
           tournamentId={tournamentId}
         />
       )}

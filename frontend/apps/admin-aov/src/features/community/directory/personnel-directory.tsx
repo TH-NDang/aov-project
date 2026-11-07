@@ -10,7 +10,8 @@ import {
 import { FilterTab, FilterTabs } from "@/components/filter-tabs"
 import type { Access } from "@/features/esports/pages/esports-shell"
 import { PlayerPhoto } from "@/features/esports/components/primitives"
-import { ManagementToolbar } from "@/features/tournaments/management-list"
+import { ManagementToolbar, managementSelectClassName } from "@/features/tournaments/management-list"
+import { activityLabel } from "@/features/tournaments/record-reason"
 import { PlatformIcon, platformOf } from "../platform-icon"
 import { ProfileRoleIcon } from "../profile-icons"
 import { directoryApi, directoryKeys, useDebounced } from "./directory-api"
@@ -33,19 +34,40 @@ const rolesOf = (group: PersonnelGroup) => ROLES.filter((role) => isCoachingRole
 const latestStint = (entry: CommunityProfile) =>
   [...(entry.content?.history ?? [])].sort((a, b) => (b.startsOn ?? "").localeCompare(a.startsOn ?? ""))[0]
 
+const SORTS = { ACTIVE: "Hoạt động gần đây", ACTIVITY: "Nhiều giải nhất", NAME: "Tên A–Z" }
+type PersonnelSort = keyof typeof SORTS
+
+function SortSelect({ sort, onChange }: { sort: PersonnelSort; onChange: (value: string) => void }) {
+  return (
+    <select
+      aria-label="Sắp xếp thành viên"
+      value={sort}
+      onChange={(event) => onChange(event.target.value)}
+      className={managementSelectClassName}
+    >
+      {Object.entries(SORTS).map(([value, label]) => (
+        <option key={value} value={value}>
+          {label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
 function usePersonnel(group: PersonnelGroup, access: Access) {
-  const filters = useDirectoryFilters(["q", "role"] as const)
+  const filters = useDirectoryFilters(["q", "role", "sort"] as const)
   const role = (filters.values.role || group) as PersonRoleFilter
+  const sort = (filters.values.sort || "ACTIVE") as PersonnelSort
   const search = useDebounced(filters.values.q)
   const people = useInfiniteQuery({
-    queryKey: [...directoryKeys, access.actorKey, "people", group, role, search],
+    queryKey: [...directoryKeys, access.actorKey, "people", group, role, search, sort],
     initialPageParam: 0,
     queryFn: ({ pageParam, signal }) =>
-      directoryApi.profiles({ personRole: role, q: search, sort: "ACTIVITY", page: pageParam }, signal),
+      directoryApi.profiles({ personRole: role, q: search, sort, page: pageParam }, signal),
     getNextPageParam: nextPageOf,
   })
   const rows = people.data?.pages.flatMap((page) => page.items) ?? []
-  return { filters, role, people, rows }
+  return { filters, role, sort, people, rows }
 }
 
 function RoleTabs({
@@ -86,7 +108,7 @@ const RoleLabels = ({ roles }: { roles?: PersonRole[] }) => (
 
 /** Coaches are looked up by where they work, so their latest team and how long they have been at it come first. */
 export function CoachDirectory({ access }: { access: Access }) {
-  const { filters, role, people, rows } = usePersonnel("COACHING", access)
+  const { filters, role, sort, people, rows } = usePersonnel("COACHING", access)
   return (
     <DirectoryShell
       section={directorySections[2]}
@@ -109,7 +131,7 @@ export function CoachDirectory({ access }: { access: Access }) {
             placeholder="Tên hoặc mã hồ sơ…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            {null}
+            <SortSelect sort={sort} onChange={(value) => filters.setFilter("sort", value)} />
           </ManagementToolbar>
         }
       >
@@ -141,6 +163,9 @@ export function CoachDirectory({ access }: { access: Access }) {
                       <>
                         <span className="type-body block truncate">{stint.title}</span>
                         <span className="type-meta block truncate">{stint.role}</span>
+                        {person.lastActiveOn && (
+                          <span className="type-meta block truncate">{activityLabel(person.lastActiveOn)}</span>
+                        )}
                       </>
                     ) : (
                       <span className="type-meta">Chưa có quá trình làm việc.</span>
@@ -165,7 +190,7 @@ export function CoachDirectory({ access }: { access: Access }) {
 
 /** Broadcast talent is booked by face and channel, so the photo and social links lead. */
 export function BroadcastDirectory({ access }: { access: Access }) {
-  const { filters, role, people, rows } = usePersonnel("BROADCAST", access)
+  const { filters, role, sort, people, rows } = usePersonnel("BROADCAST", access)
   return (
     <DirectoryShell
       section={directorySections[3]}
@@ -188,7 +213,7 @@ export function BroadcastDirectory({ access }: { access: Access }) {
             placeholder="Tên hoặc mã hồ sơ…"
             onReset={filters.filtered ? filters.reset : undefined}
           >
-            {null}
+            <SortSelect sort={sort} onChange={(value) => filters.setFilter("sort", value)} />
           </ManagementToolbar>
         }
       >
