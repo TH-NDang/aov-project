@@ -248,6 +248,7 @@ Kỹ năng và trang phục **không** là module riêng: chúng không có ý n
 - Frontend và API cùng origin nên production không cần CORS. Mỗi app build với `base` tương ứng (`/`, `/stream/`, `/admin/`). Ở local, mỗi app dùng `server.proxy` của Vite để chuyển `/api` và `/media` sang backend.
 - Media public được phục vụ trực tiếp từ object storage/CDN theo URL có version (`/media/{assetId}/{assetVersionId}.{ext}`). Spring Boot không stream bytes ảnh.
 - Proxy chỉ mở prefix `assets/` của bucket; object đang upload (`incoming/`) không bao giờ public.
+- Khi chạy một origin: Keycloak ở `/idp/` và presigned URL đi qua `/{bucket}/*`, chỉ nhận request có chữ ký; xem [ADR-021](adr/ADR-021-dong-goi-chay-mot-may.md).
 
 ### 3.7 Identity và phân quyền dùng chung
 
