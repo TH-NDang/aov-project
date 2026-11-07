@@ -1,7 +1,9 @@
 package com.wikiaov.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
@@ -61,7 +63,28 @@ class RuntimeConfigurationTest {
             assertThat(environment.getProperty("spring.docker.compose.enabled", Boolean.class)).isFalse();
             assertThat(environment.getProperty("wiki.storage.create-bucket-if-missing", Boolean.class)).isFalse();
             assertThat(environment.getProperty("wiki.auth.secure-cookies", Boolean.class)).isTrue();
+            assertThat(environment.getProperty("server.forward-headers-strategy")).isEqualTo("native");
         });
+    }
+
+    @Test
+    void productionRequiresDeploymentValuesInsteadOfDevelopmentDefaults() {
+        withProfile("prod", environment -> {
+            for (String property : List.of("wiki.auth.admin-origin", "wiki.auth.admin-base-path",
+                    "wiki.auth.client-secret", "wiki.media.deletion.community-base-url")) {
+                assertThatThrownBy(() -> environment.getProperty(property))
+                        .as(property).isInstanceOf(IllegalArgumentException.class);
+            }
+        });
+    }
+
+    @Test
+    void productionReachesTheIdentityProviderThroughTheBackchannelWhenGiven() {
+        withProfile("prod", environment -> assertThat(environment.getProperty("wiki.auth.identity-backchannel-uri"))
+                .isEqualTo("https://identity.example.test/realms/wiki"));
+        withProfile("prod", Map.of("JWT_BACKCHANNEL_ISSUER_URI", "http://keycloak:8080/realms/wiki"),
+                environment -> assertThat(environment.getProperty("wiki.auth.identity-backchannel-uri"))
+                        .isEqualTo("http://keycloak:8080/realms/wiki"));
     }
 
     private static void withProfile(String profile, Consumer<ConfigurableEnvironment> assertions) {
