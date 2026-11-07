@@ -161,7 +161,7 @@ http://127.0.0.1:2020 {
 	}
 
 	# The Wiki looks for a page of its own first, because a rewrite would give every address the title and canonical
-	# of the home page. 200.html is the fallback once pages are prerendered; until then that is index.html.
+	# of the home page. The service wiki-prerender keeps this folder; 200.html is for addresses it has no page for.
 	handle {
 		root * /srv/wiki
 		import cache_rules /

@@ -31,6 +31,15 @@ RUN pnpm --filter @aov/aov-wiki run build
 RUN pnpm --filter @aov/aov-stream run build --base=/stream/
 RUN pnpm --filter @aov/admin-aov run build --base=/admin/
 
+# One-shot job of Compose (service wiki-prerender): the API does not exist yet while images build (ADR-022).
+FROM node:22-bookworm-slim AS wiki-prerender
+WORKDIR /job
+COPY --from=frontend /workspace/frontend/apps/aov-wiki/package.json ./
+COPY --from=frontend /workspace/frontend/apps/aov-wiki/dist ./dist
+COPY --from=frontend /workspace/frontend/apps/aov-wiki/scripts ./scripts
+COPY --from=frontend /workspace/frontend/apps/aov-wiki/src ./src
+CMD ["node", "--experimental-strip-types", "--disable-warning=ExperimentalWarning", "scripts/prerender-job.mts"]
+
 # Caddy core has no rate limiter; ADR-007 and spec 01 section 3.3 require one at the proxy.
 FROM caddy:2.10-builder AS caddy
 RUN xcaddy build \

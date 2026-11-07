@@ -139,6 +139,28 @@ Chạy `docker compose run --rm db-restore` không tham số để xem danh sác
 `docker compose up -d --build --wait` một lần để có volume và user database, chép `backups/` về rồi làm các bước trên. Đã diễn tập đúng
 quy trình này: xóa hết volume, khởi động lại từ trống, khôi phục, tài khoản và dữ liệu trở về nguyên vẹn.
 
+## Trang tĩnh của Wiki
+
+Service một lần `wiki-prerender` tạo trang riêng cho từng tướng, trang phục, mục kho trang bị, thuật ngữ và bản cập nhật, kèm
+`sitemap.xml`, để công cụ tìm kiếm và bản xem trước liên kết đọc được mà không cần chạy JavaScript (ADR-022). Nó chạy mỗi lần
+`docker compose up`, sau khi `wiki-service` healthy. Nội dung mới chỉ có trang riêng sau lần chạy kế, nên hãy chạy lại khi vừa xuất
+bản hoặc đặt theo lịch; không cần khởi động lại proxy:
+
+```bash
+docker compose run --rm wiki-prerender
+```
+
+Lần chạy tạo trang trên `dist` của chính container, thành công mới thay toàn bộ volume `wiki-site` mà proxy phục vụ. API lỗi thì
+site giữ nguyên trang cũ, proxy vẫn chạy, nhưng `docker compose up --wait` trả lỗi và `docker compose logs wiki-prerender` cho biết
+lý do; sau khi build lại, site vẫn ở bundle cũ cho tới khi có một lần chạy thành công. Hệ thống mới chưa xuất bản tướng nào vẫn khởi
+động bình thường, chỉ chưa có trang riêng. Trong môi trường đó, mọi địa chỉ sâu rơi về `200.html` có `noindex`.
+
+Kiểm tra sau khi chạy: địa chỉ của một tướng phải trả về đúng tên tướng trong `<title>`, không phải tiêu đề trang chủ.
+
+```bash
+curl -s http://localhost:18080/hero/airi | grep -i "<title>"
+```
+
 ## Đưa dữ liệu vào
 
 Hệ thống này không tự lấy dữ liệu từ môi trường dev. Để đưa dữ liệu sang, dump database `wiki`, `community` và cả realm từ dev ở định
@@ -150,11 +172,6 @@ lại realm sau đó. Cách này chưa được chạy thử với dữ liệu d
 
 Những việc sau chủ dự án phải quyết định hoặc làm, repo không đoán thay:
 
-- **Prerender trang Wiki (bắt buộc trước khi ra mắt)**: phần SEO ở nhánh `claude/silly-allen-e51c6d` (ADR-022) chưa hợp nhất vào đây.
-  Sau khi hợp nhất cần thêm một container chạy một lần sau khi `wiki-service` healthy và chạy lại khi có nội dung mới. Nếu thiếu, trang
-  sâu của Wiki sẽ mang `noindex`. Mỗi lần chạy phải prerender trên `dist` của chính container, thất bại thì dừng; chỉ khi thành công mới
-  thay toàn bộ volume bằng `dist` đó. Named volume chỉ nhận dữ liệu từ image khi mới tạo, nên nếu không làm vậy, sau khi build lại Caddy
-  vẫn phục vụ bundle cũ. Khối Wiki trong Caddyfile đã sẵn sàng cho `200.html`.
 - **Máy chủ và tên miền**: chọn nơi thuê, trỏ DNS, mở cổng 80 và 443.
 - **TLS**: đặt `SITE_ADDRESS=<tên miền>`, `PUBLIC_ORIGIN=https://<tên miền>`, `PUBLIC_BIND_ADDRESS=0.0.0.0`, `HTTP_PORT=80`,
   `HTTPS_PORT=443`, `AUTH_SECURE_COOKIES=true`, bỏ `COMPOSE_PROFILES`, sinh secret mới rồi build lại. Bước này chưa chạy thử vì chưa có
@@ -167,8 +184,6 @@ Những việc sau chủ dự án phải quyết định hoặc làm, repo khôn
 - **Tài khoản thật**: tạo biên tập viên và gán vai trò trong console; bật MFA nếu cần.
 - **CDN hoặc load balancer**: nếu đặt trước Caddy phải khai báo `trusted_proxies`, nếu không giới hạn tần suất theo IP sẽ sai.
 - **Theo dõi**: chưa có giám sát uptime, cảnh báo đầy đĩa hay gom log; log JSON hiện chỉ xoay vòng trong Docker.
-- **Sai mật khẩu ở Admin báo sai lỗi**: Keycloak trả `401` nhưng `KeycloakTokens` chỉ xử lý `400`, nên người dùng thấy "identity provider
-  unavailable" (503) thay vì sai mật khẩu. Lỗi có sẵn, không do đóng gói; đăng nhập đúng không bị ảnh hưởng.
 - **Tính năng chỉ có ở Vite dev**: JSON storage, ảnh gốc của patch, ảnh shop và nhập từ `/__resources/` trong Admin cần `resources/` và
   dev server, nên bản build trả 404 cho chúng.
 - **Content-Security-Policy** chưa đặt; cần liệt kê nguồn thật như YouTube trước khi bật.

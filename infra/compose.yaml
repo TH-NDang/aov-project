@@ -300,7 +300,7 @@ services:
 
   reverse-proxy:
     image: aov/reverse-proxy:${IMAGE_TAG:-local}
-    build:
+    build: &frontend-build
       context: ../frontend
       dockerfile: ../infra/proxy/Dockerfile
       additional_contexts:
@@ -320,6 +320,7 @@ services:
       - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-18443}:443
     volumes:
       - caddy-data:/data
+      - wiki-site:/srv/wiki:ro
     depends_on:
       wiki-service:
         condition: service_healthy
@@ -329,13 +330,35 @@ services:
         condition: service_healthy
       seaweedfs:
         condition: service_healthy
+      # Waits for it but starts either way: a failed run leaves the pages online, and "up --wait" reports the failure.
+      wiki-prerender:
+        condition: service_completed_successfully
+        required: false
       # So that a failure here fails the start, and "up --wait" returns only when the accounts exist.
       keycloak-test-users:
         condition: service_completed_successfully
         required: false
     logging: *logging
 
+  # One-shot on every `up`, and by hand after publishing: docker compose run --rm wiki-prerender (ADR-022).
+  wiki-prerender:
+    image: aov/wiki-prerender:${IMAGE_TAG:-local}
+    build:
+      <<: *frontend-build
+      target: wiki-prerender
+    environment:
+      VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}
+      WIKI_API_TARGET: http://wiki-service:8080
+      WIKI_SITE_DIR: /site
+    volumes:
+      - wiki-site:/site
+    depends_on:
+      wiki-service:
+        condition: service_healthy
+    logging: *logging
+
 volumes:
   postgres-data:
   seaweedfs-data:
   caddy-data:
+  wiki-site:
