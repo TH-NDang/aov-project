@@ -6,7 +6,8 @@ import {
   upgradeHeroImage,
   type Request,
 } from "../src/features/publishing/publishing-api"
-import { publicationPatchIssue, publishIssues, type Content, type Revision } from "../src/features/publishing/types"
+import { contentBlockers, publicationPatchIssue } from "../src/features/publishing/publish-rules"
+import type { Content, Revision } from "../src/features/publishing/types"
 import { observedAttributes } from "../src/features/publishing/combat-attributes"
 import { fixtureContent, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { mediaPath } from "../../../tooling/media-proxy.mts"
@@ -166,7 +167,7 @@ test("publication accepts observed stats from the revision patch without a base 
     effectType: "SOURCE_SNAPSHOT",
     metadata: { patchCode: "s4", observedAttributes: observation },
   })
-  const issues = (patch: string) => publishIssues(content, !!observedAttributes(content.SKILLS, patch))
+  const issues = (patch: string) => contentBlockers(content, !!observedAttributes(content.SKILLS, patch))
   for (const values of [{}, { resourceLabel: "Năng lượng" }, { health: "?" }]) {
     observation.values = values
     assert.equal(issues("s4").length, 1)
