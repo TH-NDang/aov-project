@@ -24,6 +24,8 @@ import "./warehouse-page.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { notFoundMeta, warehouseEntryMeta } from "../../lib/seo/page-meta"
+import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
 import { PublicTabBar } from "@aov/ui/components/public-tab-bar"
 
@@ -62,6 +64,13 @@ export default function WarehousePage() {
       navigate({ pathname: warehousePath(kind, selectedCode), search: window.location.search }, { replace: true })
   }, [kind, navigate, selectedCode, selectedId])
 
+  usePageHead(
+    selectedEntry
+      ? warehouseEntryMeta(kind, selectedEntry, scope.locale)
+      : selectedId && catalog.isSuccess
+        ? notFoundMeta(scope.locale, warehousePath(kind, selectedId), kind)
+        : null,
+  )
   const items = useMemo(() => entries.filter((entry): entry is WarehouseItem => entry.kind === "items"), [entries])
   const matchingItems = useMemo(
     () => filtered.filter((entry): entry is WarehouseItem => entry.kind === "items"),

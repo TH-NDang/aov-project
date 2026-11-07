@@ -4,6 +4,8 @@ import { WikiHeader } from "../../components/wiki-header"
 
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 
+import { contactMeta } from "../../lib/seo/page-meta"
+import { usePageHead } from "../../lib/seo/use-page-head"
 import { ContactRequestError, sendContactRequest } from "./contact-request"
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -12,6 +14,7 @@ const field = "w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2.5 o
 export function ContactPage() {
   const { href, locale } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
+  usePageHead(contactMeta(locale))
   const [params] = useSearchParams()
   const assetId = params.get("assetId")
   const versionId = params.get("versionId")
@@ -54,7 +57,6 @@ export function ContactPage() {
   }
   return (
     <>
-      <title>{text("Liên hệ — AOV Wiki", "Contact — AOV Wiki")}</title>
       <WikiHeader />
       <main id="main" className="wiki-contact-page">
         <Link to={href("/")} className="text-sm text-gold">

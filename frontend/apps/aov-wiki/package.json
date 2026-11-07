@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port 5173 --strictPort",
     "build": "tsc -p tsconfig.json && vite build",
+    "prerender": "node --experimental-strip-types scripts/prerender.mts",
     "preview": "vite preview --port 5173 --strictPort",
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
