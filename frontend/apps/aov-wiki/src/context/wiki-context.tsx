@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react"
-import { useLocation, useSearchParams } from "react-router"
+import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
-import { supportedWikiLocale, wikiScopeHref, wikiSection } from "../lib/wiki-catalog"
+import { supportedWikiLocale, warehouseListPath, wikiScopeHref, wikiSection } from "../lib/wiki-catalog"
 
 export interface WikiRegion {
   code: string
@@ -157,6 +157,7 @@ function normalizeOptions(value: CatalogContextResponse): WikiOptions {
 
 function useWikiState() {
   const [params, setParams] = useSearchParams()
+  const navigate = useNavigate()
   const { pathname } = useLocation()
   const section = wikiSection(pathname, params.get("tab"))
   const [preferences] = useState(readPreferences)
@@ -207,29 +208,26 @@ function useWikiState() {
   const setRegion = useCallback(
     (value: string) => {
       if (!markets.data?.some((market) => market.code === value && market.available)) return
-      setParams((current) => {
-        const next = new URLSearchParams(current)
-        next.set("region", value)
-        next.set("locale", locale)
-        for (const key of [
-          "season",
-          "patch",
-          "unscoped",
-          "item",
-          "hero",
-          "revision",
-          "q",
-          "group",
-          "role",
-          "position",
-          "rarity",
-          "skill",
-        ])
-          next.delete(key)
-        return next
-      })
+      const next = new URLSearchParams(params)
+      next.set("region", value)
+      next.set("locale", locale)
+      for (const key of [
+        "season",
+        "patch",
+        "unscoped",
+        "hero",
+        "revision",
+        "q",
+        "group",
+        "role",
+        "position",
+        "rarity",
+        "skill",
+      ])
+        next.delete(key)
+      navigate({ pathname: warehouseListPath(pathname), search: `?${next}` })
     },
-    [locale, markets.data, setParams],
+    [locale, markets.data, navigate, params, pathname],
   )
   const setLocale = useCallback(
     (value: string) => {
@@ -245,21 +243,19 @@ function useWikiState() {
   )
   const setScope = useCallback(
     (value: { seasonId: string; patchVariantId: string; includeUnscoped?: boolean }) => {
-      setParams((current) => {
-        const next = new URLSearchParams(current)
-        if (value.seasonId) next.set("season", value.seasonId)
-        else next.delete("season")
-        if (value.patchVariantId) next.set("patch", value.patchVariantId)
-        else next.delete("patch")
-        if (value.includeUnscoped !== undefined) {
-          if (value.includeUnscoped) next.set("unscoped", "1")
-          else next.delete("unscoped")
-        }
-        next.delete("item")
-        return next
-      })
+      const next = new URLSearchParams(params)
+      if (value.seasonId) next.set("season", value.seasonId)
+      else next.delete("season")
+      if (value.patchVariantId) next.set("patch", value.patchVariantId)
+      else next.delete("patch")
+      if (value.includeUnscoped !== undefined) {
+        if (value.includeUnscoped) next.set("unscoped", "1")
+        else next.delete("unscoped")
+      }
+      // An open armory entry may not exist in the new version, so it closes.
+      navigate({ pathname: warehouseListPath(pathname), search: `?${next}` })
     },
-    [setParams],
+    [navigate, params, pathname],
   )
   const href = useCallback(
     (path: string) => wikiScopeHref(path, { region, locale, seasonId, patchVariantId, includeUnscoped, section }),

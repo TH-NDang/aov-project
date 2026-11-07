@@ -10,6 +10,7 @@ import { useWikiContext, wikiText } from "./context/wiki-context"
 import { ContactPage } from "./features/contact/contact-page"
 import { WikiLoginCallback } from "./features/auth/wiki-account"
 import { WikiFooter } from "./components/wiki-footer"
+import { legacyWarehouseTarget, WAREHOUSE_TABS, wikiScrollKey } from "./lib/wiki-catalog"
 
 const TermsPage = lazy(() => import("./features/terms/terms-page").then((module) => ({ default: module.TermsPage })))
 const UpdatesPage = lazy(() =>
@@ -38,6 +39,22 @@ function HeroDetailRoute() {
   )
 }
 
+function WarehouseRoute() {
+  const { tab } = useParams()
+  const { search } = useLocation()
+  if (!WAREHOUSE_TABS.some((known) => known === tab)) return <Navigate to={legacyWarehouseTarget(search)} replace />
+  return (
+    <Suspense fallback={<WarehouseRouteLoading />}>
+      <WarehousePage />
+    </Suspense>
+  )
+}
+
+function LegacyWarehouseRedirect() {
+  const { search } = useLocation()
+  return <Navigate to={legacyWarehouseTarget(search)} replace />
+}
+
 /** Term links used to point at the home page; they now open the glossary. */
 function HomePage() {
   const { locale, href } = useWikiContext()
@@ -63,9 +80,10 @@ function HomePage() {
 export default function App() {
   const { t, href, locale } = useWikiContext()
   const { pathname } = useLocation()
+  const scrollKey = wikiScrollKey(pathname)
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [pathname])
+  }, [scrollKey])
 
   return (
     <>
@@ -96,14 +114,8 @@ export default function App() {
               </Suspense>
             }
           />
-          <Route
-            path="/warehouse"
-            element={
-              <Suspense fallback={<WarehouseRouteLoading />}>
-                <WarehousePage />
-              </Suspense>
-            }
-          />
+          <Route path="/warehouse" element={<LegacyWarehouseRedirect />} />
+          <Route path="/warehouse/:tab/:entryCode?" element={<WarehouseRoute />} />
           {["/terms", "/terms/:termId"].map((path) => (
             <Route
               key={path}

@@ -1,5 +1,5 @@
 import { type CSSProperties, type ReactNode } from "react"
-import { Outlet, useMatch, useSearchParams } from "react-router"
+import { Outlet, useLocation, useMatch } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiHeader } from "../components/wiki-header"
 import { LibraryNavigation } from "./library-navigation"
@@ -10,8 +10,8 @@ import { useWikiContext } from "../context/wiki-context"
 export function WikiLibraryLayout() {
   const { t } = useWikiContext()
   const layout = usePageLayout()
-  const [params] = useSearchParams()
-  const isWarehouse = useMatch("/warehouse")
+  const { pathname } = useLocation()
+  const isWarehouse = useMatch("/warehouse/*")
   const isSkins = useMatch("/skins")
   const isUpdates = useMatch("/updates/*")
   const isTerms = useMatch("/terms/*")
@@ -22,7 +22,7 @@ export function WikiLibraryLayout() {
     : isUpdates
       ? "updates"
       : searchScope === "warehouse"
-        ? warehouseKind(params.get("tab"))
+        ? warehouseKind(pathname.split("/")[2] ?? null)
         : searchScope
   const pageTitle = t(active)
 

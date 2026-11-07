@@ -14,25 +14,25 @@ export const wikiSections = [
   {
     key: "items",
     icon: "items",
-    path: "/warehouse?tab=items",
+    path: "/warehouse/items",
     group: "warehouse",
   },
   {
     key: "enchantments",
     icon: "enchantments",
-    path: "/warehouse?tab=enchantments",
+    path: "/warehouse/enchantments",
     group: "warehouse",
   },
   {
     key: "arcana",
     icon: "arcana",
-    path: "/warehouse?tab=arcana",
+    path: "/warehouse/arcana",
     group: "warehouse",
   },
   {
     key: "spells",
     icon: "spells",
-    path: "/warehouse?tab=spells",
+    path: "/warehouse/spells",
     group: "warehouse",
   },
   {

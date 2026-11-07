@@ -2,7 +2,7 @@ import { SpellFilters } from "@aov/ui/components/warehouse/spell-filters"
 import { ItemCategoryArtwork } from "@aov/ui/components/item-category-icons"
 import { ArcanaFilters } from "@aov/ui/components/warehouse/arcana-filters"
 import { useMemo, type CSSProperties } from "react"
-import { useSearchParams } from "react-router"
+import { useNavigate, useSearchParams } from "react-router"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiImage } from "../../components/wiki-image"
 import { WarehouseArtwork } from "./warehouse-artwork"
@@ -28,6 +28,7 @@ import {
   type WarehouseKind,
   warehouseText,
 } from "./warehouse-types"
+import { warehousePath } from "../../lib/wiki-catalog"
 import "./warehouse-catalogs.css"
 
 interface CatalogSelection {
@@ -271,7 +272,8 @@ export function WarehouseCatalog(props: CatalogProps) {
   const { kind, entries, allEntries, group, groups, selectedId, onGroupChange, onSelect, onClear, itemView } = props
   const scope = useWikiContext()
   const { locale } = scope
-  const [params, setParams] = useSearchParams()
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
   const references = useQuery({ ...wikiReferencesQuery(scope), enabled: kind === "arcana" })
   const statColor = useMemo(() => createArcanaStatColors(references.data?.entities ?? []), [references.data])
   const searching = !!params.get("q")
@@ -280,18 +282,13 @@ export function WarehouseCatalog(props: CatalogProps) {
     onSelect(entry, document.activeElement instanceof HTMLButtonElement ? document.activeElement : undefined)
   const selection = { locale, selectedId: selectedId ?? "", onOpen: open }
   function changeFilters(changes: Record<string, string | null>) {
-    setParams(
-      (current) => {
-        const next = new URLSearchParams(current)
-        next.delete("item")
-        for (const [key, value] of Object.entries(changes)) {
-          if (value) next.set(key, value)
-          else next.delete(key)
-        }
-        return next
-      },
-      { replace: true },
-    )
+    const next = new URLSearchParams(params)
+    for (const [key, value] of Object.entries(changes)) {
+      if (value) next.set(key, value)
+      else next.delete(key)
+    }
+    // A new filter closes the open entry, which lives in the path.
+    navigate({ pathname: warehousePath(kind), search: `?${next}` }, { replace: true })
   }
   if (kind === "spells") {
     const spells = entries.filter((e) => e.kind === "spells")

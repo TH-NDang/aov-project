@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react"
-import { Link, useNavigate, useSearchParams } from "react-router"
+import { Link, useLocation, useNavigate } from "react-router"
 import { cn } from "@aov/ui/lib/utils"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { PublicAppOptionBody, PublicAppWordmark } from "@aov/ui/components/public-app-brand"
@@ -16,6 +16,7 @@ import "./wiki-header.css"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { WikiPreferenceControls } from "../context/wiki-preferences"
 import { wikiSections, type WikiSectionKey } from "../layout/wiki-sections"
+import { warehouseListPath } from "../lib/wiki-catalog"
 import { LibraryContents } from "../layout/library-contents"
 import { WikiIcon } from "./wiki-icon"
 import { WikiSearchSuggestions } from "./wiki-search-suggestions"
@@ -216,7 +217,7 @@ function LibrarySearch({
 }) {
   const navigate = useNavigate()
   const { t, href, locale } = useWikiContext()
-  const [params] = useSearchParams()
+  const { pathname } = useLocation()
   const [search, setSearch] = useState("")
   const [open, setOpen] = useState(false)
   const [focused, setFocused] = useState(false)
@@ -227,9 +228,9 @@ function LibrarySearch({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const destination = new URL(chooseSection ? section.path : target.path, window.location.origin)
-    if (!chooseSection && scope === "warehouse" && params.get("tab"))
-      destination.searchParams.set("tab", params.get("tab")!)
+    // Inside the armory a search stays on the current tab.
+    const path = chooseSection ? section.path : scope === "warehouse" ? warehouseListPath(pathname) : target.path
+    const destination = new URL(path, window.location.origin)
     if (search.trim()) destination.searchParams.set("q", search.trim())
     navigate(href(destination.pathname + destination.search))
     setOpen(false)

@@ -56,7 +56,7 @@ Dưới 900px trang dùng bố cục compact, từ 900px dùng bố cục wide. 
 
 ## Kho trang bị
 
-- `/warehouse?tab=items|enchantments|arcana|spells` dùng chung bố cục thư viện. Trang chủ mở Kho trang bị; mục lục có bốn mục con. Tab, bộ lọc nhóm (`group`), tìm kiếm (`q`) và mục đang xem (`item`) lưu trong query để chia sẻ hoặc mở lại. Tìm kiếm trên header giữ tab hiện tại; mỗi mục cũng có ô tìm riêng, tìm không dấu cả theo tên, tóm tắt và mô tả nên gõ tên hiệu ứng cũng ra.
+- `/warehouse/items|enchantments|arcana|spells` dùng chung bố cục thư viện. Trang chủ mở Kho trang bị; mục lục có bốn mục con. Tab và mục đang xem nằm trong đường dẫn (`/warehouse/<tab>/<code>`) để mỗi mục có trang và xem trước riêng; bộ lọc nhóm (`group`) và tìm kiếm (`q`) lưu trong query. Tất cả đều chia sẻ hoặc mở lại được; liên kết cũ dạng `?tab=&item=` tự chuyển sang địa chỉ mới. Tìm kiếm trên header giữ tab hiện tại; mỗi mục cũng có ô tìm riêng, tìm không dấu cả theo tên, tóm tắt và mô tả nên gõ tên hiệu ứng cũng ra.
 - Trên compact, đầu trang ghi Kho trang bị và bốn phần Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ là dãy tab dính bên dưới.
 - Chỉ đọc dữ liệu công khai từ bốn API `/items`, `/enchantments`, `/arcana`, `/spells`; phụ trợ cũ đọc thêm `/spells/archived`. Không gọi API admin, không đưa bản nháp vào danh mục. Mục chưa xuất bản có trạng thái trống rõ ràng.
 - Trang bị/phụ trợ chưa biết patch gốc có thể được xuất bản như dữ liệu nền chưa rõ patch khi nội dung đã đủ. Chi tiết hiển thị rõ trạng thái này, không ghi nhận thành thay đổi mới của mùa hiện tại. Bản cập nhật gắn patch thật được ưu tiên hơn dữ liệu nền; mục còn thiếu nội dung vẫn giữ nháp.
