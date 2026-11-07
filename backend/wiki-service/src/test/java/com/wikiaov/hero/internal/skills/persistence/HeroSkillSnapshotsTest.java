@@ -29,7 +29,7 @@ class HeroSkillSnapshotsTest {
         var id = UUID.randomUUID();
         var hero = UUID.randomUUID();
         var ids = List.of(id);
-        when(sources.find(HeroSection.SKILLS, id)).thenReturn(List.of());
+        when(sources.find(HeroSection.SKILLS, List.of(id))).thenReturn(Map.of());
         when(snapshots.findBySkillSetRevisionIdIn(ids, Sort.by("displayOrder"))).thenReturn(List.of(
                 new SkillSnapshotRow(id, hero, "passive", "PASSIVE", null, 0, null),
                 new SkillSnapshotRow(id, hero, "skill-1", "ACTIVE", null, 1, null)));
@@ -56,9 +56,38 @@ class HeroSkillSnapshotsTest {
     }
 
     @Test
+    void readsManySkillSetsInOneQueryEachWithoutMixingTheirRows() {
+        UUID first = UUID.randomUUID(), second = UUID.randomUUID(), empty = UUID.randomUUID();
+        var hero = UUID.randomUUID();
+        var ids = List.of(first, second, empty);
+        when(sources.find(HeroSection.SKILLS, ids)).thenReturn(Map.of(second, List.of(
+                new Source("Fixture", null, null, Verification.VERIFIED, null))));
+        when(snapshots.findBySkillSetRevisionIdIn(ids, Sort.by("displayOrder"))).thenReturn(List.of(
+                new SkillSnapshotRow(first, hero, "same-key", "ACTIVE", null, 0, null),
+                new SkillSnapshotRow(second, hero, "same-key", "ACTIVE", null, 0, null)));
+        when(translations.findBySkillSetRevisionIdIn(ids, Sort.by("locale"))).thenReturn(List.of(
+                new SkillTranslationRow(first, "same-key", "vi-VN", "Trước", "Bản trước"),
+                new SkillTranslationRow(second, "same-key", "vi-VN", "Sau", "Bản sau")));
+        when(effects.findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder"))).thenReturn(List.of(
+                new SkillEffectRow(second, "same-key", 0, "DAMAGE", Map.of())));
+
+        var contents = store.contents(ids);
+
+        assertThat(contents.get(first).skills().getFirst().translations()).extracting(SkillTranslation::name)
+                .containsExactly("Trước");
+        assertThat(contents.get(first).skills().getFirst().effects()).isEmpty();
+        assertThat(contents.get(first).sources()).isEmpty();
+        assertThat(contents.get(second).skills().getFirst().translations()).extracting(SkillTranslation::name)
+                .containsExactly("Sau");
+        assertThat(contents.get(second).skills().getFirst().effects()).hasSize(1);
+        assertThat(contents.get(second).sources()).hasSize(1);
+        assertThat(contents.get(empty).skills()).isEmpty();
+    }
+
+    @Test
     void emptySkillSetsDoNotQueryChildTables() {
         var id = UUID.randomUUID();
-        when(sources.find(HeroSection.SKILLS, id)).thenReturn(List.of());
+        when(sources.find(HeroSection.SKILLS, List.of(id))).thenReturn(Map.of());
         when(snapshots.findBySkillSetRevisionIdIn(List.of(id), Sort.by("displayOrder"))).thenReturn(List.of());
 
         assertThat(store.content(id).skills()).isEmpty();

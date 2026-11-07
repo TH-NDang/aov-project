@@ -60,6 +60,7 @@ class OpenApiMvcTest extends OpenApiContractChecks {
                     controllers.add("com.wikiaov.patch.internal.web.PatchStatDefaultsController");
                     controllers.add("com.wikiaov.patch.internal.web.PatchNotesController");
                     controllers.add("com.wikiaov.hero.internal.web.HeroStatSamplesController");
+                    controllers.add("com.wikiaov.hero.internal.web.HeroPublishReadinessController");
                     for (String controllerName : controllers) {
                         Class<?> controller = Class.forName(controllerName);
                         registry.registerBeanDefinition(controller.getName(), new RootBeanDefinition(controller));

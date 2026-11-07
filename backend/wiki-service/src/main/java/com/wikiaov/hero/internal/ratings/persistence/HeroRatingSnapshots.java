@@ -49,8 +49,20 @@ public class HeroRatingSnapshots implements HeroSectionSnapshots {
 
     @Override
     public Ratings content(UUID id) {
-        var references = sources.find(section(), id);
         var rating = revisions.findById(id).orElse(null);
+        return ratings(rating, sources.find(section(), id));
+    }
+
+    /** Reads many snapshots in a bounded number of queries, for lists that cover every hero. */
+    public Map<UUID, Ratings> contents(Collection<UUID> ids) {
+        var references = sources.find(section(), ids);
+        Map<UUID, Ratings> result = new HashMap<>();
+        for (var rating : revisions.findAllById(ids))
+            result.put(rating.getId(), ratings(rating, references.getOrDefault(rating.getId(), List.of())));
+        return result;
+    }
+
+    private static Ratings ratings(RatingRevision rating, List<Source> references) {
         return new Ratings(rating.getScaleCode(), rating.getSurvivability(), rating.getAttackDamage(),
                 rating.getSkillEffects(), rating.getDifficulty(), rating.isDerived(), references);
     }

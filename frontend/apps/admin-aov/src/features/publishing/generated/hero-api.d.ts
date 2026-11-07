@@ -314,6 +314,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/wiki/v1/admin/heroes/publish-readiness": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations["heroPublishReadiness"]
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   "/api/wiki/v1/admin/hero-media": {
     parameters: {
       query?: never
@@ -1139,6 +1155,65 @@ export interface components {
       /** Format: int64 */
       totalElements: number
     }
+    HeroPublishName: {
+      locale: string
+      name: string
+    }
+    HeroPublishDraftSkill: {
+      skillKey: string
+      translations: {
+        locale: string
+        name: string
+        description: string
+      }[]
+    }
+    HeroPublishDraftProfile: {
+      translations: components["schemas"]["HeroPublishName"][]
+      roles: string[]
+    }
+    HeroPublishDraftRatings: {
+      scaleCode: string | null
+      survivability: number | null
+      attackDamage: number | null
+      skillEffects: number | null
+      difficulty: number | null
+    }
+    HeroPublishDraftStats: {
+      values: string[]
+    }
+    HeroPublishDraftSkills: {
+      skills: components["schemas"]["HeroPublishDraftSkill"][]
+    }
+    HeroPublishDraftMedia: {
+      bindings: {
+        /** Format: uuid */
+        HEAD?: string
+        /** Format: uuid */
+        PORTRAIT?: string
+        /** Format: uuid */
+        SPLASH?: string
+      }
+    }
+    HeroPublishDraft: {
+      /** Format: uuid */
+      revisionId: string
+      observedStats: boolean
+      skinsSaved: boolean
+      profile: components["schemas"]["HeroPublishDraftProfile"] | null
+      overviewRatings: components["schemas"]["HeroPublishDraftRatings"] | null
+      combatStats: components["schemas"]["HeroPublishDraftStats"] | null
+      skills: components["schemas"]["HeroPublishDraftSkills"] | null
+      mediaBindings: components["schemas"]["HeroPublishDraftMedia"] | null
+    }
+    HeroPublishReadiness: {
+      /** Format: uuid */
+      id: string
+      code: string
+      names: components["schemas"]["HeroPublishName"][]
+      headUrl: string | null
+      revisions: components["schemas"]["HeroComparisonRevision"][]
+      drafts: components["schemas"]["HeroPublishDraft"][]
+    }
   }
   responses: never
   parameters: never
@@ -1877,6 +1952,26 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+    }
+  }
+  heroPublishReadiness: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Every hero, ordered by code, with what the Admin publish rules read from each open draft */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HeroPublishReadiness"][]
+        }
       }
     }
   }
