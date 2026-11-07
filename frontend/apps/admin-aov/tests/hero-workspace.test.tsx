@@ -185,6 +185,10 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
       /BCP 47|Thêm bản dịch|Cốt truyện/,
     )
     await type(input("Tên tướng"), "Unsaved hero")
+    // Checked at once: an edit counts as at risk only until local storage has it, 500 ms later.
+    const unload = new dom.window.Event("beforeunload", { cancelable: true })
+    dom.window.dispatchEvent(unload)
+    assert.equal(unload.defaultPrevented, true)
     const draftControl = document.querySelector<HTMLButtonElement>('header button[aria-label*="phần chưa lưu"]')!
     assert.ok(draftControl)
     assert.equal(document.querySelector('[aria-label="Trạng thái bản nháp"]'), null)
@@ -209,9 +213,6 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await click(draftControl)
     assert.equal(unsafe, false, "Locally captured edits must not prevent opening another page")
     assert.equal(document.querySelector<HTMLButtonElement>('[aria-controls="workspace-translations"]')!.disabled, false)
-    const unload = new dom.window.Event("beforeunload", { cancelable: true })
-    dom.window.dispatchEvent(unload)
-    assert.equal(unload.defaultPrevented, true)
     await click(mainTab("translations"))
     await select(translationLocale(), "en-US")
     await type(input("Tên · Tiếng Anh (Mỹ)"), "Unfinished English")
