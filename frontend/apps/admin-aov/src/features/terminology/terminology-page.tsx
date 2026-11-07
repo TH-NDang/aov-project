@@ -47,6 +47,7 @@ import { TermIconPicker } from "./term-icon-picker"
 import { mergeReferenceCatalog, updateHeroAliases } from "./hero-aliases"
 import { HeroAliasEditor } from "./hero-alias-editor"
 import { invalidateReferenceCatalog } from "./reference-api"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 const ReferencePreview = memo(EntityRichText)
 
@@ -99,7 +100,15 @@ export function TerminologyPage() {
     if (draft) setMessage("")
   }, [draft])
   const settings = draft ?? catalog.config
-  usePageCloseGuard(() => !saving && (!draft || window.confirm("Bỏ thay đổi thuật ngữ chưa lưu?")))
+  usePageCloseGuard(
+    async () =>
+      !saving &&
+      (!draft ||
+        (await confirmDiscard({
+          title: "Đóng trang thuật ngữ?",
+          description: "Thay đổi thuật ngữ chưa lưu sẽ bị bỏ.",
+        }))),
+  )
   useBeforeUnload((event) => {
     if (draft || saving) event.preventDefault()
   })
@@ -237,7 +246,14 @@ export function TerminologyPage() {
                 <DropdownMenuItem
                   disabled={saving}
                   onSelect={async () => {
-                    if (!draft || window.confirm("Bỏ thay đổi và tải lại?")) {
+                    if (
+                      !draft ||
+                      (await confirmDiscard({
+                        title: "Tải lại thiết lập?",
+                        description: "Thay đổi thuật ngữ chưa lưu sẽ bị bỏ.",
+                        confirmLabel: "Bỏ và tải lại",
+                      }))
+                    ) {
                       setDraft(null)
                       await catalog.settings.refetch()
                     }

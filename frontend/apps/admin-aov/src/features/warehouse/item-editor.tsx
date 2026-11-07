@@ -31,6 +31,7 @@ import {
   type WarehouseEntry,
   type WarehouseMetadata,
 } from "./warehouse-types"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 export function ItemEditor({
   entry,
@@ -107,14 +108,23 @@ export function ItemEditor({
     setValue((old) => ({ ...old, ...patch }))
     setDirty(true)
   }
-  function close() {
-    if (!busy && !uploading && (!dirty || window.confirm("Bỏ các chỉnh sửa chưa áp dụng?"))) onClose()
+  async function close() {
+    if (busy || uploading) return
+    if (
+      !dirty ||
+      (await confirmDiscard({
+        title: "Đóng phần chỉnh sửa?",
+        description: "Các chỉnh sửa chưa áp dụng sẽ bị bỏ.",
+        confirmLabel: "Bỏ chỉnh sửa",
+      }))
+    )
+      onClose()
   }
   return (
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) close()
+        if (!open) void close()
       }}
     >
       <SheetContent
@@ -225,8 +235,16 @@ export function ItemEditor({
                   categories={categories}
                   locale={locale}
                   pencil={canEdit && !translationOnly ? pencil : undefined}
-                  onView={(item) => {
-                    if (!dirty || window.confirm("Bỏ các chỉnh sửa chưa áp dụng?")) onView(item)
+                  onView={async (item) => {
+                    if (
+                      !dirty ||
+                      (await confirmDiscard({
+                        title: "Mở trang bị khác?",
+                        description: "Các chỉnh sửa chưa áp dụng sẽ bị bỏ.",
+                        confirmLabel: "Bỏ chỉnh sửa",
+                      }))
+                    )
+                      onView(item)
                   }}
                 />
               )}

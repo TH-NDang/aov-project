@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { ArrowUpRight, Check, ImagePlus, LoaderCircle, ShieldAlert } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
@@ -31,6 +31,7 @@ import {
   type CharacterImageGroup,
 } from "./character-image-api"
 import { FocalPointEditor } from "./focal-point-editor"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 export const imageRoleLabels: Record<MediaRole, string> = { HEAD: "Head", PORTRAIT: "Portrait", SPLASH: "Cover" }
 export function imageHeroHref(group: CharacterImageGroup, entry?: CharacterImageEntry) {
@@ -93,6 +94,7 @@ export function CharacterMediaViewer({
   const client = useQueryClient()
   const api = createCharacterImageApi(request)
   const locale = useContentLocale()
+  const navigate = useNavigate()
   const { actor } = useSession()
   const canWrite = !!actor?.capabilities.includes("hero:write")
   const preview = useQuery({
@@ -148,17 +150,37 @@ export function CharacterMediaViewer({
     window.addEventListener("beforeunload", guard)
     return () => window.removeEventListener("beforeunload", guard)
   }, [busy, dirty])
-  function close() {
-    if (!busy && (!dirty || window.confirm("Ảnh đã chọn chưa được lưu vào bản nháp. Đóng phần chỉnh sửa?"))) onClose()
+  async function close() {
+    if (busy) return
+    if (
+      !dirty ||
+      (await confirmDiscard({
+        title: "Đóng phần chỉnh sửa?",
+        description: "Ảnh đã chọn chưa được lưu vào bản nháp.",
+        confirmLabel: "Bỏ ảnh đã chọn",
+      }))
+    )
+      onClose()
   }
-  function switchImage(nextOwner: CharacterMediaOwner, nextRole: MediaRole) {
-    if (busy || (dirty && !window.confirm("Ảnh vừa chọn chưa lưu. Chuyển sang ảnh khác và bỏ lựa chọn này?"))) return
+  async function switchImage(nextOwner: CharacterMediaOwner, nextRole: MediaRole) {
+    if (busy) return
+    if (
+      dirty &&
+      !(await confirmDiscard({
+        title: "Chuyển sang ảnh khác?",
+        description: "Ảnh vừa chọn chưa lưu và sẽ bị bỏ.",
+        confirmLabel: "Bỏ ảnh và chuyển",
+      }))
+    )
+      return
+
     setSelection({ ownerType: nextOwner.ownerType, skinKey: nextOwner.skinKey, role: nextRole, clicked: null })
     setAssetId(null)
     setLabel("")
     setMain(false)
     setError("")
   }
+  const fullPageLink = `/hero/${heroId}?revision=${revisionId}&tab=${fullPageTab ?? (entry.ownerType === "SKIN" ? "skins" : "media")}`
   async function save(id: string, fileLabel: string | null, asMain: boolean) {
     if (!preview.data || preview.isFetching || !editable) return
     setSaving(true)
@@ -186,7 +208,7 @@ export function CharacterMediaViewer({
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) close()
+        if (!open) void close()
       }}
     >
       <SheetContent
@@ -225,16 +247,26 @@ export function CharacterMediaViewer({
             </Badge>
             <Button variant="outline" size="sm" asChild>
               <Link
-                to={`/hero/${heroId}?revision=${revisionId}&tab=${fullPageTab ?? (entry.ownerType === "SKIN" ? "skins" : "media")}`}
+                to={fullPageLink}
                 aria-disabled={busy}
-                onClick={(event) => {
-                  if (busy || (dirty && !window.confirm("Ảnh vừa chọn chưa lưu. Mở trang tướng và bỏ lựa chọn này?"))) {
-                    event.preventDefault()
+                onClick={async (event) => {
+                  // The click is spent once the question opens, so an accepted answer navigates by itself.
+                  if (busy || dirty) event.preventDefault()
+                  if (busy) return
+                  if (
+                    dirty &&
+                    !(await confirmDiscard({
+                      title: "Mở trang tướng?",
+                      description: "Ảnh vừa chọn chưa lưu và sẽ bị bỏ.",
+                      confirmLabel: "Bỏ ảnh và mở",
+                    }))
+                  )
                     return
-                  }
+
                   setAssetId(null)
                   setLabel("")
                   setMain(false)
+                  if (dirty) void navigate(fullPageLink)
                 }}
               >
                 <ArrowUpRight className="size-4" />

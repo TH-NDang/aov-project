@@ -21,7 +21,7 @@ import { SearchField } from "@/components/search-field"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { Link, useSearchParams } from "react-router"
+import { Link, useNavigate, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
@@ -52,6 +52,7 @@ import { useHeroEntries } from "./patch-notes-sheet"
 import { showAllCatalogEntries } from "./catalog-scope"
 import { useHeroScopeChanges } from "./use-hero-scope-changes"
 import { HeroCatalogFilters, heroCatalogFacets } from "./hero-catalog-filters"
+import { confirmDiscard } from "@/components/confirm-dialog"
 const HeroWorkspace = lazy(() =>
   import("./publishing-page").then((module) => ({ default: module.PublishingWorkspace })),
 )
@@ -695,6 +696,7 @@ function HeroQuickView({
   ruleset: string
   onClose: () => void
 }) {
+  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const restored = useQuery({
     queryKey: ["publishing-revisions", heroId],
@@ -717,15 +719,17 @@ function HeroQuickView({
   }, [heroId, requestedRevision, revision?.id, setParams])
   const [unsafe, setUnsafe] = useState(false)
   const [saving, setSaving] = useState(false)
-  const canLeave = () => !saving && (!unsafe || window.confirm("Bạn có thay đổi chưa lưu. Đóng trang tướng này?"))
+  const canLeave = async () =>
+    !saving &&
+    (!unsafe || (await confirmDiscard({ title: "Đóng trang tướng này?", description: "Bạn có thay đổi chưa lưu." })))
   usePageCloseGuard(() => !heroId || canLeave())
   return (
     <>
       <HeroNavigationGuard unsafe={!!heroId && (unsafe || saving)} busy={saving} />
       <Sheet
         open={!!heroId}
-        onOpenChange={(open) => {
-          if (!open && canLeave()) {
+        onOpenChange={async (open) => {
+          if (!open && (await canLeave())) {
             setUnsafe(false)
             onClose()
           }
@@ -759,10 +763,14 @@ function HeroQuickView({
                     <Link
                       aria-label="Mở trang tướng đầy đủ"
                       to={heroPageLocation(heroId, params, revisionId)}
-                      onClick={(event) => {
-                        if (!canLeave()) event.preventDefault()
-                        else {
+                      onClick={async (event) => {
+                        if (!saving && !unsafe) return
+
+                        // The click is spent once the question opens, so an accepted answer navigates by itself.
+                        event.preventDefault()
+                        if (await canLeave()) {
                           setUnsafe(false)
+                          void navigate(heroPageLocation(heroId, params, revisionId))
                         }
                       }}
                     >

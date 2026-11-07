@@ -19,6 +19,7 @@ import {
 } from "./character-image-api"
 import { BadgeGroupSelect } from "./skin-badge-group-editor"
 import { toast } from "sonner"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 export const badgeKindLabels: Record<BadgeKind, string> = {
   UNKNOWN: "Chưa phân loại",
@@ -65,8 +66,10 @@ export function SkinBadgeEditor({
     setDirty(true)
     setTranslations((current) => current.map((text) => (text.locale === language ? { ...text, ...value } : text)))
   }
-  function close() {
-    if (!busy && !uploading && (!dirty || window.confirm("Có thay đổi nhãn chưa lưu. Đóng phần chỉnh sửa?"))) onClose()
+  async function close() {
+    if (busy || uploading) return
+    if (!dirty || (await confirmDiscard({ title: "Đóng phần chỉnh sửa?", description: "Có thay đổi nhãn chưa lưu." })))
+      onClose()
   }
   useEffect(() => {
     if (!dirty && !busy && !uploading) return
@@ -105,7 +108,7 @@ export function SkinBadgeEditor({
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) close()
+        if (!open) void close()
       }}
     >
       <SheetContent

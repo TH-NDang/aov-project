@@ -1,5 +1,6 @@
 import { useContext, useEffect } from "react"
 import { UNSAFE_DataRouterContext, useBlocker } from "react-router"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 export function HeroNavigationGuard({ unsafe, busy }: { unsafe: boolean; busy: boolean }) {
   const router = useContext(UNSAFE_DataRouterContext)
@@ -11,8 +12,21 @@ function HistoryGuard({ busy }: { busy: boolean }) {
   const blocker = useBlocker(({ historyAction }) => historyAction === "POP")
   useEffect(() => {
     if (blocker.state !== "blocked") return
-    if (!busy && window.confirm("Bạn có thay đổi chưa lưu. Bỏ thay đổi và chuyển trang?")) blocker.proceed()
-    else blocker.reset()
+    if (busy) {
+      blocker.reset()
+      return
+    }
+
+    // The navigation stays blocked while the question is open; a later block or unmount makes this answer obsolete.
+    let current = true
+    void confirmDiscard({ title: "Chuyển trang?", description: "Bạn có thay đổi chưa lưu." }).then((leave) => {
+      if (!current) return
+      if (leave) blocker.proceed()
+      else blocker.reset()
+    })
+    return () => {
+      current = false
+    }
   }, [blocker, busy])
   return null
 }

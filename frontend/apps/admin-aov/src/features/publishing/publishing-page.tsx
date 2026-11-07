@@ -96,6 +96,7 @@ import {
   sameHeroSection,
 } from "./hero-working-copy"
 import { toast } from "sonner"
+import { confirmAction } from "@/components/confirm-dialog"
 
 const api = createPublishingApi(backendRequest)
 const CAUSES: Record<Cause, string> = {
@@ -593,8 +594,16 @@ export function PublishingWorkspace({
   // The one action the header offers for this version; the rest stays in its menu.
   const headerAction =
     revision?.state === "DRAFT" && canPublish ? "publish" : revision?.state === "PUBLISHED" && canWrite ? "draft" : null
-  function discardDraft() {
-    if (!revision || !window.confirm("Hủy bản nháp này? Bản đã xuất bản vẫn được giữ lại.")) return
+  async function discardDraft() {
+    if (!revision) return
+    const confirmed = await confirmAction({
+      title: "Hủy bản nháp này?",
+      description: "Bản đã xuất bản vẫn được giữ lại.",
+      confirmLabel: "Hủy bản nháp",
+      cancelLabel: "Giữ bản nháp",
+    })
+    if (!confirmed) return
+
     void run(async () => {
       const discarded = await api.discard(revision)
       await localDraft.discard()
@@ -874,7 +883,7 @@ export function PublishingWorkspace({
                     {writable && (
                       <>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive" disabled={busy} onSelect={() => discardDraft()}>
+                        <DropdownMenuItem variant="destructive" disabled={busy} onSelect={() => void discardDraft()}>
                           <Trash2 />
                           Hủy bản nháp
                         </DropdownMenuItem>

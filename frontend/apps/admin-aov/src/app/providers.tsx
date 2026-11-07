@@ -7,6 +7,7 @@ import { errorMessage, isApiError } from "@/lib/api/errors"
 import { ThemeProvider, useTheme } from "./theme"
 import { HotkeysProvider } from "./hotkeys"
 import { DraftPersistenceGuard } from "./drafts/draft-persistence-guard"
+import { ConfirmDialogHost } from "@/components/confirm-dialog"
 
 declare module "@tanstack/react-query" {
   interface Register {
@@ -48,6 +49,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           <TooltipProvider delayDuration={200}>
             <DraftPersistenceGuard />
             {children}
+            <ConfirmDialogHost />
             <ThemedToaster />
           </TooltipProvider>
         </HotkeysProvider>

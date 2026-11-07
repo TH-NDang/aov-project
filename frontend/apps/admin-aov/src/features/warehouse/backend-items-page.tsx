@@ -41,6 +41,7 @@ import { recipeConnectionError } from "./item-graph"
 import { ItemShopGraph, ItemShopHelp } from "./item-shop-graph"
 import { ItemEditor } from "./item-editor"
 import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 type Entry = WarehouseEntry<ItemContent>
 type PendingItem = { entry: Entry; content: ItemContent; patchId?: string | null }
@@ -387,8 +388,17 @@ export function BackendItemsPage() {
             <WarehouseRulesetSelect
               context={{
                 ...context,
-                setRuleset: (id) => {
-                  if (pending && !window.confirm("Bỏ các thay đổi chưa lưu để chuyển bộ quy tắc?")) return
+                setRuleset: async (id) => {
+                  if (
+                    pending &&
+                    !(await confirmDiscard({
+                      title: "Chuyển bộ quy tắc?",
+                      description: "Các thay đổi chưa lưu sẽ bị bỏ.",
+                      confirmLabel: "Bỏ và chuyển",
+                    }))
+                  )
+                    return
+
                   setEdits(new Map())
                   setUndo([])
                   setSelectedId(null)
