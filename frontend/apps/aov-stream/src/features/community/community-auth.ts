@@ -9,6 +9,7 @@ const auth = createPublicAuth({
   profileUrl: "/api/community/v1/me",
   nameField: "name",
   locale: streamLocale,
+  basePath: import.meta.env.BASE_URL,
 })
 export const { signIn, signOut, accessToken, completeLogin, useSession: useCommunitySession } = auth
 void auth.restoreSession()

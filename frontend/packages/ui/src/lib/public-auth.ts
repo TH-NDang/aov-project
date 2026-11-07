@@ -10,6 +10,8 @@ type Config = {
   profileUrl: string
   nameField: string
   locale: () => string
+  /** Where the app is served from, such as "/stream/". Paths in the session stay relative to it. */
+  basePath?: string
 }
 const encode = (bytes: Uint8Array) =>
   btoa(String.fromCharCode(...bytes))
@@ -36,13 +38,14 @@ export function publicAuthError(locale = "vi") {
 }
 
 const SILENT_MESSAGE = "aov-silent-login"
+const withTrailingSlash = (path: string) => (path.endsWith("/") ? path : `${path}/`)
 
 /**
  * Runs first in each public app. Inside the hidden frame of a silent login the callback only hands its query to the
  * parent page, so the app must not render.
  */
-export function relaySilentLogin() {
-  if (window.parent === window || location.pathname !== "/auth/callback") return false
+export function relaySilentLogin(basePath = "/") {
+  if (window.parent === window || location.pathname !== `${withTrailingSlash(basePath)}auth/callback`) return false
   window.parent.postMessage({ type: SILENT_MESSAGE, search: location.search }, location.origin)
   return true
 }
@@ -53,6 +56,9 @@ export function relaySilentLogin() {
  * credential: it only avoids that request for visitors who never signed in.
  */
 export function createPublicAuth(config: Config) {
+  const base = withTrailingSlash(config.basePath ?? "/")
+  const callbackPath = `${base}auth/callback`
+  const appPath = (pathname: string) => (pathname.startsWith(base) ? `/${pathname.slice(base.length)}` : pathname)
   const markerKey = `${config.storageKey}-active`
   const hasMarker = () => {
     try {
@@ -71,7 +77,7 @@ export function createPublicAuth(config: Config) {
     }
   }
   const restorable = () =>
-    hasMarker() && typeof window !== "undefined" && window.parent === window && location.pathname !== "/auth/callback"
+    hasMarker() && typeof window !== "undefined" && window.parent === window && location.pathname !== callbackPath
   let session: Session = { status: restorable() ? "loading" : "anonymous", name: "", revision: 0 }
   let credentials: Credentials | null = null
   let renewing: Promise<string> | null = null
@@ -80,7 +86,7 @@ export function createPublicAuth(config: Config) {
   let generation = 0
   const listeners = new Set<() => void>()
   const issuer = config.issuer.replace(/\/$/, "")
-  const callback = () => `${location.origin}/auth/callback`
+  const callback = () => `${location.origin}${callbackPath}`
   const publish = (value: Partial<Session>) => {
     session = { ...session, ...value }
     listeners.forEach((listener) => listener())
@@ -123,7 +129,7 @@ export function createPublicAuth(config: Config) {
           verifier,
           state,
           created: Date.now(),
-          returnTo: location.pathname + location.search + location.hash,
+          returnTo: appPath(location.pathname) + location.search + location.hash,
         }),
       )
       const params = authorizeParams(state, challenge)
@@ -308,7 +314,7 @@ export function createPublicAuth(config: Config) {
     publish({ status: "anonymous", name: "", revision: session.revision + 1, error: undefined })
     if (remote && idToken)
       location.assign(
-        `${issuer}/protocol/openid-connect/logout?${new URLSearchParams({ id_token_hint: idToken, post_logout_redirect_uri: location.origin + config.returnPath })}`,
+        `${issuer}/protocol/openid-connect/logout?${new URLSearchParams({ id_token_hint: idToken, post_logout_redirect_uri: location.origin + base.slice(0, -1) + config.returnPath })}`,
       )
   }
   return { useSession, signIn, signOut, accessToken, completeLogin, restoreSession, getSnapshot }

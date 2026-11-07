@@ -361,7 +361,7 @@ function Manager({ profile, viewer }: { profile: CommunityProfile; viewer: PageV
   })
   const invite = useMutation({
     mutationFn: () => communityApi<{ token: string }>(`/me/pages/${profile.id}/invitations`, { role: inviteRole }),
-    onSuccess: (value) => setInvitation(`${location.origin}/invitations#${value.token}`),
+    onSuccess: (value) => setInvitation(`${location.origin}${import.meta.env.BASE_URL}invitations#${value.token}`),
   })
   const membership = useMutation({
     mutationFn: () => communityApi(`/me/pages/${profile.id}/members/${confirmation!.id}/${confirmation!.action}`, {}),
