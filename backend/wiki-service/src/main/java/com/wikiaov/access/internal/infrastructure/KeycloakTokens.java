@@ -5,11 +5,13 @@ import com.wikiaov.access.internal.application.AuthErrorCode;
 import com.wikiaov.access.internal.application.AuthProperties;
 import com.wikiaov.access.internal.application.port.IdentityTokens;
 import com.wikiaov.platform.ApiException;
+import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
@@ -17,10 +19,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 @Component
 @EnableConfigurationProperties(AuthProperties.class)
 class KeycloakTokens implements IdentityTokens {
+    private static final JsonMapper JSON = JsonMapper.builder().build();
+
     private final AuthProperties properties;
     private final String issuer;
     private final String backchannel;
@@ -100,7 +106,10 @@ class KeycloakTokens implements IdentityTokens {
         try {
             TokenBody body = client.post().uri(backchannel + "/protocol/openid-connect/token")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve()
-                    .onStatus(status -> status.value() == 400, (request, response) -> {
+                    .onStatus(status -> status.value() == 400 || status.value() == 401, (request, response) -> {
+                        if (response.getStatusCode().value() == 401 && !isRejectedGrant(response))
+                            throw unavailable();
+
                         throw new ApiException(rejected, "The identity provider rejected the authentication request.");
                     }).body(TokenBody.class);
             if (body == null || body.accessToken() == null || body.refreshToken() == null
@@ -110,6 +119,15 @@ class KeycloakTokens implements IdentityTokens {
         } catch (RestClientException exception) {
             // Do not propagate upstream response bodies or request credentials to logs or API errors.
             throw unavailable();
+        }
+    }
+
+    /** A 401 means a wrong password, the user's to fix, or a wrong client secret, which is ours. */
+    private boolean isRejectedGrant(ClientHttpResponse response) throws IOException {
+        try {
+            return "invalid_grant".equals(JSON.readTree(response.getBody()).path("error").asString());
+        } catch (JacksonException exception) {
+            return false;
         }
     }
 
