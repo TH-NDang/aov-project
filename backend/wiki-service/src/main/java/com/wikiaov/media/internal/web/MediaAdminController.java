@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.web;
 
 import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.media.internal.application.response.MediaAssetBatch;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.application.response.MediaAssetSummary;
 import com.wikiaov.media.internal.application.response.MediaUsageReport;
@@ -33,6 +34,7 @@ import com.wikiaov.platform.PageSlice;
 import com.wikiaov.platform.QueryParameters;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.jspecify.annotations.Nullable;
@@ -133,6 +135,12 @@ class MediaAdminController implements MediaAdminApi {
     public MediaAssetDetails getAsset(HttpServletRequest http, @PathVariable UUID assetId) {
         QueryParameters.requireOnly(http, Set.of());
         return queries.get(assetId);
+    }
+
+    @GetMapping(path = "/assets/batch", version = "1")
+    public MediaAssetBatch getAssets(HttpServletRequest http, @RequestParam List<UUID> ids) {
+        QueryParameters.requireOnly(http, Set.of("ids"));
+        return new MediaAssetBatch(queries.getAll(ids));
     }
 
     @PostMapping(path = "/assets/{assetId}/version-uploads", version = "1")

@@ -18,6 +18,8 @@ public interface MediaAssetVersionRepository extends Repository<MediaAssetVersio
 
     List<MediaAssetVersion> findByAssetIdOrderByVersionNoDesc(UUID assetId);
 
+    List<MediaAssetVersion> findByAssetIdInOrderByVersionNoDesc(Collection<UUID> assetIds);
+
     List<MediaAssetVersion> findByIdIn(Collection<UUID> ids);
 
     Optional<MediaAssetVersion> findByAssetIdAndSha256(UUID assetId, String sha256);

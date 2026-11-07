@@ -655,6 +655,12 @@
     [],
     []
   ],
+  "com.wikiaov.media.internal.web.MediaAdminController#getAssets": [
+    [],
+    [
+      "@Size(min=1,max=100)"
+    ]
+  ],
   "com.wikiaov.media.internal.web.MediaAdminController#requestUpload": [
     [],
     [],

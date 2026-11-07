@@ -21,7 +21,7 @@
   "com/wikiaov/item/internal/web/ItemCategoryController.java": "42a73a542ca729f3a99aeffd438434c732a179297351dbfab5459dc3e9c4a76b",
   "com/wikiaov/item/internal/web/ItemPatchChangeController.java": "f4bcd491882017bfcc3d557530cf53d589275ae0f41abdece7da534dc4f066ac",
   "com/wikiaov/item/internal/web/ItemPublicController.java": "7a281d46f358300475cf9079060a8ac396f6b772eed70187f69beba66d884386",
-  "com/wikiaov/media/internal/web/MediaAdminController.java": "eef103e2b80406c8da3ce3ce1b2c5d3f02249c0698add7238f973001728424bc",
+  "com/wikiaov/media/internal/web/MediaAdminController.java": "5ec64201dee3aeb6b0257368558d4b149073e651846e6e956bfc86c8681e1175",
   "com/wikiaov/patch/internal/web/PatchAdminController.java": "8645e8c5b885fe882c319af26e54b49771034284b4e6bbbed8cd73f3ec910eed",
   "com/wikiaov/patch/internal/web/PatchDataReviewController.java": "30acfbf2bfdfea71f0945eb2bbdda99d529d41f9ac0ffb4a9a34dd038a3d2270",
   "com/wikiaov/patch/internal/web/PublicationOverviewController.java": "8fd1092b31a773b1b1dba24ef7b885db14133c2732cc20d3b841f6417de279a6",

@@ -633,6 +633,54 @@ class MediaAdminApiIntegrationTest {
     }
 
     @Test
+    void severalAssetsAreReadTogetherInTheRequestedOrder() throws Exception {
+        String empty = createAsset("OTHER");
+        String image = createAsset("HERO_SKIN_ART");
+        String versionId = JsonPath.read(uploadVersion(image, TestImages.png(30, 30), "image/png"), "$.versionId");
+        addSource(image, versionId, "{\"label\":\"Garena\",\"ownerName\":\"Garena\"}").andExpect(status().isOk());
+        String laterVersionId = JsonPath.read(uploadVersion(image, TestImages.png(40, 40), "image/png"), "$.versionId");
+        String unknown = UUID.randomUUID().toString();
+
+        String single = mvc.perform(get(BASE + "/assets/" + image).with(reader()))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        mvc.perform(get(BASE + "/assets/batch").param("ids", String.join(",", image, unknown, empty, image))
+                .with(reader()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(2)))
+                .andExpect(jsonPath("$.items[0].id").value(image))
+                .andExpect(jsonPath("$.items[0].versions[0].id").value(laterVersionId))
+                .andExpect(jsonPath("$.items[0].versions[1].id").value(versionId))
+                .andExpect(jsonPath("$.items[0].provenance[*].ownerName", hasItem("Garena")))
+                .andExpect(jsonPath("$.items[1].id").value(empty))
+                .andExpect(jsonPath("$.items[1].versions", hasSize(0)))
+                .andExpect(result -> assertThat(JsonPath.<Object>read(result.getResponse().getContentAsString(),
+                        "$.items[0]")).isEqualTo(JsonPath.<Object>read(single, "$")));
+        mvc.perform(get(BASE + "/assets/batch").param("ids", unknown).with(reader()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items", hasSize(0)));
+    }
+
+    @Test
+    void readingSeveralAssetsValidatesTheQuery() throws Exception {
+        String id = UUID.randomUUID().toString();
+        String tooMany = String.join(",", java.util.Collections.nCopies(101, id));
+
+        for (String ids : List.of(tooMany, "", "not-a-uuid", id + ",," + id)) {
+            mvc.perform(get(BASE + "/assets/batch").param("ids", ids).with(reader()))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+        }
+        mvc.perform(get(BASE + "/assets/batch").with(reader()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+        mvc.perform(get(BASE + "/assets/batch").param("ids", id).param("page", "0").with(reader()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_QUERY_PARAMETER"));
+        mvc.perform(get(BASE + "/assets/batch").param("ids", id))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void sourceSurvivesUploadRetriesAndCanBeBackfilledWithoutReplacingBytes() throws Exception {
         UUID ownerPage = UUID.randomUUID();
         UUID relatedPage = UUID.randomUUID();

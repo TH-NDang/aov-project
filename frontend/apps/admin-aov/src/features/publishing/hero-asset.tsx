@@ -3,16 +3,13 @@ import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Image } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
-import { backendRequest } from "@/app/auth/session"
 import { ImagePreview } from "@/components/image-preview"
 import type { LightboxImage } from "@/components/image-lightbox"
-import { createPublishingApi } from "./publishing-api"
+import { heroContentAssetQuery } from "./hero-content-asset"
 import { ImageCredit } from "@aov/ui/components/image-credit"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { ImageCreditPanel } from "../media/image-credit-panel"
 import { creditSummary, visibleSources } from "../media/media-source-gaps"
-
-const api = createPublishingApi(backendRequest)
 
 export function HeroAsset({
   id,
@@ -35,12 +32,7 @@ export function HeroAsset({
   gallery?: { images: LightboxImage[]; index: number }
 }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
-  const asset = useQuery({
-    queryKey: ["hero-content-asset", id],
-    queryFn: () => api.asset(id!),
-    enabled: !!id,
-    staleTime: 60000,
-  })
+  const asset = useQuery({ ...heroContentAssetQuery(id ?? ""), enabled: !!id })
   const sources = asset.data?.currentUrl
     ? visibleSources(currentMediaSources(asset.data.provenance ?? [], asset.data.currentVersionId))
     : []

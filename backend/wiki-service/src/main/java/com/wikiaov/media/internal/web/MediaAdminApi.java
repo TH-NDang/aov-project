@@ -1,6 +1,7 @@
 package com.wikiaov.media.internal.web;
 
 import com.wikiaov.media.MediaSemanticType;
+import com.wikiaov.media.internal.application.response.MediaAssetBatch;
 import com.wikiaov.media.internal.application.response.MediaAssetDetails;
 import com.wikiaov.media.internal.application.response.MediaAssetSummary;
 import com.wikiaov.media.internal.application.response.MediaUsageReport;
@@ -30,6 +31,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 
@@ -102,6 +106,15 @@ public interface MediaAdminApi {
     })
     MediaAssetDetails getAsset(@Parameter(hidden = true) HttpServletRequest http,
             @Parameter(description = "Asset id identifier.") UUID assetId);
+
+    @Operation(operationId = "mediaAdminApi_getAssets", summary = "Get several assets - media admin", description = "Get up to 100 assets for media admin in one request, so a screen of images does not read them one by one. Items follow the requested order; a repeated id appears once and an unknown id is left out instead of failing the request. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules. Unrecognized query parameters are rejected.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
+            @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "403", description = "The authenticated actor lacks a required capability or fails an authorization rule.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),
+            @ApiResponse(responseCode = "200", description = "Successful operation.", useReturnTypeSchema = true),
+            @ApiResponse(responseCode = "default", description = "Failure expressed as RFC 9457 Problem Details, including the module-specific code and requestId when available.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem")))
+    })
+    MediaAssetBatch getAssets(@Parameter(hidden = true) HttpServletRequest http,
+            @Parameter(description = "Asset ids separated by commas, at most 100.") @Size(min = 1, max = 100) List<@NotNull UUID> ids);
 
     @Operation(operationId = "mediaAdminApi_requestUpload", summary = "Request upload - media admin", description = "Create a presigned upload ticket. Upload bytes directly to object storage, then call complete; bytes never pass through this API. Requires a valid bearer token with catalog:read; application use cases enforce additional capabilities and domain rules.", security = @SecurityRequirement(name = "bearerAuth"), responses = {
             @ApiResponse(responseCode = "401", description = "A valid bearer access token is required.", content = @Content(mediaType = "application/problem+json", schema = @Schema(ref = "#/components/schemas/ApiProblem"))),

@@ -4,16 +4,14 @@ import { useQuery } from "@tanstack/react-query"
 import { CircleAlert, Copyright, ExternalLink, Info, RefreshCw, UserRound } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
-import { backendRequest, getSession } from "@/app/auth/session"
+import { getSession } from "@/app/auth/session"
 import { useIsWide } from "@/hooks/use-media-query"
-import { createPublishingApi } from "./publishing-api"
+import { heroContentAssetQuery } from "./hero-content-asset"
 import { sourceHttpUrl } from "./hero-source-review"
 import type { AssetDetail } from "./types"
 import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { ImageDetailSheet } from "../media/image-detail-sheet"
 import { ownerCandidate, primarySource, sourceGap, sourceGapLabels, visibleSources } from "../media/media-source-gaps"
-
-const api = createPublishingApi(backendRequest)
 
 /** Asset-wide and current-version sources describe the image being displayed. */
 export function currentImageSources(asset: AssetDetail | undefined) {
@@ -23,12 +21,7 @@ export function currentImageSources(asset: AssetDetail | undefined) {
 /** Who owns the image first, then where it came from; the image sheet completes a missing owner. */
 export function HeroImageSource({ assetId }: { assetId: string | null | undefined }) {
   const [detail, setDetail] = useState<"view" | "owner" | "new" | null>(null)
-  const asset = useQuery({
-    queryKey: ["hero-content-asset", assetId],
-    queryFn: () => api.asset(assetId!),
-    enabled: !!assetId,
-    staleTime: 60000,
-  })
+  const asset = useQuery({ ...heroContentAssetQuery(assetId ?? ""), enabled: !!assetId })
   if (!assetId) return null
 
   const writable = !!getSession().actor?.capabilities.includes("media:write")

@@ -1139,6 +1139,23 @@ ghi “Chưa xác minh” chưa được tính đầy đủ. Chỉ cần một n
 Ảnh đại diện người dùng (`USER_AVATAR`) thuộc về chính người dùng tải lên, không cần ghi nguồn hay chủ
 sở hữu nên không bao giờ nằm trong kết quả `needsCredit=true` (01/11/2026).
 
+Đọc nhiều asset trong một lần gọi, dùng cho màn hình hiện nhiều ảnh cùng lúc (07/11/2026):
+
+```http
+GET /api/wiki/v1/admin/media/assets/batch?ids={assetId},{assetId}
+```
+
+```json
+{ "items": [{ "id": "...", "versions": [], "provenance": [] }] }
+```
+
+- Mỗi item có cùng dạng với asset detail ở trên và cần cùng quyền `catalog:read`.
+- `ids` bắt buộc, tối đa 100 id, ngăn cách bằng dấu phẩy. Thiếu `ids`, rỗng, quá 100 id, có id sai định dạng hoặc có
+  tham số lạ trả `400 INVALID_QUERY_PARAMETER`.
+- `items` theo thứ tự trong `ids`. Id lặp lại chỉ trả một lần.
+- Id không tồn tại bị bỏ khỏi `items` và không làm hỏng cả lần gọi, nên vẫn trả `200`. Client nào cần phân biệt thì so
+  `items` với `ids` hoặc gọi `GET .../assets/{assetId}` để nhận `404 MEDIA_ASSET_NOT_FOUND`.
+
 ---
 
 ## 31. Yêu cầu upload MediaAssetVersion
