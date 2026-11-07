@@ -207,9 +207,61 @@ Mỗi mục có cách hiển thị riêng thay vì một dòng chung, vì ngư�
 | Tổ chức | Dòng | Khu vực, website, số giải đã tổ chức, số năm, các hạng giải, giải gần nhất |
 | Hệ thống giải | Thẻ theo logo | Số mùa, số năm, các hạng giải, mùa gần nhất |
 
-"Đội gần nhất" của tuyển thủ là đội ở dòng đội hình của giải gần nhất, không khẳng định hợp đồng hiện tại. Vị trí lấy từ hồ sơ tuyển thủ, nếu trống thì lấy từ dòng đội hình gần nhất có ghi vị trí. Đội hình của đội bỏ qua thành viên đã rời (INACTIVE) và lấy giải gần nhất có đội hình, vì giải mới nhất có thể chưa nhập.
+"Đội gần nhất" của tuyển thủ là đội ở dòng đội hình có ngày hoạt động gần nhất, không khẳng định hợp đồng hiện tại. Vị trí lấy từ hồ sơ tuyển thủ, nếu trống thì lấy từ dòng đội hình gần nhất có ghi vị trí. Đội hình của đội bỏ qua thành viên đã rời (INACTIVE) và lấy giải gần nhất có đội hình, vì giải mới nhất có thể chưa nhập.
 
 Số liệu được tính từ giải, trận và đội hình khi đọc, nên không cần lưu riêng và không lệch khi sửa dữ liệu.
+
+## Ưu tiên gần đây trong quản lý thi đấu (07/11/2026)
+
+Lịch sử nhập từ Liquipedia lùi về tới 2016, nên mọi danh sách và ô chọn trong Admin xếp cái đang làm và còn hoạt động lên trước, nhưng vẫn tìm được hồ sơ cũ. Thứ tự do database tính khi đọc, không lưu riêng và không nạp hàng vào bộ nhớ. "Hôm nay" là ngày của database. Mỗi thứ tự đều kết thúc bằng tên rồi UUID, nên cuộn tải thêm không lặp hay bỏ sót dòng.
+
+### Giải đấu
+
+Xếp theo nhóm, trong nhóm theo khoảng cách tới hôm nay:
+
+| Nhóm | Điều kiện | Trong nhóm |
+|---|---|---|
+| 0. Đang diễn ra | Hôm nay nằm trong ngày bắt đầu và kết thúc | Sắp kết thúc trước |
+| 1. Sắp diễn ra | Bắt đầu trong 30 ngày tới | Sắp bắt đầu trước |
+| 2. Còn lại có ngày | Đã kết thúc, hoặc bắt đầu sau hơn 30 ngày | Gần hôm nay trước, tính cả hai phía |
+| 3. Không có ngày | Không có ngày và không có năm | Theo tên |
+
+Giải ở xa trong tương lai nằm xen giữa các giải đã qua cách hôm nay chừng ấy ngày, nên không chen lên đầu mà cũng không bị đẩy xuống cuối. Ngày quyết định, trạng thái chỉ dùng khi: giải ghi FINISHED thì không còn là đang diễn ra dù ngày chưa hết; giải không có ngày thì ONGOING vào nhóm 0, UPCOMING hoặc ANNOUNCED vào nhóm 1; giải ONGOING chỉ có ngày bắt đầu vẫn ở nhóm 0. Giải chỉ có năm thuộc nhóm 2, tính từ đầu đến cuối năm đó.
+
+Các mùa của một tổ chức hoặc hệ thống giải (`/admin/competitions`) dùng cùng thứ tự này.
+
+### Đội và tuyển thủ: ngày hoạt động gần nhất
+
+`lastActiveOn` của đội là trận gần nhất đội đã đấu:
+
+- Ngày của trận là ngày muộn hơn giữa lịch của trận và ván cuối, đọc theo UTC. Trận được tính khi đã có kết quả, đã có ván, hoặc lịch đã qua; trận hẹn trong tương lai chưa có kết quả thì chưa tính.
+- **Ngày sai không đẩy được đội cũ lên đầu:** ngày của trận không được vượt ngày kết thúc của giải (giải chỉ có năm thì là cuối năm) và không vượt hôm nay. Dữ liệu dev có 106 trận ghi ngày ngoài giải: 27 trận sau ngày kết thúc, ảnh hưởng 26 đội (có trận ghi muộn đúng một năm), đều bị chặn lại ở ngày kết thúc giải; 79 trận trước ngày bắt đầu được giữ nguyên, vì đó phần lớn là vòng loại thật và ngày sớm không nâng hạng ai. Không sửa dữ liệu nguồn.
+- Đội có mặt trong giải mà không có trận có ngày (trận không ghi lịch, đội hình, bảng xếp hạng cuối, đăng ký tham dự) lấy ngày kết thúc giải; nếu giải đang diễn ra hoặc bắt đầu trong 30 ngày tới thì lấy hôm nay; giải xa hơn 30 ngày hoặc không có ngày thì chưa có ngày hoạt động. Trận có ngày luôn thắng các dấu hiệu này trong cùng một giải.
+
+Tuyển thủ lấy ngày của đội trong từng dòng đội hình của mình, ngày muộn nhất là `lastActiveOn`; "đội gần nhất" và "giải gần nhất" lấy theo đúng dòng đó. Không đọc đội hình từng ván: chỉ 12.989 trong 25.399 ván ghi tuyển thủ, mọi tuyển thủ được ghi trong ván đều đã có dòng đội hình, và không ai có ván mới hơn ngày suy từ đội hình. Việc mở từng ván để đọc cũng rất tốn (64 nghìn dòng). Vì vậy tuyển thủ dự bị được tính theo đội, và người chỉ ghi trong ván mà không có dòng đội hình sẽ chưa có ngày. Người đã rời đội (INACTIVE) chỉ được tính tới ngày đầu của giải đó.
+
+Hồ sơ PERSON không có trận riêng, nên lấy mốc lịch sử có ngày muộn nhất (không vượt hôm nay); mốc không ghi ngày không được tính. Tổ chức và hệ thống giải lấy giải gần nhất của mình theo quy tắc "có mặt trong giải" ở trên.
+
+Dòng không có ngày xếp cuối, theo tên rồi UUID. Trên dev hiện còn 12 đội và 94 tuyển thủ như vậy.
+
+### Tìm kiếm
+
+Khi có từ khóa, độ khớp tên đứng trước độ gần đây: khớp nguyên tên, rồi đầu tên, rồi đầu một từ trong tên, rồi chỗ khác. Mỗi tên gọi khác, tên ngắn và mã đều tính là một tên. Không phân biệt hoa thường, dấu, và dấu câu giữa các từ. Vì vậy gõ đúng tên một tuyển thủ đã giải nghệ sẽ thấy người đó đầu tiên, trước những người mới đấu nhưng chỉ khớp một phần tên.
+
+### Ô chọn trong ngữ cảnh
+
+Thứ tự: khớp nguyên tên, rồi dòng thuộc ngữ cảnh, rồi độ khớp, rồi ngày hoạt động.
+
+| Ô chọn | Ngữ cảnh | Xếp trước |
+|---|---|---|
+| Đội trong một giải (thêm đội tham dự, đội A/B của trận) | `tournamentId` | Đội có trận, đội hình, thứ hạng hoặc đăng ký trong giải |
+| Tuyển thủ của đội trong giải (đội hình, ván) | `teamId`, `tournamentId` | Đội hình của đội trong giải này, rồi người từng ở đội này, rồi người khác trong giải này |
+| Giải của một đội hoặc tuyển thủ (xem đội hình, thành tích) | `teamId` hoặc `playerId` | Giải họ đã tham gia |
+| Thành viên của hồ sơ đội | `relatedPageId` | Hồ sơ có mốc lịch sử gắn với đội này |
+
+Dòng hiển thị lý do xếp hạng: ngữ cảnh ("Trong giải này", "Từng ở đội này") và ngày hoạt động. Giải đấu hiển thị ngày cùng thời gian còn lại, ví dụ "Còn 8 ngày", "Kết thúc 6 ngày trước". Vẫn chọn được cách xếp khác ở từng danh sách: giải theo trạng thái hoặc tên; đội, tuyển thủ theo số giải, chức vô địch, tiền thưởng, tên; ban huấn luyện, broadcast, tổ chức, hệ thống giải theo nhiều giải nhất hoặc tên. Khi chọn cách xếp khác thì thứ tự đó được giữ nguyên, kể cả khi có từ khóa.
+
+Trận trong một giải vẫn theo lịch thi đấu, trận không có ngày xếp cuối. Trận tìm xuyên giải theo độ khớp tên rồi mới nhất. Không đổi thứ tự public trên Stream: các endpoint công khai không dùng chung truy vấn với danh sách admin.
 
 ## Cơ sở dữ liệu
 
@@ -240,10 +292,18 @@ trận theo giải mà không đọc toàn bộ.
 V012 tạo schema currency và bảng currency.exchange_rate (currency, rate_date là khóa chính; units_per_usd, source,
 fetched_at). Mỗi đơn vị một dòng mỗi ngày, giữ vĩnh viễn để đọc lại tiền thưởng theo tỷ giá của ngày đó (ADR-020).
 
+V013 phục vụ "Ưu tiên gần đây": thêm cột sinh từ nội dung để không phải mở tài liệu khi xếp hạng (tournament: starts_on,
+ends_on, season_year, status, placement_team_ids; series: scheduled_at, team_a_id, team_b_id, decided; game: started_at;
+roster_membership: status, lane; competition_plan: entrant_team_ids, organizer_page_id, circuit_page_id; page:
+history_last_on; search_names cho team, player, tournament, series, page), các index theo lịch trận, đội và giải, cùng
+hàm và view tính khi đọc (tournament_window, tournament_team, team_tournament_activity, team_activity,
+player_tournament_activity, player_activity, page_activity). `tournament.page_activity` là phần duy nhất module community
+được đọc từ schema tournament; hàm `search_names`, `search_key`, `name_match_rank` dùng chung.
+
 ## API
 
 Tiền tố /api/community/v1. Danh sách trả {items,totalElements,page,size}, size 1–100 (riêng danh sách đội, tuyển
-thủ, giải, trận, ván, đội hình ở /admin là 1–500). /admin cần
+thủ, giải, trận, ván, đội hình ở /admin là 1–500). Thứ tự theo "Ưu tiên gần đây". /admin cần
 tournament:read; ghi cần thêm tournament:write; công bố/duyệt cần tournament:publish. /me cần tài khoản
 người dùng và kiểm tra quyền page tại thời điểm thao tác. Body sửa có version để chống ghi đè.
 
@@ -251,12 +311,17 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 |---|---|
 | GET /pages?kind=&q=&page=&size= | Chỉ bản công bố; tìm theo tên công bố |
 | GET /pages/{id}, /pages/by-code/{code}, /pages/by-entity/{kind}/{id} | Hồ sơ công khai |
-| GET /admin/series?tournamentId=, /admin/games?tournamentId= | Trận/ván của một giải |
+| GET /admin/tournaments?q=&alsoRegions=&status=&tier=&region=&year=&sort=&teamId=&playerId=&state=&page=&size= | Mặc định sort RECENT; còn STATUS, NAME, UPDATED. `alsoRegions` là các khu vực mà từ khóa gọi tên, để gõ tên nơi vẫn ra giải. teamId/playerId đưa giải họ tham gia lên trước, dòng có `context` PARTICIPANT. state khác ACTIVE thì theo updatedAt |
+| GET /admin/tournaments/facets | {total,statuses,regions,years}, cho tab và bộ lọc mà không tải cả danh sách |
+| GET /admin/teams?q=&sort=&tournamentId=&state=&page=&size= | sort RECENT (mặc định), NAME, UPDATED. Dòng có thêm `lastActiveOn`, `context` TOURNAMENT khi thuộc giải; hai trường này không có khi không áp dụng |
+| GET /admin/players?q=&sort=&teamId=&tournamentId=&state=&page=&size= | Như trên; `context` là TEAM_IN_TOURNAMENT, TEAM hoặc TOURNAMENT |
+| GET /admin/reference-catalog?q=&kind= | Khớp tên rồi hoạt động gần nhất; tra theo `ids` không xếp hạng |
+| GET /admin/series?q=&tournamentId=, /admin/games?tournamentId= | Trận/ván; trong một giải theo lịch, xuyên giải theo độ khớp rồi mới nhất |
 | GET /admin/tournaments/stats | [{tournamentId,teams,matches,played}], không tải từng trận |
-| GET /admin/teams/directory?q=&country=&sort=&page=&size= | Danh bạ đội: số giải, trận, thắng-thua, chức vô địch, tiền thưởng, giải gần nhất và đội hình gần nhất có trên hồ sơ. sort: RECENT, TOURNAMENTS, TITLES, PRIZE, NAME |
-| GET /admin/players/directory?q=&country=&lane=&status=&sort=&page=&size= | Danh bạ tuyển thủ: vị trí, đội và giải của dòng đội hình gần nhất, số giải, chức vô địch, tướng tủ. sort: RECENT, TOURNAMENTS, TITLES, NAME |
+| GET /admin/teams/directory?q=&country=&sort=&page=&size= | Danh bạ đội: số giải, trận, thắng-thua, chức vô địch, tiền thưởng, giải gần nhất, `lastActiveOn` và đội hình gần nhất có trên hồ sơ. sort: RECENT, TOURNAMENTS, TITLES, PRIZE, NAME |
+| GET /admin/players/directory?q=&country=&lane=&status=&sort=&page=&size= | Danh bạ tuyển thủ: vị trí, đội và giải của dòng đội hình gần nhất, `lastActiveOn`, số giải, chức vô địch, tướng tủ. sort: RECENT, TOURNAMENTS, TITLES, NAME |
 | GET /admin/competitions/page-stats | [{pageId,tournaments,firstYear,lastYear,tiers,latestTournament}] theo trang tổ chức và hệ thống giải |
-| GET /admin/pages, /admin/pages/{id} | Bản nháp. Danh sách nhận thêm country, entityIds (tối đa 100 định danh) và sort: RECENT, NAME, ACTIVITY (nhiều mục lịch sử nhất) |
+| GET /admin/pages, /admin/pages/{id} | Bản nháp. Danh sách nhận thêm country, entityIds (tối đa 100 định danh) và sort: RECENT (mới sửa), NAME, ACTIVITY (nhiều mục lịch sử nhất), ACTIVE (theo "Ưu tiên gần đây", dòng có thêm `lastActiveOn`). relatedPageId đưa hồ sơ có lịch sử gắn với trang đó lên trước, dòng có `related`; chỉ dùng với ACTIVE |
 | POST /admin/pages | {kind,code,entityId?,content} |
 | PUT /admin/pages/{id} | {version,content} |
 | POST /admin/pages/{id}/publish hoặc /withdraw | {version} |
@@ -290,7 +355,7 @@ người dùng và kiểm tra quyền page tại thời điểm thao tác. Body 
 | GET /competitions?teamId=&playerId=&organizerPageId=&page=&size= | Snapshot công bố với bộ lọc tham gia/tổ chức |
 | GET /competitions/{id} | Snapshot giải |
 | GET /exchange-rates?on= | Công khai. `on` là các ngày yyyy-mm-dd, tối đa 60; bỏ trống là hôm nay. Trả {base:"USD",days:[{on,rates:[{currency,unitsPerUsd,rateDate}]}]}: tỷ giá mới nhất vào hoặc trước từng ngày. Ngày cũ hơn lịch sử có rates rỗng. Lỗi EXCHANGE_RATE_INVALID_QUERY 400 |
-| GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp) / kế hoạch cùng dữ liệu giải quyết |
+| GET /admin/competitions?organizerPageId=&page=&size=, /admin/competitions/{id} | Tóm tắt kế hoạch (kèm tournament và lọc tổ chức theo bản nháp, theo thứ tự danh sách giải) / kế hoạch cùng dữ liệu giải quyết |
 | PUT /admin/competitions/{id} | {version,content:CompetitionPlan} |
 | POST /admin/competitions/preview | {content,stageCode,opponent}; lịch xem trước, không ghi DB |
 | POST /admin/competitions/{id}/materialize, /publish, /withdraw | {version}; tạo trận thật / chụp snapshot / ẩn công khai |
