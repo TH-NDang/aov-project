@@ -23,12 +23,19 @@ import org.springframework.web.util.UriComponentsBuilder;
 class KeycloakTokens implements IdentityTokens {
     private final AuthProperties properties;
     private final String issuer;
+    private final String backchannel;
     private final RestClient client;
 
+    /**
+     * @param issuer      public issuer; browsers are sent here and tokens carry it
+     * @param backchannel where this service calls the provider, which may be a private address of the same realm
+     */
     KeycloakTokens(AuthProperties properties,
-            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
+            @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer,
+            @Value("${wiki.auth.identity-backchannel-uri:${spring.security.oauth2.resourceserver.jwt.issuer-uri}}") String backchannel) {
         this.properties = properties;
         this.issuer = issuer.replaceAll("/+$", "");
+        this.backchannel = backchannel.replaceAll("/+$", "");
         var factory = new JdkClientHttpRequestFactory(HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5)).followRedirects(HttpClient.Redirect.NEVER).build());
         factory.setReadTimeout(Duration.ofSeconds(10));
@@ -62,7 +69,7 @@ class KeycloakTokens implements IdentityTokens {
         form.add("token", refreshToken);
         form.add("token_type_hint", "refresh_token");
         try {
-            client.post().uri(issuer + "/protocol/openid-connect/revoke")
+            client.post().uri(backchannel + "/protocol/openid-connect/revoke")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve().toBodilessEntity();
         } catch (RestClientException exception) {
             throw unavailable();
@@ -91,7 +98,7 @@ class KeycloakTokens implements IdentityTokens {
 
     private Tokens exchange(MultiValueMap<String, String> form, AuthErrorCode rejected) {
         try {
-            TokenBody body = client.post().uri(issuer + "/protocol/openid-connect/token")
+            TokenBody body = client.post().uri(backchannel + "/protocol/openid-connect/token")
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED).body(form).retrieve()
                     .onStatus(status -> status.value() == 400, (request, response) -> {
                         throw new ApiException(rejected, "The identity provider rejected the authentication request.");
