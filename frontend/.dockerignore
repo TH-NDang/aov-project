@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/dist-ssr
+**/.turbo
+**/.vite
+**/coverage
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+apps/admin-aov/storage
+docs

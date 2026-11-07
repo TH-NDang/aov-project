@@ -24,6 +24,7 @@ aov-project/
 │   ├── wiki-service/   Spring Boot 4.1.1, Java 21, Maven Wrapper — AOV Wiki backend
 │   └── community-service/ Java 21, Maven Wrapper — manual tournament backend; separate DB/API
 ├── frontend/           pnpm + Turborepo: apps/aov-wiki, apps/aov-stream, apps/admin-aov, packages/ui
+├── infra/              Production-like Docker Compose: reverse proxy, realm template, backup scripts (guide: infra/README.md)
 └── resources/          Raw data and images (images via Git LFS).
 ```
 

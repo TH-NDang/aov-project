@@ -23,6 +23,6 @@ class StoragePropertiesTest {
     }
 
     private static StorageProperties properties(String assetsBucket) {
-        return new StorageProperties(null, "auto", "private-media", assetsBucket, true, null, null, false);
+        return new StorageProperties(null, "auto", "private-media", assetsBucket, true, null, null, false, null);
     }
 }

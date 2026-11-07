@@ -19,6 +19,7 @@ import org.springframework.validation.annotation.Validated;
  * @param accessKey             access key; empty falls back to the AWS default credentials chain
  * @param secretKey             secret key paired with {@code accessKey}
  * @param createBucketIfMissing create the bucket at startup; meant for local development only
+ * @param publicEndpoint        endpoint written into presigned URLs for browsers; empty uses {@code endpoint}
  */
 @Validated
 @ConfigurationProperties("wiki.storage")
@@ -30,7 +31,8 @@ record StorageProperties(
         @DefaultValue("true") boolean pathStyleAccess,
         @Nullable String accessKey,
         @Nullable String secretKey,
-        @DefaultValue("false") boolean createBucketIfMissing
+        @DefaultValue("false") boolean createBucketIfMissing,
+        @Nullable URI publicEndpoint
 ) {
 
     String bucketFor(String key) {
@@ -41,6 +43,11 @@ record StorageProperties(
 
     String effectiveAssetsBucket() {
         return assetsBucket == null || assetsBucket.isBlank() ? bucket : assetsBucket;
+    }
+
+    @Nullable
+    URI presignEndpoint() {
+        return publicEndpoint != null ? publicEndpoint : endpoint;
     }
 
     boolean hasStaticCredentials() {

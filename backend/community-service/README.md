@@ -14,6 +14,7 @@ Docker, PostgreSQL và Keycloak của dự án cần đang chạy. Trong thư m�
 Lần đầu, script chỉ tạo database/user riêng nếu chưa có; không xóa dữ liệu Wiki.
 Có thể tự thiết lập database rồi dùng `-SkipDatabaseSetup`.
 Biến môi trường được mô tả trong `.env.example`; ứng dụng đọc biến đã export, không tự thực thi nội dung file môi trường.
+Profile `prod` bỏ mọi giá trị mặc định local, thiếu biến thì không khởi động; chạy bằng Docker xem [`infra/README.md`](../../infra/README.md).
 Để quản trị, chạy script đồng bộ quyền và đăng nhập lại admin để nhận audience `community-service` cùng các quyền:
 
 ```powershell

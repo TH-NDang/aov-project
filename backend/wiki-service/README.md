@@ -66,12 +66,18 @@ classpath. Production dùng profile `prod` và cấp cấu hình từ môi trư�
 |---|---|
 | `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL của môi trường tương ứng |
 | `JWT_ISSUER_URI`, `JWT_AUDIENCE`, `JWT_RESOURCE_CLIENT_ID` | Issuer, audience và client mang capability |
-| `ADMIN_ORIGIN`, `ADMIN_BASE_PATH` | Nguồn và đường dẫn frontend admin được phép dùng auth |
+| `JWT_BACKCHANNEL_ISSUER_URI` | Tùy chọn: địa chỉ nội bộ để gọi token/revoke khi khác issuer công khai; JWKS đặt riêng qua `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI` |
+| `ADMIN_ORIGIN`, `ADMIN_BASE_PATH` | Nguồn và đường dẫn frontend admin được phép dùng auth; bắt buộc ở profile `prod` |
+| `AUTH_SECURE_COOKIES` | Mặc định `true`; `false` chỉ dành cho origin HTTP loopback |
+| `COMMUNITY_API_BASE_URL` | Địa chỉ `community-service`; bắt buộc ở profile `prod`, phải là HTTPS, loopback hoặc tên service nội bộ không có dấu chấm |
 | `ADMIN_AUTH_CLIENT_ID`, `ADMIN_AUTH_CLIENT_SECRET`, `GOOGLE_LOGIN_ENABLED` | Confidential client của backend và tùy chọn Google |
 | `STORAGE_ENDPOINT`, `STORAGE_REGION`, `STORAGE_BUCKET` | Object storage S3-compatible |
 | `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_PATH_STYLE` | Credentials và cách đánh địa chỉ S3 |
+| `STORAGE_PUBLIC_ENDPOINT` | Tùy chọn: endpoint ghi vào presigned URL cho trình duyệt khi service gọi storage qua mạng nội bộ |
 | `MEDIA_PUBLIC_BASE_URL` | Prefix phân phối `assets/` qua proxy/CDN |
 | `USER_DEFAULT_LOCALE`, `USER_DEFAULT_TIME_ZONE` | Default hồ sơ trước khi người dùng tự chỉnh |
+
+Chạy toàn hệ thống như production bằng Docker trên một máy: xem [`infra/README.md`](../../infra/README.md).
 
 `ddl-auto` giữ `validate`; Flyway migrations ở `src/main/resources/db/migration` là nguồn thay đổi
 schema. Chỉ profile local tự tạo bucket; production cần chuẩn bị storage và quyền phù hợp.

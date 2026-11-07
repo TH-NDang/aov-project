@@ -72,7 +72,7 @@ wiki:
     admin-base-path: ${ADMIN_BASE_PATH:/}
     client-id: ${ADMIN_AUTH_CLIENT_ID:admin-aov-backend}
     client-secret: ${ADMIN_AUTH_CLIENT_SECRET:}
-    secure-cookies: true
+    secure-cookies: ${AUTH_SECURE_COOKIES:true}
     google-enabled: ${GOOGLE_LOGIN_ENABLED:false}
     google-callback-path: ${GOOGLE_CALLBACK_PATH:/api/wiki/v1/auth/google/callback}
   security:
@@ -81,6 +81,8 @@ wiki:
   storage:
     # Any S3-compatible service: SeaweedFS locally, Cloudflare R2 / AWS S3 in production (ADR-006).
     endpoint: ${STORAGE_ENDPOINT:}
+    # Browser-facing endpoint for presigned URLs when the service reaches storage over a private network.
+    public-endpoint: ${STORAGE_PUBLIC_ENDPOINT:}
     region: ${STORAGE_REGION:us-east-1}
     bucket: ${STORAGE_BUCKET:wiki-media}
     assets-bucket: ${STORAGE_ASSETS_BUCKET:}

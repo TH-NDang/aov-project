@@ -7,10 +7,10 @@ import "./stream.css"
 import App from "./App"
 
 const queryClient = new QueryClient()
-if (!relaySilentLogin()) {
+if (!relaySilentLogin(import.meta.env.BASE_URL)) {
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "") || "/"}>
         <QueryClientProvider client={queryClient}>
           <App />
         </QueryClientProvider>

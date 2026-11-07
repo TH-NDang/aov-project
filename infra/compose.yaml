@@ -1,0 +1,341 @@
+# The whole system on one machine, the way production runs it. See README.md (Vietnamese) in this folder.
+# Every value comes from .env; only .env.example is tracked.
+name: aov-stack
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+x-storage-tool: &storage-tool
+  image: rclone/rclone:1.71
+  entrypoint: ["/bin/sh", "/scripts/media.sh"]
+  environment:
+    RCLONE_CONFIG_STORE_TYPE: s3
+    RCLONE_CONFIG_STORE_PROVIDER: Other
+    RCLONE_CONFIG_STORE_ENDPOINT: ${STORAGE_ENDPOINT:-http://seaweedfs:8333}
+    RCLONE_CONFIG_STORE_REGION: ${STORAGE_REGION:-us-east-1}
+    RCLONE_CONFIG_STORE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:?set in .env}
+    RCLONE_CONFIG_STORE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:?set in .env}
+    RCLONE_CONFIG_STORE_FORCE_PATH_STYLE: ${STORAGE_PATH_STYLE:-true}
+    STORAGE_BUCKET: ${STORAGE_BUCKET:-wiki-media}
+    STORAGE_ASSETS_BUCKET: ${STORAGE_ASSETS_BUCKET:-}
+  logging: *logging
+
+x-database-tool: &database-tool
+  image: postgres:17.6
+  environment:
+    PGUSER: ${POSTGRES_SUPERUSER:?set in .env}
+    PGPASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+    BACKUP_KEEP: ${BACKUP_KEEP:-10}
+  volumes:
+    - ./backups:/backups
+    - ./scripts:/scripts:ro
+  logging: *logging
+
+services:
+  # One-shot: stops the start when a public origin still has sample secrets.
+  preflight:
+    image: postgres:17.6
+    entrypoint: ["/bin/sh", "/scripts/preflight.sh"]
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
+      AUTH_SECURE_COOKIES: ${AUTH_SECURE_COOKIES:-true}
+      COMPOSE_PROFILES: ${COMPOSE_PROFILES:-}
+      POSTGRES_SUPERUSER_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+      WIKI_DB_PASSWORD: ${WIKI_DB_PASSWORD:?set in .env}
+      COMMUNITY_DB_PASSWORD: ${COMMUNITY_DB_PASSWORD:?set in .env}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in .env}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:?set in .env}
+      WIKI_IMPORTER_CLIENT_SECRET: ${WIKI_IMPORTER_CLIENT_SECRET:?set in .env}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:?set in .env}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
+    volumes:
+      - ./scripts:/scripts:ro
+    logging: *logging
+
+  postgres:
+    image: postgres:17.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUPERUSER:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+      POSTGRES_DB: postgres
+      WIKI_DB_PASSWORD: ${WIKI_DB_PASSWORD:?set in .env}
+      COMMUNITY_DB_PASSWORD: ${COMMUNITY_DB_PASSWORD:?set in .env}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in .env}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init-databases.sh:/docker-entrypoint-initdb.d/10-databases.sh:ro
+    healthcheck:
+      # Over TCP on purpose: while the databases are created the image only listens on its Unix socket.
+      test: ["CMD-SHELL", 'pg_isready --host=127.0.0.1 --username="$${POSTGRES_USER}" --dbname=keycloak']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
+    logging: *logging
+
+  # One-shot on every `up`, before the services start and Flyway migrates. Keeps the newest BACKUP_KEEP dumps.
+  db-backup:
+    <<: *database-tool
+    entrypoint: ["/bin/sh", "/scripts/db-backup.sh"]
+    environment:
+      PGUSER: ${POSTGRES_SUPERUSER:?set in .env}
+      PGPASSWORD: ${POSTGRES_SUPERUSER_PASSWORD:?set in .env}
+      BACKUP_KEEP: ${BACKUP_KEEP:-10}
+      BACKUP_LABEL: auto
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Run by hand: docker compose run --rm db-restore <folder>
+  db-restore:
+    <<: *database-tool
+    profiles: [ops]
+    entrypoint: ["/bin/sh", "/scripts/db-restore.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    # A cache that can be lost (ADR-012): no persistence, bounded memory, reachable only on this network.
+    command:
+      - redis-server
+      - --maxmemory
+      - 128mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --requirepass
+      - ${REDIS_PASSWORD:?set in .env}
+    healthcheck:
+      test: ["CMD-SHELL", 'redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
+    logging: *logging
+
+  # Bundled S3-compatible storage (ADR-006). A hosted service only needs the STORAGE_* values in .env.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.48
+    restart: unless-stopped
+    command: server -ip=seaweedfs -ip.bind=0.0.0.0 -dir=/data -s3 -s3.port=8333
+    environment:
+      AWS_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY:?set in .env}
+      AWS_SECRET_ACCESS_KEY: ${STORAGE_SECRET_KEY:?set in .env}
+    volumes:
+      - seaweedfs-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:8333/healthz && wget --quiet --spider http://127.0.0.1:8888/healthz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    logging: *logging
+
+  # One-shot: production buckets are prepared outside the application (ADR-014).
+  storage-init:
+    <<: *storage-tool
+    command: ["init"]
+    volumes:
+      - ./scripts:/scripts:ro
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+
+  # Run by hand: docker compose run --rm media-backup
+  media-backup:
+    <<: *storage-tool
+    profiles: [ops]
+    command: ["backup"]
+    volumes:
+      - ./backups:/backups
+      - ./scripts:/scripts:ro
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+
+  # Run by hand: docker compose run --rm media-restore
+  media-restore:
+    <<: *storage-tool
+    profiles: [ops]
+    command: ["restore"]
+    volumes:
+      - ./backups:/backups:ro
+      - ./scripts:/scripts:ro
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+
+  keycloak:
+    image: aov/keycloak:${IMAGE_TAG:-local}
+    build: &keycloak-build
+      context: ../backend/wiki-service/infra/local/keycloak-themes
+      dockerfile: ../../../../../infra/keycloak/Dockerfile
+      additional_contexts:
+        keycloak: ./keycloak
+    restart: unless-stopped
+    environment:
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set in .env}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?set in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      # Tokens always carry the public address; the services call Keycloak on this network.
+      KC_HOSTNAME: ${PUBLIC_ORIGIN:?set in .env}/idp
+      KC_HOSTNAME_ADMIN: http://localhost:${KEYCLOAK_ADMIN_PORT:-18081}/idp
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      # Placeholders of the realm template.
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
+      ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:?set in .env}
+      WIKI_IMPORTER_CLIENT_SECRET: ${WIKI_IMPORTER_CLIENT_SECRET:?set in .env}
+    ports:
+      # The admin console is not on the public listener: use it from this machine or through an SSH tunnel.
+      - 127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18081}:8080
+    mem_limit: ${KEYCLOAK_MEM_LIMIT:-1536m}
+    depends_on:
+      db-backup:
+        condition: service_completed_successfully
+    logging: *logging
+
+  # One-shot, profile "test-identity": sign-in accounts for trying the system. Not for a public origin.
+  keycloak-test-users:
+    image: aov/keycloak:${IMAGE_TAG:-local}
+    build: *keycloak-build
+    profiles: [test-identity]
+    entrypoint: ["/bin/bash", "/scripts/create-test-users.sh"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER:?set in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set in .env}
+      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:-}
+    volumes:
+      - ./keycloak/create-test-users.sh:/scripts/create-test-users.sh:ro
+    healthcheck:
+      disable: true
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    logging: *logging
+
+  wiki-service:
+    image: aov/wiki-service:${IMAGE_TAG:-local}
+    build:
+      context: ../backend/wiki-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/wiki
+      DB_USERNAME: wiki
+      DB_PASSWORD: ${WIKI_DB_PASSWORD:?set in .env}
+      JWT_ISSUER_URI: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+      JWT_BACKCHANNEL_ISSUER_URI: http://keycloak:8080/idp/realms/wikiaov
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/idp/realms/wikiaov/protocol/openid-connect/certs
+      ADMIN_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
+      ADMIN_BASE_PATH: /admin/
+      ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:?set in .env}
+      AUTH_SECURE_COOKIES: ${AUTH_SECURE_COOKIES:-true}
+      GOOGLE_LOGIN_ENABLED: ${GOOGLE_LOGIN_ENABLED:-false}
+      STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-http://seaweedfs:8333}
+      # Browsers upload through the proxy on the same origin unless a hosted service signs its own URLs.
+      STORAGE_PUBLIC_ENDPOINT: ${STORAGE_PUBLIC_ENDPOINT:-${PUBLIC_ORIGIN}}
+      STORAGE_REGION: ${STORAGE_REGION:-us-east-1}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-wiki-media}
+      STORAGE_ASSETS_BUCKET: ${STORAGE_ASSETS_BUCKET:-}
+      STORAGE_PATH_STYLE: ${STORAGE_PATH_STYLE:-true}
+      STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY:?set in .env}
+      STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY:?set in .env}
+      MEDIA_PUBLIC_BASE_URL: ${MEDIA_PUBLIC_BASE_URL:-/media}
+      MEDIA_CLOUDFLARE_PURGE_ENABLED: ${MEDIA_CLOUDFLARE_PURGE_ENABLED:-false}
+      CLOUDFLARE_ZONE_ID: ${CLOUDFLARE_ZONE_ID:-}
+      CLOUDFLARE_CACHE_PURGE_TOKEN: ${CLOUDFLARE_CACHE_PURGE_TOKEN:-}
+      COMMUNITY_API_BASE_URL: http://community-service:8082
+      READ_MODEL_CACHE_ENABLED: "true"
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?set in .env}
+    mem_limit: ${WIKI_MEM_LIMIT:-1536m}
+    depends_on:
+      db-backup:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      storage-init:
+        condition: service_completed_successfully
+    logging: *logging
+
+  community-service:
+    image: aov/community-service:${IMAGE_TAG:-local}
+    build:
+      context: ../backend/community-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      COMMUNITY_DATABASE_URL: jdbc:postgresql://postgres:5432/community
+      COMMUNITY_DATABASE_USER: community
+      COMMUNITY_DATABASE_PASSWORD: ${COMMUNITY_DB_PASSWORD:?set in .env}
+      KEYCLOAK_ISSUER: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8080/idp/realms/wikiaov/protocol/openid-connect/certs
+      WIKI_BASE_URL: http://wiki-service:8080
+      COMMUNITY_ALLOWED_ORIGINS: ${PUBLIC_ORIGIN:?set in .env}
+      COMMUNITY_EXCHANGE_RATES_ENABLED: ${COMMUNITY_EXCHANGE_RATES_ENABLED:-true}
+    mem_limit: ${COMMUNITY_MEM_LIMIT:-768m}
+    depends_on:
+      db-backup:
+        condition: service_completed_successfully
+    logging: *logging
+
+  reverse-proxy:
+    image: aov/reverse-proxy:${IMAGE_TAG:-local}
+    build:
+      context: ../frontend
+      dockerfile: ../infra/proxy/Dockerfile
+      additional_contexts:
+        proxy: ./proxy
+        skill-artwork: ../resources/Lien-Quan-v3/assets/skill
+      args:
+        VITE_AUTH_ISSUER: ${PUBLIC_ORIGIN:?set in .env}/idp/realms/wikiaov
+        VITE_WIKI_URL: ${PUBLIC_ORIGIN:?set in .env}/
+        VITE_STREAM_URL: ${PUBLIC_ORIGIN:?set in .env}/stream
+        VITE_ADMIN_URL: ${PUBLIC_ORIGIN:?set in .env}/admin
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-wiki-media}
+    ports:
+      - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-18080}:80
+      - ${PUBLIC_BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-18443}:443
+    volumes:
+      - caddy-data:/data
+    depends_on:
+      wiki-service:
+        condition: service_healthy
+      community-service:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
+      # So that a failure here fails the start, and "up --wait" returns only when the accounts exist.
+      keycloak-test-users:
+        condition: service_completed_successfully
+        required: false
+    logging: *logging
+
+volumes:
+  postgres-data:
+  seaweedfs-data:
+  caddy-data:

@@ -1,4 +1,5 @@
 # Production profile. Every secret comes from environment variables; nothing is hard-coded here.
+# Values below have no default on purpose: a missing variable stops the service at startup.
 logging:
   structured:
     format:
@@ -9,3 +10,18 @@ management:
   endpoint:
     health:
       show-details: never
+
+server:
+  # Only the reverse proxy can reach this port, and it overwrites X-Forwarded-*: throttles must see the real client.
+  forward-headers-strategy: native
+
+wiki:
+  auth:
+    admin-origin: ${ADMIN_ORIGIN}
+    admin-base-path: ${ADMIN_BASE_PATH}
+    client-secret: ${ADMIN_AUTH_CLIENT_SECRET}
+    # Where this service reaches the identity provider; tokens still carry the public issuer.
+    identity-backchannel-uri: ${JWT_BACKCHANNEL_ISSUER_URI:${JWT_ISSUER_URI}}
+  media:
+    deletion:
+      community-base-url: ${COMMUNITY_API_BASE_URL}

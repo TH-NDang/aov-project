@@ -171,3 +171,44 @@ test("only a hidden callback frame relays and skips rendering", () => {
   assert.equal(relaySilentLogin(), true)
   assert.deepEqual(posted, [[{ type: "aov-silent-login", search: "?state=s&code=c" }, "https://stream.example.test"]])
 })
+
+test("an app under a base path signs in, returns and signs out inside that path", async () => {
+  const auth = createPublicAuth({ ...config, basePath: "/stream/" })
+  location.pathname = "/stream/pages/team"
+  location.search = "?tab=roster"
+  location.hash = "#top"
+  let authorize
+  location.assign = (url) => {
+    authorize = new URL(url)
+  }
+  await auth.signIn()
+  assert.equal(authorize.searchParams.get("redirect_uri"), "https://stream.example.test/stream/auth/callback")
+
+  const flow = JSON.parse(sessionStorage.getItem("stream-login"))
+  assert.equal(flow.returnTo, "/pages/team?tab=roster#top")
+
+  define("history", { replaceState() {} })
+  location.pathname = "/stream/auth/callback"
+  location.search = `?state=${flow.state}&code=code`
+  assert.equal(await auth.completeLogin(), "/pages/team?tab=roster#top")
+  assert.equal(requests[0].options.body.get("redirect_uri"), "https://stream.example.test/stream/auth/callback")
+
+  let logout
+  location.assign = (url) => {
+    logout = new URL(url)
+  }
+  auth.signOut()
+  assert.equal(logout.searchParams.get("post_logout_redirect_uri"), "https://stream.example.test/stream/")
+})
+
+test("the silent callback relays only on the callback path of the app", () => {
+  const messages = []
+  const top = {}
+  window.parent = { postMessage: (message) => messages.push(message), ...top }
+  location.search = "?state=s&code=c"
+  location.pathname = "/auth/callback"
+  assert.equal(relaySilentLogin("/stream/"), false)
+  location.pathname = "/stream/auth/callback"
+  assert.equal(relaySilentLogin("/stream/"), true)
+  assert.equal(messages[0].search, "?state=s&code=c")
+})
