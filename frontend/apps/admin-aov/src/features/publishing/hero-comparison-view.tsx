@@ -260,6 +260,7 @@ export function OtherComparisonCard({
   const isImage = images.before.length > 0 || images.after.length > 0
   const numberDelta =
     typeof change.before === "number" && typeof change.after === "number" ? change.after - change.before : null
+  const statReading = field === "baseValue" && [change.before, change.after].some((side) => typeof side === "string")
   return (
     <article className="@container min-w-0 overflow-hidden admin-panel">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/15 px-4 py-3">
@@ -292,7 +293,7 @@ export function OtherComparisonCard({
             )
           })}
         </div>
-      ) : numberDelta !== null ? (
+      ) : numberDelta !== null || statReading ? (
         <div className="flex flex-wrap items-center gap-3 p-4 tabular-nums">
           <span className="text-muted-foreground">
             <ContentText value={change.before} />
@@ -301,10 +302,12 @@ export function OtherComparisonCard({
           <strong>
             <ContentText value={change.after} />
           </strong>
-          <Badge variant="secondary">
-            {numberDelta > 0 ? "+" : ""}
-            {Number(numberDelta.toFixed(6))}
-          </Badge>
+          {numberDelta !== null && (
+            <Badge variant="secondary">
+              {numberDelta > 0 ? "+" : ""}
+              {Number(numberDelta.toFixed(6))}
+            </Badge>
+          )}
         </div>
       ) : (
         <DescriptionComparison

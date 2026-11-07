@@ -52,7 +52,14 @@ export interface Ratings {
   sources: Source[]
 }
 export interface Stats {
-  values: { statKey: string; baseValue: number | null; growthPerLevel: number | null; unit: string }[]
+  values: {
+    statKey: string
+    baseValue: number | null
+    /** The percent the game shows after the bar, as in "150 | 20%". Only the stats in `stat-reading.ts` have one. */
+    percentValue?: number | null
+    growthPerLevel: number | null
+    unit: string
+  }[]
   sources: Source[]
 }
 export interface Skill {

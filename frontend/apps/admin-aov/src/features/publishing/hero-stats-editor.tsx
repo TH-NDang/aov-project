@@ -1,8 +1,10 @@
+import { useEffect, useId, useRef, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Field, control } from "./fields"
 import { STAT_LABELS } from "./patch-change-model"
 import { combatAttributeRows, formatStat, observedAttributes, statUnit, type StatDefault } from "./combat-attributes"
+import { formatStatNumber, formatStatReading, hasStatPercent, parseStatReading } from "./stat-reading"
 import type { Skills, Stats } from "./types"
 
 const units: Record<string, string> = {
@@ -13,6 +15,77 @@ const units: Record<string, string> = {
   UNKNOWN: "Chưa xác định",
   "": "Không có đơn vị",
 }
+
+/** One box for what the game shows as "150 | 20%", so the editor types what they see instead of splitting it up. */
+function StatReadingField({
+  value,
+  percent,
+  onChange,
+}: {
+  value: number | null
+  percent: number | null | undefined
+  onChange: (value: number | null, percent: number | null) => void
+}) {
+  const [typed, setTyped] = useState<string | null>(null)
+  const text = typed ?? formatStatReading(value, percent)
+  const reading = parseStatReading(text)
+  const problem = reading.ok ? "" : reading.message
+  const input = useRef<HTMLInputElement>(null)
+  const inputId = useId()
+  const helpId = useId()
+  // Keeps the section form from saving the last good reading while the box says something else.
+  useEffect(() => input.current?.setCustomValidity(problem), [problem])
+  // Undoing or discarding changes the reading from outside; while typing the words stay as typed.
+  useEffect(() => {
+    if (document.activeElement !== input.current) setTyped(null)
+  }, [value, percent])
+  return (
+    <div className="col-span-2 grid content-start gap-1.5">
+      <label className="type-body" htmlFor={inputId}>
+        Số và phần trăm trong game
+      </label>
+      <input
+        ref={input}
+        id={inputId}
+        className={control}
+        value={text}
+        placeholder="150 | 20%"
+        autoComplete="off"
+        aria-invalid={!reading.ok}
+        aria-describedby={helpId}
+        onChange={(event) => {
+          const next = event.target.value
+          setTyped(next)
+          const parsed = parseStatReading(next)
+          if (parsed.ok) onChange(parsed.value, parsed.percent)
+        }}
+        onBlur={() => {
+          if (reading.ok) setTyped(null)
+        }}
+      />
+      <div id={helpId} className="space-y-1">
+        <p className="type-meta">
+          Gõ đúng như game hiện: số, dấu |, rồi phần trăm. Game ghi 150 | 20% thì gõ 150 | 20%.
+        </p>
+        {!reading.ok ? (
+          <p role="alert" className="type-meta text-destructive">
+            {reading.message}
+          </p>
+        ) : reading.value !== null && reading.percent !== null ? (
+          <p className="type-meta">
+            Đã đọc: số {formatStatNumber(reading.value)}, phần trăm {formatStatNumber(reading.percent)}%.
+          </p>
+        ) : reading.value !== null ? (
+          <p className="type-meta">
+            Đã đọc: số {formatStatNumber(reading.value)}, chưa có phần trăm. Game ghi gì sau dấu | thì gõ thêm, kể cả
+            0%.
+          </p>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 export function HeroStatsEditor({
   value,
   onChange,
@@ -102,7 +175,11 @@ export function HeroStatsEditor({
                 value={Object.hasOwn(STAT_LABELS, stat.statKey) ? stat.statKey : "custom"}
                 onChange={(event) => {
                   const statKey = event.target.value === "custom" ? "" : event.target.value
-                  update(index, { statKey, unit: statUnit(statKey) })
+                  update(index, {
+                    statKey,
+                    unit: statUnit(statKey),
+                    ...(hasStatPercent(statKey) ? {} : { percentValue: null }),
+                  })
                 }}
               >
                 {Object.entries(STAT_LABELS).map(([key, label]) => (
@@ -140,14 +217,23 @@ export function HeroStatsEditor({
               onChange={(statKey) => update(index, { statKey })}
             />
           )}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Field
-              label="Giá trị cơ bản"
-              type="number"
-              step="any"
-              value={stat.baseValue ?? ""}
-              onChange={(v) => update(index, { baseValue: v === "" ? null : Number(v) })}
-            />
+          <div className="grid grid-cols-2 items-start gap-3 sm:grid-cols-3">
+            {hasStatPercent(stat.statKey) ? (
+              <StatReadingField
+                key={stat.statKey}
+                value={stat.baseValue}
+                percent={stat.percentValue}
+                onChange={(baseValue, percentValue) => update(index, { baseValue, percentValue, unit: "POINT" })}
+              />
+            ) : (
+              <Field
+                label="Giá trị cơ bản"
+                type="number"
+                step="any"
+                value={stat.baseValue ?? ""}
+                onChange={(v) => update(index, { baseValue: v === "" ? null : Number(v) })}
+              />
+            )}
             <Field
               label="Tăng mỗi cấp"
               type="number"
@@ -155,21 +241,23 @@ export function HeroStatsEditor({
               value={stat.growthPerLevel ?? ""}
               onChange={(v) => update(index, { growthPerLevel: v === "" ? null : Number(v) })}
             />
-            <label className="type-body col-span-2 grid gap-1.5 sm:col-span-1">
-              Đơn vị
-              <select
-                className={control}
-                value={stat.unit}
-                onChange={(event) => update(index, { unit: event.target.value })}
-              >
-                {Object.entries(units).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-                {!Object.hasOwn(units, stat.unit) && <option value={stat.unit}>Đơn vị hiện tại ({stat.unit})</option>}
-              </select>
-            </label>
+            {!hasStatPercent(stat.statKey) && (
+              <label className="type-body col-span-2 grid gap-1.5 sm:col-span-1">
+                Đơn vị
+                <select
+                  className={control}
+                  value={stat.unit}
+                  onChange={(event) => update(index, { unit: event.target.value })}
+                >
+                  {Object.entries(units).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                  {!Object.hasOwn(units, stat.unit) && <option value={stat.unit}>Đơn vị hiện tại ({stat.unit})</option>}
+                </select>
+              </label>
+            )}
           </div>
         </div>
       ))}

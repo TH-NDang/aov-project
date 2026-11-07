@@ -326,6 +326,92 @@ test("attack summary follows roles and active skill scaling while full details k
   })
 })
 
+test("armor is typed the way the game shows it and a malformed value cannot be saved", async () => {
+  await withView(async ({ document, render, dom }) => {
+    const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")
+    let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
+      values: [
+        { statKey: "ARMOR", baseValue: null, growthPerLevel: null, unit: "POINT" },
+        { statKey: "HP", baseValue: 3720, percentValue: null, growthPerLevel: null, unit: "HP" },
+      ],
+      sources: [],
+    }
+    const mount = () =>
+      render(
+        <HeroStatsEditor
+          value={stats}
+          onChange={(v) => {
+            stats = v
+          }}
+        />,
+      )
+    const type = async (next: string) => {
+      const node = document.querySelector<HTMLInputElement>('input[placeholder="150 | 20%"]')!
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(node, next)
+        node.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
+      })
+      await mount()
+      return document.querySelector<HTMLInputElement>('input[placeholder="150 | 20%"]')!
+    }
+    await mount()
+    assert.equal(document.querySelectorAll('input[placeholder="150 | 20%"]').length, 1, "HP keeps its number box")
+    assert.match(document.body.textContent!, /Gõ đúng như game hiện: số, dấu |, rồi phần trăm/)
+    assert.equal(document.querySelectorAll("select").length, 3, "armor has no unit to pick, HP still does")
+
+    let input = await type("150 | 20%")
+    assert.deepEqual(stats.values[0], {
+      statKey: "ARMOR",
+      baseValue: 150,
+      percentValue: 20,
+      growthPerLevel: null,
+      unit: "POINT",
+    })
+    assert.equal(input.validationMessage, "")
+    assert.match(document.body.textContent!, /Đã đọc: số 150, phần trăm 20%/)
+
+    input = await type("150 |")
+    assert.equal(stats.values[0].percentValue, 20, "The last good reading stays until the box parses again")
+    assert.match(input.validationMessage, /Thiếu phần trăm sau dấu |/)
+    assert.match(document.querySelector('[role="alert"]')!.textContent!, /Thiếu phần trăm/)
+    assert.equal(input.getAttribute("aria-invalid"), "true")
+
+    input = await type("145")
+    assert.equal(stats.values[0].baseValue, 145)
+    assert.equal(stats.values[0].percentValue, null)
+    assert.equal(input.validationMessage, "")
+    assert.match(document.body.textContent!, /chưa có phần trăm/)
+  })
+})
+
+test("a stat without a percent in the game drops one when the row switches to it", async () => {
+  await withView(async ({ document, render, dom }) => {
+    const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")
+    let stats: NonNullable<typeof fixtureContent.COMBAT_STATS> = {
+      values: [{ statKey: "ARMOR", baseValue: 150, percentValue: 20, growthPerLevel: null, unit: "POINT" }],
+      sources: [],
+    }
+    const mount = () =>
+      render(
+        <HeroStatsEditor
+          value={stats}
+          onChange={(v) => {
+            stats = v
+          }}
+        />,
+      )
+    await mount()
+    assert.equal(document.querySelector<HTMLInputElement>('input[placeholder="150 | 20%"]')!.value, "150 | 20%")
+    const select = document.querySelector("select")!
+    await act(async () => {
+      select.value = "MOVEMENT_SPEED"
+      select.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+    })
+    assert.equal(stats.values[0].percentValue, null)
+    assert.equal(stats.values[0].baseValue, 150)
+  })
+})
+
 test("a hero can override a shared stat and switch back without storing a copy", async () => {
   await withView(async ({ document, render, click }) => {
     const { HeroStatsEditor } = await import("../src/features/publishing/hero-stats-editor")

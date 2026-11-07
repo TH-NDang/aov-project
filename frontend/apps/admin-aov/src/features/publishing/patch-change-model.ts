@@ -253,6 +253,7 @@ export interface HeroPatchView {
     statKey: string
     unit: string
     baseValue: number | null
+    percentValue?: number | null
     growthPerLevel: number | null
     provenance: Provenance
     changeSetId: string | null

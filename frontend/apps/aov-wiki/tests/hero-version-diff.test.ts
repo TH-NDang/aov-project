@@ -3,8 +3,10 @@ import test from "node:test"
 import {
   diffWords,
   heroDifferences,
+  localizedStatText,
   previousPatch,
   skillDifference,
+  statText,
   stripSkillMarkup,
 } from "../src/features/hero/hero-version-diff.ts"
 
@@ -129,4 +131,30 @@ test("the previous version follows season and patch order inside one ruleset", (
   assert.equal(previousPatch(patches, seasons, patches[2])?.id, "p1")
   assert.equal(previousPatch(patches, seasons, patches[1]), undefined)
   assert.equal(previousPatch(patches, seasons, undefined), undefined)
+})
+
+test("a stat with a percent reads the way the game shows it", () => {
+  assert.equal(statText({ baseValue: 150, percentValue: 20 }), "150 | 20%")
+  assert.equal(statText({ baseValue: 80, percentValue: 0 }), "80 | 0%")
+  assert.equal(statText({ baseValue: 145, percentValue: null }), "145")
+  assert.equal(statText({ baseValue: 3720 }), "3720")
+  assert.equal(localizedStatText("150 | 20%", "vi-VN"), "150 | 20%")
+  assert.equal(localizedStatText("12.5 | 7.5%", "vi-VN"), "12,5 | 7,5%")
+  assert.equal(localizedStatText("3720", "vi-VN"), "3.720")
+})
+
+test("a percent change is a difference, but a percent recorded for the first time is not", () => {
+  const armor = (baseValue: number, percentValue?: number | null) => ({
+    content: { combatStats: { values: [{ statKey: "ARMOR", baseValue, percentValue }] } },
+  })
+  assert.deepEqual(heroDifferences(armor(150, 20), armor(150, 0)).stats.get("ARMOR"), {
+    before: "150 | 20%",
+    after: "150 | 0%",
+  })
+  assert.deepEqual(heroDifferences(armor(145), armor(150, 20)).stats.get("ARMOR"), {
+    before: "145",
+    after: "150 | 20%",
+  })
+  assert.equal(heroDifferences(armor(150), armor(150, 20)).stats.size, 0)
+  assert.equal(heroDifferences(armor(150, 20), armor(150, 20)).stats.size, 0)
 })

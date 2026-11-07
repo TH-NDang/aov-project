@@ -1,6 +1,7 @@
 import { statLabel } from "./patch-change-model"
 import { plainComparisonText } from "./hero-comparison"
 import { isRecord } from "./import-relations"
+import { formatStatNumber, formatStatReading } from "./stat-reading"
 import type { components } from "./generated/hero-api"
 import type { Content, Role, Skills, Stats } from "./types"
 
@@ -66,7 +67,7 @@ export function normalizedUnit(key: string, unit: string) {
 
 export function formatStat(value: number, unit: string) {
   const suffix = { POINT: "", HP: "", UNKNOWN: "", PERCENT: "%", percent: "%" }[unit] ?? (unit ? " " + unit : "")
-  return value.toLocaleString("vi-VN", { useGrouping: false, maximumFractionDigits: 12 }) + suffix
+  return formatStatNumber(value) + suffix
 }
 
 export function overviewAttackStats(roles: Role[], skills: Skills | null) {
@@ -141,13 +142,25 @@ export function combatAttributeRows(
     const own = heroes.get(key)
     const reference = shared.get(key)
     const capture = observedStat(key, observation?.values)
-    let observed = typeof capture?.value === "number" ? formatStat(capture.value, capture.unit) : capture?.value
-    if (capture?.percent !== undefined) observed = (observed ?? "—") + " | " + formatStat(capture.percent, "PERCENT")
+    const captured = typeof capture?.value === "number" ? capture.value : null
+    const observed =
+      capture?.percent !== undefined
+        ? formatStatReading(captured, capture.percent)
+        : captured !== null
+          ? formatStat(captured, capture!.unit)
+          : (capture?.value as string | undefined)
     if (!own && !reference && !observation) return []
-    const ownValue = own?.baseValue != null ? formatStat(own.baseValue, own.unit) : undefined
+    const ownValue =
+      own?.baseValue == null
+        ? undefined
+        : own.percentValue != null
+          ? formatStatReading(own.baseValue, own.percentValue)
+          : formatStat(own.baseValue, own.unit)
     const fallback = reference && formatStat(reference.baseValue, reference.unit)
     const reading =
-      own?.baseValue != null ? { value: own.baseValue, unit: own.unit, resource: capture?.resource } : capture
+      own?.baseValue != null
+        ? { value: own.baseValue, unit: own.unit, percent: own.percentValue ?? undefined, resource: capture?.resource }
+        : capture
     const kind =
       ownValue != null
         ? "Giá trị riêng"

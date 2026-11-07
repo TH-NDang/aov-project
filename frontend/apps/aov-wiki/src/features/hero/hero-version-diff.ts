@@ -156,15 +156,28 @@ export function heroDifferences(
   }
 
   const stats = new Map<string, ValueChange>()
-  const oldStats = new Map(before.content.combatStats?.values?.map((stat) => [stat.statKey, stat.baseValue]))
+  const oldStats = new Map(before.content.combatStats?.values?.map((stat) => [stat.statKey, stat]))
   for (const stat of after.content.combatStats?.values ?? []) {
     const previous = oldStats.get(stat.statKey)
-    if (previous != null && stat.baseValue != null && previous !== stat.baseValue) {
-      stats.set(stat.statKey, { before: String(previous), after: String(stat.baseValue) })
+    if (previous?.baseValue == null || stat.baseValue == null) continue
+    // A percent recorded for the first time is new data, not a change in the game.
+    const percentChanged =
+      previous.percentValue != null && stat.percentValue != null && previous.percentValue !== stat.percentValue
+    if (previous.baseValue !== stat.baseValue || percentChanged) {
+      stats.set(stat.statKey, { before: statText(previous), after: statText(stat) })
     }
   }
   return { skills, stats }
 }
+
+/** The stat as the game shows it, such as "150 | 20%". A percent nobody recorded stays out. */
+export function statText(stat: { baseValue: number | null; percentValue?: number | null }) {
+  const number = String(stat.baseValue ?? "")
+  return stat.percentValue == null ? number : `${number} | ${stat.percentValue}%`
+}
+
+export const localizedStatText = (text: string, locale: string) =>
+  text.replace(/\d+(?:\.\d+)?/g, (number) => Number(number).toLocaleString(locale))
 
 type PatchOrder = { id: string; seasonId: string; rulesetId: string; ordinal: number }
 

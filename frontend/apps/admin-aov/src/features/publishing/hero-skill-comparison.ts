@@ -1,5 +1,5 @@
 import { SKILL_FIELD_LABELS as fieldLabels, skillFieldLabel } from "./skill-field-labels"
-import { plainComparisonText } from "./hero-comparison"
+import { joinStatReadings, plainComparisonText } from "./hero-comparison"
 import { compareSkillRanks, type RankComparison } from "./skill-rank-values"
 import type { HeroComparison } from "./publishing-api"
 import type { Skill } from "./types"
@@ -309,7 +309,7 @@ export function buildSkillComparison(comparison: HeroComparison, locale: string,
         (b.afterSkill?.displayOrder ?? b.beforeSkill?.displayOrder ?? Number.MAX_SAFE_INTEGER) ||
       a.skillKey.localeCompare(b.skillKey),
   )
-  const otherChanges = comparison.changes.flatMap((change) => {
+  const otherChanges = joinStatReadings(comparison.changes, comparison.before, comparison.after).flatMap((change) => {
     if (change.section === "skills" || change.path.split("/").some((key) => noise.has(normalized(key)))) return []
     const before = withoutCaptureMetadata(change.before) ?? null
     const after = withoutCaptureMetadata(change.after) ?? null
