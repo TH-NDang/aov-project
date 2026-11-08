@@ -234,4 +234,14 @@
     <path fill="none" stroke="#d9b87e" stroke-width="3" d="M15 27c0 12 6 19 17 19s18-8 18-19"/>
     <path fill="url(#gold)" d="M29 46h6v6l10 1 3 5H16l3-5 10-1z"/>
   </symbol>
+  <symbol id="gameModes" viewBox="0 0 64 64" stroke="#3a3542" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <path fill="url(#plum)" d="M19 19h26c8 0 12 5 14 15l2 10c1 7-4 11-9 10-3-1-5-3-7-7l-2-3H21l-2 3c-2 4-4 6-7 7-5 1-10-3-9-10l2-10c2-10 6-15 14-15z"/>
+    <path fill="none" stroke="#f1e4ff" stroke-width="3" d="M12 30c1-3 3-5 6-6"/>
+    <path fill="url(#paper)" d="M14 35h4v-4h5v4h4v5h-4v4h-5v-4h-4z"/>
+    <circle cx="45" cy="31" r="3.2" fill="url(#coral)"/>
+    <circle cx="51" cy="37" r="3.2" fill="url(#jade)"/>
+    <circle cx="39" cy="37" r="3.2" fill="url(#blue)"/>
+    <circle cx="45" cy="43" r="3.2" fill="url(#gold)"/>
+    <path fill="url(#gold)" d="m32 4 2.6 5.2 5.7.8-4.1 4 1 5.7-5.2-2.7-5.2 2.7 1-5.7-4.1-4 5.7-.8z"/>
+  </symbol>
 </svg>

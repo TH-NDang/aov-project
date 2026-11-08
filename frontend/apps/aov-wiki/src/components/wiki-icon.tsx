@@ -3,7 +3,14 @@ import { catalogIcons } from "@aov/ui/components/catalog-icons"
 import { navArtIcons } from "@aov/ui/components/nav-art-icons"
 
 const { heroes: hero, skins: skin, ...warehouseIcons } = catalogIcons
-const sectionIcons = { hero, skin, ...warehouseIcons, updates: navArtIcons.releases, terms: navArtIcons.glossary }
+const sectionIcons = {
+  hero,
+  skin,
+  ...warehouseIcons,
+  updates: navArtIcons.releases,
+  terms: navArtIcons.glossary,
+  mode: navArtIcons.gameModes,
+}
 type SectionIcon = keyof typeof sectionIcons
 
 const PATHS = {
@@ -130,12 +137,6 @@ const PATHS = {
     <>
       <path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2Zm6-2v14m6-12v14" />
       <path d="m5 13 2-3m4-1 2 3m4 2 2-3" />
-    </>
-  ),
-  mode: (
-    <>
-      <path d="M5 22V4m0 1c6-5 8 4 15 0v11c-7 4-9-5-15 0" />
-      <path d="m10 8 5 2-5 2Z" />
     </>
   ),
 } satisfies Record<string, ReactNode>

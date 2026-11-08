@@ -30,4 +30,5 @@ export const navArtIcons = {
   coaches: createArtworkIcon(artwork, "coaches"),
   broadcast: createArtworkIcon(artwork, "broadcast"),
   videos: createArtworkIcon(artwork, "videos"),
+  gameModes: createArtworkIcon(artwork, "gameModes"),
 }

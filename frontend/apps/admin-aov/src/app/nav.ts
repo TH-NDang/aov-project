@@ -122,7 +122,7 @@ export const NAV_GROUPS: NavGroup[] = [
         items: [
           {
             title: "Chế độ chơi",
-            icon: "releases",
+            icon: "gameModes",
             to: "/game-modes",
             description: "Chế độ PVP, giải trí và cẩm nang Cờ Liên quân",
             capability: "catalog:read",
