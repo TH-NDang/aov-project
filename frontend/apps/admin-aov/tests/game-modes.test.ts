@@ -8,6 +8,7 @@ import {
   importedImageSource,
   mapLimit,
   missingLabel,
+  retry,
   modeContentFromManifest,
   type GuideManifest,
   type ModeManifestEntry,
@@ -113,4 +114,17 @@ test("every imported image says what it shows, which file it came from and when 
     assert.ok(source.note!.includes("goc-da-che-uid/sanh-") && source.note!.includes(mode.art!), mode.code)
   }
   assert.equal(importedImageSource({ label: "Ảnh", note: " " }), null, "a source without a note is not concrete")
+})
+
+test("a failed upload is tried again before the import gives up", async () => {
+  let calls = 0
+  const flaky = () => (++calls < 3 ? Promise.reject(new Error("R2 500")) : Promise.resolve("asset"))
+  assert.equal(await retry(flaky, 3, 1), "asset")
+  assert.equal(calls, 3)
+  calls = 0
+  await assert.rejects(
+    retry(() => (++calls, Promise.reject(new Error("still down"))), 2, 1),
+    /still down/,
+  )
+  assert.equal(calls, 2)
 })

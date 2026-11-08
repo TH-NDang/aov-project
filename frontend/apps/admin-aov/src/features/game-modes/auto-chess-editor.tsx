@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
 import { ArrowLeft, Download, Upload } from "lucide-react"
@@ -29,6 +29,7 @@ import {
   importedImageSource,
   mapLimit,
   missingLabel,
+  retry,
   type GuideManifest,
 } from "./game-mode-import"
 
@@ -422,6 +423,8 @@ function StartGuide({
   onCreated: (guide: AdminGuide) => void
 }) {
   const [progress, setProgress] = useState("")
+  // Icons uploaded by an earlier attempt on this page; running the import again only uploads the rest.
+  const uploaded = useRef(new Map<string, string>())
   const run = useMutation({
     mutationFn: async (fromResources: boolean) => {
       if (!fromResources) return gameModeApi.createGuideDraft(modeId, undefined, "Nháp trống")
@@ -436,18 +439,24 @@ function StartGuide({
         )
       const paths = guideIconPaths(manifest)
       let done = 0
-      const assets = new Map<string, string>()
+      const assets = uploaded.current
       await mapLimit(paths, 4, async (path) => {
+        if (assets.has(path)) {
+          setProgress(`Đã tải ${++done}/${paths.length} ảnh…`)
+          return
+        }
         const image = await fetch(`${RESOURCES_BASE}${GUIDE_FOLDER}${path}`)
         if (image.ok) {
           const blob = await image.blob()
           const name = path.slice(path.lastIndexOf("/") + 1)
           assets.set(
             path,
-            await uploadModeImage(
-              new File([blob], name, { type: blob.type || "image/jpeg" }),
-              "AUTO_CHESS_ICON",
-              importedImageSource(manifest.imageSources?.[path])!,
+            await retry(() =>
+              uploadModeImage(
+                new File([blob], name, { type: blob.type || "image/jpeg" }),
+                "AUTO_CHESS_ICON",
+                importedImageSource(manifest.imageSources?.[path])!,
+              ),
             ),
           )
         }

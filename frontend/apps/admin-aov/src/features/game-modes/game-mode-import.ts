@@ -117,6 +117,18 @@ function withoutIcon<T extends { icon?: string | null }>(value: T): Omit<T, "ico
   return rest
 }
 
+/** Runs `task` again after a failure, waiting longer each time; the last failure is rethrown. */
+export async function retry<T>(task: () => Promise<T>, attempts = 3, delayMs = 1000): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await task()
+    } catch (error) {
+      if (attempt >= attempts) throw error
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt))
+    }
+  }
+}
+
 /** Runs `task` over `values` with at most `limit` at a time, keeping the input order in the result. */
 export async function mapLimit<T, R>(
   values: readonly T[],
