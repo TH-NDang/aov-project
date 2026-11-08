@@ -2894,24 +2894,25 @@ GET `/api/wiki/v1/game-modes/{code}/auto-chess/insights`
 ### Người dùng đăng nhập
 
 Cần Bearer token hợp lệ audience `wiki-service` của tài khoản người; không cần role. Service account nhận 403
-`GAME_MODE_FORBIDDEN`.
+`GAME_MODE_FORBIDDEN`. Các route này nằm dưới `/users/me` như mọi thao tác khác của người đăng nhập: luôn cần token
+và trả `Cache-Control: no-store`.
 
-GET `/api/wiki/v1/game-modes/{code}/auto-chess/me`
+GET `/api/wiki/v1/users/me/game-modes/{code}/auto-chess`
 - Trả `{likedLineupIds: [UUID], lineups: [CommunityLineup + status, version]}` của người gọi trong chế độ.
 
-PUT / DELETE `/api/wiki/v1/game-modes/{code}/auto-chess/lineups/{lineupId}/like`
+PUT / DELETE `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/likes/{lineupId}`
 - Không có body. Trả `{lineupId, liked, likes}`. Idempotent. 404 khi đội hình không thuộc chế độ, đã ẩn hoặc
   không có trong cẩm nang xuất bản (DELETE vẫn trả 200 nếu người gọi từng thích). 422 khi tự thích.
   429 khi vượt giới hạn.
 
-POST `/api/wiki/v1/game-modes/{code}/auto-chess/lineups`
+POST `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups`
 - Body: `{name, note, units: [{unitCode, carry, row, itemCodes}], emblems: [traitCode]}`. Trả 201 đội hình.
   422 khi mã không có trong cẩm nang xuất bản hoặc vượt giới hạn số lượng; 429 khi vượt tần suất.
 
-PUT `/api/wiki/v1/game-modes/{code}/auto-chess/lineups/{lineupId}`
+PUT `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups/{lineupId}`
 - Body như POST cộng `expectedVersion`. Chỉ người đăng. 409 `GAME_MODE_CONFLICT` khi phiên bản cũ.
 
-DELETE `/api/wiki/v1/game-modes/{code}/auto-chess/lineups/{lineupId}?expectedVersion=`
+DELETE `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups/{lineupId}?expectedVersion=`
 - Chỉ người đăng. Trả 204, xóa lượt thích của đội hình.
 
 ### Admin

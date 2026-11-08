@@ -46,8 +46,9 @@ nhập bằng client `aov-wiki`, token chỉ có audience `wiki-service`.
   `community-service`; lượt thích đội hình không phải bài viết cộng đồng.
 - **Danh tính:** khóa `(issuer, subject)` lấy từ JWT đã xác minh (ADR-008), không nhận từ request. Chỉ tài khoản
   người (`HUMAN`) được thích hoặc đăng đội hình; service account bị từ chối. Không cần role quản trị.
-- **Một lượt thích mỗi người mỗi đội hình:** khóa chính `(lineup_id, issuer, subject)`. `PUT .../like` và
-  `DELETE .../like` là idempotent; gửi lại không tạo lượt thứ hai. Không thích đội hình của chính mình.
+- **Một lượt thích mỗi người mỗi đội hình:** khóa chính `(lineup_id, issuer, subject)`. `PUT .../likes/{lineupId}` và
+  `DELETE .../likes/{lineupId}` (dưới `/users/me`) là idempotent; gửi lại không tạo lượt thứ hai. Không thích đội
+  hình của chính mình.
 - **Đối tượng được thích:** đội hình đề xuất trong cẩm nang đã xuất bản (UUID ổn định trong nội dung) và đội
   hình cộng đồng đang hiển thị của cùng chế độ. Đội hình bị gỡ khỏi bản xuất bản hoặc bị ẩn giữ lượt thích cũ
   nhưng không nhận lượt mới và không xuất hiện trong xếp hạng.
