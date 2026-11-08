@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link, Navigate, useParams } from "react-router"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext } from "../../context/wiki-context"
 import { CatalogHeading } from "../../layout/catalog-heading"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { AutoChessGuide, GUIDE_TABS, type GuideTab } from "./auto-chess-guide"
-import { guideQuery, modeQuery, ModeRequestError } from "./mode-api"
+import { guideQuery, modeQuery, ModeRequestError, type ModeContent } from "./mode-api"
 import {
   AvailabilityBadge,
   availabilityLabel,
@@ -21,6 +22,7 @@ import "./modes.css"
 export function ModeDetailPage() {
   const { code = "", tab } = useParams()
   const { href, locale } = useWikiContext()
+  const layout = usePageLayout()
   const mode = useQuery(modeQuery(code))
   const hasGuide = !!mode.data?.hasGuide
   const guide = useQuery({ ...guideQuery(code), enabled: hasGuide })
@@ -60,6 +62,9 @@ export function ModeDetailPage() {
   const activeTab = (tab ?? "tong-quan") as GuideTab
   const duration = durationText(content.duration)
   const art = content.artAssetId ? images[content.artAssetId] : null
+  // A guide's rules repeat and extend the mode's, so the page shows one list: the longer one.
+  const guideRules = guide.data?.content.rules ?? []
+  const rules = guideRules.length > content.rules.length ? guideRules : content.rules
 
   return (
     <div className="mode-page">
@@ -88,7 +93,7 @@ export function ModeDetailPage() {
           {GUIDE_TABS.map((item) => (
             <Link
               key={item.key}
-              className="mode-chip"
+              className="guide-tab"
               aria-current={activeTab === item.key ? "page" : undefined}
               to={href(`/modes/${encodeURIComponent(code)}${item.key === "tong-quan" ? "" : `/${item.key}`}`)}
               preventScrollReset
@@ -101,29 +106,24 @@ export function ModeDetailPage() {
 
       {activeTab === "tong-quan" ? (
         <div className="mode-columns">
-          <div className="mode-page">
+          <div className="mode-stack">
+            {layout === "compact" && <QuickFacts content={content} edition={guide.data?.content.edition} inline />}
             {content.summary && (
               <section className="mode-panel">
                 <h2>Giới thiệu</h2>
                 <p className="mode-prose">{content.summary}</p>
               </section>
             )}
-            {content.rules.length > 0 && (
+            {rules.length > 0 && (
               <section className="mode-panel">
                 <h2>Luật chơi</h2>
-                <RuleList rules={content.rules} />
-              </section>
-            )}
-            {hasGuide && guide.data && guide.data.content.rules.length > content.rules.length && (
-              <section className="mode-panel">
-                <h2>Luật chi tiết</h2>
-                <RuleList rules={guide.data.content.rules} />
+                <RuleList rules={rules} collapsible={layout === "compact"} />
               </section>
             )}
             {content.heroes.length > 0 && (
               <section className="mode-panel">
                 <h2>Tướng của chế độ</h2>
-                <ul className="mode-facts">
+                <ul className="mode-hero-list">
                   {content.heroes.map((hero) => (
                     <li key={hero.name}>
                       {hero.heroCode ? <Link to={href(`/hero/${hero.heroCode}`)}>{hero.name}</Link> : hero.name}
@@ -153,67 +153,24 @@ export function ModeDetailPage() {
                 </div>
               </section>
             )}
-            {!content.summary && !content.rules.length && !hasGuide && (
+            {!content.summary && !rules.length && !hasGuide && (
               <p className="mode-empty">Chế độ này mới có thông tin cơ bản. Luật chơi và hình ảnh sẽ được bổ sung.</p>
             )}
-          </div>
-          <aside className="mode-panel" aria-label="Thông tin nhanh">
-            <h2>Thông tin nhanh</h2>
-            <dl className="mode-facts">
-              <div>
-                <dt>Nhóm</dt>
-                <dd>{GROUP_LABEL[content.group]}</dd>
-              </div>
-              {duration && (
-                <div>
-                  <dt>Thời lượng thường gặp</dt>
-                  <dd>{duration}</dd>
-                </div>
-              )}
-              {content.playersLabel && (
-                <div>
-                  <dt>Số người</dt>
-                  <dd>{content.playersLabel}</dd>
-                </div>
-              )}
-              <div>
-                <dt>Tình trạng</dt>
-                <dd>{availabilityLabel(content.availability) ?? "Chưa rõ"}</dd>
-              </div>
-              {(content.availability?.startsOn || content.availability?.endsOn) && (
-                <div>
-                  <dt>Thời gian mở</dt>
-                  <dd>
-                    {formatDay(content.availability.startsOn) ?? "?"} – {formatDay(content.availability.endsOn) ?? "?"}
-                  </dd>
-                </div>
-              )}
-              {content.availability?.observedOn && (
-                <div>
-                  <dt>Ghi nhận ngày</dt>
-                  <dd>{formatDay(content.availability.observedOn)}</dd>
-                </div>
-              )}
-              {content.availability?.note && (
-                <div>
-                  <dt>Ghi chú</dt>
-                  <dd>{content.availability.note}</dd>
-                </div>
-              )}
-              {hasGuide && guide.data?.content.edition && (
-                <div>
-                  <dt>Cẩm nang</dt>
-                  <dd>{guide.data.content.edition}</dd>
-                </div>
-              )}
-            </dl>
-            {content.sources.length > 0 && (
-              <p className="mode-sources">
-                Nguồn: {content.sources.map((source) => source.label).join("; ")}. Hình ảnh: Garena / Liên Quân Mobile.
-              </p>
+            {layout === "compact" && (
+              <>
+                <Sources content={content} />
+                <Link to={href("/modes")}>← Tất cả chế độ</Link>
+              </>
             )}
-            <Link to={href("/modes")}>← Tất cả chế độ</Link>
-          </aside>
+          </div>
+          {layout === "wide" && (
+            <aside className="mode-panel mode-aside" aria-label="Thông tin nhanh">
+              <h2>Thông tin nhanh</h2>
+              <QuickFacts content={content} edition={guide.data?.content.edition} />
+              <Sources content={content} />
+              <Link to={href("/modes")}>← Tất cả chế độ</Link>
+            </aside>
+          )}
         </div>
       ) : guide.isPending ? (
         <p className="mode-empty">Đang tải cẩm nang…</p>
@@ -223,5 +180,54 @@ export function ModeDetailPage() {
         <AutoChessGuide code={code} tab={activeTab} guide={guide.data} />
       )}
     </div>
+  )
+}
+
+/** On a phone the facts sit right under the art as one compact block instead of a column at the end. */
+function QuickFacts({ content, edition, inline }: { content: ModeContent; edition?: string | null; inline?: boolean }) {
+  const duration = durationText(content.duration)
+  const availability = content.availability
+  const facts: [string, string][] = [
+    ["Nhóm", GROUP_LABEL[content.group]],
+    ...(duration ? ([["Thời lượng", duration]] as [string, string][]) : []),
+    ...(content.playersLabel ? ([["Số người", content.playersLabel]] as [string, string][]) : []),
+    ["Tình trạng", availabilityLabel(availability) ?? "Chưa rõ"],
+    ...(availability?.startsOn || availability?.endsOn
+      ? ([
+          ["Thời gian mở", `${formatDay(availability.startsOn) ?? "?"} – ${formatDay(availability.endsOn) ?? "?"}`],
+        ] as [string, string][])
+      : []),
+    ...(availability?.observedOn ? ([["Ghi nhận", formatDay(availability.observedOn)!]] as [string, string][]) : []),
+  ]
+  return (
+    <dl className="mode-facts" data-inline={inline || undefined}>
+      {facts.map(([term, value]) => (
+        <div key={term}>
+          <dt>{term}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+      {edition && (
+        <div data-wide="true">
+          <dt>Cẩm nang</dt>
+          <dd>{edition}</dd>
+        </div>
+      )}
+      {availability?.note && (
+        <div data-wide="true">
+          <dt>Ghi chú</dt>
+          <dd>{availability.note}</dd>
+        </div>
+      )}
+    </dl>
+  )
+}
+
+function Sources({ content }: { content: ModeContent }) {
+  if (!content.sources.length) return null
+  return (
+    <p className="mode-sources">
+      Nguồn: {content.sources.map((source) => source.label).join("; ")}. Hình ảnh: Garena / Liên Quân Mobile.
+    </p>
   )
 }

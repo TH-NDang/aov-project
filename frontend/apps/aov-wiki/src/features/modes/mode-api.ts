@@ -1,4 +1,5 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
+import { nextPageOf } from "@aov/ui/lib/page-slice"
 import { wikiAccessToken } from "../auth/wiki-auth"
 import type { GuideContent, LineupUnit, ModeImage, RuleSection } from "./auto-chess-model"
 
@@ -182,14 +183,17 @@ export const guideQuery = (code: string) =>
     retry: (count, error) => !(error instanceof ModeRequestError && error.status === 404) && count < 1,
   })
 
-export const communityLineupsQuery = (code: string, sort: LineupSort, unit: string | null, page: number) =>
-  queryOptions({
-    queryKey: ["wiki", "game-mode", code, "community", sort, unit, page],
-    queryFn: ({ signal }) => {
-      const params = new URLSearchParams({ sort, page: String(page), size: "12" })
+/** Community lineups load page by page as the reader scrolls. */
+export const communityLineupsQuery = (code: string, sort: LineupSort, unit: string | null) =>
+  infiniteQueryOptions({
+    queryKey: ["wiki", "game-mode", code, "community", sort, unit],
+    queryFn: ({ signal, pageParam }) => {
+      const params = new URLSearchParams({ sort, page: String(pageParam), size: "12" })
       if (unit) params.set("unit", unit)
       return readPublic<PageSlice<CommunityLineup>>(`/${encodeURIComponent(code)}/auto-chess/lineups?${params}`, signal)
     },
+    initialPageParam: 0,
+    getNextPageParam: nextPageOf,
     staleTime: 15_000,
   })
 

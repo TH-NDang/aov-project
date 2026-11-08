@@ -1,59 +1,24 @@
 /* Game modes and the auto-chess guide. Layout follows the library pages; colors come from the wiki tokens. */
-.mode-page {
+.mode-page,
+.mode-stack {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
   min-width: 0;
+}
+.mode-stack {
+  gap: 14px;
+  align-content: start;
 }
 .mode-lead {
   font: var(--wiki-type-body);
   color: var(--aov-muted);
-  max-width: 70ch;
-}
-.mode-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-.mode-search {
-  font: var(--wiki-type-body);
-  flex: 1 1 220px;
-  max-width: 320px;
-  min-width: 0;
-  padding: 8px 12px;
-  border: 1px solid var(--aov-line-strong);
-  border-radius: var(--aov-radius-control);
-  background: var(--aov-sunken);
-  color: var(--aov-text);
-}
-.mode-chip {
-  font: var(--wiki-type-category);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 4px 12px;
-  border: 1px solid var(--aov-line-strong);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--aov-text-soft);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.mode-chip[aria-pressed="true"],
-.mode-chip[aria-current="page"] {
-  border-color: var(--aov-accent);
-  background: var(--aov-accent-soft);
-  color: var(--aov-accent-strong);
-}
-.mode-chip:disabled {
-  cursor: default;
-  opacity: 0.5;
+  max-width: 72ch;
 }
 .mode-section-title {
   font: var(--wiki-type-section);
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   color: var(--aov-text);
 }
@@ -61,13 +26,265 @@
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
+.mode-meta {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  color: var(--aov-muted);
+}
+.mode-prose {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.mode-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.mode-empty {
+  font: var(--wiki-type-body);
+  padding: 24px;
+  border: 1px dashed var(--aov-line-strong);
+  border-radius: var(--aov-radius-card);
+  color: var(--aov-muted);
+  text-align: center;
+}
+.mode-message {
+  font: var(--wiki-type-meta);
+  color: var(--aov-warning);
+}
+
+/* Filters: a search box that keeps its width, and chips that scroll on one row instead of wrapping. */
+.mode-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.mode-search,
+.mode-select {
+  font: var(--wiki-type-body);
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-sunken);
+  color: var(--aov-text);
+}
+.mode-search {
+  flex: 1 1 240px;
+  max-width: 360px;
+  min-width: 0;
+}
+.mode-select {
+  flex: 0 1 220px;
+  min-width: 0;
+}
+.mode-chip-row {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.mode-chip-row::-webkit-scrollbar {
+  display: none;
+}
+/* A chip row never widens the page: it takes what is left and scrolls inside it. */
+.mode-filter-bar > .mode-chip-row {
+  flex: 1 1 auto;
+  max-width: 100%;
+}
+.mode-chip {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 14px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.mode-chip:hover {
+  border-color: var(--aov-accent);
+  color: var(--aov-text);
+}
+.mode-chip[aria-pressed="true"],
+.mode-chip[aria-current="page"],
+.mode-chip[data-tone="accent"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.mode-chip[data-tier][aria-pressed="true"] {
+  border-color: var(--tier-color);
+  background: color-mix(in srgb, var(--tier-color) 18%, transparent);
+  color: var(--aov-text);
+}
+.mode-chip:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+/* A small switch between two or three views. */
+.mode-segment {
+  display: inline-flex;
+  flex: none;
+  padding: 3px;
+  border: 1px solid var(--aov-line);
+  border-radius: 999px;
+  background: var(--aov-sunken);
+}
+.mode-segment button {
+  font: var(--wiki-type-category);
+  min-height: 30px;
+  padding: 2px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--aov-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mode-segment button[aria-pressed="true"] {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+
+/* Badges */
+.mode-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mode-badge {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--aov-sunken) 86%, transparent);
+  color: var(--aov-text-soft);
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+}
+.mode-badge[data-tone]::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.mode-badge[data-tone="open"] {
+  color: var(--aov-success);
+}
+.mode-badge[data-tone="limited"] {
+  color: var(--aov-warning);
+}
+.mode-badge[data-tone="closed"] {
+  color: var(--aov-danger);
+}
+.mode-badge[data-tone="unknown"] {
+  color: var(--aov-muted);
+}
+.mode-badge[data-tone="guide"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.mode-badge[data-tone="guide"]::before {
+  display: none;
+}
+
+/* Art without a picture shows the section emblem on a quiet gradient. */
+.mode-art-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--aov-accent) 14%, transparent), transparent 60%),
+    linear-gradient(135deg, var(--aov-raised), var(--aov-sunken));
+  opacity: 0.9;
+}
+.mode-art-fallback svg {
+  opacity: 0.55;
+  filter: grayscale(0.4);
+}
+
+/* Spotlight: a mode with a guide */
+.mode-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 40%, var(--aov-line));
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.mode-spotlight-art {
+  position: relative;
+  min-height: 220px;
+  background: var(--aov-sunken);
+}
+.mode-spotlight-art img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mode-spotlight-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: 10px;
+  padding: 20px 22px;
+}
+.mode-spotlight-body h2 {
+  font: var(--wiki-type-page);
+}
+.mode-spotlight-body h2 a {
+  color: var(--aov-text);
+  text-decoration: none;
+}
+.mode-spotlight-body h2 a:hover {
+  color: var(--aov-accent-strong);
+}
+.mode-spotlight-body .mode-chip-row {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.mode-eyebrow {
+  font: var(--wiki-type-meta);
+  justify-self: start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Wide: a grid of cards */
+.mode-group {
+  display: grid;
+  gap: 12px;
+}
 .mode-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 224px), 1fr));
   gap: 14px;
 }
 .mode-card {
   display: grid;
+  grid-template-rows: auto 1fr;
   overflow: hidden;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-card);
@@ -83,18 +300,23 @@
   border-color: var(--aov-accent);
   transform: translateY(-2px);
 }
+.mode-card[data-closed] .mode-card-art img,
+.mode-row[data-closed] .mode-row-art img {
+  filter: saturate(0.55) brightness(0.8);
+}
 .mode-card-art {
   position: relative;
   aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, var(--aov-raised), var(--aov-sunken));
   overflow: hidden;
+  background: var(--aov-sunken);
 }
 .mode-card-art img,
+.mode-row-art img,
 .mode-banner img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 .mode-card-art .mode-badges {
   position: absolute;
@@ -102,67 +324,61 @@
   left: 8px;
   right: 8px;
 }
-.mode-art-fallback {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  font: var(--wiki-type-page);
-  color: color-mix(in srgb, var(--aov-accent) 55%, transparent);
-  letter-spacing: 0.04em;
-}
 .mode-card-body {
   display: grid;
-  gap: 6px;
-  padding: 12px 14px 14px;
+  align-content: start;
+  gap: 4px;
+  padding: 10px 12px 12px;
 }
 .mode-card-body h3 {
   font: var(--wiki-type-entry);
   color: var(--aov-text);
 }
-.mode-meta {
-  font: var(--wiki-type-meta);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  color: var(--aov-muted);
+
+/* Compact: a list with a small picture */
+.mode-list {
+  display: grid;
+  gap: 8px;
 }
-.mode-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.mode-badge {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
+.mode-row {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
+  gap: 12px;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--aov-sunken) 82%, transparent);
-  color: var(--aov-text-soft);
-  backdrop-filter: blur(6px);
-}
-.mode-badge[data-tone="open"] {
-  color: var(--aov-success);
-}
-.mode-badge[data-tone="limited"] {
-  color: var(--aov-warning);
-}
-.mode-badge[data-tone="closed"] {
-  color: var(--aov-danger);
-}
-.mode-badge[data-tone="guide"] {
-  background: var(--aov-accent);
-  color: var(--aov-on-accent);
-}
-.mode-empty {
-  font: var(--wiki-type-body);
-  padding: 24px;
-  border: 1px dashed var(--aov-line-strong);
+  padding: 8px;
+  border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: inherit;
+  text-decoration: none;
+}
+.mode-row:active {
+  border-color: var(--aov-accent);
+}
+.mode-row-art {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: calc(var(--aov-radius-card) - 4px);
+  background: var(--aov-sunken);
+}
+.mode-row-art .mode-art-fallback svg {
+  width: 28px;
+  height: 28px;
+}
+.mode-row-body {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.mode-row-body strong {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.mode-row-chevron {
+  font: var(--wiki-type-section);
   color: var(--aov-muted);
-  text-align: center;
+  padding-right: 4px;
 }
 
 /* Mode page */
@@ -172,14 +388,14 @@
   border-radius: var(--aov-radius-card);
   background: var(--aov-sunken);
   aspect-ratio: 21 / 9;
-  max-height: 420px;
+  max-height: 400px;
 }
 .mode-banner-copy {
   position: absolute;
   inset: auto 0 0 0;
   display: grid;
-  gap: 8px;
-  padding: 48px 20px 16px;
+  gap: 6px;
+  padding: 56px 20px 16px;
   background: linear-gradient(transparent, rgb(8 10 16 / 88%));
 }
 .mode-banner-copy h1 {
@@ -187,28 +403,31 @@
   color: #fff;
 }
 .mode-banner .mode-meta {
-  color: rgb(255 255 255 / 80%);
+  color: rgb(255 255 255 / 82%);
 }
 .mode-banner[data-empty="true"] {
   aspect-ratio: auto;
-  min-height: 160px;
+  min-height: 180px;
 }
 /* Guide tabs keep the art as a strip, so the tab content starts higher. */
 .mode-banner.mode-banner-compact {
   aspect-ratio: auto;
-  height: 160px;
+  height: 132px;
   min-height: 0;
+}
+.mode-banner.mode-banner-compact .mode-banner-copy {
+  padding-top: 24px;
 }
 .mode-columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
   gap: 20px;
   align-items: start;
 }
 .mode-panel {
   display: grid;
-  gap: 10px;
-  padding: 16px;
+  gap: 12px;
+  padding: 16px 18px;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
@@ -218,21 +437,56 @@
   font: var(--wiki-type-section);
   color: var(--aov-text);
 }
-.mode-panel h3 {
-  font: var(--wiki-type-entry);
-  color: var(--aov-text);
+.mode-aside {
+  position: sticky;
+  top: calc(var(--wiki-header-height, 56px) + 64px);
 }
 .mode-rules {
   display: grid;
-  gap: 14px;
+  gap: 16px;
+}
+.mode-rule-group {
+  display: grid;
+  gap: 10px;
+}
+.mode-rule-group > h3,
+.mode-rule-group > summary {
+  font: var(--wiki-type-category);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--aov-line);
+  color: var(--aov-accent-strong);
+}
+.mode-rule-group > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  min-height: 36px;
+  align-items: center;
+}
+.mode-rule-group > summary::-webkit-details-marker {
+  display: none;
+}
+.mode-rule-group > summary::after {
+  content: "+";
+  color: var(--aov-muted);
+}
+.mode-rule-group[open] > summary::after {
+  content: "−";
 }
 .mode-rule {
   display: grid;
   gap: 4px;
 }
+.mode-rule + .mode-rule {
+  margin-top: 6px;
+}
+.mode-rule h4 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
 .mode-rule p,
-.mode-rule li,
-.mode-prose {
+.mode-rule li {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
 }
@@ -244,11 +498,11 @@
 }
 .mode-facts {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 .mode-facts div {
   display: grid;
-  gap: 2px;
+  gap: 1px;
 }
 .mode-facts dt {
   font: var(--wiki-type-meta);
@@ -258,9 +512,26 @@
   font: var(--wiki-type-body);
   color: var(--aov-text);
 }
+/* On a phone the facts form a two-column block right under the art. */
+.mode-facts[data-inline] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.mode-facts[data-inline] [data-wide] {
+  grid-column: 1 / -1;
+}
 .mode-sources {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
+}
+.mode-hero-list {
+  display: grid;
+  gap: 4px;
+  font: var(--wiki-type-body);
 }
 
 /* Guide tabs: always at the top, scrolling sideways on narrow screens. */
@@ -269,95 +540,218 @@
   top: var(--wiki-header-height, 56px);
   z-index: 5;
   display: flex;
-  gap: 6px;
+  gap: 2px;
   overflow-x: auto;
-  padding: 8px 0;
+  margin-top: -8px;
+  border-bottom: 1px solid var(--aov-line);
   background: var(--aov-bg);
   scrollbar-width: none;
 }
 .guide-tabs::-webkit-scrollbar {
   display: none;
 }
-.guide-tabs a {
+.guide-tab {
+  font: var(--wiki-type-category);
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-bottom: 2px solid transparent;
+  color: var(--aov-muted);
   text-decoration: none;
+  white-space: nowrap;
+}
+.guide-tab:hover {
+  color: var(--aov-text);
+}
+.guide-tab[aria-current="page"] {
+  border-bottom-color: var(--aov-accent);
+  color: var(--aov-accent-strong);
 }
 .guide-edition {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
-.guide-grid {
+
+/* Units */
+.unit-group {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr));
   gap: 10px;
 }
+.unit-group-title {
+  font: var(--wiki-type-category);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--cost-color) 45%, var(--aov-line));
+}
+.unit-group-title small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.unit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 10px;
+}
+.unit-grid[data-layout="compact"] {
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: 8px;
+}
+.unit-tile {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 5px;
+  padding: 12px 8px 10px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cost-color) 10%, var(--aov-surface)),
+    var(--aov-surface)
+  );
+  color: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+.unit-tile:hover,
+.unit-tile:focus-visible {
+  border-color: var(--cost-color);
+  transform: translateY(-2px);
+}
+.unit-tile strong {
+  font: var(--wiki-type-category);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--aov-text);
+}
+.unit-traits {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+.guide-table .unit-traits {
+  justify-content: flex-start;
+}
+.unit-trait-names {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.unit-incomplete {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--aov-warning);
+}
+.unit-grid[data-layout="compact"] .unit-tile {
+  padding: 8px 4px;
+}
+.unit-grid[data-layout="compact"] .unit-traits {
+  display: none;
+}
+
+/* A unit with a line of text beside it: builder suggestions */
 .guide-unit {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-columns: 36px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
-  padding: 10px;
+  padding: 8px 10px;
   border: 1px solid var(--aov-line);
-  border-left: 3px solid var(--cost-color, var(--aov-line));
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
   color: inherit;
   text-align: left;
   cursor: pointer;
 }
-.guide-unit:hover,
-.guide-unit[aria-pressed="true"] {
-  border-color: var(--aov-accent);
+.guide-unit:hover {
+  border-color: var(--cost-color, var(--aov-accent));
+}
+.guide-unit > span:last-child {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
 }
 .guide-unit strong {
-  font: var(--wiki-type-entry);
-  display: block;
+  font: var(--wiki-type-category);
   color: var(--aov-text);
 }
-.guide-unit span {
+.guide-unit > span:last-child > span {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
+
+/* Portrait: the game's unit icon framed in its cost color */
 .guide-portrait {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--aov-sunken);
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
   border: 2px solid var(--cost-color, var(--aov-line-strong));
+  border-radius: 10px;
+  background: var(--aov-sunken);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 35%);
+}
+.guide-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.guide-portrait b {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
 }
 .guide-portrait[data-size="sm"] {
   width: 36px;
   height: 36px;
+  border-radius: 8px;
+}
+.guide-portrait[data-size="md"] {
+  width: 56px;
+  height: 56px;
 }
 .guide-portrait[data-size="lg"] {
   width: 72px;
   height: 72px;
+  border-radius: 12px;
 }
-/* Initials of a unit without a portrait must fit the circle. */
-.guide-portrait.mode-art-fallback {
-  font: var(--wiki-type-meta);
-  letter-spacing: 0;
-  overflow: hidden;
-}
-.guide-portrait.mode-art-fallback[data-size="lg"] {
-  font: var(--wiki-type-entry);
+.guide-trait-icon {
+  display: inline-block;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--aov-sunken);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 40%);
 }
 .guide-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   object-fit: cover;
   flex: none;
   background: var(--aov-sunken);
-}
-.guide-icon[data-round="true"] {
-  border-radius: 50%;
 }
 .guide-cost {
   font: var(--wiki-type-meta);
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   color: var(--cost-color, var(--aov-accent));
 }
 .guide-cost::before {
@@ -376,17 +770,35 @@
   font: var(--wiki-type-meta);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 1px 8px 1px 2px;
+  gap: 5px;
+  padding: 2px 9px 2px 3px;
+  border: 1px solid transparent;
   border-radius: 999px;
   background: var(--aov-sunken);
   color: var(--aov-text-soft);
+  white-space: nowrap;
 }
-.guide-trait-tag img {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+.guide-trait-tag b {
+  font-weight: 700;
+  color: var(--aov-text);
 }
+.guide-trait-tag[data-active="true"] {
+  border-color: color-mix(in srgb, var(--aov-accent) 50%, transparent);
+  color: var(--aov-text);
+}
+.guide-name-button {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--aov-text);
+  cursor: pointer;
+}
+
+/* Tables */
 .guide-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--aov-line);
@@ -424,6 +836,8 @@
 .guide-table tr:last-child td {
   border-bottom: 0;
 }
+
+/* Unit detail */
 .guide-detail {
   display: grid;
   gap: 14px;
@@ -432,6 +846,13 @@
   display: flex;
   gap: 14px;
   align-items: center;
+  padding: 12px;
+  border-radius: var(--aov-radius-card);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--cost-color) 18%, transparent), transparent);
+}
+.guide-detail-head > div {
+  display: grid;
+  gap: 4px;
 }
 .guide-detail-head h2 {
   font: var(--wiki-type-page);
@@ -439,33 +860,52 @@
 }
 .guide-skill {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 12px;
   padding: 12px;
   border-radius: var(--aov-radius-card);
   background: var(--aov-sunken);
 }
 .guide-skill .guide-icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
+}
+.guide-skill h3,
+.guide-detail-trait h3 {
+  font: var(--wiki-type-entry);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text);
 }
 .guide-skill p {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
   white-space: pre-line;
 }
-.guide-values,
-.guide-skill .guide-values {
+.guide-values {
   font: var(--wiki-type-category);
+  color: var(--aov-success);
+}
+.guide-skill .guide-values {
   color: var(--aov-success);
 }
 .guide-note {
   font: var(--wiki-type-meta);
   color: var(--aov-warning);
 }
+.guide-detail-trait {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+}
+
+/* Traits */
 .guide-traits {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 12px;
 }
 .guide-trait {
@@ -493,19 +933,20 @@
 .guide-tier {
   font: var(--wiki-type-body);
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 26px minmax(0, 1fr);
   gap: 8px;
   align-items: start;
   color: var(--aov-text-soft);
 }
 .guide-tier b {
-  font: var(--wiki-type-category);
+  font: var(--wiki-type-meta);
+  font-weight: 700;
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 2px solid var(--aov-line-strong);
+  border: 2px solid color-mix(in srgb, var(--aov-accent) 45%, var(--aov-line-strong));
   color: var(--aov-text);
 }
 .guide-tier[data-reached="true"] b {
@@ -526,7 +967,13 @@
   border: 0;
   background: none;
   cursor: pointer;
+  border-radius: 10px;
 }
+.guide-members button[aria-current] .guide-portrait {
+  box-shadow: 0 0 0 2px var(--aov-accent);
+}
+
+/* Items and other cards */
 .guide-card-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
@@ -534,35 +981,133 @@
 }
 .guide-card {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  gap: 10px;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
   padding: 12px;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-card);
   background: var(--aov-surface);
 }
 .guide-card .guide-icon {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
 }
-.guide-card h3 {
+.guide-card h3,
+.blessing-card h3 {
   font: var(--wiki-type-entry);
   color: var(--aov-text);
 }
-.guide-card p {
+.guide-card p,
+.blessing-card p {
   font: var(--wiki-type-body);
   color: var(--aov-text-soft);
   white-space: pre-line;
 }
-.guide-card[data-tier="EPIC"] {
-  border-color: color-mix(in srgb, #b46cff 45%, var(--aov-line));
+.item-group {
+  display: grid;
+  gap: 10px;
 }
-.guide-card[data-tier="LEGENDARY"] {
-  border-color: color-mix(in srgb, #ffb04a 55%, var(--aov-line));
+.item-stone {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  transform: rotate(45deg);
+  background: var(--stone-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--stone-color) 60%, transparent);
+}
+.item-card .guide-icon {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--stone-color) 55%, transparent);
 }
 .guide-slots {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
+}
+
+/* Blessings: a white drawing on black, blended into a badge of the tier color */
+.blessing-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 10px;
+}
+.blessing-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--aov-line);
+  border-left: 3px solid var(--tier-color);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.blessing-card > div {
+  display: grid;
+  gap: 2px;
+}
+.blessing-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    color-mix(in srgb, var(--tier-color) 75%, #fff),
+    var(--tier-color) 55%
+  );
+  isolation: isolate;
+}
+.blessing-icon img {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+}
+.blessing-tier {
+  font: var(--wiki-type-meta);
+  color: var(--tier-color);
+}
+
+/* Quests */
+.quest-list {
+  display: grid;
+  gap: 8px;
+  counter-reset: quest;
+}
+.quest-list li {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  counter-increment: quest;
+}
+.quest-list li::before {
+  content: counter(quest);
+  font: var(--wiki-type-meta);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--aov-sunken);
+  color: var(--aov-muted);
+}
+.quest-list p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text);
+}
+.quest-reward {
+  font: var(--wiki-type-meta);
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+  white-space: nowrap;
 }
 
 /* Lineups */
@@ -625,16 +1170,23 @@
   position: relative;
   display: grid;
   justify-items: center;
-  gap: 2px;
-  width: 58px;
+  gap: 3px;
+  width: 64px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
 }
 .lineup-unit span {
   font: var(--wiki-type-meta);
-  max-width: 58px;
+  max-width: 64px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--aov-text-soft);
+}
+.lineup-unit .lineup-items {
+  max-width: none;
 }
 .lineup-unit[data-carry="true"] .guide-portrait {
   box-shadow: 0 0 0 2px var(--aov-accent);
@@ -642,10 +1194,14 @@
 .lineup-unit em {
   font: var(--wiki-type-meta);
   position: absolute;
-  top: -4px;
-  right: 2px;
-  padding: 0 4px;
-  border-radius: 6px;
+  top: -5px;
+  right: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
   background: var(--aov-accent);
   color: var(--aov-on-accent);
   font-style: normal;
@@ -670,9 +1226,11 @@
   background: color-mix(in srgb, #e0557a 18%, transparent);
   color: #ff8fab;
 }
-.mode-message {
-  font: var(--wiki-type-meta);
-  color: var(--aov-warning);
+.mode-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Builder */
@@ -696,7 +1254,7 @@
   justify-items: center;
   align-content: center;
   gap: 4px;
-  min-height: 92px;
+  min-height: 96px;
   padding: 6px 2px;
   border-radius: 10px;
   border: 1px solid var(--aov-line);
@@ -714,6 +1272,18 @@
   color: var(--aov-text-soft);
   cursor: pointer;
 }
+.builder-slot > button:first-child {
+  padding: 0;
+  border: 0;
+}
+.builder-slot-actions {
+  display: flex;
+  gap: 4px;
+}
+.builder-slot-actions button {
+  min-width: 28px;
+  min-height: 26px;
+}
 .builder-slot button[aria-pressed="true"] {
   border-color: var(--aov-accent);
   color: var(--aov-accent-strong);
@@ -728,13 +1298,13 @@
 }
 .builder-pool {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
   gap: 8px;
 }
 .builder-pool button {
   display: grid;
   justify-items: center;
-  gap: 2px;
+  gap: 3px;
   padding: 6px 2px;
   border: 1px solid transparent;
   border-radius: 10px;
@@ -773,11 +1343,6 @@
 .builder-trait[data-active="true"] {
   opacity: 1;
   box-shadow: inset 3px 0 0 var(--aov-accent);
-}
-.builder-trait img {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
 }
 .builder-trait strong {
   font: var(--wiki-type-category);
@@ -826,7 +1391,7 @@
 .insight-bar {
   font: var(--wiki-type-meta);
   display: grid;
-  grid-template-columns: minmax(84px, 140px) minmax(0, 1fr) 48px;
+  grid-template-columns: minmax(84px, 150px) minmax(0, 1fr) 48px;
   gap: 8px;
   align-items: center;
   color: var(--aov-text-soft);
@@ -865,24 +1430,78 @@
   float: right;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 899px) {
+  .mode-page {
+    gap: 16px;
+  }
   .mode-columns,
-  .builder {
+  .builder,
+  .mode-spotlight {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .mode-spotlight-art {
+    min-height: 0;
+    aspect-ratio: 16 / 9;
+  }
+  .mode-spotlight-body {
+    padding: 14px 16px 16px;
+  }
+  .mode-spotlight-body .mode-chip-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  /* 16px so an iPhone does not zoom into the field. */
+  .mode-search,
+  .mode-select,
+  .builder-form input,
+  .builder-form textarea {
+    font-size: 16px;
+  }
+  .mode-search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .mode-select {
+    flex: 1 1 160px;
   }
   .mode-banner {
     aspect-ratio: 16 / 9;
   }
   .mode-banner.mode-banner-compact {
-    height: 120px;
+    height: 104px;
+  }
+  .mode-banner-copy {
+    padding: 40px 14px 12px;
+  }
+  .guide-tabs {
+    margin-inline: -16px;
+    padding-inline: 8px;
+  }
+  .guide-tab {
+    padding: 0 12px;
+  }
+  .guide-traits,
+  .guide-card-list,
+  .blessing-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .quest-list li {
+    grid-template-columns: 28px minmax(0, 1fr);
+  }
+  .quest-reward {
+    grid-column: 2;
+    justify-self: start;
   }
   .builder-board {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
     padding: 6px;
   }
   .builder-slot {
-    min-height: 78px;
+    min-height: 84px;
+  }
+  .builder-slot .guide-portrait {
+    width: 32px;
+    height: 32px;
   }
   .mode-dialog {
     width: 100vw;
@@ -890,6 +1509,18 @@
     max-height: 100dvh;
     height: 100dvh;
     margin: 0;
+    padding: 14px;
     border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-card,
+  .unit-tile {
+    transition: none;
+  }
+  .mode-card:hover,
+  .unit-tile:hover {
+    transform: none;
   }
 }

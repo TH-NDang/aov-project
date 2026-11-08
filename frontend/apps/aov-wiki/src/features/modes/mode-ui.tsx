@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react"
+import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImageCredit } from "../../components/wiki-image-credit"
 import { ruleBlocks, type ModeImage, type RuleSection } from "./auto-chess-model"
 import type { ModeAvailability, ModeDuration } from "./mode-api"
@@ -14,14 +15,28 @@ const AVAILABILITY: Record<ModeAvailability["status"], { label: string; tone: st
   UNKNOWN: { label: "Chưa rõ lịch mở", tone: "unknown" },
 }
 
+const OPEN = new Set<ModeAvailability["status"]>(["ALWAYS_OPEN", "LIMITED", "SPECIAL"])
+
+export function isOpen(availability?: ModeAvailability | null) {
+  return !!availability && OPEN.has(availability.status)
+}
+
 export function availabilityLabel(availability?: ModeAvailability | null) {
   if (!availability) return null
   return availability.gameLabel || AVAILABILITY[availability.status]?.label || null
 }
 
-export function AvailabilityBadge({ availability }: { availability?: ModeAvailability | null }) {
+/** `quiet` leaves out an unknown status, which only adds noise to a list. */
+export function AvailabilityBadge({
+  availability,
+  quiet,
+}: {
+  availability?: ModeAvailability | null
+  quiet?: boolean
+}) {
   if (!availability) return null
   const known = AVAILABILITY[availability.status] ?? AVAILABILITY.UNKNOWN
+  if (quiet && known.tone === "unknown") return null
   return (
     <span className="mode-badge" data-tone={known.tone} title={known.label}>
       {availability.gameLabel || known.label}
@@ -42,7 +57,7 @@ export function formatDay(value?: string | null) {
   return year && month && day ? `${day}/${month}/${year}` : value
 }
 
-/** Mode art with the image credit, or the mode's initials when no art is published yet. */
+/** Mode art with the image credit, or the mode's emblem while no art is published yet. */
 export function ModeArt({
   image,
   name,
@@ -77,7 +92,7 @@ export function ModeArt({
         />
       ) : (
         <span className="mode-art-fallback" aria-hidden="true">
-          {initials(name)}
+          <WikiIcon name="mode" size={40} />
         </span>
       )}
       {children}
@@ -91,16 +106,25 @@ export function ModeArt({
   )
 }
 
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 3)
-    .map((word) => word[0]?.toUpperCase())
-    .join("")
+function RuleBody({ body }: { body?: string | null }) {
+  return ruleBlocks(body).map((block, at) =>
+    block.kind === "text" ? (
+      <p key={at}>{block.text}</p>
+    ) : (
+      <ul key={at}>
+        {block.items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    ),
+  )
 }
 
-export function RuleList({ rules }: { rules: RuleSection[] }) {
+/**
+ * Rules grouped the way the game groups them. With `collapsible`, each group folds so a phone reader sees the outline
+ * first; the first group stays open.
+ */
+export function RuleList({ rules, collapsible }: { rules: RuleSection[]; collapsible?: boolean }) {
   const groups = new Map<string, RuleSection[]>()
   for (const rule of rules) {
     const key = rule.group ?? ""
@@ -108,27 +132,26 @@ export function RuleList({ rules }: { rules: RuleSection[] }) {
   }
   return (
     <div className="mode-rules">
-      {[...groups.entries()].map(([group, entries]) => (
-        <section key={group} className="mode-rule">
-          {group && <h3>{group}</h3>}
-          {entries.map((rule, index) => (
-            <div key={`${rule.title}-${index}`} className="mode-rule">
-              <h4 className="mode-section-title">{rule.title}</h4>
-              {ruleBlocks(rule.body).map((block, at) =>
-                block.kind === "text" ? (
-                  <p key={at}>{block.text}</p>
-                ) : (
-                  <ul key={at}>
-                    {block.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                ),
-              )}
-            </div>
-          ))}
-        </section>
-      ))}
+      {[...groups.entries()].map(([group, entries], index) => {
+        const items = entries.map((rule, at) => (
+          <div key={`${rule.title}-${at}`} className="mode-rule">
+            <h4>{rule.title}</h4>
+            <RuleBody body={rule.body} />
+          </div>
+        ))
+        if (!group) return <div key={index}>{items}</div>
+        return collapsible ? (
+          <details key={group} className="mode-rule-group" open={index === 0}>
+            <summary>{group}</summary>
+            {items}
+          </details>
+        ) : (
+          <section key={group} className="mode-rule-group">
+            <h3>{group}</h3>
+            {items}
+          </section>
+        )
+      })}
     </div>
   )
 }

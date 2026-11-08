@@ -1,6 +1,8 @@
 import { useMemo, useState, type ReactNode } from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
+import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext } from "../../context/wiki-context"
 import { signIn, useWikiSession } from "../auth/wiki-auth"
 import {
@@ -17,7 +19,7 @@ import {
   type Lineup,
   type LineupUnit,
 } from "./auto-chess-model"
-import { costStyle, TraitTag, UnitPortrait, type GuideIndex } from "./auto-chess-guide"
+import { costStyle, TraitIcon, TraitTag, UnitPortrait, type GuideIndex } from "./auto-chess-guide"
 import {
   communityLineupsQuery,
   deleteLineup,
@@ -104,12 +106,12 @@ function LineupUnits({
             type="button"
             className="lineup-unit"
             data-carry={item.carry}
-            style={{ background: "none", border: 0, cursor: "pointer", ...costStyle(unit.cost) }}
+            style={costStyle(unit.cost)}
             title={`${unit.name}${item.row ? ` · ${ROW_LABEL[item.row]}` : ""}${item.carry ? " · chủ lực" : ""}`}
             onClick={() => onOpen(unit.code)}
           >
-            {item.carry && <em>C</em>}
-            <UnitPortrait unit={unit} index={index} />
+            {item.carry && <em title="Chủ lực">★</em>}
+            <UnitPortrait unit={unit} index={index} size="md" />
             <span>{unit.name}</span>
             {item.itemCodes.length > 0 && (
               <span className="lineup-items">
@@ -136,9 +138,15 @@ function ActiveTraits({ units, emblems, index }: { units: LineupUnit[]; emblems:
   return (
     <div className="guide-trait-tags">
       {counts.map((count) => (
-        <span key={count.trait.code} className="guide-trait-tag" title={count.trait.tiers[count.reachedTier]?.effect}>
-          {index.image(count.trait.iconAssetId) ? <img src={index.image(count.trait.iconAssetId)} alt="" /> : <span />}
-          {count.count} {count.trait.name}
+        <span
+          key={count.trait.code}
+          className="guide-trait-tag"
+          data-active="true"
+          title={count.trait.tiers[count.reachedTier]?.effect}
+        >
+          <TraitIcon trait={count.trait} index={index} size={18} />
+          <b>{count.count}</b>
+          {count.trait.name}
         </span>
       ))}
     </div>
@@ -160,8 +168,9 @@ export function LineupsTab({
   const likes = useLikes(code)
   const [sort, setSort] = useState<LineupSort>("popular")
   const [unit, setUnit] = useState<string | null>(null)
-  const [page, setPage] = useState(0)
-  const community = useQuery(communityLineupsQuery(code, sort, unit, page))
+  const community = useInfiniteQuery(communityLineupsQuery(code, sort, unit))
+  const communityLineups = community.data?.pages.flatMap((page) => page.items) ?? []
+  const communityTotal = community.data?.pages[0]?.totalElements ?? 0
   const own = new Set(likes.me.data?.lineups.map((lineup) => lineup.id))
   const editorial = [...guide.content.lineups].sort(
     (a, b) =>
@@ -197,7 +206,7 @@ export function LineupsTab({
       )}
 
       <h2 className="mode-section-title">
-        Đội hình cộng đồng <small>{community.data?.totalElements ?? 0} đội hình</small>
+        Đội hình cộng đồng <small>{communityTotal} đội hình</small>
       </h2>
       <div className="mode-toolbar">
         {(
@@ -212,10 +221,7 @@ export function LineupsTab({
             type="button"
             className="mode-chip"
             aria-pressed={sort === key}
-            onClick={() => {
-              setSort(key)
-              setPage(0)
-            }}
+            onClick={() => setSort(key)}
           >
             {label}
           </button>
@@ -224,10 +230,7 @@ export function LineupsTab({
           className="mode-search"
           aria-label="Lọc theo quân cờ"
           value={unit ?? ""}
-          onChange={(event) => {
-            setUnit(event.target.value || null)
-            setPage(0)
-          }}
+          onChange={(event) => setUnit(event.target.value || null)}
         >
           <option value="">Mọi quân cờ</option>
           {index.content.units.map((item) => (
@@ -242,13 +245,13 @@ export function LineupsTab({
       </div>
       {community.isPending ? (
         <p className="mode-empty">Đang tải…</p>
-      ) : community.isError ? (
+      ) : community.isLoadingError ? (
         <p className="mode-empty">Chưa tải được đội hình cộng đồng.</p>
-      ) : community.data.items.length === 0 ? (
+      ) : communityLineups.length === 0 ? (
         <p className="mode-empty">Chưa có đội hình cộng đồng phù hợp. Hãy là người đầu tiên chia sẻ đội hình!</p>
       ) : (
         <div className="lineup-list">
-          {community.data.items.map((lineup) => (
+          {communityLineups.map((lineup) => (
             <article key={lineup.id} className="lineup-card">
               <header className="lineup-head">
                 <h3>{lineup.name}</h3>
@@ -265,20 +268,7 @@ export function LineupsTab({
               </div>
             </article>
           ))}
-          <div className="lineup-actions">
-            <button type="button" className="mode-chip" disabled={page === 0} onClick={() => setPage(page - 1)}>
-              ← Trang trước
-            </button>
-            <span className="mode-meta">Trang {page + 1}</span>
-            <button
-              type="button"
-              className="mode-chip"
-              disabled={(page + 1) * community.data.size >= community.data.totalElements}
-              onClick={() => setPage(page + 1)}
-            >
-              Trang sau →
-            </button>
-          </div>
+          <InfiniteScroll query={community} label="đội hình cộng đồng" />
         </div>
       )}
     </section>
@@ -349,6 +339,7 @@ export function BuilderTab({
   const [search, setSearch] = useState("")
   const [cost, setCost] = useState<number | null>(null)
   const [copied, setCopied] = useState(false)
+  const layout = usePageLayout()
   const chosen = new Set(units.map((unit) => unit.unitCode))
   const counts = traitCounts(
     index.content,
@@ -418,18 +409,27 @@ export function BuilderTab({
                     <UnitPortrait unit={unit} index={index} size="sm" />
                   </button>
                   <strong>{unit.name}</strong>
-                  <button
-                    type="button"
-                    aria-pressed={item.carry}
-                    onClick={() =>
-                      write(units.map((other) => (other === item ? { ...other, carry: !other.carry } : other)))
-                    }
-                  >
-                    Chủ lực
-                  </button>
-                  <button type="button" onClick={() => toggleUnit(unit.code)} aria-label={`Bỏ ${unit.name}`}>
-                    Bỏ
-                  </button>
+                  <span className="builder-slot-actions">
+                    <button
+                      type="button"
+                      aria-pressed={item.carry}
+                      aria-label={`${unit.name} là chủ lực`}
+                      title="Chủ lực"
+                      onClick={() =>
+                        write(units.map((other) => (other === item ? { ...other, carry: !other.carry } : other)))
+                      }
+                    >
+                      ★
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleUnit(unit.code)}
+                      aria-label={`Bỏ ${unit.name}`}
+                      title="Bỏ khỏi đội hình"
+                    >
+                      ✕
+                    </button>
+                  </span>
                 </div>
               )
             })}
@@ -446,6 +446,9 @@ export function BuilderTab({
               Xóa hết
             </button>
           </div>
+          {layout === "compact" && (
+            <ActiveTraits units={units.map((unit) => ({ ...unit, itemCodes: [] }))} emblems={emblems} index={index} />
+          )}
           <div className="mode-toolbar" role="group" aria-label="Huy hiệu Phe/Nghề">
             <select
               className="mode-search"
@@ -528,11 +531,7 @@ export function BuilderTab({
               <div className="builder-active">
                 {counts.map((count) => (
                   <div key={count.trait.code} className="builder-trait" data-active={count.reachedTier >= 0}>
-                    {index.image(count.trait.iconAssetId) ? (
-                      <img src={index.image(count.trait.iconAssetId)} alt="" />
-                    ) : (
-                      <span />
-                    )}
+                    <TraitIcon trait={count.trait} index={index} size={28} />
                     <div>
                       <strong>
                         {count.count} {count.trait.name}
