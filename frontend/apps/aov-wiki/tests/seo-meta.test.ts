@@ -106,7 +106,7 @@ test("library pages take their description from the address alone", () => {
 })
 
 test("every section has its own title and description in both languages", () => {
-  const keys = ["heroes", "skins", "items", "enchantments", "arcana", "spells", "updates", "terms"] as const
+  const keys = ["heroes", "skins", "items", "enchantments", "arcana", "spells", "updates", "terms", "modes"] as const
   for (const locale of ["vi-VN", "en-US"]) {
     const metas = [...keys.map((key) => sectionMeta(key, locale)), homeMeta(locale)]
     assert.equal(new Set(metas.map((meta) => meta.title)).size, metas.length)

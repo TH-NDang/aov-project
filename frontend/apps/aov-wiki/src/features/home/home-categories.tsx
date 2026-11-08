@@ -11,6 +11,7 @@ const descriptions: Record<Exclude<WikiSectionKey, "updates" | "terms">, [string
   enchantments: ["Bốn hệ phù hiệu và các bậc", "The four trees and their tiers"],
   arcana: ["Ngọc theo màu và cấp", "Arcana by color and level"],
   spells: ["Phép bổ trợ và thời gian hồi", "Spells and cooldowns"],
+  modes: ["PVP, giải trí và cẩm nang Cờ Liên quân", "PVP, casual modes and the auto-chess guide"],
 }
 
 export function HomeCategories() {

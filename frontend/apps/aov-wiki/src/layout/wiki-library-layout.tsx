@@ -17,15 +17,18 @@ export function WikiLibraryLayout() {
   const isSkins = useMatch("/skins")
   const isUpdates = useMatch("/updates/*")
   const isTerms = useMatch("/terms/*")
+  const isModes = useMatch("/modes/*")
   const isHeroList = useMatch("/hero")
   const searchScope = isWarehouse ? "warehouse" : isSkins ? "skins" : "heroes"
-  const active = isTerms
-    ? "terms"
-    : isUpdates
-      ? "updates"
-      : searchScope === "warehouse"
-        ? warehouseKind(pathname.split("/")[2] ?? null)
-        : searchScope
+  const active = isModes
+    ? "modes"
+    : isTerms
+      ? "terms"
+      : isUpdates
+        ? "updates"
+        : searchScope === "warehouse"
+          ? warehouseKind(pathname.split("/")[2] ?? null)
+          : searchScope
   const pageTitle = t(active)
   usePageHead(libraryPageMeta(pathname, locale))
 

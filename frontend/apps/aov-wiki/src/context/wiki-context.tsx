@@ -98,6 +98,8 @@ const COPY: Record<string, [string, string]> = {
   terms: ["Thuật ngữ", "Glossary"],
   map: ["Bản đồ", "Maps"],
   mode: ["Chế độ chơi", "Game modes"],
+  modes: ["Chế độ chơi", "Game modes"],
+  play: ["Lối chơi", "Gameplay"],
   backHome: ["Về trang chủ", "Back home"],
   search: ["Tìm kiếm", "Search"],
   searchHeroes: ["Tìm tướng", "Search heroes"],

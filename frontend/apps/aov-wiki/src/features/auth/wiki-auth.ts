@@ -14,6 +14,8 @@ const auth = createPublicAuth({
   locale: () => document.documentElement.lang || "vi",
 })
 export const { signIn, signOut, completeLogin, useSession: useWikiSession } = auth
+/** The signed-in reader's bearer token for personal requests, or null when nobody is signed in. */
+export const wikiAccessToken = () => auth.accessToken()
 void auth.restoreSession()
 
 type WikiProfile = {

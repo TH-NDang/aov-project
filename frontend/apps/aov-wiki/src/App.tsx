@@ -31,6 +31,10 @@ const SkinDirectory = lazy(() =>
   import("./features/skins/skin-directory").then((module) => ({ default: module.SkinDirectory })),
 )
 const WarehousePage = lazy(() => import("./features/warehouse/warehouse-page"))
+const ModesPage = lazy(() => import("./features/modes/modes-page").then((module) => ({ default: module.ModesPage })))
+const ModeDetailPage = lazy(() =>
+  import("./features/modes/mode-detail-page").then((module) => ({ default: module.ModeDetailPage })),
+)
 
 function HeroDetailRoute() {
   const { heroCode } = useParams()
@@ -143,6 +147,25 @@ export default function App() {
               element={
                 <Suspense fallback={null}>
                   <TermsPage />
+                </Suspense>
+              }
+            />
+          ))}
+          <Route
+            path="/modes"
+            element={
+              <Suspense fallback={null}>
+                <ModesPage />
+              </Suspense>
+            }
+          />
+          {["/modes/:code", "/modes/:code/:tab"].map((path) => (
+            <Route
+              key={path}
+              path={path}
+              element={
+                <Suspense fallback={null}>
+                  <ModeDetailPage />
                 </Suspense>
               }
             />

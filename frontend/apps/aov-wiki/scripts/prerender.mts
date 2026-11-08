@@ -17,6 +17,7 @@ import {
   type PublishedCatalog,
   type PublishedEntry,
   type PublishedHero,
+  type PublishedMode,
   type PublishedPatch,
   type StaticPage,
 } from "../src/lib/seo/static-pages.ts"
@@ -29,7 +30,7 @@ const REQUEST_TIMEOUT_MS = 30_000
 /** How the public API answers before any patch is live: a new system has no market data to read yet. */
 const NO_GAMEPLAY_CONTEXT = "PATCH_CONTEXT_UNAVAILABLE"
 /** Directories written only by this script; removing them is how unpublished content disappears. */
-const OWNED_DIRECTORIES = ["hero", "skins", "warehouse", "terms", "updates", "contact"]
+const OWNED_DIRECTORIES = ["hero", "skins", "warehouse", "terms", "updates", "modes", "contact"]
 
 class NotPublic extends Error {}
 
@@ -37,8 +38,9 @@ class NotPublic extends Error {}
 export class NothingPublished extends Error {}
 
 function apiReader(apiBase: string, retryDelayMs: number) {
-  return async function read<T>(apiPath: string, params: Record<string, string> = {}): Promise<T> {
-    const query = new URLSearchParams({ ...STATIC_SCOPE, ...params })
+  /** `scoped: false` for content that has no region or language variant, such as game modes. */
+  return async function read<T>(apiPath: string, params: Record<string, string> = {}, scoped = true): Promise<T> {
+    const query = new URLSearchParams({ ...(scoped ? STATIC_SCOPE : {}), ...params })
     const url = `${apiBase.replace(/\/$/, "")}/api/wiki/v1${apiPath}?${query}`
     let failure: unknown
     for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
@@ -159,7 +161,7 @@ async function readTerms(read: Reader) {
 
 export async function readPublishedCatalog(apiBase: string, retryDelayMs = 1000): Promise<PublishedCatalog> {
   const read = apiReader(apiBase, retryDelayMs)
-  const [heroes, skins, terms, patches, items, enchantments, arcana, spells, archived] = await Promise.all([
+  const [heroes, skins, terms, patches, items, enchantments, arcana, spells, archived, modes] = await Promise.all([
     readHeroes(read),
     readSkins(read),
     readTerms(read),
@@ -169,6 +171,7 @@ export async function readPublishedCatalog(apiBase: string, retryDelayMs = 1000)
     readPages<PublishedEntry>(read, "/arcana"),
     readPages<PublishedEntry>(read, "/spells"),
     readPages<PublishedEntry>(read, "/spells/archived"),
+    read<{ items: PublishedMode[] }>("/game-modes", {}, false).then((answer) => answer.items),
   ])
   // Retired talents stay readable in the wiki, so they keep their pages too.
   const currentSpells = new Set(spells.map((entry) => entry.id))
@@ -177,6 +180,7 @@ export async function readPublishedCatalog(apiBase: string, retryDelayMs = 1000)
     skins,
     terms,
     patches,
+    modes,
     warehouse: {
       items,
       enchantments,
