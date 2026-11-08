@@ -11,7 +11,12 @@ import { Page, PageHeader } from "@/components/page-header"
 import { errorMessage } from "@/lib/api/errors"
 import { RESOURCES_BASE } from "@/lib/media"
 import { gameModeApi, gameModeKeys, uploadModeImage, type AdminSummary, type ModeGroup } from "./game-mode-api"
-import { modeContentFromManifest, MODES_MANIFEST, type ModeManifestEntry } from "./game-mode-import"
+import {
+  importedImageSource,
+  modeContentFromManifest,
+  MODES_MANIFEST,
+  type ModeManifestEntry,
+} from "./game-mode-import"
 
 const GROUP_LABEL: Record<ModeGroup, string> = { PVP: "PVP", ENTERTAINMENT: "Giải trí" }
 
@@ -211,18 +216,16 @@ function ImportModesDialog({
           continue
         }
         let artAssetId: string | null = null
-        if (entry.art) {
+        const artSource = importedImageSource(entry.artSource)
+        if (entry.art && !artSource) say(`${entry.name}: ảnh chưa có nguồn trong che-do.json, chưa tải.`)
+        else if (entry.art && artSource) {
           const image = await fetch(`${RESOURCES_BASE}che-do-choi/${entry.art}`)
           if (image.ok) {
             const blob = await image.blob()
             artAssetId = await uploadModeImage(
               new File([blob], `${entry.code}.png`, { type: blob.type || "image/png" }),
               "GAME_MODE_ART",
-              {
-                type: "GAME_CLIENT",
-                label: "Ảnh sảnh chọn chế độ trong Liên Quân Mobile",
-                note: `${entry.artNote ?? ""} resources/Lien-Quan-v3/che-do-choi/${entry.art}`.trim(),
-              },
+              artSource,
             )
           } else say(`${entry.name}: không đọc được ảnh ${entry.art}.`)
         }
@@ -253,7 +256,8 @@ function ImportModesDialog({
         </DialogHeader>
         <p className="type-body">
           Đọc che-do-choi/che-do.json (26 chế độ từ ảnh sảnh), tải ảnh đã gỡ giao diện vào kho ảnh với credit Garena /
-          Liên Quân Mobile và tạo bản nháp cho chế độ chưa có. Chế độ đã có được giữ nguyên.
+          Liên Quân Mobile và nguồn riêng của từng ảnh (ảnh sảnh gốc, bước xử lý), rồi tạo bản nháp cho chế độ chưa có.
+          Chế độ đã có được giữ nguyên.
         </p>
         {canPublish && (
           <label className="type-body flex items-center gap-2">

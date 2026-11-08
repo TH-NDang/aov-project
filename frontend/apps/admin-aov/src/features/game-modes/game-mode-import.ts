@@ -1,4 +1,12 @@
+import type { MediaSourceInput } from "@aov/ui/lib/media-credit"
 import type { GuideContent, ModeContent, ModeGroup } from "./game-mode-api"
+
+/** Where one imported image comes from, recorded next to the data: what it shows, its file and when it was taken. */
+export interface ImageSource {
+  label: string
+  observedAt?: string | null
+  note: string
+}
 
 /** One mode of `resources/Lien-Quan-v3/che-do-choi/che-do.json`. */
 export interface ModeManifestEntry {
@@ -12,6 +20,7 @@ export interface ModeManifestEntry {
   availability: NonNullable<ModeContent["availability"]>
   art?: string | null
   artNote?: string | null
+  artSource?: ImageSource | null
   guideKind: "NONE" | "AUTO_CHESS"
   rules: ModeContent["rules"]
   sources: ModeContent["sources"]
@@ -26,11 +35,13 @@ export interface GuideManifest extends Omit<GuideContent, "traits" | "units" | "
   })[]
   items: (Omit<GuideContent["items"][number], "iconAssetId"> & { icon?: string | null })[]
   blessings: (Omit<GuideContent["blessings"][number], "iconAssetId"> & { icon?: string | null })[]
+  /** Source of every icon, keyed by the same path as the icon. */
+  imageSources?: Record<string, ImageSource>
 }
 
 export const MODES_MANIFEST = "che-do-choi/che-do.json"
 export const GUIDE_FOLDER = "che-do-choi/co-lien-quan/"
-export const GUIDE_MANIFEST = `${GUIDE_FOLDER}du-lieu/bach-khoa-2026-11-08.json`
+export const GUIDE_MANIFEST = `${GUIDE_FOLDER}du-lieu/bach-khoa-2026-11-08-1503.json`
 
 export function modeContentFromManifest(entry: ModeManifestEntry, artAssetId: string | null): ModeContent {
   return {
@@ -62,6 +73,20 @@ export function guideIconPaths(manifest: GuideManifest) {
   manifest.items.forEach((item) => add(item.icon))
   manifest.blessings.forEach((blessing) => add(blessing.icon))
   return [...paths]
+}
+
+/**
+ * The media source of an imported image, or null when the data does not say where it comes from. Such an image is not
+ * uploaded: a vague source would hide that its origin still has to be found.
+ */
+export function importedImageSource(source: ImageSource | null | undefined): MediaSourceInput | null {
+  if (!source?.label?.trim() || !source.note?.trim()) return null
+  return { type: "GAME_CLIENT", label: source.label.trim(), observedAt: source.observedAt ?? null, note: source.note }
+}
+
+/** Icon paths of the encyclopedia that have no usable source. */
+export function iconsWithoutSource(manifest: GuideManifest) {
+  return guideIconPaths(manifest).filter((path) => !importedImageSource(manifest.imageSources?.[path]))
 }
 
 /** Replaces resource paths with uploaded asset ids; a path without an upload leaves the image empty. */

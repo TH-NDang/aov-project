@@ -25,6 +25,8 @@ import {
   GUIDE_MANIFEST,
   guideContentFromManifest,
   guideIconPaths,
+  iconsWithoutSource,
+  importedImageSource,
   mapLimit,
   missingLabel,
   type GuideManifest,
@@ -427,6 +429,11 @@ function StartGuide({
       if (!response.ok)
         throw new Error("Không đọc được dữ liệu Bách khoa. Chạy Admin bằng pnpm dev để có /__resources/.")
       const manifest = (await response.json()) as GuideManifest
+      const unsourced = iconsWithoutSource(manifest)
+      if (unsourced.length)
+        throw new Error(
+          `${unsourced.length} icon chưa có nguồn trong dữ liệu, ví dụ ${unsourced[0]}. Chưa tải ảnh nào.`,
+        )
       const paths = guideIconPaths(manifest)
       let done = 0
       const assets = new Map<string, string>()
@@ -437,11 +444,11 @@ function StartGuide({
           const name = path.slice(path.lastIndexOf("/") + 1)
           assets.set(
             path,
-            await uploadModeImage(new File([blob], name, { type: blob.type || "image/jpeg" }), "AUTO_CHESS_ICON", {
-              type: "GAME_CLIENT",
-              label: "Bách khoa Cờ Liên Quân trong game (thu thập 08/11/2026)",
-              note: `resources/Lien-Quan-v3/${GUIDE_FOLDER}${path}`,
-            }),
+            await uploadModeImage(
+              new File([blob], name, { type: blob.type || "image/jpeg" }),
+              "AUTO_CHESS_ICON",
+              importedImageSource(manifest.imageSources?.[path])!,
+            ),
           )
         }
         setProgress(`Đã tải ${++done}/${paths.length} ảnh…`)
@@ -449,7 +456,7 @@ function StartGuide({
       return gameModeApi.createGuideDraft(
         modeId,
         guideContentFromManifest(manifest, assets),
-        "Nhập Bách khoa 08/11/2026",
+        `Nhập ${manifest.edition ?? "Bách khoa"}`,
       )
     },
     onSuccess: onCreated,
@@ -457,9 +464,9 @@ function StartGuide({
   return (
     <Section title="Chưa có cẩm nang">
       <p className="type-body">
-        Nhập bản chép Bách khoa 08/11/2026 trong resources (35 quân cờ đủ dữ liệu, 27 Phe/Nghề, 7 trang bị, 82 chúc
-        phúc, 18 nhiệm vụ và 3 đội hình mẫu) cùng khoảng 190 icon, hoặc bắt đầu từ nháp trống. Kết quả là bản nháp để rà
-        soát.
+        Nhập bản chép Bách khoa 08/11/2026 (lượt 15:03) trong resources: 58 quân cờ, 27 Phe/Nghề, 22 trang bị, 82 chúc
+        phúc, 18 nhiệm vụ và 3 đội hình mẫu, cùng 247 icon. Mỗi icon mang nguồn riêng: ảnh thể hiện gì, tệp gốc trong bộ
+        thu thập và giờ ghi. Hoặc bắt đầu từ nháp trống. Kết quả là bản nháp để rà soát.
       </p>
       <div className="flex flex-wrap gap-2">
         <Button disabled={!canWrite || run.isPending} onClick={() => run.mutate(true)}>
@@ -591,7 +598,7 @@ function UnitsEditor({ content, setContent, image, upload }: EditorProps) {
               <Input
                 type="number"
                 min={1}
-                max={5}
+                max={6}
                 value={unit.cost}
                 onChange={(e) => update({ ...unit, cost: Number(e.target.value) })}
               />

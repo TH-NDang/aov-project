@@ -4,6 +4,8 @@ import { test } from "node:test"
 import {
   guideContentFromManifest,
   guideIconPaths,
+  iconsWithoutSource,
+  importedImageSource,
   mapLimit,
   missingLabel,
   modeContentFromManifest,
@@ -14,7 +16,7 @@ import {
 const resources = new URL("../../../../resources/Lien-Quan-v3/che-do-choi/", import.meta.url)
 const modes = JSON.parse(readFileSync(new URL("che-do.json", resources), "utf8")) as { modes: ModeManifestEntry[] }
 const guide = JSON.parse(
-  readFileSync(new URL("co-lien-quan/du-lieu/bach-khoa-2026-11-08.json", resources), "utf8"),
+  readFileSync(new URL("co-lien-quan/du-lieu/bach-khoa-2026-11-08-1503.json", resources), "utf8"),
 ) as GuideManifest
 
 test("the lobby manifest lists every mode once with the observed labels and no made-up dates", () => {
@@ -43,7 +45,8 @@ test("the encyclopedia references only its own codes and every icon file exists"
   for (const unit of guide.units)
     for (const code of unit.traitCodes) assert.ok(traits.has(code), `${unit.code} → ${code}`)
   for (const lineup of guide.lineups) for (const member of lineup.units) assert.ok(units.has(member.unitCode))
-  assert.equal(guide.units.filter((unit) => unit.complete).length, 35)
+  assert.equal(guide.units.filter((unit) => unit.complete).length, 58)
+  assert.ok(guide.units.every((unit) => unit.cost >= 1 && unit.cost <= 6))
   for (const trait of guide.traits)
     trait.tiers.forEach((tier, at) => at && assert.ok(tier.count > trait.tiers[at - 1]!.count, trait.code))
 
@@ -60,7 +63,9 @@ test("icon paths become asset ids and missing uploads leave the image empty", ()
   assert.equal(content.units[0]!.portraitAssetId, assets.get(guide.units[0]!.portrait!) ?? null)
   assert.ok(!("portrait" in content.units[0]!))
   assert.ok(!("icon" in content.traits[0]!))
-  assert.equal(content.units.at(-1)!.skill?.name, null, "a unit seen only in the list has no skill yet")
+  const edras = content.units.find((unit) => unit.code === "edras")!
+  assert.equal(edras.skill?.description, null, "a skill the game leaves blank stays blank")
+  assert.deepEqual(content.units.find((unit) => unit.code === "ignis")!.traitCodes, [])
   const withPath = [
     ...guide.traits.map((trait, at) => [trait.icon, content.traits[at]!.iconAssetId] as const),
     ...guide.units.map((unit, at) => [unit.portrait, content.units[at]!.portraitAssetId] as const),
@@ -91,4 +96,21 @@ test("uploads run a few at a time and keep their order", async () => {
 test("missing fields read as Vietnamese labels", () => {
   assert.equal(missingLabel("availability.status"), "Tình trạng mở")
   assert.equal(missingLabel("units[0].stats", { units: [{ name: "Violet" }] } as never), "Violet: thiếu chỉ số")
+})
+
+test("every imported image says what it shows, which file it came from and when it was recorded", () => {
+  assert.deepEqual(iconsWithoutSource(guide), [])
+  for (const path of guideIconPaths(guide)) {
+    const source = importedImageSource(guide.imageSources![path])!
+    assert.equal(source.type, "GAME_CLIENT")
+    assert.ok(source.label.length <= 200 && source.note!.length <= 2000, path)
+    assert.ok(source.note!.includes(`co-v2.zip`) && source.note!.includes(path.slice(path.indexOf("/") + 1)), path)
+    assert.match(source.observedAt ?? "", /^2026-11-08T\d\d:\d\d:\d\dZ$/, path)
+  }
+  for (const mode of modes.modes.filter((entry) => entry.art)) {
+    const source = importedImageSource(mode.artSource)
+    assert.ok(source, mode.code)
+    assert.ok(source.note!.includes("goc-da-che-uid/sanh-") && source.note!.includes(mode.art!), mode.code)
+  }
+  assert.equal(importedImageSource({ label: "Ảnh", note: " " }), null, "a source without a note is not concrete")
 })
