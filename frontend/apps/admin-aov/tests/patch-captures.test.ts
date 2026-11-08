@@ -132,6 +132,47 @@ test("each image keeps how its hero and item link is known, and nothing is guess
   ])
 })
 
+test("each hero's coverage says which items have a usable image and what the review asked for", () => {
+  const manifest = buildCaptureManifest(
+    dataset({
+      observedAttributes: [
+        { heroCode: "airi", values: { health: 3543, physicalAttack: 170 }, source: airi.attributes.ref },
+        { heroCode: "d-arcy", values: { health: null }, source: darcy.attributes.ref },
+      ],
+      recaptureRequests: {
+        entries: [{ heroCode: "d-arcy", skillKey: "skill-0-1", request: "Mở nội tại, chọn Chi tiết." }],
+      },
+    }),
+  )
+  const [first, second] = manifest.sources
+  assert.deepEqual(first!.overview, [airi.overview.ref.file_name])
+  assert.deepEqual(first!.attributes, [
+    { fileName: airi.attributes.ref.file_name, values: { health: 3543, physicalAttack: 170 } },
+  ])
+  assert.deepEqual(
+    first!.skills.map((skill) => [skill.skillKey, skill.shown.length, skill.withheld.length, skill.cut]),
+    [
+      ["skill-0-1", 1, 0, false],
+      ["skill-1-1", 2, 0, true],
+    ],
+    "a description the review marked partial is cut, whatever the number of pages",
+  )
+  // The passive was never entered; its only image was withheld, so it reads as a skill with no usable image.
+  assert.deepEqual(second!.skills, [
+    {
+      skillKey: "skill-0-1",
+      name: null,
+      shown: [],
+      withheld: [darcy.passive.ref.file_name],
+      cut: false,
+      table: null,
+      request: "Mở nội tại, chọn Chi tiết.",
+    },
+  ])
+  assert.deepEqual(second!.attributes[0]!.values, { health: null })
+  assert.equal(buildCaptureManifest(dataset()).sources[0]!.attributes[0]!.values, null, "an older set says nothing")
+})
+
 test("a folder and record that disagree stay unlinked instead of picking a hero", () => {
   const stray = image("zuka", "9999-hero-999-overview.png")
   const manifest = buildCaptureManifest(
@@ -185,7 +226,12 @@ async function fixtureRepository() {
   )
   const inner = zipSync(members, { level: 6 })
   await writeFile(join(resources, "raw", "outer.zip"), zipSync({ [INNER]: inner }, { level: 1 }))
-  return { root, cache: join(root, "cache"), worktree: join(root, ".claude", "worktrees", "feature", "apps", "admin") }
+  return {
+    root,
+    directory,
+    cache: join(root, "cache"),
+    worktree: join(root, ".claude", "worktrees", "feature", "apps", "admin"),
+  }
 }
 
 async function request(
@@ -254,6 +300,31 @@ test("the dev endpoint serves verified originals from the nested archive and ref
     const coverage = await request(handler, "/2026-10-30/coverage.json")
     const summary = JSON.parse(coverage.body.toString()) as { totalImages: number; linkedToItem: number }
     assert.deepEqual([summary.totalImages, summary.linkedToItem], [10, 7])
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test("every hero's coverage is served and read again once a reviewer adds to the set", async () => {
+  const { root, directory, cache, worktree } = await fixtureRepository()
+  try {
+    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache, signatureTtlMs: 0 })
+    type Body = { patchCode: string; heroes: { heroCode: string; attributes: { values: unknown }[] }[] }
+    const read = async () => JSON.parse((await request(handler, "/2026-10-30/heroes.json")).body.toString()) as Body
+    const before = await read()
+    assert.equal(before.patchCode, "2026-10-30")
+    assert.deepEqual(
+      before.heroes.map((hero) => hero.heroCode),
+      ["airi", "d-arcy"],
+    )
+    assert.equal(before.heroes[1]!.attributes[0]!.values, null)
+
+    await writeFile(
+      join(directory, "manual", "observed-attributes.json"),
+      JSON.stringify([{ heroCode: "d-arcy", values: { health: 3400 }, source: darcy.attributes.ref }]),
+    )
+    const after = await read()
+    assert.deepEqual(after.heroes[1]!.attributes[0]!.values, { health: 3400 }, "no restart needed")
   } finally {
     await rm(root, { recursive: true, force: true })
   }
