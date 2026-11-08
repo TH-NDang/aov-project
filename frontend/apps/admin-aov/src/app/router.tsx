@@ -158,6 +158,25 @@ const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import("@/features/warehouse/secondary-pages")).BackendArcanaPage }),
           },
           {
+            path: "game-modes",
+            handle: title("Chế độ chơi"),
+            lazy: async () => ({ Component: (await import("@/features/game-modes/game-modes-page")).GameModesPage }),
+          },
+          {
+            path: "game-modes/:modeId",
+            handle: title("Chế độ chơi"),
+            lazy: async () => ({
+              Component: (await import("@/features/game-modes/game-mode-editor")).GameModeEditorPage,
+            }),
+          },
+          {
+            path: "game-modes/:modeId/auto-chess",
+            handle: title("Cẩm nang Cờ Liên quân"),
+            lazy: async () => ({
+              Component: (await import("@/features/game-modes/auto-chess-editor")).AutoChessEditorPage,
+            }),
+          },
+          {
             path: "spells",
             handle: title("Phụ trợ"),
             lazy: async () => ({ Component: (await import("@/features/warehouse/secondary-pages")).BackendSpellsPage }),
