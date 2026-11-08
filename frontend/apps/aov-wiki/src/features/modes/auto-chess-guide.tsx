@@ -36,6 +36,7 @@ const COST_COLOR: Record<number, string> = {
   3: "#4f9be0",
   4: "#b46cff",
   5: "#f2b440",
+  6: "var(--aov-wiki-danger)",
 }
 
 export const costStyle = (cost: number) => ({ "--cost-color": COST_COLOR[cost] ?? "#9aa4b2" }) as CSSProperties

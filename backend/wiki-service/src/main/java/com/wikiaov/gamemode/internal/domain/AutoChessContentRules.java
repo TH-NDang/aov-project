@@ -31,6 +31,9 @@ public final class AutoChessContentRules {
 
     public static final int MAX_EMBLEMS = 3;
 
+    /** The encyclopedia lists 6-gold units since 08/11/2026 (Volkath, Edras). */
+    public static final int MAX_COST = 6;
+
     private AutoChessContentRules() {
     }
 
@@ -64,8 +67,7 @@ public final class AutoChessContentRules {
             if (!unit.complete())
                 continue;
             String at = "units[" + i + "]";
-            if (unit.traitCodes().isEmpty())
-                missing.add(at + ".traitCodes");
+            // A unit without any trait is a real game state (Ignis), so traits are not required here.
             if (unit.portraitAssetId() == null)
                 missing.add(at + ".portraitAssetId");
             if (unit.skill() == null || unit.skill().name() == null || unit.skill().name().isBlank())
@@ -148,7 +150,7 @@ public final class AutoChessContentRules {
             String at = "units[" + i + "]";
             checks.code(at + ".code", unit.code(), codes);
             checks.text(at + ".name", unit.name(), 80, true);
-            checks.range(at + ".cost", unit.cost(), 1, 5, true);
+            checks.range(at + ".cost", unit.cost(), 1, MAX_COST, true);
             checks.references(at + ".traitCodes", unit.traitCodes(), traitCodes, 3);
             checks.text(at + ".note", unit.note(), 500, false);
             if (unit.heroCode() != null && !ContentChecks.CODE.matcher(unit.heroCode()).matches())

@@ -57,6 +57,24 @@ class AutoChessContentRulesTest {
     }
 
     @Test
+    void unitsMayCostUpToSixGoldAndHaveNoTrait() {
+        var guide = AutoChessFixtures.guide();
+        var units = new ArrayList<>(guide.units());
+        units.add(AutoChessFixtures.unit("edras", "Edras", 6, "dau-si"));
+        units.add(AutoChessFixtures.unit("ignis", "Ignis", 5));
+        var withTopCost = new AutoChessContent(null, null, null, null, guide.traits(), units, null, null, null, null,
+                null, null);
+
+        assertThat(AutoChessContentRules.validate(withTopCost)).isEmpty();
+        assertThat(AutoChessContentRules.missingFields(withTopCost)).isEmpty();
+
+        units.add(AutoChessFixtures.unit("qua-dat", "Quá đắt", 7, "dau-si"));
+        var tooExpensive = new AutoChessContent(null, null, null, null, guide.traits(), units, null, null, null, null,
+                null, null);
+        assertThat(codes(AutoChessContentRules.validate(tooExpensive))).contains("OUT_OF_RANGE");
+    }
+
+    @Test
     void draftsMayBeIncompleteButPublicationNeedsCompleteUnits() {
         var guide = AutoChessFixtures.guide();
         var units = new ArrayList<>(guide.units());
