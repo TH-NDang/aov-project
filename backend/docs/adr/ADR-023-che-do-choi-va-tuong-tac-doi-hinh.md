@@ -71,8 +71,11 @@ nhập bằng client `aov-wiki`, token chỉ có audience `wiki-service`.
 - Realm đang chạy cần thêm hai quyền mới bằng `backend/wiki-service/scripts/sync-gamemode-roles.ps1`; realm
   mới nhận từ file import.
 - Giới hạn tần suất là theo instance. Khi chạy nhiều instance cần chuyển sang bộ đếm dùng chung (ADR riêng).
-- Dữ liệu trong `gamemode` không là bản sao của danh mục tướng: quân cờ có thể liên kết `heroId` tùy chọn
+- Dữ liệu trong `gamemode` không là bản sao của danh mục tướng: quân cờ có thể liên kết `heroCode` tùy chọn
   nhưng chỉ số/kỹ năng của chế độ là dữ liệu riêng của chế độ.
+- `/modes` và `/modes/<code>` có trang tĩnh và nằm trong sitemap như các trang công khai khác (ADR-022). Nội dung chế
+  độ không chia theo thị trường hay ngôn ngữ nên script gọi API chế độ không kèm `region`/`locale`. Các tab cẩm nang
+  (`/modes/<code>/<tab>`) dùng chung canonical của trang chế độ và không có trang tĩnh riêng.
 
 ## Kiểm chứng
 
