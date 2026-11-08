@@ -46,6 +46,9 @@ Không dùng `order` trong CSS hay để `flex-wrap` tự quyết định thứ 
 | Chi tiết tướng | Ảnh và tên → Chọn patch → Một dòng "Thay đổi ở bản này", bấm để mở xuống → Tổng quan gọn → Bộ kỹ năng → Trang phục → Video → Các lần thay đổi khác. Nút nổi mở drawer các phần | Màn đầu: ảnh tướng bên trái, bảng tên và Tổng quan bên phải. Sau đó: Chọn patch → Thay đổi → Bộ kỹ năng → Trang phục → Video → Lịch sử, mỗi phần một bảng. Từ 1180px có cột mục lục bên phải, dưới đó dùng nút nổi |
 | Danh sách tướng | Ô tìm và nút Lọc dính dưới đầu trang → Thay đổi tại patch → Lưới tướng | Ô tìm → Vị trí và Vai trò → Thay đổi tại patch → Lưới tướng |
 | Kho trang bị | Tab Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ → Tìm kiếm → Danh sách | Mục lục bên trái, thanh công cụ một hàng, danh sách |
+| Chế độ chơi | Ô tìm → hàng bộ lọc cuộn ngang → Cẩm nang nổi bật → Danh sách dạng hàng: ảnh nhỏ, tên, thời lượng, tình trạng | Ô tìm và bộ lọc một hàng → Cẩm nang nổi bật → Lưới thẻ có ảnh theo nhóm PVP, Giải trí |
+| Một chế độ | Ảnh → Hàng tab cẩm nang dính dưới đầu trang → Thông tin nhanh hai cột → Giới thiệu → Luật chơi gấp theo nhóm, nhóm đầu mở sẵn | Ảnh → Hàng tab → Giới thiệu và Luật chơi bên trái, Thông tin nhanh dính bên phải |
+| Cẩm nang Cờ Liên quân | Quân cờ: lưới 4 cột chỉ ảnh và tên, chia theo giá. Xếp đội hình: bàn cờ → Phe/Nghề đang kích hoạt ngay dưới bàn → kho quân cờ | Quân cờ: thẻ có Phe/Nghề, chia theo giá. Xếp đội hình: bàn cờ và kho quân bên trái, Phe/Nghề bên phải |
 
 ## AOV Stream
 
