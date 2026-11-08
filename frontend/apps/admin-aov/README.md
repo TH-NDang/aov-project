@@ -115,6 +115,27 @@ Không có middleware này (bản build triển khai) thì nút tự ẩn.
 - Lần đầu đọc một ZIP con mất vài giây vì phải giải nén cả ZIP đó vào `%TEMP%/aov-patch-captures`
   (tổng khoảng 1,6 GB, xóa được bất cứ lúc nào, đổi nơi lưu bằng `AOV_CAPTURE_CACHE`).
 - `GET /__patch-captures/<patch>/coverage.json` trả về tỉ lệ nối và danh sách ảnh chưa nối.
+- `GET /__patch-captures/<patch>/heroes.json` trả về, cho từng tướng, ảnh của từng mục: ảnh tổng quan; ảnh thuộc tính kèm
+  số đã đọc được (`manual/observed-attributes.json`, giá trị `null` hoặc thiếu là không nhìn thấy); từng kỹ năng với ảnh đã
+  rà soát, ảnh mang tên kỹ năng nhưng bị loại, mô tả bị cắt, có thấy bảng cấp hay không và lời dặn chụp lại
+  (`recapture-requests.review.json`).
+- Middleware đọc lại bộ ảnh khi một tệp JSON trong thư mục patch được thêm, xóa hoặc sửa, nên không cần khởi động lại Vite.
+
+### Ảnh gốc cần chụp
+
+Trang **Sẵn sàng xuất bản** có thêm cột **Ảnh gốc cần chụp** và bộ lọc **Cần chụp ảnh gốc**: với mỗi tướng, mục nào chưa có
+ảnh, ảnh nào không cho thấy điều cần thấy, cần mở màn hình nào trong game và ảnh đó giúp đối chiếu dữ liệu gì. Bản nháp được
+đối chiếu với bộ ảnh của patch của nó; patch chưa có bộ ảnh thì dùng bộ mới nhất. Cách tính nằm ở
+`src/features/publishing/source-image-gaps.ts`:
+
+- **Chỉ số**: không có ảnh thuộc tính, ảnh chỉ chụp trang tướng (mọi số đều không thấy) hoặc bị che một phần.
+- **Trang tướng**: không có cả ảnh tổng quan lẫn ảnh thuộc tính, nên không đối chiếu được đánh giá và sở trường.
+- **Kỹ năng**: chưa có ảnh, ảnh mang tên kỹ năng nhưng chụp màn hình khác, mô tả bị cắt, hoặc chưa thấy bảng cấp chiêu.
+  Kỹ năng chưa có trong bản nháp nhưng bộ ảnh có nhắc tới (ví dụ nội tại bị loại khi rà soát) cũng được liệt kê.
+
+Mỗi mục có một mức: **Gỡ chặn xuất bản** (điều kiện xuất bản đang thiếu chỉ ảnh này cung cấp được), **Thiếu dữ liệu**,
+**Chưa đối chiếu được** và **Nên xem lại**. Bộ lọc xếp tướng mà chụp xong là đủ điều kiện xuất bản lên đầu, rồi tướng chưa
+xuất bản, rồi tướng cần ít ảnh hơn. Trang đọc lại bộ ảnh mỗi 30 giây và khi quay lại cửa sổ.
 
 ### Ảnh cửa hàng
 

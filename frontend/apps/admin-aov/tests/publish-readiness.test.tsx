@@ -13,7 +13,12 @@ import {
   readinessSummary,
   type HeroPublishReadiness,
 } from "../src/features/publishing/publish-readiness"
-import { closeHeroLocation, heroFixLocation, readHeroLocation } from "../src/features/publishing/hero-location"
+import {
+  closeHeroLocation,
+  heroFixLocation,
+  heroSourceLocation,
+  readHeroLocation,
+} from "../src/features/publishing/hero-location"
 import type { Revision } from "../src/features/publishing/types"
 import { createHeroFixture, fixtureRevision } from "./fixtures/hero-workspace-data"
 import { intersectionHarness } from "./fixtures/intersection-observer"
@@ -156,7 +161,7 @@ test("a hero with data in two rulesets gets a row for each", () => {
 })
 
 test("the filters narrow together and search ignores accents", () => {
-  const all = { q: "", unpublished: false, draft: "" as const }
+  const all = { q: "", unpublished: false, draft: "" as const, captures: false }
   assert.deepEqual(codes(all), ["airi", "butterfly", "capheny", "dirak", "eland", "fennik"])
   assert.deepEqual(codes({ ...all, unpublished: true }), ["airi", "capheny", "dirak", "fennik"])
   assert.deepEqual(codes({ ...all, draft: "ready" }), ["airi", "butterfly"])
@@ -172,12 +177,15 @@ test("filters are read from the address and nothing else counts as a filter", ()
     q: "air",
     unpublished: true,
     draft: "ready",
+    captures: false,
   })
   assert.deepEqual(readinessFilter(new URLSearchParams("published=true&draft=everything")), {
     q: "",
     unpublished: false,
     draft: "",
+    captures: false,
   })
+  assert.equal(readinessFilter(new URLSearchParams("captures=missing")).captures, true)
 })
 
 test("the summary counts each state and ranks the most common blockers first", () => {
@@ -229,6 +237,15 @@ test("a blocker opens its hero on the matching tab and section, and closing clea
   const patch = heroFixLocation(current, "hero-id", "draft-id", "PATCH")
   assert.equal(patch.get("fix"), "PATCH")
   assert.equal(patch.get("section"), null)
+})
+
+test("a missing source image opens its hero where that data is shown", () => {
+  const current = new URLSearchParams("captures=missing")
+  const skill = heroSourceLocation(current, "hero-id", "draft-id", { area: "SKILL", skillKey: "skill-0-1" })
+  assert.deepEqual([skill.get("tab"), skill.get("skill"), skill.get("revision")], ["skills", "skill-0-1", "draft-id"])
+  const stats = heroSourceLocation(current, "hero-id", undefined, { area: "STATS" })
+  assert.deepEqual([stats.get("tab"), stats.get("skill"), stats.get("revision")], ["overview", null, null])
+  assert.equal(closeHeroLocation(stats).toString(), current.toString())
 })
 
 // The session client keeps the first fetch it is loaded with, so every test answers through this one.
@@ -459,3 +476,163 @@ for (const canWrite of [true, false])
       }
     })
   })
+
+test("source images still to capture show per hero, rank the list, open the skill and follow new captures", async () => {
+  const { SOURCE_COVERAGE_REFRESH_MS, sourceCoverageKey } =
+    await import("../src/features/publishing/use-source-coverage")
+  const statsMissing = (code: string) =>
+    hero(code, code[0]!.toUpperCase() + code.slice(1), {
+      revisions: [revision(code, `${code}-1`, "DRAFT")],
+      drafts: [{ ...completeDraft(`${code}-1`), observedStats: false }],
+    })
+  const passiveMissing = hero("liliana", "Liliana", {
+    revisions: [revision("liliana", "liliana-1", "DRAFT")],
+    drafts: [completeDraft("liliana-1")],
+  })
+  const complete = hero("airi", "Airi", {
+    revisions: [revision("airi", "airi-1", "DRAFT")],
+    drafts: [completeDraft("airi-1")],
+  })
+  const blank = { health: null, physicalAttack: null, physicalDefense: null, movementSpeed: null, attackRange: null }
+  // Every number on the attributes screen, as the reviewer reads it off a full capture.
+  const shown = {
+    health: 3400,
+    physicalAttack: 165,
+    magicAttack: 0,
+    physicalDefense: 140,
+    magicDefense: 80,
+    maxResource: 440,
+    movementSpeed: 380,
+    attackRange: "Đánh gần",
+    physicalPierce: 0,
+    magicPierce: 0,
+    bonusAttackSpeedPercent: 0,
+    criticalChancePercent: 0,
+    criticalDamagePercent: 200,
+    physicalLifestealPercent: 0,
+    magicLifestealPercent: 0,
+    cooldownReductionPercent: 0,
+  }
+  // The draft fixtures carry one skill keyed "a".
+  const skillA = { skillKey: "a", name: "A", shown: ["a.png"], withheld: [], cut: false, table: true, request: null }
+  let bijanValues: Record<string, unknown> = blank
+  const coverage = () => ({
+    patchCode: "2026-10-30",
+    heroes: [
+      {
+        heroCode: "airi",
+        overview: ["o.png"],
+        attributes: [{ fileName: "a.png", values: shown }],
+        skills: [skillA],
+      },
+      {
+        heroCode: "bijan",
+        overview: ["o.png"],
+        attributes: [{ fileName: "1932-hero-102-attributes.png", values: bijanValues }],
+        skills: [skillA],
+      },
+      {
+        heroCode: "liliana",
+        overview: ["o.png"],
+        attributes: [{ fileName: "a.png", values: shown }],
+        skills: [
+          skillA,
+          {
+            skillKey: "skill-0-1",
+            name: null,
+            shown: [],
+            withheld: ["1747-01-hero-092-passive-detail.png"],
+            cut: false,
+            table: null,
+            request: "Mở biểu tượng nội tại, chọn Chi tiết.",
+          },
+        ],
+      },
+    ],
+  })
+  const captureRequests: string[] = []
+  const fetcher: typeof fetch = async (input) => {
+    const path = new URL(String(input), "http://localhost").pathname.replace("/api/wiki/v1", "")
+    if (path.startsWith("/__patch-captures/")) captureRequests.push(path)
+    if (path === "/__patch-captures/sets.json") return Response.json({ patches: ["2026-10-30"] })
+    if (path === "/__patch-captures/2026-10-30/heroes.json") return Response.json(coverage())
+    if (path === "/auth/refresh") return Response.json({ accessToken: "readiness-fixture", expiresIn: 3600 })
+    if (path === "/auth/logout") return new Response(null, { status: 204 })
+    if (path === "/admin/me")
+      return Response.json({
+        issuer: "fixture",
+        subject: "reader",
+        type: "HUMAN",
+        displayName: "Reader",
+        capabilities: ["catalog:read"],
+      })
+    if (path === "/admin/heroes/publish-readiness")
+      return Response.json([complete, statsMissing("bijan"), passiveMissing])
+    if (path === "/admin/publication-overview")
+      return Response.json({
+        asOf: "2026-11-07T00:00:00Z",
+        rulesets: [{ id: standard, code: "aov", description: "" }],
+        markets: [],
+        seasons: [],
+        seasonSchedules: [],
+        releases: [],
+        assignments: [],
+        ...overview,
+      })
+    if (path === "/users/me") return Response.json({ locale: "vi-VN" })
+    return Response.json({ code: "NOT_FOUND", detail: "Not in this test" }, { status: 404 })
+  }
+  await withDocument(
+    fetcher,
+    intersectionHarness().Observer,
+    async ({ document, cache, show, waitFor, click, search }) => {
+      const { PublishReadinessPage } = await import("../src/features/publishing/publish-readiness-page")
+      const rendered = () =>
+        [...document.querySelectorAll('tbody button[aria-label^="Xem tướng "]')].map((button) =>
+          button.getAttribute("aria-label")!.replace("Xem tướng ", ""),
+        )
+      const toggle = () =>
+        [...document.querySelectorAll<HTMLButtonElement>("button[aria-pressed]")].find((button) =>
+          /Cần chụp ảnh gốc/.test(button.textContent ?? ""),
+        )
+      const rowText = (code: string) =>
+        document.querySelector(`tbody button[aria-label="Xem tướng ${code}"]`)!.closest("tr")!.textContent ?? ""
+
+      await show(<PublishReadinessPage />, "/hero/publish-readiness")
+      await waitFor(() => !!toggle(), "the captures filter appears once the capture sets are read")
+      assert.match(document.querySelector("thead")!.textContent ?? "", /Ảnh gốc cần chụp/)
+      assert.match(toggle()!.textContent ?? "", /2/)
+      assert.match(document.body.textContent ?? "", /Đối chiếu với bộ ảnh patch 2026-10-30/)
+      assert.match(rowText("airi"), /Đủ ảnh để đối chiếu/)
+      assert.match(rowText("bijan"), /Gỡ chặn xuất bản/)
+      assert.match(rowText("bijan"), /Chi tiết \(góc dưới trái\) → Thuộc tính/)
+      assert.match(rowText("liliana"), /Bản nháp chưa có kỹ năng này/)
+
+      await click(toggle()!)
+      assert.match(search(), /captures=missing/)
+      assert.deepEqual(rendered(), ["bijan", "liliana"], "the capture that unblocks publishing comes first")
+
+      const passive = [...document.querySelectorAll<HTMLButtonElement>("tbody li button")].find((button) =>
+        /Nội tại/.test(button.textContent ?? ""),
+      )!
+      assert.match(passive.textContent ?? "", /Mở biểu tượng nội tại, chọn Chi tiết\./)
+      await click(passive)
+      for (const part of ["hero=liliana", "revision=liliana-1", "tab=skills", "skill=skill-0-1", "captures=missing"])
+        assert.ok(search().includes(part), part)
+
+      // The sets are read again on a timer; here the reviewer has just recorded Bijan's new attributes image.
+      const queries = cache.getQueryCache().findAll({ queryKey: sourceCoverageKey })
+      assert.ok(queries.length >= 2)
+      for (const query of queries)
+        assert.equal((query.options as { refetchInterval?: number }).refetchInterval, SOURCE_COVERAGE_REFRESH_MS)
+      bijanValues = shown
+      const before = captureRequests.length
+      await act(async () => {
+        await cache.refetchQueries({ queryKey: sourceCoverageKey })
+      })
+      assert.ok(captureRequests.length > before)
+      await waitFor(() => !rendered().includes("bijan"), "a hero whose capture arrived leaves the list")
+      assert.deepEqual(rendered(), ["liliana"])
+    },
+  )
+})

@@ -40,6 +40,35 @@ export interface CaptureCoverage {
   unlinkedFromItem: UnlinkedCapture[]
 }
 
+/** What one hero's captures show item by item, so an editor can tell what still has to be captured. */
+export interface HeroSourceCoverage {
+  heroCode: string
+  overview: string[]
+  attributes: AttributeSource[]
+  skills: SkillSource[]
+}
+
+export interface AttributeSource {
+  fileName: string
+  /** The values read off this image; a field that is null or absent was not visible. Null where the set has no record. */
+  values: Record<string, unknown> | null
+}
+
+export interface SkillSource {
+  skillKey: string
+  name: string | null
+  /** Reviewed images of this skill. */
+  shown: string[]
+  /** Images named after this skill that the review rejected because they show something else. */
+  withheld: string[]
+  /** The description runs on past the last captured page. */
+  cut: boolean
+  /** Whether a level table appears on any captured page; null where the review did not say. */
+  table: boolean | null
+  /** What the reviewer asked to be captured again. */
+  request: string | null
+}
+
 export interface CaptureManifest {
   patchCode: string
   archive: string
@@ -47,6 +76,7 @@ export interface CaptureManifest {
   heroes: Map<string, HeroCaptures>
   images: Map<string, CaptureImage>
   coverage: CaptureCoverage
+  sources: HeroSourceCoverage[]
 }
 
 interface SourceRef {
@@ -65,7 +95,10 @@ export interface CaptureDatasetFiles {
     skills: {
       skillKey: string
       name?: string
-      effects?: { effectType: string; metadata?: { sourceImages?: SourceRef[]; completeness?: string } }[]
+      effects?: {
+        effectType: string
+        metadata?: { sourceImages?: SourceRef[]; completeness?: string; tableObservationStatus?: string }
+      }[]
     }[]
   }[]
   attributeSources: { heroCode: string; source: SourceRef; index: number }[]
@@ -76,6 +109,9 @@ export interface CaptureDatasetFiles {
       withheld?: { heroCode: string; skillKey?: string; sources?: SourceRef[]; reason?: string }[]
     }
   }
+  /** Values read off each attributes image; older sets do not have them. */
+  observedAttributes?: { heroCode: string; values?: Record<string, unknown> | null; source?: SourceRef }[]
+  recaptureRequests?: { entries?: { heroCode: string; skillKey?: string; request?: string }[] }
 }
 
 const SOURCE_FOLDER = /^[^/]+\/([^/]+)\/[^/]+$/
@@ -88,12 +124,14 @@ const NOTE_FORM_ICONS =
 const NOTE_FORM_UNKNOWN = "Tên tệp ghi “unknown”; chưa xác định ảnh này thuộc mục nào."
 const NOTE_UNCLASSIFIED = "Tên tệp không thuộc nhóm đã biết và chưa có bản rà soát nào nhắc tới."
 
+/** A review names an image by its place in the archive and its hash; a file with other bytes is another image. */
+const keyOf = (source: Pick<SourceRef, "member" | "sha256">) => `${source.member}\u0000${source.sha256}`
+
 type Link = Pick<CaptureImage, "section" | "link" | "skillKey" | "skillName"> & { notes: string[] }
 
 export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifest {
   const links = new Map<string, Link>()
   const notesFor = new Map<string, string[]>()
-  const keyOf = (source: SourceRef) => `${source.member}\u0000${source.sha256}`
   const addNote = (source: SourceRef, note: string) =>
     notesFor.set(keyOf(source), [...(notesFor.get(keyOf(source)) ?? []), note])
 
@@ -203,6 +241,7 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
     archiveSha256: files.sourceManifest.sha256,
     heroes,
     images,
+    sources: buildSourceCoverage(files, heroes),
     coverage: {
       totalImages: images.size,
       heroes: heroes.size,
@@ -214,4 +253,82 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
       unlinkedFromItem,
     },
   }
+}
+
+const SKILL_KEY = /^skill-(\d+)-(\d+)$/
+
+/** Passive first, then each slot's variants in order; keys the set could not name come last. */
+const skillOrder = (a: string, b: string) => {
+  const [, slotA = "99", formA = "99"] = SKILL_KEY.exec(a) ?? []
+  const [, slotB = "99", formB = "99"] = SKILL_KEY.exec(b) ?? []
+  return Number(slotA) - Number(slotB) || Number(formA) - Number(formB) || a.localeCompare(b)
+}
+
+/**
+ * Item by item, which images show what an editor needs. A skill appears when the review entered it or an image was named
+ * after it, so a passive that was withheld still shows up as one that has no usable image.
+ */
+function buildSourceCoverage(files: CaptureDatasetFiles, heroes: Map<string, HeroCaptures>): HeroSourceCoverage[] {
+  const itemKey = (heroCode: string, skillKey: string) => `${heroCode}\u0000${skillKey}`
+  const entered = new Map<string, { name: string | null; cut: boolean; table: boolean | null }>()
+  for (const row of files.importRows)
+    for (const skill of row.skills) {
+      const snapshot = skill.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
+      const table = snapshot?.tableObservationStatus
+      entered.set(itemKey(row.code, skill.skillKey), {
+        name: skill.name ?? null,
+        cut: snapshot?.completeness === "PARTIAL_SOURCE",
+        table: table === "VISIBLE_TABLE_TRANSCRIBED" ? true : table === "NO_TABLE_VISIBLE_IN_CAPTURE" ? false : null,
+      })
+    }
+  const cut = new Set(
+    (files.sourceGaps.additionalGaps ?? [])
+      .filter((gap) => gap.kind === "DESCRIPTION_SOURCE_INCOMPLETE" && gap.skillKey)
+      .map((gap) => itemKey(gap.heroCode, gap.skillKey!)),
+  )
+  const requests = new Map(
+    (files.recaptureRequests?.entries ?? [])
+      .filter((entry) => entry.skillKey && entry.request)
+      .map((entry) => [itemKey(entry.heroCode, entry.skillKey!), entry.request!]),
+  )
+  const readings = new Map(
+    (files.observedAttributes ?? [])
+      .filter((entry) => entry.source)
+      .map((entry) => [keyOf(entry.source!), entry.values ?? {}]),
+  )
+
+  return [...heroes.values()].map(({ heroCode, images }) => {
+    const of = (section: CaptureSection) => images.filter((image) => image.section === section)
+    const keys = new Set([
+      ...files.importRows.filter((row) => row.code === heroCode).flatMap((row) => row.skills.map((s) => s.skillKey)),
+      ...[...of("SKILL"), ...of("WITHHELD")].flatMap((image) => (image.skillKey ? [image.skillKey] : [])),
+    ])
+    const skills = [...keys].sort(skillOrder).map((skillKey): SkillSource => {
+      const known = entered.get(itemKey(heroCode, skillKey))
+      const named = (section: CaptureSection) =>
+        of(section)
+          .filter((image) => image.skillKey === skillKey)
+          .map((image) => image.fileName)
+      return {
+        skillKey,
+        name: known?.name ?? of("SKILL").find((image) => image.skillKey === skillKey)?.skillName ?? null,
+        shown: named("SKILL"),
+        withheld: named("WITHHELD"),
+        cut: !!known?.cut || cut.has(itemKey(heroCode, skillKey)),
+        table: known?.table ?? null,
+        request: requests.get(itemKey(heroCode, skillKey)) ?? null,
+      }
+    })
+    return {
+      heroCode,
+      overview: of("OVERVIEW").map((image) => image.fileName),
+      attributes: of("ATTRIBUTES").map((image) => ({
+        fileName: image.fileName,
+        values: files.observedAttributes
+          ? (readings.get(keyOf({ member: image.member, sha256: image.id })) ?? null)
+          : null,
+      })),
+      skills,
+    }
+  })
 }

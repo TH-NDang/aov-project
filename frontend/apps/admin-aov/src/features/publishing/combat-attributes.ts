@@ -31,6 +31,9 @@ const attributes: Attribute[] = [
 
 const fields = new Map(attributes.map((a) => [a.key, a]))
 
+/** Every stat the game's attributes screen shows, in its order. */
+export const combatAttributeKeys = attributes.map((a) => a.key)
+
 export function statUnit(key: string) {
   return fields.get(key)?.field.endsWith("Percent") ? "PERCENT" : "POINT"
 }

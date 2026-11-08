@@ -12,7 +12,7 @@ import type { Revision } from "./types"
 export type HeroPublishReadiness = Omit<components["schemas"]["HeroPublishReadiness"], "revisions"> & {
   revisions: Revision[]
 }
-type Draft = components["schemas"]["HeroPublishDraft"]
+export type Draft = components["schemas"]["HeroPublishDraft"]
 
 export type ReadinessStatus = "READY" | "BLOCKED" | "NO_DRAFT"
 export interface ReadinessRow {
@@ -27,6 +27,8 @@ export interface ReadinessRow {
   publishedPatch?: Variant
   draft?: Revision
   draftPatch?: Variant
+  /** What the publish rules read from the draft. */
+  facts?: Draft
   status: ReadinessStatus
   blockers: PublishBlocker[]
   /** Set when the draft is waiting for its patch to be published. */
@@ -93,6 +95,7 @@ export function readinessRows(
         publishedPatch: variant(published?.effectiveFromPatchVariantId),
         draft,
         draftPatch,
+        facts: facts || undefined,
         status: !draft ? "NO_DRAFT" : blockers.length ? "BLOCKED" : "READY",
         blockers,
         patchLink: draft ? publicationPatchLink(draft, draftPatch) : undefined,
@@ -106,6 +109,8 @@ export interface ReadinessFilter {
   q: string
   unpublished: boolean
   draft: DraftFilter
+  /** Only heroes with source images still to capture, most useful first. */
+  captures: boolean
 }
 
 export function readinessFilter(params: URLSearchParams): ReadinessFilter {
@@ -114,6 +119,7 @@ export function readinessFilter(params: URLSearchParams): ReadinessFilter {
     q: (params.get("q") ?? "").slice(0, 100),
     unpublished: params.get("published") === "false",
     draft: draft === "ready" || draft === "blocked" ? draft : "",
+    captures: params.get("captures") === "missing",
   }
 }
 

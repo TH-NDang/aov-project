@@ -11,6 +11,7 @@ import { buildCaptureManifest, type CaptureDatasetFiles, type CaptureManifest } 
 const PATCH_CODE = /^[a-z0-9][a-z0-9-]{0,63}$/
 const HERO_CODE = /^[a-z0-9][a-z0-9-]{0,63}$/
 const IMAGE_ID = /^[0-9a-f]{64}$/
+const SIGNATURE_TTL_MS = 1000
 
 /** `resources/raw` is git-ignored, so a worktree has to reach the checkout that holds it. */
 export function findResourcesRoot(start: string, configured = process.env.AOV_RESOURCES_DIR): string | null {
@@ -52,6 +53,27 @@ function listCaptureSets(root: string): string[] {
 }
 
 const readJson = async <T>(path: string): Promise<T> => JSON.parse(await readFile(path, "utf8")) as T
+const readOptionalJson = async <T>(path: string): Promise<T | undefined> =>
+  existsSync(path) ? readJson<T>(path) : undefined
+
+/** Changes whenever a file the manifest is built from is added, removed or rewritten. */
+export async function captureSetSignature(directory: string): Promise<string> {
+  const folders = [directory, join(directory, "manual"), join(directory, "evidence")]
+  const parts = await Promise.all(
+    folders.map(async (folder) => {
+      const entries = await readdir(folder, { withFileTypes: true }).catch(() => [])
+      const files = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+      const stamps = await Promise.all(
+        files.map(async (entry) => {
+          const info = await stat(join(folder, entry.name)).catch(() => null)
+          return info ? `${entry.name}:${info.size}:${info.mtimeMs}` : entry.name
+        }),
+      )
+      return stamps.sort().join("|")
+    }),
+  )
+  return parts.join("\n")
+}
 
 export async function loadCaptureManifest(directory: string, patchCode: string): Promise<CaptureManifest> {
   const names = await readdir(directory)
@@ -69,6 +91,8 @@ export async function loadCaptureManifest(directory: string, patchCode: string):
       reviews.map((name) => readJson<CaptureDatasetFiles["attributeReviews"][number]>(join(directory, name))),
     ),
     sourceGaps: await readJson(join(directory, "manual", "source-gaps.json")),
+    observedAttributes: await readOptionalJson(join(directory, "manual", "observed-attributes.json")),
+    recaptureRequests: await readOptionalJson(join(directory, "recapture-requests.review.json")),
   }
   return buildCaptureManifest(files)
 }
@@ -76,23 +100,38 @@ export async function loadCaptureManifest(directory: string, patchCode: string):
 interface HandlerOptions {
   start: string
   cacheRoot?: string
+  /** How long one look at the files stands for every request. */
+  signatureTtlMs?: number
 }
 
-export function createPatchCaptureHandler({ start, cacheRoot }: HandlerOptions) {
-  const manifests = new Map<string, Promise<CaptureManifest>>()
+export function createPatchCaptureHandler({ start, cacheRoot, signatureTtlMs = SIGNATURE_TTL_MS }: HandlerOptions) {
+  const manifests = new Map<string, { signature: string; manifest: Promise<CaptureManifest> }>()
+  const signatures = new Map<string, { at: number; value: Promise<string> }>()
   const extractions = new Map<string, Promise<string>>()
   const directories = new Map<string, Promise<Map<string, ZipEntry>>>()
 
-  const manifestFor = (root: string, patchCode: string) => {
-    let manifest = manifests.get(patchCode)
-    if (!manifest) {
-      const directory = findPatchDirectory(root, patchCode)
-      if (!directory) return null
-      manifest = loadCaptureManifest(directory, patchCode)
-      // A failed read is not remembered: the fix is usually restoring files while the dev server keeps running.
-      manifest.catch(() => manifests.delete(patchCode))
-      manifests.set(patchCode, manifest)
-    }
+  // A burst of image requests shares one look at the files.
+  const signatureOf = (directory: string) => {
+    const cached = signatures.get(directory)
+    if (cached && Date.now() - cached.at < signatureTtlMs) return cached.value
+    const value = captureSetSignature(directory)
+    signatures.set(directory, { at: Date.now(), value })
+    return value
+  }
+
+  /** Reviews and captures added while the dev server runs are read again on the next request. */
+  const manifestFor = async (root: string, patchCode: string) => {
+    const directory = findPatchDirectory(root, patchCode)
+    if (!directory) return null
+    const signature = await signatureOf(directory)
+    const cached = manifests.get(patchCode)
+    if (cached?.signature === signature) return cached.manifest
+    const manifest = loadCaptureManifest(directory, patchCode)
+    // A failed read is not remembered: the fix is usually restoring files while the dev server keeps running.
+    manifest.catch(() => {
+      if (manifests.get(patchCode)?.manifest === manifest) manifests.delete(patchCode)
+    })
+    manifests.set(patchCode, { signature, manifest })
     return manifest
   }
 
@@ -142,9 +181,11 @@ export function createPatchCaptureHandler({ start, cacheRoot }: HandlerOptions) 
       const root = findResourcesRoot(start)
       return send(res, 200, { patches: root ? listCaptureSets(root) : [] })
     }
-    const match = /^\/([^/]+)\/(?:(coverage)\.json|heroes\/([^/]+)\.json|images\/([^/]+)\.png)$/.exec(path)
+    const match = /^\/([^/]+)\/(?:(coverage)\.json|(heroes)\.json|heroes\/([^/]+)\.json|images\/([^/]+)\.png)$/.exec(
+      path,
+    )
     if (!match) return next()
-    const [, patchCode = "", coverage, heroCode, imageId] = match
+    const [, patchCode = "", coverage, allHeroes, heroCode, imageId] = match
     try {
       if (req.method !== "GET" && req.method !== "HEAD")
         return failed(res, 405, "METHOD_NOT_ALLOWED", "Capture images are read-only.")
@@ -159,6 +200,7 @@ export function createPatchCaptureHandler({ start, cacheRoot }: HandlerOptions) 
       const manifest = await manifestFor(root, patchCode)
       if (!manifest) return failed(res, 404, "PATCH_NOT_FOUND", `No capture set for patch ${patchCode}.`)
       if (coverage) return send(res, 200, { patchCode, archive: manifest.archive, ...manifest.coverage })
+      if (allHeroes) return send(res, 200, { patchCode, heroes: manifest.sources })
       if (heroCode) {
         const hero = manifest.heroes.get(heroCode)
         if (!hero) return failed(res, 404, "HERO_NOT_FOUND", `No captures for hero ${heroCode}.`)

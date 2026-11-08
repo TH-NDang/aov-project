@@ -89,6 +89,21 @@ export function heroFixLocation(params: URLSearchParams, heroId: string, revisio
   })
 }
 
+/** Opens a hero where the data a missing source image would check is shown: a skill on its own, the rest on the overview. */
+export function heroSourceLocation(
+  params: URLSearchParams,
+  heroId: string,
+  revisionId: string | undefined,
+  item: { area: "OVERVIEW" | "STATS" | "SKILL"; skillKey?: string },
+) {
+  const skill = item.area === "SKILL" ? heroLocationId(item.skillKey ?? null) : ""
+  return patchHeroLocation(openHeroLocation(params, heroId, revisionId), {
+    view: "overview",
+    tab: item.area === "SKILL" ? "skills" : "overview",
+    skill,
+  })
+}
+
 /** Keep the working context while dropping identities that belong to the previous hero. */
 export function switchHeroLocation(params: URLSearchParams, heroId: string, revisionId?: string) {
   return patchHeroLocation(params, {
