@@ -66,7 +66,8 @@ public class GameModeImages {
 
     private static Image image(MediaAssetReference asset) {
         var version = asset.currentVersion();
-        return new Image(asset.assetId(), version.url(), version.width(), version.height(), version.sources(),
+        return new Image(asset.assetId(), version.versionId(), version.url(), version.width(), version.height(),
+                version.sources(),
                 version.focalPoint());
     }
 }

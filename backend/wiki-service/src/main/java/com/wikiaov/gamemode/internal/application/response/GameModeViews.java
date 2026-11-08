@@ -22,6 +22,7 @@ public final class GameModeViews {
     /** A usable image with its public credit. */
     public record Image(
             UUID assetId,
+            UUID versionId,
             String url,
             int width,
             int height,
