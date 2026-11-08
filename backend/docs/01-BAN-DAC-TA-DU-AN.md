@@ -2470,8 +2470,9 @@ Một revision cẩm nang là ảnh chụp toàn bộ Bách khoa tại một th�
   (nhóm, tiêu đề, nội dung; dòng bắt đầu bằng “- ” là gạch đầu dòng).
 - Phe/Nghề (`traits`): mã, loại `FACTION` (game gọi “Phe”) hoặc `CLASS` (game gọi “Nghề”), tên, mô tả, icon,
   các mốc kích hoạt `{count, effect}` tăng dần, ghi chú biên tập.
-- Quân cờ (`units`): mã, tên, giá 1–5 vàng, 1–3 mã Phe/Nghề, ảnh, liên kết tướng tùy chọn, chiêu (tên, mô tả,
-  icon, nhãn giá trị và 3 giá trị theo sao), chỉ số theo 1/2/3 sao (máu, công vật lý, giáp, giáp phép), cờ
+- Quân cờ (`units`): mã, tên, giá 1–6 vàng, 0–3 mã Phe/Nghề (game có quân không thuộc Phe/Nghề nào), ảnh,
+  liên kết tướng tùy chọn, chiêu (tên, mô tả, icon, nhãn giá trị và 3 giá trị theo sao), chỉ số theo 1/2/3 sao
+  (máu, công vật lý, giáp, giáp phép), cờ
   `complete` cho quân chưa đủ dữ liệu và ghi chú.
 - Trang bị: nhóm trang bị (mã, tên, số ô trong Bách khoa) và trang bị (mã, tên, hiệu ứng, nhóm, vị trí ô, icon).
   Ô chưa có dữ liệu hiển thị là chưa biết; không đặt tên giả.
@@ -2492,7 +2493,9 @@ lớn nhất có `count` không vượt quá số đếm. Wiki ghi rõ cách đ�
 
 Dữ liệu ban đầu lấy từ bộ thu thập Bách khoa ngày 08/11/2026 trong
 `resources/Lien-Quan-v3/che-do-choi/co-lien-quan/`; Admin nhập bộ này thành nháp để người biên tập rà soát
-trước khi xuất bản. Icon nhập vào Media với credit Garena / Liên Quân Mobile.
+trước khi xuất bản. Icon nhập vào Media với credit Garena / Liên Quân Mobile và nguồn riêng của từng ảnh: ảnh
+thể hiện gì, tệp gốc trong bộ thu thập, màn hình Bách khoa đã mở và thời điểm ghi theo nhật ký lượt chạy. Ảnh chế
+độ ghi ảnh sảnh gốc và bước xử lý.
 
 ### Đội hình cộng đồng, lượt thích và phân tích
 
