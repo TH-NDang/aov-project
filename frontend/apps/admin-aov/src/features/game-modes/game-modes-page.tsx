@@ -1,8 +1,7 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "react-router"
-import { Download, ImageIcon, Plus } from "lucide-react"
-import { Badge } from "@aov/ui/components/badge"
+import { BookOpen, Download, ImageIcon, Plus, Search } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { Input } from "@aov/ui/components/input"
@@ -20,6 +19,24 @@ import {
 
 const GROUP_LABEL: Record<ModeGroup, string> = { PVP: "PVP", ENTERTAINMENT: "Giải trí" }
 
+type Filter = "all" | "published" | "unpublished" | "draft" | "no-art"
+
+const FILTERS: { key: Filter; label: string; test: (mode: AdminSummary) => boolean }[] = [
+  { key: "all", label: "Tất cả", test: () => true },
+  { key: "published", label: "Đã xuất bản", test: (mode) => !!mode.published },
+  { key: "unpublished", label: "Chưa xuất bản", test: (mode) => !mode.published },
+  { key: "draft", label: "Có nháp", test: (mode) => !!mode.draft },
+  { key: "no-art", label: "Thiếu ảnh", test: (mode) => !mode.art },
+]
+
+/** Accents and case do not hide a mode from a search. */
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+
 /** Every game mode with its draft and publication state; new modes start here. */
 export function GameModesPage() {
   const actor = useSession().actor
@@ -28,6 +45,15 @@ export function GameModesPage() {
   const modes = useQuery({ queryKey: gameModeKeys.list, queryFn: ({ signal }) => gameModeApi.list(signal) })
   const [creating, setCreating] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [filter, setFilter] = useState<Filter>("all")
+  const [search, setSearch] = useState("")
+  const visible = useMemo(() => {
+    const test = FILTERS.find((item) => item.key === filter)!.test
+    const needle = fold(search.trim())
+    return (modes.data ?? []).filter(
+      (mode) => test(mode) && (!needle || fold(`${mode.name} ${mode.code}`).includes(needle)),
+    )
+  }, [modes.data, filter, search])
 
   return (
     <Page>
@@ -60,20 +86,52 @@ export function GameModesPage() {
           Chưa có chế độ nào. Dùng “Nhập từ resources” để tạo 26 chế độ từ ảnh sảnh đã thu thập.
         </p>
       ) : (
-        (["PVP", "ENTERTAINMENT", null] as const).map((group) => {
-          const rows = modes.data.filter((mode) => mode.group === group)
-          if (!rows.length) return null
-          return (
-            <section key={group ?? "none"} className="grid gap-2">
-              <h2 className="type-section-title">{group ? GROUP_LABEL[group] : "Chưa chọn nhóm"}</h2>
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {rows.map((mode) => (
-                  <ModeRow key={mode.id} mode={mode} />
-                ))}
-              </div>
-            </section>
-          )
-        })
+        <>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="relative min-w-56 flex-1 basis-64 sm:max-w-80">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-8"
+                placeholder="Tìm tên hoặc mã…"
+                aria-label="Tìm chế độ"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </label>
+            <div className="flex flex-wrap gap-1" role="group" aria-label="Lọc theo trạng thái">
+              {FILTERS.map((item) => (
+                <Button
+                  key={item.key}
+                  type="button"
+                  size="sm"
+                  variant={filter === item.key ? "secondary" : "ghost"}
+                  aria-pressed={filter === item.key}
+                  onClick={() => setFilter(item.key)}
+                >
+                  {item.label}
+                  <span className="type-meta">{modes.data.filter(item.test).length}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+          {visible.length === 0 && <p className="type-body text-muted-foreground">Không có chế độ nào khớp bộ lọc.</p>}
+          {(["PVP", "ENTERTAINMENT", null] as const).map((group) => {
+            const rows = visible.filter((mode) => mode.group === group)
+            if (!rows.length) return null
+            return (
+              <section key={group ?? "none"} className="grid gap-2">
+                <h2 className="type-section-title">
+                  {group ? GROUP_LABEL[group] : "Chưa chọn nhóm"} <span className="type-meta">{rows.length}</span>
+                </h2>
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  {rows.map((mode) => (
+                    <ModeRow key={mode.id} mode={mode} />
+                  ))}
+                </div>
+              </section>
+            )
+          })}
+        </>
       )}
       <CreateModeDialog open={creating} onOpenChange={setCreating} />
       <ImportModesDialog
@@ -86,34 +144,50 @@ export function GameModesPage() {
   )
 }
 
+/** The single state an editor acts on: what readers see now, and whether a draft is waiting. */
+function modeState(mode: AdminSummary): { label: string; tone: "live" | "draft" | "none" } {
+  if (mode.published && mode.draft) return { label: "Đã xuất bản · có nháp mới", tone: "draft" }
+  if (mode.published) return { label: "Đã xuất bản", tone: "live" }
+  if (mode.draft) return { label: "Nháp, chưa xuất bản", tone: "draft" }
+  return { label: "Chưa có nội dung", tone: "none" }
+}
+
+const TONE_CLASS = {
+  live: "bg-emerald-500/15 text-emerald-300",
+  draft: "bg-amber-500/15 text-amber-200",
+  none: "bg-muted text-muted-foreground",
+} as const
+
 function ModeRow({ mode }: { mode: AdminSummary }) {
+  const state = modeState(mode)
   return (
     <Link
       to={`/game-modes/${mode.id}`}
-      className="flex items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:border-primary"
+      className="grid grid-cols-[112px_minmax(0,1fr)] items-center gap-3 rounded-lg border bg-card p-2 transition-colors hover:border-primary"
     >
-      <span className="flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+      <span className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md bg-muted">
         {mode.art ? (
           <img src={mode.art.url} alt="" className="size-full object-cover" loading="lazy" />
         ) : (
-          <ImageIcon className="size-5 text-muted-foreground" aria-label="Chưa có ảnh" />
+          <span className="type-meta flex flex-col items-center gap-1 text-amber-200">
+            <ImageIcon className="size-5" aria-hidden="true" />
+            Thiếu ảnh
+          </span>
         )}
       </span>
       <span className="grid min-w-0 gap-1">
-        <strong className="truncate">{mode.name}</strong>
+        <strong className="type-body truncate font-semibold">{mode.name}</strong>
         <span className="type-meta truncate">
           {mode.code}
           {mode.order != null && ` · thứ tự ${mode.order}`}
         </span>
-        <span className="flex flex-wrap gap-1">
-          {mode.published ? (
-            <Badge variant="secondary">Đã xuất bản</Badge>
-          ) : (
-            <Badge variant="outline">Chưa xuất bản</Badge>
-          )}
-          {mode.draft && <Badge>Có nháp</Badge>}
+        <span className="flex flex-wrap items-center gap-1.5">
+          <span className={`type-meta rounded-full px-2 py-0.5 ${TONE_CLASS[state.tone]}`}>{state.label}</span>
           {mode.guideKind === "AUTO_CHESS" && (
-            <Badge variant="outline">{mode.guide?.published ? "Cẩm nang đã xuất bản" : "Cẩm nang chưa xuất bản"}</Badge>
+            <span className="type-meta inline-flex items-center gap-1 text-muted-foreground">
+              <BookOpen className="size-3.5" aria-hidden="true" />
+              {mode.guide?.published ? "Cẩm nang đã xuất bản" : "Cẩm nang nháp"}
+            </span>
           )}
         </span>
       </span>

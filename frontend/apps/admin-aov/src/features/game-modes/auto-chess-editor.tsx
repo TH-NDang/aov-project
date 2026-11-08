@@ -532,9 +532,28 @@ interface EditorProps {
   upload: (file: File, label: string) => Promise<string>
 }
 
+/** Cost colors of the game, so a unit's price reads at a glance like in the guide. */
+const COST_COLOR: Record<number, string> = {
+  1: "#9aa4b2",
+  2: "#4fbf7a",
+  3: "#4f9be0",
+  4: "#b46cff",
+  5: "#f2b440",
+  6: "#e0625a",
+}
+
+const foldName = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+
 function UnitsEditor({ content, setContent, image, upload }: EditorProps) {
   const [selected, setSelected] = useState(0)
   const [search, setSearch] = useState("")
+  const needle = foldName(search.trim())
+  const costs = [...new Set(content.units.map((item) => item.cost))].sort((a, b) => a - b)
   const unit = content.units[selected]
   const update = (next: Unit) =>
     setContent({ ...content, units: content.units.map((u, i) => (i === selected ? next : u)) })
@@ -561,27 +580,54 @@ function UnitsEditor({ content, setContent, image, upload }: EditorProps) {
     <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
       <Section title={`Quân cờ (${content.units.length})`}>
         <Input placeholder="Tìm…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <ul className="grid max-h-[60vh] gap-1 overflow-y-auto">
-          {content.units.map((item, at) =>
-            item.name.toLowerCase().includes(search.toLowerCase()) ? (
-              <li key={at}>
-                <button
-                  type="button"
-                  className={`type-body flex w-full items-center gap-2 rounded-md p-1 text-left ${at === selected ? "bg-muted" : ""}`}
-                  onClick={() => setSelected(at)}
-                >
-                  {image(item.portraitAssetId) ? (
-                    <img src={image(item.portraitAssetId)} alt="" className="size-7 rounded-full" />
-                  ) : (
-                    <span className="size-7 rounded-full bg-muted" />
-                  )}
-                  <span className="truncate">{item.name || "(chưa đặt tên)"}</span>
-                  <span className="type-meta ml-auto">{item.cost}🪙</span>
-                </button>
-              </li>
-            ) : null,
-          )}
-        </ul>
+        <div className="grid max-h-[60vh] gap-3 overflow-y-auto pr-1">
+          {costs.map((cost) => {
+            const members = content.units
+              .map((item, at) => ({ item, at }))
+              .filter(({ item }) => item.cost === cost && (!needle || foldName(item.name).includes(needle)))
+            if (!members.length) return null
+            return (
+              <section key={cost} className="grid gap-1">
+                <h3 className="type-label flex items-center gap-1.5" style={{ color: COST_COLOR[cost] }}>
+                  <span className="size-2 rounded-full bg-current" aria-hidden="true" />
+                  {cost} vàng · {members.length}
+                </h3>
+                <ul className="grid gap-0.5">
+                  {members.map(({ item, at }) => (
+                    <li key={at}>
+                      <button
+                        type="button"
+                        aria-current={at === selected || undefined}
+                        className={`type-body flex w-full items-center gap-2 rounded-md p-1 text-left hover:bg-muted/60 ${at === selected ? "bg-muted" : ""}`}
+                        onClick={() => setSelected(at)}
+                      >
+                        {image(item.portraitAssetId) ? (
+                          <img
+                            src={image(item.portraitAssetId)}
+                            alt=""
+                            className="size-8 rounded-md border-2 object-cover"
+                            style={{ borderColor: COST_COLOR[item.cost] }}
+                          />
+                        ) : (
+                          <span
+                            className="size-8 rounded-md border-2 bg-muted"
+                            style={{ borderColor: COST_COLOR[item.cost] }}
+                          />
+                        )}
+                        <span className="truncate">{item.name || "(chưa đặt tên)"}</span>
+                        {!item.complete && (
+                          <span className="type-meta ml-auto text-amber-200" title="Chưa đủ dữ liệu">
+                            thiếu
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )
+          })}
+        </div>
         <Button type="button" variant="outline" size="sm" onClick={add}>
           Thêm quân cờ
         </Button>
@@ -628,28 +674,12 @@ function UnitsEditor({ content, setContent, image, upload }: EditorProps) {
               Đủ dữ liệu
             </label>
           </div>
-          <div className="grid gap-1">
-            <span className="type-label">Phe/Nghề (tối đa 3)</span>
-            <div className="flex flex-wrap gap-2">
-              {content.traits.map((trait) => (
-                <label key={trait.code} className="type-body flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    checked={unit.traitCodes.includes(trait.code)}
-                    onChange={(e) =>
-                      update({
-                        ...unit,
-                        traitCodes: e.target.checked
-                          ? [...unit.traitCodes, trait.code]
-                          : unit.traitCodes.filter((code) => code !== trait.code),
-                      })
-                    }
-                  />
-                  {trait.name}
-                </label>
-              ))}
-            </div>
-          </div>
+          <TraitPicker
+            traits={content.traits}
+            chosen={unit.traitCodes}
+            image={image}
+            onChange={(traitCodes) => update({ ...unit, traitCodes })}
+          />
           <div className="grid gap-2 sm:grid-cols-[auto_1fr_1fr]">
             <IconField
               src={image(unit.skill?.iconAssetId)}
@@ -1050,5 +1080,56 @@ function CommunityModeration({
         </ul>
       )}
     </Section>
+  )
+}
+
+/** Traits as toggles with their icons, factions apart from classes; at most three, the game's limit for one unit. */
+function TraitPicker({
+  traits,
+  chosen,
+  image,
+  onChange,
+}: {
+  traits: GuideContent["traits"]
+  chosen: string[]
+  image: (id?: string | null) => string | undefined
+  onChange: (traitCodes: string[]) => void
+}) {
+  const full = chosen.length >= 3
+  return (
+    <div className="grid gap-2">
+      <span className="type-label">Phe/Nghề · đã chọn {chosen.length}/3</span>
+      {(["FACTION", "CLASS"] as const).map((kind) => (
+        <div key={kind} className="grid gap-1">
+          <span className="type-meta">{kind === "FACTION" ? "Phe" : "Nghề"}</span>
+          <div className="flex flex-wrap gap-1.5">
+            {traits
+              .filter((trait) => trait.kind === kind)
+              .map((trait) => {
+                const on = chosen.includes(trait.code)
+                return (
+                  <button
+                    key={trait.code}
+                    type="button"
+                    aria-pressed={on}
+                    disabled={!on && full}
+                    onClick={() =>
+                      onChange(on ? chosen.filter((code) => code !== trait.code) : [...chosen, trait.code])
+                    }
+                    className={`type-meta inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-0.5 transition-colors disabled:opacity-40 ${on ? "border-primary bg-primary/15 text-foreground" : "hover:border-foreground/40"}`}
+                  >
+                    {image(trait.iconAssetId) ? (
+                      <img src={image(trait.iconAssetId)} alt="" className="size-5 rounded-full object-cover" />
+                    ) : (
+                      <span className="size-5 rounded-full bg-muted" />
+                    )}
+                    {trait.name}
+                  </button>
+                )
+              })}
+          </div>
+        </div>
+      ))}
+    </div>
   )
 }
