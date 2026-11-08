@@ -1,0 +1,79 @@
+package com.wikiaov.gamemode.internal.web;
+
+import com.wikiaov.gamemode.internal.application.GameModeCommands.CreateDraft;
+import com.wikiaov.gamemode.internal.application.GameModeCommands.CreateMode;
+import com.wikiaov.gamemode.internal.application.GameModeCommands.Mutation;
+import com.wikiaov.gamemode.internal.application.GameModeCommands.UpdateMode;
+import com.wikiaov.gamemode.internal.application.response.GameModeViews.AdminMode;
+import com.wikiaov.gamemode.internal.application.response.GameModeViews.AdminSummary;
+import com.wikiaov.gamemode.internal.application.response.GameModeViews.Revision;
+import com.wikiaov.gamemode.internal.catalog.application.GameModeCatalog;
+import com.wikiaov.platform.ApiPaths;
+import com.wikiaov.platform.QueryParameters;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(ApiPaths.ADMIN + "/game-modes")
+public class GameModeAdminController implements GameModeAdminApi {
+    private final GameModeCatalog catalog;
+
+    public GameModeAdminController(GameModeCatalog catalog) {
+        this.catalog = catalog;
+    }
+
+    @GetMapping(version = "1")
+    public List<AdminSummary> list(HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return catalog.adminList();
+    }
+
+    @PostMapping(version = "1")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AdminMode create(@RequestBody CreateMode input) {
+        return catalog.create(input);
+    }
+
+    @GetMapping(path = "/{id}", version = "1")
+    public AdminMode current(@PathVariable UUID id, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return catalog.current(id);
+    }
+
+    @GetMapping(path = "/{id}/revisions", version = "1")
+    public List<Revision> history(@PathVariable UUID id, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return catalog.history(id);
+    }
+
+    @GetMapping(path = "/{id}/revisions/{revisionId}", version = "1")
+    public AdminMode revision(@PathVariable UUID id, @PathVariable UUID revisionId, HttpServletRequest request) {
+        QueryParameters.requireOnly(request, Set.of());
+        return catalog.revision(id, revisionId);
+    }
+
+    @PostMapping(path = "/{id}/drafts", version = "1")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AdminMode createDraft(@PathVariable UUID id, @RequestBody CreateDraft input) {
+        return catalog.createDraft(id, input);
+    }
+
+    @PutMapping(path = "/{id}/drafts/{revisionId}", version = "1")
+    public AdminMode update(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody UpdateMode input) {
+        return catalog.update(id, revisionId, input);
+    }
+
+    @PostMapping(path = "/{id}/drafts/{revisionId}/publish", version = "1")
+    public AdminMode publish(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Mutation input) {
+        return catalog.publish(id, revisionId, input);
+    }
+
+    @PostMapping(path = "/{id}/drafts/{revisionId}/discard", version = "1")
+    public AdminMode discard(@PathVariable UUID id, @PathVariable UUID revisionId, @RequestBody Mutation input) {
+        return catalog.discard(id, revisionId, input);
+    }
+}

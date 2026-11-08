@@ -116,6 +116,19 @@ export const NAV_GROUPS: NavGroup[] = [
           },
         ],
       },
+      {
+        title: "Lối chơi",
+        icon: "competition",
+        items: [
+          {
+            title: "Chế độ chơi",
+            icon: "releases",
+            to: "/game-modes",
+            description: "Chế độ PVP, giải trí và cẩm nang Cờ Liên quân",
+            capability: "catalog:read",
+          },
+        ],
+      },
     ],
   },
   {

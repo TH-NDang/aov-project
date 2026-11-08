@@ -16,5 +16,9 @@ public enum MediaSemanticType {
     PATCH_ART,
     /** AI-generated chibi sticker of a hero or skin; the provenance note names the subject and expression. */
     CHIBI_STICKER,
+    /** Artwork of a game mode with the game's menu, text and account details removed (ADR-023). */
+    GAME_MODE_ART,
+    /** Icon from the auto-chess encyclopedia: unit, skill, trait, item or blessing. */
+    AUTO_CHESS_ICON,
     OTHER
 }

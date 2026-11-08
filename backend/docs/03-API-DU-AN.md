@@ -2855,3 +2855,89 @@ POST `/api/wiki/v1/admin/videos/import`
   displayOrder, status}]}`, 1 đến 500 dòng; kiểm tra quyền của mọi dòng trước khi ghi.
 - Trả `{created, skipped, rejected: [{index, reason}]}`. Dòng đã có bị bỏ qua và giữ nguyên; dòng sai được báo
   mà không làm hỏng cả lô. Audit `VIDEOS_IMPORTED` nếu có dòng được thêm.
+
+## Chế độ chơi và Cờ Liên quân (ADR-023)
+
+Nội dung trả `contentLocale: "vi-VN"`. Ảnh trả dạng `{assetId, url, width, height, credits}` chỉ khi asset dùng
+được; asset thiếu hoặc chưa sẵn sàng bị bỏ qua thay vì lỗi. Mã lỗi thuộc `GameModeErrorCode`:
+404 `GAME_MODE_NOT_FOUND`, 404 `GAME_MODE_REVISION_NOT_FOUND`, 404 `GAME_MODE_GUIDE_NOT_FOUND`,
+404 `GAME_MODE_LINEUP_NOT_FOUND`, 409 `GAME_MODE_CONFLICT`, 409 `GAME_MODE_CODE_TAKEN`,
+422 `GAME_MODE_INVALID_CONTENT` (kèm `missingFields` khi xuất bản thiếu dữ liệu), 403 `GAME_MODE_FORBIDDEN`,
+429 `GAME_MODE_RATE_LIMITED`.
+
+### Public
+
+GET `/api/wiki/v1/game-modes`
+- Không có query. Trả `{items: [GameModeCard]}` của các chế độ đã xuất bản, sắp theo nhóm (`PVP` trước) rồi
+  thứ tự hiển thị. Card gồm `code`, `name`, `group`, `summary`, `playersLabel`, `duration`, `availability`,
+  `art`, `hasGuide`.
+
+GET `/api/wiki/v1/game-modes/{code}`
+- Trả chế độ đã xuất bản: card + `rules`, `heroes`, `specialItems`, `sources`, `publishedAt`. 404 khi chưa
+  xuất bản.
+
+GET `/api/wiki/v1/game-modes/{code}/auto-chess`
+- Trả cẩm nang đã xuất bản: nội dung ở 01, ảnh đã hydrate, mỗi đội hình đề xuất có `likes`, `recentLikes`.
+  404 `GAME_MODE_GUIDE_NOT_FOUND` khi chế độ không có cẩm nang xuất bản.
+
+GET `/api/wiki/v1/game-modes/{code}/auto-chess/lineups`
+- Query: `sort` (`popular` mặc định, `trending`, `recent`), `unit` (mã quân cờ, tùy chọn), `page`, `size`
+  (1–50, mặc định 20). Trả `PageSlice` đội hình cộng đồng đang hiển thị: `id`, `name`, `note`, `units`,
+  `emblems`, `likes`, `recentLikes`, `createdAt`, `updatedAt`. Không có thông tin người đăng.
+
+GET `/api/wiki/v1/game-modes/{code}/auto-chess/insights`
+- Trả `{lineupCount, communityLineupCount, units: [{code, appearances, weighted, carryCount}],
+  traits: [{code, activations, topTierReached}], costs: [{cost, count}]}` từ đội hình đề xuất xuất bản và đội
+  hình cộng đồng đang hiển thị (tối đa 2000 đội hình nhiều lượt thích nhất). `weighted` = số lần xuất hiện
+  nhân (1 + lượt thích).
+
+### Người dùng đăng nhập
+
+Cần Bearer token hợp lệ audience `wiki-service` của tài khoản người; không cần role. Service account nhận 403
+`GAME_MODE_FORBIDDEN`. Các route này nằm dưới `/users/me` như mọi thao tác khác của người đăng nhập: luôn cần token
+và trả `Cache-Control: no-store`.
+
+GET `/api/wiki/v1/users/me/game-modes/{code}/auto-chess`
+- Trả `{likedLineupIds: [UUID], lineups: [CommunityLineup + status, version]}` của người gọi trong chế độ.
+
+PUT / DELETE `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/likes/{lineupId}`
+- Không có body. Trả `{lineupId, liked, likes}`. Idempotent. 404 khi đội hình không thuộc chế độ, đã ẩn hoặc
+  không có trong cẩm nang xuất bản (DELETE vẫn trả 200 nếu người gọi từng thích). 422 khi tự thích.
+  429 khi vượt giới hạn.
+
+POST `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups`
+- Body: `{name, note, units: [{unitCode, carry, row, itemCodes}], emblems: [traitCode]}`. Trả 201 đội hình.
+  422 khi mã không có trong cẩm nang xuất bản hoặc vượt giới hạn số lượng; 429 khi vượt tần suất.
+
+PUT `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups/{lineupId}`
+- Body như POST cộng `expectedVersion`. Chỉ người đăng. 409 `GAME_MODE_CONFLICT` khi phiên bản cũ.
+
+DELETE `/api/wiki/v1/users/me/game-modes/{code}/auto-chess/lineups/{lineupId}?expectedVersion=`
+- Chỉ người đăng. Trả 204, xóa lượt thích của đội hình.
+
+### Admin
+
+Cần `catalog:read`; ghi cần `gamemode:write`; xuất bản, ẩn/hiện đội hình cần `gamemode:publish`.
+Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`, `AUTO_CHESS_*`, `LINEUP_*`.
+
+- GET `/api/wiki/v1/admin/game-modes` — danh sách mọi chế độ: `id`, `code`, `name`, `group`, `order`,
+  `guideKind`, `published` (revision xuất bản gần nhất hoặc null), `draft` (nháp mở hoặc null), `guide`
+  (trạng thái cẩm nang).
+- POST `/api/wiki/v1/admin/game-modes` — body `{code, name, group, content?}`; tạo identity và nháp đầu; 201.
+  409 `GAME_MODE_CODE_TAKEN` khi trùng mã.
+- GET `/api/wiki/v1/admin/game-modes/{id}` — nháp mở nếu có, không thì bản xuất bản gần nhất; kèm
+  `missingFields` và ảnh đã hydrate (kể cả nháp).
+- GET `/api/wiki/v1/admin/game-modes/{id}/revisions` và `/revisions/{revisionId}` — lịch sử và một revision.
+- POST `/api/wiki/v1/admin/game-modes/{id}/drafts` — body `{changeNote}`; tạo nháp từ bản xuất bản gần nhất;
+  409 nếu đã có nháp mở.
+- PUT `/api/wiki/v1/admin/game-modes/{id}/drafts/{revisionId}` — body `{expectedVersion, content, changeNote}`.
+- POST `/api/wiki/v1/admin/game-modes/{id}/drafts/{revisionId}/publish` và `/discard` — body
+  `{expectedVersion, changeNote}`.
+- Cẩm nang Cờ Liên quân dùng cùng bộ endpoint dưới `/api/wiki/v1/admin/game-modes/{id}/auto-chess`
+  (GET hiện hành, GET `revisions`, GET `revisions/{revisionId}`, POST `drafts` với `{changeNote, content?}` —
+  `content` chỉ dùng cho nháp đầu tiên khi chưa có bản xuất bản, PUT `drafts/{revisionId}`, POST
+  `drafts/{revisionId}/publish`, `drafts/{revisionId}/discard`). 422 khi chế độ không có `guideKind = AUTO_CHESS`.
+- GET `/api/wiki/v1/admin/game-modes/{id}/auto-chess/community-lineups` — query `status`, `page`, `size`;
+  `PageSlice` đội hình cộng đồng kèm `likes`, `status`, `hiddenReason`, `version`, `updatedAt`.
+- POST `/api/wiki/v1/admin/game-modes/{id}/auto-chess/community-lineups/{lineupId}/visibility` — body
+  `{expectedVersion, hidden, reason}`; lý do bắt buộc khi ẩn.

@@ -67,7 +67,7 @@ export interface PatchLike {
 }
 
 export type WarehouseTab = (typeof WAREHOUSE_TABS)[number]
-export type SectionKey = "heroes" | "skins" | WarehouseTab | "updates" | "terms"
+export type SectionKey = "heroes" | "skins" | WarehouseTab | "updates" | "terms" | "modes"
 
 const pick = (locale: string, vietnamese: string, english: string) => (locale.startsWith("en") ? english : vietnamese)
 
@@ -82,6 +82,14 @@ export const DEFAULT_IMAGE: PageImage = {
 }
 
 export const SECTIONS: Record<SectionKey, { path: string; name: [string, string]; description: [string, string] }> = {
+  modes: {
+    path: "/modes",
+    name: ["Chế độ chơi", "Game modes"],
+    description: [
+      "Các chế độ chơi Liên Quân Mobile: thời lượng, tình trạng mở, luật chơi và cẩm nang Cờ Liên quân.",
+      "Arena of Valor game modes: match length, availability, rules and the auto-chess guide.",
+    ],
+  },
   heroes: {
     path: "/hero",
     name: ["Tướng", "Heroes"],
@@ -251,6 +259,7 @@ export function libraryPageMeta(pathname: string, locale: string): PageMeta | nu
   if (root === "skins") return sectionMeta("skins", locale)
   if (root === "updates" && !tab) return sectionMeta("updates", locale)
   if (root === "terms" && !tab) return sectionMeta("terms", locale)
+  if (root === "modes" && !tab) return sectionMeta("modes", locale)
   if (root === "warehouse" && !entry) {
     const section = WAREHOUSE_TABS.find((candidate) => candidate === tab) ?? "items"
     return sectionMeta(section, locale)
@@ -336,6 +345,39 @@ export function termMeta(term: { id: string; name: string; description?: string 
     locale,
     type: "article",
     image: DEFAULT_IMAGE,
+  }
+}
+
+/** What the mode page needs for its head; the art is the cleaned lobby image. */
+export interface ModeMetaSource {
+  code: string
+  name: string
+  summary?: string | null
+  hasGuide?: boolean
+  art?: { url: string; width?: number; height?: number } | null
+}
+
+export function modeMeta(mode: ModeMetaSource, locale: string): PageMeta {
+  const section = pick(locale, ...SECTIONS.modes.name)
+  const heading = `${mode.name} — ${section}`
+  const details = plainText(mode.summary)
+  return {
+    title: titled(heading),
+    heading,
+    description: clampDescription(
+      details ||
+        pick(
+          locale,
+          `${mode.name}: chế độ chơi trong Liên Quân Mobile — thời lượng, tình trạng mở và luật chơi${mode.hasGuide ? ", cùng cẩm nang chi tiết" : ""}.`,
+          `${mode.name}: an Arena of Valor game mode — match length, availability and rules${mode.hasGuide ? ", with a detailed guide" : ""}.`,
+        ),
+    ),
+    path: `/modes/${encodeURIComponent(mode.code)}`,
+    locale,
+    type: "article",
+    image: mode.art
+      ? { url: mode.art.url, width: mode.art.width, height: mode.art.height, alt: mode.name }
+      : DEFAULT_IMAGE,
   }
 }
 

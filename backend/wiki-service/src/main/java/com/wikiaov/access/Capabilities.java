@@ -20,6 +20,8 @@ public final class Capabilities {
     public static final String SPELL_PUBLISH = "spell:publish";
     public static final String ENCHANTMENT_WRITE = "enchantment:write";
     public static final String ENCHANTMENT_PUBLISH = "enchantment:publish";
+    public static final String GAMEMODE_WRITE = "gamemode:write";
+    public static final String GAMEMODE_PUBLISH = "gamemode:publish";
 
     public static final String MEDIA_WRITE = "media:write";
 

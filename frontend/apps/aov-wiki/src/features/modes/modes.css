@@ -1,0 +1,895 @@
+/* Game modes and the auto-chess guide. Layout follows the library pages; colors come from the wiki tokens. */
+.mode-page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.mode-lead {
+  font: var(--wiki-type-body);
+  color: var(--aov-muted);
+  max-width: 70ch;
+}
+.mode-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.mode-search {
+  font: var(--wiki-type-body);
+  flex: 1 1 220px;
+  max-width: 320px;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-sunken);
+  color: var(--aov-text);
+}
+.mode-chip {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 12px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.mode-chip[aria-pressed="true"],
+.mode-chip[aria-current="page"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.mode-chip:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.mode-section-title {
+  font: var(--wiki-type-section);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  color: var(--aov-text);
+}
+.mode-section-title small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 14px;
+}
+.mode-card {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+.mode-card:hover,
+.mode-card:focus-visible {
+  border-color: var(--aov-accent);
+  transform: translateY(-2px);
+}
+.mode-card-art {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, var(--aov-raised), var(--aov-sunken));
+  overflow: hidden;
+}
+.mode-card-art img,
+.mode-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.mode-card-art .mode-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+}
+.mode-art-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font: var(--wiki-type-page);
+  color: color-mix(in srgb, var(--aov-accent) 55%, transparent);
+  letter-spacing: 0.04em;
+}
+.mode-card-body {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px 14px;
+}
+.mode-card-body h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.mode-meta {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  color: var(--aov-muted);
+}
+.mode-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mode-badge {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--aov-sunken) 82%, transparent);
+  color: var(--aov-text-soft);
+  backdrop-filter: blur(6px);
+}
+.mode-badge[data-tone="open"] {
+  color: var(--aov-success);
+}
+.mode-badge[data-tone="limited"] {
+  color: var(--aov-warning);
+}
+.mode-badge[data-tone="closed"] {
+  color: var(--aov-danger);
+}
+.mode-badge[data-tone="guide"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.mode-empty {
+  font: var(--wiki-type-body);
+  padding: 24px;
+  border: 1px dashed var(--aov-line-strong);
+  border-radius: var(--aov-radius-card);
+  color: var(--aov-muted);
+  text-align: center;
+}
+
+/* Mode page */
+.mode-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-sunken);
+  aspect-ratio: 21 / 9;
+  max-height: 420px;
+}
+.mode-banner-copy {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  gap: 8px;
+  padding: 48px 20px 16px;
+  background: linear-gradient(transparent, rgb(8 10 16 / 88%));
+}
+.mode-banner-copy h1 {
+  font: var(--wiki-type-page);
+  color: #fff;
+}
+.mode-banner .mode-meta {
+  color: rgb(255 255 255 / 80%);
+}
+.mode-banner[data-empty="true"] {
+  aspect-ratio: auto;
+  min-height: 160px;
+}
+/* Guide tabs keep the art as a strip, so the tab content starts higher. */
+.mode-banner.mode-banner-compact {
+  aspect-ratio: auto;
+  height: 160px;
+  min-height: 0;
+}
+.mode-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  gap: 20px;
+  align-items: start;
+}
+.mode-panel {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  min-width: 0;
+}
+.mode-panel h2 {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+.mode-panel h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.mode-rules {
+  display: grid;
+  gap: 14px;
+}
+.mode-rule {
+  display: grid;
+  gap: 4px;
+}
+.mode-rule p,
+.mode-rule li,
+.mode-prose {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+}
+.mode-rule ul {
+  display: grid;
+  gap: 2px;
+  padding-left: 18px;
+  list-style: disc;
+}
+.mode-facts {
+  display: grid;
+  gap: 8px;
+}
+.mode-facts div {
+  display: grid;
+  gap: 2px;
+}
+.mode-facts dt {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.mode-facts dd {
+  font: var(--wiki-type-body);
+  color: var(--aov-text);
+}
+.mode-sources {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+
+/* Guide tabs: always at the top, scrolling sideways on narrow screens. */
+.guide-tabs {
+  position: sticky;
+  top: var(--wiki-header-height, 56px);
+  z-index: 5;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 0;
+  background: var(--aov-bg);
+  scrollbar-width: none;
+}
+.guide-tabs::-webkit-scrollbar {
+  display: none;
+}
+.guide-tabs a {
+  text-decoration: none;
+}
+.guide-edition {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 168px), 1fr));
+  gap: 10px;
+}
+.guide-unit {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--aov-line);
+  border-left: 3px solid var(--cost-color, var(--aov-line));
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.guide-unit:hover,
+.guide-unit[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+}
+.guide-unit strong {
+  font: var(--wiki-type-entry);
+  display: block;
+  color: var(--aov-text);
+}
+.guide-unit span {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.guide-portrait {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--aov-sunken);
+  border: 2px solid var(--cost-color, var(--aov-line-strong));
+}
+.guide-portrait[data-size="sm"] {
+  width: 36px;
+  height: 36px;
+}
+.guide-portrait[data-size="lg"] {
+  width: 72px;
+  height: 72px;
+}
+/* Initials of a unit without a portrait must fit the circle. */
+.guide-portrait.mode-art-fallback {
+  font: var(--wiki-type-meta);
+  letter-spacing: 0;
+  overflow: hidden;
+}
+.guide-portrait.mode-art-fallback[data-size="lg"] {
+  font: var(--wiki-type-entry);
+}
+.guide-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex: none;
+  background: var(--aov-sunken);
+}
+.guide-icon[data-round="true"] {
+  border-radius: 50%;
+}
+.guide-cost {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--cost-color, var(--aov-accent));
+}
+.guide-cost::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.guide-trait-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.guide-trait-tag {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px 1px 2px;
+  border-radius: 999px;
+  background: var(--aov-sunken);
+  color: var(--aov-text-soft);
+}
+.guide-trait-tag img {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.guide-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+}
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--wiki-type-body);
+}
+.guide-table th,
+.guide-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--aov-line);
+  text-align: left;
+  white-space: nowrap;
+}
+.guide-table th {
+  font: var(--wiki-type-category);
+  color: var(--aov-muted);
+  background: var(--aov-sunken);
+}
+.guide-table th button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.guide-table td.num,
+.guide-table th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.guide-table tr:last-child td {
+  border-bottom: 0;
+}
+.guide-detail {
+  display: grid;
+  gap: 14px;
+}
+.guide-detail-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.guide-detail-head h2 {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+}
+.guide-skill {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-sunken);
+}
+.guide-skill .guide-icon {
+  width: 44px;
+  height: 44px;
+}
+.guide-skill p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+  white-space: pre-line;
+}
+.guide-values,
+.guide-skill .guide-values {
+  font: var(--wiki-type-category);
+  color: var(--aov-success);
+}
+.guide-note {
+  font: var(--wiki-type-meta);
+  color: var(--aov-warning);
+}
+.guide-traits {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: 12px;
+}
+.guide-trait {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 14px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.guide-trait-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.guide-trait-head h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.guide-tiers {
+  display: grid;
+  gap: 6px;
+}
+.guide-tier {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  color: var(--aov-text-soft);
+}
+.guide-tier b {
+  font: var(--wiki-type-category);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--aov-line-strong);
+  color: var(--aov-text);
+}
+.guide-tier[data-reached="true"] b {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.guide-tier[data-reached="true"] {
+  color: var(--aov-text);
+}
+.guide-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.guide-members button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.guide-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+  gap: 10px;
+}
+.guide-card {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.guide-card .guide-icon {
+  width: 40px;
+  height: 40px;
+}
+.guide-card h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.guide-card p {
+  font: var(--wiki-type-body);
+  color: var(--aov-text-soft);
+  white-space: pre-line;
+}
+.guide-card[data-tier="EPIC"] {
+  border-color: color-mix(in srgb, #b46cff 45%, var(--aov-line));
+}
+.guide-card[data-tier="LEGENDARY"] {
+  border-color: color-mix(in srgb, #ffb04a 55%, var(--aov-line));
+}
+.guide-slots {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+
+/* Lineups */
+.lineup-list {
+  display: grid;
+  gap: 12px;
+}
+.lineup-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+.lineup-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.lineup-head h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lineup-tier {
+  font: var(--wiki-type-category);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.lineup-tier[data-tier="S"] {
+  background: #e05555;
+  color: #fff;
+}
+.lineup-tier[data-tier="A"] {
+  background: #e0954a;
+  color: #1a1206;
+}
+.lineup-tier[data-tier="B"] {
+  background: #d8c35a;
+  color: #1a1606;
+}
+.lineup-tier[data-tier="C"] {
+  background: #6aa86a;
+  color: #08140a;
+}
+.lineup-units {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.lineup-unit {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: 58px;
+}
+.lineup-unit span {
+  font: var(--wiki-type-meta);
+  max-width: 58px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--aov-text-soft);
+}
+.lineup-unit[data-carry="true"] .guide-portrait {
+  box-shadow: 0 0 0 2px var(--aov-accent);
+}
+.lineup-unit em {
+  font: var(--wiki-type-meta);
+  position: absolute;
+  top: -4px;
+  right: 2px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+  font-style: normal;
+}
+.lineup-items {
+  display: flex;
+  gap: 2px;
+}
+.lineup-items img {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+}
+.lineup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.like-button[aria-pressed="true"] {
+  border-color: #e0557a;
+  background: color-mix(in srgb, #e0557a 18%, transparent);
+  color: #ff8fab;
+}
+.mode-message {
+  font: var(--wiki-type-meta);
+  color: var(--aov-warning);
+}
+
+/* Builder */
+.builder {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 16px;
+  align-items: start;
+}
+.builder-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--aov-line-strong);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-sunken);
+}
+.builder-slot {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  min-height: 92px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  border: 1px solid var(--aov-line);
+  background: var(--aov-surface);
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  text-align: center;
+}
+.builder-slot button {
+  font: var(--wiki-type-meta);
+  padding: 2px 6px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.builder-slot button[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  color: var(--aov-accent-strong);
+}
+.builder-slot strong {
+  font: var(--wiki-type-meta);
+  color: var(--aov-text);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.builder-pool {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+}
+.builder-pool button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  cursor: pointer;
+  font: var(--wiki-type-meta);
+}
+.builder-pool button:hover {
+  border-color: var(--aov-line-strong);
+}
+.builder-pool button[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+}
+.builder-pool button span {
+  max-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.builder-active {
+  display: grid;
+  gap: 8px;
+}
+.builder-trait {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--aov-sunken);
+  opacity: 0.72;
+}
+.builder-trait[data-active="true"] {
+  opacity: 1;
+  box-shadow: inset 3px 0 0 var(--aov-accent);
+}
+.builder-trait img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+}
+.builder-trait strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.builder-trait p {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.builder-steps {
+  font: var(--wiki-type-meta);
+  display: flex;
+  gap: 3px;
+}
+.builder-steps i {
+  font-style: normal;
+  padding: 0 5px;
+  border-radius: 6px;
+  background: var(--aov-raised);
+  color: var(--aov-muted);
+}
+.builder-steps i[data-on="true"] {
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.builder-form {
+  display: grid;
+  gap: 8px;
+}
+.builder-form input,
+.builder-form textarea {
+  font: var(--wiki-type-body);
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-sunken);
+  color: var(--aov-text);
+}
+
+/* Analysis */
+.insight-bars {
+  display: grid;
+  gap: 6px;
+}
+.insight-bar {
+  font: var(--wiki-type-meta);
+  display: grid;
+  grid-template-columns: minmax(84px, 140px) minmax(0, 1fr) 48px;
+  gap: 8px;
+  align-items: center;
+  color: var(--aov-text-soft);
+}
+.insight-bar > div {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--aov-sunken);
+  overflow: hidden;
+}
+.insight-bar > div > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--aov-accent);
+}
+.insight-bar b {
+  font-weight: 600;
+  text-align: right;
+  color: var(--aov-text);
+  font-variant-numeric: tabular-nums;
+}
+.mode-dialog {
+  width: min(720px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 18px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-popover);
+  color: var(--aov-text);
+}
+.mode-dialog::backdrop {
+  background: rgb(0 0 0 / 60%);
+}
+.mode-dialog-close {
+  float: right;
+}
+
+@media (max-width: 860px) {
+  .mode-columns,
+  .builder {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mode-banner {
+    aspect-ratio: 16 / 9;
+  }
+  .mode-banner.mode-banner-compact {
+    height: 120px;
+  }
+  .builder-board {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px;
+  }
+  .builder-slot {
+    min-height: 78px;
+  }
+  .mode-dialog {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100dvh;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+}

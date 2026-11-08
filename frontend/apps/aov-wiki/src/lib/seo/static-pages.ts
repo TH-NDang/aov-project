@@ -6,6 +6,7 @@ import {
   heroPositionLabels,
   heroRoleLabels,
   homeMeta,
+  modeMeta,
   patchMeta,
   plainText,
   sectionMeta,
@@ -15,6 +16,7 @@ import {
   translationFor,
   warehouseEntryMeta,
   type HeroMetaSource,
+  type ModeMetaSource,
   type PageImage,
   type PageMeta,
   type PatchLike,
@@ -49,6 +51,13 @@ export interface PublishedCatalog {
   warehouse: Record<WarehouseTab, readonly PublishedEntry[]>
   terms: readonly { id: string; name: string; description?: string | null }[]
   patches: readonly PublishedPatch[]
+  /** Published game modes; older callers may leave them out. */
+  modes?: readonly PublishedMode[]
+}
+
+export interface PublishedMode extends ModeMetaSource {
+  group: string
+  publishedAt?: string | null
 }
 
 export interface StaticPage {
@@ -250,6 +259,34 @@ export function buildStaticPages(catalog: PublishedCatalog): StaticPage[] {
       meta,
       body: page(term.name, paragraph(plainText(term.description)) + `<p>${link("/terms", "Tất cả thuật ngữ")}</p>`),
       listed: true,
+    })
+  }
+
+  const modes = sectionMeta("modes", LOCALE)
+  pages.push({
+    path: modes.path,
+    meta: modes,
+    body: page(
+      modes.heading,
+      paragraph(modes.description) +
+        list(
+          (catalog.modes ?? []).map((mode) => {
+            const label = link(`/modes/${encodeURIComponent(mode.code)}`, mode.name)
+            const details = plainText(mode.summary)
+            return details ? `${label}: ${escapeHtml(details)}` : label
+          }),
+        ),
+    ),
+    listed: true,
+  })
+  for (const mode of catalog.modes ?? []) {
+    const meta = modeMeta(mode, LOCALE)
+    pages.push({
+      path: meta.path,
+      meta,
+      body: page(mode.name, paragraph(plainText(mode.summary)) + `<p>${link("/modes", "Tất cả chế độ chơi")}</p>`),
+      listed: true,
+      lastmod: mode.publishedAt,
     })
   }
 

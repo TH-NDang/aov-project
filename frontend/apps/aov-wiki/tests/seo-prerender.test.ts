@@ -68,6 +68,18 @@ const catalog: PublishedCatalog = {
   },
   terms: [{ id: "giap", name: "Giáp", description: "Giảm <info>sát thương</info>" }],
   patches: [{ code: "2026-10-30", title: "Giữa mùa", summary: "", effectiveAt: "2026-11-04T11:27:08Z" }],
+  modes: [
+    {
+      code: "co-lien-quan",
+      name: "Cờ Liên quân",
+      group: "ENTERTAINMENT",
+      summary: "Xếp quân cờ, ghép Phe và Nghề.",
+      hasGuide: true,
+      art: { url: "https://cdn.test/co-lien-quan.png", width: 1600, height: 900 },
+      publishedAt: "2026-11-08T03:00:00Z",
+    },
+    { code: "dau-truong-ulti", name: "Đấu trường Ulti", group: "ENTERTAINMENT", art: null },
+  ],
 }
 
 const pages = buildStaticPages(catalog)
@@ -93,6 +105,9 @@ test("every public page exists with one title and description of its own", () =>
     "/terms/giap",
     "/updates",
     "/updates/2026-10-30",
+    "/modes",
+    "/modes/co-lien-quan",
+    "/modes/dau-truong-ulti",
   ])
     assert.ok(pageAt(expected), expected)
   assert.deepEqual(repeatedMeta(pages), [])
@@ -133,6 +148,19 @@ test("published text cannot break out of the markup or act as a replacement patt
   assert.ok(html.includes("<h1>Alice &lt;&amp;&gt;</h1>"))
   assert.ok(html.includes("&quot;dấu&quot; $&amp; lạ"))
   assert.ok(!html.includes("<&>"))
+})
+
+test("a game mode page previews its art, and the catalog links every published mode", () => {
+  const html = renderStaticPage(TEMPLATE, pageAt("/modes/co-lien-quan")!, SITE)
+  assert.match(html, /<title>Cờ Liên quân — Chế độ chơi \| AOV WiKi<\/title>/)
+  assert.match(html, /name="description" content="Xếp quân cờ, ghép Phe và Nghề\."/)
+  assert.match(html, /property="og:image" content="https:\/\/cdn\.test\/co-lien-quan\.png"/)
+  const withoutArt = renderStaticPage(TEMPLATE, pageAt("/modes/dau-truong-ulti")!, SITE)
+  assert.match(withoutArt, /content="Đấu trường Ulti: chế độ chơi trong Liên Quân Mobile/)
+  assert.match(withoutArt, /og:image" content="https:\/\/wiki\.example\.test\/images\/mole-logo-v4\.png"/)
+  const catalog = pageAt("/modes")!.body
+  assert.ok(catalog.includes('href="/modes/co-lien-quan"') && catalog.includes('href="/modes/dau-truong-ulti"'))
+  assert.ok(renderSitemap(pages, SITE).includes(`<loc>${SITE}/modes/co-lien-quan</loc><lastmod>2026-11-08</lastmod>`))
 })
 
 test("a hero without artwork previews the site logo", () => {
@@ -192,6 +220,7 @@ const PUBLIC_API: Record<string, unknown> = {
   "/enchantments": { items: [], totalElements: 0 },
   "/arcana": { items: [], totalElements: 0 },
   "/spells": { items: [entry("spell-1", "boc-pha", "Bộc phá")], totalElements: 1 },
+  "/game-modes": { items: [{ code: "co-lien-quan", name: "Cờ Liên quân", group: "ENTERTAINMENT", hasGuide: true }] },
   "/spells/archived": {
     items: [entry("spell-1", "boc-pha", "Bộc phá"), entry("spell-2", "cam-tru", "Cấm trụ")],
     totalElements: 2,
@@ -244,7 +273,11 @@ test("prerendering writes each page, the sitemap and robots.txt from anonymous p
   assert.ok((await readFile(path.join(distDir, "robots.txt"), "utf8")).includes(`Sitemap: ${SITE}/sitemap.xml`))
 
   assert.ok(api.requests.every((url) => url.startsWith("/api/wiki/v1/") && !url.includes("/admin/")))
-  assert.ok(api.requests.every((url) => url.includes("region=VN") && url.includes("locale=vi-VN")))
+  // Game modes have no region or language variant, and their endpoints accept no scope.
+  const scoped = api.requests.filter((url) => !url.startsWith("/api/wiki/v1/game-modes"))
+  assert.ok(scoped.every((url) => url.includes("region=VN") && url.includes("locale=vi-VN")))
+  assert.ok(api.requests.includes("/api/wiki/v1/game-modes?"))
+  assert.ok(await exists(path.join(distDir, "modes", "co-lien-quan", "index.html")))
   // The template stays neutral, so the step can run again without a new build.
   assert.equal(await readFile(path.join(distDir, "200.html"), "utf8"), TEMPLATE)
 })

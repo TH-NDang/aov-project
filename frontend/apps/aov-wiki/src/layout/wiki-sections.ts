@@ -36,6 +36,12 @@ export const wikiSections = [
     group: "warehouse",
   },
   {
+    key: "modes",
+    icon: "mode",
+    path: "/modes",
+    group: "play",
+  },
+  {
     key: "updates",
     icon: "updates",
     path: "/updates",

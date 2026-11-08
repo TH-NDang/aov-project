@@ -23,6 +23,7 @@
               "arcana:write",
               "spell:write",
               "enchantment:write",
+              "gamemode:write",
               "media:write"
             ]
           }
@@ -42,7 +43,8 @@
               "item:publish",
               "arcana:publish",
               "spell:publish",
-              "enchantment:publish"
+              "enchantment:publish",
+              "gamemode:publish"
             ]
           }
         }
@@ -179,6 +181,14 @@
         {
           "name": "enchantment:publish",
           "description": "Capability enchantment:publish"
+        },
+        {
+          "name": "gamemode:write",
+          "description": "Capability gamemode:write"
+        },
+        {
+          "name": "gamemode:publish",
+          "description": "Capability gamemode:publish"
         },
         {
           "name": "patch:write",

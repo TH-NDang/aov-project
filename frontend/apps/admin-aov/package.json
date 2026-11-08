@@ -25,6 +25,7 @@
     "test:table": "node --experimental-strip-types --test tests/table.test.ts",
     "test:heroes": "node --experimental-strip-types --test tests/heroes.test.ts",
     "test:videos": "tsx --tsconfig tests/tsconfig.json --test tests/videos.test.ts",
+    "test:game-modes": "tsx --tsconfig tests/tsconfig.json --test tests/game-modes.test.ts",
     "test:typography": "tsx --test tests/typography.test.ts",
     "test:community": "tsx --tsconfig tests/tsconfig.json --test tests/profile-slug.test.ts tests/profile-roster-model.test.ts",
     "test:tabs": "tsx --tsconfig tests/tsconfig.json --test tests/page-tabs.test.tsx tests/page-tab-redirects.test.tsx tests/page-tab-preview.test.ts tests/nav-active.test.ts",
