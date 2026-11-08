@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowLeft, ChevronRight, FilePenLine, UserRound } from "lucide-react"
 import { Link, useSearchParams } from "react-router"
@@ -16,6 +16,7 @@ import {
   closeHeroLocation,
   heroFixLocation,
   heroLocationId,
+  heroSourceLocation,
   openHeroLocation,
   patchHeroLocation,
 } from "./hero-location"
@@ -30,9 +31,21 @@ import {
 } from "./publish-readiness"
 import type { PublishBlocker } from "./publish-rules"
 import { createPublishingApi, publishReadinessKey } from "./publishing-api"
+import {
+  orderByCaptures,
+  readinessCapturePatches,
+  readinessSourceGaps,
+  sourceGapSummary,
+  sourceGapWeightLabels,
+  type HeroSourceGaps,
+  type SourceGap,
+  type SourceGapWeight,
+} from "./source-image-gaps"
+import { useSourceCoverage } from "./use-source-coverage"
 
 const api = createPublishingApi(backendRequest)
 const noRows: ReadinessRow[] = []
+const noGaps = new Map<string, HeroSourceGaps>()
 
 export function PublishReadinessPage() {
   const [params, setParams] = useSearchParams()
@@ -45,7 +58,23 @@ export function PublishReadinessPage() {
   )
   const filter = readinessFilter(params)
   const summary = useMemo(() => readinessSummary(rows), [rows])
-  const matching = useMemo(() => filterReadinessRows(rows, filter), [rows, filter.q, filter.unpublished, filter.draft])
+  const patchesFor = useCallback((patches: string[]) => readinessCapturePatches(rows, patches), [rows])
+  const coverage = useSourceCoverage(patchesFor)
+  const captureSets = coverage.status === "ready" ? coverage : null
+  const sourceGaps = useMemo(
+    () => (captureSets ? readinessSourceGaps(rows, captureSets.patches, captureSets.heroes, locale) : noGaps),
+    [rows, captureSets?.patches, captureSets?.heroes, locale],
+  )
+  const captureSummary = useMemo(() => sourceGapSummary(sourceGaps), [sourceGaps])
+  const checkedAgainst = useMemo(
+    () => (captureSets ? readinessCapturePatches(rows, captureSets.patches) : []),
+    [rows, captureSets?.patches],
+  )
+  const byCaptures = filter.captures && !!captureSets
+  const matching = useMemo(() => {
+    const filtered = filterReadinessRows(rows, filter)
+    return byCaptures ? orderByCaptures(filtered, sourceGaps) : filtered
+  }, [rows, filter.q, filter.unpublished, filter.draft, byCaptures, sourceGaps])
   const revealed = useRevealedRows(matching, JSON.stringify(filter))
   const heroId = heroLocationId(params.get("hero"))
   const openedHero = heroes.data?.find((hero) => hero.id === heroId) ?? null
@@ -110,6 +139,14 @@ export function PublishReadinessPage() {
                 active={filter.draft === "blocked"}
                 onToggle={() => toggleDraft("blocked")}
               />
+              {captureSets && (
+                <FilterToggle
+                  label="Cần chụp ảnh gốc"
+                  count={captureSummary.heroes}
+                  active={filter.captures}
+                  onToggle={() => update({ captures: filter.captures ? "" : "missing" })}
+                />
+              )}
             </div>
           </div>
           <p className="type-meta">
@@ -117,6 +154,7 @@ export function PublishReadinessPage() {
             {rows.length > 0 &&
               ` ${summary.readyUnpublished} tướng chưa xuất bản đã có bản nháp sẵn sàng; ${summary.noDraft} không có bản nháp.`}
           </p>
+          <CaptureOverview state={coverage} patches={checkedAgainst} summary={captureSummary} />
           {summary.blockers.length > 0 && (
             <div className="space-y-1">
               <h3 className="type-label">Thiếu nhiều nhất</h3>
@@ -162,14 +200,22 @@ export function PublishReadinessPage() {
                   đúng phần cần sửa.
                 </caption>
                 <colgroup className="hidden @min-[44rem]/readiness:table-column-group">
-                  <col className="w-[24%]" />
-                  <col className="w-[20%]" />
-                  <col className="w-[20%]" />
-                  <col className="w-[36%]" />
+                  {(captureSets
+                    ? ["w-[18%]", "w-[13%]", "w-[13%]", "w-[24%]", "w-[32%]"]
+                    : ["w-[24%]", "w-[20%]", "w-[20%]", "w-[36%]"]
+                  ).map((width, index) => (
+                    <col key={index} className={width} />
+                  ))}
                 </colgroup>
                 <thead className="sr-only bg-muted @min-[44rem]/readiness:not-sr-only @min-[44rem]/readiness:table-header-group">
                   <tr>
-                    {["Tướng", "Đã xuất bản", "Bản nháp", "Còn thiếu để xuất bản"].map((title) => (
+                    {[
+                      "Tướng",
+                      "Đã xuất bản",
+                      "Bản nháp",
+                      "Còn thiếu để xuất bản",
+                      ...(captureSets ? ["Ảnh gốc cần chụp"] : []),
+                    ].map((title) => (
                       <th key={title} scope="col" className="type-label h-10 px-3 py-2 text-left text-muted-foreground">
                         {title}
                       </th>
@@ -191,6 +237,14 @@ export function PublishReadinessPage() {
                       onFix={(blocker) =>
                         open((current) => heroFixLocation(current, row.heroId, row.draft!.id, blocker.key))
                       }
+                      captures={
+                        captureSets ? { sources: sourceGaps.get(row.rowKey), pending: captureSets.pending } : undefined
+                      }
+                      onOpenGap={(gap) =>
+                        open((current) =>
+                          heroSourceLocation(current, row.heroId, row.draft?.id ?? row.published?.id, gap),
+                        )
+                      }
                     />
                   ))}
                 </tbody>
@@ -199,7 +253,7 @@ export function PublishReadinessPage() {
             {!matching.length && (
               <div className="grid justify-items-center gap-2 p-12 text-center">
                 <p className="type-body text-muted-foreground">Không có tướng phù hợp với tìm kiếm và bộ lọc.</p>
-                <Button variant="outline" onClick={() => update({ q: "", published: "", draft: "" })}>
+                <Button variant="outline" onClick={() => update({ q: "", published: "", draft: "", captures: "" })}>
                   Xóa bộ lọc
                 </Button>
               </div>
@@ -243,8 +297,8 @@ function FilterToggle({
   )
 }
 
-const columnLabels = ["Đã xuất bản", "Bản nháp", "Còn thiếu"]
-const cellClass = "min-w-0 align-middle @min-[44rem]/readiness:px-3 @min-[44rem]/readiness:py-2"
+const columnLabels = ["Đã xuất bản", "Bản nháp", "Còn thiếu", "Ảnh gốc cần chụp"]
+const cellClass = "min-w-0 align-top @min-[44rem]/readiness:px-3 @min-[44rem]/readiness:py-2"
 
 function ReadinessTableRow({
   row,
@@ -252,12 +306,17 @@ function ReadinessTableRow({
   ruleset,
   onOpen,
   onFix,
+  captures,
+  onOpenGap,
 }: {
   row: ReadinessRow
   active: boolean
   ruleset?: string
   onOpen: (revisionId?: string) => void
   onFix: (blocker: PublishBlocker) => void
+  /** Absent where the capture sets cannot be read. */
+  captures?: { sources?: HeroSourceGaps; pending: boolean }
+  onOpenGap: (gap: SourceGap) => void
 }) {
   return (
     <tr
@@ -335,6 +394,22 @@ function ReadinessTableRow({
           <span className="type-meta">Không có gì chờ xuất bản</span>
         )}
       </td>
+      {captures && (
+        <td className={cn(cellClass, "col-span-2 @min-[44rem]/readiness:col-auto")}>
+          <ColumnLabel index={3} />
+          {captures.sources ? (
+            <SourceGapCell sources={captures.sources} onOpen={onOpenGap} />
+          ) : (
+            <span className="type-meta">
+              {!row.draft && !row.published
+                ? "Chưa có phiên bản để đối chiếu"
+                : captures.pending
+                  ? "Đang đọc bộ ảnh gốc…"
+                  : "Không có bộ ảnh gốc"}
+            </span>
+          )}
+        </td>
+      )}
     </tr>
   )
 }
@@ -410,5 +485,114 @@ function ReadinessHead({ url }: { url: string | null }) {
         <UserRound aria-label="Chưa có ảnh head" className="size-5 text-muted-foreground" />
       )}
     </span>
+  )
+}
+
+function CaptureOverview({
+  state,
+  patches,
+  summary,
+}: {
+  state: ReturnType<typeof useSourceCoverage>
+  patches: string[]
+  summary: ReturnType<typeof sourceGapSummary>
+}) {
+  if (state.status === "unavailable" || state.status === "loading") return null
+  if (state.status === "error")
+    return (
+      <p role="alert" className="type-meta text-destructive">
+        {state.message}
+      </p>
+    )
+  return (
+    <div className="space-y-1">
+      <h3 className="type-label">Ảnh gốc cần chụp</h3>
+      <p className="type-meta">
+        {patches.length
+          ? `Đối chiếu với bộ ảnh patch ${patches.join(", ")}. Trang tự đọc lại khi có ảnh hoặc bản rà soát mới.`
+          : "Chưa có bộ ảnh gốc nào trong thư mục resources."}
+      </p>
+      {summary.groups.length > 0 && (
+        <ul className="type-body flex flex-col gap-0.5">
+          {summary.groups.map((item) => (
+            <li key={item.group} className="flex gap-2">
+              <span className="w-6 shrink-0 text-right font-semibold tabular-nums">{item.count}</span>
+              <span>{item.label}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+const weightTone: Record<SourceGapWeight, string> = {
+  UNBLOCKS: "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  MISSING_DATA: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  UNCHECKED: "border-border bg-muted text-muted-foreground",
+  MINOR: "border-border bg-muted text-muted-foreground",
+}
+
+function SourceGapCell({ sources, onOpen }: { sources: HeroSourceGaps; onOpen: (gap: SourceGap) => void }) {
+  if (sources.group === "COMPLETE") return <span className="type-meta">Đủ ảnh để đối chiếu</span>
+  const main = sources.gaps.filter((gap) => gap.weight !== "MINOR")
+  const minor = sources.gaps.filter((gap) => gap.weight === "MINOR")
+  const list = (gaps: SourceGap[]) => (
+    <ul className="space-y-2">
+      {gaps.map((gap) => (
+        <li key={gap.key}>
+          <SourceGapItem gap={gap} onOpen={() => onOpen(gap)} />
+        </li>
+      ))}
+    </ul>
+  )
+  return (
+    <div className="space-y-2">
+      {sources.revisionPatch && (
+        <p className="type-meta">
+          Bản đang xem ở patch {sources.revisionPatch}, chưa có bộ ảnh riêng; đối chiếu với bộ {sources.patchCode}.
+        </p>
+      )}
+      {main.length > 0 && list(main)}
+      {minor.length > 0 &&
+        (main.length ? (
+          <details className="group/minor">
+            <summary className="type-meta cursor-pointer underline-offset-4 hover:underline">
+              {minor.length} mục nên xem lại
+            </summary>
+            <div className="pt-2">{list(minor)}</div>
+          </details>
+        ) : (
+          list(minor)
+        ))}
+    </div>
+  )
+}
+
+function SourceGapItem({ gap, onOpen }: { gap: SourceGap; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      className="group/gap flex w-full cursor-pointer gap-2 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      title={gap.files.length ? `Ảnh hiện có: ${gap.files.join(", ")}` : undefined}
+      onClick={onOpen}
+    >
+      <span className="min-w-0 flex-1 space-y-0.5">
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="type-body">
+            <span className="font-semibold underline-offset-4 group-hover/gap:text-primary group-hover/gap:underline">
+              {gap.title}
+            </span>
+          </span>
+          <Badge variant="outline" className={cn("rounded-md px-1.5 py-0 text-xs font-medium", weightTone[gap.weight])}>
+            {sourceGapWeightLabels[gap.weight]}
+          </Badge>
+        </span>
+        <span className="type-body block">{gap.capture}</span>
+        <span className="type-meta block">
+          {gap.problem} {gap.data} {gap.checks}
+        </span>
+      </span>
+    </button>
   )
 }
