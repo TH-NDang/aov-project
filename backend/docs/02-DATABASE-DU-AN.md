@@ -1853,3 +1853,49 @@ xác nhận khi ghi qua `VideoSubjectProvider` và `GameplayContexts`.
 Ràng buộc `subject_video_unique` là `UNIQUE NULLS NOT DISTINCT (subject_kind, subject_id, subject_key, url,
 start_seconds)`, cần PostgreSQL 15 trở lên. Chỉ mục `subject_video_public_idx (subject_id, status,
 display_order)` phục vụ đọc công khai, `subject_video_review_idx (status, updated_at DESC)` phục vụ hàng chờ.
+
+## Chế độ chơi và Cờ Liên quân — V057 (ADR-023)
+
+Migration V057 tạo các bảng trong schema `gamemode` (đã có từ V000), thuộc module `gamemode`. Không có khóa
+ngoại sang schema khác; asset và tướng được xác nhận qua contract công khai của module sở hữu khi ghi.
+
+`gamemode.game_mode` — identity chế độ: `id` UUID, `code` duy nhất (slug), `created_at`, `created_by_issuer`,
+`created_by_subject`.
+
+`gamemode.game_mode_revision` và `gamemode.auto_chess_revision` — cùng cấu trúc revision:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id` | UUID revision |
+| `mode_id` | FK `game_mode(id)` |
+| `revision_no` | Số thứ tự tăng dần trong một chế độ, `UNIQUE (mode_id, revision_no)` |
+| `state` | `DRAFT`, `PUBLISHED`, `DISCARDED` |
+| `version` | Optimistic version của nháp |
+| `content` | JSONB nội dung (tiếng Việt); cấu trúc theo record nội dung của module |
+| `source_revision_id` | Revision xuất bản làm gốc khi tạo nháp; null với nháp đầu |
+| `change_note` | Ghi chú biên tập, tối đa 4000 ký tự |
+| `published_at` | Thời điểm xuất bản; bắt buộc khi `PUBLISHED` |
+| `created_at`, `created_by_*`, `updated_at`, `updated_by_*` | Người và thời điểm thao tác |
+
+Chỉ mục duy nhất một phần `(mode_id) WHERE state = 'DRAFT'` bảo đảm tối đa một nháp mở. Chỉ mục
+`(mode_id, state, published_at DESC)` phục vụ đọc bản xuất bản gần nhất. Khóa ghi bằng `SELECT ... FOR UPDATE`
+trên `game_mode` trước khi tạo/sửa/xuất bản revision của chế độ đó.
+
+`gamemode.community_lineup` — đội hình cộng đồng:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id` | UUID, cũng là `lineupId` được thích |
+| `mode_id` | FK `game_mode(id)` |
+| `author_issuer`, `author_subject` | Danh tính người đăng từ JWT |
+| `name`, `note` | 1–60 và tối đa 280 ký tự |
+| `units`, `emblems` | JSONB: `[{unitCode, carry, row, itemCodes}]`, `[traitCode]` |
+| `status`, `hidden_reason` | `VISIBLE`/`HIDDEN`; lý do chỉ cho admin |
+| `version`, `created_at`, `updated_at` | Optimistic version và thời điểm |
+
+Chỉ mục `(mode_id, status, updated_at DESC)` và `(mode_id, author_issuer, author_subject)`.
+
+`gamemode.lineup_like` — lượt thích: `lineup_id`, `issuer`, `subject`, `mode_id`, `lineup_source`
+(`EDITORIAL`, `COMMUNITY`), `created_at`. Khóa chính `(lineup_id, issuer, subject)` bảo đảm một lượt mỗi người.
+`lineup_id` của đội hình đề xuất là UUID trong nội dung cẩm nang nên không có FK; đội hình cộng đồng bị xóa
+thì xóa lượt thích của nó. Chỉ mục `(mode_id, lineup_id)` và `(mode_id, created_at)` phục vụ đếm tổng và 7 ngày.

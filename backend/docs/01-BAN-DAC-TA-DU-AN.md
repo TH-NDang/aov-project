@@ -29,7 +29,7 @@ phát sinh change set. Change set được ghi riêng, cần `patch:write`; STAT
 snapshot, SKILL kiểm tra stable key và giá trị thay đổi; mô tả mechanic vẫn cần biên tập viên xác minh.
 
 Item/Spell/Arcana/Enchantment đã có catalog authoring/API theo các phần bổ sung bên dưới; GameMode
-vẫn là phase mở rộng. Danh mục tham chiếu dùng scalar projection, đọc Media theo lô và Redis tùy chọn
+có danh mục chế độ và cẩm nang Cờ Liên quân theo mục “Chế độ chơi và Cờ Liên quân” (ADR-023). Danh mục tham chiếu dùng scalar projection, đọc Media theo lô và Redis tùy chọn
 theo ADR-012. Chưa có projection materialized, full-text search hoặc tự sinh game data.
 
 ---
@@ -446,7 +446,9 @@ Quản lý phù hiệu/enchantment và các nhánh/quy tắc liên quan.
 
 ### 4.8 GameMode domain
 
-Quản lý chế độ chơi và metadata liên quan nếu cần.
+Quản lý danh mục chế độ chơi (nhóm PVP/giải trí, ảnh, thời lượng, tình trạng mở, luật ngắn, tướng/vật phẩm
+riêng), cẩm nang chi tiết theo loại chế độ (hiện có Cờ Liên quân) và tương tác đội hình của người dùng.
+Chi tiết ở mục “Chế độ chơi và Cờ Liên quân” cuối tài liệu và ADR-023.
 
 ### 4.9 Access domain
 
@@ -1640,6 +1642,7 @@ Backend chỉ kiểm tra **capability**. Vai trò là role tổng hợp (composi
 | `<domain>:write`, `media:write` | ✓ | ✓ | | ✓ | ✓ |
 | `<domain>:publish` | | ✓ | | ✓ | ✓ |
 | `patch:write`, `patch:publish` | | | ✓ | ✓ | |
+| `gamemode:write` / `gamemode:publish` | ✓ / | ✓ / ✓ | | ✓ / ✓ | |
 | `region:admin` | | | | ✓ | |
 
 Realm local: `backend/wiki-service/infra/local/keycloak/wikiaov-realm.json`. Danh sách capability trong code: `com.wikiaov.access.Capabilities`.
@@ -2435,3 +2438,74 @@ Trang công khai ẩn video có bản áp dụng mới hơn phiên bản đang x
 
 Dữ liệu thu thập từ kênh YouTube được nhập qua màn hình Video trong admin. Chỉ phần khớp chắc chắn mới
 công khai ngay, phần còn lại vào `Chờ duyệt` hoặc được liệt kê là không khớp; quy tắc đầy đủ ở ADR-019.
+
+## Chế độ chơi và Cờ Liên quân (ADR-023)
+
+Phạm vi theo yêu cầu ngày 08/11/2026: danh mục chế độ chơi trên Wiki và Admin, bắt đầu bằng cẩm nang chi
+tiết Cờ Liên quân và phần tương tác đội hình. Quyết định về nơi sở hữu tương tác ở ADR-023.
+
+### Danh mục chế độ
+
+- Mỗi chế độ có `code` (slug), nhóm `PVP` hoặc `ENTERTAINMENT` (giải trí), thứ tự hiển thị trong nhóm, tên,
+  mô tả ngắn, số người/đội hình (ví dụ `5v5`, `8 người`), thời lượng thường gặp tính bằng phút (từ–đến), ảnh
+  chế độ (`GAME_MODE_ART`), các mục luật ngắn, tướng riêng của chế độ (liên kết tướng tùy chọn + tên + ghi chú),
+  vật phẩm riêng (tên, mô tả, icon tùy chọn), nguồn quan sát và `guideKind` (`NONE` hoặc `AUTO_CHESS`).
+- Tình trạng mở gồm `status` (`ALWAYS_OPEN` thường trực, `LIMITED` mở hữu hạn, `SPECIAL` mở đặc biệt,
+  `CLOSED` tạm đóng, `LOCKED` chưa mở khóa, `UNKNOWN`), nhãn đúng như trong game, ngày bắt đầu/kết thúc nếu
+  biết và ngày quan sát. Không suy ra ngày từ nhãn tương đối. Ngày kết thúc không được trước ngày bắt đầu.
+- Tạo chế độ mới chỉ cần mã, tên và nhóm; nháp được lưu thiếu dữ liệu và trả `missingFields`. Xuất bản cần
+  tên, nhóm và tình trạng; ảnh, thời lượng, luật là tùy chọn để chế độ mới có thể xuất hiện sớm rồi bổ sung dần.
+  Ảnh đã gắn phải là asset `GAME_MODE_ART` dùng được; vật phẩm riêng dùng `AUTO_CHESS_ICON` hoặc `OTHER`.
+- `guideKind = AUTO_CHESS` chỉ được đặt cho chế độ có cẩm nang Cờ Liên quân; Wiki chỉ hiện cẩm nang khi cẩm
+  nang đã xuất bản.
+- Luồng nháp/xuất bản theo mục 9: tối đa một nháp mở mỗi chế độ, `expectedVersion` cho mọi thao tác ghi,
+  bản xuất bản bất biến, tạo nháp mới từ bản xuất bản gần nhất, audit cùng transaction. Nội dung hiện chỉ có
+  tiếng Việt và trả `contentLocale = vi-VN`.
+
+### Cẩm nang Cờ Liên quân
+
+Một revision cẩm nang là ảnh chụp toàn bộ Bách khoa tại một thời điểm, gồm:
+
+- Thông tin chung: tên phiên bản (ví dụ “Bách khoa 08/11/2026”), ngày quan sát, mô tả, các mục luật cơ bản
+  (nhóm, tiêu đề, nội dung; dòng bắt đầu bằng “- ” là gạch đầu dòng).
+- Phe/Nghề (`traits`): mã, loại `FACTION` (game gọi “Phe”) hoặc `CLASS` (game gọi “Nghề”), tên, mô tả, icon,
+  các mốc kích hoạt `{count, effect}` tăng dần, ghi chú biên tập.
+- Quân cờ (`units`): mã, tên, giá 1–5 vàng, 1–3 mã Phe/Nghề, ảnh, liên kết tướng tùy chọn, chiêu (tên, mô tả,
+  icon, nhãn giá trị và 3 giá trị theo sao), chỉ số theo 1/2/3 sao (máu, công vật lý, giáp, giáp phép), cờ
+  `complete` cho quân chưa đủ dữ liệu và ghi chú.
+- Trang bị: nhóm trang bị (mã, tên, số ô trong Bách khoa) và trang bị (mã, tên, hiệu ứng, nhóm, vị trí ô, icon).
+  Ô chưa có dữ liệu hiển thị là chưa biết; không đặt tên giả.
+- Chúc phúc: bậc `NORMAL` (Thường), `EPIC` (Huyền thoại / Sử thi), `LEGENDARY` (Truyền thuyết), tên, mô tả, icon.
+- Nhiệm vụ: nội dung và phần thưởng.
+- Đội hình đề xuất: UUID ổn định, mã, tên, hạng `S/A/B/C`, độ khó `EASY/MEDIUM/HARD`, mô tả lối chơi, 1–10 quân
+  (mã quân cờ, quân chủ lực, hàng `FRONT/MIDDLE/BACK` tùy chọn, tối đa 3 trang bị), huy hiệu Phe/Nghề thêm
+  (tối đa 3), chúc phúc gợi ý và ghi chú.
+
+Quy tắc: mã trong mỗi danh sách là duy nhất; quân cờ/đội hình chỉ tham chiếu mã có trong cùng revision; mốc
+kích hoạt dương và tăng dần; giá trị chiêu và chỉ số có đúng 0 hoặc 3 phần tử, chỉ số không âm. Lưu nháp
+chấp nhận dữ liệu thiếu nhưng không chấp nhận tham chiếu sai. Xuất bản cần ít nhất một quân cờ và một Phe/Nghề;
+quân cờ `complete = true` cần ảnh, chiêu và chỉ số. Đội hình đề xuất giữ UUID khi tạo nháp mới để lượt thích
+không bị mất. Chỉ chế độ `guideKind = AUTO_CHESS` mới có cẩm nang.
+
+Kích hoạt Phe/Nghề đếm số quân cờ khác nhau (theo mã) có Phe/Nghề đó cộng huy hiệu thêm; mốc đạt được là mốc
+lớn nhất có `count` không vượt quá số đếm. Wiki ghi rõ cách đếm này là quy ước của công cụ.
+
+Dữ liệu ban đầu lấy từ bộ thu thập Bách khoa ngày 08/11/2026 trong
+`resources/Lien-Quan-v3/che-do-choi/co-lien-quan/`; Admin nhập bộ này thành nháp để người biên tập rà soát
+trước khi xuất bản. Icon nhập vào Media với credit Garena / Liên Quân Mobile.
+
+### Đội hình cộng đồng, lượt thích và phân tích
+
+- Người đăng nhập Wiki (tài khoản người) lưu đội hình từ công cụ xếp đội hình; đội hình công khai ngay ở trạng
+  thái `VISIBLE`. Người đăng sửa hoặc xóa đội hình của mình; người có `gamemode:publish` ẩn (`HIDDEN`) hoặc
+  hiện lại kèm lý do, có audit.
+- Ràng buộc: tên 1–60 ký tự, ghi chú tối đa 280, 1–10 quân không trùng mã, tối đa 3 trang bị mỗi quân, tối đa
+  3 huy hiệu; mã phải có trong cẩm nang đã xuất bản. Tối đa 30 đội hình mỗi người mỗi chế độ.
+- Lượt thích: một lượt mỗi người mỗi đội hình; thích/bỏ thích idempotent; không tự thích; đội hình ẩn hoặc
+  không còn trong bản xuất bản không nhận lượt mới. Không công khai danh sách người thích.
+- Giới hạn theo người dùng trên mỗi instance: 60 thao tác thích mỗi 10 phút, 10 lần tạo/sửa mỗi giờ.
+- Xếp hạng công khai: `popular` (tổng lượt thích), `trending` (lượt thích 7 ngày), `recent` (mới cập nhật).
+  Đội hình đề xuất xếp theo hạng biên tập rồi lượt thích.
+- Phân tích công khai: tần suất quân cờ, tỷ lệ Phe/Nghề đạt mốc, phân bố giá quân trong đội hình đề xuất và
+  đội hình cộng đồng đang hiển thị; lượt thích được dùng làm trọng số. Không thu thập trận đấu thật nên không
+  đưa ra tỷ lệ thắng.
