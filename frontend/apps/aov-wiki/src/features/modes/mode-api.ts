@@ -123,6 +123,8 @@ export class ModeRequestError extends Error {
 }
 
 const BASE = "/api/wiki/v1/game-modes"
+/** The signed-in reader's routes live under `/users/me`, like the rest of what belongs to a reader. */
+const READER_BASE = "/api/wiki/v1/users/me/game-modes"
 
 async function readPublic<T>(path: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${BASE}${path}`, { signal, credentials: "omit" })
@@ -147,7 +149,7 @@ async function failure(response: Response) {
 async function readPersonal<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = await wikiAccessToken()
   if (!token) throw new ModeRequestError(401, undefined, "Sign in first.")
-  const response = await fetch(`${BASE}${path}`, {
+  const response = await fetch(`${READER_BASE}${path}`, {
     ...init,
     headers: { ...(init.body ? { "Content-Type": "application/json" } : {}), Authorization: `Bearer ${token}` },
     credentials: "omit",
@@ -201,14 +203,14 @@ export const insightsQuery = (code: string) =>
 export const myStateQuery = (code: string, revision: number) =>
   queryOptions({
     queryKey: ["wiki", "game-mode", code, "me", revision],
-    queryFn: () => readPersonal<MyState>(`/${encodeURIComponent(code)}/auto-chess/me`),
+    queryFn: () => readPersonal<MyState>(`/${encodeURIComponent(code)}/auto-chess`),
     staleTime: 15_000,
     retry: false,
   })
 
 export function setLike(code: string, lineupId: string, liked: boolean) {
   return readPersonal<{ lineupId: string; liked: boolean; likes: number }>(
-    `/${encodeURIComponent(code)}/auto-chess/lineups/${encodeURIComponent(lineupId)}/like`,
+    `/${encodeURIComponent(code)}/auto-chess/likes/${encodeURIComponent(lineupId)}`,
     { method: liked ? "PUT" : "DELETE" },
   )
 }

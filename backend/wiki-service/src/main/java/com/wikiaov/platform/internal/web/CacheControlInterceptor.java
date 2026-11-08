@@ -8,13 +8,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Admin responses and the signed-in reader's lineup routes are always {@code Cache-Control: no-store}. Public endpoints set their own cache headers
+ * Admin responses are always {@code Cache-Control: no-store}. Public endpoints set their own cache headers
  * and ETag in the controller, because they need a stable representation (03-API section 51-52).
  */
 class CacheControlInterceptor implements HandlerInterceptor {
 
-    private static final Pattern ADMIN_PATH = Pattern.compile(
-            "^/api/wiki/[^/]+/((admin|auth|users)(/.*)?|game-modes/[^/]+/auto-chess/(me|lineups/.+))$");
+    private static final Pattern ADMIN_PATH = Pattern.compile("^/api/wiki/[^/]+/(admin|auth|users)(/.*)?$");
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {

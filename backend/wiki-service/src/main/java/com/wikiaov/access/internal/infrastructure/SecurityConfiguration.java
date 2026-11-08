@@ -48,13 +48,6 @@ class SecurityConfiguration {
                         // Admin rules must come before the public GET rule; "*" covers every API version.
                         .requestMatchers(HttpMethod.POST, "/api/wiki/*/media/contact-requests").permitAll()
                         .requestMatchers("/api/wiki/*/users/**").authenticated()
-                        // Lineup likes and saved lineups belong to the signed-in reader (ADR-023).
-                        .requestMatchers(HttpMethod.GET, "/api/wiki/*/game-modes/*/auto-chess/me").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/wiki/*/game-modes/*/auto-chess/lineups").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/wiki/*/game-modes/*/auto-chess/lineups/**")
-                        .authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/api/wiki/*/game-modes/*/auto-chess/lineups/**")
-                        .authenticated()
                         .requestMatchers(ApiPaths.ANY_VERSION_ADMIN_PATTERN).hasAuthority(Capabilities.CATALOG_READ)
                         .requestMatchers(HttpMethod.GET, ApiPaths.ANY_VERSION_PATTERN).permitAll()
                         .requestMatchers(HttpMethod.HEAD, ApiPaths.ANY_VERSION_PATTERN).permitAll()

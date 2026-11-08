@@ -38,6 +38,8 @@ class GameModeIntegrationTest {
 
     private static final String PUBLIC = "/api/wiki/v1/game-modes";
 
+    private static final String READER = "/api/wiki/v1/users/me/game-modes";
+
     private static final String LINEUP_ID = "7f6c1d2e-0000-4000-8000-000000000001";
 
     private static final String GUIDE = """
@@ -150,7 +152,7 @@ class GameModeIntegrationTest {
     @Test
     void likesNeedAPersonCountOncePerReaderAndAreIdempotent() throws Exception {
         publishedGuide();
-        String like = PUBLIC + "/" + code + "/auto-chess/lineups/" + LINEUP_ID + "/like";
+        String like = READER + "/" + code + "/auto-chess/likes/" + LINEUP_ID;
 
         mvc.perform(put(like)).andExpect(status().isUnauthorized());
         mvc.perform(put(like).with(service())).andExpect(status().isForbidden())
@@ -162,12 +164,12 @@ class GameModeIntegrationTest {
         mvc.perform(delete(like).with(person("reader-a"))).andExpect(status().isOk())
                 .andExpect(jsonPath("$.liked").value(false)).andExpect(jsonPath("$.likes").value(1));
         mvc.perform(delete(like).with(person("reader-a"))).andExpect(status().isOk());
-        mvc.perform(put(PUBLIC + "/" + code + "/auto-chess/lineups/" + UUID.randomUUID() + "/like")
+        mvc.perform(put(READER + "/" + code + "/auto-chess/likes/" + UUID.randomUUID())
                 .with(person("reader-a"))).andExpect(status().isNotFound());
 
         mvc.perform(get(PUBLIC + "/" + code + "/auto-chess")).andExpect(
                 jsonPath("$.lineupLikes['" + LINEUP_ID + "'].likes").value(1));
-        mvc.perform(get(PUBLIC + "/" + code + "/auto-chess/me").with(person("reader-b")))
+        mvc.perform(get(READER + "/" + code + "/auto-chess").with(person("reader-b")))
                 .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
                 .andExpect(jsonPath("$.likedLineupIds[0]").value(LINEUP_ID));
     }
@@ -176,6 +178,8 @@ class GameModeIntegrationTest {
     void readersSaveLineupsOthersLikeThemAndModeratorsHideThem() throws Exception {
         String modeId = publishedGuide();
         String lineups = PUBLIC + "/" + code + "/auto-chess/lineups";
+        String mine = READER + "/" + code + "/auto-chess";
+        String own = mine + "/lineups";
         String body = """
                 {"name": "Học đường nhanh", "note": "Lên Violet 2 sao sớm",
                  "units": [{"unitCode": "violet", "carry": true, "row": "BACK", "itemCodes": ["thanh-kiem"]},
@@ -183,18 +187,17 @@ class GameModeIntegrationTest {
                  "emblems": ["dau-si"]}
                 """;
 
-        send(post(lineups), body.replace("violet", "khong-co"), person("author")).andExpect(
+        send(post(own), body.replace("violet", "khong-co"), person("author")).andExpect(
                 status().isUnprocessableContent());
-        JsonNode saved = json.readTree(send(post(lineups), body, person("author")).andExpect(status().isCreated())
+        JsonNode saved = json.readTree(send(post(own), body, person("author")).andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString());
         String lineupId = saved.get("id").asText();
         assertThat(saved.get("status").asText()).isEqualTo("VISIBLE");
 
-        mvc.perform(put(lineups + "/" + lineupId + "/like").with(person("author")))
+        mvc.perform(put(mine + "/likes/" + lineupId).with(person("author")))
                 .andExpect(status().isUnprocessableContent());
-        mvc.perform(put(lineups + "/" + lineupId + "/like").with(person("fan"))).andExpect(jsonPath("$.likes")
-                .value(1));
-        send(put(lineups + "/" + lineupId), body.replace("{\"name\"", "{\"expectedVersion\": 1, \"name\""),
+        mvc.perform(put(mine + "/likes/" + lineupId).with(person("fan"))).andExpect(jsonPath("$.likes").value(1));
+        send(put(own + "/" + lineupId), body.replace("{\"name\"", "{\"expectedVersion\": 1, \"name\""),
                 person("fan")).andExpect(status().isForbidden());
 
         mvc.perform(get(lineups).param("sort", "popular").param("unit", "violet")).andExpect(status().isOk())
@@ -217,10 +220,9 @@ class GameModeIntegrationTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("HIDDEN"));
 
         mvc.perform(get(lineups)).andExpect(jsonPath("$.totalElements").value(0));
-        mvc.perform(put(lineups + "/" + lineupId + "/like").with(person("other"))).andExpect(status().isNotFound());
-        mvc.perform(get(PUBLIC + "/" + code + "/auto-chess/me").with(person("author")))
-                .andExpect(jsonPath("$.lineups[0].status").value("HIDDEN"));
-        mvc.perform(delete(lineups + "/" + lineupId).param("expectedVersion", "2").with(person("author")))
+        mvc.perform(put(mine + "/likes/" + lineupId).with(person("other"))).andExpect(status().isNotFound());
+        mvc.perform(get(mine).with(person("author"))).andExpect(jsonPath("$.lineups[0].status").value("HIDDEN"));
+        mvc.perform(delete(own + "/" + lineupId).param("expectedVersion", "2").with(person("author")))
                 .andExpect(status().isNoContent());
         assertThat(jdbc.sql("select count(*) from gamemode.lineup_like where lineup_id = ?::uuid").param(lineupId)
                 .query(Long.class).single()).isZero();
@@ -229,7 +231,7 @@ class GameModeIntegrationTest {
     @Test
     void likesAreRateLimitedPerReader() throws Exception {
         publishedGuide();
-        String like = PUBLIC + "/" + code + "/auto-chess/lineups/" + LINEUP_ID + "/like";
+        String like = READER + "/" + code + "/auto-chess/likes/" + LINEUP_ID;
         String reader = "busy-" + UUID.randomUUID();
         for (int i = 0; i < 60; i++)
             mvc.perform(put(like).with(person(reader))).andExpect(status().isOk());

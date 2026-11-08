@@ -13,9 +13,12 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-/** Likes and saved lineups of the signed-in reader; every route needs a person's bearer token. */
+/**
+ * Likes and saved lineups of the signed-in reader. Like every {@code /users/me} route, each one needs a person's bearer
+ * token and is never cached.
+ */
 @RestController
-@RequestMapping(ApiPaths.ROOT + "/game-modes/{code}/auto-chess")
+@RequestMapping(ApiPaths.ROOT + "/users/me/game-modes/{code}/auto-chess")
 public class LineupController implements LineupApi {
     private final LineupInteractions lineups;
 
@@ -23,18 +26,18 @@ public class LineupController implements LineupApi {
         this.lineups = lineups;
     }
 
-    @GetMapping(path = "/me", version = "1")
+    @GetMapping(version = "1")
     public MyState me(@PathVariable String code, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return lineups.me(code);
     }
 
-    @PutMapping(path = "/lineups/{lineupId}/like", version = "1")
+    @PutMapping(path = "/likes/{lineupId}", version = "1")
     public LikeState like(@PathVariable String code, @PathVariable UUID lineupId) {
         return lineups.like(code, lineupId);
     }
 
-    @DeleteMapping(path = "/lineups/{lineupId}/like", version = "1")
+    @DeleteMapping(path = "/likes/{lineupId}", version = "1")
     public LikeState unlike(@PathVariable String code, @PathVariable UUID lineupId) {
         return lineups.unlike(code, lineupId);
     }
