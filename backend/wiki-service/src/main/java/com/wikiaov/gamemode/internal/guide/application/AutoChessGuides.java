@@ -216,6 +216,8 @@ public class AutoChessGuides {
                 if (unit.skill() != null)
                     add(usages, unit.skill().iconAssetId(), revision, "SKILL_ICON", scope, edition, unit.name());
             }
+            for (var group : content.itemGroups())
+                add(usages, group.iconAssetId(), revision, "ITEM_GROUP_ICON", scope, edition, group.name());
             for (var item : content.items())
                 add(usages, item.iconAssetId(), revision, "ITEM_ICON", scope, edition, item.name());
             for (var blessing : content.blessings())

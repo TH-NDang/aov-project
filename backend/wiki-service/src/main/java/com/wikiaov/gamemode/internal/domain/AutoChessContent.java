@@ -129,11 +129,15 @@ public record AutoChessContent(
         }
     }
 
-    /** A row of the encyclopedia's item grid. {@code slotCount} includes slots the capture could not read. */
+    /**
+     * A row of the encyclopedia's item grid. {@code slotCount} includes slots the capture could not read;
+     * {@code iconAssetId} is the stone the game draws at the start of the row.
+     */
     public record ItemGroup(
             String code,
             String name,
-            Integer slotCount
+            Integer slotCount,
+            UUID iconAssetId
     ) {
     }
 
@@ -171,6 +175,21 @@ public record AutoChessContent(
      * @param difficulty {@code EASY}, {@code MEDIUM}, {@code HARD}, or null
      * @param emblems    extra trait emblems counted by the lineup, at most three
      */
+    /**
+     * The board a lineup holds earlier in a match. {@code stage} is {@code EARLY} or {@code MID}; the lineup's own
+     * units are its late game.
+     */
+    public record LineupStage(
+            String stage,
+            List<String> unitCodes,
+            String note
+    ) {
+
+        public LineupStage {
+            unitCodes = copy(unitCodes);
+        }
+    }
+
     public record Lineup(
             UUID id,
             String code,
@@ -181,26 +200,32 @@ public record AutoChessContent(
             List<LineupUnit> units,
             List<String> emblems,
             List<String> blessingCodes,
-            String notes
+            String notes,
+            List<LineupStage> stages,
+            List<String> priorityItemCodes
     ) {
 
         public Lineup {
             units = copy(units);
             emblems = copy(emblems);
             blessingCodes = copy(blessingCodes);
+            stages = copy(stages);
+            priorityItemCodes = copy(priorityItemCodes);
         }
 
         public Lineup withId(UUID replacement) {
             return new Lineup(replacement, code, name, tier, difficulty, summary, units, emblems, blessingCodes,
-                    notes);
+                    notes, stages, priorityItemCodes);
         }
     }
 
     /** A unit placed in a lineup; {@code row} is {@code FRONT}, {@code MIDDLE}, {@code BACK} or null. */
+    /** A unit of a lineup; {@code row} and {@code column} (1–7) place it on the three-by-seven board when known. */
     public record LineupUnit(
             String unitCode,
             boolean carry,
             String row,
+            Integer column,
             List<String> itemCodes
     ) {
 

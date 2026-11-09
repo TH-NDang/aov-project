@@ -2,6 +2,7 @@ package com.wikiaov.gamemode.internal.application;
 
 import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
+import com.wikiaov.gamemode.internal.domain.AutoChessContentRules;
 import com.wikiaov.gamemode.internal.domain.GameModeContent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -59,7 +60,7 @@ public final class GameModeCommands {
             @Positive Long expectedVersion,
             @NotBlank @Size(max = 60) String name,
             @Size(max = 280) String note,
-            @NotNull @Size(min = 1, max = 10) List<LineupUnit> units,
+            @NotNull @Size(min = 1, max = AutoChessContentRules.MAX_LINEUP_UNITS) List<LineupUnit> units,
             @Size(max = 3) List<String> emblems
     ) {
 

@@ -1,6 +1,7 @@
 package com.wikiaov.gamemode.internal.domain;
 
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.Lineup;
+import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupStage;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.Unit;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.UnitStats;
@@ -25,9 +26,19 @@ public final class AutoChessContentRules {
 
     public static final Set<String> ROWS = Set.of("FRONT", "MIDDLE", "BACK");
 
-    public static final int MAX_LINEUP_UNITS = 10;
+    /** Cells in each of the three rows of a player's half of the board. */
+    public static final int BOARD_COLUMNS = 7;
+
+    /** Stages before the late game, which is the lineup itself. */
+    public static final Set<String> LINEUP_STAGES = Set.of("EARLY", "MID");
+
+    /** Ten board slots plus the one an item opens. */
+    public static final int MAX_LINEUP_UNITS = 11;
 
     public static final int MAX_ITEMS_PER_UNIT = 3;
+
+    /** Items a lineup builds first, in order. */
+    public static final int MAX_PRIORITY_ITEMS = 6;
 
     public static final int MAX_EMBLEMS = 3;
 
@@ -91,6 +102,7 @@ public final class AutoChessContentRules {
             if (unit.skill() != null)
                 add(ids, unit.skill().iconAssetId());
         });
+        content.itemGroups().forEach(group -> add(ids, group.iconAssetId()));
         content.items().forEach(item -> add(ids, item.iconAssetId()));
         content.blessings().forEach(blessing -> add(ids, blessing.iconAssetId()));
         return ids;
@@ -268,18 +280,43 @@ public final class AutoChessContentRules {
             lineupUnits(checks, at + ".units", lineup.units(), units, items);
             checks.references(at + ".emblems", lineup.emblems(), traits, MAX_EMBLEMS);
             checks.references(at + ".blessingCodes", lineup.blessingCodes(), blessings, 5);
+            lineupStages(checks, at + ".stages", lineup.stages(), units);
+            checks.references(at + ".priorityItemCodes", lineup.priorityItemCodes(), items, MAX_PRIORITY_ITEMS);
         }
     }
 
-    /** Shared by editorial and community lineups: known units once each, known items, valid rows. */
+    /** Early and mid game boards: each stage once, known units once each. */
+    private static void lineupStages(ContentChecks checks, String at, List<LineupStage> stages, Set<String> units) {
+        checks.size(at, stages, LINEUP_STAGES.size());
+        var seen = new HashSet<String>();
+        for (int s = 0; s < stages.size(); s++) {
+            var stage = stages.get(s);
+            String stageAt = at + "[" + s + "]";
+            checks.oneOf(stageAt + ".stage", stage.stage(), LINEUP_STAGES, true);
+            if (stage.stage() != null && !seen.add(stage.stage()))
+                checks.fail(stageAt + ".stage", "DUPLICATE_STAGE", "Each stage appears once.");
+
+            checks.references(stageAt + ".unitCodes", stage.unitCodes(), units, MAX_LINEUP_UNITS);
+            checks.text(stageAt + ".note", stage.note(), 500, false);
+        }
+    }
+
+    /** Shared by editorial and community lineups: known units once each, known items, valid rows and free cells. */
     static void lineupUnits(ContentChecks checks, String at, List<LineupUnit> lineupUnits, Set<String> units,
             Set<String> items) {
         checks.size(at, lineupUnits, MAX_LINEUP_UNITS);
         var codes = lineupUnits.stream().map(LineupUnit::unitCode).collect(Collectors.toList());
         checks.references(at + "[].unitCode", codes, units, MAX_LINEUP_UNITS);
+        var cells = new HashSet<String>();
         for (int u = 0; u < lineupUnits.size(); u++) {
             var unit = lineupUnits.get(u);
             checks.oneOf(at + "[" + u + "].row", unit.row(), ROWS, false);
+            checks.range(at + "[" + u + "].column", unit.column(), 1, BOARD_COLUMNS, false);
+            if (unit.column() != null && unit.row() == null)
+                checks.fail(at + "[" + u + "].row", "REQUIRED", "A unit with a column needs a row.");
+            if (unit.column() != null && unit.row() != null && !cells.add(unit.row() + "-" + unit.column()))
+                checks.fail(at + "[" + u + "].column", "DUPLICATE_CELL", "Two units stand on one cell.");
+
             checks.size(at + "[" + u + "].itemCodes", unit.itemCodes(), MAX_ITEMS_PER_UNIT);
             for (int x = 0; x < unit.itemCodes().size(); x++) {
                 if (!items.contains(unit.itemCodes().get(x)))

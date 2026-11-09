@@ -33,12 +33,13 @@ public final class AutoChessFixtures {
                 unit("amily", "Amily", 1, "giai-dieu-hoc-duong"));
         var items = List.of(new Item("thanh-kiem", "Thánh kiếm", "Tăng 70% ST chí mạng", "da-do", 0, null));
         var lineups = List.of(new Lineup(LINEUP_ID, "hoc-duong", "Học đường", "A", "EASY", null,
-                List.of(new LineupUnit("violet", true, "BACK", List.of("thanh-kiem")),
-                        new LineupUnit("florentino", false, "FRONT", List.of()),
-                        new LineupUnit("amily", false, "FRONT", List.of())),
-                List.of(), List.of(), null));
+                List.of(new LineupUnit("violet", true, "BACK", null, List.of("thanh-kiem")),
+                        new LineupUnit("florentino", false, "FRONT", null, List.of()),
+                        new LineupUnit("amily", false, "FRONT", null, List.of())),
+                List.of(), List.of(), null, List.of(), List.of("thanh-kiem")));
         return new AutoChessContent("Bách khoa thử", null, null, List.of(), traits, units,
-                List.of(new ItemGroup("da-do", "Nhóm đá đỏ", 7)), items, List.of(), List.of(), lineups, List.of());
+                List.of(new ItemGroup("da-do", "Nhóm đá đỏ", 7, null)), items, List.of(), List.of(), lineups,
+                List.of());
     }
 
     public static Unit unit(String code, String name, int cost, String... traits) {

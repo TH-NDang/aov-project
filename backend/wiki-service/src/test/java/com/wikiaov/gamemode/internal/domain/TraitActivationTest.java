@@ -33,11 +33,12 @@ class TraitActivationTest {
 
     @Test
     void insightsWeightUnitsByLikesAndCountTopTiers() {
-        var lineup = List.of(new LineupUnit("violet", true, null, List.of()),
-                new LineupUnit("florentino", false, null, List.of()), new LineupUnit("amily", false, null, List.of()));
+        var lineup = List.of(new LineupUnit("violet", true, null, null, List.of()),
+                new LineupUnit("florentino", false, null, null, List.of()),
+                new LineupUnit("amily", false, null, null, List.of()));
         var summary = LineupInsights.summarize(guide, List.of(new LineupInsights.Sample(lineup, List.of(), 4),
-                new LineupInsights.Sample(List.of(new LineupUnit("arduin", false, null, List.of()),
-                        new LineupUnit("florentino", true, null, List.of())), List.of(), 0)));
+                new LineupInsights.Sample(List.of(new LineupUnit("arduin", false, null, null, List.of()),
+                        new LineupUnit("florentino", true, null, null, List.of())), List.of(), 0)));
 
         assertThat(summary.lineupCount()).isEqualTo(2);
         assertThat(summary.units().getFirst().code()).isEqualTo("florentino");
