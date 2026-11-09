@@ -122,6 +122,38 @@ const PATHS = {
   chevronRight: <path d="m10 8 4 4-4 4" />,
   chevronLeft: <path d="m14 8-4 4 4 4" />,
   rows: <path d="M4 7h16M4 12h16M4 17h16" />,
+  copy: <path d="M9 9h10v11H9zM6 15H5V4h10v1" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  share: <path d="M4 13v6h16v-6M12 3v12M7.5 7.5 12 3l4.5 4.5" />,
+  trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />,
+  /** A broom, tilted as if sweeping: handle, binding, a fanned head with bristles. Clears without deleting. */
+  broom: (
+    <g transform="translate(12 12) rotate(30) scale(0.9) translate(-12 -12)">
+      <path d="M12 2v8.5" />
+      <path d="M8.5 10.5h7l.5 2.5H8Z" />
+      <path d="M8 13 5.5 21h13L16 13" />
+      <path d="m10 15.5-.7 5.5M12 15.5V21M14 15.5l.7 5.5" />
+    </g>
+  ),
+  clipboard: <path d="M9 4h6v3H9zM8 5.5H6v14.5h12V5.5h-2M9 12h6M9 15.5h4" />,
+  bulb: <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3Z" />,
+  /** Cards in a grid. */
+  cards: <path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" />,
+  /** Stats: three bars rising from a baseline. */
+  stats: (
+    <>
+      <path d="M3.5 20h17" />
+      <rect x="5" y="13" width="3.5" height="7" rx="1" />
+      <rect x="10.25" y="8.5" width="3.5" height="11.5" rx="1" />
+      <rect x="15.5" y="4" width="3.5" height="16" rx="1" />
+    </>
+  ),
+  /** A list beside an open entry. */
+  detail: <path d="M3 5h18v14H3zM10 5v14M5 8.5h3M5 12h3M5 15.5h3M13 9h5M13 12.5h5M13 16h3" />,
+  /** A board of three rows of square cells. */
+  chessboard: <path d="M3 6h18v12H3zM3 10h18M3 14h18M7.5 6v12M12 6v12M16.5 6v12" />,
+  /** A table of rows and columns. */
+  table: <path d="M3 5h18v14H3zM3 10h18M3 14.5h18M8 5v14M13.5 5v14" />,
   board: <path d="M4 5h5v5H4zM15 5h5v5h-5zM15 14h5v5h-5zM9 7.5h6M9 7.5l6 9" />,
   check: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   home: <path d="M4 10.5 12 4l8 6.5V20h-5v-6H9v6H4Z" />,

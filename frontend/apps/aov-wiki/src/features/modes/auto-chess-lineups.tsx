@@ -1,25 +1,54 @@
 import { useMemo, useState, type ReactNode } from "react"
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Link, useSearchParams } from "react-router"
+import { Link, useNavigate, useSearchParams } from "react-router"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@aov/ui/components/public-overlay"
+import { WikiIcon } from "../../components/wiki-icon"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext } from "../../context/wiki-context"
 import { signIn, useWikiSession } from "../auth/wiki-auth"
 import {
-  costSummary,
   decodeLineup,
   DIFFICULTY_LABEL,
   encodeLineup,
-  foldText,
   MAX_EMBLEMS,
+  BOARD_SLOTS,
   MAX_LINEUP_UNITS,
   ROW_LABEL,
+  cellOf,
   suggestUnits,
   traitCounts,
+  type BoardRow,
+  type BuilderUnit,
   type Lineup,
   type LineupUnit,
 } from "./auto-chess-model"
-import { costStyle, TraitIcon, TraitTag, UnitPortrait, type GuideIndex } from "./auto-chess-guide"
+import {
+  BoardGrid,
+  BoardPiece,
+  LineupBoard,
+  LineupViewSwitch,
+  placeUnits,
+  useLineupView,
+  type LineupView,
+} from "./lineup-board"
+import {
+  BlessingIcon,
+  CostChips,
+  TraitFilter,
+  costStyle,
+  TIER_STYLE,
+  TraitIcon,
+  TraitTag,
+  UnitPortrait,
+  type GuideIndex,
+} from "./auto-chess-guide"
+import { ModeDialog, ModeFab } from "./mode-ui"
 import {
   communityLineupsQuery,
   deleteLineup,
@@ -95,36 +124,67 @@ function LineupUnits({
   index: GuideIndex
   onOpen: (code: string) => void
 }) {
+  const shown = units.filter((item) => index.units.has(item.unitCode))
   return (
-    <div className="lineup-units">
-      {units.map((item) => {
-        const unit = index.units.get(item.unitCode)
-        if (!unit) return null
+    <div className="lineup-units" aria-label={`${Math.min(shown.length, BOARD_SLOTS)}/${BOARD_SLOTS} ô`}>
+      {shown.map((item, at) => {
+        const unit = index.units.get(item.unitCode)!
+        const extra = at >= BOARD_SLOTS
         return (
           <button
             key={item.unitCode}
             type="button"
             className="lineup-unit"
             data-carry={item.carry}
+            data-extra={extra || undefined}
             style={costStyle(unit.cost)}
-            title={`${unit.name}${item.row ? ` · ${ROW_LABEL[item.row]}` : ""}${item.carry ? " · chủ lực" : ""}`}
+            title={`${unit.name}${item.row ? ` · ${ROW_LABEL[item.row]}` : ""}${item.carry ? " · chủ lực" : ""}${extra ? " · ô thêm từ trang bị" : ""}`}
             onClick={() => onOpen(unit.code)}
           >
-            {item.carry && <em title="Chủ lực">★</em>}
-            <UnitPortrait unit={unit} index={index} size="md" />
+            <span className="lineup-portrait">
+              <UnitPortrait unit={unit} index={index} size="md" />
+              {item.carry && (
+                <em className="carry-mark" title="Chủ lực" aria-label="Chủ lực">
+                  M
+                </em>
+              )}
+            </span>
             <span>{unit.name}</span>
             {item.itemCodes.length > 0 && (
               <span className="lineup-items">
                 {item.itemCodes.map((code) => {
-                  const src = index.image(index.items.get(code)?.iconAssetId)
-                  return src ? <img key={code} src={src} alt={index.items.get(code)?.name ?? ""} /> : null
+                  const entry = index.items.get(code)
+                  const src = index.image(entry?.iconAssetId)
+                  return src ? <img key={code} src={src} alt={entry?.name ?? ""} title={entry?.name ?? code} /> : null
                 })}
               </span>
             )}
           </button>
         )
       })}
+      {Array.from({ length: Math.max(0, BOARD_SLOTS - shown.length) }, (_, at) => (
+        <span key={`empty-${at}`} className="lineup-slot-empty" aria-hidden="true" />
+      ))}
     </div>
+  )
+}
+
+/** The board when the lineup places at least one unit and the reader chose it; the list otherwise. */
+function LineupPieces({
+  units,
+  view,
+  index,
+  onOpen,
+}: {
+  units: LineupUnit[]
+  view: LineupView
+  index: GuideIndex
+  onOpen: (code: string) => void
+}) {
+  return view === "board" && units.some((unit) => cellOf(unit)) ? (
+    <LineupBoard units={units} index={index} onOpen={onOpen} />
+  ) : (
+    <LineupUnits units={units} index={index} onOpen={onOpen} />
   )
 }
 
@@ -166,6 +226,7 @@ export function LineupsTab({
 }) {
   const { href } = useWikiContext()
   const likes = useLikes(code)
+  const [view, setView] = useLineupView()
   const [sort, setSort] = useState<LineupSort>("popular")
   const [unit, setUnit] = useState<string | null>(null)
   const community = useInfiniteQuery(communityLineupsQuery(code, sort, unit))
@@ -183,9 +244,12 @@ export function LineupsTab({
   return (
     <section className="mode-page" aria-label="Đội hình">
       {likes.message && <p className="mode-message">{likes.message}</p>}
-      <h2 className="mode-section-title">
-        Đội hình đề xuất <small>xếp theo hạng rồi lượt thích</small>
-      </h2>
+      <div className="lineup-section-head">
+        <h2 className="mode-section-title">
+          Đội hình đề xuất <small>xếp theo hạng rồi lượt thích</small>
+        </h2>
+        <LineupViewSwitch view={view} onChange={setView} />
+      </div>
       {editorial.length ? (
         <div className="lineup-list">
           {editorial.map((lineup) => (
@@ -196,6 +260,7 @@ export function LineupsTab({
               likes={likes}
               base={guide.lineupLikes[lineup.id]?.likes ?? 0}
               recent={guide.lineupLikes[lineup.id]?.recentLikes ?? 0}
+              view={view}
               onOpen={onOpen}
               builder={builderLink(lineup.units, lineup.emblems)}
             />
@@ -239,9 +304,6 @@ export function LineupsTab({
             </option>
           ))}
         </select>
-        <Link className="mode-chip" to={href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh`)}>
-          + Tạo đội hình
-        </Link>
       </div>
       {community.isPending ? (
         <p className="mode-empty">Đang tải…</p>
@@ -256,22 +318,173 @@ export function LineupsTab({
               <header className="lineup-head">
                 <h3>{lineup.name}</h3>
                 {lineup.recentLikes > 0 && <span className="mode-badge">+{lineup.recentLikes} tuần này</span>}
-                <LikeButton id={lineup.id} base={lineup.likes} likes={likes} own={own.has(lineup.id)} />
+                <span className="lineup-head-actions">
+                  <LikeButton id={lineup.id} base={lineup.likes} likes={likes} own={own.has(lineup.id)} />
+                  <LineupCopyMenu builder={builderLink(lineup.units, lineup.emblems)} />
+                </span>
               </header>
-              {lineup.note && <p className="mode-prose">{lineup.note}</p>}
-              <LineupUnits units={lineup.units} index={index} onOpen={onOpen} />
-              <ActiveTraits units={lineup.units} emblems={lineup.emblems} index={index} />
-              <div className="lineup-actions">
-                <Link className="mode-chip" to={builderLink(lineup.units, lineup.emblems)}>
-                  Mở trong công cụ xếp đội hình
-                </Link>
+              <div className="lineup-tags">
+                <ActiveTraits units={lineup.units} emblems={lineup.emblems} index={index} />
               </div>
+              <LineupFrame stages={[]} stage="LATE" onStage={() => undefined}>
+                <LineupPieces units={lineup.units} view={view} index={index} onOpen={onOpen} />
+              </LineupFrame>
+              <LineupTips tip={lineup.note} />
             </article>
           ))}
           <InfiniteScroll query={community} label="đội hình cộng đồng" />
         </div>
       )}
+      <ModeFab label="Đăng đội hình" to={href(`/modes/${encodeURIComponent(code)}/xep-doi-hinh`)} />
     </section>
+  )
+}
+
+const STAGES = [
+  { key: "EARLY", label: "Đầu trận" },
+  { key: "MID", label: "Giữa trận" },
+  { key: "LATE", label: "Cuối trận" },
+] as const
+
+/** Items the lineup builds first, numbered in order, each naming itself and its effect on hover. */
+function PriorityItems({ codes, index }: { codes: string[]; index: GuideIndex }) {
+  return (
+    <section className="lineup-extra" aria-label="Trang bị ưu tiên">
+      <h4>Trang bị ưu tiên</h4>
+      <ol className="lineup-priority">
+        {codes.map((code, at) => {
+          const item = index.items.get(code)
+          const src = index.image(item?.iconAssetId)
+          return (
+            <li key={code} title={item?.effect?.replace(/<[^>]+>/g, "") ?? undefined}>
+              <b>{at + 1}</b>
+              {src && <img src={src} alt="" />}
+              <span>{item?.name ?? code}</span>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
+}
+
+/** Blessings to take with the lineup, in order, drawn on their tier's color. */
+function PriorityBlessings({ codes, index }: { codes: string[]; index: GuideIndex }) {
+  const blessings = new Map(index.content.blessings.map((blessing) => [blessing.code, blessing]))
+  return (
+    <section className="lineup-extra" aria-label="Chúc phúc ưu tiên">
+      <h4>Chúc phúc ưu tiên</h4>
+      <ol className="lineup-priority">
+        {codes.map((code, at) => {
+          const blessing = blessings.get(code)
+          if (!blessing) return null
+          return (
+            <li
+              key={code}
+              className="lineup-blessing"
+              style={TIER_STYLE[blessing.tier]}
+              title={blessing.description?.replace(/<[^>]+>/g, "") ?? undefined}
+            >
+              <b>{at + 1}</b>
+              <BlessingIcon blessing={blessing} index={index} />
+              <span>{blessing.name}</span>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
+}
+
+/** Open a lineup in the builder, or copy it to paste there later with the builder's paste button. */
+function LineupCopyMenu({ builder }: { builder: string }) {
+  const navigate = useNavigate()
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    await navigator.clipboard?.writeText(new URL(builder, window.location.origin).toString())
+    setCopied(true)
+    window.setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger
+        className="lineup-icon-button"
+        aria-label={copied ? "Đã sao chép đội hình" : "Sao chép đội hình"}
+        title={copied ? "Đã sao chép" : "Sao chép đội hình"}
+        data-done={copied || undefined}
+      >
+        <WikiIcon name={copied ? "check" : "copy"} size={18} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={8} drawerTitle="Đội hình này" className="lineup-menu">
+        <DropdownMenuItem className="lineup-menu-item" onSelect={() => navigate(builder)}>
+          <WikiIcon name="board" size={20} />
+          <span>
+            <b>Mở trong Xếp đội hình</b>
+            <small>Xếp tiếp ngay từ đội hình này</small>
+          </span>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="lineup-menu-item" onSelect={() => void copy()}>
+          <WikiIcon name="copy" size={20} />
+          <span>
+            <b>Sao chép đội hình</b>
+            <small>Dán vào Xếp đội hình bằng nút Dán, hoặc gửi cho bạn bè</small>
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/** The board in a frame; the frame's top edge names the stage, or switches between stages when there are some. */
+function LineupFrame({
+  stages,
+  stage,
+  onStage,
+  children,
+}: {
+  stages: NonNullable<Lineup["stages"]>
+  stage: "EARLY" | "MID" | "LATE"
+  onStage: (stage: "EARLY" | "MID" | "LATE") => void
+  children: ReactNode
+}) {
+  return (
+    <section className="lineup-frame" aria-label="Đội hình theo giai đoạn">
+      <div className="lineup-frame-head">
+        {stages.length > 0 ? (
+          <div className="lineup-stages" role="group" aria-label="Giai đoạn trận">
+            {STAGES.filter((entry) => entry.key === "LATE" || stages.some((item) => item.stage === entry.key)).map(
+              (entry) => (
+                <button
+                  key={entry.key}
+                  type="button"
+                  aria-pressed={stage === entry.key}
+                  onClick={() => onStage(entry.key)}
+                >
+                  {entry.label}
+                </button>
+              ),
+            )}
+          </div>
+        ) : (
+          <span className="lineup-frame-label">Đội hình</span>
+        )}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/** Tips for playing the lineup. */
+function LineupTips({ tip }: { tip?: string | null }) {
+  if (!tip) return null
+  return (
+    <aside className="lineup-tips" aria-label="Mẹo">
+      <WikiIcon name="bulb" size={20} />
+      <div>
+        <h4>Mẹo</h4>
+        <p>{tip}</p>
+      </div>
+    </aside>
   )
 }
 
@@ -281,6 +494,7 @@ function EditorialLineup({
   likes,
   base,
   recent,
+  view,
   onOpen,
   builder,
 }: {
@@ -289,38 +503,65 @@ function EditorialLineup({
   likes: Likes
   base: number
   recent: number
+  view: LineupView
   onOpen: (code: string) => void
   builder: string
 }) {
-  const cost = costSummary(
-    index.content,
-    lineup.units.map((unit) => unit.unitCode),
-  )
+  const stages = lineup.stages ?? []
+  const [stage, setStage] = useState<"EARLY" | "MID" | "LATE">("LATE")
+  const current = stage === "LATE" ? null : stages.find((entry) => entry.stage === stage)
+  const shown: LineupUnit[] = current
+    ? current.unitCodes.map((unitCode) => {
+        const full = lineup.units.find((unit) => unit.unitCode === unitCode)
+        return { unitCode, carry: !!full?.carry, row: full?.row, column: full?.column, itemCodes: [] }
+      })
+    : lineup.units
+  const side = (lineup.priorityItemCodes?.length ?? 0) > 0 || lineup.blessingCodes.length > 0
   return (
     <article className="lineup-card">
       <header className="lineup-head">
-        <span className="lineup-tier" data-tier={lineup.tier ?? undefined} title="Hạng biên tập">
-          {lineup.tier ?? "–"}
-        </span>
-        <h3>{lineup.name}</h3>
+        {lineup.tier && (
+          <span className="lineup-tier" data-tier={lineup.tier} title="Hạng biên tập">
+            {lineup.tier}
+          </span>
+        )}
+        <div className="lineup-title">
+          <h3>{lineup.name}</h3>
+          {lineup.summary && <p className="lineup-summary">{lineup.summary}</p>}
+        </div>
         {lineup.difficulty && <span className="mode-badge">Độ khó: {DIFFICULTY_LABEL[lineup.difficulty]}</span>}
         {recent > 0 && <span className="mode-badge">+{recent} tuần này</span>}
-        <LikeButton id={lineup.id} base={base} likes={likes} />
+        <span className="lineup-head-actions">
+          <LikeButton id={lineup.id} base={base} likes={likes} />
+          <LineupCopyMenu builder={builder} />
+        </span>
       </header>
-      {lineup.summary && <p className="mode-prose">{lineup.summary}</p>}
-      <LineupUnits units={lineup.units} index={index} onOpen={onOpen} />
-      <ActiveTraits units={lineup.units} emblems={lineup.emblems} index={index} />
-      <p className="mode-meta">
-        Tổng giá {cost.total} vàng · {lineup.units.length} quân
-        {lineup.emblems.length > 0 &&
-          ` · huy hiệu: ${lineup.emblems.map((code) => index.traits.get(code)?.name).join(", ")}`}
-      </p>
-      {lineup.notes && <p className="guide-note">{lineup.notes}</p>}
-      <div className="lineup-actions">
-        <Link className="mode-chip" to={builder}>
-          Mở trong công cụ xếp đội hình
-        </Link>
+      <div className="lineup-tags">
+        <ActiveTraits units={shown} emblems={lineup.emblems} index={index} />
+        {lineup.emblems.length > 0 && (
+          <div className="guide-trait-tags" aria-label="Huy hiệu">
+            <span className="mode-meta">Huy hiệu</span>
+            {lineup.emblems.map((emblem, at) => (
+              <TraitTag key={`${emblem}-${at}`} code={emblem} index={index} />
+            ))}
+          </div>
+        )}
       </div>
+      <div className="lineup-body" data-side={side || undefined}>
+        <LineupFrame stages={stages} stage={stage} onStage={setStage}>
+          <LineupPieces units={shown} view={view} index={index} onOpen={onOpen} />
+          {current?.note && <p className="lineup-stage-note">{current.note}</p>}
+        </LineupFrame>
+        {side && (
+          <div className="lineup-side">
+            {(lineup.priorityItemCodes?.length ?? 0) > 0 && (
+              <PriorityItems codes={lineup.priorityItemCodes!} index={index} />
+            )}
+            {lineup.blessingCodes.length > 0 && <PriorityBlessings codes={lineup.blessingCodes} index={index} />}
+          </div>
+        )}
+      </div>
+      <LineupTips tip={lineup.notes} />
     </article>
   )
 }
@@ -336,9 +577,43 @@ export function BuilderTab({
 }) {
   const [params, setParams] = useSearchParams()
   const { units, emblems } = useMemo(() => decodeLineup(params.toString(), index.content), [params, index])
-  const [search, setSearch] = useState("")
   const [cost, setCost] = useState<number | null>(null)
+  const [traitPicks, setTraitPicks] = useState<string[]>([])
+  const [picking, setPicking] = useState(false)
+  const [view, setView] = useLineupView()
+  const [selected, setSelected] = useState<string | null>(null)
+  const [target, setTarget] = useState<{ row: BoardRow; column: number } | null>(null)
+  const [emblemPicking, setEmblemPicking] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [posting, setPosting] = useState(false)
+  const [pasting, setPasting] = useState<{ open: boolean; text: string; message: string }>({
+    open: false,
+    text: "",
+    message: "",
+  })
+  const applyPasted = (text: string) => {
+    const trimmed = text.trim()
+    let query = trimmed.replace(/^\?/, "")
+    try {
+      query = new URL(trimmed).search
+    } catch {
+      // Not an address: the text is the lineup's query itself.
+    }
+    const next = decodeLineup(query, index.content)
+    if (!next.units.length) {
+      setPasting({ open: true, text: trimmed, message: "Không đọc được đội hình từ nội dung này." })
+      return
+    }
+    write(next.units, next.emblems)
+    setPasting({ open: false, text: "", message: `Đã dán ${next.units.length} quân.` })
+  }
+  async function paste() {
+    try {
+      applyPasted(await navigator.clipboard.readText())
+    } catch {
+      setPasting({ open: true, text: "", message: "" })
+    }
+  }
   const layout = usePageLayout()
   const chosen = new Set(units.map((unit) => unit.unitCode))
   const counts = traitCounts(
@@ -346,19 +621,15 @@ export function BuilderTab({
     units.map((unit) => unit.unitCode),
     emblems,
   )
-  const summary = costSummary(index.content, [...chosen])
   const suggestions = suggestUnits(index.content, [...chosen], emblems).slice(0, 6)
-  const needle = foldText(search.trim())
-  const pool = index.content.units.filter(
-    (unit) =>
-      (!cost || unit.cost === cost) &&
-      (!needle ||
-        foldText([unit.name, ...unit.traitCodes.map((code) => index.traits.get(code)?.name ?? "")].join(" ")).includes(
-          needle,
-        )),
-  )
+  const picksOf = (kind: "FACTION" | "CLASS") =>
+    traitPicks.filter((traitCode) => index.traits.get(traitCode)?.kind === kind)
+  const fitsKind = (unit: (typeof index.content.units)[number], codes: string[]) =>
+    !codes.length || codes.some((traitCode) => unit.traitCodes.includes(traitCode))
+  const base = index.content.units.filter((unit) => !cost || unit.cost === cost)
+  const pool = base.filter((unit) => fitsKind(unit, picksOf("FACTION")) && fitsKind(unit, picksOf("CLASS")))
 
-  function write(next: { unitCode: string; carry: boolean }[], nextEmblems = emblems) {
+  function write(next: BuilderUnit[], nextEmblems = emblems) {
     setParams(
       (current) => {
         const result = new URLSearchParams(encodeLineup(next, nextEmblems))
@@ -369,10 +640,40 @@ export function BuilderTab({
       { replace: true, preventScrollReset: true },
     )
   }
-  const toggleUnit = (code: string) =>
-    chosen.has(code)
-      ? write(units.filter((unit) => unit.unitCode !== code))
-      : units.length < MAX_LINEUP_UNITS && write([...units, { unitCode: code, carry: false }])
+  const { placed, bench } = placeUnits(units)
+  /** Adds a unit, onto the cell an empty-cell tap chose; removes it when already chosen. */
+  const toggleUnit = (code: string) => {
+    if (chosen.has(code)) {
+      if (selected === code) setSelected(null)
+      write(units.filter((unit) => unit.unitCode !== code))
+      return
+    }
+    if (units.length >= MAX_LINEUP_UNITS) return
+    const cell = target && !placed.has(`${target.row}-${target.column}`) ? target : null
+    write([...units, cell ? { unitCode: code, carry: false, ...cell } : { unitCode: code, carry: false }])
+    if (cell) {
+      setTarget(null)
+      setPicking(false)
+    }
+  }
+  /** A unit moved onto a cell, or off the board with no cell; whoever stood there takes the mover's old place. */
+  const moveTo = (code: string, cell: { row: BoardRow; column: number } | null) => {
+    const mover = units.find((unit) => unit.unitCode === code)
+    if (!mover) return
+    const occupant = cell ? placed.get(`${cell.row}-${cell.column}`) : undefined
+    const at = (unit: BuilderUnit, next: { row?: BoardRow | null; column?: number | null } | null): BuilderUnit =>
+      next?.row && next.column
+        ? { unitCode: unit.unitCode, carry: unit.carry, row: next.row, column: next.column }
+        : { unitCode: unit.unitCode, carry: unit.carry }
+    write(
+      units.map((unit) =>
+        unit === mover ? at(unit, cell) : unit === occupant && occupant !== mover ? at(unit, mover) : unit,
+      ),
+    )
+    setSelected(null)
+  }
+  const selectedUnit = selected ? units.find((unit) => unit.unitCode === selected) : undefined
+  const selectedInfo = selectedUnit ? index.units.get(selectedUnit.unitCode) : undefined
 
   async function copyLink() {
     await navigator.clipboard?.writeText(window.location.href)
@@ -380,149 +681,363 @@ export function BuilderTab({
     window.setTimeout(() => setCopied(false), 2000)
   }
 
+  /** Filters and every unit, in the drawer that an empty slot or the board's + opens on every screen. */
+  const unitPicker = (
+    <>
+      <div className="builder-pool-head">
+        <TraitFilter
+          index={index}
+          picked={traitPicks}
+          onChange={setTraitPicks}
+          countWith={(traitCode) => {
+            const kind = index.traits.get(traitCode)?.kind
+            const other = picksOf(kind === "FACTION" ? "CLASS" : "FACTION")
+            return base.filter((unit) => unit.traitCodes.includes(traitCode) && fitsKind(unit, other)).length
+          }}
+        />
+        <CostChips
+          costs={[...new Set(index.content.units.map((unit) => unit.cost))].sort((a, b) => a - b)}
+          value={cost}
+          onChange={setCost}
+        />
+      </div>
+      <div className="builder-pool">
+        {pool.map((unit) => (
+          <button
+            key={unit.code}
+            type="button"
+            aria-pressed={chosen.has(unit.code)}
+            style={costStyle(unit.cost)}
+            title={unit.traitCodes.map((code) => index.traits.get(code)?.name).join(" · ")}
+            onClick={() => toggleUnit(unit.code)}
+            disabled={!chosen.has(unit.code) && units.length >= MAX_LINEUP_UNITS}
+          >
+            <UnitPortrait unit={unit} index={index} size="sm" />
+            <span>{unit.name}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  )
+
+  const slotAt = (slot: number) => {
+    const item = units[slot]
+    const unit = item ? index.units.get(item.unitCode) : undefined
+    if (!item || !unit)
+      return (
+        <button
+          key={slot}
+          type="button"
+          className="builder-slot builder-slot-empty"
+          data-extra={slot >= BOARD_SLOTS || undefined}
+          aria-label={slot >= BOARD_SLOTS ? "Thêm quân vào ô thêm" : "Thêm quân cờ"}
+          onClick={() => setPicking(true)}
+        >
+          <span className="builder-slot-plus" aria-hidden="true">
+            +
+          </span>
+          <span>{slot >= BOARD_SLOTS ? "Ô thêm" : "Thêm quân"}</span>
+        </button>
+      )
+    return (
+      <div
+        key={item.unitCode}
+        className="builder-slot"
+        data-extra={slot >= BOARD_SLOTS || undefined}
+        style={costStyle(unit.cost)}
+      >
+        <button
+          type="button"
+          style={{ border: 0, padding: 0 }}
+          title={`Xem ${unit.name}`}
+          onClick={() => onOpen(unit.code)}
+        >
+          <UnitPortrait unit={unit} index={index} size="sm" />
+        </button>
+        <strong>{unit.name}</strong>
+        <span className="builder-slot-actions">
+          <button
+            type="button"
+            aria-pressed={item.carry}
+            aria-label={`${unit.name} là chủ lực`}
+            title="Chủ lực (M)"
+            className="carry-toggle"
+            onClick={() => write(units.map((other) => (other === item ? { ...other, carry: !other.carry } : other)))}
+          >
+            M
+          </button>
+          <button
+            type="button"
+            onClick={() => toggleUnit(unit.code)}
+            aria-label={`Bỏ ${unit.name}`}
+            title="Bỏ khỏi đội hình"
+          >
+            ✕
+          </button>
+        </span>
+      </div>
+    )
+  }
+
   return (
     <section className="mode-page" aria-label="Xếp đội hình">
-      <p className="mode-lead">
-        Chọn tối đa {MAX_LINEUP_UNITS} quân cờ để xem Phe/Nghề được kích hoạt. Mỗi quân cờ khác nhau được tính một lần;
-        huy hiệu (từ chúc phúc như “Trái tim…”) cộng thêm một. Đường dẫn trang luôn chứa đội hình để chia sẻ.
-      </p>
       <div className="builder">
         <div className="mode-page">
-          <div className="builder-board" aria-label="Đội hình đang xếp">
-            {Array.from({ length: MAX_LINEUP_UNITS }, (_, slot) => {
-              const item = units[slot]
-              const unit = item ? index.units.get(item.unitCode) : undefined
-              if (!item || !unit)
-                return (
-                  <div key={slot} className="builder-slot">
-                    Trống
-                  </div>
-                )
-              return (
-                <div key={item.unitCode} className="builder-slot" style={costStyle(unit.cost)}>
-                  <button
-                    type="button"
-                    style={{ border: 0, padding: 0 }}
-                    title={`Xem ${unit.name}`}
-                    onClick={() => onOpen(unit.code)}
-                  >
-                    <UnitPortrait unit={unit} index={index} size="sm" />
-                  </button>
-                  <strong>{unit.name}</strong>
-                  <span className="builder-slot-actions">
+          <section className="builder-board-card" aria-label="Đội hình đang xếp">
+            <header className="builder-board-head">
+              <span className="builder-board-title">
+                Đội hình{" "}
+                <b>
+                  {Math.min(units.length, BOARD_SLOTS)}/{BOARD_SLOTS}
+                </b>
+                {units.length > BOARD_SLOTS ? " + ô thêm" : ""}
+              </span>
+              <span className="builder-board-actions">
+                <LineupViewSwitch view={view} onChange={setView} />
+                <button
+                  type="button"
+                  className="lineup-icon-button"
+                  aria-label="Thêm quân cờ"
+                  title="Thêm quân cờ"
+                  disabled={units.length >= MAX_LINEUP_UNITS}
+                  onClick={() => setPicking(true)}
+                >
+                  <WikiIcon name="plus" size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="lineup-icon-button"
+                  aria-label={copied ? "Đã chép đường dẫn" : "Chép đường dẫn chia sẻ"}
+                  title={copied ? "Đã chép đường dẫn" : "Chép đường dẫn chia sẻ"}
+                  data-done={copied || undefined}
+                  disabled={!units.length}
+                  onClick={() => void copyLink()}
+                >
+                  <WikiIcon name={copied ? "check" : "share"} size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="lineup-icon-button"
+                  aria-label="Dán đội hình đã sao chép"
+                  title="Dán đội hình đã sao chép"
+                  onClick={() => void paste()}
+                >
+                  <WikiIcon name="clipboard" size={18} />
+                </button>
+                <button
+                  type="button"
+                  className="lineup-icon-button"
+                  data-tone="danger"
+                  aria-label="Xóa hết"
+                  title="Xóa hết"
+                  disabled={!units.length}
+                  onClick={() => {
+                    setSelected(null)
+                    write([], [])
+                  }}
+                >
+                  <WikiIcon name="broom" size={18} />
+                </button>
+              </span>
+            </header>
+            {view === "board" ? (
+              <BoardGrid
+                label="Bàn cờ đang xếp"
+                cell={(row, column) => {
+                  const item = placed.get(`${row}-${column}`)
+                  if (item)
+                    return (
+                      <BoardPiece
+                        item={item}
+                        index={index}
+                        selected={selected === item.unitCode}
+                        onClick={() =>
+                          selected && selected !== item.unitCode
+                            ? moveTo(selected, { row, column })
+                            : setSelected(selected === item.unitCode ? null : item.unitCode)
+                        }
+                      />
+                    )
+                  return (
                     <button
                       type="button"
-                      aria-pressed={item.carry}
-                      aria-label={`${unit.name} là chủ lực`}
-                      title="Chủ lực"
-                      onClick={() =>
-                        write(units.map((other) => (other === item ? { ...other, carry: !other.carry } : other)))
+                      className="board-empty"
+                      data-target={selected ? true : undefined}
+                      aria-label={
+                        selected
+                          ? `Đặt vào ${ROW_LABEL[row]}, ô ${column}`
+                          : `Thêm quân vào ${ROW_LABEL[row]}, ô ${column}`
                       }
+                      disabled={!selected && units.length >= MAX_LINEUP_UNITS}
+                      onClick={() => {
+                        if (selected) return moveTo(selected, { row, column })
+                        setTarget({ row, column })
+                        setPicking(true)
+                      }}
                     >
-                      ★
+                      <span aria-hidden="true">+</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => toggleUnit(unit.code)}
-                      aria-label={`Bỏ ${unit.name}`}
-                      title="Bỏ khỏi đội hình"
-                    >
-                      ✕
-                    </button>
-                  </span>
+                  )
+                }}
+                footer={
+                  <>
+                    {bench.length > 0 && (
+                      <div className="board-bench" aria-label="Chưa xếp chỗ">
+                        <span className="mode-meta">Chưa xếp chỗ</span>
+                        {bench.map((item) => (
+                          <BoardPiece
+                            key={item.unitCode}
+                            item={item}
+                            index={index}
+                            selected={selected === item.unitCode}
+                            onClick={() => setSelected(selected === item.unitCode ? null : item.unitCode)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    {selectedUnit && selectedInfo && (
+                      <div className="board-selected" aria-label={`Đang chọn ${selectedInfo.name}`}>
+                        <strong>{selectedInfo.name}</strong>
+                        <span className="builder-slot-actions">
+                          <button
+                            type="button"
+                            aria-pressed={selectedUnit.carry}
+                            className="carry-toggle"
+                            title="Chủ lực (M)"
+                            aria-label={`${selectedInfo.name} là chủ lực`}
+                            onClick={() =>
+                              write(
+                                units.map((unit) => (unit === selectedUnit ? { ...unit, carry: !unit.carry } : unit)),
+                              )
+                            }
+                          >
+                            M
+                          </button>
+                          <button
+                            type="button"
+                            title={`Xem ${selectedInfo.name}`}
+                            aria-label={`Xem ${selectedInfo.name}`}
+                            onClick={() => onOpen(selectedInfo.code)}
+                          >
+                            <WikiIcon name="info" size={16} />
+                          </button>
+                          {cellOf(selectedUnit) && (
+                            <button
+                              type="button"
+                              title="Đưa xuống hàng chờ"
+                              aria-label="Đưa xuống hàng chờ"
+                              onClick={() => moveTo(selectedUnit.unitCode, null)}
+                            >
+                              <WikiIcon name="chevron" size={16} />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            title="Bỏ khỏi đội hình"
+                            aria-label={`Bỏ ${selectedInfo.name}`}
+                            onClick={() => toggleUnit(selectedUnit.unitCode)}
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      </div>
+                    )}
+                  </>
+                }
+              />
+            ) : (
+              <>
+                <div className="builder-board">{Array.from({ length: BOARD_SLOTS }, (_, slot) => slotAt(slot))}</div>
+                {/* An item opens one more slot; it stays apart so the board reads as the game's ten. */}
+                <div className="builder-extra">
+                  {slotAt(BOARD_SLOTS)}
+                  <p className="mode-meta">
+                    <b>Ô thêm</b> · cho quân thứ {BOARD_SLOTS + 1} khi có trang bị mở thêm ô.
+                  </p>
                 </div>
-              )
-            })}
-          </div>
-          <div className="mode-toolbar">
-            <span className="mode-meta">
-              {units.length}/{MAX_LINEUP_UNITS} quân · tổng giá {summary.total} vàng
-              {summary.byCost.length > 0 && ` (${summary.byCost.map(([value, n]) => `${n}×${value}`).join(", ")})`}
-            </span>
-            <button type="button" className="mode-chip" onClick={() => void copyLink()} disabled={!units.length}>
-              {copied ? "Đã chép đường dẫn" : "Chép đường dẫn chia sẻ"}
-            </button>
-            <button type="button" className="mode-chip" onClick={() => write([], [])} disabled={!units.length}>
-              Xóa hết
-            </button>
-          </div>
+              </>
+            )}
+            {/* Emblems come from blessings such as the heart ones: each adds one to a faction or class without a unit. */}
+            <div className="builder-emblems">
+              <div className="builder-emblems-head">
+                <span className="builder-board-title">
+                  Huy hiệu{" "}
+                  <b>
+                    {emblems.length}/{MAX_EMBLEMS}
+                  </b>
+                </span>
+                <span className="mode-meta">+1 vào một Phe/Nghề, như khi có chúc phúc “Trái tim…”</span>
+                <button
+                  type="button"
+                  className="lineup-icon-button"
+                  aria-label="Thêm huy hiệu"
+                  title="Thêm huy hiệu"
+                  disabled={emblems.length >= MAX_EMBLEMS}
+                  onClick={() => setEmblemPicking(true)}
+                >
+                  <WikiIcon name="plus" size={18} />
+                </button>
+              </div>
+              {emblems.length > 0 && (
+                <div className="guide-trait-tags">
+                  {emblems.map((emblem, at) => {
+                    const trait = index.traits.get(emblem)
+                    return (
+                      <button
+                        key={`${emblem}-${at}`}
+                        type="button"
+                        className="guide-trait-tag"
+                        title="Bỏ huy hiệu"
+                        onClick={() =>
+                          write(
+                            units,
+                            emblems.filter((_, other) => other !== at),
+                          )
+                        }
+                      >
+                        <TraitIcon trait={trait} index={index} size={18} />
+                        <b>+1</b>
+                        {trait?.name ?? emblem}
+                        <span aria-hidden="true">✕</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
+          {pasting.open && (
+            <form
+              className="builder-paste"
+              onSubmit={(event) => {
+                event.preventDefault()
+                applyPasted(pasting.text)
+              }}
+            >
+              <input
+                className="mode-search"
+                autoFocus
+                value={pasting.text}
+                placeholder="Dán đường dẫn hoặc mã đội hình…"
+                aria-label="Đội hình đã sao chép"
+                onChange={(event) => setPasting({ ...pasting, text: event.target.value })}
+              />
+              <button type="submit" className="mode-chip" disabled={!pasting.text.trim()}>
+                Dùng
+              </button>
+              <button
+                type="button"
+                className="mode-chip"
+                onClick={() => setPasting({ open: false, text: "", message: "" })}
+              >
+                Hủy
+              </button>
+            </form>
+          )}
+          {pasting.message && <p className="mode-meta">{pasting.message}</p>}
           {layout === "compact" && (
             <ActiveTraits units={units.map((unit) => ({ ...unit, itemCodes: [] }))} emblems={emblems} index={index} />
           )}
-          <div className="mode-toolbar" role="group" aria-label="Huy hiệu Phe/Nghề">
-            <select
-              className="mode-search"
-              aria-label="Thêm huy hiệu"
-              value=""
-              disabled={emblems.length >= MAX_EMBLEMS}
-              onChange={(event) => event.target.value && write(units, [...emblems, event.target.value])}
-            >
-              <option value="">
-                + Huy hiệu ({emblems.length}/{MAX_EMBLEMS})
-              </option>
-              {index.content.traits.map((trait) => (
-                <option key={trait.code} value={trait.code}>
-                  {trait.name}
-                </option>
-              ))}
-            </select>
-            {emblems.map((emblem, at) => (
-              <button
-                key={`${emblem}-${at}`}
-                type="button"
-                className="mode-chip"
-                onClick={() =>
-                  write(
-                    units,
-                    emblems.filter((_, other) => other !== at),
-                  )
-                }
-                title="Bỏ huy hiệu"
-              >
-                +1 {index.traits.get(emblem)?.name} ✕
-              </button>
-            ))}
-          </div>
-          <div className="mode-toolbar">
-            <input
-              className="mode-search"
-              type="search"
-              placeholder="Tìm quân cờ hoặc Phe/Nghề…"
-              aria-label="Tìm quân cờ để thêm"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-            {[...new Set(index.content.units.map((unit) => unit.cost))]
-              .sort((a, b) => a - b)
-              .map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className="mode-chip"
-                  style={costStyle(value)}
-                  aria-pressed={cost === value}
-                  onClick={() => setCost(cost === value ? null : value)}
-                >
-                  <span className="guide-cost">{value}</span>
-                </button>
-              ))}
-          </div>
-          <div className="builder-pool">
-            {pool.map((unit) => (
-              <button
-                key={unit.code}
-                type="button"
-                aria-pressed={chosen.has(unit.code)}
-                style={costStyle(unit.cost)}
-                title={unit.traitCodes.map((code) => index.traits.get(code)?.name).join(" · ")}
-                onClick={() => toggleUnit(unit.code)}
-                disabled={!chosen.has(unit.code) && units.length >= MAX_LINEUP_UNITS}
-              >
-                <UnitPortrait unit={unit} index={index} size="sm" />
-                <span>{unit.name}</span>
-              </button>
-            ))}
-          </div>
         </div>
         <aside className="mode-page">
           <section className="mode-panel" aria-label="Phe và Nghề kích hoạt">
@@ -583,9 +1098,59 @@ export function BuilderTab({
               </div>
             </section>
           )}
-          <SaveLineup code={code} units={units} emblems={emblems} index={index} />
         </aside>
       </div>
+      <ModeFab label="Đăng đội hình" onClick={() => setPosting(true)} />
+      <ModeDialog
+        open={picking}
+        onClose={() => {
+          setPicking(false)
+          setTarget(null)
+        }}
+        label="Chọn quân cờ"
+        title={target ? `Chọn quân cho ${ROW_LABEL[target.row].toLowerCase()}, ô ${target.column}` : "Chọn quân cờ"}
+      >
+        <div className="unit-picker">{unitPicker}</div>
+      </ModeDialog>
+      <ModeDialog
+        open={emblemPicking}
+        onClose={() => setEmblemPicking(false)}
+        label="Chọn huy hiệu"
+        title={`Chọn huy hiệu · ${emblems.length}/${MAX_EMBLEMS}`}
+      >
+        <div className="trait-index">
+          <p className="mode-meta">Mỗi huy hiệu cộng 1 vào Phe/Nghề đó; có thể chọn cùng một Phe/Nghề nhiều lần.</p>
+          {(["FACTION", "CLASS"] as const).map((kind) => (
+            <section key={kind} className="trait-index-group" aria-label={kind === "FACTION" ? "Phe" : "Nghề"}>
+              <h2 className="mode-section-title">{kind === "FACTION" ? "Phe" : "Nghề"}</h2>
+              <div className="trait-index-grid">
+                {index.content.traits
+                  .filter((trait) => trait.kind === kind)
+                  .map((trait) => {
+                    const taken = emblems.filter((code) => code === trait.code).length
+                    return (
+                      <button
+                        key={trait.code}
+                        type="button"
+                        className="trait-index-item"
+                        aria-pressed={taken > 0}
+                        disabled={emblems.length >= MAX_EMBLEMS}
+                        onClick={() => write(units, [...emblems, trait.code])}
+                      >
+                        <TraitIcon trait={trait} index={index} size={40} />
+                        <span>{trait.name}</span>
+                        {taken > 0 && <small>+{taken}</small>}
+                      </button>
+                    )
+                  })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </ModeDialog>
+      <ModeDialog open={posting} onClose={() => setPosting(false)} label="Đăng đội hình" title="Đăng đội hình">
+        <SaveLineup code={code} units={units} emblems={emblems} index={index} />
+      </ModeDialog>
     </section>
   )
 }
@@ -597,7 +1162,7 @@ function SaveLineup({
   index,
 }: {
   code: string
-  units: { unitCode: string; carry: boolean }[]
+  units: BuilderUnit[]
   emblems: string[]
   index: GuideIndex
 }) {
@@ -633,8 +1198,7 @@ function SaveLineup({
 
   if (session.status !== "authenticated")
     return (
-      <section className="mode-panel">
-        <h2>Chia sẻ đội hình</h2>
+      <section className="mode-panel lineup-post">
         <p className="mode-meta">Đăng nhập để lưu đội hình, chia sẻ với cộng đồng và nhận lượt thích.</p>
         <button type="button" className="mode-chip" onClick={() => void signIn()}>
           Đăng nhập
@@ -643,8 +1207,7 @@ function SaveLineup({
     )
 
   return (
-    <section className="mode-panel">
-      <h2>Chia sẻ đội hình</h2>
+    <section className="mode-panel lineup-post">
       <form
         className="builder-form"
         onSubmit={(event) => {
@@ -750,7 +1313,8 @@ export function InsightsTab({
   const unitButton = (unitCode: string) => {
     const unit = index.units.get(unitCode)
     return unit ? (
-      <button type="button" className="guide-trait-tag" onClick={() => onOpen(unit.code)}>
+      <button type="button" className="guide-name-button" onClick={() => onOpen(unit.code)}>
+        <UnitPortrait unit={unit} index={index} size="sm" />
         {unit.name}
       </button>
     ) : (
@@ -790,7 +1354,7 @@ export function InsightsTab({
             <Bars
               rows={insights.data.traits.slice(0, 10).map((row) => ({
                 key: row.code,
-                label: index.traits.get(row.code)?.name ?? row.code,
+                label: <TraitTag code={row.code} index={index} />,
                 value: row.activations,
               }))}
             />

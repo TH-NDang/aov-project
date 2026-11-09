@@ -63,6 +63,8 @@ export interface ItemGroup {
   code: string
   name: string
   slotCount?: number | null
+  /** The stone the game draws at the start of the group's row. */
+  iconAssetId?: string | null
 }
 
 export interface Item {
@@ -88,11 +90,32 @@ export interface Quest {
   reward?: string | null
 }
 
-export interface LineupUnit {
+export const BOARD_ROWS = ["FRONT", "MIDDLE", "BACK"] as const
+export type BoardRow = (typeof BOARD_ROWS)[number]
+/** Cells in each row of a player's half of the board; the front row faces the opponent. */
+export const BOARD_COLUMNS = 7
+
+/** Where a unit stands: both a row and a column (1–7), or nowhere yet. */
+export interface BoardCell {
+  row?: BoardRow | null
+  column?: number | null
+}
+
+export interface LineupUnit extends BoardCell {
   unitCode: string
   carry: boolean
-  row?: "FRONT" | "MIDDLE" | "BACK" | null
   itemCodes: string[]
+}
+
+/** A unit in the builder: a carry mark and, once placed, its cell. */
+export interface BuilderUnit extends BoardCell {
+  unitCode: string
+  carry: boolean
+}
+
+/** The key of the cell a unit stands on, or null when it has not been placed. */
+export function cellOf(unit: BoardCell) {
+  return unit.row && unit.column ? `${unit.row}-${unit.column}` : null
 }
 
 export interface Lineup {
@@ -106,6 +129,10 @@ export interface Lineup {
   emblems: string[]
   blessingCodes: string[]
   notes?: string | null
+  /** Early and mid game boards; the lineup's own units are its late game. */
+  stages?: { stage: "EARLY" | "MID"; unitCodes: string[]; note?: string | null }[]
+  /** Items to build first, in order. */
+  priorityItemCodes?: string[]
 }
 
 export interface GuideContent {
@@ -123,7 +150,10 @@ export interface GuideContent {
   sources: { label: string; url?: string | null; observedOn?: string | null }[]
 }
 
-export const MAX_LINEUP_UNITS = 10
+/** Slots on the board. */
+export const BOARD_SLOTS = 10
+/** The board's slots plus the one an item opens. */
+export const MAX_LINEUP_UNITS = BOARD_SLOTS + 1
 export const MAX_EMBLEMS = 3
 
 export const TRAIT_KIND_LABEL: Record<Trait["kind"], string> = { FACTION: "Phe", CLASS: "Nghề" }
@@ -222,28 +252,45 @@ export function suggestUnits(
 }
 
 const CODE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+const ROW_LETTER: Record<BoardRow, string> = { FRONT: "f", MIDDLE: "m", BACK: "b" }
+const LETTER_ROW: Record<string, BoardRow> = { f: "FRONT", m: "MIDDLE", b: "BACK" }
+const UNIT_PART = /^([^*@]+)(\*)?(?:@([fmb])([1-7]))?$/
 
-/** A builder lineup as a short query string: `u=violet*,florentino&e=dau-si` (an asterisk marks a carry). */
-export function encodeLineup(units: { unitCode: string; carry: boolean }[], emblems: string[]) {
+/**
+ * A builder lineup as a short query string: `u=violet*@b4,florentino@f4&e=dau-si`. An asterisk marks a carry; `@` gives
+ * the cell, the row's letter (front, middle, back) and the column.
+ */
+export function encodeLineup(units: BuilderUnit[], emblems: string[]) {
   const params = new URLSearchParams()
-  if (units.length) params.set("u", units.map((unit) => unit.unitCode + (unit.carry ? "*" : "")).join(","))
+  const part = (unit: BuilderUnit) =>
+    unit.unitCode + (unit.carry ? "*" : "") + (unit.row && unit.column ? `@${ROW_LETTER[unit.row]}${unit.column}` : "")
+  if (units.length) params.set("u", units.map(part).join(","))
   if (emblems.length) params.set("e", emblems.join(","))
   return params.toString()
 }
 
-/** Reads a shared lineup, keeping only known codes, each unit once and the size limits. */
+/** Reads a shared lineup, keeping only known codes, each unit once, one unit per cell and the size limits. */
 export function decodeLineup(search: string, guide?: Pick<GuideContent, "traits" | "units">) {
   const params = new URLSearchParams(search)
   const knownUnits = guide ? new Set(guide.units.map((unit) => unit.code)) : null
   const knownTraits = guide ? new Set(guide.traits.map((trait) => trait.code)) : null
   const seen = new Set<string>()
-  const units: { unitCode: string; carry: boolean }[] = []
+  const cells = new Set<string>()
+  const units: BuilderUnit[] = []
   for (const part of (params.get("u") ?? "").split(",")) {
-    const carry = part.endsWith("*")
-    const unitCode = carry ? part.slice(0, -1) : part
+    const match = UNIT_PART.exec(part)
+    if (!match) continue
+    const [, unitCode = "", star, letter, column] = match
     if (!CODE.test(unitCode) || seen.has(unitCode) || (knownUnits && !knownUnits.has(unitCode))) continue
     seen.add(unitCode)
-    units.push({ unitCode, carry })
+    const unit: BuilderUnit = { unitCode, carry: !!star }
+    const cell = letter && column ? `${LETTER_ROW[letter]}-${column}` : null
+    if (cell && !cells.has(cell)) {
+      cells.add(cell)
+      unit.row = LETTER_ROW[letter!]
+      unit.column = Number(column)
+    }
+    units.push(unit)
     if (units.length === MAX_LINEUP_UNITS) break
   }
   const emblems = (params.get("e") ?? "")

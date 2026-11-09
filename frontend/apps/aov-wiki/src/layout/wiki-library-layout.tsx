@@ -18,6 +18,7 @@ export function WikiLibraryLayout() {
   const isUpdates = useMatch("/updates/*")
   const isTerms = useMatch("/terms/*")
   const isModes = useMatch("/modes/*")
+  const isModeDetail = useMatch("/modes/:code/*")
   const isHeroList = useMatch("/hero")
   const searchScope = isWarehouse ? "warehouse" : isSkins ? "skins" : "heroes"
   const active = isModes
@@ -35,15 +36,16 @@ export function WikiLibraryLayout() {
   return (
     <div className="wiki-library-shell">
       {/* On the compact layout the armory's parts are tabs below the header, which names the whole armory. */}
+      {/* A mode's page opens on its cover, so on phones the header starts clear over it and darkens on scroll. */}
       <WikiHeader
-        variant="library"
+        variant={layout === "compact" && isModeDetail ? "hero" : "library"}
         pageTitle={layout === "compact" && isWarehouse ? t("warehouse") : pageTitle}
         section={active}
         searchScope={searchScope}
         ownSearch={!!(isHeroList || isSkins || isWarehouse)}
       />
       {layout === "compact" ? (
-        <main id="main" className="wiki-library-main-compact" tabIndex={-1}>
+        <main id="main" className="wiki-library-main-compact" data-cover={isModeDetail ? "" : undefined} tabIndex={-1}>
           <Outlet />
         </main>
       ) : (

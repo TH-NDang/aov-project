@@ -1,7 +1,12 @@
-import { useMemo, useState, type CSSProperties } from "react"
+import { createContext, Fragment, useContext, useMemo, useState, type CSSProperties } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
+import { EntityRichText } from "@aov/ui/components/entity-rich-text"
+import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { WikiIcon } from "../../components/wiki-icon"
 import { useWikiContext } from "../../context/wiki-context"
+import { wikiReferencesQuery } from "../../lib/wiki-references"
 import {
   BLESSING_TIER_LABEL,
   encodeLineup,
@@ -15,6 +20,8 @@ import {
 } from "./auto-chess-model"
 import { BuilderTab, InsightsTab, LineupsTab } from "./auto-chess-lineups"
 import type { PublicGuide } from "./mode-api"
+import { GoldIcon } from "./gold-icon"
+import { StarLevel } from "./star-level"
 import { formatDay, ModeDialog } from "./mode-ui"
 
 export const GUIDE_TABS = [
@@ -73,8 +80,95 @@ export function useGuideIndex(guide: PublicGuide): GuideIndex {
   }, [guide])
 }
 
+/** What guide text can point at, and where a trait tag leads. Empty outside a guide. */
+const GuideLinks = createContext<{ entities: EntityReference[]; traitHref: (code: string) => string } | null>(null)
+
+const plain = (value?: string | null) => (value ?? "").replace(/<[^>]+>/g, "")
+
+/**
+ * The guide's own traits, units and items as references, so a name in a description gets a card like a term does.
+ * Each points at its place in the guide.
+ */
+function guideReferences(index: GuideIndex, modeCode: string, href: (path: string) => string): EntityReference[] {
+  const base = `/modes/${encodeURIComponent(modeCode)}`
+  const translation = (name: string, description: string) => [{ locale: "vi-VN", name, aliases: [], description }]
+  return [
+    ...index.content.traits.map((trait) => ({
+      id: `guide-trait-${trait.code}`,
+      kind: "term" as const,
+      translations: translation(
+        trait.name,
+        [
+          `${TRAIT_KIND_LABEL[trait.kind]} · ${index.membersOf(trait.code).length} quân cờ`,
+          ...trait.tiers.map((tier) => `(${tier.count}) ${plain(tier.effect)}`),
+        ].join("\n"),
+      ),
+      icon: index.image(trait.iconAssetId) ?? null,
+      autoMatch: true,
+      destinations: { wiki: href(`${base}/phe-nghe?trait=${encodeURIComponent(trait.code)}`) },
+    })),
+    ...index.content.units.map((unit) => ({
+      id: `guide-unit-${unit.code}`,
+      kind: "term" as const,
+      translations: translation(
+        unit.name,
+        [
+          `Quân cờ ${unit.cost} vàng · ${unit.traitCodes.map((code) => index.traits.get(code)?.name).join(", ")}`,
+          unit.skill?.name ? `${unit.skill.name}: ${plain(unit.skill.description)}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      ),
+      icon: index.image(unit.portraitAssetId) ?? null,
+      autoMatch: false,
+      destinations: { wiki: href(`${base}/quan-co?unit=${encodeURIComponent(unit.code)}`) },
+    })),
+    ...index.content.items.map((item) => ({
+      id: `guide-item-${item.code}`,
+      kind: "term" as const,
+      translations: translation(item.name, `Trang bị Cờ Liên quân · ${plain(item.effect)}`),
+      icon: index.image(item.iconAssetId) ?? null,
+      autoMatch: true,
+      destinations: { wiki: href(`${base}/trang-bi`) },
+    })),
+  ]
+}
+
+/**
+ * Guide text as the editor wrote it: colors, faded parts and references, with terms recognized the same way as in the
+ * Admin preview, so what the editor sees is what the reader gets.
+ */
+export function GuideText({ text }: { text?: string | null }) {
+  const scope = useWikiContext()
+  const links = useContext(GuideLinks)
+  const references = useQuery(wikiReferencesQuery(scope))
+  const entities = useMemo(
+    () => [...(links?.entities ?? []), ...(references.data?.entities ?? [])],
+    [links, references.data],
+  )
+  if (!text) return null
+  return (
+    <EntityRichText
+      text={text}
+      entities={entities}
+      locale={scope.locale}
+      fallbackLocale={references.data?.fallbackLocale}
+      autoRecognize={references.data?.autoRecognize ?? false}
+      context="wiki"
+    />
+  )
+}
+
 /** The game's unit icon in a frame of its cost color, the way the game shows a unit's price. */
-export function UnitPortrait({ unit, index, size }: { unit: Unit; index: GuideIndex; size?: "sm" | "md" | "lg" }) {
+export function UnitPortrait({
+  unit,
+  index,
+  size,
+}: {
+  unit: Unit
+  index: GuideIndex
+  size?: "xs" | "sm" | "md" | "lg"
+}) {
   const src = index.image(unit.portraitAssetId)
   return (
     <span className="guide-portrait" data-size={size} style={costStyle(unit.cost)}>
@@ -97,29 +191,88 @@ export function TraitIcon({ trait, index, size = 20 }: { trait?: Trait; index: G
   )
 }
 
-export function TraitTag({ code, index, count }: { code: string; index: GuideIndex; count?: number }) {
-  const trait = index.traits.get(code)
-  if (!trait) return null
+/** A unit's traits, factions first, then classes. */
+export function splitTraits(unit: Unit, index: GuideIndex) {
+  const traits = unit.traitCodes.map((code) => index.traits.get(code)).filter((trait): trait is Trait => !!trait)
+  return {
+    factions: traits.filter((trait) => trait.kind === "FACTION"),
+    classes: traits.filter((trait) => trait.kind === "CLASS"),
+  }
+}
+
+/** Factions and classes of a unit with a divider between them, as icons, names or tags. */
+export function UnitTraits({ unit, index, as }: { unit: Unit; index: GuideIndex; as: "icons" | "names" | "tags" }) {
+  const { factions, classes } = splitTraits(unit, index)
+  const part = (traits: Trait[], kind: string) =>
+    traits.length > 0 && (
+      <span className="unit-trait-part" data-kind={kind}>
+        {as === "names"
+          ? traits.map((trait) => trait.name).join(", ")
+          : traits.map((trait) =>
+              as === "icons" ? (
+                <span
+                  key={trait.code}
+                  className="trait-tip"
+                  role="img"
+                  aria-label={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
+                  data-tip={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
+                >
+                  <TraitIcon trait={trait} index={index} size={20} />
+                </span>
+              ) : (
+                <TraitTag key={trait.code} code={trait.code} index={index} />
+              ),
+            )}
+      </span>
+    )
   return (
-    <span className="guide-trait-tag" title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}>
-      <TraitIcon trait={trait} index={index} size={18} />
-      {count !== undefined && <b>{count}</b>}
-      {trait.name}
+    <span className="unit-traits" data-as={as}>
+      {part(factions, "Phe")}
+      {factions.length > 0 && classes.length > 0 && <i className="unit-trait-divider" aria-hidden="true" />}
+      {part(classes, "Nghề")}
     </span>
   )
 }
 
-const TIER_STYLE: Record<Blessing["tier"], CSSProperties> = {
-  NORMAL: { "--tier-color": "#7d8aa0" } as CSSProperties,
-  EPIC: { "--tier-color": "#b46cff" } as CSSProperties,
-  LEGENDARY: { "--tier-color": "#f2b440" } as CSSProperties,
+export function TraitTag({ code, index, count }: { code: string; index: GuideIndex; count?: number }) {
+  const links = useContext(GuideLinks)
+  const trait = index.traits.get(code)
+  if (!trait) return null
+  const body = (
+    <>
+      <TraitIcon trait={trait} index={index} size={18} />
+      {count !== undefined && <b>{count}</b>}
+      {trait.name}
+    </>
+  )
+  return links ? (
+    <Link
+      className="guide-trait-tag"
+      data-link="true"
+      to={links.traitHref(trait.code)}
+      title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}
+    >
+      {body}
+    </Link>
+  ) : (
+    <span className="guide-trait-tag" title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`}>
+      {body}
+    </span>
+  )
+}
+
+/** The game's blessing cards: blue for the normal tier, purple for epic, bronze for legendary. */
+export const TIER_STYLE: Record<Blessing["tier"], CSSProperties> = {
+  NORMAL: { "--tier-color": "#4fb0ff", "--tier-bg": "linear-gradient(180deg, #1b3988, #2b5cc4)" } as CSSProperties,
+  EPIC: { "--tier-color": "#e277ff", "--tier-bg": "linear-gradient(180deg, #491c7a, #7f3ca8)" } as CSSProperties,
+  LEGENDARY: { "--tier-color": "#ffab45", "--tier-bg": "linear-gradient(180deg, #5a3110, #96591f)" } as CSSProperties,
 }
 
 /**
- * The game ships blessing icons as white drawings on black. Screen blending turns the black into the tier color, so the
- * icon reads as a colored badge instead of a black square.
+ * The game ships blessing icons as white drawings on black. Screen blending drops the black, so the drawing sits on
+ * the card's own color like in the game.
  */
-function BlessingIcon({ blessing, index }: { blessing: Blessing; index: GuideIndex }) {
+export function BlessingIcon({ blessing, index }: { blessing: Blessing; index: GuideIndex }) {
   const src = index.image(blessing.iconAssetId)
   return (
     <span className="blessing-icon" style={TIER_STYLE[blessing.tier]} aria-hidden="true">
@@ -130,6 +283,15 @@ function BlessingIcon({ blessing, index }: { blessing: Blessing; index: GuideInd
 
 export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideTab; guide: PublicGuide }) {
   const index = useGuideIndex(guide)
+  const { href } = useWikiContext()
+  const links = useMemo(
+    () => ({
+      entities: guideReferences(index, code, href),
+      traitHref: (traitCode: string) =>
+        href(`/modes/${encodeURIComponent(code)}/phe-nghe?trait=${encodeURIComponent(traitCode)}`),
+    }),
+    [index, code, href],
+  )
   const [params, setParams] = useSearchParams()
   const openUnit = params.get("unit")
   const selected = openUnit ? index.units.get(openUnit) : undefined
@@ -145,7 +307,7 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
     )
 
   return (
-    <>
+    <GuideLinks.Provider value={links}>
       <p className="guide-edition">
         {guide.content.edition ?? "Bách khoa Cờ Liên quân"}
         {guide.content.observedOn && ` · ghi nhận ${formatDay(guide.content.observedOn)}`} · Dữ liệu và hình ảnh: Garena
@@ -159,10 +321,10 @@ export function AutoChessGuide({ code, tab, guide }: { code: string; tab: GuideT
       {tab === "doi-hinh" && <LineupsTab code={code} guide={guide} index={index} onOpen={showUnit} />}
       {tab === "xep-doi-hinh" && <BuilderTab code={code} index={index} onOpen={showUnit} />}
       {tab === "phan-tich" && <InsightsTab code={code} index={index} onOpen={showUnit} />}
-      <ModeDialog open={!!selected} onClose={() => showUnit(null)} label={selected?.name ?? "Quân cờ"}>
+      <ModeDialog open={!!selected} onClose={() => showUnit(null)} label={selected?.name ?? "Quân cờ"} title="Quân cờ">
         {selected && <UnitDetail unit={selected} index={index} code={code} onOpen={showUnit} />}
       </ModeDialog>
-    </>
+    </GuideLinks.Provider>
   )
 }
 
@@ -173,8 +335,18 @@ const STATS: { key: StatKey; label: string }[] = [
   { key: "armor", label: "Giáp" },
   { key: "magicResistance", label: "Giáp phép" },
 ]
+type SortKey = StatKey | "cost" | "name"
+type SortRule = { key: SortKey; desc: boolean }
+const SORT_LABEL: Record<SortKey, string> = {
+  name: "Tên",
+  cost: "Giá",
+  ...(Object.fromEntries(STATS.map((stat) => [stat.key, stat.label])) as Record<StatKey, string>),
+}
+/** Stats read best from the highest; names and prices from the lowest. */
+const naturalDesc = (key: SortKey) => key !== "cost" && key !== "name"
 
-function CostChips({
+/** The price filter: one segmented bar, each price as the coin and its number in the price's color. */
+export function CostChips({
   costs,
   value,
   onChange,
@@ -184,60 +356,161 @@ function CostChips({
   onChange: (cost: number | null) => void
 }) {
   return (
-    <div className="mode-chip-row" role="group" aria-label="Lọc theo giá">
-      <button type="button" className="mode-chip" aria-pressed={value === null} onClick={() => onChange(null)}>
+    <div className="cost-bar" role="group" aria-label="Lọc theo giá">
+      <button type="button" aria-pressed={value === null} onClick={() => onChange(null)}>
         Mọi giá
       </button>
       {costs.map((cost) => (
         <button
           key={cost}
           type="button"
-          className="mode-chip"
           style={costStyle(cost)}
           aria-pressed={value === cost}
+          aria-label={`${cost} vàng`}
+          title={`${cost} vàng`}
           onClick={() => onChange(value === cost ? null : cost)}
         >
-          <span className="guide-cost">{cost} vàng</span>
+          <GoldIcon />
+          <b>{cost}</b>
         </button>
       ))}
     </div>
   )
 }
 
+/**
+ * Factions and classes as icons that toggle, each naming itself on hover with the units it would show. The chosen
+ * ones are also spelled out underneath, since a phone cannot hover.
+ */
+export function TraitFilter({
+  index,
+  picked,
+  onChange,
+  countWith,
+}: {
+  index: GuideIndex
+  picked: string[]
+  onChange: (codes: string[]) => void
+  countWith: (code: string) => number
+}) {
+  const toggle = (code: string) =>
+    onChange(picked.includes(code) ? picked.filter((entry) => entry !== code) : [...picked, code])
+  return (
+    <div className="trait-filter" role="group" aria-label="Lọc theo Phe/Nghề">
+      {(["FACTION", "CLASS"] as const).map((kind) => (
+        <div key={kind} className="trait-filter-row">
+          <span>{TRAIT_KIND_LABEL[kind]}</span>
+          <div className="trait-filter-icons">
+            {index.content.traits
+              .filter((trait) => trait.kind === kind)
+              .map((trait) => {
+                const count = countWith(trait.code)
+                const on = picked.includes(trait.code)
+                const tip = `${TRAIT_KIND_LABEL[kind]}: ${trait.name} · ${count} quân`
+                return (
+                  <button
+                    key={trait.code}
+                    type="button"
+                    className="trait-filter-icon trait-tip"
+                    data-tip={tip}
+                    aria-label={tip}
+                    aria-pressed={on}
+                    data-empty={!on && count === 0}
+                    onClick={() => toggle(trait.code)}
+                  >
+                    <TraitIcon trait={trait} index={index} size={28} />
+                  </button>
+                )
+              })}
+          </div>
+        </div>
+      ))}
+      {picked.length > 0 && (
+        <div className="trait-filter-active">
+          <span className="mode-meta">Đang lọc:</span>
+          {picked.map((code) => {
+            const trait = index.traits.get(code)
+            return (
+              <button
+                key={code}
+                type="button"
+                className="mode-chip"
+                aria-label={`Bỏ lọc ${trait?.name ?? code}`}
+                onClick={() => toggle(code)}
+              >
+                <TraitIcon trait={trait} index={index} size={16} />
+                {trait?.name ?? code} ✕
+              </button>
+            )
+          })}
+          <button type="button" className="mode-chip" onClick={() => onChange([])}>
+            Bỏ lọc
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
   const layout = usePageLayout()
-  const [search, setSearch] = useState("")
   const [cost, setCost] = useState<number | null>(null)
-  const [trait, setTrait] = useState<string | null>(null)
+  const [picked, setPicked] = useState<string[]>([])
   const [view, setView] = useState<"cards" | "table">("cards")
   const [star, setStar] = useState(0)
-  const [sort, setSort] = useState<{ key: StatKey | "cost" | "name"; desc: boolean }>({ key: "cost", desc: false })
+  const [sorts, setSorts] = useState<SortRule[]>([{ key: "cost", desc: false }])
+  const [multiSort, setMultiSort] = useState(false)
   const costs = [...new Set(index.content.units.map((unit) => unit.cost))].sort((a, b) => a - b)
-  const needle = foldText(search.trim())
 
-  const units = index.content.units
-    .filter(
-      (unit) =>
-        (!cost || unit.cost === cost) &&
-        (!trait || unit.traitCodes.includes(trait)) &&
-        (!needle ||
-          foldText(
-            [unit.name, unit.skill?.name ?? "", ...unit.traitCodes.map((c) => index.traits.get(c)?.name ?? "")].join(
-              " ",
-            ),
-          ).includes(needle)),
-    )
+  // Several factions or several classes widen the choice; a faction and a class narrow it to units with both.
+  const pickedOf = (kind: Trait["kind"]) => picked.filter((code) => index.traits.get(code)?.kind === kind)
+  const matchesKind = (unit: Unit, codes: string[]) =>
+    !codes.length || codes.some((code) => unit.traitCodes.includes(code))
+  const base = index.content.units.filter((unit) => !cost || unit.cost === cost)
+  const units = base
+    .filter((unit) => matchesKind(unit, pickedOf("FACTION")) && matchesKind(unit, pickedOf("CLASS")))
     .sort((a, b) => {
-      const value = (unit: Unit) =>
-        sort.key === "cost" ? unit.cost : sort.key === "name" ? 0 : (unit.stats?.[sort.key]?.[star] ?? -1)
-      const order =
-        sort.key === "name"
-          ? a.name.localeCompare(b.name, "vi")
-          : value(a) - value(b) || a.cost - b.cost || a.name.localeCompare(b.name, "vi")
-      return sort.desc ? -order : order
+      const value = (unit: Unit, key: SortKey) =>
+        key === "cost" ? unit.cost : key === "name" ? 0 : (unit.stats?.[key]?.[star] ?? -1)
+      // The first rule decides; the next ones only break its ties.
+      for (const rule of sorts) {
+        const order = rule.key === "name" ? a.name.localeCompare(b.name, "vi") : value(a, rule.key) - value(b, rule.key)
+        if (order) return rule.desc ? -order : order
+      }
+      return a.cost - b.cost || a.name.localeCompare(b.name, "vi")
     })
-  const sortBy = (key: StatKey | "cost" | "name") =>
-    setSort((current) => ({ key, desc: current.key === key ? !current.desc : key !== "cost" && key !== "name" }))
+  /** A click sorts by that column alone; with the multi-column switch on, or Shift held, it adds the column as the next rule. */
+  const sortBy = (key: SortKey, add: boolean) =>
+    setSorts((current) => {
+      const at = current.findIndex((rule) => rule.key === key)
+      if (add || multiSort) {
+        if (at < 0) return [...current, { key, desc: naturalDesc(key) }]
+        return current.map((rule, index) => (index === at ? { ...rule, desc: !rule.desc } : rule))
+      }
+      if (current.length === 1 && at === 0) return [{ key, desc: !current[0].desc }]
+      return [{ key, desc: naturalDesc(key) }]
+    })
+  const sortHead = (key: SortKey, label: string, className?: string) => {
+    const at = sorts.findIndex((rule) => rule.key === key)
+    const rule = sorts[at]
+    return (
+      <th scope="col" className={className} aria-sort={rule ? (rule.desc ? "descending" : "ascending") : "none"}>
+        <button
+          type="button"
+          className="sort-head"
+          data-active={!!rule}
+          title="Bấm để sắp xếp, giữ Shift để thêm cột"
+          onClick={(event) => sortBy(key, event.shiftKey)}
+        >
+          {label}
+          <span className="sort-mark" aria-hidden="true">
+            {rule ? (rule.desc ? "↓" : "↑") : "↕"}
+          </span>
+          {rule && sorts.length > 1 && <b className="sort-rank">{at + 1}</b>}
+        </button>
+      </th>
+    )
+  }
   const byCost = costs
     .map((value) => ({ cost: value, units: units.filter((unit) => unit.cost === value) }))
     .filter((group) => group.units.length)
@@ -245,42 +518,27 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
   return (
     <section className="mode-stack" aria-label="Quân cờ">
       <div className="mode-filter-bar">
-        <input
-          className="mode-search"
-          type="search"
-          placeholder="Tìm quân cờ, chiêu, Phe/Nghề…"
-          aria-label="Tìm quân cờ"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <select
-          className="mode-select"
-          aria-label="Lọc theo Phe/Nghề"
-          value={trait ?? ""}
-          onChange={(event) => setTrait(event.target.value || null)}
-        >
-          <option value="">Mọi Phe/Nghề</option>
-          {(["FACTION", "CLASS"] as const).map((kind) => (
-            <optgroup key={kind} label={TRAIT_KIND_LABEL[kind]}>
-              {index.content.traits
-                .filter((item) => item.kind === kind)
-                .map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {item.name} ({index.membersOf(item.code).length})
-                  </option>
-                ))}
-            </optgroup>
-          ))}
-        </select>
         <div className="mode-segment" role="group" aria-label="Kiểu xem">
           <button type="button" aria-pressed={view === "cards"} onClick={() => setView("cards")}>
+            <WikiIcon name="cards" size={16} />
             Thẻ
           </button>
           <button type="button" aria-pressed={view === "table"} onClick={() => setView("table")}>
+            <WikiIcon name="stats" size={16} />
             Chỉ số
           </button>
         </div>
       </div>
+      <TraitFilter
+        index={index}
+        picked={picked}
+        onChange={setPicked}
+        countWith={(code) => {
+          const kind = index.traits.get(code)?.kind
+          const other = pickedOf(kind === "FACTION" ? "CLASS" : "FACTION")
+          return base.filter((unit) => unit.traitCodes.includes(code) && matchesKind(unit, other)).length
+        }}
+      />
       <CostChips costs={costs} value={cost} onChange={setCost} />
       <p className="mode-meta">{units.length} quân cờ</p>
 
@@ -288,7 +546,10 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
         byCost.map((group) => (
           <section key={group.cost} className="unit-group" style={costStyle(group.cost)}>
             <h2 className="unit-group-title">
-              <span className="guide-cost">{group.cost} vàng</span>
+              <span className="guide-cost" aria-label={`${group.cost} vàng`}>
+                <GoldIcon size={16} />
+                {group.cost}
+              </span>
               <small>{group.units.length} quân</small>
             </h2>
             <div className="unit-grid" data-layout={layout}>
@@ -299,20 +560,10 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
                   className="unit-tile"
                   style={costStyle(unit.cost)}
                   onClick={() => onOpen(unit.code)}
-                  title={unit.traitCodes.map((code) => index.traits.get(code)?.name).join(" · ")}
                 >
                   <UnitPortrait unit={unit} index={index} size={layout === "compact" ? "md" : "lg"} />
                   <strong>{unit.name}</strong>
-                  <span className="unit-traits">
-                    {unit.traitCodes.map((code) => (
-                      <TraitIcon key={code} trait={index.traits.get(code)} index={index} size={18} />
-                    ))}
-                  </span>
-                  {layout === "wide" && (
-                    <span className="unit-trait-names">
-                      {unit.traitCodes.map((code) => index.traits.get(code)?.name).join(" · ")}
-                    </span>
-                  )}
+                  <UnitTraits unit={unit} index={index} as="icons" />
                   {!unit.complete && <i className="unit-incomplete" title="Chưa đủ dữ liệu" />}
                 </button>
               ))}
@@ -321,39 +572,67 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
         ))
       ) : (
         <>
-          <div className="mode-segment" role="group" aria-label="Cấp sao">
-            {[0, 1, 2].map((value) => (
-              <button key={value} type="button" aria-pressed={star === value} onClick={() => setStar(value)}>
-                {"★".repeat(value + 1)}
+          <div className="sort-bar">
+            <div className="mode-segment" role="group" aria-label="Cấp sao">
+              {[0, 1, 2].map((value) => (
+                <button key={value} type="button" aria-pressed={star === value} onClick={() => setStar(value)}>
+                  <StarLevel level={value + 1} />
+                </button>
+              ))}
+            </div>
+            <div className="sort-rules" role="group" aria-label="Thứ tự sắp xếp">
+              <span className="mode-meta">Sắp xếp:</span>
+              {sorts.map((rule, at) => (
+                <span key={rule.key} className="sort-rule">
+                  <button
+                    type="button"
+                    aria-label={`${SORT_LABEL[rule.key]} ${rule.desc ? "giảm dần" : "tăng dần"}, bấm để đảo chiều`}
+                    onClick={() =>
+                      setSorts((current) =>
+                        current.map((entry, index) => (index === at ? { ...entry, desc: !entry.desc } : entry)),
+                      )
+                    }
+                  >
+                    {sorts.length > 1 && <b className="sort-rank">{at + 1}</b>}
+                    {SORT_LABEL[rule.key]} {rule.desc ? "↓" : "↑"}
+                  </button>
+                  {sorts.length > 1 && (
+                    <button
+                      type="button"
+                      aria-label={`Bỏ sắp xếp theo ${SORT_LABEL[rule.key]}`}
+                      onClick={() => setSorts((current) => current.filter((_, index) => index !== at))}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </span>
+              ))}
+              <button
+                type="button"
+                className="mode-chip"
+                aria-pressed={multiSort}
+                onClick={() => setMultiSort(!multiSort)}
+              >
+                <WikiIcon name="sort" size={16} />
+                Nhiều cột
               </button>
-            ))}
+            </div>
           </div>
+          <p className="mode-meta">
+            {multiSort
+              ? "Bấm thêm tiêu đề cột để sắp xếp tiếp theo cột đó; bấm lại để đảo chiều."
+              : layout === "compact"
+                ? "Bấm tiêu đề cột để sắp xếp. Bật “Nhiều cột” để sắp xếp theo nhiều cột."
+                : "Bấm tiêu đề cột để sắp xếp. Bật “Nhiều cột” hoặc giữ Shift khi bấm để sắp xếp theo nhiều cột."}
+          </p>
           <div className="guide-table-wrap">
             <table className="guide-table">
               <thead>
                 <tr>
-                  <th scope="col">
-                    <button type="button" onClick={() => sortBy("name")}>
-                      Quân cờ
-                    </button>
-                  </th>
-                  <th scope="col" className="num">
-                    <button type="button" onClick={() => sortBy("cost")}>
-                      Giá
-                    </button>
-                  </th>
+                  {sortHead("name", "Quân cờ")}
+                  {sortHead("cost", "Giá", "num")}
                   {STATS.map((stat) => (
-                    <th
-                      key={stat.key}
-                      scope="col"
-                      className="num"
-                      aria-sort={sort.key === stat.key ? (sort.desc ? "descending" : "ascending") : undefined}
-                    >
-                      <button type="button" onClick={() => sortBy(stat.key)}>
-                        {stat.label}
-                        {sort.key === stat.key ? (sort.desc ? " ↓" : " ↑") : ""}
-                      </button>
-                    </th>
+                    <Fragment key={stat.key}>{sortHead(stat.key, stat.label, "num")}</Fragment>
                   ))}
                   <th scope="col">Phe/Nghề</th>
                 </tr>
@@ -376,11 +655,7 @@ function UnitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string)
                       </td>
                     ))}
                     <td>
-                      <span className="unit-traits">
-                        {unit.traitCodes.map((code) => (
-                          <TraitTag key={code} code={code} index={index} />
-                        ))}
-                      </span>
+                      <UnitTraits unit={unit} index={index} as="tags" />
                     </td>
                   </tr>
                 ))}
@@ -413,12 +688,11 @@ function UnitDetail({
         <UnitPortrait unit={unit} index={index} size="lg" />
         <div>
           <h2>{unit.name}</h2>
-          <span className="guide-cost">{unit.cost} vàng</span>
-          <div className="guide-trait-tags">
-            {unit.traitCodes.map((trait) => (
-              <TraitTag key={trait} code={trait} index={index} />
-            ))}
-          </div>
+          <span className="guide-cost" aria-label={`${unit.cost} vàng`}>
+            <GoldIcon />
+            {unit.cost}
+          </span>
+          <UnitTraits unit={unit} index={index} as="tags" />
         </div>
       </header>
       {!unit.complete && <p className="guide-note">Quân cờ này chưa có đủ dữ liệu trong bản Bách khoa đã thu thập.</p>}
@@ -428,7 +702,11 @@ function UnitDetail({
           {skillIcon ? <img className="guide-icon" src={skillIcon} alt="" /> : <span />}
           <div>
             <h3>{unit.skill.name}</h3>
-            {unit.skill.description && <p>{unit.skill.description}</p>}
+            {unit.skill.description && (
+              <p>
+                <GuideText text={unit.skill.description} />
+              </p>
+            )}
             {unit.skill.values.length === 3 && (
               <p className="guide-values">
                 {unit.skill.valueLabel ?? "Giá trị"}: {unit.skill.values.join(" / ")}
@@ -443,15 +721,11 @@ function UnitDetail({
             <thead>
               <tr>
                 <th scope="col">Chỉ số</th>
-                <th scope="col" className="num">
-                  ★
-                </th>
-                <th scope="col" className="num">
-                  ★★
-                </th>
-                <th scope="col" className="num">
-                  ★★★
-                </th>
+                {[1, 2, 3].map((level) => (
+                  <th key={level} scope="col" className="num">
+                    <StarLevel level={level} />
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -518,93 +792,385 @@ function UnitDetail({
   )
 }
 
+/** Numbers in a plain effect stand out like in the game. Text that already carries markup stays as written. */
+function emphasizeNumbers(text?: string | null) {
+  if (!text || /[<[{]/.test(text)) return text
+  return text.replace(/[+\-−]?\d+(?:[.,]\d+)?%?/g, "<b>$&</b>")
+}
+
+/** Tiers as the game draws them: the count in a ring that fills one step per tier. */
 export function TierList({ trait, count }: { trait: Trait; count?: number }) {
   return (
     <div className="guide-tiers">
-      {trait.tiers.map((tier) => (
-        <p key={tier.count} className="guide-tier" data-reached={count !== undefined && count >= tier.count}>
+      {trait.tiers.map((tier, at) => (
+        <p
+          key={tier.count}
+          className="guide-tier"
+          data-reached={count !== undefined && count >= tier.count}
+          style={{ "--tier-progress": (at + 1) / trait.tiers.length } as CSSProperties}
+        >
           <b>{tier.count}</b>
-          <span>{tier.effect}</span>
+          <span>
+            <GuideText text={emphasizeNumbers(tier.effect)} />
+          </span>
         </p>
       ))}
     </div>
   )
 }
 
+const TRAIT_KINDS = ["FACTION", "CLASS"] as const
+
+/**
+ * The traits tab like the game's interaction screen: every trait as an icon, the chosen one in full beside the list (in a
+ * drawer on phones), plus the game's table of units by faction and class. The choice lives in the address.
+ */
 function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string) => void }) {
-  const [search, setSearch] = useState("")
+  const layout = usePageLayout()
+  const [params, setParams] = useSearchParams()
   const [kind, setKind] = useState<Trait["kind"] | null>(null)
-  const needle = foldText(search.trim())
+  const table = params.get("xem") === "bang"
+  const visible = index.content.traits.filter((trait) => !kind || trait.kind === kind)
+  const linked = index.traits.get(params.get("trait") ?? "")
+  const selected = linked ?? (layout === "wide" ? (visible[0] ?? index.content.traits[0]) : undefined)
+  const change = (apply: (next: URLSearchParams) => void) =>
+    setParams(
+      (current) => {
+        const next = new URLSearchParams(current)
+        apply(next)
+        return next
+      },
+      { replace: true, preventScrollReset: true },
+    )
+  const pick = (code: string | null) =>
+    change((next) => {
+      // On wide screens the detail sits beside the list, so picking from the table goes back to it.
+      if (code && layout === "wide") next.delete("xem")
+      if (code) next.set("trait", code)
+      else next.delete("trait")
+    })
+
   return (
     <section className="mode-stack" aria-label="Phe và Nghề">
       <div className="mode-filter-bar">
-        <input
-          className="mode-search"
-          type="search"
-          placeholder="Tìm Phe/Nghề hoặc hiệu ứng…"
-          aria-label="Tìm Phe/Nghề"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <div className="mode-segment" role="group" aria-label="Loại">
-          <button type="button" aria-pressed={kind === null} onClick={() => setKind(null)}>
-            Tất cả
+        {!table && (
+          <>
+            <div className="mode-segment" role="group" aria-label="Loại">
+              <button type="button" aria-pressed={kind === null} onClick={() => setKind(null)}>
+                Tất cả
+              </button>
+              {TRAIT_KINDS.map((value) => (
+                <button key={value} type="button" aria-pressed={kind === value} onClick={() => setKind(value)}>
+                  {TRAIT_KIND_LABEL[value]}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        <div className="mode-segment trait-view" role="group" aria-label="Cách xem">
+          <button
+            type="button"
+            aria-label="Chi tiết"
+            aria-pressed={!table}
+            onClick={() => change((next) => next.delete("xem"))}
+          >
+            <WikiIcon name="detail" size={16} />
+            <span className="segment-label">Chi tiết</span>
           </button>
-          {(["FACTION", "CLASS"] as const).map((value) => (
-            <button key={value} type="button" aria-pressed={kind === value} onClick={() => setKind(value)}>
-              {TRAIT_KIND_LABEL[value]}
-            </button>
-          ))}
+          <button
+            type="button"
+            aria-label="Bảng Phe × Nghề"
+            aria-pressed={table}
+            onClick={() => change((next) => next.set("xem", "bang"))}
+          >
+            <WikiIcon name="table" size={16} />
+            <span className="segment-label">Bảng Phe × Nghề</span>
+          </button>
         </div>
       </div>
-      {(["FACTION", "CLASS"] as const)
-        .filter((value) => !kind || kind === value)
-        .map((value) => {
-          const traits = index.content.traits.filter(
-            (trait) =>
-              trait.kind === value &&
-              (!needle || foldText([trait.name, ...trait.tiers.map((tier) => tier.effect)].join(" ")).includes(needle)),
-          )
-          if (!traits.length) return null
-          return (
-            <section key={value} className="mode-stack">
-              <h2 className="mode-section-title">
-                {TRAIT_KIND_LABEL[value]} <small>{traits.length}</small>
-              </h2>
-              <div className="guide-traits">
-                {traits.map((trait) => {
-                  const members = index.membersOf(trait.code)
-                  return (
-                    <article key={trait.code} className="guide-trait" id={`trait-${trait.code}`}>
-                      <header className="guide-trait-head">
-                        <TraitIcon trait={trait} index={index} size={40} />
-                        <div>
-                          <h3>{trait.name}</h3>
-                          <span className="mode-meta">
-                            {members.length} quân cờ · mốc {trait.tiers.map((tier) => tier.count).join(" / ")}
+      {table ? (
+        <TraitTable index={index} onOpen={onOpen} onPick={pick} />
+      ) : (
+        <div className="trait-browser">
+          <div className="trait-index">
+            {TRAIT_KINDS.map((value) => {
+              const traits = visible.filter((trait) => trait.kind === value)
+              if (!traits.length) return null
+              return (
+                <section key={value} className="trait-index-group" aria-label={TRAIT_KIND_LABEL[value]}>
+                  <h2 className="mode-section-title">
+                    {TRAIT_KIND_LABEL[value]} <small>{traits.length}</small>
+                  </h2>
+                  <div className="trait-index-grid">
+                    {traits.map((trait) => (
+                      <button
+                        key={trait.code}
+                        type="button"
+                        className="trait-index-item"
+                        aria-pressed={selected?.code === trait.code}
+                        onClick={() => pick(trait.code)}
+                      >
+                        <TraitIcon trait={trait} index={index} size={layout === "compact" ? 40 : 44} />
+                        <span>{trait.name}</span>
+                        <small>
+                          {index.membersOf(trait.code).length} quân
+                          <span className="trait-index-tiers">
+                            {" "}
+                            · {trait.tiers.map((tier) => tier.count).join("/")}
                           </span>
+                        </small>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )
+            })}
+          </div>
+          {layout === "wide" && selected && <TraitDetail trait={selected} index={index} onOpen={onOpen} />}
+        </div>
+      )}
+      {layout === "compact" && (
+        <ModeDialog open={!!linked} onClose={() => pick(null)} label={linked?.name ?? "Phe/Nghề"} title="Phe & Nghề">
+          {linked && <TraitDetail trait={linked} index={index} onOpen={onOpen} />}
+        </ModeDialog>
+      )}
+    </section>
+  )
+}
+
+/** One trait in full: its tiers, the units that carry it and the traits those units bring along. */
+function TraitDetail({ trait, index, onOpen }: { trait: Trait; index: GuideIndex; onOpen: (code: string) => void }) {
+  const members = [...index.membersOf(trait.code)].sort((a, b) => a.cost - b.cost || a.name.localeCompare(b.name, "vi"))
+  const partners = new Map<string, number>()
+  for (const member of members)
+    for (const code of member.traitCodes) if (code !== trait.code) partners.set(code, (partners.get(code) ?? 0) + 1)
+  const together = [...partners].sort((a, b) => b[1] - a[1])
+  return (
+    <article className="trait-detail" aria-label={`${TRAIT_KIND_LABEL[trait.kind]} ${trait.name}`}>
+      <header className="trait-detail-head">
+        <TraitIcon trait={trait} index={index} size={64} />
+        <div>
+          <span className="mode-meta">{TRAIT_KIND_LABEL[trait.kind]}</span>
+          <h2>{trait.name}</h2>
+          <span className="mode-meta">
+            {members.length} quân cờ · mốc {trait.tiers.map((tier) => tier.count).join(" / ")}
+          </span>
+        </div>
+      </header>
+      {trait.description && (
+        <p className="mode-prose">
+          <GuideText text={trait.description} />
+        </p>
+      )}
+      <TierList trait={trait} />
+      {trait.note && <p className="guide-note">{trait.note}</p>}
+      <section className="trait-detail-block" aria-label="Quân cờ liên quan">
+        <h3>Quân cờ liên quan</h3>
+        {members.length ? (
+          <div className="trait-members">
+            {members.map((member) => (
+              <button
+                key={member.code}
+                type="button"
+                className="trait-member"
+                style={costStyle(member.cost)}
+                onClick={() => onOpen(member.code)}
+              >
+                <UnitPortrait unit={member} index={index} size="md" />
+                <span>{member.name}</span>
+                <small className="guide-cost" aria-label={`${member.cost} vàng`}>
+                  <GoldIcon size={12} />
+                  {member.cost}
+                </small>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="mode-meta">Chưa có quân cờ trong bản đã thu thập.</p>
+        )}
+      </section>
+      {together.length > 0 && (
+        <section className="trait-detail-block" aria-label="Hay đi cùng">
+          <h3>Hay đi cùng</h3>
+          <div className="guide-trait-tags">
+            {together.map(([code, count]) => (
+              <TraitTag key={code} code={code} index={index} count={count} />
+            ))}
+          </div>
+          <p className="mode-meta">Số là số quân cờ có cả hai Phe/Nghề.</p>
+        </section>
+      )}
+    </article>
+  )
+}
+
+/** The game's table: classes down, factions across, each unit where its two traits meet. */
+function TraitTable({
+  index,
+  onOpen,
+  onPick,
+}: {
+  index: GuideIndex
+  onOpen: (code: string) => void
+  onPick: (code: string) => void
+}) {
+  const factions = index.content.traits.filter((trait) => trait.kind === "FACTION")
+  const classes = index.content.traits.filter((trait) => trait.kind === "CLASS")
+  const head = (trait: Trait) => (
+    <button type="button" title={`${TRAIT_KIND_LABEL[trait.kind]}: ${trait.name}`} onClick={() => onPick(trait.code)}>
+      <TraitIcon trait={trait} index={index} size={30} />
+      <span>{trait.name}</span>
+    </button>
+  )
+  return (
+    <>
+      <p className="mode-meta">Hàng là Nghề, cột là Phe. Bấm icon để xem Phe/Nghề, bấm quân cờ để xem quân cờ.</p>
+      <div className="trait-table-scroll" role="region" aria-label="Bảng Phe × Nghề" tabIndex={0}>
+        <table className="trait-table">
+          <thead>
+            <tr>
+              <th scope="col">
+                <span className="mode-meta">Nghề \ Phe</span>
+              </th>
+              {factions.map((trait) => (
+                <th key={trait.code} scope="col">
+                  {head(trait)}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {classes.map((row) => (
+              <tr key={row.code}>
+                <th scope="row">{head(row)}</th>
+                {factions.map((column) => (
+                  <td key={column.code}>
+                    {index
+                      .membersOf(row.code)
+                      .filter((unit) => unit.traitCodes.includes(column.code))
+                      .map((unit) => (
+                        <button
+                          key={unit.code}
+                          type="button"
+                          title={`${unit.name} · ${unit.cost} vàng`}
+                          aria-label={unit.name}
+                          onClick={() => onOpen(unit.code)}
+                        >
+                          <UnitPortrait unit={unit} index={index} size="xs" />
+                        </button>
+                      ))}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
+}
+
+/** The game sorts items by the color of their stone (yellow-green, blue, gold, red); the group name says which. */
+function stoneColor(code: string, name: string) {
+  const key = foldText(`${code} ${name}`)
+  // "xanh lam" contains "xanh la", so blue is checked first.
+  if (key.includes("xanh lam") || key.includes("xanh duong")) return "#3fa2f0"
+  if (key.includes("xanh la")) return "#a9c63b"
+  if (key.includes("vang")) return "#f0b232"
+  if (key.includes("do")) return "#e2474b"
+  return "#9aa4b2"
+}
+
+/** The stone of an item group: its picture when there is one, else a diamond in its color. */
+function StoneMark({
+  group,
+  index,
+  size = 24,
+}: {
+  group: { iconAssetId?: string | null }
+  index: GuideIndex
+  size?: number
+}) {
+  const src = index.image(group.iconAssetId)
+  return src ? (
+    <img className="item-stone-icon" src={src} alt="" width={size} height={size} />
+  ) : (
+    <i className="item-stone" aria-hidden="true" />
+  )
+}
+
+function ItemsTab({ index }: { index: GuideIndex }) {
+  const { itemGroups, items } = index.content
+  const [stone, setStone] = useState<string | null>(null)
+  const groups: { code: string; name: string; iconAssetId?: string | null }[] = [
+    ...itemGroups,
+    ...(items.some((item) => !item.groupCode) ? [{ code: "", name: "Khác" }] : []),
+  ]
+  const entriesOf = (code: string) =>
+    items.filter((item) => (item.groupCode ?? "") === code).sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99))
+  // A chip drops the group words and keeps the stone color: "Xanh la" style names.
+  const shortName = (name: string) => {
+    const short = name.replace(/^nhóm\s+/iu, "").replace(/^đá\s+/iu, "")
+    return short.charAt(0).toLocaleUpperCase("vi") + short.slice(1)
+  }
+  return (
+    <section className="mode-stack" aria-label="Trang bị">
+      <div className="mode-chip-row" role="group" aria-label="Nhóm trang bị">
+        <button type="button" className="mode-chip" aria-pressed={stone === null} onClick={() => setStone(null)}>
+          Tất cả <span className="tier-count">{items.length}</span>
+        </button>
+        {groups.map((group) => (
+          <button
+            key={group.code}
+            type="button"
+            className="mode-chip stone-chip"
+            style={{ "--stone-color": stoneColor(group.code, group.name) } as CSSProperties}
+            aria-pressed={stone === group.code}
+            onClick={() => setStone(stone === group.code ? null : group.code)}
+          >
+            <StoneMark group={group} index={index} size={20} />
+            {shortName(group.name)}
+            <span className="tier-count">{entriesOf(group.code).length}</span>
+          </button>
+        ))}
+      </div>
+      {groups
+        .filter((group) => stone === null || group.code === stone)
+        .map((group) => {
+          const entries = entriesOf(group.code)
+          return (
+            <section
+              key={group.code}
+              className="item-group"
+              style={{ "--stone-color": stoneColor(group.code, group.name) } as CSSProperties}
+            >
+              <h2 className="mode-section-title">
+                <StoneMark group={group} index={index} />
+                {group.name}
+                <small>{entries.length} trang bị</small>
+              </h2>
+              {entries.length ? (
+                <div className="guide-card-list">
+                  {entries.map((item) => {
+                    const icon = index.image(item.iconAssetId)
+                    return (
+                      <article key={item.code} className="guide-card item-card">
+                        {icon ? <img className="guide-icon" src={icon} alt="" loading="lazy" /> : <span />}
+                        <div>
+                          <h3>{item.name}</h3>
+                          {item.effect && (
+                            <p>
+                              <GuideText text={item.effect} />
+                            </p>
+                          )}
                         </div>
-                      </header>
-                      {trait.description && <p className="mode-prose">{trait.description}</p>}
-                      <TierList trait={trait} />
-                      {trait.note && <p className="guide-note">{trait.note}</p>}
-                      <div className="guide-members">
-                        {members.map((member) => (
-                          <button
-                            key={member.code}
-                            type="button"
-                            title={`${member.name} (${member.cost} vàng)`}
-                            onClick={() => onOpen(member.code)}
-                          >
-                            <UnitPortrait unit={member} index={index} size="sm" />
-                          </button>
-                        ))}
-                        {!members.length && <span className="mode-meta">Chưa có quân cờ trong bản đã thu thập.</span>}
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="guide-slots">Chưa có trang bị nào của nhóm này trong bản đã thu thập.</p>
+              )}
             </section>
           )
         })}
@@ -612,59 +1178,47 @@ function TraitsTab({ index, onOpen }: { index: GuideIndex; onOpen: (code: string
   )
 }
 
-/** The game sorts items by the color of their stone; the group name says which. */
-function stoneColor(code: string, name: string) {
-  const key = foldText(`${code} ${name}`)
-  if (key.includes("xanh la")) return "#4fbf7a"
-  if (key.includes("xanh lam") || key.includes("xanh duong")) return "#4f9be0"
-  if (key.includes("vang")) return "#f2b440"
-  if (key.includes("do")) return "#e0625a"
-  return "#9aa4b2"
-}
+const BLESSING_TIERS = ["NORMAL", "EPIC", "LEGENDARY"] as const
 
-function ItemsTab({ index }: { index: GuideIndex }) {
-  const { itemGroups, items } = index.content
-  const groups = [...itemGroups, ...(items.some((item) => !item.groupCode) ? [{ code: "", name: "Khác" }] : [])]
+/**
+ * A mark per blessing tier, drawn in the tier's color: a gem for the normal tier, a crest for epic, a crown for
+ * legendary, so the tier reads before its name.
+ */
+export function TierIcon({ tier, size = 18 }: { tier: Blessing["tier"]; size?: number }) {
   return (
-    <section className="mode-stack" aria-label="Trang bị">
-      {groups.map((group) => {
-        const entries = items
-          .filter((item) => (item.groupCode ?? "") === group.code)
-          .sort((a, b) => (a.slot ?? 99) - (b.slot ?? 99))
-        const slots = "slotCount" in group ? group.slotCount : null
-        return (
-          <section
-            key={group.code}
-            className="item-group"
-            style={{ "--stone-color": stoneColor(group.code, group.name) } as CSSProperties}
-          >
-            <h2 className="mode-section-title">
-              <i className="item-stone" aria-hidden="true" />
-              {group.name}
-              {slots ? <small>{`${entries.length}/${slots} ô có dữ liệu`}</small> : null}
-            </h2>
-            {entries.length ? (
-              <div className="guide-card-list">
-                {entries.map((item) => {
-                  const icon = index.image(item.iconAssetId)
-                  return (
-                    <article key={item.code} className="guide-card item-card">
-                      {icon ? <img className="guide-icon" src={icon} alt="" loading="lazy" /> : <span />}
-                      <div>
-                        <h3>{item.name}</h3>
-                        {item.effect && <p>{item.effect}</p>}
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
-            ) : (
-              <p className="guide-slots">Chưa có trang bị nào của nhóm này trong bản đã thu thập.</p>
-            )}
-          </section>
-        )
-      })}
-    </section>
+    <svg
+      className="tier-icon"
+      style={TIER_STYLE[tier]}
+      width={size}
+      height={size}
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {tier === "NORMAL" && (
+        <>
+          <path d="M10 2.2 16.6 8 10 17.8 3.4 8Z" fill="currentColor" />
+          <path d="M3.4 8h13.2M7 8l3 9.8L13 8m-6 0 3-5.8L13 8" fill="none" stroke="#fff" strokeOpacity=".55" />
+        </>
+      )}
+      {tier === "EPIC" && (
+        <>
+          <path d="M10 1.8 16.8 5.6v8.8L10 18.2 3.2 14.4V5.6Z" fill="currentColor" />
+          <path
+            d="m10 5.4 1.3 3.1 3.3.3-2.5 2.2.8 3.3L10 12.6l-2.9 1.7.8-3.3-2.5-2.2 3.3-.3Z"
+            fill="#fff"
+            fillOpacity=".85"
+          />
+        </>
+      )}
+      {tier === "LEGENDARY" && (
+        <>
+          <path d="M2.6 6.4 6.6 9.6 10 3.4l3.4 6.2 4-3.2-1.6 9H4.2Z" fill="currentColor" />
+          <path d="M4.2 17.4h11.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          <circle cx="10" cy="11.6" r="1.6" fill="#fff" fillOpacity=".85" />
+        </>
+      )}
+    </svg>
   )
 }
 
@@ -672,11 +1226,14 @@ function BlessingsTab({ index }: { index: GuideIndex }) {
   const [tier, setTier] = useState<Blessing["tier"] | null>(null)
   const [search, setSearch] = useState("")
   const needle = foldText(search.trim())
-  const blessings = index.content.blessings.filter(
-    (blessing) =>
-      (!tier || blessing.tier === tier) &&
-      (!needle || foldText(`${blessing.name} ${blessing.description ?? ""}`).includes(needle)),
-  )
+  const matches = (blessing: Blessing) =>
+    !needle || foldText(`${blessing.name} ${blessing.description ?? ""}`).includes(needle)
+  const sections = BLESSING_TIERS.filter((value) => !tier || tier === value)
+    .map((value) => ({
+      tier: value,
+      blessings: index.content.blessings.filter((blessing) => blessing.tier === value && matches(blessing)),
+    }))
+    .filter((section) => section.blessings.length)
   return (
     <section className="mode-stack" aria-label="Chúc phúc">
       <div className="mode-filter-bar">
@@ -691,35 +1248,52 @@ function BlessingsTab({ index }: { index: GuideIndex }) {
       </div>
       <div className="mode-chip-row" role="group" aria-label="Bậc chúc phúc">
         <button type="button" className="mode-chip" aria-pressed={tier === null} onClick={() => setTier(null)}>
-          Tất cả ({index.content.blessings.length})
+          Tất cả <span className="tier-count">{index.content.blessings.length}</span>
         </button>
-        {(Object.keys(BLESSING_TIER_LABEL) as Blessing["tier"][]).map((value) => (
+        {BLESSING_TIERS.map((value) => (
           <button
             key={value}
             type="button"
-            className="mode-chip"
+            className="mode-chip tier-chip"
             style={TIER_STYLE[value]}
             data-tier={value}
             aria-pressed={tier === value}
             onClick={() => setTier(tier === value ? null : value)}
           >
-            {BLESSING_TIER_LABEL[value]} ({index.content.blessings.filter((b) => b.tier === value).length})
+            <TierIcon tier={value} />
+            {BLESSING_TIER_LABEL[value]}
+            <span className="tier-count">{index.content.blessings.filter((b) => b.tier === value).length}</span>
           </button>
         ))}
       </div>
-      <div className="blessing-list">
-        {blessings.map((blessing) => (
-          <article key={blessing.code} className="blessing-card" style={TIER_STYLE[blessing.tier]}>
-            <BlessingIcon blessing={blessing} index={index} />
-            <div>
-              <h3>{blessing.name}</h3>
-              <span className="blessing-tier">{BLESSING_TIER_LABEL[blessing.tier]}</span>
-              {blessing.description && <p>{blessing.description}</p>}
-            </div>
-          </article>
-        ))}
-      </div>
-      {!blessings.length && <p className="mode-empty">Không có chúc phúc khớp tìm kiếm.</p>}
+      {sections.map((section) => (
+        <section key={section.tier} className="blessing-section" style={TIER_STYLE[section.tier]}>
+          <h2 className="blessing-section-title">
+            <TierIcon tier={section.tier} size={22} />
+            {BLESSING_TIER_LABEL[section.tier]}
+            <small>{section.blessings.length} chúc phúc</small>
+          </h2>
+          <div className="blessing-list">
+            {section.blessings.map((blessing) => (
+              <article key={blessing.code} className="blessing-card" style={TIER_STYLE[blessing.tier]}>
+                <BlessingIcon blessing={blessing} index={index} />
+                <div>
+                  <h3>{blessing.name}</h3>
+                  {blessing.description && (
+                    <p>
+                      <GuideText text={blessing.description} />
+                    </p>
+                  )}
+                </div>
+                <span className="blessing-tier-mark" title={BLESSING_TIER_LABEL[blessing.tier]}>
+                  <TierIcon tier={blessing.tier} size={16} />
+                </span>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+      {!sections.length && <p className="mode-empty">Không có chúc phúc khớp tìm kiếm.</p>}
     </section>
   )
 }

@@ -78,7 +78,7 @@ test("the cost summary and suggestions follow the chosen units", () => {
   assert.deepEqual(first!.gains, ["phao-thu"])
 })
 
-test("a shared link keeps known units once, carries and at most ten units and three emblems", () => {
+test("a shared link keeps known units once, carries, ten board units plus the extra slot and three emblems", () => {
   const query = encodeLineup(
     [
       { unitCode: "violet", carry: true },
@@ -101,7 +101,27 @@ test("a shared link keeps known units once, carries and at most ten units and th
   )
   assert.deepEqual(messy.emblems, ["dau-si", "dau-si", "phao-thu"])
   const many = Array.from({ length: 14 }, (_, at) => `u${at}`).join(",")
-  assert.equal(decodeLineup(`u=${many}`).units.length, 10)
+  assert.equal(decodeLineup(`u=${many}`).units.length, 11)
+})
+
+test("a shared link keeps each unit's cell, one unit per cell, and still reads links without cells", () => {
+  const query = encodeLineup(
+    [
+      { unitCode: "violet", carry: true, row: "BACK", column: 4 },
+      { unitCode: "arduin", carry: false, row: "FRONT", column: 4 },
+    ],
+    [],
+  )
+  assert.equal(decodeURIComponent(query), "u=violet*@b4,arduin@f4")
+  assert.deepEqual(decodeLineup(query, guide).units, [
+    { unitCode: "violet", carry: true, row: "BACK", column: 4 },
+    { unitCode: "arduin", carry: false, row: "FRONT", column: 4 },
+  ])
+  assert.deepEqual(decodeLineup("u=violet@m2,arduin*@m2,ghost@f9", guide).units, [
+    { unitCode: "violet", carry: false, row: "MIDDLE", column: 2 },
+    { unitCode: "arduin", carry: true },
+  ])
+  assert.deepEqual(decodeLineup("u=violet@f8", guide).units, [])
 })
 
 test("rule bodies turn dash lines into lists and search ignores Vietnamese marks", () => {

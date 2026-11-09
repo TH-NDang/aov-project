@@ -6,6 +6,7 @@ import { CatalogHeading } from "../../layout/catalog-heading"
 import { modeMeta, notFoundMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { AutoChessGuide, GUIDE_TABS, type GuideTab } from "./auto-chess-guide"
+import { AutoChessOverview } from "./auto-chess-overview"
 import { guideQuery, modeQuery, ModeRequestError, type ModeContent } from "./mode-api"
 import {
   AvailabilityBadge,
@@ -76,7 +77,6 @@ export function ModeDetailPage() {
         eager
       >
         <div className="mode-banner-copy">
-          <h1>{content.name}</h1>
           <p className="mode-meta">
             <span>{GROUP_LABEL[content.group]}</span>
             {duration && <span>{duration} / trận</span>}
@@ -87,6 +87,8 @@ export function ModeDetailPage() {
           </span>
         </div>
       </ModeArt>
+      {/* The cover carries no name; on phones, where there is no page heading, the name follows the cover. */}
+      {layout === "compact" && <h1 className="mode-compact-title">{content.name}</h1>}
 
       {hasGuide && (
         <nav className="guide-tabs" aria-label="Mục cẩm nang">
@@ -114,12 +116,19 @@ export function ModeDetailPage() {
                 <p className="mode-prose">{content.summary}</p>
               </section>
             )}
-            {rules.length > 0 && (
-              <section className="mode-panel">
-                <h2>Luật chơi</h2>
-                <RuleList rules={rules} collapsible={layout === "compact"} />
-              </section>
-            )}
+            {guide.data && <AutoChessOverview guide={guide.data} code={code} />}
+            {rules.length > 0 &&
+              (guide.data ? (
+                <details className="mode-panel ov-rules">
+                  <summary>Luật chơi đầy đủ</summary>
+                  <RuleList rules={rules} collapsible={layout === "compact"} />
+                </details>
+              ) : (
+                <section className="mode-panel">
+                  <h2>Luật chơi</h2>
+                  <RuleList rules={rules} collapsible={layout === "compact"} />
+                </section>
+              ))}
             {content.heroes.length > 0 && (
               <section className="mode-panel">
                 <h2>Tướng của chế độ</h2>
