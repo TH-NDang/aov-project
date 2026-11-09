@@ -62,6 +62,11 @@ export interface Stats {
   }[]
   sources: Source[]
 }
+/** The icon a skill shows in a named state, while its name, text and numbers stay those of the skill. */
+export interface SkillStateIcon {
+  assetId: string
+  label: string
+}
 export interface Skill {
   skillKey: string
   kind: "PASSIVE" | "ACTIVE" | "OTHER"
@@ -70,6 +75,8 @@ export interface Skill {
   iconAssetId: string | null
   translations: (Translation & { description: string })[]
   effects: { effectType: string; metadata: Record<string, unknown> }[]
+  /** Read as empty when missing; content saved before states existed has none. */
+  stateIcons?: SkillStateIcon[]
 }
 export interface Skills {
   skills: Skill[]

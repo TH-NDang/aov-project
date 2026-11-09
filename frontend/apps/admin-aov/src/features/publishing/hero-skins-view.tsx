@@ -51,7 +51,13 @@ export function HeroSkinsView({
   canWrite,
   busy,
   onTranslate,
+  onEditSkin,
+  editSkinLabel,
 }: {
+  /** Opens the skin editor on one skin; absent when nobody may edit here. */
+  onEditSkin?: (skinKey: string) => void
+  /** Why the pencil waits, when it does. */
+  editSkinLabel?: (name: string) => string
   skins: readonly Skin[]
   locale: string
   heroId?: string
@@ -65,6 +71,8 @@ export function HeroSkinsView({
   const [params, setParams] = useSearchParams()
   const [filter, setFilter] = useState<SkinWorkFilter>("all")
   const [drafts, setDrafts] = useState<Record<string, SkinAcquisitionDraft>>({})
+  // The acquisition form opens on request and stays open while stepping through skins with "save and next".
+  const [editingPrice, setEditingPrice] = useState(false)
   const rail = useRef<HTMLDivElement>(null)
   const activeThumb = useRef<HTMLButtonElement>(null)
   const refocusThumb = useRef(false)
@@ -233,6 +241,20 @@ export function HeroSkinsView({
                 disabled={busy}
               />
               <PatchCaptureLink groupKey={captureGroupKeys.skins} skinKey={selected.skinKey} name={selectedName} />
+              {onEditSkin && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 shrink-0"
+                  aria-label={editSkinLabel?.(selectedName) ?? `Chỉnh sửa trang phục ${selectedName}`}
+                  title={editSkinLabel?.(selectedName) ?? `Chỉnh sửa trang phục ${selectedName}`}
+                  disabled={busy}
+                  onClick={() => onEditSkin(selected.skinKey)}
+                >
+                  <Pencil className="size-4" />
+                </Button>
+              )}
             </div>
             <MediaCode value={selected.skinKey} label="Mã trang phục" plain />
             {/* The stage is too small for its caption beside the panel, so the tier moves here. */}
@@ -268,19 +290,36 @@ export function HeroSkinsView({
               draft={drafts[selected.skinKey]}
               canWrite={canWrite}
               onOpen={(imageId) => captures.reveal(captureGroupKeys.skins, imageId)}
-              onFill={(price, capturedOn) =>
+              onFill={(price, capturedOn) => {
+                setEditingPrice(true)
                 changeDraft({
                   ...(drafts[selected.skinKey] ?? skinAcquisitionDraft(value)),
                   method: "VOUCHER",
                   voucherPrice: price.toString(),
                   ...(capturedOn ? { capturedOn } : {}),
                 })
-              }
+              }}
             />
           )}
           {heroId && (
             <div className="@container/skin-work min-w-0 rounded-xl border bg-card p-3 [grid-area:editor]">
-              <h5 className="type-label mb-2">Cách nhận và giá</h5>
+              <div className="mb-2 flex min-h-8 items-center justify-between gap-2">
+                <h5 className="type-label">Cách nhận và giá</h5>
+                {canWrite && !editingPrice && !drafts[selected.skinKey] && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    aria-label="Chỉnh sửa cách nhận và giá"
+                    title="Chỉnh sửa cách nhận và giá"
+                    disabled={busy}
+                    onClick={() => setEditingPrice(true)}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                )}
+              </div>
               <SkinAcquisitionEditor
                 key={selected.skinKey}
                 heroId={heroId}
@@ -292,6 +331,8 @@ export function HeroSkinsView({
                 onDraftChange={changeDraft}
                 nextName={next ? text(next)?.name || next.skinKey : undefined}
                 onNext={next ? () => select(next.skinKey) : undefined}
+                editing={editingPrice}
+                onEditingChange={setEditingPrice}
               />
             </div>
           )}
@@ -375,23 +416,29 @@ function SkinStage({
       meta: <ImageCreditPanel sources={sources} assetId={asset.id} />,
     })
   })
-  const backdrop = assets[0].data?.currentUrl
+  // A cover is close to the frame and fills it, cropping a sliver; the large view still shows all of it. A portrait
+  // standing in for a missing cover is far narrower, so it stays whole over a blurred copy of itself.
+  const cover = !!skin.artAssetId
+  const backdrop = cover ? undefined : assets[1].data?.currentUrl
 
   return (
     <div className="relative isolate aspect-video min-w-0 overflow-hidden rounded-xl border bg-muted self-start [grid-area:stage]">
+      {/* The blurred copy reaches past the frame, so the blur never fades to an empty edge. */}
       {backdrop && (
-        <img
-          src={backdrop}
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 size-full scale-110 object-cover opacity-50 blur-2xl"
-        />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+          <img
+            src={backdrop}
+            alt=""
+            className="absolute -top-12 -left-12 h-[calc(100%+6rem)] w-[calc(100%+6rem)] max-w-none object-cover blur-2xl saturate-150"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
       )}
       <HeroAsset
         id={skin.artAssetId ?? skin.portraitAssetId}
         alt={`${name} · Ảnh nền`}
         className="absolute inset-0 size-full rounded-none border-0 bg-transparent"
-        frameAspectRatio={16 / 9}
+        frameAspectRatio={cover ? undefined : 16 / 9}
         preview
         gallery={images.length ? { images, index: 0 } : undefined}
       />

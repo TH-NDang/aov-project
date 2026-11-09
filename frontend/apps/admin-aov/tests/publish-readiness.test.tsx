@@ -469,7 +469,10 @@ for (const canWrite of [true, false])
       assert.match(search(), /section=OVERVIEW_RATINGS/)
       if (canWrite) {
         await waitFor(() => !!editor(), "the editor opens")
-        assert.match(editor()!.textContent ?? "", /Đánh giá/)
+        // The editor takes the place of the overview it changes, whose heading names the part being edited.
+        const overview = document.getElementById("hero-content-overview")!
+        assert.ok(overview.contains(editor()))
+        assert.match(overview.textContent ?? "", /Đang sửa · Đánh giá/)
       } else {
         await waitFor(() => document.activeElement?.id === "hero-OVERVIEW_RATINGS", "the section takes the focus")
         assert.equal(editor(), null)

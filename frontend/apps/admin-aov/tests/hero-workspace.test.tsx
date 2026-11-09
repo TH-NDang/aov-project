@@ -279,7 +279,14 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await type(input("Tên tướng"), "Pending profile name")
     await type(input("Ghi chú thay đổi"), "Pending information note")
     await click(mainTab("overview"))
-    await click(button("Chỉnh sửa cốt truyện"))
+    // The lore opens from its icon on the hero card; its editor starts from that window.
+    await click(document.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"][aria-label*="ốt truyện"]')!)
+    await click(document.querySelector<HTMLButtonElement>('[role="dialog"] button[aria-label="Chỉnh sửa cốt truyện"]')!)
+    // A written lore reads as published first; its pencil turns the same box into the editor.
+    const openLore = document.querySelector<HTMLButtonElement>(
+      '[aria-label="Chỉnh sửa nội dung"] button[aria-label^="Sửa "]',
+    )
+    if (openLore) await click(openLore)
     const loreEditor = document.querySelector<HTMLElement>('[contenteditable="true"]')!
     assert.ok(loreEditor)
     assert.equal(document.querySelector('[aria-label="Các phần nội dung"]'), null)

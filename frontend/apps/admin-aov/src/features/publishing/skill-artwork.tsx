@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query"
-import { ArrowLeftRight, Sparkles } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { HeroAsset } from "./hero-asset"
@@ -78,12 +77,6 @@ export function SkillArtwork({
           {shortLabel}
         </span>
       )}
-      {inventory && (
-        <span className="pointer-events-none absolute -right-0.5 -bottom-0.5 rounded-full border bg-card p-0.5 text-muted-foreground">
-          <Sparkles className="size-2.5" aria-hidden="true" />
-          <span className="sr-only">Ảnh thư viện</span>
-        </span>
-      )}
     </span>
   )
 }
@@ -101,24 +94,26 @@ export function SkillArtworkStack({
 }) {
   const active = skills.find((skill) => skill.skillKey === selectedSkillKey) ?? skills[0]
   if (!active) return null
-  const previews = [...skills.filter((skill) => skill !== active).slice(0, 2), active]
+  // The chosen variant stands in front at the size of a single icon; the others peek out behind it to the right,
+  // smaller and dimmer the further back they sit, so a slot with variants reads at a glance without a number.
+  const behind = skills.filter((skill) => skill !== active).slice(0, 2)
   return (
-    <span aria-hidden="true" className={cn("relative inline-flex h-14 w-[4.5rem] shrink-0", className)}>
-      {previews.map((skill, index) => (
-        <span
-          key={skill.skillKey}
-          className="absolute rounded-full bg-card p-0.5 shadow-sm"
-          style={{ left: index * 10, top: (previews.length - index - 1) * 5, zIndex: index + 1 }}
-        >
-          <SkillArtwork skill={skill} heroId={heroId} className="size-10" />
-        </span>
-      ))}
-      {skills.length > 1 && (
-        <span className="absolute right-0 bottom-0 z-10 flex items-center gap-0.5 rounded-full border bg-card px-1 py-0.5 text-xs font-medium text-muted-foreground">
-          <ArrowLeftRight className="size-2.5" />
-          {skills.length}
-        </span>
-      )}
+    <span aria-hidden="true" className={cn("relative inline-flex size-10 shrink-0", className)}>
+      {behind
+        .map((skill, index) => ({ skill, depth: index + 1 }))
+        .reverse()
+        .map(({ skill, depth }) => (
+          <span
+            key={skill.skillKey}
+            className="absolute inset-0 rounded-full bg-card ring-2 ring-card"
+            style={{ transform: `translateX(${depth * 10}px) scale(${1 - depth * 0.1})`, opacity: 1 - depth * 0.3 }}
+          >
+            <SkillArtwork skill={skill} heroId={heroId} className="size-full" />
+          </span>
+        ))}
+      <span className="absolute inset-0 rounded-full bg-card ring-2 ring-card">
+        <SkillArtwork skill={active} heroId={heroId} className="size-full" />
+      </span>
     </span>
   )
 }

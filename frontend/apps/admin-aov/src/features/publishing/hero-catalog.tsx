@@ -758,38 +758,10 @@ export function HeroQuickView({
               <ChevronsRight aria-hidden className="size-5" />
             </Button>
           </SheetClose>
-          <SheetHeader className="h-11 shrink-0 justify-center gap-0 border-b px-4 py-0">
-            <div className="flex items-center justify-between gap-3">
-              <SheetTitle className="min-w-0 truncate text-xs font-medium text-muted-foreground">
-                {hero?.code ? `Tướng / ${hero.code}` : "Chi tiết tướng"}
-              </SheetTitle>
-              <div className="flex shrink-0 items-center gap-1">
-                {heroId && (
-                  <Button asChild variant="ghost" size="sm" className="h-7 gap-1.5 px-2 text-xs">
-                    <Link
-                      aria-label="Mở trang tướng đầy đủ"
-                      to={heroPageLocation(heroId, params, revisionId)}
-                      onClick={async (event) => {
-                        if (!saving && !unsafe) return
-
-                        // The click is spent once the question opens, so an accepted answer navigates by itself.
-                        event.preventDefault()
-                        if (await canLeave()) {
-                          setUnsafe(false)
-                          void navigate(heroPageLocation(heroId, params, revisionId))
-                        }
-                      }}
-                    >
-                      <ArrowUpRight className="size-3.5" />
-                      <span className="hidden sm:inline">Mở toàn trang</span>
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-            <SheetDescription className="sr-only">
-              {revision ? `Phiên bản #${revision.revisionNo}` : "Chi tiết tướng"}
-            </SheetDescription>
+          {/* The hero's own header leads the drawer; opening the full page lives in its actions menu. */}
+          <SheetHeader className="sr-only">
+            <SheetTitle>{hero?.code ? `Tướng / ${hero.code}` : "Chi tiết tướng"}</SheetTitle>
+            <SheetDescription>{revision ? `Phiên bản #${revision.revisionNo}` : "Chi tiết tướng"}</SheetDescription>
           </SheetHeader>
           <HeroQuickViewBody>
             {heroId && (
@@ -804,6 +776,19 @@ export function HeroQuickView({
                   key={heroId}
                   heroId={heroId}
                   revisionId={revisionId}
+                  fullPage={{
+                    to: heroPageLocation(heroId, params, revisionId),
+                    onClick: async (event) => {
+                      if (!saving && !unsafe) return
+
+                      // The click is spent once the question opens, so an accepted answer navigates by itself.
+                      event.preventDefault()
+                      if (await canLeave()) {
+                        setUnsafe(false)
+                        void navigate(heroPageLocation(heroId, params, revisionId))
+                      }
+                    },
+                  }}
                   onUnsavedChange={(unsafe, busy) => {
                     setUnsafe(unsafe)
                     setSaving(!!busy)

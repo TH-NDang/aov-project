@@ -71,22 +71,21 @@ export function HeroLanguagePicker({
           <span className="flex min-w-0 items-center gap-2">
             <HeroLanguageIcon locale={locale} />
             {/* A header line has no room for the region: the tooltip and the list keep the full name, a phone the flag. */}
-            <span className={`type-body truncate ${compact ? "hidden max-w-40 sm:inline" : ""}`}>
-              {compact ? selected.split(" (")[0] : selected}
-            </span>
+            {/* A header keeps only the flag; the title and the list carry the language's name. */}
+            {!compact && <span className="type-body truncate">{selected}</span>}
           </span>
           <span className="flex shrink-0 items-center gap-2">
             {!!progress?.missing.length && (
               <span
-                className={`type-label rounded bg-amber-500/10 px-1.5 py-0.5 text-amber-700 dark:text-amber-400 ${compact ? "hidden sm:inline" : ""}`}
+                className={`type-label rounded bg-amber-500/10 px-1.5 py-0.5 text-amber-700 dark:text-amber-400 ${compact ? "hidden" : ""}`}
               >
                 {progress.exists ? `Thiếu ${progress.missing.length}` : "Chưa dịch"}
               </span>
             )}
             {compact && !!progress?.missing.length && (
-              <span className="size-1.5 rounded-full bg-amber-500 sm:hidden" aria-hidden />
+              <span className="size-1.5 rounded-full bg-amber-500" aria-hidden />
             )}
-            {!!progress?.totalFields && !progress.missing.length && (
+            {!compact && !!progress?.totalFields && !progress.missing.length && (
               <CheckCircle2 className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-label="Đủ nội dung" />
             )}
             <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
@@ -99,38 +98,7 @@ export function HeroLanguagePicker({
           {revisionNo != null && <span className="type-meta mt-0.5 block">Nội dung của bản #{revisionNo}</span>}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup value={locale} onValueChange={onChange}>
-          {languageOptions.map((option) => {
-            const optionProgress = content ? translationStatus(content, option.value) : undefined
-            const complete = optionProgress && optionProgress.totalFields > 0 && !optionProgress.missing.length
-            return (
-              <DropdownMenuRadioItem
-                key={option.value}
-                value={option.value}
-                textValue={option.label}
-                data-locale={option.value}
-                className="min-h-11 gap-3 rounded-lg py-2.5 pr-2.5 data-[state=checked]:bg-accent/60"
-              >
-                <HeroLanguageIcon locale={option.value} />
-                <span className="min-w-0 flex-1">
-                  <span className="type-body block">{option.label}</span>
-                  {optionProgress && (
-                    <span
-                      className={`type-meta mt-0.5 block ${complete ? "text-emerald-600 dark:text-emerald-400" : ""}`}
-                    >
-                      {translationStatusLabel(optionProgress)}
-                    </span>
-                  )}
-                </span>
-                {optionProgress && (
-                  <span className="type-meta shrink-0 tabular-nums" aria-label="Số mục đã dịch">
-                    {optionProgress.completedFields}/{optionProgress.totalFields}
-                  </span>
-                )}
-              </DropdownMenuRadioItem>
-            )
-          })}
-        </DropdownMenuRadioGroup>
+        <HeroLanguageItems content={content} locale={locale} onChange={onChange} />
         {content && (
           <>
             <DropdownMenuSeparator />
@@ -139,5 +107,49 @@ export function HeroLanguagePicker({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+/** The languages to read in, each with how much of this version it covers; shared by the picker and narrow menus. */
+export function HeroLanguageItems({
+  content,
+  locale,
+  onChange,
+}: {
+  content?: Content
+  locale: string
+  onChange: (locale: string) => void
+}) {
+  return (
+    <DropdownMenuRadioGroup value={locale} onValueChange={onChange}>
+      {languageOptions.map((option) => {
+        const optionProgress = content ? translationStatus(content, option.value) : undefined
+        const complete = optionProgress && optionProgress.totalFields > 0 && !optionProgress.missing.length
+        return (
+          <DropdownMenuRadioItem
+            key={option.value}
+            value={option.value}
+            textValue={option.label}
+            data-locale={option.value}
+            className="min-h-11 gap-3 rounded-lg py-2.5 pr-2.5 data-[state=checked]:bg-accent/60"
+          >
+            <HeroLanguageIcon locale={option.value} />
+            <span className="min-w-0 flex-1">
+              <span className="type-body block">{option.label}</span>
+              {optionProgress && (
+                <span className={`type-meta mt-0.5 block ${complete ? "text-emerald-600 dark:text-emerald-400" : ""}`}>
+                  {translationStatusLabel(optionProgress)}
+                </span>
+              )}
+            </span>
+            {optionProgress && (
+              <span className="type-meta shrink-0 tabular-nums" aria-label="Số mục đã dịch">
+                {optionProgress.completedFields}/{optionProgress.totalFields}
+              </span>
+            )}
+          </DropdownMenuRadioItem>
+        )
+      })}
+    </DropdownMenuRadioGroup>
   )
 }

@@ -102,6 +102,12 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.ok(condition(), "Expected URL-backed hero workspace was not reached")
   }
   const click = (selector: string) => act(async () => document.querySelector<HTMLElement>(selector)!.click())
+  const openActions = () =>
+    act(async () => {
+      document
+        .querySelector<HTMLElement>('[aria-label="Thao tác tướng"]')!
+        .dispatchEvent(new dom.window.MouseEvent("pointerdown", { bubbles: true, button: 0 }))
+    })
   try {
     await verifySession()
     await mount()
@@ -217,7 +223,8 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await mount()
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu bản dịch"]'))
     assert.ok(document.querySelector('[aria-controls="workspace-translations"][aria-selected="true"]'))
-    await click('[aria-label="Mở trang tướng đầy đủ"]')
+    await openActions()
+    await click('a[role="menuitem"][href^="/hero/fixture-hero"]')
     await waitFor(() => router.state.location.pathname === "/hero/fixture-hero")
     const params = new URLSearchParams(router.state.location.search)
     assert.equal(params.get("hero"), null)
@@ -274,7 +281,7 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await waitFor(() => !!document.querySelector("#hero-content-media"))
     assert.equal(new URLSearchParams(router.state.location.search).get("revision"), "fixture-previous")
     assert.equal(
-      document.querySelector<HTMLSelectElement>('[aria-label="Phiên bản dữ liệu"]')!.value,
+      document.querySelector<HTMLElement>('[aria-label="Phiên bản dữ liệu"]')!.dataset.revision,
       "fixture-previous",
     )
     assert.equal(

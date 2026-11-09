@@ -1,13 +1,18 @@
 import type { ComponentType, ReactNode } from "react"
 import { useLayoutEffect, useRef, useState } from "react"
-import { BookOpen, Clapperboard, ImageIcon, Pencil, Swords } from "lucide-react"
+import { BookOpen, Clapperboard, ImageIcon, Pencil, Shirt, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
-import { catalogIcons } from "@aov/ui/components/catalog-icons"
 import { cn } from "@aov/ui/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { ContentsSection, SectionContents, useSectionContents, type ContentsEntry } from "@/components/section-contents"
+import {
+  ContentsSection,
+  SectionContents,
+  sectionFrame,
+  useSectionContents,
+  type ContentsEntry,
+} from "@/components/section-contents"
 import { SECTIONS, type Content, type Section } from "./types"
-import { HeroOverview } from "./hero-overview"
+import { HeroOverviewCard, HeroOverviewFacts, type HeroOverviewProps } from "./hero-overview"
 import type { StatDefault } from "./combat-attributes"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { SubjectVideosPanel } from "../videos/subject-videos-panel"
@@ -24,6 +29,26 @@ export { HeroAsset } from "./hero-asset"
 
 /** The element id of a content section; links and the old tab keys (`?tab=skills`) land on it. */
 export const heroContentSectionId = (tab: HeroContentTab) => `hero-content-${tab}`
+
+/** An editor open on the page: it takes the place of the section it changes, the rest of the page stays readable. */
+export interface HeroSectionEditing {
+  section: Section
+  /** The part being changed, shown next to the section title, such as the profile details or the lore. */
+  title: string
+  node: ReactNode
+}
+
+const LOCKED = "lưu hoặc hủy phần đang sửa trước"
+
+/** Shows that a section is open in its editor; the editor itself says what can be changed. */
+function EditingStatus({ part }: { part?: string }) {
+  return (
+    <span className="type-meta inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-primary">
+      <Pencil className="size-3" />
+      {part ? `Đang sửa · ${part}` : "Đang sửa"}
+    </span>
+  )
+}
 
 const sectionTab = (id: string | undefined) =>
   (id?.startsWith("hero-content-") ? id.slice("hero-content-".length) : "overview") as HeroContentTab
@@ -116,7 +141,10 @@ function HeroContentBody({
   onSkillLayoutChange,
   reviewTarget,
   onReviewShown,
+  editing,
 }: {
+  /** The editor open on the page, if any. */
+  editing?: HeroSectionEditing | null
   reviewTarget?: HeroReviewItem | null
   onReviewShown?: () => void
   content: Content
@@ -127,7 +155,8 @@ function HeroContentBody({
   locale: string
   editable: boolean
   busy: boolean
-  onEdit: (section: Section, profilePart?: "information" | "lore") => void
+  /** `focus` names the one skin to open, when the pencil of a single skin was used. */
+  onEdit: (section: Section, profilePart?: "information" | "lore", focus?: string) => void
   onNeedsDraft?: () => void
   /** Prices and skin acquisition follow the shop, so they only ask for the right to write. */
   canWrite?: boolean
@@ -156,7 +185,16 @@ function HeroContentBody({
   })
   const activeSkill = selectedSkillKey ?? localSkill
   const target = reviewTarget
-  const { revealed, prepare } = contents
+  const { revealed, prepare, jump, reveal } = contents
+  const editingTab = editing ? reviewTab(editing.section) : null
+  const editingKey = editing && `${editing.section}:${editing.title}`
+  // An editor opens where its section starts, under the sticky bars, so the first field is the first thing in view.
+  // The section counts as loaded from then on, so closing the editor shows its content again rather than a placeholder.
+  useLayoutEffect(() => {
+    if (!editingTab) return
+    reveal(heroContentSectionId(editingTab))
+    jump(heroContentSectionId(editingTab))
+  }, [editingKey, editingTab, jump, reveal])
   useLayoutEffect(() => {
     if (!target?.section) return
     // A lazy section has to be on the page before the warning inside it can be found, and the ones above it loaded so
@@ -182,30 +220,65 @@ function HeroContentBody({
     onReviewShown?.()
   }, [target, activeSkill, onReviewShown, revealed, prepare])
 
+  // The section open in an editor shows its state instead of the button; the others wait until it is saved or closed.
   const editAction = (section: Section) => {
+    if (editing?.section === section) return null
     const label = SECTIONS.find(([key]) => key === section)![2]
+    const name = editing
+      ? `Chỉnh sửa ${label} · ${LOCKED}`
+      : editable
+        ? `Chỉnh sửa ${label}`
+        : onNeedsDraft
+          ? `Chỉnh sửa ${label} · tạo bản nháp trước`
+          : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`
+    const disabled = (!editable && !onNeedsDraft) || busy || !!editing
     return (
-      <IconAction
-        label={
-          editable
-            ? `Chỉnh sửa ${label}`
-            : onNeedsDraft
-              ? `Chỉnh sửa ${label} · tạo bản nháp trước`
-              : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`
-        }
-        icon={Pencil}
-        disabled={(!editable && !onNeedsDraft) || busy}
-        onClick={() => (editable ? onEdit(section) : onNeedsDraft?.())}
-      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        aria-label={name}
+        title={name}
+        aria-disabled={disabled}
+        className="size-8 shrink-0 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+        onClick={() => {
+          if (disabled) return
+          if (editable) onEdit(section)
+          else onNeedsDraft?.()
+        }}
+      >
+        <Pencil className="size-4" />
+      </Button>
     )
   }
+  const sectionStatus = (tab: HeroContentTab) =>
+    editingTab === tab ? <EditingStatus part={tab === "overview" ? editing!.title : undefined} /> : undefined
+  const editorIn = (tab: HeroContentTab) => (editingTab === tab ? editing!.node : null)
   const entries: ContentsEntry[] = [
     { id: heroContentSectionId("overview"), label: "Tổng quan", icon: BookOpen },
     { id: heroContentSectionId("skills"), label: "Kỹ năng", icon: Swords, count: content.SKILLS?.skills.length ?? 0 },
-    { id: heroContentSectionId("skins"), label: "Trang phục", icon: catalogIcons.skins, count: skins.length },
+    { id: heroContentSectionId("skins"), label: "Trang phục", icon: Shirt, count: skins.length },
     { id: heroContentSectionId("media"), label: "Ảnh", icon: ImageIcon },
     ...(heroId ? [{ id: heroContentSectionId("videos"), label: "Video", icon: Clapperboard }] : []),
   ]
+  const overview: HeroOverviewProps = {
+    heroId,
+    variantId,
+    statDefaults,
+    patchCode,
+    referenceError,
+    content,
+    profile,
+    locale,
+    editable,
+    busy,
+    locked: !!editing,
+    onEdit,
+    onNeedsDraft,
+    onTranslate,
+    canWrite,
+    issues,
+  }
   const roles = ["HEAD", "PORTRAIT", "SPLASH"] as const
   const roleLabel = (role: (typeof roles)[number]) =>
     role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"
@@ -215,109 +288,151 @@ function HeroContentBody({
       <SectionContents
         contents={contents}
         entries={entries}
+        // An editor gets the whole row; the contents list waits behind its button until the editor closes.
+        folded={!!editing}
+        framed
         // The scrolled hero name (48px) and the workspace tab row stay stuck above the sections.
         className="[--contents-offset:85px] @max-2xl:[--contents-offset:105px]"
         onNavigate={(id) => onTabChange?.(sectionTab(id))}
         onActiveChange={onVisibleTabChange && ((id) => onVisibleTabChange(sectionTab(id)))}
       >
-        <ContentsSection id={heroContentSectionId("overview")} title="Tổng quan" icon={BookOpen}>
-          <HeroOverview
-            heroId={heroId}
-            variantId={variantId}
-            statDefaults={statDefaults}
-            patchCode={patchCode}
-            referenceError={referenceError}
-            content={content}
-            profile={profile}
-            locale={locale}
-            editable={editable}
-            busy={busy}
-            onEdit={onEdit}
-            onNeedsDraft={onNeedsDraft}
-            onTranslate={onTranslate}
-            canWrite={canWrite}
-            issues={issues}
-          />
-        </ContentsSection>
-        <ContentsSection
-          id={heroContentSectionId("skills")}
-          title="Kỹ năng"
-          icon={Swords}
-          count={content.SKILLS?.skills.length ?? 0}
-          lazy
-        >
-          <div id="hero-SKILLS" className="min-w-0">
-            <HeroSkillsView
-              action={editAction("SKILLS")}
-              onTranslate={onTranslate}
-              skills={content.SKILLS?.skills ?? []}
-              locale={locale}
-              heroId={heroId}
-              selectedSkillKey={activeSkill}
-              onSkillChange={onSkillChange ?? setLocalSkill}
-              layout={skillLayout}
-              onLayoutChange={onSkillLayoutChange}
-            />
-            <HeroContentSources sources={content.SKILLS?.sources ?? []} />
+        {/* Ratings and attributes run beside the hero card and the skills while reading. On a narrow page, or while an
+            editor needs the width, they follow the card in one column. */}
+        <div className="@container/overview">
+          <div
+            className={cn(
+              "grid items-start gap-6",
+              !editing && "@min-[820px]/overview:grid-cols-[minmax(0,1fr)_22rem]",
+            )}
+          >
+            <div
+              className={cn(
+                "contents",
+                !editing && "@min-[820px]/overview:block @min-[820px]/overview:min-w-0 @min-[820px]/overview:space-y-6",
+              )}
+            >
+              <ContentsSection
+                id={heroContentSectionId("overview")}
+                title="Tổng quan"
+                icon={BookOpen}
+                status={sectionStatus("overview")}
+                className="order-1"
+              >
+                {editorIn("overview") ?? <HeroOverviewCard {...overview} />}
+              </ContentsSection>
+              <ContentsSection
+                className="order-3"
+                id={heroContentSectionId("skills")}
+                title="Kỹ năng"
+                icon={Swords}
+                count={content.SKILLS?.skills.length ?? 0}
+                status={sectionStatus("skills")}
+                actions={editAction("SKILLS")}
+                lazy={editingTab !== "skills"}
+              >
+                {editorIn("skills") ?? (
+                  <div id="hero-SKILLS" className="min-w-0">
+                    <HeroSkillsView
+                      onTranslate={onTranslate}
+                      skills={content.SKILLS?.skills ?? []}
+                      locale={locale}
+                      heroId={heroId}
+                      selectedSkillKey={activeSkill}
+                      onSkillChange={onSkillChange ?? setLocalSkill}
+                      layout={skillLayout}
+                      onLayoutChange={onSkillLayoutChange}
+                    />
+                    <HeroContentSources sources={content.SKILLS?.sources ?? []} />
+                  </div>
+                )}
+              </ContentsSection>
+            </div>
+            {editingTab !== "overview" && (
+              <aside aria-label="Đánh giá và thuộc tính" className={cn("order-2 min-w-0", sectionFrame)}>
+                <HeroOverviewFacts {...overview} />
+              </aside>
+            )}
           </div>
-        </ContentsSection>
+        </div>
         <ContentsSection
           id={heroContentSectionId("skins")}
           title="Trang phục"
-          icon={catalogIcons.skins}
+          icon={Shirt}
           count={skins.length}
+          status={sectionStatus("skins")}
           actions={editAction("SKINS")}
-          lazy
+          lazy={editingTab !== "skins"}
           placeholderHeight={480}
         >
-          <div id="hero-SKINS" className="min-w-0">
-            {skins.length ? (
-              <HeroSkinsView
-                skins={skins}
-                locale={locale}
-                heroId={heroId}
-                canWrite={canWrite}
-                busy={busy}
-                onTranslate={onTranslate}
-              />
-            ) : (
-              <Text>Chưa có trang phục trong bản dữ liệu này.</Text>
-            )}
-            <HeroContentSources sources={content.SKINS?.sources ?? []} />
-          </div>
+          {editorIn("skins") ?? (
+            <div id="hero-SKINS" className="min-w-0">
+              {skins.length ? (
+                <HeroSkinsView
+                  skins={skins}
+                  locale={locale}
+                  heroId={heroId}
+                  canWrite={canWrite}
+                  busy={busy}
+                  onTranslate={onTranslate}
+                  onEditSkin={
+                    editable || onNeedsDraft
+                      ? (key) => {
+                          if (editing) return
+                          if (editable) onEdit("SKINS", undefined, key)
+                          else onNeedsDraft?.()
+                        }
+                      : undefined
+                  }
+                  editSkinLabel={(name) =>
+                    editing
+                      ? `Chỉnh sửa trang phục ${name} · lưu hoặc hủy phần đang sửa trước`
+                      : editable
+                        ? `Chỉnh sửa trang phục ${name}`
+                        : `Chỉnh sửa trang phục ${name} · tạo bản nháp trước`
+                  }
+                />
+              ) : (
+                <Text>Chưa có trang phục trong bản dữ liệu này.</Text>
+              )}
+              <HeroContentSources sources={content.SKINS?.sources ?? []} />
+            </div>
+          )}
         </ContentsSection>
         <ContentsSection
           id={heroContentSectionId("media")}
           title="Ảnh"
           icon={ImageIcon}
+          status={sectionStatus("media")}
           actions={editAction("MEDIA_BINDINGS")}
-          lazy
+          lazy={editingTab !== "media"}
         >
-          <div id="hero-MEDIA_BINDINGS" className="min-w-0 space-y-4">
-            {/* Each image's own credit lives in its info button; this line only sums them up. */}
-            <ImageCreditSummary
-              label="ảnh tướng"
-              assetIds={roles.map((role) => content.MEDIA_BINDINGS?.bindings[role])}
-            />
-            <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
-              {roles.map((role) => (
-                <div
-                  key={role}
-                  className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
-                >
-                  <HeroAsset
-                    id={content.MEDIA_BINDINGS?.bindings[role]}
-                    alt={`${profile?.name || "Tướng"} · ${roleLabel(role)}`}
-                    className="w-full"
-                    naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
-                    preview
-                  />
-                  <p className="type-meta text-center">{roleLabel(role)}</p>
-                </div>
-              ))}
+          {editorIn("media") ?? (
+            <div id="hero-MEDIA_BINDINGS" className="min-w-0 space-y-4">
+              {/* Each image's own credit lives in its info button; this line only sums them up. */}
+              <ImageCreditSummary
+                label="ảnh tướng"
+                assetIds={roles.map((role) => content.MEDIA_BINDINGS?.bindings[role])}
+              />
+              <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
+                {roles.map((role) => (
+                  <div
+                    key={role}
+                    className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
+                  >
+                    <HeroAsset
+                      id={content.MEDIA_BINDINGS?.bindings[role]}
+                      alt={`${profile?.name || "Tướng"} · ${roleLabel(role)}`}
+                      className="w-full"
+                      naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
+                      preview
+                    />
+                    <p className="type-meta text-center">{roleLabel(role)}</p>
+                  </div>
+                ))}
+              </div>
+              <HeroContentSources sources={content.MEDIA_BINDINGS?.sources ?? []} />
             </div>
-            <HeroContentSources sources={content.MEDIA_BINDINGS?.sources ?? []} />
-          </div>
+          )}
         </ContentsSection>
         {heroId && (
           // The video panel brings its own heading and add button.

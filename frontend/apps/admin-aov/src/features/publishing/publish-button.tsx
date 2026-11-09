@@ -20,6 +20,9 @@ export function PublishButton({
   onDismissFailure,
   onOpenSection,
   onPublish,
+  open: requestedOpen,
+  onOpenChange,
+  triggerClassName,
 }: {
   busy: boolean
   publishing: boolean
@@ -34,8 +37,18 @@ export function PublishButton({
   onDismissFailure: () => void
   onOpenSection: (key: string) => void
   onPublish: () => void
+  /** Opened from elsewhere, such as a menu that holds the action on a narrow header. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+  /** A narrow header hides the button and keeps it only as the anchor of its popover. */
+  triggerClassName?: string
 }) {
-  const [open, setOpen] = useState(false)
+  const [localOpen, setLocalOpen] = useState(false)
+  const open = requestedOpen ?? localOpen
+  const setOpen = (next: boolean) => {
+    setLocalOpen(next)
+    onOpenChange?.(next)
+  }
   const blocked = issues.length > 0 || unsaved.length > 0
   return (
     <Popover
@@ -50,6 +63,7 @@ export function PublishButton({
           type="button"
           variant={blocked ? "outline" : "default"}
           disabled={busy}
+          className={triggerClassName}
           aria-label={blocked ? "Xuất bản · xem mục còn thiếu" : undefined}
           onClick={(event) => {
             if (blocked) return

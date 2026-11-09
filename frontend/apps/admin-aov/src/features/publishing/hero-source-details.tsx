@@ -2,13 +2,21 @@ import { useState, type ReactNode } from "react"
 import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink, Pencil } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
-import { Input } from "@aov/ui/components/input"
 import { AdminEntityText } from "../terminology/catalog"
 import type { Skill } from "./types"
 import { heroReviewItems, sourceHttpUrl, sourceReviewNotes } from "./hero-source-review"
 import { hasRankFormula, skillSourceTable } from "./skill-rank-values"
 import { SkillTagsEditor, SkillTableEditor } from "./skill-source-editor"
 import { SkillRankSummaryHeading } from "./skill-rank-summary-heading"
+import {
+  COOLDOWN_COLOR,
+  ENERGY_COLOR,
+  SkillCostField,
+  costNumber,
+  costSeconds,
+  type CostField,
+  type CostStyle,
+} from "./skill-cost-fields"
 
 type RecordValue = Record<string, unknown>
 const record = (value: unknown): RecordValue | null =>
@@ -72,6 +80,8 @@ export function SkillSourceDetails({
   onChange,
   showBadges = true,
   children,
+  costStyles,
+  onCostStyle,
 }: {
   skill: Skill
   collapseSources?: boolean
@@ -81,6 +91,10 @@ export function SkillSourceDetails({
   showBadges?: boolean
   /** Goes between the rank table and where the data came from. */
   children?: ReactNode
+  /** The hero's shared label and colour for each cost line, used where this skill has none yet. */
+  costStyles?: Partial<Record<CostField, CostStyle>>
+  /** Applies a label or colour to the line in every skill of the hero. */
+  onCostStyle?: (field: CostField, style: CostStyle) => void
 }) {
   const [tableOpen, setTableOpen] = useState(false)
   const source = snapshot(skill)
@@ -134,27 +148,49 @@ export function SkillSourceDetails({
       {onChange && (
         <>
           <p className="type-meta">Đặc tính và thông số dùng chung cho các ngôn ngữ của chiêu.</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-1.5">
-              <span className="type-label">Hồi chiêu</span>
-              <Input
-                value={text(record(source?.cooldown)?.display)}
-                placeholder="H.chiêu: 5s"
-                onChange={(event) =>
-                  updateSource({ cooldown: { ...record(source?.cooldown), display: event.target.value } })
-                }
-              />
-            </label>
-            <label className="grid gap-1.5">
-              <span className="type-label">Tiêu hao</span>
-              <Input
-                value={text(record(source?.energyCost)?.display)}
-                placeholder="Nội năng cần: 50"
-                onChange={(event) =>
-                  updateSource({ energyCost: { ...record(source?.energyCost), display: event.target.value } })
-                }
-              />
-            </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SkillCostField
+              title="Hồi chiêu"
+              display={text(record(source?.cooldown)?.display)}
+              labels={["H.chiêu"]}
+              defaultLabel={costStyles?.cooldown?.label || "H.chiêu"}
+              color={costStyles?.cooldown?.color ?? COOLDOWN_COLOR}
+              onStyleChange={onCostStyle && ((style) => onCostStyle("cooldown", style))}
+              valuePlaceholder="10s"
+              onChange={(display, cost) => {
+                const seconds = cost ? costSeconds(cost.value) : null
+                updateSource({
+                  cooldown: display
+                    ? {
+                        ...record(source?.cooldown),
+                        display,
+                        ...(cost ? { label: cost.label || undefined, seconds: seconds ?? undefined } : {}),
+                      }
+                    : undefined,
+                })
+              }}
+            />
+            <SkillCostField
+              title="Tiêu hao"
+              display={text(record(source?.energyCost)?.display)}
+              labels={["N.lượng", "Nội năng cần", "Hao máu", "Máu dùng"]}
+              defaultLabel={costStyles?.energyCost?.label || "N.lượng"}
+              color={costStyles?.energyCost?.color ?? ENERGY_COLOR}
+              onStyleChange={onCostStyle && ((style) => onCostStyle("energyCost", style))}
+              valuePlaceholder="40"
+              onChange={(display, cost) => {
+                const value = cost ? costNumber(cost.value) : null
+                updateSource({
+                  energyCost: display
+                    ? {
+                        ...record(source?.energyCost),
+                        display,
+                        ...(cost ? { label: cost.label || undefined, value: value ?? undefined } : {}),
+                      }
+                    : undefined,
+                })
+              }}
+            />
           </div>
           <SkillTagsEditor tags={tags} locale={locale} onChange={(tags) => updateSource({ tags })} />
         </>

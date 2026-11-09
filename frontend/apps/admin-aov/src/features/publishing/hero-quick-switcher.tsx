@@ -20,6 +20,8 @@ interface HeroQuickSwitcherProps {
   rulesetId?: string
   disabled?: boolean
   onSelect: (hero: HeroRow) => void
+  /** Sits inside a line of text, right after the hero name. */
+  compact?: boolean
 }
 
 export function HeroQuickSwitcher(props: HeroQuickSwitcherProps) {
@@ -34,7 +36,7 @@ export function HeroQuickSwitcher(props: HeroQuickSwitcherProps) {
           type="button"
           variant="ghost"
           size="icon"
-          className="size-9 shrink-0"
+          className={props.compact ? "-my-1 size-7 shrink-0" : "size-9 shrink-0"}
           disabled={props.disabled}
           aria-label="Chuyển tướng nhanh"
           title="Chuyển tướng nhanh"

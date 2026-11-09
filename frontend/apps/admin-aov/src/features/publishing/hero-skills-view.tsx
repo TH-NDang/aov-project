@@ -14,6 +14,7 @@ import { PatchCaptureLink } from "./patch-capture-panel"
 import { captureGroupKeys } from "./patch-capture-model"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { SkillVideosSection } from "../videos/skill-videos-section"
+import { SkillStateSwitch, skillInState, stateIconsOf } from "./skill-state-icons"
 
 export type HeroSkillsLayout = "focus" | "flat"
 
@@ -84,55 +85,171 @@ export function HeroSkillsView({
       .map((skill) => skillImageMatch(skill, images.data ?? [])?.id)
       .filter(Boolean),
   )
-  const explicitAssets = new Set(skills.map((skill) => skill.iconAssetId).filter(Boolean))
+  const explicitAssets = new Set(
+    skills.flatMap((skill) => [skill.iconAssetId, ...stateIconsOf(skill).map((icon) => icon.assetId)]).filter(Boolean),
+  )
   const unused = (images.data ?? []).filter((image) => !assigned.has(image.id) && !explicitAssets.has(image.assetId))
+  // Reading keeps the page light: a strip of skill icons on top, the credits at the foot. The editor keeps its rail.
+  const compact = !activeEditor && !action
+  const layoutSwitch = current && (
+    <div
+      role="group"
+      aria-label="Cách hiển thị kỹ năng"
+      className={cn(
+        "flex w-fit shrink-0 flex-wrap gap-1 rounded-lg bg-muted/50 p-1",
+        // A flat view stays reachable on a phone so it can be switched back; otherwise the space goes to the skills.
+        !compact && layout === "focus" && "hidden @min-[500px]/skills:flex",
+      )}
+    >
+      {(
+        [
+          ["focus", PanelLeft, "Tập trung"],
+          ["flat", List, "Dạng phẳng"],
+        ] as const
+      ).map(([mode, Icon, label]) => (
+        <button
+          key={mode}
+          type="button"
+          aria-pressed={layout === mode}
+          disabled={locked}
+          title={label}
+          className={cn(
+            "flex items-center rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            compact ? "size-8 justify-center" : "min-h-9 gap-2 px-3 text-xs font-medium",
+            layout === mode ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+          )}
+          onClick={() => changeLayout(mode)}
+        >
+          <Icon className="size-3.5" />
+          <span className={compact ? "sr-only" : undefined}>{label}</span>
+        </button>
+      ))}
+    </div>
+  )
+  const variantSwitch = (variants: Skill[]) => (
+    <div role="group" aria-label="Chuyển biến thể kỹ năng" className="flex flex-wrap gap-2">
+      {variants.map((skill) => {
+        const label = skill.formKey || skillVariantLabel(skill, skills) || skillLabel(skill)
+        const name = selectSkillTranslation(skill, locale)?.name || skillLabel(skill)
+        const active = skill.skillKey === current.skillKey
+        return (
+          <button
+            key={skill.skillKey}
+            type="button"
+            aria-pressed={active}
+            disabled={locked}
+            aria-label={`${label} · ${name}`}
+            className={cn(
+              "flex min-h-11 min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              active
+                ? "border-primary/40 bg-primary/8 font-medium"
+                : "border-transparent bg-muted/35 hover:bg-muted/60",
+            )}
+            onClick={() => choose(skill.skillKey)}
+          >
+            <SkillArtwork skill={skill} heroId={heroId} className="size-8" />
+            <span className="min-w-0 break-words">{label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+  const credits = (
+    <ImageCreditSummary
+      label="ảnh kỹ năng"
+      assetIds={skills.map((skill) => skill.iconAssetId || skillImageMatch(skill, images.data ?? [])?.assetId)}
+    />
+  )
   return (
     <div className="@container/skills min-w-0 space-y-5">
-      {(current || action) && (
+      {!compact && (current || action) && (
         <div className="flex flex-wrap items-center gap-3">
-          {current && (
-            <div
-              role="group"
-              aria-label="Cách hiển thị kỹ năng"
-              className={cn(
-                "flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1",
-                // A flat view stays reachable on a phone so it can be switched back; otherwise the space goes to the skills.
-                layout === "focus" && "hidden @min-[500px]/skills:flex",
-              )}
-            >
-              {(
-                [
-                  ["focus", PanelLeft, "Tập trung"],
-                  ["flat", List, "Dạng phẳng"],
-                ] as const
-              ).map(([mode, Icon, label]) => (
-                <button
-                  key={mode}
-                  type="button"
-                  aria-pressed={layout === mode}
-                  disabled={locked}
-                  className={cn(
-                    "flex min-h-9 items-center gap-2 rounded-md px-3 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    layout === mode
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                  onClick={() => changeLayout(mode)}
-                >
-                  <Icon className="size-3.5" />
-                  {label}
-                </button>
-              ))}
-            </div>
-          )}
-          <ImageCreditSummary
-            label="ảnh kỹ năng"
-            assetIds={skills.map((skill) => skill.iconAssetId || skillImageMatch(skill, images.data ?? [])?.assetId)}
-          />
+          {layoutSwitch}
+          {credits}
           {action && <div className="ml-auto">{action}</div>}
         </div>
       )}
-      {current && layout === "focus" ? (
+      {compact && current && layout === "flat" && <div className="flex justify-end">{layoutSwitch}</div>}
+      {compact && current && layout === "focus" ? (
+        <div className="min-w-0 space-y-4">
+          <div className="flex items-start gap-2">
+            <div
+              ref={rail}
+              role="group"
+              aria-label="Chọn kỹ năng"
+              className="flex min-w-0 flex-1 gap-1 overflow-x-auto overscroll-x-contain border-b"
+            >
+              {groups.map((group) => {
+                const active = group.skills.some((skill) => skill.skillKey === current.skillKey)
+                const skill = active ? current : group.skills[0]!
+                const name = selectSkillTranslation(skill, locale)?.name || skillLabel(skill)
+                const variant = skillVariantLabel(skill, skills)
+                const multiple = group.skills.length > 1
+                return (
+                  <button
+                    key={group.key}
+                    ref={active ? selectedButton : undefined}
+                    type="button"
+                    aria-pressed={active}
+                    aria-controls={panelId}
+                    disabled={locked}
+                    title={name}
+                    aria-label={`${skillLabel(skill)} · ${name}${multiple ? ` · ${group.skills.length} biến thể` : skill.formKey ? ` · ${skill.formKey}` : variant ? ` · ${variant}` : ""}`}
+                    // Marked like a tab: a bar under the chosen skill, the others dimmed until hovered.
+                    className={cn(
+                      "group relative flex w-[4.5rem] shrink-0 flex-col items-center gap-1.5 rounded-t-md px-1 pt-1 pb-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                      active &&
+                        "after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-primary",
+                    )}
+                    onClick={() => choose(skill.skillKey)}
+                  >
+                    <span
+                      className={cn(
+                        "transition-opacity",
+                        !active && "opacity-55 group-hover:opacity-100 group-disabled:group-hover:opacity-55",
+                      )}
+                    >
+                      {multiple ? (
+                        <SkillArtworkStack skills={group.skills} heroId={heroId} selectedSkillKey={skill.skillKey} />
+                      ) : (
+                        <SkillArtwork skill={skill} heroId={heroId} className="size-10" />
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "type-meta max-w-full truncate",
+                        active ? "text-foreground" : "group-hover:text-foreground",
+                      )}
+                    >
+                      {skillLabel(skill)}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            {layoutSwitch}
+          </div>
+          <div
+            id={panelId}
+            role="region"
+            aria-label="Chi tiết kỹ năng"
+            aria-live="polite"
+            aria-atomic="false"
+            className="min-w-0 space-y-4"
+            data-review-skill={current.skillKey}
+          >
+            <SkillDetail
+              onTranslate={onTranslate}
+              key={currentGroup?.key ?? current.skillKey}
+              skill={current}
+              locale={locale}
+              heroId={heroId}
+              variant={skillVariantLabel(current, skills)}
+              states={currentGroup && currentGroup.skills.length > 1 && variantSwitch(currentGroup.skills)}
+            />
+          </div>
+        </div>
+      ) : current && layout === "focus" ? (
         <div className="grid min-w-0 gap-5 @min-[760px]/skills:grid-cols-[210px_minmax(0,1fr)] @min-[760px]/skills:gap-6">
           <div
             ref={rail}
@@ -213,37 +330,7 @@ export function HeroSkillsView({
               locale={locale}
               heroId={heroId}
               variant={skillVariantLabel(current, skills)}
-              states={
-                currentGroup &&
-                currentGroup.skills.length > 1 && (
-                  <div role="group" aria-label="Chuyển biến thể kỹ năng" className="flex flex-wrap gap-2">
-                    {currentGroup.skills.map((skill) => {
-                      const label = skill.formKey || skillVariantLabel(skill, skills) || skillLabel(skill)
-                      const name = selectSkillTranslation(skill, locale)?.name || skillLabel(skill)
-                      const active = skill.skillKey === current.skillKey
-                      return (
-                        <button
-                          key={skill.skillKey}
-                          type="button"
-                          aria-pressed={active}
-                          disabled={locked}
-                          aria-label={`${label} · ${name}`}
-                          className={cn(
-                            "flex min-h-11 min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                            active
-                              ? "border-primary/40 bg-primary/8 font-medium"
-                              : "border-transparent bg-muted/35 hover:bg-muted/60",
-                          )}
-                          onClick={() => choose(skill.skillKey)}
-                        >
-                          <SkillArtwork skill={skill} heroId={heroId} className="size-8" />
-                          <span className="min-w-0 break-words">{label}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )
-              }
+              states={currentGroup && currentGroup.skills.length > 1 && variantSwitch(currentGroup.skills)}
             />
           </div>
         </div>
@@ -309,8 +396,10 @@ export function HeroSkillsView({
           <p className="text-sm text-muted-foreground">Chưa có nội dung kỹ năng trong bản dữ liệu này.</p>
         </div>
       )}
-      {unused.length > 0 && (
-        <details className="group border-t pt-4" onToggle={(event) => setGalleryOpen(event.currentTarget.open)}>
+      {compact && current && <div className="border-t pt-3">{credits}</div>}
+      {/* The editor brings its own tray of unused images with actions; this gallery is for reading. */}
+      {compact && unused.length > 0 && (
+        <details className="group -mt-2" onToggle={(event) => setGalleryOpen(event.currentTarget.open)}>
           <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-muted-foreground hover:text-foreground [&::-webkit-details-marker]:hidden">
             <Image className="size-4" aria-hidden="true" />
             Ảnh chưa gắn nội dung
@@ -362,6 +451,8 @@ function SkillDetail({
   onTranslate?: (target: TranslationTarget) => void
 }) {
   const text = translatedText(skill.translations, locale, sectionTextFields.SKILLS)
+  // A state only swaps the picture; the text below stays the skill's own.
+  const [state, setState] = useState<number | null>(null)
   const videos = heroId && (
     <SkillVideosSection heroId={heroId} skillKey={skill.skillKey} skillName={text?.name || skillLabel(skill)} />
   )
@@ -375,11 +466,11 @@ function SkillDetail({
     )
   return (
     <>
-      <header className="flex items-center gap-3">
-        <SkillArtwork skill={skill} heroId={heroId} className="size-14" preview />
+      <header className="flex items-start gap-3">
+        <SkillArtwork skill={skillInState(skill, state)} heroId={heroId} className="size-12" preview />
         <div className="min-w-0 flex-1 space-y-1.5">
-          <h4 className="break-words text-xl font-semibold tracking-tight">{text?.name || skillLabel(skill)}</h4>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <h4 className="type-section-title break-words">{text?.name || skillLabel(skill)}</h4>
+          <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
             <span>{skillLabel(skill)}</span>
             {skill.formKey && (
               <Badge variant="outline" className="max-w-full break-all whitespace-normal">
@@ -401,8 +492,9 @@ function SkillDetail({
         <PatchCaptureLink groupKey={captureGroupKeys.skill(skill.skillKey)} name={text?.name || skillLabel(skill)} />
       </header>
       {states}
+      <SkillStateSwitch skill={skill} state={state} onState={setState} />
       {text?.description ? (
-        <div className="whitespace-pre-wrap break-words text-sm leading-7 [overflow-wrap:anywhere]">
+        <div className="type-body whitespace-pre-wrap break-words leading-7 [overflow-wrap:anywhere]">
           <AdminEntityText text={text.description} />
         </div>
       ) : (

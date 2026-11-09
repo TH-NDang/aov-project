@@ -42,7 +42,7 @@ export function HeroCombatAttributes({
       {!!summary.length && (
         <div>
           <dl
-            className="grid grid-cols-2 gap-2 @min-[560px]/overview:grid-cols-[repeat(auto-fit,minmax(6rem,1fr))]"
+            className="grid grid-cols-2 gap-2 @min-[560px]/stats:grid-cols-[repeat(auto-fit,minmax(6rem,1fr))]"
             aria-label="Thuộc tính nổi bật theo vai trò"
           >
             {summary.map((r) => (

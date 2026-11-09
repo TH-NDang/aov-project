@@ -57,9 +57,12 @@ function stickyOffset(wrapper: HTMLElement) {
   return Number.parseFloat(value ?? "") || 0
 }
 
+/**
+ * Looks inside this contents box only: pages kept open in other workspace tabs carry the same section ids, and a
+ * document-wide lookup would find theirs first.
+ */
 function findSection(wrapper: HTMLElement, id: string) {
-  const element = wrapper.ownerDocument.getElementById(id)
-  return element && wrapper.contains(element) ? element : null
+  return wrapper.querySelector<HTMLElement>(`[id="${id.replace(/["\\]/g, "\\$&")}"]`)
 }
 
 const FOLLOWING = 4 // Node.DOCUMENT_POSITION_FOLLOWING
@@ -235,6 +238,11 @@ export function useSectionContents({ requested, first }: { requested?: string; f
 }
 
 const ContentsContext = createContext<SectionContentsController | null>(null)
+/** Whether the sections of this page sit in their own framed cards. */
+const FramedContext = createContext(false)
+
+/** The card a framed section sits in; pages that frame their own groups beside the sections reuse it. */
+export const sectionFrame = "rounded-xl border bg-card p-4 @min-[600px]/contents:p-5"
 
 function ContentsList({
   entries,
@@ -307,6 +315,8 @@ export function SectionContents({
   entries,
   layout = "page",
   title = COPY.title,
+  folded = false,
+  framed = false,
   onNavigate,
   onActiveChange,
   className,
@@ -316,6 +326,10 @@ export function SectionContents({
   entries: readonly ContentsEntry[]
   layout?: ContentsLayout
   title?: string
+  /** Keeps the list behind the floating button at every width, e.g. while an editor needs the whole row. */
+  folded?: boolean
+  /** Sets each section in its own card, so a long page reads as distinct parts. */
+  framed?: boolean
   /** The reader picked a section from the list. */
   onNavigate?: (id: string) => void
   /** The section being read changed while scrolling. */
@@ -375,71 +389,117 @@ export function SectionContents({
 
   return (
     <ContentsContext.Provider value={contents}>
-      <div ref={wrapper} className={cn("@container/contents relative min-w-0", className)}>
-        <div className={cn("grid items-start gap-0", columns[layout])}>
-          <div className="min-w-0 space-y-10">{children}</div>
-          <nav
-            aria-label={title}
-            className={cn("sticky hidden self-start [overflow-anchor:none]", railVisible[layout])}
-            style={{ top: "calc(var(--contents-offset, 0px) + 1rem)" }}
+      <FramedContext.Provider value={framed}>
+        <div ref={wrapper} className={cn("@container/contents relative min-w-0", className)}>
+          <div className={cn("grid items-start gap-0", !folded && columns[layout])}>
+            <div className={cn("min-w-0", framed ? "space-y-6" : "space-y-12")}>{children}</div>
+            {!folded && (
+              <nav
+                aria-label={title}
+                className={cn("sticky hidden self-start [overflow-anchor:none]", railVisible[layout])}
+                style={{ top: "calc(var(--contents-offset, 0px) + 1rem)" }}
+              >
+                <p className="type-label mb-2 text-muted-foreground">{title}</p>
+                <ContentsList entries={entries} active={active} onPick={pick} />
+              </nav>
+            )}
+          </div>
+          {/* The margin leaves room at the end of the page, so the button never covers the last line. */}
+          <div
+            className={cn(
+              "pointer-events-none sticky bottom-4 z-30 mt-16 h-0 [overflow-anchor:none]",
+              !folded && buttonHidden[layout],
+            )}
           >
-            <p className="type-label mb-2 text-muted-foreground">{title}</p>
-            <ContentsList entries={entries} active={active} onPick={pick} />
-          </nav>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={activeLabel ? `${COPY.open} · Đang xem ${activeLabel}` : COPY.open}
+              aria-haspopup="dialog"
+              aria-expanded={open}
+              title={COPY.open}
+              className="pointer-events-auto absolute right-0 bottom-0 size-12 rounded-full bg-background shadow-lg"
+              onClick={() => setOpen(true)}
+            >
+              <TableOfContents className="size-5" />
+            </Button>
+          </div>
+          <Sheet open={open} onOpenChange={setOpen}>
+            <SheetContent
+              side="bottom"
+              className="max-h-[80dvh] gap-0 overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
+              // The drawer holds the page still while open, so the jump waits until it has gone.
+              onCloseAutoFocus={(event) => {
+                const id = picked.current
+                if (!id) return
+                picked.current = null
+                event.preventDefault()
+                pick(id)
+              }}
+            >
+              <SheetHeader className="pr-12">
+                <SheetTitle className="type-section-title">{title}</SheetTitle>
+                <SheetDescription className="sr-only">Chọn một phần để cuộn tới.</SheetDescription>
+              </SheetHeader>
+              <nav aria-label={title} className="px-2 pb-4">
+                <ContentsList
+                  entries={entries}
+                  active={active}
+                  roomy
+                  onPick={(id) => {
+                    picked.current = id
+                    setOpen(false)
+                  }}
+                />
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
-        {/* The margin leaves room at the end of the page, so the button never covers the last line. */}
-        <div
-          className={cn(
-            "pointer-events-none sticky bottom-4 z-30 mt-16 h-0 [overflow-anchor:none]",
-            buttonHidden[layout],
-          )}
-        >
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={activeLabel ? `${COPY.open} · Đang xem ${activeLabel}` : COPY.open}
-            aria-haspopup="dialog"
-            aria-expanded={open}
-            title={COPY.open}
-            className="pointer-events-auto absolute right-0 bottom-0 size-12 rounded-full bg-background shadow-lg"
-            onClick={() => setOpen(true)}
-          >
-            <TableOfContents className="size-5" />
-          </Button>
-        </div>
-        <Sheet open={open} onOpenChange={setOpen}>
-          <SheetContent
-            side="bottom"
-            className="max-h-[80dvh] gap-0 overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
-            // The drawer holds the page still while open, so the jump waits until it has gone.
-            onCloseAutoFocus={(event) => {
-              const id = picked.current
-              if (!id) return
-              picked.current = null
-              event.preventDefault()
-              pick(id)
-            }}
-          >
-            <SheetHeader className="pr-12">
-              <SheetTitle className="type-section-title">{title}</SheetTitle>
-              <SheetDescription className="sr-only">Chọn một phần để cuộn tới.</SheetDescription>
-            </SheetHeader>
-            <nav aria-label={title} className="px-2 pb-4">
-              <ContentsList
-                entries={entries}
-                active={active}
-                roomy
-                onPick={(id) => {
-                  picked.current = id
-                  setOpen(false)
-                }}
-              />
-            </nav>
-          </SheetContent>
-        </Sheet>
-      </div>
+      </FramedContext.Provider>
     </ContentsContext.Provider>
+  )
+}
+
+/**
+ * The heading row of a section: an icon tile, the title and its count on the left, the section's own actions on the
+ * right. Panels that bring their own heading use it too, so every part of a page starts the same way.
+ */
+export function SectionHeading({
+  id,
+  title,
+  icon: SectionIcon,
+  count,
+  status,
+  description,
+  actions,
+}: {
+  id?: string
+  title: ReactNode
+  icon?: Icon
+  count?: number | null
+  /** A short state shown next to the title, such as the part being edited. */
+  status?: ReactNode
+  description?: ReactNode
+  actions?: ReactNode
+}) {
+  return (
+    <div className="mb-4 flex min-h-9 flex-wrap items-center gap-x-3 gap-y-1">
+      <h2 id={id} className="type-section-title flex min-w-0 items-center gap-2.5">
+        {SectionIcon && (
+          <span className="grid size-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+            <SectionIcon className="size-4" />
+          </span>
+        )}
+        <span className="min-w-0 break-words">{title}</span>
+        {count !== null && count !== undefined && (
+          <span className="type-meta rounded-full bg-muted px-2 tabular-nums">{count}</span>
+        )}
+      </h2>
+      {status}
+      {actions && <div className="ml-auto flex shrink-0 items-center gap-1">{actions}</div>}
+      {description && <p className="type-meta basis-full">{description}</p>}
+    </div>
   )
 }
 
@@ -453,6 +513,7 @@ export function ContentsSection({
   label,
   icon: SectionIcon,
   count,
+  status,
   actions,
   lazy = false,
   placeholderHeight = 320,
@@ -466,6 +527,7 @@ export function ContentsSection({
   label?: string
   icon?: Icon
   count?: number | null
+  status?: ReactNode
   actions?: ReactNode
   lazy?: boolean
   placeholderHeight?: number
@@ -473,6 +535,7 @@ export function ContentsSection({
   children: ReactNode
 }) {
   const contents = useContext(ContentsContext)
+  const framed = useContext(FramedContext)
   const headingId = useId()
   const ref = useRef<HTMLElement>(null)
   const shown = !lazy || !contents || contents.revealed.has(id)
@@ -501,17 +564,17 @@ export function ContentsSection({
       data-contents-pending={shown ? undefined : ""}
       aria-busy={shown ? undefined : true}
       // A placeholder is swapped out when it loads, so it must never be the scroll anchor: the page would jump.
-      className={cn("min-w-0 outline-none", !shown && "[overflow-anchor:none]", className)}
+      className={cn("min-w-0 outline-none", framed && sectionFrame, !shown && "[overflow-anchor:none]", className)}
     >
       {title && (
-        <div className="mb-3 flex min-h-9 flex-wrap items-center gap-x-3 gap-y-1">
-          <h2 id={headingId} className="type-section-title flex min-w-0 items-center gap-2">
-            {SectionIcon && <SectionIcon className="size-4 shrink-0 text-muted-foreground" />}
-            {title}
-            {count !== null && count !== undefined && <span className="type-meta tabular-nums">{count}</span>}
-          </h2>
-          {actions && <div className="ml-auto flex items-center gap-1">{actions}</div>}
-        </div>
+        <SectionHeading
+          id={headingId}
+          title={title}
+          icon={SectionIcon}
+          count={count}
+          status={status}
+          actions={actions}
+        />
       )}
       {shown ? (
         children

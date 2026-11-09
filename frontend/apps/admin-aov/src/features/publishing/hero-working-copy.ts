@@ -64,6 +64,8 @@ const contentSchema = z.object({
           iconAssetId: nullableText,
           translations: z.array(translation.extend({ description: text })),
           effects: z.array(z.object({ effectType: text, metadata: z.record(text, z.unknown()) })),
+          // A label may be empty while it is being typed; the server checks it on save.
+          stateIcons: z.array(z.object({ assetId: text, label: z.string() })).optional(),
         }),
       ),
       sources: z.array(source),

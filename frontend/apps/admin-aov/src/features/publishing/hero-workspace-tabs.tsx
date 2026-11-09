@@ -1,5 +1,5 @@
 import type { ComponentType } from "react"
-import { GitCompareArrows, Languages, Layers, LayoutList } from "lucide-react"
+import { GitBranch, GitCompareArrows, Languages, Layers, LayoutList } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import type { HeroWorkspaceView } from "./hero-location"
@@ -11,12 +11,13 @@ const views: readonly [HeroWorkspaceView, Icon, string][] = [
   ["translations", Languages, "Bản dịch"],
   ["history", GitCompareArrows, "Lịch sử"],
   ["patch", Layers, "Theo patch"],
+  ["versions", GitBranch, "Phiên bản"],
 ]
 
 /**
- * One tab row: the hero's content as a single page, then translations, history and patch data. On a narrow page the four
- * tabs share the width as icon tabs, and the row stays under the scrolled hero name so switching never needs a scroll
- * back up. The content page lists its own sections.
+ * One tab row: the hero's content as a single page, then translations, history, patch data and version management.
+ * On a narrow page the tabs share the width as icon tabs, and the row stays under the scrolled hero name so switching
+ * never needs a scroll back up. The content page lists its own sections.
  */
 export function HeroWorkspaceTabs({
   view,

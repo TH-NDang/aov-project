@@ -1,23 +1,38 @@
 import { catalogScopePatch, resolveCatalogScope } from "./catalog-scope"
 import { useCatalogScopePreference } from "./catalog-scope-memory"
 import { HeroTimeline } from "./hero-timeline"
-import { useEffect, useId, useMemo, useRef, useState, type ComponentProps, type ReactNode } from "react"
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ComponentProps,
+  type MouseEvent,
+  type ReactNode,
+  type RefObject,
+} from "react"
 import { revisionSkillReferences } from "./revision-skill-references"
 import { useHeroSkillImages } from "./skill-artwork"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, FileUp, MoreHorizontal, Plus, RefreshCw, Save, Settings2, Trash2, X } from "lucide-react"
+import { ArrowLeft, ArrowUpRight, FileUp, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown, Send } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@aov/ui/components/dropdown-menu"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { Page, PageHeader } from "@/components/page-header"
-import { useIsWide } from "@/hooks/use-media-query"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
@@ -35,7 +50,8 @@ import { HeroCatalog } from "./hero-catalog"
 import { HeroRevisionHistory } from "./hero-revision-history"
 import { HeroPatchTimeline } from "./hero-patch-view"
 import { HeroTranslationStatus } from "./hero-translation-status"
-import { HeroLanguagePicker } from "./hero-language-picker"
+import { HeroLanguageIcon, HeroLanguageItems, HeroLanguagePicker } from "./hero-language-picker"
+import { cn } from "@aov/ui/lib/utils"
 import { HeroReviewNotice } from "./hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "./hero-source-review"
 import {
@@ -155,32 +171,22 @@ function PublishingFrame({
   )
 }
 
-/** Mounted while open, so the viewport check runs only when the sheet is shown. */
-function ManagementSheet({
-  description,
-  onClose,
-  children,
-}: {
-  description: string
-  onClose: () => void
-  children: ReactNode
-}) {
-  const wide = useIsWide()
-  return (
-    <Sheet open onOpenChange={(open) => !open && onClose()}>
-      <SheetContent
-        side={wide ? "right" : "bottom"}
-        aria-label="Quản lý phiên bản"
-        className={wide ? "w-[min(640px,94vw)] sm:max-w-none" : "max-h-[90dvh] rounded-t-2xl"}
-      >
-        <SheetHeader className="gap-1 border-b">
-          <SheetTitle className="type-section-title pr-8">Quản lý phiên bản</SheetTitle>
-          <SheetDescription>{description}</SheetDescription>
-        </SheetHeader>
-        {children}
-      </SheetContent>
-    </Sheet>
-  )
+/** Whether a box is at least `minimum` pixels wide. An unmeasured box counts as wide, so tests and first paint get the full header. */
+function useWideBox(ref: RefObject<HTMLElement | null>, minimum: number) {
+  const [wide, setWide] = useState(true)
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (!element || typeof ResizeObserver === "undefined") return
+    const measure = () => {
+      const width = element.getBoundingClientRect().width
+      if (width > 0) setWide(width >= minimum)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [ref, minimum])
+  return wide
 }
 
 export function PublishingPage({ translationMode = false }: { translationMode?: boolean }) {
@@ -242,11 +248,14 @@ export function PublishingWorkspace({
   revisionId,
   onUnsavedChange,
   translationMode = false,
+  fullPage,
 }: {
   heroId: string
   revisionId?: string
   onUnsavedChange?: (unsafe: boolean, busy?: boolean) => void
   translationMode?: boolean
+  /** In the drawer: where the full page of this hero opens, and the guard its link runs first. */
+  fullPage?: { to: string; onClick?: (event: MouseEvent<HTMLAnchorElement>) => void }
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -258,7 +267,8 @@ export function PublishingWorkspace({
   const [selectedId, setSelectedId] = useState(requestedRevision)
   const [editing, setEditing] = useState(false)
   const [profilePart, setProfilePart] = useState<ProfileEditorPart>("information")
-  const [managementOpen, setManagementOpen] = useState(false)
+  // The skin whose own pencil opened the skin editor; the section pencil opens all of them.
+  const [skinFocus, setSkinFocus] = useState<string | null>(null)
   const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -436,11 +446,11 @@ export function PublishingWorkspace({
   useEffect(() => {
     onUnsavedChange?.(busy, busy)
   }, [busy, onUnsavedChange])
+  // The content page brings the edited section into view; outside it the editor stands alone and is scrolled to.
   useEffect(() => {
-    if (editing) {
-      editorRef.current?.focus({ preventScroll: true })
-      editorRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
-    }
+    if (!editing) return
+    editorRef.current?.focus({ preventScroll: true })
+    if (view !== "overview") editorRef.current?.scrollIntoView?.({ block: "start", behavior: "smooth" })
   }, [editing])
   useBeforeUnload((event) => {
     if (busy) {
@@ -470,6 +480,7 @@ export function PublishingWorkspace({
       rulesetId={revision?.rulesetId}
       disabled={busy || !preview}
       onSelect={switchHero}
+      compact
     />
   ) : null
 
@@ -541,17 +552,9 @@ export function PublishingWorkspace({
       notes,
     })
   }
-  async function refresh() {
-    if (!canLeave()) return
-    await run(async () => {
-      const fresh = await api.read(heroId, selectedId)
-      queryClient.setQueryData(["publishing-preview", heroId, selectedId], fresh)
-      setEditing(false)
-    }, "Đã tải phiên bản mới nhất.")
-  }
   function openManagement() {
     setError("")
-    setManagementOpen(true)
+    switchView("versions")
   }
   function openUnsavedSection(next: Section) {
     updateLocation({ view: "overview" })
@@ -631,6 +634,276 @@ export function PublishingWorkspace({
       await openRevision(discarded)
     }, "Đã hủy bản nháp.")
   }
+
+  const headerRef = useRef<HTMLElement>(null)
+  const wideHeader = useWideBox(headerRef, 672)
+  const [publishOpen, setPublishOpen] = useState(false)
+  const unsavedSections = SECTIONS.filter(([key]) => dirty.has(key)).map(([key, , label]) => ({ key, label }))
+  const chooseRevision = (next: string) => {
+    setSelectedId(next)
+    updateLocation({ revision: next, compare: null, changes: null, translationKey: null, translationField: null })
+    setEditing(false)
+  }
+  const publishButton = (triggerClassName?: string) =>
+    revision && (
+      <PublishButton
+        busy={busy}
+        publishing={publishing}
+        issues={issues}
+        unsaved={unsavedSections}
+        patch={patchLink && { ...patchLink, canPublish: capabilities.includes("patch:publish") }}
+        onReloadPatch={
+          revision.effectiveFromPatchVariantId && !publicationPatch && !overview.isPending
+            ? () => void overview.refetch()
+            : undefined
+        }
+        reloadingPatch={overview.isFetching}
+        failure={publishFailure}
+        onDismissFailure={() => setPublishFailure("")}
+        onOpenSection={(key) => openUnsavedSection(key as Section)}
+        onPublish={publishRevision}
+        open={triggerClassName ? publishOpen : undefined}
+        onOpenChange={triggerClassName ? setPublishOpen : undefined}
+        triggerClassName={triggerClassName}
+      />
+    )
+  // The version as "#n"; on a narrow header its menu also holds the reading language and the main action.
+  const versionMenu = (narrow: boolean) =>
+    revision && (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            aria-label="Phiên bản dữ liệu"
+            title={`Phiên bản #${revision.revisionNo} · ${STATES[revision.state]}`}
+            data-revision={selectedId}
+            disabled={busy}
+            className={cn("h-9 shrink-0 bg-background font-normal", narrow ? "gap-1 px-2" : "gap-1.5 px-2.5")}
+          >
+            <span className="type-body tabular-nums">#{revision.revisionNo}</span>
+            <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuLabel className="type-label">Phiên bản dữ liệu</DropdownMenuLabel>
+          <DropdownMenuRadioGroup value={selectedId} onValueChange={chooseRevision}>
+            {(revisions.data ?? [revision]).map((row) => (
+              <DropdownMenuRadioItem key={row.id} value={row.id}>
+                #{row.revisionNo} · {STATES[row.state]}
+                {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
+                  ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
+                  : ""}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+          {narrow && preview && !translating && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger
+                  disabled={busy || (editing && section !== "SKILLS")}
+                  className="gap-2"
+                  aria-label="Ngôn ngữ hiển thị nội dung"
+                >
+                  <HeroLanguageIcon locale={location.readLocale} />
+                  Ngôn ngữ
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="w-80 max-w-[calc(100vw-2rem)] rounded-xl p-1.5">
+                  <HeroLanguageItems
+                    content={preview.content}
+                    locale={location.readLocale}
+                    onChange={setContentLocale}
+                  />
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            </>
+          )}
+          {narrow && headerAction && (
+            <>
+              <DropdownMenuSeparator />
+              {headerAction === "publish" ? (
+                <DropdownMenuItem
+                  disabled={busy}
+                  onSelect={() => {
+                    // Gaps open the same list the header button shows; with none, the click publishes.
+                    if (issues.length || unsavedSections.length) setTimeout(() => setPublishOpen(true))
+                    else publishRevision()
+                  }}
+                >
+                  <Send />
+                  {publishing ? "Đang xuất bản…" : "Xuất bản"}
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem disabled={busy} onSelect={startDraft}>
+                  {!openDraft && <Plus />}
+                  {startDraftLabel}
+                </DropdownMenuItem>
+              )}
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  const actionsMenu = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="icon" aria-label="Thao tác tướng" className="shrink-0">
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        {fullPage && (
+          <DropdownMenuItem asChild>
+            <Link to={fullPage.to} onClick={fullPage.onClick}>
+              <ArrowUpRight />
+              Mở trang tướng đầy đủ
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {fullPage && writable && <DropdownMenuSeparator />}
+        {writable && (
+          <DropdownMenuItem variant="destructive" disabled={busy} onSelect={() => void discardDraft()}>
+            <Trash2 />
+            Hủy bản nháp
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+
+  // One editor at a time. On the content page it takes the place of the section it changes; translations keep it in
+  // their own view.
+  const editorPanel =
+    preview && revision && (editing || translating) ? (
+      <div
+        ref={editorRef}
+        tabIndex={-1}
+        className="scroll-mt-16 space-y-4 outline-none"
+        role="region"
+        aria-label="Chỉnh sửa nội dung"
+      >
+        {translating && (
+          <fieldset disabled={busy} className="grid gap-4 admin-section py-4 @min-[600px]:grid-cols-2">
+            <div className="min-w-0 space-y-2">
+              <p className="type-label">Đọc từ</p>
+              <HeroLanguagePicker
+                label="Ngôn ngữ nguồn"
+                locale={sourceLocale}
+                disabled={busy}
+                onChange={setSourceLocale}
+                compact={false}
+              />
+            </div>
+            <div className="min-w-0 space-y-2">
+              <p className="type-label">Dịch sang</p>
+              <HeroLanguagePicker
+                label="Ngôn ngữ đích"
+                locale={targetLocale}
+                content={preview.content}
+                revisionNo={revision.revisionNo}
+                disabled={busy}
+                onChange={setTargetLocale}
+                compact={false}
+              />
+            </div>
+            {sourceLocale === locale && (
+              <p role="status" className="text-sm text-amber-600 @min-[600px]:col-span-2">
+                Chọn ngôn ngữ đích khác nguồn để bắt đầu biên dịch.
+              </p>
+            )}
+          </fieldset>
+        )}
+        {translating && (
+          <div className="flex gap-1 overflow-x-auto" aria-label="Các phần nội dung">
+            {SECTIONS.filter(([key]) => ["PROFILE", "SKILLS", "SKINS"].includes(key)).map(([key, , label]) => (
+              <Button
+                key={key}
+                type="button"
+                disabled={busy}
+                className="shrink-0"
+                variant={section === key ? "secondary" : "ghost"}
+                onClick={() => setSection(key)}
+              >
+                {label}
+                {dirty.has(key) && <span className="size-1.5 rounded-full bg-amber-500" aria-label="Chưa lưu" />}
+              </Button>
+            ))}
+          </div>
+        )}
+        <Box title={editorTitle} unframed={!translating}>
+          <form
+            id={sectionFormId}
+            onSubmit={(event) => {
+              event.preventDefault()
+              if (!sectionDirty || editorDisabled) return
+              void run(async () => {
+                const value = sectionValue ?? emptySection(section, editorLocale)
+                const next = await api.save(revision, section, value, note)
+                const saved = await api.read(heroId, revision.id)
+                queryClient.setQueryData(["publishing-preview", heroId, revision.id], saved)
+                const notes = { ...localDraft.value.notes }
+                delete notes[noteKey]
+                const content = {
+                  ...preview.content,
+                  [section]: focusedProfile
+                    ? replaceProfilePart(preview.content.PROFILE, saved.content.PROFILE, profilePart, editorLocale)
+                    : saved.content[section],
+                }
+                localDraft.rebase({ content, notes }, { content: saved.content, notes: {} }, next.version)
+                if (!translating) setEditing(false)
+              }, "Đã lưu nội dung vào bản nháp.")
+            }}
+          >
+            <fieldset disabled={editorDisabled} className="min-w-0 space-y-5">
+              {translating ? (
+                <TranslationEditor
+                  section={section as TranslatableSection}
+                  value={
+                    (preview.content[section] ?? emptySection(section, locale)) as NonNullable<
+                      Content[TranslatableSection]
+                    >
+                  }
+                  sourceLocale={sourceLocale}
+                  targetLocale={locale}
+                  onChange={update}
+                  focusKey={urlParams.get("translationKey") ?? undefined}
+                  focusField={
+                    Object.hasOwn(translationFields, urlParams.get("translationField") ?? "")
+                      ? (urlParams.get("translationField") as TranslationField)
+                      : undefined
+                  }
+                  onClearFocus={() => updateLocation({ translationKey: null, translationField: null })}
+                />
+              ) : (
+                <SectionEditor
+                  savedSkillKeys={new Set(read.data?.content.SKILLS?.skills.map((skill) => skill.skillKey) ?? [])}
+                  savedSkinKeys={new Set(read.data?.content.SKINS?.skins.map((skin) => skin.skinKey) ?? [])}
+                  focusSkinKey={skinFocus}
+                  statDefaults={statDefaults.data}
+                  referenceError={statDefaults.isError}
+                  skills={preview.content.SKILLS}
+                  patchCode={statPatch?.patchCode}
+                  section={section}
+                  value={preview.content[section]}
+                  locale={editorLocale}
+                  profilePart={profilePart}
+                  onChange={update}
+                  heroId={heroId}
+                  initialSkillKey={heroLocationId(urlParams.get("skill"))}
+                  skillLayout={urlParams.get("skillLayout") === "flat" ? "flat" : "focus"}
+                  onSkillLayoutChange={(layout) => updateLocation({ skillLayout: layout === "flat" ? "flat" : null })}
+                  onSkillChange={(skill) => updateLocation({ skill })}
+                  onBusyChange={setBusy}
+                  reviewOpen={reviewOpen}
+                  onReviewOpenChange={setReviewOpen}
+                />
+              )}
+            </fieldset>
+          </form>
+        </Box>
+      </div>
+    ) : null
 
   return (
     <PublishingFrame
@@ -714,10 +987,16 @@ export function PublishingWorkspace({
         />
       ) : (
         <>
-          <header className="relative">
+          <header ref={headerRef} className="relative">
             {/* The name and the controls wrap as two whole groups, so no button can end up alone on a line. */}
-            <div className="flex flex-col gap-3 @2xl:flex-row @2xl:flex-wrap @2xl:items-center @2xl:justify-end @2xl:gap-x-4">
-              <div className="flex min-w-0 items-center gap-2.5 @max-2xl:pr-11 @2xl:flex-auto">
+            <div
+              className={
+                wideHeader
+                  ? "flex flex-wrap items-center justify-end gap-x-4 gap-y-3"
+                  : "flex min-w-0 items-center gap-1.5"
+              }
+            >
+              <div className={cn("flex min-w-0 items-center gap-2.5", wideHeader ? "flex-auto" : "flex-1 gap-2")}>
                 {!onUnsavedChange && (
                   <Button variant="ghost" size="icon" asChild>
                     <Link
@@ -731,21 +1010,27 @@ export function PublishingWorkspace({
                     </Link>
                   </Button>
                 )}
-                <HeroAsset
-                  id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
-                  alt={`Ảnh tướng ${heroName}`}
-                  className="size-9 shrink-0 rounded-full"
-                  frameAspectRatio={1}
-                />
+                {/* A narrow header gives the name the room; the scrolled name bar still shows the picture. */}
+                {wideHeader && (
+                  <HeroAsset
+                    id={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                    alt={`Ảnh tướng ${heroName}`}
+                    className="size-9 shrink-0 rounded-full"
+                    frameAspectRatio={1}
+                  />
+                )}
                 <div className="min-w-0">
-                  <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
-                    {heroName}
-                  </h1>
+                  {/* Switching hero belongs to the name, so its button follows it on the same line. */}
+                  <div className="flex min-w-0 items-center gap-1">
+                    <h1 ref={heroHeadingRef} className="truncate text-base font-semibold">
+                      {heroName}
+                    </h1>
+                    {quickSwitcher}
+                  </div>
                   <p className="truncate text-xs text-muted-foreground">
                     {revision ? CAUSES[revision.cause] : "Đang mở dữ liệu"}
                   </p>
                 </div>
-                {quickSwitcher}
                 <PatchCaptureToggle />
                 {preview && (
                   <HeroReviewNotice
@@ -796,120 +1081,35 @@ export function PublishingWorkspace({
                   </DraftStatusControl>
                 )}
               </div>
-              <div className="flex min-w-0 items-center gap-2 @2xl:shrink-0">
-                {revision && (revisions.data?.length ?? 0) > 1 ? (
-                  <label className="flex min-w-0 flex-1 items-center text-sm @2xl:flex-none">
-                    <span className="sr-only">Phiên bản dữ liệu</span>
-                    <select
-                      aria-label="Phiên bản dữ liệu"
-                      className="h-9 w-full rounded-md border bg-background px-2.5 text-sm disabled:opacity-50 @2xl:w-44"
-                      value={selectedId}
-                      disabled={busy}
-                      onChange={(event) => {
-                        setSelectedId(event.target.value)
-                        updateLocation({
-                          revision: event.target.value,
-                          compare: null,
-                          changes: null,
-                          translationKey: null,
-                          translationField: null,
-                        })
-                        setEditing(false)
-                      }}
-                    >
-                      {revisions.data?.map((row) => (
-                        <option key={row.id} value={row.id}>
-                          #{row.revisionNo} · {STATES[row.state]}
-                          {new Set(revisions.data?.map((item) => item.rulesetId)).size > 1
-                            ? ` · ${rulesets.data?.find((item) => item.id === row.rulesetId)?.code ?? "Bộ quy tắc khác"}`
-                            : ""}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  // Most heroes have a single version; there is nothing to switch to.
-                  revision && (
-                    <span className="inline-flex h-9 min-w-0 flex-1 items-center rounded-md border bg-muted/40 px-2.5 text-sm @2xl:flex-none">
-                      <span className="truncate">
-                        #{revision.revisionNo} · {STATES[revision.state]}
-                      </span>
-                    </span>
-                  )
-                )}
-                {preview && revision && !translating && (
-                  <HeroLanguagePicker
-                    content={preview.content}
-                    locale={location.readLocale}
-                    revisionNo={revision.revisionNo}
-                    disabled={busy || (editing && section !== "SKILLS")}
-                    onChange={setContentLocale}
-                  />
-                )}
-                {headerAction === "publish" && revision && (
-                  <PublishButton
-                    busy={busy}
-                    publishing={publishing}
-                    issues={issues}
-                    unsaved={SECTIONS.filter(([key]) => dirty.has(key)).map(([key, , label]) => ({ key, label }))}
-                    patch={
-                      patchLink && {
-                        ...patchLink,
-                        canPublish: capabilities.includes("patch:publish"),
-                      }
-                    }
-                    onReloadPatch={
-                      revision.effectiveFromPatchVariantId && !publicationPatch && !overview.isPending
-                        ? () => void overview.refetch()
-                        : undefined
-                    }
-                    reloadingPatch={overview.isFetching}
-                    failure={publishFailure}
-                    onDismissFailure={() => setPublishFailure("")}
-                    onOpenSection={(key) => openUnsavedSection(key as Section)}
-                    onPublish={publishRevision}
-                  />
-                )}
-                {headerAction === "draft" && (
-                  <Button variant="outline" disabled={busy} onClick={startDraft}>
-                    {!openDraft && <Plus className="size-4" />}
-                    {startDraftLabel}
-                  </Button>
-                )}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      aria-label="Thao tác tướng"
-                      className="shrink-0 @max-2xl:absolute @max-2xl:top-0 @max-2xl:right-0"
-                    >
-                      <MoreHorizontal className="size-4" />
+              {wideHeader ? (
+                <div className="flex min-w-0 shrink-0 items-center gap-2">
+                  {versionMenu(false)}
+                  {preview && revision && !translating && (
+                    <HeroLanguagePicker
+                      content={preview.content}
+                      locale={location.readLocale}
+                      revisionNo={revision.revisionNo}
+                      disabled={busy || (editing && section !== "SKILLS")}
+                      onChange={setContentLocale}
+                    />
+                  )}
+                  {headerAction === "publish" && revision && publishButton()}
+                  {headerAction === "draft" && (
+                    <Button variant="outline" disabled={busy} onClick={startDraft}>
+                      {!openDraft && <Plus className="size-4" />}
+                      {startDraftLabel}
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {(canMoveBaseline || canFork || canRecordChanges) && (
-                      <DropdownMenuItem onSelect={openManagement}>
-                        <Settings2 />
-                        Quản lý phiên bản
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem disabled={busy} onSelect={() => void refresh()}>
-                      <RefreshCw />
-                      Tải dữ liệu mới nhất
-                    </DropdownMenuItem>
-                    {writable && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem variant="destructive" disabled={busy} onSelect={() => void discardDraft()}>
-                          <Trash2 />
-                          Hủy bản nháp
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+                  )}
+                  {actionsMenu}
+                </div>
+              ) : (
+                // One row on a narrow header: the version menu also holds the language and the main action.
+                <div className="relative flex shrink-0 items-center gap-1.5">
+                  {versionMenu(true)}
+                  {headerAction === "publish" && revision && publishButton("sr-only")}
+                  {actionsMenu}
+                </div>
+              )}
             </div>
           </header>
           <HeroWorkspaceTabs view={view} busy={busy} onView={switchView} />
@@ -920,7 +1120,7 @@ export function PublishingWorkspace({
           {errorMessage(failure)}
         </p>
       ))}
-      {error && !managementOpen && (
+      {error && (
         <div role="alert" className="space-y-1 rounded-xl border border-destructive/30 p-4 text-sm text-destructive">
           <p>{error}</p>
           {(editing || translating) && (
@@ -977,8 +1177,9 @@ export function PublishingWorkspace({
                 </div>
               )}
               <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
-                {view === "overview" && !editing && (
+                {view === "overview" && (
                   <HeroContent
+                    editing={editing && editorPanel ? { section, title: editorTitle, node: editorPanel } : null}
                     variantId={statPatch?.id}
                     statDefaults={statDefaults.data}
                     referenceError={statDefaults.isError}
@@ -1001,7 +1202,7 @@ export function PublishingWorkspace({
                     onNeedsDraft={canWrite && revision?.state === "PUBLISHED" ? startDraft : undefined}
                     canWrite={canWrite}
                     issues={writable ? issues : undefined}
-                    onEdit={(next, part = "information") => {
+                    onEdit={(next, part = "information", focus) => {
                       if (next === "PROFILE") {
                         const fields = part === "lore" ? (["lore"] as const) : (["name", "title", "summary"] as const)
                         const missing = missingTranslationFields(
@@ -1017,6 +1218,7 @@ export function PublishingWorkspace({
                         updateLocation({ tab: editedTab === "overview" ? null : editedTab })
                       setSection(next)
                       setProfilePart(part)
+                      setSkinFocus(next === "SKINS" ? (focus ?? null) : null)
                       setEditing(true)
                       setError("")
                     }}
@@ -1053,166 +1255,19 @@ export function PublishingWorkspace({
                     onOpenRevision={(next) => void run(() => openRevision(next), "Đã mở phiên bản.")}
                   />
                 )}
-                {view === "patch" && (
-                  <HeroPatchTimeline
-                    heroId={heroId}
-                    revision={revision}
-                    revisions={revisions.data ?? []}
-                    content={preview.content}
-                    locale={locale}
-                    canRecord={capabilities.includes("patch:write")}
-                  />
-                )}
-                {(editing || translating) && (
-                  <div
-                    ref={editorRef}
-                    tabIndex={-1}
-                    className="scroll-mt-16 space-y-4 outline-none"
-                    role="region"
-                    aria-label="Chỉnh sửa nội dung"
-                  >
-                    {translating && (
-                      <fieldset disabled={busy} className="grid gap-4 admin-section py-4 @min-[600px]:grid-cols-2">
-                        <div className="min-w-0 space-y-2">
-                          <p className="type-label">Đọc từ</p>
-                          <HeroLanguagePicker
-                            label="Ngôn ngữ nguồn"
-                            locale={sourceLocale}
-                            disabled={busy}
-                            onChange={setSourceLocale}
-                            compact={false}
-                          />
-                        </div>
-                        <div className="min-w-0 space-y-2">
-                          <p className="type-label">Dịch sang</p>
-                          <HeroLanguagePicker
-                            label="Ngôn ngữ đích"
-                            locale={targetLocale}
-                            content={preview.content}
-                            revisionNo={revision.revisionNo}
-                            disabled={busy}
-                            onChange={setTargetLocale}
-                            compact={false}
-                          />
-                        </div>
-                        {sourceLocale === locale && (
-                          <p role="status" className="text-sm text-amber-600 @min-[600px]:col-span-2">
-                            Chọn ngôn ngữ đích khác nguồn để bắt đầu biên dịch.
-                          </p>
-                        )}
-                      </fieldset>
-                    )}
-                    {translating && (
-                      <div className="flex gap-1 overflow-x-auto" aria-label="Các phần nội dung">
-                        {SECTIONS.filter(([key]) => ["PROFILE", "SKILLS", "SKINS"].includes(key)).map(
-                          ([key, , label]) => (
-                            <Button
-                              key={key}
-                              type="button"
-                              disabled={busy}
-                              className="shrink-0"
-                              variant={section === key ? "secondary" : "ghost"}
-                              onClick={() => setSection(key)}
-                            >
-                              {label}
-                              {dirty.has(key) && (
-                                <span className="size-1.5 rounded-full bg-amber-500" aria-label="Chưa lưu" />
-                              )}
-                            </Button>
-                          ),
-                        )}
-                      </div>
-                    )}
-                    <Box title={editorTitle} unframed={section === "SKILLS" && !translating}>
-                      <form
-                        id={sectionFormId}
-                        onSubmit={(event) => {
-                          event.preventDefault()
-                          if (!sectionDirty || editorDisabled) return
-                          void run(async () => {
-                            const value = sectionValue ?? emptySection(section, editorLocale)
-                            const next = await api.save(revision, section, value, note)
-                            const saved = await api.read(heroId, revision.id)
-                            queryClient.setQueryData(["publishing-preview", heroId, revision.id], saved)
-                            const notes = { ...localDraft.value.notes }
-                            delete notes[noteKey]
-                            const content = {
-                              ...preview.content,
-                              [section]: focusedProfile
-                                ? replaceProfilePart(
-                                    preview.content.PROFILE,
-                                    saved.content.PROFILE,
-                                    profilePart,
-                                    editorLocale,
-                                  )
-                                : saved.content[section],
-                            }
-                            localDraft.rebase({ content, notes }, { content: saved.content, notes: {} }, next.version)
-                            if (!translating) setEditing(false)
-                          }, "Đã lưu nội dung vào bản nháp.")
-                        }}
-                      >
-                        <fieldset disabled={editorDisabled} className="min-w-0 space-y-5">
-                          {translating ? (
-                            <TranslationEditor
-                              section={section as TranslatableSection}
-                              value={
-                                (preview.content[section] ?? emptySection(section, locale)) as NonNullable<
-                                  Content[TranslatableSection]
-                                >
-                              }
-                              sourceLocale={sourceLocale}
-                              targetLocale={locale}
-                              onChange={update}
-                              focusKey={urlParams.get("translationKey") ?? undefined}
-                              focusField={
-                                Object.hasOwn(translationFields, urlParams.get("translationField") ?? "")
-                                  ? (urlParams.get("translationField") as TranslationField)
-                                  : undefined
-                              }
-                              onClearFocus={() => updateLocation({ translationKey: null, translationField: null })}
-                            />
-                          ) : (
-                            <SectionEditor
-                              statDefaults={statDefaults.data}
-                              referenceError={statDefaults.isError}
-                              skills={preview.content.SKILLS}
-                              patchCode={statPatch?.patchCode}
-                              section={section}
-                              value={preview.content[section]}
-                              locale={editorLocale}
-                              profilePart={profilePart}
-                              onChange={update}
-                              heroId={heroId}
-                              initialSkillKey={heroLocationId(urlParams.get("skill"))}
-                              skillLayout={urlParams.get("skillLayout") === "flat" ? "flat" : "focus"}
-                              onSkillLayoutChange={(layout) =>
-                                updateLocation({ skillLayout: layout === "flat" ? "flat" : null })
-                              }
-                              onSkillChange={(skill) => updateLocation({ skill })}
-                              onBusyChange={setBusy}
-                              reviewOpen={reviewOpen}
-                              onReviewOpenChange={setReviewOpen}
-                            />
-                          )}
-                        </fieldset>
-                      </form>
-                    </Box>
-                  </div>
-                )}
-              </div>
-              {/* A sheet keeps publishing next to the page instead of below every section. */}
-              {managementOpen && (
-                <ManagementSheet
-                  onClose={() => setManagementOpen(false)}
-                  description={`Bản #${revision.revisionNo} · ${STATES[revision.state]} · ${CAUSES[revision.cause]}`}
-                >
-                  <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pt-4 pb-6">
-                    {error && (
-                      <p role="alert" className="rounded-xl border border-destructive/30 p-3 text-sm text-destructive">
-                        {error}
+                {view === "versions" && (
+                  // What can be done to this version as a whole: inherit a draft, move its baseline, record its changes.
+                  <div className="min-w-0 space-y-5">
+                    <p className="type-meta">
+                      Bản #{revision.revisionNo} · {STATES[revision.state]} · {CAUSES[revision.cause]}
+                    </p>
+                    {!canFork && !canMoveBaseline && !canRecordChanges && (
+                      <p className="type-body rounded-xl border bg-muted/30 p-4 text-muted-foreground">
+                        Bản này hiện không có thao tác phiên bản nào: không tạo được bản nháp kế thừa, không chuyển mốc
+                        và không ghi thay đổi patch.
                       </p>
                     )}
+
                     {canFork && (
                       <Box title="Tạo bản nháp kế thừa">
                         <form
@@ -1227,7 +1282,7 @@ export function PublishingWorkspace({
                                   cause === "GAME_PATCH" ? (importContext?.patchVariantId ?? null) : null,
                                 ),
                               )
-                              setManagementOpen(false)
+                              updateLocation({ view: "overview" })
                             }, "Đã tạo bản nháp từ phiên bản đã chọn.")
                           }}
                         >
@@ -1283,15 +1338,27 @@ export function PublishingWorkspace({
                           await invalidateHeroCatalogs(queryClient)
                           await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
                           await revisions.refetch()
-                          setManagementOpen(false)
+                          updateLocation({ view: "overview" })
                           toast.success("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")
                         }}
                       />
                     )}
                     {canRecordChanges && <PatchChangeForm key={revision.id} revision={revision} locale={locale} />}
                   </div>
-                </ManagementSheet>
-              )}
+                )}
+                {view === "patch" && (
+                  <HeroPatchTimeline
+                    heroId={heroId}
+                    revision={revision}
+                    revisions={revisions.data ?? []}
+                    content={preview.content}
+                    locale={locale}
+                    canRecord={capabilities.includes("patch:write")}
+                  />
+                )}
+                {view !== "overview" && editorPanel}
+              </div>
+              {/* A sheet keeps publishing next to the page instead of below every section. */}
             </>
           )}
         </>

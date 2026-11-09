@@ -2,7 +2,7 @@ import type { PublishBlockerKey } from "./publish-rules"
 import type { Section } from "./types"
 
 export type HeroContentTab = "overview" | "skills" | "skins" | "media" | "videos"
-export type HeroWorkspaceView = "overview" | "translations" | "history" | "patch"
+export type HeroWorkspaceView = "overview" | "translations" | "history" | "patch" | "versions"
 const heroKeys = [
   "hero",
   "revision",
@@ -40,7 +40,7 @@ export function readHeroLocation(params: URLSearchParams, translationMode = fals
   // The content sections share one page now, so `view=skills` still opens that page on its section.
   const contentView = contentTabs.includes(view as HeroContentTab) ? (view as HeroContentTab) : null
   return {
-    view: (contentView || view === "translations" || view === "history" || view === "patch"
+    view: (contentView || view === "translations" || view === "history" || view === "patch" || view === "versions"
       ? contentView
         ? "overview"
         : view

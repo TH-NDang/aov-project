@@ -1,7 +1,7 @@
 import type { InputHTMLAttributes, ReactNode } from "react"
 import type { Source } from "./types"
 import { Button } from "@aov/ui/components/button"
-import { AdminRichTextField } from "../terminology/rich-text-field"
+import { AdminLiveRichTextField, AdminRichTextField } from "../terminology/rich-text-field"
 import { BookOpenText } from "lucide-react"
 import { EditorToolSheet } from "./editor-tool-sheet"
 export const control = "w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
@@ -19,6 +19,18 @@ export function Field({
   multiline?: boolean
   richTextLocale?: string
 } & Omit<InputHTMLAttributes<HTMLInputElement>, "onChange" | "value">) {
+  // A rich text reads as published and turns into its editor in the same box; a locked one keeps the plain editor.
+  if (multiline && richTextLocale !== undefined && !props.disabled)
+    return (
+      <AdminLiveRichTextField
+        key={richTextLocale}
+        label={label}
+        value={String(value)}
+        onChange={onChange}
+        locale={richTextLocale}
+        required={props.required}
+      />
+    )
   if (multiline && richTextLocale !== undefined)
     return (
       <AdminRichTextField

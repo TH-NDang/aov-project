@@ -135,10 +135,10 @@ function describe(item: MediaUsageItem) {
   const owner = usageOwners[item.ownerType] ?? item.ownerType
   const heroPath = `/hero/${item.ownerId}?${item.revisionId ? `revision=${item.revisionId}&` : ""}`
   if (item.ownerType === "HERO") {
-    if (kind === "SKILL_ICON")
+    if (kind === "SKILL_ICON" || kind === "SKILL_STATE")
       return {
         title: `${item.ownerName ?? "Tướng"} · ${item.partName ?? key}`,
-        detail: "Kỹ năng · Icon",
+        detail: kind === "SKILL_STATE" ? "Kỹ năng · Ảnh theo trạng thái" : "Kỹ năng · Icon",
         href: `${heroPath}tab=skills&skill=${encodeURIComponent(key ?? "")}`,
       }
     if (kind.startsWith("SKIN_"))

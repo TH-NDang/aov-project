@@ -32,6 +32,14 @@ export function AdminLiveRichTextField({
   short = false,
   ...props
 }: Pick<EntityRichTextEditorProps, "label" | "locale" | "value" | "onChange" | "required"> & { short?: boolean }) {
+  if (!short) return <AdminRichTextBox {...props} />
+  return <AdminShortLiveField {...props} />
+}
+
+/** A short text such as a tag keeps its editor and a live result side by side; it is edited in its own step. */
+function AdminShortLiveField(
+  props: Pick<EntityRichTextEditorProps, "label" | "locale" | "value" | "onChange" | "required">,
+) {
   const text = useDeferredValue(props.value)
   const updating = text !== props.value
   return (
@@ -45,10 +53,10 @@ export function AdminLiveRichTextField({
           <AdminRichTextField
             {...props}
             compact
-            allowBlocks={!short}
+            allowBlocks={false}
             hideLabel
             renderPreview={false}
-            inputClassName={short ? "min-h-12" : "min-h-32 max-h-[42dvh] resize-y overflow-y-auto leading-7"}
+            inputClassName="min-h-12"
           />
         </div>
         <section aria-label={`Kết quả hiển thị · ${props.label}`} className="flex min-w-0 flex-col gap-2">
@@ -74,6 +82,33 @@ export function AdminLiveRichTextField({
             )}
           </div>
         </section>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * One box that reads like the published text and is typed into directly: colours, bold, headings, tables and the icons
+ * of recognised names show while writing, so there is no separate preview and no mode to switch. The tools stay quiet
+ * until the box is in use.
+ */
+function AdminRichTextBox(
+  props: Pick<EntityRichTextEditorProps, "label" | "locale" | "value" | "onChange" | "required">,
+) {
+  return (
+    <div className="group/box min-w-0 space-y-2">
+      <h4 className="type-label flex min-h-8 items-center gap-2">
+        <PencilLine aria-hidden className="size-4 text-muted-foreground" />
+        {props.label}
+      </h4>
+      <div className="[&_[role=toolbar]]:opacity-60 [&_[role=toolbar]]:transition-opacity group-focus-within/box:[&_[role=toolbar]]:opacity-100 group-hover/box:[&_[role=toolbar]]:opacity-100">
+        <AdminRichTextField
+          {...props}
+          compact
+          hideLabel
+          renderPreview={false}
+          inputClassName="min-h-32 max-h-[50dvh] resize-y overflow-y-auto leading-7"
+        />
       </div>
     </div>
   )

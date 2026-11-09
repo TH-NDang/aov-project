@@ -145,6 +145,12 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
       (button) => button.getAttribute("aria-label") === label && !button.closest('[aria-hidden="true"]'),
     )!
   const click = (node: HTMLElement) => act(async () => node.click())
+  const openActions = () =>
+    act(async () => {
+      document
+        .querySelector<HTMLElement>('[aria-label="Thao tác tướng"]')!
+        .dispatchEvent(new dom.window.MouseEvent("pointerdown", { bubbles: true, button: 0 }))
+    })
   const switchTo = async (name: string) => {
     await click(visibleButton("Chuyển tướng nhanh"))
     await waitFor(() => !!visibleButton(`Chuyển sang ${name}`))
@@ -213,7 +219,10 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
     )
     assert.equal(router.state.location.pathname + router.state.location.search, firstUrl)
     assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "passive")
-    const fullPage = document.querySelector<HTMLElement>('[aria-label="Mở trang tướng đầy đủ"]')!
+    await openActions()
+    const fullPage = [...document.querySelectorAll<HTMLElement>("[role=menuitem]")].find(
+      (item) => item.textContent === "Mở trang tướng đầy đủ",
+    )!
     await click(fullPage)
     await waitFor(() => router.state.location.pathname === "/hero/fixture-hero")
     await switchTo("Tulen")

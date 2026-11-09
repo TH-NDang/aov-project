@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Clapperboard, Plus } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { useSession } from "@/app/auth/auth-gate"
+import { SectionHeading } from "@/components/section-contents"
 import { errorMessage } from "@/lib/api/errors"
 import { videoApi, videoKeys } from "./video-api"
 import { VideoFormDialog } from "./video-form-dialog"
@@ -86,18 +87,28 @@ export function SubjectVideosPanel({
 
   return (
     <section className="grid gap-4" aria-label="Video">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="type-section-title">Video</h2>
-          <p className="type-meta">
-            {kind === "HERO"
+      <header>
+        <SectionHeading
+          title="Video"
+          icon={Clapperboard}
+          count={list.data?.items.length}
+          description={
+            kind === "HERO"
               ? "Gắn nhiều video cho tướng, từng kỹ năng hoặc từng trang phục. Có hiệu lực ngay, không cần xuất bản lại tướng."
-              : "Có hiệu lực ngay, không cần xuất bản lại mục này."}
-          </p>
-        </div>
-        <Button type="button" disabled={!canAdd} onClick={() => setForm({ video: null, subject: ownSubject })}>
-          <Plus className="size-4" /> Thêm video
-        </Button>
+              : "Có hiệu lực ngay, không cần xuất bản lại mục này."
+          }
+          actions={
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!canAdd}
+              onClick={() => setForm({ video: null, subject: ownSubject })}
+            >
+              <Plus className="size-4" /> Thêm video
+            </Button>
+          }
+        />
       </header>
 
       {[list.error, actions.error].filter(Boolean).map((failure, index) => (

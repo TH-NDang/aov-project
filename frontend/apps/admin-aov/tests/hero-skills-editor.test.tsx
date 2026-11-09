@@ -151,6 +151,20 @@ test("focused skill editing preserves forms, effects and translations while addi
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(element, value)
       element.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
+  const openMenu = (trigger: HTMLElement) =>
+    act(async () => {
+      trigger.dispatchEvent(new dom.window.MouseEvent("pointerdown", { bubbles: true, button: 0 }))
+    })
+  const menuItem = (text: string) =>
+    [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.startsWith(text))!
+  const addSkillIn = async (slot: string) => {
+    await openMenu(button("Thêm kỹ năng"))
+    await act(async () => menuItem(slot).click())
+  }
+  const openDescription = async () => {
+    const edit = editor().querySelector<HTMLButtonElement>('[aria-label="Sửa Mô tả"]')
+    if (edit) await act(async () => edit.click())
+  }
   const waitFor = async (condition: () => boolean) => {
     for (let attempt = 0; attempt < 100 && !condition(); attempt++)
       await act(async () => {
@@ -179,7 +193,12 @@ test("focused skill editing preserves forms, effects and translations while addi
         </QueryClientProvider>,
       ),
     )
-    assert.equal(editor().querySelectorAll('[data-slot="entity-reference-input"]').length, 1)
+    assert.equal(
+      editor().querySelectorAll('[data-slot="entity-reference-input"]').length,
+      1,
+      "The description is typed into where it reads",
+    )
+    assert.equal(editor().querySelector('[aria-label="Kết quả hiển thị · Mô tả"]'), null, "One box: no second preview")
     assert.equal(document.querySelectorAll('[aria-label="Chọn kỹ năng"] [aria-pressed="true"]').length, 1)
     assert.equal(
       document.querySelector('[aria-label="Chọn kỹ năng"] [aria-pressed="true"]')?.getAttribute("aria-label"),
@@ -223,13 +242,12 @@ test("focused skill editing preserves forms, effects and translations while addi
     await type(nameInput(), "Fox skill")
     assert.equal(current.skills[1].translations[0].name, "Tên riêng dạng cáo")
     assert.equal(current.skills[1].translations[1].name, "Fox skill")
+    await openDescription()
+    assert.equal(editor().querySelector('[aria-label="Kết quả hiển thị · Mô tả"]'), null, "One box: no second preview")
     const description = referenceInput(editor())
     await act(async () => fillReferenceInput(description, "Updated English description"))
     assert.equal(current.skills[1].translations[1].description, "Updated English description")
-    assert.match(
-      editor().querySelector('[aria-label="Kết quả hiển thị · Mô tả"]')!.textContent!,
-      /Updated English description/,
-    )
+    assert.match(description.textContent!, /Updated English description/)
     assert.ok(
       ![...editor().querySelectorAll("summary")].some((summary) => summary.textContent?.includes("Xem trước nội dung")),
     )
@@ -255,7 +273,7 @@ test("focused skill editing preserves forms, effects and translations while addi
     await act(async () => button("Xem bảng").click())
     assert.ok(editor().querySelector("table")!.textContent!.includes("100 (+150/cấp chiêu)"))
     await act(async () => button("Thêm nhãn").click())
-    const tagInput = editor().querySelectorAll<HTMLDivElement>('[data-slot="entity-reference-input"]')[1]
+    const tagInput = [...editor().querySelectorAll<HTMLDivElement>('[data-slot="entity-reference-input"]')].at(-1)!
     await act(async () => fillReferenceInput(tagInput, "Đẩy lùi"))
     assert.match(editor().querySelector('[aria-label="Kết quả hiển thị · Nội dung nhãn"]')!.textContent!, /Đẩy lùi/)
     await act(async () => button("Xong").click())
@@ -325,19 +343,24 @@ test("focused skill editing preserves forms, effects and translations while addi
     assert.deepEqual(current.skills[1].effects, expectedEffects)
     assert.deepEqual(current.sources, [{ ...original.sources[0], label: "Updated source" }])
     await act(async () => settings().click())
-    const keyInput = [...document.querySelectorAll('[role="dialog"] label')]
-      .find((label) => label.textContent === "Khóa kỹ năng")!
-      .querySelector<HTMLInputElement>("input")!
-    await type(keyInput, "renamed-fox")
+    // The key is never typed: it follows the slot and the variant chosen.
+    const slotSelect = [...document.querySelectorAll('[role="dialog"] label')]
+      .find((label) => label.textContent?.startsWith("Ô chiêu"))!
+      .querySelector<HTMLSelectElement>("select")!
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLSelectElement.prototype, "value")!.set!.call(slotSelect, "2")
+      slotSelect.dispatchEvent(new dom.window.Event("change", { bubbles: true }))
+    })
+    assert.match(document.querySelector('[role="dialog"]')!.textContent!, /skill-2-1/)
     assert.equal(current.skills[1].skillKey, "skill-3")
     await act(async () => button("Áp dụng").click())
     assert.equal(nameInput().value, "Fox skill", "Changing the stable key does not switch or remount the edited form")
-    assert.equal(current.skills[1].skillKey, "renamed-fox")
+    assert.equal(current.skills[1].skillKey, "skill-2-1")
     const beforeAdd = structuredClone(current)
-    await act(async () => button("Thêm kỹ năng").click())
+    await addSkillIn("Chiêu 4")
     assert.equal(current.skills.length, 4)
     assert.equal(new Set(current.skills.map((item) => item.skillKey)).size, 4)
-    assert.equal(current.skills[3].skillKey, "skill-3")
+    assert.equal(current.skills.at(-1)!.skillKey, "skill-4-1", "A new skill takes its slot's key")
     assert.equal(current.skills[3].displayOrder, 3)
     assert.equal(nameInput().value, "")
     assert.deepEqual(current.skills.slice(0, 3), beforeAdd.skills)
@@ -379,8 +402,8 @@ test("focused skill editing preserves forms, effects and translations while addi
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Đóng đối chiếu cảnh báo"]')!.click())
     await act(async () => setCurrent!({ skills: [], sources: original.sources }))
     assert.match(document.body.textContent!, /Chưa có nội dung kỹ năng/)
-    await act(async () => button("Thêm kỹ năng").click())
-    assert.equal(current.skills[0].skillKey, "skill-1")
+    await addSkillIn("Chiêu 1")
+    assert.equal(current.skills[0].skillKey, "skill-1-1")
     assert.equal(current.skills[0].formKey, null, "No missing form is inferred")
     assert.deepEqual(current.sources, original.sources)
     assert.deepEqual(original, snapshot, "Editing must never mutate the input snapshot")

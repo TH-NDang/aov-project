@@ -1,12 +1,11 @@
 import { HeroSkillsEditor } from "./hero-skills-editor"
+import { HeroSkinsEditor } from "./hero-skins-editor"
 import { AdminReferenceProvider } from "../terminology/catalog"
 import type { HeroSkillsLayout } from "./hero-skills-view"
 import { HeroProfileEditor, type ProfileEditorPart } from "./hero-profile-editor"
 import { HeroStatsEditor } from "./hero-stats-editor"
 import type { StatDefault } from "./combat-attributes"
-import { Button } from "@aov/ui/components/button"
 import { AssetPicker } from "./asset-picker"
-import { SkinBadgePicker } from "../media/skin-badge-picker"
 import { retainImageOptions } from "./image-options"
 import { heroRatingScale } from "./hero-rating-scale"
 import { Field, SectionSources } from "./fields"
@@ -70,6 +69,9 @@ export function SectionEditor({
   skills,
   patchCode,
   referenceError,
+  savedSkillKeys,
+  savedSkinKeys,
+  focusSkinKey,
 }: {
   section: Section
   value: Content[Section]
@@ -88,6 +90,12 @@ export function SectionEditor({
   skills?: Skills | null
   patchCode?: string
   referenceError?: boolean
+  /** Skill keys already saved on the server, which keep their key. */
+  savedSkillKeys?: ReadonlySet<string>
+  /** Skin keys already saved on the server, which keep their key. */
+  savedSkinKeys?: ReadonlySet<string>
+  /** The one skin opened from its pencil. */
+  focusSkinKey?: string | null
 }) {
   const data = value ?? emptySection(section, locale)
   let editor
@@ -145,6 +153,7 @@ export function SectionEditor({
     editor = (
       <AdminReferenceProvider locale={locale}>
         <HeroSkillsEditor
+          savedKeys={savedSkillKeys}
           value={data as Skills}
           locale={locale}
           onChange={onChange}
@@ -160,150 +169,14 @@ export function SectionEditor({
       </AdminReferenceProvider>
     )
   } else if (section === "SKINS") {
-    const p = data as Skins
     editor = (
-      <>
-        {p.skins.map((s, i) => (
-          <details key={i} className="rounded-lg border p-3">
-            <summary className="cursor-pointer font-medium">{s.translations[0]?.name || s.skinKey}</summary>
-            <div className="mt-3 space-y-3">
-              <Field
-                label="Khóa trang phục"
-                required
-                value={s.skinKey}
-                onChange={(skinKey) =>
-                  onChange({ ...p, skins: p.skins.map((v, n) => (n === i ? { ...v, skinKey } : v)) })
-                }
-              />
-              <label className="grid gap-1.5 text-sm">
-                Bậc / nhãn trang phục
-                <SkinBadgePicker
-                  value={s.rarityCode}
-                  locale={locale}
-                  onChange={(rarityCode) =>
-                    onChange({ ...p, skins: p.skins.map((v, n) => (n === i ? { ...v, rarityCode } : v)) })
-                  }
-                />
-              </label>
-              {s.translations.map((t, j) => (
-                <div key={j} className="space-y-3 border-l-2 pl-3">
-                  {(
-                    [
-                      ["locale", "Ngôn ngữ"],
-                      ["name", "Tên trang phục"],
-                      ["description", "Mô tả"],
-                      ["acquisitionNote", "Cách sở hữu"],
-                    ] as const
-                  ).map(([key, label]) => (
-                    <Field
-                      key={key}
-                      label={label}
-                      required={key === "locale" || key === "name"}
-                      multiline={key === "description"}
-                      richTextLocale={t.locale}
-                      value={t[key] ?? ""}
-                      onChange={(text) =>
-                        onChange({
-                          ...p,
-                          skins: p.skins.map((v, n) =>
-                            n === i
-                              ? {
-                                  ...v,
-                                  translations: v.translations.map((t, k) => (k === j ? { ...t, [key]: text } : t)),
-                                }
-                              : v,
-                          ),
-                        })
-                      }
-                    />
-                  ))}
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  onChange({
-                    ...p,
-                    skins: p.skins.map((v, n) =>
-                      n === i
-                        ? {
-                            ...v,
-                            translations: [
-                              ...v.translations,
-                              { locale: "", name: "", description: null, acquisitionNote: null },
-                            ],
-                          }
-                        : v,
-                    ),
-                  })
-                }
-              >
-                Thêm bản dịch trang phục
-              </Button>
-              <div className="grid gap-3 lg:grid-cols-2">
-                {(
-                  [
-                    ["PORTRAIT", "portraitAssetId", "Portrait"],
-                    ["SPLASH", "artAssetId", "Cover"],
-                  ] as const
-                ).map(([role, key, title]) => (
-                  <div key={role} className="space-y-2">
-                    <h4 className="text-sm font-medium">{title}</h4>
-                    <AssetPicker
-                      semanticType="HERO_SKIN_ART"
-                      value={s[key] ?? null}
-                      onChange={(assetId) =>
-                        onChange({
-                          ...p,
-                          skins: p.skins.map((v, n) =>
-                            n === i
-                              ? { ...v, [key]: assetId, images: retainImageOptions(v.images, role, v[key], assetId) }
-                              : v,
-                          ),
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  onChange({
-                    ...p,
-                    skins: p.skins.filter((_, n) => n !== i).map((s, displayOrder) => ({ ...s, displayOrder })),
-                  })
-                }
-              >
-                Bỏ trang phục
-              </Button>
-            </div>
-          </details>
-        ))}
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() =>
-            onChange({
-              ...p,
-              skins: [
-                ...p.skins,
-                {
-                  skinKey: "",
-                  displayOrder: p.skins.length,
-                  artAssetId: null,
-                  rarityCode: null,
-                  translations: [{ locale, name: "", description: null, acquisitionNote: null }],
-                },
-              ],
-            })
-          }
-        >
-          Thêm trang phục
-        </Button>
-      </>
+      <HeroSkinsEditor
+        value={data as Skins}
+        locale={locale}
+        onChange={onChange}
+        focusKey={focusSkinKey}
+        savedKeys={savedSkinKeys}
+      />
     )
   } else {
     const p = data as Bindings
@@ -311,13 +184,13 @@ export function SectionEditor({
       <div className="grid gap-4 lg:grid-cols-3">
         {(
           [
-            ["HEAD", "Head"],
-            ["PORTRAIT", "Portrait"],
-            ["SPLASH", "Splash"],
+            ["HEAD", "Ảnh đại diện"],
+            ["PORTRAIT", "Chân dung"],
+            ["SPLASH", "Ảnh nền"],
           ] as const
         ).map(([role, label]) => (
           <div key={role} className="space-y-2">
-            <h3 className="text-sm font-medium">{label}</h3>
+            <h3 className="type-label">{label}</h3>
             <AssetPicker
               semanticType={`HERO_${role}`}
               value={p.bindings[role] ?? null}

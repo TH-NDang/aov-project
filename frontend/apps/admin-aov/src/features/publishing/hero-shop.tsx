@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { AlertTriangle, ChevronDown, ChevronRight, Pencil, Trash2 } from "lucide-react"
+import { AlertTriangle, ChevronDown, ChevronRight, Gem, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { FilterTab, FilterTabs } from "@aov/ui/components/filter-tabs"
@@ -131,129 +131,155 @@ export function HeroShopPanel({
     save.mutate()
   }
   const Gold = gameplayIcons.coin
+  const actions = (
+    <span className="inline-flex shrink-0 items-center">
+      <PatchCaptureLink groupKey={captureGroupKeys.shopPrice} name="giá tướng" />
+      {canWrite && !editing && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0"
+          aria-label="Chỉnh sửa giá tướng"
+          title="Chỉnh sửa giá tướng"
+          onClick={open}
+        >
+          <Pencil className="size-3.5" />
+        </Button>
+      )}
+    </span>
+  )
+  // One line under the hero name: each currency as its icon and amount, then since when it holds.
   return (
     <section className={className} aria-label="Giá tướng">
-      <div className="mb-3 flex min-h-6 items-center justify-between gap-2">
-        <h3 className="type-section-title flex items-center gap-2">
-          <Gold className="size-4 text-muted-foreground" />
-          Giá tướng
-        </h3>
-        <div className="flex shrink-0 items-center gap-1">
-          <PatchCaptureLink groupKey={captureGroupKeys.shopPrice} name="giá tướng" />
-          {canWrite && !editing && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="size-8 shrink-0"
-              aria-label="Chỉnh sửa giá tướng"
-              title="Chỉnh sửa giá tướng"
-              onClick={open}
-            >
-              <Pencil className="size-4" />
-            </Button>
-          )}
-        </div>
-      </div>
       {editing ? (
-        <form className="grid gap-3" onSubmit={submit}>
-          <Field label="Trạng thái">
-            <select
-              className={control}
-              value={form.availability}
-              onChange={(event) => setForm({ ...form, availability: event.target.value as HeroAvailability })}
-            >
-              {Object.entries(availabilityLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Giá vàng">
+        <div className="mt-1 rounded-lg border p-3">
+          <p className="type-label mb-3">Giá tướng</p>
+          <form className="grid gap-3" onSubmit={submit}>
+            <Field label="Trạng thái">
+              <select
+                className={control}
+                value={form.availability}
+                onChange={(event) => setForm({ ...form, availability: event.target.value as HeroAvailability })}
+              >
+                {Object.entries(availabilityLabels).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Giá vàng">
+                <Input
+                  inputMode="numeric"
+                  type="number"
+                  min={0}
+                  value={form.goldPrice}
+                  onChange={(event) => setForm({ ...form, goldPrice: event.target.value })}
+                />
+              </Field>
+              <Field label="Quân huy">
+                <Input
+                  inputMode="numeric"
+                  type="number"
+                  min={0}
+                  value={form.voucherPrice}
+                  onChange={(event) => setForm({ ...form, voucherPrice: event.target.value })}
+                />
+              </Field>
+            </div>
+            <Field label="Áp dụng từ ngày">
               <Input
-                inputMode="numeric"
-                type="number"
-                min={0}
-                value={form.goldPrice}
-                onChange={(event) => setForm({ ...form, goldPrice: event.target.value })}
+                type="date"
+                required
+                value={form.capturedOn}
+                onChange={(event) => setForm({ ...form, capturedOn: event.target.value })}
               />
             </Field>
-            <Field label="Quân huy">
-              <Input
-                inputMode="numeric"
-                type="number"
-                min={0}
-                value={form.voucherPrice}
-                onChange={(event) => setForm({ ...form, voucherPrice: event.target.value })}
-              />
-            </Field>
-          </div>
-          <Field label="Áp dụng từ ngày">
-            <Input
-              type="date"
-              required
-              value={form.capturedOn}
-              onChange={(event) => setForm({ ...form, capturedOn: event.target.value })}
-            />
-          </Field>
-          <p className="type-meta">
-            Giữ ngày cũ để sửa mốc này. Chọn ngày mới để thêm mốc giá, giá cũ vẫn được giữ lại.
-          </p>
-          <Field label="Ghi chú nội bộ">
-            <Input
-              value={form.note}
-              maxLength={500}
-              onChange={(event) => setForm({ ...form, note: event.target.value })}
-            />
-          </Field>
-          <label className="type-body flex items-center gap-2">
-            <input
-              type="checkbox"
-              className="size-4 accent-primary"
-              checked={form.needsReview}
-              onChange={(event) => setForm({ ...form, needsReview: event.target.checked })}
-            />
-            Cần xem lại, chưa hiện ra Wiki
-          </label>
-          {save.isError && (
-            <p role="alert" className="type-meta text-destructive">
-              {errorMessage(save.error)}
+            <p className="type-meta">
+              Giữ ngày cũ để sửa mốc này. Chọn ngày mới để thêm mốc giá, giá cũ vẫn được giữ lại.
             </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(false)} disabled={save.isPending}>
-              Hủy
-            </Button>
-            <Button type="submit" size="sm" disabled={save.isPending}>
-              Lưu
-            </Button>
-          </div>
-        </form>
-      ) : price ? (
-        <div className="space-y-2">
-          <dl className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <dt className="type-meta">Giá vàng</dt>
-              <dd className="type-section-title tabular-nums">{amount(price.goldPrice)}</dd>
+            <Field label="Ghi chú nội bộ">
+              <Input
+                value={form.note}
+                maxLength={500}
+                onChange={(event) => setForm({ ...form, note: event.target.value })}
+              />
+            </Field>
+            <label className="type-body flex items-center gap-2">
+              <input
+                type="checkbox"
+                className="size-4 accent-primary"
+                checked={form.needsReview}
+                onChange={(event) => setForm({ ...form, needsReview: event.target.checked })}
+              />
+              Cần xem lại, chưa hiện ra Wiki
+            </label>
+            {save.isError && (
+              <p role="alert" className="type-meta text-destructive">
+                {errorMessage(save.error)}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditing(false)}
+                disabled={save.isPending}
+              >
+                Hủy
+              </Button>
+              <Button type="submit" size="sm" disabled={save.isPending}>
+                Lưu
+              </Button>
             </div>
-            <div className="rounded-lg bg-muted/40 px-3 py-2">
-              <dt className="type-meta">Quân huy</dt>
-              <dd className="type-section-title tabular-nums">{amount(price.voucherPrice)}</dd>
-            </div>
-          </dl>
-          <p className="type-meta flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span>{availabilityLabels[price.availability]}</span>
-            {capturedDate(price.capturedOn) && <span>Từ {capturedDate(price.capturedOn)}</span>}
-            {price.needsReview && <ReviewMark />}
-          </p>
-          {price.note && <p className="type-meta">{price.note}</p>}
-          <PriceHistory heroId={heroId} rows={shop.data?.priceHistory ?? []} canWrite={canWrite} />
+          </form>
         </div>
       ) : (
-        <p className="type-meta">{shop.isError ? "Chưa tải được giá tướng." : "Chưa có giá ở thị trường Việt Nam."}</p>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          {price ? (
+            <>
+              <dl className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <div className="flex items-center gap-1.5" title="Giá vàng">
+                  <dt>
+                    <Gold className="size-4 text-primary" aria-hidden="true" />
+                    <span className="sr-only">Giá vàng</span>
+                  </dt>
+                  <dd className="type-body tabular-nums">
+                    <strong className="font-semibold">{amount(price.goldPrice)}</strong>
+                  </dd>
+                </div>
+                <div className="flex items-center gap-1.5" title="Quân huy">
+                  <dt>
+                    <Gem className="size-4 text-primary" aria-hidden="true" />
+                    <span className="sr-only">Quân huy</span>
+                  </dt>
+                  <dd className="type-body tabular-nums">
+                    <strong className="font-semibold">{amount(price.voucherPrice)}</strong>
+                  </dd>
+                </div>
+              </dl>
+              {/* A hero on sale needs no label; any other state says why the amounts may not apply. */}
+              {price.availability !== "ON_SALE" && (
+                <span className="type-meta">{availabilityLabels[price.availability]}</span>
+              )}
+              {price.needsReview && <ReviewMark />}
+              {actions}
+            </>
+          ) : (
+            <>
+              <span className="type-meta">
+                {shop.isError ? "Chưa tải được giá tướng." : "Chưa có giá ở thị trường Việt Nam."}
+              </span>
+              {actions}
+            </>
+          )}
+        </div>
       )}
+      {!editing && price?.note && <p className="type-meta">{price.note}</p>}
+      {!editing && price && <PriceHistory heroId={heroId} rows={shop.data?.priceHistory ?? []} canWrite={canWrite} />}
     </section>
   )
 }
@@ -356,6 +382,8 @@ export function SkinAcquisitionEditor({
   onDraftChange,
   nextName,
   onNext,
+  editing = true,
+  onEditingChange,
 }: {
   heroId: string
   skinKey: string
@@ -369,6 +397,9 @@ export function SkinAcquisitionEditor({
   /** Offers to save and move on, so a run of skins takes one key per skin. */
   nextName?: string
   onNext?: () => void
+  /** The form is open; otherwise the stored value reads like any other field, with a pencil beside its heading. */
+  editing?: boolean
+  onEditingChange?: (editing: boolean) => void
 }) {
   const client = useQueryClient()
   const form = draft ?? skinAcquisitionDraft(value)
@@ -397,6 +428,7 @@ export function SkinAcquisitionEditor({
       await client.invalidateQueries({ queryKey: shopKey(heroId) })
       onDraftChange(null)
       if (next) onNext?.()
+      else onEditingChange?.(false)
     },
   })
   const steps = history.length > 1 && (
@@ -432,7 +464,7 @@ export function SkinAcquisitionEditor({
       </ul>
     </details>
   )
-  if (!canWrite)
+  if (!canWrite || (!editing && !draft))
     return (
       <div className="grid gap-2">
         <p className="type-section-title">
@@ -524,11 +556,18 @@ export function SkinAcquisitionEditor({
         </p>
       )}
       <div className="flex flex-wrap justify-end gap-2">
-        {draft && (
-          <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={() => onDraftChange(null)}>
-            Bỏ thay đổi
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={busy}
+          onClick={() => {
+            onDraftChange(null)
+            onEditingChange?.(false)
+          }}
+        >
+          Hủy
+        </Button>
         <Button type="submit" size="sm" variant={nextName ? "outline" : "default"} disabled={busy || !changed}>
           Lưu
         </Button>

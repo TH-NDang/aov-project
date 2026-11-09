@@ -161,3 +161,44 @@ test("a contents page opens on the requested section, loads lazy parts on demand
     assert.match(document.body.textContent!, /Danh sách kỹ năng/)
   })
 })
+
+test("a page kept open in another tab with the same section ids never takes the jump", async () => {
+  await withUi(async ({ document, contents, render, click }) => {
+    const { ContentsSection, SectionContents, useSectionContents } = contents
+    function Page({ name }: { name: string }) {
+      const state = useSectionContents({ first: "part-a" })
+      return (
+        <div data-page={name}>
+          <SectionContents
+            contents={state}
+            entries={[
+              { id: "part-a", label: "Tổng quan" },
+              { id: "part-b", label: "Kỹ năng" },
+            ]}
+          >
+            <ContentsSection id="part-a" title="Tổng quan">
+              <p>Đầu trang {name}</p>
+            </ContentsSection>
+            <ContentsSection id="part-b" title="Kỹ năng" lazy>
+              <p>Kỹ năng của {name}</p>
+            </ContentsSection>
+          </SectionContents>
+        </div>
+      )
+    }
+    // The first page sits hidden in an earlier workspace tab, so its sections come first in the document.
+    await render(
+      <>
+        <div hidden>
+          <Page name="trang ẩn" />
+        </div>
+        <Page name="trang đang xem" />
+      </>,
+    )
+    const visible = document.querySelector('[data-page="trang đang xem"]')!
+    await click(visible.querySelector('nav[aria-label="Trên trang này"] [aria-controls="part-b"]'))
+    assert.match(visible.textContent!, /Kỹ năng của trang đang xem/, "The page being read loads its own section")
+    assert.doesNotMatch(document.body.textContent!, /Kỹ năng của trang ẩn/, "The hidden page stays as it was")
+    assert.equal(document.activeElement?.closest("[data-page]")?.getAttribute("data-page"), "trang đang xem")
+  })
+})

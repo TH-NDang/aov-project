@@ -101,7 +101,8 @@ export function HeroScrollIdentity({
           </span>
         )}
         <span className="min-w-0 truncate text-sm font-semibold">{name}</span>
-        {visible && actions && <div className="ml-auto shrink-0">{actions}</div>}
+        {/* The switcher follows the name, as it does in the page header. */}
+        {visible && actions && <div className="-ml-1 shrink-0">{actions}</div>}
       </div>
     </div>
   )

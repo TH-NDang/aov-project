@@ -203,6 +203,10 @@ async function view(
       Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, "value")!.set!.call(input, value)
       input.dispatchEvent(new dom.window.Event("input", { bubbles: true }))
     })
+  const openPrice = async () => {
+    await waitFor(() => !!button("Chỉnh sửa cách nhận và giá"), "The stored value reads first, with a pencil")
+    await click(button("Chỉnh sửa cách nhận và giá"))
+  }
   const press = async (node: Element, key: string) =>
     act(async () => {
       node.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key, bubbles: true }))
@@ -217,6 +221,7 @@ async function view(
     button,
     heading,
     priceInput,
+    openPrice,
     type,
     press,
     close: async () => {
@@ -301,6 +306,7 @@ test("a skin without a portrait says the Wiki is drawing its old head instead", 
 test("arrow keys belong to the form while the editor is in it", async () => {
   const ui = await view()
   try {
+    await ui.openPrice()
     await ui.waitFor(() => !!ui.priceInput())
     await ui.press(ui.priceInput()!, "ArrowRight")
     assert.equal(ui.heading(), "Trang phục A")
@@ -312,6 +318,7 @@ test("arrow keys belong to the form while the editor is in it", async () => {
 test("the form is on the tab, keeps unsaved work across skins and saves what was typed", async () => {
   const ui = await view()
   try {
+    await ui.openPrice()
     await ui.waitFor(() => ui.priceInput()?.value === "39")
     assert.equal((ui.button("Lưu") as HTMLButtonElement).disabled, true, "Nothing to save yet")
     await ui.type(ui.priceInput()!, "120")
@@ -338,6 +345,7 @@ test("the form is on the tab, keeps unsaved work across skins and saves what was
 test("typing a value back to what is stored leaves nothing unsaved", async () => {
   const ui = await view()
   try {
+    await ui.openPrice()
     await ui.waitFor(() => ui.priceInput()?.value === "39")
     await ui.type(ui.priceInput()!, "40")
     await ui.waitFor(() => !!ui.button("Xem Trang phục A (chưa lưu)"))
@@ -351,6 +359,7 @@ test("typing a value back to what is stored leaves nothing unsaved", async () =>
 test("the main button saves and moves on, or only moves on when nothing changed", async () => {
   const ui = await view()
   try {
+    await ui.openPrice()
     await ui.waitFor(() => ui.priceInput()?.value === "39")
     await ui.click(ui.button("Sang tiếp"))
     await ui.waitFor(() => ui.heading() === "Trang phục B")
@@ -370,6 +379,7 @@ test("the main button saves and moves on, or only moves on when nothing changed"
 test("a form shows only what its method uses and clears the other method's value when saved", async () => {
   const ui = await view()
   try {
+    await ui.openPrice()
     await ui.waitFor(() => !!ui.priceInput())
     await ui.click(ui.button("Sự kiện"))
     assert.equal(ui.priceInput(), null)
@@ -399,6 +409,7 @@ test("the summary filters the rail to what still needs an editor", async () => {
     await ui.click([...filters.querySelectorAll("button")].find((node) => node.textContent?.startsWith("Cần xem lại")))
     await ui.waitFor(() => ui.heading() === "Trang phục B")
 
+    await ui.openPrice()
     const checkbox = ui.document.querySelector<HTMLInputElement>('form input[type="checkbox"]')!
     await ui.click(checkbox)
     await ui.click(ui.button("Lưu"))

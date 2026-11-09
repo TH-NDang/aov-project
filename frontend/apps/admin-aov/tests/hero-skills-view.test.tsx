@@ -481,10 +481,13 @@ test("hero overview shows the hero's positions and five-point ratings without ch
       document.getElementById(expand.getAttribute("aria-controls")!)!.textContent,
       content.PROFILE!.translations[0].summary,
     )
-    const lore = document.querySelector<HTMLDetailsElement>("#hero-lore")!
-    assert.equal(lore.open, false)
-    await click(lore.querySelector("summary")!)
-    assert.equal(lore.open, true)
+    // The lore waits behind one icon on the hero card and opens in its own window.
+    assert.equal(document.querySelector("[role=dialog]"), null)
+    await click(document.querySelector<HTMLButtonElement>('button[aria-label="Đọc cốt truyện"]')!)
+    assert.ok(
+      document.querySelector("[role=dialog]")?.textContent?.includes(content.PROFILE!.translations[0].lore!),
+      "The lore opens in its own window",
+    )
     assert.equal(JSON.stringify(content), original)
     const withoutLore = structuredClone(content)
     withoutLore.PROFILE!.translations[0].lore = null
@@ -493,7 +496,8 @@ test("hero overview shows the hero's positions and five-point ratings without ch
         <HeroContent content={withoutLore} locale="vi-VN" editable={false} busy={false} onEdit={() => {}} />
       </MemoryRouter>,
     )
-    assert.equal(document.querySelector("#hero-lore"), null)
+    assert.equal(document.querySelector('button[aria-label="Đọc cốt truyện"]'), null)
+    assert.equal(document.querySelector('button[aria-label^="Cốt truyện"]'), null)
   })
 })
 
@@ -1008,10 +1012,11 @@ test("inventory matches only unambiguous skill identities and explicit version a
       document.querySelector('img[alt="Ảnh kỹ năng của phiên bản"]')?.getAttribute("src"),
       "/media/version-icon.webp",
     )
-    assert.equal(document.body.textContent?.includes("Ảnh thư viện"), false)
+    assert.equal(document.querySelector('img[alt="Ảnh thư viện kỹ năng"]'), null)
     await render(<SkillArtwork skill={value} heroId="view-hero" />)
     await waitFor(() => !!document.querySelector('img[src="/media/asset-exact.webp"]'))
-    assert.match(document.body.textContent!, /Ảnh thư viện/)
+    // No mark on the icon; the picture names its origin and the tooltip explains it.
+    assert.ok(document.querySelector('img[alt="Ảnh thư viện kỹ năng"]'))
     assert.ok(document.querySelector('[title*="không phải ảnh xác nhận riêng"]'))
   })
 })

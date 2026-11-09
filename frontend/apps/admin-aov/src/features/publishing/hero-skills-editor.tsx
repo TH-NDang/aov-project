@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from "react"
-import { Pencil, Plus, X } from "lucide-react"
+import { CopyPlus, Pencil, Plus, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@aov/ui/components/dropdown-menu"
 import {
   Sheet,
   SheetClose,
@@ -16,10 +22,14 @@ import { HeroSkillsView, type HeroSkillsLayout } from "./hero-skills-view"
 import { HeroReviewEditor } from "./hero-review-editor"
 import { SkillSourceDetails } from "./hero-source-details"
 import { AssetPicker } from "./asset-picker"
-import { SkillArtwork } from "./skill-artwork"
+import { SkillArtwork, useHeroSkillImages, type SkillImage } from "./skill-artwork"
+import { SkillStateIconsEditor, knownStateLabels, stateIconsOf, stateLabelHints } from "./skill-state-icons"
+import { SkillImageTray } from "./skill-image-tray"
+import { addSkillVariant, unusedSkillImages } from "./skill-variants"
+import { applyCostStyle, sharedCostStyle } from "./skill-cost-fields"
 import { SectionSources } from "./fields"
 import { SkillSettings } from "./skill-settings"
-import { skillLabel, skillVariantLabel } from "./hero-skills"
+import { skillLabel, skillSlot, skillVariantLabel } from "./hero-skills"
 import type { Skill, Skills } from "./types"
 
 export function nextSkillKey(skills: readonly Pick<Skill, "skillKey">[]): string {
@@ -41,7 +51,10 @@ export function HeroSkillsEditor({
   onBusyChange,
   reviewOpen,
   onReviewOpenChange,
+  savedKeys,
 }: {
+  /** Keys already saved on the server; they stay as they are. */
+  savedKeys?: ReadonlySet<string>
   value: Skills
   locale: string
   onChange: (value: Skills) => void
@@ -62,6 +75,11 @@ export function HeroSkillsEditor({
   })
   const [uploading, setUploading] = useState(false)
   const [imageOpen, setImageOpen] = useState(false)
+  // A state added from the tray opens the picture sheet on its name, which is all it still needs.
+  const [focusState, setFocusState] = useState<number | null>(null)
+  const library = useHeroSkillImages(heroId).data ?? []
+  const unused = unusedSkillImages(value.skills, library)
+  const stateLabels = knownStateLabels(value.skills)
   const changeBusy = useCallback(
     (busy: boolean) => {
       setUploading(busy)
@@ -91,19 +109,26 @@ export function HeroSkillsEditor({
         : [...selected.translations, row],
     })
   }
-  function add() {
-    const skill: Skill = {
-      skillKey: nextSkillKey(value.skills),
-      kind: "ACTIVE",
-      formKey: null,
-      displayOrder: Math.max(-1, ...value.skills.map((item) => item.displayOrder)) + 1,
-      iconAssetId: null,
-      translations: [{ locale, name: "", description: "" }],
-      effects: [],
-    }
-    setSelectedIndex(value.skills.length)
-    onSkillChange?.(skill.skillKey)
-    onChange({ ...value, skills: [...value.skills, skill] })
+  function applyVariant(result: ReturnType<typeof addSkillVariant>) {
+    if (!result) return
+    setSelectedIndex(result.skills.length - 1)
+    onSkillChange?.(result.added.skillKey)
+    onChange({ ...value, skills: result.skills })
+  }
+  function addInSlot(slot: number) {
+    applyVariant(addSkillVariant(value.skills, undefined, { locale, slot, library }))
+  }
+  function addVariant(copy: boolean) {
+    applyVariant(addSkillVariant(value.skills, selected, { locale, copy, library }))
+  }
+  function addState(image: SkillImage) {
+    if (!selected) return
+    const icons = stateIconsOf(selected)
+    patch({
+      stateIcons: [...icons, { assetId: image.assetId, label: stateLabelHints(selected, stateLabels)[0] ?? "" }],
+    })
+    setFocusState(icons.length)
+    setImageOpen(true)
   }
   return (
     <div className="space-y-4">
@@ -135,9 +160,24 @@ export function HeroSkillsEditor({
               onChange={(sources) => onChange({ ...value, sources })}
               disabled={uploading}
             />
-            <Button type="button" size="sm" variant="outline" onClick={add} disabled={uploading}>
-              <Plus className="size-4" /> Thêm kỹ năng
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" size="sm" variant="outline" disabled={uploading}>
+                  <Plus className="size-4" /> Thêm kỹ năng
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                {[0, 1, 2, 3, 4].map((slot) => {
+                  const count = value.skills.filter((skill) => skillSlot(skill) === slot).length
+                  return (
+                    <DropdownMenuItem key={slot} onSelect={() => addInSlot(slot)}>
+                      <span className="flex-1">{slot === 0 ? "Nội tại" : `Chiêu ${slot}`}</span>
+                      <span className="type-meta">{count ? "thêm biến thể" : "chiêu mới"}</span>
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
         activeEditor={
@@ -164,7 +204,15 @@ export function HeroSkillsEditor({
                         </span>
                       </button>
                     </SheetTrigger>
-                    <SheetContent showCloseButton={false} className="w-full gap-0 sm:max-w-lg">
+                    <SheetContent
+                      showCloseButton={false}
+                      className="w-full gap-0 sm:max-w-lg"
+                      // A state added from the tray takes the focus on its name instead of the sheet's first field.
+                      onOpenAutoFocus={(event) => {
+                        if (focusState !== null) event.preventDefault()
+                      }}
+                      onCloseAutoFocus={() => setFocusState(null)}
+                    >
                       <SheetHeader className="relative shrink-0 pr-14">
                         <SheetTitle>Chỉnh sửa ảnh kỹ năng</SheetTitle>
                         <SheetDescription>
@@ -195,6 +243,15 @@ export function HeroSkillsEditor({
                           onBusyChange={changeBusy}
                           directUpload
                         />
+                        <div className="border-t pt-4">
+                          <SkillStateIconsEditor
+                            skill={selected}
+                            suggestions={stateLabelHints(selected, stateLabels)}
+                            focusIndex={imageOpen ? focusState : null}
+                            onChange={(stateIcons) => patch({ stateIcons })}
+                            onBusyChange={changeBusy}
+                          />
+                        </div>
                       </fieldset>
                     </SheetContent>
                   </Sheet>
@@ -220,28 +277,61 @@ export function HeroSkillsEditor({
                       {!selected.formKey && skillVariantLabel(selected, value.skills) && (
                         <Badge variant="outline">{skillVariantLabel(selected, value.skills)}</Badge>
                       )}
+                      {stateIconsOf(selected).length > 0 && (
+                        <Badge variant="outline">{stateIconsOf(selected).length} ảnh trạng thái</Badge>
+                      )}
                     </div>
                   </div>
                 </div>
-                <SkillSettings
-                  skill={selected}
-                  locale={locale}
-                  disabled={uploading}
-                  onApply={(settings) => {
-                    patch(settings)
-                    if (settings.skillKey !== selected.skillKey) onSkillChange?.(settings.skillKey)
-                  }}
-                  onRemoveTranslation={() =>
-                    patch({ translations: selected.translations.filter((text) => text.locale !== locale) })
-                  }
-                  onRemove={() => {
-                    const remaining = value.skills.filter((_, position) => position !== index)
-                    const next = Math.max(0, index - 1)
-                    setSelectedIndex(next)
-                    onSkillChange?.(remaining[next]?.skillKey ?? "")
-                    onChange({ ...value, skills: remaining })
-                  }}
-                />
+                <div className="flex shrink-0 items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        disabled={uploading || skillSlot(selected) === null}
+                        title={
+                          skillSlot(selected) === null
+                            ? "Chiêu chưa rõ ô nên chưa thêm được biến thể"
+                            : "Biến thể là dạng khác của chiêu, có tên và mô tả riêng"
+                        }
+                      >
+                        <CopyPlus className="size-4" />
+                        Thêm biến thể
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-72">
+                      <DropdownMenuItem onSelect={() => addVariant(false)}>Biến thể trống</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => addVariant(true)}>
+                        Chép tên, mô tả và thông số của chiêu này
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <SkillSettings
+                    usedKeys={
+                      new Set(value.skills.filter((_, position) => position !== index).map((skill) => skill.skillKey))
+                    }
+                    locked={!!savedKeys?.has(selected.skillKey)}
+                    skill={selected}
+                    locale={locale}
+                    disabled={uploading}
+                    onApply={(settings) => {
+                      patch(settings)
+                      if (settings.skillKey !== selected.skillKey) onSkillChange?.(settings.skillKey)
+                    }}
+                    onRemoveTranslation={() =>
+                      patch({ translations: selected.translations.filter((text) => text.locale !== locale) })
+                    }
+                    onRemove={() => {
+                      const remaining = value.skills.filter((_, position) => position !== index)
+                      const next = Math.max(0, index - 1)
+                      setSelectedIndex(next)
+                      onSkillChange?.(remaining[next]?.skillKey ?? "")
+                      onChange({ ...value, skills: remaining })
+                    }}
+                  />
+                </div>
               </div>
               <AdminLiveRichTextField
                 key={locale}
@@ -256,10 +346,26 @@ export function HeroSkillsEditor({
                 collapseSources
                 locale={locale}
                 onChange={(effects) => patch({ effects })}
+                costStyles={{
+                  cooldown: sharedCostStyle(value.skills, "cooldown"),
+                  energyCost: sharedCostStyle(value.skills, "energyCost"),
+                }}
+                onCostStyle={(field, style) =>
+                  onChange({ ...value, skills: applyCostStyle(value.skills, field, style) })
+                }
               />
             </section>
           )
         }
+      />
+      <SkillImageTray
+        images={unused}
+        selected={selected}
+        selectedName={selected ? `${skillLabel(selected)}${translation?.name ? ` · ${translation.name}` : ""}` : ""}
+        disabled={uploading}
+        onUseAsIcon={(image) => patch({ iconAssetId: image.assetId })}
+        onAddState={addState}
+        onCreateVariant={(image) => applyVariant(addSkillVariant(value.skills, selected, { locale, image, library }))}
       />
     </div>
   )
