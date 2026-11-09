@@ -2474,13 +2474,22 @@ Một revision cẩm nang là ảnh chụp toàn bộ Bách khoa tại một th�
   liên kết tướng tùy chọn, chiêu (tên, mô tả, icon, nhãn giá trị và 3 giá trị theo sao), chỉ số theo 1/2/3 sao
   (máu, công vật lý, giáp, giáp phép), cờ
   `complete` cho quân chưa đủ dữ liệu và ghi chú.
-- Trang bị: nhóm trang bị (mã, tên, số ô trong Bách khoa) và trang bị (mã, tên, hiệu ứng, nhóm, vị trí ô, icon).
+- Trang bị: nhóm trang bị (mã, tên, số ô trong Bách khoa, icon viên đá đầu hàng) và trang bị (mã, tên, hiệu ứng,
+  nhóm, vị trí ô, icon).
   Ô chưa có dữ liệu hiển thị là chưa biết; không đặt tên giả.
 - Chúc phúc: bậc `NORMAL` (Thường), `EPIC` (Huyền thoại / Sử thi), `LEGENDARY` (Truyền thuyết), tên, mô tả, icon.
 - Nhiệm vụ: nội dung và phần thưởng.
-- Đội hình đề xuất: UUID ổn định, mã, tên, hạng `S/A/B/C`, độ khó `EASY/MEDIUM/HARD`, mô tả lối chơi, 1–10 quân
-  (mã quân cờ, quân chủ lực, hàng `FRONT/MIDDLE/BACK` tùy chọn, tối đa 3 trang bị), huy hiệu Phe/Nghề thêm
-  (tối đa 3), chúc phúc gợi ý và ghi chú.
+- Đội hình đề xuất: UUID ổn định, mã, tên, hạng `S/A/B/C`, độ khó `EASY/MEDIUM/HARD`, mô tả lối chơi, 1–11 quân
+  (10 ô trên bàn cờ và 1 ô thêm do trang bị mở; mỗi quân có mã quân cờ, quân chủ lực, hàng `FRONT/MIDDLE/BACK`
+  và cột `column` 1–7 tùy chọn, tối đa 3 trang bị), huy hiệu Phe/Nghề thêm (tối đa 3), chúc phúc gợi ý và ghi
+  chú. Đội hình có thể kèm giai đoạn trận (`stages`): đầu trận `EARLY` và giữa trận `MID`, mỗi giai đoạn một lần,
+  gồm danh sách mã quân cờ (tối đa 11, không trùng) và ghi chú ngắn; các quân của chính đội hình là cuối trận. Đội
+  hình còn có danh sách trang bị ưu tiên (`priorityItemCodes`, tối đa 6, theo thứ tự nên lên) tách khỏi trang bị
+  của từng quân; chúc phúc gợi ý (`blessingCodes`) được hiển thị là chúc phúc ưu tiên.
+- Bàn cờ của một người chơi có 3 hàng × 7 ô vuông; hàng `FRONT` gần phía đối thủ nhất. Một quân có `column` thì phải
+  có `row`, và hai quân không đứng cùng một ô (`DUPLICATE_CELL`). Quân chưa có ô được hiển thị ở hàng chờ. Quy tắc
+  này áp dụng cho cả đội hình đề xuất và đội hình cộng đồng; đường dẫn chia sẻ ghi ô của quân dạng `violet*@b4`
+  (chữ `f/m/b` là hàng trước/giữa/sau, số là cột).
 
 Quy tắc: mã trong mỗi danh sách là duy nhất; quân cờ/đội hình chỉ tham chiếu mã có trong cùng revision; mốc
 kích hoạt dương và tăng dần; giá trị chiêu và chỉ số có đúng 0 hoặc 3 phần tử, chỉ số không âm. Lưu nháp
@@ -2502,8 +2511,8 @@ thể hiện gì, tệp gốc trong bộ thu thập, màn hình Bách khoa đã 
 - Người đăng nhập Wiki (tài khoản người) lưu đội hình từ công cụ xếp đội hình; đội hình công khai ngay ở trạng
   thái `VISIBLE`. Người đăng sửa hoặc xóa đội hình của mình; người có `gamemode:publish` ẩn (`HIDDEN`) hoặc
   hiện lại kèm lý do, có audit.
-- Ràng buộc: tên 1–60 ký tự, ghi chú tối đa 280, 1–10 quân không trùng mã, tối đa 3 trang bị mỗi quân, tối đa
-  3 huy hiệu; mã phải có trong cẩm nang đã xuất bản. Tối đa 30 đội hình mỗi người mỗi chế độ.
+- Ràng buộc: tên 1–60 ký tự, ghi chú tối đa 280, 1–11 quân không trùng mã (10 ô và 1 ô thêm), tối đa 3 trang bị
+  mỗi quân, tối đa 3 huy hiệu; mã phải có trong cẩm nang đã xuất bản. Tối đa 30 đội hình mỗi người mỗi chế độ.
 - Lượt thích: một lượt mỗi người mỗi đội hình; thích/bỏ thích idempotent; không tự thích; đội hình ẩn hoặc
   không còn trong bản xuất bản không nhận lượt mới. Không công khai danh sách người thích.
 - Giới hạn theo người dùng trên mỗi instance: 60 thao tác thích mỗi 10 phút, 10 lần tạo/sửa mỗi giờ.
