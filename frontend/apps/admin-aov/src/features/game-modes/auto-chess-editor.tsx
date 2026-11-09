@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
-import { ArrowLeft, Download, Upload } from "lucide-react"
+import { ArrowLeft, Download } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
@@ -10,7 +10,17 @@ import { useSession } from "@/app/auth/auth-gate"
 import { Page, PageHeader } from "@/components/page-header"
 import { ApiError, errorMessage } from "@/lib/api/errors"
 import { RESOURCES_BASE } from "@/lib/media"
-import { field, ListEditor, Section, selectClass } from "./game-mode-editor"
+import {
+  BlessingsSection,
+  ItemsSection,
+  LineupsSection,
+  QuestsSection,
+  TraitsSection,
+  UnitsSection,
+} from "./auto-chess-sections"
+import { field, Section } from "./game-mode-editor"
+import { ModeArtCard } from "./mode-art-card"
+import { RulesEditor } from "./rules-editor"
 import {
   gameModeApi,
   gameModeKeys,
@@ -18,7 +28,6 @@ import {
   type AdminGuide,
   type AdminImage,
   type GuideContent,
-  type GuideLineup,
 } from "./game-mode-api"
 import {
   GUIDE_FOLDER,
@@ -33,9 +42,6 @@ import {
   type GuideManifest,
 } from "./game-mode-import"
 
-type Unit = GuideContent["units"][number]
-type Trait = GuideContent["traits"][number]
-
 const TABS = [
   ["general", "Chung"],
   ["units", "Quân cờ"],
@@ -49,12 +55,14 @@ const TABS = [
 ] as const
 type Tab = (typeof TABS)[number][0]
 
-const STATS = [
-  ["health", "Máu"],
-  ["physicalAttack", "Công vật lý"],
-  ["armor", "Giáp"],
-  ["magicResistance", "Giáp phép"],
-] as const
+const TAB_COUNT: Partial<Record<Tab, (content: GuideContent) => number>> = {
+  units: (content) => content.units.length,
+  traits: (content) => content.traits.length,
+  items: (content) => content.items.length,
+  blessings: (content) => content.blessings.length,
+  quests: (content) => content.quests.length,
+  lineups: (content) => content.lineups.length,
+}
 
 /** Editor of the auto-chess encyclopedia snapshot of a mode, saved and published as a whole. */
 export function AutoChessEditorPage() {
@@ -177,19 +185,37 @@ export function AutoChessEditorPage() {
           )
         }
       />
+      <ModeArtCard modeId={modeId} canWrite={canWrite} />
       {message && <p className="type-body whitespace-pre-line">{message}</p>}
       {data.missingFields.length > 0 && (
         <p className="type-body text-destructive">
           Cần bổ sung trước khi xuất bản: {data.missingFields.map((path) => missingLabel(path, content)).join(", ")}
         </p>
       )}
-      <div className="flex flex-wrap gap-1" role="tablist">
-        {TABS.map(([key, label]) => (
-          <Button key={key} size="sm" variant={tab === key ? "default" : "outline"} onClick={() => setTab(key)}>
-            {label}
-          </Button>
-        ))}
-      </div>
+      <nav
+        className="sticky top-0 z-20 -mx-1 flex gap-1 overflow-x-auto border-b bg-background/95 px-1 backdrop-blur [scrollbar-width:none]"
+        aria-label="Phần của cẩm nang"
+      >
+        {TABS.map(([key, label]) => {
+          const count = TAB_COUNT[key]?.(content)
+          return (
+            <button
+              key={key}
+              type="button"
+              aria-current={tab === key ? "page" : undefined}
+              onClick={() => setTab(key)}
+              className={`type-label -mb-px inline-flex min-h-10 shrink-0 items-center gap-1.5 border-b-2 px-3 whitespace-nowrap transition-colors ${
+                tab === key
+                  ? "border-primary text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+              {count !== undefined && <span className="type-meta rounded-full bg-muted px-1.5">{count}</span>}
+            </button>
+          )
+        })}
+      </nav>
       <fieldset disabled={!editable && tab !== "community"} className="grid gap-4">
         {tab === "general" && (
           <Section title="Thông tin chung">
@@ -218,183 +244,17 @@ export function AutoChessEditorPage() {
               />
             </label>
             <h3 className="type-label">Luật cơ bản</h3>
-            <ListEditor
-              rows={content.rules}
-              empty={{ group: null, title: "", body: "" }}
-              onChange={(rules) => setContent({ ...content, rules })}
-              render={(rule, update) => (
-                <div className="grid gap-2">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      value={rule.group ?? ""}
-                      placeholder="Nhóm"
-                      onChange={(e) => update({ ...rule, group: e.target.value || null })}
-                    />
-                    <Input
-                      value={rule.title}
-                      placeholder="Tiêu đề"
-                      onChange={(e) => update({ ...rule, title: e.target.value })}
-                    />
-                  </div>
-                  <Textarea value={rule.body ?? ""} onChange={(e) => update({ ...rule, body: e.target.value })} />
-                </div>
-              )}
-            />
+            <RulesEditor rules={content.rules} onChange={(rules) => setContent({ ...content, rules })} />
           </Section>
         )}
-        {tab === "units" && <UnitsEditor content={content} setContent={setContent} image={image} upload={upload} />}
-        {tab === "traits" && <TraitsEditor content={content} setContent={setContent} image={image} upload={upload} />}
-        {tab === "items" && (
-          <>
-            <Section title="Nhóm trang bị">
-              <ListEditor
-                rows={content.itemGroups}
-                empty={{ code: "", name: "", slotCount: null }}
-                onChange={(itemGroups) => setContent({ ...content, itemGroups })}
-                render={(group, update) => (
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <Input
-                      value={group.code}
-                      placeholder="Mã"
-                      onChange={(e) => update({ ...group, code: e.target.value })}
-                    />
-                    <Input
-                      value={group.name}
-                      placeholder="Tên"
-                      onChange={(e) => update({ ...group, name: e.target.value })}
-                    />
-                    <Input
-                      type="number"
-                      value={group.slotCount ?? ""}
-                      placeholder="Số ô"
-                      onChange={(e) =>
-                        update({ ...group, slotCount: e.target.value === "" ? null : Number(e.target.value) })
-                      }
-                    />
-                  </div>
-                )}
-              />
-            </Section>
-            <Section title="Trang bị">
-              <ListEditor
-                rows={content.items}
-                empty={{ code: "", name: "", effect: null, groupCode: null, slot: null, iconAssetId: null }}
-                onChange={(items) => setContent({ ...content, items })}
-                render={(item, update) => (
-                  <div className="grid gap-2 sm:grid-cols-[auto_1fr_1fr_2fr_1fr_80px]">
-                    <IconField
-                      src={image(item.iconAssetId)}
-                      onFile={async (file) => update({ ...item, iconAssetId: await upload(file, "item icon") })}
-                    />
-                    <Input
-                      value={item.code}
-                      placeholder="Mã"
-                      onChange={(e) => update({ ...item, code: e.target.value })}
-                    />
-                    <Input
-                      value={item.name}
-                      placeholder="Tên"
-                      onChange={(e) => update({ ...item, name: e.target.value })}
-                    />
-                    <Input
-                      value={item.effect ?? ""}
-                      placeholder="Hiệu ứng"
-                      onChange={(e) => update({ ...item, effect: e.target.value || null })}
-                    />
-                    <select
-                      className={selectClass}
-                      value={item.groupCode ?? ""}
-                      onChange={(e) => update({ ...item, groupCode: e.target.value || null })}
-                    >
-                      <option value="">Không nhóm</option>
-                      {content.itemGroups.map((group) => (
-                        <option key={group.code} value={group.code}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                    <Input
-                      type="number"
-                      value={item.slot ?? ""}
-                      placeholder="Ô"
-                      onChange={(e) => update({ ...item, slot: e.target.value === "" ? null : Number(e.target.value) })}
-                    />
-                  </div>
-                )}
-              />
-            </Section>
-          </>
-        )}
+        {tab === "units" && <UnitsSection content={content} setContent={setContent} image={image} upload={upload} />}
+        {tab === "traits" && <TraitsSection content={content} setContent={setContent} image={image} upload={upload} />}
+        {tab === "items" && <ItemsSection content={content} setContent={setContent} image={image} upload={upload} />}
         {tab === "blessings" && (
-          <Section title={`Chúc phúc (${content.blessings.length})`}>
-            <ListEditor
-              rows={content.blessings}
-              empty={{ code: "", tier: "NORMAL" as const, name: "", description: null, iconAssetId: null }}
-              onChange={(blessings) => setContent({ ...content, blessings })}
-              render={(blessing, update) => (
-                <div className="grid gap-2 sm:grid-cols-[auto_1fr_1fr_160px]">
-                  <IconField
-                    src={image(blessing.iconAssetId)}
-                    onFile={async (file) => update({ ...blessing, iconAssetId: await upload(file, "blessing icon") })}
-                  />
-                  <Input
-                    value={blessing.code}
-                    placeholder="Mã"
-                    onChange={(e) => update({ ...blessing, code: e.target.value })}
-                  />
-                  <Input
-                    value={blessing.name}
-                    placeholder="Tên"
-                    onChange={(e) => update({ ...blessing, name: e.target.value })}
-                  />
-                  <select
-                    className={selectClass}
-                    value={blessing.tier}
-                    onChange={(e) => update({ ...blessing, tier: e.target.value as typeof blessing.tier })}
-                  >
-                    <option value="NORMAL">Thường</option>
-                    <option value="EPIC">Huyền thoại / Sử thi</option>
-                    <option value="LEGENDARY">Truyền thuyết</option>
-                  </select>
-                  <Textarea
-                    className="sm:col-span-4"
-                    value={blessing.description ?? ""}
-                    onChange={(e) => update({ ...blessing, description: e.target.value || null })}
-                  />
-                </div>
-              )}
-            />
-          </Section>
+          <BlessingsSection content={content} setContent={setContent} image={image} upload={upload} />
         )}
-        {tab === "quests" && (
-          <Section title="Nhiệm vụ">
-            <ListEditor
-              rows={content.quests}
-              empty={{ code: "", task: "", reward: null }}
-              onChange={(quests) => setContent({ ...content, quests })}
-              render={(quest, update) => (
-                <div className="grid gap-2 sm:grid-cols-[1fr_3fr_1fr]">
-                  <Input
-                    value={quest.code}
-                    placeholder="Mã"
-                    onChange={(e) => update({ ...quest, code: e.target.value })}
-                  />
-                  <Input
-                    value={quest.task}
-                    placeholder="Nhiệm vụ"
-                    onChange={(e) => update({ ...quest, task: e.target.value })}
-                  />
-                  <Input
-                    value={quest.reward ?? ""}
-                    placeholder="Phần thưởng"
-                    onChange={(e) => update({ ...quest, reward: e.target.value || null })}
-                  />
-                </div>
-              )}
-            />
-          </Section>
-        )}
-        {tab === "lineups" && <LineupsEditor content={content} setContent={setContent} />}
+        {tab === "quests" && <QuestsSection content={content} setContent={setContent} />}
+        {tab === "lineups" && <LineupsSection content={content} setContent={setContent} image={image} />}
         {tab === "json" && <JsonEditor content={content} onApply={setContent} />}
         <Section title="Ghi chú thay đổi">
           <Input value={note} maxLength={4000} onChange={(event) => setNote(event.target.value)} />
@@ -488,473 +348,6 @@ function StartGuide({
       {progress && <p className="type-meta">{progress}</p>}
       {run.isError && <p className="type-body text-destructive">{errorMessage(run.error)}</p>}
       {!canWrite && <p className="type-meta">Cần quyền gamemode:write.</p>}
-    </Section>
-  )
-}
-
-function IconField({ src, onFile, round }: { src?: string; onFile: (file: File) => Promise<void>; round?: boolean }) {
-  const [busy, setBusy] = useState(false)
-  return (
-    <label
-      className="relative inline-flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-md border bg-muted"
-      title="Đổi ảnh"
-    >
-      {src ? (
-        <img src={src} alt="" className={round ? "size-full rounded-full object-cover" : "size-full object-cover"} />
-      ) : (
-        <Upload className="size-4" />
-      )}
-      {busy && <span className="absolute inset-0 bg-background/70" />}
-      <input
-        type="file"
-        hidden
-        accept="image/png,image/jpeg,image/webp"
-        onChange={async (event) => {
-          const file = event.target.files?.[0]
-          event.target.value = ""
-          if (!file) return
-          setBusy(true)
-          try {
-            await onFile(file)
-          } finally {
-            setBusy(false)
-          }
-        }}
-      />
-    </label>
-  )
-}
-
-interface EditorProps {
-  content: GuideContent
-  setContent: (content: GuideContent) => void
-  image: (id?: string | null) => string | undefined
-  upload: (file: File, label: string) => Promise<string>
-}
-
-/** Cost colors of the game, so a unit's price reads at a glance like in the guide. */
-const COST_COLOR: Record<number, string> = {
-  1: "#9aa4b2",
-  2: "#4fbf7a",
-  3: "#4f9be0",
-  4: "#b46cff",
-  5: "#f2b440",
-  6: "#e0625a",
-}
-
-const foldName = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/gi, "d")
-    .toLowerCase()
-
-function UnitsEditor({ content, setContent, image, upload }: EditorProps) {
-  const [selected, setSelected] = useState(0)
-  const [search, setSearch] = useState("")
-  const needle = foldName(search.trim())
-  const costs = [...new Set(content.units.map((item) => item.cost))].sort((a, b) => a - b)
-  const unit = content.units[selected]
-  const update = (next: Unit) =>
-    setContent({ ...content, units: content.units.map((u, i) => (i === selected ? next : u)) })
-  const add = () => {
-    setContent({
-      ...content,
-      units: [
-        ...content.units,
-        {
-          code: "",
-          name: "",
-          cost: 1,
-          traitCodes: [],
-          complete: false,
-          skill: null,
-          stats: null,
-          portraitAssetId: null,
-        },
-      ],
-    })
-    setSelected(content.units.length)
-  }
-  return (
-    <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-      <Section title={`Quân cờ (${content.units.length})`}>
-        <Input placeholder="Tìm…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <div className="grid max-h-[60vh] gap-3 overflow-y-auto pr-1">
-          {costs.map((cost) => {
-            const members = content.units
-              .map((item, at) => ({ item, at }))
-              .filter(({ item }) => item.cost === cost && (!needle || foldName(item.name).includes(needle)))
-            if (!members.length) return null
-            return (
-              <section key={cost} className="grid gap-1">
-                <h3 className="type-label flex items-center gap-1.5" style={{ color: COST_COLOR[cost] }}>
-                  <span className="size-2 rounded-full bg-current" aria-hidden="true" />
-                  {cost} vàng · {members.length}
-                </h3>
-                <ul className="grid gap-0.5">
-                  {members.map(({ item, at }) => (
-                    <li key={at}>
-                      <button
-                        type="button"
-                        aria-current={at === selected || undefined}
-                        className={`type-body flex w-full items-center gap-2 rounded-md p-1 text-left hover:bg-muted/60 ${at === selected ? "bg-muted" : ""}`}
-                        onClick={() => setSelected(at)}
-                      >
-                        {image(item.portraitAssetId) ? (
-                          <img
-                            src={image(item.portraitAssetId)}
-                            alt=""
-                            className="size-8 rounded-md border-2 object-cover"
-                            style={{ borderColor: COST_COLOR[item.cost] }}
-                          />
-                        ) : (
-                          <span
-                            className="size-8 rounded-md border-2 bg-muted"
-                            style={{ borderColor: COST_COLOR[item.cost] }}
-                          />
-                        )}
-                        <span className="truncate">{item.name || "(chưa đặt tên)"}</span>
-                        {!item.complete && (
-                          <span className="type-meta ml-auto text-amber-200" title="Chưa đủ dữ liệu">
-                            thiếu
-                          </span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )
-          })}
-        </div>
-        <Button type="button" variant="outline" size="sm" onClick={add}>
-          Thêm quân cờ
-        </Button>
-      </Section>
-      {unit && (
-        <Section title={unit.name || "Quân cờ mới"}>
-          <div className="flex flex-wrap items-end gap-3">
-            <IconField
-              round
-              src={image(unit.portraitAssetId)}
-              onFile={async (file) => update({ ...unit, portraitAssetId: await upload(file, "unit portrait") })}
-            />
-            <label className={field}>
-              <span className="type-label">Mã</span>
-              <Input value={unit.code} onChange={(e) => update({ ...unit, code: e.target.value })} />
-            </label>
-            <label className={field}>
-              <span className="type-label">Tên</span>
-              <Input value={unit.name} onChange={(e) => update({ ...unit, name: e.target.value })} />
-            </label>
-            <label className={field}>
-              <span className="type-label">Giá</span>
-              <Input
-                type="number"
-                min={1}
-                max={6}
-                value={unit.cost}
-                onChange={(e) => update({ ...unit, cost: Number(e.target.value) })}
-              />
-            </label>
-            <label className={field}>
-              <span className="type-label">Mã tướng (tùy chọn)</span>
-              <Input
-                value={unit.heroCode ?? ""}
-                onChange={(e) => update({ ...unit, heroCode: e.target.value || null })}
-              />
-            </label>
-            <label className="type-body flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={unit.complete}
-                onChange={(e) => update({ ...unit, complete: e.target.checked })}
-              />
-              Đủ dữ liệu
-            </label>
-          </div>
-          <TraitPicker
-            traits={content.traits}
-            chosen={unit.traitCodes}
-            image={image}
-            onChange={(traitCodes) => update({ ...unit, traitCodes })}
-          />
-          <div className="grid gap-2 sm:grid-cols-[auto_1fr_1fr]">
-            <IconField
-              src={image(unit.skill?.iconAssetId)}
-              onFile={async (file) =>
-                update({ ...unit, skill: { values: [], ...unit.skill, iconAssetId: await upload(file, "skill icon") } })
-              }
-            />
-            <Input
-              placeholder="Tên chiêu"
-              value={unit.skill?.name ?? ""}
-              onChange={(e) => update({ ...unit, skill: { values: [], ...unit.skill, name: e.target.value || null } })}
-            />
-            <Input
-              placeholder="Nhãn giá trị (vd. ST phép)"
-              value={unit.skill?.valueLabel ?? ""}
-              onChange={(e) =>
-                update({ ...unit, skill: { values: [], ...unit.skill, valueLabel: e.target.value || null } })
-              }
-            />
-          </div>
-          <Textarea
-            placeholder="Mô tả chiêu"
-            value={unit.skill?.description ?? ""}
-            onChange={(e) =>
-              update({ ...unit, skill: { values: [], ...unit.skill, description: e.target.value || null } })
-            }
-          />
-          <label className={field}>
-            <span className="type-label">Giá trị chiêu theo 1/2/3 sao, cách nhau bằng “/”</span>
-            <Input
-              value={unit.skill?.values.join("/") ?? ""}
-              onChange={(e) =>
-                update({
-                  ...unit,
-                  skill: {
-                    ...unit.skill,
-                    values: e.target.value ? e.target.value.split("/").map((v) => v.trim()) : [],
-                  },
-                })
-              }
-            />
-          </label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {STATS.map(([key, label]) => (
-              <label key={key} className={field}>
-                <span className="type-label">{label} (1/2/3 sao)</span>
-                <Input
-                  value={unit.stats?.[key]?.join("/") ?? ""}
-                  onChange={(e) =>
-                    update({
-                      ...unit,
-                      stats: {
-                        health: [],
-                        physicalAttack: [],
-                        armor: [],
-                        magicResistance: [],
-                        ...unit.stats,
-                        [key]: e.target.value ? e.target.value.split("/").map((v) => Number(v.trim())) : [],
-                      },
-                    })
-                  }
-                />
-              </label>
-            ))}
-          </div>
-          <label className={field}>
-            <span className="type-label">Ghi chú biên tập</span>
-            <Input value={unit.note ?? ""} onChange={(e) => update({ ...unit, note: e.target.value || null })} />
-          </label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="justify-self-start"
-            onClick={() => {
-              setContent({ ...content, units: content.units.filter((_, i) => i !== selected) })
-              setSelected(0)
-            }}
-          >
-            Xóa quân cờ này
-          </Button>
-        </Section>
-      )}
-    </div>
-  )
-}
-
-function TraitsEditor({ content, setContent, image, upload }: EditorProps) {
-  const members = useMemo(() => {
-    const map = new Map<string, number>()
-    content.units.forEach((unit) => unit.traitCodes.forEach((code) => map.set(code, (map.get(code) ?? 0) + 1)))
-    return map
-  }, [content.units])
-  return (
-    <Section title={`Phe/Nghề (${content.traits.length})`}>
-      <ListEditor<Trait>
-        rows={content.traits}
-        empty={{ code: "", kind: "FACTION", name: "", description: null, iconAssetId: null, tiers: [], note: null }}
-        onChange={(traits) => setContent({ ...content, traits })}
-        render={(trait, update) => (
-          <div className="grid gap-2">
-            <div className="grid gap-2 sm:grid-cols-[auto_1fr_1fr_140px_auto]">
-              <IconField
-                round
-                src={image(trait.iconAssetId)}
-                onFile={async (file) => update({ ...trait, iconAssetId: await upload(file, "trait icon") })}
-              />
-              <Input value={trait.code} placeholder="Mã" onChange={(e) => update({ ...trait, code: e.target.value })} />
-              <Input
-                value={trait.name}
-                placeholder="Tên"
-                onChange={(e) => update({ ...trait, name: e.target.value })}
-              />
-              <select
-                className={selectClass}
-                value={trait.kind}
-                onChange={(e) => update({ ...trait, kind: e.target.value as Trait["kind"] })}
-              >
-                <option value="FACTION">Phe</option>
-                <option value="CLASS">Nghề</option>
-              </select>
-              <span className="type-meta self-center">{members.get(trait.code) ?? 0} quân</span>
-            </div>
-            <ListEditor
-              rows={trait.tiers}
-              empty={{ count: (trait.tiers.at(-1)?.count ?? 0) + 1, effect: "" }}
-              onChange={(tiers) => update({ ...trait, tiers })}
-              render={(tier, setTier) => (
-                <div className="grid gap-2 sm:grid-cols-[80px_1fr]">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={tier.count}
-                    onChange={(e) => setTier({ ...tier, count: Number(e.target.value) })}
-                  />
-                  <Input
-                    value={tier.effect}
-                    placeholder="Hiệu ứng"
-                    onChange={(e) => setTier({ ...tier, effect: e.target.value })}
-                  />
-                </div>
-              )}
-            />
-            <Input
-              value={trait.note ?? ""}
-              placeholder="Ghi chú"
-              onChange={(e) => update({ ...trait, note: e.target.value || null })}
-            />
-          </div>
-        )}
-      />
-    </Section>
-  )
-}
-
-function LineupsEditor({
-  content,
-  setContent,
-}: {
-  content: GuideContent
-  setContent: (content: GuideContent) => void
-}) {
-  return (
-    <Section title="Đội hình đề xuất">
-      <p className="type-meta">
-        Mỗi đội hình giữ ID khi tạo nháp mới nên lượt thích không mất. Hạng S/A/B/C là đánh giá biên tập; để trống nếu
-        chưa kiểm chứng.
-      </p>
-      <ListEditor<GuideLineup>
-        rows={content.lineups}
-        empty={{
-          code: "",
-          name: "",
-          tier: null,
-          difficulty: null,
-          summary: null,
-          units: [],
-          emblems: [],
-          blessingCodes: [],
-          notes: null,
-        }}
-        onChange={(lineups) => setContent({ ...content, lineups })}
-        render={(lineup, update) => (
-          <div className="grid gap-2">
-            <div className="grid gap-2 sm:grid-cols-4">
-              <Input
-                value={lineup.code}
-                placeholder="Mã"
-                onChange={(e) => update({ ...lineup, code: e.target.value })}
-              />
-              <Input
-                value={lineup.name}
-                placeholder="Tên"
-                onChange={(e) => update({ ...lineup, name: e.target.value })}
-              />
-              <select
-                className={selectClass}
-                value={lineup.tier ?? ""}
-                onChange={(e) => update({ ...lineup, tier: (e.target.value || null) as GuideLineup["tier"] })}
-              >
-                <option value="">Chưa xếp hạng</option>
-                {["S", "A", "B", "C"].map((tier) => (
-                  <option key={tier} value={tier}>
-                    Hạng {tier}
-                  </option>
-                ))}
-              </select>
-              <select
-                className={selectClass}
-                value={lineup.difficulty ?? ""}
-                onChange={(e) =>
-                  update({ ...lineup, difficulty: (e.target.value || null) as GuideLineup["difficulty"] })
-                }
-              >
-                <option value="">Độ khó?</option>
-                <option value="EASY">Dễ</option>
-                <option value="MEDIUM">Vừa</option>
-                <option value="HARD">Khó</option>
-              </select>
-            </div>
-            <Textarea
-              value={lineup.summary ?? ""}
-              placeholder="Lối chơi"
-              onChange={(e) => update({ ...lineup, summary: e.target.value || null })}
-            />
-            <div className="flex flex-wrap gap-2">
-              {content.units.map((unit) => {
-                const member = lineup.units.find((item) => item.unitCode === unit.code)
-                return (
-                  <span
-                    key={unit.code}
-                    className="type-body inline-flex items-center gap-1 rounded-md border px-2 py-1"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={!!member}
-                      disabled={!member && lineup.units.length >= 10}
-                      onChange={(e) =>
-                        update({
-                          ...lineup,
-                          units: e.target.checked
-                            ? [...lineup.units, { unitCode: unit.code, carry: false, row: null, itemCodes: [] }]
-                            : lineup.units.filter((item) => item.unitCode !== unit.code),
-                        })
-                      }
-                    />
-                    {unit.name}
-                    {member && (
-                      <button
-                        type="button"
-                        className={member.carry ? "text-primary" : "text-muted-foreground"}
-                        onClick={() =>
-                          update({
-                            ...lineup,
-                            units: lineup.units.map((item) =>
-                              item === member ? { ...item, carry: !item.carry } : item,
-                            ),
-                          })
-                        }
-                      >
-                        {member.carry ? "★ chủ lực" : "☆"}
-                      </button>
-                    )}
-                  </span>
-                )
-              })}
-            </div>
-            <Input
-              value={lineup.notes ?? ""}
-              placeholder="Ghi chú"
-              onChange={(e) => update({ ...lineup, notes: e.target.value || null })}
-            />
-          </div>
-        )}
-      />
     </Section>
   )
 }
@@ -1080,56 +473,5 @@ function CommunityModeration({
         </ul>
       )}
     </Section>
-  )
-}
-
-/** Traits as toggles with their icons, factions apart from classes; at most three, the game's limit for one unit. */
-function TraitPicker({
-  traits,
-  chosen,
-  image,
-  onChange,
-}: {
-  traits: GuideContent["traits"]
-  chosen: string[]
-  image: (id?: string | null) => string | undefined
-  onChange: (traitCodes: string[]) => void
-}) {
-  const full = chosen.length >= 3
-  return (
-    <div className="grid gap-2">
-      <span className="type-label">Phe/Nghề · đã chọn {chosen.length}/3</span>
-      {(["FACTION", "CLASS"] as const).map((kind) => (
-        <div key={kind} className="grid gap-1">
-          <span className="type-meta">{kind === "FACTION" ? "Phe" : "Nghề"}</span>
-          <div className="flex flex-wrap gap-1.5">
-            {traits
-              .filter((trait) => trait.kind === kind)
-              .map((trait) => {
-                const on = chosen.includes(trait.code)
-                return (
-                  <button
-                    key={trait.code}
-                    type="button"
-                    aria-pressed={on}
-                    disabled={!on && full}
-                    onClick={() =>
-                      onChange(on ? chosen.filter((code) => code !== trait.code) : [...chosen, trait.code])
-                    }
-                    className={`type-meta inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-2.5 pl-0.5 transition-colors disabled:opacity-40 ${on ? "border-primary bg-primary/15 text-foreground" : "hover:border-foreground/40"}`}
-                  >
-                    {image(trait.iconAssetId) ? (
-                      <img src={image(trait.iconAssetId)} alt="" className="size-5 rounded-full object-cover" />
-                    ) : (
-                      <span className="size-5 rounded-full bg-muted" />
-                    )}
-                    {trait.name}
-                  </button>
-                )
-              })}
-          </div>
-        </div>
-      ))}
-    </div>
   )
 }

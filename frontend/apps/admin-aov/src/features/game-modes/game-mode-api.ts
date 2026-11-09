@@ -114,7 +114,7 @@ export interface GuideContent {
     complete: boolean
     note?: string | null
   }[]
-  itemGroups: { code: string; name: string; slotCount?: number | null }[]
+  itemGroups: { code: string; name: string; slotCount?: number | null; iconAssetId?: string | null }[]
   items: {
     code: string
     name: string
@@ -142,10 +142,21 @@ export interface GuideLineup {
   tier?: "S" | "A" | "B" | "C" | null
   difficulty?: "EASY" | "MEDIUM" | "HARD" | null
   summary?: string | null
-  units: { unitCode: string; carry: boolean; row?: "FRONT" | "MIDDLE" | "BACK" | null; itemCodes: string[] }[]
+  units: {
+    unitCode: string
+    carry: boolean
+    row?: "FRONT" | "MIDDLE" | "BACK" | null
+    /** Column 1–7 on the three-by-seven board, with a row. */
+    column?: number | null
+    itemCodes: string[]
+  }[]
   emblems: string[]
   blessingCodes: string[]
   notes?: string | null
+  /** Early and mid game boards; the lineup's own units are its late game. */
+  stages?: { stage: "EARLY" | "MID"; unitCodes: string[]; note?: string | null }[]
+  /** Items to build first, in order. */
+  priorityItemCodes?: string[]
 }
 
 export interface AdminGuide {

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link, useParams } from "react-router"
-import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react"
+import { ArrowDown, ArrowLeft, ArrowUp, Copy, ListPlus, Plus, Trash2, Upload } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
@@ -11,6 +11,9 @@ import { Page, PageHeader } from "@/components/page-header"
 import { errorMessage } from "@/lib/api/errors"
 import { gameModeApi, gameModeKeys, uploadModeImage, type AdminMode, type ModeContent } from "./game-mode-api"
 import { AVAILABILITY_LABEL, missingLabel } from "./game-mode-import"
+import { confirmAction } from "@/components/confirm-dialog"
+import { HeroCodePicker, RowMenu } from "./entry-controls"
+import { RulesEditor } from "./rules-editor"
 
 export const field = "grid gap-1"
 export const selectClass = "h-9 rounded-md border bg-transparent px-3 type-body"
@@ -224,32 +227,7 @@ export function GameModeEditorPage() {
           </Section>
 
           <Section title="Luật chơi">
-            <ListEditor
-              rows={content.rules}
-              empty={{ group: null, title: "", body: "" }}
-              onChange={(rules) => set({ rules })}
-              render={(rule, update) => (
-                <div className="grid gap-2">
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <Input
-                      value={rule.group ?? ""}
-                      placeholder="Nhóm (tùy chọn)"
-                      onChange={(event) => update({ ...rule, group: event.target.value || null })}
-                    />
-                    <Input
-                      value={rule.title}
-                      placeholder="Tiêu đề"
-                      onChange={(event) => update({ ...rule, title: event.target.value })}
-                    />
-                  </div>
-                  <Textarea
-                    value={rule.body ?? ""}
-                    placeholder="Nội dung; dòng bắt đầu bằng “- ” là gạch đầu dòng"
-                    onChange={(event) => update({ ...rule, body: event.target.value })}
-                  />
-                </div>
-              )}
-            />
+            <RulesEditor rules={content.rules} onChange={(rules) => set({ rules })} />
           </Section>
 
           <Section title="Tướng của chế độ">
@@ -264,10 +242,10 @@ export function GameModeEditorPage() {
                     placeholder="Tên"
                     onChange={(event) => update({ ...hero, name: event.target.value })}
                   />
-                  <Input
-                    value={hero.heroCode ?? ""}
-                    placeholder="Mã tướng (vd. airi)"
-                    onChange={(event) => update({ ...hero, heroCode: event.target.value || null })}
+                  <HeroCodePicker
+                    value={hero.heroCode ?? null}
+                    unitName={hero.name}
+                    onChange={(heroCode) => update({ ...hero, heroCode })}
                   />
                   <Input
                     value={hero.note ?? ""}
@@ -410,6 +388,7 @@ export function Section({ title, children }: { title: string; children: ReactNod
   )
 }
 
+/** Rows edited in place; the "⋯" menu moves, copies, adds below or removes a row. */
 export function ListEditor<T>({
   rows,
   empty,
@@ -421,22 +400,52 @@ export function ListEditor<T>({
   onChange: (rows: T[]) => void
   render: (row: T, update: (row: T) => void) => ReactNode
 }) {
+  const insert = (at: number, row: T) => onChange([...rows.slice(0, at), row, ...rows.slice(at)])
+  const move = (at: number, target: number) => {
+    const next = [...rows]
+    ;[next[at], next[target]] = [next[target], next[at]]
+    onChange(next)
+  }
   return (
     <div className="grid gap-2">
       {rows.map((row, at) => (
         <div key={at} className="flex items-start gap-2 rounded-md border p-2">
+          <span className="type-meta mt-1.5 grid size-6 shrink-0 place-items-center rounded-full bg-muted">
+            {at + 1}
+          </span>
           <div className="min-w-0 flex-1">
             {render(row, (next) => onChange(rows.map((other, i) => (i === at ? next : other))))}
           </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Xóa dòng"
-            onClick={() => onChange(rows.filter((_, i) => i !== at))}
-          >
-            <Trash2 />
-          </Button>
+          <RowMenu
+            label={`Tùy chọn cho dòng ${at + 1}`}
+            actions={[
+              { label: "Lên trên", icon: <ArrowUp />, disabled: at === 0, onSelect: () => move(at, at - 1) },
+              {
+                label: "Xuống dưới",
+                icon: <ArrowDown />,
+                disabled: at === rows.length - 1,
+                onSelect: () => move(at, at + 1),
+              },
+              { label: "Thêm dòng bên dưới", icon: <ListPlus />, onSelect: () => insert(at + 1, empty) },
+              { label: "Nhân bản", icon: <Copy />, onSelect: () => insert(at + 1, structuredClone(row)) },
+              {
+                label: "Xóa dòng",
+                icon: <Trash2 />,
+                destructive: true,
+                apart: true,
+                onSelect: async () => {
+                  if (
+                    await confirmAction({
+                      title: `Xóa dòng ${at + 1}?`,
+                      description: "Dòng sẽ bị xóa khỏi bản nháp cho tới khi bạn lưu.",
+                      confirmLabel: "Xóa",
+                    })
+                  )
+                    onChange(rows.filter((_, i) => i !== at))
+                },
+              },
+            ]}
+          />
         </div>
       ))}
       <Button
