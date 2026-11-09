@@ -304,3 +304,32 @@ test("reference input keeps chips atomic, stable during typing and hydration, an
     }
   }
 })
+
+test("icons beside recognised names are decoration: the source, the caret and the text around them stay as typed", async () => {
+  const dom = new JSDOM('<div id="root"></div>')
+  const root = dom.window.document.getElementById("root")!
+  const { createEntityIndex } = await import("@aov/ui/lib/entity-rich-text")
+  const { decorateReferences, passiveReferenceHighlights, removeDecorations } =
+    await import("@aov/ui/lib/reference-input-recognition")
+  const hero: EntityReference = {
+    id: heroId,
+    kind: "hero",
+    icon: "/hero.webp",
+    translations: [{ locale: "vi-VN", name: "Airi", aliases: [], description: "" }],
+  }
+  const text = "Khi Airi lướt, Airi nhận lá chắn."
+  root.append(text)
+  const matches = passiveReferenceHighlights(root, createEntityIndex([hero], "vi-VN", "vi-VN"))
+  assert.equal(matches.length, 2, "Every mention is coloured")
+  const icons = decorateReferences(root, matches)
+  assert.equal(icons.length, 1, "Only the first mention gets an icon, as in the published text")
+  assert.equal(icons[0]!.element.nextSibling?.textContent?.startsWith("Airi"), true, "The icon sits before the name")
+  assert.equal(serializeReferenceInput(root), text, "An icon adds nothing to the source")
+  setReferenceInputSelection(root, 4, 8)
+  assert.deepEqual(getReferenceInputSelection(root), { start: 4, end: 8 }, "Positions skip the icon")
+  removeDecorations(root)
+  assert.equal(root.querySelector("[data-decoration]"), null)
+  assert.equal(root.childNodes.length, 1, "Taking the icon out joins the text it split")
+  assert.equal(root.textContent, text)
+  dom.window.close()
+})

@@ -21,7 +21,12 @@ import {
   type ReferenceInputPart,
   type ReferenceInputNode,
 } from "../lib/reference-input-dom"
-import { paintPassiveReferences } from "../lib/reference-input-recognition"
+import {
+  decorateReferences,
+  passiveReferenceHighlights,
+  registerPassiveHighlights,
+  removeDecorations,
+} from "../lib/reference-input-recognition"
 import { inputAtomRange } from "../lib/reference-input-dom"
 import { isParagraphStyle, paragraphStyles } from "../lib/rich-text-blocks"
 import { ExampleTable } from "./rich-text-blocks"
@@ -107,18 +112,29 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     )
     const clearHighlights = React.useRef(() => {})
     const [recognitionRevision, refreshRecognition] = React.useReducer((revision: number) => revision + 1, 0)
+    // Icons of recognised names, drawn the way the published text shows them; they are never part of the source.
+    const [decorations, setDecorations] = React.useState<{ element: HTMLSpanElement; entity: EntityReference }[]>([])
     React.useEffect(() => {
       const root = element.current
       if (!root || !autoRecognize || disabled) {
         clearHighlights.current()
         clearHighlights.current = () => {}
+        if (root) removeDecorations(root)
+        setDecorations((current) => (current.length ? [] : current))
         return
       }
       const timer = setTimeout(() => {
-        if (!composing.current) {
-          clearHighlights.current()
-          clearHighlights.current = paintPassiveReferences(root, recognitionIndex, highlightKey)
-        }
+        if (composing.current) return
+        const focused = inside()
+        const selection = focused ? getReferenceInputSelection(root) : undefined
+        clearHighlights.current()
+        removeDecorations(root)
+        const matches = passiveReferenceHighlights(root, recognitionIndex)
+        const icons = decorateReferences(root, matches)
+        clearHighlights.current = registerPassiveHighlights(root, matches, highlightKey)
+        // Positions count source text only, so the caret returns to the same place around the new icons.
+        if (selection) setReferenceInputSelection(root, selection.start, selection.end)
+        setDecorations(icons)
       }, 350)
       return () => clearTimeout(timer)
     }, [value, recognitionIndex, autoRecognize, disabled, highlightKey, recognitionRevision])
@@ -207,7 +223,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
           if (node.nodeType === 3) return true
           if (node.nodeType !== 1) return false
           const child = node as HTMLElement
-          if (isTail(child) || registered.has(child)) return true
+          if (isTail(child) || registered.has(child) || child.hasAttribute("data-decoration")) return true
           return child.hasAttribute("data-format-open") && normalized(child)
         })
       const snapshot = normalized(root) ? readReferenceInputSnapshot(root) : undefined
@@ -396,7 +412,33 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
         }
         position += length
       }
-      return false
+      const selection = root.ownerDocument.getSelection()
+      if (!selection?.rangeCount) return false
+      const caret = selection.getRangeAt(0)
+      const container = caret.startContainer
+      const neighbour =
+        container.nodeType === 3
+          ? backward
+            ? caret.startOffset === 0
+              ? container.previousSibling
+              : null
+            : caret.startOffset === (container as Text).length
+              ? container.nextSibling
+              : null
+          : container.childNodes[backward ? caret.startOffset - 1 : caret.startOffset]
+      if (
+        !(neighbour instanceof root.ownerDocument.defaultView!.HTMLElement) ||
+        !neighbour.hasAttribute("data-decoration")
+      )
+        return false
+      if (backward ? range.start === 0 : range.start >= range.value.length) return true
+      setReferenceInputSelection(
+        root,
+        backward ? range.start - 1 : range.start,
+        backward ? range.start : range.start + 1,
+      )
+      replace("")
+      return true
     }
     operations.current = { replace, remove }
     React.useEffect(() => {
@@ -461,6 +503,13 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
     const catalog = React.useMemo(
       () => new Map(entities.map((entry) => [`${entry.kind}:${entry.id}`, entry])),
       [entities],
+    )
+    const icons = decorations.map(({ element: host, entity }, index) =>
+      createPortal(
+        <EntityReferenceArtwork entity={entity} resolveIcon={resolveIcon} className="size-4" />,
+        host,
+        `decoration-${index}`,
+      ),
     )
     const chips = React.useMemo(
       () =>
@@ -549,6 +598,8 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
           aria-disabled={disabled || ancestorDisabled}
           aria-required={required || undefined}
           contentEditable={!disabled && !ancestorDisabled}
+          // Game text is full of names and terms a browser dictionary marks as misspelt; the marks only add noise.
+          spellCheck={props.spellCheck ?? false}
           suppressContentEditableWarning
           data-slot="entity-reference-input"
           className={`min-h-28 w-full whitespace-pre-wrap break-words rounded-md border bg-background px-3 py-2 text-sm leading-7 outline-none focus-visible:ring-2 focus-visible:ring-ring aria-disabled:opacity-50 ${className}`}
@@ -618,6 +669,7 @@ export const EntityReferenceInput = React.forwardRef<EntityReferenceInputHandle,
           }}
         />
         {chips}
+        {icons}
       </>
     )
   },

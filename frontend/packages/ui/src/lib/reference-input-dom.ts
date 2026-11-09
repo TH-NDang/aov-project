@@ -154,6 +154,8 @@ function sourceMap(root: HTMLElement): SourceMap {
     }
     if (node.nodeType !== 1) return
     const element = node as Element
+    // An icon drawn beside a recognised name is decoration: it holds no source and no caret position of its own.
+    if (element.hasAttribute("data-decoration")) return
     if (element.tagName === "BR" && element.hasAttribute("data-input-tail")) {
       result.boundaries.set(node, [start, start])
       return
