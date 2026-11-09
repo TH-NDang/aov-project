@@ -29,7 +29,11 @@ Section PUT dùng payload phẳng, `expectedDraftVersion` và full section conte
 `expectedVersion`. `changeNote` tùy chọn. `sources` có thể bỏ qua và mặc định array rỗng.
 Profile: `{translations:[{locale,name,title?,summary?,lore?}],roles:["ASSASSIN"],positions?:["DRAGON"]}`.
 `positions` nhận `TOP`, `MID`, `JUNGLE`, `DRAGON`, `SUPPORT`; bỏ trống nghĩa là chưa có vị trí đi.
-Skills: `{skills:[{skillKey,kind,formKey?,displayOrder,iconAssetId?,translations:[{locale,name,description}],effects:[]}]}`.
+Skills: `{skills:[{skillKey,kind,formKey?,displayOrder,iconAssetId?,stateIcons?,
+translations:[{locale,name,description}],effects:[]}]}`. `stateIcons` là `[{assetId,label}]`, tối đa 10 mỗi
+kỹ năng, asset semantic `HERO_SKILL_ICON`, nhãn 1–64 ký tự; nhãn không trùng (không phân biệt hoa thường), asset
+không trùng nhau và không trùng `iconAssetId`, sai trả 422 `HERO_INVALID_CONTENT`. Bỏ trống nghĩa là danh sách rỗng;
+đọc luôn trả mảng.
 Skins: `{skins:[{skinKey,displayOrder,artAssetId?,rarityCode?,translations:[{locale,name,description?,acquisitionNote?}]}]}`.
 Effect gồm effectType và metadata. Source gồm label, sourceUrl?, observedAt?, verificationState
 (UNVERIFIED/VERIFIED), note?. Hero media bindings nhận HEAD/PORTRAIT/SPLASH asset UUID.
@@ -1395,6 +1399,8 @@ Response:
 ```
 
 `counts` luôn tính trên toàn bộ usage; `scope` chỉ lọc `items`. Dữ liệu lấy trực tiếp từ các module sở hữu qua `MediaUsageProvider`; trước Phase 3 chưa module nào cung cấp nên kết quả rỗng.
+
+Ảnh theo trạng thái của kỹ năng có vai trò `SKILL_STATE:<skillKey>`, `shown = true`, `partName` là tên kỹ năng.
 
 `shown` cho biết nơi đó có thật sự vẽ ảnh không. `false` nghĩa là chỉ còn lưu mã ảnh: ảnh bổ sung (`images`) chưa được chọn làm ảnh chính, ảnh trong thư viện ảnh kỹ năng (Admin dùng làm icon tạm khi kỹ năng chưa gắn icon, người đọc không thấy), phiên nhập đang chờ, và head trang phục (`SKIN_HEAD:<skinKey>`) khi trang phục đã có chân dung. Head trang phục chỉ tính `shown = true` khi trang phục chưa có chân dung, vì khi đó Wiki vẽ head thay chân dung. Mọi tham chiếu, kể cả `shown = false`, vẫn chặn xóa ảnh và `CURRENT` vẫn chặn deprecate như trước. `ownerName` và `partName` là tên đọc được (ưu tiên vi-VN) của đối tượng và phần bên trong nó như trang phục, kỹ năng; có thể `null`.
 

@@ -2373,6 +2373,37 @@ Khi đọc ở admin, icon đã gán trong snapshot được ưu tiên; ảnh th
 phân biệt, không được xem là bằng chứng ảnh đã áp dụng trong patch lịch sử. Những ảnh chưa ghép vẫn
 hiện trong thư viện tướng và được báo tham chiếu Media để không bị xem là asset bỏ trống.
 
+### Ảnh theo trạng thái, biến thể và ảnh chưa gắn của kỹ năng (09/11/2026)
+
+Một kỹ năng có thể đổi icon khi tướng vào trạng thái khác trong khi tên, mô tả, hồi chiêu, tiêu hao và bảng cấp vẫn
+giữ nguyên, ví dụ chiêu của Billow ở trạng thái Hải quái. Đó là **ảnh theo trạng thái** của cùng một kỹ năng, không
+phải biến thể, nên không chép mô tả sang kỹ năng khác:
+
+- Mỗi kỹ năng trong snapshot có thêm danh sách `stateIcons` theo thứ tự, tối đa 10 ảnh. Mỗi ảnh gồm asset Media
+  semantic `HERO_SKILL_ICON` và nhãn trạng thái 1–64 ký tự, ví dụ `Hải quái`. Nhãn ghi như hiển thị trong ngôn
+  ngữ biên tập, chưa có bản dịch riêng.
+- Trong cùng kỹ năng, nhãn không trùng nhau (không phân biệt hoa thường) và asset không trùng nhau, cũng không trùng
+  icon chính. Icon chính (`iconAssetId`) là trạng thái thường.
+- Ảnh theo trạng thái đi theo revision như mọi trường snapshot: chỉ sửa trong bản nháp, bản đã xuất bản bất biến.
+  Dữ liệu cũ không có `stateIcons` được đọc như danh sách rỗng.
+- Ảnh theo trạng thái được báo tham chiếu Media với vai trò `SKILL_STATE:<skillKey>` và tính là đang hiển thị.
+- Admin khi đọc có nút chuyển "Thường · <nhãn>" dưới kỹ năng, chỉ đổi ảnh. Wiki chưa hiển thị trong đợt này.
+
+Khi tên hoặc mô tả đổi theo dạng (Edras, Yena, Liliana…), mỗi dạng vẫn là **biến thể**: một kỹ năng riêng cùng slot,
+`skillKey` dạng `skill-<slot>-<biến thể>`, có bản dịch riêng. Trình sửa có nút "Thêm biến thể": tạo kỹ năng cùng
+slot với số biến thể kế tiếp, đặt ngay sau các biến thể đã có của slot, lấy icon từ ảnh thư viện cùng slot và biến
+thể nếu có, và có thể chép tên, mô tả của biến thể đang chọn làm điểm bắt đầu.
+
+Trình sửa kỹ năng có khay **ảnh chưa gắn**: ảnh thư viện chưa là icon chính hay ảnh theo trạng thái của kỹ năng nào
+trong bản nháp đang sửa, nhóm theo slot. Mỗi ảnh có thể dùng làm icon chính cho kỹ năng đang chọn, thêm làm ảnh theo
+trạng thái của kỹ năng đó (kèm nhãn), hoặc tạo biến thể mới của slot. Các thao tác chỉ đổi bản nháp đang sửa và được
+lưu bằng "Lưu phần này"; thư viện ảnh không bị ghi lại.
+
+Admin không cho gõ tay khóa kỹ năng và khóa trang phục. Kỹ năng mới chọn slot và số biến thể, khóa tự
+thành `skill-<slot>-<biến thể>` và không trùng kỹ năng khác. Trang phục mới lấy khóa
+`<mã tướng>-<tên tiếng Việt không dấu>-<số>`, phần mã tướng đọc từ các khóa đã có. Khóa đã lưu lên server
+giữ nguyên vì mô tả, video, giá và ảnh thư viện tham chiếu nó.
+
 ### Tham chiếu trực tiếp kỹ năng (2026-10-20)
 
 Bộ chọn `@` tìm kỹ năng trực tiếp trên nhiều tướng, không cần chọn tướng trước. Có thể gõ

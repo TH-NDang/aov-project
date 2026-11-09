@@ -1770,6 +1770,14 @@ liên kết với identity kỹ năng đã có. Không FK vào bảng Media; ki�
 `MediaUsageProvider` với revisionId=null, role `SKILL_LIBRARY:<slot>:<variant>`. Không giữ file bytes
 hoặc URL storage trong bảng. Slot/biến thể là vị trí nguồn, không xác nhận dạng gameplay hay lịch sử.
 
+### Ảnh theo trạng thái của kỹ năng — V059 (09/11/2026)
+
+`hero.skill_state_icon` giữ `skill_set_revision_id`, `skill_key`, `icon_order` 0–9, `asset_id` UUID và `label`
+VARCHAR(64) NOT NULL. Khóa chính `(skill_set_revision_id,skill_key,icon_order)`; unique
+`(skill_set_revision_id,skill_key,asset_id)`; FK `(skill_set_revision_id,skill_key)` vào `hero.hero_skill_snapshot`.
+Index theo `asset_id` cho tham chiếu Media. Trigger `guard_section_child` giữ bảng bất biến khi revision kỹ năng đã
+xuất bản, như các bảng con khác của snapshot kỹ năng. Không FK vào bảng Media; kiểm tra qua `MediaAssets`.
+
 ### Tham chiếu kỹ năng (2026-10-20)
 
 Identity tham chiếu dùng khóa ghép đã có: `<heroUUID>.<skillKey>`; không tạo UUID mới cho kỹ năng,
