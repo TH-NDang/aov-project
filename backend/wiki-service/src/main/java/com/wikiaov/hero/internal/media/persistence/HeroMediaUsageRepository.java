@@ -53,6 +53,12 @@ public interface HeroMediaUsageRepository extends Repository<HeroRevision, UUID>
             where s.skillSetRevisionId=r.skillsRevisionId and s.iconAssetId is not null and r.state<>'DISCARDED'
                 and (:all=true or s.iconAssetId=:assetId)
             union
+            select distinct r.heroId as heroId,r.id as revisionId,r.state as state,i.assetId as assetId,
+                concat('SKILL_STATE:',i.skillKey) as role,true as shown
+            from HeroRevision r,SkillStateIconRow i
+            where i.skillSetRevisionId=r.skillsRevisionId and r.state<>'DISCARDED'
+                and (:all=true or i.assetId=:assetId)
+            union
             select distinct r.heroId as heroId,r.id as revisionId,r.state as state,s.artAssetId as assetId,
                 concat('SKIN_ART:',s.skinKey) as role,true as shown
             from HeroRevision r,SkinSnapshotRow s

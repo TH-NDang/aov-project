@@ -139,7 +139,23 @@ public final class HeroContent {
             @PositiveOrZero int displayOrder,
             UUID iconAssetId,
             @NotEmpty @Size(max = 30) List<@Valid SkillTranslation> translations,
-            @NotNull @Size(max = 100) List<@Valid Effect> effects
+            @NotNull @Size(max = 100) List<@Valid Effect> effects,
+            @Size(max = 10) List<@NotNull @Valid SkillStateIcon> stateIcons
+    ) {
+        public Skill {
+            stateIcons = stateIcons == null ? List.of() : stateIcons;
+        }
+
+        public Skill(String skillKey, SkillKind kind, String formKey, int displayOrder, UUID iconAssetId,
+                List<SkillTranslation> translations, List<Effect> effects) {
+            this(skillKey, kind, formKey, displayOrder, iconAssetId, translations, effects, List.of());
+        }
+    }
+
+    /** The icon a skill shows in a named state, such as a form, while its name, text and numbers stay the same. */
+    public record SkillStateIcon(
+            @NotNull UUID assetId,
+            @NotBlank @Size(max = 64) String label
     ) {
     }
 

@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSectionLifecycle;
 import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillSnapshotRow;
+import com.wikiaov.hero.internal.skills.persistence.entity.SkillStateIconRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
 import java.util.*;
 import org.junit.jupiter.api.Test;
@@ -20,9 +21,10 @@ class HeroSkillSnapshotsTest {
     private final SkillSnapshotRepository snapshots = mock(SkillSnapshotRepository.class);
     private final SkillTranslationRepository translations = mock(SkillTranslationRepository.class);
     private final SkillEffectRepository effects = mock(SkillEffectRepository.class);
+    private final SkillStateIconRepository stateIcons = mock(SkillStateIconRepository.class);
     private final HeroSectionSources sources = mock(HeroSectionSources.class);
     private final HeroSkillSnapshots store = new HeroSkillSnapshots(revisions, identities, snapshots,
-            translations, effects, new HeroSectionLifecycle(), sources);
+            translations, effects, stateIcons, new HeroSectionLifecycle(), sources);
 
     @Test
     void loadsTranslationsAndEffectsOnceForTheWholeSkillSetWithoutMixingSkillKeys() {
@@ -40,6 +42,11 @@ class HeroSkillSnapshotsTest {
         when(effects.findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder"))).thenReturn(List.of(
                 new SkillEffectRow(id, "skill-1", 0, "DAMAGE", Map.of("amount", 10)),
                 new SkillEffectRow(id, "passive", 0, "HEAL", Map.of("amount", 5))));
+        var sea = UUID.randomUUID();
+        var storm = UUID.randomUUID();
+        when(stateIcons.findBySkillSetRevisionIdIn(ids, Sort.by("iconOrder"))).thenReturn(List.of(
+                new SkillStateIconRow(id, "skill-1", 0, sea, "Hải quái"),
+                new SkillStateIconRow(id, "skill-1", 1, storm, "Bão tố")));
 
         var content = store.content(id);
 
@@ -50,9 +57,13 @@ class HeroSkillSnapshotsTest {
                 .containsExactly("en-US", "vi-VN");
         assertThat(content.skills().getFirst().effects()).extracting(Effect::effectType).containsExactly("HEAL");
         assertThat(content.skills().getLast().effects()).extracting(Effect::effectType).containsExactly("DAMAGE");
+        assertThat(content.skills().getFirst().stateIcons()).isEmpty();
+        assertThat(content.skills().getLast().stateIcons()).containsExactly(new SkillStateIcon(sea, "Hải quái"),
+                new SkillStateIcon(storm, "Bão tố"));
         verify(translations).findBySkillSetRevisionIdIn(ids, Sort.by("locale"));
         verify(effects).findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder"));
-        verifyNoMoreInteractions(translations, effects);
+        verify(stateIcons).findBySkillSetRevisionIdIn(ids, Sort.by("iconOrder"));
+        verifyNoMoreInteractions(translations, effects, stateIcons);
     }
 
     @Test
@@ -92,6 +103,6 @@ class HeroSkillSnapshotsTest {
 
         assertThat(store.content(id).skills()).isEmpty();
 
-        verifyNoInteractions(translations, effects);
+        verifyNoInteractions(translations, effects, stateIcons);
     }
 }

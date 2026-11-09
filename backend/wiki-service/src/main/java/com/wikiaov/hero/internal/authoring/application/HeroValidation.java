@@ -92,6 +92,26 @@ public class HeroValidation {
             skill.translations().forEach(text -> locale(text.locale()));
 
             asset(skill.iconAssetId(), MediaSemanticType.HERO_SKILL_ICON);
+            stateIcons(skill);
+        }
+    }
+
+    /** Each state names a different look of the same skill, so labels and pictures never repeat, the main icon included. */
+    private void stateIcons(Skill skill) {
+        var labels = new HashSet<String>();
+        var assets = new HashSet<UUID>();
+        if (skill.iconAssetId() != null)
+            assets.add(skill.iconAssetId());
+
+        for (var icon : skill.stateIcons()) {
+            if (icon.label() == null || icon.label().isBlank())
+                throw invalid("A skill state icon needs a state name.");
+            if (!labels.add(icon.label().strip().toLowerCase(Locale.ROOT)))
+                throw invalid("A skill names each state once.");
+            if (!assets.add(icon.assetId()))
+                throw invalid("A skill state icon must differ from the skill's other icons.");
+
+            asset(icon.assetId(), MediaSemanticType.HERO_SKILL_ICON);
         }
     }
 

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.media.*;
 import com.wikiaov.platform.ApiException;
 import jakarta.validation.Validation;
 import java.math.BigDecimal;
@@ -59,6 +60,62 @@ class HeroDraftValidationTest {
                 assertThatThrownBy(() -> validation.validate(HeroSection.COMBAT_STATS, stats(stat)))
                         .isInstanceOf(ApiException.class);
         }
+    }
+
+    @Test
+    void skillStateIconsNameEachStateOnceWithAPictureOfTheirOwn() {
+        var icon = UUID.randomUUID();
+        var sea = UUID.randomUUID();
+        var storm = UUID.randomUUID();
+        var portrait = UUID.randomUUID();
+        var media = new MediaAssets() {
+            @Override
+            public Optional<MediaAssetReference> find(UUID assetId) {
+                var type = assetId.equals(portrait)
+                        ? MediaSemanticType.HERO_PORTRAIT
+                        : MediaSemanticType.HERO_SKILL_ICON;
+                return Optional.of(new MediaAssetReference(assetId, type, MediaAssetState.ACTIVE,
+                        new MediaAssetReference.CurrentVersion(UUID.randomUUID(), "image/webp", 64, 64,
+                                "https://img.example/" + assetId + ".webp")));
+            }
+
+            @Override
+            public Map<UUID, MediaAssetReference> findAll(Collection<UUID> assetIds) {
+                return Map.of();
+            }
+        };
+        try (var factory = Validation.buildDefaultValidatorFactory()) {
+            var validation = new HeroValidation(media, factory.getValidator(), null);
+
+            assertThatCode(() -> validation.validate(HeroSection.SKILLS,
+                    skills(icon, new SkillStateIcon(sea, "Hải quái"), new SkillStateIcon(storm, "Bão tố"))))
+                    .doesNotThrowAnyException();
+            assertThat(new Skill("skill-1-1", SkillKind.ACTIVE, null, 0, icon,
+                    List.of(new SkillTranslation("vi-VN", "Chiêu", "Mô tả")), List.of(), null).stateIcons())
+                    .as("A skill saved before state icons reads as having none").isEmpty();
+
+            var refused = List.of(
+                    skills(icon, new SkillStateIcon(sea, "Hải quái"), new SkillStateIcon(storm, " hải QUÁI ")),
+                    skills(icon, new SkillStateIcon(sea, "Hải quái"), new SkillStateIcon(sea, "Bão tố")),
+                    skills(icon, new SkillStateIcon(icon, "Hải quái")),
+                    skills(icon, new SkillStateIcon(sea, "  ")),
+                    skills(icon, new SkillStateIcon(portrait, "Hải quái")));
+            for (var value : refused)
+                assertThatThrownBy(() -> validation.validate(HeroSection.SKILLS, value))
+                        .isInstanceOf(ApiException.class);
+
+            var tooMany = new ArrayList<SkillStateIcon>();
+            for (int n = 0; n < 11; n++)
+                tooMany.add(new SkillStateIcon(UUID.randomUUID(), "Trạng thái " + n));
+            assertThat(factory.getValidator()
+                    .validate(skills(icon, tooMany.toArray(SkillStateIcon[]::new)).skills().getFirst()))
+                    .anyMatch(v -> v.getPropertyPath().toString().equals("stateIcons"));
+        }
+    }
+
+    private static Skills skills(UUID icon, SkillStateIcon... states) {
+        return new Skills(List.of(new Skill("skill-1-1", SkillKind.ACTIVE, null, 0, icon,
+                List.of(new SkillTranslation("vi-VN", "Chiêu", "Mô tả")), List.of(), List.of(states))), List.of());
     }
 
     private static Stats stats(Stat stat) {

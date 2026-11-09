@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.sections.persistence.HeroSectionSources;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillEffectRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillIdentityRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillSnapshotRow;
+import com.wikiaov.hero.internal.skills.persistence.entity.SkillStateIconRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillsRevision;
 import java.time.Instant;
@@ -26,6 +27,7 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
     private final SkillSnapshotRepository snapshots;
     private final SkillTranslationRepository translations;
     private final SkillEffectRepository effects;
+    private final SkillStateIconRepository stateIcons;
     private final HeroSectionLifecycle lifecycle;
     private final HeroSectionSources sources;
 
@@ -64,6 +66,11 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
             var effect = skill.effects().get(n);
             effects.save(new SkillEffectRow(revisionId, skill.skillKey(), n, effect.effectType(), effect.metadata()));
         }
+        for (int n = 0; n < skill.stateIcons().size(); n++) {
+            var icon = skill.stateIcons().get(n);
+            stateIcons
+                    .save(new SkillStateIconRow(revisionId, skill.skillKey(), n, icon.assetId(), icon.label().strip()));
+        }
     }
 
     @Override
@@ -87,18 +94,26 @@ public class HeroSkillSnapshots implements HeroSectionSnapshots {
                 : effects.findBySkillSetRevisionIdIn(ids, Sort.by("effectOrder")).stream()
                         .collect(Collectors.groupingBy(SkillEffectRow::getSkillSetRevisionId,
                                 Collectors.groupingBy(SkillEffectRow::getSkillKey)));
+        Map<UUID, Map<String, List<SkillStateIconRow>>> skillIcons = skills.isEmpty()
+                ? Collections.emptyMap()
+                : stateIcons.findBySkillSetRevisionIdIn(ids, Sort.by("iconOrder")).stream()
+                        .collect(Collectors.groupingBy(SkillStateIconRow::getSkillSetRevisionId,
+                                Collectors.groupingBy(SkillStateIconRow::getSkillKey)));
 
         Map<UUID, Skills> result = new HashMap<>();
         for (UUID id : ids) {
             var skillTexts = texts.getOrDefault(id, Map.of());
             var effectRows = skillEffects.getOrDefault(id, Map.of());
+            var iconRows = skillIcons.getOrDefault(id, Map.of());
             result.put(id, new Skills(skills.getOrDefault(id, List.of()).stream().map(skill -> new Skill(
                     skill.getSkillKey(), SkillKind.valueOf(skill.getKind()), skill.getFormKey(),
                     skill.getDisplayOrder(), skill.getIconAssetId(),
                     skillTexts.getOrDefault(skill.getSkillKey(), List.of()).stream()
                             .map(t -> new SkillTranslation(t.getLocale(), t.getName(), t.getDescription())).toList(),
                     effectRows.getOrDefault(skill.getSkillKey(), List.of()).stream()
-                            .map(effect -> new Effect(effect.getEffectType(), effect.getMetadata())).toList()))
+                            .map(effect -> new Effect(effect.getEffectType(), effect.getMetadata())).toList(),
+                    iconRows.getOrDefault(skill.getSkillKey(), List.of()).stream()
+                            .map(icon -> new SkillStateIcon(icon.getAssetId(), icon.getLabel())).toList()))
                     .toList(),
                     references.getOrDefault(id, List.of())));
         }

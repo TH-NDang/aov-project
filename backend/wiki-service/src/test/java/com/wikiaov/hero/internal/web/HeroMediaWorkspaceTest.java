@@ -217,6 +217,40 @@ class HeroMediaWorkspaceTest {
     }
 
     @Test
+    void skillStateIconsTravelWithTheSkillAndCountAsShownImages() throws Exception {
+        var draft = complete(create("billow", "Billow"));
+        UUID sea = asset(MediaSemanticType.HERO_SKILL_ICON);
+        UUID storm = asset(MediaSemanticType.HERO_SKILL_ICON);
+        var skill = new HashMap<String, Object>(Map.of("skillKey", "skill-1-1", "kind", "ACTIVE", "displayOrder", 0,
+                "iconAssetId", assets.get(MediaSemanticType.HERO_SKILL_ICON), "translations",
+                List.of(Map.of("locale", "vi-VN", "name", "Hải triều", "description", "Mô tả dùng chung")),
+                "effects", List.of()));
+        skill.put("stateIcons", List.of(image(sea, "Hải quái"), image(storm, "Bão tố")));
+        draft = update(draft, "skills", Map.of("skills", List.of(skill)));
+
+        var saved = rows(
+                map(map(send(get(revisionPath(draft)), null, 200).get("content")).get("skills")).get("skills"));
+        assertThat(rows(saved.getFirst().get("stateIcons")))
+                .extracting(row -> row.get("assetId"), row -> row.get("label"))
+                .containsExactly(tuple(sea.toString(), "Hải quái"), tuple(storm.toString(), "Bão tố"));
+        assertThat(usages(sea)).singleElement().satisfies(usage -> {
+            assertThat(usage.propertyRole()).isEqualTo("SKILL_STATE:skill-1-1");
+            assertThat(usage.shown()).as("a state icon is drawn when the skill is in that state").isTrue();
+            assertThat(usage.partName()).isEqualTo("Hải triều");
+        });
+
+        skill.put("stateIcons", List.of(image(sea, "Hải quái"), image(storm, "hải quái")));
+        var body = new HashMap<String, Object>(Map.of("skills", List.of(skill)));
+        body.put("expectedDraftVersion", draft.get("version"));
+        assertThat(send(put(path(draft) + "/skills"), body, 422).get("code")).isEqualTo("HERO_INVALID_CONTENT");
+
+        var published = publish(draft);
+        var kept = rows(map(map(send(get(revisionPath(published)), null, 200).get("content")).get("skills"))
+                .get("skills"));
+        assertThat(rows(kept.getFirst().get("stateIcons"))).hasSize(2);
+    }
+
+    @Test
     void publishedImageOptionsRemainImmutableWhileVisualDraftRetainsCollectedAlternates() throws Exception {
         var draft = complete(create("nakroth", "Nakroth"));
         UUID mainHead = assets.get(MediaSemanticType.HERO_HEAD);
