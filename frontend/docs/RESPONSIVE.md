@@ -22,7 +22,7 @@ Không dùng `order` trong CSS hay để `flex-wrap` tự quyết định thứ 
 
 - Phần người đọc đến trang để tìm phải nằm trong màn hình đầu hoặc chỉ cách một lần vuốt.
 - Bố cục compact rút gọn phần phụ thay vì chỉ đẩy xuống: chữ dài thì cắt kèm "Xem thêm", bộ lọc gom vào một nút.
-- **Không có thanh điều hướng cố định ở đáy màn hình.** Wiki mở mục lục từ nút ở đầu trang, Stream dùng hàng tab ở đầu trang.
+- **Không có thanh điều hướng cố định ở đáy màn hình.** Wiki mở mục lục từ nút ở đầu trang, Stream dùng hàng tab ở đầu trang. Một nút tròn nổi mở drawer mục lục (trang tướng trên Wiki, trang chi tiết trong Admin) không phải thanh điều hướng.
 - **Các nút không xuống dòng lẻ từng cái.** Một hàng gồm nhiều phần thì gom thành nhóm và cho cả nhóm xuống dòng cùng nhau, hoặc xếp sẵn thành hai hàng. Không để một nút hay một ô lọc rớt xuống hàng riêng.
 - Dãy tab dài cuộn ngang trên một hàng, không xuống dòng.
 - Ô tìm kiếm giữ độ rộng tối thiểu bằng `flex-basis`, không dùng `flex: 1` kèm `flex-wrap` vì ô sẽ bị bóp nhỏ mà các ô khác không xuống dòng.
@@ -58,8 +58,22 @@ Hàng tab Bảng tin, Giải đấu, Khám phá nằm ở đầu trang trên c�
 
 Admin vẫn dùng một bố cục, co giãn bằng container query theo độ rộng khung nội dung, vì khung này đổi theo thanh bên và bảng ảnh gốc.
 
+### Trang chi tiết dạng phẳng
+
+Nội dung của một mục (tướng, trang bị, ngọc, phụ trợ, phù hiệu) nằm trên **một trang cuộn** trong tab "Nội dung", mỗi phần trước đây là một tab nay là một phần có tiêu đề, giữ đúng thứ tự cũ. Các tab quản lý (Bản dịch, Lịch sử, Theo patch) vẫn là tab riêng.
+
+- Khung đủ rộng: cột "Trên trang này" dính bên phải, tô sáng phần đang đọc, bấm để cuộn tới.
+- Khung hẹp (điện thoại, hoặc khi bảng ảnh gốc chiếm chỗ): cột biến mất, thay bằng **một nút tròn nổi** ở góc dưới bên phải mở drawer dưới với cùng mục lục. Chọn một mục thì drawer đóng rồi trang mới cuộn.
+- Phần nào trước đây chỉ tải khi mở tab thì nay tải khi cuộn đến gần (khoảng 600px trước khi vào màn hình). Khi nhảy tới một phần, các phần phía trên nó được tải trước rồi mới cuộn, để không có gì tải sau làm trang trôi.
+- Địa chỉ cũ vẫn dùng được: `?tab=skills`, `?tab=media`… mở trang ở đúng phần, `?view=skills` cũng vậy. Bấm mục lục ghi lại `tab` vào URL; cuộn tay thì không đổi URL.
+
+Component dùng chung: `SectionContents`, `ContentsSection` và `useSectionContents` trong `apps/admin-aov/src/components/section-contents.tsx`. Trang khai báo chiều cao các thanh dính phía trên bằng `--contents-offset` (px) trên `SectionContents`. Thanh dính cần `[overflow-anchor:none]` để trình duyệt không lấy nó làm mốc giữ vị trí cuộn.
+
 | Trang | Cách xử lý |
 |---|---|
+| Chi tiết tướng | Tab: Nội dung → Bản dịch → Lịch sử → Theo patch, trên điện thoại bốn tab chia đều một hàng, icon trên nhãn. Nội dung: Tổng quan → Kỹ năng → Trang phục → Ảnh → Video. Cột mục lục khi khung nội dung từ 64rem (cửa sổ từ khoảng 1320px khi thanh bên mở và bảng ảnh gốc đóng), dưới đó dùng nút nổi |
+| Chi tiết trang bị | Ngăn bên rộng tối đa 880px, trên điện thoại là sheet dưới. Tab: Nội dung → Bản dịch → Lịch sử. Nội dung: Thông tin (chỉ số, hiệu ứng, ghép từ, vị trí trong shop) → Mốc patch và ghi chú → Video. Cột mục lục khi ngăn từ 42rem |
+| Chi tiết ngọc, phụ trợ, phù hiệu | Như trang bị. Nội dung: Thông tin → Phân loại ngọc / Thuộc tính / Hệ và vị trí → Chỉ số (ngọc) hoặc Trạng thái phụ trợ → Ảnh → Mốc patch và ghi chú → Video. Ngăn sửa hệ phù hiệu và nhóm trang bị vẫn giữ tab vì chỉ là một biểu mẫu ngắn |
 | Đầu trang chi tiết tướng | Tên và nhóm nút là hai khối. Không đủ chỗ thì cả nhóm nút xuống hàng dưới, điện thoại giữ nút `⋯` ở góc trên |
 | Danh sách có bộ lọc | Ô tìm một khối, nhóm ô lọc một khối luôn nằm trên một hàng |
 | Hồ sơ (Đội tuyển, Tuyển thủ…) | Tab trên một hàng, thiếu chỗ thì ẩn icon rồi cuộn ngang |
