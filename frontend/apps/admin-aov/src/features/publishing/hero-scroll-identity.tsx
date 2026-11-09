@@ -82,7 +82,7 @@ export function HeroScrollIdentity({
       data-slot="hero-scroll-identity"
       data-visible={visible}
       aria-hidden={!visible}
-      className="pointer-events-none sticky top-0 z-20 -mb-6 h-0 shrink-0"
+      className="pointer-events-none sticky top-0 z-20 -mb-6 h-0 shrink-0 [overflow-anchor:none]"
     >
       <div
         className={cn(

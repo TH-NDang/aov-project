@@ -185,8 +185,11 @@ test("quick hero navigation keeps drawer/full-page context and cached drafts whi
         JSON.stringify(slot.record?.value ?? null).includes("Airi chưa lưu"),
       ),
     )
-    await click(document.querySelector<HTMLButtonElement>('[role="tab"][aria-controls="hero-content-skills"]')!)
+    // Leaving the editor through the content tab reopens the page on the section that was being edited.
+    await click(document.querySelector<HTMLButtonElement>('[aria-controls="workspace-overview"]')!)
     await waitFor(() => document.body.textContent?.includes("Airi chưa lưu") === true)
+    assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "skills")
+    assert.ok(document.querySelector('#hero-content-skills:not([aria-busy]) [aria-label="Tất cả kỹ năng"]'))
     const firstUrl = router.state.location.pathname + router.state.location.search
     await switchTo("Tulen")
     await waitFor(

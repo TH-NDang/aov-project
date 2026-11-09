@@ -2,13 +2,18 @@ import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useEffect, useState, type ReactNode } from "react"
 import {
   Archive,
+  CalendarClock,
+  ChartNoAxesCombined,
   History,
   Image,
   Languages,
+  Layers,
+  LayoutList,
   LoaderCircle,
   Plus,
   Save,
   Settings2,
+  SlidersHorizontal,
   Trash2,
   Clapperboard,
 } from "lucide-react"
@@ -21,6 +26,7 @@ import { SecondaryAttributes } from "./secondary-attributes"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@aov/ui/components/tabs"
 import { useIsWide } from "@/hooks/use-media-query"
+import { ContentsSection, SectionContents, useSectionContents, type ContentsEntry } from "@/components/section-contents"
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../publishing/asset-picker"
 import { HeroAsset } from "../publishing/hero-content"
@@ -49,6 +55,19 @@ import {
 import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 
 export type SecondaryKind = "arcana" | "spells" | "enchantments"
+
+/** Sections of an arcana, spell or enchantment content page, in reading order. */
+const SECONDARY_SECTIONS = {
+  overview: "secondary-section-overview",
+  mechanics: "secondary-section-mechanics",
+  stats: "secondary-section-stats",
+  states: "secondary-section-states",
+  images: "secondary-section-images",
+  context: "secondary-section-context",
+  videos: "secondary-section-videos",
+} as const
+type SecondarySectionKey = keyof typeof SECONDARY_SECTIONS
+const partIcons = { mechanics: SlidersHorizontal, stats: ChartNoAxesCombined, states: Layers }
 export interface SecondaryContent extends WarehouseContent {
   color?: "RED" | "PURPLE" | "GREEN"
   tier?: number
@@ -173,9 +192,7 @@ export function SecondaryEditor({
 }) {
   const wide = useIsWide()
   const [section, setSection] = useState(initialSection)
-  const [tab, setTab] = useState<string>(
-    initialSection === "images" || initialSection === "translations" ? initialSection : "information",
-  )
+  const [tab, setTab] = useState<string>(initialSection === "translations" ? "translations" : "content")
   const [code, setCode] = useState(initialCode)
   const [content, setContent] = useState(initialContent)
   const [patchId, setPatchId] = useState(initialPatchId)
@@ -238,7 +255,7 @@ export function SecondaryEditor({
       (readOnly && !onOpenDraft && !onCreateDraft)
     )
       return null
-    const targetTab = target === "images" || target === "translations" ? target : "information"
+    const targetTab = target === "translations" ? "translations" : "content"
     const active = section === target && tab === targetTab
     return (
       <SectionPencil
@@ -256,6 +273,8 @@ export function SecondaryEditor({
           }
           setSection(active ? undefined : target)
           setTab(targetTab)
+          // The picture on the header edits the Images section further down the page.
+          if (target === "images" && !active) contents.jump(SECONDARY_SECTIONS.images)
         }}
       />
     )
@@ -291,6 +310,46 @@ export function SecondaryEditor({
   const parts: ("mechanics" | "stats" | "states")[] = ["mechanics"]
   if (kind === "arcana") parts.push("stats")
   if (kind === "spells") parts.push("states")
+  const hasOverview =
+    isNew ||
+    !!currentText?.description ||
+    (!!currentText?.summary && currentText.summary !== currentText.description) ||
+    (!!currentText && currentText.locale !== locale)
+  const sectionKeys: SecondarySectionKey[] = [
+    ...(hasOverview ? (["overview"] as const) : []),
+    ...parts,
+    "images",
+    "context",
+    ...(hasHistory ? (["videos"] as const) : []),
+  ]
+  const partTitle = (part: (typeof parts)[number]) =>
+    part === "stats" ? "Chỉ số" : part === "states" ? "Trạng thái phụ trợ" : mechanicsTitle
+  const sectionLabels: Record<SecondarySectionKey, string> = {
+    overview: "Thông tin",
+    mechanics: mechanicsTitle,
+    stats: "Chỉ số",
+    states: "Trạng thái phụ trợ",
+    images: "Ảnh",
+    context: "Mốc patch và ghi chú",
+    videos: "Video",
+  }
+  const sectionIcons = {
+    overview: Settings2,
+    ...partIcons,
+    images: Image,
+    context: CalendarClock,
+    videos: Clapperboard,
+  }
+  const entries: ContentsEntry[] = sectionKeys.map((key) => ({
+    id: SECONDARY_SECTIONS[key],
+    label: sectionLabels[key],
+    icon: sectionIcons[key],
+  }))
+  const requestedKey = initialSection && initialSection in SECONDARY_SECTIONS ? initialSection : undefined
+  const contents = useSectionContents({
+    requested: requestedKey && SECONDARY_SECTIONS[requestedKey as SecondarySectionKey],
+    first: SECONDARY_SECTIONS[sectionKeys[0]],
+  })
   const orderPeers = enchantmentPeers
     .filter((entry) => entry.content.branchCode === content.branchCode && entry.content.tier === content.tier)
     .sort((a, b) => (a.content.position ?? 999) - (b.content.position ?? 999) || a.code.localeCompare(b.code))
@@ -300,7 +359,7 @@ export function SecondaryEditor({
         side={wide ? "right" : "bottom"}
         className={
           wide
-            ? "flex w-[min(640px,94vw)] flex-col gap-0 overflow-hidden sm:max-w-none"
+            ? "flex w-[min(880px,94vw)] flex-col gap-0 overflow-hidden sm:max-w-none"
             : "flex max-h-[92dvh] flex-col gap-0 overflow-hidden rounded-t-2xl"
         }
         onEscapeKeyDown={(event) => (busy || uploading) && event.preventDefault()}
@@ -327,7 +386,7 @@ export function SecondaryEditor({
                   className="size-12 shrink-0 rounded-full"
                 />
               )}
-              {tab !== "images" && pencil("images", "absolute -top-1 -right-2 rounded-full border bg-background")}
+              {section !== "images" && pencil("images", "absolute -top-1 -right-2 rounded-full border bg-background")}
             </div>
           )}
           <div className="min-w-0">
@@ -361,15 +420,14 @@ export function SecondaryEditor({
           )}
           {translationOnly && <p className="type-meta mb-2">Nháp bản dịch cho phép sửa nội dung dịch và ghi chú.</p>}
           <Tabs value={tab} onValueChange={setTab} className="gap-3">
-            <TabsList className={`grid w-full ${hasHistory ? "grid-cols-5" : "grid-cols-3"}`}>
-              <TabsTrigger value="information" disabled={busy || uploading}>
-                <Settings2 className="size-4" /> Thông tin
+            <TabsList
+              className={`sticky top-0 z-10 grid w-full [overflow-anchor:none] ${hasHistory ? "grid-cols-3" : "grid-cols-2"}`}
+            >
+              <TabsTrigger value="content" disabled={busy || uploading}>
+                <LayoutList className="size-4" /> Nội dung
               </TabsTrigger>
               <TabsTrigger value="translations" disabled={busy || uploading}>
                 <Languages className="size-4" /> Bản dịch
-              </TabsTrigger>
-              <TabsTrigger value="images" disabled={busy || uploading}>
-                <Image className="size-4" /> Ảnh
               </TabsTrigger>
               {hasHistory && (
                 <TabsTrigger value="history" disabled={busy || uploading}>
@@ -377,157 +435,334 @@ export function SecondaryEditor({
                   Lịch sử
                 </TabsTrigger>
               )}
-              {hasHistory && (
-                <TabsTrigger value="videos" disabled={busy || uploading}>
-                  <Clapperboard className="size-4" />
-                  Video
-                </TabsTrigger>
-              )}
             </TabsList>
-            <TabsContent value="information" className="space-y-3">
-              {currentText?.summary && currentText.summary !== currentText.description && (
-                <p className="type-body">{currentText.summary}</p>
-              )}
-              {currentText && currentText.locale !== locale && (
-                <Badge variant="outline">
-                  {currentText.locale} · Chưa có {locale}
-                </Badge>
-              )}
-              {isNew && kind === "spells" && !readOnly && (
-                <fieldset disabled={busy || uploading} className="space-y-2">
-                  <legend className="mb-2 text-sm font-medium">Biểu tượng phụ trợ</legend>
-                  <AssetPicker
-                    semanticType="SPELL_ICON"
-                    value={content.iconAssetId}
-                    directUpload
-                    onChange={(iconAssetId) => update({ iconAssetId })}
-                    onBusyChange={setUploading}
-                  />
-                  <p className="text-xs text-muted-foreground">PNG, JPEG hoặc WebP · tối đa 25 MB.</p>
-                </fieldset>
-              )}
-              {currentText?.description && (
-                <div className="text-sm leading-6">
-                  <AdminEntityText text={currentText.description} />
-                </div>
-              )}
-              {isNew && (
-                <Field
-                  label="Mã định danh"
-                  value={code}
-                  onChange={(value) => {
-                    setCode(value)
-                    setDirty(true)
-                  }}
-                  disabled={disabled}
-                  placeholder="vi-du-ma-khong-dau"
-                />
-              )}
-              {parts.map((part) => (
-                <section key={part} className="space-y-2 border-t pt-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="type-section-title">
-                      {part === "stats" ? "Chỉ số" : part === "states" ? "Trạng thái phụ trợ" : mechanicsTitle}
-                    </h3>
-                    {pencil(part)}
-                  </div>
-                  {editing(part) && part === "stats" ? (
-                    <WarehouseStatsEditor
-                      stats={content.stats ?? []}
-                      catalog={statCatalog}
-                      locale={locale}
-                      disabled={disabled}
-                      onChange={(stats) => update({ stats })}
-                    />
-                  ) : editing(part) ? (
-                    <SecondaryMechanics
-                      part={part}
-                      kind={kind}
-                      content={content}
-                      onChange={update}
-                      branches={branches}
-                      locale={locale}
-                      disabled={disabled}
-                      enchantmentOrderControl={
-                        <WarehouseOrderPicker
-                          label="Thứ tự trong cấp"
-                          contextLabel={`${warehouseText(branches.find((branch) => branch.code === content.branchCode)?.translations ?? [], locale)?.name ?? content.branchCode ?? ""} · Cấp ${["I", "II", "III"][(content.tier ?? 1) - 1]}`}
-                          items={orderPeers.map((entry) => ({
-                            id: entry.id,
-                            name: warehouseText(entry.content.translations, locale)?.name ?? entry.code,
-                            iconAssetId: entry.content.iconAssetId,
-                            color: enchantmentBranchColor(
-                              branches.find((branch) => branch.code === content.branchCode) ?? {
-                                code: content.branchCode ?? "",
-                                color: null,
-                              },
-                            ),
-                          }))}
-                          disabled={disabled || dirty || isNew || !onReorderEnchantments}
-                          disabledReason={
-                            isNew
-                              ? "Lưu phù hiệu trước khi sắp xếp trong cấp."
-                              : dirty
-                                ? "Lưu thay đổi trước khi sắp xếp."
-                                : undefined
-                          }
-                          blockedReason={
-                            orderPeers.some(
-                              (entry) =>
-                                entry.revision.state !== "DRAFT" || entry.revision.cause === "TRANSLATION_UPDATE",
-                            )
-                              ? "Tạo bản nháp nội dung cho các phù hiệu trong cấp trước khi sắp xếp. Bản đã xuất bản và bản dịch được giữ nguyên."
-                              : undefined
-                          }
-                          onSave={async (ids) => {
-                            await onReorderEnchantments?.(ids)
-                          }}
-                        />
-                      }
-                    />
-                  ) : (
-                    <SecondaryAttributes
-                      part={part}
-                      kind={kind}
-                      content={content}
-                      branches={branches}
-                      locale={locale}
-                    />
-                  )}
-                </section>
-              ))}
-              <details
-                key={editing("context") ? "edit" : "view"}
-                open={editing("context") || undefined}
-                className="border-t pt-3"
+            <TabsContent value="content">
+              <SectionContents
+                contents={contents}
+                entries={entries}
+                layout="panel"
+                // The tab row above stays stuck to the top of the panel.
+                className="[--contents-offset:36px]"
               >
-                <summary className="cursor-pointer text-sm font-medium">Mốc patch và ghi chú</summary>
-                <div className="mt-2 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="type-label">Ngữ cảnh dữ liệu</span>
-                    {pencil("context")}
+                {hasOverview && (
+                  <ContentsSection id={SECONDARY_SECTIONS.overview} title="Thông tin" icon={Settings2}>
+                    <div className="space-y-3">
+                      {currentText?.summary && currentText.summary !== currentText.description && (
+                        <p className="type-body">{currentText.summary}</p>
+                      )}
+                      {currentText && currentText.locale !== locale && (
+                        <Badge variant="outline">
+                          {currentText.locale} · Chưa có {locale}
+                        </Badge>
+                      )}
+                      {isNew && kind === "spells" && !readOnly && (
+                        <fieldset disabled={busy || uploading} className="space-y-2">
+                          <legend className="mb-2 text-sm font-medium">Biểu tượng phụ trợ</legend>
+                          <AssetPicker
+                            semanticType="SPELL_ICON"
+                            value={content.iconAssetId}
+                            directUpload
+                            onChange={(iconAssetId) => update({ iconAssetId })}
+                            onBusyChange={setUploading}
+                          />
+                          <p className="text-xs text-muted-foreground">PNG, JPEG hoặc WebP · tối đa 25 MB.</p>
+                        </fieldset>
+                      )}
+                      {currentText?.description && (
+                        <div className="text-sm leading-6">
+                          <AdminEntityText text={currentText.description} />
+                        </div>
+                      )}
+                      {isNew && (
+                        <Field
+                          label="Mã định danh"
+                          value={code}
+                          onChange={(value) => {
+                            setCode(value)
+                            setDirty(true)
+                          }}
+                          disabled={disabled}
+                          placeholder="vi-du-ma-khong-dau"
+                        />
+                      )}
+                    </div>
+                  </ContentsSection>
+                )}
+                {parts.map((part) => (
+                  <ContentsSection
+                    key={part}
+                    id={SECONDARY_SECTIONS[part]}
+                    title={partTitle(part)}
+                    icon={partIcons[part]}
+                    actions={pencil(part)}
+                  >
+                    {editing(part) && part === "stats" ? (
+                      <WarehouseStatsEditor
+                        stats={content.stats ?? []}
+                        catalog={statCatalog}
+                        locale={locale}
+                        disabled={disabled}
+                        onChange={(stats) => update({ stats })}
+                      />
+                    ) : editing(part) ? (
+                      <SecondaryMechanics
+                        part={part}
+                        kind={kind}
+                        content={content}
+                        onChange={update}
+                        branches={branches}
+                        locale={locale}
+                        disabled={disabled}
+                        enchantmentOrderControl={
+                          <WarehouseOrderPicker
+                            label="Thứ tự trong cấp"
+                            contextLabel={`${warehouseText(branches.find((branch) => branch.code === content.branchCode)?.translations ?? [], locale)?.name ?? content.branchCode ?? ""} · Cấp ${["I", "II", "III"][(content.tier ?? 1) - 1]}`}
+                            items={orderPeers.map((entry) => ({
+                              id: entry.id,
+                              name: warehouseText(entry.content.translations, locale)?.name ?? entry.code,
+                              iconAssetId: entry.content.iconAssetId,
+                              color: enchantmentBranchColor(
+                                branches.find((branch) => branch.code === content.branchCode) ?? {
+                                  code: content.branchCode ?? "",
+                                  color: null,
+                                },
+                              ),
+                            }))}
+                            disabled={disabled || dirty || isNew || !onReorderEnchantments}
+                            disabledReason={
+                              isNew
+                                ? "Lưu phù hiệu trước khi sắp xếp trong cấp."
+                                : dirty
+                                  ? "Lưu thay đổi trước khi sắp xếp."
+                                  : undefined
+                            }
+                            blockedReason={
+                              orderPeers.some(
+                                (entry) =>
+                                  entry.revision.state !== "DRAFT" || entry.revision.cause === "TRANSLATION_UPDATE",
+                              )
+                                ? "Tạo bản nháp nội dung cho các phù hiệu trong cấp trước khi sắp xếp. Bản đã xuất bản và bản dịch được giữ nguyên."
+                                : undefined
+                            }
+                            onSave={async (ids) => {
+                              await onReorderEnchantments?.(ids)
+                            }}
+                          />
+                        }
+                      />
+                    ) : (
+                      <SecondaryAttributes
+                        part={part}
+                        kind={kind}
+                        content={content}
+                        branches={branches}
+                        locale={locale}
+                      />
+                    )}
+                  </ContentsSection>
+                ))}
+                <ContentsSection
+                  id={SECONDARY_SECTIONS.images}
+                  title="Ảnh"
+                  icon={Image}
+                  actions={pencil("images")}
+                  lazy
+                  placeholderHeight={160}
+                >
+                  {!editing("images") ? (
+                    <div className="space-y-3">
+                      <HeroAsset
+                        id={content.iconAssetId}
+                        alt={name}
+                        preview
+                        frameAspectRatio={1}
+                        className="size-20 rounded-full"
+                      />
+                      {kind === "spells" && (content.states?.length ?? 0) > 0 && (
+                        <div className="grid grid-cols-2 gap-3 border-t pt-4">
+                          {content.states!.map((state) => (
+                            <div key={state.key} className="space-y-2 rounded-xl border p-3">
+                              <HeroAsset
+                                id={state.iconAssetId}
+                                alt={warehouseText(state.translations, locale)?.name || state.key}
+                                preview
+                                frameAspectRatio={1}
+                                className="mx-auto size-20 rounded-full"
+                              />
+                              <p className="text-center text-xs">
+                                {warehouseText(state.translations, locale)?.name || state.key}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {kind === "spells" && (content.referenceImages?.length ?? 0) > 0 && (
+                        <div className="space-y-3 border-t pt-4">
+                          <h3 className="text-sm font-medium">Ảnh tham khảo</h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            {content.referenceImages!.map((image) => (
+                              <div key={image.assetId} className="space-y-2">
+                                <HeroAsset
+                                  id={image.assetId}
+                                  alt={image.notes ?? "Ảnh tham khảo"}
+                                  preview
+                                  frameAspectRatio={1}
+                                  className="mx-auto size-24"
+                                />
+                                {image.notes && (
+                                  <p className="text-center text-xs text-muted-foreground">{image.notes}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <fieldset disabled={busy || uploading} className="space-y-4">
+                      {/* A new spell picks its icon in the information section above, on the same page. */}
+                      {!(isNew && kind === "spells") && (
+                        <>
+                          <p className="text-sm text-muted-foreground">Biểu tượng dùng chung cho các bản dịch.</p>
+                          <AssetPicker
+                            semanticType={semanticTypes[kind]}
+                            value={content.iconAssetId}
+                            onChange={(iconAssetId) => update({ iconAssetId })}
+                            onBusyChange={setUploading}
+                          />
+                        </>
+                      )}
+                      {content.iconAssetId && !(isNew && kind === "spells") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={disabled}
+                          onClick={() => update({ iconAssetId: null })}
+                        >
+                          Bỏ biểu tượng
+                        </Button>
+                      )}
+                      {kind === "spells" &&
+                        content.states?.map((state, index) => (
+                          <div key={index} className="space-y-3 border-t pt-4">
+                            <h3 className="text-sm font-medium">
+                              {warehouseText(state.translations, locale)?.name ||
+                                state.key ||
+                                `Trạng thái ${index + 1}`}
+                            </h3>
+                            <AssetPicker
+                              semanticType="SPELL_ICON"
+                              value={state.iconAssetId}
+                              onBusyChange={setUploading}
+                              onChange={(iconAssetId) =>
+                                update({
+                                  states: content.states!.map((entry, n) =>
+                                    n === index ? { ...entry, iconAssetId } : entry,
+                                  ),
+                                })
+                              }
+                            />
+                          </div>
+                        ))}
+                      {kind === "spells" && (
+                        <div className="space-y-4 border-t pt-4">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="text-sm font-medium">Ảnh tham khảo</h3>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={disabled}
+                              onClick={() =>
+                                update({
+                                  referenceImages: [...(content.referenceImages ?? []), { assetId: "", notes: null }],
+                                })
+                              }
+                            >
+                              <Plus className="size-4" /> Thêm ảnh
+                            </Button>
+                          </div>
+                          {content.referenceImages?.map((image, index) => (
+                            <div key={index} className="space-y-3 rounded-xl border p-3">
+                              <AssetPicker
+                                semanticType="SPELL_ICON"
+                                value={image.assetId || null}
+                                onBusyChange={setUploading}
+                                onChange={(assetId) =>
+                                  update({
+                                    referenceImages: content.referenceImages!.map((entry, n) =>
+                                      n === index ? { ...entry, assetId } : entry,
+                                    ),
+                                  })
+                                }
+                              />
+                              <Field
+                                label="Ghi chú ảnh"
+                                value={image.notes ?? ""}
+                                onChange={(notes) =>
+                                  update({
+                                    referenceImages: content.referenceImages!.map((entry, n) =>
+                                      n === index ? { ...entry, notes: notes || null } : entry,
+                                    ),
+                                  })
+                                }
+                                disabled={disabled}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                disabled={disabled}
+                                onClick={() =>
+                                  update({ referenceImages: content.referenceImages!.filter((_, n) => n !== index) })
+                                }
+                              >
+                                <Trash2 className="size-4" /> Bỏ ảnh
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </fieldset>
+                  )}
+                </ContentsSection>
+                <ContentsSection
+                  id={SECONDARY_SECTIONS.context}
+                  title="Mốc patch và ghi chú"
+                  icon={CalendarClock}
+                  actions={pencil("context")}
+                >
+                  <div className="space-y-2">
+                    <WarehousePatchContext
+                      compact={!editing("context")}
+                      rulesetId={rulesetId}
+                      allowUnknownPatch={archiveEligible}
+                      baselineMode={baselineMode}
+                      value={patchId}
+                      disabled={
+                        disabled || translationOnly || !editing("context") || !allowPatchChange || !!sourceRevisionId
+                      }
+                      onChange={(value) => {
+                        setPatchId(value)
+                        setDirty(true)
+                      }}
+                    />
+                    <WarehouseNotes
+                      value={content.notes}
+                      onChange={(notes) => update({ notes })}
+                      disabled={disabled || !editing("context")}
+                    />
                   </div>
-                  <WarehousePatchContext
-                    compact={!editing("context")}
-                    rulesetId={rulesetId}
-                    allowUnknownPatch={archiveEligible}
-                    baselineMode={baselineMode}
-                    value={patchId}
-                    disabled={
-                      disabled || translationOnly || !editing("context") || !allowPatchChange || !!sourceRevisionId
-                    }
-                    onChange={(value) => {
-                      setPatchId(value)
-                      setDirty(true)
-                    }}
-                  />
-                  <WarehouseNotes
-                    value={content.notes}
-                    onChange={(notes) => update({ notes })}
-                    disabled={disabled || !editing("context")}
-                  />
-                </div>
-              </details>
+                </ContentsSection>
+                {hasHistory && (
+                  // The video panel brings its own heading and add button.
+                  <ContentsSection id={SECONDARY_SECTIONS.videos} label="Video" lazy placeholderHeight={200}>
+                    <SubjectVideosPanel
+                      kind={kind === "enchantments" ? "ENCHANTMENT" : kind === "arcana" ? "ARCANA" : "SPELL"}
+                      id={entryId!}
+                      name={name}
+                    />
+                  </ContentsSection>
+                )}
+              </SectionContents>
             </TabsContent>
             <TabsContent value="translations">
               <div className="mb-2 flex items-center justify-between">
@@ -571,161 +806,6 @@ export function SecondaryEditor({
                 </div>
               )}
             </TabsContent>
-            <TabsContent value="images" className="space-y-5">
-              <div className="flex items-center justify-between">
-                <h3 className="type-section-title">Hình ảnh</h3>
-                {pencil("images")}
-              </div>
-              {!editing("images") ? (
-                <div className="space-y-3">
-                  <HeroAsset
-                    id={content.iconAssetId}
-                    alt={name}
-                    preview
-                    frameAspectRatio={1}
-                    className="size-20 rounded-full"
-                  />
-                  {kind === "spells" && (content.states?.length ?? 0) > 0 && (
-                    <div className="grid grid-cols-2 gap-3 border-t pt-4">
-                      {content.states!.map((state) => (
-                        <div key={state.key} className="space-y-2 rounded-xl border p-3">
-                          <HeroAsset
-                            id={state.iconAssetId}
-                            alt={warehouseText(state.translations, locale)?.name || state.key}
-                            preview
-                            frameAspectRatio={1}
-                            className="mx-auto size-20 rounded-full"
-                          />
-                          <p className="text-center text-xs">
-                            {warehouseText(state.translations, locale)?.name || state.key}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {kind === "spells" && (content.referenceImages?.length ?? 0) > 0 && (
-                    <div className="space-y-3 border-t pt-4">
-                      <h3 className="text-sm font-medium">Ảnh tham khảo</h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        {content.referenceImages!.map((image) => (
-                          <div key={image.assetId} className="space-y-2">
-                            <HeroAsset
-                              id={image.assetId}
-                              alt={image.notes ?? "Ảnh tham khảo"}
-                              preview
-                              frameAspectRatio={1}
-                              className="mx-auto size-24"
-                            />
-                            {image.notes && <p className="text-center text-xs text-muted-foreground">{image.notes}</p>}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <fieldset disabled={busy || uploading} className="space-y-4">
-                  <p className="text-sm text-muted-foreground">Biểu tượng dùng chung cho các bản dịch.</p>
-                  <AssetPicker
-                    semanticType={semanticTypes[kind]}
-                    value={content.iconAssetId}
-                    onChange={(iconAssetId) => update({ iconAssetId })}
-                    onBusyChange={setUploading}
-                  />
-                  {content.iconAssetId && (
-                    <Button variant="ghost" size="sm" disabled={disabled} onClick={() => update({ iconAssetId: null })}>
-                      Bỏ biểu tượng
-                    </Button>
-                  )}
-                  {kind === "spells" &&
-                    content.states?.map((state, index) => (
-                      <div key={index} className="space-y-3 border-t pt-4">
-                        <h3 className="text-sm font-medium">
-                          {warehouseText(state.translations, locale)?.name || state.key || `Trạng thái ${index + 1}`}
-                        </h3>
-                        <AssetPicker
-                          semanticType="SPELL_ICON"
-                          value={state.iconAssetId}
-                          onBusyChange={setUploading}
-                          onChange={(iconAssetId) =>
-                            update({
-                              states: content.states!.map((entry, n) =>
-                                n === index ? { ...entry, iconAssetId } : entry,
-                              ),
-                            })
-                          }
-                        />
-                      </div>
-                    ))}
-                  {kind === "spells" && (
-                    <div className="space-y-4 border-t pt-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-sm font-medium">Ảnh tham khảo</h3>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={disabled}
-                          onClick={() =>
-                            update({
-                              referenceImages: [...(content.referenceImages ?? []), { assetId: "", notes: null }],
-                            })
-                          }
-                        >
-                          <Plus className="size-4" /> Thêm ảnh
-                        </Button>
-                      </div>
-                      {content.referenceImages?.map((image, index) => (
-                        <div key={index} className="space-y-3 rounded-xl border p-3">
-                          <AssetPicker
-                            semanticType="SPELL_ICON"
-                            value={image.assetId || null}
-                            onBusyChange={setUploading}
-                            onChange={(assetId) =>
-                              update({
-                                referenceImages: content.referenceImages!.map((entry, n) =>
-                                  n === index ? { ...entry, assetId } : entry,
-                                ),
-                              })
-                            }
-                          />
-                          <Field
-                            label="Ghi chú ảnh"
-                            value={image.notes ?? ""}
-                            onChange={(notes) =>
-                              update({
-                                referenceImages: content.referenceImages!.map((entry, n) =>
-                                  n === index ? { ...entry, notes: notes || null } : entry,
-                                ),
-                              })
-                            }
-                            disabled={disabled}
-                          />
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={disabled}
-                            onClick={() =>
-                              update({ referenceImages: content.referenceImages!.filter((_, n) => n !== index) })
-                            }
-                          >
-                            <Trash2 className="size-4" /> Bỏ ảnh
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </fieldset>
-              )}
-            </TabsContent>
-            {hasHistory && (
-              <TabsContent value="videos">
-                <SubjectVideosPanel
-                  kind={kind === "enchantments" ? "ENCHANTMENT" : kind === "arcana" ? "ARCANA" : "SPELL"}
-                  id={entryId!}
-                  name={name}
-                />
-              </TabsContent>
-            )}
             {hasHistory && (
               <TabsContent value="history">
                 <WarehouseChangeHistory

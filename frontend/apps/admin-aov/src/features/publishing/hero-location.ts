@@ -37,13 +37,17 @@ export function readHeroLocation(params: URLSearchParams, translationMode = fals
   const view = params.get("view")
   const tab = params.get("tab")
   const section = params.get("section")
+  // The content sections share one page now, so `view=skills` still opens that page on its section.
+  const contentView = contentTabs.includes(view as HeroContentTab) ? (view as HeroContentTab) : null
   return {
-    view: (view === "overview" || view === "translations" || view === "history" || view === "patch"
-      ? view
+    view: (contentView || view === "translations" || view === "history" || view === "patch"
+      ? contentView
+        ? "overview"
+        : view
       : translationMode
         ? "translations"
         : "overview") as HeroWorkspaceView,
-    tab: (contentTabs.includes(tab as HeroContentTab) ? tab : "overview") as HeroContentTab,
+    tab: (contentTabs.includes(tab as HeroContentTab) ? tab : (contentView ?? "overview")) as HeroContentTab,
     section: (sections.includes(section as Section) ? section : "PROFILE") as Section,
     readLocale: localeValue(
       params.get("readLocale") ?? (!translationMode ? params.get("locale") : null),

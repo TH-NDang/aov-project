@@ -1,9 +1,11 @@
 import type { ComponentType, ReactNode } from "react"
 import { useLayoutEffect, useRef, useState } from "react"
-import { BookOpen, ChartNoAxesCombined, Image, Pencil, Shield, Sparkles, Swords, Clapperboard } from "lucide-react"
+import { BookOpen, Clapperboard, ImageIcon, Pencil, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { catalogIcons } from "@aov/ui/components/catalog-icons"
 import { cn } from "@aov/ui/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
+import { ContentsSection, SectionContents, useSectionContents, type ContentsEntry } from "@/components/section-contents"
 import { SECTIONS, type Content, type Section } from "./types"
 import { HeroOverview } from "./hero-overview"
 import type { StatDefault } from "./combat-attributes"
@@ -11,7 +13,6 @@ import { translatedText, sectionTextFields, type TranslationTarget } from "./her
 import { SubjectVideosPanel } from "../videos/subject-videos-panel"
 import { HeroContentSources } from "./hero-content-sources"
 import { AdminEntityText, AdminReferenceProvider } from "../terminology/catalog"
-import { HeroReviewNotice } from "./hero-review-notice"
 import { reviewTab, type HeroReviewItem } from "./hero-source-review"
 import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
@@ -21,14 +22,11 @@ import { HeroSkinsView } from "./hero-skins-view"
 import { visibleSkins } from "./hero-skins"
 export { HeroAsset } from "./hero-asset"
 
-const icons = {
-  PROFILE: BookOpen,
-  OVERVIEW_RATINGS: Shield,
-  COMBAT_STATS: ChartNoAxesCombined,
-  SKILLS: Swords,
-  SKINS: Sparkles,
-  MEDIA_BINDINGS: Image,
-}
+/** The element id of a content section; links and the old tab keys (`?tab=skills`) land on it. */
+export const heroContentSectionId = (tab: HeroContentTab) => `hero-content-${tab}`
+
+const sectionTab = (id: string | undefined) =>
+  (id?.startsWith("hero-content-") ? id.slice("hero-content-".length) : "overview") as HeroContentTab
 
 export function IconAction({
   label,
@@ -90,6 +88,10 @@ export function HeroContent(props: Parameters<typeof HeroContentBody>[0]) {
   )
 }
 
+/**
+ * The hero's content as one page: overview, skills, skins, images and videos in that order, with a contents list that
+ * follows the reader. Sections after the overview load as they come near the screen, as their tabs used to.
+ */
 function HeroContentBody({
   content,
   variantId,
@@ -104,19 +106,17 @@ function HeroContentBody({
   onTranslate,
   canWrite = false,
   issues,
-  tab: selectedTab,
+  tab = "overview",
   onTabChange,
+  onVisibleTabChange,
   heroId,
   selectedSkillKey,
   onSkillChange,
   skillLayout,
   onSkillLayoutChange,
-  showTabs = true,
   reviewTarget,
   onReviewShown,
 }: {
-  /** The hero page shows the content sections in its own tab row. */
-  showTabs?: boolean
   reviewTarget?: HeroReviewItem | null
   onReviewShown?: () => void
   content: Content
@@ -133,8 +133,12 @@ function HeroContentBody({
   canWrite?: boolean
   issues?: string[]
   onTranslate?: (target: TranslationTarget) => void
+  /** The section an address asks for; the page opens on it. */
   tab?: HeroContentTab
+  /** The reader picked a section from the contents list. */
   onTabChange?: (tab: HeroContentTab) => void
+  /** The section being read changed while scrolling. */
+  onVisibleTabChange?: (tab: HeroContentTab) => void
   heroId?: string
   selectedSkillKey?: string
   onSkillChange?: (key: string) => void
@@ -142,18 +146,23 @@ function HeroContentBody({
   onSkillLayoutChange?: (layout: "focus" | "flat") => void
 }) {
   const profile = translatedText(content.PROFILE?.translations ?? [], locale, sectionTextFields.PROFILE)
-  // The base appearance repeats the hero's own images, which the Images tab already shows.
+  // The base appearance repeats the hero's own images, which the Images section already shows.
   const skins = visibleSkins(content.SKINS?.skins ?? [])
-  const [localTab, setLocalTab] = useState<HeroContentTab>("overview")
   const [localSkill, setLocalSkill] = useState<string>()
-  const [localReview, setLocalReview] = useState<HeroReviewItem | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const tab = selectedTab ?? localTab
+  const contents = useSectionContents({
+    requested: heroContentSectionId(tab === "videos" && !heroId ? "overview" : tab),
+    first: heroContentSectionId("overview"),
+  })
   const activeSkill = selectedSkillKey ?? localSkill
-  const target = reviewTarget ?? localReview
+  const target = reviewTarget
+  const { revealed, prepare } = contents
   useLayoutEffect(() => {
-    if (!target?.section || tab !== reviewTab(target.section) || (target.skillKey && activeSkill !== target.skillKey))
-      return
+    if (!target?.section) return
+    // A lazy section has to be on the page before the warning inside it can be found, and the ones above it loaded so
+    // the warning stays where it is brought.
+    if (!prepare(heroContentSectionId(reviewTab(target.section)))) return
+    if (target.skillKey && activeSkill !== target.skillKey) return
     const section = contentRef.current?.querySelector<HTMLElement>(`#hero-${target.section}`)
     if (!section) return
     const skill = target.skillKey
@@ -170,65 +179,48 @@ function HeroContentBody({
     if (!element.matches("summary")) element.tabIndex = -1
     element.focus({ preventScroll: true })
     element.scrollIntoView?.({ block: "center" })
-    if (reviewTarget) onReviewShown?.()
-    else setLocalReview(null)
-  }, [target, reviewTarget, tab, activeSkill, onReviewShown])
-  const visibleSections: Section[] =
-    tab === "overview" || tab === "videos"
-      ? []
-      : tab === "skills"
-        ? ["SKILLS"]
-        : tab === "skins"
-          ? ["SKINS"]
-          : ["MEDIA_BINDINGS"]
+    onReviewShown?.()
+  }, [target, activeSkill, onReviewShown, revealed, prepare])
+
+  const editAction = (section: Section) => {
+    const label = SECTIONS.find(([key]) => key === section)![2]
+    return (
+      <IconAction
+        label={
+          editable
+            ? `Chỉnh sửa ${label}`
+            : onNeedsDraft
+              ? `Chỉnh sửa ${label} · tạo bản nháp trước`
+              : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`
+        }
+        icon={Pencil}
+        disabled={(!editable && !onNeedsDraft) || busy}
+        onClick={() => (editable ? onEdit(section) : onNeedsDraft?.())}
+      />
+    )
+  }
+  const entries: ContentsEntry[] = [
+    { id: heroContentSectionId("overview"), label: "Tổng quan", icon: BookOpen },
+    { id: heroContentSectionId("skills"), label: "Kỹ năng", icon: Swords, count: content.SKILLS?.skills.length ?? 0 },
+    { id: heroContentSectionId("skins"), label: "Trang phục", icon: catalogIcons.skins, count: skins.length },
+    { id: heroContentSectionId("media"), label: "Ảnh", icon: ImageIcon },
+    ...(heroId ? [{ id: heroContentSectionId("videos"), label: "Video", icon: Clapperboard }] : []),
+  ]
+  const roles = ["HEAD", "PORTRAIT", "SPLASH"] as const
+  const roleLabel = (role: (typeof roles)[number]) =>
+    role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"
+
   return (
-    <div ref={contentRef} className="space-y-4" aria-label="Nội dung tướng">
-      <div
-        className={cn("flex gap-1 overflow-x-auto border-b pb-2", !showTabs && "hidden")}
-        role="tablist"
-        aria-label="Thông tin hiển thị"
+    <div ref={contentRef} aria-label="Nội dung tướng">
+      <SectionContents
+        contents={contents}
+        entries={entries}
+        // The scrolled hero name (48px) and the workspace tab row stay stuck above the sections.
+        className="[--contents-offset:85px] @max-2xl:[--contents-offset:105px]"
+        onNavigate={(id) => onTabChange?.(sectionTab(id))}
+        onActiveChange={onVisibleTabChange && ((id) => onVisibleTabChange(sectionTab(id)))}
       >
-        {(
-          [
-            ["overview", BookOpen, "Tổng quan", null],
-            ["skills", Swords, "Kỹ năng", content.SKILLS?.skills.length ?? 0],
-            ["skins", Sparkles, "Trang phục", skins.length],
-            ["media", Image, "Ảnh tướng", null],
-            ...(heroId ? ([["videos", Clapperboard, "Video", null]] as const) : []),
-          ] as const
-        ).map(([key, Icon, label, count]) => (
-          <Button
-            key={key}
-            role="tab"
-            type="button"
-            variant={tab === key ? "secondary" : "ghost"}
-            aria-selected={tab === key}
-            aria-controls={`hero-content-${key}`}
-            className="shrink-0"
-            onClick={() => (onTabChange ? onTabChange(key) : setLocalTab(key))}
-          >
-            <Icon className="size-4" />
-            {label}
-            {count !== null && <span className="text-xs tabular-nums text-muted-foreground">{count}</span>}
-          </Button>
-        ))}
-        {showTabs && (
-          <HeroReviewNotice
-            skills={content.SKILLS?.skills ?? []}
-            locale={locale}
-            disabled={busy}
-            onNavigate={(item) => {
-              if (!item.section) return
-              const selectTab = onTabChange ?? setLocalTab
-              selectTab(reviewTab(item.section))
-              if (item.skillKey) (onSkillChange ?? setLocalSkill)(item.skillKey)
-              setLocalReview(item)
-            }}
-          />
-        )}
-      </div>
-      <div className="grid items-start gap-4" role="tabpanel" id={`hero-content-${tab}`}>
-        {tab === "overview" && (
+        <ContentsSection id={heroContentSectionId("overview")} title="Tổng quan" icon={BookOpen}>
           <HeroOverview
             heroId={heroId}
             variantId={variantId}
@@ -246,42 +238,40 @@ function HeroContentBody({
             canWrite={canWrite}
             issues={issues}
           />
-        )}
-        {tab === "videos" && heroId && <SubjectVideosPanel kind="HERO" id={heroId} name={profile?.name || "Tướng"} />}
-        {SECTIONS.filter(([key]) => visibleSections.includes(key)).map(([section, , label]) => {
-          const Icon = icons[section]
-          const data = content[section]
-          const editAction = (
-            <IconAction
-              label={
-                editable
-                  ? `Chỉnh sửa ${label}`
-                  : onNeedsDraft
-                    ? `Chỉnh sửa ${label} · tạo bản nháp trước`
-                    : `Chỉnh sửa ${label} · cần bản nháp và quyền chỉnh sửa`
-              }
-              icon={Pencil}
-              disabled={(!editable && !onNeedsDraft) || busy}
-              onClick={() => (editable ? onEdit(section) : onNeedsDraft?.())}
+        </ContentsSection>
+        <ContentsSection
+          id={heroContentSectionId("skills")}
+          title="Kỹ năng"
+          icon={Swords}
+          count={content.SKILLS?.skills.length ?? 0}
+          lazy
+        >
+          <div id="hero-SKILLS" className="min-w-0">
+            <HeroSkillsView
+              action={editAction("SKILLS")}
+              onTranslate={onTranslate}
+              skills={content.SKILLS?.skills ?? []}
+              locale={locale}
+              heroId={heroId}
+              selectedSkillKey={activeSkill}
+              onSkillChange={onSkillChange ?? setLocalSkill}
+              layout={skillLayout}
+              onLayoutChange={onSkillLayoutChange}
             />
-          )
-          let body: ReactNode
-          if (section === "SKILLS")
-            body = (
-              <HeroSkillsView
-                action={editAction}
-                onTranslate={onTranslate}
-                skills={content.SKILLS?.skills ?? []}
-                locale={locale}
-                heroId={heroId}
-                selectedSkillKey={activeSkill}
-                onSkillChange={onSkillChange ?? setLocalSkill}
-                layout={skillLayout}
-                onLayoutChange={onSkillLayoutChange}
-              />
-            )
-          else if (section === "SKINS")
-            body = skins.length ? (
+            <HeroContentSources sources={content.SKILLS?.sources ?? []} />
+          </div>
+        </ContentsSection>
+        <ContentsSection
+          id={heroContentSectionId("skins")}
+          title="Trang phục"
+          icon={catalogIcons.skins}
+          count={skins.length}
+          actions={editAction("SKINS")}
+          lazy
+          placeholderHeight={480}
+        >
+          <div id="hero-SKINS" className="min-w-0">
+            {skins.length ? (
               <HeroSkinsView
                 skins={skins}
                 locale={locale}
@@ -292,63 +282,50 @@ function HeroContentBody({
               />
             ) : (
               <Text>Chưa có trang phục trong bản dữ liệu này.</Text>
-            )
-          else
-            body = (
-              <div className="space-y-4">
-                {/* Each image's own credit lives in its info button; this line only sums them up. */}
-                <ImageCreditSummary
-                  label="ảnh tướng"
-                  assetIds={(["HEAD", "PORTRAIT", "SPLASH"] as const).map(
-                    (role) => content.MEDIA_BINDINGS?.bindings[role],
-                  )}
-                />
-                <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
-                  {(["HEAD", "PORTRAIT", "SPLASH"] as const).map((role) => (
-                    <div
-                      key={role}
-                      className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
-                    >
-                      <HeroAsset
-                        id={content.MEDIA_BINDINGS?.bindings[role]}
-                        alt={`${profile?.name || "Tướng"} · ${role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"}`}
-                        className="w-full"
-                        naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
-                        preview
-                      />
-                      <p className="text-center text-xs text-muted-foreground">
-                        {role === "HEAD" ? "Đại diện" : role === "PORTRAIT" ? "Chân dung" : "Ảnh nền"}
-                      </p>
-                    </div>
-                  ))}
+            )}
+            <HeroContentSources sources={content.SKINS?.sources ?? []} />
+          </div>
+        </ContentsSection>
+        <ContentsSection
+          id={heroContentSectionId("media")}
+          title="Ảnh"
+          icon={ImageIcon}
+          actions={editAction("MEDIA_BINDINGS")}
+          lazy
+        >
+          <div id="hero-MEDIA_BINDINGS" className="min-w-0 space-y-4">
+            {/* Each image's own credit lives in its info button; this line only sums them up. */}
+            <ImageCreditSummary
+              label="ảnh tướng"
+              assetIds={roles.map((role) => content.MEDIA_BINDINGS?.bindings[role])}
+            />
+            <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
+              {roles.map((role) => (
+                <div
+                  key={role}
+                  className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
+                >
+                  <HeroAsset
+                    id={content.MEDIA_BINDINGS?.bindings[role]}
+                    alt={`${profile?.name || "Tướng"} · ${roleLabel(role)}`}
+                    className="w-full"
+                    naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
+                    preview
+                  />
+                  <p className="type-meta text-center">{roleLabel(role)}</p>
                 </div>
-              </div>
-            )
-          return (
-            <section
-              key={section}
-              className={cn(
-                "min-w-0 scroll-mt-4",
-                section !== "SKILLS" && "admin-section py-4 sm:py-5",
-                section === "COMBAT_STATS" && "@min-[900px]:col-span-2",
-              )}
-              id={`hero-${section}`}
-            >
-              {section !== "SKILLS" && (
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <h3 className="flex items-center gap-2 font-semibold">
-                    <Icon className="size-4 text-muted-foreground" />
-                    {section === "PROFILE" ? "Cốt truyện & thông tin" : label}
-                  </h3>
-                  {editAction}
-                </div>
-              )}
-              {body}
-              <HeroContentSources sources={data?.sources ?? []} />
-            </section>
-          )
-        })}
-      </div>
+              ))}
+            </div>
+            <HeroContentSources sources={content.MEDIA_BINDINGS?.sources ?? []} />
+          </div>
+        </ContentsSection>
+        {heroId && (
+          // The video panel brings its own heading and add button.
+          <ContentsSection id={heroContentSectionId("videos")} label="Video" lazy placeholderHeight={240}>
+            <SubjectVideosPanel kind="HERO" id={heroId} name={profile?.name || "Tướng"} />
+          </ContentsSection>
+        )}
+      </SectionContents>
     </div>
   )
 }

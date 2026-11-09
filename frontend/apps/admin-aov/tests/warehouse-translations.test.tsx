@@ -649,7 +649,7 @@ test("creating a spell uploads its icon from the information tab and saves the c
         }}
       />,
     )
-    assert.equal(document.querySelector('[role="tab"][data-state="active"]')?.textContent?.trim(), "Thông tin")
+    assert.equal(document.querySelector('[role="tab"][data-state="active"]')?.textContent?.trim(), "Nội dung")
     assert.ok([...document.querySelectorAll("button")].some((button) => button.textContent?.trim() === "Tải ảnh mới"))
     await upload(new File([new Uint8Array([137, 80, 78, 71])], "new-spell.png", { type: "image/png" }))
     assert.ok(

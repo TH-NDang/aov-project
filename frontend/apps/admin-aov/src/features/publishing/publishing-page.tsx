@@ -71,6 +71,7 @@ import {
   heroPageLocation,
   readHeroLocation,
   switchHeroLocation,
+  type HeroContentTab,
   type HeroWorkspaceView,
 } from "./hero-location"
 import { useHeroLocation } from "./use-hero-location"
@@ -80,7 +81,6 @@ import { DraftStatusControl } from "@/app/drafts/draft-status"
 import { HeroDraftChanges, savedHeroSections } from "./hero-draft-changes"
 import { PublishButton } from "./publish-button"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
-import { visibleSkins } from "./hero-skins"
 import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
 import { captureFocus } from "./patch-capture-model"
 import { PatchCapturePanel, PatchCaptureToggle } from "./patch-capture-panel"
@@ -299,6 +299,8 @@ export function PublishingWorkspace({
   const displayLocale = useContentLocale()
   const location = readHeroLocation(urlParams, translationMode, displayLocale)
   const { view, section, targetLocale, sourceLocale } = location
+  // The content page reports the section being read, so the capture panel can follow the scroll.
+  const [visibleTab, setVisibleTab] = useState<HeroContentTab>(location.tab)
   const setSection = (value: Section) =>
     updateLocation({ section: value, translationKey: null, translationField: null })
   const setContentLocale = (value: string) => updateLocation({ readLocale: value })
@@ -393,7 +395,7 @@ export function PublishingWorkspace({
     ready: !!preview && !overview.isPending,
     focus: captureFocus({
       view,
-      tab: location.tab,
+      tab: visibleTab,
       editing,
       section,
       skillKey: heroLocationId(urlParams.get("skill")),
@@ -910,21 +912,7 @@ export function PublishingWorkspace({
               </div>
             </div>
           </header>
-          <HeroWorkspaceTabs
-            view={view}
-            contentTab={location.tab}
-            busy={busy}
-            counts={{
-              skills: preview?.content.SKILLS?.skills.length ?? null,
-              skins: preview ? visibleSkins(preview.content.SKINS?.skins ?? []).length : null,
-            }}
-            onContentTab={(contentTab) => {
-              if (busy) return
-              updateLocation({ view: "overview", tab: contentTab === "overview" ? null : contentTab })
-              setEditing(false)
-            }}
-            onView={switchView}
-          />
+          <HeroWorkspaceTabs view={view} busy={busy} onView={switchView} />
         </>
       )}
       {[rulesets.error, regions.error, revisions.error, read.error].filter(Boolean).map((failure, index) => (
@@ -995,7 +983,6 @@ export function PublishingWorkspace({
                     statDefaults={statDefaults.data}
                     referenceError={statDefaults.isError}
                     patchCode={statPatch?.patchCode}
-                    showTabs={false}
                     reviewTarget={reviewTarget}
                     onReviewShown={() => setReviewTarget(null)}
                     content={preview.content}
@@ -1008,7 +995,8 @@ export function PublishingWorkspace({
                     skillLayout={urlParams.get("skillLayout") === "flat" ? "flat" : "focus"}
                     onSkillLayoutChange={(layout) => updateLocation({ skillLayout: layout === "flat" ? "flat" : null })}
                     onSkillChange={(skill) => updateLocation({ skill })}
-                    onTabChange={(tab) => updateLocation({ tab })}
+                    onTabChange={(tab) => updateLocation({ tab: tab === "overview" ? null : tab })}
+                    onVisibleTabChange={setVisibleTab}
                     onTranslate={canWrite ? openTranslation : undefined}
                     onNeedsDraft={canWrite && revision?.state === "PUBLISHED" ? startDraft : undefined}
                     canWrite={canWrite}
@@ -1023,6 +1011,10 @@ export function PublishingWorkspace({
                         )[0]
                         if (missing) return openTranslation({ ...missing, section: "PROFILE", key: "profile" })
                       }
+                      // Closing the editor reopens the content page on the section that was edited.
+                      const editedTab = reviewTab(next)
+                      if (editedTab !== location.tab)
+                        updateLocation({ tab: editedTab === "overview" ? null : editedTab })
                       setSection(next)
                       setProfilePart(part)
                       setEditing(true)

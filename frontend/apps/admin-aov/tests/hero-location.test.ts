@@ -138,3 +138,20 @@ test("switching heroes can select their own revision and produce a full-page URL
   assert.equal(full.searchParams.get("ruleset"), "shared")
   for (const key of ["hero", "compare", "skill", "season"]) assert.equal(full.searchParams.get(key), null)
 })
+
+test("content sections share one page, so a section named as a view opens that page on it", () => {
+  assert.deepEqual(
+    [
+      readHeroLocation(new URLSearchParams("view=skills")).view,
+      readHeroLocation(new URLSearchParams("view=skills")).tab,
+    ],
+    ["overview", "skills"],
+  )
+  assert.equal(
+    readHeroLocation(new URLSearchParams("view=videos&tab=skins")).tab,
+    "skins",
+    "An explicit tab still wins",
+  )
+  assert.equal(readHeroLocation(new URLSearchParams("view=media")).view, "overview")
+  assert.equal(readHeroLocation(new URLSearchParams("view=history&tab=media")).view, "history")
+})
