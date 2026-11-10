@@ -32,20 +32,29 @@ export function HeroAsset({
   gallery?: { images: LightboxImage[]; index: number }
 }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null)
   const asset = useQuery({ ...heroContentAssetQuery(id ?? ""), enabled: !!id })
   const sources = asset.data?.currentUrl
     ? visibleSources(currentMediaSources(asset.data.provenance ?? [], asset.data.currentVersionId))
     : []
+  const url = asset.data?.currentUrl
+  const shown = !!url && failedUrl !== url
   const thumbnail = (
     <div
-      className={cn("@container overflow-hidden rounded-xl border bg-muted/40", className)}
+      // A picture stands on its own, without a frame. Only an empty, failed or still loading slot gets a tinted
+      // ground, and an empty or failed one an outline too, so a missing picture still shows where it belongs.
+      className={cn(
+        "@container overflow-hidden rounded-xl",
+        !shown ? "border bg-muted/40" : loadedUrl !== url && "bg-muted/40",
+        className,
+      )}
       style={frameAspectRatio ? { aspectRatio: frameAspectRatio } : undefined}
       // Hovering any image tells who owns it, without opening it.
       title={asset.data?.currentUrl ? creditSummary(sources) : undefined}
     >
-      {asset.data?.currentUrl && failedUrl !== asset.data.currentUrl ? (
+      {shown ? (
         <img
-          src={asset.data.currentUrl}
+          src={url}
           alt={alt}
           loading="lazy"
           className={cn(
@@ -54,7 +63,8 @@ export function HeroAsset({
             naturalAspectRatio && "block h-auto w-full object-contain",
           )}
           style={naturalAspectRatio ? { aspectRatio: `auto ${naturalAspectRatio}` } : undefined}
-          onError={() => setFailedUrl(asset.data!.currentUrl)}
+          onLoad={() => setLoadedUrl(url)}
+          onError={() => setFailedUrl(url)}
         />
       ) : (
         <div

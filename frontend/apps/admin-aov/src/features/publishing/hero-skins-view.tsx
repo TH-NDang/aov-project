@@ -205,8 +205,9 @@ export function HeroSkinsView({
                       title={states ? `${name} · ${states}` : name}
                       tabIndex={active ? 0 : -1}
                       className={cn(
-                        "relative aspect-[3/4] w-14 shrink-0 overflow-hidden rounded-md border bg-muted/40 outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring @min-[480px]/skin-tab:w-11 @min-[900px]/skin-tab:w-[60px]",
-                        active ? "border-primary ring-1 ring-primary" : "opacity-75 hover:opacity-100",
+                        "relative aspect-[3/4] w-14 shrink-0 overflow-hidden rounded-md bg-muted/40 outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring @min-[480px]/skin-tab:w-11 @min-[900px]/skin-tab:w-[60px]",
+                        // No frame around the pictures: the chosen one is marked by a ring, the others are dimmed.
+                        active ? "ring-2 ring-primary" : "opacity-70 hover:opacity-100",
                       )}
                       onClick={() => select(skin.skinKey)}
                     >
@@ -422,7 +423,7 @@ function SkinStage({
   const backdrop = cover ? undefined : assets[1].data?.currentUrl
 
   return (
-    <div className="relative isolate aspect-video min-w-0 overflow-hidden rounded-xl border bg-muted self-start [grid-area:stage]">
+    <div className="relative isolate aspect-video min-w-0 overflow-hidden rounded-xl bg-muted self-start [grid-area:stage]">
       {/* The blurred copy reaches past the frame, so the blur never fades to an empty edge. */}
       {backdrop && (
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">

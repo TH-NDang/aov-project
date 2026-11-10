@@ -18,7 +18,9 @@ import { captureGroupKeys } from "./patch-capture-model"
 import type { StatDefault } from "./combat-attributes"
 import type { Content, Profile, Section } from "./types"
 
-const panel = "min-w-0 admin-section py-4 first:border-t-0 first:pt-0 last:pb-0"
+// Groups are divided by a line between them; the card's own edge already opens the first one. `admin-section` is not
+// used here: its unlayered border would win over `first:border-t-0`.
+const panel = "min-w-0 border-t py-4 first:border-t-0 first:pt-0 last:pb-0"
 
 export interface HeroOverviewProps {
   content: Content
