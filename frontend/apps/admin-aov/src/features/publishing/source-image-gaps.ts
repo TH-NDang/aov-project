@@ -114,7 +114,10 @@ function statsGap({ coverage, draft, blockers }: SourceGapInput): SourceGap | nu
   const recorded = images.flatMap((image) => (image.values ? [image.values] : []))
   // A set that never recorded how an image was read cannot say what is missing from it.
   if (images.length && !recorded.length) return null
-  const hidden = combatAttributeKeys.filter((key) => !recorded.some((values) => observedStat(key, values)))
+  // A hero whose screen has no resource row (Charlotte) is read as such: nothing there is hidden.
+  const shown = (key: string, values: Record<string, unknown>) =>
+    !!observedStat(key, values) || (key === "MAX_RESOURCE" && values.noResource === true)
+  const hidden = combatAttributeKeys.filter((key) => !recorded.some((values) => shown(key, values)))
   if (!hidden.length) return null
 
   const reason: SourceGapReason = !images.length

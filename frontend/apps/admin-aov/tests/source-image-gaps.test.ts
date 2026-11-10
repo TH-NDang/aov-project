@@ -159,6 +159,28 @@ test("numbers covered on the image are named, so only they are captured again", 
   assert.equal(gap!.checks, "Đối chiếu Máu, Công vật lý và Công phép.")
 })
 
+test("a hero with no resource row on its attributes screen has nothing hidden there", () => {
+  const noResource = { ...readable, maxResource: null, resourceLabel: null, noResource: true }
+  assert.deepEqual(
+    sourceGaps({
+      coverage: coverage({ attributes: [{ fileName: "a.png", values: noResource }] }),
+      draft: draft(),
+      blockers: [],
+    }),
+    [],
+  )
+  const [gap] = sourceGaps({
+    coverage: coverage({ attributes: [{ fileName: "a.png", values: { ...noResource, noResource: undefined } }] }),
+    draft: draft(),
+    blockers: [],
+  })
+  assert.equal(
+    gap!.problem,
+    "Ảnh Thuộc tính bị che, không đọc được Tài nguyên tối đa.",
+    "without the mark it is unread",
+  )
+})
+
 test("a set that never recorded how an image was read cannot call it short", () => {
   assert.deepEqual(
     sourceGaps({
