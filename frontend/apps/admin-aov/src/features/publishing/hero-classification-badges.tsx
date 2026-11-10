@@ -5,7 +5,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/u
 import { MediaImage } from "@/components/media-image"
 import { POSITIONS, ROLES, type Position, type Role } from "./types"
 
-const roleIcons: Record<Role, string> = {
+export const roleIcons: Record<Role, string> = {
   TANK: "do-don",
   WARRIOR: "dau-si",
   ASSASSIN: "sat-thu",

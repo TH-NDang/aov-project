@@ -14,6 +14,7 @@ import type {
 import { SECTIONS } from "./types"
 import type { UploadTicket } from "../users/avatar-upload"
 import type { HeroPublishReadiness } from "./publish-readiness"
+import type { HeroForms, ReplaceHeroForms } from "./hero-forms-model"
 export type Request = <T>(path: string, init?: RequestInit) => Promise<T>
 
 const sectionKeys = {
@@ -146,6 +147,9 @@ export function createPublishingApi(request: Request) {
     },
     publishReadiness: (signal?: AbortSignal) =>
       request<HeroPublishReadiness[]>("/admin/heroes/publish-readiness", signal ? { signal } : undefined),
+    forms: (heroId: string) => request<HeroForms>(`/admin/heroes/${heroId}/forms`),
+    replaceForms: (heroId: string, value: ReplaceHeroForms) =>
+      send<HeroForms>(`/admin/heroes/${heroId}/forms`, "PUT", value),
     shop: (heroId: string, region: string) => request<HeroShop>(`/admin/heroes/${heroId}/shop?region=${region}`),
     saveShopPrice: (heroId: string, region: string, value: HeroShopPrice) =>
       send<HeroShopPrice>(`/admin/heroes/${heroId}/shop?region=${region}`, "PUT", value),
