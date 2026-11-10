@@ -2069,7 +2069,9 @@ Hai API đọc admin bổ sung, yêu cầu `catalog:read` và giữ `no-store`:
   `validTo`. Dùng để tiếp tục thiết lập context sau khi tải lại admin, không suy diễn ruleset từ locale.
 
 Public Hero detail có thêm `skillMedia` và `skinMedia`, là map theo `skillKey` / `skinKey` tới
-`MediaAssetReference` usable hiện tại. Không có ảnh thì không có entry. Hai map này cùng `media`
+`MediaAssetReference` usable hiện tại. Không có ảnh thì không có entry. `skillStateMedia` là map theo
+`assetId` của ảnh theo trạng thái (`content.skills.skills[].stateIcons[].assetId`, kèm `label`) tới
+`MediaAssetReference`, để Wiki đổi icon chiêu theo trạng thái như Admin. Các map này cùng `media`
 thuộc response resolver cần revalidation; không nhúng URL current vào section immutable.
 Activate media version thay ETag/detail URL ảnh nhưng giữ nguyên HeroRevision và section IDs.
 
