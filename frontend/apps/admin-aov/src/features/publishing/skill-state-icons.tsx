@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
-import { cn } from "@aov/ui/lib/utils"
+import { SkillStateToggle } from "@aov/ui/components/skill-kit"
 import { AssetPicker } from "./asset-picker"
 import { HeroAsset } from "./hero-asset"
 import type { Skill, SkillStateIcon } from "./types"
@@ -169,32 +169,5 @@ export function SkillStateSwitch({
   state: number | null
   onState: (state: number | null) => void
 }) {
-  const icons = stateIconsOf(skill)
-  if (!icons.length) return null
-  const options: [number | null, string][] = [
-    [null, "Thường"],
-    ...icons.map((icon, n): [number, string] => [n, icon.label]),
-  ]
-  return (
-    <div
-      role="group"
-      aria-label="Trạng thái của chiêu"
-      className="flex w-fit flex-wrap gap-1 rounded-lg bg-muted/50 p-1"
-    >
-      {options.map(([value, label]) => (
-        <button
-          key={value ?? "normal"}
-          type="button"
-          aria-pressed={state === value}
-          className={cn(
-            "type-label min-h-8 rounded-md px-2.5 outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            state === value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-          )}
-          onClick={() => onState(value)}
-        >
-          {label || "Chưa đặt tên"}
-        </button>
-      ))}
-    </div>
-  )
+  return <SkillStateToggle states={stateIconsOf(skill).map((icon) => icon.label)} value={state} onChange={onState} />
 }

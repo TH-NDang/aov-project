@@ -1,3 +1,4 @@
+import { skillCooldownRange } from "@aov/ui/lib/skill-kit"
 import { useState, type ReactNode } from "react"
 import { AlertTriangle, ChevronDown, Clock3, Droplets, ExternalLink, Pencil } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
@@ -49,14 +50,23 @@ function skillCosts(skill: Skill) {
 /** A skill's cost and traits as loose badges, for a row of its own or beside the skill's name. */
 export function SkillSourceBadges({ skill, showTags = true }: { skill: Skill; showTags?: boolean }) {
   const { cooldownText, energyText } = skillCosts(skill)
+  // The level table gives the whole range ("10s → 8s"), which says more than the first rank alone.
+  const cooldownRange = skillCooldownRange(skill)
   const tags = showTags ? strings(snapshot(skill)?.tags) : []
   return (
     <>
-      {cooldownText && (
-        <Badge variant="secondary" className="gap-1.5">
+      {cooldownRange ? (
+        <Badge variant="secondary" className="gap-1.5" title="Hồi chiêu từ cấp 1 tới cấp cao nhất">
           <Clock3 className="size-3" />
-          <AdminEntityText text={cooldownText} />
+          {cooldownRange}
         </Badge>
+      ) : (
+        cooldownText && (
+          <Badge variant="secondary" className="gap-1.5">
+            <Clock3 className="size-3" />
+            <AdminEntityText text={cooldownText} />
+          </Badge>
+        )
       )}
       {energyText && (
         <Badge variant="secondary" className="gap-1.5">

@@ -15,6 +15,7 @@ import { captureGroupKeys } from "./patch-capture-model"
 import { translatedText, sectionTextFields, type TranslationTarget } from "./hero-translation-model"
 import { SkillVideosSection } from "../videos/skill-videos-section"
 import { SkillStateSwitch, skillInState, stateIconsOf } from "./skill-state-icons"
+import { SkillFormSwitch, SkillVariantDots } from "@aov/ui/components/skill-kit"
 
 export type HeroSkillsLayout = "focus" | "flat"
 
@@ -126,33 +127,25 @@ export function HeroSkillsView({
       ))}
     </div>
   )
+  // The forms of one slot switch in place, like the switch button beside the skills in the game.
   const variantSwitch = (variants: Skill[]) => (
-    <div role="group" aria-label="Chuyển biến thể kỹ năng" className="flex flex-wrap gap-2">
-      {variants.map((skill) => {
+    <SkillFormSwitch
+      label="Chuyển biến thể kỹ năng"
+      disabled={locked}
+      value={current.skillKey}
+      onChange={choose}
+      options={variants.map((skill) => {
         const label = skill.formKey || skillVariantLabel(skill, skills) || skillLabel(skill)
         const name = selectSkillTranslation(skill, locale)?.name || skillLabel(skill)
-        const active = skill.skillKey === current.skillKey
-        return (
-          <button
-            key={skill.skillKey}
-            type="button"
-            aria-pressed={active}
-            disabled={locked}
-            aria-label={`${label} · ${name}`}
-            className={cn(
-              "flex min-h-11 min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              active
-                ? "border-primary/40 bg-primary/8 font-medium"
-                : "border-transparent bg-muted/35 hover:bg-muted/60",
-            )}
-            onClick={() => choose(skill.skillKey)}
-          >
-            <SkillArtwork skill={skill} heroId={heroId} className="size-8" />
-            <span className="min-w-0 break-words">{label}</span>
-          </button>
-        )
+        return {
+          key: skill.skillKey,
+          label,
+          title: name,
+          ariaLabel: `${label} · ${name}`,
+          icon: <SkillArtwork skill={skill} heroId={heroId} className="size-5" />,
+        }
       })}
-    </div>
+    />
   )
   const credits = (
     <ImageCreditSummary
@@ -223,6 +216,7 @@ export function HeroSkillsView({
                     >
                       {skillLabel(skill)}
                     </span>
+                    <SkillVariantDots count={group.skills.length} active={group.skills.indexOf(skill)} />
                   </button>
                 )
               })}
@@ -466,7 +460,7 @@ function SkillDetail({
     )
   return (
     <>
-      <header className="flex items-start gap-3">
+      <header className="flex flex-wrap items-start gap-3">
         <SkillArtwork skill={skillInState(skill, state)} heroId={heroId} className="size-12" preview />
         <div className="min-w-0 flex-1 space-y-1.5">
           <h4 className="type-section-title break-words">{text?.name || skillLabel(skill)}</h4>
@@ -490,8 +484,9 @@ function SkillDetail({
           onTranslate={onTranslate}
         />
         <PatchCaptureLink groupKey={captureGroupKeys.skill(skill.skillKey)} name={text?.name || skillLabel(skill)} />
+        {/* The form switch sits with the name it changes; on a narrow panel it takes its own line. */}
+        {states && <div className="basis-full">{states}</div>}
       </header>
-      {states}
       <SkillStateSwitch skill={skill} state={state} onState={setState} />
       {text?.description ? (
         <div className="type-body whitespace-pre-wrap break-words leading-7 [overflow-wrap:anywhere]">

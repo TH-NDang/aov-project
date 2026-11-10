@@ -1,4 +1,5 @@
 import { skillSlot } from "@aov/ui/lib/skill-rank-values"
+import { groupSkillKit } from "@aov/ui/lib/skill-kit"
 import type { Skill } from "./types"
 
 export function selectSkillTranslation(skill: Skill, locale: string) {
@@ -29,30 +30,9 @@ export interface HeroSkillGroup {
   skills: Skill[]
 }
 
-/** Group only explicit slot/variant identities; unknown captures remain independent. */
+/** Group only explicit slot/variant identities; unknown captures remain independent. Shared with the Wiki. */
 export function groupHeroSkills(skills: readonly Skill[]): HeroSkillGroup[] {
-  const ordered = [...skills].sort((a, b) => a.displayOrder - b.displayOrder)
-  const slots = new Map<number, Skill[]>()
-  for (const skill of ordered) {
-    const slot = skillSlot(skill)
-    if (slot === null || skillVariant(skill) === null) continue
-    slots.set(slot, [...(slots.get(slot) ?? []), skill])
-  }
-  const grouped = new Map<number, Skill[]>()
-  for (const [slot, members] of slots) {
-    if (members.length > 1 && new Set(members.map(skillVariant)).size === members.length) grouped.set(slot, members)
-  }
-  const output: HeroSkillGroup[] = []
-  const seen = new Set<number>()
-  for (const skill of ordered) {
-    const slot = skillSlot(skill)
-    const members = slot !== null ? grouped.get(slot) : undefined
-    if (members?.includes(skill)) {
-      if (!seen.has(slot!)) output.push({ key: `slot:${slot}`, skills: members })
-      seen.add(slot!)
-    } else output.push({ key: `skill:${skill.skillKey}`, skills: [skill] })
-  }
-  return output
+  return groupSkillKit(skills)
 }
 
 export function skillLabel(skill: Skill) {
