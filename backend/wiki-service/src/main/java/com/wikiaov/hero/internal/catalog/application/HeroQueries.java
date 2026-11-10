@@ -136,14 +136,19 @@ public class HeroQueries {
 
     private void addSkillMedia(Map<String, Object> result, HeroRevisionView rev) {
         Map<String, Object> skillMedia = new LinkedHashMap<>();
+        // State icons are keyed by asset, since the content lists them by asset ID under each skill.
+        Map<String, Object> skillStateMedia = new LinkedHashMap<>();
         var skills = (Skills) sections.content(HeroSection.SKILLS, rev.sections().get(HeroSection.SKILLS));
         skills.skills().forEach(skill -> {
             if (skill.iconAssetId() != null)
                 media.find(skill.iconAssetId()).filter(a -> a.usable())
                         .ifPresent(a -> skillMedia.put(skill.skillKey(), a));
+            skill.stateIcons().forEach(icon -> media.find(icon.assetId()).filter(a -> a.usable())
+                    .ifPresent(a -> skillStateMedia.put(icon.assetId().toString(), a)));
         });
 
         result.put("skillMedia", skillMedia);
+        result.put("skillStateMedia", skillStateMedia);
     }
 
     private void addSkinMedia(Map<String, Object> result, HeroRevisionView rev) {

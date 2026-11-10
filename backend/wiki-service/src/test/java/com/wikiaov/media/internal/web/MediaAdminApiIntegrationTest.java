@@ -987,6 +987,7 @@ class MediaAdminApiIntegrationTest {
         var published = pipeline(post(path + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
         var first = mvc.perform(get(root + "/heroes/" + hero)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.skillMedia.skill-1.currentVersion.url").isNotEmpty())
+                .andExpect(jsonPath("$.skillStateMedia").isMap())
                 .andExpect(jsonPath("$.skinMedia.skin-1.currentVersion.url").isNotEmpty()).andReturn().getResponse();
         String tag = first.getHeader("ETag");
         mvc.perform(get(root + "/heroes/" + hero).header("If-None-Match", tag)).andExpect(status().isNotModified());
