@@ -2390,7 +2390,12 @@ phải biến thể, nên không chép mô tả sang kỹ năng khác:
 - Admin khi đọc có nút chuyển "Thường · <nhãn>" dưới kỹ năng, chỉ đổi ảnh. Wiki chưa hiển thị trong đợt này.
 
 Khi tên hoặc mô tả đổi theo dạng (Edras, Yena, Liliana…), mỗi dạng vẫn là **biến thể**: một kỹ năng riêng cùng slot,
-`skillKey` dạng `skill-<slot>-<biến thể>`, có bản dịch riêng. Trình sửa có nút "Thêm biến thể": tạo kỹ năng cùng
+`skillKey` dạng `skill-<slot>-<biến thể>`, có bản dịch riêng. Biến thể nên có **tên dạng** (`formKey`, trường "Dạng tướng"
+trong Thiết lập kỹ năng) đọc từ mô tả game, ví dụ `Quang minh`/`Hắc ám`, `Loan đao`/`Viên đao`, `Thường`/`Phi hành`,
+`Khởi đầu`/`Cường hóa`, `Lần 1`/`Lần 2`; Admin hiện tên này thay cho "Biến thể N" ở tab và chip tham chiếu, và ô tìm `@`
+tìm được theo tên này. Cách chọn: chiêu có nút chuyển ↻ trên trang tướng trong game và có tên/mô tả riêng là biến thể;
+chiêu không có nút chuyển, chỉ đổi icon khi thỏa điều kiện (cộng dồn, tái kích hoạt, trạng thái) là **ảnh theo trạng
+thái** với nhãn là điều kiện đó, ví dụ `Hải quái`, `Tái kích hoạt`, `25 tầng dịch bệnh`. Trình sửa có nút "Thêm biến thể": tạo kỹ năng cùng
 slot với số biến thể kế tiếp, đặt ngay sau các biến thể đã có của slot, lấy icon từ ảnh thư viện cùng slot và biến
 thể nếu có, và có thể chép tên, mô tả của biến thể đang chọn làm điểm bắt đầu.
 

@@ -2672,10 +2672,15 @@ ghi audit. API không tạo/sửa snapshot tướng hoặc mô tả chiêu. Medi
   xuất bản, không vượt patch/ngày xuất bản hiện hành. Locale dùng BCP 47 chuẩn như danh mục chung.
 
 Cả hai trả `PageSlice`: `{items,page,size,totalElements}`. Tìm bằng `q` tối đa 120 ký tự, page>=0,
-size mặc định 20, tối đa 100. `heroId` tùy chọn để giới hạn tướng. Tìm không dấu theo mã/tên tướng
-và tên kỹ năng; nhận lệnh nhóm `Kỹ năng`/`Chiêu`/`Chiêu thức`/`Skill`, slot và biến thể nguồn theo
-thứ tự bất kỳ so với tên tướng. `chiêu 1 airi` và `airi chiêu 1` tương đương; `edras chiêu 2 1`
-là slot 2 biến thể 1. Không suy ra biến thể từ mảng hoặc tên dịch.
+size mặc định 20, tối đa 100. `heroId` tùy chọn để giới hạn tướng. Tìm không dấu theo mã/tên tướng,
+tên kỹ năng, tên dạng của biến thể (`formKey`, ví dụ `Viên đao`, `Phi hành`) và nhãn ảnh theo trạng thái
+của kỹ năng (ví dụ `Hải quái`); mỗi từ còn lại phải khớp một trong các trường đó. Nhận lệnh nhóm
+`Kỹ năng`/`Chiêu`/`Chiêu thức`/`Skill`, slot và biến thể nguồn theo thứ tự bất kỳ so với tên tướng.
+`chiêu 1 airi` và `airi chiêu 1` tương đương; `edras chiêu 2 1` là slot 2 biến thể 1. Slot còn viết
+được dạng ngắn `c1`/`s1` (kèm biến thể: `c2 2`), `chiêu1`; `chiêu cuối`/`ult` là slot 3; `nội tại`,
+`passive`, `nt` là slot 0. `yena viên đao c1`, `billow hải quái` và `superman phi hành chiêu 2` đều
+tìm được kỹ năng tương ứng. Không suy ra biến thể từ mảng hoặc tên dịch; token đã lưu vẫn là
+`<heroUUID>.<skillKey>` nên đổi tên dạng hay nhãn trạng thái không làm hỏng tham chiếu cũ.
 
 `ids` là danh sách tối đa 50 `<heroUUID>.<skillKey>` ngăn bằng dấu phẩy; loại trùng, không dùng cùng
 q khác rỗng, size mặc định 50. Token cũ được giải quyết bằng revision hợp lệ gần nhất còn chứa
