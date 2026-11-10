@@ -5,9 +5,22 @@ import { wikiText } from "../../context/wiki-context"
 import type { HeroDetail, PublicSkill } from "./hero-api"
 import { skillIllustration } from "./skill-illustration"
 
-export function SkillIcon({ hero, skill, locale }: { hero: HeroDetail; skill: PublicSkill; locale: string }) {
+export function SkillIcon({
+  hero,
+  skill,
+  locale,
+  stateAssetId,
+}: {
+  hero: HeroDetail
+  skill: PublicSkill
+  locale: string
+  /** Shows the skill in one of its states instead of its own picture. */
+  stateAssetId?: string | null
+}) {
   const [failed, setFailed] = useState<string[]>([])
-  const bound = hero.skillMedia?.[skill.skillKey]?.currentVersion?.url
+  const bound =
+    (stateAssetId && hero.skillStateMedia?.[stateAssetId]?.currentVersion?.url) ||
+    hero.skillMedia?.[skill.skillKey]?.currentVersion?.url
   const reference = skillIllustration(hero.code, skill)
   const url = [bound, reference].find((value): value is string => !!value && !failed.includes(value))
   if (!url) return <WikiIcon name={skill.kind === "PASSIVE" ? "spark" : "items"} size={20} />

@@ -21,6 +21,8 @@ import { HeroSkins } from "./hero-skins"
 import { HeroSectionNav } from "./hero-section-nav"
 import { WikiIcon } from "../../components/wiki-icon"
 import { SkillVideos } from "../videos/skill-videos"
+import { SkillFormSwitch, SkillStateToggle, SkillVariantDots } from "@aov/ui/components/skill-kit"
+import { groupSkillKit, skillCooldownRange, skillFormName } from "@aov/ui/lib/skill-kit"
 
 function skillLabel(skill: PublicSkill, locale: string) {
   if (skill.kind === "PASSIVE") return wikiText(locale, "Nội tại", "Passive")
@@ -192,6 +194,18 @@ type Handbook = ReturnType<typeof useHandbook>
 function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
   const { locale, text, skills, active, source, version, videos, changedHere, difference } = handbook
   const { selectSkill, rich, columns, tableLabel, rows, profile } = handbook
+  // The forms of a slot share one entry in the kit and switch in place, as in the game.
+  const groups = groupSkillKit(skills)
+  const group = groups.find((entry) => entry.skills.some((skill) => skill.skillKey === active?.skillKey))
+  // A state only swaps the picture; it starts from the normal one whenever another skill is shown.
+  const [chosenState, setChosenState] = useState<{ skillKey: string; index: number | null }>({
+    skillKey: "",
+    index: null,
+  })
+  const state = chosenState.skillKey === active?.skillKey ? chosenState.index : null
+  const stateIcons = active?.stateIcons ?? []
+  const cooldownRange = active ? skillCooldownRange(active) : null
+  const formName = (skill: PublicSkill) => skillFormName(skill, (n) => text(`Biến thể ${n}`, `Form ${n}`))
   if (!active)
     return (
       <p>
@@ -201,22 +215,28 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
   return (
     <>
       <div className="wiki-skill-options" role="group" aria-labelledby="wiki-kit-title">
-        {skills.map((skill) => {
+        {groups.map((entry) => {
+          const chosen = entry.skills.some((skill) => skill.skillKey === active.skillKey)
+          const skill = chosen ? active : entry.skills[0]!
+          const changed = entry.skills.some((member) => version.changedSkills.has(member.skillKey))
+          const hasVideo = entry.skills.some((member) => videos.bySkill.has(member.skillKey))
+          const forms = entry.skills.length > 1 ? ` · ${entry.skills.length} ${text("dạng", "forms")}` : ""
           return (
             <button
               type="button"
-              key={skill.skillKey}
-              aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}${version.changedSkills.has(skill.skillKey) ? ` · ${text("có thay đổi", "changed")}` : ""}${videos.bySkill.has(skill.skillKey) ? text(" · có video", " · has video") : ""}`}
-              aria-pressed={skill.skillKey === active.skillKey}
+              key={entry.key}
+              aria-label={`${skillLabel(skill, locale)} · ${skill.name || ""}${forms}${changed ? ` · ${text("có thay đổi", "changed")}` : ""}${hasVideo ? text(" · có video", " · has video") : ""}`}
+              aria-pressed={chosen}
               onClick={() => selectSkill(skill.skillKey)}
             >
               <SkillIcon hero={hero} skill={skill} locale={locale} />
               <span>
                 <small>{skillLabel(skill, locale)}</small>
                 <strong>{skill.name || text("Chưa rõ tên", "Unnamed ability")}</strong>
+                <SkillVariantDots count={entry.skills.length} active={entry.skills.indexOf(skill)} />
               </span>
-              {version.changedSkills.has(skill.skillKey) && <i className="wiki-skill-changed" aria-hidden="true" />}
-              {videos.bySkill.has(skill.skillKey) && <WikiIcon name="play" className="wiki-skill-has-video" />}
+              {changed && <i className="wiki-skill-changed" aria-hidden="true" />}
+              {hasVideo && <WikiIcon name="play" className="wiki-skill-has-video" />}
             </button>
           )
         })}
@@ -226,9 +246,22 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
         aria-label={active.name ?? skillLabel(active, locale)}
       >
         <header className="wiki-edit-heading">
-          <div>
-            <span>{skillLabel(active, locale)}</span>
-            <h3>{active.name}</h3>
+          <div className="wiki-skill-title">
+            <span className="wiki-skill-title-icon">
+              <SkillIcon
+                hero={hero}
+                skill={active}
+                locale={locale}
+                stateAssetId={state === null ? null : stateIcons[state]?.assetId}
+              />
+            </span>
+            <div>
+              <span>
+                {skillLabel(active, locale)}
+                {group && group.skills.length > 1 && formName(active) ? ` · ${formName(active)}` : ""}
+              </span>
+              <h3>{active.name}</h3>
+            </div>
           </div>
           <FeedbackDialog
             target={`${profile?.name ?? hero.code} · ${skillLabel(active, locale)} · ${active.name ?? ""}`}
@@ -241,10 +274,31 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
             ]}
           />
         </header>
+        {group && group.skills.length > 1 && (
+          <SkillFormSwitch
+            label={text("Dạng của chiêu", "Ability form")}
+            value={active.skillKey}
+            onChange={selectSkill}
+            options={group.skills.map((skill) => ({
+              key: skill.skillKey,
+              label: formName(skill) || skill.name || skillLabel(skill, locale),
+              title: skill.name ?? undefined,
+              ariaLabel: `${formName(skill) || skillLabel(skill, locale)} · ${skill.name ?? ""}`,
+              icon: (
+                <span className="wiki-skill-form-icon">
+                  <SkillIcon hero={hero} skill={skill} locale={locale} />
+                </span>
+              ),
+            }))}
+          />
+        )}
         <div className="wiki-skill-meta">
-          {[source?.tags, source?.cooldown?.display, source?.energyCost?.display].map((value, i) =>
-            typeof value === "string" && value.trim() ? <span key={i}>{rich(value)}</span> : null,
-          )}
+          {/* The cooldown from the first to the last rank says more than the first rank alone. */}
+          {[
+            source?.tags,
+            cooldownRange ? `${text("Hồi chiêu", "Cooldown")}: ${cooldownRange}` : source?.cooldown?.display,
+            source?.energyCost?.display,
+          ].map((value, i) => (typeof value === "string" && value.trim() ? <span key={i}>{rich(value)}</span> : null))}
           {difference?.cooldown && (
             <span>
               {text("Trước đây", "Before")}: <del>{difference.cooldown.before}</del>
@@ -256,6 +310,14 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
             </span>
           )}
         </div>
+        <SkillStateToggle
+          states={stateIcons.map((icon) => icon.label)}
+          value={state}
+          onChange={(index) => setChosenState({ skillKey: active.skillKey, index })}
+          normalLabel={text("Thường", "Normal")}
+          label={text("Trạng thái của chiêu", "Ability state")}
+          unnamed={text("Chưa đặt tên", "Unnamed")}
+        />
         <SkillVideos
           skillKey={active.skillKey}
           videos={videos.bySkill.get(active.skillKey) ?? []}

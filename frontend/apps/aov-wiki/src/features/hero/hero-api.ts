@@ -45,6 +45,10 @@ interface HeroPage {
 
 export interface PublicSkill {
   skillKey: string
+  /** The name of the variant's form, when the slot has several. */
+  formKey?: string | null
+  /** Pictures the skill takes in a state; the text stays the skill's own. */
+  stateIcons?: { assetId: string; label: string }[]
   name?: string | null
   description?: string | null
   kind: "PASSIVE" | "ACTIVE" | "OTHER"
@@ -75,6 +79,8 @@ export interface HeroDetail {
   context: HeroContext
   media: Partial<Record<"HEAD" | "PORTRAIT" | "SPLASH", HeroMedia>>
   skillMedia?: Record<string, HeroMedia>
+  /** State pictures by asset ID, as listed under each skill's `stateIcons`. */
+  skillStateMedia?: Record<string, HeroMedia>
   content: {
     profile?: { name: string; roles: HeroRole[]; title?: string | null; summary?: string | null; lore?: string | null }
     overviewRatings?: {

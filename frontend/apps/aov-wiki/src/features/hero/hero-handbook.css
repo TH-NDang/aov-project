@@ -726,3 +726,51 @@
 .wiki-fact-icon {
   flex: none;
 }
+
+/* The chosen ability shows its picture beside its name; a state swaps the picture. */
+.wiki-skill-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.wiki-skill-title-icon {
+  display: inline-flex;
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
+.wiki-skill-title-icon img,
+.wiki-skill-form-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wiki-skill-form-icon {
+  display: inline-flex;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
+.wiki-skill-form-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.wiki-skill-read [data-slot="skill-form-switch"],
+.wiki-skill-read [data-slot="skill-state-toggle"] {
+  margin-top: 0.75rem;
+}
+
+.wiki-skill-options [data-slot="skill-variant-dots"] {
+  justify-content: flex-start;
+  margin-top: 0.25rem;
+}
