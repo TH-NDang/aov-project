@@ -6,7 +6,12 @@ import { tmpdir } from "node:os"
 import { basename, dirname, join, resolve } from "node:path"
 import type { Plugin } from "vite"
 import { extractInnerArchive, readZipDirectory, readZipEntry, type ZipEntry } from "./nested-zip.ts"
-import { buildCaptureManifest, type CaptureDatasetFiles, type CaptureManifest } from "./patch-capture-manifest.ts"
+import {
+  buildCaptureManifest,
+  sourceArchiveOf,
+  type CaptureDatasetFiles,
+  type CaptureManifest,
+} from "./patch-capture-manifest.ts"
 
 const PATCH_CODE = /^[a-z0-9][a-z0-9-]{0,63}$/
 const HERO_CODE = /^[a-z0-9][a-z0-9-]{0,63}$/
@@ -137,12 +142,13 @@ export function createPatchCaptureHandler({ start, cacheRoot, signatureTtlMs = S
 
   const innerArchive = (root: string, manifest: CaptureManifest, archive: string) => {
     const cache = cacheRoot ?? process.env.AOV_CAPTURE_CACHE ?? join(tmpdir(), "aov-patch-captures")
-    const target = join(cache, manifest.archiveSha256.slice(0, 16), basename(archive))
+    const source = sourceArchiveOf(manifest, archive)
+    const target = join(cache, source.sha256.slice(0, 16), basename(archive))
     let extraction = extractions.get(target)
     if (!extraction) {
       extraction = (async () => {
         const existing = await stat(target).catch(() => null)
-        if (!existing) await extractInnerArchive(join(root, "raw", basename(manifest.archive)), archive, target)
+        if (!existing) await extractInnerArchive(join(root, "raw", basename(source.archive)), archive, target)
         return target
       })()
       extraction.catch(() => extractions.delete(target))

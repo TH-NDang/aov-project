@@ -69,10 +69,18 @@ export interface SkillSource {
   request: string | null
 }
 
+/** An archive in `resources/raw` that holds inner archives of the set. */
+export interface SourceArchive {
+  archive: string
+  sha256: string
+}
+
 export interface CaptureManifest {
   patchCode: string
   archive: string
   archiveSha256: string
+  /** Inner archives that come from a later capture run rather than the set's own archive, by inner archive name. */
+  supplementArchives: Map<string, SourceArchive>
   heroes: Map<string, HeroCaptures>
   images: Map<string, CaptureImage>
   coverage: CaptureCoverage
@@ -86,9 +94,19 @@ interface SourceRef {
   file_name: string
 }
 
+/** A later capture run of the same patch, added to the set to fill what the first run missed. */
+export interface CaptureSupplement extends SourceArchive {
+  innerArchives: string[]
+}
+
 export interface CaptureDatasetFiles {
   patchCode: string
-  sourceManifest: { archive: string; sha256: string; identityAliases: Record<string, string> }
+  sourceManifest: {
+    archive: string
+    sha256: string
+    identityAliases: Record<string, string>
+    supplements?: CaptureSupplement[]
+  }
   evidence: { record_id: string; pages: { source: SourceRef }[] }[]
   importRows: {
     code: string
@@ -239,6 +257,7 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
     patchCode: files.patchCode,
     archive: files.sourceManifest.archive,
     archiveSha256: files.sourceManifest.sha256,
+    supplementArchives: supplementArchives(files.sourceManifest.supplements ?? []),
     heroes,
     images,
     sources: buildSourceCoverage(files, heroes),
@@ -253,6 +272,22 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
       unlinkedFromItem,
     },
   }
+}
+
+/** Images name only their inner archive, so two runs sharing an inner archive name could serve the wrong bytes. */
+function supplementArchives(supplements: readonly CaptureSupplement[]) {
+  const archives = new Map<string, SourceArchive>()
+  for (const { archive, sha256, innerArchives } of supplements)
+    for (const inner of innerArchives) {
+      if (archives.has(inner)) throw new Error(`Inner archive ${inner} is listed by two capture runs.`)
+      archives.set(inner, { archive, sha256 })
+    }
+  return archives
+}
+
+/** The archive in `resources/raw` that holds an inner archive: a supplement's, else the set's own. */
+export function sourceArchiveOf(manifest: CaptureManifest, innerArchive: string): SourceArchive {
+  return manifest.supplementArchives.get(innerArchive) ?? { archive: manifest.archive, sha256: manifest.archiveSha256 }
 }
 
 const SKILL_KEY = /^skill-(\d+)-(\d+)$/
