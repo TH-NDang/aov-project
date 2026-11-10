@@ -39,7 +39,7 @@ import { useReferenceCatalog } from "./catalog"
 import { saveSettings, loadLegacySettings } from "./settings-api"
 import { ReferenceCatalogTable } from "./reference-catalog-table"
 import { ReferencePreviewWorkspace } from "./reference-preview-workspace"
-import { EntityRichTextEditor } from "@aov/ui/components/entity-rich-text-editor"
+import { AdminDescriptionField } from "./rich-text-field"
 import { useSkillReferences } from "./use-skill-references"
 import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
 import { EntityReferenceArtwork } from "@aov/ui/components/entity-rich-text"
@@ -160,6 +160,23 @@ export function TerminologyPage() {
   const descriptionEntities = useMemo(
     () => [...editorEntities, ...descriptionSkills, ...descriptionCommunity],
     [editorEntities, descriptionSkills, descriptionCommunity],
+  )
+  // A definition is recognised against the draft catalog being edited here, not the saved one.
+  const descriptionReferences = useMemo(
+    () => ({
+      entities: descriptionEntities,
+      fallbackLocale: settings.fallbackLocale,
+      autoRecognize: settings.autoRecognize,
+      resolveIcon: catalog.resolveIcon,
+      searchReferences: searchDescriptionReferences,
+    }),
+    [
+      descriptionEntities,
+      settings.fallbackLocale,
+      settings.autoRecognize,
+      catalog.resolveIcon,
+      searchDescriptionReferences,
+    ],
   )
   const update = (value: EntityReference) =>
     setDraft({
@@ -566,18 +583,14 @@ export function TerminologyPage() {
                         </div>
                       </div>
                     ) : (
-                      <EntityRichTextEditor
+                      <AdminDescriptionField
                         key={`${selected}:${locale}`}
                         label={entity.kind === "term" ? "Định nghĩa thuật ngữ" : "Giới thiệu ngắn khi xem tham chiếu"}
                         maxLength={4000}
                         value={translation?.description ?? ""}
                         onChange={(value) => textField("description", value)}
-                        entities={descriptionEntities}
                         locale={locale}
-                        fallbackLocale={settings.fallbackLocale}
-                        autoRecognize={settings.autoRecognize}
-                        resolveIcon={catalog.resolveIcon}
-                        searchReferences={searchDescriptionReferences}
+                        references={descriptionReferences}
                       />
                     )}
                     <details className="group space-y-3 rounded-xl border bg-muted/10 p-4">

@@ -17,7 +17,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@aov/ui/components/sheet"
-import { AdminLiveRichTextField } from "../terminology/rich-text-field"
+import { AdminDescriptionField } from "../terminology/rich-text-field"
 import { HeroSkillsView, type HeroSkillsLayout } from "./hero-skills-view"
 import { HeroReviewEditor } from "./hero-review-editor"
 import { SkillSourceDetails } from "./hero-source-details"
@@ -333,7 +333,7 @@ export function HeroSkillsEditor({
                   />
                 </div>
               </div>
-              <AdminLiveRichTextField
+              <AdminDescriptionField
                 key={locale}
                 label="Mô tả"
                 locale={locale}
