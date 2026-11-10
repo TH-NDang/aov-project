@@ -99,6 +99,31 @@ test("the rules also accept the narrow draft the overview loads, without lore, e
   assert.deepEqual(contentBlockers(narrow), [])
 })
 
+test("a hero that holds forms needs only its names, skins and three images", () => {
+  const holder: PublishContent = {
+    PROFILE: { roles: [], translations: [{ locale: "vi-VN", name: "Flowborn" }] },
+    OVERVIEW_RATINGS: null,
+    COMBAT_STATS: null,
+    SKILLS: { skills: [] },
+    SKINS: {},
+    MEDIA_BINDINGS: { bindings: { HEAD: "a", PORTRAIT: "b", SPLASH: "c" } },
+  }
+  assert.deepEqual(contentBlockers(holder, false, true), [])
+  assert.deepEqual(
+    contentBlockers(holder).map(({ key }) => key),
+    ["PROFILE", "OVERVIEW_RATINGS", "COMBAT_STATS", "SKILLS"],
+    "the same draft is incomplete for an ordinary hero",
+  )
+  assert.deepEqual(
+    contentBlockers(
+      { ...holder, PROFILE: { roles: [], translations: [] }, SKINS: null, MEDIA_BINDINGS: { bindings: { HEAD: "a" } } },
+      false,
+      true,
+    ).map(({ key }) => key),
+    ["PROFILE", "SKINS", "MEDIA_BINDINGS"],
+  )
+})
+
 const baseline: Revision = { ...fixtureRevision, cause: "DATA_BASELINE", effectiveFromPatchVariantId: "patch" }
 const patch = {
   id: "patch",

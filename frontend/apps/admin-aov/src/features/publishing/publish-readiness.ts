@@ -85,6 +85,7 @@ export function readinessRows(
               patch: draftPatch,
               patchLoading: false,
               observedStats: facts.observedStats,
+              holdsForms: !!hero.formIds?.length,
             })
           : []
       return {

@@ -44,7 +44,25 @@ export function publicationPatchIssue(
   return patch.status === "PUBLISHED" ? null : `Hãy xuất bản patch ${patch.patchCode} trước khi xuất bản tướng.`
 }
 
-export function contentBlockers(content: PublishContent, hasObservedStats = false): PublishBlocker[] {
+/**
+ * A hero that holds forms publishes only what its forms share (ADR-024): its names and title, its skins and the three
+ * card images. Roles, ratings, stats and skills belong to the forms, so they are not asked of it.
+ */
+function holderBlockers(content: PublishContent): PublishBlocker[] {
+  const blockers: PublishBlocker[] = []
+  if (!content.PROFILE?.translations.length) blockers.push({ key: "PROFILE", message: "Điền tên và danh hiệu tướng." })
+  if (!content.SKINS) blockers.push({ key: "SKINS", message: "Lưu danh sách trang phục." })
+  if ((["HEAD", "PORTRAIT", "SPLASH"] as const).some((role) => !content.MEDIA_BINDINGS?.bindings[role]))
+    blockers.push({ key: "MEDIA_BINDINGS", message: "Chọn đủ ảnh Head, Portrait và Splash." })
+  return blockers
+}
+
+export function contentBlockers(
+  content: PublishContent,
+  hasObservedStats = false,
+  holdsForms = false,
+): PublishBlocker[] {
+  if (holdsForms) return holderBlockers(content)
   const blockers: PublishBlocker[] = []
   if (!content.PROFILE?.roles.length || !content.PROFILE.translations.length)
     blockers.push({ key: "PROFILE", message: "Điền thông tin và vai trò tướng." })
@@ -81,17 +99,20 @@ export function publishBlockers({
   patch,
   patchLoading,
   observedStats,
+  holdsForms = false,
 }: {
   revision: PublicationRevision
   content: PublishContent
   patch: PublicationPatch | undefined
   patchLoading: boolean
   observedStats: boolean
+  /** The hero holds forms, so only what the forms share is asked of it. */
+  holdsForms?: boolean
 }): PublishBlocker[] {
   const patchIssue = publicationPatchIssue(revision, patch, patchLoading)
   return [
     ...(patchIssue ? [{ key: "PATCH" as const, message: patchIssue }] : []),
-    ...contentBlockers(content, observedStats),
+    ...contentBlockers(content, observedStats, holdsForms),
   ]
 }
 

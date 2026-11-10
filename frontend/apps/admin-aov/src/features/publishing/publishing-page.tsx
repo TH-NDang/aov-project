@@ -455,6 +455,7 @@ export function PublishingWorkspace({
         patch: publicationPatch,
         patchLoading: overview.isPending,
         observedStats: usesObservedStats(preview.content, publicationPatch),
+        holdsForms: !!heroId && heroForms.data?.holder?.id === heroId,
       }).map((blocker) => blocker.message)
     : []
 
