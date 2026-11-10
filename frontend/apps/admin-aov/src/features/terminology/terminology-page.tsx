@@ -92,7 +92,6 @@ export function TerminologyPage() {
   }, [params])
   const [locale, setLocale] = useState("vi-VN")
   const [preview, setPreview] = useState("")
-  const [previewContext, setPreviewContext] = useState<"admin" | "wiki">("admin")
   const [message, setMessage] = useState("")
   const [saving, setSaving] = useState(false)
   const [searchSlot, setSearchSlot] = useState<HTMLDivElement | null>(null)
@@ -730,8 +729,6 @@ export function TerminologyPage() {
             autoRecognize={settings.autoRecognize}
             resolveIcon={catalog.resolveIcon}
             searchReferences={searchPreviewReferences}
-            context={previewContext}
-            onContextChange={setPreviewContext}
           />
         )}
       </fieldset>

@@ -3,35 +3,11 @@ import { test } from "node:test"
 import * as React from "react"
 import { act } from "react"
 import { JSDOM } from "jsdom"
-import {
-  fillReferenceInput,
-  referenceInput,
-  referenceInputSelection,
-  referenceInputValue,
-  selectReferenceInput,
-} from "./fixtures/reference-input"
+import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
 
-test("mobile preview preserves editing through resizing, keyboard changes and desktop layout", async () => {
+test("the try-out tab writes in the shared description box without a second pane", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/terminology", pretendToBeVisual: true })
   const document = dom.window.document
-  let width = 360
-  let resized = () => {}
-  let disconnected = false
-  const visual = Object.assign(new dom.window.EventTarget(), {
-    height: 800,
-    width: 390,
-    offsetTop: 0,
-    offsetLeft: 0,
-    scale: 1,
-  })
-  Object.defineProperty(dom.window, "visualViewport", { configurable: true, value: visual })
-  Object.defineProperty(dom.window, "innerHeight", { configurable: true, value: 800 })
-  const bounds = dom.window.HTMLElement.prototype.getBoundingClientRect
-  dom.window.HTMLElement.prototype.getBoundingClientRect = function () {
-    return this.getAttribute("aria-label") === "Soạn và xem trước nội dung"
-      ? new dom.window.DOMRect(16, 160, width, 600)
-      : bounds.call(this)
-  }
   const originals = new Map<string, PropertyDescriptor | undefined>()
   for (const [key, value] of Object.entries({
     React,
@@ -50,13 +26,8 @@ test("mobile preview preserves editing through resizing, keyboard changes and de
     requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
     cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
     ResizeObserver: class {
-      constructor(callback: () => void) {
-        resized = callback
-      }
       observe() {}
-      disconnect() {
-        disconnected = true
-      }
+      disconnect() {}
     },
     IS_REACT_ACT_ENVIRONMENT: true,
   })) {
@@ -74,105 +45,43 @@ test("mobile preview preserves editing through resizing, keyboard changes and de
         onChange={setValue}
         locale="vi-VN"
         onLocaleChange={() => {}}
-        context="admin"
-        onContextChange={() => {}}
+        entities={[]}
+        fallbackLocale="vi-VN"
+        autoRecognize
       />
     )
   }
-  const flush = () =>
-    act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 35))
-    })
-  const separator = () => document.querySelector<HTMLElement>('[role="separator"]')!
-  const key = async (value: string) =>
-    act(async () => separator().dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: value, bubbles: true })))
+  const button = (name: string) =>
+    [...document.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent?.trim() === name)!
+  const click = (element: HTMLElement) =>
+    act(async () => element.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true })))
   try {
     await act(async () => root.render(<Harness />))
     const input = referenceInput(document.body)
-    await act(async () => fillReferenceInput(input, "Nội dung đang viết"))
-    await act(async () => selectReferenceInput(input, 4, 8))
-    const selection = referenceInputSelection(input)
-    assert.equal(separator().getAttribute("aria-valuenow"), "60")
-    await key("ArrowDown")
-    assert.equal(separator().getAttribute("aria-valuenow"), "65")
-    await key("Home")
-    assert.equal(separator().getAttribute("aria-valuenow"), "40")
-    await key("End")
-    await key("ArrowDown")
-    assert.equal(separator().getAttribute("aria-valuenow"), "75")
-
-    const divider = separator()
-    Object.defineProperty(divider.parentElement, "clientHeight", { configurable: true, value: 528 })
-    Object.defineProperty(divider, "clientHeight", { configurable: true, value: 28 })
-    let captured = false
-    divider.setPointerCapture = () => {
-      captured = true
-    }
-    divider.releasePointerCapture = () => {
-      captured = false
-    }
-    const pointer = async (type: string, y: number) =>
-      act(async () => {
-        const event = new dom.window.MouseEvent(type, { bubbles: true, button: 0, clientY: y })
-        Object.defineProperties(event, { pointerId: { value: 1 }, isPrimary: { value: true } })
-        divider.dispatchEvent(event)
-      })
-    await pointer("pointerdown", 300)
-    await pointer("pointermove", 225)
-    assert.equal(captured, true)
-    assert.equal(separator().getAttribute("aria-valuenow"), "60")
-    await pointer("pointerup", 225)
-    await pointer("pointermove", 800)
-    assert.equal(captured, false)
-    assert.equal(separator().getAttribute("aria-valuenow"), "60")
-
-    visual.height = 410
-    visual.offsetTop = 24
-    visual.dispatchEvent(new dom.window.Event("resize"))
-    await flush()
-    const fixed = document.querySelector<HTMLElement>('[data-keyboard="true"]')!
-    assert.ok(fixed)
-    assert.equal(fixed.style.height, "410px")
-    assert.equal(fixed.style.top, "24px")
-    assert.equal(referenceInput(document.body), input)
-    assert.deepEqual(referenceInputSelection(input), selection)
-    assert.equal(referenceInputValue(input), "Nội dung đang viết")
-    assert.equal(separator().getAttribute("aria-valuenow"), "65")
-
-    const output = document.querySelector<HTMLElement>('[aria-label="Nội dung xem trước"]')!
-    Object.defineProperties(input, { clientHeight: { value: 100 }, scrollHeight: { value: 500 } })
-    Object.defineProperties(output, { clientHeight: { value: 80 }, scrollHeight: { value: 280 } })
-    await act(async () => {
-      input.scrollTop = 200
-      input.dispatchEvent(new dom.window.Event("scroll"))
-    })
-    assert.equal(output.scrollTop, 100)
-
-    visual.scale = 1.5
-    visual.dispatchEvent(new dom.window.Event("resize"))
-    await flush()
-    assert.equal(document.querySelector('[data-keyboard="true"]'), null, "Pinch zoom must not activate keyboard mode")
-    visual.scale = 1
-    visual.height = 800
-    visual.offsetTop = 0
-    visual.dispatchEvent(new dom.window.Event("resize"))
-    await flush()
-    assert.equal(separator().getAttribute("aria-valuenow"), "60", "Closing the keyboard restores the user's split")
-
-    width = 900
-    resized()
-    await flush()
+    assert.ok(input, "The tab writes in the shared description box")
+    assert.ok(document.querySelector('[role="toolbar"]'), "The box keeps the same toolbar as a skill description")
+    assert.equal(document.body.textContent?.includes("Kết quả hiển thị"), false, "One box: no second pane")
     assert.equal(document.querySelector('[role="separator"]'), null)
-    assert.equal(referenceInput(document.body), input)
-    await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Hoàn tác"]')!.click())
-    assert.equal(referenceInputValue(input), "Nội dung ban đầu", "Viewport changes preserve undo history")
+
+    await act(async () => fillReferenceInput(input, "Nội dung đang viết"))
+    assert.equal(referenceInputValue(referenceInput(document.body)), "Nội dung đang viết")
+
+    await click(button("Ví dụ"))
+    assert.match(
+      referenceInputValue(referenceInput(document.body)),
+      /Nội dung đang viết\n\nGây <b>sát thương phép<\/b>/,
+    )
+
+    await click(button("Xóa"))
+    assert.equal(referenceInputValue(referenceInput(document.body)), "")
+    await click(button("Khôi phục nội dung"))
+    assert.match(referenceInputValue(referenceInput(document.body)), /^Nội dung đang viết/)
   } finally {
     await act(async () => root.unmount())
-    assert.equal(disconnected, true)
-    dom.window.close()
     for (const [key, descriptor] of originals) {
       if (descriptor) Object.defineProperty(globalThis, key, descriptor)
-      else Reflect.deleteProperty(globalThis, key)
+      else delete (globalThis as Record<string, unknown>)[key]
     }
+    dom.window.close()
   }
 })
