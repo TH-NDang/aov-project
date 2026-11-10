@@ -13,7 +13,7 @@
   "com/wikiaov/hero/internal/web/HeroImportController.java": "7419fda4dee359fda77f822e98335b83ec23a1817ec79321e92e5edc54feb58a",
   "com/wikiaov/hero/internal/web/HeroImportJobController.java": "9c4749f563169bd3c5f214a81dc0c9960330eebdb3fc45d00bd8b9d311617677",
   "com/wikiaov/hero/internal/web/HeroMediaController.java": "151c628b9b5e4c58f23cdf25482597cd9a72b15e56590de97519662a7b24fe4b",
-  "com/wikiaov/hero/internal/web/HeroPublicController.java": "12be81363080abee076aa3cf3ecd4bd6d346b457ff56a469c56ef7e62c0b58b2",
+  "com/wikiaov/hero/internal/web/HeroPublicController.java": "7a5587bb5ea2d7821e099829ccedcd0c036724be2f3cf911f46e92b46dbd05fa",
   "com/wikiaov/hero/internal/web/HeroSkillImageController.java": "adcaeb3a1473fa3c60999695be47797ffd39e74033448d7ce1ce2d73946c228c",
   "com/wikiaov/hero/internal/web/HeroUploadSessionController.java": "6a3b1b2b0fd058a35910b07738d676c613b6be28de82423404eee7952882271d",
   "com/wikiaov/hero/internal/web/SkinBadgeGroupController.java": "9279e57a2ba4a2ebcb959aaf2e1204716754caca013915f1f80455e035141a16",

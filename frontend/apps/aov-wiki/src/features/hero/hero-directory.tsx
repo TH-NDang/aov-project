@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import { Link, useSearchParams } from "react-router"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { heroCatalogQuery, type HeroListItem } from "./hero-api"
+import { heroFormPath, heroSearchTexts } from "./hero-forms"
 import {
   HERO_POSITIONS,
   HERO_ROLES,
@@ -184,23 +185,29 @@ export function HeroDirectory() {
   const hasFilters = ["q", "role", "position"].some((key) => searchParams.has(key))
   const needle = normalizedHeroSearch(search)
   const visibleHeroes = (query.data?.items || []).filter((hero) => {
-    const matchesSearch = !needle || normalizedHeroSearch(`${hero.name} ${hero.code}`).includes(needle)
+    const matchesSearch = !needle || normalizedHeroSearch(heroSearchTexts(hero).join(" ")).includes(needle)
     const matchesRole = !roles.length || roles.some((role) => hero.roles.includes(role))
     const matchesPosition = !positions.length || positions.some((position) => hero.positions?.includes(position))
     return matchesSearch && matchesRole && matchesPosition
   })
   const publishedHeroes = new Map(query.data?.items.map((hero) => [hero.id, hero]))
+  // Changes are recorded per form, so a form's change opens that form on its hero's page (ADR-024).
+  const publishedForms = new Map(
+    query.data?.items.flatMap((hero) => (hero.forms ?? []).map((form) => [form.id, { hero, form }] as const)),
+  )
   const visibleIds = new Set(visibleHeroes.map((hero) => hero.id))
   const changed: ChangedSubject[] = []
   for (const { id, name, kind } of changes.subjects.values()) {
-    const hero = publishedHeroes.get(id)
-    if (hero && visibleIds.has(id)) {
+    const owner = publishedForms.get(id)
+    const hero = publishedHeroes.get(id) ?? owner?.hero
+    if (hero && visibleIds.has(hero.id)) {
+      const shown = owner?.form ?? hero
       changed.push({
         id,
-        name: hero.name,
+        name: shown.name,
         kind,
-        image: hero.head?.currentVersion?.url ?? hero.portrait?.currentVersion?.url,
-        href: scope.href(`/hero/${hero.code}`),
+        image: shown.head?.currentVersion?.url ?? shown.portrait?.currentVersion?.url,
+        href: scope.href(owner ? heroFormPath(hero.code, owner.form.formKey, hero.forms) : `/hero/${hero.code}`),
       })
     } else if (!hero && name && !roles.length && !positions.length && normalizedHeroSearch(name).includes(needle)) {
       // Official notes can precede the first published profile for a hero.

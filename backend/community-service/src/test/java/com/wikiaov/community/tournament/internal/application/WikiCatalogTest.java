@@ -54,6 +54,11 @@ class WikiCatalogTest {
         assertThat(result.heroes().getFirst().revisionId()).isEqualTo(REVISION);
         assertThat(requested).filteredOn(value -> !value.contains("catalog-context") && !value.endsWith("/regions"))
                 .allMatch(value -> value.contains("seasonId=" + SEASON) && value.contains("patchVariantId=" + LATEST));
+        // Games record the form a player picked, so the hero list must name forms rather than holding heroes.
+        assertThat(requested).filteredOn(value -> value.contains("/heroes?")).isNotEmpty()
+                .allMatch(value -> value.contains("playable=true"));
+        assertThat(requested).filteredOn(value -> value.contains("/items?"))
+                .noneMatch(value -> value.contains("playable"));
         int size = requested.size();
         catalog.read("VN", "vi-VN", SEASON, null, false);
         assertThat(requested).hasSize(size);

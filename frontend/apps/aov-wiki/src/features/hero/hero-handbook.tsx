@@ -510,6 +510,7 @@ export function HeroStage({ art, identity, children }: { art: ReactNode; identit
 
 type HandbookLayoutProps = {
   hero: HeroDetail
+  skinOwner?: string
   handbook: Handbook
   art: ReactNode
   identity: ReactNode
@@ -528,18 +529,18 @@ function AbilitiesSection({ hero, handbook }: { hero: HeroDetail; handbook: Hand
   )
 }
 
-function HandbookParts({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
+function HandbookParts({ hero, skinOwner, handbook }: { hero: HeroDetail; skinOwner?: string; handbook: Handbook }) {
   return (
     <>
       <AbilitiesSection hero={hero} handbook={handbook} />
-      <HeroSkins key={hero.id} hero={hero} />
+      <HeroSkins key={hero.id} hero={hero} owner={skinOwner} />
       <HeroVideos handbook={handbook} />
       <HeroHistory hero={hero} version={handbook.version} />
     </>
   )
 }
 
-function HandbookWide({ hero, handbook, art, identity, picker }: HandbookLayoutProps) {
+function HandbookWide({ hero, skinOwner, handbook, art, identity, picker }: HandbookLayoutProps) {
   const openSkill = useAbilityJump(handbook)
   return (
     <>
@@ -552,7 +553,7 @@ function HandbookWide({ hero, handbook, art, identity, picker }: HandbookLayoutP
       <div className="wiki-handbook">
         <div className="wiki-handbook-main">
           <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} />
-          <HandbookParts hero={hero} handbook={handbook} />
+          <HandbookParts hero={hero} skinOwner={skinOwner} handbook={handbook} />
         </div>
         <HeroSectionNav />
       </div>
@@ -564,7 +565,7 @@ function HandbookWide({ hero, handbook, art, identity, picker }: HandbookLayoutP
  * Compact screens: a single column in reading order. What changed in the chosen patch is one line under the patch
  * picker that opens downward, so who the hero is and the abilities follow without a long list between them.
  */
-function HandbookCompact({ hero, handbook, art, picker }: HandbookLayoutProps) {
+function HandbookCompact({ hero, skinOwner, handbook, art, picker }: HandbookLayoutProps) {
   const openSkill = useAbilityJump(handbook)
   return (
     <>
@@ -575,7 +576,7 @@ function HandbookCompact({ hero, handbook, art, picker }: HandbookLayoutProps) {
         <div className="wiki-handbook-profile public-panel wiki-slip">
           <OverviewPanel hero={hero} handbook={handbook} />
         </div>
-        <HandbookParts hero={hero} handbook={handbook} />
+        <HandbookParts hero={hero} skinOwner={skinOwner} handbook={handbook} />
         <HeroSectionNav />
       </div>
     </>
@@ -584,16 +585,19 @@ function HandbookCompact({ hero, handbook, art, picker }: HandbookLayoutProps) {
 
 export function HeroHandbook({
   hero,
+  skinOwner,
   art,
   identity,
   picker,
 }: {
   hero: HeroDetail
+  /** The code of the hero that holds this form, whose shared skins the form shows too (ADR-024). */
+  skinOwner?: string
   art: ReactNode
   identity: ReactNode
   picker: ReactNode
 }) {
   const handbook = useHandbook(hero)
-  const props = { hero, handbook, art, identity, picker }
+  const props = { hero, skinOwner, handbook, art, identity, picker }
   return usePageLayout() === "compact" ? <HandbookCompact {...props} /> : <HandbookWide {...props} />
 }

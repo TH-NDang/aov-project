@@ -21,6 +21,7 @@ const ARTWORK_APPEARANCES: Readonly<Record<string, HeroAppearance>> = {
   dirak: { surfaceRgb: "65, 50, 31", backdrop: "#2c2419", accent: "#e4ce94" },
   "eland-orr": { surfaceRgb: "35, 53, 65", backdrop: "#1a2831", accent: "#aeced3" },
   errol: { surfaceRgb: "32, 51, 62", backdrop: "#192730", accent: "#a7c8d4" },
+  flowborn: { surfaceRgb: "33, 55, 66", backdrop: "#1b2b33", accent: "#b6d8e1" },
   "flowborn-ad": { surfaceRgb: "33, 55, 66", backdrop: "#1b2b33", accent: "#b6d8e1" },
   gildur: { surfaceRgb: "45, 49, 67", backdrop: "#202431", accent: "#dfca9e" },
   hayate: { surfaceRgb: "47, 48, 63", backdrop: "#222330", accent: "#c6bfd4" },

@@ -41,3 +41,7 @@ Không dùng thẻ `<title>` hoặc `<meta>` trong JSX: chúng sẽ nằm song s
 
 - Canonical không bao giờ có query string. `locale`, `region`, `season`, `patch` và các bộ lọc chỉ đổi cách xem.
 - Kho trang bị dùng `/warehouse/<tab>` và `/warehouse/<tab>/<code>`. Liên kết cũ dạng `?tab=&item=` được chuyển hướng.
+- Tướng nhiều dạng (ADR-024, ví dụ Flowborn) dùng `/hero/<tướng>` cho dạng mặc định và `/hero/<tướng>/<khóa dạng>` cho
+  các dạng khác; mỗi dạng có trang tĩnh và canonical riêng. Mã và UUID cũ của dạng (`/hero/flowborn-ad`,
+  `/hero/<uuid dạng>`) là trang không vào sitemap, canonical trỏ về địa chỉ mới, ứng dụng chuyển hướng `replace`.
+  Đổi dạng giữ vị trí cuộn và kỹ năng đang mở.

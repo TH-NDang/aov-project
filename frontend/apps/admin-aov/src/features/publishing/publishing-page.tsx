@@ -17,7 +17,19 @@ import { revisionSkillReferences } from "./revision-skill-references"
 import { useHeroSkillImages } from "./skill-artwork"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowLeft, ArrowUpRight, FileUp, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown, Send } from "lucide-react"
+import {
+  ArrowLeft,
+  ArrowUpRight,
+  FileUp,
+  Layers,
+  MoreHorizontal,
+  Plus,
+  Save,
+  Trash2,
+  X,
+  ChevronDown,
+  Send,
+} from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -45,6 +57,7 @@ import { BaselineContextForm } from "./baseline-context-form"
 import { HeroAsset, HeroContent } from "./hero-content"
 import { HeroScrollIdentity } from "./hero-scroll-identity"
 import { HeroQuickSwitcher } from "./hero-quick-switcher"
+import { HeroFormSwitcher, HeroFormsDialog, useHeroForms } from "./hero-forms"
 import { selectCatalogRevisions } from "./catalog-data"
 import { HeroCatalog } from "./hero-catalog"
 import { HeroRevisionHistory } from "./hero-revision-history"
@@ -282,6 +295,9 @@ export function PublishingWorkspace({
   const [importContext, setImportContext] = useState<ImportContext | null>(null)
   const [publishFailure, setPublishFailure] = useState("")
   const [publishing, setPublishing] = useState(false)
+  const [formsOpen, setFormsOpen] = useState(false)
+  const heroForms = useHeroForms(heroId || undefined)
+  const heroCode = heroForms.data?.code
   const requestedFilter: CatalogFilter = {
     seasonId: heroLocationId(urlParams.get("season")),
     variantId: heroLocationId(urlParams.get("patch")),
@@ -490,6 +506,17 @@ export function PublishingWorkspace({
     if (onUnsavedChange) void navigate({ search: `?${params}` }, { preventScrollReset: true })
     else void navigate(heroPageLocation(next.id, params), { preventScrollReset: false })
   }
+  /** Opens another form of the same hero; each form is a hero of its own, so its newest revision opens (ADR-024). */
+  function switchForm(nextId: string) {
+    if (busy || nextId === heroId) return
+    const params = switchHeroLocation(urlParams, nextId)
+    params.delete("revision")
+    if (onUnsavedChange) void navigate({ search: `?${params}` }, { preventScrollReset: true })
+    else void navigate(heroPageLocation(nextId, params), { preventScrollReset: true })
+  }
+  const formSwitcher = heroId ? (
+    <HeroFormSwitcher heroId={heroId} locale={displayLocale} disabled={busy || !preview} onSelect={switchForm} />
+  ) : null
   const quickSwitcher = heroId ? (
     <HeroQuickSwitcher
       heroId={heroId}
@@ -776,6 +803,12 @@ export function PublishingWorkspace({
               <ArrowUpRight />
               Mở trang tướng đầy đủ
             </Link>
+          </DropdownMenuItem>
+        )}
+        {canPublish && heroId && heroCode && !heroForms.data?.formKey && (
+          <DropdownMenuItem disabled={busy} onSelect={() => setFormsOpen(true)}>
+            <Layers />
+            Dạng của tướng
           </DropdownMenuItem>
         )}
         {fullPage && writable && <DropdownMenuSeparator />}
@@ -1128,6 +1161,10 @@ export function PublishingWorkspace({
                 </div>
               )}
             </div>
+            {formSwitcher && <div className="mt-2">{formSwitcher}</div>}
+            {heroCode && canPublish && (
+              <HeroFormsDialog hero={{ id: heroId, code: heroCode }} open={formsOpen} onOpenChange={setFormsOpen} />
+            )}
           </header>
           {view === "overview" ? (
             <HeroStickyBars

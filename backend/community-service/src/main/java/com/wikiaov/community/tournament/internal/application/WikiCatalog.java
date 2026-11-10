@@ -129,6 +129,9 @@ public class WikiCatalog {
     private Map<String, Object> readMap(String path, Key key, int page, boolean historical) {
         return client.get().uri(builder -> {
             builder.path("/api/wiki/v1/" + path).queryParam("region", key.region()).queryParam("locale", key.locale());
+            // Players pick a hero's forms, never the hero that holds them, so games keep each form's id (ADR-024).
+            if (path.equals("heroes"))
+                builder.queryParam("playable", true);
             if (historical) {
                 builder.queryParam("page", page).queryParam("size", 100);
                 if (key.season() != null)

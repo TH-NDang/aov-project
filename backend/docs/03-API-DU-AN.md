@@ -350,6 +350,28 @@ Không trả toàn bộ skills/skins trong list.
 chưa có phiên bản hiện hành; không thay `portrait` bằng ảnh `head`. Chỉ tải metadata ảnh cho trang
 kết quả đang trả, gộp HEAD/PORTRAIT qua một lần đọc Media theo lô; không tải detail cho từng tướng.
 
+### Tướng nhiều dạng (ADR-024)
+
+Danh sách mặc định trả thứ người đọc duyệt: tướng không có dạng và tướng chứa dạng (ví dụ `flowborn`). Dạng
+(`flowborn-ad`, `flowborn-mid`) không thành mục riêng mà nằm trong `forms` của tướng chứa nó:
+
+```text
+item của tướng chứa dạng = {
+  id, code, revisionId, unscopedBaseline, name, actualLocale, head?, portrait?,
+  roles, positions,            hợp của các dạng đã xuất bản, theo thứ tự dạng
+  forms: [{id, code, revisionId, unscopedBaseline, name, actualLocale, formKey, roles, positions, head?, portrait?}]
+}
+```
+
+`forms` chỉ gồm dạng đã xuất bản trong cùng context, theo thứ tự hiển thị; dạng đầu là dạng mặc định. Tướng chứa
+dạng chỉ xuất hiện khi chính nó và ít nhất một dạng đã xuất bản. `role` khớp khi một dạng có vai trò đó; `q` khớp
+mã/tên của tướng hoặc của một dạng. HEAD/PORTRAIT của tướng và các dạng trên trang được đọc trong cùng một lần
+`MediaAssets.findAll`.
+
+`playable=true` trả thứ người chơi chọn trong trận: tướng không có dạng và từng dạng, không có tướng chứa dạng. Mục
+của dạng có thêm `parent: {id, code, formKey}`. `community-service` đọc danh mục tướng cho giải đấu bằng tham số này,
+nên lượt chọn/cấm tiếp tục lưu UUID của dạng.
+
 ### Thị trường, ngôn ngữ và mốc xem danh mục wiki
 
 `GET /api/wiki/v1/catalog-context?region=VN&locale=vi-VN` là API công khai dành cho bộ chọn của wiki.
@@ -384,7 +406,8 @@ GET /api/wiki/v1/skins?region=VN&locale=vi-VN&page=0&size=24
 ```
 
 Danh mục này dành cho thư viện Trang phục của wiki, không dùng API quản trị và không yêu cầu frontend
-tải chi tiết từng tướng. Tham số được cho phép: `region` (mặc định `VN`), `locale` (mặc định `vi-VN`),
+tải chi tiết từng tướng. `hero` là mã của tướng chứa dạng thì gồm trang phục chung của tướng và trang phục riêng của
+mọi dạng; `heroCode` của mỗi mục vẫn là mã tướng sở hữu trang phục (ADR-024). Tham số được cho phép: `region` (mặc định `VN`), `locale` (mặc định `vi-VN`),
 `q` (tối đa 120 ký tự), `hero` (mã tướng), `rarity` (mã nhãn bậc/chủ đề), `page` (từ 0), `size`
 (1–60, mặc định 24). Tham số lạ bị từ chối. Tìm kiếm không phân biệt dấu và hoa/thường, ghép các từ
 trong tên/mã tướng và tên/khóa trang phục; các từ tìm kiếm có thể xuất hiện theo thứ tự khác nhau.
@@ -452,6 +475,13 @@ revision metadata
 Dùng cho caller muốn một request đơn giản.
 
 Backend vẫn giữ section revisions bên dưới; endpoint này không biến domain trở lại blob.
+
+Tướng chứa dạng (ADR-024) trả nội dung chung của chính nó (tên, danh hiệu, tiểu sử, trang phục chung, ảnh; các
+section gameplay rỗng) và thêm `forms`: mỗi dạng đã xuất bản trong cùng context, theo thứ tự, có đúng cấu trúc chi
+tiết của một tướng (`id`, `code`, `revisionId`, `sections`, `content`, `media`, `skillMedia`, `skinMedia`…) cộng
+`formKey`, `displayOrder`, `actualLocale`, `fallbackApplied` và không có `context` riêng. Gọi bằng UUID của một
+dạng trả chi tiết của dạng đó kèm `parent: {id, code, formKey}` để client đưa người đọc về trang tướng.
+Manifest có cùng `forms`/`parent`, không có nội dung.
 
 ---
 
@@ -832,6 +862,43 @@ drafts[]        mỗi bản nháp đang mở, tối đa một bản cho mỗi ru
 ```
 
 Các section trong `drafts[]` chỉ giữ trường mà điều kiện xuất bản ở Admin đọc: không có cốt truyện, effect của kỹ năng, ảnh phụ hay nguồn. Section chưa gắn vào bản nháp trả `null`.
+
+Mỗi phần tử còn có `holderId`, `formKey` (khi tướng là một dạng) và `formIds` (các dạng theo thứ tự khi tướng chứa
+dạng). Danh sách `GET /admin/heroes` có cùng ba trường. Tướng chứa dạng không cần vai trò, đánh giá, chỉ số, kỹ năng
+để xuất bản (ADR-024).
+
+### Dạng của tướng (ADR-024)
+
+```http
+GET /api/wiki/v1/admin/heroes/{heroId}/forms
+PUT /api/wiki/v1/admin/heroes/{heroId}/forms
+```
+
+`GET` (quyền `catalog:read`, không nhận query parameter) gọi được từ tướng chứa dạng, từ một dạng hoặc từ tướng
+thường:
+
+```text
+heroId
+holder    {id, code, names} của tướng chứa dạng; null với tướng thường
+formKey   khóa dạng khi heroId là một dạng
+forms[]   {id, code, formKey, displayOrder, names, roles, published, draftOpen}
+```
+
+Tên và vai trò lấy từ revision mới nhất chưa hủy của từng tướng, nên nút đổi dạng trong Admin khớp với bản đang soạn.
+
+`PUT` (quyền `hero:publish`) thay toàn bộ danh sách: `{expectedForms: [uuid], forms: [{heroId, formKey}], changeNote?}`,
+tối đa 20 dạng; thứ tự trong mảng là thứ tự hiển thị, dạng đầu là dạng mặc định. Có hiệu lực ngay, không qua bản
+nháp, ghi audit `HERO_FORMS_UPDATED`. Quy tắc:
+
+- `expectedForms` phải bằng danh sách hiện tại, nếu không trả `HERO_FORMS_CONFLICT` (409) kèm `currentForms`;
+- mã của dạng phải là `<mã tướng>-<formKey>`; dạng không chứa dạng, tướng chứa dạng không là dạng, một tướng chỉ là
+  dạng của một tướng (`HERO_INVALID_CONTENT`, 422);
+- tướng chứa dạng không được có vai trò, vị trí, đánh giá, chỉ số hay kỹ năng trong revision chưa hủy nào
+  (`HERO_FORM_PARENT_GAMEPLAY`, 422). Sau khi có dạng, lưu hoặc xuất bản các nội dung đó cho tướng chứa dạng cũng
+  trả lỗi này;
+- danh sách rỗng đưa tướng về tướng thường.
+
+Thêm dạng mới (ví dụ `flowborn-tank`) = tạo tướng bằng `POST /admin/heroes` rồi thêm vào danh sách.
 
 Endpoint không kết luận bản nháp đủ điều kiện hay chưa. Admin tự áp dụng cùng điều kiện với nút Xuất bản, còn `POST .../publish` (mục 27) vẫn kiểm tra lại và có quyết định cuối cùng.
 
@@ -2123,7 +2190,7 @@ POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trư�
 ## Tổng quan phát hành cho admin
 
 - GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
-- GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
+- GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Change set của một dạng có thêm `holderId`, `holderCode`, `formKey` (ADR-024); trang patch công khai nhận cùng các trường. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
 
 Frontend dùng TanStack Query cho tổng quan (làm mới 60 giây), danh mục và snapshot tướng, bảng thay đổi theo variant/locale (chỉ tải khi mở). Sau mutation thiết lập mùa/patch hoặc ghi thay đổi, invalidate các cache liên quan. Đổi trang giữ cache theo cơ chế workspace hiện có.
 

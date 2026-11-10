@@ -11,6 +11,8 @@ import com.wikiaov.hero.internal.domain.CharacterCodes;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroImages;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.forms.application.HeroForms;
+import com.wikiaov.hero.internal.forms.domain.HeroFormGameplay;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.hero.internal.stats.domain.HeroStatObservations;
 import com.wikiaov.patch.GameplayContexts;
@@ -35,10 +37,11 @@ public class HeroAuthoring {
     private final AuditLog audit;
     private final Clock clock;
     private final IdentifierAliases aliases;
+    private final HeroForms forms;
 
     public HeroAuthoring(PatchDataReviews dataReviews, HeroStore store, HeroSections sections,
             HeroValidation validation, GameplayContexts contexts,
-            CurrentActor actors, AuditLog audit, Clock clock, IdentifierAliases aliases) {
+            CurrentActor actors, AuditLog audit, Clock clock, IdentifierAliases aliases, HeroForms forms) {
         this.dataReviews = dataReviews;
         this.store = store;
         this.sections = sections;
@@ -48,6 +51,7 @@ public class HeroAuthoring {
         this.audit = audit;
         this.clock = clock;
         this.aliases = aliases;
+        this.forms = forms;
     }
 
     @PreAuthorize("hasAuthority('hero:write')")
@@ -186,6 +190,8 @@ public class HeroAuthoring {
         Object old = sections.content(section, draft.sections().get(section));
         content = HeroImages.retain(old, content);
         validation.validate(section, content);
+        if (forms.holdsForms(heroId) && HeroFormGameplay.present(content))
+            throw formGameplay(section);
         if (Objects.equals(old, content))
             return draft;
 
@@ -264,6 +270,10 @@ public class HeroAuthoring {
         checkContext(draft.rulesetId(), draft.cause(), draft.effectiveFromPatchVariantId(), true);
         if (draft.sections().size() != HeroSection.values().length)
             throw HeroValidation.invalid("All hero sections are required.");
+        if (forms.holdsForms(draft.heroId())) {
+            validateHolderPublication(draft);
+            return;
+        }
         var skills = (Skills) sections.content(HeroSection.SKILLS, draft.sections().get(HeroSection.SKILLS));
         for (var section : HeroSection.values()) {
             var value = section == HeroSection.SKILLS
@@ -288,6 +298,33 @@ public class HeroAuthoring {
         if (skills.skills().stream().anyMatch(s -> !s.translations().stream().map(SkillTranslation::locale)
                 .collect(java.util.stream.Collectors.toSet()).containsAll(locales)))
             throw HeroValidation.invalid("Every skill needs translations for all profile locales.");
+    }
+
+    /**
+     * A hero that holds forms publishes only what its forms share (ADR-024): names, title, lore, shared skins and the
+     * three card images. Gameplay sections stay empty, so their publication requirements do not apply.
+     */
+    private void validateHolderPublication(HeroRevisionView draft) {
+        for (var section : HeroSection.values()) {
+            var value = sections.content(section, draft.sections().get(section));
+            if (HeroFormGameplay.present(value))
+                throw formGameplay(section);
+            if (section == HeroSection.PROFILE)
+                validation.validate(section, value);
+            else if (section == HeroSection.SKINS || section == HeroSection.MEDIA_BINDINGS)
+                validation.validatePublication(section, value);
+        }
+
+        var bindings = (Bindings) sections.content(HeroSection.MEDIA_BINDINGS,
+                draft.sections().get(HeroSection.MEDIA_BINDINGS));
+        if (!bindings.bindings().keySet().equals(EnumSet.allOf(MediaRole.class)))
+            throw HeroValidation.invalid("HEAD, PORTRAIT and SPLASH bindings are required for publication.");
+    }
+
+    private static ApiException formGameplay(HeroSection section) {
+        return new ApiException(HeroErrorCode.HERO_FORM_PARENT_GAMEPLAY,
+                "Roles, positions, ratings, stats and skills belong to the hero's forms.",
+                Map.of("section", section.name()));
     }
 
     private HeroRevisionView defaultSource(UUID heroId, Fork input) {

@@ -7,6 +7,8 @@ import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.forms.application.HeroForms;
+import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.media.persistence.HeroMediaSnapshots;
 import com.wikiaov.hero.internal.profile.persistence.HeroProfileSnapshots;
 import com.wikiaov.hero.internal.ratings.persistence.HeroRatingSnapshots;
@@ -37,6 +39,7 @@ public class HeroPublishReadiness {
     private final HeroMediaSnapshots media;
     private final MediaAssets assets;
     private final GameplayContexts contexts;
+    private final HeroForms forms;
 
     @PreAuthorize("hasAuthority('catalog:read')")
     public List<HeroPublishReadinessView> list() {
@@ -60,14 +63,19 @@ public class HeroPublishReadiness {
         var heads = assets.findAll(newest.stream().map(revision -> headAsset(revision, content))
                 .filter(Objects::nonNull).collect(Collectors.toSet()));
         Map<UUID, String> patchCodes = new HashMap<>();
+        var structure = forms.structure();
 
         return heroes.stream().map(hero -> {
             var rows = revisions.getOrDefault(hero.getId(), List.of());
             var identity = rows.isEmpty() ? null : rows.getFirst();
+            var form = structure.form(hero.getId());
             return new HeroPublishReadinessView(hero.getId(), hero.getCode(), names(identity, content),
                     headUrl(identity, content, heads), rows,
                     rows.stream().filter(HeroPublishReadiness::isDraft)
-                            .map(draft -> draft(draft, content, patchCodes)).toList());
+                            .map(draft -> draft(draft, content, patchCodes)).toList(),
+                    form.map(HeroFormStructure.Form::holderId).orElse(null),
+                    form.map(HeroFormStructure.Form::formKey).orElse(null),
+                    structure.formsOf(hero.getId()).stream().map(HeroFormStructure.Form::heroId).toList());
         }).toList();
     }
 

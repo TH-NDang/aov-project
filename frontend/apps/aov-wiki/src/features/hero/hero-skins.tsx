@@ -29,13 +29,21 @@ function HeroSkinsSkeleton({ label }: { label: string }) {
 }
 
 /** The hero's skins on the hero page itself: one large image, the rest a tap away, and the full viewer on demand. */
-export function HeroSkins({ hero }: { hero: HeroDetail }) {
+export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string }) {
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
-  const query = useQuery(heroSkinsQuery(scope, hero.code))
+  // A form shows the skins every form shares and its own, not those of the other forms (ADR-024).
+  const library = owner ?? hero.code
+  const query = useQuery(heroSkinsQuery(scope, library))
   const skins = useMemo(
-    () => groupSkins(query.data ?? [], "most", "tier", scope.locale)[0] ?? [],
-    [query.data, scope.locale],
+    () =>
+      groupSkins(
+        (query.data ?? []).filter((skin) => !owner || skin.heroCode === owner || skin.heroCode === hero.code),
+        "most",
+        "tier",
+        scope.locale,
+      )[0] ?? [],
+    [query.data, scope.locale, owner, hero.code],
   )
   const groups = useMemo(() => [skins], [skins])
   const [selectedKey, setSelectedKey] = useState<string>()
@@ -71,7 +79,7 @@ export function HeroSkins({ hero }: { hero: HeroDetail }) {
         {text("Trang phục", "Skins")}
         {!!count && <span>{count}</span>}
       </h2>
-      <Link to={scope.href(`/skins?hero=${encodeURIComponent(hero.code)}`)}>
+      <Link to={scope.href(`/skins?hero=${encodeURIComponent(library)}`)}>
         {text("Mở trong kho trang phục", "Open in the skin library")}
         <WikiIcon name="arrow" size={14} />
       </Link>

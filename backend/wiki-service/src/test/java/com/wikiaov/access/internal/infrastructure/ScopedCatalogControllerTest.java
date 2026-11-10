@@ -81,7 +81,7 @@ class ScopedCatalogControllerTest {
                     .param("seasonId", season.toString()).param("patchVariantId", patch.toString()))
                     .andExpect(status().isOk());
 
-        verify(heroes).list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false);
+        verify(heroes).list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false, false);
         verify(heroes).detail(hero, "VN", "en-US", false, season, patch, false);
         verify(heroes).detail(hero, "VN", "en-US", true, season, patch, false);
         verify(skins).read("VN", "en-US", "", null, null, 0, 24, season, patch, false);

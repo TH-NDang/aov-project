@@ -8,6 +8,8 @@ import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.forms.application.HeroForms;
+import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.media.*;
 import com.wikiaov.patch.*;
@@ -25,12 +27,14 @@ class HeroQueriesTest {
     private final Instant at = Instant.parse("2026-10-20T00:00:00Z");
     private final GameplayContext context = new GameplayContext(UUID.randomUUID(), "VN", UUID.randomUUID(),
             "aov-standard", UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, at);
+    private final HeroForms forms = mock(HeroForms.class);
     private final HeroQueries queries = new HeroQueries(store, sections, contexts, media, new JsonMapper(),
-            Clock.fixed(at, ZoneOffset.UTC));
+            Clock.fixed(at, ZoneOffset.UTC), forms);
 
     @BeforeEach
     void resolvePublishedContext() {
         when(contexts.resolve("VN", at)).thenReturn(context);
+        when(forms.structure()).thenReturn(HeroFormStructure.empty());
     }
 
     @Test

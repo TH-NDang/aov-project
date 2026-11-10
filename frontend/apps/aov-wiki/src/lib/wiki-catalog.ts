@@ -60,9 +60,14 @@ export function legacyWarehouseTarget(search: string) {
   return params.size ? `${path}?${params}` : path
 }
 
-/** Moving between armory tabs and entries stays on one reading surface, so it must not reset the scroll position. */
+/**
+ * Moving between armory tabs and entries, or between the forms of one hero, stays on one reading surface, so it must
+ * not reset the scroll position.
+ */
 export function wikiScrollKey(pathname: string) {
-  return pathname.split("/")[1] === "warehouse" ? "/warehouse" : pathname
+  const [, root, entry] = pathname.split("/")
+  if (root === "warehouse") return "/warehouse"
+  return root === "hero" && entry ? `/hero/${entry}` : pathname
 }
 
 export function wikiScopeHref(path: string, scope: WikiCatalogScope) {

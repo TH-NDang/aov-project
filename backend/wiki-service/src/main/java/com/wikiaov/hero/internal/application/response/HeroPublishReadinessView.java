@@ -11,6 +11,8 @@ import java.util.UUID;
 /**
  * A hero's publication state for the Admin overview. Each draft carries only the fields the Admin's publish rules read,
  * so the list stays small enough to load for every hero; this view passes no judgement of its own.
+ * {@code holderId} and {@code formKey} are set for a form of another hero; {@code formIds} lists the forms of a hero
+ * that holds forms, whose drafts carry no gameplay (ADR-024).
  */
 public record HeroPublishReadinessView(
         UUID id,
@@ -18,7 +20,10 @@ public record HeroPublishReadinessView(
         List<Name> names,
         String headUrl,
         List<HeroRevisionView> revisions,
-        List<Draft> drafts
+        List<Draft> drafts,
+        UUID holderId,
+        String formKey,
+        List<UUID> formIds
 ) {
     public record Name(
             String locale,

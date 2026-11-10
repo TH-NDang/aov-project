@@ -145,6 +145,11 @@ export interface HeroRow {
   revisions: Revision[]
   lastEditedAt?: string | null
   gameplayChanges?: HeroGameplayChange[]
+  /** The hero that holds this one as a form, and the form's key (ADR-024). */
+  holderId?: string | null
+  formKey?: string | null
+  /** The forms this hero holds, in switcher order. */
+  formIds?: string[]
 }
 export type ChangeSource = "SNAPSHOT" | "PATCH_NOTES"
 export interface HeroGameplayChange {

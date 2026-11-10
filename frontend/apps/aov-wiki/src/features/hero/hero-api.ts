@@ -28,6 +28,30 @@ export interface HeroListItem {
   positions?: HeroPosition[]
   head?: HeroMedia
   portrait?: HeroMedia
+  /** The published forms of a hero that holds forms, default form first (ADR-024). */
+  forms?: HeroListForm[]
+}
+
+/** One form inside a hero's list entry: what the switcher and the library need without loading the form. */
+export interface HeroListForm {
+  unscopedBaseline?: boolean
+  id: string
+  code: string
+  formKey: string
+  revisionId: string
+  name: string
+  actualLocale: string
+  roles: HeroRole[]
+  positions?: HeroPosition[]
+  head?: HeroMedia
+  portrait?: HeroMedia
+}
+
+/** Where a form sits when it is read on its own, so readers can be sent to the hero that holds it. */
+export interface HeroFormParent {
+  id: string
+  code: string
+  formKey: string
 }
 
 interface HeroContext {
@@ -95,6 +119,16 @@ export interface HeroDetail {
       values?: { statKey: string; baseValue: number | null; percentValue?: number | null; unit?: string }[]
     } | null
   }
+  /** Each published form of a hero that holds forms, with the same detail as a hero (ADR-024). */
+  forms?: HeroFormDetail[]
+  /** Set when this hero is a form of another hero. */
+  parent?: HeroFormParent
+}
+
+export type HeroFormDetail = Omit<HeroDetail, "context" | "forms" | "parent"> & {
+  formKey: string
+  displayOrder: number
+  actualLocale?: string
 }
 
 async function readHeroApi<T>(path: string, signal: AbortSignal): Promise<T> {

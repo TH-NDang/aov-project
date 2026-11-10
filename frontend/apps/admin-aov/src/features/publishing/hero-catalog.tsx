@@ -30,6 +30,7 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetDescript
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, heroPreviewKey, heroCatalogKey, type HeroCatalogQuery } from "./publishing-api"
+import { heroFormNote } from "./hero-forms-model"
 import { type HeroGameplayChange, type HeroRow } from "./types"
 import { heroCatalogRows, appliedMarkets, translationCoverage, type HeroCatalogRow } from "./catalog-data"
 import type { CatalogFilter } from "./catalog-context"
@@ -193,6 +194,7 @@ export function HeroCatalog({
                   title={row.original.code}
                 >
                   {row.original.code}
+                  {heroFormNote(row.original) && ` · ${heroFormNote(row.original)}`}
                 </span>
               </div>
               <ChevronRight
