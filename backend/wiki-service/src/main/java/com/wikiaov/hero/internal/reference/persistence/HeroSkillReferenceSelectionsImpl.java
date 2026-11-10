@@ -9,6 +9,7 @@ import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceReposit
 import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository.Result;
 import com.wikiaov.hero.internal.reference.persistence.HeroSkillReferenceRepository.Row;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillSnapshotRow;
+import com.wikiaov.hero.internal.skills.persistence.entity.SkillStateIconRow;
 import com.wikiaov.hero.internal.skills.persistence.entity.SkillTranslationRow;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -140,8 +141,16 @@ public class HeroSkillReferenceSelectionsImpl implements HeroSkillReferenceSelec
                     builder.equal(translation.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
                     builder.equal(translation.get("skillKey"), skill.get("skillKey")),
                     builder.like(normalized(builder, translation.get("name")), pattern, '!'));
+            // A variant is also found by the name of its form and a skill by the label of one of its state icons.
+            var stateCopy = query.subquery(Integer.class);
+            var state = stateCopy.from(SkillStateIconRow.class);
+            stateCopy.select(state.get("iconOrder")).where(
+                    builder.equal(state.get("skillSetRevisionId"), revision.get("skillsRevisionId")),
+                    builder.equal(state.get("skillKey"), skill.get("skillKey")),
+                    builder.like(normalized(builder, state.get("label")), pattern, '!'));
             predicates.add(builder.or(builder.like(normalized(builder, hero.get("code")), pattern, '!'),
-                    builder.exists(ownerCopy), builder.exists(skillCopy)));
+                    builder.exists(ownerCopy), builder.exists(skillCopy),
+                    builder.like(normalized(builder, skill.get("formKey")), pattern, '!'), builder.exists(stateCopy)));
         }
 
         return new Selection(hero, revision, skill, predicates.toArray(Predicate[]::new));

@@ -26,6 +26,30 @@ class SkillReferenceSearchTest {
     }
 
     @Test
+    void acceptsTheShortSlotStylesPlayersWrite() {
+        assertThat(SkillReferenceSearch.parse("airi c1"))
+                .isEqualTo(new SkillReferenceSearch(java.util.List.of("airi"), 1, null));
+        assertThat(SkillReferenceSearch.parse("S2 Airi"))
+                .isEqualTo(new SkillReferenceSearch(java.util.List.of("airi"), 2, null));
+        assertThat(SkillReferenceSearch.parse("edras c2 2"))
+                .isEqualTo(new SkillReferenceSearch(java.util.List.of("edras"), 2, 2));
+        assertThat(SkillReferenceSearch.parse("edras chiêu1"))
+                .isEqualTo(new SkillReferenceSearch(java.util.List.of("edras"), 1, null));
+        assertThat(SkillReferenceSearch.parse("chiêu cuối Airi").sourceSlot()).isEqualTo(3);
+        assertThat(SkillReferenceSearch.parse("airi ult").sourceSlot()).isEqualTo(3);
+        assertThat(SkillReferenceSearch.parse("airi nt").sourceSlot()).isZero();
+    }
+
+    @Test
+    void keepsFormAndStateWordsForTheirOwnMatch() {
+        var search = SkillReferenceSearch.parse("Yena Viên đao chiêu 1");
+        assertThat(search.words()).containsExactly("yena", "vien", "dao");
+        assertThat(search.sourceSlot()).isEqualTo(1);
+        assertThat(SkillReferenceSearch.parse("billow hải quái").words()).containsExactly("billow", "hai", "quai");
+        assertThat(SkillReferenceSearch.parse("superman phi hành").words()).containsExactly("superman", "phi", "hanh");
+    }
+
+    @Test
     void neverInventsVariantFromCaptureNamesOrListOrder() {
         assertThat(SkillReferenceSearch.sourceSlot("skill-2-3")).isEqualTo(2);
         assertThat(SkillReferenceSearch.variantNo("skill-2-3")).isEqualTo(3);

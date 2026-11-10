@@ -162,6 +162,24 @@ class SkillReferenceCatalogIntegrationTest {
     }
 
     @Test
+    void findsVariantsByFormStateAndShortSlotNames() throws Exception {
+        sql.update("update hero.hero_skill_snapshot set form_key = 'Quang minh' where hero_id = ? and skill_key = ?",
+                edras, "skill-1-2");
+        sql.update("insert into hero.skill_state_icon(skill_set_revision_id,skill_key,icon_order,asset_id,label)"
+                + " select skill_set_revision_id, skill_key, 0, ?, 'Hải quái' from hero.hero_skill_snapshot"
+                + " where hero_id = ? and skill_key = ?", UUID.randomUUID(), airi, "skill-1-1");
+
+        for (String q : List.of("edras quang minh", "Quang Minh Edras", "edras c1 quang minh")) {
+            var items = admin(q, null).get("items");
+            assertThat(items.size()).isEqualTo(1);
+            assertThat(items.get(0).get("skillKey").asString()).isEqualTo("skill-1-2");
+        }
+        for (String q : List.of("airi hai quai", "Hải quái c1", "airi s1"))
+            assertThat(admin(q, null).get("items").get(0).get("id").asString()).isEqualTo(airi + ".skill-1-1");
+        assertThat(admin("edras hai quai", null).get("totalElements").asInt()).isZero();
+    }
+
+    @Test
     void idsCanResolveLastContainingSnapshotButSearchNeverOffersRemovedSkill() throws Exception {
         assertThat(admin("Retired", null).get("totalElements").asInt()).isZero();
         var value = admin("", airi + ".skill-9-1").get("items").get(0);
