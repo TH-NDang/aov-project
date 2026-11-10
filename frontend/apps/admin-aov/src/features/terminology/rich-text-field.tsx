@@ -1,10 +1,10 @@
-import { memo, useDeferredValue, useMemo } from "react"
-import { Eye, PencilLine } from "lucide-react"
+import { useMemo } from "react"
+import { PencilLine } from "lucide-react"
 import { EntityRichText, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 import { EntityRichTextEditor } from "@aov/ui/components/entity-rich-text-editor"
 import type { EntityReference } from "@aov/ui/lib/entity-rich-text"
 import type { EntityReferenceSearch } from "@aov/ui/lib/entity-rich-text-editor"
-import { AdminEntityText, useReferenceCatalog } from "./catalog"
+import { useReferenceCatalog } from "./catalog"
 import { useSkillReferences } from "./use-skill-references"
 import { useCommunityReferences, useReferenceSearch } from "./use-community-references"
 
@@ -42,8 +42,6 @@ export interface AdminDescriptionFieldProps {
   paragraphStyles?: boolean
   /** The button that inserts an example table, and editing a table in place. */
   exampleTables?: boolean
-  /** Shows the published result beside the box, for a short text edited in its own step. */
-  livePreview?: boolean
   /** Hides the heading where the block around the field already names it. */
   hideLabel?: boolean
   /** Recognises against another catalog, such as the terminology draft that is still being edited. */
@@ -88,7 +86,6 @@ function DescriptionBox({
   toolbar = true,
   paragraphStyles = true,
   exampleTables = true,
-  livePreview = false,
   hideLabel = false,
   references,
   ...props
@@ -117,48 +114,7 @@ function DescriptionBox({
       </div>
     </div>
   )
-  if (!livePreview) return box
-  return (
-    <div className="@container/live min-w-0">
-      <div className="grid min-w-0 gap-4 @min-[580px]/live:grid-cols-2">
-        {box}
-        <LiveResult label={label} value={props.value} />
-      </div>
-    </div>
-  )
-}
-
-const LiveContent = memo(AdminEntityText)
-
-/** The published result next to the box, rendered with the reference context of the page around it. */
-function LiveResult({ label, value }: { label: string; value: string }) {
-  const text = useDeferredValue(value)
-  const updating = text !== value
-  return (
-    <section aria-label={`Kết quả hiển thị · ${label}`} className="flex min-w-0 flex-col gap-2">
-      <div className="flex min-h-8 flex-wrap items-center justify-between gap-2">
-        <h4 className="type-label flex items-center gap-2">
-          <Eye aria-hidden className="size-4 text-muted-foreground" />
-          Kết quả hiển thị
-        </h4>
-        <span className="type-meta inline-flex items-center gap-1.5">
-          <span aria-hidden className={`size-1.5 rounded-full ${updating ? "bg-amber-500" : "bg-emerald-500"}`} />
-          {updating ? "Đang cập nhật…" : "Trực tiếp"}
-        </span>
-      </div>
-      <div
-        aria-busy={updating}
-        tabIndex={0}
-        className="max-h-[45dvh] min-w-0 flex-1 overflow-y-auto rounded-lg bg-muted/30 px-3 py-2 text-sm leading-7 whitespace-pre-wrap break-words outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {text ? (
-          <LiveContent text={text} />
-        ) : (
-          <span className="text-muted-foreground">Nội dung sẽ hiển thị khi bạn nhập.</span>
-        )}
-      </div>
-    </section>
-  )
+  return box
 }
 
 export function AdminRichTextPreview({ text, locale }: { text: string; locale: string }) {

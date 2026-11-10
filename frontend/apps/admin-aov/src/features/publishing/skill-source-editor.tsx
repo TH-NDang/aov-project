@@ -67,7 +67,6 @@ export function SkillTagsEditor({
             key={`${locale}:${editing}`}
             label="Nội dung nhãn"
             size="short"
-            livePreview
             paragraphStyles={false}
             exampleTables={false}
             locale={locale}

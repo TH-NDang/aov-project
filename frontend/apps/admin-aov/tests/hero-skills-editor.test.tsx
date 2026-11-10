@@ -7,7 +7,7 @@ import { MemoryRouter } from "react-router"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { Skill, Skills } from "../src/features/publishing/types"
 import { createHeroFixture } from "./fixtures/hero-workspace-data"
-import { fillReferenceInput, referenceInput } from "./fixtures/reference-input"
+import { fillReferenceInput, referenceInput, referenceInputValue } from "./fixtures/reference-input"
 
 test("focused skill editing preserves forms, effects and translations while adding unique skills and selecting media", async () => {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/hero/fixture-hero", pretendToBeVisual: true })
@@ -275,7 +275,12 @@ test("focused skill editing preserves forms, effects and translations while addi
     await act(async () => button("Thêm nhãn").click())
     const tagInput = [...editor().querySelectorAll<HTMLDivElement>('[data-slot="entity-reference-input"]')].at(-1)!
     await act(async () => fillReferenceInput(tagInput, "Đẩy lùi"))
-    assert.match(editor().querySelector('[aria-label="Kết quả hiển thị · Nội dung nhãn"]')!.textContent!, /Đẩy lùi/)
+    assert.equal(
+      editor().querySelector('[aria-label="Kết quả hiển thị · Nội dung nhãn"]'),
+      null,
+      "One box: no second preview",
+    )
+    assert.equal(referenceInputValue(tagInput), "Đẩy lùi")
     await act(async () => button("Xong").click())
     assert.equal(document.querySelector('input[aria-label="Tải ảnh mới"]'), null, "The image picker opens on demand")
     await act(async () => button("Lưu phần này").click())
