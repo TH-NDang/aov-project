@@ -33,7 +33,6 @@ export function HeroFormSwitch({ hero, current }: { hero: HeroListItem; current?
             to={scope.href(skill ? `${path}?skill=${encodeURIComponent(skill)}` : path)}
             aria-current={form.id === current?.id ? "page" : undefined}
             preventScrollReset
-            title={form.name}
           >
             {firstRole && <HeroGlyph name={firstRole.glyph} />}
             <span>{role?.label ?? form.name}</span>
