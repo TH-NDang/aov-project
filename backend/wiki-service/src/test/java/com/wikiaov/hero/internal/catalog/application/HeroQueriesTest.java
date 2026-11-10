@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
+import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.*;
 import com.wikiaov.patch.*;
 import java.time.*;
@@ -29,7 +30,7 @@ class HeroQueriesTest {
             "aov-standard", UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, at);
     private final HeroForms forms = mock(HeroForms.class);
     private final HeroQueries queries = new HeroQueries(store, sections, contexts, media, new JsonMapper(),
-            Clock.fixed(at, ZoneOffset.UTC), forms);
+            Clock.fixed(at, ZoneOffset.UTC), forms, mock(SkillLibraryIcons.class));
 
     @BeforeEach
     void resolvePublishedContext() {

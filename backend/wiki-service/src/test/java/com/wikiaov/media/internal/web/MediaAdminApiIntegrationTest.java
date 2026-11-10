@@ -955,6 +955,8 @@ class MediaAdminApiIntegrationTest {
             uploadVersion(asset, TestImages.png(40, 30), "image/png");
             assets.put(semantic, asset);
         }
+        String libraryIcon = createAsset("HERO_SKILL_ICON");
+        uploadVersion(libraryIcon, TestImages.png(40, 30), "image/png");
         var draft = pipeline(post(root + "/admin/heroes"), Map.of("code", "fixture-" + suffix,
                 "name", "Synthetic test hero", "initialLocale", "vi-VN", "rulesetId", ruleset, "releaseId", release),
                 201);
@@ -968,11 +970,16 @@ class MediaAdminApiIntegrationTest {
                 "skillEffects", 3, "difficulty", 4));
         sections.put("combat-stats",
                 Map.of("values", List.of(Map.of("statKey", "HP", "baseValue", 100, "unit", "POINT"))));
+        // The second skill has no icon of its own; the hero's skill image library supplies it, as in Admin.
         sections.put("skills",
                 Map.of("skills", List.of(Map.of("skillKey", "skill-1", "kind", "ACTIVE", "displayOrder", 0,
                         "iconAssetId", assets.get("SKILL_ICON"), "translations", List.of(Map.of("locale", "vi-VN",
                                 "name", "Test skill", "description", "Synthetic description, not game data")),
-                        "effects", List.of()))));
+                        "effects", List.of()),
+                        Map.of("skillKey", "skill-2-1", "kind", "ACTIVE", "displayOrder", 1, "translations",
+                                List.of(Map.of("locale", "vi-VN", "name", "Library skill", "description",
+                                        "Synthetic description, not game data")),
+                                "effects", List.of()))));
         sections.put("skins", Map.of("skins", List.of(Map.of("skinKey", "skin-1", "displayOrder", 0,
                 "artAssetId", assets.get("SKIN_ART"), "translations",
                 List.of(Map.of("locale", "vi-VN", "name", "Test skin"))))));
@@ -984,9 +991,13 @@ class MediaAdminApiIntegrationTest {
             draft = pipeline(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                     .put(path + "/" + section.getKey()), body, 200);
         }
+        pipeline(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .put(root + "/admin/heroes/" + hero + "/skill-images/2/1"),
+                Map.of("expectedVersion", -1, "assetId", libraryIcon, "sourceFilename", "fixture-2-1.png"), 200);
         var published = pipeline(post(path + "/publish"), Map.of("expectedVersion", draft.get("version")), 200);
         var first = mvc.perform(get(root + "/heroes/" + hero)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.skillMedia.skill-1.currentVersion.url").isNotEmpty())
+                .andExpect(jsonPath("$.skillMedia.skill-2-1.assetId").value(libraryIcon))
                 .andExpect(jsonPath("$.skillStateMedia").isMap())
                 .andExpect(jsonPath("$.skinMedia.skin-1.currentVersion.url").isNotEmpty()).andReturn().getResponse();
         String tag = first.getHeader("ETag");

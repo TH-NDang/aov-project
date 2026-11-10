@@ -10,6 +10,7 @@ import com.wikiaov.hero.internal.domain.HeroSection;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
+import com.wikiaov.hero.internal.skills.application.SkillLibraryIcons;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.*;
 import com.wikiaov.platform.*;
@@ -30,9 +31,10 @@ public class HeroQueries {
     private final JsonMapper json;
     private final Clock clock;
     private final HeroForms forms;
+    private final SkillLibraryIcons libraryIcons;
 
     public HeroQueries(HeroStore store, HeroSections sections, GameplayContexts contexts, MediaAssets media,
-            JsonMapper json, Clock clock, HeroForms forms) {
+            JsonMapper json, Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons) {
         this.store = store;
         this.sections = sections;
         this.contexts = contexts;
@@ -40,6 +42,7 @@ public class HeroQueries {
         this.json = json;
         this.clock = clock;
         this.forms = forms;
+        this.libraryIcons = libraryIcons;
     }
 
     public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at) {
@@ -176,10 +179,12 @@ public class HeroQueries {
         // State icons are keyed by asset, since the content lists them by asset ID under each skill.
         Map<String, Object> skillStateMedia = new LinkedHashMap<>();
         var skills = (Skills) sections.content(HeroSection.SKILLS, rev.sections().get(HeroSection.SKILLS));
+        // A skill without an icon of its own shows the hero's library picture, as it does in Admin.
+        var library = libraryIcons.forSkills(rev.heroId(), skills.skills());
         skills.skills().forEach(skill -> {
-            if (skill.iconAssetId() != null)
-                media.find(skill.iconAssetId()).filter(a -> a.usable())
-                        .ifPresent(a -> skillMedia.put(skill.skillKey(), a));
+            var iconId = skill.iconAssetId() != null ? skill.iconAssetId() : library.get(skill.skillKey());
+            if (iconId != null)
+                media.find(iconId).filter(a -> a.usable()).ifPresent(a -> skillMedia.put(skill.skillKey(), a));
             skill.stateIcons().forEach(icon -> media.find(icon.assetId()).filter(a -> a.usable())
                     .ifPresent(a -> skillStateMedia.put(icon.assetId().toString(), a)));
         });
