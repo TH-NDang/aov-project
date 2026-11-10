@@ -30,13 +30,11 @@ public class HeroPublicController implements HeroPublicApi {
             @RequestParam(required = false) String role, @RequestParam(defaultValue = "code,asc") String sort,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
             @RequestParam(defaultValue = "false") boolean includeUnscoped,
-            HttpServletRequest request, WebRequest web) {
+            @RequestParam(defaultValue = "false") boolean playable, HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of("region", "locale", "page", "size", "q", "role", "sort", "seasonId",
-                "patchVariantId", "includeUnscoped"));
-        return cached(seasonId == null && patchVariantId == null
-                ? queries.list(region, locale, page, size, q, role, sort)
-                : queries.list(region, locale, page, size, q, role, sort, seasonId, patchVariantId, includeUnscoped),
-                web, false);
+                "patchVariantId", "includeUnscoped", "playable"));
+        return cached(queries.list(region, locale, page, size, q, role, sort, seasonId, patchVariantId,
+                includeUnscoped, playable), web, false);
     }
 
     @GetMapping(path = "/heroes/{heroId}", version = "1")

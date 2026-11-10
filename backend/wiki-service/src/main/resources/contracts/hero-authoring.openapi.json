@@ -1531,6 +1531,84 @@
           }
         }
       }
+    },
+    "/api/wiki/v1/admin/heroes/{heroId}/forms": {
+      "get": {
+        "operationId": "heroForms",
+        "description": "Tướng chứa dạng và các dạng theo thứ tự, gọi được từ tướng chứa dạng hoặc từ một dạng. Quyền catalog:read.",
+        "parameters": [
+          {
+            "name": "heroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Nút đổi dạng của tướng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroForms"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không có tướng"
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceHeroForms",
+        "description": "Thay toàn bộ danh sách dạng theo thứ tự; dạng đầu là dạng mặc định. Có hiệu lực ngay. Quyền hero:publish.",
+        "parameters": [
+          {
+            "name": "heroId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceHeroForms"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nút đổi dạng của tướng",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeroForms"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Không có tướng"
+          },
+          "409": {
+            "description": "HERO_FORMS_CONFLICT: danh sách dạng đã đổi"
+          },
+          "422": {
+            "description": "Mã dạng sai quy ước, dạng lồng nhau hoặc tướng chứa dạng còn dữ liệu gameplay (HERO_FORM_PARENT_GAMEPLAY)"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4016,7 +4094,10 @@
           "names",
           "headUrl",
           "revisions",
-          "drafts"
+          "drafts",
+          "holderId",
+          "formKey",
+          "formIds"
         ],
         "properties": {
           "id": {
@@ -4047,6 +4128,184 @@
             "items": {
               "$ref": "#/components/schemas/HeroPublishDraft"
             }
+          },
+          "holderId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Tướng chứa dạng khi tướng này là một dạng (ADR-024)"
+          },
+          "formKey": {
+            "type": "string",
+            "nullable": true,
+            "description": "Khóa dạng khi tướng này là một dạng"
+          },
+          "formIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Các dạng theo thứ tự khi tướng này chứa dạng"
+          }
+        }
+      },
+      "HeroFormsHolder": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "names"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroPublishName"
+            }
+          }
+        }
+      },
+      "HeroForm": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "formKey",
+          "displayOrder",
+          "names",
+          "roles",
+          "published",
+          "draftOpen"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "formKey": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroPublishName"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "TANK",
+                "WARRIOR",
+                "ASSASSIN",
+                "MAGE",
+                "MARKSMAN",
+                "SUPPORT"
+              ]
+            }
+          },
+          "published": {
+            "type": "boolean"
+          },
+          "draftOpen": {
+            "type": "boolean"
+          }
+        }
+      },
+      "HeroForms": {
+        "type": "object",
+        "description": "Nút đổi dạng của một tướng (ADR-024). holder là tướng chứa dạng; formKey chỉ có khi tướng được hỏi là một dạng.",
+        "required": [
+          "heroId",
+          "holder",
+          "formKey",
+          "forms"
+        ],
+        "properties": {
+          "heroId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "holder": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeroFormsHolder"
+              }
+            ],
+            "nullable": true
+          },
+          "formKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "forms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeroForm"
+            }
+          }
+        }
+      },
+      "HeroFormEntry": {
+        "type": "object",
+        "required": [
+          "heroId",
+          "formKey"
+        ],
+        "properties": {
+          "heroId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "formKey": {
+            "type": "string",
+            "maxLength": 32,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        }
+      },
+      "ReplaceHeroForms": {
+        "type": "object",
+        "required": [
+          "expectedForms",
+          "forms"
+        ],
+        "properties": {
+          "expectedForms": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "forms": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/HeroFormEntry"
+            }
+          },
+          "changeNote": {
+            "type": "string",
+            "maxLength": 4000,
+            "nullable": true
           }
         }
       }

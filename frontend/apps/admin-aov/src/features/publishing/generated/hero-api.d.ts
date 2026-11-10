@@ -507,6 +507,24 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  "/api/wiki/v1/admin/heroes/{heroId}/forms": {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** @description Tướng chứa dạng và các dạng theo thứ tự, gọi được từ tướng chứa dạng hoặc từ một dạng. Quyền catalog:read. */
+    get: operations["heroForms"]
+    /** @description Thay toàn bộ danh sách dạng theo thứ tự; dạng đầu là dạng mặc định. Có hiệu lực ngay. Quyền hero:publish. */
+    put: operations["replaceHeroForms"]
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
 export type webhooks = Record<string, never>
 export interface components {
@@ -1216,6 +1234,50 @@ export interface components {
       headUrl: string | null
       revisions: components["schemas"]["HeroComparisonRevision"][]
       drafts: components["schemas"]["HeroPublishDraft"][]
+      /**
+       * Format: uuid
+       * @description Tướng chứa dạng khi tướng này là một dạng (ADR-024)
+       */
+      holderId: string | null
+      /** @description Khóa dạng khi tướng này là một dạng */
+      formKey: string | null
+      /** @description Các dạng theo thứ tự khi tướng này chứa dạng */
+      formIds: string[]
+    }
+    HeroFormsHolder: {
+      /** Format: uuid */
+      id: string
+      code: string
+      names: components["schemas"]["HeroPublishName"][]
+    }
+    HeroForm: {
+      /** Format: uuid */
+      id: string
+      code: string
+      formKey: string
+      displayOrder: number
+      names: components["schemas"]["HeroPublishName"][]
+      roles: ("TANK" | "WARRIOR" | "ASSASSIN" | "MAGE" | "MARKSMAN" | "SUPPORT")[]
+      published: boolean
+      draftOpen: boolean
+    }
+    /** @description Nút đổi dạng của một tướng (ADR-024). holder là tướng chứa dạng; formKey chỉ có khi tướng được hỏi là một dạng. */
+    HeroForms: {
+      /** Format: uuid */
+      heroId: string
+      holder: components["schemas"]["HeroFormsHolder"] | null
+      formKey: string | null
+      forms: components["schemas"]["HeroForm"][]
+    }
+    HeroFormEntry: {
+      /** Format: uuid */
+      heroId: string
+      formKey: string
+    }
+    ReplaceHeroForms: {
+      expectedForms: string[]
+      forms: components["schemas"]["HeroFormEntry"][]
+      changeNote?: string | null
     }
   }
   responses: never
@@ -2340,6 +2402,82 @@ export interface operations {
         content?: never
       }
       /** @description Invalid review state or unpublished variant */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  heroForms: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        heroId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Nút đổi dạng của tướng */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HeroForms"]
+        }
+      }
+      /** @description Không có tướng */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  replaceHeroForms: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        heroId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReplaceHeroForms"]
+      }
+    }
+    responses: {
+      /** @description Nút đổi dạng của tướng */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          "application/json": components["schemas"]["HeroForms"]
+        }
+      }
+      /** @description Không có tướng */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description HERO_FORMS_CONFLICT: danh sách dạng đã đổi */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Mã dạng sai quy ước, dạng lồng nhau hoặc tướng chứa dạng còn dữ liệu gameplay (HERO_FORM_PARENT_GAMEPLAY) */
       422: {
         headers: {
           [name: string]: unknown

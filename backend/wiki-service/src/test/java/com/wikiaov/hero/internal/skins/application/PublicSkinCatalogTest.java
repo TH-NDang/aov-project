@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
 import com.wikiaov.media.*;
@@ -21,12 +22,14 @@ class PublicSkinCatalogTest {
     private final Instant now = Instant.parse("2026-10-25T00:00:00Z");
     private final GameplayContext context = new GameplayContext(UUID.randomUUID(), "VN", UUID.randomUUID(),
             "aov-standard", UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, now);
+    private final HeroForms forms = mock(HeroForms.class);
     private final PublicSkinCatalog catalog = new PublicSkinCatalog(repository, contexts, media,
-            Clock.fixed(now, ZoneOffset.UTC));
+            Clock.fixed(now, ZoneOffset.UTC), forms);
 
     @BeforeEach
     void resolveContext() {
         when(contexts.resolve("VN", now)).thenReturn(context);
+        when(forms.codesFor(anyString())).thenAnswer(call -> Set.of((String) call.getArgument(0)));
     }
 
     @Test

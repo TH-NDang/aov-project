@@ -26,6 +26,20 @@ public class HeroStore {
         return heroes.findById(id).orElseThrow();
     }
 
+    public HeroIdentity requireHero(UUID id) {
+        return heroes.findById(id)
+                .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND, "The hero does not exist."));
+    }
+
+    /** Finds a hero by its code or by a code it had before (ADR-010). */
+    public Optional<HeroIdentity> findByCode(String code) {
+        return heroes.findByCode(code);
+    }
+
+    public List<HeroIdentity> heroes(Collection<UUID> ids) {
+        return heroes.findAllById(ids);
+    }
+
     public List<HeroIdentity> heroes(boolean descending) {
         return heroes.findAll(Sort.by(descending ? Sort.Direction.DESC : Sort.Direction.ASC, "code"));
     }

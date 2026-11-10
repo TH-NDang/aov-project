@@ -4,8 +4,11 @@ import com.wikiaov.hero.internal.application.HeroErrorCode;
 import com.wikiaov.hero.internal.application.response.HeroRevisionView;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
 import com.wikiaov.hero.internal.authoring.persistence.HeroStore;
+import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.forms.application.HeroForms;
+import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.media.MediaAssets;
 import com.wikiaov.patch.*;
@@ -26,15 +29,17 @@ public class HeroQueries {
     private final MediaAssets media;
     private final JsonMapper json;
     private final Clock clock;
+    private final HeroForms forms;
 
     public HeroQueries(HeroStore store, HeroSections sections, GameplayContexts contexts, MediaAssets media,
-            JsonMapper json, Clock clock) {
+            JsonMapper json, Clock clock, HeroForms forms) {
         this.store = store;
         this.sections = sections;
         this.contexts = contexts;
         this.media = media;
         this.json = json;
         this.clock = clock;
+        this.forms = forms;
     }
 
     public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at) {
@@ -90,9 +95,41 @@ public class HeroQueries {
                 .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND,
                         "No published hero is available in this context."));
 
-        return detail(rev, context, locale, manifest);
+        var result = detail(rev, context, locale, manifest);
+        addForms(result, rev.heroId(), context, at, scope.allowUnscoped(), locale, manifest);
+        return result;
     }
 
+    /**
+     * A hero that holds forms lists each form published in the same context, in switcher order and with the same detail
+     * as any hero. A form names the hero that holds it, so readers can be sent to the holding page (ADR-024).
+     */
+    @SuppressWarnings("unchecked")
+    private void addForms(Map<String, Object> result, UUID heroId, GameplayContext context, Instant at,
+            boolean allowUnscoped, String locale, boolean manifest) {
+        var structure = forms.structure();
+        if (structure.holdsForms(heroId)) {
+            List<Map<String, Object>> entries = new ArrayList<>();
+            for (var form : structure.formsOf(heroId))
+                current(form.heroId(), context, at, allowUnscoped).ifPresent(formRevision -> {
+                    var entry = detail(formRevision, context, locale, manifest);
+                    var formContext = (Map<String, Object>) entry.remove("context");
+                    entry.put("formKey", form.formKey());
+                    entry.put("displayOrder", form.displayOrder());
+                    entry.put("actualLocale", formContext.get("actualLocale"));
+                    entry.put("fallbackApplied", formContext.get("fallbackApplied"));
+                    entries.add(entry);
+                });
+            result.put("forms", entries);
+        }
+        structure.form(heroId).ifPresent(form -> result.put("parent", parent(form, store.hero(form.holderId()))));
+    }
+
+    private static Map<String, Object> parent(HeroFormStructure.Form form, HeroIdentity holder) {
+        return Map.of("id", holder.getId(), "code", holder.getCode(), "formKey", form.formKey());
+    }
+
+    @SuppressWarnings("unchecked")
     private Map<String, Object> detail(HeroRevisionView rev, GameplayContext ctx, String locale, boolean manifest) {
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("context", context(ctx, locale));
@@ -175,6 +212,16 @@ public class HeroQueries {
 
     public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
             String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
+        return list(region, locale, page, size, q, role, sort, seasonId, patchVariantId, includeUnscoped, false);
+    }
+
+    /**
+     * Lists what readers browse (ADR-024): heroes without forms and heroes that hold forms, each holder carrying its
+     * published forms. With {@code playable}, lists what players pick instead: heroes without forms and every form,
+     * each form naming its holder; heroes that hold forms are left out.
+     */
+    public Map<String, Object> list(String region, String locale, int page, int size, String q, String role,
+            String sort, UUID seasonId, UUID patchVariantId, boolean includeUnscoped, boolean playable) {
         HeroValidation.locale(locale);
         if (page < 0 || size < 1 || size > 100)
             throw HeroValidation.invalid("Page must be nonnegative and size between 1 and 100.");
@@ -191,36 +238,54 @@ public class HeroQueries {
         Instant at = clock.instant();
         var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
         var ctx = scope.gameplay();
+        var structure = forms.structure();
+        var heroes = store.heroes(sort.endsWith("desc"));
+        var codes = heroes.stream().collect(Collectors.toMap(HeroIdentity::getId, HeroIdentity::getCode));
+
+        Map<UUID, Published> published = new LinkedHashMap<>();
+        for (var hero : heroes)
+            current(hero.getId(), ctx, at, scope.allowUnscoped())
+                    .ifPresent(rev -> published.put(hero.getId(), published(hero, rev, locale)));
+
         List<ListEntry> all = new ArrayList<>();
-        for (var hero : store.heroes(sort.endsWith("desc"))) {
-            var selected = current(hero.getId(), ctx, at, scope.allowUnscoped());
-            if (selected.isEmpty())
+        for (var hero : published.values()) {
+            UUID id = hero.identity().getId();
+            boolean holder = structure.holdsForms(id);
+            if (playable ? holder : structure.isForm(id))
                 continue;
 
-            var rev = selected.get();
-            var profile = (Profile) sections.content(HeroSection.PROFILE, rev.sections().get(HeroSection.PROFILE));
-            if (role != null && profile.roles().stream().noneMatch(r -> r.name().equals(role)))
+            var members = holder
+                    ? structure.formsOf(id).stream().map(form -> published.get(form.heroId())).filter(Objects::nonNull)
+                            .toList()
+                    : List.<Published>of();
+            if (holder && members.isEmpty())
+                continue;
+            var roles = holder ? union(members, Published::roles) : hero.roles();
+            var positions = holder ? union(members, Published::positions) : hero.positions();
+            if (role != null && roles.stream().noneMatch(r -> r.name().equals(role)))
+                continue;
+            if (!q.isBlank() && !hero.matches(q) && members.stream().noneMatch(member -> member.matches(q)))
                 continue;
 
-            String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),
-                    locale);
-            var translated = profile.translations().stream().filter(t -> t.locale().equals(actual)).findFirst()
-                    .orElseThrow();
-            if (!q.isBlank() && !hero.getCode().contains(q.toLowerCase(Locale.ROOT))
-                    && !translated.name().toLowerCase(Locale.ROOT).contains(q.toLowerCase(Locale.ROOT)))
-                continue;
+            var item = hero.item();
+            item.put("roles", roles);
+            item.put("positions", positions.stream().sorted().toList());
+            List<ListEntry> formEntries = new ArrayList<>();
+            for (var member : members) {
+                var form = structure.form(member.identity().getId()).orElseThrow();
+                var formItem = member.item();
+                formItem.put("formKey", form.formKey());
+                formItem.put("roles", member.roles());
+                formItem.put("positions", member.positions().stream().sorted().toList());
+                formEntries.add(new ListEntry(formItem, member.bindingsId(), List.of()));
+            }
+            if (holder)
+                item.put("forms", formEntries.stream().map(ListEntry::item).toList());
+            if (playable)
+                structure.form(id).ifPresent(form -> item.put("parent",
+                        Map.of("id", form.holderId(), "code", codes.get(form.holderId()), "formKey", form.formKey())));
 
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("id", rev.heroId());
-            item.put("code", hero.getCode());
-            item.put("revisionId", rev.id());
-            item.put("unscopedBaseline", rev.effectiveFromPatchVariantId() == null);
-            item.put("name", translated.name());
-            item.put("actualLocale", actual);
-            item.put("roles", profile.roles());
-            item.put("positions", profile.positions().stream().sorted().toList());
-
-            all.add(new ListEntry(item, rev.sections().get(HeroSection.MEDIA_BINDINGS)));
+            all.add(new ListEntry(item, hero.bindingsId(), formEntries));
         }
 
         long offset = (long) page * size;
@@ -233,13 +298,32 @@ public class HeroQueries {
                 all.size(), "totalPages", all.isEmpty() ? 0 : (all.size() + size - 1) / size);
     }
 
+    private Published published(HeroIdentity hero, HeroRevisionView rev, String locale) {
+        var profile = (Profile) sections.content(HeroSection.PROFILE, rev.sections().get(HeroSection.PROFILE));
+        String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),
+                locale);
+        var translated = profile.translations().stream().filter(t -> t.locale().equals(actual)).findFirst()
+                .orElseThrow();
+        return new Published(hero, rev, translated.name(), actual, profile.roles(), profile.positions(),
+                rev.sections().get(HeroSection.MEDIA_BINDINGS));
+    }
+
+    private static <T> Set<T> union(List<Published> heroes, java.util.function.Function<Published, Set<T>> values) {
+        Set<T> result = new LinkedHashSet<>();
+        heroes.forEach(hero -> result.addAll(values.apply(hero)));
+        return result;
+    }
+
+    /** Reads the head and portrait of every hero and form on the page in one batch. */
     private List<Map<String, Object>> listMedia(List<ListEntry> entries) {
         if (entries.isEmpty())
             return List.of();
 
+        var everyEntry = entries.stream().flatMap(entry -> java.util.stream.Stream.concat(
+                java.util.stream.Stream.of(entry), entry.forms().stream())).toList();
         Map<UUID, Bindings> bindings = new HashMap<>();
         Set<UUID> assetIds = new HashSet<>();
-        for (var entry : entries) {
+        for (var entry : everyEntry) {
             var value = bindings.computeIfAbsent(entry.mediaBindingRevisionId(),
                     id -> (Bindings) sections.content(HeroSection.MEDIA_BINDINGS, id));
             for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
@@ -250,22 +334,48 @@ public class HeroQueries {
         }
 
         var assets = media.findAll(assetIds);
-        return entries.stream().map(entry -> {
-            Map<String, Object> item = new LinkedHashMap<>(entry.item());
+        for (var entry : everyEntry) {
             var selected = bindings.get(entry.mediaBindingRevisionId()).bindings();
             for (var role : List.of(MediaRole.HEAD, MediaRole.PORTRAIT)) {
                 UUID assetId = selected.get(role);
                 var asset = assetId == null ? null : assets.get(assetId);
                 if (asset != null && asset.usable())
-                    item.put(role.name().toLowerCase(Locale.ROOT), asset);
+                    entry.item().put(role.name().toLowerCase(Locale.ROOT), asset);
             }
+        }
+        return entries.stream().map(ListEntry::item).toList();
+    }
+
+    private record Published(
+            HeroIdentity identity,
+            HeroRevisionView revision,
+            String name,
+            String actualLocale,
+            Set<Role> roles,
+            Set<Position> positions,
+            UUID bindingsId
+    ) {
+        boolean matches(String q) {
+            String query = q.toLowerCase(Locale.ROOT);
+            return identity.getCode().contains(query) || name.toLowerCase(Locale.ROOT).contains(query);
+        }
+
+        Map<String, Object> item() {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", identity.getId());
+            item.put("code", identity.getCode());
+            item.put("revisionId", revision.id());
+            item.put("unscopedBaseline", revision.effectiveFromPatchVariantId() == null);
+            item.put("name", name);
+            item.put("actualLocale", actualLocale);
             return item;
-        }).toList();
+        }
     }
 
     private record ListEntry(
             Map<String, Object> item,
-            UUID mediaBindingRevisionId
+            UUID mediaBindingRevisionId,
+            List<ListEntry> forms
     ) {
     }
 

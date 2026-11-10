@@ -12,6 +12,8 @@ import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTransl
 import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
 import com.wikiaov.hero.internal.domain.HeroContent.Role;
+import com.wikiaov.hero.internal.forms.application.HeroForms;
+import com.wikiaov.hero.internal.forms.domain.HeroFormStructure;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchVariantReference;
 import com.wikiaov.platform.PageSlice;
@@ -33,13 +35,15 @@ public class HeroCatalog {
     private final HeroCatalogRepository catalog;
     private final HeroStore store;
     private final GameplayContexts contexts;
+    private final HeroForms forms;
 
     public HeroCatalog(com.wikiaov.hero.internal.change.persistence.HeroPatchAssessmentRepository assessments,
-            HeroCatalogRepository catalog, HeroStore store, GameplayContexts contexts) {
+            HeroCatalogRepository catalog, HeroStore store, GameplayContexts contexts, HeroForms forms) {
         this.assessments = assessments;
         this.catalog = catalog;
         this.store = store;
         this.contexts = contexts;
+        this.forms = forms;
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
@@ -146,10 +150,17 @@ public class HeroCatalog {
         }
 
         var edited = catalog.editedTimes(heroIds);
+        var structure = forms.structure();
 
-        return identities.map(hero -> new HeroCatalogView(hero.getId(), hero.getCode(),
-                revisions.getOrDefault(hero.getId(), List.of()), latest(hero.getCreatedAt(), edited.get(hero.getId())),
-                metadata.getOrDefault(hero.getId(), List.of())));
+        return identities.map(hero -> {
+            var form = structure.form(hero.getId());
+            return new HeroCatalogView(hero.getId(), hero.getCode(), revisions.getOrDefault(hero.getId(), List.of()),
+                    latest(hero.getCreatedAt(), edited.get(hero.getId())),
+                    metadata.getOrDefault(hero.getId(), List.of()),
+                    form.map(HeroFormStructure.Form::holderId).orElse(null),
+                    form.map(HeroFormStructure.Form::formKey).orElse(null),
+                    structure.formsOf(hero.getId()).stream().map(HeroFormStructure.Form::heroId).toList());
+        });
     }
 
     private static List<HeroPatchChangeSet> selectChanges(List<HeroPatchChangeSet> changes,

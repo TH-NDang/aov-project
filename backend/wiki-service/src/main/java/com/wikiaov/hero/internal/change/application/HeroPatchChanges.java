@@ -11,6 +11,7 @@ import com.wikiaov.hero.internal.domain.HeroChanges.*;
 import com.wikiaov.hero.internal.domain.HeroContent.*;
 import com.wikiaov.hero.internal.domain.HeroContent.Cause;
 import com.wikiaov.hero.internal.domain.HeroSection;
+import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.sections.persistence.HeroSections;
 import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.patch.PatchCatalog;
@@ -38,11 +39,12 @@ public class HeroPatchChanges implements HeroChangeQueries {
     private final AuditLog audit;
     private final CurrentActor actors;
     private final Clock clock;
+    private final HeroForms forms;
 
     public HeroPatchChanges(PatchDataReviews dataReviews,
             HeroPatchHistory history,
             HeroStore store, GameplayContexts contexts, AuditLog audit, CurrentActor actors,
-            Clock clock, PatchCatalog patches, HeroSections sections) {
+            Clock clock, PatchCatalog patches, HeroSections sections, HeroForms forms) {
         this.dataReviews = dataReviews;
         this.history = history;
         this.patches = patches;
@@ -52,6 +54,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
         this.audit = audit;
         this.actors = actors;
         this.clock = clock;
+        this.forms = forms;
     }
 
     @Transactional
@@ -117,14 +120,26 @@ public class HeroPatchChanges implements HeroChangeQueries {
     public List<Map<String, Object>> forAuthoringVariant(UUID variantId, String locale) {
         HeroValidation.locale(locale);
         contexts.variant(variantId);
-        return HeroPatchChangeViews.render(history.forVariant(variantId, locale));
+        return withForms(HeroPatchChangeViews.render(history.forVariant(variantId, locale)));
     }
 
     public List<Map<String, Object>> forVariant(UUID variantId, String locale) {
         HeroValidation.locale(locale);
         if (!contexts.variant(variantId).published())
             return List.of();
-        return HeroPatchChangeViews.render(history.forVariant(variantId, locale));
+        return withForms(HeroPatchChangeViews.render(history.forVariant(variantId, locale)));
+    }
+
+    /** A form's change names the hero that holds it, so readers reach the form on that hero's page (ADR-024). */
+    private List<Map<String, Object>> withForms(List<Map<String, Object>> rows) {
+        var structure = forms.structure();
+        for (var row : rows)
+            structure.form((UUID) row.get("heroId")).ifPresent(form -> {
+                row.put("holderId", form.holderId());
+                row.put("holderCode", store.hero(form.holderId()).getCode());
+                row.put("formKey", form.formKey());
+            });
+        return rows;
     }
 
     public PageSlice<Map<String, Object>> forHero(UUID heroId, String region, String locale, int page, int size) {

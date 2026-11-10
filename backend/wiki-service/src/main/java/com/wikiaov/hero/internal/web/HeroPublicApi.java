@@ -39,6 +39,7 @@ public interface HeroPublicApi {
             @Parameter(description = "Optional season; selects its latest eligible published patch.") UUID seasonId,
             @Parameter(description = "Optional published patch variant, consistent with the season.") UUID patchVariantId,
             @Parameter(description = "Include unscoped baseline observations in a historical view.") boolean includeUnscoped,
+            @Parameter(description = "List what players pick (heroes without forms and every form, each form naming its holding hero) instead of what readers browse (heroes, with their forms inside).") boolean playable,
             @Parameter(hidden = true) HttpServletRequest request,
             @Parameter(hidden = true) WebRequest web);
 

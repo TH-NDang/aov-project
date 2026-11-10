@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.skins.application;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView.*;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
+import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
 import com.wikiaov.media.MediaAssetReference;
@@ -26,13 +27,15 @@ public class PublicSkinCatalog {
     private final GameplayContexts contexts;
     private final MediaAssets media;
     private final Clock clock;
+    private final HeroForms forms;
 
     public PublicSkinCatalog(PublicSkinCatalogRepository repository, GameplayContexts contexts, MediaAssets media,
-            Clock clock) {
+            Clock clock, HeroForms forms) {
         this.repository = repository;
         this.contexts = contexts;
         this.media = media;
         this.clock = clock;
+        this.forms = forms;
     }
 
     public PublicSkinCatalogView read(String region, String locale, String q, String hero, String rarity, int page,
@@ -59,8 +62,10 @@ public class PublicSkinCatalog {
                         : row.badge().getName()))
                 .distinct().sorted(Comparator.comparing(Filter::code)).toList();
         String[] search = normalized(q).split("\\s+");
+        // A hero that holds forms covers its shared skins and the skins of every form (ADR-024).
+        var heroCodes = hero == null ? null : forms.codesFor(hero);
         var matching = catalog.stream()
-                .filter(row -> hero == null || hero.equals(row.hero().getHeroCode()))
+                .filter(row -> heroCodes == null || heroCodes.contains(row.hero().getHeroCode()))
                 .filter(row -> rarity == null || rarity.equals(row.skin().getRarityCode()))
                 .filter(row -> matches(row, search))
                 .sorted(Comparator.comparing((Localized row) -> row.hero().getHeroCode())
