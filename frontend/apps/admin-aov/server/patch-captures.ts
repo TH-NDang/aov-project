@@ -18,6 +18,9 @@ const HERO_CODE = /^[a-z0-9][a-z0-9-]{0,63}$/
 const IMAGE_ID = /^[0-9a-f]{64}$/
 const SIGNATURE_TTL_MS = 1000
 
+/** Captures are PNG screenshots, except in-match shots that arrived as JPEG; the bytes say which. */
+const imageType = (bytes: Uint8Array) => (bytes[0] === 0xff && bytes[1] === 0xd8 ? "image/jpeg" : "image/png")
+
 /** `resources/raw` is git-ignored, so a worktree has to reach the checkout that holds it. */
 export function findResourcesRoot(start: string, configured = process.env.AOV_RESOURCES_DIR): string | null {
   if (configured) return resolve(configured)
@@ -218,7 +221,7 @@ export function createPatchCaptureHandler({ start, cacheRoot, signatureTtlMs = S
       if (createHash("sha256").update(bytes).digest("hex") !== image.id)
         return failed(res, 502, "IMAGE_HASH_MISMATCH", `${image.fileName} does not match its recorded hash.`)
       res.writeHead(200, {
-        "Content-Type": "image/png",
+        "Content-Type": imageType(bytes),
         "Content-Length": bytes.length,
         // The address is the content hash, so it can never point at different bytes.
         "Cache-Control": "private, max-age=31536000, immutable",

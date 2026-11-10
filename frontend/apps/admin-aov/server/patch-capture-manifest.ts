@@ -14,7 +14,13 @@ export interface CaptureImage {
   skillKey: string | null
   skillName: string | null
   notes: string[]
+  /** IN_MATCH: taken during a match, not on the hero page, so the hero page's layout does not apply to it. */
+  screen?: CaptureScreen
+  /** Other skills this image is a reviewed source of, such as an in-match panel that lists every skill. */
+  alsoSkillKeys?: string[]
 }
+
+export type CaptureScreen = "IN_MATCH"
 
 export interface HeroCaptures {
   heroCode: string
@@ -73,6 +79,8 @@ export interface SkillSource {
 export interface SourceArchive {
   archive: string
   sha256: string
+  /** What every image of the archive shows; absent for hero page captures. */
+  screen?: CaptureScreen
 }
 
 export interface CaptureManifest {
@@ -141,13 +149,16 @@ const NOTE_FORM_ICONS =
   "Ảnh chụp bộ biểu tượng của dạng khác; không có bản rà soát nào gắn ảnh này với một mục đã nhập."
 const NOTE_FORM_UNKNOWN = "Tên tệp ghi “unknown”; chưa xác định ảnh này thuộc mục nào."
 const NOTE_UNCLASSIFIED = "Tên tệp không thuộc nhóm đã biết và chưa có bản rà soát nào nhắc tới."
+const NOTE_IN_MATCH =
+  "Ảnh chụp trong trận, không phải trang Chi tiết của tướng; hồi chiêu và số liệu trong trận đã tính trang bị và cấp chiêu."
 
 /** A review names an image by its place in the archive and its hash; a file with other bytes is another image. */
 const keyOf = (source: Pick<SourceRef, "member" | "sha256">) => `${source.member}\u0000${source.sha256}`
 
-type Link = Pick<CaptureImage, "section" | "link" | "skillKey" | "skillName"> & { notes: string[] }
+type Link = Pick<CaptureImage, "section" | "link" | "skillKey" | "skillName" | "alsoSkillKeys"> & { notes: string[] }
 
 export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifest {
+  const supplements = supplementArchives(files.sourceManifest.supplements ?? [])
   const links = new Map<string, Link>()
   const notesFor = new Map<string, string[]>()
   const addNote = (source: SourceRef, note: string) =>
@@ -157,6 +168,12 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
     for (const skill of row.skills) {
       const snapshot = skill.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
       for (const source of snapshot?.sourceImages ?? []) {
+        // One picture can show several skills, as the in-match skill panel does; it stays one image listed under each.
+        const earlier = links.get(keyOf(source))
+        if (earlier?.section === "SKILL" && earlier.skillKey !== skill.skillKey) {
+          earlier.alsoSkillKeys = [...new Set([...(earlier.alsoSkillKeys ?? []), skill.skillKey])]
+          continue
+        }
         links.set(keyOf(source), {
           section: "SKILL",
           link: "REVIEWED",
@@ -214,6 +231,7 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
             ],
           }
       const link = reviewed ?? fallback
+      const screen = supplements.get(source.archive)?.screen
       const image: CaptureImage = {
         id: source.sha256,
         fileName: source.file_name,
@@ -223,7 +241,13 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
         link: link.link,
         skillKey: link.skillKey,
         skillName: link.skillName,
-        notes: [...link.notes, ...(notesFor.get(keyOf(source)) ?? [])],
+        notes: [
+          ...link.notes,
+          ...(notesFor.get(keyOf(source)) ?? []),
+          ...(screen === "IN_MATCH" ? [NOTE_IN_MATCH] : []),
+        ],
+        ...(screen ? { screen } : {}),
+        ...(link.alsoSkillKeys?.length ? { alsoSkillKeys: link.alsoSkillKeys } : {}),
       }
       images.set(image.id, image)
       if (!folder || heroCode !== record.record_id) {
@@ -257,7 +281,7 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
     patchCode: files.patchCode,
     archive: files.sourceManifest.archive,
     archiveSha256: files.sourceManifest.sha256,
-    supplementArchives: supplementArchives(files.sourceManifest.supplements ?? []),
+    supplementArchives: supplements,
     heroes,
     images,
     sources: buildSourceCoverage(files, heroes),
@@ -277,10 +301,10 @@ export function buildCaptureManifest(files: CaptureDatasetFiles): CaptureManifes
 /** Images name only their inner archive, so two runs sharing an inner archive name could serve the wrong bytes. */
 function supplementArchives(supplements: readonly CaptureSupplement[]) {
   const archives = new Map<string, SourceArchive>()
-  for (const { archive, sha256, innerArchives } of supplements)
+  for (const { archive, sha256, innerArchives, screen } of supplements)
     for (const inner of innerArchives) {
       if (archives.has(inner)) throw new Error(`Inner archive ${inner} is listed by two capture runs.`)
-      archives.set(inner, { archive, sha256 })
+      archives.set(inner, screen ? { archive, sha256, screen } : { archive, sha256 })
     }
   return archives
 }
@@ -336,13 +360,16 @@ function buildSourceCoverage(files: CaptureDatasetFiles, heroes: Map<string, Her
     const of = (section: CaptureSection) => images.filter((image) => image.section === section)
     const keys = new Set([
       ...files.importRows.filter((row) => row.code === heroCode).flatMap((row) => row.skills.map((s) => s.skillKey)),
-      ...[...of("SKILL"), ...of("WITHHELD")].flatMap((image) => (image.skillKey ? [image.skillKey] : [])),
+      ...[...of("SKILL"), ...of("WITHHELD")].flatMap((image) => [
+        ...(image.skillKey ? [image.skillKey] : []),
+        ...(image.alsoSkillKeys ?? []),
+      ]),
     ])
     const skills = [...keys].sort(skillOrder).map((skillKey): SkillSource => {
       const known = entered.get(itemKey(heroCode, skillKey))
       const named = (section: CaptureSection) =>
         of(section)
-          .filter((image) => image.skillKey === skillKey)
+          .filter((image) => image.skillKey === skillKey || !!image.alsoSkillKeys?.includes(skillKey))
           .map((image) => image.fileName)
       return {
         skillKey,

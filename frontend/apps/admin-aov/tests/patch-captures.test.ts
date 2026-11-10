@@ -5,7 +5,13 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import { zipSync } from "fflate"
-import { buildCaptureManifest, sourceArchiveOf, type CaptureDatasetFiles } from "../server/patch-capture-manifest"
+import {
+  buildCaptureManifest,
+  sourceArchiveOf,
+  type CaptureDatasetFiles,
+  type CaptureImage,
+  type HeroSourceCoverage,
+} from "../server/patch-capture-manifest"
 import { createPatchCaptureHandler, findResourcesRoot } from "../server/patch-captures"
 
 const png = (text: string) => new TextEncoder().encode(`\x89PNG fixture ${text}`)
@@ -381,6 +387,62 @@ test("an image from a later capture run is served from that run's archive", asyn
     }
     const later = hero.images.find((item) => item.fileName === ref.file_name)!
     assert.deepEqual([later.section, later.link], ["ATTRIBUTES", "REVIEWED"])
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test("an in-match run is marked and explained, one panel backs several skills, and its JPEGs are served as JPEG", async () => {
+  const { root, directory, cache, worktree } = await fixtureRepository()
+  try {
+    const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, ...new TextEncoder().encode("in-match skill panel")])
+    const member = "aya-in-match/airi/07-squirrel-skill-panel.jpg"
+    const ref = { archive: "01_match.zip", member, sha256: sha(bytes), file_name: "07-squirrel-skill-panel.jpg" }
+    const inner = zipSync({ [member]: bytes }, { level: 0 })
+    await writeFile(join(root, "resources", "raw", "match.zip"), zipSync({ "01_match.zip": inner }, { level: 0 }))
+    const files = dataset()
+    const supplements = [
+      { archive: "match.zip", sha256: "e".repeat(64), innerArchives: ["01_match.zip"], screen: "IN_MATCH" },
+    ]
+    await writeFile(join(directory, "source-manifest.json"), JSON.stringify({ ...files.sourceManifest, supplements }))
+    const airiRecord = files.evidence[0]!
+    await writeFile(
+      join(directory, "evidence", "airi.json"),
+      JSON.stringify({ ...airiRecord, pages: [...airiRecord.pages, { source: ref }] }),
+    )
+    const rows = structuredClone(files.importRows)
+    for (const skillKey of ["skill-1-2", "skill-2-2"])
+      rows[0]!.skills.push({
+        skillKey,
+        name: skillKey,
+        effects: [{ effectType: "SOURCE_SNAPSHOT", metadata: { sourceImages: [ref] } }],
+      })
+    await writeFile(join(directory, "manual", "import-rows.json"), JSON.stringify(rows))
+
+    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache })
+    const picture = await request(handler, `/2026-10-30/images/${ref.sha256}.png`)
+    assert.equal(picture.status, 200)
+    assert.equal(picture.headers["Content-Type"], "image/jpeg")
+    const earlier = await request(handler, `/2026-10-30/images/${airi.passive.ref.sha256}.png`)
+    assert.equal(earlier.headers["Content-Type"], "image/png")
+
+    const hero = JSON.parse((await request(handler, "/2026-10-30/heroes/airi.json")).body.toString()) as {
+      images: CaptureImage[]
+    }
+    const panel = hero.images.find((item) => item.fileName === ref.file_name)!
+    assert.deepEqual(
+      [panel.section, panel.link, panel.skillKey, panel.alsoSkillKeys, panel.screen],
+      ["SKILL", "REVIEWED", "skill-1-2", ["skill-2-2"], "IN_MATCH"],
+    )
+    assert.match(panel.notes.at(-1)!, /trong trận/)
+    assert.equal(hero.images.find((item) => item.fileName === airi.passive.ref.file_name)!.screen, undefined)
+
+    const all = JSON.parse((await request(handler, "/2026-10-30/heroes.json")).body.toString()) as {
+      heroes: HeroSourceCoverage[]
+    }
+    const skills = all.heroes.find((item) => item.heroCode === "airi")!.skills
+    for (const skillKey of ["skill-1-2", "skill-2-2"])
+      assert.deepEqual(skills.find((item) => item.skillKey === skillKey)!.shown, [ref.file_name], skillKey)
   } finally {
     await rm(root, { recursive: true, force: true })
   }
