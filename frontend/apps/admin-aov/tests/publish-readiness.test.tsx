@@ -603,8 +603,9 @@ test("source images still to capture show per hero, rank the list, open the skil
 
       await show(<PublishReadinessPage />, "/hero/publish-readiness")
       await waitFor(() => !!toggle(), "the captures filter appears once the capture sets are read")
+      // The filter shows before every hero's capture set is read, so its count starts at 0 and settles afterwards.
+      await waitFor(() => /2/.test(toggle()?.textContent ?? ""), "the captures filter counts both heroes to capture")
       assert.match(document.querySelector("thead")!.textContent ?? "", /Ảnh gốc cần chụp/)
-      assert.match(toggle()!.textContent ?? "", /2/)
       assert.match(document.body.textContent ?? "", /Đối chiếu với bộ ảnh patch 2026-10-30/)
       assert.match(rowText("airi"), /Đủ ảnh để đối chiếu/)
       assert.match(rowText("bijan"), /Gỡ chặn xuất bản/)
