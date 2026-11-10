@@ -4,7 +4,7 @@ import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { Popover, PopoverAnchor, PopoverContent } from "@aov/ui/components/popover"
 import { AdminEntityText } from "../terminology/catalog"
-import { AdminLiveRichTextField } from "../terminology/rich-text-field"
+import { AdminDescriptionField } from "../terminology/rich-text-field"
 import { plainComparisonText } from "./hero-comparison"
 import { isRecord } from "./import-relations"
 import { rankSummary, rankValues, skillRankCount, skillSourceTable } from "./skill-rank-values"
@@ -63,10 +63,13 @@ export function SkillTagsEditor({
       </div>
       {editing !== null && (
         <div className="space-y-2">
-          <AdminLiveRichTextField
+          <AdminDescriptionField
             key={`${locale}:${editing}`}
             label="Nội dung nhãn"
-            short
+            size="short"
+            livePreview
+            paragraphStyles={false}
+            exampleTables={false}
             locale={locale}
             value={tags[editing] ?? ""}
             onChange={(value) => {

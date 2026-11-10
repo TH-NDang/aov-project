@@ -9,6 +9,7 @@ import {
   styleReferenceParagraph,
   toggleReferenceFormat,
 } from "@aov/ui/lib/reference-input-formatting"
+import { writeExampleTable } from "@aov/ui/lib/rich-text-blocks"
 import {
   referenceInput,
   referenceInputSelection,
@@ -74,7 +75,12 @@ test("format transformations toggle mixed visible runs and retain atomic identit
   assert.equal(toggleReferenceFormat("text", { start: 0, end: 4 }, "color", "red;display:none"), null)
 })
 
-async function editorHarness(initial: string, catalog: EntityReference[] = [], withSidebar = false) {
+async function editorHarness(
+  initial: string,
+  catalog: EntityReference[] = [],
+  withSidebar = false,
+  tools: { allowBlocks?: boolean; allowTables?: boolean } = {},
+) {
   const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/", pretendToBeVisual: true })
   Object.defineProperty(dom.window, "matchMedia", {
     value: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
@@ -122,6 +128,7 @@ async function editorHarness(initial: string, catalog: EntityReference[] = [], w
         entities={catalog}
         locale="vi-VN"
         renderPreview={false}
+        {...tools}
       />
     )
     if (!sidebar) return editor
@@ -221,6 +228,46 @@ test("authors can style an existing paragraph and insert, edit and undo an examp
     assert.equal(referenceInputValue(editor.input()), saved.replace("18%", "21%"))
     await editor.click("Hoàn tác")
     assert.equal(editor.saved(), saved)
+  } finally {
+    await editor.close()
+  }
+})
+
+test("paragraph types and example tables are separate tools a page can turn off", async () => {
+  const table = writeExampleTable([
+    ["Cấp 1", "Cấp 2"],
+    ["15%", "18%"],
+  ])
+  const has = (document: Document, selector: string) => !!document.querySelector(selector)
+  const editsTable = (document: Document) =>
+    [...document.querySelectorAll("button")].some((button) => button.textContent?.trim() === "Sửa bảng ví dụ")
+  const tablesOnly = await editorHarness(table, [], false, { allowBlocks: false, allowTables: true })
+  try {
+    assert.equal(has(tablesOnly.document, 'select[aria-label="Loại văn bản"]'), false)
+    assert.equal(has(tablesOnly.document, 'button[aria-label="Chèn bảng ví dụ"]'), true)
+    assert.equal(editsTable(tablesOnly.document), true)
+  } finally {
+    await tablesOnly.close()
+  }
+  const noTables = await editorHarness(table, [], false, { allowTables: false })
+  try {
+    assert.equal(has(noTables.document, 'select[aria-label="Loại văn bản"]'), true)
+    assert.equal(has(noTables.document, 'button[aria-label="Chèn bảng ví dụ"]'), false)
+    assert.equal(editsTable(noTables.document), false)
+  } finally {
+    await noTables.close()
+  }
+})
+
+test("the bar over a selection also turns recognition off, for fields without the toolbar", async () => {
+  const editor = await editorHarness("Gây sát thương phép")
+  try {
+    await act(async () => editor.input().dispatchEvent(new editor.dom.window.FocusEvent("focusin", { bubbles: true })))
+    await editor.select(4, 19)
+    await editor.click("Bỏ qua tự nhận diện chữ đang chọn")
+    assert.equal(editor.saved(), "Gây <noauto>sát thương phép</noauto>")
+    await editor.click("Hoàn tác")
+    assert.equal(editor.saved(), "Gây sát thương phép")
   } finally {
     await editor.close()
   }

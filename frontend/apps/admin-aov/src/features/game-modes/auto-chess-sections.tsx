@@ -21,7 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { Switch } from "@aov/ui/components/switch"
 import { Textarea } from "@aov/ui/components/textarea"
 import { confirmAction } from "@/components/confirm-dialog"
-import { AdminRichTextField } from "../terminology/rich-text-field"
+import { AdminDescriptionField } from "../terminology/rich-text-field"
 import { ClampedChips, HeroCodePicker, RowMenu, SuggestInput } from "./entry-controls"
 import type { GuideContent, GuideLineup } from "./game-mode-api"
 
@@ -329,20 +329,18 @@ function RichField({
   /** Hides the label where the block above already names the field. */
   bare?: boolean
 }) {
+  // Guide cards show no paragraph types or tables; a short row keeps its formatting in the bar over a selection.
   return (
-    <AdminRichTextField
+    <AdminDescriptionField
       label={label}
       locale="vi-VN"
       value={value ?? ""}
       onChange={(next) => onChange(next || null)}
-      compact
+      size={short ? "short" : "regular"}
+      toolbar={!short}
+      paragraphStyles={false}
+      exampleTables={false}
       hideLabel={bare}
-      allowBlocks={false}
-      renderPreview={false}
-      className={short ? "space-y-1 [&>p[id$='-help']]:sr-only [&>[role=toolbar]]:hidden" : undefined}
-      inputClassName={
-        short ? "min-h-9! h-auto! py-1.5 leading-6" : "min-h-24 max-h-[40dvh] resize-y overflow-y-auto leading-7"
-      }
     />
   )
 }

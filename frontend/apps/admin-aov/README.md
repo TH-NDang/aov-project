@@ -475,7 +475,7 @@ Mô tả tướng dùng parser và renderer chung trong `@aov/ui`, giữ nguyên
 <i>chữ nghiêng</i>
 ```
 
-Editor dùng chung `EntityRichTextEditor` hiện tích hợp vào giới thiệu/cốt truyện tướng, mô tả chiêu, mô tả trang phục, các ô văn bản dài của bản dịch và mô tả ngắn thuật ngữ. Ô tên, locale, nguồn/URL và dữ liệu số giữ control phù hợp riêng. Editor sửa chuỗi nguồn, có preview render; không phải WYSIWYG/contenteditable hay bộ xử lý HTML. Bôi chọn rồi dùng toolbar đậm/nghiêng/màu/chèn tham chiếu; toolbar luôn hiện cho mobile và keyboard, có Ctrl/⌘ B/I/Z, Shift+Z hoặc Ctrl+Y. Formatting chèn cặp thẻ và giữ vùng chọn bên trong; chèn tham chiếu xong đặt caret sau thẻ. Vùng chọn cắt qua cấu trúc thẻ hoặc ở trong ref được từ chối kèm thông báo để tránh tạo link lồng hoặc phá nguồn.
+Mọi ô mô tả của Admin dùng chung một ô `AdminDescriptionField` (xem mục “Ô mô tả dùng chung” bên dưới), bọc editor `EntityRichTextEditor` của `@aov/ui`. Ô tên, locale, nguồn/URL và dữ liệu số giữ control phù hợp riêng. Editor sửa chuỗi nguồn, không phải bộ xử lý HTML. Bôi chọn rồi dùng toolbar đậm/nghiêng/màu/chèn tham chiếu; toolbar luôn hiện cho mobile và keyboard, có Ctrl/⌘ B/I/Z, Shift+Z hoặc Ctrl+Y. Formatting chèn cặp thẻ và giữ vùng chọn bên trong; chèn tham chiếu xong đặt caret sau thẻ. Vùng chọn cắt qua cấu trúc thẻ hoặc ở trong ref được từ chối kèm thông báo để tránh tạo link lồng hoặc phá nguồn.
 
 Gõ `@` ở đầu nội dung/sau khoảng trắng hoặc dấu phân cách sẽ mở gợi ý từ danh mục thật và alias theo locale/dự phòng (tìm kiếm có thể không dấu). Email không kích hoạt; Esc đóng và giữ nguyên text, nội dung không tự biến thành ref nếu chưa chọn. Mũi tên/Enter chọn, click/chạm có cùng hành vi. Tạm dừng gợi ý và phím chọn khi IME đang composition. Bộ chọn toolbar cho phép chèn vào vị trí caret hoặc dùng nhãn văn bản đang bôi chọn. Danh sách tối đa 8 gợi ý cùng số kết quả; không có kết quả thì Enter vẫn là xuống dòng. Undo/redo lưu tối đa 100 trạng thái trong phiên của mỗi ô, gom phiên IME, có nút thao tác và hỗ trợ beforeinput history trên mobile; không lưu lịch sử qua reload. Paste lấy text/plain, giữ nguyên nguồn; không chạy HTML/script. Khi mở lại/switch locale, chuỗi nguồn không bị parse rồi serialize lại. Giới hạn nội dung chung 100.000 ký tự, mô tả glossary 4.000 ký tự; backend vẫn kiểm tra giới hạn trường riêng khi lưu.
 
@@ -488,6 +488,44 @@ và `/reference-catalog?region&locale`. Bản dịch thuật ngữ tách bảng;
 `catalog:read` cho truy cập admin. `expectedVersion` ngăn ghi đè; bản lưu được dùng ngay bởi admin và wiki.
 JSON Vite chỉ còn là nguồn chuyển đổi tùy chọn trong tab Thiết lập. Tab **Thử hiển thị** có thanh công cụ,
 chọn tham chiếu `@`, chọn ngôn ngữ, thử đích liên kết admin/wiki; nội dung thử không lưu vào dữ liệu game.
+
+## Ô mô tả dùng chung
+
+`AdminDescriptionField` trong `src/features/terminology/rich-text-field.tsx` là ô mô tả duy nhất của Admin. Ô vừa viết
+vừa hiện như bản công khai: màu, đậm/nghiêng, “Nhạt”, “Bỏ qua tự nhận diện”, loại đoạn (Đoạn thường / Chú thích /
+Thông tin / Ví dụ), bảng ví dụ, tham chiếu `@` và icon cạnh tên được nhận diện. Không có ô xem trước riêng; thanh công
+cụ mờ đi khi chưa dùng ô. Bôi đen chữ sẽ hiện thanh nổi có đậm, nghiêng, nhạt, màu, `@`, bỏ qua tự nhận diện và xóa
+định dạng, nên ô ẩn thanh công cụ vẫn đủ công cụ trong câu. Cải tiến cách viết hoặc nhận diện chỉ cần sửa ở ô này (và
+editor trong `@aov/ui`).
+
+Trang cần ít công cụ hơn thì tắt bằng prop, không dùng editor khác:
+
+| Prop | Mặc định | Ý nghĩa |
+|---|---|---|
+| `paragraphStyles` | bật | Chọn loại đoạn |
+| `exampleTables` | bật | Nút chèn bảng ví dụ và sửa bảng ngay trong ô |
+| `toolbar` | bật | Thanh công cụ phía trên; tắt thì dùng thanh nổi khi bôi đen và gõ `@` |
+| `size` | `regular` | `short` giữ ô cao một dòng, cho nhãn hoặc dòng trong danh sách |
+| `livePreview` | tắt | Hiện kết quả công khai bên cạnh, cho nội dung ngắn sửa ở bước riêng |
+| `hideLabel` | tắt | Ẩn tiêu đề khi khối bao quanh đã ghi tên ô (nhãn vẫn còn cho trình đọc màn hình) |
+| `references` | danh mục đã lưu | Nhận diện theo danh mục khác, như bản nháp ở trang thuật ngữ |
+
+Nơi đang dùng:
+
+- Tướng: mô tả chiêu, nhãn chiêu (`size="short"`, `livePreview`, không loại đoạn/bảng), giới thiệu và cốt truyện, mô tả
+  trang phục, các ô dài ở tab Bản dịch. Ô `Field` có `multiline` và `richTextLocale` luôn dùng ô này, kể cả khi khóa.
+- Kho: mô tả trang bị, ngọc, phụ trợ, phù hiệu, nhóm trang bị/hệ phù hiệu và mô tả hiệu ứng trang bị.
+- Cờ Liên quân: mô tả chiêu quân cờ, mô tả tộc/hệ, hiệu ứng từng mốc, hiệu ứng trang bị và mô tả chúc phúc (không loại
+  đoạn/bảng vì thẻ trong hướng dẫn không hiển thị khối; mô tả tộc/hệ và hiệu ứng mốc dùng `size="short"` không thanh
+  công cụ).
+- Thuật ngữ: định nghĩa thuật ngữ và giới thiệu ngắn của tham chiếu, nhận diện theo bản nháp đang sửa qua `references`.
+
+Các ô sau vẫn là ô văn bản thường vì dữ liệu lưu và Wiki hiển thị dạng chữ thuần (đổi sang rich text sẽ làm lộ thẻ
+`<b>`, `<ref>` trên trang công khai): mô tả ngắn và luật của chế độ chơi, giới thiệu Cờ Liên quân, mẹo đội hình, ghi chú
+khác của patch, tóm tắt và mô tả dòng thay đổi patch, tóm tắt phiên bản dùng chung, tóm tắt lịch sử thay đổi kho, ghi
+chú gỡ phụ trợ, ghi chú biên tập, tên gọi khác (mỗi dòng một tên). Ô văn bản của giải đấu, cộng đồng, video và hồ sơ
+người dùng không phải mô tả game nên cũng giữ nguyên. Tab **Thử hiển thị** của trang thuật ngữ dùng thẳng editor vì là
+khung thử có bố cục xem trước riêng, không lưu dữ liệu.
 
 ## Lưu trữ thuật ngữ dùng chung
 

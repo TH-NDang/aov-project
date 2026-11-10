@@ -58,7 +58,10 @@ export interface EntityRichTextEditorProps {
   renderPreview?: boolean
   hideLabel?: boolean
   compact?: boolean
+  /** Paragraph types (note, info, example) for whole paragraphs. */
   allowBlocks?: boolean
+  /** Inserting and editing example tables; follows `allowBlocks` unless set. */
+  allowTables?: boolean
   className?: string
   inputClassName?: string
   searchReferences?: EntityReferenceSearch
@@ -165,6 +168,7 @@ export function EntityRichTextEditor({
   hideLabel = false,
   compact = false,
   allowBlocks = true,
+  allowTables = allowBlocks,
   className,
   inputClassName,
   searchReferences,
@@ -492,45 +496,49 @@ export function EntityRichTextEditor({
           compact && "gap-0.5 rounded-lg",
         )}
       >
-        {allowBlocks && (
+        {(allowBlocks || allowTables) && (
           <div className="flex items-center border-r pr-1">
-            <select
-              aria-label="Loại văn bản"
-              title="Đặt kiểu cho cả đoạn. Bôi đen một phần câu rồi chọn Chú thích thì chữ nhạt đi ngay trong câu, không xuống dòng."
-              className="h-7 rounded bg-transparent px-1 text-xs hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-              disabled={disabled || isComposing}
-              value={formatting.style}
-              onChange={(event) => {
-                const style = event.target.value
-                if (style !== "normal" && !isParagraphStyle(style)) return
-                if (style === "note" && selectsPartOfLine(current.current, selection.current)) return format("muted")
-                const next = styleReferenceParagraph(current.current, selection.current, style)
-                if (next) commit(next)
-              }}
-            >
-              <option value="normal">Đoạn thường</option>
-              {Object.entries(paragraphStyles).map(([key, style]) => (
-                <option key={key} value={key}>
-                  {style.label}
-                </option>
-              ))}
-            </select>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              aria-label="Chèn bảng ví dụ"
-              title="Chèn bảng ví dụ"
-              className="size-7 p-0"
-              disabled={disabled || isComposing}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                const end = selection.current.end
-                setTable({ range: { start: end, end }, original: current.current })
-              }}
-            >
-              <Table2 aria-hidden className="size-4" />
-            </Button>
+            {allowBlocks && (
+              <select
+                aria-label="Loại văn bản"
+                title="Đặt kiểu cho cả đoạn. Bôi đen một phần câu rồi chọn Chú thích thì chữ nhạt đi ngay trong câu, không xuống dòng."
+                className="h-7 rounded bg-transparent px-1 text-xs hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+                disabled={disabled || isComposing}
+                value={formatting.style}
+                onChange={(event) => {
+                  const style = event.target.value
+                  if (style !== "normal" && !isParagraphStyle(style)) return
+                  if (style === "note" && selectsPartOfLine(current.current, selection.current)) return format("muted")
+                  const next = styleReferenceParagraph(current.current, selection.current, style)
+                  if (next) commit(next)
+                }}
+              >
+                <option value="normal">Đoạn thường</option>
+                {Object.entries(paragraphStyles).map(([key, style]) => (
+                  <option key={key} value={key}>
+                    {style.label}
+                  </option>
+                ))}
+              </select>
+            )}
+            {allowTables && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="Chèn bảng ví dụ"
+                title="Chèn bảng ví dụ"
+                className="size-7 p-0"
+                disabled={disabled || isComposing}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  const end = selection.current.end
+                  setTable({ range: { start: end, end }, original: current.current })
+                }}
+              >
+                <Table2 aria-hidden className="size-4" />
+              </Button>
+            )}
           </div>
         )}
         <div
@@ -722,7 +730,7 @@ export function EntityRichTextEditor({
         />
       )}
       <EntityReferenceInput
-        onEditTable={allowBlocks ? editTable : undefined}
+        onEditTable={allowTables ? editTable : undefined}
         id={id}
         ref={area}
         className={cn(
@@ -889,6 +897,19 @@ export function EntityRichTextEditor({
                   }}
                 >
                   <AtSign aria-hidden className="size-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={formatting.noauto ? "secondary" : "ghost"}
+                  aria-label="Bỏ qua tự nhận diện chữ đang chọn"
+                  aria-pressed={formatting.noauto}
+                  title={formatting.noauto ? "Bật lại tự nhận diện cho đoạn đang chọn" : "Bỏ qua tự nhận diện"}
+                  className="size-7 p-0"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => format("noauto")}
+                >
+                  <Link2Off aria-hidden className="size-3.5" />
                 </Button>
                 <Button
                   type="button"

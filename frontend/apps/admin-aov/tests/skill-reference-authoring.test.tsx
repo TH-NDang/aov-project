@@ -131,7 +131,7 @@ test("admin authors natural skill mentions and restores saved references with th
   }
   const { createRoot } = await import("react-dom/client")
   const { verifySession, logout } = await import("../src/app/auth/session")
-  const { AdminRichTextField, AdminRichTextPreview } = await import("../src/features/terminology/rich-text-field")
+  const { AdminDescriptionField, AdminRichTextPreview } = await import("../src/features/terminology/rich-text-field")
   const { AdminEntityText, AdminReferenceProvider, ReferenceRulesetProvider } =
     await import("../src/features/terminology/catalog")
   const document = dom.window.document
@@ -144,13 +144,7 @@ test("admin authors natural skill mentions and restores saved references with th
     saved = text
     return (
       <>
-        <AdminRichTextField
-          label="Mô tả kỹ năng"
-          value={text}
-          onChange={setText}
-          locale="vi-VN"
-          renderPreview={false}
-        />
+        <AdminDescriptionField label="Mô tả kỹ năng" value={text} onChange={setText} locale="vi-VN" />
         <div data-testid="live-preview">
           <AdminRichTextPreview text={text} locale="vi-VN" />
         </div>
