@@ -2357,8 +2357,8 @@ trang bị đã xuất bản và có hiệu lực trong thị trường được
 `terminology.PublicReferenceProvider`. Không trả đường dẫn admin hoặc tùy chỉnh của đối tượng chưa
 công khai. Thiếu lịch gameplay không ngăn đọc các thuật ngữ chung.
 
-Tab **Thử hiển thị** dùng chung trình soạn mô tả, có thanh định dạng và chọn tham chiếu, chọn ngôn ngữ
-và ngữ cảnh admin/wiki. Nội dung thử không lưu vào dữ liệu game. JSON Vite cũ chỉ còn nguồn chuyển
+Tab **Thử hiển thị** dùng chung ô mô tả 2 trong 1 (vừa viết vừa hiện như bản công khai), có thanh định dạng,
+chọn tham chiếu và chọn ngôn ngữ; không có khung xem trước thứ hai. Nội dung thử không lưu vào dữ liệu game. JSON Vite cũ chỉ còn nguồn chuyển
 đổi tùy chọn: đọc vào nháp, kiểm tra rồi lưu backend, không tự ghi đè hoặc xóa file cũ.
 
 

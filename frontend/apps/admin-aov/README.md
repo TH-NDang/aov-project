@@ -486,8 +486,8 @@ Tham chiếu thủ công ưu tiên hơn tự nhận diện; không lồng liên 
 Thiết lập dùng chung lưu trong PostgreSQL qua `/admin/reference-settings`, đọc công khai qua `/reference-settings`
 và `/reference-catalog?region&locale`. Bản dịch thuật ngữ tách bảng; quyền `hero:write` cho biên tập,
 `catalog:read` cho truy cập admin. `expectedVersion` ngăn ghi đè; bản lưu được dùng ngay bởi admin và wiki.
-JSON Vite chỉ còn là nguồn chuyển đổi tùy chọn trong tab Thiết lập. Tab **Thử hiển thị** có thanh công cụ,
-chọn tham chiếu `@`, chọn ngôn ngữ, thử đích liên kết admin/wiki; nội dung thử không lưu vào dữ liệu game.
+JSON Vite chỉ còn là nguồn chuyển đổi tùy chọn trong tab Thiết lập. Tab **Thử hiển thị** là một ô mô tả dùng chung (vừa
+viết vừa hiện như bản công khai), có chọn ngôn ngữ, nút Ví dụ và Xóa/Khôi phục; nội dung thử không lưu vào dữ liệu game.
 
 ## Ô mô tả dùng chung
 
@@ -524,8 +524,8 @@ Các ô sau vẫn là ô văn bản thường vì dữ liệu lưu và Wiki hi�
 `<b>`, `<ref>` trên trang công khai): mô tả ngắn và luật của chế độ chơi, giới thiệu Cờ Liên quân, mẹo đội hình, ghi chú
 khác của patch, tóm tắt và mô tả dòng thay đổi patch, tóm tắt phiên bản dùng chung, tóm tắt lịch sử thay đổi kho, ghi
 chú gỡ phụ trợ, ghi chú biên tập, tên gọi khác (mỗi dòng một tên). Ô văn bản của giải đấu, cộng đồng, video và hồ sơ
-người dùng không phải mô tả game nên cũng giữ nguyên. Tab **Thử hiển thị** của trang thuật ngữ dùng thẳng editor vì là
-khung thử có bố cục xem trước riêng, không lưu dữ liệu.
+người dùng không phải mô tả game nên cũng giữ nguyên. Tab **Thử hiển thị** của trang thuật ngữ và ô sửa nhãn đặc tính
+của kỹ năng cũng dùng ô này, không còn khung "Kết quả hiển thị" thứ hai.
 
 ## Lưu trữ thuật ngữ dùng chung
 
