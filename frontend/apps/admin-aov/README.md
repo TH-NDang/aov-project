@@ -113,6 +113,12 @@ Không có middleware này (bản build triển khai) thì nút tự ẩn.
 - Lượt chụp bổ sung cho cùng patch được ghi vào `supplements` của `source-manifest.json` (tên ZIP trong `resources/raw/`,
   SHA-256 và danh sách ZIP con). Ảnh của ZIP con có tên trong danh sách đó được lấy từ ZIP bổ sung; hai lượt không được trùng
   tên ZIP con.
+- Lượt bổ sung ghi `screen: "IN_MATCH"` là ảnh chụp trong trận (ví dụ bảng Chiêu thức của dạng sóc nhỏ của Aya, chỉ có
+  trong trận). Ảnh này có ghi chú riêng, không vẽ vùng bấm hay tự phóng to theo bố cục trang tướng dù cùng tỉ lệ 20:9, và
+  được gửi đúng định dạng (JPEG hoặc PNG theo nội dung tệp).
+- Một ảnh có thể là nguồn đã rà của nhiều kỹ năng (bảng Chiêu thức trong trận liệt kê mọi kỹ năng): khi nhiều kỹ năng trong
+  `manual/import-rows.json` cùng nêu ảnh đó, ảnh nằm ở kỹ năng đầu tiên và các kỹ năng sau trong `alsoSkillKeys`, và hiện ở
+  nhóm của từng kỹ năng.
 - Mỗi ảnh nối theo bản rà soát (`manual/import-rows.json`, `manual-attribute-sources.json`, `manual/source-gaps.json`),
   chỉ ảnh tổng quan nối theo tên tệp. Ảnh bị loại hoặc chưa rõ mục không bao giờ gắn vào kỹ năng trùng tên.
 - Lần đầu đọc một ZIP con mất vài giây vì phải giải nén cả ZIP đó vào `%TEMP%/aov-patch-captures`
