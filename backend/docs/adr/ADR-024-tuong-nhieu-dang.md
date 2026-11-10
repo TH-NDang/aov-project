@@ -123,9 +123,18 @@ Danh sách vẫn có hai Flowborn, tên/danh hiệu/trang phục chung phải nh
   - `/hero/flowborn-ad`, `/hero/flowborn-mid` và `/hero/<uuid dạng>` là trang alias không vào sitemap, canonical
     trỏ về đường dẫn mới, client chuyển hướng `replace`.
   - Đổi dạng không cuộn lên đầu trang; `?skill=` giữ nguyên khi đổi dạng nếu dạng kia có cùng khóa kỹ năng.
-- Admin: vẫn `/hero/<uuid>`. Trang của tướng chứa dạng và trang mỗi dạng có cùng nút đổi dạng
-  “Chung · Xạ thủ · Pháp sư” cạnh tên; chọn dạng là mở trang của tướng nội bộ đó, nên các trình sửa section hiện có
-  dùng nguyên vẹn.
+- Admin: vẫn `/hero/<uuid>`. Nút đổi dạng cạnh tên chỉ liệt kê các dạng (“Xạ thủ · Pháp sư”), giống game và Wiki;
+  chọn dạng là mở trang của tướng nội bộ đó, nên các trình sửa section hiện có dùng nguyên vẹn. Mở tướng chứa dạng từ
+  danh sách tướng, ô tìm tướng hoặc `/hero/<uuid>` không kèm `revision` là vào dạng mặc định; tab trang của tướng
+  chứa dạng được thay bằng tab của dạng.
+- Phần chung (tên, danh hiệu, ảnh thẻ của tướng chứa dạng) hiện cạnh nút đổi dạng trên trang mỗi dạng và sửa trong
+  một hộp thoại: lưu là tạo bản nháp của tướng chứa dạng nếu chưa có, lưu phần đã đổi rồi xuất bản ngay; người không
+  có quyền xuất bản chỉ lưu bản nháp. Nếu tướng chứa dạng đang có bản nháp, hộp thoại sửa trên bản nháp đó và báo
+  rằng các thay đổi khác trong đó cũng được xuất bản. Trang riêng của tướng chứa dạng (trang phục chung, giá, video,
+  lịch sử) mở từ hộp thoại này, từ nút mở bản nháp trong danh sách tướng hoặc từ trang sẵn sàng xuất bản; trên trang
+  đó nút đổi dạng đánh dấu “Phần chung”.
+- Danh hiệu của dạng không hiển thị ở đâu, nên Admin ẩn ô danh hiệu khi sửa thông tin của dạng; danh hiệu chỉ sửa ở
+  phần chung.
 - External identity được ghi cho dạng: Garena `flowborn` → `flowborn-ad`, `flowborn-2` → `flowborn-mid`;
   Liquipedia `Flowborn/Marksman`, `Flowborn/Mage`.
 
@@ -212,6 +221,8 @@ Danh sách vẫn có hai Flowborn, tên/danh hiệu/trang phục chung phải nh
    quy ước, ví dụ `flowborn-tank`.
 3. Migration xuất bản ngay revision baseline của tướng `flowborn`, để Wiki không mất Flowborn.
 4. Thứ tự dạng: xạ thủ (`ad`) là dạng mặc định, pháp sư (`mid`) thứ hai.
+5. Admin không có mục “Chung” trong nút đổi dạng: phần chung sửa và xuất bản từ trang mỗi dạng; dữ liệu, API và Wiki
+   giữ nguyên.
 
 Triển khai: V060 (bảng và trigger), V061 (dữ liệu Flowborn).
 
