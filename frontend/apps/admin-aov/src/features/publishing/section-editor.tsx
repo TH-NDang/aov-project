@@ -72,7 +72,10 @@ export function SectionEditor({
   savedSkillKeys,
   savedSkinKeys,
   focusSkinKey,
+  sharedTitle,
 }: {
+  /** The hero is a form, whose title is shared by the hero that holds it. */
+  sharedTitle?: boolean
   section: Section
   value: Content[Section]
   locale: string
@@ -100,7 +103,15 @@ export function SectionEditor({
   const data = value ?? emptySection(section, locale)
   let editor
   if (section === "PROFILE") {
-    editor = <HeroProfileEditor value={data as Profile} locale={locale} part={profilePart} onChange={onChange} />
+    editor = (
+      <HeroProfileEditor
+        value={data as Profile}
+        locale={locale}
+        part={profilePart}
+        onChange={onChange}
+        sharedTitle={sharedTitle}
+      />
+    )
   } else if (section === "OVERVIEW_RATINGS") {
     const raw = data as Ratings
     const p = { ...raw, scaleCode: raw.scaleCode || "GAME_OVERVIEW_10" }

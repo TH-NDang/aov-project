@@ -135,7 +135,10 @@ function HeroContentBody({
   onReviewShown,
   reveal,
   editing,
+  sharedTitle = false,
 }: {
+  /** The hero is a form: its own title is not shown, since the shared one of the hero that holds it is. */
+  sharedTitle?: boolean
   /** The editor open on the page, if any. */
   editing?: HeroSectionEditing | null
   /** A part of the overview to bring into view, such as the one a source image was picked for; `at` makes it new. */
@@ -269,7 +272,7 @@ function HeroContentBody({
     patchCode,
     referenceError,
     content,
-    profile,
+    profile: sharedTitle && profile ? { ...profile, title: null } : profile,
     locale,
     editable,
     busy,

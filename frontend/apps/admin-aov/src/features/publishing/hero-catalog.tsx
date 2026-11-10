@@ -108,10 +108,13 @@ export function HeroCatalog({
   useLayoutEffect(() => {
     updateParams.current = setParams
   }, [setParams])
-  const openHero = useCallback((hero: CatalogRow) => {
+  /** `exact` opens the revision given even on a hero that holds forms, such as its open draft. */
+  const openHero = useCallback((hero: CatalogRow, exact = false) => {
+    // A hero that holds forms opens on its default form, whose page edits the shared part too.
+    const form = !exact && hero.formIds?.length ? hero.formIds[0] : undefined
     updateParams.current(
       (current) => {
-        const next = openHeroLocation(current, hero.id, hero.selectedRevision?.id)
+        const next = openHeroLocation(current, form ?? hero.id, form ? undefined : hero.selectedRevision?.id)
         return !hero.selectedRevision && current.get("patch")
           ? patchHeroLocation(next, { view: "patch", atPatch: current.get("patch") })
           : next
@@ -265,7 +268,7 @@ export function HeroCatalog({
                 className="h-auto max-w-full justify-start px-1.5 py-0.5 text-xs"
                 aria-label={`Mở bản nháp ${row.original.code} · ${draftContext}`}
                 title={draftContext}
-                onClick={() => openHero({ ...row.original, selectedRevision: draft })}
+                onClick={() => openHero({ ...row.original, selectedRevision: draft }, true)}
               >
                 <FilePenLine aria-hidden className="size-3.5 shrink-0" />
                 <span className="truncate">{draft.id === r?.id ? "Mở bản nháp" : `Mở nháp · ${draftContext}`}</span>

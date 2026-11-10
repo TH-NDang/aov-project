@@ -43,11 +43,14 @@ export function HeroProfileEditor({
   locale,
   part,
   onChange,
+  sharedTitle = false,
 }: {
   value: Profile
   locale: string
   part: ProfileEditorPart
   onChange: (value: Profile) => void
+  /** The hero is a form: its title is the shared one of the hero that holds it, so it has no field here. */
+  sharedTitle?: boolean
 }) {
   const translation = value.translations.find((row) => row.locale === locale)
   const text = translation ?? emptyTranslation(locale)
@@ -75,8 +78,17 @@ export function HeroProfileEditor({
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Tên tướng" value={text.name} required onChange={(v) => changeText("name", v)} />
-            <Field label="Danh hiệu" value={text.title ?? ""} onChange={(v) => changeText("title", v)} />
+            <Field
+              label={sharedTitle ? "Tên đầy đủ của dạng" : "Tên tướng"}
+              value={text.name}
+              required
+              onChange={(v) => changeText("name", v)}
+            />
+            {sharedTitle ? (
+              <p className="type-meta self-end pb-2">Danh hiệu dùng chung cho mọi dạng: sửa ở Phần chung.</p>
+            ) : (
+              <Field label="Danh hiệu" value={text.title ?? ""} onChange={(v) => changeText("title", v)} />
+            )}
           </div>
           <Field
             label="Giới thiệu"

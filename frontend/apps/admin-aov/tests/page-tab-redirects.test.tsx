@@ -3,9 +3,9 @@ import { test } from "node:test"
 import { JSDOM } from "jsdom"
 import * as React from "react"
 import { act, useEffect } from "react"
-import { createMemoryRouter, Navigate, RouterProvider } from "react-router"
+import { createMemoryRouter, Navigate, RouterProvider, useNavigate } from "react-router"
 import { HotkeysProvider } from "../src/app/hotkeys"
-import { PageTabPanels, PageTabsProvider, usePageTabs } from "../src/app/layout/page-tabs"
+import { PageTabPanels, PageTabsProvider, replacingPageTab, usePageTabs } from "../src/app/layout/page-tabs"
 import type { RouteHandle } from "../src/app/layout/site-header"
 
 test("redirect-only routes execute without opening ghost tabs or remounting existing page sessions", async () => {
@@ -106,6 +106,101 @@ test("redirect-only routes execute without opening ghost tabs or remounting exis
       assert.equal(draft.closest("[data-page-tab]"), publishingPanel)
     }
     assert.ok(observedTabs.every((paths) => paths.every((path) => ["/hero", "/other"].includes(path))))
+  } finally {
+    await act(async () => root.unmount())
+    router.dispose()
+    dom.window.close()
+    for (const [key, descriptor] of originals) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
+      else Reflect.deleteProperty(globalThis, key)
+    }
+  }
+})
+
+test("a redirect that replaces its page takes over that page's tab in place", async () => {
+  const dom = new JSDOM('<div id="root"></div>', { url: "http://localhost/other" })
+  const originals = new Map<string, PropertyDescriptor | undefined>()
+  for (const [key, value] of Object.entries({
+    React,
+    window: dom.window,
+    document: dom.window.document,
+    navigator: dom.window.navigator,
+    localStorage: dom.window.localStorage,
+    HTMLElement: dom.window.HTMLElement,
+    IS_REACT_ACT_ENVIRONMENT: true,
+  })) {
+    originals.set(key, Object.getOwnPropertyDescriptor(globalThis, key))
+    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
+  }
+  function Tabs() {
+    const { sessions } = usePageTabs()
+    return (
+      <nav>
+        {sessions.map((session) => (
+          <a key={session.path} href={session.to}>
+            {session.path}
+          </a>
+        ))}
+      </nav>
+    )
+  }
+  // Like a hero that holds forms: once open, it hands its place to its first form.
+  function Holder() {
+    const navigate = useNavigate()
+    useEffect(() => {
+      void navigate("/hero/form", { replace: true, state: replacingPageTab("/hero/holder") })
+    }, [navigate])
+    return <p>Holder</p>
+  }
+  const router = createMemoryRouter(
+    [
+      {
+        element: (
+          <PageTabsProvider>
+            <Tabs />
+            <PageTabPanels />
+          </PageTabsProvider>
+        ),
+        children: [
+          { path: "/other", element: <p>Another page</p> },
+          { path: "/last", element: <p>Last page</p> },
+          { path: "/hero/holder", element: <Holder /> },
+          { path: "/hero/form", element: <p>Form</p> },
+        ],
+      },
+    ],
+    { initialEntries: ["/other"] },
+  )
+  const { createRoot } = await import("react-dom/client")
+  const root = createRoot(dom.window.document.getElementById("root")!)
+  const flush = async () =>
+    act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+  const navigateTo = async (to: string) => {
+    await act(async () => {
+      await router.navigate(to)
+    })
+    await flush()
+  }
+  const tabs = () => [...dom.window.document.querySelectorAll("nav a")].map((anchor) => anchor.textContent)
+  try {
+    await act(async () =>
+      root.render(
+        <HotkeysProvider>
+          <RouterProvider router={router} />
+        </HotkeysProvider>,
+      ),
+    )
+    await flush()
+    await navigateTo("/hero/holder")
+    assert.equal(router.state.location.pathname, "/hero/form")
+    assert.deepEqual(tabs(), ["/other", "/hero/form"])
+    assert.equal(dom.window.document.querySelectorAll("[data-page-tab]").length, 2)
+
+    await navigateTo("/last")
+    await navigateTo("/hero/form")
+    assert.deepEqual(tabs(), ["/other", "/hero/form", "/last"], "the form tab stays where the holder was")
   } finally {
     await act(async () => root.unmount())
     router.dispose()

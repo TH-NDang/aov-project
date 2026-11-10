@@ -48,7 +48,7 @@ import { Page, PageHeader } from "@/components/page-header"
 import { PageActionsMenu } from "@/components/page-actions-menu"
 import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
-import { usePageCloseGuard } from "@/app/layout/page-tabs"
+import { replacingPageTab, usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage, isApiError } from "@/lib/api/errors"
 import { languageOptions } from "../users/profile-preference-picker"
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
@@ -58,6 +58,8 @@ import { HeroAsset, HeroContent } from "./hero-content"
 import { HeroScrollIdentity } from "./hero-scroll-identity"
 import { HeroQuickSwitcher } from "./hero-quick-switcher"
 import { HeroFormSwitcher, HeroFormsDialog, useHeroForms } from "./hero-forms"
+import { defaultFormOf, formsOwnerOf } from "./hero-forms-model"
+import { HeroSharedPart } from "./hero-shared-part"
 import { selectCatalogRevisions } from "./catalog-data"
 import { HeroCatalog } from "./hero-catalog"
 import { HeroRevisionHistory } from "./hero-revision-history"
@@ -273,6 +275,7 @@ export function PublishingWorkspace({
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const capabilities = useSession().actor?.capabilities ?? []
   const canWrite = capabilities.includes("hero:write")
   const canPublish = capabilities.includes("hero:publish")
@@ -296,8 +299,8 @@ export function PublishingWorkspace({
   const [publishFailure, setPublishFailure] = useState("")
   const [publishing, setPublishing] = useState(false)
   const [formsOpen, setFormsOpen] = useState(false)
+  const [openedWithoutRevision] = useState(!requestedRevision)
   const heroForms = useHeroForms(heroId || undefined)
-  const heroCode = heroForms.data?.code
   const requestedFilter: CatalogFilter = {
     seasonId: heroLocationId(urlParams.get("season")),
     variantId: heroLocationId(urlParams.get("patch")),
@@ -497,6 +500,8 @@ export function PublishingWorkspace({
 
   function switchHero(next: HeroRow) {
     if (busy || next.id === heroId) return
+    // A hero that holds forms opens on its default form; its shared part is edited from there.
+    if (next.formIds?.length) return switchForm(next.formIds[0])
     const rulesetId = revision?.rulesetId || heroLocationId(urlParams.get("ruleset"))
     const selected =
       selectCatalogRevisions(next.revisions, overview.data, filter, rulesetId)[0] ??
@@ -508,15 +513,37 @@ export function PublishingWorkspace({
     else void navigate(heroPageLocation(next.id, params), { preventScrollReset: false })
   }
   /** Opens another form of the same hero; each form is a hero of its own, so its newest revision opens (ADR-024). */
-  function switchForm(nextId: string) {
+  function switchForm(nextId: string, replace = false) {
     if (busy || nextId === heroId) return
     const params = switchHeroLocation(urlParams, nextId)
     params.delete("revision")
-    if (onUnsavedChange) void navigate({ search: `?${params}` }, { preventScrollReset: true })
-    else void navigate(heroPageLocation(nextId, params), { preventScrollReset: true })
+    if (onUnsavedChange) void navigate({ search: `?${params}` }, { preventScrollReset: true, replace })
+    else
+      void navigate(heroPageLocation(nextId, params), {
+        preventScrollReset: true,
+        replace,
+        state: replace ? replacingPageTab(pathname) : undefined,
+      })
   }
+  // Opening the hero that holds forms lands on its default form, as the Wiki does. A link to one of its revisions, such
+  // as the shared part's own page or a row of the readiness overview, still opens it.
+  const defaultForm = defaultFormOf(heroForms.data, heroId)
+  useEffect(() => {
+    if (openedWithoutRevision && defaultForm) switchForm(defaultForm, true)
+  }, [openedWithoutRevision, defaultForm])
+  const formHolder = heroForms.data?.formKey ? heroForms.data.holder : null
+  const formsOwner = formsOwnerOf(heroForms.data)
   const formSwitcher = heroId ? (
     <HeroFormSwitcher heroId={heroId} locale={displayLocale} disabled={busy || !preview} onSelect={switchForm} />
+  ) : null
+  const sharedPart = formHolder ? (
+    <HeroSharedPart
+      holder={formHolder}
+      locale={location.readLocale}
+      canWrite={canWrite}
+      canPublish={canPublish}
+      disabled={busy}
+    />
   ) : null
   const quickSwitcher = heroId ? (
     <HeroQuickSwitcher
@@ -806,7 +833,7 @@ export function PublishingWorkspace({
             </Link>
           </DropdownMenuItem>
         )}
-        {canPublish && heroId && heroCode && !heroForms.data?.formKey && (
+        {canPublish && heroId && formsOwner && (
           <DropdownMenuItem disabled={busy} onSelect={() => setFormsOpen(true)}>
             <Layers />
             Dạng của tướng
@@ -928,6 +955,7 @@ export function PublishingWorkspace({
                 />
               ) : (
                 <SectionEditor
+                  sharedTitle={!!formHolder}
                   savedSkillKeys={new Set(read.data?.content.SKILLS?.skills.map((skill) => skill.skillKey) ?? [])}
                   savedSkinKeys={new Set(read.data?.content.SKINS?.skins.map((skin) => skin.skinKey) ?? [])}
                   focusSkinKey={skinFocus}
@@ -1162,9 +1190,14 @@ export function PublishingWorkspace({
                 </div>
               )}
             </div>
-            {formSwitcher && <div className="mt-2">{formSwitcher}</div>}
-            {heroCode && canPublish && (
-              <HeroFormsDialog hero={{ id: heroId, code: heroCode }} open={formsOpen} onOpenChange={setFormsOpen} />
+            {(formSwitcher || sharedPart) && (
+              <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5">
+                {formSwitcher}
+                {sharedPart}
+              </div>
+            )}
+            {formsOwner && canPublish && (
+              <HeroFormsDialog hero={formsOwner} open={formsOpen} onOpenChange={setFormsOpen} />
             )}
           </header>
           {view === "overview" ? (
@@ -1261,6 +1294,7 @@ export function PublishingWorkspace({
               <div role="tabpanel" id={`workspace-${view}`} className="min-w-0 space-y-5">
                 {view === "overview" && (
                   <HeroContent
+                    sharedTitle={!!formHolder}
                     editing={editing && editorPanel ? { section, title: editorTitle, node: editorPanel } : null}
                     variantId={statPatch?.id}
                     statDefaults={statDefaults.data}
@@ -1286,7 +1320,12 @@ export function PublishingWorkspace({
                     issues={writable ? issues : undefined}
                     onEdit={(next, part = "information", focus) => {
                       if (next === "PROFILE") {
-                        const fields = part === "lore" ? (["lore"] as const) : (["name", "title", "summary"] as const)
+                        const fields =
+                          part === "lore"
+                            ? (["lore"] as const)
+                            : formHolder
+                              ? (["name", "summary"] as const)
+                              : (["name", "title", "summary"] as const)
                         const missing = missingTranslationFields(
                           preview.content.PROFILE?.translations ?? [],
                           location.readLocale,

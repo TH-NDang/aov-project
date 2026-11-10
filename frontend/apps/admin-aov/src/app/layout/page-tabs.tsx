@@ -63,6 +63,26 @@ function remember(sessions: PageSession[], active: PageSession) {
   return sessions.map((session) => (session.path === active.path ? active : session))
 }
 
+/**
+ * Navigation state for a redirect that takes the place of the page it came from, such as a hero that opens on one of
+ * its forms: the new page takes over that page's tab instead of leaving it open beside it.
+ */
+export function replacingPageTab(path: string) {
+  return { replacesPageTab: path }
+}
+
+function replacedPageTab(state: unknown) {
+  const path = (state as { replacesPageTab?: unknown } | null)?.replacesPageTab
+  return typeof path === "string" ? path : null
+}
+
+function rememberInPlace(sessions: PageSession[], active: PageSession, replaced: string | null) {
+  if (!replaced || replaced === active.path || !sessions.some((session) => session.path === replaced))
+    return remember(sessions, active)
+  const others = sessions.filter((session) => session.path !== active.path)
+  return others.map((session) => (session.path === replaced ? active : session))
+}
+
 export function PageTabsProvider({ children }: { children: ReactNode }) {
   const { enabled } = useHotkeys()
   const location = useLocation()
@@ -100,19 +120,23 @@ export function PageTabsProvider({ children }: { children: ReactNode }) {
     }
   }, [])
   const [closingPath, setClosingPath] = useState<string | null>(null)
+  const replaced = replacedPageTab(location.state)
   const sessions = transient
     ? saved.filter((session) => session.path !== active.path)
     : closingPath === active.path
       ? saved
-      : remember(saved, active)
+      : rememberInPlace(saved, active, replaced)
 
   useLayoutEffect(() => {
     if (closingPath === active.path) return
+    if (replaced && replaced !== active.path) closeGuards.current.delete(replaced)
     setSaved((current) =>
-      transient ? current.filter((session) => session.path !== active.path) : remember(current, active),
+      transient
+        ? current.filter((session) => session.path !== active.path)
+        : rememberInPlace(current, active, replaced),
     )
     if (closingPath !== null) setClosingPath(null)
-  }, [active, closingPath, transient])
+  }, [active, closingPath, transient, replaced])
 
   useEffect(() => previews.retain(sessions.map((session) => session.path)), [previews, sessions])
 

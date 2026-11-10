@@ -34,8 +34,9 @@ export function useHeroForms(heroId?: string) {
 }
 
 /**
- * The form switcher beside a hero's name (ADR-024): the shared part ("Chung") and each form, which is a hero of its
- * own with its own drafts. Choosing one opens that hero's page, so every section editor stays the same.
+ * The form switcher beside a hero's name (ADR-024): each form, which is a hero of its own with its own drafts. Choosing
+ * one opens that hero's page, so every section editor stays the same. The shared part is edited from the form pages;
+ * its own page, opened from there, is marked so it is not mistaken for a form.
  */
 export function HeroFormSwitcher({
   heroId,
@@ -51,9 +52,15 @@ export function HeroFormSwitcher({
   const forms = useHeroForms(heroId)
   const choices = heroFormChoices(forms.data, locale, ROLES)
   if (!choices.length) return null
+  const sharedPage = forms.data?.holder?.id === heroId
 
   return (
     <div role="group" aria-label="Dạng tướng" className="flex min-w-0 flex-wrap items-center gap-1.5">
+      {sharedPage && (
+        <span className="type-body rounded-md bg-secondary px-2.5 py-1.5 ring-1 ring-ring" aria-current="page">
+          Phần chung
+        </span>
+      )}
       {choices.map((choice) => {
         const current = choice.id === heroId
         return (
