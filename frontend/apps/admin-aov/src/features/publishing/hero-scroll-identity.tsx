@@ -2,7 +2,8 @@ import { useEffect, useState, type ReactNode, type RefObject } from "react"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroAsset } from "./hero-asset"
 
-function scrollParent(element: HTMLElement): HTMLElement | null {
+/** The nearest ancestor that scrolls, which sticky bars and saved positions are measured against. */
+export function scrollParent(element: HTMLElement): HTMLElement | null {
   const view = element.ownerDocument.defaultView
   if (!view) return null
   for (let parent = element.parentElement; parent; parent = parent.parentElement) {
@@ -70,13 +71,6 @@ export function HeroScrollIdentity({
       view.removeEventListener("resize", schedule)
     }
   }, [headingRef, identityKey])
-  const monogram = name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => Array.from(part)[0] ?? "")
-    .join("")
-    .toLocaleUpperCase()
   return (
     <div
       data-slot="hero-scroll-identity"
@@ -90,20 +84,32 @@ export function HeroScrollIdentity({
           visible ? "pointer-events-auto opacity-100" : "opacity-0",
         )}
       >
-        {assetId ? (
-          <HeroAsset id={assetId} className="size-8 shrink-0 rounded-full" frameAspectRatio={1} />
-        ) : (
-          <span
-            aria-hidden="true"
-            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
-          >
-            {monogram || "?"}
-          </span>
-        )}
+        <HeroAvatar assetId={assetId} name={name} />
         <span className="min-w-0 truncate text-sm font-semibold">{name}</span>
         {/* The switcher follows the name, as it does in the page header. */}
         {visible && actions && <div className="-ml-1 shrink-0">{actions}</div>}
       </div>
     </div>
+  )
+}
+
+/** The hero's small round picture, or the initials of its name while it has none. */
+export function HeroAvatar({ assetId, name }: { assetId?: string | null; name: string }) {
+  const monogram = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => Array.from(part)[0] ?? "")
+    .join("")
+    .toLocaleUpperCase()
+  return assetId ? (
+    <HeroAsset id={assetId} className="size-8 shrink-0 rounded-full" frameAspectRatio={1} />
+  ) : (
+    <span
+      aria-hidden="true"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold"
+    >
+      {monogram || "?"}
+    </span>
   )
 }

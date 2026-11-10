@@ -15,24 +15,26 @@ const views: readonly [HeroWorkspaceView, Icon, string][] = [
 ]
 
 /**
- * One tab row: the hero's content as a single page, then translations, history, patch data and version management.
- * On a narrow page the tabs share the width as icon tabs, and the row stays under the scrolled hero name so switching
- * never needs a scroll back up. The content page lists its own sections.
+ * One tab row: the hero's content, then translations, history, patch data and version management. On a narrow page the
+ * tabs share the width as icon tabs. By itself the row stays under the scrolled hero name so switching never needs a
+ * scroll back up; above the content tabs it rides in their bars instead (`sticky={false}`).
  */
 export function HeroWorkspaceTabs({
   view,
   busy,
   onView,
+  sticky = true,
 }: {
   view: HeroWorkspaceView
   busy: boolean
   onView: (view: HeroWorkspaceView) => void
+  sticky?: boolean
 }) {
   return (
     // Sticky bars are left out of scroll anchoring, so sections loading above the screen do not push the page down.
     <nav
       aria-label="Các phần của tướng"
-      className="sticky top-12 z-10 flex border-b bg-background [overflow-anchor:none]"
+      className={cn("flex border-b bg-background", sticky && "sticky top-12 z-10 [overflow-anchor:none]")}
     >
       <div
         role="tablist"

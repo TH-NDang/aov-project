@@ -87,7 +87,6 @@ import {
   heroPageLocation,
   readHeroLocation,
   switchHeroLocation,
-  type HeroContentTab,
   type HeroWorkspaceView,
 } from "./hero-location"
 import { useHeroLocation } from "./use-hero-location"
@@ -98,6 +97,7 @@ import { HeroDraftChanges, savedHeroSections } from "./hero-draft-changes"
 import { PublishButton } from "./publish-button"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
+import { HeroContentTabs, HeroStickyBars } from "./hero-content-tabs"
 import { captureFocus } from "./patch-capture-model"
 import { PatchCapturePanel, PatchCaptureToggle } from "./patch-capture-panel"
 import { PatchCaptureProvider, usePatchCaptureWorkspace, type PatchCaptureWorkspace } from "./use-patch-captures"
@@ -285,6 +285,8 @@ export function PublishingWorkspace({
   const editorRef = useRef<HTMLDivElement>(null)
   const sectionFormId = useId()
   const heroHeadingRef = useRef<HTMLHeadingElement>(null)
+  // Where each content tab was left, kept while other workspace tabs are open.
+  const contentPositions = useRef(new Map<string, number>())
   const overview = usePublicationOverview()
   const preferred = useCatalogScopePreference(overview.data, requestedFilter, !heroId)
   const filter = !heroId && overview.data ? resolveCatalogScope(overview.data, preferred) : requestedFilter
@@ -309,8 +311,6 @@ export function PublishingWorkspace({
   const displayLocale = useContentLocale()
   const location = readHeroLocation(urlParams, translationMode, displayLocale)
   const { view, section, targetLocale, sourceLocale } = location
-  // The content page reports the section being read, so the capture panel can follow the scroll.
-  const [visibleTab, setVisibleTab] = useState<HeroContentTab>(location.tab)
   const setSection = (value: Section) =>
     updateLocation({ section: value, translationKey: null, translationField: null })
   const setContentLocale = (value: string) => updateLocation({ readLocale: value })
@@ -405,7 +405,7 @@ export function PublishingWorkspace({
     ready: !!preview && !overview.isPending,
     focus: captureFocus({
       view,
-      tab: visibleTab,
+      tab: location.tab,
       editing,
       section,
       skillKey: heroLocationId(urlParams.get("skill")),
@@ -953,7 +953,7 @@ export function PublishingWorkspace({
       className={`@container min-w-0 ${heroId ? "mx-auto w-full max-w-6xl" : ""}`}
     >
       {!onUnsavedChange && <HeroNavigationGuard unsafe={busy} busy={busy} />}
-      {heroId && (
+      {heroId && view !== "overview" && (
         <HeroScrollIdentity
           headingRef={heroHeadingRef}
           identityKey={`${heroId}:${selectedId}`}
@@ -1112,7 +1112,31 @@ export function PublishingWorkspace({
               )}
             </div>
           </header>
-          <HeroWorkspaceTabs view={view} busy={busy} onView={switchView} />
+          {view === "overview" ? (
+            <HeroStickyBars
+              memoryKey={`${heroId}:${location.tab}`}
+              positions={contentPositions.current}
+              startKey={editing ? `${section}:${profilePart}:${skinFocus ?? ""}` : null}
+              top={<HeroWorkspaceTabs view={view} busy={busy} onView={switchView} sticky={false} />}
+            >
+              {(stuck) => (
+                <HeroContentTabs
+                  tab={location.tab}
+                  onTab={(tab) => updateLocation({ tab: tab === "overview" ? null : tab })}
+                  content={preview?.content}
+                  videos={!!heroId}
+                  editingTab={editing ? reviewTab(section) : null}
+                  busy={busy}
+                  stuck={stuck}
+                  assetId={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
+                  name={heroName}
+                  switcher={quickSwitcher}
+                />
+              )}
+            </HeroStickyBars>
+          ) : (
+            <HeroWorkspaceTabs view={view} busy={busy} onView={switchView} />
+          )}
         </>
       )}
       {[rulesets.error, regions.error, revisions.error, read.error].filter(Boolean).map((failure, index) => (
@@ -1197,7 +1221,6 @@ export function PublishingWorkspace({
                     onSkillLayoutChange={(layout) => updateLocation({ skillLayout: layout === "flat" ? "flat" : null })}
                     onSkillChange={(skill) => updateLocation({ skill })}
                     onTabChange={(tab) => updateLocation({ tab: tab === "overview" ? null : tab })}
-                    onVisibleTabChange={setVisibleTab}
                     onTranslate={canWrite ? openTranslation : undefined}
                     onNeedsDraft={canWrite && revision?.state === "PUBLISHED" ? startDraft : undefined}
                     canWrite={canWrite}
