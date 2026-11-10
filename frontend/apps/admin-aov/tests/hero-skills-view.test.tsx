@@ -216,10 +216,10 @@ test("hero analysis opens on demand and excludes the selected hero from both rol
       />,
     )
     assert.doesNotMatch(document.body.textContent!, /Đồng mức/)
-    const trigger = Array.from(document.querySelectorAll("summary")).find((s) =>
-      s.textContent?.includes("Phân tích thuộc tính"),
-    )!
+    // The comparison opens in the attributes window, on its own tab.
+    const trigger = Array.from(document.querySelectorAll("button")).find((b) => b.textContent?.trim() === "So sánh")!
     await click(trigger)
+    assert.ok(document.querySelector('[role="dialog"]'), "The comparison opens in a window of its own")
     await waitFor(() => document.body.textContent!.includes("Đồng mức · 6 mẫu"))
     await click(Array.from(document.querySelectorAll("button")).find((b) => b.textContent === "Cùng vai trò")!)
     assert.match(document.body.textContent!, /Đồng mức · 5 mẫu/)
@@ -294,11 +294,17 @@ test("combat attributes keep observed crit damage, patch defaults and explicit o
 })
 
 test("attack summary follows roles and active skill scaling while full details keep both stats", async () => {
-  await withView(async ({ document, render }) => {
+  await withView(async ({ document, render, click }) => {
     const { HeroCombatAttributes } = await import("../src/features/publishing/hero-combat-attributes")
     const skills = structuredClone(fixtureContent.SKILLS!)
     const skill = skills.skills[0]
     skill.kind = "ACTIVE"
+    // The whole list lives in the attributes window; it stays open while the roles change.
+    const fullList = async () => {
+      if (!document.querySelector('[role="dialog"]'))
+        await click(document.querySelector<HTMLButtonElement>("button[data-review-attributes]")!)
+      return document.querySelector('[role="dialog"]')!.textContent!
+    }
     const stats = {
       values: [
         { statKey: "ATTACK_DAMAGE", baseValue: 176, growthPerLevel: null, unit: "POINT" },
@@ -309,8 +315,9 @@ test("attack summary follows roles and active skill scaling while full details k
     const mount = async (roles: NonNullable<typeof fixtureContent.PROFILE>["roles"], text: string) => {
       skill.translations[0].description = text
       await render(<HeroCombatAttributes stats={stats} skills={skills} roles={roles} />)
-      assert.match(document.querySelector("details")!.textContent!, /Công vật lý/)
-      assert.match(document.querySelector("details")!.textContent!, /Công phép/)
+      const list = await fullList()
+      assert.match(list, /Công vật lý/)
+      assert.match(list, /Công phép/)
       return Array.from(
         document.querySelectorAll('dl[aria-label="Thuộc tính nổi bật theo vai trò"] dt'),
         (el) => el.textContent,

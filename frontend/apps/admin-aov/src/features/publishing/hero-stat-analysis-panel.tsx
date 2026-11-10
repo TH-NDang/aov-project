@@ -69,7 +69,7 @@ export function HeroStatAnalysisPanel({
     (peer) => peer.heroId !== heroId && (!sameRole || peer.roles.some((role) => roles.includes(role as Role))),
   )
   return (
-    <div className="space-y-3 border-t p-3">
+    <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Nhóm đối chiếu">
         <Button
           type="button"

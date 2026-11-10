@@ -140,7 +140,11 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
       () => document.activeElement?.closest("[data-review-skill]")?.getAttribute("data-review-skill") === "skill-1-1",
     )
     await goToWarning("Đến Thuộc tính chiến đấu")
-    await waitFor(() => !!document.querySelector("#hero-COMBAT_STATS details[data-review-attributes][open]"))
+    // An attribute warning opens the window with every attribute; closing it returns to the page.
+    const attributesWindow = () => document.querySelector("[data-attributes-window]")
+    await waitFor(() => !!attributesWindow()?.textContent?.includes("Giáp"))
+    await click("[data-attributes-window] [data-slot='dialog-close']")
+    await waitFor(() => !attributesWindow())
     assert.equal(new URLSearchParams(router.state.location.search).get("revision"), "fixture-draft")
     await click(warnings)
     const reviewButton = () =>
