@@ -188,6 +188,7 @@ export default function App() {
           />
         </Route>
         <Route path="/hero/:heroCode" element={<HeroDetailRoute />} />
+        <Route path="/hero/:heroCode/:formKey" element={<HeroDetailRoute />} />
         <Route path="/hero/*" element={<HeroDetailRoute />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

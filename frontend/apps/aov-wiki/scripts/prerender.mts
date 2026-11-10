@@ -4,6 +4,7 @@
  * Runs after `vite build` and can run again at any time without rebuilding: it reads the template from dist/200.html
  * and replaces what an earlier run wrote. See backend/docs/adr/ADR-022-wiki-static-prerender.md.
  */
+import type { HeroRole } from "../src/features/hero/hero-classifications.ts"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
@@ -98,6 +99,7 @@ interface HeroListRow {
   name: string
   roles?: string[]
   positions?: string[]
+  forms?: { id: string; code: string; formKey: string; name: string; roles?: HeroRole[]; positions?: string[] }[]
 }
 
 interface HeroDetailResponse {
@@ -107,6 +109,7 @@ interface HeroDetailResponse {
     skills?: { skills?: { name?: string | null; description?: string | null }[] } | null
     skins?: { skins?: { name?: string | null }[] } | null
   }
+  forms?: (Omit<HeroDetailResponse, "forms"> & { id: string; formKey: string })[]
 }
 
 async function readHeroes(read: Reader) {
@@ -114,13 +117,31 @@ async function readHeroes(read: Reader) {
   const heroes = await mapLimit(rows, DETAIL_CONCURRENCY, async (row): Promise<PublishedHero | null> => {
     try {
       const detail = await read<HeroDetailResponse>(`/heroes/${encodeURIComponent(row.id)}`)
+      // A hero that holds forms is read form by form; the list names each published form in order (ADR-024).
+      const forms = (row.forms ?? []).flatMap((form) => {
+        const formDetail = detail.forms?.find((candidate) => candidate.id === form.id)
+        return formDetail
+          ? [
+              {
+                ...form,
+                roles: form.roles ?? [],
+                summary: formDetail.content.profile?.summary,
+                media: formDetail.media,
+                skills: formDetail.content.skills?.skills ?? [],
+                skins: formDetail.content.skins?.skins ?? [],
+              },
+            ]
+          : []
+      })
       return {
         ...row,
+        forms: undefined,
         title: detail.content.profile?.title,
         summary: detail.content.profile?.summary,
         media: detail.media,
         skills: detail.content.skills?.skills ?? [],
         skins: detail.content.skins?.skins ?? [],
+        ...(forms.length ? { forms } : {}),
       }
     } catch (error) {
       // A hero withdrawn between the two requests simply has no page.

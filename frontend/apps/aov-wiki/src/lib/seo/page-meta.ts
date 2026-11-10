@@ -44,6 +44,8 @@ export interface HeroMetaSource {
   title?: string | null
   summary?: string | null
   media?: Partial<Record<"HEAD" | "PORTRAIT" | "SPLASH", MediaLike | undefined>> | null
+  /** The form being read of a hero that holds forms (ADR-024); the default form keeps the hero's own address. */
+  form?: { key: string; label: string; isDefault: boolean } | null
 }
 
 export interface TranslationLike {
@@ -278,7 +280,9 @@ export const heroPositionLabels = (positions: readonly string[] | undefined, loc
     .map((position) => position.label)
 
 export function heroMeta(hero: HeroMetaSource, locale: string): PageMeta {
-  const heading = hero.title ? `${hero.name} — ${hero.title}` : hero.name
+  const form = hero.form && !hero.form.isDefault ? hero.form : undefined
+  const named = form ? `${hero.name} (${form.label})` : hero.name
+  const heading = hero.title ? `${named} — ${hero.title}` : named
   const roles = heroRoleLabels(hero.roles, locale)
   const identity = pick(
     locale,
@@ -296,7 +300,9 @@ export function heroMeta(hero: HeroMetaSource, locale: string): PageMeta {
     title: titled(heading),
     heading,
     description: clampDescription(`${identity} ${details}`),
-    path: `/hero/${encodeURIComponent(hero.code)}`,
+    path: form
+      ? `/hero/${encodeURIComponent(hero.code)}/${encodeURIComponent(form.key)}`
+      : `/hero/${encodeURIComponent(hero.code)}`,
     locale,
     type: "article",
     image: pageImage(hero.media?.SPLASH ?? hero.media?.PORTRAIT ?? hero.media?.HEAD, hero.name) ?? DEFAULT_IMAGE,

@@ -42,13 +42,20 @@ function heroShopQuery(heroId: string, region: string, at?: string) {
 
 const dayLabel = (day: string, locale: string) => formatCalendarDate(day, undefined, locale)
 
-/** What the hero costs in the market being read, next to its roles. It stays out of the way when nothing is known. */
-export function HeroPriceTag({ heroId }: { heroId: string }) {
+/**
+ * What the hero costs in the market being read, next to its roles. It stays out of the way when nothing is known.
+ * A form sold on its own has its own price; otherwise it shows the price of the hero that holds it (ADR-024).
+ */
+export function HeroPriceTag({ heroId, fallbackHeroId }: { heroId: string; fallbackHeroId?: string }) {
   const { locale, region } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const at = useShopDay()
   const { data } = useQuery(heroShopQuery(heroId, region, at))
-  const price = data?.price
+  const fallback = useQuery({
+    ...heroShopQuery(fallbackHeroId ?? heroId, region, at),
+    enabled: !!fallbackHeroId && !!data && !data.price,
+  })
+  const price = data?.price ?? (fallbackHeroId ? fallback.data?.price : undefined)
   if (!price) return null
   const Coin = gameplayIcons.coin
   const amounts = [

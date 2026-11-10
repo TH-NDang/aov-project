@@ -1,8 +1,10 @@
 import { useState, type CSSProperties } from "react"
-import { Link, useLocation, useParams } from "react-router"
+import { Link, Navigate, useLocation, useParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { HeroDetailLayout } from "../../layout/wiki-library-layout"
-import { heroCatalogQuery, heroDetailQuery, type HeroListItem } from "./hero-api"
+import { heroCatalogQuery, heroDetailQuery, type HeroListForm, type HeroListItem } from "./hero-api"
+import { HeroFormSwitch } from "./hero-form-switch"
+import { formLabelRole, heroWithForm, resolveHeroRoute, selectedForm } from "./hero-forms"
 import { heroAppearance } from "./hero-appearance"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useHeroChangedVariants } from "../../lib/wiki-patch-changes"
@@ -17,25 +19,42 @@ import { WikiImage } from "../../components/wiki-image"
 import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
 import "./hero-detail.css"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { heroMeta, notFoundMeta } from "../../lib/seo/page-meta"
+import { heroMeta, heroRoleLabels, notFoundMeta } from "../../lib/seo/page-meta"
 import { PublicEmbers } from "@aov/ui/components/public-embers"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 
-function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string }) {
+function heroMetaForm(form: HeroListForm, forms: readonly HeroListForm[], locale: string) {
+  const role = formLabelRole(form, forms)
+  return {
+    key: form.formKey,
+    label: (role && heroRoleLabels([role], locale)[0]) || form.name,
+    isDefault: forms[0]?.id === form.id,
+  }
+}
+
+function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: HeroListForm; returnTo: string }) {
   const scope = useWikiContext()
   const { locale, t } = scope
   const query = useQuery(heroDetailQuery(hero.id, scope))
-  const history = useHeroChangedVariants(hero.id)
+  // A hero with forms is read one form at a time: its gameplay, history and images, under the shared name (ADR-024).
+  const formDetail = query.data && selectedForm(query.data, form?.formKey)
+  const page = query.data && heroWithForm(query.data, formDetail)
+  const media = { ...query.data?.media, ...formDetail?.media }
+  const gameplay = form ?? hero
+  const history = useHeroChangedVariants(gameplay.id)
   const layout = usePageLayout()
   const [failedUrls, setFailedUrls] = useState<string[]>([])
-  const portrait = query.data?.media.PORTRAIT?.currentVersion?.url
-  const splash = query.data?.media.SPLASH?.currentVersion?.url
+  const portrait = media.PORTRAIT?.currentVersion?.url
+  const splash = media.SPLASH?.currentVersion?.url
   const artwork = [splash, portrait].find((url) => url && !failedUrls.includes(url))
   const kind = artwork && artwork === portrait ? "PORTRAIT" : "SPLASH"
-  const head = query.data?.media.HEAD?.currentVersion?.url || hero.head?.currentVersion?.url
-  const identityImage = [head, portrait, hero.portrait?.currentVersion?.url].find(
-    (url) => url && !failedUrls.includes(url),
-  )
+  const head = media.HEAD?.currentVersion?.url || gameplay.head?.currentVersion?.url || hero.head?.currentVersion?.url
+  const identityImage = [
+    head,
+    portrait,
+    gameplay.portrait?.currentVersion?.url,
+    hero.portrait?.currentVersion?.url,
+  ].find((url) => url && !failedUrls.includes(url))
   const appearance = heroAppearance(hero.code)
   const style = {
     "--hero-surface-rgb": appearance.surfaceRgb,
@@ -66,7 +85,8 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
           <HeroQuickSwitch currentHeroId={hero.id} returnTo={returnTo} />
         </div>
       </div>
-      {(query.data?.unscopedBaseline ?? hero.unscopedBaseline) && (
+      <HeroFormSwitch hero={hero} current={form} />
+      {(page?.unscopedBaseline ?? gameplay.unscopedBaseline) && (
         <span className="mt-2 inline-flex rounded-full bg-black/20 px-2 py-1 text-xs text-white/70">
           {wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}
         </span>
@@ -74,7 +94,7 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
       {query.data?.content.profile?.title && <p className="wiki-hero-epithet">{query.data.content.profile.title}</p>}
       <div className="wiki-hero-role-strip">
         {localizedHeroOptions(HERO_ROLES, locale)
-          .filter((role) => hero.roles.includes(role.value))
+          .filter((role) => gameplay.roles.includes(role.value))
           .map((role) => (
             <span key={role.value}>
               <HeroGlyph name={role.glyph} />
@@ -82,25 +102,25 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
             </span>
           ))}
         {localizedHeroOptions(HERO_POSITIONS, locale)
-          .filter((position) => hero.positions?.includes(position.value))
+          .filter((position) => gameplay.positions?.includes(position.value))
           .map((position) => (
             <span key={position.value}>
               <HeroGlyph name={position.glyph} />
               {position.label}
             </span>
           ))}
-        <HeroPriceTag heroId={hero.id} />
+        <HeroPriceTag heroId={gameplay.id} fallbackHeroId={form ? hero.id : undefined} />
         <HeroVideoButton heroId={hero.id} />
       </div>
     </>
   )
   const art = (
     <section className="wiki-hero-profile" data-artwork={kind} aria-labelledby="hero-profile-title">
-      {artwork && query.data?.media[kind]?.currentVersion && (
+      {artwork && media[kind]?.currentVersion && (
         <ImageCredit
           className="right-4 bottom-4"
-          sources={query.data.media[kind].currentVersion?.sources}
-          contactHref={`/contact?assetId=${query.data.media[kind].assetId}&versionId=${query.data.media[kind].currentVersion?.versionId}`}
+          sources={media[kind].currentVersion?.sources}
+          contactHref={`/contact?assetId=${media[kind].assetId}&versionId=${media[kind].currentVersion?.versionId}`}
         />
       )}
       {splash && (
@@ -115,7 +135,7 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
           key={artwork}
           className="wiki-hero-profile-art"
           src={artwork}
-          focus={query.data?.media[kind]?.currentVersion?.focalPoint}
+          focus={media[kind]?.currentVersion?.focalPoint}
           alt={wikiText(locale, `Ảnh tướng ${hero.name}`, `${hero.name} artwork`)}
           fetchPriority="high"
           loading="eager"
@@ -161,17 +181,25 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
       meta={heroMeta(
         {
           ...hero,
-          title: query.data?.content.profile?.title,
-          summary: query.data?.content.profile?.summary,
-          media: query.data?.media,
+          roles: gameplay.roles,
+          title: page?.content.profile?.title,
+          summary: page?.content.profile?.summary,
+          media,
+          form: form && hero.forms ? heroMetaForm(form, hero.forms, locale) : undefined,
         },
         locale,
       )}
       backTo={returnTo}
       style={style}
     >
-      {query.data ? (
-        <HeroHandbook hero={query.data} art={art} identity={identity} picker={picker} />
+      {page ? (
+        <HeroHandbook
+          hero={page}
+          skinOwner={form ? hero.code : undefined}
+          art={art}
+          identity={identity}
+          picker={picker}
+        />
       ) : (
         <HeroStage art={art} identity={identity}>
           {query.isError ? (
@@ -193,14 +221,17 @@ function HeroArtwork({ hero, returnTo }: { hero: HeroListItem; returnTo: string 
 export function HeroDetailPage() {
   const scope = useWikiContext()
   const { locale, t } = scope
-  const { heroCode } = useParams()
+  const { heroCode, formKey } = useParams()
   const location = useLocation()
   const catalog = useQuery(heroCatalogQuery(scope))
-  const hero = catalog.data?.items.find((item) => item.code === heroCode || item.id === heroCode)
+  const route = catalog.data ? resolveHeroRoute(catalog.data.items, heroCode, formKey) : undefined
   const previous = (location.state as { from?: unknown } | null)?.from
   const returnTo = typeof previous === "string" && /^\/hero(?:\?|$)/u.test(previous) ? previous : "/hero"
 
-  if (hero) return <HeroArtwork key={hero.id} hero={hero} returnTo={returnTo} />
+  if (route?.kind === "redirect")
+    return <Navigate to={`${route.path}${location.search}${location.hash}`} state={location.state} replace />
+  if (route?.kind === "hero")
+    return <HeroArtwork key={route.hero.id} hero={route.hero} form={route.form} returnTo={returnTo} />
   if (catalog.isPending) return <HeroDetailLoading heroCode={heroCode} />
 
   return (

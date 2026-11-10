@@ -1,3 +1,5 @@
+import { formLabelRole, heroFormPath } from "../../features/hero/hero-forms.ts"
+import type { HeroRole } from "../../features/hero/hero-classifications.ts"
 import { warehousePath, WAREHOUSE_TABS } from "../wiki-catalog.ts"
 import { headTags } from "./head-tags.ts"
 import {
@@ -34,6 +36,21 @@ export interface PublishedHero extends HeroMetaSource {
   positions?: readonly string[]
   skills: readonly { name?: string | null; description?: string | null }[]
   skins: readonly { name?: string | null }[]
+  /** The published forms of a hero that holds forms, default form first (ADR-024). */
+  forms?: readonly PublishedHeroForm[]
+}
+
+export interface PublishedHeroForm {
+  id: string
+  code: string
+  formKey: string
+  name: string
+  roles: readonly HeroRole[]
+  positions?: readonly string[]
+  summary?: string | null
+  media?: HeroMetaSource["media"]
+  skills: PublishedHero["skills"]
+  skins: PublishedHero["skins"]
 }
 
 export interface PublishedEntry extends WarehouseEntryLike {
@@ -98,7 +115,34 @@ function page(heading: string, content: string) {
   return `<div data-prerendered><header>${link("/", SITE_NAME)}${contents}</header><main><h1>${escapeHtml(heading)}</h1>${content}</main></div>`
 }
 
+/**
+ * A hero that holds forms has one page per form (ADR-024): the default form at the hero's own address, every other
+ * at /hero/<hero>/<form key>. The forms' former addresses and ids preview the same page, unlisted.
+ */
+function heroFormPages(hero: PublishedHero, forms: readonly PublishedHeroForm[]): StaticPage[] {
+  return forms.flatMap((form, index) => {
+    const role = formLabelRole(form, forms)
+    const label = (role && heroRoleLabels([role], LOCALE)[0]) || form.name
+    const page = heroPage({
+      ...hero,
+      roles: form.roles,
+      positions: form.positions,
+      summary: form.summary || hero.summary,
+      media: { ...hero.media, ...form.media },
+      skills: form.skills,
+      skins: [...hero.skins, ...form.skins],
+      form: { key: form.formKey, label, isDefault: index === 0 },
+      forms: undefined,
+    })[0]
+    const switcher = list(forms.map((other) => link(heroFormPath(hero.code, other.formKey, forms), other.name)))
+    const listed = { ...page, body: page.body.replace("</main>", `<h2>Dạng</h2>${switcher}</main>`) }
+    const aliases = [form.code, form.id, ...(index === 0 ? [hero.id, `${hero.code}/${form.formKey}`] : [])]
+    return [listed, ...aliases.map((alias) => ({ ...listed, path: `/hero/${alias}`, listed: false }))]
+  })
+}
+
 function heroPage(hero: PublishedHero): StaticPage[] {
+  if (hero.forms?.length) return heroFormPages(hero, hero.forms)
   const meta = heroMeta(hero, LOCALE)
   const roles = heroRoleLabels(hero.roles, LOCALE)
   const positions = heroPositionLabels(hero.positions, LOCALE)
