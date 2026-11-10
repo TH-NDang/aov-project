@@ -9,42 +9,38 @@
   margin-inline: auto;
   padding-inline: var(--wiki-gutter);
 }
+/* The introduction on the left, the support links on the right; the links drop below when they no longer fit. */
 .wiki-footer-main {
-  display: grid;
-  grid-template-columns: minmax(200px, 1fr) minmax(0, 3fr);
-  gap: 24px clamp(24px, 5vw, 72px);
-  padding-block: 32px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px clamp(24px, 5vw, 72px);
+  padding-block: 28px 20px;
 }
 .wiki-footer-about p {
   font: var(--wiki-type-meta);
   max-width: 34ch;
-  margin-top: 10px;
+  margin-top: 8px;
   color: var(--aov-muted);
 }
+/* As tall as a link, so the name and the links share one line. */
 .wiki-footer-brand {
   font: var(--wiki-type-section);
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  padding-block: 2px;
   color: var(--aov-text);
   text-decoration: none;
 }
 .wiki-footer-brand img {
   border-radius: var(--aov-radius-control);
 }
-.wiki-footer-links {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 24px;
-}
-.wiki-footer-links h2 {
-  font: var(--wiki-type-label);
-  margin: 0 0 8px;
-  color: var(--aov-muted);
-}
 .wiki-footer-links ul {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 28px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -87,17 +83,12 @@
   color: var(--aov-muted);
 }
 
-@media (max-width: 900px) {
-  .wiki-footer-main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* Three links do not fit one line on a phone: a list reads better than one link left alone on a second line. */
 @media (max-width: 560px) {
   .wiki-footer-main {
     padding-block: 24px 16px;
   }
-  .wiki-footer-links {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px 16px;
+  .wiki-footer-links ul {
+    flex-direction: column;
   }
 }

@@ -140,9 +140,9 @@ Dữ liệu từ `GET /videos`, xem ADR-019. Chỉ hiện khối khi mục có v
 
 ## Chân trang
 
-- `WikiFooter` dùng chung cho mọi trang: giới thiệu ngắn ở bên trái và bốn nhóm liên kết. Ba nhóm đầu lấy từ `wikiSections` nên khớp với mục lục thư viện; nhóm Hỗ trợ gồm góp ý, liên hệ và nguồn ảnh, AOV Stream.
+- `WikiFooter` dùng chung cho mọi trang: giới thiệu ngắn ở bên trái và ba liên kết hỗ trợ ở bên phải, cùng hàng với tên AOV Wiki: góp ý, liên hệ và nguồn ảnh, AOV Stream. Chân trang không lặp lại mục lục thư viện (Sổ tay nhân vật, Kho trang bị, Tham khảo).
 - Dòng cuối ghi thuộc về Garena / Liên Quân Mobile và mốc dữ liệu đang xem kèm thị trường.
-- Dưới 900px phần giới thiệu nằm trên các nhóm liên kết; dưới 560px các nhóm xếp hai cột. Trang có nút mục lục nổi chừa thêm khoảng trống cuối chân trang để nút không che liên kết.
+- Khi không đủ chỗ cho một hàng, ba liên kết xuống dưới phần giới thiệu; dưới 560px chúng xếp dọc để không liên kết nào rớt lẻ một mình. Trang có nút mục lục nổi chừa thêm khoảng trống cuối chân trang để nút không che liên kết.
 
 ## Ảnh nền đầu trang
 

@@ -2,14 +2,13 @@ import { Link } from "react-router"
 import { publicSiteUrl } from "@aov/ui/lib/public-site-url"
 import { useWikiContext, wikiText } from "../context/wiki-context"
 import { FeedbackDialog } from "../layout/feedback-dialog"
-import { wikiSections } from "../layout/wiki-sections"
 import { WikiIcon } from "./wiki-icon"
 import "./wiki-footer.css"
 
 const STREAM_URL = publicSiteUrl(import.meta.env.VITE_STREAM_URL, 5174, window.location.origin)
 
 export function WikiFooter() {
-  const { href, locale, t, options, regions, region, patchVariantId } = useWikiContext()
+  const { href, locale, options, regions, region, patchVariantId } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
   const patch = options?.patches.find((entry) => entry.id === (patchVariantId || options.currentPatchVariantId))
   const market = regions.find((entry) => entry.code === region)?.displayName
@@ -28,45 +27,26 @@ export function WikiFooter() {
             )}
           </p>
         </div>
-        <nav className="wiki-footer-links" aria-label={text("Liên kết cuối trang", "Footer links")}>
-          {(["characters", "warehouse", "news"] as const).map((group) => (
-            <div key={group}>
-              <h2>{t(group)}</h2>
-              <ul>
-                {wikiSections
-                  .filter((section) => section.group === group)
-                  .map((section) => (
-                    <li key={section.key}>
-                      <Link to={href(section.path)}>
-                        <WikiIcon name={section.icon} size={18} />
-                        {t(section.key)}
-                      </Link>
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          ))}
-          <div>
-            <h2>{text("Hỗ trợ", "Support")}</h2>
-            <ul>
-              <li>
-                <FeedbackDialog showLabel />
-              </li>
-              <li>
-                <Link to={href("/contact")}>
-                  <WikiIcon name="imagePlus" size={18} />
-                  {text("Liên hệ & nguồn ảnh", "Contact & image sources")}
-                </Link>
-              </li>
-              <li>
-                <a href={STREAM_URL}>
-                  <img src="/icons/stream-owl.svg" width="18" height="18" alt="" />
-                  AOV Stream
-                  <WikiIcon name="open" size={14} />
-                </a>
-              </li>
-            </ul>
-          </div>
+        {/* Support links only: the footer does not repeat the library index. */}
+        <nav className="wiki-footer-links" aria-label={text("Hỗ trợ", "Support")}>
+          <ul>
+            <li>
+              <FeedbackDialog showLabel />
+            </li>
+            <li>
+              <Link to={href("/contact")}>
+                <WikiIcon name="imagePlus" size={18} />
+                {text("Liên hệ & nguồn ảnh", "Contact & image sources")}
+              </Link>
+            </li>
+            <li>
+              <a href={STREAM_URL}>
+                <img src="/icons/stream-owl.svg" width="18" height="18" alt="" />
+                AOV Stream
+                <WikiIcon name="open" size={14} />
+              </a>
+            </li>
+          </ul>
         </nav>
       </div>
       <div className="wiki-footer-note">
