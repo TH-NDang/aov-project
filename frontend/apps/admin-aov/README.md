@@ -121,6 +121,29 @@ Không có middleware này (bản build triển khai) thì nút tự ẩn.
   (`recapture-requests.review.json`).
 - Middleware đọc lại bộ ảnh khi một tệp JSON trong thư mục patch được thêm, xóa hoặc sửa, nên không cần khởi động lại Vite.
 
+### Vùng trên ảnh và điều hướng (09/11/2026)
+
+Ảnh chụp màn hình thông tin tướng trong game giữ một bố cục cố định trên ảnh tỉ lệ 20:9. Các vùng đo trên ảnh 2400 × 1080
+của patch 2026-10-30 nằm trong `captureRegions` và `captureFocusBox` (`src/features/publishing/patch-capture-model.ts`),
+tính theo tỉ lệ của ảnh. Ảnh có tỉ lệ khác, ảnh cửa hàng và ảnh chưa nối mục không được đoán vùng.
+
+- **Phóng sẵn vào phần cần đọc:** ảnh tổng quan mở ở cột chi tiết bên trái (sở trường, 4 icon chiêu, vai trò); ảnh chỉ số mở
+  ở bảng thuộc tính; ảnh kỹ năng mở ở khung mô tả. Nút **Phóng vào phần cần đọc** quay lại vùng đó, **Vừa khung** xem cả ảnh.
+- **Vùng dẫn tới trang:** rê chuột lên ảnh thì các vùng hiện viền, rê vào một vùng thì hiện nhãn "Đi tới …". Bấm (không kéo)
+  để mở mục tương ứng ở trang tướng:
+  - Sở trường → Đánh giá.
+  - Icon nội tại và 3 chiêu → kỹ năng đó; khung ảnh cũng chuyển sang ảnh của kỹ năng.
+  - Tên tướng, dòng giới thiệu → thẻ tướng.
+  - Bảng thuộc tính → Thuộc tính chiến đấu.
+  - Khung mô tả → kỹ năng của ảnh.
+  Khi đang phóng to, kéo để di chuyển vẫn dùng được; chỉ một lần bấm không di chuyển mới tính là chọn vùng.
+- **Điều hướng hai chiều:** trang tướng đổi mục thì khung ảnh theo, như trước. Ngược lại, chọn nhóm ảnh (Tổng quan, Chỉ số,
+  Giá tướng, từng kỹ năng, Trang phục), dùng mũi tên sang nhóm khác hoặc sang trang phục khác thì trang tướng mở đúng tab, đúng
+  kỹ năng hoặc trang phục, và cuộn tới phần đó (một viền sáng ngắn chỉ ra phần vừa mở). Ảnh khác của cùng một mục không làm
+  trang đổi chỗ.
+  - Khi đang sửa một phần, hoặc đang ở Bản dịch, Lịch sử, Theo patch, Phiên bản, trang không bị kéo đi; chỉ khung ảnh đổi.
+  - Chỉ số và Giá tướng nằm chung tab Tổng quan với thẻ tướng, nên khung ảnh ghi nhớ nhóm đã chọn cho tới khi đổi tab nội dung.
+
 ### Ảnh gốc cần chụp
 
 Trang **Sẵn sàng xuất bản** có thêm cột **Ảnh gốc cần chụp** và bộ lọc **Cần chụp ảnh gốc**: với mỗi tướng, mục nào chưa có
