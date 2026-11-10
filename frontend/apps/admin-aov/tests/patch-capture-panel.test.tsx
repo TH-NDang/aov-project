@@ -142,6 +142,24 @@ test("a game screen opens on the part worth reading, and its ratings, skill icon
   assert.ok(place.top >= 0 && place.top + place.height <= 252, `${place.top} + ${place.height}`)
 })
 
+test("an in-match shot shows whole, and a picture of several skills joins each skill's group", () => {
+  // Resized in-match shots keep the 20:9 shape, so only the mark keeps the hero page layout off them.
+  const screen = { width: 2000, height: 900 }
+  const panel = capture("panel", "SKILL", { skillKey: "skill-1-1", alsoSkillKeys: ["skill-2-1"], screen: "IN_MATCH" })
+  assert.deepEqual(captureRegions(panel, skills, "vi-VN", screen), [])
+  assert.equal(captureFocusBox(panel, screen), null)
+  assert.notEqual(captureFocusBox({ ...panel, screen: undefined }, screen), null)
+
+  const groups = groupsFor("skill:skill-2-1", [...images, panel])
+  for (const key of ["skill:skill-1-1", "skill:skill-2-1"])
+    assert.ok(groups.find((group) => group.key === key)!.images.includes(panel), key)
+  const extra = groupsFor("overview", [capture("x", "SKILL", { skillKey: "skill-1-1", alsoSkillKeys: ["skill-9-1"] })])
+  assert.ok(
+    extra.some((group) => group.key === "skill:skill-9-1"),
+    "a skill the draft lacks still gets its images",
+  )
+})
+
 test("each group knows the part of the page it checks, and leaves the rest alone", () => {
   assert.deepEqual(captureGroupTarget({ key: "overview" }, skills), {
     tab: "overview",

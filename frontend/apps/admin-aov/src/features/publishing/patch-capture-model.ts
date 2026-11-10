@@ -48,6 +48,10 @@ export const captureGroupKeys = {
 
 const ordered = (skills: readonly Skill[]) => [...skills].sort((a, b) => a.displayOrder - b.displayOrder)
 
+/** An image is a source of its own skill and of any other skill the review listed it under. */
+const showsSkill = (image: CaptureImage, skillKey: string) =>
+  image.skillKey === skillKey || !!image.alsoSkillKeys?.includes(skillKey)
+
 /** The group that matches what the workspace is showing, so the panel can follow the editor. */
 export function captureFocus({
   view,
@@ -124,16 +128,18 @@ export function buildCaptureGroups({
       key: captureGroupKeys.skill(skill.skillKey),
       label,
       title: name ? `${label} · ${name}` : label,
-      images: reviewed.filter((image) => image.skillKey === skill.skillKey),
+      images: reviewed.filter((image) => showsSkill(image, skill.skillKey)),
       empty: hidden
         ? `Có ${hidden} ảnh mang tên kỹ năng này nhưng đã bị loại khi rà soát, nên không nối với kỹ năng. Xem nhóm “Không nhập”.`
         : "Không có ảnh gốc nối với kỹ năng này.",
     }
   })
   const known = new Set(draftSkills.map((skill) => skill.skillKey))
-  const extraKeys = [...new Set(reviewed.map((image) => image.skillKey!))].filter((key) => !known.has(key))
+  const extraKeys = [...new Set(reviewed.flatMap((image) => [image.skillKey!, ...(image.alsoSkillKeys ?? [])]))].filter(
+    (key) => !known.has(key),
+  )
   const extraGroups = extraKeys.map((skillKey): CaptureGroup => {
-    const members = reviewed.filter((image) => image.skillKey === skillKey)
+    const members = reviewed.filter((image) => showsSkill(image, skillKey))
     const label = manifestSkillLabel(skillKey)
     const name = members[0]?.skillName
     return {
@@ -350,7 +356,9 @@ export function captureRegions(
   locale: string,
   natural: { width: number; height: number } | null | undefined,
 ): CaptureRegion[] {
-  if (image.box || !isGameScreen(natural) || !gameScreenSections.includes(image.section)) return []
+  // An in-match shot can have the same 20:9 shape, but none of the hero page layout.
+  if (image.box || image.screen === "IN_MATCH" || !isGameScreen(natural) || !gameScreenSections.includes(image.section))
+    return []
   const regions: CaptureRegion[] = [
     {
       key: "ratings",
@@ -409,7 +417,7 @@ export function captureFocusBox(
   image: CaptureImage,
   natural: { width: number; height: number } | null | undefined,
 ): CaptureBox | null {
-  if (image.box || !isGameScreen(natural)) return null
+  if (image.box || image.screen === "IN_MATCH" || !isGameScreen(natural)) return null
   if (image.section === "OVERVIEW") return DETAILS_COLUMN
   if (image.section === "ATTRIBUTES") return ATTRIBUTE_SHEET
   if (image.section === "SKILL") return SKILL_TEXT
