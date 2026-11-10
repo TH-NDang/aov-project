@@ -1,6 +1,6 @@
 # ADR-024 — Tướng nhiều dạng (Flowborn)
 
-**Trạng thái:** Đề xuất, chờ người dùng quyết định  
+**Trạng thái:** Chấp nhận (phương án B) theo quyết định của người dùng ngày 10/11/2026  
 **Ngày:** 2026-11-10
 
 ## Bối cảnh
@@ -62,7 +62,7 @@ Mô tả ở phần Quyết định.
 Danh sách vẫn có hai Flowborn, tên/danh hiệu/trang phục chung phải nhập hai lần, không có trang một tướng. Không
 đáp ứng yêu cầu.
 
-## Quyết định (đề xuất phương án B)
+## Quyết định (phương án B)
 
 ### Hai khái niệm
 
@@ -144,8 +144,8 @@ Danh sách vẫn có hai Flowborn, tên/danh hiệu/trang phục chung phải nh
   `skillMedia`, `skinMedia`…). Gọi bằng UUID của dạng trả chi tiết dạng kèm `parent: {id, code, formKey}` để client
   chuyển về trang tướng.
 - Admin: `GET /admin/heroes/{heroId}/forms` và `PUT /admin/heroes/{heroId}/forms` (thay toàn bộ danh sách có thứ tự
-  `{heroId, formKey}`, kèm `expectedForms` để phát hiện ghi đè). Danh sách admin, kiểm tra sẵn sàng và chi tiết
-  revision thêm `parentHeroId`, `formKey`, `forms` để Admin nhóm dạng dưới tướng. Tạo dạng mới (ví dụ
+  `{heroId, formKey}`, kèm `expectedForms` để phát hiện ghi đè). Danh sách admin và kiểm tra sẵn sàng thêm
+  `holderId`, `formKey` (khi là dạng) và `formIds` (khi chứa dạng) để Admin nhóm dạng dưới tướng. Tạo dạng mới (ví dụ
   `flowborn-tank`) = tạo tướng bằng API hiện có rồi gắn vào danh sách dạng.
 - Bộ chọn thực thể chơi được (tham chiếu `@`, giải đấu, Cờ Liên quân, so sánh chỉ số) liệt kê tướng thường và
   **dạng**, không liệt kê tướng chứa dạng; tên hiển thị là tên đầy đủ của dạng.
@@ -205,15 +205,15 @@ Danh sách vẫn có hai Flowborn, tên/danh hiệu/trang phục chung phải nh
 - 03: `forms` trong danh sách/chi tiết công khai, `playable=true`, `parent` của dạng, API quản lý dạng, lỗi mới.
 - `community-service`: `WikiCatalog` đọc danh mục bằng `playable=true`.
 
-## Điểm cần người dùng quyết định
+## Quyết định của người dùng (10/11/2026)
 
-1. Chọn phương án B (khuyến nghị) hay A.
-2. Khóa dạng giữ `ad`/`mid` theo mã hiện có (không đổi tên file, khóa trang phục, ảnh gốc) hay đổi sang
-   `marksman`/`mage` (cần alias mã, đổi tên file tài nguyên theo ADR-010). Dạng sau này theo cùng quy ước, ví dụ
-   `flowborn-tank`.
-3. Migration xuất bản ngay revision baseline của tướng `flowborn` (Wiki không mất Flowborn) hay chỉ tạo nháp để
-   biên tập viên xem rồi xuất bản (Flowborn biến khỏi Wiki đến lúc đó).
-4. Thứ tự dạng: xạ thủ trước (dạng mặc định), pháp sư sau.
+1. Chọn phương án B.
+2. Khóa dạng giữ `ad`/`mid` theo mã hiện có; không đổi tên file, khóa trang phục hay ảnh gốc. Dạng sau này theo cùng
+   quy ước, ví dụ `flowborn-tank`.
+3. Migration xuất bản ngay revision baseline của tướng `flowborn`, để Wiki không mất Flowborn.
+4. Thứ tự dạng: xạ thủ (`ad`) là dạng mặc định, pháp sư (`mid`) thứ hai.
+
+Triển khai: V060 (bảng và trigger), V061 (dữ liệu Flowborn).
 
 ## Kiểm chứng
 

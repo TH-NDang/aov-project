@@ -627,6 +627,23 @@ id   = 05f3... UUID
 code = nakroth
 ```
 
+#### Tướng nhiều dạng (ADR-024)
+
+Một tướng có thể có nhiều **dạng** chọn trước trận, mỗi dạng có vai trò, vị trí, đánh giá, chỉ số, kỹ năng và lịch sử
+cân bằng riêng. Flowborn (“Hậu duệ Khởi Nguyên”) là một tướng có dạng xạ thủ và pháp sư; game có thể thêm dạng.
+
+- **Tướng** là thứ người đọc duyệt, tìm và mở. **Dạng** là thứ người chơi chọn trong trận. Tướng thường là cả hai.
+- Mỗi dạng là một Hero identity đầy đủ (UUID, mã, chuỗi revision), gắn vào tướng chứa nó theo thứ tự; dạng đầu là dạng
+  mặc định. Mã dạng là `<mã tướng>-<khóa dạng>` (`flowborn-ad`, `flowborn-mid`). Chỉ một cấp.
+- Tướng chứa dạng giữ phần chung: tên, danh hiệu, tiểu sử, trang phục dùng chung, ảnh thẻ tướng; không có vai trò, vị
+  trí, đánh giá, chỉ số, kỹ năng. Dạng giữ gameplay, trang phục riêng của dạng và ảnh của dạng; tên của dạng là tên đầy
+  đủ khi dạng đứng một mình (bộ chọn, ván đấu, ghi chú cập nhật).
+- Mỗi dạng có nháp, xuất bản, change set theo patch, ảnh gốc và kiểm tra sẵn sàng riêng. Dạng chưa xuất bản không hiện
+  trên Wiki. Giá shop có thể ghi ở tướng (mua một lần) hoặc ở dạng (bán riêng); có giá dạng thì dùng giá dạng.
+- Tham chiếu tới một dạng (token `<heroUUID>.<skillKey>`, lượt chọn giải đấu, video, ảnh gốc theo mã) dùng UUID/mã
+  của dạng và không đổi khi tướng có thêm dạng.
+- `formKey` của kỹ năng là nhãn trạng thái trong trận, không phải dạng tướng.
+
 ### 7.2 HeroRevision là composition
 
 Một HeroRevision không cần copy toàn bộ nội dung của hero.

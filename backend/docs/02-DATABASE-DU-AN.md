@@ -128,6 +128,30 @@ Stable identity của tướng.
 
 Không lưu name/stats/ảnh trực tiếp tại đây.
 
+### `hero.hero_form` — dạng của tướng (ADR-024)
+
+Một tướng có thể chứa các dạng có thứ tự (Flowborn: xạ thủ, pháp sư). Mỗi dạng là một `hero.hero` đầy đủ với revision,
+kỹ năng, chỉ số, change set riêng; bảng này chỉ ghi dạng thuộc tướng nào, khóa và vị trí.
+
+| Column | Type | Rule |
+|---|---|---|
+| hero_id | UUID | PK, FK `hero.hero` — tướng nội bộ của dạng |
+| parent_hero_id | UUID | NOT NULL, FK `hero.hero` — tướng chứa dạng |
+| form_key | VARCHAR(32) | slug; UNIQUE(`parent_hero_id`, `form_key`) |
+| display_order | INTEGER | 1–99; UNIQUE(`parent_hero_id`, `display_order`); 1 là dạng mặc định |
+| created_at, created_by_issuer, created_by_subject | | như các bảng khác |
+
+`CHECK(hero_id <> parent_hero_id)`. Trigger `trg_hero_form_guard` (`hero.guard_hero_form`) chặn dạng lồng nhau và yêu
+cầu `code` của dạng bằng `<code tướng>-<form_key>`. Bảng không theo revision: đổi danh sách có hiệu lực ngay qua API quản
+trị. Tướng chứa dạng giữ phần chung (bản dịch tên/danh hiệu/tiểu sử, trang phục chung, ảnh HEAD/PORTRAIT/SPLASH), các section
+vai trò/vị trí, đánh giá, chỉ số, kỹ năng để rỗng; module `hero` kiểm tra khi lưu và xuất bản.
+
+V060 tạo bảng. V061 tạo tướng `flowborn` (UUID `1bca4c6c-88a3-476c-a3aa-4bb206837745`) với revision baseline đã xuất bản
+ở mọi ruleset mà `flowborn-ad` đã xuất bản (patch hiệu lực sớm nhất của `flowborn-ad`, tên/danh hiệu/tiểu sử và ảnh của
+bản xuất bản mới nhất), gắn `flowborn-ad` (`ad`, 1) và `flowborn-mid` (`mid`, 2), ghi external identity và tăng
+`platform.catalog_cache_epoch`. Revision, nháp, change set và ảnh của hai dạng giữ nguyên. Database không có
+`flowborn-ad` hoặc đã có mã `flowborn` thì không đổi.
+
 ### External identity
 
 `hero.hero_external_identity`
@@ -145,6 +169,9 @@ PK/unique phù hợp:
 UNIQUE(provider, namespace, external_value)
 UNIQUE(hero_id, provider, namespace)
 ```
+
+Dữ liệu hiện có (V061): `garena-vn`/`hoc-vien-tuong-skin` là slug trang Học viện tướng của Garena (`flowborn` →
+`flowborn-ad`, `flowborn-2` → `flowborn-mid`); `liquipedia`/`honorofkings` là trang Liquipedia của từng dạng.
 
 ---
 
