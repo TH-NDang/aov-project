@@ -2,7 +2,13 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import { useQuery } from "@tanstack/react-query"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
-import { buildCaptureGroups, withShopGroups, type CaptureGroup, type CaptureImage } from "./patch-capture-model"
+import {
+  buildCaptureGroups,
+  withShopGroups,
+  type CaptureGroup,
+  type CaptureImage,
+  type CaptureTarget,
+} from "./patch-capture-model"
 import { createPublishingApi, type HeroCatalogQuery } from "./publishing-api"
 import type { HeroRow, PageSlice, Skill } from "./types"
 
@@ -99,6 +105,10 @@ export interface PatchCaptureWorkspace {
   focusRequest: number
   toggle: () => void
   close: () => void
+  skills: readonly Skill[]
+  locale: string
+  /** Opens a group and the part of the page it is the source of, when the page is free to follow. */
+  go: (target: CaptureTarget, imageId?: string) => void
   /** From a button next to an item: opens the panel on that item and hands it the keyboard. */
   reveal: (key: string, imageId?: string) => void
   select: (key: string, imageId?: string) => void
@@ -112,6 +122,7 @@ export function usePatchCaptureWorkspace({
   locale,
   focus,
   ready,
+  onNavigate,
 }: {
   heroId: string
   heroName: string
@@ -120,6 +131,7 @@ export function usePatchCaptureWorkspace({
   locale: string
   focus: string
   ready: boolean
+  onNavigate?: (target: CaptureTarget) => void
 }): PatchCaptureWorkspace {
   const [open, setOpen] = useState(readOpen)
   const [manual, setManual] = useState<{ key: string; focus: string; imageId?: string } | null>(null)
@@ -201,6 +213,12 @@ export function usePatchCaptureWorkspace({
       change(true)
     },
     select: (key, imageId) => setManual({ key, focus, imageId }),
+    skills,
+    locale,
+    go: (target, imageId) => {
+      setManual({ key: target.group, focus, imageId })
+      onNavigate?.(target)
+    },
   }
 }
 

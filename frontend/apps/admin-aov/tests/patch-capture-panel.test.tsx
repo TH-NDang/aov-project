@@ -8,10 +8,16 @@ import { TooltipProvider } from "@aov/ui/components/tooltip"
 import type { CaptureImage } from "../server/patch-capture-manifest"
 import {
   buildCaptureGroups,
+  captureBoxOnScreen,
+  captureBoxZoom,
   captureCardZoom,
   captureFit,
   captureFocus,
+  captureFocusBox,
   captureGroupKeys,
+  captureGroupTarget,
+  captureRegions,
+  type CaptureTarget,
   type CaptureImage,
   captureImageTitle,
   captureImageUrl,
@@ -92,6 +98,70 @@ test("the panel follows the section being viewed or edited", () => {
   assert.equal(focus({ view: "patch" }), "patch-notes")
   assert.equal(focus({ view: "history", tab: "skills" }), "overview")
   assert.equal(focus({ tab: "skills", skills: [] }), "overview")
+  // The panel can lead the page to a part that shares the overview tab; an editor or another view still decides.
+  assert.equal(focus({ pinned: "attributes" }), "attributes")
+  assert.equal(
+    focus({ pinned: "attributes", editing: true, section: "SKILLS", skillKey: "skill-1-1" }),
+    "skill:skill-1-1",
+  )
+  assert.equal(focus({ pinned: "attributes", view: "patch" }), "patch-notes")
+})
+
+test("a game screen opens on the part worth reading, and its ratings, skill icons and text lead to the page", () => {
+  const screen = { width: 2400, height: 1080 }
+  const overview = captureRegions(capture("overview", "OVERVIEW"), skills, "vi-VN", screen)
+  assert.deepEqual(
+    overview.map((region) => region.key),
+    ["ratings", "skill-0", "skill-1", "skill-2", "name"],
+    "Only the slots the draft has get an icon",
+  )
+  const one = overview.find((region) => region.key === "skill-1")!
+  assert.equal(one.label, "Chiêu 1 · Lôi đình")
+  assert.deepEqual(one.target, { tab: "skills", skill: "skill-1-1", group: "skill:skill-1-1" })
+  assert.deepEqual(overview[0]!.target, { tab: "overview", section: "OVERVIEW_RATINGS", group: "overview" })
+  const sheet = captureRegions(capture("attributes", "ATTRIBUTES"), skills, "vi-VN", screen)
+  assert.deepEqual(sheet.find((region) => region.key === "attributes")!.target, {
+    tab: "overview",
+    section: "COMBAT_STATS",
+    group: "attributes",
+  })
+  const passive = captureRegions(capture("passive", "SKILL", { skillKey: "skill-0-1" }), skills, "vi-VN", screen)
+  assert.deepEqual(passive.at(-1)!.target, { tab: "skills", skill: "skill-0-1", group: "skill:skill-0-1" })
+  // Nothing is guessed on a picture of another shape, on unmatched captures or on shop cards.
+  assert.deepEqual(captureRegions(capture("overview", "OVERVIEW"), skills, "vi-VN", { width: 1080, height: 2400 }), [])
+  assert.deepEqual(captureRegions(capture("icons", "FORM"), skills, "vi-VN", screen), [])
+  assert.deepEqual(captureRegions(capture("overview", "OVERVIEW"), skills, "vi-VN", null), [])
+
+  const focus = captureFocusBox(capture("passive", "SKILL", { skillKey: "skill-0-1" }), screen)!
+  assert.ok(focus.x > 0.4, "a skill screen opens on its text, on the right")
+  assert.equal(captureFocusBox(capture("overview", "OVERVIEW"), { width: 1000, height: 1000 }), null)
+  const zoom = captureBoxZoom(focus, screen, 560, 252)
+  assert.ok(zoom.scale > 1.4, `scale ${zoom.scale}`)
+  const place = captureBoxOnScreen(focus, screen, { width: 560, height: 252 }, zoom)
+  assert.ok(place.left >= 0 && place.left + place.width <= 560, `${place.left} + ${place.width}`)
+  assert.ok(place.top >= 0 && place.top + place.height <= 252, `${place.top} + ${place.height}`)
+})
+
+test("each group knows the part of the page it checks, and leaves the rest alone", () => {
+  assert.deepEqual(captureGroupTarget({ key: "overview" }, skills), {
+    tab: "overview",
+    section: "PROFILE",
+    group: "overview",
+  })
+  assert.deepEqual(captureGroupTarget({ key: "attributes" }, skills)?.section, "COMBAT_STATS")
+  assert.deepEqual(captureGroupTarget({ key: "skill:skill-2-1" }, skills), {
+    tab: "skills",
+    skill: "skill-2-1",
+    group: "skill:skill-2-1",
+  })
+  assert.equal(captureGroupTarget({ key: "skill:skill-9-1" }, skills), null, "a skill the draft lacks has no page")
+  assert.equal(captureGroupTarget({ key: "withheld" }, skills), null)
+  assert.equal(captureGroupTarget({ key: "form" }, skills), null)
+  assert.deepEqual(captureGroupTarget({ key: "skins" }, skills, capture("card", "SKILL", { skinKey: "skin-b" })), {
+    tab: "skins",
+    skin: "skin-b",
+    group: "skins",
+  })
 })
 
 test("every draft skill gets a group, and a rejected image never joins the skill it was named after", () => {
@@ -305,6 +375,7 @@ async function mount() {
     await import("../src/features/publishing/patch-capture-panel")
   const { PatchCaptureProvider } = await import("../src/features/publishing/use-patch-captures")
   const { useState } = React
+  const navigations: CaptureTarget[] = []
   const select = (selected: string, patch: Partial<{ key: string; imageId: string | null }> = {}) => ({
     ...patch,
     key: selected,
@@ -350,6 +421,12 @@ async function mount() {
         setOpen(true)
       },
       select: (key: string, imageId?: string) => setActive(select(key, { imageId: imageId ?? null })),
+      skills,
+      locale: "vi-VN",
+      go: (target: CaptureTarget, imageId?: string) => {
+        navigations.push(target)
+        setActive(select(target.group, { imageId: imageId ?? null }))
+      },
     }
     return (
       <QueryClientProvider client={new QueryClient()}>
@@ -373,6 +450,7 @@ async function mount() {
   return {
     document,
     dom,
+    navigations,
     render: (
       state: unknown,
       initial?: string,
@@ -419,15 +497,19 @@ test("opening a hero shows the original next to the page, with zoom and quick sw
     assert.match(ui.document.querySelector("aside")!.textContent!, /1\/7 ảnh của tướng/)
     assert.match(ui.document.querySelector("aside")!.textContent!, /Chỉ theo tên tệp/)
 
-    // Arrow keys walk the whole hero, crossing from one item to the next.
+    // Arrow keys walk the whole hero, crossing from one item to the next, and the page follows each new item.
     await ui.press("ArrowRight")
     assert.equal(ui.chip("Chỉ số")?.getAttribute("aria-pressed"), "true")
+    assert.deepEqual(ui.navigations.at(-1), { tab: "overview", section: "COMBAT_STATS", group: "attributes" })
     assert.match(ui.document.querySelector("[aria-label='Ghi chú rà soát']")!.textContent!, /chỉ chụp tổng quan/)
     await ui.press("ArrowRight")
     await ui.press("ArrowRight")
     assert.equal(ui.chip("Chiêu 1")?.getAttribute("aria-pressed"), "true")
     assert.equal(ui.picture()?.getAttribute("src"), `/__patch-captures/2026-10-30/images/${images[3]!.id}.png`)
+    assert.deepEqual(ui.navigations.at(-1), { tab: "skills", skill: "skill-1-1", group: "skill:skill-1-1" })
+    const led = ui.navigations.length
     await ui.click(ui.byLabel(`Ảnh 2: one-b.png`))
+    assert.equal(ui.navigations.length, led, "Another picture of the same skill leaves the page where it is")
     assert.equal(ui.picture()?.getAttribute("src"), `/__patch-captures/2026-10-30/images/${images[4]!.id}.png`)
     assert.equal(ui.byLabel(`Ảnh 2: one-b.png`)?.getAttribute("aria-current"), "true")
     await ui.press("ArrowLeft")

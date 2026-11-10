@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  Focus,
   Images,
   Maximize,
   PanelRightClose,
@@ -29,8 +30,13 @@ import { cn } from "@aov/ui/lib/utils"
 import { CopyButton } from "@/components/copy-button"
 import {
   CAPTURE_MAX_SCALE,
+  captureBoxOnScreen,
+  captureBoxZoom,
   captureCardZoom,
   captureFit,
+  captureFocusBox,
+  captureGroupTarget,
+  captureRegions,
   captureImageTitle,
   captureImageUrl,
   captureLinkHints,
@@ -39,6 +45,7 @@ import {
   zoomCaptureAt,
   type CaptureGroup,
   type CaptureImage,
+  type CaptureRegion,
   type CaptureZoom,
 } from "./patch-capture-model"
 import { usePatchCaptureContext, type CaptureState, type PatchCaptureWorkspace } from "./use-patch-captures"
@@ -277,6 +284,10 @@ function CaptureViewer({
   onZoom,
   onPrevious,
   onNext,
+  regions,
+  natural,
+  onReady,
+  onRegion,
 }: {
   image: CaptureImage
   url: string
@@ -286,9 +297,30 @@ function CaptureViewer({
   onZoom: (update: (zoom: CaptureZoom, width: number, height: number) => CaptureZoom) => void
   onPrevious?: () => void
   onNext?: () => void
+  /** Parts of the picture that lead to the page. */
+  regions: CaptureRegion[]
+  natural: { width: number; height: number } | null
+  onReady: (natural: { width: number; height: number }) => void
+  onRegion: (region: CaptureRegion) => void
 }) {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
   const [drag, setDrag] = useState<{ pointer: number; x: number; y: number } | null>(null)
+  const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null)
+  // Where a press started and on which region, so a press that did not move still picks the region while zoomed.
+  const press = useRef<{ x: number; y: number; region: string | null } | null>(null)
+  useEffect(() => {
+    const element = frame.current
+    if (!element) return
+    const measure = () => {
+      const bounds = element.getBoundingClientRect()
+      setFrameSize(bounds.width && bounds.height ? { width: bounds.width, height: bounds.height } : null)
+    }
+    measure()
+    if (typeof ResizeObserver === "undefined") return
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [frame])
   const point = (clientX: number, clientY: number) => {
     const bounds = frame.current!.getBoundingClientRect()
     return { x: clientX - bounds.left, y: clientY - bounds.top }
@@ -307,6 +339,8 @@ function CaptureViewer({
     return () => element.removeEventListener("wheel", onWheel)
   }, [frame, onZoom])
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    const region = (event.target as Element).closest?.("[data-capture-region]")?.getAttribute("data-capture-region")
+    press.current = { x: event.clientX, y: event.clientY, region: region ?? null }
     if (zoom.scale === 1 || event.button !== 0) return
     event.currentTarget.setPointerCapture?.(event.pointerId)
     setDrag({ pointer: event.pointerId, x: event.clientX - zoom.x, y: event.clientY - zoom.y })
@@ -322,12 +356,21 @@ function CaptureViewer({
       ref={frame}
       data-testid="capture-frame"
       className={cn(
-        "relative aspect-[20/9] max-h-[calc(var(--capture-height)-8.5rem)] w-full shrink-0 touch-none overflow-hidden bg-muted/60 select-none @5xl/hero-split:max-h-[60dvh]",
+        "group/frame relative aspect-[20/9] max-h-[calc(var(--capture-height)-8.5rem)] w-full shrink-0 touch-none overflow-hidden bg-muted/60 select-none @5xl/hero-split:max-h-[60dvh]",
         zoom.scale > 1 ? (drag ? "cursor-grabbing" : "cursor-grab") : "cursor-zoom-in",
       )}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
-      onPointerUp={() => setDrag(null)}
+      onPointerUp={(event) => {
+        // While zoomed the frame holds the pointer, so the region button never sees the click: pick it here.
+        const start = press.current
+        press.current = null
+        if (drag && start?.region && Math.hypot(event.clientX - start.x, event.clientY - start.y) < 5) {
+          const region = regions.find((item) => item.key === start.region)
+          if (region) onRegion(region)
+        }
+        setDrag(null)
+      }}
       onPointerCancel={() => setDrag(null)}
       onDoubleClick={(event) => {
         const at = point(event.clientX, event.clientY)
@@ -342,10 +385,38 @@ function CaptureViewer({
         draggable={false}
         className="size-full origin-top-left object-contain"
         style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` }}
-        onLoad={() => setStatus("ready")}
+        onLoad={(event) => {
+          setStatus("ready")
+          onReady({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
+        }}
         onError={() => setStatus("error")}
       />
       {image.box && status === "ready" && <CaptureCardMark box={image.box} zoom={zoom} />}
+      {status === "ready" && natural && frameSize && regions.length > 0 && (
+        // Outlined while the pointer is over the picture; each part names where it leads.
+        <div className="pointer-events-none absolute inset-0">
+          {regions.map((region) => {
+            const place = captureBoxOnScreen(region.box, natural, frameSize, zoom)
+            return (
+              <button
+                key={region.key}
+                type="button"
+                data-capture-region={region.key}
+                aria-label={`Đi tới ${region.label}`}
+                title={`Đi tới ${region.label}`}
+                className="group/region pointer-events-auto absolute rounded-md border border-transparent outline-none transition-colors group-hover/frame:border-primary/35 hover:border-primary hover:bg-primary/10 focus-visible:border-primary focus-visible:bg-primary/10"
+                style={{ left: place.left, top: place.top, width: place.width, height: place.height }}
+                onDoubleClick={(event) => event.stopPropagation()}
+                onClick={() => onRegion(region)}
+              >
+                <span className="type-meta pointer-events-none absolute top-0 left-0 max-w-[16rem] -translate-y-full truncate rounded-md bg-background/90 px-1.5 text-foreground opacity-0 shadow-sm transition-opacity group-hover/region:opacity-100 group-focus-visible/region:opacity-100">
+                  Đi tới {region.label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
       {status === "loading" && (
         <p role="status" className="type-meta absolute inset-0 flex items-center justify-center p-4 text-center">
           {image.url ? "Đang mở ảnh gốc…" : "Đang mở ảnh gốc từ ZIP… Lần đầu mở mỗi bộ ZIP mất vài giây."}
@@ -473,6 +544,15 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
   const image = group?.images.find((item) => item.id === imageId) ?? group?.images[0]
   const imageKey = image?.id
   const imageBox = image?.box
+  // The picture's own size, known once it has loaded; the parts of a game screen are measured against it.
+  const [natural, setNatural] = useState<{ id: string; width: number; height: number } | null>(null)
+  const picture = natural && natural.id === imageKey ? natural : null
+  const focusBox = image && picture ? captureFocusBox(image, picture) : null
+  const regions = image ? captureRegions(image, captures.skills, captures.locale, picture) : []
+  const zoomToFocus = (box = focusBox, shape: { width: number; height: number } | null = picture) => {
+    const bounds = frame.current?.getBoundingClientRect()
+    if (box && shape && bounds) setZoom(captureBoxZoom(box, shape, bounds.width, bounds.height))
+  }
   useEffect(() => {
     const bounds = frame.current?.getBoundingClientRect()
     setZoom(imageBox && bounds ? captureCardZoom(imageBox, bounds.width, bounds.height) : captureFit)
@@ -480,6 +560,15 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
       ?.querySelector('[aria-current="true"]')
       ?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
   }, [imageKey, imageBox])
+  // Opens the panel on a group, and the page on what that group is the source of.
+  const open = (next: CaptureGroup, member?: CaptureImage) => {
+    const target = captureGroupTarget(next, captures.skills, member ?? next.images[0])
+    if (target) captures.go(target, member?.id)
+    else captures.select(next.key, member?.id)
+  }
+  const pick = (region: CaptureRegion) =>
+    // A part that belongs to the picture already open keeps it, so ratings on a skill screen do not swap the picture.
+    captures.go(region.target, region.target.group === group?.key ? image?.id : undefined)
   const applyZoom = useCallback((update: (zoom: CaptureZoom, width: number, height: number) => CaptureZoom) => {
     const bounds = frame.current?.getBoundingClientRect()
     setZoom((current) => update(current, bounds?.width ?? 0, bounds?.height ?? 0))
@@ -492,7 +581,10 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
   const position = image ? sequence.findIndex((item) => item.image.id === image.id) : -1
   const step = (offset: number) => {
     const target = position >= 0 ? sequence[position + offset] : offset > 0 ? sequence[0] : sequence.at(-1)
-    if (target) captures.select(target.group.key, target.image.id)
+    if (!target) return
+    // Moving into another group, or onto another skin, takes the page along; more pictures of one item do not.
+    if (target.group.key !== group?.key || target.image.skinKey) open(target.group, target.image)
+    else captures.select(target.group.key, target.image.id)
   }
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return
@@ -633,7 +725,7 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                     : "border-transparent bg-muted/40 hover:bg-muted",
                   !item.images.length && item.key !== activeKey && "text-muted-foreground",
                 )}
-                onClick={() => captures.select(item.key)}
+                onClick={() => open(item)}
               >
                 {item.label}
                 <span className="tabular-nums text-muted-foreground">{item.images.length}</span>
@@ -652,6 +744,14 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                 onZoom={applyZoom}
                 onPrevious={position > 0 ? () => step(-1) : undefined}
                 onNext={position < sequence.length - 1 ? () => step(1) : undefined}
+                regions={regions}
+                natural={picture}
+                onReady={(loaded) => {
+                  setNatural({ id: image.id, ...loaded })
+                  // A game screen opens on the part worth reading; a shop card keeps its own framing.
+                  if (!image.box) zoomToFocus(captureFocusBox(image, loaded), loaded)
+                }}
+                onRegion={pick}
               />
               <div className="flex items-center gap-1 border-b px-3 py-1.5">
                 <Button
@@ -679,6 +779,18 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                 >
                   <ZoomIn />
                 </Button>
+                {focusBox && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Phóng vào phần cần đọc"
+                    title="Phóng vào phần cần đọc"
+                    onClick={() => zoomToFocus()}
+                  >
+                    <Focus />
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="ghost"
@@ -713,7 +825,7 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                         !member.box && "w-28",
                         member.id === image.id ? "border-primary" : "border-transparent opacity-80 hover:opacity-100",
                       )}
-                      onClick={() => captures.select(group.key, member.id)}
+                      onClick={() => (member.skinKey ? open(group, member) : captures.select(group.key, member.id))}
                     >
                       {member.box ? (
                         <CaptureCardThumbnail url={captureImageUrl(patchCode ?? "", member)} box={member.box} />

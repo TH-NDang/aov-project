@@ -87,6 +87,7 @@ import {
   heroPageLocation,
   readHeroLocation,
   switchHeroLocation,
+  type HeroContentTab,
   type HeroWorkspaceView,
 } from "./hero-location"
 import { useHeroLocation } from "./use-hero-location"
@@ -98,7 +99,7 @@ import { PublishButton } from "./publish-button"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
 import { HeroContentTabs, HeroStickyBars } from "./hero-content-tabs"
-import { captureFocus } from "./patch-capture-model"
+import { captureFocus, type CaptureTarget } from "./patch-capture-model"
 import { PatchCapturePanel, PatchCaptureToggle } from "./patch-capture-panel"
 import { PatchCaptureProvider, usePatchCaptureWorkspace, type PatchCaptureWorkspace } from "./use-patch-captures"
 import {
@@ -273,6 +274,9 @@ export function PublishingWorkspace({
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [reviewTarget, setReviewTarget] = useState<HeroReviewItem | null>(null)
+  // What the capture panel last led the page to, while the page stays on that tab.
+  const [capturePin, setCapturePin] = useState<{ tab: HeroContentTab; group: string } | null>(null)
+  const [contentReveal, setContentReveal] = useState<{ section: Section; at: number } | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
   const [cause, setCause] = useState<Cause>(translationMode ? "TRANSLATION" : "CONTENT_CORRECTION")
   const [importContext, setImportContext] = useState<ImportContext | null>(null)
@@ -396,6 +400,17 @@ export function PublishingWorkspace({
     focusedProfile && profilePart === "lore" ? "Cốt truyện" : SECTIONS.find(([key]) => key === section)![2]
   const heroName =
     translatedText(preview?.content.PROFILE?.translations ?? [], location.readLocale, ["name"])?.name || "Hồ sơ tướng"
+  // The capture panel can lead the page: picking a group or a part of a screenshot opens what it is the source of.
+  const followCapture = (target: CaptureTarget) => {
+    if (editing || view !== "overview") return
+    setCapturePin(target.tab === "overview" ? { tab: target.tab, group: target.group } : null)
+    updateLocation({
+      tab: target.tab === "overview" ? null : target.tab,
+      ...(target.skill ? { skill: target.skill } : {}),
+      ...(target.skin ? { skin: target.skin } : {}),
+    })
+    setContentReveal(target.section ? { section: target.section, at: Date.now() } : null)
+  }
   const captures = usePatchCaptureWorkspace({
     heroId,
     heroName: preview?.content.PROFILE ? heroName : "",
@@ -410,7 +425,9 @@ export function PublishingWorkspace({
       section,
       skillKey: heroLocationId(urlParams.get("skill")),
       skills: preview?.content.SKILLS?.skills ?? noSkills,
+      pinned: capturePin?.tab === location.tab ? capturePin.group : undefined,
     }),
+    onNavigate: followCapture,
   })
   const publicationPatch = overview.data?.variants.find(
     (variant) => variant.id === revision?.effectiveFromPatchVariantId,
@@ -1122,7 +1139,10 @@ export function PublishingWorkspace({
               {(stuck) => (
                 <HeroContentTabs
                   tab={location.tab}
-                  onTab={(tab) => updateLocation({ tab: tab === "overview" ? null : tab })}
+                  onTab={(tab) => {
+                    setCapturePin(null)
+                    updateLocation({ tab: tab === "overview" ? null : tab })
+                  }}
                   content={preview?.content}
                   videos={!!heroId}
                   editingTab={editing ? reviewTab(section) : null}
@@ -1210,6 +1230,7 @@ export function PublishingWorkspace({
                     patchCode={statPatch?.patchCode}
                     reviewTarget={reviewTarget}
                     onReviewShown={() => setReviewTarget(null)}
+                    reveal={contentReveal}
                     content={preview.content}
                     locale={locale}
                     editable={!!writable}

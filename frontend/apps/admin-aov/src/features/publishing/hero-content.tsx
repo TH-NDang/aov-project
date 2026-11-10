@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from "react"
-import { useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ImageIcon, LayoutDashboard, Pencil, Shirt, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
@@ -133,10 +133,13 @@ function HeroContentBody({
   onSkillLayoutChange,
   reviewTarget,
   onReviewShown,
+  reveal,
   editing,
 }: {
   /** The editor open on the page, if any. */
   editing?: HeroSectionEditing | null
+  /** A part of the overview to bring into view, such as the one a source image was picked for; `at` makes it new. */
+  reveal?: { section: Section; at: number } | null
   reviewTarget?: HeroReviewItem | null
   onReviewShown?: () => void
   content: Content
@@ -211,6 +214,19 @@ function HeroContentBody({
     element.scrollIntoView?.({ block: "center" })
     onReviewShown?.()
   }, [target, activeSkill, onReviewShown, active])
+
+  // Runs after the bars have put the tab back where it was left, so the part asked for wins. A short ring shows which
+  // part was meant once the page settles.
+  useEffect(() => {
+    if (!reveal || active !== reviewTab(reveal.section)) return
+    const part = contentRef.current?.querySelector<HTMLElement>(`#hero-${reveal.section}`)
+    if (!part) return
+    part.scrollIntoView?.({ block: "center", behavior: "smooth" })
+    part.animate?.([{ boxShadow: "0 0 0 2px var(--primary)" }, { boxShadow: "0 0 0 2px transparent" }], {
+      duration: 1400,
+      easing: "ease-out",
+    })
+  }, [reveal, active])
 
   // The section open in an editor shows its state instead of the button; the others wait until it is saved or closed.
   const editAction = (section: Section) => {

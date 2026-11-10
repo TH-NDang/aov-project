@@ -56,6 +56,7 @@ export function captureFocus({
   section,
   skillKey,
   skills,
+  pinned,
 }: {
   view: HeroWorkspaceView
   tab: HeroContentTab
@@ -63,8 +64,11 @@ export function captureFocus({
   section: Section
   skillKey: string
   skills: readonly Skill[]
+  /** A group the panel itself led the page to, such as the attributes, which shares its tab with the overview. */
+  pinned?: string
 }): string {
   if (view === "patch") return captureGroupKeys.patchNotes
+  if (pinned && view === "overview" && !editing) return pinned
   if (view === "history") return captureGroupKeys.overview
   const tabSections: Record<HeroContentTab, Section> = {
     overview: "PROFILE",
@@ -280,6 +284,175 @@ export function captureCardZoom(box: ShopCardBox, width: number, height: number)
   const centerX = left + (box.x + box.width / 2) * fit
   const centerY = top + (box.y + box.height / 2) * fit
   return clampCaptureZoom({ scale, x: width / 2 - centerX * scale, y: height / 2 - centerY * scale }, width, height)
+}
+
+/** Where the hero page shows what a capture is the source of, and the panel group that stays on it. */
+export interface CaptureTarget {
+  tab: HeroContentTab
+  /** The part of the tab to bring into view. */
+  section?: Section
+  skill?: string
+  skin?: string
+  group: string
+}
+
+/** The part of the page a group of captures checks; withheld and unmatched captures have none. */
+export function captureGroupTarget(
+  group: Pick<CaptureGroup, "key">,
+  skills: readonly Skill[],
+  image?: CaptureImage,
+): CaptureTarget | null {
+  const key = group.key
+  if (key === captureGroupKeys.overview) return { tab: "overview", section: "PROFILE", group: key }
+  if (key === captureGroupKeys.attributes) return { tab: "overview", section: "COMBAT_STATS", group: key }
+  if (key === captureGroupKeys.shopPrice) return { tab: "overview", section: "PROFILE", group: key }
+  if (key === captureGroupKeys.skins) return { tab: "skins", skin: image?.skinKey ?? undefined, group: key }
+  if (key === captureGroupKeys.media) return { tab: "media", group: key }
+  const skill = /^skill:(.+)$/.exec(key)?.[1]
+  // A capture of a skill the viewed draft does not have has nothing to open.
+  return skill && skills.some((item) => item.skillKey === skill) ? { tab: "skills", skill, group: key } : null
+}
+
+/** A part of a capture, in fractions of the picture, and the part of the page it is the source of. */
+export interface CaptureRegion {
+  key: string
+  label: string
+  box: { x: number; y: number; width: number; height: number }
+  target: CaptureTarget
+}
+
+type CaptureBox = CaptureRegion["box"]
+
+// The game's hero screen keeps one layout on 20:9 screenshots, measured on the 2400 x 1080 captures of patch
+// 2026-10-30: the details column on the left (ratings, then the passive and three skill icons), and on the right the
+// name, the attribute sheet or the open skill's text.
+const GAME_SCREEN_RATIO = 20 / 9
+const DETAILS_COLUMN: CaptureBox = { x: 0.045, y: 0.22, width: 0.225, height: 0.52 }
+const RATINGS: CaptureBox = { x: 0.07, y: 0.29, width: 0.18, height: 0.27 }
+const SKILL_ICON_CENTERS = [0.0925, 0.1375, 0.1815, 0.226]
+const SKILL_ICON = { y: 0.56, width: 0.042, height: 0.094 }
+const NAME: CaptureBox = { x: 0.735, y: 0.23, width: 0.18, height: 0.18 }
+const SUMMARY: CaptureBox = { x: 0.495, y: 0.12, width: 0.44, height: 0.08 }
+const ATTRIBUTE_SHEET: CaptureBox = { x: 0.495, y: 0.26, width: 0.44, height: 0.54 }
+const SKILL_TEXT: CaptureBox = { x: 0.445, y: 0.02, width: 0.49, height: 0.6 }
+
+/** Whether a picture has the shape of the game screen the regions were measured on. */
+export function isGameScreen(natural: { width: number; height: number } | null | undefined) {
+  return !!natural && natural.height > 0 && Math.abs(natural.width / natural.height - GAME_SCREEN_RATIO) < 0.05
+}
+
+const gameScreenSections: readonly CaptureImage["section"][] = ["OVERVIEW", "ATTRIBUTES", "SKILL"]
+
+/** The parts of a game screenshot that lead to the page: ratings, skill icons, and what the screen was opened on. */
+export function captureRegions(
+  image: CaptureImage,
+  skills: readonly Skill[],
+  locale: string,
+  natural: { width: number; height: number } | null | undefined,
+): CaptureRegion[] {
+  if (image.box || !isGameScreen(natural) || !gameScreenSections.includes(image.section)) return []
+  const regions: CaptureRegion[] = [
+    {
+      key: "ratings",
+      label: "Đánh giá",
+      box: RATINGS,
+      target: { tab: "overview", section: "OVERVIEW_RATINGS", group: captureGroupKeys.overview },
+    },
+  ]
+  const draft = ordered(skills)
+  SKILL_ICON_CENTERS.forEach((center, slot) => {
+    const skill = draft.find((item) => skillSlot(item) === slot)
+    if (!skill) return
+    const name = selectSkillTranslation(skill, locale)?.name
+    regions.push({
+      key: `skill-${slot}`,
+      label: name ? `${skillLabel(skill)} · ${name}` : skillLabel(skill),
+      box: { x: center - SKILL_ICON.width / 2, ...SKILL_ICON },
+      target: { tab: "skills", skill: skill.skillKey, group: captureGroupKeys.skill(skill.skillKey) },
+    })
+  })
+  if (image.section === "OVERVIEW")
+    regions.push({
+      key: "name",
+      label: "Thông tin tướng",
+      box: NAME,
+      target: { tab: "overview", section: "PROFILE", group: captureGroupKeys.overview },
+    })
+  if (image.section === "ATTRIBUTES")
+    regions.push(
+      {
+        key: "summary",
+        label: "Giới thiệu",
+        box: SUMMARY,
+        target: { tab: "overview", section: "PROFILE", group: captureGroupKeys.overview },
+      },
+      {
+        key: "attributes",
+        label: "Thuộc tính chiến đấu",
+        box: ATTRIBUTE_SHEET,
+        target: { tab: "overview", section: "COMBAT_STATS", group: captureGroupKeys.attributes },
+      },
+    )
+  const shown = image.section === "SKILL" ? draft.find((item) => item.skillKey === image.skillKey) : undefined
+  if (shown)
+    regions.push({
+      key: "skill-text",
+      label: `Mô tả ${skillLabel(shown).toLocaleLowerCase("vi")}`,
+      box: SKILL_TEXT,
+      target: { tab: "skills", skill: shown.skillKey, group: captureGroupKeys.skill(shown.skillKey) },
+    })
+  return regions
+}
+
+/** The part of a game screenshot worth reading first: the details column, the attribute sheet or the skill text. */
+export function captureFocusBox(
+  image: CaptureImage,
+  natural: { width: number; height: number } | null | undefined,
+): CaptureBox | null {
+  if (image.box || !isGameScreen(natural)) return null
+  if (image.section === "OVERVIEW") return DETAILS_COLUMN
+  if (image.section === "ATTRIBUTES") return ATTRIBUTE_SHEET
+  if (image.section === "SKILL") return SKILL_TEXT
+  return null
+}
+
+/** Opens a picture on a part of it given in fractions, the way a shop card is opened. */
+export function captureBoxZoom(
+  box: CaptureBox,
+  natural: { width: number; height: number },
+  width: number,
+  height: number,
+): CaptureZoom {
+  return captureCardZoom(
+    {
+      x: box.x * natural.width,
+      y: box.y * natural.height,
+      width: box.width * natural.width,
+      height: box.height * natural.height,
+      imageWidth: natural.width,
+      imageHeight: natural.height,
+    },
+    width,
+    height,
+  )
+}
+
+/** Where a part of the picture sits in the frame, after the picture is fitted and zoomed. */
+export function captureBoxOnScreen(
+  box: CaptureBox,
+  natural: { width: number; height: number },
+  frame: { width: number; height: number },
+  zoom: CaptureZoom,
+) {
+  const fit = Math.min(frame.width / natural.width, frame.height / natural.height)
+  const left = (frame.width - natural.width * fit) / 2
+  const top = (frame.height - natural.height * fit) / 2
+  return {
+    left: zoom.x + (left + box.x * natural.width * fit) * zoom.scale,
+    top: zoom.y + (top + box.y * natural.height * fit) * zoom.scale,
+    width: box.width * natural.width * fit * zoom.scale,
+    height: box.height * natural.height * fit * zoom.scale,
+  }
 }
 
 /** Zooms around a point in the frame; that point stays under the pointer. */
