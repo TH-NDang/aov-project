@@ -178,7 +178,7 @@ class HeroFormsIntegrationTest {
                 .containsEntry("id", holder.toString()).containsEntry("formKey", "mid");
 
         var fromForm = send(get(ROOT + "/admin/heroes/" + mid + "/forms"), null, 200);
-        assertThat(fromForm).containsEntry("formKey", "mid");
+        assertThat(fromForm).containsEntry("formKey", "mid").containsEntry("code", "flowborn-mid");
         assertThat((Map<String, Object>) fromForm.get("holder")).containsEntry("id", holder.toString());
         assertThat(send(get(ROOT + "/admin/heroes/" + ad + "/forms?unknown=1"), null, 400)).isNotNull();
 

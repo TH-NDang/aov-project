@@ -4233,6 +4233,7 @@
         "description": "Nút đổi dạng của một tướng (ADR-024). holder là tướng chứa dạng; formKey chỉ có khi tướng được hỏi là một dạng.",
         "required": [
           "heroId",
+          "code",
           "holder",
           "formKey",
           "forms"
@@ -4241,6 +4242,9 @@
           "heroId": {
             "type": "string",
             "format": "uuid"
+          },
+          "code": {
+            "type": "string"
           },
           "holder": {
             "allOf": [

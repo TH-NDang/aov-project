@@ -72,13 +72,13 @@ public class HeroForms {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     public HeroFormsView view(UUID heroId) {
-        store.requireHero(heroId);
+        var hero = store.requireHero(heroId);
         var structure = structure();
         UUID holderId = structure.holdsForms(heroId)
                 ? heroId
                 : structure.form(heroId).map(Form::holderId).orElse(null);
         if (holderId == null)
-            return new HeroFormsView(heroId, null, null, List.of());
+            return new HeroFormsView(heroId, hero.getCode(), null, null, List.of());
 
         var members = structure.formsOf(holderId);
         var ids = Stream.concat(Stream.of(holderId), members.stream().map(Form::heroId)).toList();
@@ -100,7 +100,7 @@ public class HeroForms {
                     rows.stream().anyMatch(row -> row.state().equals("DRAFT")));
         }).toList();
 
-        return new HeroFormsView(heroId, holder,
+        return new HeroFormsView(heroId, hero.getCode(), holder,
                 structure.form(heroId).map(Form::formKey).orElse(null), entries);
     }
 

@@ -13,6 +13,7 @@ import java.util.UUID;
  */
 public record HeroFormsView(
         UUID heroId,
+        String code,
         Holder holder,
         String formKey,
         List<Form> forms

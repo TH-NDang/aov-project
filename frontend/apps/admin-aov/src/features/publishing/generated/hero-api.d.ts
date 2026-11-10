@@ -1265,6 +1265,7 @@ export interface components {
     HeroForms: {
       /** Format: uuid */
       heroId: string
+      code: string
       holder: components["schemas"]["HeroFormsHolder"] | null
       formKey: string | null
       forms: components["schemas"]["HeroForm"][]
