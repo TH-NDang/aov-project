@@ -110,6 +110,9 @@ Không có middleware này (bản build triển khai) thì nút tự ẩn.
 
 - Bộ ảnh của một patch là `resources/extracted/<mùa>/<patch>/`, ảnh lấy từ ZIP lồng trong `resources/raw/`.
   Worktree không có `resources/raw` sẽ tìm ở thư mục cha, hoặc đặt `AOV_RESOURCES_DIR`.
+- Lượt chụp bổ sung cho cùng patch được ghi vào `supplements` của `source-manifest.json` (tên ZIP trong `resources/raw/`,
+  SHA-256 và danh sách ZIP con). Ảnh của ZIP con có tên trong danh sách đó được lấy từ ZIP bổ sung; hai lượt không được trùng
+  tên ZIP con.
 - Mỗi ảnh nối theo bản rà soát (`manual/import-rows.json`, `manual-attribute-sources.json`, `manual/source-gaps.json`),
   chỉ ảnh tổng quan nối theo tên tệp. Ảnh bị loại hoặc chưa rõ mục không bao giờ gắn vào kỹ năng trùng tên.
 - Lần đầu đọc một ZIP con mất vài giây vì phải giải nén cả ZIP đó vào `%TEMP%/aov-patch-captures`
@@ -128,7 +131,8 @@ Trang **Sẵn sàng xuất bản** có thêm cột **Ảnh gốc cần chụp** 
 đối chiếu với bộ ảnh của patch của nó; patch chưa có bộ ảnh thì dùng bộ mới nhất. Cách tính nằm ở
 `src/features/publishing/source-image-gaps.ts`:
 
-- **Chỉ số**: không có ảnh thuộc tính, ảnh chỉ chụp trang tướng (mọi số đều không thấy) hoặc bị che một phần.
+- **Chỉ số**: không có ảnh thuộc tính, ảnh chỉ chụp trang tướng (mọi số đều không thấy) hoặc bị che một phần. Tướng mà
+  màn Thuộc tính không có dòng tài nguyên (như Charlotte) ghi `noResource: true` trong bản đọc, nên không bị tính là che.
 - **Trang tướng**: không có cả ảnh tổng quan lẫn ảnh thuộc tính, nên không đối chiếu được đánh giá và sở trường.
 - **Kỹ năng**: chưa có ảnh, ảnh mang tên kỹ năng nhưng chụp màn hình khác, mô tả bị cắt, hoặc chưa thấy bảng cấp chiêu.
   Kỹ năng chưa có trong bản nháp nhưng bộ ảnh có nhắc tới (ví dụ nội tại bị loại khi rà soát) cũng được liệt kê.
