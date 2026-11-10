@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
 import { zipSync } from "fflate"
-import { buildCaptureManifest, type CaptureDatasetFiles } from "../server/patch-capture-manifest"
+import { buildCaptureManifest, sourceArchiveOf, type CaptureDatasetFiles } from "../server/patch-capture-manifest"
 import { createPatchCaptureHandler, findResourcesRoot } from "../server/patch-captures"
 
 const png = (text: string) => new TextEncoder().encode(`\x89PNG fixture ${text}`)
@@ -325,6 +325,62 @@ test("every hero's coverage is served and read again once a reviewer adds to the
     )
     const after = await read()
     assert.deepEqual(after.heroes[1]!.attributes[0]!.values, { health: 3400 }, "no restart needed")
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+test("a later capture run lists its own inner archives, and two runs may not share one", () => {
+  const later = { archive: "later.zip", sha256: "c".repeat(64), innerArchives: ["01_later.zip"] }
+  const manifest = buildCaptureManifest(
+    dataset({ sourceManifest: { ...dataset().sourceManifest, supplements: [later] } }),
+  )
+  assert.deepEqual(sourceArchiveOf(manifest, "01_later.zip"), { archive: "later.zip", sha256: "c".repeat(64) })
+  assert.deepEqual(sourceArchiveOf(manifest, INNER), { archive: "outer.zip", sha256: "a".repeat(64) })
+
+  const twice = { ...later, archive: "again.zip", sha256: "d".repeat(64) }
+  assert.throws(
+    () =>
+      buildCaptureManifest(dataset({ sourceManifest: { ...dataset().sourceManifest, supplements: [later, twice] } })),
+    /01_later\.zip is listed by two capture runs/,
+  )
+})
+
+test("an image from a later capture run is served from that run's archive", async () => {
+  const { root, directory, cache, worktree } = await fixtureRepository()
+  try {
+    const bytes = png("airi/later attributes")
+    const member = "pick-airi/airi/0450-hero-024-attributes.png"
+    const ref = { archive: "01_later.zip", member, sha256: sha(bytes), file_name: "0450-hero-024-attributes.png" }
+    const inner = zipSync({ [member]: bytes }, { level: 6 })
+    await writeFile(join(root, "resources", "raw", "later.zip"), zipSync({ "01_later.zip": inner }, { level: 1 }))
+    const files = dataset()
+    const supplements = [{ archive: "later.zip", sha256: "c".repeat(64), innerArchives: ["01_later.zip"] }]
+    await writeFile(join(directory, "source-manifest.json"), JSON.stringify({ ...files.sourceManifest, supplements }))
+    const airiRecord = files.evidence[0]!
+    await writeFile(
+      join(directory, "evidence", "airi.json"),
+      JSON.stringify({ ...airiRecord, pages: [...airiRecord.pages, { source: ref }] }),
+    )
+    await writeFile(
+      join(directory, "manual-attribute-sources.json"),
+      JSON.stringify([...files.attributeSources, { heroCode: "airi", source: ref, index: 3 }]),
+    )
+
+    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache })
+    const picture = await request(handler, `/2026-10-30/images/${ref.sha256}.png`)
+    assert.equal(picture.status, 200)
+    assert.deepEqual(new Uint8Array(picture.body), bytes)
+    await stat(join(cache, "c".repeat(16), "01_later.zip"))
+
+    const earlier = await request(handler, `/2026-10-30/images/${airi.skillOne.ref.sha256}.png`)
+    assert.deepEqual(new Uint8Array(earlier.body), airi.skillOne.bytes, "the set's own archive still serves its images")
+
+    const hero = JSON.parse((await request(handler, "/2026-10-30/heroes/airi.json")).body.toString()) as {
+      images: { fileName: string; section: string; link: string }[]
+    }
+    const later = hero.images.find((item) => item.fileName === ref.file_name)!
+    assert.deepEqual([later.section, later.link], ["ATTRIBUTES", "REVIEWED"])
   } finally {
     await rm(root, { recursive: true, force: true })
   }
