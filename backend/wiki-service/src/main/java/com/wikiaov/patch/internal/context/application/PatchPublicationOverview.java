@@ -3,8 +3,10 @@ package com.wikiaov.patch.internal.context.application;
 import com.wikiaov.patch.internal.application.response.PublicationOverviewView.ReleaseView;
 import com.wikiaov.patch.internal.application.response.PublicationOverviewView.VariantView;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
+import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatch;
+import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatchTranslation;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
 import com.wikiaov.patch.internal.release.persistence.PatchReleaseRepository;
 import com.wikiaov.patch.internal.release.persistence.entity.PatchRelease;
@@ -27,13 +29,15 @@ class PatchPublicationOverview {
     private final PatchReleaseRepository releases;
     private final PatchVariantRepository variants;
     private final GamePatchRepository patches;
+    private final GamePatchTranslationRepository texts;
 
     PatchPublicationOverview(PatchDataReviewRepository reviews, PatchReleaseRepository releases,
-            PatchVariantRepository variants, GamePatchRepository patches) {
+            PatchVariantRepository variants, GamePatchRepository patches, GamePatchTranslationRepository texts) {
         this.reviews = reviews;
         this.releases = releases;
         this.variants = variants;
         this.patches = patches;
+        this.texts = texts;
     }
 
     record Timeline(
@@ -41,7 +45,8 @@ class PatchPublicationOverview {
             List<PatchVariant> variants,
             Map<UUID, PatchVariant> variantsById,
             Map<UUID, GamePatch> patchesById,
-            Map<UUID, PatchDataReview> reviewsById
+            Map<UUID, PatchDataReview> reviewsById,
+            Map<UUID, String> titlesByPatch
     ) {
     }
 
@@ -55,7 +60,16 @@ class PatchPublicationOverview {
         var allVariants = variants.findAll();
         var variantsById = allVariants.stream().collect(Collectors.toMap(PatchVariant::getId, Function.identity()));
         var patchesById = patches.findAll().stream().collect(Collectors.toMap(GamePatch::getId, Function.identity()));
-        return new Timeline(allReleases, allVariants, variantsById, patchesById, reviewsById);
+        return new Timeline(allReleases, allVariants, variantsById, patchesById, reviewsById, titles());
+    }
+
+    /** Admin edits in Vietnamese, the product's language, so its title wins over the other locales. */
+    private Map<UUID, String> titles() {
+        return texts.findAll().stream()
+                .sorted(Comparator.comparing((GamePatchTranslation text) -> !"vi-VN".equals(text.getLocale()))
+                        .thenComparing(GamePatchTranslation::getLocale))
+                .collect(Collectors.toMap(GamePatchTranslation::getPatchId, GamePatchTranslation::getTitle,
+                        (first, ignored) -> first));
     }
 
     List<VariantView> variants(Timeline timeline) {
@@ -72,7 +86,8 @@ class PatchPublicationOverview {
     private static VariantView variantView(PatchVariant variant, Timeline timeline) {
         var review = timeline.reviewsById().get(variant.getId());
         return new VariantView(variant.getId(), variant.getPatchId(),
-                timeline.patchesById().get(variant.getPatchId()).getCode(), variant.getRulesetId(),
+                timeline.patchesById().get(variant.getPatchId()).getCode(),
+                timeline.titlesByPatch().get(variant.getPatchId()), variant.getRulesetId(),
                 variant.getRulesetOrdinal(), variant.getSeasonId(), variant.getStatus(),
                 review == null ? "IN_PROGRESS" : review.getState(), review == null ? 0L : review.getVersion(),
                 review == null ? null : review.getCompletedAt());

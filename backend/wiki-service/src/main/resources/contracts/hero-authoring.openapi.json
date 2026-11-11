@@ -2110,6 +2110,10 @@
           "patchCode": {
             "type": "string"
           },
+          "patchTitle": {
+            "type": "string",
+            "nullable": true
+          },
           "rulesetId": {
             "type": "string"
           },

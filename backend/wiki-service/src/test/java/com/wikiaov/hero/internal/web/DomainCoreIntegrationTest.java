@@ -166,6 +166,28 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    void renamesAPatchInOneLocaleAndKeepsItsCode() throws Exception {
+        String title = ROOT + "/admin/patches/" + patch + "/title";
+        mvc.perform(put(title).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"locale\":\"vi-VN\",\"title\":\"x\"}")
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read"))))
+                .andExpect(status().isForbidden());
+
+        send(put(title), Map.of("locale", "vi-VN", "title", "  Điều chỉnh giữa mùa  "), 204);
+        send(put(title), Map.of("locale", "en-US", "title", "Mid-season balance"), 204);
+        send(put(title), Map.of("locale", "vi-VN", "title", " "), 400);
+        send(put(ROOT + "/admin/patches/" + UUID.randomUUID() + "/title"), Map.of("locale", "vi-VN", "title", "x"),
+                404);
+
+        var overview = send(get(ROOT + "/admin/publication-overview"), null, 200);
+        var row = ((List<Map<String, Object>>) overview.get("variants")).stream()
+                .filter(v -> variant.toString().equals(v.get("id"))).findFirst().orElseThrow();
+        assertThat(row).containsEntry("patchTitle", "Điều chỉnh giữa mùa").containsEntry("patchCode", "patch-test-1");
+        assertThat(jdbc.sql("SELECT summary FROM patch.game_patch_translation WHERE patch_id=? ORDER BY locale")
+                .param(patch).query(String.class).list()).containsExactly("", "Dữ liệu kiểm thử");
+    }
+
+    @Test
     void adminCanResumePatchSetupAndIncompleteHeroPublicationIsRejected() throws Exception {
         mvc.perform(get(ROOT + "/admin/patches")).andExpect(status().isUnauthorized());
         var catalog = send(get(ROOT + "/admin/patches?page=0&size=20"), null, 200);

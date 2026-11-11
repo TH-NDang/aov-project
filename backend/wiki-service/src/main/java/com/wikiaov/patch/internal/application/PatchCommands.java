@@ -41,6 +41,13 @@ public final class PatchCommands {
     ) {
     }
 
+    /** A patch's display title in one locale; the code and the other texts stay as they are. */
+    public record Title(
+            @NotBlank @Size(max = 16) String locale,
+            @NotBlank @Size(max = 200) String title
+    ) {
+    }
+
     public record Patch(
             @NotBlank @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") @Size(max = 64) String code,
             @NotEmpty @Size(max = 30) List<@Valid Translation> translations

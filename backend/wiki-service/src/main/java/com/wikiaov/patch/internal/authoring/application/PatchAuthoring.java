@@ -50,6 +50,11 @@ public class PatchAuthoring {
     }
 
     @PreAuthorize("hasAuthority('patch:write')")
+    public void rename(UUID patchId, Title input) {
+        drafts.rename(patchId, input);
+    }
+
+    @PreAuthorize("hasAuthority('patch:write')")
     public UUID variant(UUID patchId, Variant input) {
         return drafts.variant(patchId, input);
     }

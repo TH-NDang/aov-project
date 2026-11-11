@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import com.wikiaov.patch.internal.application.response.PublicationOverviewView.ReleaseView;
 import com.wikiaov.patch.internal.application.response.PublicationOverviewView.SeasonScheduleView;
 import com.wikiaov.patch.internal.authoring.persistence.GamePatchRepository;
+import com.wikiaov.patch.internal.authoring.persistence.GamePatchTranslationRepository;
 import com.wikiaov.patch.internal.authoring.persistence.PatchVariantRepository;
 import com.wikiaov.patch.internal.authoring.persistence.entity.GamePatch;
 import com.wikiaov.patch.internal.authoring.persistence.entity.PatchVariant;
@@ -65,7 +66,7 @@ class PublicationOverviewProjectionTests {
     void distinguishesDateAnnouncementsFromCurrentPastUpcomingAndCancelledReleases() {
         var renderer = new PatchPublicationOverview(mock(PatchDataReviewRepository.class),
                 mock(PatchReleaseRepository.class), mock(PatchVariantRepository.class),
-                mock(GamePatchRepository.class));
+                mock(GamePatchRepository.class), mock(GamePatchTranslationRepository.class));
         var variant = variant("PUBLISHED");
         var past = release(variant, "SCHEDULED", now.minusSeconds(1), 1);
         var current = release(variant, "SCHEDULED", now, 2);
@@ -191,6 +192,6 @@ class PublicationOverviewProjectionTests {
         patch.setStatus("PUBLISHED");
         patch.setCode("fixture");
         return new Timeline(releases, List.of(variant), Map.of(variant.getId(), variant), Map.of(patchId, patch),
-                Map.of());
+                Map.of(), Map.of(patchId, "Fixture"));
     }
 }

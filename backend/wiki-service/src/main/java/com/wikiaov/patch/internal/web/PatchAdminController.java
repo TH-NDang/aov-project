@@ -61,6 +61,12 @@ public class PatchAdminController implements PatchAdminApi {
         return Map.of("id", authoring.patch(body));
     }
 
+    @PutMapping(path = "/patches/{id}/title", version = "1")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void title(@PathVariable UUID id, @RequestBody Title body) {
+        authoring.rename(id, body);
+    }
+
     @PostMapping(path = "/season-patches", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, UUID> seasonPatch(@RequestBody SeasonPatch body) {

@@ -64,6 +64,18 @@ public class PatchDrafts {
         return id;
     }
 
+    /** Renames the patch in one locale, adding that locale's text when the patch has none yet. */
+    public void rename(UUID patchId, Title input) {
+        patches.lockById(patchId).orElseThrow(PatchDrafts::notFound);
+        String title = input.title().strip();
+
+        if (translations.rename(patchId, input.locale(), title) == 0)
+            persist(() -> translations.saveAndFlush(new GamePatchTranslation(patchId, input.locale(), title, "",
+                    null)));
+
+        record("PATCH_RENAMED", patchId);
+    }
+
     public UUID variant(UUID patchId, Variant input) {
         rulesets.lockById(input.rulesetId()).orElseThrow(PatchDrafts::notFound);
         patches.lockById(patchId).orElseThrow(PatchDrafts::notFound);

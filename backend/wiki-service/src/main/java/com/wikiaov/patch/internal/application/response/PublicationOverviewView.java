@@ -59,6 +59,7 @@ public final class PublicationOverviewView {
             UUID id,
             UUID patchId,
             String patchCode,
+            String patchTitle,
             UUID rulesetId,
             long rulesetOrdinal,
             UUID seasonId,
