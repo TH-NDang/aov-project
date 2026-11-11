@@ -17,8 +17,15 @@ export interface HeroMedia {
   }
 }
 
+/** Set when the selected patch has no observation of the hero yet and its data comes from a later patch. */
+export interface HeroLaterObservation {
+  patchVariantId: string
+  patchCode: string
+}
+
 export interface HeroListItem {
   unscopedBaseline?: boolean
+  laterObservation?: HeroLaterObservation
   id: string
   code: string
   revisionId: string
@@ -35,6 +42,7 @@ export interface HeroListItem {
 /** One form inside a hero's list entry: what the switcher and the library need without loading the form. */
 export interface HeroListForm {
   unscopedBaseline?: boolean
+  laterObservation?: HeroLaterObservation
   id: string
   code: string
   formKey: string
@@ -97,6 +105,7 @@ export interface PublicSkill {
 
 export interface HeroDetail {
   unscopedBaseline?: boolean
+  laterObservation?: HeroLaterObservation
   id: string
   code: string
   revisionId: string

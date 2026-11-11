@@ -5,6 +5,8 @@ export interface PublishedChange {
   summary?: string | null
   actualLocale?: string | null
   sourceUrl?: string | null
+  /** The hero joined the game in this update (ADR-016). */
+  introducesHero?: boolean
   subject?: { id: string; code: string; displayName?: string }
   patchVariantId?: string
   changeKinds?: string[]

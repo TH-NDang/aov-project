@@ -524,6 +524,15 @@ a.wiki-patch-subject-link:hover strong {
   font: var(--wiki-type-meta);
   color: var(--aov-muted);
 }
+.wiki-patch-new {
+  font: var(--wiki-type-meta);
+  margin-left: 8px;
+  border: 1px solid var(--aov-accent);
+  border-radius: var(--aov-radius-pill);
+  padding: 1px 8px;
+  color: var(--aov-accent);
+  vertical-align: middle;
+}
 .wiki-patch-overall {
   display: inline-flex;
   flex: none;

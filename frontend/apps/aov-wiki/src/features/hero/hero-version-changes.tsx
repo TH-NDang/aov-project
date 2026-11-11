@@ -181,12 +181,17 @@ export function HeroVersionChanges({
           )}
         </div>
         <p>
-          {lastChange
+          {hero.laterObservation
             ? text(
-                `Nội dung bên dưới giống bản ${lastChange.code}.`,
-                `The content below is the same as ${lastChange.code}.`,
+                `Ghi chú cập nhật của bản ${selected.code} không nhắc đến ${name}.`,
+                `The ${selected.code} patch notes do not mention ${name}.`,
               )
-            : text("Tướng chưa có thay đổi nào được ghi nhận.", "No changes have been recorded for this hero.")}
+            : lastChange
+              ? text(
+                  `Nội dung bên dưới giống bản ${lastChange.code}.`,
+                  `The content below is the same as ${lastChange.code}.`,
+                )
+              : text("Tướng chưa có thay đổi nào được ghi nhận.", "No changes have been recorded for this hero.")}
         </p>
       </section>
     )

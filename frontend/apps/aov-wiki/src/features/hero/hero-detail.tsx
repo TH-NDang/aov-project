@@ -15,6 +15,7 @@ import { HERO_POSITIONS, HERO_ROLES, localizedHeroOptions } from "./hero-classif
 import { HeroGlyph } from "./hero-glyph"
 import { HeroQuickSwitch } from "./hero-quick-switch"
 import { HeroDetailLoading } from "./hero-loading"
+import { HeroLaterObservationNote } from "./hero-later-observation"
 import { WikiImage } from "../../components/wiki-image"
 import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
 import "./hero-detail.css"
@@ -174,7 +175,13 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
       </div>
     </section>
   )
-  const picker = <WikiVersionPicker changedVariants={history.data} />
+  const later = page?.laterObservation
+  const picker = (
+    <>
+      <WikiVersionPicker changedVariants={history.data} />
+      {later && <HeroLaterObservationNote later={later} />}
+    </>
+  )
 
   return (
     <HeroDetailLayout

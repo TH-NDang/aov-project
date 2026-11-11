@@ -72,7 +72,12 @@ function HeroRow({
     <>
       <span className="wiki-patch-subject-art">{image ? <WikiImage src={image} alt="" /> : name.charAt(0)}</span>
       <span className="wiki-patch-subject-name">
-        <strong>{name}</strong>
+        <strong>
+          {name}
+          {row.introducesHero && (
+            <span className="wiki-patch-new">{wikiText(scope.locale, "Tướng mới", "New hero")}</span>
+          )}
+        </strong>
         {count > 0 && <small>{wikiText(scope.locale, `${count} thay đổi`, `${count} changes`)}</small>}
       </span>
     </>

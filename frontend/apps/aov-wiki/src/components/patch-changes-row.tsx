@@ -18,6 +18,7 @@ const labels: Record<string, [string, string]> = {
   NERF: ["Giảm sức mạnh", "Nerf"],
   REWORK: ["Làm lại", "Rework"],
   FIX: ["Sửa lỗi", "Fix"],
+  RELEASE: ["Ra mắt", "New hero"],
   ADJUSTMENT: ["Điều chỉnh", "Adjustment"],
   BALANCE: ["Cân bằng", "Balance"],
   UPDATED: ["Cập nhật", "Updated"],

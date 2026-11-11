@@ -56,7 +56,13 @@ export function UpdatesPage() {
             <h2>{seasons.find((season) => season.id === seasonId)?.displayName ?? t("updates")}</h2>
             <ol>
               {[...items]
-                .sort((a, b) => b.sequence - a.sequence)
+                // Patches follow the game's order; the creation sequence only breaks ties, since older patches
+                // can be entered after newer ones.
+                .sort(
+                  (a, b) =>
+                    (variants.get(b.variantId)?.ordinal ?? 0) - (variants.get(a.variantId)?.ordinal ?? 0) ||
+                    b.sequence - a.sequence,
+                )
                 .map((release) => {
                   const variant = variants.get(release.variantId)
                   return (
