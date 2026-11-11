@@ -71,9 +71,9 @@ export function captureFocus({
   /** A group the panel itself led the page to, such as the attributes, which shares its tab with the overview. */
   pinned?: string
 }): string {
-  if (view === "patch") return captureGroupKeys.patchNotes
+  // The history view holds the change notes patch by patch, so its pictures are the patch notes.
+  if (view === "history") return captureGroupKeys.patchNotes
   if (pinned && view === "overview" && !editing) return pinned
-  if (view === "history") return captureGroupKeys.overview
   const tabSections: Record<HeroContentTab, Section> = {
     overview: "PROFILE",
     skills: "SKILLS",

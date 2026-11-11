@@ -289,7 +289,7 @@ function countText({ counts, loading = false, showCounts = true }: TimelineProps
   const count = counts?.get(variant.id)
   if (!count) return "Chưa tải thống kê"
   const parts = [count.changes > 0 ? `${count.changes} mục thay đổi` : "Chưa ghi nhận thay đổi"]
-  if (count.baseline > 0) parts.push(`${count.baseline} mục dữ liệu nền`)
+  if (count.baseline > 0) parts.push(`${count.baseline} mục nhập dữ liệu`)
   return parts.join(" · ")
 }
 

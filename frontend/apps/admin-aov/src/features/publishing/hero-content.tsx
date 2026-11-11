@@ -19,8 +19,7 @@ import { HeroAsset } from "./hero-asset"
 import { ImageCreditSummary } from "./image-credit-summary"
 import { HeroSkinsView } from "./hero-skins-view"
 import { visibleSkins } from "./hero-skins"
-import { heroContentSectionId, heroContentTabId, heroContentTabs } from "./hero-content-tabs"
-import { MediaPreview, SkillsPreview, SkinsPreview, VideosPreview, type OpenHeroTab } from "./hero-overview-previews"
+import { heroContentSectionId, heroContentTabs } from "./hero-content-tabs"
 export { HeroAsset } from "./hero-asset"
 
 export { heroContentSectionId } from "./hero-content-tabs"
@@ -106,9 +105,8 @@ export function HeroContent(props: Parameters<typeof HeroContentBody>[0]) {
 }
 
 /**
- * The hero's content in tabs: an overview that gathers the profile, the ratings and a short look at every other tab,
- * then skills, skins, images and videos in full. A tab is built the first time it is opened and then kept, so coming
- * back to it finds it as it was left.
+ * The hero's content on one page: the profile beside its ratings and attributes, then skills, skins, images and videos
+ * in full. Each part keeps its own pencil while the version is a draft.
  */
 function HeroContentBody({
   content,
@@ -124,8 +122,6 @@ function HeroContentBody({
   onTranslate,
   canWrite = false,
   issues,
-  tab = "overview",
-  onTabChange,
   heroId,
   selectedSkillKey,
   onSkillChange,
@@ -160,10 +156,6 @@ function HeroContentBody({
   canWrite?: boolean
   issues?: string[]
   onTranslate?: (target: TranslationTarget) => void
-  /** The tab an address asks for. */
-  tab?: HeroContentTab
-  /** A preview on the overview asked for its tab in full. */
-  onTabChange?: OpenHeroTab
   heroId?: string
   selectedSkillKey?: string
   onSkillChange?: (key: string) => void
@@ -174,24 +166,14 @@ function HeroContentBody({
   // The base appearance repeats the hero's own images, which the Images section already shows.
   const skins = visibleSkins(content.SKINS?.skins ?? [])
   const [localSkill, setLocalSkill] = useState<string>()
-  const [localTab, setLocalTab] = useState<HeroContentTab>()
   const contentRef = useRef<HTMLDivElement>(null)
-  const requested = onTabChange ? tab : (localTab ?? tab)
-  const active: HeroContentTab = requested === "videos" && !heroId ? "overview" : requested
-  // Tabs are built when first opened and then kept, with what was chosen and loaded in them.
-  const [built, setBuilt] = useState<ReadonlySet<HeroContentTab>>(() => new Set([active]))
-  if (!built.has(active)) setBuilt(new Set([...built, active]))
   const activeSkill = selectedSkillKey ?? localSkill
   const target = reviewTarget
   const editingTab = editing ? reviewTab(editing.section) : null
   const name = profile?.name || "Tướng"
 
-  const open: OpenHeroTab = (next) => (onTabChange ? onTabChange(next) : setLocalTab(next))
-
   useLayoutEffect(() => {
     if (!target?.section) return
-    // The warning is found once its tab is the open one.
-    if (active !== reviewTab(target.section)) return
     if (target.skillKey && activeSkill !== target.skillKey) return
     const section = contentRef.current?.querySelector<HTMLElement>(`#hero-${target.section}`)
     if (!section) return
@@ -216,12 +198,12 @@ function HeroContentBody({
     element.focus({ preventScroll: true })
     element.scrollIntoView?.({ block: "center" })
     onReviewShown?.()
-  }, [target, activeSkill, onReviewShown, active])
+  }, [target, activeSkill, onReviewShown])
 
   // Runs after the bars have put the tab back where it was left, so the part asked for wins. A short ring shows which
   // part was meant once the page settles.
   useEffect(() => {
-    if (!reveal || active !== reviewTab(reveal.section)) return
+    if (!reveal) return
     const part = contentRef.current?.querySelector<HTMLElement>(`#hero-${reveal.section}`)
     if (!part) return
     part.scrollIntoView?.({ block: "center", behavior: "smooth" })
@@ -229,11 +211,12 @@ function HeroContentBody({
       duration: 1400,
       easing: "ease-out",
     })
-  }, [reveal, active])
+  }, [reveal])
 
   // The section open in an editor shows its state instead of the button; the others wait until it is saved or closed.
   const editAction = (section: Section) => {
-    if (editing?.section === section) return null
+    // A published version is edited through the pencil in the header, which starts the draft first.
+    if (editing?.section === section || !editable) return null
     const label = SECTIONS.find(([key]) => key === section)![2]
     const buttonLabel = editing
       ? `Chỉnh sửa ${label} · ${LOCKED}`
@@ -295,32 +278,20 @@ function HeroContentBody({
           {editing!.node}
         </TabSection>
       ) : (
-        // Ratings, attributes and the smaller previews run beside the hero card and the skills while reading; a
-        // narrow page takes them in order of weight: card, skills, ratings, skins, images, videos.
+        // The hero card and its ratings form one row of equal height; the combat attributes take a full row under
+        // them, and the skills follow. A narrow page stacks everything in that order.
         <div className="@container/overview">
-          <div className="grid items-start gap-6 @min-[820px]/overview:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="contents @min-[820px]/overview:block @min-[820px]/overview:min-w-0 @min-[820px]/overview:space-y-6">
-              <div className={cn("order-1 min-w-0", sectionFrame)}>
-                <HeroOverviewCard {...overview} />
-              </div>
-              <SkillsPreview
-                className="order-2"
-                skills={content.SKILLS?.skills ?? []}
-                heroId={heroId}
-                locale={locale}
-                selectedSkillKey={activeSkill}
-                onSkillChange={onSkillChange ?? setLocalSkill}
-                onOpen={open}
-              />
-              <SkinsPreview className="order-4" skins={skins} locale={locale} onOpen={open} />
+          <div className="grid items-stretch gap-6 @min-[820px]/overview:grid-cols-[minmax(0,1fr)_22rem]">
+            <div className={cn("flex min-w-0 flex-col", sectionFrame)}>
+              <HeroOverviewCard {...overview} />
             </div>
-            <div className="contents @min-[820px]/overview:block @min-[820px]/overview:min-w-0 @min-[820px]/overview:space-y-6">
-              <aside aria-label="Đánh giá và thuộc tính" className={cn("order-3 min-w-0", sectionFrame)}>
-                <HeroOverviewFacts {...overview} />
-              </aside>
-              <MediaPreview className="order-5" content={content} name={name} onOpen={open} />
-              {heroId && <VideosPreview className="order-6" heroId={heroId} onOpen={open} />}
-            </div>
+            <aside aria-label="Đánh giá" className={cn("min-w-0", sectionFrame)}>
+              <HeroOverviewFacts {...overview} part="ratings" />
+            </aside>
+          </div>
+          {/* The combat attributes read across the page, under the card and its ratings, before the skills. */}
+          <div className={cn("mt-6 min-w-0", sectionFrame)}>
+            <HeroOverviewFacts {...overview} part="attributes" />
           </div>
         </div>
       ),
@@ -432,22 +403,14 @@ function HeroContentBody({
       ) : null,
   }
 
+  // Every part is on one page, in reading order, so nothing waits behind a tab.
   return (
-    <div ref={contentRef} aria-label="Nội dung tướng" className="@container min-w-0">
-      {heroContentTabs(!!heroId).map(({ key }) =>
-        built.has(key) || key === active ? (
-          <div
-            key={key}
-            role="tabpanel"
-            id={heroContentSectionId(key)}
-            aria-labelledby={heroContentTabId(key)}
-            hidden={key !== active}
-            className="min-w-0"
-          >
-            {panels[key]()}
-          </div>
-        ) : null,
-      )}
+    <div ref={contentRef} aria-label="Nội dung tướng" className="@container min-w-0 space-y-6">
+      {heroContentTabs(!!heroId).map(({ key }) => (
+        <div key={key} id={heroContentSectionId(key)} className="min-w-0 scroll-mt-28">
+          {panels[key]()}
+        </div>
+      ))}
     </div>
   )
 }

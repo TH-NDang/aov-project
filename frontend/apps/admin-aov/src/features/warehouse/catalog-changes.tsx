@@ -10,7 +10,7 @@ import type { TimelineCount } from "../publishing/catalog-timeline"
 import type { WarehouseKind } from "./warehouse-types"
 
 export const catalogChangeKinds = {
-  DATA_BASELINE: { label: "Dữ liệu nền", icon: changeKindIcons.DATA_BASELINE },
+  DATA_BASELINE: { label: "Nhập dữ liệu", icon: changeKindIcons.DATA_BASELINE },
   ADDED: { label: "Thêm mới", icon: changeKindIcons.ADDED },
   UPDATED: { label: "Chỉnh sửa", icon: changeKindIcons.UPDATED },
   REMOVED: { label: "Loại bỏ", icon: changeKindIcons.REMOVED },

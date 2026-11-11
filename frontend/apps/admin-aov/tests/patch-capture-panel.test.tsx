@@ -95,8 +95,7 @@ test("the panel follows the section being viewed or edited", () => {
   assert.equal(focus({ editing: true, section: "OVERVIEW_RATINGS" }), "overview")
   assert.equal(focus({ editing: true, section: "SKILLS", skillKey: "skill-1-1" }), "skill:skill-1-1")
   assert.equal(focus({ view: "translations", section: "COMBAT_STATS" }), "attributes")
-  assert.equal(focus({ view: "patch" }), "patch-notes")
-  assert.equal(focus({ view: "history", tab: "skills" }), "overview")
+  assert.equal(focus({ view: "history", tab: "skills" }), "patch-notes")
   assert.equal(focus({ tab: "skills", skills: [] }), "overview")
   // The panel can lead the page to a part that shares the overview tab; an editor or another view still decides.
   assert.equal(focus({ pinned: "attributes" }), "attributes")
@@ -104,7 +103,7 @@ test("the panel follows the section being viewed or edited", () => {
     focus({ pinned: "attributes", editing: true, section: "SKILLS", skillKey: "skill-1-1" }),
     "skill:skill-1-1",
   )
-  assert.equal(focus({ pinned: "attributes", view: "patch" }), "patch-notes")
+  assert.equal(focus({ pinned: "attributes", view: "history" }), "patch-notes")
 })
 
 test("a game screen opens on the part worth reading, and its ratings, skill icons and text lead to the page", () => {

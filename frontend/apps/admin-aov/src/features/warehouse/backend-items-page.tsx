@@ -41,6 +41,7 @@ import { recipeConnectionError } from "./item-graph"
 import { ItemShopGraph, ItemShopHelp } from "./item-shop-graph"
 import { ItemEditor } from "./item-editor"
 import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"
+import type { NewDraft } from "./warehouse-sheet"
 import { confirmDiscard } from "@/components/confirm-dialog"
 
 type Entry = WarehouseEntry<ItemContent>
@@ -245,13 +246,14 @@ export function BackendItemsPage() {
       setBusy(false)
     }
   }
-  async function fork(entry: Entry, section: WarehouseSection) {
+  async function fork(entry: Entry, request: NewDraft) {
     setBusy(true)
     setError("")
     try {
-      const draft = await getDraft(entry)
+      const draft = await warehouseApi.fork("items", entry, request.cause, request.patchVariantId)
       await refresh()
-      openEntry(draft, section)
+      openEntry(draft, request.cause === "TRANSLATION_UPDATE" ? "translations" : "details")
+      toast.success("Đã tạo bản nháp.")
     } catch (cause) {
       toast.error(errorMessage(cause))
     } finally {
@@ -551,9 +553,10 @@ export function BackendItemsPage() {
           }}
           onFork={
             canWrite && scope.draftsReady && selected.revision.state === "PUBLISHED"
-              ? (section) => void fork(selected, section)
+              ? (request) => void fork(selected, request)
               : undefined
           }
+          openDraftNo={existingDraft?.revision.revisionNo}
           onOpenDraft={
             canWrite && existingDraft && selected.revision.state === "PUBLISHED"
               ? (section) => openEntry(existingDraft, section)

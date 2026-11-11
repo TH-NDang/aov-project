@@ -9,7 +9,6 @@ import {
   useRef,
   useState,
   type ComponentProps,
-  type MouseEvent,
   type ReactNode,
   type RefObject,
 } from "react"
@@ -17,19 +16,7 @@ import { revisionSkillReferences } from "./revision-skill-references"
 import { useHeroSkillImages } from "./skill-artwork"
 import { Link, Navigate, useBeforeUnload, useLocation, useNavigate, useParams } from "react-router"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import {
-  ArrowLeft,
-  ArrowUpRight,
-  FileUp,
-  Layers,
-  MoreHorizontal,
-  Plus,
-  Save,
-  Trash2,
-  X,
-  ChevronDown,
-  Send,
-} from "lucide-react"
+import { ArrowLeft, FileUp, Layers, MoreHorizontal, Plus, Save, Trash2, X, ChevronDown, Send } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import {
   DropdownMenu,
@@ -50,10 +37,11 @@ import { backendRequest } from "@/app/auth/session"
 import { useSession } from "@/app/auth/auth-gate"
 import { replacingPageTab, usePageCloseGuard } from "@/app/layout/page-tabs"
 import { errorMessage, isApiError } from "@/lib/api/errors"
-import { languageOptions } from "../users/profile-preference-picker"
+
 import { createPublishingApi, heroPreviewKey } from "./publishing-api"
 import { invalidateHeroCatalogs } from "./publishing-cache"
 import { BaselineContextForm } from "./baseline-context-form"
+import { DraftPencil, type NewDraft } from "../warehouse/warehouse-sheet"
 import { HeroAsset, HeroContent } from "./hero-content"
 import { HeroScrollIdentity } from "./hero-scroll-identity"
 import { HeroQuickSwitcher } from "./hero-quick-switcher"
@@ -64,7 +52,7 @@ import { selectCatalogRevisions } from "./catalog-data"
 import { HeroCatalog } from "./hero-catalog"
 import { HeroRevisionHistory } from "./hero-revision-history"
 import { HeroPatchTimeline } from "./hero-patch-view"
-import { HeroTranslationStatus } from "./hero-translation-status"
+
 import { HeroLanguageIcon, HeroLanguageItems, HeroLanguagePicker } from "./hero-language-picker"
 import { cn } from "@aov/ui/lib/utils"
 import { HeroReviewNotice } from "./hero-review-notice"
@@ -77,13 +65,14 @@ import {
   type TranslationTarget,
 } from "./hero-translation-model"
 import { TranslationEditor, type TranslatableSection } from "./translation-editor"
-import { Box, control } from "./fields"
+import { Box } from "./fields"
+import { languageOptions } from "../users/profile-preference-picker"
 import { PatchChangeForm } from "./patch-change-form"
 import { SectionEditor, emptySection } from "./section-editor"
 import { statPatchContext } from "./combat-attributes"
 import { useStatDefaults } from "./patch-stat-defaults"
 import { replaceProfilePart, type ProfileEditorPart } from "./hero-profile-editor"
-import { ImportContextPicker, type ImportContext } from "./import-context"
+
 import { type CatalogFilter } from "./catalog-context"
 import { usePublicationOverview, useContentLocale } from "./publication-overview"
 import { publicationPatchLink, publishBlockers, usesObservedStats } from "./publish-rules"
@@ -113,7 +102,6 @@ import { HeroDraftChanges, savedHeroSections } from "./hero-draft-changes"
 import { PublishButton } from "./publish-button"
 import { ReferenceRulesetProvider } from "../terminology/catalog"
 import { HeroWorkspaceTabs } from "./hero-workspace-tabs"
-import { HeroContentTabs, HeroStickyBars } from "./hero-content-tabs"
 import { captureFocus, type CaptureTarget } from "./patch-capture-model"
 import { PatchCapturePanel, PatchCaptureToggle } from "./patch-capture-panel"
 import { PatchCaptureProvider, usePatchCaptureWorkspace, type PatchCaptureWorkspace } from "./use-patch-captures"
@@ -128,17 +116,11 @@ import {
 } from "./hero-working-copy"
 import { toast } from "sonner"
 import { confirmAction } from "@/components/confirm-dialog"
+import { CAUSE_NAMES } from "./version-causes"
+import { VersionFacts } from "./version-facts"
 
 const api = createPublishingApi(backendRequest)
-const CAUSES: Record<Cause, string> = {
-  DATA_BASELINE: "Mốc dữ liệu đã biết",
-  CONTENT_CORRECTION: "Sửa nội dung",
-  GAME_PATCH: "Cập nhật gameplay",
-  TRANSLATION: "Bản dịch",
-  IMPORT_CORRECTION: "Sửa dữ liệu nhập",
-  VISUAL_UPDATE: "Thay artwork",
-  OTHER: "Khác",
-}
+const CAUSES: Record<Cause, string> = CAUSE_NAMES
 const STATES = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
 const noSkills: Skill[] = []
 
@@ -264,14 +246,14 @@ export function PublishingWorkspace({
   revisionId,
   onUnsavedChange,
   translationMode = false,
-  fullPage,
+  onClose,
 }: {
   heroId: string
   revisionId?: string
   onUnsavedChange?: (unsafe: boolean, busy?: boolean) => void
   translationMode?: boolean
-  /** In the drawer: where the full page of this hero opens, and the guard its link runs first. */
-  fullPage?: { to: string; onClick?: (event: MouseEvent<HTMLAnchorElement>) => void }
+  /** In the drawer: closes it from the header, after the drawer's own guard for unsaved work. */
+  onClose?: () => void
 }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -294,8 +276,6 @@ export function PublishingWorkspace({
   const [capturePin, setCapturePin] = useState<{ tab: HeroContentTab; group: string } | null>(null)
   const [contentReveal, setContentReveal] = useState<{ section: Section; at: number } | null>(null)
   const [reviewOpen, setReviewOpen] = useState(false)
-  const [cause, setCause] = useState<Cause>(translationMode ? "TRANSLATION" : "CONTENT_CORRECTION")
-  const [importContext, setImportContext] = useState<ImportContext | null>(null)
   const [publishFailure, setPublishFailure] = useState("")
   const [publishing, setPublishing] = useState(false)
   const [formsOpen, setFormsOpen] = useState(false)
@@ -308,8 +288,6 @@ export function PublishingWorkspace({
   const editorRef = useRef<HTMLDivElement>(null)
   const sectionFormId = useId()
   const heroHeadingRef = useRef<HTMLHeadingElement>(null)
-  // Where each content tab was left, kept while other workspace tabs are open.
-  const contentPositions = useRef(new Map<string, number>())
   const overview = usePublicationOverview()
   const preferred = useCatalogScopePreference(overview.data, requestedFilter, !heroId)
   const filter = !heroId && overview.data ? resolveCatalogScope(overview.data, preferred) : requestedFilter
@@ -338,7 +316,6 @@ export function PublishingWorkspace({
     updateLocation({ section: value, translationKey: null, translationField: null })
   const setContentLocale = (value: string) => updateLocation({ readLocale: value })
   const setTargetLocale = (value: string) => updateLocation({ target: value })
-  const setSourceLocale = (value: string) => updateLocation({ source: value })
   const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: api.rulesets })
   const regions = useQuery({ queryKey: ["publishing-regions"], queryFn: api.regions })
   const revisions = useQuery({
@@ -448,6 +425,8 @@ export function PublishingWorkspace({
     }),
     onNavigate: followCapture,
   })
+  // Comparing two versions opens on request, or straight away when a link asks for a comparison.
+  const [comparing, setComparing] = useState(() => !!urlParams.get("compare"))
   const publicationPatch = overview.data?.variants.find(
     (variant) => variant.id === revision?.effectiveFromPatchVariantId,
   )
@@ -603,6 +582,20 @@ export function PublishingWorkspace({
     })
     setEditing(false)
   }
+  // A language's pencil opens translating into it, read beside another language the hero has.
+  function translateInto(target: string) {
+    if (busy) return
+    updateLocation({
+      view: "translations",
+      target,
+      source: sourceLocale === target ? languageOptions.find((option) => option.value !== target)!.value : sourceLocale,
+      ...(!["PROFILE", "SKILLS", "SKINS"].includes(section) ? { section: "PROFILE" } : {}),
+      translationKey: null,
+      translationField: null,
+    })
+    setEditing(false)
+    setError("")
+  }
   function cancelSection() {
     setEditing(false)
     setError("")
@@ -626,7 +619,7 @@ export function PublishingWorkspace({
   }
   function openManagement() {
     setError("")
-    switchView("versions")
+    switchView("history")
   }
   function openUnsavedSection(next: Section) {
     updateLocation({ view: "overview" })
@@ -648,14 +641,28 @@ export function PublishingWorkspace({
       setPublishFailure,
     ).finally(() => setPublishing(false))
   }
+  // A hero without the account's language opens in English before Vietnamese.
+  const profileLocales = read.data?.content.PROFILE?.translations.map((text) => text.locale)
+  useEffect(() => {
+    if (!profileLocales || urlParams.get("readLocale") || profileLocales.includes(location.readLocale)) return
+    const fallback = ["en-US", "vi-VN"].find((code) => profileLocales.includes(code)) ?? profileLocales[0]
+    if (fallback) updateLocation({ readLocale: fallback })
+  }, [profileLocales?.join(","), location.readLocale])
   // One ruleset holds one draft, so a second one can only fail: offer the one that exists instead.
   const openDraft = revisions.data?.find((row) => row.state === "DRAFT" && row.rulesetId === revision?.rulesetId)
   const startDraftLabel = openDraft ? `Mở bản nháp #${openDraft.revisionNo}` : "Tạo bản nháp"
   function startDraft() {
-    if (!openDraft) return openManagement()
+    if (!openDraft) return forkDraft({ cause: translating ? "TRANSLATION" : "CONTENT_CORRECTION" })
     setSelectedId(openDraft.id)
     updateLocation({ revision: openDraft.id, compare: null, changes: null })
     setEditing(false)
+  }
+  function forkDraft(request: NewDraft) {
+    if (!revision) return
+    void run(async () => {
+      await openRevision(await api.fork(revision, request.cause as Cause, request.patchVariantId ?? null))
+      updateLocation({ view: request.cause === "TRANSLATION" ? "translations" : "overview" })
+    }, "Đã tạo bản nháp từ phiên bản đang xem.")
   }
   const canMoveBaseline =
     !!writable &&
@@ -751,9 +758,12 @@ export function PublishingWorkspace({
             title={`Phiên bản #${revision.revisionNo} · ${STATES[revision.state]}`}
             data-revision={selectedId}
             disabled={busy}
-            className={cn("h-9 shrink-0 bg-background font-normal", narrow ? "gap-1 px-2" : "gap-1.5 px-2.5")}
+            className={cn("h-8 shrink-0 bg-background font-normal", narrow ? "gap-1 px-2" : "gap-1.5 px-2.5")}
           >
-            <span className="type-body tabular-nums">#{revision.revisionNo}</span>
+            <span className="type-meta whitespace-nowrap tabular-nums">
+              Bản {revision.revisionNo}
+              {!narrow && ` · ${STATES[revision.state]}`}
+            </span>
             <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
           </Button>
         </DropdownMenuTrigger>
@@ -791,55 +801,73 @@ export function PublishingWorkspace({
               </DropdownMenuSub>
             </>
           )}
-          {narrow && headerAction && (
+          {narrow && headerAction === "publish" && (
             <>
               <DropdownMenuSeparator />
-              {headerAction === "publish" ? (
-                <DropdownMenuItem
-                  disabled={busy}
-                  onSelect={() => {
-                    // Gaps open the same list the header button shows; with none, the click publishes.
-                    if (issues.length || unsavedSections.length) setTimeout(() => setPublishOpen(true))
-                    else publishRevision()
-                  }}
-                >
-                  <Send />
-                  {publishing ? "Đang xuất bản…" : "Xuất bản"}
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem disabled={busy} onSelect={startDraft}>
-                  {!openDraft && <Plus />}
-                  {startDraftLabel}
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem
+                disabled={busy}
+                onSelect={() => {
+                  // Gaps open the same list the header button shows; with none, the click publishes.
+                  if (issues.length || unsavedSections.length) setTimeout(() => setPublishOpen(true))
+                  else publishRevision()
+                }}
+              >
+                <Send />
+                {publishing ? "Đang xuất bản…" : "Xuất bản"}
+              </DropdownMenuItem>
             </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
     )
+  // The single pencil on a published version: it opens the draft in progress or starts one of the chosen kind.
+  const draftPencil = revision && (
+    <DraftPencil
+      name="tướng"
+      rulesetId={revision.rulesetId}
+      basePatchVariantId={revision.effectiveFromPatchVariantId}
+      openDraft={openDraft ? { revisionNo: openDraft.revisionNo, onOpen: startDraft } : undefined}
+      onCreate={canFork ? forkDraft : undefined}
+      extraKinds={[
+        { cause: "VISUAL_UPDATE", title: CAUSES.VISUAL_UPDATE, note: "Đổi ảnh, giữ nguyên nội dung." },
+        { cause: "IMPORT_CORRECTION", title: CAUSES.IMPORT_CORRECTION, note: "Sửa chỗ nhập sai từ nguồn." },
+        { cause: "OTHER", title: CAUSES.OTHER, note: "Thay đổi không thuộc các loại trên." },
+      ]}
+      disabled={busy || !!dirty.size}
+    />
+  )
+  // The drawer closes like every other sheet: a quiet × at the end of the header row, past a divider.
+  const closeButton = onClose && (
+    <>
+      <span aria-hidden className="mx-0.5 h-5 w-px shrink-0 bg-border" />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon-sm"
+        className="shrink-0 text-muted-foreground"
+        title="Đóng trang tướng"
+        aria-label="Đóng trang tướng"
+        disabled={busy}
+        onClick={onClose}
+      >
+        <X />
+      </Button>
+    </>
+  )
   const actionsMenu = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Thao tác tướng" className="shrink-0">
+        <Button variant="outline" size="icon-sm" aria-label="Thao tác tướng" className="shrink-0 bg-background">
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        {fullPage && (
-          <DropdownMenuItem asChild>
-            <Link to={fullPage.to} onClick={fullPage.onClick}>
-              <ArrowUpRight />
-              Mở trang tướng đầy đủ
-            </Link>
-          </DropdownMenuItem>
-        )}
         {canPublish && heroId && formsOwner && (
           <DropdownMenuItem disabled={busy} onSelect={() => setFormsOpen(true)}>
             <Layers />
             Dạng của tướng
           </DropdownMenuItem>
         )}
-        {fullPage && writable && <DropdownMenuSeparator />}
         {writable && (
           <DropdownMenuItem variant="destructive" disabled={busy} onSelect={() => void discardDraft()}>
             <Trash2 />
@@ -862,17 +890,7 @@ export function PublishingWorkspace({
         aria-label="Chỉnh sửa nội dung"
       >
         {translating && (
-          <fieldset disabled={busy} className="grid gap-4 admin-section py-4 @min-[600px]:grid-cols-2">
-            <div className="min-w-0 space-y-2">
-              <p className="type-label">Đọc từ</p>
-              <HeroLanguagePicker
-                label="Ngôn ngữ nguồn"
-                locale={sourceLocale}
-                disabled={busy}
-                onChange={setSourceLocale}
-                compact={false}
-              />
-            </div>
+          <fieldset disabled={busy} className="grid gap-4 admin-section py-4">
             <div className="min-w-0 space-y-2">
               <p className="type-label">Dịch sang</p>
               <HeroLanguagePicker
@@ -1065,7 +1083,8 @@ export function PublishingWorkspace({
           }
         />
       ) : (
-        <>
+        // The header and the tab row stay at the top together while the page scrolls, as a sheet's do.
+        <div className="sticky top-0 z-20 -mx-1 bg-background px-1 pt-1 [overflow-anchor:none]">
           <header ref={headerRef} className="relative">
             {/* The name and the controls wrap as two whole groups, so no button can end up alone on a line. */}
             <div
@@ -1168,25 +1187,25 @@ export function PublishingWorkspace({
                       content={preview.content}
                       locale={location.readLocale}
                       revisionNo={revision.revisionNo}
-                      disabled={busy || (editing && section !== "SKILLS")}
+                      disabled={busy}
+                      languagesDisabled={editing && section !== "SKILLS"}
                       onChange={setContentLocale}
+                      onTranslate={translateInto}
                     />
                   )}
                   {headerAction === "publish" && revision && publishButton()}
-                  {headerAction === "draft" && (
-                    <Button variant="outline" disabled={busy} onClick={startDraft}>
-                      {!openDraft && <Plus className="size-4" />}
-                      {startDraftLabel}
-                    </Button>
-                  )}
+                  {headerAction === "draft" && draftPencil}
                   {actionsMenu}
+                  {closeButton}
                 </div>
               ) : (
                 // One row on a narrow header: the version menu also holds the language and the main action.
                 <div className="relative flex shrink-0 items-center gap-1.5">
                   {versionMenu(true)}
+                  {headerAction === "draft" && draftPencil}
                   {headerAction === "publish" && revision && publishButton("sr-only")}
                   {actionsMenu}
+                  {closeButton}
                 </div>
               )}
             </div>
@@ -1200,35 +1219,9 @@ export function PublishingWorkspace({
               <HeroFormsDialog hero={formsOwner} open={formsOpen} onOpenChange={setFormsOpen} />
             )}
           </header>
-          {view === "overview" ? (
-            <HeroStickyBars
-              memoryKey={`${heroId}:${location.tab}`}
-              positions={contentPositions.current}
-              startKey={editing ? `${section}:${profilePart}:${skinFocus ?? ""}` : null}
-              top={<HeroWorkspaceTabs view={view} busy={busy} onView={switchView} sticky={false} />}
-            >
-              {(stuck) => (
-                <HeroContentTabs
-                  tab={location.tab}
-                  onTab={(tab) => {
-                    setCapturePin(null)
-                    updateLocation({ tab: tab === "overview" ? null : tab })
-                  }}
-                  content={preview?.content}
-                  videos={!!heroId}
-                  editingTab={editing ? reviewTab(section) : null}
-                  busy={busy}
-                  stuck={stuck}
-                  assetId={preview?.content.MEDIA_BINDINGS?.bindings.HEAD}
-                  name={heroName}
-                  switcher={quickSwitcher}
-                />
-              )}
-            </HeroStickyBars>
-          ) : (
-            <HeroWorkspaceTabs view={view} busy={busy} onView={switchView} />
-          )}
-        </>
+          {/* The content is one page now, so only the content and history tabs remain. */}
+          <HeroWorkspaceTabs view={view} busy={busy} onView={switchView} sticky={false} />
+        </div>
       )}
       {[rulesets.error, regions.error, revisions.error, read.error].filter(Boolean).map((failure, index) => (
         <p key={index} role="alert" className="rounded-xl border border-destructive/30 p-4 text-sm text-destructive">
@@ -1307,15 +1300,12 @@ export function PublishingWorkspace({
                     locale={locale}
                     editable={!!writable}
                     busy={busy}
-                    tab={location.tab}
                     heroId={heroId}
                     selectedSkillKey={heroLocationId(urlParams.get("skill"))}
                     skillLayout={urlParams.get("skillLayout") === "flat" ? "flat" : "focus"}
                     onSkillLayoutChange={(layout) => updateLocation({ skillLayout: layout === "flat" ? "flat" : null })}
                     onSkillChange={(skill) => updateLocation({ skill })}
-                    onTabChange={(tab) => updateLocation({ tab: tab === "overview" ? null : tab })}
                     onTranslate={canWrite ? openTranslation : undefined}
-                    onNeedsDraft={canWrite && revision?.state === "PUBLISHED" ? startDraft : undefined}
                     canWrite={canWrite}
                     issues={writable ? issues : undefined}
                     onEdit={(next, part = "information", focus) => {
@@ -1345,137 +1335,75 @@ export function PublishingWorkspace({
                     }}
                   />
                 )}
-                {translating && (
-                  <HeroTranslationStatus
-                    content={preview.content}
-                    selectedLocale={targetLocale}
-                    disabled={busy}
-                    onSelect={(next) => {
-                      updateLocation({
-                        target: next,
-                        source:
-                          sourceLocale === next
-                            ? languageOptions.find((option) => option.value !== next)!.value
-                            : sourceLocale,
-                        section: "PROFILE",
-                        translationKey: null,
-                        translationField: null,
-                      })
-                      setError("")
-                    }}
-                  />
-                )}
                 {view === "history" && (
-                  <HeroRevisionHistory
-                    heroId={heroId}
-                    revision={revision}
-                    revisions={revisions.data ?? []}
-                    locale={locale}
-                    content={preview.content}
-                    disabled={busy}
-                    onOpenRevision={(next) => void run(() => openRevision(next), "Đã mở phiên bản.")}
-                  />
-                )}
-                {view === "versions" && (
-                  // What can be done to this version as a whole: inherit a draft, move its baseline, record its changes.
-                  <div className="min-w-0 space-y-5">
-                    <p className="type-meta">
-                      Bản #{revision.revisionNo} · {STATES[revision.state]} · {CAUSES[revision.cause]}
-                    </p>
-                    {!canFork && !canMoveBaseline && !canRecordChanges && (
-                      <p className="type-body rounded-xl border bg-muted/30 p-4 text-muted-foreground">
-                        Bản này hiện không có thao tác phiên bản nào: không tạo được bản nháp kế thừa, không chuyển mốc
-                        và không ghi thay đổi patch.
-                      </p>
-                    )}
-
-                    {canFork && (
-                      <Box title="Tạo bản nháp kế thừa">
-                        <form
-                          className="space-y-4"
-                          onSubmit={(event) => {
-                            event.preventDefault()
-                            void run(async () => {
-                              await openRevision(
-                                await api.fork(
-                                  revision,
-                                  cause,
-                                  cause === "GAME_PATCH" ? (importContext?.patchVariantId ?? null) : null,
-                                ),
-                              )
-                              updateLocation({ view: "overview" })
-                            }, "Đã tạo bản nháp từ phiên bản đã chọn.")
-                          }}
-                        >
-                          <label className="grid gap-2 text-sm">
-                            Loại thay đổi
-                            <select
-                              className={control}
-                              value={cause}
-                              onChange={(event) => setCause(event.target.value as Cause)}
-                            >
-                              {Object.entries(CAUSES)
-                                .filter(([key]) => key !== "DATA_BASELINE")
-                                .map(([key, label]) => (
-                                  <option value={key} key={key}>
-                                    {label}
-                                  </option>
-                                ))}
-                            </select>
-                          </label>
-                          {cause === "GAME_PATCH" && (
-                            <>
-                              <ImportContextPicker
-                                regions={regions.data ?? []}
-                                value={importContext}
-                                onChange={setImportContext}
-                                disabled={busy}
-                              />
-                              {importContext && importContext.rulesetId !== revision.rulesetId && (
-                                <p className="text-sm text-destructive">Chọn patch thuộc cùng bộ quy tắc gameplay.</p>
-                              )}
-                            </>
-                          )}
-                          <Button
-                            disabled={
-                              busy ||
-                              !!dirty.size ||
-                              (cause === "GAME_PATCH" &&
-                                (!importContext || importContext.rulesetId !== revision.rulesetId))
-                            }
-                          >
-                            Tạo bản nháp từ mốc này
-                          </Button>
-                        </form>
-                      </Box>
-                    )}
-                    {canMoveBaseline && (
-                      <BaselineContextForm
-                        revision={revision}
-                        disabled={busy || !!dirty.size}
-                        onBusyChange={setBusy}
-                        onMove={async (next) => {
-                          await openRevision(next)
-                          await invalidateHeroCatalogs(queryClient)
-                          await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
-                          await revisions.refetch()
-                          updateLocation({ view: "overview" })
-                          toast.success("Đã chuyển mốc ban đầu, giữ nguyên nội dung và ảnh.")
-                        }}
+                  // Where this version sits and how the hero changed: the version on screen with what can be done to it
+                  // as a whole, then the change notes patch by patch, then any two versions side by side.
+                  <div className="min-w-0 space-y-6">
+                    <section className="space-y-4 rounded-xl border bg-muted/20 p-4" aria-label="Phiên bản đang mở">
+                      <h2 className="type-section-title">Phiên bản đang mở</h2>
+                      <VersionFacts
+                        version={`Bản ${revision.revisionNo} · ${STATES[revision.state]}`}
+                        cause={revision.cause}
+                        patch={
+                          publicationPatch
+                            ? [publicationPatch.patchTitle, publicationPatch.patchCode]
+                                .filter((part, index, parts) => part && parts.indexOf(part) === index)
+                                .join(" · ")
+                            : "Chưa rõ patch"
+                        }
                       />
-                    )}
-                    {canRecordChanges && <PatchChangeForm key={revision.id} revision={revision} locale={locale} />}
+                      {canMoveBaseline && (
+                        <BaselineContextForm
+                          revision={revision}
+                          disabled={busy || !!dirty.size}
+                          onBusyChange={setBusy}
+                          onMove={async (next) => {
+                            await openRevision(next)
+                            await invalidateHeroCatalogs(queryClient)
+                            await queryClient.invalidateQueries({ queryKey: ["hero-comparison", heroId] })
+                            await revisions.refetch()
+                            toast.success("Đã đổi patch, giữ nguyên nội dung và ảnh.")
+                          }}
+                        />
+                      )}
+                      {canRecordChanges && <PatchChangeForm key={revision.id} revision={revision} locale={locale} />}
+                    </section>
+                    <HeroPatchTimeline
+                      heroId={heroId}
+                      revision={revision}
+                      revisions={revisions.data ?? []}
+                      content={preview.content}
+                      locale={locale}
+                      canRecord={capabilities.includes("patch:write")}
+                    />
+                    {/* Comparing is a tool for when it is needed: folded, it costs no scrolling past every picture. */}
+                    <details
+                      className="group rounded-xl border"
+                      open={comparing}
+                      onToggle={(event) => setComparing(event.currentTarget.open)}
+                    >
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
+                        <span className="grid gap-0.5">
+                          <span className="type-section-title">So sánh hai bản</span>
+                          <span className="type-meta">Chọn hai bản đã lưu để xem chỗ khác nhau.</span>
+                        </span>
+                        <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                      </summary>
+                      {comparing && (
+                        <div className="border-t px-4 pb-4">
+                          <HeroRevisionHistory
+                            heroId={heroId}
+                            revision={revision}
+                            revisions={revisions.data ?? []}
+                            locale={locale}
+                            content={preview.content}
+                            disabled={busy}
+                            onOpenRevision={(next) => void run(() => openRevision(next), "Đã mở phiên bản.")}
+                          />
+                        </div>
+                      )}
+                    </details>
                   </div>
-                )}
-                {view === "patch" && (
-                  <HeroPatchTimeline
-                    heroId={heroId}
-                    revision={revision}
-                    revisions={revisions.data ?? []}
-                    content={preview.content}
-                    locale={locale}
-                    canRecord={capabilities.includes("patch:write")}
-                  />
                 )}
                 {view !== "overview" && editorPanel}
               </div>

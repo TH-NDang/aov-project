@@ -198,7 +198,7 @@ export function HeroOverviewCard(props: HeroOverviewProps) {
   const { edit } = useOverviewEditing(props)
   const name = profile?.name || "Tướng chưa đặt tên"
   return (
-    <section id="hero-PROFILE" className="min-w-0" aria-label="Thông tin tướng">
+    <section id="hero-PROFILE" className="flex min-w-0 flex-1 flex-col" aria-label="Thông tin tướng">
       <div className="flex items-start gap-3">
         <HeroAsset
           id={content.MEDIA_BINDINGS?.bindings.HEAD}
@@ -239,20 +239,29 @@ export function HeroOverviewCard(props: HeroOverviewProps) {
         <HeroPositionBadges positions={content.PROFILE?.positions ?? []} />
       </div>
       {profile?.summary && <OverviewSummary key={profile.summary} text={profile.summary} />}
-      <HeroContentSources sources={content.PROFILE?.sources ?? []} compact />
+      <div className="mt-auto pt-2">
+        <HeroContentSources sources={content.PROFILE?.sources ?? []} compact />
+      </div>
     </section>
   )
 }
 
 /** What the hero is weighed by: what still blocks publishing, the ratings, then the combat attributes. */
-export function HeroOverviewFacts(props: HeroOverviewProps) {
+/**
+ * The ratings and the combat attributes. `part` draws one of them alone, so a page can place the ratings beside the
+ * hero card and the attributes in a wider row of their own.
+ */
+export function HeroOverviewFacts({
+  part = "all",
+  ...props
+}: HeroOverviewProps & { part?: "all" | "ratings" | "attributes" }) {
   const { content, heroId, variantId, statDefaults, patchCode, referenceError, issues = [] } = props
   const { edit } = useOverviewEditing(props)
   const ratings = content.OVERVIEW_RATINGS
   const scale = heroRatingScale(ratings?.scaleCode ?? "GAME_OVERVIEW_10")
   return (
     <div className="min-w-0">
-      {issues.length > 0 && (
+      {part !== "attributes" && issues.length > 0 && (
         <section className={panel} aria-label="Còn thiếu trước khi xuất bản">
           <GroupHeader title="Còn thiếu trước khi xuất bản" icon={<ListChecks className="size-3.5" />} />
           <ul className="type-body list-disc space-y-1 pl-5 text-muted-foreground">
@@ -262,78 +271,82 @@ export function HeroOverviewFacts(props: HeroOverviewProps) {
           </ul>
         </section>
       )}
-      <section id="hero-OVERVIEW_RATINGS" className={panel} aria-label="Đánh giá tướng">
-        <GroupHeader
-          title="Đánh giá"
-          icon={<Shield className="size-3.5" />}
-          action={
-            <span className="flex shrink-0 items-center gap-1">
-              <PatchCaptureLink groupKey={captureGroupKeys.overview} name="Đánh giá" />
-              {edit("OVERVIEW_RATINGS", "Đánh giá")}
-            </span>
-          }
-        />
-        {ratings ? (
-          <dl className="space-y-3">
-            {(
-              [
-                ["survivability", "Sinh tồn"],
-                ["attackDamage", "Đánh thường"],
-                ["skillEffects", "Hiệu ứng kỹ năng"],
-                ["difficulty", "Độ khó"],
-              ] as const
-            ).map(([key, title]) => {
-              const stored = ratings[key]
-              const value = Number.isFinite(stored) ? stored / scale.factor : NaN
-              return (
-                <div key={key} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                  <dt className="type-body text-muted-foreground">{title}</dt>
-                  <dd className="type-body grid grid-cols-[5rem_3.5rem] items-center gap-2 text-right tabular-nums">
-                    <div className="flex gap-0.5" aria-hidden="true">
-                      {Array.from({ length: scale.maximum }, (_, index) => (
-                        <span key={index} className="h-1.5 flex-1 overflow-hidden rounded-sm bg-muted">
-                          <span
-                            className="block h-full bg-primary"
-                            style={{
-                              width: `${Number.isFinite(value) ? Math.max(0, Math.min(1, value - index)) * 100 : 0}%`,
-                            }}
-                          />
-                        </span>
-                      ))}
-                    </div>
-                    <span>{Number.isFinite(value) ? `${value}/${scale.maximum}` : "Chưa có"}</span>
-                  </dd>
-                </div>
-              )
-            })}
-          </dl>
-        ) : (
-          <p className="type-meta">Chưa ghi nhận đánh giá trong bản dữ liệu này.</p>
-        )}
-      </section>
-      <section id="hero-COMBAT_STATS" className={cn(panel, "@container/stats")} aria-label="Chỉ số tướng">
-        <GroupHeader
-          title="Thuộc tính chiến đấu"
-          icon={<ChartNoAxesCombined className="size-3.5" />}
-          action={
-            <span className="flex shrink-0 items-center gap-1">
-              <PatchCaptureLink groupKey={captureGroupKeys.attributes} name="Chỉ số" />
-              {edit("COMBAT_STATS", "Chỉ số")}
-            </span>
-          }
-        />
-        <HeroCombatAttributes
-          heroId={heroId}
-          variantId={variantId}
-          stats={content.COMBAT_STATS}
-          skills={content.SKILLS}
-          roles={content.PROFILE?.roles}
-          defaults={statDefaults}
-          patchCode={patchCode}
-          referenceError={referenceError}
-        />
-        <HeroContentSources sources={content.COMBAT_STATS?.sources ?? []} compact />
-      </section>
+      {part !== "attributes" && (
+        <section id="hero-OVERVIEW_RATINGS" className={panel} aria-label="Đánh giá tướng">
+          <GroupHeader
+            title="Đánh giá"
+            icon={<Shield className="size-3.5" />}
+            action={
+              <span className="flex shrink-0 items-center gap-1">
+                <PatchCaptureLink groupKey={captureGroupKeys.overview} name="Đánh giá" />
+                {edit("OVERVIEW_RATINGS", "Đánh giá")}
+              </span>
+            }
+          />
+          {ratings ? (
+            <dl className="space-y-3">
+              {(
+                [
+                  ["survivability", "Sinh tồn"],
+                  ["attackDamage", "Đánh thường"],
+                  ["skillEffects", "Hiệu ứng kỹ năng"],
+                  ["difficulty", "Độ khó"],
+                ] as const
+              ).map(([key, title]) => {
+                const stored = ratings[key]
+                const value = Number.isFinite(stored) ? stored / scale.factor : NaN
+                return (
+                  <div key={key} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                    <dt className="type-body text-muted-foreground">{title}</dt>
+                    <dd className="type-body grid grid-cols-[5rem_3.5rem] items-center gap-2 text-right tabular-nums">
+                      <div className="flex gap-0.5" aria-hidden="true">
+                        {Array.from({ length: scale.maximum }, (_, index) => (
+                          <span key={index} className="h-1.5 flex-1 overflow-hidden rounded-sm bg-muted">
+                            <span
+                              className="block h-full bg-primary"
+                              style={{
+                                width: `${Number.isFinite(value) ? Math.max(0, Math.min(1, value - index)) * 100 : 0}%`,
+                              }}
+                            />
+                          </span>
+                        ))}
+                      </div>
+                      <span>{Number.isFinite(value) ? `${value}/${scale.maximum}` : "Chưa có"}</span>
+                    </dd>
+                  </div>
+                )
+              })}
+            </dl>
+          ) : (
+            <p className="type-meta">Chưa ghi nhận đánh giá trong bản dữ liệu này.</p>
+          )}
+        </section>
+      )}
+      {part !== "ratings" && (
+        <section id="hero-COMBAT_STATS" className={cn(panel, "@container/stats")} aria-label="Chỉ số tướng">
+          <GroupHeader
+            title="Thuộc tính chiến đấu"
+            icon={<ChartNoAxesCombined className="size-3.5" />}
+            action={
+              <span className="flex shrink-0 items-center gap-1">
+                <PatchCaptureLink groupKey={captureGroupKeys.attributes} name="Chỉ số" />
+                {edit("COMBAT_STATS", "Chỉ số")}
+              </span>
+            }
+          />
+          <HeroCombatAttributes
+            heroId={heroId}
+            variantId={variantId}
+            stats={content.COMBAT_STATS}
+            skills={content.SKILLS}
+            roles={content.PROFILE?.roles}
+            defaults={statDefaults}
+            patchCode={patchCode}
+            referenceError={referenceError}
+          />
+          <HeroContentSources sources={content.COMBAT_STATS?.sources ?? []} compact />
+        </section>
+      )}
     </div>
   )
 }

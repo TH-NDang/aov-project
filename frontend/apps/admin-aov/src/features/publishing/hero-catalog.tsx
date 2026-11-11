@@ -12,7 +12,6 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  ChevronsRight,
   Clock3,
   FilePenLine,
   Info,
@@ -22,11 +21,11 @@ import { SearchField } from "@/components/search-field"
 import { InfiniteScroll } from "@/components/infinite-scroll"
 import { usePageCloseGuard } from "@/app/layout/page-tabs"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { Link, useNavigate, useSearchParams } from "react-router"
+import { Link, useSearchParams } from "react-router"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
-import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { backendRequest } from "@/app/auth/session"
 import { errorMessage } from "@/lib/api/errors"
 import { createPublishingApi, heroPreviewKey, heroCatalogKey, type HeroCatalogQuery } from "./publishing-api"
@@ -41,13 +40,7 @@ import { ChangeKindBadges, HeroChangeSummary } from "./hero-change-badges"
 import { MarketBadge } from "./market-badge"
 import { languageOptions } from "../users/profile-preference-picker"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
-import {
-  closeHeroLocation,
-  heroLocationId,
-  heroPageLocation,
-  openHeroLocation,
-  patchHeroLocation,
-} from "./hero-location"
+import { closeHeroLocation, heroLocationId, openHeroLocation, patchHeroLocation } from "./hero-location"
 import { HeroNavigationGuard } from "./hero-navigation-guard"
 import { HeroQuickViewBody } from "./hero-quick-view-body"
 import { useHeroEntries } from "./patch-notes-sheet"
@@ -483,9 +476,7 @@ export function HeroCatalog({
           </p>
           {scoped && !showAll && (
             <>
-              <p className="max-w-md text-xs">
-                Mốc dữ liệu ban đầu và chỉnh sửa nội dung không được tính là thay đổi gameplay.
-              </p>
+              <p className="max-w-md text-xs">Bản nhập dữ liệu và bản sửa nội dung không tính là thay đổi gameplay.</p>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -707,7 +698,6 @@ export function HeroQuickView({
   ruleset: string
   onClose: () => void
 }) {
-  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const restored = useQuery({
     queryKey: ["publishing-revisions", heroId],
@@ -751,19 +741,7 @@ export function HeroQuickView({
           showCloseButton={false}
           className="h-dvh w-[min(960px,calc(100vw-44px))] gap-0 overflow-visible ease-out data-[state=open]:duration-200 data-[state=closed]:duration-150 motion-reduce:animate-none sm:max-w-[min(960px,calc(100vw-44px))]"
         >
-          <SheetClose asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute top-1/2 -left-[43px] z-10 h-[68px] w-11 -translate-y-1/2 cursor-pointer touch-manipulation rounded-l-xl rounded-r-none border-border bg-background text-muted-foreground shadow-md hover:text-foreground"
-              aria-label="Đóng trang tướng"
-              title="Đóng trang tướng"
-              disabled={saving}
-            >
-              <ChevronsRight aria-hidden className="size-5" />
-            </Button>
-          </SheetClose>
-          {/* The hero's own header leads the drawer; opening the full page lives in its actions menu. */}
+          {/* The hero's own header leads the drawer and holds its close button. */}
           <SheetHeader className="sr-only">
             <SheetTitle>{hero?.code ? `Tướng / ${hero.code}` : "Chi tiết tướng"}</SheetTitle>
             <SheetDescription>{revision ? `Phiên bản #${revision.revisionNo}` : "Chi tiết tướng"}</SheetDescription>
@@ -781,18 +759,11 @@ export function HeroQuickView({
                   key={heroId}
                   heroId={heroId}
                   revisionId={revisionId}
-                  fullPage={{
-                    to: heroPageLocation(heroId, params, revisionId),
-                    onClick: async (event) => {
-                      if (!saving && !unsafe) return
-
-                      // The click is spent once the question opens, so an accepted answer navigates by itself.
-                      event.preventDefault()
-                      if (await canLeave()) {
-                        setUnsafe(false)
-                        void navigate(heroPageLocation(heroId, params, revisionId))
-                      }
-                    },
+                  onClose={async () => {
+                    if (await canLeave()) {
+                      setUnsafe(false)
+                      onClose()
+                    }
                   }}
                   onUnsavedChange={(unsafe, busy) => {
                     setUnsafe(unsafe)

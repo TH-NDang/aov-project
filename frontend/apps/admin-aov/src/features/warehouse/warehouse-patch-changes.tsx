@@ -112,8 +112,8 @@ export function WarehousePatchChanges({
               <p className="whitespace-pre-wrap">
                 {row.original.summary ??
                   (row.original.kinds.includes("DATA_BASELINE")
-                    ? "Dữ liệu nền; chưa xác định thời điểm được thêm vào game."
-                    : "Snapshot cập nhật; chưa có đánh giá được xác nhận.")}
+                    ? "Nhập dữ liệu; chưa rõ được thêm vào game lúc nào."
+                    : "Bản cập nhật theo patch; chưa phân loại thay đổi.")}
               </p>
               {row.original.sourceUrl && (
                 <a

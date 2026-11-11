@@ -102,12 +102,6 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.ok(condition(), "Expected URL-backed hero workspace was not reached")
   }
   const click = (selector: string) => act(async () => document.querySelector<HTMLElement>(selector)!.click())
-  const openActions = () =>
-    act(async () => {
-      document
-        .querySelector<HTMLElement>('[aria-label="Thao tác tướng"]')!
-        .dispatchEvent(new dom.window.MouseEvent("pointerdown", { bubbles: true, button: 0 }))
-    })
   try {
     await verifySession()
     await mount()
@@ -185,8 +179,6 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     await act(async () => saveButton().click())
     await waitFor(() => !document.querySelector('[aria-label="Chỉnh sửa nội dung"]'))
     assert.ok(document.querySelector(warnings))
-    await click('[aria-controls="hero-content-skills"]')
-    assert.equal(new URLSearchParams(router.state.location.search).get("tab"), "skills")
     assert.equal(
       document.querySelector('[aria-label="Xem tướng catalog-hero-0"]'),
       catalogButton,
@@ -196,7 +188,15 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     assert.equal(new URLSearchParams(router.state.location.search).get("skill"), "passive")
     await click('[aria-label="Cách hiển thị kỹ năng"] button:nth-child(2)')
     assert.equal(new URLSearchParams(router.state.location.search).get("skillLayout"), "flat")
-    await click('[aria-controls="workspace-translations"]')
+    // Translating opens from a language's own pencil in the language menu at the top.
+    await act(async () => {
+      document
+        .querySelector('[aria-label="Ngôn ngữ hiển thị nội dung"]')!
+        .dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    })
+    await act(async () =>
+      document.querySelector<HTMLElement>('[role="menuitem"][aria-label="Dịch sang Tiếng Anh (Mỹ)"]')!.click(),
+    )
     const target = document.querySelector<HTMLButtonElement>('[aria-label="Ngôn ngữ đích"]')!
     await act(async () => {
       target.dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
@@ -226,9 +226,12 @@ test("hero links restore a side panel beyond loaded rows, survive reload, and pr
     router = createMemoryRouter(routes, { initialEntries: [restoredUrl] })
     await mount()
     await waitFor(() => !!document.querySelector('[aria-label="Đối chiếu bản dịch"]'))
-    assert.ok(document.querySelector('[aria-controls="workspace-translations"][aria-selected="true"]'))
-    await openActions()
-    await click('a[role="menuitem"][href^="/hero/fixture-hero"]')
+    assert.ok(document.querySelector('[aria-controls="workspace-overview"][aria-selected="true"]'))
+    // The drawer has no full-page link any more; the same address opens the full page directly.
+    const { heroPageLocation } = await import("../src/features/publishing/hero-location")
+    await act(async () => {
+      await router.navigate(heroPageLocation("fixture-hero", new URLSearchParams(router.state.location.search)))
+    })
     await waitFor(() => router.state.location.pathname === "/hero/fixture-hero")
     const params = new URLSearchParams(router.state.location.search)
     assert.equal(params.get("hero"), null)

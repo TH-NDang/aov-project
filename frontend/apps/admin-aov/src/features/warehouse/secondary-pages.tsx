@@ -24,6 +24,7 @@ import { SpellCollection } from "./spell-cards"
 import { ArcanaCollection } from "./arcana-cards"
 import { ArcanaFilters } from "./arcana-filters"
 import type { EditTarget, WarehouseSection } from "./warehouse-edit-section"
+import type { NewDraft } from "./warehouse-sheet"
 import {
   warehouseText,
   type ArcanaContent,
@@ -187,12 +188,15 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
       else open(saved)
     })
   }
-  async function action(type: "fork" | "publish" | "discard", section?: WarehouseSection) {
+  async function action(type: "fork" | "publish" | "discard", request?: NewDraft) {
     await mutation.mutateAsync(async () => {
-      const saved = await warehouseApi[type](kind, selected!)
+      const saved =
+        type === "fork"
+          ? await warehouseApi.fork(kind, selected!, request?.cause, request?.patchVariantId)
+          : await warehouseApi[type](kind, selected!)
       await refresh()
       // Publishing and discarding finish the work in this panel; a new draft opens for editing.
-      if (type === "fork") open(saved, section)
+      if (type === "fork") open(saved, request?.cause === "TRANSLATION_UPDATE" ? "translations" : "mechanics")
       else close()
       toast.success(type === "publish" ? "Đã xuất bản." : type === "discard" ? "Đã hủy bản nháp." : "Đã tạo bản nháp.")
     })
@@ -467,11 +471,8 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
           translationOnly={
             (selected?.revision.state === "DRAFT" ? selected : existingDraft)?.revision.cause === "TRANSLATION_UPDATE"
           }
-          revisionLabel={
-            selected
-              ? `${selected.revision.state === "DRAFT" ? "Bản nháp" : selected.revision.state === "PUBLISHED" ? "Đã xuất bản" : "Đã bỏ"} · v${selected.revision.revisionNo}`
-              : undefined
-          }
+          revisionNo={selected?.revision.revisionNo}
+          revisionState={selected?.revision.state}
           initialLanguage={
             translationView && translationView.entryId === selectedId && translationView.locale === context.locale
               ? translationView.language
@@ -481,15 +482,15 @@ function SecondaryPage({ kind }: { kind: SecondaryKind }) {
           initialSection={selected && editTarget?.revisionId === selected.revision.id ? editTarget.section : undefined}
           onSave={save}
           onClose={close}
-          onDraft={(entry) => setSelectedEntry(entry as SecondaryEntry)}
           statCatalog={kind === "arcana" ? records : undefined}
           enchantmentPeers={kind === "enchantments" ? (records as WarehouseEntry<EnchantmentContent>[]) : []}
           onReorderEnchantments={canWrite ? reorderEnchantments : undefined}
           onCreateDraft={
             !creating && canWrite && scopeState.draftsReady && selected?.revision.state === "PUBLISHED"
-              ? (section) => action("fork", section)
+              ? (request) => action("fork", request)
               : undefined
           }
+          openDraftNo={existingDraft?.revision.revisionNo}
           onOpenDraft={
             canWrite && selected?.revision.state === "PUBLISHED" && existingDraft
               ? (section) => open(existingDraft, section)

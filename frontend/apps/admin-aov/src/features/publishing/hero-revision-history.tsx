@@ -1,7 +1,7 @@
 import { HeroOverallAssessment, type HeroAssessment } from "./hero-overall-assessment"
 import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { ArrowRight, ArrowUpRight, ChevronDown, GitCompareArrows, History, Info, RotateCw } from "lucide-react"
+import { ArrowRight, ArrowUpRight, ChevronDown, History, Info, RotateCw } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Badge } from "@aov/ui/components/badge"
 import { cn } from "@aov/ui/lib/utils"
@@ -18,17 +18,10 @@ import { ChangeColorSettings } from "./change-color-preferences"
 import type { Content, Revision } from "./types"
 import { useHeroLocation } from "./use-hero-location"
 import { heroLocationId } from "./hero-location"
+import { CAUSE_NAMES } from "./version-causes"
 
 const api = createPublishingApi(backendRequest)
-const causeNames: Record<string, string> = {
-  DATA_BASELINE: "Mốc dữ liệu ban đầu",
-  GAME_PATCH: "Cập nhật game",
-  TRANSLATION: "Bản dịch",
-  CONTENT_CORRECTION: "Hiệu chỉnh dữ liệu",
-  IMPORT_CORRECTION: "Hiệu chỉnh qua import",
-  VISUAL_UPDATE: "Cập nhật hình ảnh",
-  OTHER: "Khác",
-}
+const causeNames: Record<string, string> = CAUSE_NAMES
 const stateNames = { DRAFT: "Bản nháp", PUBLISHED: "Đã xuất bản", DISCARDED: "Đã hủy" }
 interface ChangeSet extends HeroAssessment {
   heroId: string
@@ -141,14 +134,11 @@ function RevisionHistoryContent({
   return (
     <AdminReferenceProvider locale={locale}>
       <div className="@container space-y-4" aria-label="Lịch sử và so sánh tướng">
-        <section className="admin-section py-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <GitCompareArrows className="size-4" />
-            So sánh phiên bản
-            <span title="Đối chiếu các bản đã lưu. Nhãn gameplay chỉ lấy từ thay đổi đã biên tập cho đúng cặp phiên bản.">
-              <Info className="size-3.5 text-muted-foreground" />
-            </span>
-          </h3>
+        <section className="py-4">
+          <p className="type-meta mb-3 flex items-center gap-1.5">
+            <Info className="size-3.5 shrink-0" />
+            Nhãn gameplay chỉ lấy từ thay đổi đã biên tập cho đúng cặp phiên bản.
+          </p>
           <div className="grid items-end gap-3 @min-[620px]:grid-cols-[1fr_auto_1fr]">
             <label className="grid min-w-0 gap-1.5 text-xs text-muted-foreground">
               Bản đối chiếu
@@ -158,7 +148,9 @@ function RevisionHistoryContent({
                 value={sourceId}
                 onChange={(event) => updateLocation({ compare: event.target.value, changes: null })}
               >
-                <option value="">{revision.sourceRevisionId ? "Tự động từ bản nguồn" : "Chưa có bản đối chiếu"}</option>
+                <option value="">
+                  {revision.sourceRevisionId ? "Tự động: bản trước đó" : "Chưa có bản đối chiếu"}
+                </option>
                 {candidates
                   .filter((item) => item.id !== revision.id)
                   .map((item) => (
@@ -170,7 +162,7 @@ function RevisionHistoryContent({
             </label>
             <ArrowRight className="mb-3 hidden size-4 text-muted-foreground @min-[620px]:block" />
             <div className="grid min-w-0 gap-1.5 text-xs text-muted-foreground">
-              <span>Bản đang xem</span>
+              <span>Bản đang mở</span>
               <div className="flex min-h-10 items-center rounded-md border bg-muted/20 px-3 py-2 text-sm text-foreground">
                 {revisionName(revision)}
               </div>
@@ -196,7 +188,7 @@ function RevisionHistoryContent({
           </div>
         ) : comparison.data?.status === "BASELINE_ONLY" ? (
           <div className="rounded-xl border border-dashed bg-muted/15 p-6">
-            <Badge variant="secondary">Mốc dữ liệu đã biết</Badge>
+            <Badge variant="secondary">{CAUSE_NAMES.DATA_BASELINE}</Badge>
             <h4 className="mt-3 font-semibold">Chưa đủ dữ liệu để xác định phần thay đổi</h4>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
               Bản đầu tiên ghi lại trạng thái tướng tại một thời điểm. Khi bổ sung bản của mùa hoặc patch trước, bạn có

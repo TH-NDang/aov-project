@@ -76,7 +76,7 @@ test("timeline keeps baseline separate, selects a patch, and suppresses selectio
       />,
     )
     const button = (label: string) => document.querySelector<HTMLButtonElement>(`[aria-label="Lọc patch ${label}"]`)!
-    assert.match(button("Nền S3").textContent!, /31 mục dữ liệu nền/)
+    assert.match(button("Nền S3").textContent!, /31 mục nhập dữ liệu/)
     assert.match(button("29/09").textContent!, /2 mục thay đổi/)
     assert.match(button("15/10").textContent!, /Chưa ghi nhận thay đổi/)
     await act(async () => button("29/09").click())
@@ -665,7 +665,8 @@ test("creating a spell uploads its icon from the information tab and saves the c
 })
 
 test("editing one spell translation preserves other locales, mechanics, states and artwork; published views cannot upload", async () => {
-  await withUi(async ({ document, render, tab, language, name, click }) => {
+  await withUi(async ({ document, render, tab, name, click }) => {
+    const window = document.defaultView!
     const { SecondaryEditor } = await import("../src/features/warehouse/secondary-editor")
     const content: SecondaryContent = {
       iconAssetId: "spell-icon",
@@ -711,9 +712,24 @@ test("editing one spell translation preserves other locales, mechanics, states a
       },
     }
     await render(<SecondaryEditor {...props} />)
-    await tab("Bản dịch")
-    await language("en-US")
-    await click("Sửa bản dịch")
+    // The language icon at the top sets what the page reads and edits in; its menu tells the progress.
+    await act(async () => {
+      document
+        .querySelector('button[aria-label="Ngôn ngữ: Tiếng Việt (Việt Nam)"]')!
+        .dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    })
+    // Each language row shows its flag, how far it is translated and its own pencil, as on the hero page.
+    const english = [...document.querySelectorAll<HTMLElement>('[role="menuitemradio"]')].find((item) =>
+      item.textContent?.includes("Tiếng Anh (Mỹ)"),
+    )!
+    assert.match(english.textContent!, /Đủ nội dung|Thiếu \d+ mục/)
+    assert.match(english.textContent!, /\d+\/\d+/)
+    assert.ok(document.querySelector('[role="menuitem"][aria-label="Sửa bằng Tiếng Anh (Mỹ)"]'))
+    await act(async () => english.click())
+    assert.match(document.querySelector("#secondary-section-overview")?.textContent ?? "", /Increase movement speed/)
+    await click("Sửa phụ trợ")
+    // Writing English shows the same field in another language the spell has, Vietnamese here.
+    assert.match(document.querySelector('[aria-label="Nội dung tham khảo"]')?.textContent ?? "", /Tốc hành/)
     await name("Sprint revised")
     await click("Lưu nháp")
     assert.ok(saved)
@@ -895,8 +911,9 @@ function fixtureRevision(id: string): WarehouseRevision {
   }
 }
 
-test("warehouse pencils resume or fork only on request and open the selected section", async () => {
+test("warehouse sheets fork or resume a draft only from their single pencil and open it editing", async () => {
   await withUi(async ({ document, render, click }) => {
+    const window = document.defaultView!
     const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
     const calls: string[] = []
     const props = {
@@ -910,34 +927,54 @@ test("warehouse pencils resume or fork only on request and open the selected sec
       onClose() {},
       onSave: async () => {},
     }
-    const create = async (section: string) => {
-      calls.push("fork:" + section)
+    const create = async (draft: { cause: string }) => {
+      calls.push("fork:" + draft.cause)
     }
+    // The pencil on a published version opens a menu; nothing starts until a choice is made.
+    const openMenu = async (label: string) =>
+      act(async () => {
+        document
+          .querySelector(`button[aria-label="${label}"]`)!
+          .dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+      })
+    const choose = async (text: string) =>
+      act(async () => {
+        ;[...document.querySelectorAll<HTMLElement>('[role="menuitem"]')]
+          .find((item) => item.textContent?.includes(text))!
+          .click()
+      })
     await render(<SecondaryEditor {...props} readOnly onCreateDraft={create} />)
     assert.deepEqual(calls, [])
     assert.equal(document.querySelector('button[aria-label="Hệ phù hiệu"]'), null)
-    await click("Tạo nháp và sửa hệ và vị trí")
+    await openMenu("Tạo nháp và sửa phù hiệu")
+    assert.deepEqual(calls, [])
+    assert.ok(document.body.textContent?.includes("Cập nhật theo patch"))
+    await choose("Sửa nội dung")
     await render(
       <SecondaryEditor
         {...props}
         readOnly
         onCreateDraft={create}
         onOpenDraft={(section) => calls.push("open:" + section)}
+        openDraftNo={4}
       />,
     )
-    await click("Mở nháp và sửa bản dịch")
-    assert.deepEqual(calls, ["fork:mechanics", "open:translations"])
+    await openMenu("Mở nháp và sửa phù hiệu")
+    await choose("Mở bản nháp #4")
+    assert.deepEqual(calls, ["fork:CONTENT_CORRECTION", "open:mechanics"])
     await render(<SecondaryEditor key="draft" {...props} initialSection="translations" />)
-    assert.equal(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim(), "Bản dịch")
+    assert.equal(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim(), "Nội dung")
     assert.equal(document.querySelector<HTMLInputElement>("input")?.disabled, false)
+    // One pencil for the whole page, already pressed because the draft opened editing.
+    assert.equal(document.querySelector('button[aria-label="Xem lại phù hiệu"]')?.getAttribute("aria-pressed"), "true")
+    assert.equal(document.querySelector('button[aria-label^="Sửa "]'), null)
     await render(
       <SecondaryEditor key="arcana" {...props} kind="arcana" content={newSecondaryContent("arcana", "vi-VN")} />,
     )
-    await click("Sửa chỉ số")
+    await click("Sửa ngọc")
     await click("Thêm chỉ số")
-    assert.equal(document.querySelectorAll('input[type="number"]').length, 1)
-    assert.equal(document.querySelector("select"), null)
-    await click("Xem lại chỉ số")
+    assert.equal(document.querySelectorAll('#secondary-section-stats input[type="number"]').length, 1)
+    await click("Xem lại ngọc")
     assert.equal(document.querySelectorAll('input[type="number"]').length, 0)
     await render(<SecondaryEditor key="restricted" {...props} readOnly />)
     assert.equal(document.querySelector('button[aria-label*="sửa"]'), null)
@@ -1304,7 +1341,7 @@ test("arcana uses terminology colors and live overrides without adding hover or 
 })
 
 test("archived spells stay separate, gameplay revisions require a patch, and later removal history needs a source", async () => {
-  await withUi(async ({ document, render, click }) => {
+  await withUi(async ({ document, render, click, tab }) => {
     const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
     const content = newSecondaryContent("spells", "vi-VN")
     content.translations[0] = { locale: "vi-VN", name: "Phụ trợ cũ", description: "Mô tả lịch sử" }
@@ -1333,7 +1370,8 @@ test("archived spells stay separate, gameplay revisions require a patch, and lat
       },
     }
     await render(<SecondaryEditor {...props} />)
-    assert.match(document.body.textContent ?? "", /Chưa xác định · hồ sơ lưu trữ/)
+    await tab("Lịch sử")
+    assert.match(document.body.textContent ?? "", /Chưa rõ patch · hồ sơ lưu trữ/)
     await click("Xuất bản")
     assert.equal(published, 1)
     await render(
@@ -1383,7 +1421,7 @@ test("archived spells stay separate, gameplay revisions require a patch, and lat
 })
 
 test("baseline spell publication needs no invented patch and corrections retain their unscoped baseline", async () => {
-  await withUi(async ({ document, render, click }) => {
+  await withUi(async ({ document, render, click, tab }) => {
     const { SecondaryEditor, newSecondaryContent } = await import("../src/features/warehouse/secondary-editor")
     const content = newSecondaryContent("spells", "vi-VN")
     content.translations[0] = { locale: "vi-VN", name: "Tốc hành", description: "Tăng tốc chạy" }
@@ -1410,8 +1448,9 @@ test("baseline spell publication needs no invented patch and corrections retain 
       },
     }
     await render(<SecondaryEditor {...props} missingFields={["effectiveFromPatchVariantId"]} allowPatchChange />)
-    assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /Dữ liệu nền · chưa xác định patch/)
-    await click("Sửa mốc patch và ghi chú")
+    await tab("Lịch sử")
+    assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /Chưa rõ patch · bản nhập dữ liệu/)
+    await click("Sửa phụ trợ")
     assert.match(document.body.textContent ?? "", /không phải xác nhận mục được thêm ở mùa hiện tại/)
     await click("Xuất bản")
     assert.equal(published, 1)
@@ -1424,9 +1463,10 @@ test("baseline spell publication needs no invented patch and corrections retain 
         sourceRevisionId="published-baseline"
       />,
     )
-    assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /Dữ liệu nền kế thừa/)
-    await click("Sửa mốc patch và ghi chú")
-    assert.equal(document.querySelector<HTMLSelectElement>('[aria-label="Ngữ cảnh dữ liệu"]')?.disabled, true)
+    await tab("Lịch sử")
+    assert.match(document.querySelector('[role="status"]')?.textContent ?? "", /giữ theo bản nhập dữ liệu trước/)
+    await click("Sửa phụ trợ")
+    assert.equal(document.querySelector<HTMLSelectElement>('[aria-label="Áp dụng từ patch"]')?.disabled, true)
     await click("Xuất bản")
     assert.equal(published, 2)
 
@@ -1447,7 +1487,7 @@ test("baseline spell publication needs no invented patch and corrections retain 
 
 test("patch history can compare published unscoped baselines without offering drafts, future or archived spells", async () => {
   await withUi(
-    async ({ document, client, render, click }) => {
+    async ({ document, client, render }) => {
       const { WarehouseChangeHistory } = await import("../src/features/warehouse/warehouse-change-history")
       const baseline = {
         ...fixtureRevision("baseline"),
@@ -1480,7 +1520,19 @@ test("patch history can compare published unscoped baselines without offering dr
         ],
       })
       await render(<WarehouseChangeHistory kind="spells" entryId="spell" rulesetId="standard" locale="vi-VN" />)
-      await click("Ghi nhận thay đổi / tạo bản cập nhật")
+      // One timeline node per patch, newest first; versions without a patch come last.
+      const nodes = [...document.querySelectorAll<HTMLElement>('[aria-label="Dòng thời gian theo patch"] > li')]
+      assert.deepEqual(
+        nodes.map((node) => node.querySelector("p")?.textContent),
+        ["Sau", "Hiện tại", "Trước", "Chưa rõ patch"],
+      )
+      const current = nodes.find((node) => node.textContent?.includes("Hiện tại"))!
+      await act(async () =>
+        [...current.querySelectorAll("button")]
+          .find((button) => button.textContent?.includes("Ghi nhận thay đổi"))!
+          .click(),
+      )
+      assert.equal(document.querySelector<HTMLSelectElement>('[aria-label="Bản dữ liệu đã xuất bản"]')?.value, "target")
       const choose = async (label: string, value: string) =>
         act(async () => {
           const select = document.querySelector<HTMLSelectElement>(`[aria-label="${label}"]`)!
@@ -1497,11 +1549,10 @@ test("patch history can compare published unscoped baselines without offering dr
       )
       assert.match(
         options().find((option) => option.value === "baseline")?.textContent ?? "",
-        /v1 · Dữ liệu nền chưa rõ patch/,
+        /v1 · Nhập dữ liệu, chưa rõ patch/,
       )
 
       await choose("Bản dữ liệu đã xuất bản", "baseline")
-      await choose("Patch ghi nhận thay đổi", "patch-fixture")
       assert.equal(
         options().some((option) => option.value === "baseline"),
         false,
@@ -1556,13 +1607,36 @@ test("item details show verified upgrades and select pictured ingredients only a
     assert.deepEqual(opened, [armor.id])
     assert.equal(document.querySelector('[aria-label="Thêm nguyên liệu"]'), null)
 
-    await render(<ItemEditor key="draft" {...props} entry={{ ...ring, revision: fixtureRevision(ring.id) }} editable />)
+    const described = {
+      ...ring,
+      revision: fixtureRevision(ring.id),
+      content: {
+        ...ring.content,
+        translations: [
+          { locale: "vi-VN", name: "Nhẫn hồng ngọc", description: "+150 Máu tối đa\n\nHồi phục khi rời giao tranh" },
+        ],
+      },
+    }
+    await render(<ItemEditor key="draft" {...props} entry={described} editable />)
     const apply = () =>
-      [...document.querySelectorAll("button")].find((button) => button.textContent === "Áp dụng vào bản đang sửa")!
-    assert.ok(apply().disabled)
-    await click("Sửa công thức")
+      [...document.querySelectorAll("button")].find((button) => button.textContent === "Áp dụng vào bản đang sửa")
+    // Applying appears next to the pencil only once something has changed.
+    assert.equal(apply(), undefined)
+    assert.match(
+      document.querySelector('[id="item-section-text"]')?.textContent ?? "",
+      /\+150 Máu tối đa[\s\S]*Hồi phục khi rời giao tranh/,
+    )
+    assert.deepEqual(
+      [...document.querySelectorAll("button[aria-label]")]
+        .map((button) => button.getAttribute("aria-label")!)
+        .filter((label) => /sửa/i.test(label)),
+      ["Sửa trang bị"],
+    )
+    await click("Sửa trang bị")
+    assert.ok(document.querySelector('[aria-label="Trạng thái công thức"]'))
+    assert.ok(document.querySelector('textarea, [contenteditable="true"]'))
     await click("Thêm nguyên liệu")
-    assert.ok(apply().disabled)
+    assert.equal(apply(), undefined)
     assert.equal(document.querySelectorAll('[role="option"][cmdk-item]').length, 2)
     const search = document.querySelector<HTMLInputElement>('[aria-label="Tìm nguyên liệu"]')!
     await act(async () => {
@@ -1574,8 +1648,8 @@ test("item details show verified upgrades and select pictured ingredients only a
     assert.match(choices[0].textContent!, /Hồng thạch/)
     assert.equal(choices[0].querySelector("img")?.getAttribute("src"), "/gem.png")
     await act(async () => choices[0].click())
-    assert.ok(!apply().disabled)
-    await act(async () => apply().click())
+    assert.ok(apply() && !apply()!.disabled)
+    await act(async () => apply()!.click())
     assert.deepEqual(saved[0].components, [{ itemId: gem.id, quantity: 1 }])
     assert.equal(saved[0].recipeStatus, "VERIFIED")
     assert.deepEqual(ring.content.components, [])
@@ -2180,4 +2254,15 @@ test("shop separates terminal column two items and renders external attributes b
     assert.ok(orb.querySelector('[aria-label="Nâng cấp từ Cầu chiêm tinh"]'))
     assert.equal(secondColumn.querySelectorAll('[aria-label^="Trang bị hoàn chỉnh"]').length, 2)
   })
+})
+
+test("descriptions join lines wrapped by the game's text box and keep stat, effect and sentence breaks", async () => {
+  const { joinWrappedLines } = await import("../src/features/warehouse/warehouse-sheet")
+  assert.equal(
+    joinWrappedLines("Sát thương gây ra cho\ntướng địch tăng 3% nhưng\nsát thương phải chịu cũng tăng"),
+    "Sát thương gây ra cho tướng địch tăng 3% nhưng sát thương phải chịu cũng tăng",
+  )
+  const item = "+40 Công vật lý\n+20% Tốc đánh\n\nKích hoạt - Vô hình: lập tức tàng hình.\n(Hồi chiêu: 75 giây)"
+  assert.equal(joinWrappedLines(item), item)
+  assert.equal(joinWrappedLines("Kết thúc câu.\nmở đầu câu mới"), "Kết thúc câu.\nmở đầu câu mới")
 })

@@ -104,36 +104,28 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
   const mainTab = (view: string) => document.querySelector<HTMLButtonElement>(`[aria-controls="workspace-${view}"]`)!
   const readLocale = () => document.querySelector<HTMLButtonElement>('[aria-label="Ngôn ngữ hiển thị nội dung"]')!
   const translationLocale = () => document.querySelector<HTMLButtonElement>('[aria-label="Ngôn ngữ đích"]')!
+  // Translating opens from a language's own pencil in the language menu at the top; there is no translations tab.
+  const openTranslations = async (label: string) => {
+    await act(async () => {
+      readLocale().dispatchEvent(new dom.window.KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+    })
+    await click(document.querySelector<HTMLButtonElement>(`[role="menuitem"][aria-label="Dịch sang ${label}"]`)!)
+  }
   try {
     await verifySession()
     await mount()
     await waitFor(() => !!document.querySelector('[aria-label="Nội dung tướng"]'))
     assert.equal(document.querySelector('[aria-label="Chỉnh sửa nội dung"]'), null)
     assert.match(document.body.textContent!, /Ninja rồng/)
-    assert.ok(document.querySelector('[role="tab"][aria-controls="workspace-translations"]'))
+    assert.equal(document.querySelector('[role="tab"][aria-controls="workspace-translations"]'), null)
     assert.ok(document.querySelector('[role="tab"][aria-controls="workspace-history"]'))
     assert.equal(readLocale().value, "vi-VN")
     assert.ok(readLocale().closest("header"), "The language picker belongs to the hero header")
     assert.equal(document.querySelectorAll('[aria-label="Ngôn ngữ hiển thị nội dung"]').length, 1)
-    // The overview gathers a short look at the other tabs. Its items are looked at in place; only the details button
-    // opens the tab, which is kept once built.
-    for (const tab of ["skills", "skins", "media", "videos"])
-      assert.ok(document.querySelector(`[data-preview="${tab}"]`), `The overview previews ${tab}`)
-    const skillPicks = [...document.querySelectorAll<HTMLButtonElement>('[data-preview="skills"] button[aria-pressed]')]
-    await click(skillPicks.at(-1)!)
-    assert.equal(skillPicks.at(-1)!.getAttribute("aria-pressed"), "true")
-    assert.equal(
-      document.querySelector('[aria-controls="hero-content-overview"]')!.getAttribute("aria-selected"),
-      "true",
-      "Looking at a skill on the overview stays on the overview",
-    )
-    assert.equal(document.querySelector("#hero-content-skills"), null, "A tab is built when first opened")
-    await click(document.querySelector<HTMLButtonElement>('[aria-label="Xem chi tiết kỹ năng"]')!)
-    assert.equal(document.querySelector('[aria-controls="hero-content-skills"]')!.getAttribute("aria-selected"), "true")
-    assert.equal(document.querySelector<HTMLElement>("#hero-content-overview")!.hidden, true)
-    assert.equal(document.querySelector<HTMLElement>("#hero-content-skills")!.hidden, false)
-    await click(document.querySelector<HTMLButtonElement>('[aria-controls="hero-content-overview"]')!)
-    assert.equal(document.querySelector<HTMLElement>("#hero-content-skills")?.hidden, true)
+    // Every part of the hero is on one page, with no tabs or previews to open first.
+    for (const part of ["overview", "skills", "skins", "media"])
+      assert.ok(document.querySelector(`#hero-content-${part}`), `The page shows the hero's ${part}`)
+    assert.equal(document.querySelector('[aria-controls="hero-content-skills"]'), null)
     await select(readLocale(), "en-US")
     assert.match(readLocale().getAttribute("aria-description")!, /Chưa có bản dịch/)
     assert.equal(
@@ -161,7 +153,6 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
       "Editing fallback text must open the target translation, never the source profile",
     )
     await click(mainTab("overview"))
-    await click(document.querySelector<HTMLButtonElement>('[aria-controls="hero-content-skills"]')!)
     assert.equal(readLocale().value, "en-US")
     await click(document.querySelector<HTMLButtonElement>('button[aria-label^="Xem 2 mục chưa dịch"]')!)
     await click(document.querySelector<HTMLButtonElement>('[aria-label="Dịch phần này: Mô tả"]')!)
@@ -176,9 +167,6 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     assert.equal(translationLocale().value, "en-US")
     await click(mainTab("overview"))
     await select(readLocale(), "vi-VN")
-    // The content opens on the tab it was left at, the skills; the profile lives on the overview tab.
-    assert.equal(document.querySelector('[aria-controls="hero-content-skills"]')?.getAttribute("aria-selected"), "true")
-    await click(document.querySelector<HTMLButtonElement>('[aria-controls="hero-content-overview"]')!)
     await click(document.querySelector<HTMLButtonElement>('button[aria-label="Chỉnh sửa Thông tin"]')!)
     assert.doesNotMatch(
       document.querySelector('[aria-label="Chỉnh sửa nội dung"]')!.textContent!,
@@ -187,7 +175,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await click(button("Hủy chỉnh sửa phần này"))
     assert.equal(document.querySelector('[aria-label="Chỉnh sửa nội dung"]'), null)
     assert.equal(fixture.writes.length, 0)
-    await click(mainTab("translations"))
+    await openTranslations("Tiếng Anh (Mỹ)")
     assert.equal(translationLocale().value, "en-US")
     await select(translationLocale(), "th-TH")
     await click(mainTab("overview"))
@@ -195,8 +183,12 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await select(readLocale(), "zh-TW")
     await click(mainTab("history"))
     assert.equal(readLocale().value, "zh-TW")
-    await click(mainTab("translations"))
-    assert.equal(translationLocale().value, "th-TH", "The selected target language must survive tab switching")
+    await openTranslations("Tiếng Thái (Thái Lan)")
+    assert.equal(
+      translationLocale().value,
+      "th-TH",
+      "The selected target language must survive leaving and reopening translations",
+    )
     await click(mainTab("overview"))
     assert.equal(readLocale().value, "zh-TW")
     await select(readLocale(), "vi-VN")
@@ -234,8 +226,8 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     await click(review.querySelector<HTMLButtonElement>('[data-slot="sheet-close"],button:last-child')!)
     await click(draftControl)
     assert.equal(unsafe, false, "Locally captured edits must not prevent opening another page")
-    assert.equal(document.querySelector<HTMLButtonElement>('[aria-controls="workspace-translations"]')!.disabled, false)
-    await click(mainTab("translations"))
+    assert.equal(readLocale().disabled, false)
+    await openTranslations("Tiếng Anh (Mỹ)")
     await select(translationLocale(), "en-US")
     await type(input("Tên · Tiếng Anh (Mỹ)"), "Unfinished English")
     await select(translationLocale(), "th-TH")
@@ -287,7 +279,7 @@ test("hero reading, section save/cancel/conflict and translation preserve unrela
     )
     await click(mainTab("overview"))
     assert.equal(readLocale().value, "vi-VN", "The translation URL target must not replace the reading preference")
-    await click(mainTab("translations"))
+    await openTranslations("Tiếng Anh (Mỹ)")
     assert.equal(translationLocale().value, "en-US")
     const original = structuredClone(fixture.content.PROFILE!)
     await type(input("Tên · Tiếng Anh (Mỹ)"), "Airi English")

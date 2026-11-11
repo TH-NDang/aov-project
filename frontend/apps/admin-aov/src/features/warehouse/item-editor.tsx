@@ -1,26 +1,26 @@
 import { ItemCategoryIcon, ItemCategorySelect } from "./item-category-icon"
-import { ItemOverview } from "./item-overview"
 import { ItemRecipe } from "./item-recipe"
 import { ItemRowPicker } from "./item-row-picker"
 import { shopColumns } from "./item-shop-position"
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useState } from "react"
 import {
-  Archive,
-  ArrowLeft,
-  CalendarClock,
   Clapperboard,
+  FileText,
+  Hammer,
   History,
-  Languages,
+  ImagePlus,
+  Info,
+  LayoutGrid,
   LayoutList,
   Plus,
-  Settings2,
   Sparkles,
   Trash2,
 } from "lucide-react"
-import { ITEM_STATS, itemStatsFromDescription } from "@aov/ui/lib/item-description"
+import { ITEM_STATS, itemReaderContent, itemStatsFromDescription } from "@aov/ui/lib/item-description"
 import { ItemPrice } from "@aov/ui/components/warehouse/item-price"
-import { SectionPencil, type WarehouseSection } from "./warehouse-edit-section"
+import { ItemStatList } from "@aov/ui/components/warehouse/item-facts"
+import { ItemRecipeView } from "@aov/ui/components/warehouse/item-recipe"
 import { Button } from "@aov/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
@@ -30,11 +30,33 @@ import { ContentsSection, SectionContents, useSectionContents } from "@/componen
 import { AssetPicker } from "../publishing/asset-picker"
 import { Field, control } from "../publishing/fields"
 import { HeroAsset } from "../publishing/hero-content"
+import { VersionFacts } from "../publishing/version-facts"
+import { AdminRichTextPreview } from "../terminology/rich-text-field"
+import { AdminWarehouseView } from "./warehouse-view"
 import { WarehouseTranslations } from "./warehouse-translations"
 import { WarehousePatchContext } from "./warehouse-patch-context"
 import { warehouseMissingFieldLabel } from "./warehouse-labels"
 import { WarehouseStatsEditor } from "./warehouse-stats-editor"
 import { WarehouseNotes } from "./warehouse-notes"
+import {
+  LanguagePicker,
+  ReferenceLanguage,
+  baseLanguage,
+  languageName,
+  pickDisplayLanguage,
+  translationProgress,
+} from "./warehouse-translation-panel"
+import {
+  CopyCode,
+  SHEET_TAB,
+  SHEET_TAB_LIST,
+  SheetActions,
+  WarehouseDescription,
+  focusSheet,
+  versionLabel,
+  type NewDraft,
+} from "./warehouse-sheet"
+import type { WarehouseSection } from "./warehouse-edit-section"
 import { SubjectVideosPanel } from "../videos/subject-videos-panel"
 import {
   warehouseName,
@@ -44,16 +66,34 @@ import {
   type WarehouseEntry,
   type WarehouseMetadata,
 } from "./warehouse-types"
-import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
-/** Sections of the item's content page, in reading order. */
+/** Sections of the item page, in reading order. Viewing and editing share them, so the page never rearranges. */
 const ITEM_SECTIONS = {
   overview: "item-section-overview",
-  context: "item-section-context",
+  text: "item-section-text",
+  recipe: "item-section-recipe",
+  positions: "item-section-positions",
   videos: "item-section-videos",
 } as const
-const OVERVIEW_PARTS: readonly WarehouseSection[] = ["details", "stats", "recipe", "positions"]
 
+/** Where a request to edit one part of the item lands on the page; the patch and notes have a tab of their own. */
+const SECTION_FOR: Record<WarehouseSection, string> = {
+  details: ITEM_SECTIONS.overview,
+  stats: ITEM_SECTIONS.overview,
+  images: ITEM_SECTIONS.overview,
+  mechanics: ITEM_SECTIONS.overview,
+  states: ITEM_SECTIONS.overview,
+  translations: ITEM_SECTIONS.text,
+  recipe: ITEM_SECTIONS.recipe,
+  positions: ITEM_SECTIONS.positions,
+  context: ITEM_SECTIONS.overview,
+}
+
+/**
+ * One item read as a page, with a single pencil that turns the whole page into its form. Every section keeps its
+ * place while editing, so the editor changes values where the reader saw them.
+ */
 export function ItemEditor({
   entry,
   items,
@@ -70,6 +110,7 @@ export function ItemEditor({
   onApply,
   onFork,
   onOpenDraft,
+  openDraftNo,
   onPublish,
   onDiscard,
   busy,
@@ -84,11 +125,15 @@ export function ItemEditor({
   onClose: () => void
   onApply: (content: ItemContent, patchId: string | null) => void
   translationOnly?: boolean
+  /** Opens the page already editing, scrolled to this part. */
   initialSection?: WarehouseSection
   initialLanguage?: string
   onLanguageChange?: (language: string) => void
-  onFork?: (section: WarehouseSection) => void
+  /** Starts a draft of the chosen kind from the version on screen. */
+  onFork?: (draft: NewDraft) => void
   onOpenDraft?: (section: WarehouseSection) => void
+  /** The number of the draft `onOpenDraft` opens, for the pencil's menu. */
+  openDraftNo?: number
   onPublish?: () => void
   /** Throws the draft away; offered only for a draft, after asking. */
   onDiscard?: () => void
@@ -98,63 +143,80 @@ export function ItemEditor({
   const [value, setValue] = useState(() => structuredClone(entry.content))
   const [patchId, setPatchId] = useState(entry.revision.effectiveFromPatchVariantId)
   const [uploading, setUploading] = useState(false)
-  const [section, setSection] = useState(initialSection)
-  const [tab, setTab] = useState(initialSection === "translations" ? "translations" : "content")
+  const [editing, setEditing] = useState(editable && !!initialSection)
+  const [picking, setPicking] = useState(editable && initialSection === "images")
+  const [tab, setTab] = useState(initialSection === "context" ? "history" : "content")
+  const [language, setLanguage] = useState(
+    () => initialLanguage ?? pickDisplayLanguage(entry.content.translations, locale),
+  )
   const [dirty, setDirty] = useState(false)
   const contents = useSectionContents({
-    requested: initialSection === "context" ? ITEM_SECTIONS.context : undefined,
+    requested: initialSection ? SECTION_FOR[initialSection] : undefined,
     first: ITEM_SECTIONS.overview,
   })
   const canEdit = editable || !!onFork || !!onOpenDraft
-  const focused = editable && OVERVIEW_PARTS.includes(section ?? "context")
-  function pencil(target: WarehouseSection, className?: string) {
-    if (!canEdit || (translationOnly && target !== "translations" && target !== "context")) return null
-    const active = editable && section === target && tab === (target === "translations" ? "translations" : "content")
-    return (
-      <SectionPencil
-        section={target}
-        active={active}
-        className={className}
-        disabled={busy || uploading}
-        draftAction={editable ? undefined : onOpenDraft ? "open" : "create"}
-        onClick={() => {
-          if (!editable) return (onOpenDraft ?? onFork)?.(target)
-          setSection(active ? undefined : target)
-          setTab(target === "translations" ? "translations" : "content")
-          // The form replaces the item's information, so the page goes back to where it starts.
-          if (OVERVIEW_PARTS.includes(target)) contents.jump(ITEM_SECTIONS.overview)
-        }}
-      />
-    )
-  }
+  // A translation draft may only change the words and the notes; the rest of the item stays as published.
+  const editsContent = editing && !translationOnly
   const name = warehouseName({ ...entry, content: value }, locale)
+  const text = warehouseText(value.translations, language) ?? warehouseText(value.translations, locale)
+  const reading = itemReaderContent(value, warehouseText(value.translations, locale))
   const describedStats = itemStatsFromDescription(warehouseText(value.translations, locale)?.description)
   const category = categories.find((group) => group.code === value.categoryCode)
   const baselineMode = warehouseBaselineMode(entry.revision, entry.missingFields)
   const visibleMissing = (entry.missingFields ?? []).filter(
     (field) => field !== "effectiveFromPatchVariantId" || !!patchId || !baselineMode,
   )
+  const upgrades = relatedItems.filter(
+    (item) =>
+      item.revision.state === "PUBLISHED" &&
+      item.content.recipeStatus === "VERIFIED" &&
+      item.content.components.some((part) => part.itemId === entry.id),
+  )
   const change = (patch: Partial<ItemContent>) => {
     setValue((old) => ({ ...old, ...patch }))
     setDirty(true)
   }
-  async function close() {
-    if (busy || uploading) return
+  const changePosition = (index: number, patch: Partial<ItemContent["shopPositions"][number]>) =>
+    change({ shopPositions: value.shopPositions.map((p, i) => (i === index ? { ...p, ...patch } : p)) })
+  const editLabel = editing ? "Xem lại trang bị" : "Sửa trang bị"
+  function toggleEditing() {
+    setEditing(!editing)
+  }
+  const statKeys = value.stats.map((stat) => stat.key)
+  const variantKeys = [
+    ...new Set(value.shopPositions.map((position) => position.variant).filter((v): v is string => !!v)),
+  ]
+  const progress = (target: string) =>
+    translationProgress(value.translations, baseLanguage(value.translations), target, {
+      summary: true,
+      statKeys,
+      variantKeys,
+    })
+  function chooseLanguage(next: string) {
+    setLanguage(next)
+    onLanguageChange?.(next)
+  }
+  async function leave(next: () => void, title: string) {
     if (
       !dirty ||
       (await confirmDiscard({
-        title: "Đóng phần chỉnh sửa?",
+        title,
         description: "Các chỉnh sửa chưa áp dụng sẽ bị bỏ.",
         confirmLabel: "Bỏ chỉnh sửa",
       }))
     )
-      onClose()
+      next()
   }
+  function close() {
+    if (busy || uploading) return
+    void leave(onClose, "Đóng phần chỉnh sửa?")
+  }
+  const viewItem = (item: WarehouseEntry<ItemContent>) => void leave(() => onView(item), "Mở trang bị khác?")
   return (
     <Sheet
       open
       onOpenChange={(open) => {
-        if (!open) void close()
+        if (!open) close()
       }}
     >
       <SheetContent
@@ -170,43 +232,23 @@ export function ItemEditor({
         onPointerDownOutside={(event) => {
           if (uploading) event.preventDefault()
         }}
+        onOpenAutoFocus={focusSheet}
+        showCloseButton={false}
       >
-        <SheetHeader className="shrink-0 flex-row items-center gap-3 border-b pr-10">
-          <div className="relative shrink-0">
-            <HeroAsset id={value.iconAssetId} alt={name} className="size-14 rounded-lg" frameAspectRatio={1} preview />
-            {pencil("images", "absolute -right-1 -bottom-1 rounded-full border bg-background")}
-            {editable && (
-              <Dialog
-                open={section === "images"}
-                onOpenChange={(open) => {
-                  if (!open && !uploading) setSection(undefined)
-                }}
-              >
-                <DialogContent className="max-h-[85dvh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Ảnh trang bị</DialogTitle>
-                    <DialogDescription>{name}</DialogDescription>
-                  </DialogHeader>
-                  <AssetPicker
-                    semanticType="ITEM_ICON"
-                    value={value.iconAssetId}
-                    onChange={(iconAssetId) => change({ iconAssetId })}
-                    onBusyChange={setUploading}
-                  />
-                </DialogContent>
-              </Dialog>
-            )}
-          </div>
-          <div className="min-w-0 space-y-1">
-            <div className="flex items-center gap-1">
+        <SheetHeader className="shrink-0 flex-row flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+          <HeroAsset
+            id={value.iconAssetId}
+            alt={name}
+            className="size-12 shrink-0 rounded-lg"
+            frameAspectRatio={1}
+            preview
+          />
+          <div className="min-w-40 flex-1">
+            <div className="flex min-w-0 items-center gap-1">
               <SheetTitle className="type-section-title break-words">{name}</SheetTitle>
-              {tab !== "translations" && pencil("translations")}
+              <CopyCode code={entry.code} />
             </div>
-            <SheetDescription className="type-meta">
-              Bản {entry.revision.revisionNo} · {entry.revision.state === "DRAFT" ? "Bản nháp" : "Đã xuất bản"} ·{" "}
-              {entry.code}
-            </SheetDescription>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            <div className="type-body flex flex-wrap items-center gap-x-3 gap-y-1">
               {value.categoryCode && (
                 <span className="inline-flex items-center gap-1">
                   <ItemCategoryIcon category={category} />
@@ -215,126 +257,254 @@ export function ItemEditor({
               )}
               {value.tier !== null && <span>Cấp {value.tier}</span>}
               <ItemPrice amount={value.price} locale={locale} />
-              {value.price == null && value.tier == null && !value.categoryCode && canEdit && (
-                <span className="type-meta">Giá, cấp và nhóm</span>
-              )}
-              {pencil("details")}
             </div>
+            <SheetDescription className="sr-only">Mã {entry.code}</SheetDescription>
           </div>
+          <SheetActions
+            version={versionLabel(entry.revision.revisionNo, entry.revision.state, editing)}
+            editing={editing}
+            disabled={busy || uploading}
+            closeDisabled={uploading}
+            onClose={close}
+            language={
+              <LanguagePicker
+                translations={value.translations}
+                value={language}
+                onChange={chooseLanguage}
+                progress={progress}
+                disabled={busy || uploading}
+                onEdit={
+                  canEdit
+                    ? (next) => {
+                        // The language is remembered by the page, so the draft opens writing it.
+                        chooseLanguage(next)
+                        if (editable) setEditing(true)
+                        else if (onOpenDraft) onOpenDraft("translations")
+                        else onFork?.({ cause: "TRANSLATION_UPDATE" })
+                      }
+                    : undefined
+                }
+              />
+            }
+            edit={editable ? { label: editLabel, pressed: editing, onClick: toggleEditing } : undefined}
+            draft={
+              !editable && canEdit
+                ? {
+                    name: "trang bị",
+                    rulesetId: entry.revision.rulesetId,
+                    basePatchVariantId: entry.revision.effectiveFromPatchVariantId,
+                    openDraft: onOpenDraft
+                      ? {
+                          revisionNo: openDraftNo,
+                          onOpen: () => onOpenDraft(translationOnly ? "translations" : "details"),
+                        }
+                      : undefined,
+                    onCreate: onFork,
+                  }
+                : undefined
+            }
+            discard={
+              onDiscard
+                ? {
+                    description: "Nội dung trong bản nháp sẽ bị hủy. Bản đã xuất bản giữ nguyên.",
+                    onConfirm: onDiscard,
+                  }
+                : undefined
+            }
+            save={
+              editable && dirty
+                ? {
+                    label: "Áp dụng vào bản đang sửa",
+                    title: "Đưa chỉnh sửa vào bản đang sửa; bấm Lưu thay đổi trên trang để ghi lại.",
+                    onClick: () => {
+                      onApply(value, patchId)
+                      setDirty(false)
+                    },
+                  }
+                : undefined
+            }
+            publish={
+              onPublish
+                ? {
+                    disabled: dirty || visibleMissing.length > 0,
+                    quiet: dirty,
+                    title: dirty
+                      ? "Áp dụng chỉnh sửa trước khi xuất bản"
+                      : visibleMissing.length
+                        ? "Cần hoàn thiện trước khi xuất bản"
+                        : undefined,
+                    onClick: onPublish,
+                  }
+                : undefined
+            }
+          />
         </SheetHeader>
-        <div className="min-h-0 flex-auto space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
-          {visibleMissing.length ? (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-xs">
-              <p className="font-medium">Cần hoàn thiện trước khi xuất bản</p>
-              <ul className="mt-1 list-disc pl-4">
-                {visibleMissing.map((field) => (
-                  <li key={field}>{warehouseMissingFieldLabel(field)}</li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-          {!editable && canEdit && (
-            <p className="type-meta">
-              {onOpenDraft
-                ? "Chọn bút để sửa bản nháp đang có."
-                : `Chọn bút để tạo nháp từ bản ${entry.revision.revisionNo}.`}
-            </p>
-          )}
-          {translationOnly && <p className="type-meta">Nháp bản dịch cho phép sửa nội dung dịch và ghi chú.</p>}
-          <Tabs value={tab} onValueChange={setTab}>
-            <TabsList
-              aria-label="Trang bị"
-              className="sticky top-0 z-10 grid w-full grid-cols-3 bg-muted [overflow-anchor:none]"
-            >
-              <TabsTrigger value="content">
-                <LayoutList className="size-4" /> Nội dung
-              </TabsTrigger>
-              <TabsTrigger value="translations">
-                <Languages className="size-4" /> Bản dịch · {value.translations.length}
-              </TabsTrigger>
-              <TabsTrigger value="history">
-                <History className="size-4" /> Lịch sử
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="content" className="pt-3">
-              <SectionContents
-                contents={contents}
-                layout="panel"
-                // The tab row above stays stuck to the top of the panel.
-                className="[--contents-offset:36px]"
-                entries={[
-                  { id: ITEM_SECTIONS.overview, label: "Thông tin", icon: Settings2 },
-                  { id: ITEM_SECTIONS.context, label: "Mốc patch và ghi chú", icon: CalendarClock },
-                  { id: ITEM_SECTIONS.videos, label: "Video", icon: Clapperboard },
-                ]}
-              >
-                <ContentsSection id={ITEM_SECTIONS.overview} title="Thông tin" icon={Settings2}>
-                  <div className="space-y-5">
-                    {!focused && (
-                      <ItemOverview
-                        entry={{ ...entry, content: value }}
-                        items={items}
-                        relatedItems={relatedItems}
-                        categories={categories}
-                        locale={locale}
-                        pencil={canEdit && !translationOnly ? pencil : undefined}
-                        onView={async (item) => {
-                          if (
-                            !dirty ||
-                            (await confirmDiscard({
-                              title: "Mở trang bị khác?",
-                              description: "Các chỉnh sửa chưa áp dụng sẽ bị bỏ.",
-                              confirmLabel: "Bỏ chỉnh sửa",
-                            }))
-                          )
-                            onView(item)
-                        }}
-                      />
-                    )}
-                    {focused && (
+        {/* The tab row sits right under the header and stays put; only the tab's content scrolls. */}
+        <Tabs value={tab} onValueChange={setTab} className="min-h-0 flex-auto gap-0">
+          <TabsList aria-label="Trang bị" variant="line" className={SHEET_TAB_LIST}>
+            <TabsTrigger value="content" className={SHEET_TAB}>
+              <LayoutList /> Nội dung
+            </TabsTrigger>
+            <TabsTrigger value="history" className={SHEET_TAB}>
+              <History /> Lịch sử
+            </TabsTrigger>
+          </TabsList>
+          <div className="min-h-0 flex-auto space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
+            {visibleMissing.length ? (
+              <div className="type-body rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="type-label">Cần hoàn thiện trước khi xuất bản</p>
+                <ul className="mt-1 list-disc pl-4">
+                  {visibleMissing.map((field) => (
+                    <li key={field}>{warehouseMissingFieldLabel(field)}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {translationOnly && editing && (
+              <p className="type-meta">
+                Nháp bản dịch chỉ sửa tên, mô tả và ghi chú; phần còn lại giữ như bản đã xuất bản.
+              </p>
+            )}
+            <TabsContent value="content">
+              <AdminWarehouseView>
+                <SectionContents
+                  contents={contents}
+                  layout="panel"
+                  entries={[
+                    { id: ITEM_SECTIONS.overview, label: "Tổng quan", icon: Info },
+                    { id: ITEM_SECTIONS.text, label: "Mô tả", icon: FileText },
+                    { id: ITEM_SECTIONS.recipe, label: "Công thức", icon: Hammer },
+                    { id: ITEM_SECTIONS.positions, label: "Vị trí trong shop", icon: LayoutGrid },
+                    { id: ITEM_SECTIONS.videos, label: "Video", icon: Clapperboard },
+                  ]}
+                >
+                  <ContentsSection id={ITEM_SECTIONS.overview} title="Tổng quan" icon={Info}>
+                    {editsContent ? (
                       <fieldset disabled={busy || uploading} className="min-w-0 space-y-5 disabled:opacity-60">
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setSection(undefined)}>
-                          <ArrowLeft /> Về thông tin trang bị
-                        </Button>
-                        {section === "details" && (
-                          <>
-                            <div className="grid grid-cols-2 gap-3">
-                              <Field
-                                label="Giá (vàng)"
-                                type="number"
-                                min="0"
-                                value={value.price ?? ""}
-                                onChange={(v) => change({ price: v === "" ? null : Number(v) })}
-                              />
-                              <label className="grid gap-1.5 text-sm">
-                                Cấp trang bị
-                                <select
-                                  className={control}
-                                  value={value.tier ?? ""}
-                                  onChange={(event) =>
-                                    change({ tier: event.target.value ? Number(event.target.value) : null })
-                                  }
-                                >
-                                  <option value="">Chưa xác định</option>
-                                  {[1, 2, 3].map((tier) => (
-                                    <option key={tier} value={tier}>
-                                      Cấp {tier}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                            </div>
-                            <ItemCategorySelect
-                              label="Nhóm chính"
-                              categories={categories}
-                              locale={locale}
-                              value={value.categoryCode}
-                              allowEmpty
-                              onChange={(code) => change({ categoryCode: code || null })}
-                            />
-                          </>
+                        <div className="flex items-center gap-3">
+                          <HeroAsset
+                            id={value.iconAssetId}
+                            alt={name}
+                            className="size-12 shrink-0 rounded-lg"
+                            frameAspectRatio={1}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="type-label">Biểu tượng</p>
+                            <p className="type-meta">Ảnh vuông dùng trong shop và trên Wiki.</p>
+                          </div>
+                          <Button type="button" size="sm" variant="outline" onClick={() => setPicking(true)}>
+                            <ImagePlus /> {value.iconAssetId ? "Đổi ảnh" : "Chọn ảnh"}
+                          </Button>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <Field
+                            label="Giá (vàng)"
+                            type="number"
+                            min="0"
+                            value={value.price ?? ""}
+                            onChange={(v) => change({ price: v === "" ? null : Number(v) })}
+                          />
+                          <label className="grid gap-1.5 text-sm">
+                            Cấp trang bị
+                            <select
+                              className={control}
+                              value={value.tier ?? ""}
+                              onChange={(event) =>
+                                change({ tier: event.target.value ? Number(event.target.value) : null })
+                              }
+                            >
+                              <option value="">Chưa xác định</option>
+                              {[1, 2, 3].map((tier) => (
+                                <option key={tier} value={tier}>
+                                  Cấp {tier}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                          <ItemCategorySelect
+                            label="Nhóm chính"
+                            categories={categories}
+                            locale={locale}
+                            value={value.categoryCode}
+                            allowEmpty
+                            onChange={(code) => change({ categoryCode: code || null })}
+                          />
+                        </div>
+                        <section className="space-y-2" aria-label="Chỉ số">
+                          <h3 className="type-label">Chỉ số</h3>
+                          {!value.stats.length && describedStats.length > 0 && (
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => change({ stats: describedStats })}
+                            >
+                              <Sparkles />
+                              Điền {describedStats.length} chỉ số từ mô tả
+                            </Button>
+                          )}
+                          <WarehouseStatsEditor
+                            stats={value.stats}
+                            catalog={items}
+                            locale={locale}
+                            disabled={busy || uploading}
+                            onChange={(stats) => change({ stats })}
+                            knownStats={ITEM_STATS.map((stat) => ({ key: stat.key, label: stat.vi }))}
+                          />
+                        </section>
+                      </fieldset>
+                    ) : (
+                      <div className="space-y-4">
+                        {text?.summary && (
+                          <div className="type-body text-muted-foreground">
+                            <AdminRichTextPreview text={text.summary} locale={text.locale} />
+                          </div>
                         )}
-                        {section === "recipe" && (
+                        <section className="space-y-2" aria-label="Chỉ số">
+                          <h3 className="type-label">Chỉ số</h3>
+                          {reading.stats.length ? (
+                            <ItemStatList stats={reading.stats} locale={locale} />
+                          ) : (
+                            <p className="type-meta">Chưa có chỉ số.</p>
+                          )}
+                          {!value.stats.length && reading.stats.length > 0 && (
+                            <p className="type-meta">Đang đọc từ mô tả, chưa lưu thành chỉ số có cấu trúc.</p>
+                          )}
+                        </section>
+                      </div>
+                    )}
+                  </ContentsSection>
+                  <ContentsSection
+                    id={ITEM_SECTIONS.text}
+                    title={editing ? `Tên và mô tả · ${languageName(language)}` : "Mô tả"}
+                    icon={FileText}
+                  >
+                    {editing ? (
+                      // The language chosen at the top is written here; a field opens a reference in another one.
+                      <ReferenceLanguage translations={value.translations} editing={language}>
+                        <WarehouseTranslations
+                          value={value.translations}
+                          onChange={(translations) => change({ translations })}
+                          locale={language}
+                          fixedLanguage
+                          disabled={busy}
+                          showSummary
+                          showEffects
+                          statKeys={statKeys}
+                          variantKeys={variantKeys}
+                        />
+                      </ReferenceLanguage>
+                    ) : value.translations.some((entry) => entry.locale === language) ? (
+                      <WarehouseDescription text={warehouseText(value.translations, language)} />
+                    ) : (
+                      <p className="type-meta">Chưa có bản dịch {languageName(language)}. Bấm bút để dịch.</p>
+                    )}
+                  </ContentsSection>
+                  {/* The recipe brings its own headings: what the item is built from and what it builds into. */}
+                  <ContentsSection id={ITEM_SECTIONS.recipe} label="Công thức">
+                    <div className="space-y-5">
+                      {editsContent ? (
+                        <fieldset disabled={busy || uploading} className="min-w-0 disabled:opacity-60">
                           <ItemRecipe
                             itemId={entry.id}
                             content={value}
@@ -342,162 +512,131 @@ export function ItemEditor({
                             locale={locale}
                             onChange={change}
                           />
-                        )}
-                        {section === "positions" && (
-                          <section className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-sm font-medium">Vị trí trong shop</h3>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  change({
-                                    shopPositions: [
-                                      ...value.shopPositions,
-                                      {
-                                        categoryCode: value.categoryCode ?? categories[0]?.code ?? "",
-                                        row: null,
-                                        column: null,
-                                        variant: null,
-                                      },
-                                    ],
+                        </fieldset>
+                      ) : (
+                        <ItemRecipeView
+                          content={value}
+                          items={items}
+                          upgrades={upgrades}
+                          locale={locale}
+                          onView={viewItem}
+                          showStatus
+                        />
+                      )}
+                    </div>
+                  </ContentsSection>
+                  <ContentsSection id={ITEM_SECTIONS.positions} title="Vị trí trong shop" icon={LayoutGrid}>
+                    {editsContent ? (
+                      <fieldset disabled={busy || uploading} className="min-w-0 space-y-2 disabled:opacity-60">
+                        {value.shopPositions.map((position, index) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-2 items-end gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_100px_32px]"
+                          >
+                            <ItemCategorySelect
+                              label={`Nhóm vị trí ${index + 1}`}
+                              categories={categories}
+                              locale={locale}
+                              value={position.categoryCode}
+                              onChange={(categoryCode) => changePosition(index, { categoryCode })}
+                            />
+                            <label className="type-label grid gap-1">
+                              Cột
+                              <select
+                                className={control}
+                                aria-label={`Cột vị trí ${index + 1}`}
+                                value={position.column ?? ""}
+                                onChange={(event) =>
+                                  changePosition(index, {
+                                    column: event.target.value === "" ? null : Number(event.target.value),
                                   })
                                 }
                               >
-                                <Plus className="size-4" />
-                                Thêm vị trí
-                              </Button>
-                            </div>
-                            {value.shopPositions.map((position, index) => (
-                              <div
-                                key={index}
-                                className="grid grid-cols-2 items-end gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_100px_32px]"
-                              >
-                                <ItemCategorySelect
-                                  label={`Nhóm vị trí ${index + 1}`}
-                                  categories={categories}
-                                  locale={locale}
-                                  value={position.categoryCode}
-                                  onChange={(categoryCode) =>
-                                    change({
-                                      shopPositions: value.shopPositions.map((p, i) =>
-                                        i === index ? { ...p, categoryCode } : p,
-                                      ),
-                                    })
-                                  }
-                                />
-                                <label className="grid gap-1 text-xs">
-                                  Cột
-                                  <select
-                                    className={control}
-                                    aria-label={`Cột vị trí ${index + 1}`}
-                                    value={position.column ?? ""}
-                                    onChange={(event) =>
-                                      change({
-                                        shopPositions: value.shopPositions.map((p, i) =>
-                                          i === index
-                                            ? {
-                                                ...p,
-                                                column: event.target.value === "" ? null : Number(event.target.value),
-                                              }
-                                            : p,
-                                        ),
-                                      })
-                                    }
-                                  >
-                                    <option value="">Chọn cột</option>
-                                    {shopColumns(items, position.column).map((column) => (
-                                      <option key={column} value={column}>
-                                        Cột {column + 1}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </label>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  aria-label={`Xóa vị trí ${index + 1}`}
-                                  onClick={() =>
-                                    change({ shopPositions: value.shopPositions.filter((_, i) => i !== index) })
-                                  }
-                                >
-                                  <Trash2 className="size-4" />
-                                </Button>
-                                <ItemRowPicker
-                                  entry={{ ...entry, content: value }}
-                                  items={items}
-                                  positionIndex={index}
-                                  locale={locale}
-                                  contextLabel={
-                                    warehouseText(
-                                      categories.find((group) => group.code === position.categoryCode)?.translations ??
-                                        [],
-                                      locale,
-                                    )?.name ?? position.categoryCode
-                                  }
-                                  disabled={!editable || busy || uploading}
-                                  onChange={(row) =>
-                                    change({
-                                      shopPositions: value.shopPositions.map((p, i) =>
-                                        i === index ? { ...p, row } : p,
-                                      ),
-                                    })
-                                  }
-                                />
-                                <div className="col-span-full">
-                                  <Field
-                                    label="Nhánh (nếu có)"
-                                    value={position.variant ?? ""}
-                                    onChange={(variant) =>
-                                      change({
-                                        shopPositions: value.shopPositions.map((p, i) =>
-                                          i === index ? { ...p, variant: variant || null } : p,
-                                        ),
-                                      })
-                                    }
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </section>
-                        )}
-                        {section === "stats" && (
-                          <section className="space-y-2">
-                            <h3 className="type-section-title">Chỉ số</h3>
-                            {!value.stats.length && describedStats.length > 0 && (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => change({ stats: describedStats })}
-                              >
-                                <Sparkles />
-                                Điền {describedStats.length} chỉ số từ mô tả
-                              </Button>
-                            )}
-                            <WarehouseStatsEditor
-                              stats={value.stats}
-                              catalog={items}
+                                <option value="">Chọn cột</option>
+                                {shopColumns(items, position.column).map((column) => (
+                                  <option key={column} value={column}>
+                                    Cột {column + 1}
+                                  </option>
+                                ))}
+                              </select>
+                            </label>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Xóa vị trí ${index + 1}`}
+                              onClick={() =>
+                                change({ shopPositions: value.shopPositions.filter((_, i) => i !== index) })
+                              }
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                            <ItemRowPicker
+                              entry={{ ...entry, content: value }}
+                              items={items}
+                              positionIndex={index}
                               locale={locale}
+                              contextLabel={
+                                warehouseText(
+                                  categories.find((group) => group.code === position.categoryCode)?.translations ?? [],
+                                  locale,
+                                )?.name ?? position.categoryCode
+                              }
                               disabled={busy || uploading}
-                              onChange={(stats) => change({ stats })}
-                              knownStats={ITEM_STATS.map((stat) => ({ key: stat.key, label: stat.vi }))}
+                              onChange={(row) => changePosition(index, { row })}
                             />
-                          </section>
-                        )}
+                            <div className="col-span-full">
+                              <Field
+                                label="Nhánh (nếu có)"
+                                value={position.variant ?? ""}
+                                onChange={(variant) => changePosition(index, { variant: variant || null })}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            change({
+                              shopPositions: [
+                                ...value.shopPositions,
+                                {
+                                  categoryCode: value.categoryCode ?? categories[0]?.code ?? "",
+                                  row: null,
+                                  column: null,
+                                  variant: null,
+                                },
+                              ],
+                            })
+                          }
+                        >
+                          <Plus className="size-4" />
+                          Thêm vị trí
+                        </Button>
                       </fieldset>
+                    ) : (
+                      <ShopPositions content={value} categories={categories} language={text?.locale ?? locale} />
                     )}
-                  </div>
-                </ContentsSection>
-                <ContentsSection
-                  id={ITEM_SECTIONS.context}
-                  title="Mốc patch và ghi chú"
-                  icon={CalendarClock}
-                  actions={pencil("context")}
-                >
-                  <div className="space-y-3">
+                  </ContentsSection>
+                  {/* The video panel brings its own heading and add button. */}
+                  <ContentsSection id={ITEM_SECTIONS.videos} label="Video" lazy placeholderHeight={200}>
+                    <SubjectVideosPanel kind="ITEM" id={entry.id} name={warehouseName(entry, locale)} />
+                  </ContentsSection>
+                </SectionContents>
+              </AdminWarehouseView>
+            </TabsContent>
+            <TabsContent value="history" className="space-y-5">
+              <section className="space-y-4 rounded-xl border bg-muted/20 p-4" aria-label="Phiên bản đang mở">
+                <h2 className="type-section-title">Phiên bản đang mở</h2>
+                <VersionFacts
+                  version={versionLabel(entry.revision.revisionNo, entry.revision.state, false)}
+                  cause={entry.revision.cause}
+                  patch={
                     <WarehousePatchContext
-                      compact={section !== "context"}
+                      compact={!editing}
+                      inline
                       rulesetId={entry.revision.rulesetId}
                       value={patchId}
                       baselineMode={baselineMode}
@@ -506,101 +645,92 @@ export function ItemEditor({
                         setDirty(true)
                       }}
                       disabled={
-                        !editable ||
-                        section !== "context" ||
+                        !editing ||
                         busy ||
                         entry.revision.cause !== "DATA_BASELINE" ||
                         !!entry.revision.sourceRevisionId
                       }
                     />
-                    {(editable || value.notes) && (
-                      <WarehouseNotes
-                        value={value.notes}
-                        onChange={(notes) => change({ notes })}
-                        disabled={!editable || section !== "context" || busy}
-                      />
-                    )}
-                  </div>
-                </ContentsSection>
-                {/* The video panel brings its own heading and add button. */}
-                <ContentsSection id={ITEM_SECTIONS.videos} label="Video" lazy placeholderHeight={200}>
-                  <SubjectVideosPanel kind="ITEM" id={entry.id} name={warehouseName(entry, locale)} />
-                </ContentsSection>
-              </SectionContents>
-            </TabsContent>
-            <TabsContent value="translations" className="pt-3">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="type-section-title">Nội dung bản dịch</h3>
-                {pencil("translations")}
-              </div>
-              <WarehouseTranslations
-                preview={!editable || section !== "translations"}
-                value={value.translations}
-                onChange={(translations) => change({ translations })}
-                locale={initialLanguage ?? locale}
-                onLanguageChange={onLanguageChange}
-                disabled={!editable || busy}
-                showSummary
-                showEffects
-                statKeys={value.stats.map((stat) => stat.key)}
-                variantKeys={[
-                  ...new Set(value.shopPositions.map((position) => position.variant).filter((v): v is string => !!v)),
-                ]}
-              />
-            </TabsContent>
-            <TabsContent value="history" className="pt-3">
+                  }
+                />
+                {editing || value.notes ? (
+                  <WarehouseNotes
+                    value={value.notes}
+                    onChange={(notes) => change({ notes })}
+                    disabled={!editing || busy}
+                  />
+                ) : (
+                  <p className="type-meta">Chưa có ghi chú.</p>
+                )}
+              </section>
               <WarehouseChangeHistory
                 kind="items"
                 entryId={entry.id}
                 rulesetId={entry.revision.rulesetId}
                 locale={locale}
+                currentRevisionId={entry.revision.id}
               />
             </TabsContent>
-          </Tabs>
-        </div>
-        {(onPublish || editable || onDiscard) && (
-          <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t bg-background px-4 pt-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
-            {onDiscard && (
-              <Button
-                variant="ghost"
-                className="mr-auto"
-                disabled={busy || uploading}
-                onClick={async () => {
-                  const confirmed = await confirmAction({
-                    title: "Bỏ bản nháp này?",
-                    description: "Nội dung trong bản nháp sẽ bị hủy. Bản đã xuất bản giữ nguyên.",
-                    confirmLabel: "Bỏ nháp",
-                    cancelLabel: "Giữ bản nháp",
-                  })
-                  if (confirmed) onDiscard()
-                }}
-              >
-                <Archive className="size-4" /> Bỏ nháp
-              </Button>
-            )}
-            {onPublish && (
-              <Button
-                variant="outline"
-                disabled={busy || uploading || dirty || visibleMissing.length > 0}
-                onClick={onPublish}
-              >
-                Xuất bản
-              </Button>
-            )}
-            {editable && (
-              <Button
-                disabled={busy || uploading || !dirty}
-                onClick={() => {
-                  onApply(value, patchId)
-                  setDirty(false)
-                }}
-              >
-                Áp dụng vào bản đang sửa
-              </Button>
-            )}
           </div>
+        </Tabs>
+        {editable && (
+          <Dialog
+            open={picking}
+            onOpenChange={(open) => {
+              if (!open && !uploading) setPicking(false)
+            }}
+          >
+            <DialogContent className="max-h-[85dvh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Ảnh trang bị</DialogTitle>
+                <DialogDescription>{name}</DialogDescription>
+              </DialogHeader>
+              <AssetPicker
+                semanticType="ITEM_ICON"
+                value={value.iconAssetId}
+                onChange={(iconAssetId) => change({ iconAssetId })}
+                onBusyChange={setUploading}
+              />
+            </DialogContent>
+          </Dialog>
         )}
       </SheetContent>
     </Sheet>
+  )
+}
+
+function ShopPositions({
+  content,
+  categories,
+  language,
+}: {
+  content: ItemContent
+  categories: WarehouseMetadata[]
+  language: string
+}) {
+  const text = warehouseText(content.translations, language)
+  if (!content.shopPositions.length) return <p className="type-meta">Chưa xếp vị trí.</p>
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {content.shopPositions.map((position, i) => {
+        const category = categories.find((group) => group.code === position.categoryCode)
+        const groupName = category && warehouseText(category.translations, language)?.name
+        return (
+          <li key={i} className="type-body flex flex-wrap items-center gap-1.5 rounded-md bg-muted/50 px-2 py-1">
+            <ItemCategoryIcon category={category} />
+            <span>{groupName || position.categoryCode || "Chưa xếp nhóm"}</span>
+            <span className="text-muted-foreground">
+              {[
+                position.column === null ? "Chưa xếp cột" : `Cột ${position.column + 1}`,
+                position.row === null ? "Chưa xếp hàng" : `Hàng ${position.row + 1}`,
+                position.variant && (text?.variantLabels?.[position.variant] || position.variant),
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

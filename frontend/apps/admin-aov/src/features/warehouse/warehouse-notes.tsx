@@ -27,8 +27,8 @@ export function WarehouseNotes({
             <dd className="break-all">{String(source.sourceFile ?? "—")}</dd>
             <dt>Ngày thu thập</dt>
             <dd>{String(source.collectedOn ?? "Chưa xác định")}</dd>
-            <dt>Mốc dữ liệu</dt>
-            <dd>Bản nền thu thập, chưa suy ra thay đổi của patch.</dd>
+            <dt>Loại dữ liệu</dt>
+            <dd>Bản nhập từ nguồn; chưa tính là thay đổi của patch nào.</dd>
           </dl>
           <details className="mt-3">
             <summary className="cursor-pointer text-muted-foreground">Xem bản ghi nguồn đầy đủ</summary>

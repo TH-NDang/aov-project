@@ -32,8 +32,8 @@ export const ROW_TYPE_LABELS: Record<ChangeRowType, string> = {
 }
 
 export const SOURCE_LABELS: Record<ChangeSource, string> = {
-  SNAPSHOT: "Đối chiếu bản dữ liệu",
-  PATCH_NOTES: "Ghi chú cập nhật",
+  SNAPSHOT: "Từ so sánh hai bản dữ liệu",
+  PATCH_NOTES: "Từ ghi chú cập nhật",
 }
 
 export const STAT_LABELS: Record<string, string> = {
@@ -271,21 +271,38 @@ export interface HeroPatchView {
   appliedChangeSetIds: string[]
 }
 
-export const PROVENANCE_LABELS: Record<Provenance, string> = {
-  OBSERVED: "Đã quan sát",
-  DERIVED: "Suy ra",
-  CARRIED: "Chưa xác minh",
+/** The badge over a hero's data at a patch: whether it was recorded there or worked out from another patch. */
+export function directionBadge(direction: Direction, anchorPatch: string | null) {
+  if (direction === "EXACT") return "Ghi đúng patch"
+  if (direction === "NONE") return "Chưa có dữ liệu"
+  return `Tính từ ${anchorPatch ?? "patch khác"}`
 }
 
 export function directionText(direction: Direction, anchorPatch: string | null) {
+  const anchor = anchorPatch ?? "patch khác"
   switch (direction) {
     case "EXACT":
-      return "Dữ liệu đã xuất bản đúng patch này."
+      return "Có bản dữ liệu đã xuất bản đúng patch này, nên số liệu lấy thẳng từ bản đó."
     case "FORWARD":
-      return `Lấy bản ${anchorPatch ?? "trước đó"} rồi áp giá trị mới của các thay đổi sau đó.`
+      return `Patch này không có bản dữ liệu riêng, nên số liệu được tính từ bản ở ${anchor}: những gì đổi sau ${anchor} đến hết patch này được cập nhật theo giá trị mới.`
     case "BACKWARD":
-      return `Lấy bản ${anchorPatch ?? "sau đó"} rồi lùi lại theo giá trị cũ trong các ghi chú cập nhật.`
+      return `Patch này không có bản dữ liệu riêng, nên số liệu được tính từ bản ở ${anchor}: những gì đổi sau patch này đến hết ${anchor} được trả về giá trị trước khi đổi.`
     case "NONE":
-      return "Tướng chưa có bản dữ liệu đã xuất bản trong bộ quy tắc này."
+      return "Tướng chưa có bản dữ liệu nào đã xuất bản trong bộ quy tắc này, nên chưa tính được."
   }
+}
+
+/** Where one value at a patch comes from, in the words of the explanation above the table. */
+export function provenanceText(
+  value: Provenance,
+  direction: Direction,
+  changePatch: string | null,
+  anchorPatch: string | null,
+) {
+  if (value === "OBSERVED") return "Ghi đúng patch"
+  if (value === "CARRIED") return `Giữ từ ${anchorPatch ?? "bản gốc"}`
+  // Going back in time, a change's old value is what the hero had before that patch changed it.
+  return direction === "BACKWARD"
+    ? `Trước thay đổi ở ${changePatch ?? "patch sau"}`
+    : `Theo thay đổi ở ${changePatch ?? "patch trước"}`
 }

@@ -1,4 +1,5 @@
 import { Field } from "./fields"
+import { ReferenceLanguage, WithReference } from "../warehouse/warehouse-translation-panel"
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@aov/ui/components/button"
 import {
@@ -8,7 +9,6 @@ import {
   type TranslationField,
   type TranslatableSection,
 } from "./hero-translation-model"
-import { AdminRichTextPreview } from "../terminology/rich-text-field"
 import { Check, CircleDashed } from "lucide-react"
 import { Badge } from "@aov/ui/components/badge"
 import { HeroAsset } from "./hero-content"
@@ -83,6 +83,10 @@ export function updateTranslation(
   }
 }
 
+/**
+ * Writes one language of a hero part. The page shows only that language; each field opens a floating box with the
+ * same text in a language the hero already has, English first, so translating needs no second column.
+ */
 export function TranslationEditor({
   section,
   value,
@@ -210,37 +214,30 @@ export function TranslationEditor({
                     : `Còn ${group.missing.length} mục chưa dịch`}
               </Badge>
             </div>
-            {group.fields.map((field) => (
-              <div
-                key={field}
-                data-translation-field={field}
-                onFocusCapture={() => setActiveRow(`${group.key}:${field}`)}
-                className="grid scroll-mt-24 gap-3 @min-[650px]:grid-cols-2"
-              >
-                <div className="min-w-0 rounded-lg bg-muted/40 p-3">
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">
-                    {labels[field]} · nguồn {translationLanguageLabel(sourceLocale)}
-                  </p>
-                  <div className="whitespace-pre-wrap break-words text-sm leading-6">
-                    {source?.[field] && (field === "name" || field === "title") ? (
-                      source[field]
-                    ) : source?.[field] ? (
-                      <AdminRichTextPreview text={source[field]!} locale={sourceLocale} />
-                    ) : (
-                      "Chưa có nội dung nguồn."
-                    )}
-                  </div>
+            {/* The page reads in the language being written; a field shows another language in a floating box. */}
+            <ReferenceLanguage translations={group.rows} editing={targetLocale}>
+              {group.fields.map((field) => (
+                <div
+                  key={field}
+                  data-translation-field={field}
+                  onFocusCapture={() => setActiveRow(`${group.key}:${field}`)}
+                  className="scroll-mt-24"
+                >
+                  <WithReference<TextRow> read={(other) => other?.[field]}>
+                    <Field
+                      label={`${labels[field]} · ${translationLanguageLabel(targetLocale)}`}
+                      value={target?.[field] ?? ""}
+                      required={field === "name" && !!target}
+                      multiline={field !== "name" && field !== "title"}
+                      richTextLocale={targetLocale}
+                      onChange={(text) =>
+                        onChange(updateTranslation(section, value, group.key, targetLocale, field, text))
+                      }
+                    />
+                  </WithReference>
                 </div>
-                <Field
-                  label={`${labels[field]} · ${translationLanguageLabel(targetLocale)}`}
-                  value={target?.[field] ?? ""}
-                  required={field === "name" && !!target}
-                  multiline={field !== "name" && field !== "title"}
-                  richTextLocale={targetLocale}
-                  onChange={(text) => onChange(updateTranslation(section, value, group.key, targetLocale, field, text))}
-                />
-              </div>
-            ))}
+              ))}
+            </ReferenceLanguage>
           </section>
         )
       })}

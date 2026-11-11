@@ -54,7 +54,7 @@ export function BaselineContextForm({
   const current = available.find((item) => item.patchVariantId === revision.effectiveFromPatchVariantId)
   const chosen = available.find((item) => item.contextId === contextId)
   return (
-    <Box title="Sửa mùa / patch của mốc ban đầu">
+    <Box title="Đổi patch của bản nhập dữ liệu">
       <form
         className="space-y-3"
         onSubmit={(event) => {
@@ -65,7 +65,7 @@ export function BaselineContextForm({
         <AlertDialog open={confirming} onOpenChange={setConfirming}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Chuyển mốc dữ liệu ban đầu?</AlertDialogTitle>
+              <AlertDialogTitle>Đổi patch của bản nhập dữ liệu?</AlertDialogTitle>
               <AlertDialogDescription>
                 Chuyển sang {chosen?.seasonName} / {chosen?.patchCode}. Giữ nguyên nội dung và ảnh đã nhập.
               </AlertDialogDescription>
@@ -92,18 +92,18 @@ export function BaselineContextForm({
                   }
                 }}
               >
-                Xác nhận chuyển mốc
+                Đổi patch
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
         <p className="text-sm leading-6 text-muted-foreground">
-          Dùng khi bản nháp đầu tiên được gắn nhầm mốc. Chỉ áp dụng trước khi có lịch sử đã xuất bản; giữ các phần nội
-          dung và ảnh đã gắn.
+          Dùng khi dữ liệu nhập lần đầu bị gắn nhầm patch. Chỉ đổi được khi tướng chưa có bản nào đã xuất bản; nội dung
+          và ảnh giữ nguyên.
           {current && ` Đang gắn: ${current.seasonName} / ${current.patchCode}.`}
         </p>
         <label className="grid gap-2 text-sm">
-          Mốc dữ liệu đúng
+          Patch đúng
           <select
             className={control}
             value={contextId}
@@ -124,7 +124,7 @@ export function BaselineContextForm({
           disabled={disabled || busy || !chosen || chosen.patchVariantId === revision.effectiveFromPatchVariantId}
         >
           <CalendarCog className="size-4" />
-          {busy ? "Đang chuyển…" : "Chuyển mốc ban đầu"}
+          {busy ? "Đang đổi…" : "Đổi patch"}
         </Button>
         {(error || contexts.error) && (
           <p role="alert" className="text-sm text-destructive">

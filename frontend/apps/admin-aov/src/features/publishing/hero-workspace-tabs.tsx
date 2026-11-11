@@ -1,5 +1,5 @@
 import type { ComponentType } from "react"
-import { GitBranch, GitCompareArrows, Languages, Layers, LayoutList } from "lucide-react"
+import { GitCompareArrows, LayoutList } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { cn } from "@aov/ui/lib/utils"
 import type { HeroWorkspaceView } from "./hero-location"
@@ -8,16 +8,13 @@ type Icon = ComponentType<{ className?: string }>
 
 const views: readonly [HeroWorkspaceView, Icon, string][] = [
   ["overview", LayoutList, "Nội dung"],
-  ["translations", Languages, "Bản dịch"],
   ["history", GitCompareArrows, "Lịch sử"],
-  ["patch", Layers, "Theo patch"],
-  ["versions", GitBranch, "Phiên bản"],
 ]
 
 /**
- * One tab row: the hero's content, then translations, history, patch data and version management. On a narrow page the
- * tabs share the width as icon tabs. By itself the row stays under the scrolled hero name so switching never needs a
- * scroll back up; above the content tabs it rides in their bars instead (`sticky={false}`).
+ * Two tabs: the hero's content, read or translated, and its history (the version on screen, the changes patch by patch
+ * and any two versions compared). Drafts start from the pencil in the header. The row stays under the scrolled hero
+ * name so switching never needs a scroll back up; under the hero header it rides with it (`sticky={false}`).
  */
 export function HeroWorkspaceTabs({
   view,
@@ -42,7 +39,7 @@ export function HeroWorkspaceTabs({
         className="flex min-w-0 flex-1 @2xl:gap-0.5 @2xl:overflow-x-auto"
       >
         {views.map(([key, Icon, label]) => {
-          const selected = view === key
+          const selected = view === key || (key === "overview" && view === "translations")
           return (
             <Button
               key={key}

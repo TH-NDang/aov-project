@@ -239,7 +239,7 @@ function HeroPatchChangesTable({
         </div>
       ) : !query.data?.length ? (
         <p className="p-4 text-sm text-muted-foreground">
-          Chưa ghi nhận thay đổi tướng. Dữ liệu nền được import không tự tạo lịch sử thay đổi.
+          Chưa ghi nhận thay đổi tướng. Bản nhập dữ liệu không tự tạo lịch sử thay đổi.
         </p>
       ) : (
         <div className="overflow-x-auto">

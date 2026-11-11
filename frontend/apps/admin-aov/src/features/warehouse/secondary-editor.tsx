@@ -1,8 +1,6 @@
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useEffect, useState, type ReactNode } from "react"
 import {
-  Archive,
-  CalendarClock,
   ChartNoAxesCombined,
   History,
   Image,
@@ -11,17 +9,16 @@ import {
   LayoutList,
   LoaderCircle,
   Plus,
-  Save,
   Settings2,
   SlidersHorizontal,
   Trash2,
   Clapperboard,
+  FileText,
 } from "lucide-react"
 import { SubjectVideosPanel } from "../videos/subject-videos-panel"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@aov/ui/components/select"
-import { Badge } from "@aov/ui/components/badge"
 import { Button } from "@aov/ui/components/button"
-import { SectionPencil, type WarehouseSection } from "./warehouse-edit-section"
+import type { WarehouseSection } from "./warehouse-edit-section"
 import { SecondaryAttributes } from "./secondary-attributes"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@aov/ui/components/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@aov/ui/components/tabs"
@@ -30,7 +27,7 @@ import { ContentsSection, SectionContents, useSectionContents, type ContentsEntr
 import { errorMessage } from "@/lib/api/errors"
 import { AssetPicker } from "../publishing/asset-picker"
 import { HeroAsset } from "../publishing/hero-content"
-import { AdminEntityText } from "../terminology/catalog"
+import { VersionFacts } from "../publishing/version-facts"
 import { Field, control } from "../publishing/fields"
 import { WarehouseTranslations } from "./warehouse-translations"
 import { WarehousePatchContext } from "./warehouse-patch-context"
@@ -42,6 +39,24 @@ import { SpellRemovalHistory } from "./spell-removal-history"
 import { enchantmentBranchColor } from "./enchantment-colors"
 import { WarehouseOrderPicker } from "./warehouse-order-picker"
 import {
+  LanguagePicker,
+  ReferenceLanguage,
+  baseLanguage,
+  languageName,
+  pickDisplayLanguage,
+  translationProgress,
+} from "./warehouse-translation-panel"
+import {
+  CopyCode,
+  SHEET_TAB,
+  SHEET_TAB_LIST,
+  SheetActions,
+  WarehouseDescription,
+  focusSheet,
+  versionLabel,
+  type NewDraft,
+} from "./warehouse-sheet"
+import {
   warehouseText,
   warehouseBaselineMode,
   type WarehouseContent,
@@ -52,18 +67,17 @@ import {
   type WarehouseEntry,
   type WarehouseRevision,
 } from "./warehouse-types"
-import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
+import { confirmDiscard } from "@/components/confirm-dialog"
 
 export type SecondaryKind = "arcana" | "spells" | "enchantments"
 
-/** Sections of an arcana, spell or enchantment content page, in reading order. */
+/** Sections of an arcana, spell or enchantment content page, in reading order; patch and notes have a tab. */
 const SECONDARY_SECTIONS = {
   overview: "secondary-section-overview",
   mechanics: "secondary-section-mechanics",
   stats: "secondary-section-stats",
   states: "secondary-section-states",
   images: "secondary-section-images",
-  context: "secondary-section-context",
   videos: "secondary-section-videos",
 } as const
 type SecondarySectionKey = keyof typeof SECONDARY_SECTIONS
@@ -123,10 +137,17 @@ export function newSecondaryContent(kind: SecondaryKind, locale: string, branchC
   }
 }
 
+/**
+ * An arcana, spell or enchantment read as a page, laid out like the item sheet: a compact header holding the version
+ * and every action, one pencil that turns the whole page into its form, and underlined tabs right under the header.
+ * A new entry opens straight into its form.
+ */
 export function SecondaryEditor({
   kind,
   entryId,
   revisionId,
+  revisionNo,
+  revisionState,
   revisionPublished = false,
   revisionCause = "DATA_BASELINE",
   sourceRevisionId = null,
@@ -140,7 +161,6 @@ export function SecondaryEditor({
   initialLanguage,
   onLanguageChange,
   canPublish = false,
-  revisionLabel,
   translationOnly = false,
   rulesetId,
   initialPatchId = null,
@@ -155,12 +175,13 @@ export function SecondaryEditor({
   statCatalog = [],
   enchantmentPeers = [],
   onReorderEnchantments,
-  onDraft,
+  openDraftNo,
 }: {
-  onDraft?: (entry: WarehouseEntry) => void
   kind: SecondaryKind
   entryId?: string
   revisionId?: string
+  revisionNo?: number
+  revisionState?: WarehouseRevision["state"]
   revisionPublished?: boolean
   revisionCause?: WarehouseRevision["cause"]
   sourceRevisionId?: string | null
@@ -171,7 +192,6 @@ export function SecondaryEditor({
   isNew: boolean
   readOnly?: boolean
   canPublish?: boolean
-  revisionLabel?: string
   translationOnly?: boolean
   rulesetId: string
   initialPatchId?: string | null
@@ -179,11 +199,15 @@ export function SecondaryEditor({
   missingFields?: string[]
   onSave: (code: string, content: SecondaryContent, patchId: string | null) => Promise<void>
   onPublish?: () => Promise<void>
+  /** Opens the page already editing, at this part. */
   initialSection?: WarehouseSection
   initialLanguage?: string
   onLanguageChange?: (language: string) => void
-  onCreateDraft?: (section: WarehouseSection) => Promise<void>
+  /** Starts a draft of the chosen kind from the version on screen. */
+  onCreateDraft?: (draft: NewDraft) => Promise<void>
   onOpenDraft?: (section: WarehouseSection) => void
+  /** The number of the draft `onOpenDraft` opens, for the pencil's menu. */
+  openDraftNo?: number
   onDiscard?: () => Promise<void>
   onClose: () => void
   statCatalog?: WarehouseEntry<SecondaryContent>[]
@@ -191,8 +215,11 @@ export function SecondaryEditor({
   onReorderEnchantments?: (ids: string[]) => Promise<void>
 }) {
   const wide = useIsWide()
-  const [section, setSection] = useState(initialSection)
-  const [tab, setTab] = useState<string>(initialSection === "translations" ? "translations" : "content")
+  const [pageEditing, setPageEditing] = useState(!readOnly && !!initialSection)
+  const [tab, setTab] = useState<string>(initialSection === "context" ? "history" : "content")
+  const [language, setLanguage] = useState(
+    () => initialLanguage ?? (isNew ? locale : pickDisplayLanguage(initialContent.translations, locale)),
+  )
   const [code, setCode] = useState(initialCode)
   const [content, setContent] = useState(initialContent)
   const [patchId, setPatchId] = useState(initialPatchId)
@@ -201,6 +228,7 @@ export function SecondaryEditor({
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState("")
   const disabled = readOnly || busy || uploading
+  const editingPage = !readOnly && (isNew || pageEditing)
   const archiveEligible =
     kind === "spells" && revisionCause !== "GAME_PATCH" && !!content.legacy && content.availability === "REMOVED"
   const archivedWithoutPatch = archiveEligible && !patchId
@@ -245,40 +273,25 @@ export function SecondaryEditor({
       setBusy(false)
     }
   }
+  /** A translation draft may change only the words and the notes; the rest stays as published. */
   function editing(target: WarehouseSection) {
-    return !readOnly && (isNew || section === target)
+    return editingPage && (!translationOnly || target === "translations" || target === "context")
   }
-  function pencil(target: WarehouseSection, className?: string) {
-    if (
-      (translationOnly && target !== "translations" && target !== "context") ||
-      isNew ||
-      (readOnly && !onOpenDraft && !onCreateDraft)
-    )
-      return null
-    const targetTab = target === "translations" ? "translations" : "content"
-    const active = section === target && tab === targetTab
-    return (
-      <SectionPencil
-        section={target}
-        name={target === "mechanics" ? mechanicsTitle.toLocaleLowerCase("vi") : undefined}
-        active={active}
-        className={className}
-        disabled={busy || uploading}
-        draftAction={readOnly ? (onOpenDraft ? "open" : "create") : undefined}
-        onClick={() => {
-          if (readOnly) {
-            if (onOpenDraft) onOpenDraft(target)
-            else if (onCreateDraft) void act(() => onCreateDraft(target))
-            return
-          }
-          setSection(active ? undefined : target)
-          setTab(targetTab)
-          // The picture on the header edits the Images section further down the page.
-          if (target === "images" && !active) contents.jump(SECONDARY_SECTIONS.images)
-        }}
-      />
-    )
+  const kindName = secondaryNames[kind]
+  const canEdit = !isNew && (!readOnly || !!onOpenDraft || !!onCreateDraft)
+  const editLabel = editingPage ? `Xem lại ${kindName}` : `Sửa ${kindName}`
+  function toggleEditing() {
+    setPageEditing(!pageEditing)
   }
+  const statKeys = (content.stats ?? []).map((stat) => stat.key).filter(Boolean)
+  const progress = (target: string) =>
+    translationProgress(content.translations, baseLanguage(content.translations), target, { summary: true, statKeys })
+  function chooseLanguage(next: string) {
+    setLanguage(next)
+    onLanguageChange?.(next)
+  }
+  const stateName = (state: NonNullable<SecondaryContent["states"]>[number], index: number) =>
+    warehouseText(state.translations, locale)?.name || state.key || `Trạng thái ${index + 1}`
   function save() {
     if (!code.trim() || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(code.trim())) {
       setError("Mã chỉ gồm chữ thường không dấu, số và dấu gạch nối.")
@@ -310,46 +323,55 @@ export function SecondaryEditor({
   const parts: ("mechanics" | "stats" | "states")[] = ["mechanics"]
   if (kind === "arcana") parts.push("stats")
   if (kind === "spells") parts.push("states")
-  const hasOverview =
-    isNew ||
-    !!currentText?.description ||
-    (!!currentText?.summary && currentText.summary !== currentText.description) ||
-    (!!currentText && currentText.locale !== locale)
   const sectionKeys: SecondarySectionKey[] = [
-    ...(hasOverview ? (["overview"] as const) : []),
+    "overview",
     ...parts,
     "images",
-    "context",
     ...(hasHistory ? (["videos"] as const) : []),
   ]
   const partTitle = (part: (typeof parts)[number]) =>
     part === "stats" ? "Chỉ số" : part === "states" ? "Trạng thái phụ trợ" : mechanicsTitle
+  const overviewTitle = editing("translations") ? `Tên và mô tả · ${languageName(language)}` : "Mô tả"
   const sectionLabels: Record<SecondarySectionKey, string> = {
-    overview: "Thông tin",
+    overview: overviewTitle,
     mechanics: mechanicsTitle,
     stats: "Chỉ số",
     states: "Trạng thái phụ trợ",
     images: "Ảnh",
-    context: "Mốc patch và ghi chú",
     videos: "Video",
   }
-  const sectionIcons = {
-    overview: Settings2,
-    ...partIcons,
-    images: Image,
-    context: CalendarClock,
-    videos: Clapperboard,
-  }
+  const sectionIcons = { overview: FileText, ...partIcons, images: Image, videos: Clapperboard }
   const entries: ContentsEntry[] = sectionKeys.map((key) => ({
     id: SECONDARY_SECTIONS[key],
     label: sectionLabels[key],
     icon: sectionIcons[key],
   }))
-  const requestedKey = initialSection && initialSection in SECONDARY_SECTIONS ? initialSection : undefined
+  const requestedKey: SecondarySectionKey | undefined =
+    initialSection === "translations"
+      ? "overview"
+      : initialSection && initialSection in SECONDARY_SECTIONS
+        ? (initialSection as SecondarySectionKey)
+        : undefined
   const contents = useSectionContents({
-    requested: requestedKey && SECONDARY_SECTIONS[requestedKey as SecondarySectionKey],
-    first: SECONDARY_SECTIONS[sectionKeys[0]],
+    requested: requestedKey && SECONDARY_SECTIONS[requestedKey],
+    first: SECONDARY_SECTIONS.overview,
   })
+  const branch = branches.find((entry) => entry.code === content.branchCode)
+  const facts =
+    kind === "spells"
+      ? [
+          content.cooldownSeconds != null ? `Hồi chiêu ${content.cooldownSeconds} giây` : null,
+          content.availability === "REMOVED" ? "Đã gỡ" : null,
+        ]
+      : kind === "arcana"
+        ? [
+            content.color ? `Ngọc ${{ RED: "đỏ", PURPLE: "tím", GREEN: "xanh" }[content.color]}` : null,
+            content.tier != null ? `Cấp ${content.tier}` : null,
+          ]
+        : [
+            branch ? (warehouseText(branch.translations, locale)?.name ?? branch.code) : null,
+            content.tier != null ? `Cấp ${["I", "II", "III"][content.tier - 1] ?? content.tier}` : null,
+          ]
   const orderPeers = enchantmentPeers
     .filter((entry) => entry.content.branchCode === content.branchCode && entry.content.tier === content.tier)
     .sort((a, b) => (a.content.position ?? 999) - (b.content.position ?? 999) || a.code.localeCompare(b.code))
@@ -364,100 +386,154 @@ export function SecondaryEditor({
         }
         onEscapeKeyDown={(event) => (busy || uploading) && event.preventDefault()}
         onPointerDownOutside={(event) => (busy || uploading) && event.preventDefault()}
+        onOpenAutoFocus={focusSheet}
+        showCloseButton={false}
       >
-        <SheetHeader className="shrink-0 flex-row items-center gap-3 border-b pr-12">
-          {!isNew && (
-            <div className="relative shrink-0">
-              {kind === "spells" ? (
-                <SpellArtwork
-                  iconAssetId={content.iconAssetId}
-                  states={content.states}
-                  defaultStateKey={content.defaultStateKey}
-                  name={name}
-                  locale={locale}
-                  preview
-                />
-              ) : (
-                <HeroAsset
-                  id={content.iconAssetId}
-                  alt={name}
-                  frameAspectRatio={1}
-                  preview
-                  className="size-12 shrink-0 rounded-full"
-                />
-              )}
-              {section !== "images" && pencil("images", "absolute -top-1 -right-2 rounded-full border bg-background")}
+        <SheetHeader className="shrink-0 flex-row flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+          {!isNew &&
+            (kind === "spells" ? (
+              <SpellArtwork
+                iconAssetId={content.iconAssetId}
+                states={content.states}
+                defaultStateKey={content.defaultStateKey}
+                name={name}
+                locale={locale}
+                preview
+              />
+            ) : (
+              <HeroAsset
+                id={content.iconAssetId}
+                alt={name}
+                frameAspectRatio={1}
+                preview
+                className="size-12 shrink-0 rounded-full"
+              />
+            ))}
+          <div className="min-w-40 flex-1">
+            <div className="flex min-w-0 items-center gap-1">
+              <SheetTitle className="type-section-title break-words">{isNew ? `Tạo ${kindName}` : name}</SheetTitle>
+              {!isNew && <CopyCode code={initialCode} />}
             </div>
-          )}
-          <div className="min-w-0">
-            <div className="flex items-center gap-1">
-              <SheetTitle>{isNew ? `Tạo ${secondaryNames[kind]}` : name}</SheetTitle>
-              {tab !== "translations" && pencil("translations")}
-            </div>
-            <SheetDescription className="flex flex-wrap items-center gap-2">
-              {revisionLabel && <Badge variant="outline">{revisionLabel}</Badge>}
-              {!isNew && <span className="font-mono text-xs">{initialCode}</span>}
+            {facts.some(Boolean) && (
+              <p className="type-body flex flex-wrap items-center gap-x-3 gap-y-1">
+                {facts.filter(Boolean).map((fact) => (
+                  <span key={fact}>{fact}</span>
+                ))}
+              </p>
+            )}
+            <SheetDescription className="sr-only">
+              {isNew ? `Điền thông tin ${kindName} rồi lưu nháp.` : `Mã ${initialCode}`}
             </SheetDescription>
           </div>
+          <SheetActions
+            version={isNew ? "Mới" : versionLabel(revisionNo, revisionState, editingPage)}
+            editing={editingPage}
+            disabled={busy || uploading}
+            closeDisabled={busy || uploading}
+            onClose={() => void close()}
+            language={
+              isNew ? undefined : (
+                <LanguagePicker
+                  translations={content.translations}
+                  value={language}
+                  onChange={chooseLanguage}
+                  progress={progress}
+                  disabled={busy || uploading}
+                  onEdit={
+                    canEdit
+                      ? (next) => {
+                          // The language is remembered by the page, so the draft opens writing it.
+                          chooseLanguage(next)
+                          if (!readOnly) setPageEditing(true)
+                          else if (onOpenDraft) onOpenDraft("translations")
+                          else if (onCreateDraft) void act(() => onCreateDraft({ cause: "TRANSLATION_UPDATE" }))
+                        }
+                      : undefined
+                  }
+                />
+              )
+            }
+            edit={canEdit && !readOnly ? { label: editLabel, pressed: pageEditing, onClick: toggleEditing } : undefined}
+            draft={
+              canEdit && readOnly
+                ? {
+                    name: kindName,
+                    rulesetId,
+                    basePatchVariantId: initialPatchId,
+                    openDraft: onOpenDraft
+                      ? {
+                          revisionNo: openDraftNo,
+                          onOpen: () => onOpenDraft(translationOnly ? "translations" : "mechanics"),
+                        }
+                      : undefined,
+                    onCreate: onCreateDraft ? (request) => void act(() => onCreateDraft(request)) : undefined,
+                  }
+                : undefined
+            }
+            discard={
+              !readOnly && onDiscard
+                ? { description: "Nội dung trong bản nháp sẽ bị hủy.", onConfirm: () => void act(onDiscard) }
+                : undefined
+            }
+            save={!readOnly && (isNew || dirty) ? { label: "Lưu nháp", busy, onClick: save } : undefined}
+            publish={
+              !readOnly && canPublish && onPublish
+                ? {
+                    disabled:
+                      dirty ||
+                      (!patchId && !archivedWithoutPatch && !baselineWithoutPatch) ||
+                      visibleMissing.length > 0,
+                    quiet: dirty,
+                    title: dirty
+                      ? "Lưu nháp trước khi xuất bản"
+                      : visibleMissing.length
+                        ? "Cần hoàn thiện trước khi xuất bản"
+                        : undefined,
+                    onClick: () => void act(onPublish),
+                  }
+                : undefined
+            }
+          />
         </SheetHeader>
-        <div className="min-h-0 flex-auto overflow-y-auto px-4 py-3">
-          {visibleMissing.length > 0 && (
-            <div className="mb-4 space-y-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
-              <p className="font-medium">Cần bổ sung trước khi xuất bản</p>
-              <div className="flex flex-wrap gap-1.5">
-                {visibleMissing.map((field) => (
-                  <Badge key={field} variant="outline">
-                    {warehouseMissingFieldLabel(field)}
-                  </Badge>
-                ))}
+        {/* The tab row sits right under the header and stays put; only the tab's content scrolls. */}
+        <Tabs value={tab} onValueChange={setTab} className="min-h-0 flex-auto gap-0">
+          <TabsList aria-label={kindName} variant="line" className={SHEET_TAB_LIST}>
+            <TabsTrigger value="content" className={SHEET_TAB} disabled={busy || uploading}>
+              <LayoutList /> Nội dung
+            </TabsTrigger>
+            <TabsTrigger value="history" className={SHEET_TAB} disabled={busy || uploading}>
+              <History /> Lịch sử
+            </TabsTrigger>
+          </TabsList>
+          <div className="min-h-0 flex-auto space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
+            {visibleMissing.length > 0 && (
+              <div className="type-body rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
+                <p className="type-label">Cần hoàn thiện trước khi xuất bản</p>
+                <ul className="mt-1 list-disc pl-4">
+                  {visibleMissing.map((field) => (
+                    <li key={field}>{warehouseMissingFieldLabel(field)}</li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          )}
-          {readOnly && (onOpenDraft || onCreateDraft) && (
-            <p className="type-meta mb-2">
-              {onOpenDraft ? "Chọn bút để sửa bản nháp đang có." : "Chọn bút để tạo nháp từ phiên bản đang xem."}
-            </p>
-          )}
-          {translationOnly && <p className="type-meta mb-2">Nháp bản dịch cho phép sửa nội dung dịch và ghi chú.</p>}
-          <Tabs value={tab} onValueChange={setTab} className="gap-3">
-            <TabsList
-              className={`sticky top-0 z-10 grid w-full [overflow-anchor:none] ${hasHistory ? "grid-cols-3" : "grid-cols-2"}`}
-            >
-              <TabsTrigger value="content" disabled={busy || uploading}>
-                <LayoutList className="size-4" /> Nội dung
-              </TabsTrigger>
-              <TabsTrigger value="translations" disabled={busy || uploading}>
-                <Languages className="size-4" /> Bản dịch
-              </TabsTrigger>
-              {hasHistory && (
-                <TabsTrigger value="history" disabled={busy || uploading}>
-                  <History className="size-4" />
-                  Lịch sử
-                </TabsTrigger>
-              )}
-            </TabsList>
+            )}
+            {translationOnly && editingPage && (
+              <p className="type-meta">
+                Nháp bản dịch chỉ sửa tên, mô tả và ghi chú; phần còn lại giữ như bản đã xuất bản.
+              </p>
+            )}
+            {error && (
+              <p role="alert" className="type-body rounded-lg border border-destructive/30 p-3 text-destructive">
+                {error}
+              </p>
+            )}
             <TabsContent value="content">
-              <SectionContents
-                contents={contents}
-                entries={entries}
-                layout="panel"
-                // The tab row above stays stuck to the top of the panel.
-                className="[--contents-offset:36px]"
-              >
-                {hasOverview && (
-                  <ContentsSection id={SECONDARY_SECTIONS.overview} title="Thông tin" icon={Settings2}>
-                    <div className="space-y-3">
-                      {currentText?.summary && currentText.summary !== currentText.description && (
-                        <p className="type-body">{currentText.summary}</p>
-                      )}
-                      {currentText && currentText.locale !== locale && (
-                        <Badge variant="outline">
-                          {currentText.locale} · Chưa có {locale}
-                        </Badge>
-                      )}
-                      {isNew && kind === "spells" && !readOnly && (
+              <SectionContents contents={contents} entries={entries} layout="panel">
+                <ContentsSection id={SECONDARY_SECTIONS.overview} title={overviewTitle} icon={FileText}>
+                  {editing("translations") ? (
+                    <div className="space-y-5">
+                      {isNew && kind === "spells" && (
                         <fieldset disabled={busy || uploading} className="space-y-2">
-                          <legend className="mb-2 text-sm font-medium">Biểu tượng phụ trợ</legend>
+                          <legend className="type-label mb-2">Biểu tượng phụ trợ</legend>
                           <AssetPicker
                             semanticType="SPELL_ICON"
                             value={content.iconAssetId}
@@ -465,13 +541,8 @@ export function SecondaryEditor({
                             onChange={(iconAssetId) => update({ iconAssetId })}
                             onBusyChange={setUploading}
                           />
-                          <p className="text-xs text-muted-foreground">PNG, JPEG hoặc WebP · tối đa 25 MB.</p>
+                          <p className="type-meta">PNG, JPEG hoặc WebP · tối đa 25 MB.</p>
                         </fieldset>
-                      )}
-                      {currentText?.description && (
-                        <div className="text-sm leading-6">
-                          <AdminEntityText text={currentText.description} />
-                        </div>
                       )}
                       {isNew && (
                         <Field
@@ -485,16 +556,59 @@ export function SecondaryEditor({
                           placeholder="vi-du-ma-khong-dau"
                         />
                       )}
+                      {/* The language chosen at the top is written here; a field opens a reference in another one. */}
+                      <ReferenceLanguage translations={content.translations} editing={language}>
+                        <WarehouseTranslations
+                          value={content.translations}
+                          onChange={(translations) => update({ translations })}
+                          locale={language}
+                          fixedLanguage
+                          disabled={disabled}
+                          statKeys={statKeys}
+                        />
+                      </ReferenceLanguage>
+                      {kind === "spells" && (content.states?.length ?? 0) > 0 && (
+                        <div className="space-y-3 border-t pt-4">
+                          <h3 className="type-label">Tên và mô tả trạng thái phụ trợ</h3>
+                          {content.states!.map((state, index) => (
+                            <details key={index} className="rounded-xl border p-3">
+                              <summary className="type-body cursor-pointer font-semibold">
+                                {stateName(state, index)}
+                              </summary>
+                              <div className="pt-4">
+                                <ReferenceLanguage translations={state.translations} editing={language}>
+                                  <WarehouseTranslations
+                                    value={state.translations}
+                                    locale={language}
+                                    fixedLanguage
+                                    disabled={disabled}
+                                    onChange={(translations) =>
+                                      update({
+                                        states: content.states!.map((entry, n) =>
+                                          n === index ? { ...entry, translations } : entry,
+                                        ),
+                                      })
+                                    }
+                                  />
+                                </ReferenceLanguage>
+                              </div>
+                            </details>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </ContentsSection>
-                )}
+                  ) : content.translations.some((entry) => entry.locale === language) ? (
+                    <WarehouseDescription text={warehouseText(content.translations, language)} showSummary />
+                  ) : (
+                    <p className="type-meta">Chưa có bản dịch {languageName(language)}. Bấm bút để dịch.</p>
+                  )}
+                </ContentsSection>
                 {parts.map((part) => (
                   <ContentsSection
                     key={part}
                     id={SECONDARY_SECTIONS[part]}
                     title={partTitle(part)}
                     icon={partIcons[part]}
-                    actions={pencil(part)}
                   >
                     {editing(part) && part === "stats" ? (
                       <WarehouseStatsEditor
@@ -516,17 +630,12 @@ export function SecondaryEditor({
                         enchantmentOrderControl={
                           <WarehouseOrderPicker
                             label="Thứ tự trong cấp"
-                            contextLabel={`${warehouseText(branches.find((branch) => branch.code === content.branchCode)?.translations ?? [], locale)?.name ?? content.branchCode ?? ""} · Cấp ${["I", "II", "III"][(content.tier ?? 1) - 1]}`}
+                            contextLabel={`${warehouseText(branch?.translations ?? [], locale)?.name ?? content.branchCode ?? ""} · Cấp ${["I", "II", "III"][(content.tier ?? 1) - 1]}`}
                             items={orderPeers.map((entry) => ({
                               id: entry.id,
                               name: warehouseText(entry.content.translations, locale)?.name ?? entry.code,
                               iconAssetId: entry.content.iconAssetId,
-                              color: enchantmentBranchColor(
-                                branches.find((branch) => branch.code === content.branchCode) ?? {
-                                  code: content.branchCode ?? "",
-                                  color: null,
-                                },
-                              ),
+                              color: enchantmentBranchColor(branch ?? { code: content.branchCode ?? "", color: null }),
                             }))}
                             disabled={disabled || dirty || isNew || !onReorderEnchantments}
                             disabledReason={
@@ -561,14 +670,7 @@ export function SecondaryEditor({
                     )}
                   </ContentsSection>
                 ))}
-                <ContentsSection
-                  id={SECONDARY_SECTIONS.images}
-                  title="Ảnh"
-                  icon={Image}
-                  actions={pencil("images")}
-                  lazy
-                  placeholderHeight={160}
-                >
+                <ContentsSection id={SECONDARY_SECTIONS.images} title="Ảnh" icon={Image} lazy placeholderHeight={160}>
                   {!editing("images") ? (
                     <div className="space-y-3">
                       <HeroAsset
@@ -589,7 +691,7 @@ export function SecondaryEditor({
                                 frameAspectRatio={1}
                                 className="mx-auto size-20 rounded-full"
                               />
-                              <p className="text-center text-xs">
+                              <p className="type-meta text-center">
                                 {warehouseText(state.translations, locale)?.name || state.key}
                               </p>
                             </div>
@@ -598,7 +700,7 @@ export function SecondaryEditor({
                       )}
                       {kind === "spells" && (content.referenceImages?.length ?? 0) > 0 && (
                         <div className="space-y-3 border-t pt-4">
-                          <h3 className="text-sm font-medium">Ảnh tham khảo</h3>
+                          <h3 className="type-label">Ảnh tham khảo</h3>
                           <div className="grid grid-cols-2 gap-3">
                             {content.referenceImages!.map((image) => (
                               <div key={image.assetId} className="space-y-2">
@@ -609,9 +711,7 @@ export function SecondaryEditor({
                                   frameAspectRatio={1}
                                   className="mx-auto size-24"
                                 />
-                                {image.notes && (
-                                  <p className="text-center text-xs text-muted-foreground">{image.notes}</p>
-                                )}
+                                {image.notes && <p className="type-meta text-center">{image.notes}</p>}
                               </div>
                             ))}
                           </div>
@@ -620,10 +720,10 @@ export function SecondaryEditor({
                     </div>
                   ) : (
                     <fieldset disabled={busy || uploading} className="space-y-4">
-                      {/* A new spell picks its icon in the information section above, on the same page. */}
+                      {/* A new spell picks its icon with its name and description above, on the same page. */}
                       {!(isNew && kind === "spells") && (
                         <>
-                          <p className="text-sm text-muted-foreground">Biểu tượng dùng chung cho các bản dịch.</p>
+                          <p className="type-meta">Biểu tượng dùng chung cho các bản dịch.</p>
                           <AssetPicker
                             semanticType={semanticTypes[kind]}
                             value={content.iconAssetId}
@@ -645,7 +745,7 @@ export function SecondaryEditor({
                       {kind === "spells" &&
                         content.states?.map((state, index) => (
                           <div key={index} className="space-y-3 border-t pt-4">
-                            <h3 className="text-sm font-medium">
+                            <h3 className="type-label">
                               {warehouseText(state.translations, locale)?.name ||
                                 state.key ||
                                 `Trạng thái ${index + 1}`}
@@ -667,7 +767,7 @@ export function SecondaryEditor({
                       {kind === "spells" && (
                         <div className="space-y-4 border-t pt-4">
                           <div className="flex items-center justify-between gap-2">
-                            <h3 className="text-sm font-medium">Ảnh tham khảo</h3>
+                            <h3 className="type-label">Ảnh tham khảo</h3>
                             <Button
                               size="sm"
                               variant="outline"
@@ -724,34 +824,6 @@ export function SecondaryEditor({
                     </fieldset>
                   )}
                 </ContentsSection>
-                <ContentsSection
-                  id={SECONDARY_SECTIONS.context}
-                  title="Mốc patch và ghi chú"
-                  icon={CalendarClock}
-                  actions={pencil("context")}
-                >
-                  <div className="space-y-2">
-                    <WarehousePatchContext
-                      compact={!editing("context")}
-                      rulesetId={rulesetId}
-                      allowUnknownPatch={archiveEligible}
-                      baselineMode={baselineMode}
-                      value={patchId}
-                      disabled={
-                        disabled || translationOnly || !editing("context") || !allowPatchChange || !!sourceRevisionId
-                      }
-                      onChange={(value) => {
-                        setPatchId(value)
-                        setDirty(true)
-                      }}
-                    />
-                    <WarehouseNotes
-                      value={content.notes}
-                      onChange={(notes) => update({ notes })}
-                      disabled={disabled || !editing("context")}
-                    />
-                  </div>
-                </ContentsSection>
                 {hasHistory && (
                   // The video panel brings its own heading and add button.
                   <ContentsSection id={SECONDARY_SECTIONS.videos} label="Video" lazy placeholderHeight={200}>
@@ -764,115 +836,61 @@ export function SecondaryEditor({
                 )}
               </SectionContents>
             </TabsContent>
-            <TabsContent value="translations">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="type-section-title">Nội dung bản dịch</h3>
-                {pencil("translations")}
-              </div>
-              <WarehouseTranslations
-                preview={!editing("translations")}
-                value={content.translations}
-                onChange={(translations) => update({ translations })}
-                locale={initialLanguage ?? locale}
-                onLanguageChange={onLanguageChange}
-                disabled={disabled}
-                statKeys={(content.stats ?? []).map((stat) => stat.key).filter(Boolean)}
-              />
-              {kind === "spells" && (content.states?.length ?? 0) > 0 && (
-                <div className="mt-6 space-y-5 border-t pt-5">
-                  <h3 className="font-medium">Bản dịch trạng thái phụ trợ</h3>
-                  {content.states!.map((state, index) => (
-                    <details key={index} className="rounded-xl border p-3">
-                      <summary className="cursor-pointer text-sm font-medium">
-                        {warehouseText(state.translations, locale)?.name || state.key || `Trạng thái ${index + 1}`}
-                      </summary>
-                      <div className="pt-4">
-                        <WarehouseTranslations
-                          preview={!editing("translations")}
-                          value={state.translations}
-                          locale={locale}
-                          disabled={disabled}
-                          onChange={(translations) =>
-                            update({
-                              states: content.states!.map((entry, n) =>
-                                n === index ? { ...entry, translations } : entry,
-                              ),
-                            })
-                          }
-                        />
-                      </div>
-                    </details>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            {hasHistory && (
-              <TabsContent value="history">
+            <TabsContent value="history" className="space-y-5">
+              <section className="space-y-4 rounded-xl border bg-muted/20 p-4" aria-label="Phiên bản đang mở">
+                <h2 className="type-section-title">Phiên bản đang mở</h2>
+                <VersionFacts
+                  version={isNew ? `${kindName} mới` : versionLabel(revisionNo, revisionState, false)}
+                  cause={revisionCause}
+                  patch={
+                    <WarehousePatchContext
+                      compact={!editing("context")}
+                      inline
+                      rulesetId={rulesetId}
+                      allowUnknownPatch={archiveEligible}
+                      baselineMode={baselineMode}
+                      value={patchId}
+                      disabled={
+                        disabled || translationOnly || !editing("context") || !allowPatchChange || !!sourceRevisionId
+                      }
+                      onChange={(value) => {
+                        setPatchId(value)
+                        setDirty(true)
+                      }}
+                    />
+                  }
+                />
+                {editing("context") || content.notes ? (
+                  <WarehouseNotes
+                    value={content.notes}
+                    onChange={(notes) => update({ notes })}
+                    disabled={disabled || !editing("context")}
+                  />
+                ) : (
+                  <p className="type-meta">Chưa có ghi chú.</p>
+                )}
+              </section>
+              {hasHistory && (
                 <WarehouseChangeHistory
                   kind={kind}
                   entryId={entryId!}
                   rulesetId={rulesetId}
                   locale={locale}
-                  onDraft={onDraft}
+                  currentRevisionId={revisionId}
                 />
-                {archiveEligible && (
-                  <SpellRemovalHistory
-                    id={entryId!}
-                    revisionId={revisionId!}
-                    rulesetId={rulesetId}
-                    published={revisionPublished}
-                    canPublish={canPublish}
-                  />
-                )}
-              </TabsContent>
-            )}
-          </Tabs>
-          {error && (
-            <p role="alert" className="mt-4 rounded-lg border border-destructive/30 p-3 text-sm text-destructive">
-              {error}
-            </p>
-          )}
-        </div>
-        {!readOnly && (
-          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t bg-background p-4">
-            {onDiscard && (
-              <Button
-                variant="ghost"
-                className="mr-auto"
-                disabled={busy || uploading}
-                onClick={async () => {
-                  const confirmed = await confirmAction({
-                    title: "Bỏ bản nháp này?",
-                    description: "Nội dung trong bản nháp sẽ bị hủy.",
-                    confirmLabel: "Bỏ nháp",
-                    cancelLabel: "Giữ bản nháp",
-                  })
-                  if (confirmed) void act(onDiscard)
-                }}
-              >
-                <Archive className="size-4" /> Bỏ nháp
-              </Button>
-            )}
-            <Button disabled={disabled || (!isNew && !dirty)} onClick={save}>
-              {busy && <LoaderCircle className="size-4 animate-spin" />}
-              <Save className="size-4" /> Lưu nháp
-            </Button>
-            {canPublish && onPublish && (
-              <Button
-                variant="outline"
-                disabled={
-                  disabled ||
-                  dirty ||
-                  (!patchId && !archivedWithoutPatch && !baselineWithoutPatch) ||
-                  visibleMissing.length > 0
-                }
-                onClick={() => void act(onPublish)}
-              >
-                Xuất bản
-              </Button>
-            )}
-          </footer>
-        )}
+              )}
+              {hasHistory && archiveEligible && (
+                <SpellRemovalHistory
+                  id={entryId!}
+                  revisionId={revisionId!}
+                  rulesetId={rulesetId}
+                  published={revisionPublished}
+                  canPublish={canPublish}
+                />
+              )}
+            </TabsContent>
+          </div>
+        </Tabs>
       </SheetContent>
     </Sheet>
   )
