@@ -39,6 +39,7 @@ final class HeroPatchChangeViews {
         result.put("toHeroRevisionId", header.getToHeroRevisionId());
         result.put("sourceKind", header.getSourceKind().name());
         result.put("sourceUrl", header.getSourceUrl());
+        result.put("introducesHero", header.getIntroducesHero());
 
         if (entry.translation() != null) {
             result.put("actualLocale", entry.translation().getLocale());

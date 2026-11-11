@@ -13,7 +13,6 @@ import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassifica
 import com.wikiaov.hero.internal.change.persistence.entity.StatChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.VisualChangeClassification;
 import com.wikiaov.hero.internal.domain.HeroChanges.*;
-import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,7 @@ class HeroPatchChangeViewsTests {
         when(header.getSourceKind()).thenReturn(ChangeSource.PATCH_NOTES);
         when(header.getSourceUrl()).thenReturn("https://example.org/patch-notes");
         var assessment = new HeroPatchAssessment();
-        assessment.setKind(Kind.BUFF);
+        assessment.setKind(com.wikiaov.hero.internal.domain.HeroChanges.OverallKind.BUFF);
         assessment.setVersion(2);
         var stat = new StatChangeClassification();
         stat.setStatKey("HP");

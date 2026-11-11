@@ -94,6 +94,8 @@ public class HeroPatchChanges implements HeroChangeQueries {
         else
             for (var change : input.changes())
                 validateChange(change, from, to);
+        if (input.introduces())
+            validateIntroduction(input.heroId(), variant);
 
         UUID id = UUID.randomUUID();
         var actor = actors.require();
@@ -245,6 +247,25 @@ public class HeroPatchChanges implements HeroChangeQueries {
         }
     }
 
+    /**
+     * A hero is introduced once, and readers of earlier patches stop seeing it, so no published observation may precede
+     * the patch that introduced it (ADR-016).
+     */
+    private void validateIntroduction(UUID heroId, com.wikiaov.patch.PatchVariantReference variant) {
+        if (history.introduced(heroId))
+            throw HeroValidation.invalid("The hero already has a patch that introduced it.");
+
+        boolean observedEarlier = store.revisions(heroId).stream()
+                .anyMatch(revision -> revision.state().equals("PUBLISHED")
+                        && revision.rulesetId().equals(variant.rulesetId())
+                        && revision.effectiveFromPatchVariantId() != null
+                        && contexts.variant(revision.effectiveFromPatchVariantId())
+                                .rulesetOrdinal() < variant.rulesetOrdinal());
+        if (observedEarlier)
+            throw HeroValidation
+                    .invalid("The hero has a published revision before this patch, so this patch cannot introduce it.");
+    }
+
     private HeroRevisionView latestPublished(UUID heroId, UUID rulesetId) {
         return store.revisions(heroId).stream()
                 .filter(revision -> revision.state().equals("PUBLISHED") && revision.rulesetId().equals(rulesetId))
@@ -277,7 +298,7 @@ public class HeroPatchChanges implements HeroChangeQueries {
 
     @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.AssessmentInput")
     public record AssessmentInput(
-            Kind kind,
+            com.wikiaov.hero.internal.domain.HeroChanges.OverallKind kind,
             long expectedVersion
     ) {
     }
@@ -290,6 +311,9 @@ public class HeroPatchChanges implements HeroChangeQueries {
         store.lockHero(heroId);
         if (input.kind() == null)
             throw HeroValidation.invalid("An overall classification is required.");
+        if (input.kind() == com.wikiaov.hero.internal.domain.HeroChanges.OverallKind.RELEASE
+                && !history.introduces(changeSetId))
+            throw HeroValidation.invalid("Only the change set that introduced the hero can be assessed as a release.");
         var value = history.assessment(changeSetId)
                 .orElseGet(com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment::new);
         if (value.getVersion() != input.expectedVersion())

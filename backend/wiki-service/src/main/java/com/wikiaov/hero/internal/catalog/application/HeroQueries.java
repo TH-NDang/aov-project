@@ -32,9 +32,10 @@ public class HeroQueries {
     private final Clock clock;
     private final HeroForms forms;
     private final SkillLibraryIcons libraryIcons;
+    private final HeroReadMoments moments;
 
     public HeroQueries(HeroStore store, HeroSections sections, GameplayContexts contexts, MediaAssets media,
-            JsonMapper json, Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons) {
+            JsonMapper json, Clock clock, HeroForms forms, SkillLibraryIcons libraryIcons, HeroReadMoments moments) {
         this.store = store;
         this.sections = sections;
         this.contexts = contexts;
@@ -43,6 +44,7 @@ public class HeroQueries {
         this.clock = clock;
         this.forms = forms;
         this.libraryIcons = libraryIcons;
+        this.moments = moments;
     }
 
     public Optional<HeroRevisionView> current(UUID heroId, GameplayContext context, Instant at) {
@@ -92,15 +94,34 @@ public class HeroQueries {
         HeroValidation.locale(locale);
 
         Instant at = clock.instant();
-        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
-        var context = scope.gameplay();
-        var rev = current(heroId, context, at, scope.allowUnscoped())
-                .orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND,
-                        "No published hero is available in this context."));
+        var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
+        var context = moment.context();
+        var choice = choose(heroId, moment, at).orElseThrow(() -> new ApiException(HeroErrorCode.HERO_NOT_FOUND,
+                "No published hero is available in this context."));
 
-        var result = detail(rev, context, locale, manifest);
-        addForms(result, rev.heroId(), context, at, scope.allowUnscoped(), locale, manifest);
+        var result = detail(choice.revision(), context, locale, manifest);
+        markLaterObservation(result, choice);
+        addForms(result, heroId, moment, at, locale, manifest);
         return result;
+    }
+
+    /** The published revision readers see of one hero at the selected moment (ADR-016). */
+    private Optional<HeroReadMoments.Choice<HeroRevisionView>> choose(UUID heroId, HeroReadMoments.Moment moment,
+            Instant at) {
+        var revisions = store.revisions(heroId).stream()
+                .filter(r -> r.state().equals("PUBLISHED") && r.rulesetId().equals(moment.context().rulesetId())
+                        && !r.publishedAt().isAfter(at))
+                .toList();
+
+        return moment.choose(heroId, revisions, HeroRevisionView::effectiveFromPatchVariantId,
+                HeroRevisionView::publicationSequence);
+    }
+
+    /** Content observed at a later patch says so, and readers are never shown it as the selected patch's data. */
+    private void markLaterObservation(Map<String, Object> entry, HeroReadMoments.Choice<?> choice) {
+        if (choice.laterVariantId() != null)
+            entry.put("laterObservation", Map.of("patchVariantId", choice.laterVariantId(), "patchCode",
+                    contexts.patchCode(choice.laterVariantId())));
     }
 
     /**
@@ -108,14 +129,15 @@ public class HeroQueries {
      * as any hero. A form names the hero that holds it, so readers can be sent to the holding page (ADR-024).
      */
     @SuppressWarnings("unchecked")
-    private void addForms(Map<String, Object> result, UUID heroId, GameplayContext context, Instant at,
-            boolean allowUnscoped, String locale, boolean manifest) {
+    private void addForms(Map<String, Object> result, UUID heroId, HeroReadMoments.Moment moment, Instant at,
+            String locale, boolean manifest) {
         var structure = forms.structure();
         if (structure.holdsForms(heroId)) {
             List<Map<String, Object>> entries = new ArrayList<>();
             for (var form : structure.formsOf(heroId))
-                current(form.heroId(), context, at, allowUnscoped).ifPresent(formRevision -> {
-                    var entry = detail(formRevision, context, locale, manifest);
+                choose(form.heroId(), moment, at).ifPresent(formChoice -> {
+                    var entry = detail(formChoice.revision(), moment.context(), locale, manifest);
+                    markLaterObservation(entry, formChoice);
                     var formContext = (Map<String, Object>) entry.remove("context");
                     entry.put("formKey", form.formKey());
                     entry.put("displayOrder", form.displayOrder());
@@ -246,16 +268,16 @@ public class HeroQueries {
                 throw HeroValidation.invalid("Unknown hero role.");
             }
         Instant at = clock.instant();
-        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
-        var ctx = scope.gameplay();
+        var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
+        var ctx = moment.context();
         var structure = forms.structure();
         var heroes = store.heroes(sort.endsWith("desc"));
         var codes = heroes.stream().collect(Collectors.toMap(HeroIdentity::getId, HeroIdentity::getCode));
 
         Map<UUID, Published> published = new LinkedHashMap<>();
         for (var hero : heroes)
-            current(hero.getId(), ctx, at, scope.allowUnscoped())
-                    .ifPresent(rev -> published.put(hero.getId(), published(hero, rev, locale)));
+            choose(hero.getId(), moment, at).ifPresent(
+                    choice -> published.put(hero.getId(), published(hero, choice, locale)));
 
         List<ListEntry> all = new ArrayList<>();
         for (var hero : published.values()) {
@@ -308,14 +330,19 @@ public class HeroQueries {
                 all.size(), "totalPages", all.isEmpty() ? 0 : (all.size() + size - 1) / size);
     }
 
-    private Published published(HeroIdentity hero, HeroRevisionView rev, String locale) {
+    private Published published(HeroIdentity hero, HeroReadMoments.Choice<HeroRevisionView> choice, String locale) {
+        var rev = choice.revision();
         var profile = (Profile) sections.content(HeroSection.PROFILE, rev.sections().get(HeroSection.PROFILE));
         String actual = translationLocale(profile.translations().stream().map(ProfileTranslation::locale).toList(),
                 locale);
         var translated = profile.translations().stream().filter(t -> t.locale().equals(actual)).findFirst()
                 .orElseThrow();
+        var later = choice.laterVariantId() == null
+                ? null
+                : Map.<String, Object>of("patchVariantId", choice.laterVariantId(), "patchCode",
+                        contexts.patchCode(choice.laterVariantId()));
         return new Published(hero, rev, translated.name(), actual, profile.roles(), profile.positions(),
-                rev.sections().get(HeroSection.MEDIA_BINDINGS));
+                rev.sections().get(HeroSection.MEDIA_BINDINGS), later);
     }
 
     private static <T> Set<T> union(List<Published> heroes, java.util.function.Function<Published, Set<T>> values) {
@@ -363,7 +390,8 @@ public class HeroQueries {
             String actualLocale,
             Set<Role> roles,
             Set<Position> positions,
-            UUID bindingsId
+            UUID bindingsId,
+            Map<String, Object> laterObservation
     ) {
         boolean matches(String q) {
             String query = q.toLowerCase(Locale.ROOT);
@@ -378,6 +406,8 @@ public class HeroQueries {
             item.put("unscopedBaseline", revision.effectiveFromPatchVariantId() == null);
             item.put("name", name);
             item.put("actualLocale", actualLocale);
+            if (laterObservation != null)
+                item.put("laterObservation", laterObservation);
             return item;
         }
     }

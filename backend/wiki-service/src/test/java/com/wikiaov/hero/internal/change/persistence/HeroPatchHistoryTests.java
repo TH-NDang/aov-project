@@ -44,7 +44,7 @@ class HeroPatchHistoryTests {
         var ids = List.of(first.getId(), second.getId(), third.getId());
         var assessment = new HeroPatchAssessment();
         assessment.setChangeSetId(second.getId());
-        assessment.setKind(Kind.BUFF);
+        assessment.setKind(com.wikiaov.hero.internal.domain.HeroChanges.OverallKind.BUFF);
         var fact = new OtherChangeClassification();
         fact.setChangeSetId(first.getId());
         when(sets.historyForVariant(variant)).thenReturn(List.of(first, second, third));

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.wikiaov.hero.internal.catalog.application.HeroReadMoments;
+import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
@@ -23,8 +25,9 @@ class PublicSkinCatalogTest {
     private final GameplayContext context = new GameplayContext(UUID.randomUUID(), "VN", UUID.randomUUID(),
             "aov-standard", UUID.randomUUID(), "2026-10-15", UUID.randomUUID(), 2, now);
     private final HeroForms forms = mock(HeroForms.class);
-    private final PublicSkinCatalog catalog = new PublicSkinCatalog(repository, contexts, media,
-            Clock.fixed(now, ZoneOffset.UTC), forms);
+    private final HeroPatchHistory history = mock(HeroPatchHistory.class);
+    private final PublicSkinCatalog catalog = new PublicSkinCatalog(repository, media, Clock.fixed(now, ZoneOffset.UTC),
+            forms, new HeroReadMoments(contexts, history));
 
     @BeforeEach
     void resolveContext() {
@@ -40,8 +43,8 @@ class PublicSkinCatalogTest {
         var baseline = candidate("airi", old, null, 1);
         var latest = candidate(baseline.getHeroId(), "airi", current, context.patchVariantId(), 2);
         var notEffective = candidate(baseline.getHeroId(), "airi", future, UUID.randomUUID(), 3);
-        when(contexts.variant(context.patchVariantId())).thenReturn(variant(context.patchVariantId(), 2));
-        when(contexts.variant(notEffective.getVariantId())).thenReturn(variant(notEffective.getVariantId(), 3));
+        when(contexts.rulesetVariants(context.rulesetId())).thenReturn(List.of(variant(context.patchVariantId(), 2),
+                variant(notEffective.getVariantId(), 3)));
         when(repository.candidates(context.rulesetId(), now)).thenReturn(List.of(baseline, latest, notEffective));
         when(repository.profileTexts(List.of(latest.getProfileId())))
                 .thenReturn(List.of(profile(latest.getProfileId(), "vi-VN", "Airi")));
@@ -174,7 +177,34 @@ class PublicSkinCatalogTest {
         assertThat(catalog.read("VN", "vi-VN", "", null, null, 0, 24, season, null, false).page().items()).isEmpty();
         assertThat(catalog.read("VN", "vi-VN", "", null, null, 0, 24, season, null, true).page().items())
                 .singleElement().satisfies(entry -> assertThat(entry.unscopedBaseline()).isTrue());
-        verify(contexts, never()).resolve("VN", now);
+        verify(contexts, times(2)).resolveCatalog("VN", now, season, null);
+    }
+
+    @Test
+    void historicalPatchReadsAHeroOnlyObservedLaterFromThatObservation() {
+        UUID earlier = UUID.randomUUID();
+        UUID later = UUID.randomUUID();
+        var season = UUID.randomUUID();
+        var selected = new GameplayContext(context.regionId(), "VN", context.rulesetId(), "aov-standard",
+                UUID.randomUUID(), "2026-09-29", earlier, 1, now);
+        var observed = candidate("airi", UUID.randomUUID(), later, 4);
+        when(contexts.resolveCatalog("VN", now, season, earlier)).thenReturn(selected);
+        when(contexts.rulesetVariants(context.rulesetId()))
+                .thenReturn(List.of(variant(earlier, 1), variant(context.patchVariantId(), 2), variant(later, 3)));
+        when(repository.candidates(context.rulesetId(), now)).thenReturn(List.of(observed));
+        when(repository.skins(List.of(observed.getSkinsId())))
+                .thenReturn(List.of(skin(observed.getSkinsId(), "airi-special-1", 1, null)));
+        when(repository.skinTexts(List.of(observed.getSkinsId())))
+                .thenReturn(List.of(text(observed.getSkinsId(), "airi-special-1", "vi-VN", "Special")));
+        when(media.findAll(anySet())).thenReturn(Map.of());
+
+        // The market has only reached ordinal 2, so the observation at ordinal 3 is not read yet.
+        assertThat(catalog.read("VN", "vi-VN", "", null, null, 0, 24, season, earlier, false).page().items()).isEmpty();
+
+        when(contexts.resolve("VN", now)).thenReturn(new GameplayContext(context.regionId(), "VN",
+                context.rulesetId(), "aov-standard", UUID.randomUUID(), "2026-10-30", later, 3, now));
+        assertThat(catalog.read("VN", "vi-VN", "", null, null, 0, 24, season, earlier, false).page().items())
+                .singleElement().satisfies(entry -> assertThat(entry.skinKey()).isEqualTo("airi-special-1"));
     }
 
     @Test

@@ -24,6 +24,7 @@ import com.wikiaov.hero.internal.domain.HeroChanges.VisualChange;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -56,6 +57,7 @@ public class HeroPatchHistory {
         value.setToHeroRevisionId(input.toHeroRevisionId());
         value.setSourceKind(input.source());
         value.setSourceUrl(input.sourceUrl());
+        value.setIntroducesHero(input.introduces());
         value.setCreatedAt(createdAt);
         value.setCreatedByIssuer(actor.issuer());
         value.setCreatedBySubject(actor.subject());
@@ -92,6 +94,21 @@ public class HeroPatchHistory {
 
     public Optional<UUID> heroId(UUID changeSetId) {
         return changeSets.findHeroId(changeSetId);
+    }
+
+    /** The patch variant that introduced each hero that has one (ADR-016). */
+    public Map<UUID, UUID> introductions() {
+        return changeSets.introductions().stream().collect(Collectors.toMap(
+                HeroPatchChangeSetRepository.Introduction::getHeroId,
+                HeroPatchChangeSetRepository.Introduction::getPatchVariantId));
+    }
+
+    public boolean introduced(UUID heroId) {
+        return changeSets.existsByHeroIdAndIntroducesHeroTrue(heroId);
+    }
+
+    public boolean introduces(UUID changeSetId) {
+        return changeSets.existsByIdAndIntroducesHeroTrue(changeSetId);
     }
 
     public Optional<HeroPatchAssessment> assessment(UUID changeSetId) {

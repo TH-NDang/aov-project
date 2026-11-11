@@ -1,6 +1,6 @@
 package com.wikiaov.hero.internal.change.persistence.entity;
 
-import com.wikiaov.hero.internal.domain.HeroChanges.Kind;
+import com.wikiaov.hero.internal.domain.HeroChanges.OverallKind;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
@@ -15,7 +15,7 @@ public class HeroPatchAssessment {
     @Id
     private UUID changeSetId;
     @Enumerated(EnumType.STRING)
-    private Kind kind;
+    private OverallKind kind;
     private long version;
     private Instant updatedAt;
     private String updatedByIssuer;

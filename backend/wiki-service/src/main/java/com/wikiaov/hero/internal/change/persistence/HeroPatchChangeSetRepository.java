@@ -17,7 +17,7 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
     @Query("""
             select c.id as id, c.heroId as heroId, h.code as heroCode, c.patchVariantId as patchVariantId,
                 c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId,
-                c.sourceKind as sourceKind, c.sourceUrl as sourceUrl
+                c.sourceKind as sourceKind, c.sourceUrl as sourceUrl, c.introducesHero as introducesHero
             from HeroPatchChangeSet c join HeroIdentity h on h.id = c.heroId
             where c.patchVariantId = :variantId order by c.createdAt desc, c.id
             """)
@@ -26,7 +26,7 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
     @Query("""
             select c.id as id, c.heroId as heroId, h.code as heroCode, c.patchVariantId as patchVariantId,
                 c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId,
-                c.sourceKind as sourceKind, c.sourceUrl as sourceUrl
+                c.sourceKind as sourceKind, c.sourceUrl as sourceUrl, c.introducesHero as introducesHero
             from HeroPatchChangeSet c join HeroIdentity h on h.id = c.heroId
             where c.heroId = :heroId order by c.createdAt desc, c.id
             """)
@@ -34,6 +34,14 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
 
     @Query("select c.heroId from HeroPatchChangeSet c where c.id = :id")
     Optional<UUID> findHeroId(@Param("id") UUID id);
+
+    /** The patch that introduced each hero that has one (ADR-016). */
+    @Query("select c.heroId as heroId, c.patchVariantId as patchVariantId from HeroPatchChangeSet c where c.introducesHero = true")
+    List<Introduction> introductions();
+
+    boolean existsByHeroIdAndIntroducesHeroTrue(UUID heroId);
+
+    boolean existsByIdAndIntroducesHeroTrue(UUID id);
 
     interface Header {
         UUID getId();
@@ -51,5 +59,13 @@ public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchCha
         ChangeSource getSourceKind();
 
         String getSourceUrl();
+
+        boolean getIntroducesHero();
+    }
+
+    interface Introduction {
+        UUID getHeroId();
+
+        UUID getPatchVariantId();
     }
 }

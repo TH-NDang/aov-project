@@ -20,6 +20,20 @@ public final class HeroChanges {
         OTHER
     }
 
+    /**
+     * The overall assessment of a hero in one patch. It reuses the line kinds and adds {@code RELEASE}, which only the
+     * change set that introduced the hero may carry (ADR-016).
+     */
+    public enum OverallKind {
+        BUFF,
+        NERF,
+        ADJUSTMENT,
+        REWORK,
+        FIX,
+        RELEASE,
+        OTHER
+    }
+
     /** Where the recorded values come from (ADR-016). */
     public enum ChangeSource {
         /** Values are compared with the source and target snapshots. */
@@ -92,7 +106,10 @@ public final class HeroChanges {
     ) {
     }
 
-    /** A missing {@code sourceKind} means {@link ChangeSource#SNAPSHOT}, which requires {@code toHeroRevisionId}. */
+    /**
+     * A missing {@code sourceKind} means {@link ChangeSource#SNAPSHOT}, which requires {@code toHeroRevisionId}.
+     * {@code introducesHero} marks the patch that introduced the hero (ADR-016); a missing value means false.
+     */
     public record Record(
             @NotNull UUID heroId,
             ChangeSource sourceKind,
@@ -100,10 +117,21 @@ public final class HeroChanges {
             UUID fromHeroRevisionId,
             UUID toHeroRevisionId,
             @NotEmpty @Size(max = 30) List<@Valid Summary> summaryTranslations,
-            @NotEmpty @Size(max = 200) List<@Valid Change> changes
+            @NotEmpty @Size(max = 200) List<@Valid Change> changes,
+            Boolean introducesHero
     ) {
+        public Record(UUID heroId, ChangeSource sourceKind, String sourceUrl, UUID fromHeroRevisionId,
+                UUID toHeroRevisionId, List<Summary> summaryTranslations, List<Change> changes) {
+            this(heroId, sourceKind, sourceUrl, fromHeroRevisionId, toHeroRevisionId, summaryTranslations, changes,
+                    null);
+        }
+
         public ChangeSource source() {
             return sourceKind == null ? ChangeSource.SNAPSHOT : sourceKind;
+        }
+
+        public boolean introduces() {
+            return Boolean.TRUE.equals(introducesHero);
         }
     }
 }

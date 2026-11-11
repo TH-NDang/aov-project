@@ -28,6 +28,7 @@ public class HeroPatchChangeSet extends AssignedIdentifierEntity<UUID> {
     @Enumerated(EnumType.STRING)
     private ChangeSource sourceKind;
     private String sourceUrl;
+    private boolean introducesHero;
     private Instant createdAt;
     private String createdByIssuer;
     private String createdBySubject;

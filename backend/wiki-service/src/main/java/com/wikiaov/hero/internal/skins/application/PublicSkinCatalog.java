@@ -3,14 +3,12 @@ package com.wikiaov.hero.internal.skins.application;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView;
 import com.wikiaov.hero.internal.application.response.PublicSkinCatalogView.*;
 import com.wikiaov.hero.internal.authoring.application.HeroValidation;
+import com.wikiaov.hero.internal.catalog.application.HeroReadMoments;
 import com.wikiaov.hero.internal.forms.application.HeroForms;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository;
 import com.wikiaov.hero.internal.skins.persistence.PublicSkinCatalogRepository.*;
 import com.wikiaov.media.MediaAssetReference;
 import com.wikiaov.media.MediaAssets;
-import com.wikiaov.patch.CatalogReadScope;
-import com.wikiaov.patch.GameplayContext;
-import com.wikiaov.patch.GameplayContexts;
 import com.wikiaov.platform.PageSlice;
 import java.text.Normalizer;
 import java.time.Clock;
@@ -24,18 +22,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class PublicSkinCatalog {
     private final PublicSkinCatalogRepository repository;
-    private final GameplayContexts contexts;
     private final MediaAssets media;
     private final Clock clock;
     private final HeroForms forms;
+    private final HeroReadMoments moments;
 
-    public PublicSkinCatalog(PublicSkinCatalogRepository repository, GameplayContexts contexts, MediaAssets media,
-            Clock clock, HeroForms forms) {
+    public PublicSkinCatalog(PublicSkinCatalogRepository repository, MediaAssets media, Clock clock, HeroForms forms,
+            HeroReadMoments moments) {
         this.repository = repository;
-        this.contexts = contexts;
         this.media = media;
         this.clock = clock;
         this.forms = forms;
+        this.moments = moments;
     }
 
     public PublicSkinCatalogView read(String region, String locale, String q, String hero, String rarity, int page,
@@ -47,9 +45,8 @@ public class PublicSkinCatalog {
             int size, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
         validate(locale, q, hero, rarity, page, size);
         var at = clock.instant();
-        var scope = CatalogReadScope.resolve(contexts, region, at, seasonId, patchVariantId, includeUnscoped);
-        var context = scope.gameplay();
-        var selected = selectCurrent(repository.candidates(context.rulesetId(), at), context, scope.allowUnscoped());
+        var moment = moments.resolve(region, at, seasonId, patchVariantId, includeUnscoped);
+        var selected = selectCurrent(repository.candidates(moment.context().rulesetId(), at), moment);
         if (selected.isEmpty())
             return new PublicSkinCatalogView(new PageSlice<>(List.of(), page, size, 0), List.of(), List.of());
 
@@ -81,22 +78,14 @@ public class PublicSkinCatalog {
         return new PublicSkinCatalogView(new PageSlice<>(items, page, size, matching.size()), heroes, rarities);
     }
 
-    private List<Candidate> selectCurrent(List<Candidate> candidates, GameplayContext context, boolean allowUnscoped) {
-        Map<UUID, Long> ordinals = new HashMap<>();
-        Function<Candidate, Long> ordinal = candidate -> candidate.getVariantId() == null
-                ? 0
-                : ordinals.computeIfAbsent(candidate.getVariantId(), id -> contexts.variant(id).rulesetOrdinal());
-        var order = Comparator.comparing(ordinal).thenComparing(Candidate::getPublicationSequence);
-        Map<UUID, Candidate> selected = new HashMap<>();
-        for (var candidate : candidates) {
-            if (!allowUnscoped && candidate.getVariantId() == null)
-                continue;
-            if (ordinal.apply(candidate) <= context.rulesetOrdinal())
-                selected.merge(candidate.getHeroId(), candidate, (left, right) -> order.compare(left, right) >= 0
-                        ? left
-                        : right);
-        }
-        return selected.values().stream().sorted(Comparator.comparing(Candidate::getHeroCode)).toList();
+    /** Each hero's skins come from the revision the hero catalog shows at the same moment (ADR-016). */
+    private List<Candidate> selectCurrent(List<Candidate> candidates, HeroReadMoments.Moment moment) {
+        var byHero = candidates.stream().collect(Collectors.groupingBy(Candidate::getHeroId));
+        List<Candidate> selected = new ArrayList<>();
+        byHero.forEach((heroId, revisions) -> moment
+                .choose(heroId, revisions, Candidate::getVariantId, Candidate::getPublicationSequence)
+                .ifPresent(choice -> selected.add(choice.revision())));
+        return selected.stream().sorted(Comparator.comparing(Candidate::getHeroCode)).toList();
     }
 
     private List<Localized> localize(List<Candidate> heroes, String locale) {

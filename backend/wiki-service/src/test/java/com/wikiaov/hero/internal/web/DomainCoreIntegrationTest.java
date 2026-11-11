@@ -659,6 +659,25 @@ class DomainCoreIntegrationTest {
                 .param("anchorRevisionId", id(later).toString()), null, 422);
         send(get(ROOT + "/admin/heroes/" + hero + "/patch-view").param("patchVariantId", past.toString())
                 .param("unknown", "1"), null, 400);
+
+        // A hero is introduced once, and never at a patch after one that already observed it (ADR-016).
+        List<Map<String, Object>> release = List.of(Map.of("type", "OTHER", "changeKind", "OTHER", "description",
+                "Tướng mới ra mắt"));
+        var introduced = new HashMap<>(notes(laterHero, release));
+        introduced.put("introducesHero", true);
+        UUID introducedChange = id(send(post(ROOT + "/admin/patch-variants/" + past + "/hero-changes"), introduced,
+                201));
+        assertThat(jdbc.sql("SELECT count(*) FROM hero.hero_patch_change_set WHERE hero_id=? AND introduces_hero")
+                .param(laterHero).query(Long.class).single()).isEqualTo(1L);
+        send(put(ROOT + "/admin/hero-changes/" + pastChange + "/assessment"),
+                Map.of("kind", "RELEASE", "expectedVersion", 0), 422);
+        send(put(ROOT + "/admin/hero-changes/" + introducedChange + "/assessment"),
+                Map.of("kind", "RELEASE", "expectedVersion", 0), 200);
+        UUID next = seasonPatch(season, "notes-next");
+        send(post(ROOT + "/admin/patch-variants/" + next + "/hero-changes"), introduced, 422);
+        var observedBefore = new HashMap<>(notes(hero, release));
+        observedBefore.put("introducesHero", true);
+        send(post(ROOT + "/admin/patch-variants/" + next + "/hero-changes"), observedBefore, 422);
     }
 
     private Map<String, Object> notes(UUID hero, List<Map<String, Object>> changes) {
