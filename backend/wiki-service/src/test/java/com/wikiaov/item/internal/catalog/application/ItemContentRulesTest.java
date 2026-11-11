@@ -30,6 +30,20 @@ class ItemContentRulesTest {
         assertThat(ItemContent.unwrapDescription(null)).isNull();
     }
 
+    @Test
+    void dropsImportQuotesThatPairWithNothing() {
+        assertThat(ItemContent.unwrapDescription("\"+30% Attack speed\n\nWhirlwind: extra damage"))
+                .isEqualTo("+30% Attack speed\n\nWhirlwind: extra damage");
+        assertThat(ItemContent.unwrapDescription(
+                "\"+150 Magic\n\nElement: 2 seconds cooldown.\"\n\nHunt: bonus damage\n\nHumble: fewer coins\""))
+                .isEqualTo("+150 Magic\n\nElement: 2 seconds cooldown.\n\nHunt: bonus damage\n\nHumble: fewer coins");
+        assertThat(ItemContent.unwrapDescription("\"+1200 HP\n\nUnlocks \"Resonance\", an active ability\""))
+                .isEqualTo("+1200 HP\n\nUnlocks \"Resonance\", an active ability");
+        assertThat(ItemContent.unwrapDescription("\"+150 Armor\n\n(Engraved \"Leave the fight, heal fast.)\""))
+                .isEqualTo("+150 Armor\n\n(Engraved \"Leave the fight, heal fast.)\"");
+        assertThat(ItemContent.unwrapDescription("Shows \"one\" and \"two\"")).isEqualTo("Shows \"one\" and \"two\"");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"en", "vi-VN", "de", "fr-FR", "eng"})
     void acceptsSupportedLocaleSyntax(String locale) {

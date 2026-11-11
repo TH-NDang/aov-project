@@ -1,5 +1,6 @@
 package com.wikiaov.item.internal.reference.infrastructure;
 
+import com.wikiaov.item.internal.domain.ItemContent;
 import com.wikiaov.item.internal.reference.persistence.ItemReferenceRepository;
 import com.wikiaov.media.*;
 import com.wikiaov.patch.GameplayContexts;
@@ -28,7 +29,11 @@ public class ItemPublicReferences implements PublicReferenceProvider, AdminRefer
     }
 
     public List<AdminReferenceProvider.Candidate> references(UUID rulesetId, Map<UUID, Long> patchOrdinals) {
-        return AdminReferenceProvider.candidates(references.authoring(rulesetId, patchOrdinals), "item", rulesetId);
+        var rows = references.authoring(rulesetId, patchOrdinals).stream()
+                .map(row -> new AdminReferenceProvider.Row(row.id(), row.revisionId(), row.iconAssetId(), row.locale(),
+                        row.name(), ItemContent.unwrapDescription(row.description())))
+                .toList();
+        return AdminReferenceProvider.candidates(rows, "item", rulesetId);
     }
 
     public List<PublicReferenceProvider.Candidate> references(String region, String locale) {
@@ -53,8 +58,8 @@ public class ItemPublicReferences implements PublicReferenceProvider, AdminRefer
                     .orElse(values.getFirst());
             var asset = copy.iconAssetId() == null ? null : assets.get(copy.iconAssetId());
             String icon = asset != null && asset.usable() ? asset.currentVersion().url() : null;
-            output.add(new PublicReferenceProvider.Candidate(copy.id(), "item", copy.name(), copy.description(),
-                    copy.locale(), icon));
+            output.add(new PublicReferenceProvider.Candidate(copy.id(), "item", copy.name(),
+                    ItemContent.unwrapDescription(copy.description()), copy.locale(), icon));
         }
         return output;
     }
