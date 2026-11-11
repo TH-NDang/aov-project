@@ -614,6 +614,7 @@ note NULL
 | to_hero_revision_id | UUID NULL — bắt buộc khi `source_kind = SNAPSHOT` |
 | source_kind | VARCHAR(16): `SNAPSHOT`, `PATCH_NOTES`; mặc định `SNAPSHOT` |
 | source_url | TEXT NULL — bắt buộc khi `source_kind = PATCH_NOTES` |
+| introduces_hero | BOOLEAN NOT NULL DEFAULT false — patch tướng ra mắt; tối đa một dòng `true` mỗi tướng (ADR-016) |
 | changed_sections | TEXT[] hoặc join table |
 | created_at | TIMESTAMPTZ |
 | created_by_* | TEXT |
@@ -973,6 +974,11 @@ Invariant:
 > Một region tại một thời điểm chỉ resolve tới một primary ruleset trong scope mặc định.
 
 Exclusion constraint/range constraint có thể dùng để ngăn overlapping assignments.
+
+Mọi thị trường dùng chung bộ quy tắc mặc định cho toàn bộ lịch sử; Admin không hiển thị lựa chọn bộ quy tắc khi chỉ có
+một bộ. Assignment đầu tiên của mỗi thị trường bắt đầu từ `2000-01-01T00:00:00Z`, nên lịch phát hành của patch cũ
+không bị từ chối vì thị trường được thiết lập muộn hơn patch. Thị trường thiết lập trước quy ước này được kéo mốc bắt
+đầu của assignment đầu tiên về `2000-01-01` (V063).
 
 ---
 
@@ -1746,6 +1752,7 @@ Query tổng hợp chỉ qua public contract CatalogChangeProvider; không truy 
 V027 tạo hero.hero_patch_assessment, PK change_set_id, kind, version và actor/thời điểm cập nhật.
 Đánh giá tổng thể là metadata biên tập có optimistic version và audit, độc lập các typed immutable events.
 Không backfill đánh giá tổng thể bằng hợp các nhãn con.
+V064 thêm `RELEASE` vào `kind` của đánh giá tổng thể, dùng cho change set đánh dấu tướng ra mắt (ADR-016).
 
 ### V028 — Rà soát nhập liệu patch
 

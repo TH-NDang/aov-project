@@ -44,9 +44,35 @@ không rõ patch bị từ chối. Khi bỏ tham số, API giữ thuật toán t
 DATA_BASELINE đã xuất bản ở patch mới nhất, cho phép chọn bản khác hoặc quay về tự động; lựa chọn
 mốc độc lập với patch đang xem. Không xóa snapshot cũ và không coi dữ liệu OCR chưa duyệt là mốc.
 
+### Bổ sung ngày 2026-11-11: xem tướng ở mốc cũ trên wiki công khai
+
+Phần lớn tướng chỉ được thu thập đầy đủ ở patch mới nhất, nên khi người đọc chọn một patch cũ hơn, API công khai
+không tìm thấy revision ở hoặc trước mốc đó và wiki báo không tìm thấy tướng. Người đọc mất luôn thay đổi của tướng ở
+patch đó dù ghi chú cập nhật đã được ghi.
+
+- Khi chọn mốc lịch sử (`seasonId` hoặc `patchVariantId`), `/heroes`, `/heroes/{id}`, `/heroes/{id}/manifest` và
+  `/skins` dùng revision đã xuất bản ở hoặc trước mốc như trước. Nếu tướng chưa có revision như vậy, dùng revision đã
+  xuất bản có patch sớm nhất sau mốc (quan sát sau). Quan sát sau phải cùng ruleset, đã đến thời điểm công bố và
+  không vượt patch đang có hiệu lực của thị trường; quan sát chưa xác định patch không được dùng làm quan sát sau.
+- Mục dùng quan sát sau có `laterObservation: {patchVariantId, patchCode}`. Wiki phải ghi rõ nội dung được ghi nhận
+  ở patch đó, không trình bày như dữ liệu quan sát tại mốc đang xem. Thay đổi của từng patch vẫn đọc từ lịch sử
+  thay đổi của tướng.
+- Không áp ngược giá trị của change set vào nội dung công khai: mô tả kỹ năng là văn bản tự do. Bản suy ra theo
+  trường vẫn là màn Admin `patch-view`.
+- Change set có `introducesHero=true` đánh dấu patch tướng ra mắt. Ở mốc trước patch đó, tướng không xuất hiện và
+  không dùng quan sát sau. Mỗi tướng có tối đa một change set ra mắt trong một ruleset; không nhận khi tướng đã có
+  revision đã xuất bản có patch trước patch ra mắt. Tướng không có change set ra mắt được coi là đã có từ trước mọi
+  patch đã ghi của ruleset.
+- Đánh giá tổng thể có thêm `RELEASE` (Ra mắt), chỉ dành cho change set ra mắt; các dòng thay đổi giữ bộ tính chất
+  cũ.
+- Mọi thị trường dùng bộ quy tắc chung cho toàn bộ lịch sử, nên ghi được lịch phát hành của patch cũ hơn ngày thiết
+  lập thị trường; Admin ghi lịch phát hành ngay trong patch.
+
 ## Hệ quả
 
 - Ghi được thay đổi của các patch đã qua mà không cần thu thập lại toàn bộ dữ liệu tướng.
+- Wiki mở được mọi tướng đã ra mắt ở mọi patch đã công bố của mùa, kèm thay đổi của patch đó, dù dữ liệu tướng
+  được thu thập ở mùa hoặc patch nào.
 - Kết quả suy ra chỉ đúng khi ghi chú cập nhật đầy đủ; giao diện phải hiển thị rõ nguồn suy ra và
   phần chưa xác minh, không trình bày như dữ liệu đã quan sát.
 - Bảng `hero.hero_patch_change_set` thêm `source_kind`, `source_url` và cho phép revision đích null

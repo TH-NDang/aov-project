@@ -391,6 +391,13 @@ Chọn mùa không bắt buộc chọn patch: backend lấy patch công bố cu�
 Nếu gửi cả hai, patch phải thuộc mùa; patch ngoài ruleset/thị trường, chưa công bố hoặc ở tương lai bị từ chối.
 Bản ghi không thay đổi được kế thừa đến ordinal đã chọn, không chỉ trả các mục thay đổi trong patch.
 
+Ở mốc lịch sử, tướng chưa có revision đã xuất bản ở hoặc trước mốc được đọc từ quan sát sau: revision đã xuất bản
+có patch sớm nhất sau mốc, cùng ruleset, đã công bố và không vượt patch đang có hiệu lực của thị trường. Áp dụng
+cho `/heroes`, `/heroes/{id}`, `/heroes/{id}/manifest` và `/skins`; mục (và từng dạng) dùng quan sát sau có
+`laterObservation: {patchVariantId, patchCode}`, mục quan sát đúng mốc không có trường này. Tướng có change set
+`introducesHero` ở patch sau mốc không xuất hiện. Không áp ngược change set vào nội dung
+([ADR-016](adr/ADR-016-patch-note-changes.md)).
+
 Không chọn mùa/patch giữ cách xem hiện tại, bao gồm dữ liệu nền chưa xác định patch. Khi chọn mốc lịch sử,
 backend mặc định loại các quan sát có patch `null` để không trình bày chúng như sự kiện lịch sử đã được xác minh.
 `includeUnscoped=true` là lựa chọn rõ ràng để xem thêm các quan sát đó; frontend phải ghi rõ chưa xác định patch,
@@ -1654,6 +1661,11 @@ revision nguồn/đích, dòng STAT/SKILL bắt buộc `oldValue` và `newValue`
 số và kỹ năng phải thuộc snapshot đã xuất bản mới nhất của tướng khi có. Lỗi kiểm tra trả
 `HERO_INVALID_CONTENT`.
 
+`introducesHero` (mặc định `false`) đánh dấu patch tướng ra mắt, theo nguồn nào cũng được. Ở mốc lịch sử trước patch
+đó, catalog công khai không trả tướng. Mỗi tướng tối đa một change set ra mắt trong ruleset; trùng hoặc tướng đã có
+revision đã xuất bản có patch trước patch ra mắt trả `HERO_INVALID_CONTENT`. Danh sách change set (Admin và công
+khai) trả thêm `introducesHero`.
+
 ### 39a. Dữ liệu tướng tại một patch
 
 ```http
@@ -2629,7 +2641,9 @@ Tóm tắt theo locale và nguồn HTTP bắt buộc. Trả 201 {id}; trùng own
 Không cung cấp API kéo đổi/xóa lịch sử đã xác nhận.
 
 PUT /admin/hero-changes/{changeSetId}/assessment cần patch:write, nhận {kind,expectedVersion}.
-Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng); tạo đầu version=0, lưu tăng version, xung đột 409.
+Kind dùng HeroChanges (ADJUSTMENT hiển thị Cân bằng) và thêm `RELEASE` (Ra mắt) chỉ cho change set có
+`introducesHero=true`; change set khác nhận `RELEASE` trả 422. Dòng thay đổi không nhận `RELEASE`. Tạo đầu
+version=0, lưu tăng version, xung đột 409.
 API hero changes thêm overallKind,assessmentVersion; gameplayChanges của /admin/heroes thêm overallKind nullable,
 giữ nguyên changeKinds là nhãn chi tiết. Sửa đánh giá không thay sự kiện kỹ năng/chỉ số.
 
