@@ -30,6 +30,7 @@ import { SeasonSetup } from "./season-setup"
 import { CreateRegion } from "./context-setup"
 import { VersionMarketCoverage } from "./version-market-coverage"
 import { PatchChangesTable } from "./patch-changes-table"
+import { PatchTitle } from "./patch-title"
 import { MarketBadge } from "./market-badge"
 import {
   usePublicationOverview,
@@ -303,6 +304,7 @@ function SeasonVersions({
             >
               <span className="min-w-0 flex-1">
                 <span className="type-body block break-words">{v.patchCode}</span>
+                {v.patchTitle && <span className="type-meta block break-words">{v.patchTitle}</span>}
                 <VersionMarketCoverage data={data} scope={{ variantId: v.id }} locale={locale} compact />
                 {data.rulesets.length > 1 && (
                   <span className="type-meta">{data.rulesets.find((r) => r.id === v.rulesetId)?.code}</span>
@@ -459,9 +461,11 @@ function PatchDetail({ variant, data, locale }: { variant: Variant; data: Public
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="type-meta">
-            {[season?.displayName ?? "Chưa gắn mùa", rule && rule.code].filter(Boolean).join(" · ")}
+            {[season?.displayName ?? "Chưa gắn mùa", rule && rule.code, variant.patchTitle && variant.patchCode]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
-          <h2 className="type-section-title break-words">{variant.patchCode}</h2>
+          <PatchTitle variant={variant} />
         </div>
         <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
           <span className="type-meta">{phaseLabels[variant.status] ?? variant.status}</span>

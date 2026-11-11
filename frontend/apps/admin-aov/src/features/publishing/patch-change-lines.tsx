@@ -25,6 +25,8 @@ export interface RecordedChangeSet {
   toHeroRevisionId: string | null
   sourceKind?: ChangeSource
   sourceUrl?: string | null
+  /** The hero joined the game in this patch (ADR-016). */
+  introducesHero?: boolean
   summary?: string
   actualLocale?: string
   changes: RecordedChange[]

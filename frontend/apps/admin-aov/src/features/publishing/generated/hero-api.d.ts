@@ -672,6 +672,7 @@ export interface components {
       id: string
       patchId: string
       patchCode: string
+      patchTitle?: string | null
       rulesetId: string
       rulesetOrdinal: number
       status: string

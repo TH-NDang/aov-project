@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@aov/ui/components/button"
 import { useSession } from "@/app/auth/auth-gate"
 import { backendRequest } from "@/app/auth/session"
-import { errorMessage } from "@/lib/api/errors"
+import { errorMessage, isApiError } from "@/lib/api/errors"
 import { ChangeKindSelect } from "./change-kind-select"
 import { ChangeKindBadge } from "./hero-change-badges"
 
@@ -11,6 +11,7 @@ export interface HeroAssessment {
   id: string
   overallKind?: string | null
   assessmentVersion?: number
+  introducesHero?: boolean
 }
 const options = [
   ["BUFF", "Tăng sức mạnh"],
@@ -21,23 +22,49 @@ const options = [
   ["RELEASE", "Ra mắt"],
   ["OTHER", "Khác"],
 ] as const
-export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
+
+/** The release assessment belongs only to the change set that introduced the hero, so other heroes never offer it. */
+function optionsFor(change: HeroAssessment) {
+  return change.introducesHero || change.overallKind === "RELEASE"
+    ? options
+    : options.filter(([kind]) => kind !== "RELEASE")
+}
+
+function useAssessment(change: HeroAssessment) {
   const client = useQueryClient()
-  const canWrite = useSession().actor?.capabilities.includes("patch:write")
-  const [value, setValue] = useState(change.overallKind ?? "")
-  const mutation = useMutation({
-    mutationFn: async () => {
+  const refresh = () =>
+    Promise.all([
+      client.invalidateQueries({ queryKey: ["patch-changes"] }),
+      client.invalidateQueries({ queryKey: ["publishing-heroes"] }),
+      client.invalidateQueries({ queryKey: ["hero-timeline"] }),
+    ])
+  return useMutation({
+    mutationFn: async (kind: string) => {
       await backendRequest(`/admin/hero-changes/${change.id}/assessment`, {
         method: "PUT",
-        body: JSON.stringify({ kind: value, expectedVersion: change.assessmentVersion ?? 0 }),
+        body: JSON.stringify({ kind, expectedVersion: change.assessmentVersion ?? 0 }),
       })
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ["patch-changes"] }),
-        client.invalidateQueries({ queryKey: ["publishing-heroes"] }),
-        client.invalidateQueries({ queryKey: ["hero-timeline"] }),
-      ])
+      await refresh()
     },
+    // Someone else saved first: show their assessment so the editor decides again from it.
+    onError: (error) => isApiError(error, "HERO_PATCH_CHANGE_CONFLICT") && refresh(),
   })
+}
+
+/** Says what went wrong with this assessment; the shared messages describe whole change sets. */
+function assessmentError(error: unknown, kind: string | undefined, heroName?: string) {
+  const hero = heroName ? ` của ${heroName}` : ""
+  if (isApiError(error, "HERO_PATCH_CHANGE_CONFLICT"))
+    return `Đánh giá${hero} vừa được người khác lưu. Bảng đã hiện đánh giá mới; chọn lại nếu vẫn muốn đổi.`
+  if (isApiError(error, "HERO_INVALID_CONTENT") && kind === "RELEASE")
+    return "Chỉ chọn Ra mắt khi thay đổi này được đánh dấu là tướng mới ra mắt ở patch này."
+  return `Chưa lưu được đánh giá${hero}: ${errorMessage(error)}`
+}
+
+export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
+  const canWrite = useSession().actor?.capabilities.includes("patch:write")
+  const [value, setValue] = useState(change.overallKind ?? "")
+  const mutation = useAssessment(change)
   return (
     <section className="space-y-3 rounded-xl border bg-muted/15 p-4" aria-label="Đánh giá tổng thể tướng trong patch">
       <div className="flex flex-wrap items-center gap-2">
@@ -57,7 +84,7 @@ export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
             ariaLabel="Đánh giá tổng thể tướng"
             className="min-w-44"
             placeholder="Chọn đánh giá"
-            options={options}
+            options={optionsFor(change)}
             value={value as (typeof options)[number][0] | ""}
             onChange={setValue}
             disabled={mutation.isPending}
@@ -65,7 +92,7 @@ export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
           <Button
             size="sm"
             disabled={!value || value === change.overallKind || mutation.isPending}
-            onClick={() => mutation.mutate()}
+            onClick={() => mutation.mutate(value)}
           >
             Lưu đánh giá
           </Button>
@@ -73,7 +100,7 @@ export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
       )}
       {mutation.error && (
         <p role="alert" className="text-xs text-destructive">
-          {errorMessage(mutation.error)}
+          {assessmentError(mutation.error, mutation.variables)}
         </p>
       )}
       {mutation.isSuccess && (
@@ -90,34 +117,21 @@ export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
  * be assessed from the official reasons without opening each hero.
  */
 export function InlineAssessment({ change, heroName }: { change: HeroAssessment; heroName: string }) {
-  const client = useQueryClient()
-  const mutation = useMutation({
-    mutationFn: async (kind: string) => {
-      await backendRequest(`/admin/hero-changes/${change.id}/assessment`, {
-        method: "PUT",
-        body: JSON.stringify({ kind, expectedVersion: change.assessmentVersion ?? 0 }),
-      })
-      await Promise.all([
-        client.invalidateQueries({ queryKey: ["patch-changes"] }),
-        client.invalidateQueries({ queryKey: ["publishing-heroes"] }),
-        client.invalidateQueries({ queryKey: ["hero-timeline"] }),
-      ])
-    },
-  })
+  const mutation = useAssessment(change)
   return (
     <div className="grid min-w-40 gap-1">
       <ChangeKindSelect
         ariaLabel={`Đánh giá tổng thể ${heroName}`}
         className="w-44"
         placeholder="Chưa đánh giá"
-        options={options}
+        options={optionsFor(change)}
         value={(change.overallKind ?? "") as (typeof options)[number][0] | ""}
         onChange={(kind) => kind && kind !== change.overallKind && mutation.mutate(kind)}
         disabled={mutation.isPending}
       />
       {mutation.error && (
         <p role="alert" className="type-meta text-destructive">
-          {errorMessage(mutation.error)}
+          {assessmentError(mutation.error, mutation.variables, heroName)}
         </p>
       )}
     </div>
