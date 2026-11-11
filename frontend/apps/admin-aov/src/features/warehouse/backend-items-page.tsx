@@ -273,6 +273,26 @@ export function BackendItemsPage() {
       setBusy(false)
     }
   }
+  async function discard(entry: Entry) {
+    setBusy(true)
+    setError("")
+    try {
+      await warehouseApi.discard("items", entry)
+      setEdits((previous) => {
+        const next = new Map(previous)
+        next.delete(entry.id)
+        return next
+      })
+      await refresh()
+      setSelectedId(null)
+      setEditTarget(null)
+      toast.success("Đã bỏ bản nháp.")
+    } catch (cause) {
+      setError(errorMessage(cause))
+    } finally {
+      setBusy(false)
+    }
+  }
   async function create() {
     setBusy(true)
     setError("")
@@ -544,6 +564,7 @@ export function BackendItemsPage() {
               ? () => void publish(selected)
               : undefined
           }
+          onDiscard={canWrite && selected.revision.state === "DRAFT" ? () => void discard(selected) : undefined}
         />
       )}
       <Dialog

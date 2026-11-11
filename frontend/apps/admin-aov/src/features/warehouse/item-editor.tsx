@@ -6,6 +6,7 @@ import { shopColumns } from "./item-shop-position"
 import { WarehouseChangeHistory } from "./warehouse-change-history"
 import { useState } from "react"
 import {
+  Archive,
   ArrowLeft,
   CalendarClock,
   Clapperboard,
@@ -43,7 +44,7 @@ import {
   type WarehouseEntry,
   type WarehouseMetadata,
 } from "./warehouse-types"
-import { confirmDiscard } from "@/components/confirm-dialog"
+import { confirmAction, confirmDiscard } from "@/components/confirm-dialog"
 
 /** Sections of the item's content page, in reading order. */
 const ITEM_SECTIONS = {
@@ -70,6 +71,7 @@ export function ItemEditor({
   onFork,
   onOpenDraft,
   onPublish,
+  onDiscard,
   busy,
 }: {
   entry: WarehouseEntry<ItemContent>
@@ -88,6 +90,8 @@ export function ItemEditor({
   onFork?: (section: WarehouseSection) => void
   onOpenDraft?: (section: WarehouseSection) => void
   onPublish?: () => void
+  /** Throws the draft away; offered only for a draft, after asking. */
+  onDiscard?: () => void
   busy: boolean
 }) {
   const wide = useIsWide()
@@ -554,8 +558,26 @@ export function ItemEditor({
             </TabsContent>
           </Tabs>
         </div>
-        {(onPublish || editable) && (
+        {(onPublish || editable || onDiscard) && (
           <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t bg-background px-4 pt-3 pb-[max(.75rem,env(safe-area-inset-bottom))]">
+            {onDiscard && (
+              <Button
+                variant="ghost"
+                className="mr-auto"
+                disabled={busy || uploading}
+                onClick={async () => {
+                  const confirmed = await confirmAction({
+                    title: "Bỏ bản nháp này?",
+                    description: "Nội dung trong bản nháp sẽ bị hủy. Bản đã xuất bản giữ nguyên.",
+                    confirmLabel: "Bỏ nháp",
+                    cancelLabel: "Giữ bản nháp",
+                  })
+                  if (confirmed) onDiscard()
+                }}
+              >
+                <Archive className="size-4" /> Bỏ nháp
+              </Button>
+            )}
             {onPublish && (
               <Button
                 variant="outline"
