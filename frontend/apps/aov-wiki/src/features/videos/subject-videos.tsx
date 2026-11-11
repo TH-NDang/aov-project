@@ -4,7 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
-import { orderedPatches } from "../hero/hero-version-diff"
+import { orderedPatches } from "../hero/hero-patch-line"
 import { subjectVideosQuery } from "./video-api"
 import {
   byPurpose,

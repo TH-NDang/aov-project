@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
@@ -10,7 +10,7 @@ import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { FeedbackDialog } from "../../layout/feedback-dialog"
 import { HeroHistory } from "./hero-history"
 import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
-import { localizedStatText, statText, type DiffSegment } from "./hero-version-diff"
+import { localizedStatText, statText } from "./hero-stat-text"
 import { HeroRatings } from "./hero-ratings"
 import { useHeroVideos, useVideoParam, VideoGallery } from "../videos/subject-videos"
 import { SkillIcon } from "./hero-skill-icon"
@@ -66,22 +66,6 @@ function OverviewSummary({ long, children }: { long: boolean; children: ReactNod
   )
 }
 
-function DiffText({ segments, render }: { segments: DiffSegment[]; render: (text: string) => ReactNode }) {
-  return (
-    <>
-      {segments.map((segment, index) =>
-        segment.kind === "del" ? (
-          <del key={index}>{segment.text}</del>
-        ) : segment.kind === "ins" ? (
-          <ins key={index}>{render(segment.text)}</ins>
-        ) : (
-          <Fragment key={index}>{render(segment.text)}</Fragment>
-        ),
-      )}
-    </>
-  )
-}
-
 /** What both layouts of the hero page read from: the chosen ability, the version being compared and the videos. */
 function useHandbook(hero: HeroDetail) {
   const scope = useWikiContext()
@@ -94,9 +78,6 @@ function useHandbook(hero: HeroDetail) {
   const version = useHeroVersion(hero)
   const videos = useHeroVideos(hero.id, version.selected?.id)
   const videoParam = useVideoParam()
-  const activeChange = active ? version.differences.skills.get(active.skillKey) : undefined
-  const changedHere = activeChange?.isNew ? undefined : activeChange
-  const difference = version.showDiff ? changedHere : undefined
   const selectSkill = (skillKey: string) =>
     setParams(
       (prev) => {
@@ -156,15 +137,7 @@ function useHandbook(hero: HeroDetail) {
     if (key === "ABILITY_POWER" && !roles.includes("MAGE") && roles.includes("MARKSMAN")) return []
     const stat = hero.content.combatStats?.values?.find((value) => value.statKey === key)
     if (stat?.baseValue == null) return []
-    const change = version.showDiff ? version.differences.stats.get(key) : undefined
-    return [
-      {
-        label: text(vi, en),
-        Icon,
-        value: localizedStatText(statText(stat), locale),
-        before: change ? localizedStatText(change.before, locale) : undefined,
-      },
-    ]
+    return [{ label: text(vi, en), Icon, value: localizedStatText(statText(stat), locale) }]
   })
   return {
     scope,
@@ -176,8 +149,6 @@ function useHandbook(hero: HeroDetail) {
     version,
     videos,
     videoParam,
-    changedHere,
-    difference,
     selectSkill,
     rich,
     columns,
@@ -192,7 +163,7 @@ type Handbook = ReturnType<typeof useHandbook>
 
 /** The ability picker and the chosen ability. */
 function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
-  const { locale, text, skills, active, source, version, videos, changedHere, difference } = handbook
+  const { locale, text, skills, active, source, version, videos } = handbook
   const { selectSkill, rich, columns, tableLabel, rows, profile } = handbook
   // The forms of a slot share one entry in the kit and switch in place, as in the game.
   const groups = groupSkillKit(skills)
@@ -299,16 +270,6 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
             cooldownRange ? `${text("Hồi chiêu", "Cooldown")}: ${cooldownRange}` : source?.cooldown?.display,
             source?.energyCost?.display,
           ].map((value, i) => (typeof value === "string" && value.trim() ? <span key={i}>{rich(value)}</span> : null))}
-          {difference?.cooldown && (
-            <span>
-              {text("Trước đây", "Before")}: <del>{difference.cooldown.before}</del>
-            </span>
-          )}
-          {difference?.energyCost && (
-            <span>
-              {text("Trước đây", "Before")}: <del>{difference.energyCost.before}</del>
-            </span>
-          )}
         </div>
         <SkillStateToggle
           states={stateIcons.map((icon) => icon.label)}
@@ -323,29 +284,7 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
           videos={videos.bySkill.get(active.skillKey) ?? []}
           patchCode={videos.patchCode}
         />
-        {changedHere && version.previous && (
-          <p className="wiki-diff-legend">
-            {version.showDiff ? (
-              <>
-                {text("Đang đánh dấu khác biệt so với bản", "Marking differences from")} {version.previous.code}:{" "}
-                <del>{text("nội dung cũ", "old text")}</del> <ins>{text("nội dung mới", "new text")}</ins>
-              </>
-            ) : (
-              text(
-                `Kỹ năng này khác với bản ${version.previous.code}.`,
-                `This ability differs from ${version.previous.code}.`,
-              )
-            )}
-            <button type="button" onClick={() => version.setShowDiff(!version.showDiff)}>
-              {version.showDiff ? text("Tắt đánh dấu", "Hide marks") : text("Bật đánh dấu", "Show marks")}
-            </button>
-          </p>
-        )}
-        {difference?.description ? (
-          <div className="wiki-skill-prose" key={active.skillKey}>
-            <DiffText segments={difference.description} render={rich} />
-          </div>
-        ) : active.description ? (
+        {active.description ? (
           <div className="wiki-skill-prose" key={active.skillKey}>
             {rich(active.description)}
           </div>
@@ -371,13 +310,7 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
                   <tr key={i}>
                     <th scope="row">{rich(row.label!)}</th>
                     {columns.map((_, j) => (
-                      <td key={j}>
-                        {difference?.rows.get(row.label!) &&
-                          difference.rows.get(row.label!)!.before[j] !== difference.rows.get(row.label!)!.after[j] && (
-                            <del className="wiki-diff-cell">{difference.rows.get(row.label!)!.before[j] ?? "—"}</del>
-                          )}
-                        {row.display_values?.[j] == null ? "—" : rich(String(row.display_values[j]))}
-                      </td>
+                      <td key={j}>{row.display_values?.[j] == null ? "—" : rich(String(row.display_values[j]))}</td>
                     ))}
                   </tr>
                 ))}
@@ -420,10 +353,7 @@ function OverviewPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handboo
                 <fact.Icon size={18} className="wiki-fact-icon" />
                 {fact.label}
               </dt>
-              <dd>
-                {fact.before && <del className="wiki-diff-cell">{fact.before}</del>}
-                {fact.value}
-              </dd>
+              <dd>{fact.value}</dd>
             </div>
           ))}
         </dl>

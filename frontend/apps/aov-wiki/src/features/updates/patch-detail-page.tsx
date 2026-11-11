@@ -11,7 +11,7 @@ import type { ChangeDomain } from "../../lib/wiki-patch-changes"
 import { notFoundMeta, patchMeta } from "../../lib/seo/page-meta"
 import { usePageHead } from "../../lib/seo/use-page-head"
 import { warehousePath } from "../../lib/wiki-catalog"
-import { heroCatalogQuery, heroDetailQuery } from "../hero/hero-api"
+import { heroDetailQuery } from "../hero/hero-api"
 import { ChangeDisclosure, ChangeKind, ChangeList } from "./change-list"
 import { ReleaseDate } from "./release-date"
 import {
@@ -50,24 +50,24 @@ function HeroRow({
   onToggle: () => void
 }) {
   const scope = useWikiContext()
-  const catalog = useQuery(heroCatalogQuery(scope))
-  const hero = catalog.data?.items.find((item) => item.id === row.heroId)
   const variant = scope.options?.patches.find((patch) => patch.id === variantId)
-  // The hero as of this update names its skills and tells how many levels each has.
+  // The hero as of this update gives its name and picture, names its skills and tells how many levels each has.
+  // It is read straight from the row's hero, without waiting for the whole hero list.
   const detail = useQuery({
-    ...heroDetailQuery(hero?.id ?? "", {
+    ...heroDetailQuery(row.heroId ?? "", {
       region: scope.region,
       locale: scope.locale,
       seasonId: variant?.seasonId,
       patchVariantId: variantId,
       includeUnscoped: false,
     }),
-    enabled: !!hero && !!variant,
+    enabled: !!row.heroId && !!variant,
   })
+  const hero = detail.data
   const count = row.changes?.length ?? 0
-  const name = hero?.name ?? titleCase(row.heroCode ?? "")
+  const name = hero?.content.profile?.name ?? titleCase(row.heroCode ?? "")
   const summary = parseChangeSummary(row.summary).text
-  const image = hero?.head?.currentVersion?.url ?? hero?.portrait?.currentVersion?.url
+  const image = hero?.media.HEAD?.currentVersion?.url ?? hero?.media.PORTRAIT?.currentVersion?.url
   const heading = (
     <>
       <span className="wiki-patch-subject-art">{image ? <WikiImage src={image} alt="" /> : name.charAt(0)}</span>
@@ -102,7 +102,7 @@ function HeroRow({
         <ChangeDisclosure count={count} open={open} onToggle={onToggle}>
           <ChangeList
             changes={row.changes ?? []}
-            hero={detail.data}
+            hero={hero}
             skillAction={
               hero
                 ? (key) => (

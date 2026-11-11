@@ -542,9 +542,6 @@
   min-width: 0;
   gap: 10px;
 }
-.wiki-version-note {
-  font: var(--wiki-type-meta);
-}
 .wiki-version-float {
   font: var(--wiki-type-category);
   position: fixed;
@@ -606,45 +603,6 @@
 :is(#wiki-kit-title, #wiki-hero-history-title, #wiki-hero-overview, #wiki-hero-stats, #wiki-hero-lore):focus {
   outline: none;
 }
-.wiki-version-toggle {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--aov-muted);
-  cursor: pointer;
-}
-.wiki-version-toggle input {
-  accent-color: var(--aov-accent);
-}
-.wiki-version-list {
-  display: grid;
-}
-.wiki-version-list > li > :is(button, div) {
-  display: grid;
-  width: 100%;
-  gap: 2px;
-  padding: 8px;
-  margin-inline: -8px;
-  box-sizing: content-box;
-  border-radius: var(--aov-radius-control);
-  text-align: left;
-  font: var(--wiki-type-body);
-  color: var(--aov-text-soft);
-}
-.wiki-version-list > li > button:is(:hover, :focus-visible) {
-  background: var(--aov-raised);
-}
-.wiki-version-row-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-.wiki-version-row-head strong {
-  font: var(--wiki-type-category);
-  color: var(--aov-text);
-}
 .wiki-version-links {
   font: var(--wiki-type-meta);
   display: flex;
@@ -660,42 +618,6 @@
 }
 .wiki-version-links a:hover {
   text-decoration: underline;
-}
-.wiki-handbook del {
-  color: var(--aov-danger);
-  text-decoration: line-through;
-}
-.wiki-handbook ins {
-  border-radius: 3px;
-  padding-inline: 2px;
-  background: var(--aov-success-soft);
-  color: var(--aov-success);
-  font-weight: 600;
-  text-decoration: none;
-}
-.wiki-handbook del + ins {
-  margin-inline-start: 0.25em;
-}
-.wiki-diff-legend {
-  font: var(--wiki-type-meta);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 8px;
-  margin-top: 10px;
-  color: var(--aov-muted);
-}
-.wiki-diff-legend button {
-  color: var(--aov-accent);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.wiki-diff-cell {
-  display: block;
-}
-.wiki-facts dd .wiki-diff-cell {
-  display: inline;
-  margin-inline-end: 6px;
 }
 .wiki-skill-options button {
   position: relative;

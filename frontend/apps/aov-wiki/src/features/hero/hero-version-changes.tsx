@@ -8,16 +8,13 @@ import { changeSetKind, changeSkillLabel, parseChangeSummary } from "../../lib/w
 import { ChangeDisclosure, ChangeKind, ChangeList } from "../updates/change-list"
 import { heroChangesQuery } from "../updates/updates-api"
 import "../updates/updates.css"
-import { heroDetailQuery, type HeroDetail } from "./hero-api"
-import {
-  heroDifferences,
-  NO_DIFFERENCES,
-  orderedPatches,
-  previousPatch,
-  type HeroDifferences,
-} from "./hero-version-diff"
+import type { HeroDetail } from "./hero-api"
+import { orderedPatches, previousPatch } from "./hero-patch-line"
 
-/** What the selected version changed for this hero, from published notes and from comparing two snapshots. */
+/**
+ * What the selected version changed for this hero, from published patch notes only. Two snapshots of the hero can also
+ * differ in wording or spelling; that is editorial work, which Admin compares and the public page never shows.
+ */
 export function useHeroVersion(hero: HeroDetail) {
   const scope = useWikiContext()
   const patches = useMemo(() => scope.options?.patches ?? [], [scope.options])
@@ -27,16 +24,6 @@ export function useHeroVersion(hero: HeroDetail) {
     patches.find((patch) => patch.code === hero.context?.patch?.code)
   const previous = previousPatch(patches, seasons, selected)
 
-  const earlier = useQuery({
-    ...heroDetailQuery(hero.id, {
-      region: scope.region,
-      locale: scope.locale,
-      seasonId: previous?.seasonId,
-      patchVariantId: previous?.id,
-      includeUnscoped: false,
-    }),
-    enabled: !!previous,
-  })
   const history = useQuery(heroChangesQuery(scope, hero.id))
   const rows = useMemo(() => (history.data ?? []).filter((row) => row.summary || row.changes?.length), [history.data])
   const notes = rows.filter((row) => row.patchVariantId === selected?.id)
@@ -48,33 +35,14 @@ export function useHeroVersion(hero: HeroDetail) {
     .filter((patch): patch is WikiPatch => !!patch && position(patch.id) < position(selected?.id))
     .sort((a, b) => position(b.id) - position(a.id))[0]
 
-  const differences: HeroDifferences = useMemo(
-    () =>
-      earlier.data && earlier.data.revisionId !== hero.revisionId
-        ? heroDifferences(earlier.data, hero)
-        : NO_DIFFERENCES,
-    [earlier.data, hero],
-  )
   const changedSkills = useMemo(() => {
-    const keys = new Set(differences.skills.keys())
+    const keys = new Set<string>()
     for (const row of notes) for (const change of row.changes ?? []) if (change.skillKey) keys.add(change.skillKey)
     return keys
     // notes is derived from rows and the selected version on every render.
-  }, [differences, rows, selected?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rows, selected?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const [showDiff, setShowDiff] = useState(true)
-  return {
-    selected,
-    previous,
-    notes,
-    rows,
-    lastChange,
-    differences,
-    changedSkills,
-    showDiff,
-    setShowDiff,
-    pending: history.isPending || (!!previous && earlier.isPending),
-  }
+  return { selected, previous, notes, rows, lastChange, changedSkills, pending: history.isPending }
 }
 
 export type HeroVersion = ReturnType<typeof useHeroVersion>
@@ -136,7 +104,7 @@ export function HeroVersionChanges({
   const scope = useWikiContext()
   const { locale, href } = scope
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  const { selected, previous, notes, lastChange, differences, showDiff, setShowDiff } = version
+  const { selected, previous, notes, lastChange } = version
   const section = useRef<HTMLElement & { open?: boolean }>(null)
   const heading = useRef<HTMLElement>(null)
   const [expanded, setExpanded] = useState(false)
@@ -158,10 +126,9 @@ export function HeroVersionChanges({
   const name = hero.content.profile?.name ?? hero.code
   const skills = new Map(hero.content.skills?.skills?.map((skill) => [skill.skillKey, skill]))
   const skillName = (key: string) => skills.get(key)?.name || changeSkillLabel(key, locale)
-  const hasCompared = differences.skills.size > 0 || differences.stats.size > 0
   const officialChanges = notes.flatMap((row) => row.changes ?? [])
 
-  if (!notes.length && !hasCompared) {
+  if (!notes.length) {
     if (!lastChange && !previous) return null
     return (
       <section
@@ -181,17 +148,10 @@ export function HeroVersionChanges({
           )}
         </div>
         <p>
-          {hero.laterObservation
-            ? text(
-                `Ghi chú cập nhật của bản ${selected.code} không nhắc đến ${name}.`,
-                `The ${selected.code} patch notes do not mention ${name}.`,
-              )
-            : lastChange
-              ? text(
-                  `Nội dung bên dưới giống bản ${lastChange.code}.`,
-                  `The content below is the same as ${lastChange.code}.`,
-                )
-              : text("Tướng chưa có thay đổi nào được ghi nhận.", "No changes have been recorded for this hero.")}
+          {text(
+            `Ghi chú cập nhật của bản ${selected.code} không nhắc đến ${name}.`,
+            `The ${selected.code} patch notes do not mention ${name}.`,
+          )}
         </p>
       </section>
     )
@@ -202,7 +162,7 @@ export function HeroVersionChanges({
     notes.map((row) => row.sourceUrl).find((url) => url && /^https:\/\//i.test(url)) ??
     summaries.map((summary) => summary.source).find(Boolean)
   const overall = notes.map((row) => changeSetKind(row)).find(Boolean)
-  const count = officialChanges.length || differences.skills.size + differences.stats.size
+  const count = officialChanges.length
   const backToChanges = () => {
     setExpanded(true)
     if (section.current && collapsible) section.current.open = true
@@ -220,18 +180,9 @@ export function HeroVersionChanges({
             </p>
           ),
       )}
-      {!officialChanges.length && (
-        <p className="wiki-version-note">
-          {text(
-            "Chưa có ghi chú chính thức cho bản này. Đây là khác biệt giữa hai bản dữ liệu, có thể gồm cả chỉnh sửa câu chữ.",
-            "No official notes for this version. These are differences between two data versions and may include wording edits.",
-          )}
-        </p>
-      )}
-
       <div className="wiki-version-actions">
-        <ChangeDisclosure count={count} open={expanded} onToggle={() => setExpanded(!expanded)}>
-          {officialChanges.length > 0 ? (
+        {count > 0 && (
+          <ChangeDisclosure count={count} open={expanded} onToggle={() => setExpanded(!expanded)}>
             <ChangeList
               changes={officialChanges}
               hero={hero}
@@ -249,25 +200,8 @@ export function HeroVersionChanges({
                 )
               }
             />
-          ) : (
-            <ul className="wiki-version-list">
-              {[...differences.skills.entries()].map(([key, difference]) => (
-                <li key={key}>
-                  <button type="button" onClick={() => jumpToSkill(key)}>
-                    <span className="wiki-version-row-head">
-                      <strong>{skillName(key)}</strong>
-                    </span>
-                    <span>
-                      {difference.isNew
-                        ? text("Kỹ năng mới ở bản này", "New ability in this version")
-                        : text("Nội dung kỹ năng có thay đổi", "The ability text changed")}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </ChangeDisclosure>
+          </ChangeDisclosure>
+        )}
         <div className="wiki-version-links">
           {source && (
             <a href={source} target="_blank" rel="noopener noreferrer">
@@ -276,12 +210,6 @@ export function HeroVersionChanges({
           )}
           <Link to={href(`/updates/${selected.code}`)}>{text("Xem toàn bộ bản cập nhật", "See the whole update")}</Link>
         </div>
-        {hasCompared && (
-          <label className="wiki-version-toggle">
-            <input type="checkbox" checked={showDiff} onChange={(event) => setShowDiff(event.target.checked)} />
-            {text("Đánh dấu trong kỹ năng", "Mark inside abilities")}
-          </label>
-        )}
       </div>
     </>
   )
