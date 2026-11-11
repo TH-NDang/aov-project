@@ -67,6 +67,15 @@ patch đó dù ghi chú cập nhật đã được ghi.
   cũ.
 - Mọi thị trường dùng bộ quy tắc chung cho toàn bộ lịch sử, nên ghi được lịch phát hành của patch cũ hơn ngày thiết
   lập thị trường; Admin ghi lịch phát hành ngay trong patch.
+- Wiki công khai chỉ trình bày thay đổi đã ghi thành change set (từ ghi chú cập nhật hoặc đối chiếu snapshot có người
+  biên tập chọn tính chất). Khác biệt tự so giữa hai snapshot đã xuất bản không hiện ra công khai, kể cả đánh dấu
+  cũ/mới trong mô tả kỹ năng, bảng thông số và chỉ số: khác biệt đó có thể chỉ là sửa câu chữ, chính tả hoặc cách ghi.
+  Patch không có change set của tướng hiện là "ghi chú cập nhật không nhắc đến tướng". Admin vẫn so sánh snapshot
+  khi biên tập.
+- Chọn patch cũ trên trang tướng chỉ đổi phần kỹ năng (mô tả, bảng thông số, ảnh kỹ năng) theo revision của mốc đó.
+  Hồ sơ, đánh giá, chỉ số cơ bản, vai trò, giá, trang phục và ảnh tướng giữ theo dữ liệu hiện tại: dữ liệu cũ của các
+  phần này thường thiếu hoặc chỉ khác cách ghi, còn thay đổi thật đã nằm trong ghi chú cập nhật của patch. API công
+  khai vẫn trả revision theo mốc như trước; wiki ghép phần kỹ năng của mốc vào dữ liệu hiện tại.
 
 ## Hệ quả
 

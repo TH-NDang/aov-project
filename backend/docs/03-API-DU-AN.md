@@ -1618,6 +1618,17 @@ POST /api/wiki/v1/admin/patches/{patchId}/variants
 
 Ordinal phải unique/monotonic theo ruleset policy.
 
+## 38a. Đổi tên GamePatch
+
+```http
+PUT /api/wiki/v1/admin/patches/{patchId}/title
+```
+
+Scope `patch:write`. Body `{locale,title}`; `title` 1–200 ký tự, được bỏ khoảng trắng đầu cuối. Chỉ đổi tên
+của locale đó; mã patch, tóm tắt và mô tả giữ nguyên. Locale chưa có bản dịch thì được tạo với tóm tắt rỗng. Trả 204,
+404 `PATCH_NOT_FOUND` khi patch không tồn tại. Đổi được cả patch đã xuất bản vì tên chỉ là nội dung hiển thị. Ghi
+audit `PATCH_RENAMED`.
+
 ---
 
 ## 39. Record Hero patch change set
@@ -2204,7 +2215,7 @@ POST admin/patches/{id}/variants thêm beforeVariantId tùy chọn: chèn trư�
 
 ## Tổng quan phát hành cho admin
 
-- GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
+- GET `/api/wiki/v1/admin/publication-overview`, quyền `catalog:read`, không nhận query parameter. Trả `asOf`, `markets`, `rulesets`, `assignments`, `seasons`, `variants`, `releases`. Variant có `patchTitle` nullable: tên vi-VN, không có thì tên của locale đầu tiên theo thứ tự chữ cái. Market có currentRulesetId/currentSeasonId/currentReleaseId nullable. Phase mùa: UPCOMING/CURRENT/ENDED; phase release: UPCOMING/CURRENT/PAST/DRAFT/CANCELLED. PAST biểu thị đã đến lịch nhưng không còn current, không phải chứng nhận nguồn ngoài game. Mốc ngày giờ ISO-8601. Contract nằm trong hero-authoring.openapi.json, frontend sinh type từ contract.
 - GET `/api/wiki/v1/admin/patch-variants/{id}/hero-changes?locale=vi-VN`, quyền `catalog:read`. Trả change set có heroCode, heroId, revision nguồn/đích, summary với actualLocale và danh sách changes. Change set của một dạng có thêm `holderId`, `holderCode`, `formKey` (ADR-024); trang patch công khai nhận cùng các trường. Chỉ trả thay đổi được biên tập, không tự tạo khác biệt từ baseline. Giai đoạn này chỉ có provider Hero.
 
 Frontend dùng TanStack Query cho tổng quan (làm mới 60 giây), danh mục và snapshot tướng, bảng thay đổi theo variant/locale (chỉ tải khi mở). Sau mutation thiết lập mùa/patch hoặc ghi thay đổi, invalidate các cache liên quan. Đổi trang giữ cache theo cơ chế workspace hiện có.
