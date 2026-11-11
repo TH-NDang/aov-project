@@ -1,7 +1,6 @@
 import { queryOptions, useQuery } from "@tanstack/react-query"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { formatCalendarDate } from "@aov/ui/lib/time-zone"
 
 type HeroAvailability = "ON_SALE" | "NOT_OPEN" | "COMING_SOON" | "UNKNOWN"
 type SkinMethod = "VOUCHER" | "EVENT" | "NOT_OPEN" | "OTHER" | "UNKNOWN"
@@ -15,19 +14,15 @@ interface HeroShop {
   skins: { skinKey: string; method: SkinMethod; voucherPrice: number | null; eventName: string | null }[]
 }
 
-/** The day of the version being read, or nothing for the current one, so an older page shows what held back then. */
-function useShopDay() {
-  const { options, patchVariantId } = useWikiContext()
-  const patch = options?.patches.find((entry) => entry.id === patchVariantId)
-  return patch && !patch.isCurrent ? (patch.regionalDate ?? undefined) : undefined
-}
-
-function heroShopQuery(heroId: string, region: string, at?: string) {
+/**
+ * Today's price and skin acquisition. A past patch on the hero page changes only the abilities (ADR-016), and prices
+ * were only recorded recently, so an older day would mostly show nothing.
+ */
+function heroShopQuery(heroId: string, region: string) {
   return queryOptions({
-    queryKey: ["wiki", "hero-shop", heroId, region, at ?? "today"] as const,
+    queryKey: ["wiki", "hero-shop", heroId, region] as const,
     queryFn: async ({ signal }): Promise<HeroShop> => {
       const query = new URLSearchParams({ region })
-      if (at) query.set("at", at)
       const response = await fetch(`/api/wiki/v1/heroes/${heroId}/shop?${query}`, {
         signal,
         credentials: "omit",
@@ -40,8 +35,6 @@ function heroShopQuery(heroId: string, region: string, at?: string) {
   })
 }
 
-const dayLabel = (day: string, locale: string) => formatCalendarDate(day, undefined, locale)
-
 /**
  * What the hero costs in the market being read, next to its roles. It stays out of the way when nothing is known.
  * A form sold on its own has its own price; otherwise it shows the price of the hero that holds it (ADR-024).
@@ -49,10 +42,9 @@ const dayLabel = (day: string, locale: string) => formatCalendarDate(day, undefi
 export function HeroPriceTag({ heroId, fallbackHeroId }: { heroId: string; fallbackHeroId?: string }) {
   const { locale, region } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  const at = useShopDay()
-  const { data } = useQuery(heroShopQuery(heroId, region, at))
+  const { data } = useQuery(heroShopQuery(heroId, region))
   const fallback = useQuery({
-    ...heroShopQuery(fallbackHeroId ?? heroId, region, at),
+    ...heroShopQuery(fallbackHeroId ?? heroId, region),
     enabled: !!fallbackHeroId && !!data && !data.price,
   })
   const price = data?.price ?? (fallbackHeroId ? fallback.data?.price : undefined)
@@ -70,7 +62,7 @@ export function HeroPriceTag({ heroId, fallbackHeroId }: { heroId: string; fallb
         : amounts.join(" · ")
   if (!label) return null
   return (
-    <span title={at ? text(`Giá tại ${dayLabel(at, locale)}`, `Price on ${dayLabel(at, locale)}`) : undefined}>
+    <span>
       <Coin size={17} />
       {label}
     </span>
@@ -89,8 +81,7 @@ export function SkinAcquisitionText({
 }) {
   const { locale, region } = useWikiContext()
   const text = (vi: string, en: string) => wikiText(locale, vi, en)
-  const at = useShopDay()
-  const { data } = useQuery(heroShopQuery(heroId, region, at))
+  const { data } = useQuery(heroShopQuery(heroId, region))
   const row = data?.skins.find((entry) => entry.skinKey === skinKey)
   if (!row || row.method === "UNKNOWN") return null
   const label =

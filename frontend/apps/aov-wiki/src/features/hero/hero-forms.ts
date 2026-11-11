@@ -1,5 +1,6 @@
 import type { HeroDetail, HeroFormDetail, HeroListForm, HeroListItem } from "./hero-api"
 import type { HeroRole } from "./hero-classifications"
+import type { WikiCatalogScope } from "../../lib/wiki-catalog"
 
 /**
  * Heroes with forms (ADR-024): Flowborn is one hero whose forms (marksman, mage, …) each have their own roles,
@@ -60,6 +61,38 @@ export function heroWithForm(hero: HeroDetail, form?: HeroFormDetail): HeroDetai
 }
 
 /** The detail of the form being read, matched by key; the first form when none or an unknown key is asked for. */
+/** The scope of today's data: what the page shows outside the abilities, whichever patch is chosen. */
+export function currentScope<T extends WikiCatalogScope>(scope: T): WikiCatalogScope {
+  return { region: scope.region, locale: scope.locale, seasonId: "", patchVariantId: "", includeUnscoped: false }
+}
+
+/**
+ * The hero as read at a past patch: today's profile, stats, artwork and skins with that patch's abilities. Older data
+ * of the other parts is often missing or only worded differently, and real changes there are told by the patch notes
+ * (ADR-016). A skill picture missing from the past keeps today's.
+ */
+export function heroAtPatch(current: HeroDetail, past: HeroDetail): HeroDetail {
+  const pastForms = new Map(past.forms?.map((form) => [form.formKey, form]))
+  return {
+    ...current,
+    ...skillsOf(current, past),
+    context: past.context,
+    laterObservation: past.laterObservation,
+    forms: current.forms?.map((form) => {
+      const old = pastForms.get(form.formKey)
+      return old ? { ...form, ...skillsOf(form, old), laterObservation: old.laterObservation } : form
+    }),
+  }
+}
+
+function skillsOf<T extends Pick<HeroDetail, "content" | "skillMedia" | "skillStateMedia">>(current: T, past: T) {
+  return {
+    skillMedia: { ...current.skillMedia, ...past.skillMedia },
+    skillStateMedia: { ...current.skillStateMedia, ...past.skillStateMedia },
+    content: { ...current.content, skills: past.content.skills ?? current.content.skills },
+  }
+}
+
 export function selectedForm(hero: HeroDetail, formKey?: string | null) {
   const forms = hero.forms ?? []
   return forms.find((form) => form.formKey === formKey) ?? forms[0]

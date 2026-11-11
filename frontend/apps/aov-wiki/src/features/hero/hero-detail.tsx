@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { HeroDetailLayout } from "../../layout/wiki-library-layout"
 import { heroCatalogQuery, heroDetailQuery, type HeroListForm, type HeroListItem } from "./hero-api"
 import { HeroFormSwitch } from "./hero-form-switch"
-import { formLabelRole, heroWithForm, resolveHeroRoute, selectedForm } from "./hero-forms"
+import { currentScope, formLabelRole, heroAtPatch, heroWithForm, resolveHeroRoute, selectedForm } from "./hero-forms"
 import { heroAppearance } from "./hero-appearance"
 import { WikiVersionPicker } from "../../components/wiki-version-picker"
 import { useHeroChangedVariants } from "../../lib/wiki-patch-changes"
@@ -36,11 +36,19 @@ function heroMetaForm(form: HeroListForm, forms: readonly HeroListForm[], locale
 function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: HeroListForm; returnTo: string }) {
   const scope = useWikiContext()
   const { locale, t } = scope
-  const query = useQuery(heroDetailQuery(hero.id, scope))
+  // A past patch only changes the abilities; the rest of the page is today's hero (ADR-016).
+  const past = !!(scope.seasonId || scope.patchVariantId)
+  const current = useQuery(heroDetailQuery(hero.id, currentScope(scope)))
+  const atPatch = useQuery({ ...heroDetailQuery(hero.id, scope), enabled: past })
+  const query = past ? atPatch : current
+  const detail = !past
+    ? current.data
+    : atPatch.data &&
+      (current.data ? heroAtPatch(current.data, atPatch.data) : current.isError ? atPatch.data : undefined)
   // A hero with forms is read one form at a time: its gameplay, history and images, under the shared name (ADR-024).
-  const formDetail = query.data && selectedForm(query.data, form?.formKey)
-  const page = query.data && heroWithForm(query.data, formDetail)
-  const media = { ...query.data?.media, ...formDetail?.media }
+  const formDetail = detail && selectedForm(detail, form?.formKey)
+  const page = detail && heroWithForm(detail, formDetail)
+  const media = { ...detail?.media, ...formDetail?.media }
   const gameplay = form ?? hero
   const history = useHeroChangedVariants(gameplay.id)
   const layout = usePageLayout()
@@ -92,10 +100,10 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
           {wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}
         </span>
       )}
-      {query.data?.content.profile?.title && <p className="wiki-hero-epithet">{query.data.content.profile.title}</p>}
+      {detail?.content.profile?.title && <p className="wiki-hero-epithet">{detail.content.profile.title}</p>}
       <div className="wiki-hero-role-strip">
         {localizedHeroOptions(HERO_ROLES, locale)
-          .filter((role) => gameplay.roles.includes(role.value))
+          .filter((role) => (page?.content.profile?.roles ?? gameplay.roles).includes(role.value))
           .map((role) => (
             <span key={role.value}>
               <HeroGlyph name={role.glyph} />

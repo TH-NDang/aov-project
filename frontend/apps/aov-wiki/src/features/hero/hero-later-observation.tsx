@@ -26,12 +26,12 @@ export function HeroLaterObservationNote({ later }: { later: HeroLaterObservatio
       <span>
         {selected
           ? text(
-              `Chỉ số và kỹ năng bên dưới được ghi nhận ở bản ${later.patchCode}; bản ${selected.code} chưa có bản ghi riêng.`,
-              `The stats and abilities below were recorded in ${later.patchCode}; ${selected.code} has no record of its own yet.`,
+              `Kỹ năng bên dưới được ghi nhận ở bản ${later.patchCode}; bản ${selected.code} chưa có bản ghi riêng.`,
+              `The abilities below were recorded in ${later.patchCode}; ${selected.code} has no record of its own yet.`,
             )
           : text(
-              `Nội dung bên dưới được ghi nhận ở bản ${later.patchCode}.`,
-              `The content below was recorded in ${later.patchCode}.`,
+              `Kỹ năng bên dưới được ghi nhận ở bản ${later.patchCode}.`,
+              `The abilities below were recorded in ${later.patchCode}.`,
             )}
       </span>
       <button type="button" onClick={open}>

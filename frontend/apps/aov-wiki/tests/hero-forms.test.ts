@@ -2,7 +2,9 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { HeroDetail, HeroListItem } from "../src/features/hero/hero-api.ts"
 import {
+  currentScope,
   formLabelRole,
+  heroAtPatch,
   heroFormPath,
   heroSearchTexts,
   heroWithForm,
@@ -194,4 +196,55 @@ test("each published form has a static page; former addresses preview it without
   const sitemap = renderSitemap(pages, "https://wiki.example.test")
   assert.ok(sitemap.includes("<loc>https://wiki.example.test/hero/flowborn/mid</loc>"))
   assert.ok(!sitemap.includes("flowborn-ad"))
+})
+
+test("a past patch changes only the abilities and keeps the rest of today's hero", () => {
+  const hero = (skillName: string, hp: number, title: string, icon?: string) =>
+    ({
+      id: "h",
+      code: "natalya",
+      revisionId: `r-${skillName}`,
+      context: { patch: { code: skillName } },
+      media: {},
+      skillMedia: icon ? { "skill-2-1": { assetId: icon, semanticType: "SKILL" } } : {},
+      content: {
+        profile: { name: "Natalya", roles: ["MAGE"], title },
+        skills: { skills: [{ skillKey: "skill-2-1", kind: "ACTIVE", displayOrder: 2, name: skillName }] },
+        combatStats: { values: [{ statKey: "HP", baseValue: hp }] },
+      },
+      forms: [
+        {
+          formKey: "main",
+          code: "natalya",
+          displayOrder: 0,
+          media: {},
+          content: {
+            skills: { skills: [{ skillKey: "f", kind: "ACTIVE", displayOrder: 0, name: `form ${skillName}` }] },
+          },
+        },
+      ],
+    }) as unknown as HeroDetail
+  const today = hero("today", 3673, "Hiểm họa địa ngục", "today-icon")
+  const past = { ...hero("past", 3500, "old title"), laterObservation: { patchVariantId: "p", patchCode: "x" } }
+
+  const page = heroAtPatch(today, past)
+
+  assert.equal(page.content.skills?.skills?.[0]?.name, "past")
+  assert.equal(page.content.profile?.title, "Hiểm họa địa ngục")
+  assert.equal(page.content.combatStats?.values?.[0]?.baseValue, 3673)
+  assert.equal(page.skillMedia?.["skill-2-1"]?.assetId, "today-icon")
+  assert.equal(page.revisionId, "r-today")
+  assert.deepEqual(page.context, past.context)
+  assert.deepEqual(page.laterObservation, past.laterObservation)
+  assert.equal(page.forms?.[0]?.content.skills?.skills?.[0]?.name, "form past")
+  assert.deepEqual(
+    currentScope({ region: "VN", locale: "vi-VN", seasonId: "s", patchVariantId: "p", includeUnscoped: true }),
+    {
+      region: "VN",
+      locale: "vi-VN",
+      seasonId: "",
+      patchVariantId: "",
+      includeUnscoped: false,
+    },
+  )
 })

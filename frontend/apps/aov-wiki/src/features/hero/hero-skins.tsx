@@ -7,6 +7,7 @@ import { heroSkinsQuery, type SkinEntry } from "../skins/skin-api"
 import { groupSkins } from "../skins/skin-groups"
 import { previewSource, SkinArtwork, SkinBadgeImage, SkinPreview, skinId } from "../skins/skin-preview"
 import type { HeroDetail } from "./hero-api"
+import { currentScope } from "./hero-forms"
 import { useDragScroll } from "./use-drag-scroll"
 import "./hero-skins.css"
 
@@ -34,7 +35,7 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
   // A form shows the skins every form shares and its own, not those of the other forms (ADR-024).
   const library = owner ?? hero.code
-  const query = useQuery(heroSkinsQuery(scope, library))
+  const query = useQuery(heroSkinsQuery(currentScope(scope), library))
   const skins = useMemo(
     () =>
       groupSkins(
