@@ -283,7 +283,9 @@ export function ScheduleForm({
     schema: scheduleDraftSchema,
     enabled: !!canWrite,
   })
-  const regionId = marketId ?? draft.value.regionId
+  // With one open market there is nothing to choose, so the form starts on it.
+  const openMarkets = data.markets.filter((market) => market.available)
+  const regionId = marketId ?? (draft.value.regionId || (openMarkets.length === 1 ? openMarkets[0].id : ""))
   const setRegionId = (regionId: string) => draft.update({ ...draft.value, regionId })
   const setDateDraft = (name: string, value: DateDraft) =>
     draft.update({ ...draft.value, dates: { ...draft.value.dates, [`${regionId}:${name}`]: value } })

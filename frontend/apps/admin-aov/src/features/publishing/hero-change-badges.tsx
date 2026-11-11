@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popo
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
 import { changeTone, useChangeColors } from "./change-color-preferences"
 
-export type ChangeKind = "BUFF" | "NERF" | "ADJUSTMENT" | "REWORK" | "FIX" | "OTHER"
+export type ChangeKind = "BUFF" | "NERF" | "ADJUSTMENT" | "REWORK" | "FIX" | "RELEASE" | "OTHER"
 type KindStyle = {
   label: string
   icon: ComponentType<{ className?: string; "aria-hidden"?: boolean }>
@@ -29,6 +29,7 @@ const kindStyles: Record<ChangeKind, KindStyle> = {
     icon: changeKindIcons.REWORK,
   },
   FIX: { label: "Sửa lỗi", icon: changeKindIcons.FIX },
+  RELEASE: { label: "Ra mắt", icon: changeKindIcons.ADDED },
   OTHER: { label: "Khác", icon: Ellipsis },
 }
 

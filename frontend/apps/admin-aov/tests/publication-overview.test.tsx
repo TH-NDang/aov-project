@@ -40,6 +40,8 @@ test("publication overview shows flags and hero heads, and only tabs with change
     NodeFilter: dom.window.NodeFilter,
     DocumentFragment: dom.window.DocumentFragment,
     HTMLInputElement: dom.window.HTMLInputElement,
+    // The change table picks overall assessments with a Radix select, which looks for its form.
+    HTMLFormElement: dom.window.HTMLFormElement,
     fetch: fetcher,
     MutationObserver: dom.window.MutationObserver,
     CustomEvent: dom.window.CustomEvent,

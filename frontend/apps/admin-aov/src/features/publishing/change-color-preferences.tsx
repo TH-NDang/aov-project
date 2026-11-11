@@ -134,6 +134,7 @@ export function changeTone(kind: string, colors: ChangeColors): string {
   if (kind === "NERF") return changeColorPalette[colors.nerf].className
   if (kind === "ADJUSTMENT" || kind === "ADJUST") return changeColorPalette.amber.className
   if (kind === "REWORK") return changeColorPalette.violet.className
+  if (kind === "RELEASE") return "border-primary/30 bg-primary/10 text-primary"
   if (kind === "FIX" || kind === "BUG_FIX") return "border-sky-500/25 bg-sky-500/10 text-sky-700 dark:text-sky-400"
   return "border-border bg-muted/40 text-muted-foreground"
 }

@@ -25,6 +25,7 @@ import {
 } from "./patch-change-model"
 import { ROLES, type ChangeSource, type Content } from "./types"
 import { HeroAsset } from "./hero-asset"
+import { skillImageMatch, useHeroSkillImages } from "./skill-artwork"
 import { SkillChangeList } from "./skill-change-list"
 import { ActionStrip } from "@/components/action-strip"
 import { selectSkillTranslation, skillLabel, skillVariantLabel } from "./hero-skills"
@@ -69,6 +70,7 @@ export function PatchChangeEditor({
   const starter = useRef(notes && !initialRows?.length ? rows[0].id : null)
   const [summary, setSummary] = useState("")
   const [sourceUrl, setSourceUrl] = useState(defaultSourceUrl)
+  const [introduces, setIntroduces] = useState(false)
   const [checked, setChecked] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
@@ -83,6 +85,8 @@ export function PatchChangeEditor({
   const urlProblem = notes && !isHttpUrl(sourceUrl) ? "Dán link ghi chú cập nhật chính thức (http/https)." : null
   const invalid = !summary.trim() || !!urlProblem || [...problems.values()].some(Boolean)
   const skills = notes ? [...(reference?.SKILLS?.skills ?? [])].sort((a, b) => a.displayOrder - b.displayOrder) : []
+  // A skill without an icon of its own shows the hero's library picture, as the skills editor does.
+  const library = useHeroSkillImages(notes ? heroId : undefined).data ?? []
   const update = (id: string, patch: Partial<ChangeRow>) => {
     if (starter.current === id) starter.current = null
     setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)))
@@ -108,6 +112,7 @@ export function PatchChangeEditor({
         toHeroRevisionId: toRevisionId,
         summaryTranslations: [{ locale, summary: summary.trim() }],
         changes: rows.map(changePayload),
+        introducesHero: introduces,
       })
       await Promise.all([
         cache.invalidateQueries({ queryKey: ["patch-changes"] }),
@@ -150,6 +155,18 @@ export function PatchChangeEditor({
             {checked && urlProblem && <span className="text-xs text-destructive">{urlProblem}</span>}
           </label>
         )}
+        <label className="flex items-start gap-2.5 rounded-md border p-2.5">
+          <input
+            type="checkbox"
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+            checked={introduces}
+            onChange={(event) => setIntroduces(event.target.checked)}
+          />
+          <span className="grid gap-0.5">
+            <span className="type-label">Tướng mới ra mắt ở bản này</span>
+            <span className="type-meta">Wiki không hiện tướng ở các bản trước. Mỗi tướng chỉ đánh dấu ở một bản.</span>
+          </span>
+        </label>
         <label className="grid gap-1.5 text-sm">
           <span className="font-medium">Tóm tắt</span>
           <textarea
@@ -173,6 +190,7 @@ export function PatchChangeEditor({
                 const name = selectSkillTranslation(skill, locale)?.name
                 const label = [skillLabel(skill), skillVariantLabel(skill, skills)].filter(Boolean).join(" · ")
                 const Icon = skill.kind === "PASSIVE" ? Sparkles : Swords
+                const iconId = skill.iconAssetId || skillImageMatch(skill, library)?.assetId
                 return (
                   <Button
                     key={skill.skillKey}
@@ -183,8 +201,8 @@ export function PatchChangeEditor({
                     title={name}
                     onClick={() => add("SKILL", skill.skillKey)}
                   >
-                    {skill.iconAssetId ? (
-                      <HeroAsset id={skill.iconAssetId} frameAspectRatio={1} className="size-6 rounded-md" />
+                    {iconId ? (
+                      <HeroAsset id={iconId} frameAspectRatio={1} className="size-6 rounded-md" />
                     ) : (
                       <Icon aria-hidden className="size-4" />
                     )}

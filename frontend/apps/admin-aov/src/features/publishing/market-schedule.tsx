@@ -37,7 +37,12 @@ export function PatchMarketSchedule({
   locale: string
 }) {
   const releases = data.releases.filter((r) => r.variantId === variantId)
-  if (!releases.length) return <p className="type-meta py-3">Chưa có lịch phát hành cho patch này.</p>
+  if (!releases.length)
+    return (
+      <p className="type-meta py-3">
+        Chưa có lịch phát hành cho patch này. Wiki chỉ hiện patch và thay đổi của nó ở thị trường đã có ngày phát hành.
+      </p>
+    )
   return (
     <ul aria-label="Lịch phát hành theo thị trường" className="divide-y border-y">
       {releases.map((r) => {

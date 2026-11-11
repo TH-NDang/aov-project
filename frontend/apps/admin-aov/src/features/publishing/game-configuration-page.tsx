@@ -494,8 +494,20 @@ function PatchDetail({ variant, data, locale }: { variant: Variant; data: Public
       {section === "changes" && <PatchChangesTable variantId={variant.id} overview={data} locale={locale} />}
       {section === "stats" && <PatchStatDefaults variant={variant} />}
       {section === "schedule" && (
-        <div className="space-y-2 border-t pt-3">
+        <div className="space-y-3 border-t pt-3">
           <PatchMarketSchedule variantId={variant.id} data={data} locale={locale} />
+          {/* A published patch, older ones included, gets its market dates here instead of only from a market. */}
+          {variant.status === "PUBLISHED" &&
+            data.markets.some(
+              (market) =>
+                market.available &&
+                !data.releases.some(
+                  (release) =>
+                    release.variantId === variant.id &&
+                    release.regionId === market.id &&
+                    release.status !== "CANCELLED",
+                ),
+            ) && <PatchReleaseForm variant={variant} data={data} />}
         </div>
       )}
       {section === "review" && <PatchDataReview variant={variant} />}

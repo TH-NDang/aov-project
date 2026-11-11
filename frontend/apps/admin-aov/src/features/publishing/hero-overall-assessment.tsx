@@ -18,6 +18,7 @@ const options = [
   ["ADJUSTMENT", "Điều chỉnh"],
   ["REWORK", "Làm lại"],
   ["FIX", "Sửa lỗi"],
+  ["RELEASE", "Ra mắt"],
   ["OTHER", "Khác"],
 ] as const
 export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
@@ -81,5 +82,44 @@ export function HeroOverallAssessment({ change }: { change: HeroAssessment }) {
         </p>
       )}
     </section>
+  )
+}
+
+/**
+ * The overall assessment chosen straight from a patch's change table: picking a kind saves it, so a whole patch can
+ * be assessed from the official reasons without opening each hero.
+ */
+export function InlineAssessment({ change, heroName }: { change: HeroAssessment; heroName: string }) {
+  const client = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async (kind: string) => {
+      await backendRequest(`/admin/hero-changes/${change.id}/assessment`, {
+        method: "PUT",
+        body: JSON.stringify({ kind, expectedVersion: change.assessmentVersion ?? 0 }),
+      })
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["patch-changes"] }),
+        client.invalidateQueries({ queryKey: ["publishing-heroes"] }),
+        client.invalidateQueries({ queryKey: ["hero-timeline"] }),
+      ])
+    },
+  })
+  return (
+    <div className="grid min-w-40 gap-1">
+      <ChangeKindSelect
+        ariaLabel={`Đánh giá tổng thể ${heroName}`}
+        className="w-44"
+        placeholder="Chưa đánh giá"
+        options={options}
+        value={(change.overallKind ?? "") as (typeof options)[number][0] | ""}
+        onChange={(kind) => kind && kind !== change.overallKind && mutation.mutate(kind)}
+        disabled={mutation.isPending}
+      />
+      {mutation.error && (
+        <p role="alert" className="type-meta text-destructive">
+          {errorMessage(mutation.error)}
+        </p>
+      )}
+    </div>
   )
 }

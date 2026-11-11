@@ -3,8 +3,8 @@ import { Tabs, TabsTrigger, TabsContent } from "@aov/ui/components/tabs"
 import { ScrollableTabsList } from "@/components/scrollable-tabs-list"
 import { ActionStrip } from "@/components/action-strip"
 import { WarehousePatchChanges } from "../warehouse/warehouse-patch-changes"
-import { HeroOverallAssessment } from "./hero-overall-assessment"
-import { useMemo, useState } from "react"
+import { HeroOverallAssessment, InlineAssessment } from "./hero-overall-assessment"
+import { createContext, useContext, useMemo, useState } from "react"
 import { useQueries, useQuery } from "@tanstack/react-query"
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
 import { ArrowUpRight, ChevronRight, FilePlus2 } from "lucide-react"
@@ -73,10 +73,116 @@ function PatchHeroIdentity({ change, hero, onOpen }: { change: ChangeSet; hero?:
     </button>
   )
 }
-const empty: ChangeSet[] = []
-const api = createPublishingApi(backendRequest)
 const features = tableFeatures({})
 const helper = createColumnHelper<typeof features, ChangeSet>()
+
+/** What the table's cells read at render time, so the columns themselves never change identity. */
+interface HeroTableCells {
+  heroById: Map<string, HeroEntry>
+  overview: PublicationOverview
+  markets: PublicationOverview["releases"]
+  variantId: string
+  locale: string
+  canAssess: boolean
+  open: (change: ChangeSet) => void
+}
+const HeroTableCellsContext = createContext<HeroTableCells | null>(null)
+function useHeroTableCells() {
+  const value = useContext(HeroTableCellsContext)
+  if (!value) throw new Error("Hero table cells need their context.")
+  return value
+}
+
+function HeroIdentityCell({ change }: { change: ChangeSet }) {
+  const { heroById, open } = useHeroTableCells()
+  return <PatchHeroIdentity change={change} hero={heroById.get(change.heroId)} onOpen={() => open(change)} />
+}
+
+function HeroKindCell({ change }: { change: ChangeSet }) {
+  const { heroById, overview, variantId, locale, canAssess, open } = useHeroTableCells()
+  if (canAssess)
+    return <InlineAssessment change={change} heroName={heroById.get(change.heroId)?.name ?? change.heroCode} />
+  return (
+    <HeroChangeSummary
+      overallKind={change.overallKind ?? null}
+      summary={change.summary || `${change.changes.length} mục thay đổi`}
+      patchLabel={overview.variants.find((variant) => variant.id === variantId)?.patchCode}
+      showPatchLabel={false}
+      actualLocale={change.actualLocale}
+      locale={locale}
+      onOpen={() => open(change)}
+    />
+  )
+}
+
+function HeroContentCell({ change }: { change: ChangeSet }) {
+  const { heroById, locale, open } = useHeroTableCells()
+  return (
+    <div className="space-y-1">
+      <button
+        type="button"
+        className="type-body inline-flex items-center gap-1 rounded text-left hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+        onClick={() => open(change)}
+        aria-label={`Xem ${change.changes.length} thay đổi của ${heroById.get(change.heroId)?.name ?? change.heroCode}`}
+      >
+        {change.changes.length} thay đổi
+        <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
+      </button>
+      <div>
+        <SourceBadge change={change} />
+      </div>
+      {change.actualLocale && change.actualLocale !== locale && (
+        <span className="block text-xs text-muted-foreground">Ngôn ngữ dự phòng: {change.actualLocale}</span>
+      )}
+    </div>
+  )
+}
+
+function HeroMarketsCell() {
+  const { overview, markets, locale } = useHeroTableCells()
+  return (
+    <div className="flex flex-wrap gap-1">
+      {markets.map((r) => {
+        const m = overview.markets.find((m) => m.id === r.regionId)
+        if (!m) return null
+        return (
+          <MarketBadge
+            key={r.id}
+            code={m.code}
+            name={m.displayName}
+            detail={`${phaseLabels[r.phase]} · ${dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}`}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+const heroIdentityColumn = helper.accessor("heroCode", {
+  header: "Tướng",
+  cell: ({ row }) => <HeroIdentityCell change={row.original} />,
+})
+const heroKindColumn = helper.display({
+  id: "kind",
+  header: "Đánh giá",
+  cell: ({ row }) => <HeroKindCell change={row.original} />,
+})
+const heroContentColumn = helper.display({
+  id: "summary",
+  header: "Nội dung",
+  cell: ({ row }) => <HeroContentCell change={row.original} />,
+})
+const heroMarketsColumn = helper.display({ id: "markets", header: "Thị trường", cell: () => <HeroMarketsCell /> })
+const heroColumns = helper.columns([heroIdentityColumn, heroKindColumn, heroContentColumn])
+const heroColumnsWithMarkets = helper.columns([
+  heroIdentityColumn,
+  heroKindColumn,
+  heroContentColumn,
+  heroMarketsColumn,
+])
+
+const empty: ChangeSet[] = []
+const api = createPublishingApi(backendRequest)
 function HeroPatchChangesTable({
   variantId,
   overview,
@@ -87,6 +193,7 @@ function HeroPatchChangesTable({
   locale: string
 }) {
   const [selected, setSelected] = useState<ChangeSet | null>(null)
+  const canAssess = useSession().actor?.capabilities.includes("patch:write") ?? false
   const wide = useIsWide()
   const query = useQuery(heroChangesOptions(variantId, locale))
   const heroes = useHeroEntries(locale)
@@ -110,85 +217,10 @@ function HeroPatchChangesTable({
   const markets = overview.releases.filter(
     (r) => r.variantId === variantId && (r.status === "SCHEDULED" || r.phase === "AWAITING_CONFIRMATION"),
   )
-  const columns = useMemo(
-    () =>
-      helper.columns([
-        helper.accessor("heroCode", {
-          header: "Tướng",
-          cell: ({ row }) => (
-            <PatchHeroIdentity
-              change={row.original}
-              hero={heroById.get(row.original.heroId)}
-              onOpen={() => setSelected(row.original)}
-            />
-          ),
-        }),
-        helper.display({
-          id: "kind",
-          header: "Đánh giá",
-          cell: ({ row }) => (
-            <HeroChangeSummary
-              overallKind={row.original.overallKind ?? null}
-              summary={row.original.summary || `${row.original.changes.length} mục thay đổi`}
-              patchLabel={overview.variants.find((variant) => variant.id === variantId)?.patchCode}
-              showPatchLabel={false}
-              actualLocale={row.original.actualLocale}
-              locale={locale}
-              onOpen={() => setSelected(row.original)}
-            />
-          ),
-        }),
-        helper.display({
-          id: "summary",
-          header: "Nội dung",
-          cell: ({ row }) => (
-            <div className="space-y-1">
-              <button
-                type="button"
-                className="type-body inline-flex items-center gap-1 rounded text-left hover:underline focus-visible:outline-2 focus-visible:outline-ring"
-                onClick={() => setSelected(row.original)}
-                aria-label={`Xem ${row.original.changes.length} thay đổi của ${heroById.get(row.original.heroId)?.name ?? row.original.heroCode}`}
-              >
-                {row.original.changes.length} thay đổi
-                <ChevronRight className="size-3.5 text-muted-foreground" aria-hidden />
-              </button>
-              <div>
-                <SourceBadge change={row.original} />
-              </div>
-              {row.original.actualLocale && row.original.actualLocale !== locale && (
-                <span className="block text-xs text-muted-foreground">
-                  Ngôn ngữ dự phòng: {row.original.actualLocale}
-                </span>
-              )}
-            </div>
-          ),
-        }),
-        ...(markets.length
-          ? [
-              helper.display({
-                id: "markets",
-                header: "Thị trường",
-                cell: () => (
-                  <div className="flex flex-wrap gap-1">
-                    {markets.map((r) => {
-                      const m = overview.markets.find((m) => m.id === r.regionId)
-                      if (!m) return null
-                      return (
-                        <MarketBadge
-                          key={r.id}
-                          code={m.code}
-                          name={m.displayName}
-                          detail={`${phaseLabels[r.phase]} · ${dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}`}
-                        />
-                      )
-                    })}
-                  </div>
-                ),
-              }),
-            ]
-          : []),
-      ]),
-    [overview, variantId, locale, heroById],
+  const columns = markets.length ? heroColumnsWithMarkets : heroColumns
+  const cells = useMemo<HeroTableCells>(
+    () => ({ heroById, overview, markets, variantId, locale, canAssess, open: setSelected }),
+    [heroById, overview, markets, variantId, locale, canAssess],
   )
   const table = useTable({ features, columns, data: query.data ?? empty, getRowId: (row) => row.id })
   const detailHero = detail ? heroById.get(detail.heroId) : undefined
@@ -211,34 +243,36 @@ function HeroPatchChangesTable({
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[520px] text-sm">
-            <thead className="bg-muted/40">
-              <tr>
-                {table.getHeaderGroups()[0]?.headers.map((h) => (
-                  <th
-                    key={h.id}
-                    className={`type-label px-3 py-2 text-left text-muted-foreground ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
-                  >
-                    <table.FlexRender header={h} />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-t border-border/60 align-middle hover:bg-muted/20">
-                  {row.getAllCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className={`px-3 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 bg-card" : ""}`}
+          <HeroTableCellsContext.Provider value={cells}>
+            <table className="w-full min-w-[520px] text-sm">
+              <thead className="bg-muted/40">
+                <tr>
+                  {table.getHeaderGroups()[0]?.headers.map((h) => (
+                    <th
+                      key={h.id}
+                      className={`type-label px-3 py-2 text-left text-muted-foreground ${h.column.id === "heroCode" ? "sticky left-0 z-10 min-w-40 bg-muted" : ""}`}
                     >
-                      <table.FlexRender cell={cell} />
-                    </td>
+                      <table.FlexRender header={h} />
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map((row) => (
+                  <tr key={row.id} className="border-t border-border/60 align-middle hover:bg-muted/20">
+                    {row.getAllCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className={`px-3 py-3 ${cell.column.id === "heroCode" ? "sticky left-0 z-10 bg-card" : ""}`}
+                      >
+                        <table.FlexRender cell={cell} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </HeroTableCellsContext.Provider>
         </div>
       )}
       <Sheet

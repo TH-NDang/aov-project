@@ -16,7 +16,8 @@ export const changeKindIcons = {
   DATA_BASELINE: createArtworkIcon(artwork, "baseline"),
 }
 
-const ALIASES: Record<string, keyof typeof changeKindIcons> = { ADJUST: "ADJUSTMENT", BUG_FIX: "FIX" }
+// A hero joining the game wears the same mark as a new item.
+const ALIASES: Record<string, keyof typeof changeKindIcons> = { ADJUST: "ADJUSTMENT", BUG_FIX: "FIX", RELEASE: "ADDED" }
 
 /** The mark for a change kind, or undefined for a kind that has none. */
 export function changeKindIcon(kind: string) {
