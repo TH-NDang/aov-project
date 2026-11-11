@@ -231,6 +231,47 @@ class HeroFormsIntegrationTest {
                 .contains("flowborn-ad", "airi").doesNotContain("flowborn-mid");
     }
 
+    @Test
+    void skinCatalogOfAHeroCoversItsSharedSkinsAndTheSkinsOfEveryForm() throws Exception {
+        var adDraft = skins(form("flowborn-ad", "Flowborn Xạ thủ", "MARKSMAN", "DRAGON"), "flowborn-ad-tinh-ha-1");
+        var midDraft = skins(form("flowborn-mid", "Flowborn Pháp sư", "MAGE", "MID"), "flowborn-mid-nguyet-anh-1");
+        var holderDraft = skins(holderDraft(), "flowborn-khoi-nguyen-1");
+        UUID holder = uuid(holderDraft, "heroId");
+        publish(adDraft);
+        publish(midDraft);
+        send(put(ROOT + "/admin/heroes/" + holder + "/forms"),
+                forms(List.of(), uuid(adDraft, "heroId"), uuid(midDraft, "heroId")), 200);
+        publish(holderDraft);
+        publish(skins(form("airi", "Airi", "ASSASSIN", "JUNGLE"), "airi-kiem-si-1"));
+
+        var whole = skinItems(
+                send(get(ROOT + "/skins?hero=flowborn&region=VN&locale=vi-VN&size=60&page=0"), null, 200));
+        assertThat(whole).extracting(entry -> entry.get("heroCode"), entry -> entry.get("skinKey")).containsExactly(
+                tuple("flowborn", "flowborn-khoi-nguyen-1"), tuple("flowborn-ad", "flowborn-ad-tinh-ha-1"),
+                tuple("flowborn-mid", "flowborn-mid-nguyet-anh-1"));
+        assertThat(whole.getFirst()).containsEntry("heroId", holder.toString()).containsEntry("heroName", "Flowborn");
+
+        assertThat(skinItems(send(get(ROOT + "/skins?hero=flowborn-ad"), null, 200)))
+                .extracting(entry -> entry.get("skinKey")).containsExactly("flowborn-ad-tinh-ha-1");
+        assertThat(skinItems(send(get(ROOT + "/skins?hero=airi"), null, 200)))
+                .extracting(entry -> entry.get("skinKey")).containsExactly("airi-kiem-si-1");
+    }
+
+    /** Replaces the skins of a draft with one named skin per key, in the given order. */
+    private Map<String, Object> skins(Map<String, Object> draft, String... keys) throws Exception {
+        List<Map<String, Object>> skins = new ArrayList<>();
+        for (String key : keys)
+            skins.add(Map.of("skinKey", key, "displayOrder", skins.size() + 1, "translations",
+                    List.of(Map.of("locale", "vi-VN", "name", key))));
+
+        return send(put(path(uuid(draft, "heroId"), id(draft)) + "/skins"),
+                Map.of("expectedDraftVersion", number(draft, "version"), "skins", skins), 200);
+    }
+
+    private static List<Map<String, Object>> skinItems(Map<String, Object> catalog) {
+        return items((Map<String, Object>) catalog.get("page"));
+    }
+
     /** The hero that will hold the forms: names and images only, published once it holds its forms. */
     private Map<String, Object> holderDraft() throws Exception {
         var draft = send(post(ROOT + "/admin/heroes"), Map.of("code", "flowborn", "initialLocale", "vi-VN", "name",

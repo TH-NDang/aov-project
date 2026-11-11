@@ -60,12 +60,12 @@ public class HeroForms {
 
     /** The hero codes a filter by {@code code} covers: the code itself and, for a hero that holds forms, every form. */
     public Set<String> codesFor(String code) {
-        var hero = store.findByCode(code);
-        var members = hero.map(value -> structure().formsOf(value.getId())).orElse(List.of());
+        var members = store.findByCode(code).map(hero -> structure().formsOf(hero.getId())).orElse(List.of());
         if (members.isEmpty())
             return Set.of(code);
 
-        Set<String> codes = new HashSet<>(Set.of(code, hero.get().getCode()));
+        Set<String> codes = new HashSet<>();
+        codes.add(code);
         store.heroes(members.stream().map(Form::heroId).toList()).forEach(form -> codes.add(form.getCode()));
         return codes;
     }
