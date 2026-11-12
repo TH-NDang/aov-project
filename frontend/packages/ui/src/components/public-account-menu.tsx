@@ -304,7 +304,8 @@ export function PublicAccountSummary({
   loading,
   onSignIn,
   onSignOut,
-}: Pick<PublicAccountOptionsProps, "locale" | "name" | "loading" | "onSignIn" | "onSignOut">) {
+  children,
+}: Pick<PublicAccountOptionsProps, "locale" | "name" | "loading" | "onSignIn" | "onSignOut" | "children">) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState(false)
   const text = (vi: string, en: string) => (locale.startsWith("en") ? en : vi)
@@ -358,6 +359,7 @@ export function PublicAccountSummary({
           <LogIn className="public-account-summary-action" size={19} aria-hidden="true" />
         </button>
       )}
+      {name && children && <div className="public-account-links">{children}</div>}
       {error && (
         <p className="public-account-error" role="alert">
           {text("Chưa mở được đăng nhập. Vui lòng thử lại.", "Could not open sign-in. Please try again.")}

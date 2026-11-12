@@ -35,6 +35,9 @@ const ModesPage = lazy(() => import("./features/modes/modes-page").then((module)
 const ModeDetailPage = lazy(() =>
   import("./features/modes/mode-detail-page").then((module) => ({ default: module.ModeDetailPage })),
 )
+const AccountSettingsPage = lazy(() =>
+  import("./features/account/account-settings-page").then((module) => ({ default: module.AccountSettingsPage })),
+)
 
 function HeroDetailRoute() {
   const { heroCode } = useParams()
@@ -121,6 +124,14 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/auth/callback" element={<WikiLoginCallback />} />
+        <Route
+          path="/account"
+          element={
+            <Suspense fallback={<WikiHeader />}>
+              <AccountSettingsPage />
+            </Suspense>
+          }
+        />
         <Route element={<WikiLibraryLayout />}>
           <Route
             path="/hero"

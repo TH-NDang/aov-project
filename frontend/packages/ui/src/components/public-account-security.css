@@ -1,0 +1,236 @@
+/* Account settings shared by the public apps. Colours and radii come from tokens.css, which each app maps to its palette. */
+.public-account-security {
+  display: grid;
+  gap: 20px;
+  color: var(--aov-text);
+}
+.public-account-security h1 {
+  margin: 0;
+  font-size: clamp(24px, 4vw, 32px);
+  line-height: 1.2;
+}
+.pas-intro {
+  display: grid;
+  gap: 8px;
+}
+.pas-intro p {
+  margin: 0;
+  color: var(--aov-muted);
+  line-height: 1.6;
+}
+.pas-intro .pas-email {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--aov-text);
+  overflow-wrap: anywhere;
+}
+.pas-section {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  padding: clamp(16px, 3vw, 24px);
+}
+.pas-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 18px;
+}
+.pas-section h2 svg {
+  color: var(--aov-accent);
+}
+.pas-section p {
+  margin: 0;
+  line-height: 1.6;
+}
+.pas-section > .pas-button {
+  justify-self: start;
+}
+.pas-muted {
+  color: var(--aov-muted);
+  font-size: 14px;
+}
+.pas-badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-pill);
+  padding: 1px 9px;
+  color: var(--aov-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.pas-badge-ok {
+  border-color: color-mix(in srgb, var(--aov-accent) 45%, transparent);
+  color: var(--aov-accent);
+}
+.pas-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 12px 14px;
+  line-height: 1.5;
+}
+.pas-notice-success {
+  border-color: color-mix(in srgb, var(--aov-success) 45%, transparent);
+  background: var(--aov-success-soft);
+}
+.pas-notice-error,
+.pas-error {
+  color: var(--aov-danger);
+}
+.pas-notice-error {
+  border-color: color-mix(in srgb, var(--aov-danger) 45%, transparent);
+  background: var(--aov-danger-soft);
+}
+.pas-error {
+  font-size: 14px;
+}
+.pas-form {
+  display: grid;
+  gap: 12px;
+  max-width: 460px;
+}
+.pas-form label:not(.pas-check) {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+.pas-form input:not([type="checkbox"]) {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-sunken);
+  color: var(--aov-text);
+  padding: 8px 12px;
+  font-size: 16px;
+}
+.pas-form input:focus-visible,
+.pas-button:focus-visible,
+.pas-check input:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.pas-form .pas-code {
+  max-width: 200px;
+  letter-spacing: 0.35em;
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+}
+.pas-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.pas-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--aov-accent);
+}
+.pas-actions,
+.pas-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pas-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: transparent;
+  color: var(--aov-text);
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pas-button:hover:not(:disabled) {
+  background: var(--aov-raised);
+}
+.pas-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pas-button-primary {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.pas-button-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--aov-accent) 85%, var(--aov-text));
+}
+.pas-button-danger {
+  border-color: color-mix(in srgb, var(--aov-danger) 55%, transparent);
+  color: var(--aov-danger);
+}
+.pas-sessions {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pas-session {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--aov-line);
+  padding: 12px 0;
+}
+.pas-session:first-child {
+  border-top: 0;
+}
+.pas-session > svg {
+  color: var(--aov-muted);
+}
+.pas-session[data-current] > svg {
+  color: var(--aov-accent);
+}
+.pas-session > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.pas-session strong {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.pas-session span:not(.pas-badge) {
+  color: var(--aov-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 560px) {
+  .pas-session {
+    grid-template-columns: auto 1fr;
+  }
+  .pas-session > .pas-button,
+  .pas-session > .pas-row-actions {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
