@@ -16,6 +16,7 @@ import { reviewTab, type HeroReviewItem } from "./hero-source-review"
 import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
+import { HeroGallery } from "./hero-gallery"
 import { ImageCreditSummary } from "./image-credit-summary"
 import { HeroSkinsView } from "./hero-skins-view"
 import { visibleSkins } from "./hero-skins"
@@ -372,23 +373,35 @@ function HeroContentBody({
               label="ảnh tướng"
               assetIds={roles.map((role) => content.MEDIA_BINDINGS?.bindings[role])}
             />
-            <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
-              {roles.map((role) => (
-                <div
-                  key={role}
-                  className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
-                >
-                  <HeroAsset
-                    id={content.MEDIA_BINDINGS?.bindings[role]}
-                    alt={`${name} · ${roleLabel(role)}`}
-                    className="w-full"
-                    naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
-                    preview
-                  />
-                  <p className="type-meta text-center">{roleLabel(role)}</p>
-                </div>
-              ))}
-            </div>
+            {/* A saved hero shows its whole gallery: every version's images and those attached to it (ADR-027). */}
+            {heroId ? (
+              <HeroGallery
+                heroId={heroId}
+                name={name}
+                locale={locale}
+                content={content}
+                canWrite={canWrite}
+                reloadKey={roles.map((role) => content.MEDIA_BINDINGS?.bindings[role] ?? "").join(",")}
+              />
+            ) : (
+              <div className="grid grid-cols-2 items-start gap-4 @min-[650px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)]">
+                {roles.map((role) => (
+                  <div
+                    key={role}
+                    className={cn("min-w-0 space-y-2", role === "SPLASH" && "col-span-2 @min-[650px]:col-span-1")}
+                  >
+                    <HeroAsset
+                      id={content.MEDIA_BINDINGS?.bindings[role]}
+                      alt={`${name} · ${roleLabel(role)}`}
+                      className="w-full"
+                      naturalAspectRatio={role === "HEAD" ? 1 : role === "PORTRAIT" ? 3 / 4 : 16 / 9}
+                      preview
+                    />
+                    <p className="type-meta text-center">{roleLabel(role)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
             <HeroContentSources sources={content.MEDIA_BINDINGS?.sources ?? []} />
           </div>
         )}

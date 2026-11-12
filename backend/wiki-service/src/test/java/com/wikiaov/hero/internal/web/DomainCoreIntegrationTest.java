@@ -344,6 +344,75 @@ class DomainCoreIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
+    void galleryShowsEveryVersionsImagesAndImagesAttachedStraightToTheHero() throws Exception {
+        var draft = create();
+        UUID hero = uuid(draft, "heroId"), draftId = uuid(draft, "id");
+        draft = complete(hero, draftId, draft);
+        send(post(path(hero, draftId) + "/publish"), Map.of("expectedVersion", number(draft, "version")), 200);
+        UUID sticker = UUID.randomUUID(), oldIcon = UUID.randomUUID();
+        for (var image : Map.of(sticker, MediaSemanticType.CHIBI_STICKER, oldIcon, MediaSemanticType.HERO_SKILL_ICON)
+                .entrySet())
+            when(media.find(image.getKey())).thenReturn(Optional.of(new MediaAssetReference(image.getKey(),
+                    image.getValue(), MediaAssetState.ACTIVE, new MediaAssetReference.CurrentVersion(UUID.randomUUID(),
+                            "image/webp", 128, 128, "/media/" + image.getKey() + "/v1.webp"))));
+        String gallery = ROOT + "/admin/heroes/" + hero + "/gallery";
+
+        // The published version's images come from the version itself.
+        var portrait = image(send(get(gallery), null, 200), assets.get(MediaSemanticType.HERO_PORTRAIT));
+        assertThat(portrait).containsEntry("kind", "HERO_ART").containsEntry("current", true)
+                .containsEntry("roles", List.of("PORTRAIT")).containsEntry("attachment", null);
+        assertThat((List<Map<String, Object>>) portrait.get("versions")).singleElement()
+                .satisfies(version -> assertThat(version).containsEntry("revisionId", draftId.toString())
+                        .containsEntry("state", "PUBLISHED").containsEntry("current", true));
+        assertThat(image(send(get(gallery), null, 200), assets.get(MediaSemanticType.HERO_SKILL_ICON)))
+                .containsEntry("kind", "SKILL");
+
+        // Attached images must exist, match their kind and name a real patch; each image is attached once.
+        send(post(gallery), Map.of("assetId", sticker, "kind", "SKILL"), 422);
+        send(post(gallery), Map.of("assetId", UUID.randomUUID(), "kind", "OTHER"), 422);
+        send(post(gallery), Map.of("assetId", oldIcon, "kind", "SKILL", "untilPatchVariantId", UUID.randomUUID()), 422);
+        send(post(gallery), Map.of("assetId", oldIcon, "kind", "SKILL", "caption", "x".repeat(501)), 422);
+        UUID iconItem = id(send(post(gallery), Map.of("assetId", oldIcon, "kind", "SKILL", "caption", " Old icon ",
+                "partKey", "skill-1-1", "untilPatchVariantId", variant), 201));
+        send(post(gallery), Map.of("assetId", oldIcon, "kind", "SKILL"), 409);
+        UUID stickerItem = id(send(post(gallery), Map.of("assetId", sticker, "kind", "STICKER"), 201));
+
+        var items = (List<Map<String, Object>>) send(get(gallery), null, 200).get("items");
+        var icon = image(Map.of("items", items), oldIcon);
+        assertThat(icon).containsEntry("kind", "SKILL").containsEntry("current", false)
+                .containsEntry("roles", List.of("GALLERY")).containsEntry("partKey", "skill-1-1")
+                .containsEntry("versions", List.of());
+        assertThat((Map<String, Object>) icon.get("attachment")).containsEntry("id", iconItem.toString())
+                .containsEntry("caption", "Old icon").containsEntry("untilPatchVariantId", variant.toString())
+                .containsEntry("version", 0);
+        assertThat(items.indexOf(icon)).isGreaterThan(items.indexOf(image(Map.of("items", items),
+                assets.get(MediaSemanticType.HERO_PORTRAIT))));
+        assertThat(usageProviders.stream().flatMap(p -> p.findUsages(oldIcon).stream()))
+                .anyMatch(usage -> usage.propertyRole().equals("GALLERY:SKILL") && usage.ownerId().equals(hero));
+
+        // Attachments are edited with the version read, and removing one keeps the image in media.
+        assertThat(send(put(gallery + "/" + iconItem),
+                Map.of("expectedVersion", 0, "kind", "SKILL", "caption", "Before the rework"), 200))
+                .containsEntry("version", 1);
+        send(put(gallery + "/" + iconItem), Map.of("expectedVersion", 0, "kind", "SKILL"), 409);
+        send(put(gallery + "/" + UUID.randomUUID()), Map.of("expectedVersion", 0, "kind", "SKILL"), 404);
+        send(delete(gallery + "/" + stickerItem).param("expectedVersion", "1"), null, 409);
+        send(delete(gallery + "/" + stickerItem).param("expectedVersion", "0"), null, 204);
+        send(delete(gallery + "/" + stickerItem).param("expectedVersion", "0"), null, 404);
+        assertThat(((List<Map<String, Object>>) send(get(gallery), null, 200).get("items")))
+                .noneMatch(item -> item.get("assetId").equals(sticker.toString()));
+        send(get(gallery).param("unknown", "1"), null, 400);
+        send(get(ROOT + "/admin/heroes/" + UUID.randomUUID() + "/gallery"), null, 404);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> image(Map<String, Object> gallery, UUID assetId) {
+        return ((List<Map<String, Object>>) gallery.get("items")).stream()
+                .filter(item -> item.get("assetId").equals(assetId.toString())).findFirst().orElseThrow();
+    }
+
+    @Test
     void draftVisibilityDiscardValidationAndPermissions() throws Exception {
         var d = create();
         UUID hero = uuid(d, "heroId"), id = uuid(d, "id");

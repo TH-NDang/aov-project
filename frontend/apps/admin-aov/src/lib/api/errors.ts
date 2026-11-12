@@ -52,6 +52,8 @@ const MESSAGES: Record<string, string> = {
   HERO_CODE_EXISTS: "Mã tướng đã tồn tại. Hãy mở tướng trong danh mục backend.",
   HERO_INVALID_CONTENT: "Nội dung section chưa đầy đủ hoặc không hợp lệ. Kiểm tra các trường và nguồn.",
   HERO_INVALID_MEDIA: "Ảnh chưa sẵn sàng hoặc không đúng loại. Chọn asset đã hoàn tất upload.",
+  HERO_GALLERY_ITEM_CONFLICT: "Ảnh đã có trong thư viện của tướng, hoặc vừa được sửa ở nơi khác. Tải lại rồi thử lại.",
+  HERO_GALLERY_ITEM_NOT_FOUND: "Ảnh không còn trong thư viện của tướng. Tải lại trang.",
   HERO_REVISION_NOT_EDITABLE: "Phiên bản này không còn là draft có thể sửa.",
   HERO_BADGE_NOT_FOUND: "Không tìm thấy nhãn trang phục. Hãy tải lại danh sách.",
   HERO_BADGE_CONFLICT: "Nhãn trang phục vừa được thay đổi. Hãy tải bản mới trước khi chỉnh tiếp.",
