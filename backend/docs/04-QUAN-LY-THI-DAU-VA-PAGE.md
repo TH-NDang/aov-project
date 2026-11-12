@@ -5,8 +5,8 @@ Phần mở rộng đặc tả 01/02/03 theo ADR-018, được người dùng ch
 
 ## Luồng sử dụng
 
-Admin có sáu bước: thông tin → đội tham dự → đội hình → thể thức → lịch/kết quả → kiểm tra/công bố.
-Đội tham dự độc lập trận đấu. Page tổ chức, đội, tuyển thủ có thể được tạo trước. Tạo page TEAM/PLAYER
+Admin có sáu bước: tổng quan → đội & đội hình → thể thức → lịch & kết quả → chung cuộc → công bố
+(xem "Không gian giải đấu trong Admin" bên dưới). Đội tham dự độc lập trận đấu. Page tổ chức, đội, tuyển thủ có thể được tạo trước. Tạo page TEAM/PLAYER
 không có entityId sẽ tạo danh tính thi đấu tương ứng; một danh tính chỉ gắn một page cùng loại.
 
 Trong bước thông tin giải, biên tập viên chọn hoặc tạo nhanh hồ sơ ORGANIZATION ngay tại chỗ.
@@ -35,6 +35,41 @@ hạng nằm trong số suất cho phép. Bảng chưa đủ trận luôn có nh
 Giải có bản nháp và snapshot công bố chứa thông tin giải, kế hoạch, đội, tuyển thủ, đội hình, loạt trận,
 suất đã giải quyết và bảng xếp hạng. Sửa nháp không đổi snapshot. Công bố cần ít nhất hai đội, một
 giai đoạn và URL nguồn; đội hình, lịch và kết quả có thể bổ sung sau. Lưu/công bố/thu hồi có revision.
+
+### Không gian giải đấu trong Admin (12/11/2026)
+
+Người dùng chọn Đấu Trường Danh Vọng Mùa Đông 2026 làm giải đầu tiên ghi chi tiết và duyệt bố cục mới ngày
+12/11/2026. Thay đổi chỉ ở giao diện Admin; không thêm endpoint hay migration.
+
+| Bước | Nội dung |
+|---|---|
+| Tổng quan | Thông tin giải, tổ chức, hệ thống giải, địa điểm; việc nên làm tiếp và tiến độ ghi nhận |
+| Đội & đội hình | Gộp hai bước "đội tham dự" và "đội hình": mỗi đội một khối có logo, trạng thái tham dự và đội hình ở giải này vẽ ra ngay (năm vị trí chính thức có ảnh và tên tuyển thủ, rồi dự bị, người đã rời); sửa đội hình mở bảng riêng |
+| Thể thức | Mỗi giai đoạn một thẻ tóm tắt; chọn thẻ mới mở phần sửa |
+| Lịch & kết quả | Tab theo giai đoạn. Vòng tròn: trận gom theo vòng hoặc theo ngày, bảng xếp hạng nằm cạnh. Loại trực tiếp và nhánh thắng/thua: sơ đồ nhánh dựng từ suất WINNER/LOSER |
+| Chung cuộc | Thứ hạng chung cuộc, tiền thưởng và giải thưởng của giải (`placements`, `awards`, `links`) |
+| Công bố | Mục bắt buộc và mục nên bổ sung, nội dung sẽ công bố, thay đổi chưa công bố |
+
+Đường dẫn `?step=` nhận tên bước `overview`, `teams`, `format`, `schedule`, `final`, `publish`; số 0–5 của
+bố cục cũ vẫn đọc được (1 và 2 cùng mở "Đội & đội hình").
+
+Chống sửa nhầm: dữ liệu hiển thị ở dạng chỉ đọc; ô nhập chỉ mở sau thao tác "Sửa" hoặc "Nhập" và có Lưu/Hủy.
+Ghi đè một giá trị đã có (tỷ số, hạt giống) và mọi thao tác xóa phải xác nhận, hộp xác nhận nêu giá trị cũ → mới.
+Trang công khai chỉ đổi khi công bố.
+
+Tỷ số của loạt trận đã liên kết nhập ngay trong bước "Lịch & kết quả", cùng nguồn kết quả, mức xác minh và link
+video của trận (`sourceUrl` của loạt trận, xem "Dữ liệu giải lịch sử"). Quy tắc tỷ số theo BO giữ nguyên. Tỷ số
+không tự suy ra từ đội thắng các ván. Trận chưa có loạt trận thật hiển thị suất chờ ("Thắng …", "Thua …") và chỉ
+nhập được kết quả sau khi materialize.
+
+Giải đang diễn ra dùng cùng màn hình: công bố sớm rồi công bố lại sau mỗi ngày đấu. Khi giải đã công bố, Admin so
+bản nháp với snapshot công khai và liệt kê "thay đổi chưa công bố" (tỷ số mới hoặc đổi, lịch đổi, trận thêm/bớt,
+đội tham dự, thể thức, thông tin giải); nút cập nhật bản công bố có ở đầu trang của mọi bước. Mỗi lần công bố
+vẫn chụp toàn bộ giải, không công bố riêng từng trận. Bảng xếp hạng chưa đủ trận giữ nhãn tạm tính.
+
+Bước "Công bố" tách mục bắt buộc (nguồn kiểm chứng, ít nhất hai đội, ít nhất một giai đoạn, tổ chức đã công bố
+nếu có liên kết) khỏi mục nên bổ sung (đội hình, lịch, giờ đấu, kết quả khớp suất, kết quả đủ, thứ hạng chung
+cuộc). Mục nên bổ sung không chặn công bố.
 
 ## Page và quyền đại diện
 
@@ -193,6 +228,17 @@ chúng ghi nhận, không suy diễn số liệu:
   `careerStatus`, `signatureHeroes`.
 - Link video: `sourceUrl` của trận là video cả trận hoặc cả buổi nếu có, nếu không là trang nguồn; `sourceUrl` của
   ván là video ván. Nguồn của kết quả nằm ở `result.sourceUrl`.
+
+### Ngôn ngữ danh mục của ván (12/11/2026)
+
+Ván ghi `region` và `locale` để đọc danh mục tướng, phụ trợ, trang bị, phù hiệu và ngọc từ Wiki. `locale` chỉ nhận
+ngôn ngữ mà danh mục hỗ trợ, hiện là `vi-VN` và `en-US`. Giá trị khác bị từ chối cả khi lưu nháp lẫn khi công bố,
+báo trong `missingFields` là `locale.unsupported`. Bản nháp vẫn được để trống `locale`; công bố thì bắt buộc như cũ.
+Danh sách ngôn ngữ chỉ khai báo một nơi, dùng chung cho quy tắc của ván và cho lời gọi danh mục.
+
+Lần nhập 06/11/2026 đã ghi `vi` cho mọi ván. Danh mục từ chối giá trị này nên trang trận không tải được ảnh tướng
+và ván không thể công bố. Migration V015 đổi các giá trị `vi` đó thành `vi-VN` trong bản nháp, bản công bố và lịch
+sử công bố của ván, không đụng tới trường nào khác.
 
 ## Danh bạ thi đấu trong Admin (06/11/2026)
 
