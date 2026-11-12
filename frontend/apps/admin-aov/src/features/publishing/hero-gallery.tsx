@@ -89,6 +89,17 @@ function tileShape(image: GalleryImage) {
   return "aspect-square"
 }
 
+/**
+ * How large the preview draws an image. Wide art fills the panel; portraits and square icons stay near their own size,
+ * since stretching a small icon across the panel blurs it and pushes the grid out of view. The full image opens on click.
+ */
+function previewShape(image: GalleryImage) {
+  const shape = tileShape(image)
+  if (shape.includes("aspect-video")) return { className: "w-full", ratio: 16 / 9 }
+  if (shape.includes("aspect-[3/4]")) return { className: "mx-auto w-full max-w-xs", ratio: 3 / 4 }
+  return { className: "mx-auto w-full max-w-48", ratio: 1 }
+}
+
 export const galleryKey = (heroId: string) => ["hero-gallery", heroId] as const
 
 /**
@@ -321,8 +332,8 @@ function GalleryDetail({
       <HeroAsset
         id={image.assetId}
         alt={imageTitle(image, name)}
-        className="w-full"
-        naturalAspectRatio={tileShape(image).includes("aspect-video") ? 16 / 9 : 1}
+        className={previewShape(image).className}
+        naturalAspectRatio={previewShape(image).ratio}
         preview
       />
       <div className="space-y-1">
