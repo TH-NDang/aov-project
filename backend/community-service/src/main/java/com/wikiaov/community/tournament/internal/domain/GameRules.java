@@ -18,6 +18,9 @@ public final class GameRules {
             errors.add("number.range");
         if (game.durationSeconds() != null && game.durationSeconds() < 0)
             errors.add("durationSeconds.range");
+        // A draft may leave the locale open, but a locale the catalog cannot answer would hide every reference.
+        if (game.locale() != null && !game.locale().isBlank() && !CatalogLocales.supported(game.locale()))
+            errors.add("locale.unsupported");
         if (game.sides().size() > 2)
             errors.add("sides.maximum");
         if (publication) {

@@ -1,6 +1,7 @@
 package com.wikiaov.community.tournament.internal.application;
 
 import com.wikiaov.community.platform.ApiException;
+import com.wikiaov.community.tournament.internal.domain.CatalogLocales;
 import com.wikiaov.community.tournament.internal.domain.TournamentContent.*;
 import java.net.http.HttpClient;
 import java.time.*;
@@ -40,7 +41,7 @@ public class WikiCatalog {
     }
 
     public Catalog read(String region, String locale, UUID seasonId, UUID patchVariantId, boolean includeUnscoped) {
-        if (region == null || !region.matches("[A-Z]{2,16}") || !Set.of("vi-VN", "en-US").contains(locale))
+        if (region == null || !region.matches("[A-Z]{2,16}") || !CatalogLocales.supported(locale))
             throw TournamentErrors.invalid("Choose a valid region and supported locale.");
         var key = new Key(region, locale, seasonId, patchVariantId, includeUnscoped);
         var cached = cache.get(key);

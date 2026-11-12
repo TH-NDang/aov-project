@@ -261,6 +261,85 @@ class TournamentApiIntegrationTest {
     }
 
     @Test
+    void aGameWithALocaleTheCatalogCannotAnswerIsRefusedOnCreateAndUpdate() throws Exception {
+        var base = fixture().game();
+        var bare = new Game(base.seriesId(), base.number(), base.region(), "vi", null, null, null, null, null, null,
+                null, null, base.sides(), false);
+        mvc.perform(authorized(post(ADMIN + "/games")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("content", bare)))).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.missingFields[0]").value("locale.unsupported"));
+
+        var draft = create("games", base);
+        mvc.perform(authorized(put(ADMIN + "/games/" + draft.get("id"))).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", version(draft), "content", bare))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.missingFields[0]").value("locale.unsupported"));
+        mvc.perform(authorized(get(ADMIN + "/games/" + draft.get("id"))))
+                .andExpect(jsonPath("$.content.locale").value("vi-VN"));
+    }
+
+    @Test
+    void gamesSavedWithABareLanguageTagAreMigratedToTheSupportedLocale() throws Exception {
+        try (var connection = DriverManager.getConnection(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
+                DATABASE.getPassword()); var statement = connection.createStatement()) {
+            statement.execute("CREATE DATABASE game_locale_test");
+        }
+        String url = DATABASE.getJdbcUrl().substring(0, DATABASE.getJdbcUrl().lastIndexOf('/')) + "/game_locale_test";
+        Flyway.configure().dataSource(url, DATABASE.getUsername(), DATABASE.getPassword())
+                .locations("classpath:db/migration").target("14").load().migrate();
+        UUID imported = UUID.randomUUID(), english = UUID.randomUUID(), open = UUID.randomUUID();
+        String snapshot = snapshotWithLocale("vi");
+        try (var connection = DriverManager.getConnection(url, DATABASE.getUsername(), DATABASE.getPassword());
+                var statement = connection.createStatement()) {
+            String row = "INSERT INTO tournament.game (id,version,content,published_snapshot,created_at,updated_at,"
+                    + "edited_by) VALUES ('%s',7,'%s',%s,TIMESTAMPTZ '2026-11-06 00:00:00+00',"
+                    + "TIMESTAMPTZ '2026-11-06 00:00:00+00','import')";
+            statement.execute(row.formatted(imported, "{\"locale\":\"vi\",\"region\":\"VN\",\"note\":\"kept\"}",
+                    "'" + snapshot + "'"));
+            statement.execute(row.formatted(english, "{\"locale\":\"en-US\",\"region\":\"VN\"}", "NULL"));
+            statement.execute(row.formatted(open, "{\"region\":\"VN\"}", "NULL"));
+            statement.execute("INSERT INTO tournament.game_publication (id,game_id,published_at,actor,action,snapshot) "
+                    + "VALUES ('" + UUID.randomUUID() + "','" + imported + "',now(),'import','PUBLICATION','"
+                    + snapshot + "')");
+        }
+
+        Flyway.configure().dataSource(url, DATABASE.getUsername(), DATABASE.getPassword())
+                .locations("classpath:db/migration").load().migrate();
+        String migrated = snapshotWithLocale("vi-VN");
+        try (var connection = DriverManager.getConnection(url, DATABASE.getUsername(), DATABASE.getPassword());
+                var statement = connection.createStatement()) {
+            try (var result = statement.executeQuery("SELECT content ->> 'locale', content ->> 'note', version, "
+                    + "updated_at = TIMESTAMPTZ '2026-11-06 00:00:00+00', published_snapshot = CAST('" + migrated
+                    + "' AS jsonb) FROM tournament.game WHERE id='" + imported + "'")) {
+                assertThat(result.next()).isTrue();
+                assertThat(result.getString(1)).isEqualTo("vi-VN");
+                assertThat(result.getString(2)).isEqualTo("kept");
+                // Only the tag moves: an editor holding this version can still save over it.
+                assertThat(result.getLong(3)).isEqualTo(7);
+                assertThat(result.getBoolean(4)).isTrue();
+                assertThat(result.getBoolean(5)).isTrue();
+            }
+            try (var result = statement.executeQuery("SELECT string_agg(coalesce(content ->> 'locale', 'none'), ',' "
+                    + "ORDER BY content ->> 'locale') FROM tournament.game WHERE id IN ('" + english + "','" + open
+                    + "')")) {
+                assertThat(result.next()).isTrue();
+                assertThat(result.getString(1)).isEqualTo("en-US,none");
+            }
+            try (var result = statement.executeQuery("SELECT snapshot = CAST('" + migrated
+                    + "' AS jsonb) FROM tournament.game_publication WHERE game_id='" + imported + "'")) {
+                assertThat(result.next()).isTrue();
+                assertThat(result.getBoolean(1)).isTrue();
+            }
+        }
+    }
+
+    /** The three places a published game repeats its locale, as plain JSON for a row written without the service. */
+    private static String snapshotWithLocale(String locale) {
+        return ("{\"content\":{\"locale\":\"%1$s\",\"number\":1},\"resolvedContext\":{\"locale\":\"%1$s\"},"
+                + "\"catalog\":{\"heroes\":[],\"resolvedContext\":{\"locale\":\"%1$s\"}}}").formatted(locale);
+    }
+
+    @Test
     void partialGameSavesAsDraftButCannotPublishAndDuplicateCodeIsConflict() throws Exception {
         var draft = create("games",
                 new Game(null, null, null, null, null, null, null, null, null, null, null, null, List.of(), false));
@@ -812,7 +891,7 @@ class TournamentApiIntegrationTest {
                         sides.get(1).teamId(), 5, null, null, null, null, true));
         UUID seriesId = UUID.fromString(free.get("id").toString());
         for (int number = 1; number <= 2; number++) {
-            var game = new Game(seriesId, number, "VN", "vi", null, null, null, null, null, null, null, null,
+            var game = new Game(seriesId, number, "VN", "vi-VN", null, null, null, null, null, null, null, null,
                     sides, false, null, null);
             create("games", game);
         }
