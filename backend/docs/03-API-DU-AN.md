@@ -3049,3 +3049,126 @@ Mọi thao tác ghi có `expectedVersion` trừ tạo mới; audit `GAME_MODE_*`
   `PageSlice` đội hình cộng đồng kèm `likes`, `status`, `hiddenReason`, `version`, `updatedAt`.
 - POST `/api/wiki/v1/admin/game-modes/{id}/auto-chess/community-lineups/{lineupId}/visibility` — body
   `{expectedVersion, hidden, reason}`; lý do bắt buộc khi ẩn.
+
+## Build đề cử theo tướng (ADR-026)
+
+Mapping dùng `ApiPaths.ADMIN` hoặc `ApiPaths.ROOT` và `version="1"`. Admin: đọc cần `catalog:read`; nhập, sửa bộ, xóa
+cần `hero:write`; xác nhận cần `hero:publish`. Audit `BUILD_CAPTURE_IMPORTED`, `BUILD_REVIEWED`,
+`BUILD_CAPTURE_CONFIRMED`, `BUILD_CAPTURE_DELETED`. Mã lỗi thuộc `BuildErrorCode`: 404 `BUILD_CAPTURE_NOT_FOUND`,
+404 `BUILD_NOT_FOUND`, 404 `BUILD_HERO_NOT_FOUND`, 409 `BUILD_CAPTURE_EXISTS`, 409 `BUILD_VERSION_CONFLICT`
+(`context.currentVersion`), 409 `BUILD_REVIEW_OPEN` (`context.needsReview`), 422 `BUILD_INVALID` (`context.unknownCodes`
+khi có mã lạ, dạng `{"ITEM": ["…"]}`).
+
+```http
+GET    /api/wiki/v1/admin/build-captures?region=VN&source=PRO&page=0&size=20
+POST   /api/wiki/v1/admin/build-captures
+GET    /api/wiki/v1/admin/build-captures/{captureId}
+DELETE /api/wiki/v1/admin/build-captures/{captureId}?expectedVersion=1
+PUT    /api/wiki/v1/admin/build-captures/{captureId}/builds/{buildId}
+POST   /api/wiki/v1/admin/build-captures/{captureId}/confirm
+GET    /api/wiki/v1/builds?hero=toro&region=VN
+```
+
+**Danh sách** trả `PageSlice` mới chụp trước; `region`, `source` tùy chọn, `size` 1–100 (mặc định 20). Mỗi mục:
+
+```json
+{
+  "id": "…", "code": "vn-pro-20261111", "regionCode": "VN", "sourceKind": "PRO", "sourceLabel": "Đề cử Pro",
+  "capturedAt": "2026-11-11T05:02:43Z", "sourceTimeZone": "Asia/Ho_Chi_Minh", "patchVariantId": "…",
+  "patchCode": "…", "confirmedAt": null, "heroCount": 57, "buildCount": 171, "needsReviewCount": 4, "version": 1
+}
+```
+
+**Nhập** (201, trả chi tiết). Body là phần `capture` của `build-manifest.json`:
+
+```json
+{
+  "code": "vn-pro-20261111", "regionCode": "VN", "sourceKind": "PRO", "sourceLabel": "Đề cử Pro",
+  "capturedAt": "2026-11-11T05:02:43Z", "sourceTimeZone": "Asia/Ho_Chi_Minh",
+  "sourceRun": "pro-builds-20261111-120243-738", "sourceNote": "…",
+  "images": [{ "imageId": "<sha256>", "fileName": "pro-001/pro-001-1.png", "width": 2400, "height": 1080, "layout": "PREPARE" }],
+  "heroes": [{
+    "heroCode": "toro", "nameOnScreen": "Toro", "captureOrder": 1, "result": "COLLECTED",
+    "builds": [{
+      "position": 1, "imageId": "<sha256>",
+      "items": [{ "slot": 1, "code": "…" }],
+      "enchantments": [{ "slot": 1, "code": "…" }],
+      "arcana": [{ "code": "…", "quantity": 10 }],
+      "spell": "…", "playerName": null, "playerPower": null, "playerWinRate": null,
+      "needsReview": false, "note": null
+    }]
+  }]
+}
+```
+
+Quy tắc: `code` slug; `regionCode` `^[A-Z]{2,16}$`; `sourceKind` `PRO`/`HOT`/`SYSTEM`; `sourceTimeZone` là múi giờ IANA;
+`layout` hiện chỉ có `PREPARE`. Ảnh không trùng `imageId`; tướng không trùng, `captureOrder` không trùng; mã tướng
+(mã cũ trong alias được chấp nhận), trang bị, ngọc, phù hiệu, phụ trợ phải tồn tại và đã xuất bản. Tướng `COLLECTED`
+mới có `builds`; `position` không trùng trong một tướng; `imageId` của bộ phải nằm trong `images`. Mỗi bộ: trang bị ô
+1–6 không trùng ô, phù hiệu ô 1–5 không trùng ô hay mã, ngọc không trùng mã và `quantity` 1–10. Một phần chưa đủ
+(ít hơn 6 trang bị, ít hơn 5 phù hiệu, không có phụ trợ) thì phần đó không được lưu và bộ phải có `needsReview: true`.
+`arcana` có thể rỗng: bộ vẫn đủ, chỉ không có trang ngọc. Phần đủ phải đúng luật: tổng ngọc mỗi màu ≤ 10; ô 1–3 cùng một nhánh, bậc 1, 2, 3 theo thứ tự ô;
+ô 4–5 khác nhánh chính, cùng nhánh thì bậc 1 và 2, khác nhánh thì cả hai bậc 1. `patchVariantId` lấy từ
+`GameplayContexts.resolve(regionCode, capturedAt)` nếu thị trường có lịch. Trùng `code` trả 409 `BUILD_CAPTURE_EXISTS`.
+
+**Chi tiết** trả các trường của danh sách cộng `sourceRun`, `sourceNote`, `createdAt`, `images` và `heroes` theo
+`captureOrder`:
+
+```json
+{
+  "heroId": "…", "heroCode": "toro", "nameOnScreen": "Toro", "captureOrder": 1, "result": "COLLECTED",
+  "builds": [{
+    "id": "…", "position": 1, "imageId": "…",
+    "items": [{ "slot": 1, "itemId": "…", "code": "…" }],
+    "enchantmentSetId": "…", "enchantments": [{ "slot": 1, "enchantmentId": "…", "code": "…" }],
+    "arcanaPageId": "…", "arcana": [{ "arcanaId": "…", "code": "…", "quantity": 10 }],
+    "spellId": "…", "spellCode": "…", "contentKey": "…",
+    "playerName": null, "playerPower": null, "playerWinRate": null,
+    "needsReview": false, "note": null, "reviewedAt": null, "version": 1
+  }]
+}
+```
+
+Ngọc sắp theo màu (đỏ, tím, xanh) rồi theo mã.
+
+**Sửa hoặc duyệt một bộ** — body thay toàn bộ nội dung:
+`{expectedVersion, items: [{slot, itemId}], enchantments: [{slot, enchantmentId}], arcana: [{arcanaId, quantity}],
+spellId?, playerName?, playerPower?, playerWinRate?, needsReview, note?}`. Luật như khi nhập, dùng UUID thay mã.
+`needsReview: false` cần đủ trang bị, phù hiệu, phụ trợ (ngọc tùy chọn) và ghi `reviewedAt/_by`; `needsReview: true` xóa thông tin duyệt và bỏ xác nhận
+của lần chụp nếu đã xác nhận. Trả `{build, capture}` với `capture` là mục danh sách sau khi lưu. Version cũ trả 409
+`BUILD_VERSION_CONFLICT`. Trang ngọc, bộ phù hiệu cũ không còn bộ nào dùng bị xóa.
+
+**Xác nhận lần chụp** — body `{expectedVersion}`; trả mục danh sách. Còn bộ chờ duyệt trả 409 `BUILD_REVIEW_OPEN`. Lần
+chụp đã xác nhận thì không đổi gì và trả 200.
+
+**Xóa** — `expectedVersion` bắt buộc; trả 204, xóa ảnh, tướng, bộ của lần chụp và trang ngọc, bộ phù hiệu không còn dùng.
+
+### Công khai
+
+`GET /builds?hero={mã}&region={thị trường}` — không cần đăng nhập; chỉ nhận hai tham số này. Mã tướng lạ trả 404
+`BUILD_HERO_NOT_FOUND`. Với mỗi `sourceKind`, lấy lần chụp **đã xác nhận** mới nhất ở thị trường đó có tướng này và trả
+các bộ không chờ duyệt, gộp theo `contentKey` theo thứ tự xuất hiện:
+
+```json
+{
+  "heroId": "…", "heroCode": "toro", "regionCode": "VN",
+  "sources": [{
+    "captureId": "…", "sourceKind": "PRO", "sourceLabel": "Đề cử Pro",
+    "capturedAt": "2026-11-11T05:02:43Z", "sourceTimeZone": "Asia/Ho_Chi_Minh", "patchCode": "…",
+    "result": "COLLECTED",
+    "builds": [{
+      "contentKey": "…", "positions": [1, 3],
+      "items": [{ "slot": 1, "itemId": "…", "code": "…" }],
+      "enchantments": [{ "slot": 1, "enchantmentId": "…", "code": "…" }],
+      "arcanaPageId": "…", "arcana": [{ "arcanaId": "…", "code": "…", "quantity": 10 }],
+      "arcanaPageUse": { "builds": 27, "heroes": 17 },
+      "spellId": "…", "spellCode": "…"
+    }]
+  }]
+}
+```
+
+`positions` là các thứ tự trong danh sách game có cùng bộ. `arcanaPageUse` đếm bộ và tướng dùng trang ngọc này trong
+mọi lần chụp đã xác nhận. Bộ không có ngọc trả `arcanaPageId: null`, `arcana: []`, `arcanaPageUse: null`. Không trả tên người chơi, chiến lực, tỷ lệ
+thắng, ghi chú hay ảnh dẫn chứng.
+Tướng không có lần chụp xác nhận nào trả `sources: []`. Tên và icon lấy từ `reference-catalog` theo UUID.

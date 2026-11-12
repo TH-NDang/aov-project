@@ -63,6 +63,7 @@ enchantment   Enchantment/phù hiệu catalog/revisions/change sets
 gamemode      Game mode/system catalog revisions
 access        Audit support
 user_profile  Hồ sơ dùng chung, module user (ADR-008)
+build         Build đề cử theo tướng, trang ngọc và bộ phù hiệu dùng chung (ADR-026)
 ```
 
 `query` module không cần schema riêng nếu read model được dựng động. Nếu sau này materialize projection, có thể tạo schema `projection`; dữ liệu ở đó rebuild được và không phải source of truth.
@@ -1941,3 +1942,63 @@ Chỉ mục `(mode_id, status, updated_at DESC)` và `(mode_id, author_issuer, a
 (`EDITORIAL`, `COMMUNITY`), `created_at`. Khóa chính `(lineup_id, issuer, subject)` bảo đảm một lượt mỗi người.
 `lineup_id` của đội hình đề xuất là UUID trong nội dung cẩm nang nên không có FK; đội hình cộng đồng bị xóa
 thì xóa lượt thích của nó. Chỉ mục `(mode_id, lineup_id)` và `(mode_id, created_at)` phục vụ đếm tổng và 7 ngày.
+
+## Build đề cử theo tướng — V067 (ADR-026)
+
+Migration V067 tạo schema `build`, thuộc module `build`. Khóa ngoại chỉ trong schema và sang `patch.patch_variant`;
+`hero_id`, `item_id`, `arcana_id`, `enchantment_id`, `spell_id` là tham chiếu logic, được module sở hữu xác nhận khi ghi
+qua `BuildReferenceProvider`.
+
+### `build.capture` — một lần chụp
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id`, `code` | UUID; slug duy nhất, ví dụ `vn-pro-20261111` |
+| `region_code` | Thị trường, `^[A-Z]{2,16}$` |
+| `source_kind`, `source_label` | Tab của game: `PRO`, `HOT`, `SYSTEM`; nhãn đúng như game (“Đề cử Pro”) |
+| `captured_at`, `source_time_zone` | Thời điểm chụp; múi giờ IANA của máy chụp |
+| `source_run`, `source_note` | Tên lượt chạy macro; ghi chú nguồn |
+| `patch_variant_id` | FK `patch.patch_variant`, bản đang áp dụng ở thị trường lúc chụp; null nếu chưa biết |
+| `confirmed_at`, `confirmed_by_issuer`, `confirmed_by_subject` | Xác nhận cả lần chụp; cả ba cùng null hoặc cùng có |
+| `version`, `created_at`, `created_by_*`, `updated_at` | Phiên bản lạc quan và người tạo |
+
+Chỉ mục `capture_recent_idx (captured_at DESC, id)` cho danh sách Admin; `capture_public_idx (region_code, source_kind,
+captured_at DESC) WHERE confirmed_at IS NOT NULL` cho đọc công khai.
+
+### `build.capture_image` và `build.capture_hero`
+
+`capture_image (capture_id, image_id)`: `image_id` là SHA-256 hex của tệp, `file_name`, `width`, `height`, `layout`
+(`PREPARE` = màn Chuẩn bị; vùng từng ô suy từ bố cục này). `capture_hero (capture_id, hero_id)`: `name_on_screen`,
+`capture_order` (duy nhất trong lần chụp), `result` (`COLLECTED`, `NO_BUILDS`, `FAILED`). Cả hai xóa theo lần chụp.
+
+### `build.arcana_page` và `build.enchantment_set` — giá trị dùng chung
+
+| Bảng | Cột |
+|---|---|
+| `arcana_page` | `id`, `content_key` (SHA-256 hex, duy nhất), `created_at` |
+| `arcana_page_entry` | `page_id`, `arcana_id`, `quantity` 1–10; khóa `(page_id, arcana_id)` |
+| `enchantment_set` | `id`, `content_key` (duy nhất), `created_at` |
+| `enchantment_set_entry` | `set_id`, `slot` 1–5 (1–3 nhánh chính theo bậc, 4–5 ô phụ theo thứ tự màn hình), `enchantment_id`; khóa `(set_id, slot)`, duy nhất `(set_id, enchantment_id)` |
+
+Không sửa sau khi tạo. `content_key` là SHA-256 của chuỗi chuẩn: trang ngọc là các cặp `arcanaId:quantity` sắp theo
+`arcanaId`, nối bằng dấu phẩy; bộ phù hiệu là `slot:enchantmentId` theo `slot`. Ghi bằng `INSERT … ON CONFLICT
+(content_key) DO NOTHING` rồi đọc lại, nên hai giao dịch cùng tạo một nội dung không sinh hai dòng. Dòng không còn
+`build.build` nào trỏ tới bị xóa trong giao dịch đã làm nó mất người dùng.
+
+### `build.build` — một bộ
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id`, `capture_id`, `hero_id` | FK `(capture_id, hero_id)` sang `capture_hero`, xóa theo lần chụp |
+| `list_position` | Thứ tự trong danh sách của game, 1–50; duy nhất theo `(capture_id, hero_id)` |
+| `player_name`, `player_power`, `player_win_rate` | Tùy chọn; tỷ lệ thắng 0–100 |
+| `spell_id`, `arcana_page_id`, `enchantment_set_id` | Phụ trợ; FK trang ngọc và bộ phù hiệu dùng chung |
+| `content_key` | SHA-256 của trang bị (`slot:itemId`), khóa bộ phù hiệu, khóa trang ngọc (chuỗi rỗng khi không có ngọc) và phụ trợ; null khi bộ chưa đủ |
+| `image_id` | FK `(capture_id, image_id)` sang `capture_image`, ảnh dẫn chứng |
+| `needs_review`, `note` | Chờ duyệt và lý do |
+| `reviewed_at`, `reviewed_by_*`, `version`, `updated_at` | Duyệt và phiên bản lạc quan |
+
+Ràng buộc `build_complete`: bộ không chờ duyệt phải có phụ trợ, bộ phù hiệu và `content_key`; trang ngọc tùy chọn. Đủ 6
+trang bị được kiểm tra ở ứng dụng. Chỉ mục theo `hero_id`, `arcana_page_id`, `enchantment_set_id`, `content_key` và bộ chờ duyệt.
+
+`build.build_item (build_id, slot)`: `slot` 1–6, `item_id`. Chỉ mục `item_id` phục vụ tra “bộ nào dùng trang bị này”.

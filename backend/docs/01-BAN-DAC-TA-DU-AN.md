@@ -235,6 +235,7 @@ Chạy bằng **Docker Compose trên một máy (VPS)** là đủ. Không dùng 
 | Phụ trợ | `spell` | |
 | Bảng ngọc | `arcana` | |
 | Chế độ chơi | `gamemode` | |
+| Build đề cử theo tướng | `build` | Tham chiếu tướng, trang bị, ngọc, phù hiệu, phụ trợ qua `BuildReferenceProvider` (ADR-026) |
 | Cập nhật / patch notes | `patch` + `query` | Patch detail ghép thay đổi từ nhiều module |
 | Mọi loại ảnh | `media` | Các module khác chỉ tham chiếu `MediaAsset.id` |
 
@@ -1361,6 +1362,7 @@ com.wikiaov
 ├── spell
 ├── enchantment
 ├── gamemode
+├── build
 ├── query
 ├── user
 ├── access
@@ -2574,3 +2576,34 @@ thể hiện gì, tệp gốc trong bộ thu thập, màn hình Bách khoa đã 
 - Phân tích công khai: tần suất quân cờ, tỷ lệ Phe/Nghề đạt mốc, phân bố giá quân trong đội hình đề xuất và
   đội hình cộng đồng đang hiển thị; lượt thích được dùng làm trọng số. Không thu thập trận đấu thật nên không
   đưa ra tỷ lệ thắng.
+
+## Build đề cử theo tướng (ADR-026)
+
+Phạm vi theo yêu cầu ngày 12/11/2026: lưu các bộ đồ mà game đề cử cho từng tướng (hộp thoại “Hệ thống đề xuất” ở màn
+Chuẩn bị, bắt đầu với tab **Đề cử Pro**), đọc từ ảnh chụp, để biên tập viên duyệt trong Admin và hiển thị trên trang
+tướng của Wiki. Module `build`, quyết định ở ADR-026.
+
+- **Một bộ** gồm 6 trang bị theo thứ tự mua, 5 phù hiệu (ô 1–3 là nhánh chính bậc I–III, ô 4–5 là ô phụ theo thứ tự
+  trên màn hình), 1 phụ trợ và bảng ngọc (loại ngọc và số lượng 1–10). Bảng ngọc là phần tùy chọn: nhiều loại ngọc chung
+  một biểu tượng nên ảnh màn Chuẩn bị không đủ để biết loại; chỉ lưu khi biết chắc. Dấu thoi xanh dưới ô trang bị là
+  thuộc tính của trang bị, không lưu theo bộ. Tên người chơi pro, chiến lực, tỷ lệ thắng là thông tin tùy chọn; lần
+  chụp đầu không có.
+- Luật kiểm tra khi lưu: trang bị, ngọc, phù hiệu, phụ trợ phải là mã có thật và đã xuất bản; ngọc không trùng loại,
+  tổng mỗi màu tối đa 10; 3 ô chính cùng một nhánh đủ bậc 1, 2, 3; 2 ô phụ khác nhánh chính, cùng nhánh thì bậc 1 và 2,
+  khác nhánh thì cả hai bậc 1 (cùng luật với giải đấu).
+- **Trang ngọc** và **bộ phù hiệu** dùng chung giữa các bộ: cùng nội dung thì cùng một bản ghi, không bao giờ sửa. Sửa ngọc
+  hay phù hiệu của một bộ là trỏ bộ đó sang bản ghi đúng nội dung; bản ghi không còn bộ nào dùng thì bị xóa. Mỗi bộ có
+  khóa nội dung để nhận ra các bộ giống hệt nhau.
+- **Lần chụp** là một lần chụp một tab của game (`PRO`, `HOT`, `SYSTEM`) ở một thị trường: nhãn tab đúng như game, thời
+  điểm và múi giờ của máy chụp, lượt chạy macro, ghi chú nguồn và bản cập nhật đang áp dụng ở thị trường đó lúc chụp. Mỗi
+  lần có mã slug duy nhất, ví dụ `vn-pro-20261111`.
+- Mỗi tướng (hoặc dạng, ADR-024) trong lần chụp có tên trên màn hình, thứ tự được chụp và kết quả: đã chụp, game không có
+  bộ đề cử, hoặc chụp lỗi. Mỗi bộ giữ thứ tự trong danh sách của game và **ảnh dẫn chứng** (mã băm SHA-256, tên tệp, kích
+  thước). Vùng của từng ô suy ra từ bố cục cố định của màn Chuẩn bị. Ảnh nằm ở `resources/raw/builds/<ngày>/`, không commit.
+- Bộ đọc thiếu hoặc khớp yếu được đánh dấu **chờ duyệt** kèm ghi chú. Biên tập viên sửa nội dung hoặc xác nhận bộ. Lần chụp
+  được **xác nhận** khi không còn bộ chờ duyệt; đánh dấu chờ duyệt lại một bộ thì bỏ xác nhận. Xóa lần chụp xóa mọi bộ.
+- Nhập lần chụp qua API từ tệp `build-manifest.json` do script đọc ảnh tạo ra; không nhập bằng migration.
+- **Wiki** chỉ đọc lần chụp đã xác nhận mới nhất có tướng đó, cho từng tab. Các bộ giống hệt nhau được gộp kèm số mục pro
+  dùng bộ đó. Ghi rõ nguồn, ngày chụp, thị trường và bản cập nhật; bộ chưa có ngọc ghi rõ là chưa có; không hiện tên người chơi.
+- Quyền: xem trong Admin cần `catalog:read`; nhập, sửa, xóa cần `hero:write`; xác nhận cần `hero:publish`. Mọi thao tác ghi
+  có audit.
