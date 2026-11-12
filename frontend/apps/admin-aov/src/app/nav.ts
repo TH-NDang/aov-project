@@ -80,6 +80,13 @@ export const NAV_GROUPS: NavGroup[] = [
             activePaths: ["/hero/media", "/media"],
             capability: "catalog:read",
           },
+          {
+            title: "Build đề cử",
+            icon: "items",
+            to: "/builds",
+            description: "Bộ đồ game đề cử cho từng tướng, đọc từ ảnh màn Chuẩn bị",
+            capability: "catalog:read",
+          },
         ],
       },
       {

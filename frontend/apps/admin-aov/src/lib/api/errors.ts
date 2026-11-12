@@ -72,6 +72,13 @@ const MESSAGES: Record<string, string> = {
   ITEM_CATALOG_INVALID: "Danh mục trang bị chưa hợp lệ.",
   PORTRAIT_TARGET_INVALID: "Nơi nhận ảnh chưa hợp lệ.",
   DATA_UNAVAILABLE: "Không đọc được dữ liệu mẫu.",
+  BUILD_CAPTURE_EXISTS: "Lần chụp này đã được nhập.",
+  BUILD_CAPTURE_NOT_FOUND: "Không còn lần chụp này.",
+  BUILD_NOT_FOUND: "Không còn bộ này trong lần chụp.",
+  BUILD_HERO_NOT_FOUND: "Không có tướng này.",
+  BUILD_VERSION_CONFLICT: "Người khác vừa sửa mục này. Tải lại trang rồi thử lại.",
+  BUILD_REVIEW_OPEN: "Còn bộ chờ duyệt, nên chưa xác nhận được cả lần chụp.",
+  BUILD_INVALID: "Dữ liệu build chưa hợp lệ.",
 }
 
 export function errorMessage(error: unknown): string {
