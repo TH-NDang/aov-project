@@ -8,6 +8,14 @@ spring:
       enabled: true
       file: compose.yaml
       lifecycle-management: start-only
+  # Mailpit from compose.yaml (profile "mail"): no authentication or TLS on loopback.
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
+      mail.smtp.starttls.required: ${MAIL_STARTTLS:false}
   security:
     oauth2:
       resourceserver:
@@ -16,6 +24,9 @@ spring:
           issuer-uri: ${JWT_ISSUER_URI:http://localhost:8081/realms/wikiaov}
 
 wiki:
+  account:
+    mail:
+      from: ${MAIL_FROM:AOV <no-reply@aov.localhost>}
   read-model-cache:
     enabled: ${READ_MODEL_CACHE_ENABLED:true}
   auth:
