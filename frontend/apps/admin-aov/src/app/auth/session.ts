@@ -28,7 +28,8 @@ let refreshTimer: ReturnType<typeof setTimeout> | undefined
 const listeners = new Set<() => void>()
 const channel = typeof BroadcastChannel === "undefined" ? null : new BroadcastChannel("aov-admin-session")
 const messages: Record<string, string> = {
-  AUTH_INVALID_CREDENTIALS: "Tên đăng nhập hoặc mật khẩu chưa đúng, hoặc tài khoản cần hoàn tất xác minh tại Keycloak.",
+  AUTH_INVALID_CREDENTIALS:
+    "Tên đăng nhập, mật khẩu hoặc mã xác thực 2 bước chưa đúng. Tài khoản đã bật xác thực 2 bước cần nhập mã 6 số mới nhất.",
   AUTH_SESSION_EXPIRED: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   AUTH_RATE_LIMITED: "Bạn đã thử quá nhiều lần. Vui lòng chờ một phút rồi thử lại.",
   AUTH_PROVIDER_UNAVAILABLE: "Chưa kết nối được Keycloak. Hãy kiểm tra cấu hình backend.",
@@ -136,11 +137,15 @@ export async function initializeSession() {
   }
   await verifySession()
 }
-export async function loginPassword(username: string, password: string) {
+/** `otp` is the six-digit authenticator code for accounts with two-step sign-in (ADR-024). */
+export async function loginPassword(username: string, password: string, otp?: string) {
   const current = ++generation
   try {
     await sessionLock(async () => {
-      const result = await authRequest<TokenResponse>("login", { username, password })
+      const result = await authRequest<TokenResponse>(
+        "login",
+        otp ? { username, password, otp } : { username, password },
+      )
       if (current === generation) acceptToken(result)
     })
     if (current === generation) await readActor()
