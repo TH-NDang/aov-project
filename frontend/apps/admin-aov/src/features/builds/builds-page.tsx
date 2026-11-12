@@ -227,106 +227,114 @@ export function BuildsPage() {
           ) : !detail.data ? (
             <p className="type-body text-muted-foreground">Đang tải lần chụp…</p>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-[15rem_1fr]">
-              <nav aria-label="Tướng trong lần chụp" className="grid content-start gap-2">
-                <FilterTabs label="Lọc tướng">
-                  <FilterTab
-                    active={!view.reviewOnly}
-                    count={detail.data.heroes.length}
-                    onClick={() => setView((current) => ({ ...current, reviewOnly: false }))}
-                  >
-                    Tất cả
-                  </FilterTab>
-                  <FilterTab
-                    active={view.reviewOnly}
-                    count={flaggedHeroes}
-                    onClick={() => setView((current) => ({ ...current, reviewOnly: true }))}
-                  >
-                    <Flag /> Chờ duyệt
-                  </FilterTab>
-                </FilterTabs>
-                <ul className="hidden max-h-[70svh] overflow-y-auto rounded-lg border lg:block">
-                  {rows.map((entry) => {
-                    const open = openBuilds(entry)
-                    const current = entry.heroId === hero?.heroId
-                    return (
-                      <li key={entry.heroId}>
-                        <button
-                          type="button"
-                          aria-current={current || undefined}
-                          className={cn(
-                            "flex w-full items-center gap-2 px-2.5 py-1.5 text-left type-body hover:bg-muted",
-                            current && "bg-muted",
-                          )}
-                          onClick={() => choose("hero", entry.heroId)}
-                        >
-                          <HeroFace hero={entry} heads={heads.data} />
-                          <span className="min-w-0 flex-1 truncate">{entry.nameOnScreen}</span>
-                          {open > 0 && (
-                            <span className="inline-flex items-center gap-0.5 type-meta text-[var(--aov-warning)]">
-                              <Flag className="size-3.5" />
-                              {open}
-                            </span>
-                          )}
-                        </button>
-                      </li>
-                    )
-                  })}
-                  {!rows.length && <li className="px-2.5 py-2 type-body text-muted-foreground">Không có tướng nào.</li>}
-                </ul>
-                <Select value={hero?.heroId ?? ""} onValueChange={(value) => choose("hero", value)}>
-                  <SelectTrigger className="lg:hidden" aria-label="Tướng">
-                    <SelectValue placeholder="Chọn tướng" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rows.map((entry) => (
-                      <SelectItem key={entry.heroId} value={entry.heroId}>
-                        {entry.nameOnScreen}
-                        {openBuilds(entry) ? ` · ${openBuilds(entry)} chờ duyệt` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </nav>
-
-              {hero && (
-                <section className="grid content-start gap-3" aria-labelledby="build-hero-title">
-                  <header className="flex flex-wrap items-center gap-3">
-                    <HeroFace hero={hero} heads={heads.data} className="size-10" />
-                    <div className="min-w-0">
-                      <h2 id="build-hero-title" className="type-section-title">
-                        {hero.nameOnScreen}
-                      </h2>
-                      <p className="type-meta">
-                        {RESULT_LABELS[hero.result]} · {hero.builds.length} bộ · thứ tự chụp {hero.captureOrder}
-                      </p>
-                    </div>
-                    {next && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="ml-auto"
-                        onClick={() => choose("hero", next.heroId)}
-                      >
-                        <Flag className="size-4" /> Tướng chờ duyệt tiếp theo: {next.nameOnScreen}
-                      </Button>
+            // Laid out by the page's own width: the hero list stays beside the builds whenever there is room for both.
+            <div className="@container/builds">
+              <div className="grid gap-4 @min-[46rem]/builds:grid-cols-[15rem_minmax(0,1fr)]">
+                <nav
+                  aria-label="Tướng trong lần chụp"
+                  className="grid content-start gap-2 self-start @min-[46rem]/builds:sticky @min-[46rem]/builds:top-2"
+                >
+                  <FilterTabs label="Lọc tướng">
+                    <FilterTab
+                      active={!view.reviewOnly}
+                      count={detail.data.heroes.length}
+                      onClick={() => setView((current) => ({ ...current, reviewOnly: false }))}
+                    >
+                      Tất cả
+                    </FilterTab>
+                    <FilterTab
+                      active={view.reviewOnly}
+                      count={flaggedHeroes}
+                      onClick={() => setView((current) => ({ ...current, reviewOnly: true }))}
+                    >
+                      <Flag /> Chờ duyệt
+                    </FilterTab>
+                  </FilterTabs>
+                  <ul className="hidden max-h-[70svh] overflow-y-auto rounded-lg border @min-[46rem]/builds:block">
+                    {rows.map((entry) => {
+                      const open = openBuilds(entry)
+                      const current = entry.heroId === hero?.heroId
+                      return (
+                        <li key={entry.heroId}>
+                          <button
+                            type="button"
+                            aria-current={current || undefined}
+                            className={cn(
+                              "flex w-full items-center gap-2 px-2.5 py-1.5 text-left type-body hover:bg-muted",
+                              current && "bg-muted",
+                            )}
+                            onClick={() => choose("hero", entry.heroId)}
+                          >
+                            <HeroFace hero={entry} heads={heads.data} />
+                            <span className="min-w-0 flex-1 truncate">{entry.nameOnScreen}</span>
+                            {open > 0 && (
+                              <span className="inline-flex items-center gap-0.5 type-meta text-[var(--aov-warning)]">
+                                <Flag className="size-3.5" />
+                                {open}
+                              </span>
+                            )}
+                          </button>
+                        </li>
+                      )
+                    })}
+                    {!rows.length && (
+                      <li className="px-2.5 py-2 type-body text-muted-foreground">Không có tướng nào.</li>
                     )}
-                  </header>
-                  {[...hero.builds]
-                    .sort((a, b) => a.position - b.position)
-                    .map((build) => (
-                      <BuildCard
-                        key={build.id}
-                        captureId={detail.data!.id}
-                        build={build}
-                        sameAs={duplicates.get(build.id)}
-                        references={references}
-                        canWrite={canWrite}
-                      />
-                    ))}
-                </section>
-              )}
+                  </ul>
+                  <Select value={hero?.heroId ?? ""} onValueChange={(value) => choose("hero", value)}>
+                    <SelectTrigger className="@min-[46rem]/builds:hidden" aria-label="Tướng">
+                      <SelectValue placeholder="Chọn tướng" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rows.map((entry) => (
+                        <SelectItem key={entry.heroId} value={entry.heroId}>
+                          {entry.nameOnScreen}
+                          {openBuilds(entry) ? ` · ${openBuilds(entry)} chờ duyệt` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </nav>
+
+                {hero && (
+                  <section className="grid content-start gap-3" aria-labelledby="build-hero-title">
+                    <header className="flex flex-wrap items-center gap-3">
+                      <HeroFace hero={hero} heads={heads.data} className="size-10" />
+                      <div className="min-w-0">
+                        <h2 id="build-hero-title" className="type-section-title">
+                          {hero.nameOnScreen}
+                        </h2>
+                        <p className="type-meta">
+                          {RESULT_LABELS[hero.result]} · {hero.builds.length} bộ · thứ tự chụp {hero.captureOrder}
+                        </p>
+                      </div>
+                      {next && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="ml-auto"
+                          onClick={() => choose("hero", next.heroId)}
+                        >
+                          <Flag className="size-4" /> Tướng chờ duyệt tiếp theo: {next.nameOnScreen}
+                        </Button>
+                      )}
+                    </header>
+                    {[...hero.builds]
+                      .sort((a, b) => a.position - b.position)
+                      .map((build) => (
+                        <BuildCard
+                          key={build.id}
+                          captureId={detail.data!.id}
+                          build={build}
+                          sameAs={duplicates.get(build.id)}
+                          references={references}
+                          canWrite={canWrite}
+                        />
+                      ))}
+                  </section>
+                )}
+              </div>
             </div>
           )}
         </>

@@ -119,7 +119,9 @@ export function ReferencePicker({
         <button
           type="button"
           className={cn(
-            "inline-flex p-0.5 outline-none ring-offset-1 ring-offset-background hover:ring-2 hover:ring-border focus-visible:ring-2 focus-visible:ring-ring",
+            // No padding: the hover and focus rings draw outside the icon, so a picker takes the same room as the icon
+            // it replaces and a row of six still fits on one line while editing.
+            "inline-flex outline-none ring-offset-1 ring-offset-background hover:ring-2 hover:ring-border focus-visible:ring-2 focus-visible:ring-ring",
             round ? "rounded-full" : "rounded-md",
           )}
           aria-label={`${label}: ${referenceName(selected)}`}

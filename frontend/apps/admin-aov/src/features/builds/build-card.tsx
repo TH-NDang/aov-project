@@ -19,9 +19,13 @@ import {
 import { ReferenceIcon, ReferencePicker, referenceName, type BuildReferences } from "./build-references"
 import { useReviewBuild } from "./use-builds"
 
+/**
+ * One part of the build. The label sits beside the icons when the card is wide and above them when it is not, so the
+ * icons always stay on one line instead of falling into a column.
+ */
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid gap-1.5 sm:grid-cols-[6rem_1fr] sm:items-center">
+    <div className="grid gap-1 @min-[40rem]/build:grid-cols-[5rem_minmax(0,1fr)] @min-[40rem]/build:items-center">
       <span className="type-label text-muted-foreground">{label}</span>
       <div className="flex flex-wrap items-center gap-1.5">{children}</div>
     </div>
@@ -279,74 +283,81 @@ export function BuildCard({
       { onSuccess: () => after?.(), onError: (failure) => setError(errorMessage(failure)) },
     )
   }
+  // The card lays itself out by its own width, not the window's: beside the hero list it is often narrow even on a
+  // large screen. The heading runs across the top; below it the build reads on the left and the screenshot part it
+  // came from sits on the right, so the two can be compared at a glance.
   return (
     <article
       className={cn(
-        "grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_minmax(16rem,22rem)]",
+        "@container/build grid gap-3 rounded-lg border p-3",
         build.needsReview && "border-[var(--aov-warning)]",
       )}
       aria-label={`Bộ ${build.position}`}
     >
-      <div className="grid content-start gap-3">
-        <header className="flex flex-wrap items-center gap-2">
-          <h3 className="type-section-title">Bộ {build.position}</h3>
-          {build.needsReview ? (
-            <span className="inline-flex items-center gap-1 type-meta text-[var(--aov-warning)]">
-              <Flag className="size-3.5" /> Chờ duyệt
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 type-meta text-[var(--aov-success)]">
-              <BadgeCheck className="size-3.5" /> {build.reviewedAt ? "Đã duyệt" : "Đọc chắc từ ảnh"}
-            </span>
-          )}
-          {sameAs !== undefined && <span className="type-meta text-muted-foreground">Giống hệt bộ {sameAs}</span>}
-          {!editing && (
-            <div className="ml-auto flex gap-2">
-              {build.needsReview && missingParts(draftOf(build)).length === 0 && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={!canWrite || review.isPending}
-                  onClick={() => save(confirmBodyOf(build))}
-                >
-                  <BadgeCheck className="size-4" /> Xác nhận bộ
-                </Button>
-              )}
+      <header className="flex flex-wrap items-center gap-2">
+        <h3 className="type-section-title">Bộ {build.position}</h3>
+        {build.needsReview ? (
+          <span className="inline-flex items-center gap-1 type-meta text-[var(--aov-warning)]">
+            <Flag className="size-3.5" /> Chờ duyệt
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 type-meta text-[var(--aov-success)]">
+            <BadgeCheck className="size-3.5" /> {build.reviewedAt ? "Đã duyệt" : "Đọc chắc từ ảnh"}
+          </span>
+        )}
+        {sameAs !== undefined && <span className="type-meta text-muted-foreground">Giống hệt bộ {sameAs}</span>}
+        {!editing && (
+          <div className="ml-auto flex gap-2">
+            {build.needsReview && missingParts(draftOf(build)).length === 0 && (
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
-                disabled={!canWrite}
-                onClick={() => {
-                  setError(null)
-                  setEditing(true)
-                }}
+                disabled={!canWrite || review.isPending}
+                onClick={() => save(confirmBodyOf(build))}
               >
-                <Pencil className="size-4" /> Sửa
+                <BadgeCheck className="size-4" /> Xác nhận bộ
               </Button>
-            </div>
-          )}
-        </header>
-        {editing ? (
-          <Editor
-            key={build.version}
-            build={build}
-            references={references}
-            saving={review.isPending}
-            error={error}
-            onCancel={() => setEditing(false)}
-            onSave={(draft) => save(reviewBodyOf(build, draft), () => setEditing(false))}
-          />
-        ) : (
-          <>
-            <Loadout build={build} references={references} />
-            {build.note && <p className="type-body text-muted-foreground">{build.note}</p>}
-            {error && <p className="type-body text-destructive">{error}</p>}
-          </>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={!canWrite}
+              onClick={() => {
+                setError(null)
+                setEditing(true)
+              }}
+            >
+              <Pencil className="size-4" /> Sửa
+            </Button>
+          </div>
         )}
+      </header>
+      <div className="grid gap-4 @min-[28rem]/build:grid-cols-[minmax(0,1fr)_clamp(11rem,38%,20rem)]">
+        <div className="grid min-w-0 content-start gap-3">
+          {editing ? (
+            <Editor
+              key={build.version}
+              build={build}
+              references={references}
+              saving={review.isPending}
+              error={error}
+              onCancel={() => setEditing(false)}
+              onSave={(draft) => save(reviewBodyOf(build, draft), () => setEditing(false))}
+            />
+          ) : (
+            <>
+              <Loadout build={build} references={references} />
+              {build.note && <p className="type-body text-muted-foreground">{build.note}</p>}
+              {error && <p className="type-body text-destructive">{error}</p>}
+            </>
+          )}
+        </div>
+        <div className="w-full max-w-xs justify-self-center @min-[28rem]/build:max-w-none">
+          <Evidence imageId={build.imageId} label={label} />
+        </div>
       </div>
-      <Evidence imageId={build.imageId} label={label} />
     </article>
   )
 }
