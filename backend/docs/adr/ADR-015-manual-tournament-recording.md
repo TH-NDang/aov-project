@@ -116,3 +116,103 @@ Cấm/chọn cuối cùng trong `sides` vẫn là dữ liệu dùng cho xuất b
 cuối cùng phải lấy từ các lượt đó. Khi lưu, dịch vụ áp luật của loạt BO: ngoài ván cuối cùng có thể, một đội không chọn
 lại tướng mình đã chọn ở ván khác của loạt. Không cần migration; ván cũ đọc thành giai đoạn cấm chọn rỗng.
 
+## Thao tác ngay trên thanh thời gian khi ghi
+
+Bổ sung 2026-11-12, theo góp ý của người dùng khi ghi Đấu Trường Danh Vọng Mùa Đông 2026: màn ghi khó biết bấm vào
+đâu, thao tác nhanh phải nằm ngay trên thanh, trình phát không tắt được phụ đề. Chỉ đổi giao diện Admin; hợp đồng API
+và dữ liệu giữ nguyên.
+
+- Ba dải của thanh có nhãn theo ván đang xem: đội xanh, "Mục tiêu" (mục tiêu lớn và khoảnh khắc), đội đỏ. Một dòng
+  gợi ý nói rõ bấm, bấm đúp và kéo làm gì ở chế độ hiện tại.
+- Chỉ khi người dùng có quyền ghi và đang bật chế độ ghi, thanh mới nhận thao tác sửa. Ngoài chế độ ghi, thanh chỉ
+  tua và chọn mốc như trước.
+- Ghi tại chỗ: mỗi dải có nút "+" ghi sự kiện tại vị trí video hiện tại; bấm đúp vào một dải ghi tại đúng vị trí
+  bấm. Dải của đội mở ô ghi hạ gục, dải giữa mở ô ghi mục tiêu, giây và đội được điền sẵn. Vị trí phải nằm trong một
+  ván đã vào trận.
+- Kéo mốc của ván đang xem để đổi giây. Sự kiện hạ gục, mục tiêu, khoảnh khắc giữ trong khoảng của ván. Lượt cấm chọn
+  giữ giữa lượt trước và lượt sau, trong giai đoạn cấm chọn, đúng các điều kiện dịch vụ đang kiểm tra. Mốc gộp nhiều
+  sự kiện và giao dịch trang bị không kéo được.
+- Khi kéo, video tua theo vị trí đang kéo để người ghi căn mốc bằng chính khung hình, không phải đoán theo số giây.
+  Trình phát được gọi tua vài lần mỗi giây là nhiều nhất; thả xong video đứng ở giây mới, hủy kéo thì quay về vị trí
+  cũ. Dời bằng Alt + mũi tên cũng tua theo. Thanh không tự cuộn trong lúc đang kéo. Tua theo không tự phát video:
+  video đang dừng thì vẫn dừng; video chưa phát lần nào (YouTube không vẽ khung hình nếu bị dừng ngay) được cho
+  chạy tắt tiếng tới khung hình đầu tiên rồi dừng tại đó.
+- Thanh chi tiết hiện một khoảng video tính bằng phút hoặc giờ, không còn hệ số phóng 1×–32×. Một buổi phát dài cả
+  chục giờ trong khi một ván chỉ vài chục phút, nên khi chưa ai chọn, thanh tự lấy khoảng tròn nhỏ nhất chứa trọn
+  ván đang xem cùng vùng cấm chọn của nó (5, 10, 15, 30 phút, 1, 2, 4, 8 giờ, hoặc cả video) và đặt ván vào giữa;
+  sang ván khác thì thanh theo ván đó. Chưa có ván nào thì hiện khoảng một phần tư video dài. Nút thu, phóng đi
+  từng nấc của dãy trên và từ đó thanh giữ khoảng người dùng chọn; "Vừa ván" đưa về khoảng tự chọn, "Toàn video"
+  hiện cả video.
+- Mép vùng cấm chọn kéo được (bổ sung cùng ngày, thay cho quyết định ban đầu là chỉ chỉnh trong bảng): mốc bắt đầu
+  cấm chọn ở mép trái, mốc chốt đội hình, và cờ vào trận ở mép phải. Giới hạn theo đúng điều kiện dịch vụ kiểm tra:
+  bắt đầu cấm chọn không sau lượt đầu, mốc chốt và cờ vào trận, và không lấn vào ván trước; mốc chốt nằm giữa lượt
+  cuối và cờ vào trận; cờ vào trận không trước mốc cấm chọn cuối cùng và ván không đè lên ván sau. Sự kiện của ván
+  lưu theo đồng hồ ván, nên kéo cờ vào trận dời toàn bộ sự kiện của ván trên video; thông báo sau khi thả nói rõ
+  điều đó và có "Hoàn tác". "Video & kết thúc ván" và "Cấm chọn" vẫn đặt được các mốc này bằng vị trí video.
+- Mốc "video hiện" của từng đội có trên thanh: lúc video hiện phụ trợ, phù hiệu, bảng ngọc và từng mốc trang bị.
+  Mỗi mốc gom các tuyển thủ cùng đội có cùng giây, nằm ở mép dải của đội đó (đội xanh phía trên, đội đỏ phía dưới),
+  bấm để tua tới. Kéo mốc đổi giây cho cả nhóm. Mốc trang bị của một tuyển thủ phải theo thứ tự thời gian, nên mốc
+  chỉ kéo được giữa mốc trang bị trước và sau của các tuyển thủ trong nhóm.
+- Mỗi lần kéo lưu ngay vào bản nháp của ván, hiện giây cũ → giây mới kèm nút "Hoàn tác" trong vài giây. Kéo chưa quá
+  vài điểm ảnh vẫn tính là bấm, để không đổi giây do lỡ tay.
+- Kết thúc ván không còn bảng riêng. Mốc kết thúc trước đây nhập được ở cả "Video & đồng bộ" lẫn "Kết thúc ván";
+  nay bảng video đi từ đầu tới cuối ván: link, mốc vào trận, tạm dừng, rồi khối "Kết thúc ván" gồm đội thắng và mốc
+  kết thúc (hoặc thời lượng khi ván chưa có vị trí trong video), lưu bằng một nút và chỉ gửi phần đã đổi. Ván chưa có
+  mốc kết thúc được điền sẵn vị trí video hiện tại. Bước "Kết quả" trong bảng tiến độ mở thẳng khối này.
+- Trang "Dữ liệu ván" riêng bị bỏ. Trang đó là một biểu mẫu thứ hai cho cấm, chọn, tuyển thủ, phụ trợ, đội thắng,
+  thời lượng và video, tức những gì trang trận đã ghi ở "Cấm chọn", "Phụ trợ & ngọc" và bảng video. Phần chỉ có ở đó
+  được chuyển về trang trận:
+  - bảng "Thông tin ván": thị trường, mùa và patch dùng để đọc danh mục của ván, số ván, ghi chú; lưu bằng một nút,
+    chỉ gửi phần đã đổi. Cũng tại đây: gỡ bản công khai của ván (có xác nhận) và xóa ván. Xuất bản vẫn là bước xác
+    nhận trong "Tiến độ";
+  - trang bị theo mốc và ghi chú của từng tuyển thủ nằm trong bảng "Phụ trợ, ngọc, trang bị", bên cạnh phù hiệu và
+    bảng ngọc của tuyển thủ đang chọn.
+  Đội của mỗi bên luôn là hai đội của trận; đổi bên xanh/đỏ bằng "Đổi bên" trong "Cấm chọn". Đường dẫn cũ
+  `?view=data&game=` mở trang trận tại ván đó với bảng "Thông tin ván".
+- Phụ đề được tắt hoặc bật bên trong khung của YouTube, không phải từ trang này. Thử ngày 12/11/2026 trên video của
+  giải: gọi API của trình phát (`unloadModule`, đặt track rỗng) và tham số `cc_load_policy` đều không đổi gì; dòng
+  chữ còn hiện cả khi YouTube báo đã tắt phụ đề, tức có thể do tiện ích phụ đề trên trình duyệt của người xem chèn
+  vào, và nút của tiện ích đó nằm trong hàng nút của YouTube. Vì Admin ẩn hàng nút này, trình phát có nút "Phụ đề"
+  để hiện tạm nó: người dùng tắt bằng nút CC hoặc nút của tiện ích, rồi bấm lại để ẩn. Trình phát được tạo lại tại
+  đúng giây đang xem, giữ trạng thái phát hoặc dừng.
+
+
+## Nhập phù hiệu, bảng ngọc và hàng tuyển thủ khi ghi
+
+Bổ sung 2026-11-12, theo góp ý của người dùng khi ghi ván 1 trận Black Mamba – BOX: thêm ngọc và phù hiệu khó thao
+tác, có lúc thêm rồi không xóa được, và hàng tuyển thủ ở bảng dưới nên cho xem và sửa ngay tại chỗ. Chỉ đổi giao
+diện Admin; hợp đồng API, luật kiểm tra của dịch vụ và dữ liệu giữ nguyên.
+
+Nguyên nhân của "thêm rồi không xóa được", đã tái hiện trên trận chung kết tổng:
+
+- Mỗi thao tác trong bảng gửi cả bản chụp tuyển thủ lấy từ lần vẽ trước. Thao tác thứ hai bấm khi lần lưu thứ nhất
+  chưa xong sẽ đè mất thao tác thứ nhất: xóa dòng 3 rồi xóa dòng 1 thì dòng 3 quay lại.
+- Bảng chỉ vẽ lại sau khi dịch vụ trả lời, nên giữa hai lần lưu người dùng nhìn dữ liệu cũ.
+- Nút "Thêm phù hiệu" tạo một dòng trống cấp I. Dòng trống thứ hai trùng cấp chính nên dịch vụ từ chối, nhưng thông
+  báo nằm ở thanh công cụ, bị chính bảng đang mở che mất.
+
+Quyết định:
+
+- Mỗi thay đổi trong bảng là một phép biến đổi trên nội dung mới nhất của ván, vẫn đi qua hàng lưu theo phiên bản
+  của ván. Bảng hiện kết quả ngay; khi dịch vụ từ chối, bảng quay về bản đã lưu và nêu lý do ngay trong bảng.
+- Phù hiệu và bảng ngọc chọn bằng ô có hình, không còn dòng trống với ô tìm, ô màu, ô cấp và ô số:
+  - Bảng ngọc có ba cột Đỏ, Tím, Xanh, mỗi cột đếm số viên trên 10. Mỗi loại ngọc là một ô gồm hình và tên chỉ số,
+    đúng chữ video hiện (tên trong danh mục bỏ phần màu và cấp). Mặc định hiện cấp III; cấp I và II mở bằng nút
+    chọn cấp. Bấm một ô lấy hết số viên còn trống của màu đó, tức 10 viên ở lần bấm đầu. Màu đang đủ 10 viên của
+    một loại thì bấm loại khác là đổi loại. Màu đã chia cho nhiều loại và đủ 10 viên thì phải giảm một loại trước.
+    Nút − và + chỉnh từng viên; giảm về 0 là bỏ loại đó.
+  - Phù hiệu chọn nhánh chính trước, rồi mỗi cấp I, II, III một ô. Bấm ô khác cùng cấp là đổi, bấm ô đang chọn là
+    bỏ. Chọn ô ở nhánh khác khi nhánh chính đã có phù hiệu thì hỏi xác nhận, vì các ô chính cũ sẽ bị bỏ. Nhánh phụ
+    là hai ô cấp I hoặc II của nhánh khác; bảng tự giữ đúng hai cách ghép dịch vụ chấp nhận (cấp I và II của cùng
+    một nhánh, hoặc cấp I của hai nhánh), ô mới thay ô không còn ghép được.
+- Mức quan sát không còn chọn tay. Chưa ghi gì là "chưa ghi", ghi một phần là "một phần", đủ 30 viên chia 10/10/10
+  hoặc đủ ba ô chính và hai ô phụ là "đã rõ". "Nguồn không hiển thị" là một nút bật riêng; bật khi đã có dữ liệu thì
+  hỏi xác nhận vì dữ liệu đó bị bỏ.
+- Ghi chú của bảng ngọc, phù hiệu và tuyển thủ lưu khi rời ô, không lưu theo từng phím.
+- Mục nhập tay từ trước (chỉ có tên, chưa nối danh mục) vẫn hiện trong phần đã chọn và bỏ được.
+- Hàng tuyển thủ ở bảng dưới: tên tuyển thủ ở dòng trên; dòng dưới lần lượt là biểu tượng đường (rê chuột hiện tên
+  đường), phụ trợ, phù hiệu chính và một vòng ba màu cho bảng ngọc. Rê vào phù hiệu hiện đủ ba ô chính và hai ô phụ,
+  ô chưa ghi hiện dấu "?". Rê vào vòng ngọc hiện từng màu với loại ngọc và số viên. Tên tướng không lặp lại vì ảnh
+  tướng đã mở thẻ tướng.
+- Khi đang ghi, bấm vào phụ trợ, phù hiệu hoặc vòng ngọc của một tuyển thủ mở bảng "Phụ trợ, ngọc, trang bị" đúng
+  tuyển thủ và đúng phần đó. Đây là lối tắt vào cùng một bảng, không phải ô nhập thứ hai.
