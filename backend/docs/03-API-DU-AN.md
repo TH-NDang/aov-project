@@ -125,7 +125,7 @@ Cookie không dùng để xác thực các API admin khác.
 | Method/path | Request | Response |
 |---|---|---|
 | GET /config | Không query | `{ "googleEnabled": false }` |
-| POST /login | `{ "username": "editor", "password": "..." }` | Access token + thời hạn; đặt refresh cookie |
+| POST /login | `{ "username": "editor", "password": "...", "otp": "123456" }`; `otp` tùy chọn | Access token + thời hạn; đặt refresh cookie |
 | POST /refresh | Refresh cookie, không body | Access token mới + thời hạn; cập nhật refresh cookie |
 | POST /logout | Refresh cookie, không body | 204 sau khi revoke thành công; xóa cookie |
 | POST /google | Không body | `{ "state": "...", "authorizationUrl": "..." }`; đặt cookie ràng buộc flow |
@@ -134,9 +134,11 @@ Cookie không dùng để xác thực các API admin khác.
 Response token: `{ "accessToken": "...", "expiresIn": 300 }`. Không có refresh token trong JSON.
 Refresh cookie: `aov_admin_refresh`, HttpOnly, SameSite=Lax, Secure (trừ local), path `/api/wiki/`;
 Max-Age theo refresh_expires_in từ IdP. Không có Domain. Không nhận query ở các endpoint trừ callback.
-Tên đăng nhập tối đa 254 ký tự, mật khẩu tối đa 1024 ký tự; không lưu và không log các giá trị này.
+Tên đăng nhập tối đa 254 ký tự, mật khẩu tối đa 1024 ký tự; `otp` null hoặc đúng 6 chữ số, gửi tới Keycloak
+dưới tên `totp` cho tài khoản đã bật xác thực hai bước (ADR-024). Không lưu và không log các giá trị này.
 
-- 401 AUTH_INVALID_CREDENTIALS: sai thông tin hoặc tài khoản cần hoàn tất bước xác minh ở Keycloak.
+- 401 AUTH_INVALID_CREDENTIALS: sai thông tin, thiếu/sai mã xác thực hai bước hoặc tài khoản cần hoàn tất bước
+  xác minh ở Keycloak. Keycloak trả `400` hoặc `401 invalid_grant` đều map về mã này.
 - 401 AUTH_SESSION_EXPIRED: thiếu, hết hạn hoặc không xác minh được phiên.
 - 403 FORBIDDEN: thiếu catalog:read; không cấp refresh cookie mới.
 - 403 AUTH_ORIGIN_REJECTED: Origin/header chống CSRF không hợp lệ.
@@ -182,6 +184,98 @@ Danh sách admin chỉ có hồ sơ đã lưu, không đồng bộ danh sách t�
 - 422 USER_PROFILE_INVALID: nội dung, locale hoặc múi giờ không hợp lệ.
 - 422 USER_AVATAR_INVALID: avatar chưa READY/ACTIVE, không đúng loại hoặc không thuộc người sửa.
 - 401/403: token hoặc quyền không phù hợp. Không công khai danh sách hồ sơ.
+
+### 1.5 Cài đặt bảo mật tài khoản (ADR-024)
+
+Base `/api/wiki/v1/users/me/security`, Bearer JWT đã xác minh, chỉ tài khoản HUMAN (service account nhận
+`403 FORBIDDEN`). Mọi response `no-store`, không nhận query parameter. Dùng chung cho các app công khai.
+
+| Method/path | Request | Response |
+|---|---|---|
+| GET / | — | Tổng quan bảo mật |
+| POST /password-change | `{language?}` hoặc không body | 201 phiếu mã đã gửi |
+| POST /password-change/{challengeId}/confirm | `{code, newPassword, signOutOtherSessions?, language?}` | 200 `{otherSessions, signedOut}` sau khi Keycloak nhận mật khẩu |
+| GET /sessions | — | Danh sách phiên, phiên hiện tại đứng đầu |
+| DELETE /sessions/{sessionId} | — | 204 sau khi đăng xuất phiên khác |
+| POST /sessions/sign-out-others | Không body | `{ "signedOut": 2 }` |
+| DELETE /two-factor/recovery-codes | — | 204; chỉ khi đã tắt OTP |
+
+Tổng quan:
+
+```json
+{
+  "email": "reader@example.com",
+  "emailVerified": true,
+  "password": { "set": true, "updatedAt": "2026-11-09T03:00:00Z" },
+  "passwordChangeAvailable": true,
+  "twoFactor": {
+    "enabled": true,
+    "credentialId": "keycloak-credential-id",
+    "label": "Điện thoại",
+    "createdAt": "2026-11-09T03:05:00Z",
+    "recoveryCodes": { "credentialId": "keycloak-credential-id", "remaining": 12, "total": 12, "createdAt": "2026-11-09T03:06:00Z" }
+  }
+}
+```
+
+`email` có thể null; `passwordChangeAvailable` false khi tài khoản không có email hoặc server chưa cấu hình gửi email.
+`twoFactor.credentialId` là id credential OTP trong Keycloak, frontend dùng cho `kc_action=delete_credential:{id}`;
+`recoveryCodes` null khi chưa tạo. Khi có nhiều OTP, trả cái tạo sớm nhất.
+
+Đổi mật khẩu:
+
+- Tạo phiếu trả `{challengeId, emailHint, expiresAt, resendAvailableAt}`; `emailHint` đã che (`r•••r@example.com`).
+  Mã 6 chữ số, hạn 10 phút, phiếu mới vô hiệu phiếu cũ. Giới hạn 1 phiếu/60 giây, 5 phiếu/giờ mỗi tài khoản.
+- `language` (`vi`/`en`, mặc định `vi`) chỉ chọn ngôn ngữ email. Xác nhận: `code` đúng 6 chữ số, `newPassword` 8–1024 ký tự;
+  `signOutOtherSessions` mặc định true khi bỏ trống. `otherSessions` là `SIGNED_OUT`, `KEPT` hoặc `FAILED` (mật khẩu đã đổi
+  nhưng chưa đăng xuất hết phiên khác; giao diện nhắc dùng nút đăng xuất thiết bị khác).
+  Mật khẩu đi thẳng tới Keycloak, không lưu, không log. Thành công thì phiếu thành `USED`, ghi audit
+  `USER_PASSWORD_CHANGED` (không có mật khẩu/mã) và gửi email thông báo.
+- 409 USER_EMAIL_MISSING: tài khoản Keycloak chưa có email.
+- 429 USER_PASSWORD_CODE_RATE_LIMITED: gửi mã quá dày; context `retryAfterSeconds` là số giây cần chờ.
+- 404 USER_PASSWORD_CHALLENGE_NOT_FOUND: không có phiếu hoặc phiếu của tài khoản khác.
+- 400 USER_PASSWORD_CODE_INVALID: sai mã; context `attemptsRemaining`.
+- 410 USER_PASSWORD_CODE_EXPIRED: phiếu hết hạn, đã dùng, bị thay bằng phiếu mới, gửi lỗi hoặc hết lượt thử.
+- 409 USER_PASSWORD_CHANGE_IN_PROGRESS: một request khác đang áp dụng cùng phiếu.
+- 422 USER_PASSWORD_REJECTED: Keycloak từ chối theo password policy; context `policy` là khóa lỗi của Keycloak
+  (chỉ chữ cái). Phiếu trở về chờ, dùng lại cùng mã với mật khẩu khác khi còn hạn.
+- 503 USER_MAIL_UNAVAILABLE: chưa cấu hình hoặc không gửi được email; phiếu thành `FAILED`.
+
+Phiên:
+
+```json
+{
+  "sessions": [
+    {
+      "id": "keycloak-session-id",
+      "current": true,
+      "ipAddress": "203.0.113.10",
+      "startedAt": "2026-11-09T02:00:00Z",
+      "lastAccessAt": "2026-11-09T03:10:00Z",
+      "applications": ["aov-wiki"],
+      "device": { "browser": "Chrome/130.0", "os": "Windows", "osVersion": "10", "device": "Other", "mobile": false }
+    }
+  ],
+  "deviceDetails": true
+}
+```
+
+Phiên hiện tại theo claim `sid`. `device` null và `deviceDetails` false khi Keycloak không trả được thông tin thiết bị;
+danh sách vẫn đủ phiên. `applications` là client id Keycloak đã dùng phiên. Chưa có vị trí địa lý.
+
+- 404 USER_SESSION_NOT_FOUND: phiên không tồn tại hoặc không thuộc tài khoản.
+- 409 USER_SESSION_CURRENT: muốn đăng xuất phiên hiện tại thì dùng luồng đăng xuất của app.
+- Đăng xuất ghi audit `USER_SESSION_SIGNED_OUT` / `USER_OTHER_SESSIONS_SIGNED_OUT` với số phiên, không ghi IP.
+
+Xác thực hai bước: bật, xem mã khôi phục, tạo lại mã và tắt chạy trên Keycloak bằng `kc_action`
+(`CONFIGURE_TOTP`, `CONFIGURE_RECOVERY_AUTHN_CODES`, `delete_credential:{id}`; tạo lại và tắt kèm `max_age=0`).
+Sau khi tắt OTP, frontend gọi `DELETE /two-factor/recovery-codes` để xóa mã khôi phục còn lại.
+
+- 409 USER_TWO_FACTOR_ACTIVE: tài khoản vẫn còn OTP nên không xóa mã khôi phục qua API này.
+
+Lỗi chung: 503 USER_ACCOUNT_PROVIDER_UNAVAILABLE khi Keycloak hoặc client `wiki-service` chưa sẵn sàng;
+không trả nội dung lỗi gốc của Keycloak.
+
 ## 2. Common request context
 
 ### Region

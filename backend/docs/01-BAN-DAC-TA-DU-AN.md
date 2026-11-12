@@ -261,6 +261,7 @@ admin-aov      public client cũ, không dùng trong luồng admin hiện tại
 aov-wiki       public client, Code + PKCE S256 — đăng nhập qua theme AOV, audience wiki-service
 aov-stream     public client, Code + PKCE S256 — đăng nhập qua theme AOV, audience community-service và wiki-service
 wiki-importer  confidential client, client credentials — script import dữ liệu gọi admin API
+wiki-service   audience của API wiki; confidential client có service account Admin API và token exchange cho cài đặt bảo mật (ADR-024)
 ```
 
 - Audience theo service: `wiki-service`, `community-service`. Mỗi service chỉ chấp nhận token có audience của mình.
@@ -269,6 +270,11 @@ wiki-importer  confidential client, client credentials — script import dữ li
 - Actor identity thống nhất toàn hệ thống là `(issuer, subject)`, nên một người vừa biên tập wiki vừa đăng bài cộng đồng vẫn là một danh tính.
 - Luồng admin qua backend theo ADR-007: mật khẩu chỉ chuyển tiếp tới Keycloak, refresh token nằm trong cookie HttpOnly; access token giữ trong bộ nhớ frontend.
 - Không service nào lưu mật khẩu. Hồ sơ hiển thị (tên, avatar, giới thiệu, locale, múi giờ) thuộc module `user` trong `wiki-service`, khóa theo `(issuer, subject)`; dùng chung qua API theo ADR-008.
+- Cài đặt bảo mật tài khoản theo ADR-024, dùng chung cho các app công khai:
+  - Đổi/đặt mật khẩu: nhập mật khẩu mới ở trang Cài đặt, mật khẩu chỉ có hiệu lực sau khi nhập đúng mã 6 số gửi tới email tài khoản (hạn 10 phút, tối đa 5 lần sai). Mặc định đăng xuất thiết bị khác.
+  - Thiết bị: liệt kê phiên Keycloak của tài khoản (trình duyệt/HĐH nếu có, IP, lần hoạt động cuối, app đã dùng, đánh dấu thiết bị hiện tại); đăng xuất một phiên khác hoặc mọi phiên khác.
+  - Xác thực hai bước bằng ứng dụng Authenticator (TOTP), tùy chọn cho mọi tài khoản: bật, xem mã khôi phục một lần, tạo lại mã và tắt đều làm trên trang Keycloak theme AOV; tắt hoặc tạo lại mã phải nhập lại mật khẩu và mã. Đăng nhập (kể cả Google) hỏi mã 6 số hoặc mã khôi phục; form admin có ô mã tùy chọn.
+  - Client `wiki-service` là confidential client có service account (`view-users`, `manage-users`) và token exchange sang audience `account`; secret chỉ ở backend. SPA không gọi Admin/Account API của Keycloak.
 - Trước khi Keycloak sẵn sàng, admin API **không được** mở ra ngoài production.
 
 ### 3.8 Dữ liệu và giao tiếp giữa các service

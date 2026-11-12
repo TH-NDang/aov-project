@@ -56,3 +56,11 @@ giới thiệu hoặc token vào metadata audit. Chưa có xóa hồ sơ, khóa 
 Test PostgreSQL + SeaweedFS độc lập: tạo/sửa hồ sơ, conflict, phân quyền, từ chối giả mạo identity,
 upload URL thật, complete lại an toàn, tải bytes qua URL ký sẵn, ownership và reverse usage sau gắn/gỡ.
 Frontend test thứ tự upload/complete, không gửi token/cookie tới storage, không complete khi PUT thất bại.
+
+## Cập nhật 09/11/2026 — cài đặt bảo mật (ADR-024)
+
+Ngoại lệ có chủ đích với nguyên tắc "không nhận mật khẩu trong frontend": trang Cài đặt tài khoản của app công khai
+nhận mật khẩu mới để đổi/đặt mật khẩu, chỉ áp dụng sau khi người dùng nhập đúng mã gửi qua email. Mật khẩu đi qua
+wiki-service một lần tới Keycloak Admin API, không lưu, không log. Đăng nhập vẫn chỉ trên trang Keycloak theme AOV.
+Module `user` thêm phiếu mã đổi mật khẩu và các endpoint `/users/me/security/**`; Keycloak tiếp tục sở hữu mật khẩu,
+OTP, mã khôi phục và phiên.

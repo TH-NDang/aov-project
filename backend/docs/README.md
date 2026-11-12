@@ -43,6 +43,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [021](adr/ADR-021-dong-goi-chay-mot-may.md) | Đóng gói toàn hệ thống trên một máy: Keycloak ở `/idp/`, tách địa chỉ công khai và nội bộ, upload qua proxy cùng origin |
 | [022](adr/ADR-022-wiki-static-prerender.md) | Prerender tĩnh cho Wiki công khai: tiêu đề, xem trước, sitemap từ dữ liệu đã xuất bản, địa chỉ kho trang bị theo path |
 | [023](adr/ADR-023-che-do-choi-va-tuong-tac-doi-hinh.md) | Chế độ chơi, cẩm nang Cờ Liên quân, đội hình cộng đồng và lượt thích trong `wiki-service` |
+| [024](adr/ADR-024-account-security-settings.md) | Cài đặt bảo mật tài khoản: mã email đổi mật khẩu, phiên đăng nhập, xác thực hai bước |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
 đã hoàn thành một tính năng hoặc một lượt kiểm thử chưa thực hiện.

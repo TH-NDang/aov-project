@@ -41,3 +41,12 @@ mật khẩu, vai trò, ký token và xác minh Google; backend không phát JWT
 - Đăng xuất ứng dụng không đăng xuất tài khoản Google trên toàn trình duyệt.
 - Không tự cấp role admin cho tài khoản Google mới. Quản trị viên phải gán capability phù hợp.
 - Chưa thêm reset mật khẩu, đăng ký, quản lý người dùng hoặc MFA vào UI admin.
+
+## Cập nhật 09/11/2026 — xác thực hai bước (ADR-024)
+
+- `POST /auth/login` nhận thêm `otp` tùy chọn (6 chữ số), chuyển tới Keycloak dưới tên `totp` cho tài khoản đã bật
+  xác thực hai bước. Không lưu, không log mã. Form admin luôn có ô mã tùy chọn vì Keycloak trả cùng một lỗi cho sai
+  mật khẩu, thiếu mã và sai mã. Direct Grant vẫn không nhận mã khôi phục hoặc required action khác.
+- Thiếu mã hoặc sai mã cũng là `401 invalid_grant` như sai mật khẩu, nên trả `AUTH_INVALID_CREDENTIALS` (cách xử lý
+  401 có từ bản sửa ngày 07/11/2026). Lỗi xác thực client vẫn là IdP/cấu hình chưa sẵn sàng.
+- Đăng nhập Google đi qua post-login flow có điều kiện 2FA, nên hỏi mã trên trang Keycloak khi tài khoản đã bật.

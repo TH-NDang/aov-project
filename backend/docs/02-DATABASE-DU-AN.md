@@ -1263,6 +1263,28 @@ Migration `V003__create_user_profiles.sql`; module `user` sở hữu. Thay phư�
 Không lưu email, mật khẩu hoặc role. Index theo thời gian tạo và avatar. Hồ sơ được tạo ở lần lưu đầu,
 không tạo chỉ vì GET hoặc đăng nhập. Tên mặc định đọc từ actor khi chưa có hồ sơ.
 
+### `user_profile.password_change_challenge` — phiếu mã đổi mật khẩu (ADR-024)
+
+Migration `V069__create_password_change_challenge.sql`; module `user` sở hữu. Mỗi row là một lần gửi mã 6 số
+tới email tài khoản trước khi đổi/đặt mật khẩu trong Keycloak.
+
+| Cột | Kiểu / quy tắc |
+|---|---|
+| id | UUID PK, trả cho client làm `challengeId` |
+| issuer, subject | TEXT, lấy từ JWT; không có FK sang `profile` vì tài khoản có thể chưa lưu hồ sơ |
+| code_hash | BYTEA 32 byte, SHA-256 của id phiếu và mã; không lưu mã gốc |
+| status | `PENDING`, `APPLYING`, `USED`, `SUPERSEDED`, `FAILED` |
+| failed_attempts | SMALLINT 0–5; đủ 5 thì phiếu không dùng được nữa |
+| created_at, expires_at | TIMESTAMPTZ; hạn 10 phút sau khi tạo |
+| used_at | TIMESTAMPTZ nullable, chỉ có khi `USED` |
+| updated_at | TIMESTAMPTZ |
+
+Không lưu mật khẩu, email hay token. Index `(issuer, subject, created_at DESC)` cho giới hạn tần suất và phiếu
+mới nhất; index `expires_at` để xóa phiếu hết hạn quá 1 ngày. Tạo phiếu mới chuyển các phiếu `PENDING` cũ của cùng
+tài khoản sang `SUPERSEDED`. Xác nhận khóa row (`FOR UPDATE`); `APPLYING` ngăn hai request dùng cùng mã đổi mật khẩu
+song song. Gửi email lỗi chuyển phiếu sang `FAILED`. Phiếu `APPLYING` bị bỏ dở (ví dụ process dừng) hết tác dụng khi
+quá hạn.
+
 ---
 ## 35. Audit event
 
