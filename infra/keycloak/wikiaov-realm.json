@@ -305,12 +305,30 @@
     },
     {
       "clientId": "wiki-service",
-      "name": "wiki-service (resource server)",
+      "name": "wiki-service (resource server and account security backend)",
       "enabled": true,
       "publicClient": false,
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false
+      "serviceAccountsEnabled": true,
+      "secret": "${WIKI_SERVICE_CLIENT_SECRET}",
+      "attributes": {
+        "standard.token.exchange.enabled": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "audience-account",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "account",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
     },
     {
       "clientId": "community-service",
@@ -388,6 +406,17 @@
     }
   ],
   "users": [
+    {
+      "username": "service-account-wiki-service",
+      "enabled": true,
+      "serviceAccountClientId": "wiki-service",
+      "clientRoles": {
+        "realm-management": [
+          "view-users",
+          "manage-users"
+        ]
+      }
+    },
     {
       "username": "service-account-wiki-importer",
       "enabled": true,

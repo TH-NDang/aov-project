@@ -204,6 +204,7 @@ services:
       PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
       ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:?set in .env}
       WIKI_IMPORTER_CLIENT_SECRET: ${WIKI_IMPORTER_CLIENT_SECRET:?set in .env}
+      WIKI_SERVICE_CLIENT_SECRET: ${WIKI_SERVICE_CLIENT_SECRET:?set in .env}
     ports:
       # The admin console is not on the public listener: use it from this machine or through an SSH tunnel.
       - 127.0.0.1:${KEYCLOAK_ADMIN_PORT:-18081}:8080
@@ -248,6 +249,16 @@ services:
       ADMIN_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
       ADMIN_BASE_PATH: /admin/
       ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:?set in .env}
+      # Account security (ADR-024): service account and token exchange of the wiki-service client.
+      WIKI_SERVICE_CLIENT_SECRET: ${WIKI_SERVICE_CLIENT_SECRET:?set in .env}
+      # Password change codes go out over SMTP; without a host or sender the settings page cannot change passwords.
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-true}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      MAIL_FROM: ${MAIL_FROM:-}
       AUTH_SECURE_COOKIES: ${AUTH_SECURE_COOKIES:-true}
       GOOGLE_LOGIN_ENABLED: ${GOOGLE_LOGIN_ENABLED:-false}
       STORAGE_ENDPOINT: ${STORAGE_ENDPOINT:-http://seaweedfs:8333}
