@@ -188,32 +188,6 @@ test("equipment editor saves a six-slot observation without fabricating purchase
   })
 })
 
-test("missing broadcast loadouts stay explicit and do not become empty known configurations", async () => {
-  await withUi(async ({ render, change, document }) => {
-    const { LoadoutEditor } = await import("../src/features/tournaments/loadout-editor")
-    let latest = emptyParticipant("JUNGLE")
-    function Host() {
-      const [value, setValue] = useState(latest)
-      return (
-        <LoadoutEditor
-          participant={value}
-          catalog={catalog}
-          onChange={(value) => {
-            latest = value
-            setValue(value)
-          }}
-        />
-      )
-    }
-    await render(<Host />)
-    await change('[aria-label="Mức độ quan sát bảng ngọc"]', "NOT_SHOWN")
-    assert.equal(latest.arcana.status, "NOT_SHOWN")
-    assert.deepEqual(latest.arcana.entries, [])
-    assert.equal(latest.enchantments.status, "UNKNOWN")
-    assert.match(document.body.textContent ?? "", /không xem đây là bảng trống/)
-  })
-})
-
 test("changing one game's season keeps its already observed picks and leaves other games untouched", async () => {
   const originalFetch = globalThis.fetch
   globalThis.fetch = async () =>

@@ -51,13 +51,24 @@ export type VideoClock = {
   toGame: (videoSecond: number) => number | null
 }
 
-function fromEvent(event: TimelineEvent | undefined, at: number, kind: TimelineKind, video?: VideoClock): Draft {
+/** Where and for whom a new moment starts when it was asked for on the timeline rather than at the playhead. */
+export type ComposerStart = { videoSecond?: number; side?: Side }
+
+function fromEvent(
+  event: TimelineEvent | undefined,
+  at: number,
+  kind: TimelineKind,
+  video?: VideoClock,
+  start?: ComposerStart,
+): Draft {
+  const videoNow = start?.videoSecond ?? video?.now ?? null
   const base: Draft = {
     kind: event?.kind ?? kind,
-    time: formatClock(video ? (event ? video.toVideo(event.at) : (video.now ?? video.toVideo(at))) : (event?.at ?? at)),
+    time: formatClock(video ? (event ? video.toVideo(event.at) : (videoNow ?? video.toVideo(at))) : (event?.at ?? at)),
     assists: [],
     objective: "DARK_SLAYER",
-    side: "BLUE",
+    side: start?.side ?? "BLUE",
+    noteSide: start?.side,
     action: "BUY",
     slot: 1,
     item: "",
@@ -172,6 +183,7 @@ export function EventComposer({
   items,
   editing,
   initialKind = "KILL",
+  start,
   snapshotsFor,
   events,
   onSave,
@@ -185,12 +197,14 @@ export function EventComposer({
   items: Reference[]
   editing?: TimelineEvent
   initialKind?: TimelineKind
+  /** Position and team the timeline asked for; ignored when editing a stored moment. */
+  start?: ComposerStart
   snapshotsFor: (seat: SeatKey) => GameView["snapshots"][SeatKey]
   events: TimelineEvent[]
   onSave: (event: TimelineEvent) => void
   onCancel: () => void
 }) {
-  const [draft, setDraft] = useState(() => fromEvent(editing, at, initialKind, video))
+  const [draft, setDraft] = useState(() => fromEvent(editing, at, initialKind, video, editing ? undefined : start))
   const listId = useId()
   const hintId = useId()
   const set = (change: Partial<Draft>) => setDraft((current) => ({ ...current, ...change }))

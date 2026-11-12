@@ -1,13 +1,17 @@
-import { useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { Catalog, GameContent, ObservationStatus, Participant, Side } from "@aov/community-contracts"
-import { Clock3, EyeOff, X } from "lucide-react"
+import { Clock3, EyeOff, Shield, Swords, TriangleAlert, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
+import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
-import { LoadoutEditor, type ObservedAtControl } from "@/features/tournaments/loadout-editor"
+import { EquipmentEditor } from "@/features/tournaments/equipment-editor"
+import { LoadoutEditor, type ObservedAtControl } from "./loadout-editor"
 import { HeroIcon, LaneIcon, TimeTag, VIDEO_MARK } from "../components/primitives"
 import { ReferencePicker } from "../components/game/reference-picker"
 import type { GameView, IconRef } from "../model/game-view"
 import { LANE_LABELS } from "../model/labels"
+import type { LoadoutPart } from "../model/loadout"
+import { seatSide, type SeatKey } from "../model/timeline"
 import { formatClock } from "../model/vod"
 
 /** The game clock for the player position, and back to video time for display and seeking. */
@@ -18,6 +22,50 @@ export type LoadoutClock = {
 }
 
 type Seat = { side: Side; index: number }
+type ContentChange = (content: GameContent) => GameContent
+
+/** A player and the part of their loadout to open on, as asked from the scoreboard. */
+export type LoadoutTarget = { seat?: SeatKey; part?: LoadoutPart }
+
+/**
+ * Shows an edit at once and sends it as a change to the latest saved game. The panel used to draw only what the
+ * service had answered and to send whole copies of a player, so a second edit made before the first was saved wrote
+ * the first one away. When a save is refused the panel goes back to what is saved.
+ */
+function useOptimisticContent(content: GameContent, send: (change: ContentChange) => unknown) {
+  const [local, setLocal] = useState(content)
+  const shown = useRef(content)
+  const saved = useRef(content)
+  const pending = useRef(0)
+  const refused = useRef(false)
+
+  useEffect(() => {
+    saved.current = content
+    if (pending.current > 0) return
+    shown.current = content
+    setLocal(content)
+  }, [content])
+
+  const apply = useCallback(
+    (change: ContentChange) => {
+      const next = change(shown.current)
+      if (next === shown.current) return
+      shown.current = next
+      setLocal(next)
+      pending.current += 1
+      void Promise.resolve(send(change)).then((accepted) => {
+        pending.current -= 1
+        if (accepted === false) refused.current = true
+        if (pending.current > 0 || !refused.current) return
+        refused.current = false
+        shown.current = saved.current
+        setLocal(saved.current)
+      })
+    },
+    [send],
+  )
+  return [local, apply] as const
+}
 
 const STATUS_SHORT: Record<ObservationStatus, string> = {
   UNKNOWN: "chưa ghi",
@@ -27,14 +75,16 @@ const STATUS_SHORT: Record<ObservationStatus, string> = {
 }
 
 /**
- * Spells, emblems and arcana of each player, with the moment the broadcast showed them. Sources often show one team's
- * loadouts at a time, so a mark or a "not shown" status can be applied to the whole team at once.
+ * Spells, emblems, arcana and equipment of each player, with the moment the broadcast showed them. Sources often show
+ * one team's loadouts at a time, so a mark or a "not shown" status can be applied to the whole team at once.
  */
 export function LoadoutPanel({
-  content,
+  content: savedContent,
   view,
   catalog,
   clock,
+  target,
+  error,
   onSeekGame,
   onChange,
 }: {
@@ -42,29 +92,64 @@ export function LoadoutPanel({
   view: GameView
   catalog: Catalog
   clock?: LoadoutClock
+  /** Opens on this player and part; a new object re-targets a panel that is already open. */
+  target?: LoadoutTarget | null
+  /** Why the last change was not saved. The save status of the page sits under this panel, so it is repeated here. */
+  error?: string | null
   onSeekGame: (gameSecond: number) => void
-  onChange: (change: (content: GameContent) => GameContent) => void
+  /** Resolves to `false` when the service refused the change. */
+  onChange: (change: ContentChange) => unknown
 }) {
-  const [seat, setSeat] = useState<Seat>({ side: "BLUE", index: 0 })
+  const seatOf = (key?: SeatKey): Seat | null => {
+    if (!key) return null
+    const index = view.sides[seatSide(key)].seats.findIndex((entry) => entry.key === key)
+    return index < 0 ? null : { side: seatSide(key), index }
+  }
+  const [content, apply] = useOptimisticContent(savedContent, onChange)
+  const [seat, setSeat] = useState<Seat>(() => seatOf(target?.seat) ?? { side: "BLUE", index: 0 })
+  const [tab, setTab] = useState<"loadout" | "equipment">("loadout")
+  const root = useRef<HTMLDivElement>(null)
+  const scrollTo = useRef<LoadoutPart | null>(target?.part ?? null)
   const side = content.sides.find((entry) => entry.side === seat.side) ?? content.sides[0]
   const participant = side?.participants[seat.index]
   // A mark taken before the game clock starts (draft, loading screen) is kept at 0:00.
   const nowGame = clock?.videoNow != null ? Math.max(0, Math.round(clock.toGame(clock.videoNow) ?? 0)) : null
 
+  useEffect(() => {
+    const wanted = seatOf(target?.seat)
+    if (!wanted) return
+    scrollTo.current = target?.part ?? null
+    setSeat(wanted)
+    setTab("loadout")
+    // Only a new request moves the panel; the lookup reads the seats of the same game.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target])
+  useEffect(() => {
+    if (!scrollTo.current) return
+    const part = root.current?.querySelector(`[data-part="${scrollTo.current}"]`)
+    scrollTo.current = null
+    part?.scrollIntoView?.({ block: "nearest" })
+  })
+
   const updateSeat = (target: Seat, change: (participant: Participant) => Participant) =>
-    onChange((current) => ({
-      ...current,
-      sides: current.sides.map((entry) =>
-        entry.side !== target.side
-          ? entry
-          : {
-              ...entry,
-              participants: entry.participants.map((value, index) => (index === target.index ? change(value) : value)),
-            },
-      ),
-    }))
+    apply((current) => {
+      const before = current.sides.find((entry) => entry.side === target.side)?.participants[target.index]
+      const after = before && change(before)
+      if (!before || !after || after === before) return current
+      return {
+        ...current,
+        sides: current.sides.map((entry) =>
+          entry.side !== target.side
+            ? entry
+            : {
+                ...entry,
+                participants: entry.participants.map((value, index) => (index === target.index ? after : value)),
+              },
+        ),
+      }
+    })
   const updateTeam = (code: Side, change: (participant: Participant) => Participant) =>
-    onChange((current) => ({
+    apply((current) => ({
       ...current,
       sides: current.sides.map((entry) =>
         entry.side === code ? { ...entry, participants: entry.participants.map(change) } : entry,
@@ -82,7 +167,16 @@ export function LoadoutPanel({
   }
 
   return (
-    <div className="space-y-4 p-4 text-sm">
+    <div ref={root} className="space-y-4 p-4 text-sm">
+      {error && (
+        <p
+          role="alert"
+          className="flex items-start gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs"
+        >
+          <TriangleAlert size={14} className="mt-0.5 shrink-0 text-destructive" />
+          <span>Thay đổi vừa rồi chưa lưu được, bảng đã quay về bản đã lưu. {error}</span>
+        </p>
+      )}
       {(["BLUE", "RED"] as const).map((code) => {
         const team = view.sides[code]
         return (
@@ -195,7 +289,7 @@ export function LoadoutPanel({
               {LANE_LABELS[participant.lane].name} · {participant.hero?.name || "chưa có tướng"}
             </span>
           </header>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2" data-part="spell">
             <span className="text-xs font-medium text-muted-foreground">Phụ trợ</span>
             <ReferencePicker
               label={`Phụ trợ của ${view.sides[seat.side].seats[seat.index]?.playerName ?? "tuyển thủ"}`}
@@ -225,15 +319,80 @@ export function LoadoutPanel({
               "phụ trợ",
             )}
           </div>
-          <LoadoutEditor
-            participant={participant}
-            catalog={catalog}
-            observedAt={observedAt}
-            onChange={(next) => updateSeat(seat, () => next)}
+          <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1" role="group" aria-label="Phần đang ghi">
+            {(
+              [
+                { id: "loadout", label: "Phù hiệu & bảng ngọc", icon: Shield },
+                {
+                  id: "equipment",
+                  label: participant.equipmentSnapshots.length
+                    ? `Trang bị · ${participant.equipmentSnapshots.length} mốc`
+                    : "Trang bị theo mốc",
+                  icon: Swords,
+                },
+              ] as const
+            ).map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                aria-pressed={tab === entry.id}
+                onClick={() => setTab(entry.id)}
+                className={cn(
+                  "flex h-8 items-center justify-center gap-1.5 rounded-md text-xs font-semibold transition",
+                  tab === entry.id ? "bg-background shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                <entry.icon size={14} /> {entry.label}
+              </button>
+            ))}
+          </div>
+          {tab === "loadout" ? (
+            <LoadoutEditor
+              key={`loadout-${seat.side}-${seat.index}`}
+              participant={participant}
+              catalog={catalog}
+              observedAt={observedAt}
+              onChange={(change) => updateSeat(seat, change)}
+            />
+          ) : (
+            <EquipmentEditor
+              participant={participant}
+              catalog={catalog}
+              // The editor answers with a whole player; only its own two lists are taken from that copy.
+              onChange={(next) =>
+                updateSeat(seat, (value) => ({
+                  ...value,
+                  equipmentSnapshots: next.equipmentSnapshots,
+                  equipmentEvents: next.equipmentEvents,
+                }))
+              }
+            />
+          )}
+          <PlayerNote
+            key={`${seat.side}-${seat.index}`}
+            value={participant.note ?? ""}
+            onChange={(note) => updateSeat(seat, (value) => ({ ...value, note: note || undefined }))}
           />
         </section>
       )}
     </div>
+  )
+}
+
+/** A note about one player in this game. Saved when the field is left, not on every key, since each save is a request. */
+function PlayerNote({ value, onChange }: { value: string; onChange: (note: string) => void }) {
+  const [text, setText] = useState(value)
+  return (
+    <label className="block space-y-1.5">
+      <span className="text-xs font-medium text-muted-foreground">Ghi chú tuyển thủ</span>
+      <Textarea
+        value={text}
+        maxLength={2000}
+        rows={2}
+        onChange={(event) => setText(event.target.value)}
+        onBlur={() => text.trim() !== value.trim() && onChange(text.trim())}
+      />
+    </label>
   )
 }
 

@@ -1,4 +1,5 @@
 import type { DocumentView, DraftTurn, GameContent, SeriesContent, Side } from "@aov/community-contracts"
+import { observationMarks, type ObservationMark } from "./observation-marks"
 import { readTimeline } from "./timeline-io"
 import type { TimelineEvent } from "./timeline"
 import { gameToVideo, videoToGame, youtubeVideoId, type VodSync } from "./vod"
@@ -25,6 +26,8 @@ export type GameChapter = {
   sync: VodSync
   winner: Side | null
   events: TimelineEvent[]
+  /** Moments the broadcast showed spells, emblems, arcana or equipment, in game seconds; absent where not drawn. */
+  marks?: ObservationMark[]
 }
 
 /** Video time assumed for a ban/pick phase whose game start is not recorded yet. */
@@ -92,6 +95,7 @@ export function layoutChapters(games: DocumentView<GameContent>[], videoId: stri
         sync,
         winner: content.winner ?? null,
         events,
+        marks: observationMarks(content, duration),
       }
     })
 }

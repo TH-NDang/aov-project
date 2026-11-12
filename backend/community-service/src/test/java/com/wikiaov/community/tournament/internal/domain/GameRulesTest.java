@@ -32,6 +32,26 @@ class GameRulesTest {
     }
 
     @Test
+    void aGameNamesALocaleTheCatalogCanAnswerOrNoneYet() {
+        for (String supported : List.of("vi-VN", "en-US")) {
+            assertThat(GameRules.violations(withLocale(supported), false, null)).isEmpty();
+            assertThat(GameRules.violations(withLocale(supported), true, CATALOG)).isEmpty();
+        }
+
+        // A bare language tag is what an import once wrote; the catalog has no answer for it.
+        for (String unsupported : List.of("vi", "en", "vi-vn", "th-TH")) {
+            assertThat(GameRules.violations(withLocale(unsupported), false, null))
+                    .containsExactly("locale.unsupported");
+            assertThat(GameRules.violations(withLocale(unsupported), true, CATALOG))
+                    .containsExactly("locale.unsupported");
+        }
+
+        assertThat(GameRules.violations(withLocale(null), false, null)).isEmpty();
+        assertThat(GameRules.violations(withLocale(" "), false, null)).isEmpty();
+        assertThat(GameRules.violations(withLocale(" "), true, CATALOG)).containsExactly("locale");
+    }
+
+    @Test
     void tenPlayersEightBansAndOneSpellEachCanPublishWithoutUnobservedLoadouts() {
         assertThat(GameRules.violations(game(), true, CATALOG)).isEmpty();
 
@@ -369,6 +389,13 @@ class GameRulesTest {
         }
         return new Game(SERIES, 1, "VN", "vi-VN", null, null, null, 600, Side.BLUE, null, null, null, sides,
                 false);
+    }
+
+    private static Game withLocale(String locale) {
+        var game = game();
+        return new Game(game.seriesId(), game.number(), game.region(), locale, game.seasonId(),
+                game.patchVariantId(), game.startedAt(), game.durationSeconds(), game.winner(), game.sourceUrl(),
+                game.sourceTimestampSeconds(), game.note(), game.sides(), game.includeUnscoped());
     }
 
     private static Participant participant(Game game, int side, int index) {

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
 import type { SeriesContent } from "@aov/community-contracts"
-import { broadcastChapters, videoTimelineEvents } from "../src/features/esports/model/broadcast-timeline"
+import { broadcastChapters, retimeRange, videoTimelineEvents } from "../src/features/esports/model/broadcast-timeline"
+import { moveTurn } from "../src/features/esports/model/draft"
 import {
   axisLength,
   broadcastEvents,
@@ -30,7 +31,13 @@ import {
   seatStatsAt,
   type TimelineEvent,
 } from "../src/features/esports/model/timeline"
-import { readTimeline, upsertEvent, withPlayback, writeTimeline } from "../src/features/esports/model/timeline-io"
+import {
+  moveEvent,
+  readTimeline,
+  upsertEvent,
+  withPlayback,
+  writeTimeline,
+} from "../src/features/esports/model/timeline-io"
 import {
   formatClock,
   gameToVideo,
@@ -770,4 +777,89 @@ test("dates near today read as words and keep the exact date for tooltips", asyn
   assert.match(exactDate("2026-10-28T18:00:00"), /28 tháng 10.*2026.*18:00/)
   assert.doesNotMatch(exactDate("2026-10-28T18:00:00", false), /18:00/)
   assert.doesNotMatch(exactDate("2026-10-28"), /:/, "a date-only value has no time")
+})
+
+test("a marker can only be dragged where the service would accept it", () => {
+  const turn = (order: number, atSecond: number | null) => ({
+    order,
+    kind: "BAN" as const,
+    side: "BLUE" as const,
+    hero: { id: null, name: `Hero ${order}` },
+    atSecond,
+  })
+  const doc = {
+    id: "g1",
+    version: 1,
+    createdAt: "",
+    updatedAt: "",
+    missingFields: [],
+    content: {
+      seriesId: "s",
+      number: 1,
+      region: "VN",
+      locale: "vi-VN",
+      sides: [
+        {
+          side: "BLUE" as const,
+          teamId: "a",
+          bans: [],
+          participants: [
+            {
+              lane: "MID" as const,
+              hero: { id: null, name: "Mid" },
+              spell: {},
+              arcana: { status: "UNKNOWN" as const, entries: [] },
+              enchantments: { status: "UNKNOWN" as const, entries: [] },
+              equipmentSnapshots: [],
+              equipmentEvents: [{ atSeconds: 90, type: "BUY" as const, item: { id: null, name: "Boots" }, toSlot: 1 }],
+            },
+          ],
+        },
+      ],
+      sourceUrl: "https://youtu.be/R5rCsGqDJIg",
+      durationSeconds: 900,
+      sourceTimestampSeconds: 400,
+      draft: { startSecond: 100, lockedSecond: 380, turns: [turn(1, 120), turn(2, 150), turn(3, null), turn(4, 200)] },
+      timeline: { pauses: [], events: [{ id: "k1", kind: "KILL" as const, atSeconds: 60 }] },
+    },
+  }
+  const [live] = layoutChapters([doc], "R5rCsGqDJIg")
+  const item = live!.events.find((event) => event.kind === "ITEM")!
+  const target = (order: number) => ({ kind: "turn" as const, gameId: "g1", order })
+
+  assert.deepEqual(retimeRange(live!, { kind: "event", gameId: "g1", id: "k1" }, 5000), { min: 400, max: 1300 })
+  assert.equal(retimeRange(live!, { kind: "event", gameId: "g1", id: item.id }, 5000), null, "equipment has its form")
+  assert.equal(retimeRange(live!, { kind: "event", gameId: "g1", id: "gone" }, 5000), null)
+  assert.deepEqual(retimeRange(live!, target(2), 5000), { min: 120, max: 200 }, "between its neighbours")
+  assert.deepEqual(retimeRange(live!, target(4), 5000), { min: 150, max: 380 }, "the turn without a second is skipped")
+  assert.deepEqual(retimeRange(live!, target(1), 5000), { min: 100, max: 150 }, "not before the draft starts")
+  assert.equal(retimeRange(live!, target(3), 5000), null, "a turn without a second has no marker to drag")
+
+  // Without a lock the game start bounds the draft; before the game is live only the video does.
+  const unlocked = { ...doc, content: { ...doc.content, draft: { ...doc.content.draft, lockedSecond: null } } }
+  assert.deepEqual(retimeRange(layoutChapters([unlocked], "R5rCsGqDJIg")[0]!, target(4), 5000), { min: 150, max: 400 })
+  const pending = { ...unlocked, content: { ...unlocked.content, sourceTimestampSeconds: undefined } }
+  const [open] = layoutChapters([pending], "R5rCsGqDJIg")
+  assert.deepEqual(retimeRange(open!, target(4), 5000), { min: 150, max: 5000 })
+  assert.equal(retimeRange(open!, { kind: "event", gameId: "g1", id: "k1" }, 5000), null, "no game clock yet")
+
+  const moved = moveEvent(doc.content, "k1", 420.4)!
+  assert.deepEqual(
+    moved.timeline!.events.map((event) => [event.id, event.atSeconds]),
+    [["k1", 420]],
+  )
+  assert.equal(
+    JSON.stringify(moved.sides[0]!.participants[0]!.equipmentEvents),
+    JSON.stringify(doc.content.sides[0]!.participants[0]!.equipmentEvents),
+    "equipment keeps its own seconds",
+  )
+  assert.equal(moveEvent(doc.content, "gone", 10), null)
+
+  const turned = moveTurn(doc.content, 2, 171.6)!
+  assert.deepEqual(
+    turned.draft!.turns.map((entry) => entry.atSecond),
+    [120, 172, null, 200],
+  )
+  assert.equal(turned.sides, doc.content.sides, "line-ups and bans are not rebuilt by a change of second")
+  assert.equal(moveTurn(doc.content, 9, 10), null)
 })

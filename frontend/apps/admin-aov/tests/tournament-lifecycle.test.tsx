@@ -305,3 +305,78 @@ test("trash keeps restore behind write permission and refreshes its list after r
     tournamentApi.restore = original.restore
   }
 })
+
+test("the game info panel saves only what changed and asks before taking the public copy down", async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async () =>
+    Response.json({
+      seasons: [{ id: "s3", name: "S3 2026", patches: [{ id: "p3", code: "s3-final", title: "Baseline" }] }],
+    })
+  try {
+    await withUi(async ({ render, click, document, flush }) => {
+      const { GameInfoPanel, changedGameInfo, gameInfoOf } =
+        await import("../src/features/esports/pages/game-info-panel")
+      const { ConfirmDialogHost } = await import("../src/components/confirm-dialog")
+      const content = { seriesId: "s", number: 2, region: "VN", locale: "vi-VN", sides: [], note: "MVP: A" }
+      const entry = { id: "g", version: 4, createdAt: "", updatedAt: "", missingFields: [], content }
+      const saved: unknown[] = []
+      let withdrawn = 0
+      let progress = 0
+      const panel = (publishedAt: string | null, canPublish = true) => (
+        <>
+          <GameInfoPanel
+            key={String(publishedAt)}
+            entry={{ ...entry, publishedAt } as never}
+            canPublish={canPublish}
+            onSave={(change) => saved.push(change)}
+            onWithdraw={() => withdrawn++}
+            onDeleted={() => assert.fail("nothing was deleted")}
+            onOpenProgress={() => progress++}
+          />
+          <ConfirmDialogHost />
+        </>
+      )
+      const button = (label: string) =>
+        [...document.querySelectorAll<HTMLButtonElement>("button")].filter(
+          (entry) => entry.textContent?.replace(/\s+/g, " ").trim() === label,
+        )
+      const type = async (element: HTMLInputElement | HTMLTextAreaElement, value: string) => {
+        const prototype = Object.getPrototypeOf(element) as object
+        await act(async () => {
+          Object.getOwnPropertyDescriptor(prototype, "value")!.set!.call(element, value)
+          element.dispatchEvent(new document.defaultView!.Event("input", { bubbles: true }))
+        })
+      }
+
+      assert.deepEqual(changedGameInfo(gameInfoOf(content as never), gameInfoOf(content as never)), {})
+      await render(panel(null))
+      assert.equal(button("Lưu thông tin ván")[0]!.disabled, true, "nothing to save yet")
+      assert.match(document.body.textContent ?? "", /Chưa xuất bản/)
+      assert.equal(button("Gỡ công khai").length, 0)
+      await click("Mở Tiến độ")
+      assert.equal(progress, 1)
+
+      await type(document.querySelector<HTMLTextAreaElement>("textarea")!, "MVP: B")
+      await click("Lưu thông tin ván")
+      assert.deepEqual(saved, [{ note: "MVP: B" }], "the market, season and number were not sent again")
+      await type(document.querySelector<HTMLInputElement>('input[type="number"]')!, "0")
+      assert.equal(button("Lưu thông tin ván")[0]!.disabled, true, "a game number outside 1 to 99 cannot be saved")
+      await click("Hủy")
+      assert.equal(document.querySelector<HTMLTextAreaElement>("textarea")!.value, "MVP: A")
+
+      // A published game can be taken down, by someone who may publish, after a question.
+      await render(panel("2026-11-12T03:00:00Z", false))
+      assert.equal(button("Gỡ công khai").length, 0)
+      await render(panel("2026-11-12T04:00:00Z"))
+      await act(async () => button("Gỡ công khai")[0]!.click())
+      await flush()
+      assert.equal(withdrawn, 0, "the question comes first")
+      assert.match(document.body.textContent ?? "", /Gỡ ván 2 khỏi trang công khai\?/)
+      await act(async () => button("Gỡ công khai").at(-1)!.click())
+      await flush()
+      assert.equal(withdrawn, 1)
+    })
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+})

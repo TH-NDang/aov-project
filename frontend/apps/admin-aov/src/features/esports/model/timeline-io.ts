@@ -122,3 +122,11 @@ export const upsertEvent = (events: TimelineEvent[], event: TimelineEvent) =>
   events.some((entry) => entry.id === event.id)
     ? events.map((entry) => (entry.id === event.id ? event : entry))
     : [...events, event]
+
+/** The game with one recorded moment moved to another second of the game clock; null when it is not stored. */
+export function moveEvent(content: GameContent, id: string, gameSecond: number): GameContent | null {
+  const events = readTimeline(content)
+  const event = events.find((candidate) => candidate.id === id)
+  if (!event) return null
+  return writeTimeline(content, upsertEvent(events, { ...event, at: Math.max(0, Math.round(gameSecond)) }))
+}
