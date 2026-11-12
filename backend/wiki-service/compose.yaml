@@ -45,12 +45,20 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin-local}
       ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:-}
+      WIKI_SERVICE_CLIENT_SECRET: ${WIKI_SERVICE_CLIENT_SECRET:-}
     ports:
       - '127.0.0.1:8081:8080'
     volumes:
       - keycloak-data:/opt/keycloak/data
       - ./infra/local/keycloak:/opt/keycloak/data/import:ro
       - ./infra/local/keycloak-themes/aov-public:/opt/keycloak/themes/aov-public:ro
+  # Catches account security email locally (ADR-024); not part of production.
+  mailpit:
+    image: axllent/mailpit:v1.32.0
+    profiles: [mail]
+    ports:
+      - '127.0.0.1:1025:1025' # SMTP
+      - '127.0.0.1:8025:8025' # web UI to read the messages
 volumes:
   postgres-data:
   seaweedfs-data:
