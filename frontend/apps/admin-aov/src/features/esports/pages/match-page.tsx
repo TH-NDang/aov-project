@@ -734,7 +734,8 @@ function MatchViewer({
           {flash.text}
         </span>
       )}
-      <ShortcutList open={keysOpen} onOpenChange={setKeysOpen} editable={editable} />
+      {/* A phone has no keyboard to use them with. */}
+      {!phone && <ShortcutList open={keysOpen} onOpenChange={setKeysOpen} editable={editable} />}
     </div>
   )
 
@@ -829,12 +830,18 @@ function MatchViewer({
       onClick={() => setPanel({ kind: "progress" })}
       aria-label={`Tiến độ ghi ván ${focused.number}`}
     >
-      <ListChecks size={14} /> {phone ? "" : "Tiến độ"}
+      <ListChecks size={14} /> Tiến độ
       <ProgressBadge progress={focusedProgress} />
     </Button>
   )
+  // On a phone the tools keep their names and form one row that scrolls sideways, instead of bare icons.
   const tools = (editable || progressButton) && (
-    <span className="flex flex-wrap items-center gap-1.5">
+    <span
+      className={cn(
+        "flex items-center gap-1.5",
+        phone ? "w-full flex-nowrap overflow-x-auto pb-1 [&>*]:shrink-0" : "flex-wrap",
+      )}
+    >
       {progressButton}
       {editable && focused && (
         <>
@@ -845,10 +852,10 @@ function MatchViewer({
             aria-label="Video, đồng bộ và kết thúc ván"
             title="Link video, mốc vào trận, tạm dừng, mốc kết thúc và đội thắng"
           >
-            <Link2 size={14} /> {phone ? "" : "Video & kết thúc ván"}
+            <Link2 size={14} /> {phone ? "Video" : "Video & kết thúc ván"}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setPanel({ kind: "draft" })} aria-label="Cấm chọn">
-            <ShieldBan size={14} /> {phone ? "" : "Cấm chọn"}
+            <ShieldBan size={14} /> Cấm chọn
           </Button>
           <Button
             size="sm"
@@ -856,7 +863,7 @@ function MatchViewer({
             onClick={() => setPanel({ kind: "loadout" })}
             aria-label="Phụ trợ, phù hiệu, bảng ngọc và trang bị"
           >
-            <Gem size={14} /> {phone ? "" : "Phụ trợ, ngọc, trang bị"}
+            <Gem size={14} /> {phone ? "Ngọc, trang bị" : "Phụ trợ, ngọc, trang bị"}
           </Button>
           {focused.live ? (
             !phone && (
@@ -887,7 +894,7 @@ function MatchViewer({
             aria-label={`Thông tin ván ${focused.number}`}
             title="Mùa và patch của ván, số ván, ghi chú, gỡ công khai, xóa ván"
           >
-            <Info size={14} /> {phone ? "" : `Thông tin ván ${focused.number}`}
+            <Info size={14} /> {phone ? "Thông tin" : `Thông tin ván ${focused.number}`}
           </Button>
         </>
       )}
@@ -1222,7 +1229,7 @@ function MatchHeader({
   const side = (view: TeamView, wins: number | undefined, won: boolean, align: "left" | "right") => (
     <div
       className={cn(
-        "flex min-w-0 flex-1 items-center gap-3",
+        "flex min-w-0 flex-1 items-center gap-2 @xl:gap-3",
         align === "right" && "flex-row-reverse text-right",
         winner && !won && "esp-loser",
       )}
@@ -1242,7 +1249,9 @@ function MatchHeader({
         </span>
         <span className={cn("flex items-center gap-2", align === "right" && "flex-row-reverse")}>
           {winner && <ResultTag won={won} />}
-          <WinPips wins={wins} bestOf={content.bestOf} align={align === "right" ? "end" : "start"} won={won} />
+          <span className="hidden @xl:inline-flex">
+            <WinPips wins={wins} bestOf={content.bestOf} align={align === "right" ? "end" : "start"} won={won} />
+          </span>
         </span>
       </span>
     </div>
@@ -1269,7 +1278,7 @@ function MatchHeader({
           )}
           <span className="ml-auto flex flex-wrap gap-2">{children}</span>
         </div>
-        <div className="flex items-center gap-3 @3xl:gap-8">
+        <div className="flex items-center gap-2 @xl:gap-3 @3xl:gap-8">
           {side(team(content.teamAId), content.result?.scoreA, winner === "A", "left")}
           <div className="esp-num flex shrink-0 items-center gap-2 text-3xl font-black @3xl:text-4xl">
             <span className={winner === "B" ? "text-white/35" : winner === "A" ? "text-[var(--esp-gold)]" : ""}>

@@ -199,6 +199,7 @@ function ArcanaColumn({
   value,
   options,
   byId,
+  className,
   onChange,
 }: {
   color: ArcanaColor
@@ -206,6 +207,7 @@ function ArcanaColumn({
   value: Loadout<ArcanaAllocation>
   options: Reference[]
   byId: Map<string, Reference>
+  className?: string
   onChange: Change<Loadout<ArcanaAllocation>>
 }) {
   const total = stonesOf(value.entries, color)
@@ -223,7 +225,7 @@ function ArcanaColumn({
   const picked = "bg-[color-mix(in_oklch,var(--arcana)_16%,transparent)]"
 
   return (
-    <div data-arcana={color} className="min-w-0 rounded-lg border">
+    <div data-arcana={color} className={cn("min-w-0 rounded-lg border", className)}>
       <div className="flex items-center gap-2 border-b px-2 py-1.5">
         <span className="size-2.5 rounded-full bg-[var(--arcana)]" aria-hidden="true" />
         <span className="text-xs font-semibold">{label}</span>
@@ -333,6 +335,8 @@ function ArcanaEditor({
   onChange: Change<Loadout<ArcanaAllocation>>
 }) {
   const [tier, setTier] = useState(3)
+  // Where the three columns do not fit side by side, one colour is shown at a time.
+  const [colorShown, setColorShown] = useState<ArcanaColor>("RED")
   const byId = useMemo(() => new Map(catalog.arcana.map((stone) => [stone.id, stone])), [catalog.arcana])
   const status = arcanaStatus(value.entries, value.status)
   const hidden = status === "NOT_SHOWN"
@@ -392,12 +396,34 @@ function ArcanaEditor({
               Bấm một loại ngọc để lấy hết số viên còn trống của màu đó.
             </span>
           </div>
+          <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 @lg:hidden" role="group" aria-label="Màu ngọc">
+            {ARCANA_COLORS.map((color) => (
+              <button
+                key={color.code}
+                type="button"
+                data-arcana={color.code}
+                aria-pressed={colorShown === color.code}
+                onClick={() => setColorShown(color.code)}
+                className={cn(
+                  "flex h-8 items-center justify-center gap-1.5 rounded-md text-xs font-semibold",
+                  colorShown === color.code ? "bg-background shadow-sm" : "text-muted-foreground",
+                )}
+              >
+                <span className="size-2 rounded-full bg-[var(--arcana)]" aria-hidden="true" />
+                {color.label}
+                <span className="esp-num font-normal">
+                  {stonesOf(value.entries, color.code)}/{STONES_PER_COLOR}
+                </span>
+              </button>
+            ))}
+          </div>
           <div className="grid gap-2 @lg:grid-cols-3">
             {ARCANA_COLORS.map((color) => (
               <ArcanaColumn
                 key={color.code}
                 color={color.code}
                 label={color.label}
+                className={colorShown === color.code ? undefined : "hidden @lg:block"}
                 value={value}
                 byId={byId}
                 options={catalog.arcana.filter((stone) => stone.color === color.code && stone.tier === tier)}
@@ -677,8 +703,12 @@ function EnchantmentsEditor({
             {branches
               .filter((code) => code !== (recorded ?? branch))
               .map((code) => (
-                <div key={code} className="flex items-start gap-2" data-secondary-branch={code}>
-                  <span className="w-20 shrink-0 pt-2 text-xs text-muted-foreground">{branchLabel(code)}</span>
+                <div
+                  key={code}
+                  className="flex flex-col gap-1 @lg:flex-row @lg:items-start @lg:gap-2"
+                  data-secondary-branch={code}
+                >
+                  <span className="shrink-0 text-xs text-muted-foreground @lg:w-20 @lg:pt-2">{branchLabel(code)}</span>
                   <div className="flex flex-wrap items-start gap-x-3 gap-y-1">
                     {[1, 2].map((tier) => (
                       <div key={tier} className="flex items-start gap-1">

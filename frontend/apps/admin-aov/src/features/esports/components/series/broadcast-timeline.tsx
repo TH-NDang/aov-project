@@ -489,7 +489,7 @@ export function BroadcastTimeline({
   return (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
-        <span className="mr-auto flex items-center gap-2 text-muted-foreground">
+        <span className="mr-auto hidden items-center gap-2 text-muted-foreground @2xl:flex">
           <TimeTag kind="video" seconds={current} className="font-semibold text-foreground" />
           {here ? (
             <span>
@@ -547,9 +547,16 @@ export function BroadcastTimeline({
         data-timeline-hint
       >
         {notice ?? (
-          <span className="flex items-center gap-1.5">
-            <MousePointerClick size={13} aria-hidden="true" className="shrink-0" /> {hint}
-          </span>
+          <>
+            <span className="hidden items-center gap-1.5 @2xl:flex">
+              <MousePointerClick size={13} aria-hidden="true" className="shrink-0" /> {hint}
+            </span>
+            {/* A narrow screen is a touch screen: fewer words, and the gestures that work there. */}
+            <span className="flex items-center gap-1.5 @2xl:hidden">
+              <MousePointerClick size={13} aria-hidden="true" className="shrink-0" />
+              {editing ? "Chạm để tua · chụm để phóng · kéo mốc để đổi giây" : "Chạm để tua · chụm hai ngón để phóng"}
+            </span>
+          </>
         )}
         <span className="ml-auto hidden items-center gap-3 @2xl:flex" aria-hidden="true">
           <span className="flex items-center gap-1">
@@ -612,7 +619,8 @@ export function BroadcastTimeline({
               data-synced={chapter.synced || undefined}
               style={{ left: pct(chapter.start), width: `calc(${pct(chapter.end - chapter.start)} + 1px)` }}
             >
-              V{chapter.number}
+              {/* On a narrow overview a game is a few pixels wide and the name would be cut to one letter. */}
+              <span className="hidden @2xl:inline">V{chapter.number}</span>
             </span>
           ))}
           {events.map((event) =>

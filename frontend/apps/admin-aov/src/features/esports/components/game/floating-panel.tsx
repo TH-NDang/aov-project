@@ -57,8 +57,9 @@ export function FloatingPanel({
       aria-modal="false"
       aria-label={title}
       className={cn(
-        "fixed z-50 flex max-h-[85vh] flex-col overflow-hidden border bg-popover text-popover-foreground shadow-2xl",
-        phone ? "inset-x-0 bottom-0 rounded-t-2xl" : "right-6 bottom-6 rounded-2xl",
+        "fixed z-50 flex flex-col overflow-hidden border bg-popover text-popover-foreground shadow-2xl",
+        // On a phone the sheet stops short of the video pinned at the top: what is recorded is read off the picture.
+        phone ? "inset-x-0 bottom-0 max-h-[62dvh] rounded-t-2xl" : "right-6 bottom-6 max-h-[85vh] rounded-2xl",
       )}
       style={
         phone ? undefined : { width: `min(${width}px, calc(100vw - 3rem))`, translate: `${offset.x}px ${offset.y}px` }

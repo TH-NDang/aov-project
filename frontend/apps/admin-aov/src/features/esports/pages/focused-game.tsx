@@ -319,7 +319,12 @@ export function FocusedGame({
         )}
         {editable && panel?.kind === "loadout" && catalog && (
           <FloatingPanel
-            title={`Phụ trợ · phù hiệu · ngọc · trang bị · Ván ${view.number}`}
+            // A phone shows the title on one line.
+            title={
+              phone
+                ? `Ngọc, trang bị · Ván ${view.number}`
+                : `Phụ trợ · phù hiệu · ngọc · trang bị · Ván ${view.number}`
+            }
             icon={<Gem size={15} />}
             onClose={() => onPanel(null)}
             width={760}
@@ -383,7 +388,7 @@ export function FocusedGame({
         )}
         {editable && panel?.kind === "sync" && (
           <FloatingPanel
-            title={`Video · đồng bộ · kết thúc · Ván ${view.number}`}
+            title={phone ? `Video · Ván ${view.number}` : `Video · đồng bộ · kết thúc · Ván ${view.number}`}
             icon={<Link2 size={15} />}
             onClose={() => onPanel(null)}
             width={520}
