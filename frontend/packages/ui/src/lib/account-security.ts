@@ -1,4 +1,4 @@
-/** Client for /users/me/security on wiki-service (ADR-024), shared by the public apps. */
+/** Client for /users/me/security on wiki-service (ADR-028), shared by the public apps. */
 
 export type SecurityOverview = {
   email: string | null

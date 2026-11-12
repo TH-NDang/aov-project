@@ -249,7 +249,7 @@ services:
       ADMIN_ORIGIN: ${PUBLIC_ORIGIN:?set in .env}
       ADMIN_BASE_PATH: /admin/
       ADMIN_AUTH_CLIENT_SECRET: ${ADMIN_AUTH_CLIENT_SECRET:?set in .env}
-      # Account security (ADR-024): service account and token exchange of the wiki-service client.
+      # Account security (ADR-028): service account and token exchange of the wiki-service client.
       WIKI_SERVICE_CLIENT_SECRET: ${WIKI_SERVICE_CLIENT_SECRET:?set in .env}
       # Password change codes go out over SMTP; without a host or sender the settings page cannot change passwords.
       MAIL_HOST: ${MAIL_HOST:-}

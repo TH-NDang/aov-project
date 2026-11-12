@@ -1,4 +1,4 @@
-# ADR-024 — Cài đặt bảo mật tài khoản: đổi mật khẩu bằng mã email, phiên đăng nhập, xác thực hai bước
+# ADR-028 — Cài đặt bảo mật tài khoản: đổi mật khẩu bằng mã email, phiên đăng nhập, xác thực hai bước
 
 - Trạng thái: Chấp nhận — chủ dự án chọn phương án ngày 09/11/2026: gửi mã qua SMTP chuẩn (Mailpit ở local),
   nhập mật khẩu mới trong trang Wiki, xác thực hai bước tùy chọn cho mọi tài khoản và Admin có ô nhập mã,

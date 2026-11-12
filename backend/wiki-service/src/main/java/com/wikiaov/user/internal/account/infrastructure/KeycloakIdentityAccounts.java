@@ -35,7 +35,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 /**
- * Keycloak Admin API (service account) and Account API (token exchange) for account security (ADR-024).
+ * Keycloak Admin API (service account) and Account API (token exchange) for account security (ADR-028).
  *
  * <p>Request and response bodies are never logged: they carry passwords, tokens and personal data.
  */

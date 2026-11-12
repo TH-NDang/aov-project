@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react"
 
-/** Keycloak application-initiated actions used by account settings (ADR-024). */
+/** Keycloak application-initiated actions used by account settings (ADR-028). */
 export type AccountAction = "CONFIGURE_TOTP" | "CONFIGURE_RECOVERY_AUTHN_CODES" | `delete_credential:${string}`
 export type AccountActionResult = { action: AccountAction; status: "success" | "cancelled" | "error" }
 export type SignInOptions = {

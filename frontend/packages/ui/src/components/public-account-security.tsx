@@ -25,7 +25,7 @@ export type PublicAccountSecurityProps = {
   actionResult?: AccountActionResult | null
 }
 
-/** Account settings shared by the public apps: password, signed-in devices and two-step sign-in (ADR-024). */
+/** Account settings shared by the public apps: password, signed-in devices and two-step sign-in (ADR-028). */
 export function PublicAccountSecurity({ locale, api, startAction, actionResult }: PublicAccountSecurityProps) {
   const text: Text = useCallback((vi, en) => (locale.startsWith("en") ? en : vi), [locale])
   const [overview, setOverview] = useState<SecurityOverview | null>(null)

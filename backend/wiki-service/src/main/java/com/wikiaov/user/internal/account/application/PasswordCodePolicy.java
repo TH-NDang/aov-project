@@ -4,7 +4,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
-/** Limits for password change codes (ADR-024). The database allows at most five failed attempts. */
+/** Limits for password change codes (ADR-028). The database allows at most five failed attempts. */
 @ConfigurationProperties("wiki.account.password-code")
 public record PasswordCodePolicy(
         @DefaultValue("10m") Duration lifetime,

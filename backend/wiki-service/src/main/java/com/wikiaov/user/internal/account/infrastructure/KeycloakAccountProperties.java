@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Confidential Keycloak client used for account security (ADR-024).
+ * Confidential Keycloak client used for account security (ADR-028).
  *
  * @param clientId     client with a service account ({@code view-users}, {@code manage-users}) and standard token
  *                     exchange to the {@code account} audience

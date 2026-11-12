@@ -9,7 +9,7 @@ param(
     [switch]$DryRun
 )
 
-# Applies the Keycloak settings of ADR-024 to an existing realm; a fresh import already has the client part.
+# Applies the Keycloak settings of ADR-028 to an existing realm; a fresh import already has the client part.
 # - wiki-service: confidential client, service account with realm-management view-users/manage-users,
 #   standard token exchange and an `account` audience mapper (device details of sessions).
 # - Browser flow: recovery codes as an alternative to the authenticator code.
@@ -99,7 +99,7 @@ try {
     $flows = @(Invoke-Admin GET '/authentication/flows')
     if (-not ($flows | Where-Object alias -eq $postBrokerFlow)) {
         $null = Invoke-Admin POST '/authentication/flows' @{
-            alias = $postBrokerFlow; description = 'Two-step sign-in after an identity provider (ADR-024)'
+            alias = $postBrokerFlow; description = 'Two-step sign-in after an identity provider (ADR-028)'
             providerId = 'basic-flow'; topLevel = $true; builtIn = $false
         }
         $null = Invoke-Admin POST "/authentication/flows/$([Uri]::EscapeDataString($postBrokerFlow))/executions/flow" @{

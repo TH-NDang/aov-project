@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 
-/** Request bodies of the password change flow (ADR-024). */
+/** Request bodies of the password change flow (ADR-028). */
 public final class PasswordChangeRequests {
     private PasswordChangeRequests() {
     }

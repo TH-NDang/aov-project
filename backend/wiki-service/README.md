@@ -150,7 +150,7 @@ client, role tổng hợp và tài khoản đích. Chạy lại không tạo tr�
 hiện có. Có thể truyền `-ServerUrl`, `-Realm`, `-TargetUsername`, `-Credential`; máy chủ ngoài local
 phải dùng HTTPS. Đây không phải công cụ đồng bộ toàn bộ realm.
 
-### Cài đặt bảo mật tài khoản (ADR-024)
+### Cài đặt bảo mật tài khoản (ADR-028)
 
 Trang Cài đặt tài khoản của Wiki gọi `/api/wiki/v1/users/me/security/**`. Backend cần:
 

@@ -17,7 +17,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 
 /**
- * Account security state and sessions of the caller (ADR-024). The identity provider owns every credential and
+ * Account security state and sessions of the caller (ADR-028). The identity provider owns every credential and
  * session; this facade only reads them and ends sessions that belong to the caller. No database transaction is held
  * while the provider is called.
  */

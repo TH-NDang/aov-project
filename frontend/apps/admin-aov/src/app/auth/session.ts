@@ -137,7 +137,7 @@ export async function initializeSession() {
   }
   await verifySession()
 }
-/** `otp` is the six-digit authenticator code for accounts with two-step sign-in (ADR-024). */
+/** `otp` is the six-digit authenticator code for accounts with two-step sign-in (ADR-028). */
 export async function loginPassword(username: string, password: string, otp?: string) {
   const current = ++generation
   try {

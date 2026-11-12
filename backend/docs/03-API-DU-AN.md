@@ -135,7 +135,7 @@ Response token: `{ "accessToken": "...", "expiresIn": 300 }`. Không có refresh
 Refresh cookie: `aov_admin_refresh`, HttpOnly, SameSite=Lax, Secure (trừ local), path `/api/wiki/`;
 Max-Age theo refresh_expires_in từ IdP. Không có Domain. Không nhận query ở các endpoint trừ callback.
 Tên đăng nhập tối đa 254 ký tự, mật khẩu tối đa 1024 ký tự; `otp` null hoặc đúng 6 chữ số, gửi tới Keycloak
-dưới tên `totp` cho tài khoản đã bật xác thực hai bước (ADR-024). Không lưu và không log các giá trị này.
+dưới tên `totp` cho tài khoản đã bật xác thực hai bước (ADR-028). Không lưu và không log các giá trị này.
 
 - 401 AUTH_INVALID_CREDENTIALS: sai thông tin, thiếu/sai mã xác thực hai bước hoặc tài khoản cần hoàn tất bước
   xác minh ở Keycloak. Keycloak trả `400` hoặc `401 invalid_grant` đều map về mã này.
@@ -185,7 +185,7 @@ Danh sách admin chỉ có hồ sơ đã lưu, không đồng bộ danh sách t�
 - 422 USER_AVATAR_INVALID: avatar chưa READY/ACTIVE, không đúng loại hoặc không thuộc người sửa.
 - 401/403: token hoặc quyền không phù hợp. Không công khai danh sách hồ sơ.
 
-### 1.5 Cài đặt bảo mật tài khoản (ADR-024)
+### 1.5 Cài đặt bảo mật tài khoản (ADR-028)
 
 Base `/api/wiki/v1/users/me/security`, Bearer JWT đã xác minh, chỉ tài khoản HUMAN (service account nhận
 `403 FORBIDDEN`). Mọi response `no-store`, không nhận query parameter. Dùng chung cho các app công khai.

@@ -112,7 +112,7 @@ thị trường nằm trong nhóm cài đặt của menu; Wiki không có thiế
 Callback `/auth/callback` đọc tên qua `/api/wiki/v1/users/me` rồi trở lại URL trước đăng nhập.
 Khi đã đăng nhập, popup tài khoản (desktop) và hàng tài khoản trong menu “⋯” (mobile) có liên kết
 **Cài đặt tài khoản** tới `/account`: đổi mật khẩu bằng mã gửi email, xem/đăng xuất thiết bị và bật/tắt xác thực
-hai bước (ADR-024). Phần giao diện dùng chung `PublicAccountSecurity` của `@aov/ui`; bật/tắt 2FA chuyển sang trang
+hai bước (ADR-028). Phần giao diện dùng chung `PublicAccountSecurity` của `@aov/ui`; bật/tắt 2FA chuyển sang trang
 Keycloak theme AOV bằng `kc_action` rồi quay lại `/account`.
 Cấu hình `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` trước khi build; xem
 [cài đặt theme](../../../../backend/wiki-service/infra/local/keycloak-themes/README.md).

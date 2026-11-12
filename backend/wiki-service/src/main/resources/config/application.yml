@@ -17,7 +17,7 @@ spring:
       timeout: ${REDIS_TIMEOUT:200ms}
       ssl:
         enabled: ${REDIS_SSL:false}
-  # Account security email (ADR-024). Without a host or wiki.account.mail.from, password changes are unavailable.
+  # Account security email (ADR-028). Without a host or wiki.account.mail.from, password changes are unavailable.
   mail:
     host: ${MAIL_HOST:}
     port: ${MAIL_PORT:587}
@@ -63,7 +63,7 @@ management:
     # The cache is optional; losing Redis must not make the database-backed API unready.
     redis:
       enabled: false
-    # Account email is optional (ADR-024); a missing SMTP server only disables password changes.
+    # Account email is optional (ADR-028); a missing SMTP server only disables password changes.
     mail:
       enabled: false
   endpoints:

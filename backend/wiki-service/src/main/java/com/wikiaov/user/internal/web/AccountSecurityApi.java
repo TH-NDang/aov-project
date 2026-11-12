@@ -18,7 +18,7 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 
 /**
- * HTTP API documentation contract for account security (ADR-024). Runtime mappings and binding remain on the
+ * HTTP API documentation contract for account security (ADR-028). Runtime mappings and binding remain on the
  * controller; validation is inherited from this interface.
  */
 @Tag(name = "user")

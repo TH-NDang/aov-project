@@ -1,4 +1,4 @@
-<#-- Same form as the Keycloak base theme; an unnamed authenticator shows its type name instead of "otp" (ADR-024). -->
+<#-- Same form as the Keycloak base theme; an unnamed authenticator shows its type name instead of "otp" (ADR-028). -->
 <#import "template.ftl" as layout>
 <#assign credentialName = (credentialLabel == "otp")?then(msg("otp-display-name"), (credentialLabel == "recovery-authn-codes")?then(msg("recovery-authn-codes-display-name"), credentialLabel))>
 <@layout.registrationLayout displayMessage=false; section>

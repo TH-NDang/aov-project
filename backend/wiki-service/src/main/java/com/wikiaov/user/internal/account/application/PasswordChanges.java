@@ -33,7 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Password change confirmed by a code mailed to the account (ADR-024).
+ * Password change confirmed by a code mailed to the account (ADR-028).
  *
  * <p>Each step uses short transactions: email and identity-provider calls always happen outside them. The new password
  * goes straight to the identity provider and is never stored, logged or audited.

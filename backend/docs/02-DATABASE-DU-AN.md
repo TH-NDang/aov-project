@@ -1263,7 +1263,7 @@ Migration `V003__create_user_profiles.sql`; module `user` sở hữu. Thay phư�
 Không lưu email, mật khẩu hoặc role. Index theo thời gian tạo và avatar. Hồ sơ được tạo ở lần lưu đầu,
 không tạo chỉ vì GET hoặc đăng nhập. Tên mặc định đọc từ actor khi chưa có hồ sơ.
 
-### `user_profile.password_change_challenge` — phiếu mã đổi mật khẩu (ADR-024)
+### `user_profile.password_change_challenge` — phiếu mã đổi mật khẩu (ADR-028)
 
 Migration `V069__create_password_change_challenge.sql`; module `user` sở hữu. Mỗi row là một lần gửi mã 6 số
 tới email tài khoản trước khi đổi/đặt mật khẩu trong Keycloak.

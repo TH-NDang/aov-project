@@ -6,7 +6,7 @@ form đăng nhập, đăng ký, xác minh, MFA và khôi phục mật khẩu k�
 action URL và các bước xác thực. Các tính năng chỉ hiện khi realm đã bật/cấu hình tương ứng.
 Riêng `delete-credential.ftl` chép form gốc của Keycloak 26.4, chỉ đổi tên hiển thị khi credential chưa đặt tên
 (`otp` thành "Ứng dụng xác thực"). Bản dịch tiếng Việt có đủ các trang thiết lập ứng dụng xác thực, mã khôi phục,
-nhập mã khi đăng nhập và xác nhận xóa dùng cho trang Cài đặt tài khoản (ADR-024).
+nhập mã khi đăng nhập và xác nhận xóa dùng cho trang Cài đặt tài khoản (ADR-028).
 
 Trên desktop, cột thương hiệu bám theo màn hình khi cuộn form đăng nhập/đăng ký; nội dung tự thu gọn
 theo chiều cao cửa sổ. Mobile dùng một cột, giữ ô nhập và nút thao tác cao tối thiểu 44px. Form đăng ký
