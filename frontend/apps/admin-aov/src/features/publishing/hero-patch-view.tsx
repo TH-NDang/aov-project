@@ -27,7 +27,7 @@ import { control } from "./fields"
 import { patchViewAnchors, selectedPatchAnchor, patchViewRequest } from "./patch-view-anchor"
 import { formatPatchValue } from "./patch-value"
 import { SkillChangeList } from "./skill-change-list"
-import { compareSkillRanks } from "./skill-rank-values"
+import { compareSkillRanks, rankPartLabel, splitSkillRankValues } from "./skill-rank-values"
 import { SkillRankValues } from "./skill-rank-table"
 import { formatStatReading } from "./stat-reading"
 
@@ -219,7 +219,16 @@ export function HeroPatchTimeline({
             {errorMessage(changes.error)}
           </p>
         )}
-        {recorded && <ChangeLines changes={recorded.changes} content={content} heroId={heroId} locale={locale} />}
+        {recorded && (
+          <ChangeLines
+            changes={recorded.changes}
+            content={content}
+            heroId={heroId}
+            locale={locale}
+            changeSetId={recorded.id}
+            canRecordPrevious={canRecord}
+          />
+        )}
       </section>
 
       <section className="space-y-3 rounded-lg bg-muted/25 p-3">
@@ -303,15 +312,22 @@ export function HeroPatchTimeline({
                   locale={locale}
                   renderRow={(field, skill) => {
                     const ranks = compareSkillRanks(null, field.value, skill, skill)
+                    const split = splitSkillRankValues(field.value, skill)
+                    const label = skillFieldLabel(field.fieldKey)
                     return (
                       <li
                         key={`${field.skillKey}:${field.fieldKey}`}
                         className="type-body flex flex-wrap gap-x-3 gap-y-1 py-2.5"
                       >
-                        <span className="font-medium">{skillFieldLabel(field.fieldKey)}</span>
+                        <span className="font-medium">{label}</span>
                         {!ranks && (
+                          // A value that does not change with rank still reads as its plain numbers.
                           <span className="min-w-0 flex-1 whitespace-pre-wrap">
-                            {formatPatchValue(field.value ?? "—")}
+                            {split?.parts.length
+                              ? split.parts
+                                  .map((part) => `${rankPartLabel(part.key, label)} ${part.values[0] ?? "—"}`)
+                                  .join(" · ")
+                              : formatPatchValue(field.value ?? "—")}
                           </span>
                         )}
                         <ProvenanceTag
@@ -327,7 +343,8 @@ export function HeroPatchTimeline({
                               columns={ranks.columns}
                               values={ranks.after}
                               summary={ranks.summary.after}
-                              label={skillFieldLabel(field.fieldKey)}
+                              parts={split?.parts}
+                              label={label}
                             />
                           </div>
                         )}

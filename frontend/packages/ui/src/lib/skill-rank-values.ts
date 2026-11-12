@@ -255,6 +255,122 @@ export function compareSkillRanks(
   }
 }
 
+const rankVariables = ["physicalAttack", "bonusPhysicalAttack", "magicAttack", "maxHealth", "heroLevel"] as const
+export type RankVariable = (typeof rankVariables)[number]
+
+/** One number a formula is made of: the value itself ("base") or the share of a stat it adds. */
+export interface RankPart {
+  key: "base" | RankVariable
+  before: (string | null)[]
+  after: (string | null)[]
+  changed: boolean[]
+  summary: { before: string | null; after: string | null }
+}
+
+export interface RankPartsComparison {
+  columns: string[]
+  parts: RankPart[]
+}
+
+/** Each rank of a recorded value as numbers, or null when a side is not a formula of known stats. */
+function linearRanks(value: unknown, count: number): (Linear | null)[] | null {
+  if (value === null || value === undefined) return Array.from({ length: count }, () => null)
+  if (Array.isArray(value)) {
+    if (value.length === 1) return linearRanks(value[0], count)
+    if (value.length !== count) return null
+    const items = value.map((item, index) =>
+      evaluateRank(formula(clean(String(item ?? "")).replace(rankPrefix, "")), index + 1),
+    )
+    return items.every(Boolean) ? items : null
+  }
+  if (typeof value !== "string" && typeof value !== "number") return null
+  const text = formula(String(value))
+  // A plain percentage that rises by rank is one number already; it has no parts to show.
+  if (text.includes("%")) return null
+  const items = Array.from({ length: count }, (_, index) => evaluateRank(text, index + 1))
+  return items.every(Boolean) ? items : null
+}
+
+const exact = (number: number) => Math.round(number * 1_000_000) / 1_000_000
+
+/**
+ * Splits a before/after formula such as "350 + 110*(rank-1) + 0.4*magicAttack" into its numbers, so each reads as
+ * plain values by rank: the base, then the share of every stat it scales with, as the game writes it ("40%").
+ * Returns null when neither side scales with a stat; the whole comparison already shows plain numbers then.
+ */
+export function splitSkillRanks(
+  before: unknown,
+  after: unknown,
+  beforeSkill?: RankSkill | null,
+  afterSkill?: RankSkill | null,
+): RankPartsComparison | null {
+  // A value that does not change with rank, such as "0.9*physicalAttack", splits as one value with no rank columns.
+  const whole = compareSkillRanks(before, after, beforeSkill, afterSkill) ?? {
+    columns: [] as string[],
+    before: [],
+    after: [],
+    changed: [],
+    summary: { before: null, after: null },
+  }
+  const count = Math.max(whole.columns.length, 1)
+  const old = linearRanks(before, count)
+  const next = linearRanks(after, count)
+  if (!old || !next) return null
+  const used = rankVariables.filter((key) =>
+    [...old, ...next].some((linear) => linear && Math.abs(linear.terms[key] ?? 0) > 1e-10),
+  )
+  if (!used.length) return null
+
+  const parts = (["base", ...used] as const).map((key): RankPart => {
+    const read = (linear: Linear | null) => {
+      if (!linear) return null
+      const number = exact(key === "base" ? linear.constant : (linear.terms[key] ?? 0))
+      // A stat's share reads as the game writes it, a percentage of the stat; a hero-level term stays a per-level number.
+      return key === "base" || key === "heroLevel" ? numeric.format(number) : `${numeric.format(exact(number * 100))}%`
+    }
+    const oldValues = old.map(read)
+    const newValues = next.map(read)
+    const summary = (values: (string | null)[]) =>
+      values.every((value) => value === null) ? null : count === 1 ? values[0] : rankSummary(values, whole.columns)
+    return {
+      key,
+      before: oldValues,
+      after: newValues,
+      changed: oldValues.map((value, index) => value !== newValues[index]),
+      summary: { before: summary(oldValues), after: summary(newValues) },
+    }
+  })
+  // A formula made only of stat shares has no base number of its own.
+  const base = parts[0]
+  const noBase = [...base.before, ...base.after].every((value) => value === null || value === "0")
+  return { columns: whole.columns, parts: noBase ? parts.slice(1) : parts }
+}
+
+/** The same split for one value, as the data at a patch records it. */
+export function splitSkillRankValues(value: unknown, skill?: RankSkill | null) {
+  const split = splitSkillRanks(null, value, skill, skill)
+  return (
+    split && {
+      columns: split.columns,
+      parts: split.parts.map(({ key, after, summary }) => ({ key, values: after, summary: summary.after })),
+    }
+  )
+}
+
+const partNames: Record<RankVariable, string> = {
+  physicalAttack: "Tỉ lệ Công vật lý",
+  bonusPhysicalAttack: "Tỉ lệ Công vật lý cộng thêm",
+  magicAttack: "Tỉ lệ Công phép",
+  maxHealth: "Tỉ lệ Máu tối đa",
+  heroLevel: "Thêm mỗi cấp tướng",
+}
+
+/** The row label of a part: the field's own base number, or the stat whose share it is. */
+export function rankPartLabel(key: RankPart["key"], fieldLabel: string): string {
+  if (key !== "base") return partNames[key]
+  return /(?:^|\s)gốc(?:\s|$)/i.test(fieldLabel) ? fieldLabel : `${fieldLabel} gốc`
+}
+
 export function skillSourceTable(skill: RankSkill) {
   const source = skill.effects?.find((effect) => effect.effectType === "SOURCE_SNAPSHOT")?.metadata
   const table = record(source?.levelTable)

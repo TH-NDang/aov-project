@@ -2,11 +2,14 @@ import assert from "node:assert/strict"
 import { test } from "node:test"
 import {
   compareSkillRanks,
+  rankPartLabel,
   rankSummary,
   rankValues,
   skillRankCount,
   skillSourceTable,
+  splitSkillRanks,
 } from "../src/features/publishing/skill-rank-values"
+import { markDescriptionChanges, mechanicSkillKey } from "../src/features/publishing/patch-description-marks"
 import { buildSkillComparison } from "../src/features/publishing/hero-skill-comparison"
 import type { Skill } from "../src/features/publishing/types"
 import type { HeroComparison } from "../src/features/publishing/publishing-api"
@@ -145,4 +148,79 @@ test("history suppresses a formula and a rank table that describe identical valu
     changes: [],
   } as unknown as HeroComparison
   assert.deepEqual(buildSkillComparison(input, "vi-VN").skills, [])
+})
+
+const shield = {
+  oldValue: "350 + 110*(rank-1) + 0.4*magicAttack + 0.04*maxHealth",
+  newValue: "500 + 100*(rank-1) + 0.5*magicAttack + 0.05*maxHealth",
+}
+const damage = {
+  oldValue: "450 + 110*(rank-1) + 0.4*magicAttack + 0.04*maxHealth",
+  newValue: "500 + 100*(rank-1) + 0.5*magicAttack + 0.05*maxHealth",
+}
+
+test("a formula change splits into plain numbers: its base by rank, then each stat share as the game writes it", () => {
+  const split = splitSkillRanks(shield.oldValue, shield.newValue, skill(), skill())!
+  assert.deepEqual(
+    split.parts.map((part) => [rankPartLabel(part.key, "Lá chắn"), part.before, part.after, part.summary]),
+    [
+      [
+        "Lá chắn gốc",
+        ["350", "460", "570", "680", "790", "900"],
+        ["500", "600", "700", "800", "900", "1000"],
+        { before: "350 (+110/cấp chiêu)", after: "500 (+100/cấp chiêu)" },
+      ],
+      ["Tỉ lệ Công phép", Array(6).fill("40%"), Array(6).fill("50%"), { before: "40%", after: "50%" }],
+      ["Tỉ lệ Máu tối đa", Array(6).fill("4%"), Array(6).fill("5%"), { before: "4%", after: "5%" }],
+    ],
+  )
+  assert.deepEqual(splitSkillRanks(damage.oldValue, damage.newValue, skill(), skill())!.parts[0].changed, [
+    true,
+    true,
+    true,
+    true,
+    true,
+    false,
+  ])
+  // Plain numbers and values without a stat share keep the single comparison.
+  assert.equal(splitSkillRanks("8 - 0.5*(rank-1)", "8 - 0.3*(rank-1)", skill(), skill()), null)
+  assert.equal(splitSkillRanks("Làm chậm", "Choáng", skill(), skill()), null)
+  assert.deepEqual(
+    splitSkillRanks("0.8*physicalAttack", "0.9*physicalAttack", skill(), skill())?.parts.map((part) => [
+      part.key,
+      part.before,
+      part.after,
+    ]),
+    [["physicalAttack", ["80%"], ["90%"]]],
+  )
+  assert.equal(rankPartLabel("base", "Sát thương gốc"), "Sát thương gốc")
+})
+
+test("the description marks each changed number once, in recorded order, and never reads inside markup", () => {
+  const description =
+    "Chặn 500 <color=#9A71E2>(+50%Công phép)</color> (5% máu tối đa) trong 5 giây. Sau 1.5 giây gây 500 <color=#9A71E2>(+50%Công phép)</color>(+5% máu tối đa), 50% sát thương."
+  const { text, marks } = markDescriptionChanges(description, [shield, damage], skill())
+  assert.equal(marks, 6)
+  assert.equal(
+    text,
+    "Chặn <muted>350 → </muted><b>500</b> <color=#9A71E2>(+<muted>40% → </muted><b>50%</b>Công phép)</color> (<muted>4% → </muted><b>5%</b> máu tối đa) trong 5 giây. Sau 1.5 giây gây <muted>450 → </muted><b>500</b> <color=#9A71E2>(+<muted>40% → </muted><b>50%</b>Công phép)</color>(+<muted>4% → </muted><b>5%</b> máu tối đa), 50% sát thương.",
+  )
+  assert.deepEqual(markDescriptionChanges("Hồi 6 giây", [{ oldValue: "6", newValue: "5" }], skill()), {
+    text: "Hồi 6 giây",
+    marks: 0,
+  })
+})
+
+test("mechanic notes find their skill by the name the patch notes use", () => {
+  const skills = ["skill-0-1", "skill-1-1", "skill-1-2", "skill-2-1"].map((skillKey, displayOrder) => ({
+    ...skill(),
+    skillKey,
+    displayOrder,
+  }))
+  assert.deepEqual(
+    ["Nội tại", "Chiêu 1", "chiêu 2", "skill-1-2", "additional-self-heal"].map((name) =>
+      mechanicSkillKey(name, skills),
+    ),
+    ["skill-0-1", "skill-1-1", "skill-2-1", "skill-1-2", undefined],
+  )
 })

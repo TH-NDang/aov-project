@@ -29,6 +29,7 @@ import { skillImageMatch, useHeroSkillImages } from "./skill-artwork"
 import { SkillChangeList } from "./skill-change-list"
 import { ActionStrip } from "@/components/action-strip"
 import { selectSkillTranslation, skillLabel, skillVariantLabel } from "./hero-skills"
+import { mechanicSkillKey } from "./patch-description-marks"
 
 const api = createPublishingApi(backendRequest)
 export const compactControl =
@@ -218,16 +219,30 @@ export function PatchChangeEditor({
             skillKeyOf={(row) =>
               row.type === "SKILL" && reference?.SKILLS?.skills.some((skill) => skill.skillKey === row.key)
                 ? row.key
-                : undefined
+                : row.type === "MECHANIC"
+                  ? mechanicSkillKey(row.key, reference?.SKILLS?.skills)
+                  : undefined
             }
             skills={reference?.SKILLS?.skills}
             locale={locale}
             heroId={heroId}
-            groupAction={(key) => (
-              <Button type="button" variant="ghost" size="sm" onClick={() => add("SKILL", key)}>
-                <Plus aria-hidden className="size-4" /> Thêm dòng trong nhóm
-              </Button>
-            )}
+            groupAction={(key) => {
+              const skill = reference?.SKILLS?.skills.find((item) => item.skillKey === key)
+              return (
+                <div className="flex flex-wrap gap-1">
+                  <Button type="button" variant="ghost" size="sm" onClick={() => add("SKILL", key)}>
+                    <Plus aria-hidden className="size-4" /> Thêm dòng trong nhóm
+                  </Button>
+                  {/* A rework rewrites the skill without numbers to compare; its note is named the way the patch
+                      notes name the skill, so the history files it under this card. */}
+                  {skill && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => add("MECHANIC", skillLabel(skill))}>
+                      <Plus aria-hidden className="size-4" /> Ghi cơ chế hoặc làm lại
+                    </Button>
+                  )}
+                </div>
+              )
+            }}
             renderRow={(row, skill) => (
               <ChangeRowEditor
                 key={row.id}
@@ -551,14 +566,17 @@ function ChangeRowEditor({
         </div>
       )}
       {row.type === "MECHANIC" && (
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
-          <input
-            aria-label={`${label}: tên cơ chế`}
-            className={compactControl}
-            placeholder="Tên cơ chế"
-            value={row.key}
-            onChange={(event) => onChange({ key: event.target.value })}
-          />
+        // In a skill's card the card names the skill; the name field returns with the "change target" button.
+        <div className={cn("grid gap-2", showTarget && "sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]")}>
+          {showTarget && (
+            <input
+              aria-label={`${label}: tên cơ chế`}
+              className={compactControl}
+              placeholder="Tên cơ chế hoặc chiêu"
+              value={row.key}
+              onChange={(event) => onChange({ key: event.target.value })}
+            />
+          )}
           <ValueInput
             label={`${label}: mô tả`}
             value={row.description}

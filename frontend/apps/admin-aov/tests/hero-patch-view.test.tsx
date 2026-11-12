@@ -178,8 +178,10 @@ test("the timeline uses the new published baseline, preserves it across patches 
       ),
     )
     await waitFor(() => dom.window.document.body.textContent!.includes("6 seconds from notes"))
-    assert.match(dom.window.document.body.textContent!, /40 \+ 0\.25 × Công vật lý/)
-    assert.equal(dom.window.document.body.textContent!.split("45 + 0.23 × Công vật lý").length - 1, 2)
+    // A formula reads as its plain numbers: the recorded change and the data at the patch alike.
+    assert.match(dom.window.document.body.textContent!, /Sát thương chuẩn gốc4045Tỉ lệ Công vật lý25%23%/)
+    assert.match(dom.window.document.body.textContent!, /Sát thương chuẩn gốc 45 · Tỉ lệ Công vật lý 23%/)
+    assert.doesNotMatch(dom.window.document.body.textContent!, /× Công vật lý/)
     assert.doesNotMatch(dom.window.document.body.textContent!, /physicalAttack/)
     const recorded = [...dom.window.document.querySelectorAll("h3")]
       .find((title) => title.textContent?.startsWith("Thay đổi ở"))!
