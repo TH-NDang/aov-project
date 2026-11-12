@@ -80,25 +80,34 @@ const draftOnly = (image: GalleryImage) =>
 const inPeriod = (image: GalleryImage, period: Period) =>
   period === "all" || (period === "current" ? image.current : !image.current && !draftOnly(image))
 
-/** How a tile is shaped: wide art across two columns, portraits tall, icons and stickers square. */
-function tileShape(image: GalleryImage) {
+/** What an image is shaped like: wide art, a tall portrait, or a square icon or sticker. */
+function imageShape(image: GalleryImage): "wide" | "tall" | "square" {
   const place = role(image)
-  if (place === "SPLASH" || place === "SKIN_ART" || (place === "GALLERY" && image.kind === "SKIN"))
-    return "col-span-2 aspect-video"
-  if (place === "PORTRAIT" || place === "SKIN_PORTRAIT") return "aspect-[3/4]"
-  return "aspect-square"
+  if (place === "SPLASH" || place === "SKIN_ART" || (place === "GALLERY" && image.kind === "SKIN")) return "wide"
+  if (place === "PORTRAIT" || place === "SKIN_PORTRAIT") return "tall"
+  return "square"
 }
+
+/**
+ * Every tile has the same height, so the grid has no holes: wide art spans two columns, the rest one. A portrait is
+ * cropped from the top, which keeps the face; an icon or sticker is never cropped, since its round edge would be cut.
+ * The preview shows every image whole.
+ */
+const TILE_CLASS = {
+  wide: "col-span-2",
+  tall: "[&_img]:object-top",
+  square: "[&_img]:object-contain [&_img]:p-1",
+} as const
 
 /**
  * How large the preview draws an image. Wide art fills the panel; portraits and square icons stay near their own size,
  * since stretching a small icon across the panel blurs it and pushes the grid out of view. The full image opens on click.
  */
-function previewShape(image: GalleryImage) {
-  const shape = tileShape(image)
-  if (shape.includes("aspect-video")) return { className: "w-full", ratio: 16 / 9 }
-  if (shape.includes("aspect-[3/4]")) return { className: "mx-auto w-full max-w-xs", ratio: 3 / 4 }
-  return { className: "mx-auto w-full max-w-48", ratio: 1 }
-}
+const PREVIEW_SHAPE = {
+  wide: { className: "w-full", ratio: 16 / 9 },
+  tall: { className: "mx-auto w-full max-w-52", ratio: 3 / 4 },
+  square: { className: "mx-auto w-full max-w-40", ratio: 1 },
+} as const
 
 export const galleryKey = (heroId: string) => ["hero-gallery", heroId] as const
 
@@ -197,7 +206,7 @@ export function HeroGallery({
       </div>
 
       {shown.length ? (
-        <div className="grid min-w-0 gap-4 @min-[760px]:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)]">
+        <div className="grid min-w-0 gap-4 @min-[640px]:grid-cols-[minmax(0,1fr)_minmax(15rem,19rem)]">
           {selected && (
             <GalleryDetail
               key={selected.assetId}
@@ -210,12 +219,14 @@ export function HeroGallery({
               locale={locale}
             />
           )}
+          {/* The grid keeps a fixed height and scrolls inside, so a hero with many images does not stretch the page.
+              About three and a half rows show, and the cut row tells there is more below. */}
           <ul
             aria-label="Ảnh"
-            className="grid min-w-0 grid-cols-[repeat(auto-fill,minmax(6.5rem,1fr))] gap-2 @min-[760px]:order-first"
+            className="grid max-h-[25rem] min-w-0 grid-flow-row-dense auto-rows-[7rem] grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] content-start gap-2 overflow-y-auto p-0.5 pr-1.5 @min-[640px]:order-first"
           >
             {shown.map((image) => (
-              <li key={image.assetId} className={tileShape(image)}>
+              <li key={image.assetId} className={TILE_CLASS[imageShape(image)]}>
                 <button
                   type="button"
                   aria-pressed={selected?.assetId === image.assetId}
@@ -328,12 +339,12 @@ function GalleryDetail({
           : "Gắn thêm vào tướng"
 
   return (
-    <aside aria-label="Ảnh đang xem" className="min-w-0 space-y-3 rounded-xl border p-3 @min-[760px]:self-start">
+    <aside aria-label="Ảnh đang xem" className="min-w-0 space-y-3 rounded-xl border p-3 @min-[640px]:self-start">
       <HeroAsset
         id={image.assetId}
         alt={imageTitle(image, name)}
-        className={previewShape(image).className}
-        naturalAspectRatio={previewShape(image).ratio}
+        className={PREVIEW_SHAPE[imageShape(image)].className}
+        naturalAspectRatio={PREVIEW_SHAPE[imageShape(image)].ratio}
         preview
       />
       <div className="space-y-1">
