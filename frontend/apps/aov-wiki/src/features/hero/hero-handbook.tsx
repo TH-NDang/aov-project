@@ -18,6 +18,7 @@ import { wikiReferencesQuery } from "../../lib/wiki-references"
 import type { HeroDetail, PublicSkill } from "./hero-api"
 import "./hero-handbook.css"
 import { HeroSkins } from "./hero-skins"
+import { HeroBuilds } from "./hero-builds"
 import { HeroSectionNav } from "./hero-section-nav"
 import { WikiIcon } from "../../components/wiki-icon"
 import { SkillVideos } from "../videos/skill-videos"
@@ -463,6 +464,7 @@ function HandbookParts({ hero, skinOwner, handbook }: { hero: HeroDetail; skinOw
   return (
     <>
       <AbilitiesSection hero={hero} handbook={handbook} />
+      <HeroBuilds heroCode={hero.code} />
       <HeroSkins key={hero.id} hero={hero} owner={skinOwner} />
       <HeroVideos handbook={handbook} />
       <HeroHistory hero={hero} version={handbook.version} />

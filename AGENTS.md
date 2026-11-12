@@ -39,7 +39,7 @@ aov-project/
 ## Backend conventions (`backend/wiki-service`)
 
 - Root package `com.wikiaov`. One deployable, modular monolith (Spring Modulith).
-- Modules: `hero`, `media`, `patch`, `item`, `arcana`, `spell`, `enchantment`, `gamemode`, `query`, `access`, `platform`, `user`, `terminology`, `video`.
+- Modules: `hero`, `media`, `patch`, `item`, `arcana`, `spell`, `enchantment`, `gamemode`, `query`, `access`, `platform`, `user`, `terminology`, `video`, `build`.
 - Each module exposes public contracts at its package root. Large modules group implementation by function first:
   `internal/<capability>/{application,domain,persistence/entity,infrastructure}`. Examples: Hero `skills`, `skins`,
   `importing`; Patch `season`, `ruleset`, `release`; Media `asset`, `upload`, `storage`.

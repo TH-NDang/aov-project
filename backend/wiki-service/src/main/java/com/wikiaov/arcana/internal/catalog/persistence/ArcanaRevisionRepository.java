@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface ArcanaRevisionRepository extends JpaRepository<ArcanaRevision, UUID> {
     List<ArcanaRevision> findByOwnerIdOrderByRevisionNoDesc(UUID ownerId);
 
+    List<ArcanaRevision> findByOwnerIdInAndState(Collection<UUID> ownerIds, String state);
+
     List<ArcanaRevision> findByStateNot(String state);
 
     List<ArcanaRevision> findByRulesetIdAndState(UUID rulesetId, String state);

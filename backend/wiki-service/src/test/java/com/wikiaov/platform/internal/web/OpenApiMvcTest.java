@@ -59,6 +59,8 @@ class OpenApiMvcTest extends OpenApiContractChecks {
                     controllers.add("com.wikiaov.media.internal.web.MediaReferencesController");
                     controllers.add("com.wikiaov.patch.internal.web.PatchStatDefaultsController");
                     controllers.add("com.wikiaov.patch.internal.web.PatchNotesController");
+                    controllers.add("com.wikiaov.build.internal.web.BuildCaptureController");
+                    controllers.add("com.wikiaov.build.internal.web.BuildPublicController");
                     controllers.add("com.wikiaov.hero.internal.web.HeroStatSamplesController");
                     controllers.add("com.wikiaov.hero.internal.web.HeroPublishReadinessController");
                     controllers.add("com.wikiaov.hero.internal.web.HeroFormsController");
