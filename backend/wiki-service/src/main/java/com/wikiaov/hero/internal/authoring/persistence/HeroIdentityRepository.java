@@ -2,6 +2,8 @@ package com.wikiaov.hero.internal.authoring.persistence;
 
 import com.wikiaov.hero.internal.authoring.persistence.entity.HeroIdentity;
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +16,9 @@ public interface HeroIdentityRepository
             org.springframework.data.jpa.repository.JpaSpecificationExecutor<HeroIdentity> {
     @Query("select h from HeroIdentity h where h.code=:code or h.id in (select a.heroId from HeroCodeAlias a where a.legacyCode=:code)")
     Optional<HeroIdentity> findByCode(String code);
+
+    /** Current codes only; legacy codes still resolve one at a time through {@link #findByCode}. */
+    List<HeroIdentity> findByCodeIn(Collection<String> codes);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select h from HeroIdentity h where h.id = :id")

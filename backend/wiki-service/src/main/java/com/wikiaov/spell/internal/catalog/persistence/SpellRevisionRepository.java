@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface SpellRevisionRepository extends JpaRepository<SpellRevision, UUID> {
     List<SpellRevision> findByOwnerIdOrderByRevisionNoDesc(UUID ownerId);
 
+    List<SpellRevision> findByOwnerIdInAndState(Collection<UUID> ownerIds, String state);
+
     List<SpellRevision> findByStateNot(String state);
 
     List<SpellRevision> findByRulesetIdAndState(UUID rulesetId, String state);

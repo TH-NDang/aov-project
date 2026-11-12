@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.*;
 public interface EnchantmentIdentityRepository extends JpaRepository<EnchantmentIdentity, UUID> {
     Optional<EnchantmentIdentity> findByCode(String code);
 
+    List<EnchantmentIdentity> findByCodeIn(Collection<String> codes);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from EnchantmentIdentity e where e.id=:id")
     Optional<EnchantmentIdentity> lockById(UUID id);

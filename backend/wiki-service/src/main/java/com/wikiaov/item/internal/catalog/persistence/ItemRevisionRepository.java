@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface ItemRevisionRepository extends JpaRepository<ItemRevision, UUID> {
     List<ItemRevision> findByOwnerIdOrderByRevisionNoDesc(UUID ownerId);
 
+    List<ItemRevision> findByOwnerIdInAndState(Collection<UUID> ownerIds, String state);
+
     List<ItemRevision> findByStateNot(String state);
 
     List<ItemRevision> findByRulesetIdAndState(UUID rulesetId, String state);

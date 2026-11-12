@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 public interface EnchantmentRevisionRepository extends JpaRepository<EnchantmentRevision, UUID> {
     List<EnchantmentRevision> findByOwnerIdOrderByRevisionNoDesc(UUID ownerId);
 
+    List<EnchantmentRevision> findByOwnerIdInAndState(Collection<UUID> ownerIds, String state);
+
     List<EnchantmentRevision> findByStateNot(String state);
 
     List<EnchantmentRevision> findByRulesetIdAndState(UUID rulesetId, String state);

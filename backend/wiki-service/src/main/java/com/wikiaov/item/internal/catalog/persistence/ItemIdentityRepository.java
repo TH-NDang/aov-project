@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.*;
 public interface ItemIdentityRepository extends JpaRepository<ItemIdentity, UUID> {
     Optional<ItemIdentity> findByCode(String code);
 
+    List<ItemIdentity> findByCodeIn(Collection<String> codes);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from ItemIdentity e where e.id=:id")
     Optional<ItemIdentity> lockById(UUID id);
