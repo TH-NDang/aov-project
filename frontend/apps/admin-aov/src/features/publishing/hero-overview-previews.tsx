@@ -1,23 +1,19 @@
 import { useRef, useState, type ComponentType, type ReactNode } from "react"
-import { useQueries, useQuery } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import { ChevronRight, Clapperboard, ImageIcon, Play, Shirt, Swords } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { InfiniteScroll } from "@aov/ui/components/infinite-scroll"
 import { useRevealedRows } from "@aov/ui/hooks/use-revealed-rows"
-import { currentMediaSources } from "@aov/ui/lib/media-credit"
 import { videoThumbnail } from "@aov/ui/lib/video-playback"
 import { cn } from "@aov/ui/lib/utils"
-import type { LightboxImage } from "@/components/image-lightbox"
 import { SectionHeading, sectionFrame } from "@/components/section-contents"
-import { ImageCreditPanel } from "../media/image-credit-panel"
-import { visibleSources } from "../media/media-source-gaps"
 import { AdminEntityText } from "../terminology/catalog"
 import { videoApi, videoKeys } from "../videos/video-api"
 import type { AdminVideo } from "../videos/video-model"
 import { PURPOSE_LABELS } from "../videos/video-model"
 import { VideoPlayerDialog } from "../videos/video-player-dialog"
 import { HeroAsset } from "./hero-asset"
-import { heroContentAssetQuery } from "./hero-content-asset"
+import { useAssetGallery } from "./asset-gallery"
 import type { HeroContentTab } from "./hero-location"
 import { groupHeroSkills, skillLabel } from "./hero-skills"
 import { sectionTextFields, translatedText } from "./hero-translation-model"
@@ -73,34 +69,6 @@ function PreviewCard({
       {children}
     </section>
   )
-}
-
-/** The large view of pictures that already sit on the page, with their credits, in the order given. */
-function useGallery(entries: readonly { id?: string | null; title: string }[]) {
-  // One query per picture: an empty slot asks for nothing, and a picture used twice is read once.
-  const ids = [...new Set(entries.flatMap(({ id }) => (id ? [id] : [])))]
-  const assets = useQueries({ queries: ids.map((id) => heroContentAssetQuery(id)) })
-  const images: LightboxImage[] = []
-  const positions = new Map<number, number>()
-  entries.forEach((entry, order) => {
-    const asset = entry.id ? assets[ids.indexOf(entry.id)]?.data : undefined
-    if (!asset?.currentUrl) return
-    positions.set(order, images.length)
-    images.push({
-      path: asset.currentUrl,
-      title: entry.title,
-      meta: (
-        <ImageCreditPanel
-          sources={visibleSources(currentMediaSources(asset.provenance ?? [], asset.currentVersionId))}
-          assetId={asset.id}
-        />
-      ),
-    })
-  })
-  return (order: number) => {
-    const index = positions.get(order)
-    return index === undefined ? undefined : { images, index }
-  }
 }
 
 /** The skills as a strip of icons; the chosen one shows its name and the start of its text. */
@@ -212,7 +180,7 @@ export function SkinsPreview({
     skin,
     name: translatedText(skin.translations, locale, sectionTextFields.SKINS)?.name || skin.skinKey,
   }))
-  const gallery = useGallery(
+  const gallery = useAssetGallery(
     named.map(({ skin, name }) => ({ id: skin.portraitAssetId ?? skin.artAssetId, title: name })),
   )
   return (
@@ -267,7 +235,7 @@ export function MediaPreview({
 }) {
   const bindings = content.MEDIA_BINDINGS?.bindings
   const present = MEDIA_ROLES.filter(({ role }) => bindings?.[role]).length
-  const gallery = useGallery(
+  const gallery = useAssetGallery(
     MEDIA_ROLES.map(({ role, label }) => ({ id: bindings?.[role], title: `${name} · ${label}` })),
   )
   return (

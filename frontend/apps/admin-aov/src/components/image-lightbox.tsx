@@ -1,9 +1,10 @@
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { useHotkeys } from "@/app/hotkeys"
 import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@aov/ui/components/dialog"
 import { Kbd } from "@aov/ui/components/kbd"
+import { cn } from "@aov/ui/lib/utils"
 import { CopyButton } from "@/components/copy-button"
 import { MediaImage } from "@/components/media-image"
 import { mediaUrl } from "@/lib/media"
@@ -22,13 +23,24 @@ interface ImageLightboxProps {
   onCloseAutoFocus?: (event: Event) => void
 }
 
-/** Large preview with keyboard navigation through `images`. */
+/**
+ * Large preview that steps through `images`: arrow keys, the buttons on the picture, or the strip of small pictures
+ * beside it (below it on a narrow screen), which shows where in the set the open picture sits.
+ */
 export function ImageLightbox({ images, index, onIndexChange, onCloseAutoFocus }: ImageLightboxProps) {
   const { enabled } = useHotkeys()
   const title = useRef<HTMLHeadingElement>(null)
+  // Held in state: the dialog mounts its content a render after opening, so the strip appears after `index` is set.
+  const [strip, setStrip] = useState<HTMLUListElement | null>(null)
   const image = index === null ? undefined : images[index]
   const hasPrev = index !== null && index > 0
   const hasNext = index !== null && index < images.length - 1
+  const many = images.length > 1
+
+  // Keep the open picture's thumbnail in view when the view opens and as the set is stepped through.
+  useEffect(() => {
+    strip?.querySelector<HTMLElement>('[aria-current="true"]')?.scrollIntoView({ block: "nearest", inline: "nearest" })
+  }, [index, strip])
 
   useEffect(() => {
     if (index === null || !enabled) return
@@ -60,53 +72,92 @@ export function ImageLightbox({ images, index, onIndexChange, onCloseAutoFocus }
                 {image.subtitle ?? `${index! + 1}/${images.length}`}
               </DialogDescription>
             </DialogHeader>
-            <div className="relative flex min-w-0 w-full items-center justify-center overflow-hidden rounded-lg bg-muted/60 p-2 sm:p-4">
-              <MediaImage
-                path={image.path}
-                alt={image.title}
-                className="block max-h-[65dvh] w-auto min-w-0 max-w-full object-contain"
-                fallbackClassName="h-64 w-full"
-              />
-              {hasPrev && (
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="absolute left-2 rounded-full"
-                  onClick={() => onIndexChange(index! - 1)}
-                  aria-label="Ảnh trước"
+            <div className={cn("grid min-w-0 gap-3", many && "sm:grid-cols-[6rem_minmax(0,1fr)]")}>
+              {many && (
+                <ul
+                  ref={setStrip}
+                  aria-label="Chọn ảnh"
+                  className="order-last flex min-w-0 gap-2 overflow-x-auto p-1 sm:order-first sm:max-h-[65dvh] sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto"
                 >
-                  <ChevronLeft />
-                </Button>
+                  {images.map((entry, position) => (
+                    <li key={`${position}:${entry.path}`} className="shrink-0">
+                      <button
+                        type="button"
+                        aria-label={`Ảnh ${position + 1}: ${entry.title}`}
+                        aria-current={position === index ? "true" : undefined}
+                        title={entry.title}
+                        onClick={() => onIndexChange(position)}
+                        className={cn(
+                          "block h-14 w-20 overflow-hidden rounded-md border bg-muted/40 outline-none transition-opacity focus-visible:ring-2 focus-visible:ring-ring",
+                          position === index ? "ring-2 ring-primary" : "opacity-60 hover:opacity-100",
+                        )}
+                      >
+                        <MediaImage
+                          path={entry.path}
+                          alt=""
+                          className="size-full object-contain"
+                          fallbackClassName="size-full"
+                        />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
-              {hasNext && (
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="absolute right-2 rounded-full"
-                  onClick={() => onIndexChange(index! + 1)}
-                  aria-label="Ảnh sau"
-                >
-                  <ChevronRight />
-                </Button>
-              )}
+              {/* With a set, the frame keeps one height, so the arrows and the strip stay put while pictures change. */}
+              <div
+                className={cn(
+                  "relative flex min-w-0 w-full items-center justify-center overflow-hidden rounded-lg bg-muted/60 p-2 sm:p-4",
+                  many && "sm:h-[65dvh]",
+                )}
+              >
+                <MediaImage
+                  path={image.path}
+                  alt={image.title}
+                  className={cn(
+                    "block w-auto min-w-0 max-w-full object-contain",
+                    many ? "max-h-[55dvh] sm:max-h-full" : "max-h-[65dvh]",
+                  )}
+                  fallbackClassName="h-64 w-full"
+                />
+                {hasPrev && (
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-2 rounded-full"
+                    onClick={() => onIndexChange(index! - 1)}
+                    aria-label="Ảnh trước"
+                  >
+                    <ChevronLeft />
+                  </Button>
+                )}
+                {hasNext && (
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute right-2 rounded-full"
+                    onClick={() => onIndexChange(index! + 1)}
+                    aria-label="Ảnh sau"
+                  >
+                    <ChevronRight />
+                  </Button>
+                )}
+              </div>
             </div>
             {image.meta && <div className="min-w-0 [overflow-wrap:anywhere]">{image.meta}</div>}
-            <div className="flex w-full min-w-0 items-center gap-2 overflow-hidden rounded-md border bg-muted/40 px-2 py-2 text-xs sm:px-3">
-              <code className="min-w-0 flex-1 truncate font-mono" title={image.path}>
-                {image.path}
-              </code>
-              <CopyButton value={image.path} label="Sao chép đường dẫn" />
-              <Button variant="ghost" size="icon-xs" asChild>
-                <a href={mediaUrl(image.path)} target="_blank" rel="noreferrer" aria-label="Mở ảnh gốc">
-                  <ExternalLink />
+            {/* Plain actions instead of the raw address: few readers need the link itself, and it stays one copy away. */}
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
+              {many && (
+                <p className="type-meta mr-auto">
+                  Dùng <Kbd>←</Kbd> <Kbd>→</Kbd> hoặc bấm ảnh nhỏ để chuyển ảnh
+                </p>
+              )}
+              <CopyButton value={mediaUrl(image.path) ?? image.path} label="Sao chép liên kết ảnh" />
+              <Button variant="outline" size="sm" asChild>
+                <a href={mediaUrl(image.path)} target="_blank" rel="noreferrer" title={image.path}>
+                  <ExternalLink /> Mở ảnh gốc
                 </a>
               </Button>
             </div>
-            {images.length > 1 && (
-              <p className="text-center text-xs text-muted-foreground">
-                Dùng <Kbd>←</Kbd> <Kbd>→</Kbd> để chuyển ảnh
-              </p>
-            )}
           </>
         )}
       </DialogContent>
