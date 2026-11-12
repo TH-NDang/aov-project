@@ -2574,3 +2574,30 @@ thể hiện gì, tệp gốc trong bộ thu thập, màn hình Bách khoa đã 
 - Phân tích công khai: tần suất quân cờ, tỷ lệ Phe/Nghề đạt mốc, phân bố giá quân trong đội hình đề xuất và
   đội hình cộng đồng đang hiển thị; lượt thích được dùng làm trọng số. Không thu thập trận đấu thật nên không
   đưa ra tỷ lệ thắng.
+
+## Thống kê đấu hạng (ADR-025)
+
+Phạm vi theo yêu cầu ngày 11/11/2026: lưu số liệu của **Bảng Phân Bậc Tướng** trong game (Cộng đồng → Bảng Phân Bậc
+Tướng) đọc từ ảnh chụp, để biên tập viên duyệt và so sánh theo thời gian trong Admin. Chưa hiển thị trên Wiki; đề xuất
+hiển thị nằm ở ADR-025.
+
+- **Bản chụp** là một lần chụp hai bảng của game cho một bộ lọc: thị trường (`VN`), chế độ (`RANKED_ELITE` = “Đấu hạng
+  (Tinh Anh trở lên)”, giữ đúng chữ trên game), thời điểm chụp kèm múi giờ của máy chụp, khoảng thời gian thống kê nếu
+  game có ghi (hiện không ghi), tên lượt chụp của macro và ghi chú nguồn. Mỗi bản có mã slug duy nhất, ví dụ
+  `vn-ranked-elite-20261111-0705`.
+- Bảng **Tỷ lệ**: tier (`T0`–`T4`), tỷ lệ thắng, tỷ lệ chọn, tỷ lệ cấm (phần trăm, hai chữ số thập phân) và ba tướng mà
+  tướng này thắng nhiều hơn khi gặp, theo thứ tự trên game. Bảng **Chỉ số**: sát thương gây ra, hạ, vàng, sát thương phải
+  chịu, hỗ trợ — trung bình mỗi trận. Mỗi tướng còn giữ tên và vai trò đúng như trên game và vị trí trên từng bảng.
+- Thống kê theo **thực thể chơi được**: tướng thường và từng dạng (ADR-024). Hai dòng “Flowborn” là `flowborn-ad` và
+  `flowborn-mid`, phân biệt bằng vai trò trên game.
+- Mỗi giá trị giữ chữ đọc được trên ảnh và **ảnh dẫn chứng**: ảnh nào (mã băm SHA-256, tên tệp, bảng, trang) và vùng nào
+  (x, y, rộng, cao theo pixel của ảnh). Ảnh nằm ở `resources/raw/ranking/<ngày>/` và không commit, như ảnh cửa hàng;
+  Admin xem ảnh qua middleware dev.
+- Giá trị đọc không chắc hoặc không có trên ảnh được đánh dấu **chờ duyệt** kèm lý do. Giá trị thiếu vẫn có dòng với
+  giá trị rỗng. Biên tập viên xác nhận (giữ giá trị) hoặc sửa (nhập giá trị mới, chữ đọc được giữ nguyên); có thể đánh
+  dấu chờ duyệt lại một giá trị đã duyệt.
+- Biên tập viên **xác nhận cả bản chụp** khi không còn giá trị chờ duyệt. Đánh dấu chờ duyệt lại một giá trị thì bản
+  chụp trở về trạng thái đang duyệt. Xóa bản chụp (nhập nhầm) xóa mọi giá trị của nó.
+- Admin so sánh hai bản chụp theo từng tướng: đổi tier, chênh lệch từng chỉ số; tướng chỉ có ở một bản được ghi rõ.
+- Nhập bản chụp qua API từ tệp `ranking-manifest.json` do script đọc ảnh tạo ra; không nhập bằng migration.
+- Quyền: xem cần `catalog:read`; nhập, duyệt, xác nhận, xóa cần `hero:write`. Mọi thao tác ghi có audit.

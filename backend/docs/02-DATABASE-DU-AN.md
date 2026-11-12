@@ -1934,3 +1934,53 @@ Chỉ mục `(mode_id, status, updated_at DESC)` và `(mode_id, author_issuer, a
 (`EDITORIAL`, `COMMUNITY`), `created_at`. Khóa chính `(lineup_id, issuer, subject)` bảo đảm một lượt mỗi người.
 `lineup_id` của đội hình đề xuất là UUID trong nội dung cẩm nang nên không có FK; đội hình cộng đồng bị xóa
 thì xóa lượt thích của nó. Chỉ mục `(mode_id, lineup_id)` và `(mode_id, created_at)` phục vụ đếm tổng và 7 ngày.
+
+## Thống kê đấu hạng — V068 (ADR-025)
+
+Migration V068 tạo bốn bảng trong schema `hero`, thuộc capability `ranking` của module `hero`. Một bản chụp là một
+lần chụp Bảng Phân Bậc Tướng của game; mọi giá trị giữ nơi nó được đọc trên ảnh.
+
+`hero.ranking_snapshot` — bản chụp:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `id` | UUID |
+| `code` | Slug duy nhất, ví dụ `vn-ranked-elite-20261111-0705` |
+| `region_code` | Thị trường, `^[A-Z]{2,16}$` |
+| `mode_code`, `mode_label` | Chế độ (`RANKED_ELITE`, chữ hoa/số/gạch dưới) và đúng chữ trên game |
+| `period_label` | Khoảng thời gian thống kê nếu game ghi; null khi không có |
+| `captured_at`, `source_time_zone` | Thời điểm chụp (UTC) và múi giờ IANA của máy chụp |
+| `source_run`, `source_note` | Tên lượt chụp của macro và ghi chú nguồn (≤ 2000 ký tự) |
+| `confirmed_at`, `confirmed_by_issuer`, `confirmed_by_subject` | Biên tập viên xác nhận cả bản; cùng null hoặc cùng có |
+| `version` | Optimistic version của bản (xác nhận, bỏ xác nhận) |
+| `created_at`, `created_by_*`, `updated_at` | Người nhập và thời điểm |
+
+Chỉ mục `(captured_at DESC, id)` phục vụ danh sách mới nhất trước.
+
+`hero.ranking_snapshot_image` — ảnh của bản chụp: `snapshot_id` (FK, xóa theo bản), `image_id` (SHA-256 hex của tệp),
+`board` (`RATES`, `FIGURES`), `page_no` (≥ 1), `file_name`, `width`, `height`. Khóa chính `(snapshot_id, image_id)`,
+`UNIQUE (snapshot_id, board, page_no)`. Bytes ảnh không nằm trong DB.
+
+`hero.ranking_snapshot_hero` — tướng/dạng có trong bản: `snapshot_id` (FK, xóa theo bản), `hero_id` (FK `hero.hero`),
+`name_on_screen`, `role_on_screen` (`TANK`, `WARRIOR`, `ASSASSIN`, `MAGE`, `MARKSMAN`, `SUPPORT`), `rates_position`,
+`figures_position` (vị trí 1-based trên từng bảng, null khi không có). Khóa chính `(snapshot_id, hero_id)`; vị trí
+duy nhất trong mỗi bảng của một bản (chỉ mục duy nhất một phần).
+
+`hero.ranking_snapshot_value` — một giá trị:
+
+| Cột | Ý nghĩa |
+|---|---|
+| `snapshot_id`, `hero_id`, `metric` | Khóa chính; `(snapshot_id, hero_id)` FK `ranking_snapshot_hero`, xóa theo |
+| `metric` | `TIER`, `WIN_RATE`, `PICK_RATE`, `BAN_RATE`, `COUNTER_1`, `COUNTER_2`, `COUNTER_3`, `DAMAGE_DEALT`, `KILLS`, `GOLD`, `DAMAGE_TAKEN`, `ASSISTS` |
+| `number_value` | `NUMERIC(12,2)` cho tỷ lệ (phần trăm) và chỉ số mỗi trận |
+| `tier_value` | `T0`–`T9` cho `TIER` |
+| `hero_value` | FK `hero.hero` cho `COUNTER_*` |
+| `read_text` | Chữ đọc được trên ảnh, giữ nguyên khi biên tập viên sửa; null khi không đọc được hoặc giá trị suy từ ảnh chân dung |
+| `needs_review`, `note` | Chờ duyệt và lý do/ghi chú (≤ 1000 ký tự) |
+| `image_id`, `box_x`, `box_y`, `box_width`, `box_height` | Ảnh dẫn chứng (FK `(snapshot_id, image_id)` `ranking_snapshot_image`) và vùng theo pixel ảnh; cùng null hoặc cùng có |
+| `reviewed_at`, `reviewed_by_issuer`, `reviewed_by_subject` | Lần xác nhận/sửa gần nhất; xóa khi đánh dấu chờ duyệt lại |
+| `version`, `updated_at` | Optimistic version của giá trị |
+
+Ràng buộc: mỗi chỉ số chỉ dùng đúng một cột giá trị theo loại; giá trị rỗng phải `needs_review = true` (chỉ bỏ cờ được
+bằng cách nhập giá trị). Chỉ mục một phần `(snapshot_id) WHERE needs_review` phục vụ đếm giá trị chờ duyệt. Thao tác
+ghi khóa dòng `ranking_snapshot` bằng `SELECT … FOR UPDATE` trước khi sửa giá trị hoặc xác nhận bản.

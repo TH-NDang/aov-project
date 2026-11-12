@@ -44,6 +44,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [022](adr/ADR-022-wiki-static-prerender.md) | Prerender tĩnh cho Wiki công khai: tiêu đề, xem trước, sitemap từ dữ liệu đã xuất bản, địa chỉ kho trang bị theo path |
 | [023](adr/ADR-023-che-do-choi-va-tuong-tac-doi-hinh.md) | Chế độ chơi, cẩm nang Cờ Liên quân, đội hình cộng đồng và lượt thích trong `wiki-service` |
 | [024](adr/ADR-024-tuong-nhieu-dang.md) | Tướng nhiều dạng (Flowborn): tướng danh mục chứa các dạng chơi được, mỗi dạng giữ danh tính và lịch sử riêng |
+| [025](adr/ADR-025-thong-ke-dau-hang.md) | Bản chụp thống kê đấu hạng: đọc từ ảnh Bảng Phân Bậc Tướng, mỗi giá trị có ảnh dẫn chứng và trạng thái duyệt |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
 đã hoàn thành một tính năng hoặc một lượt kiểm thử chưa thực hiện.
