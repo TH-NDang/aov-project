@@ -92,6 +92,7 @@ export function missingFieldLabel(path: string) {
     "draft.startSecond.afterGameStart": "Mốc bắt đầu cấm chọn phải trước lúc vào trận",
     "draft.lockedSecond.afterGameStart": "Mốc chốt đội hình phải trước lúc vào trận",
     "draft.lockedSecond.range": "Mốc chốt đội hình phải sau mốc bắt đầu cấm chọn",
+    "locale.unsupported": "Ngôn ngữ danh mục của ván chỉ nhận vi-VN hoặc en-US",
   }
   if (special[path]) return special[path]
   return path
