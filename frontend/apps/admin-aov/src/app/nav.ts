@@ -87,6 +87,13 @@ export const NAV_GROUPS: NavGroup[] = [
             description: "Bộ đồ game đề cử cho từng tướng, đọc từ ảnh màn Chuẩn bị",
             capability: "catalog:read",
           },
+          {
+            title: "Thống kê đấu hạng",
+            icon: "competition",
+            to: "/ranking",
+            description: "Tỷ lệ thắng, chọn, cấm và chỉ số mỗi trận đọc từ ảnh game",
+            capability: "catalog:read",
+          },
         ],
       },
       {

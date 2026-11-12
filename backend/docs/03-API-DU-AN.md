@@ -3225,3 +3225,90 @@ các bộ không chờ duyệt, gộp theo `contentKey` theo thứ tự xuất h
 mọi lần chụp đã xác nhận. Bộ không có ngọc trả `arcanaPageId: null`, `arcana: []`, `arcanaPageUse: null`. Không trả tên người chơi, chiến lực, tỷ lệ
 thắng, ghi chú hay ảnh dẫn chứng.
 Tướng không có lần chụp xác nhận nào trả `sources: []`. Tên và icon lấy từ `reference-catalog` theo UUID.
+
+## Thống kê đấu hạng (ADR-025)
+
+Chỉ có API admin. Mapping dùng `ApiPaths.ADMIN` và `version="1"`. Đọc cần `catalog:read`; nhập, sửa giá trị, xác nhận,
+xóa cần `hero:write`. Audit `HERO_RANKING_SNAPSHOT_IMPORTED`, `HERO_RANKING_VALUE_REVIEWED`,
+`HERO_RANKING_SNAPSHOT_CONFIRMED`, `HERO_RANKING_SNAPSHOT_DELETED`. Mã lỗi thuộc `HeroErrorCode`:
+404 `HERO_RANKING_SNAPSHOT_NOT_FOUND`, 404 `HERO_RANKING_VALUE_NOT_FOUND`, 409 `HERO_RANKING_SNAPSHOT_EXISTS`,
+409 `HERO_RANKING_VERSION_CONFLICT` (`context.currentVersion`), 409 `HERO_RANKING_REVIEW_OPEN` (`context.needsReview`),
+422 `HERO_RANKING_INVALID` (`context.unknownHeroCodes` khi có mã tướng lạ).
+
+```http
+GET    /api/wiki/v1/admin/ranking-snapshots?region=VN&mode=RANKED_ELITE&page=0&size=20
+POST   /api/wiki/v1/admin/ranking-snapshots
+GET    /api/wiki/v1/admin/ranking-snapshots/{snapshotId}
+DELETE /api/wiki/v1/admin/ranking-snapshots/{snapshotId}?expectedVersion=1
+PUT    /api/wiki/v1/admin/ranking-snapshots/{snapshotId}/heroes/{heroId}/values/{metric}
+POST   /api/wiki/v1/admin/ranking-snapshots/{snapshotId}/confirm
+```
+
+**Danh sách** trả `PageSlice` mới chụp trước; `region`, `mode` tùy chọn, `size` 1–100 (mặc định 20). Mỗi mục:
+
+```json
+{
+  "id": "…", "code": "vn-ranked-elite-20261111-0705", "regionCode": "VN",
+  "modeCode": "RANKED_ELITE", "modeLabel": "Đấu hạng (Tinh Anh trở lên)", "periodLabel": null,
+  "capturedAt": "2026-11-11T00:07:49Z", "sourceTimeZone": "Asia/Ho_Chi_Minh",
+  "confirmedAt": null, "heroCount": 130, "valueCount": 1560, "needsReviewCount": 22, "version": 1
+}
+```
+
+**Nhập** (201, trả chi tiết). Body là phần `snapshot` của `ranking-manifest.json`:
+
+```json
+{
+  "code": "vn-ranked-elite-20261111-0705", "regionCode": "VN", "modeCode": "RANKED_ELITE",
+  "modeLabel": "Đấu hạng (Tinh Anh trở lên)", "periodLabel": null, "capturedAt": "2026-11-11T00:07:49Z",
+  "sourceTimeZone": "Asia/Ho_Chi_Minh", "sourceRun": "ranking-20261111-070528-451", "sourceNote": "…",
+  "images": [{ "imageId": "<sha256>", "board": "RATES", "pageNo": 1, "fileName": "…-page-1.png", "width": 2400, "height": 1080 }],
+  "heroes": [{
+    "heroCode": "toro", "nameOnScreen": "Toro", "roleOnScreen": "TANK", "ratesPosition": 1, "figuresPosition": 110,
+    "values": [
+      { "metric": "WIN_RATE", "number": 49.42, "tier": null, "heroCode": null, "readText": "49,42%",
+        "needsReview": false, "note": null, "source": { "imageId": "<sha256>", "x": 955, "y": 410, "width": 190, "height": 112 } },
+      { "metric": "COUNTER_1", "number": null, "tier": null, "heroCode": "grakk", "readText": null,
+        "needsReview": false, "note": null, "source": { "imageId": "<sha256>", "x": 1825, "y": 422, "width": 88, "height": 88 } }
+    ]
+  }]
+}
+```
+
+Quy tắc: `code` slug; `regionCode` `^[A-Z]{2,16}$`; `modeCode` `^[A-Z][A-Z0-9_]*$`; `sourceTimeZone` là múi giờ IANA;
+ảnh không trùng `imageId` hay `(board, pageNo)`; tướng không trùng; mã tướng (kể cả `heroCode` của `COUNTER_*`) phải
+tồn tại (mã cũ trong alias được chấp nhận và lưu theo UUID). Mỗi chỉ số tối đa một lần mỗi tướng và chỉ dùng trường của
+loại mình: `tier` (`T0`–`T9`) cho `TIER`, `heroCode` cho `COUNTER_*`, `number` cho phần còn lại; tỷ lệ trong 0–100,
+chỉ số mỗi trận ≥ 0. Giá trị rỗng phải có `needsReview: true`. `source` tùy chọn; nếu có, `imageId` phải nằm trong
+`images` và vùng nằm trong ảnh. Trùng `code` trả 409 `HERO_RANKING_SNAPSHOT_EXISTS`.
+
+**Chi tiết** trả các trường của danh sách cộng `sourceRun`, `sourceNote`, `createdAt`, `images` như khi nhập và
+`heroes` theo `ratesPosition` (tướng không có ở bảng Tỷ lệ xếp cuối):
+
+```json
+{
+  "heroId": "…", "heroCode": "toro", "nameOnScreen": "Toro", "roleOnScreen": "TANK",
+  "ratesPosition": 1, "figuresPosition": 110,
+  "values": [{
+    "metric": "WIN_RATE", "number": 49.42, "tier": null, "heroId": null, "heroCode": null,
+    "readText": "49,42%", "needsReview": false, "note": null,
+    "source": { "imageId": "…", "x": 955, "y": 410, "width": 190, "height": 112 },
+    "reviewedAt": null, "version": 1
+  }]
+}
+```
+
+Trong `values`, `heroId`/`heroCode` là tướng mà giá trị `COUNTER_*` chỉ tới.
+
+**Duyệt một giá trị** — body `{expectedVersion, number?, tier?, heroId?, needsReview, note?}`. Trường giá trị theo loại
+chỉ số như khi nhập (`heroId` thay cho `heroCode`); bỏ trống trường giá trị nghĩa là giá trị rỗng, chỉ được khi
+`needsReview: true`. `needsReview: false` ghi `reviewedAt/_by` (xác nhận nếu giá trị không đổi, sửa nếu đổi);
+`needsReview: true` xóa thông tin duyệt và bỏ xác nhận của bản chụp nếu bản đã xác nhận. `note` thay ghi chú cũ.
+Trả `{value, snapshot}` với `snapshot` là mục danh sách sau khi lưu. Version cũ trả 409 `HERO_RANKING_VERSION_CONFLICT`.
+
+**Xác nhận bản chụp** — body `{expectedVersion}`; trả mục danh sách. Còn giá trị chờ duyệt trả 409
+`HERO_RANKING_REVIEW_OPEN`. Bản đã xác nhận thì không đổi gì và trả 200.
+
+**Xóa** — `expectedVersion` bắt buộc; trả 204 và xóa mọi ảnh, tướng, giá trị của bản.
+
+So sánh hai bản chụp làm ở Admin bằng hai lần đọc chi tiết, khớp theo `heroId`.

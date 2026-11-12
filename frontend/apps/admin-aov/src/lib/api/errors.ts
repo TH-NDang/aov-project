@@ -81,6 +81,12 @@ const MESSAGES: Record<string, string> = {
   BUILD_VERSION_CONFLICT: "Người khác vừa sửa mục này. Tải lại trang rồi thử lại.",
   BUILD_REVIEW_OPEN: "Còn bộ chờ duyệt, nên chưa xác nhận được cả lần chụp.",
   BUILD_INVALID: "Dữ liệu build chưa hợp lệ.",
+  HERO_RANKING_SNAPSHOT_EXISTS: "Bản chụp này đã được nhập.",
+  HERO_RANKING_SNAPSHOT_NOT_FOUND: "Không còn bản chụp này.",
+  HERO_RANKING_VALUE_NOT_FOUND: "Không còn giá trị này trong bản chụp.",
+  HERO_RANKING_VERSION_CONFLICT: "Người khác vừa sửa mục này. Tải lại trang rồi thử lại.",
+  HERO_RANKING_REVIEW_OPEN: "Còn giá trị chờ duyệt, nên chưa xác nhận được cả bản chụp.",
+  HERO_RANKING_INVALID: "Dữ liệu thống kê chưa hợp lệ.",
 }
 
 export function errorMessage(error: unknown): string {
