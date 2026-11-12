@@ -194,7 +194,7 @@ test("a timeline cluster seeks to its displayed start even when a later kill rep
 })
 
 function mockYouTube() {
-  type PlayerEvents = { onReady(event: { target: FakePlayer }): void }
+  type PlayerEvents = { onReady(event: { target: FakePlayer }): void; onStateChange(event: { data: number }): void }
   class FakePlayer {
     static instances: FakePlayer[] = []
     readonly events: PlayerEvents
@@ -230,8 +230,9 @@ function mockYouTube() {
       return 20144
     }
 
+    state = 2
     getPlayerState() {
-      return 2
+      return this.state
     }
 
     rates: number[] = []
@@ -248,7 +249,10 @@ function mockYouTube() {
       this.muted = false
     }
 
-    destroy() {}
+    destroyed = false
+    destroy() {
+      this.destroyed = true
+    }
   }
   window.YT = { Player: FakePlayer }
   return FakePlayer.instances
@@ -289,6 +293,21 @@ test("video seeks wait for readiness and apply the latest requested second witho
     await act(async () => ref.current!.seek(550))
     assert.deepEqual(player.seeks, [830, 550])
     assert.equal(player.plays, 0, "seeking a paused player keeps it paused")
+    assert.equal(player.pauses, 1)
+
+    // A video that was never played draws nothing when paused at once: it starts muted and stops on its first frame.
+    player.state = 5
+    await act(async () => ref.current!.seek(600))
+    await act(async () => ref.current!.seek(610))
+    assert.deepEqual([player.plays, player.pauses, player.muted], [0, 1, true])
+    await act(async () => player.events.onStateChange({ data: 1 }))
+    assert.deepEqual(
+      [player.pauses, player.muted],
+      [2, false],
+      "the frame is shown, the video waits, the sound is back",
+    )
+    await act(async () => player.events.onStateChange({ data: 1 }))
+    assert.equal(player.pauses, 2, "playing later is not stopped again")
     assert.deepEqual(readings, [], "a requested time must not be reported as an observed video position")
   })
 })
@@ -343,19 +362,23 @@ test("the full video timeline exposes its actual duration and seeks chapters in 
     const slider = document.querySelector('[role="slider"]')!
     assert.equal(slider.getAttribute("aria-valuemax"), "20144")
     assert.equal(slider.getAttribute("aria-valuetext"), "10:40")
-    assert.equal((slider as HTMLElement).style.width, "calc(400% - 28px)")
+    const range = () => document.querySelector('[aria-label="Phạm vi đang xem"]')?.textContent
+    assert.equal(range(), "2 giờ", "a long video without a game opens on about a quarter of it")
+    assert.match((slider as HTMLElement).style.width, /^calc\(279\.7\d*% - 28px\)$/)
     assert.equal(document.querySelector(".esp-track-ticks")?.lastElementChild?.textContent, "5:35:44")
     assert.ok(document.querySelectorAll(".esp-track-ticks > span").length <= 10)
     await act(async () => document.querySelector<HTMLButtonElement>('[data-chapter="g2"]')!.click())
     assert.deepEqual(seeks, [1800])
     await act(async () => document.querySelector<HTMLButtonElement>('[aria-label="Phóng to timeline"]')!.click())
-    assert.equal((slider as HTMLElement).style.width, "calc(800% - 28px)")
+    assert.equal(range(), "1 giờ", "the span steps through round lengths of video")
     assert.equal(slider.getAttribute("aria-valuemax"), "20144", "zoom changes the width, never the video duration")
     const fit = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
       (button) => button.textContent?.trim() === "Toàn video",
     )!
     await act(async () => fit.click())
     assert.equal((slider as HTMLElement).style.width, "calc(100% - 28px)")
+    assert.equal(range(), "Cả video")
+    assert.equal(document.querySelector<HTMLButtonElement>('[aria-label="Thu nhỏ timeline"]')!.disabled, true)
     slider.getBoundingClientRect = () => ({ left: -200, width: 4000 }) as DOMRect
     await act(async () => slider.dispatchEvent(new window.MouseEvent("pointerdown", { bubbles: true, clientX: 800 })))
     assert.deepEqual(seeks, [1800, 5036], "a scrolled timeline uses the track's actual position and width")
@@ -639,14 +662,18 @@ test("pauses and the end of a game are entered as broadcast positions", async ()
   await withDom(async (document, render) => {
     const { VodSyncPanel } = await import("../src/features/esports/components/game/vod-sync-panel")
     const changes: unknown[] = []
+    const teams = { BLUE: game.sides.BLUE.team, RED: game.sides.RED.team }
     await render(
       <VodSyncPanel
         url=""
         startSecond={1800}
         pauses={[]}
-        duration={900}
+        recordedDuration={900}
         gameAt={100}
         videoNow={2100}
+        number={1}
+        teams={teams}
+        winner="BLUE"
         onChange={(change) => changes.push(change)}
       />,
     )
@@ -656,6 +683,65 @@ test("pauses and the end of a game are entered as broadcast positions", async ()
     await act(async () => button(document, "Thêm").click())
     assert.deepEqual(changes.at(-1), { pauses: [{ atSeconds: 300, durationSeconds: 90 }] })
     assert.match(document.body.textContent ?? "", /Thời lượng ván ⏱15:00/)
+  }, popoverGlobals)
+})
+
+test("a game is closed in the video panel: its end and its winner are saved together, only when changed", async () => {
+  await withDom(async (document, render) => {
+    const { VodSyncPanel } = await import("../src/features/esports/components/game/vod-sync-panel")
+    const changes: unknown[] = []
+    const teams = { BLUE: game.sides.BLUE.team, RED: game.sides.RED.team }
+    const panel = (recordedDuration: number | null, winner: "BLUE" | "RED" | null, startSecond: number | null) => (
+      <VodSyncPanel
+        key={`${recordedDuration}-${winner}-${startSecond}`}
+        url=""
+        startSecond={startSecond}
+        pauses={[]}
+        recordedDuration={recordedDuration}
+        gameAt={100}
+        videoNow={2700}
+        number={2}
+        teams={teams}
+        winner={winner}
+        focus="end"
+        onChange={(change) => changes.push(change)}
+      />
+    )
+    const end = () => document.querySelector<HTMLFieldSetElement>("[data-game-end]")!
+    const save = () => button(document, "Lưu kết thúc ván")
+    const winner = (name: string) =>
+      [...end().querySelectorAll<HTMLButtonElement>("[aria-pressed]")].find((entry) =>
+        entry.textContent?.includes(name),
+      )!
+
+    // A game with no end yet ends where the video is being watched: 45:00, fifteen minutes after its start.
+    await render(panel(null, null, 1800))
+    assert.match(end().textContent ?? "", /Kết thúc ván 2/)
+    assert.equal(end().querySelector<HTMLInputElement>("input")!.value, "45:00")
+    assert.match(end().textContent ?? "", /Thời lượng ván ⏱15:00/)
+    await act(async () => winner("Crimson").click())
+    await act(async () => save().click())
+    assert.deepEqual(changes.at(-1), { duration: 900, winner: "RED" })
+
+    // A recorded game shows what is stored; nothing can be saved until something differs.
+    await render(panel(900, "RED", 1800))
+    assert.equal(winner("Crimson").getAttribute("aria-pressed"), "true")
+    assert.equal(save().disabled, true)
+    type(end().querySelector<HTMLInputElement>("input")!, "44:00")
+    await settle()
+    await act(async () => save().click())
+    assert.deepEqual(changes.at(-1), { duration: 840 }, "the winner is not sent again when it did not change")
+    type(end().querySelector<HTMLInputElement>("input")!, "29:00")
+    await settle()
+    assert.equal(save().disabled, true, "an end before the start cannot be saved")
+    assert.match(end().textContent ?? "", /Mốc kết thúc phải sau mốc bắt đầu/)
+
+    // Without a position in the video the length is typed, and the winner alone can still be recorded.
+    await render(panel(null, null, null))
+    assert.equal(end().querySelector<HTMLInputElement>("input")!.value, "")
+    await act(async () => winner("Azure").click())
+    await act(async () => save().click())
+    assert.deepEqual(changes.at(-1), { winner: "BLUE" })
   }, popoverGlobals)
 })
 
@@ -1046,5 +1132,141 @@ test("clicking into the video hands keyboard focus back so page shortcuts keep w
       await new Promise((resolve) => setTimeout(resolve, 5))
     })
     assert.notEqual(document.activeElement, frame)
+  })
+})
+
+test("the timeline names its rows and only an editor who is recording can record or move on the bar", async () => {
+  await withDom(async (document, render) => {
+    const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
+    const created: [string, number | undefined][] = []
+    const moved: [string, number][] = []
+    const seeks: number[] = []
+    const selected: string[] = []
+    const stored = events.filter((event) => event.kind !== "ITEM")
+    const live = { ...chapter(0, 900), events: stored }
+    const timeline = (editing: boolean, canCreate = true) => (
+      <BroadcastTimeline
+        duration={900}
+        current={300}
+        chapters={[live]}
+        events={onAxis(stored)}
+        views={{ g1: game }}
+        chapterTitle={() => ""}
+        focusedGameId="g1"
+        activeId={null}
+        isDimmed={() => false}
+        lookups={lookups}
+        editing={
+          editing
+            ? {
+                gameId: "g1",
+                canCreate,
+                onCreate: (row, second) => created.push([row, second]),
+                onRetime: (target, second) => moved.push([target.kind === "event" ? target.id : "turn", second]),
+              }
+            : undefined
+        }
+        onSeek={(second) => seeks.push(second)}
+        onSelect={(event) => selected.push(event.id)}
+        onOpen={() => {}}
+      />
+    )
+    const pointer = (type: string, clientX: number, clientY = 0) =>
+      new window.MouseEvent(type, { bubbles: true, clientX, clientY, button: 0 })
+    const measure = () => {
+      const slider = document.querySelector<HTMLElement>('[role="slider"]')!
+      slider.getBoundingClientRect = () => ({ left: 0, top: 0, width: 900, height: 158 }) as DOMRect
+      return slider
+    }
+
+    await render(timeline(false))
+    assert.deepEqual(
+      [...document.querySelectorAll("[data-timeline-lanes] [data-row]")].map((lane) => lane.getAttribute("data-row")),
+      ["BLUE", "MID", "RED"],
+    )
+    assert.match(document.querySelector("[data-timeline-lanes]")!.textContent ?? "", /Mục tiêu/)
+    assert.match(document.querySelector("[data-timeline-hint]")!.textContent ?? "", /Bấm vào thanh để tua/)
+    assert.equal(document.querySelectorAll("[data-add]").length, 0, "reading shows no way to record")
+    assert.equal(document.querySelectorAll("[data-movable]").length, 0)
+    await act(async () => measure().dispatchEvent(pointer("dblclick", 450, 84)))
+    assert.deepEqual(created, [], "a double click records nothing outside recording")
+
+    await render(timeline(true))
+    assert.match(
+      document.querySelector("[data-timeline-hint]")!.textContent ?? "",
+      /bấm đúp.*kéo mốc hoặc mép vùng cấm chọn của ván 1.*video tua theo/,
+    )
+    assert.equal(document.querySelectorAll("[data-add]").length, 3)
+    await act(async () => document.querySelector<HTMLButtonElement>('[data-add="RED"]')!.click())
+    await act(async () => measure().dispatchEvent(pointer("dblclick", 450, 84)))
+    await act(async () => measure().dispatchEvent(pointer("dblclick", 200, 40)))
+    assert.deepEqual(created, [
+      ["RED", undefined],
+      ["MID", 450],
+      ["BLUE", 200],
+    ])
+
+    // A press that barely moves is still a click; a real drag moves the marker and does not select it.
+    const kill = document.querySelector<HTMLButtonElement>('[data-marker][data-kind="KILL"]')!
+    assert.equal(kill.hasAttribute("data-movable"), true)
+    await act(async () => kill.dispatchEvent(pointer("pointerdown", 120)))
+    await act(async () => window.dispatchEvent(pointer("pointermove", 122)))
+    await act(async () => window.dispatchEvent(pointer("pointerup", 122)))
+    await act(async () => kill.click())
+    assert.deepEqual(moved, [])
+    assert.deepEqual(selected, ["g1|k1"])
+
+    await act(async () => kill.dispatchEvent(pointer("pointerdown", 120)))
+    await act(async () => window.dispatchEvent(pointer("pointermove", 200)))
+    assert.match(document.querySelector("[data-moving]")!.textContent ?? "", /2:00 → 3:20/)
+    await act(async () => window.dispatchEvent(pointer("pointerup", 5000)))
+    await act(async () => kill.click())
+    assert.deepEqual(moved, [["k1", 900]], "a drop past the end of the game lands on its last second")
+    assert.deepEqual(selected, ["g1|k1"], "the click that ends a drag selects nothing")
+    assert.equal(kill.style.left.includes("100%"), true, "the marker waits where it was dropped")
+
+    await act(async () =>
+      kill.dispatchEvent(new window.KeyboardEvent("keydown", { key: "ArrowLeft", altKey: true, bubbles: true })),
+    )
+    assert.deepEqual(moved.at(-1), ["k1", 119])
+    assert.deepEqual(seeks, [200, 900, 119], "the video follows a marker while it moves and stays where it lands")
+
+    await render(timeline(true, false))
+    assert.equal(document.querySelector<HTMLButtonElement>('[data-add="BLUE"]')!.disabled, true)
+    assert.match(document.querySelector("[data-timeline-hint]")!.textContent ?? "", /vào trận rồi mới ghi/)
+  })
+})
+
+test("the captions button brings back YouTube's own controls, where captions are switched, and hides them again", async () => {
+  await withDom(async (document, render) => {
+    const { VodPlayer } = await import("../src/features/esports/components/game/vod-player")
+    const instances = mockYouTube()
+    await render(
+      <VodPlayer videoId="R5rCsGqDJIg" startAt={95} title="Game" onTime={() => {}} onPlayingChange={() => {}} />,
+    )
+    const first = instances[0]
+    await act(async () => first.events.onReady({ target: first }))
+    const button = () => document.querySelector<HTMLButtonElement>("[aria-pressed]")!
+    assert.equal(button().getAttribute("aria-label"), "Phụ đề: hiện điều khiển của YouTube")
+    assert.equal(button().getAttribute("aria-pressed"), "false")
+
+    // Only a new player can show YouTube's bar; it continues at the same second and stays paused.
+    await act(async () => button().click())
+    const second = instances[1]
+    assert.equal(first.destroyed, true)
+    assert.equal(second.vars.controls, 1)
+    assert.equal(second.vars.start, 95)
+    await act(async () => second.events.onReady({ target: second }))
+    assert.deepEqual(second.seeks, [95])
+    assert.equal(second.plays, 0)
+    assert.equal(button().getAttribute("aria-label"), "Ẩn điều khiển của YouTube")
+    assert.match(document.querySelector('[aria-label="Điều khiển video"]')!.textContent ?? "", /hàng nút trên video/)
+
+    await act(async () => button().click())
+    assert.equal(instances[2].vars.controls, 0)
+    assert.doesNotMatch(
+      document.querySelector('[aria-label="Điều khiển video"]')!.textContent ?? "",
+      /hàng nút trên video/,
+    )
   })
 })

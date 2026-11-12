@@ -1,11 +1,11 @@
 import { currentTimeZone, formatInZone } from "@aov/ui/lib/time-zone"
 import { useEffect, useMemo, useState, type MutableRefObject, type ReactNode } from "react"
-import type { Catalog, DocumentView, GameContent, Reference } from "@aov/community-contracts"
+import type { Catalog, DocumentView, GameContent, Reference, Side } from "@aov/community-contracts"
 import {
   CircleAlert,
   CircleCheck,
-  Flag,
   Gem,
+  Info,
   Link2,
   ListChecks,
   LoaderCircle,
@@ -20,13 +20,14 @@ import { EventComposer, type VideoClock } from "../components/game/event-compose
 import { EventDetailDialog } from "../components/game/event-detail-dialog"
 import { EventFeed, type FeedFilter } from "../components/game/event-feed"
 import { FloatingPanel } from "../components/game/floating-panel"
-import { ResultPanel } from "../components/game/result-panel"
 import { Scoreboard } from "../components/game/scoreboard"
 import { VodSyncPanel } from "../components/game/vod-sync-panel"
 import { referenceIndex, type GameView } from "../model/game-view"
 import type { HeroLocks } from "../model/series-rules"
 import { recordingProgress, type ProgressTarget } from "../model/recording-progress"
+import { GameInfoPanel } from "./game-info-panel"
 import { LoadoutPanel } from "./loadout-panel"
+import type { LoadoutPart } from "../model/loadout"
 import { ProgressPanel } from "./progress-panel"
 import { chapterVideo, type GameChapter } from "../model/series-vod"
 import { videoToGame } from "../model/vod"
@@ -43,12 +44,19 @@ import {
 import { youtubeWatchUrl } from "../model/vod"
 
 export type Panel =
-  | { kind: "composer"; editing?: TimelineEvent; eventKind?: TimelineKind }
-  | { kind: "sync" }
+  | {
+      kind: "composer"
+      editing?: TimelineEvent
+      eventKind?: TimelineKind
+      /** Video second the moment was asked for on the timeline; the playhead when absent. */
+      at?: number
+      side?: Side
+    }
+  | { kind: "sync"; focus?: "end" }
   | { kind: "draft" }
-  | { kind: "result" }
-  | { kind: "loadout" }
+  | { kind: "loadout"; seat?: SeatKey; part?: LoadoutPart }
   | { kind: "progress" }
+  | { kind: "info" }
 /** Moments of one game to show in the detail dialog, by stored id. */
 export type DetailRequest = { gameId: string; ids: string[] }
 
@@ -56,6 +64,7 @@ export type DetailRequest = { gameId: string; ids: string[] }
 export type GameActions = {
   save: (change: (content: GameContent) => GameContent) => Promise<boolean>
   publish: () => Promise<boolean>
+  withdraw: () => Promise<boolean>
 }
 
 export type FocusedGameParts = {
@@ -107,7 +116,7 @@ export function FocusedGame({
   onVideoUrl,
   shareLink,
   actions,
-  onOpenData,
+  tournamentRegion,
   onEnableEditing,
   children,
 }: {
@@ -138,28 +147,34 @@ export function FocusedGame({
   onVideoUrl: (url: string) => void
   shareLink: (videoSecond: number) => string
   actions?: MutableRefObject<GameActions | null>
-  onOpenData: () => void
+  /** Market of the tournament, to say so when a game is still recorded under another one. */
+  tournamentRegion?: string
   onEnableEditing: () => void
   children: (parts: FocusedGameParts) => ReactNode
 }) {
-  const { save, publish, state: saveState, reload } = useGameSaver(entry)
+  const { save, publish, withdraw, state: saveState, reload } = useGameSaver(entry)
   useEffect(() => {
     if (!actions) return
-    actions.current = { save, publish }
+    actions.current = { save, publish, withdraw }
     return () => {
       actions.current = null
     }
-  }, [actions, save, publish])
+  }, [actions, save, publish, withdraw])
   const progress = useMemo(() => recordingProgress(entry), [entry])
   const openTarget = (target: ProgressTarget) => {
-    if (target === "data") return onOpenData()
     if (!editable) onEnableEditing()
+    // The result of a game is recorded where it ends, in the video panel; what the service still reports usually
+    // comes down to the game's market, season or patch, which the info panel holds.
     onPanel(
       target === "composer"
         ? chapter.live
           ? { kind: "composer", eventKind: "KILL" }
           : { kind: "draft" }
-        : { kind: target },
+        : target === "result"
+          ? { kind: "sync", focus: "end" }
+          : target === "data"
+            ? { kind: "info" }
+            : { kind: target },
     )
   }
   const events = useMemo(() => readTimeline(entry.content), [entry.content])
@@ -243,6 +258,7 @@ export function FocusedGame({
         itemTier={lookups.itemTier}
         locks={locks}
         heroIcon={heroIcon}
+        onEditLoadout={editable && catalog ? (seat, part) => onPanel({ kind: "loadout", seat, part }) : undefined}
       />
     ),
     status: editable ? <SaveStatus state={saveState} onReload={() => void reload()} compact={phone} /> : null,
@@ -266,7 +282,7 @@ export function FocusedGame({
             onClose={() => onPanel(null)}
           >
             <EventComposer
-              key={panel.editing?.id ?? `new-${panel.eventKind}`}
+              key={panel.editing?.id ?? `new-${panel.eventKind}-${panel.at ?? ""}-${panel.side ?? ""}`}
               game={view}
               at={gameAt}
               video={videoClock}
@@ -274,6 +290,7 @@ export function FocusedGame({
               items={items}
               editing={panel.editing}
               initialKind={panel.eventKind}
+              start={{ videoSecond: panel.at, side: panel.side }}
               snapshotsFor={(seat) => view.snapshots[seat]}
               events={events}
               onSave={saveEvent}
@@ -300,26 +317,9 @@ export function FocusedGame({
             />
           </FloatingPanel>
         )}
-        {editable && panel?.kind === "result" && (
-          <FloatingPanel
-            title={`Kết thúc ván ${view.number}`}
-            icon={<Flag size={15} />}
-            onClose={() => onPanel(null)}
-            width={440}
-          >
-            <ResultPanel
-              game={view}
-              video={videoClock}
-              onSave={(result) => {
-                onPanel(null)
-                void save((content) => ({ ...content, ...result }))
-              }}
-            />
-          </FloatingPanel>
-        )}
         {editable && panel?.kind === "loadout" && catalog && (
           <FloatingPanel
-            title={`Phụ trợ · phù hiệu · bảng ngọc · Ván ${view.number}`}
+            title={`Phụ trợ · phù hiệu · ngọc · trang bị · Ván ${view.number}`}
             icon={<Gem size={15} />}
             onClose={() => onPanel(null)}
             width={760}
@@ -338,8 +338,29 @@ export function FocusedGame({
                     }
                   : undefined
               }
+              target={panel}
+              error={saveState.status === "error" ? saveState.error : null}
               onSeekGame={(second) => seekGame(second)}
-              onChange={(change) => void save(change)}
+              onChange={(change) => save(change)}
+            />
+          </FloatingPanel>
+        )}
+        {editable && panel?.kind === "info" && (
+          <FloatingPanel
+            title={`Thông tin ván ${view.number}`}
+            icon={<Info size={15} />}
+            onClose={() => onPanel(null)}
+            width={560}
+          >
+            <GameInfoPanel
+              key={entry.version}
+              entry={entry}
+              tournamentRegion={tournamentRegion}
+              canPublish={canPublish}
+              onSave={(change) => void save((content) => ({ ...content, ...change }))}
+              onWithdraw={() => void withdraw()}
+              onDeleted={() => onPanel(null)}
+              onOpenProgress={() => onPanel({ kind: "progress" })}
             />
           </FloatingPanel>
         )}
@@ -362,29 +383,36 @@ export function FocusedGame({
         )}
         {editable && panel?.kind === "sync" && (
           <FloatingPanel
-            title={`Video & đồng bộ · Ván ${view.number}`}
+            title={`Video · đồng bộ · kết thúc · Ván ${view.number}`}
             icon={<Link2 size={15} />}
             onClose={() => onPanel(null)}
             width={520}
           >
             <VodSyncPanel
+              key={panel.focus ?? "all"}
               url={view.sourceUrl}
               startSecond={view.sourceStartSecond}
               pauses={chapter.sync.pauses}
-              duration={chapter.duration}
+              recordedDuration={view.durationSeconds}
               gameAt={gameAt}
               videoNow={videoNow}
+              number={view.number}
+              teams={{ BLUE: view.sides.BLUE.team, RED: view.sides.RED.team }}
+              winner={view.winner}
+              focus={panel.focus}
               onChange={(change) => {
                 if (change.url !== undefined) onVideoUrl(change.url)
                 const rest = { ...change, url: undefined }
-                if (rest.startSecond === undefined && !rest.pauses && !rest.duration) return
-                void save((content) =>
-                  withPlayback(content, {
+                if (rest.startSecond === undefined && !rest.pauses && !rest.duration && rest.winner === undefined)
+                  return
+                void save((content) => ({
+                  ...withPlayback(content, {
                     startSecond: rest.startSecond,
                     pauses: rest.pauses,
                     durationSeconds: rest.duration,
                   }),
-                )
+                  ...(rest.winner !== undefined ? { winner: rest.winner } : {}),
+                }))
               }}
             />
           </FloatingPanel>

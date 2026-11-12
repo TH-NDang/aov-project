@@ -35,6 +35,22 @@
     --side-soft: var(--esp-red-soft);
   }
 
+  /* The three stone colours of an arcana page. They reuse the palette above; purple is mixed from the side colours. */
+  :root {
+    --esp-arcana-red: var(--esp-red);
+    --esp-arcana-purple: color-mix(in oklch, var(--esp-blue) 62%, var(--esp-red));
+    --esp-arcana-green: var(--esp-live);
+  }
+  [data-arcana="RED"] {
+    --arcana: var(--esp-arcana-red);
+  }
+  [data-arcana="PURPLE"] {
+    --arcana: var(--esp-arcana-purple);
+  }
+  [data-arcana="GREEN"] {
+    --arcana: var(--esp-arcana-green);
+  }
+
   /* Best-of badges: neutral Bo1, blue Bo3, violet Bo5, gold Bo7 (finals). */
   .esp-bo {
     --bo: var(--muted-foreground);
@@ -558,7 +574,8 @@
   .esp-bt-draft-label {
     position: absolute;
     top: -20px;
-    left: 4px;
+    /* Clear of the marker that sits on the start of the phase. */
+    left: 14px;
     font-size: 12px;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -608,6 +625,45 @@
     box-shadow:
       0 0 0 1.5px var(--esp-gold),
       0 0 0 3px var(--background);
+  }
+  /* Where the ban/pick phase begins: the left edge of the hatched zone. */
+  .esp-bt-edge {
+    position: absolute;
+    top: 6px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin-left: -9px;
+    border-radius: 5px;
+    color: var(--esp-gold-text);
+    background: var(--card);
+    box-shadow:
+      0 0 0 1.5px var(--esp-gold),
+      0 0 0 3px var(--background);
+  }
+  /* The moment the broadcast showed a team's spells, emblems, arcana or equipment, on the outer edge of its row. */
+  .esp-bt-mark {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    transform: translate(-50%, -50%);
+    border-radius: 999px;
+    color: var(--side);
+    background: var(--card);
+    box-shadow:
+      0 0 0 1.5px var(--side),
+      0 0 0 3px var(--background);
+  }
+  .esp-bt-mark[data-side="BLUE"] {
+    top: 32px;
+  }
+  .esp-bt-mark[data-side="RED"] {
+    top: 136px;
   }
   .esp-bt-flag {
     position: absolute;
@@ -659,6 +715,145 @@
     color: var(--background);
     background: var(--foreground);
     pointer-events: none;
+  }
+  /* While a marker is dragged the label says where it came from and where it would land. */
+  .esp-bt-scrub[data-moving] {
+    z-index: 7;
+    color: var(--esp-ink);
+    background: var(--esp-gold);
+  }
+
+  /* Row names sit in a column left of the track, so they stay put while the zoomed track scrolls. */
+  .esp-bt-frame {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    row-gap: 8px;
+  }
+  .esp-bt-lane-title {
+    align-self: center;
+    padding-inline: 6px 8px;
+    font-size: 12px;
+    color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+  /* Same vertical layout as the track: the viewport adds 20px above it. */
+  .esp-bt-lanes {
+    position: relative;
+    width: 56px;
+    height: 158px;
+    margin-top: 20px;
+  }
+  @container (min-width: 42rem) {
+    .esp-bt-lanes {
+      width: 132px;
+    }
+  }
+  .esp-bt-lane {
+    position: absolute;
+    left: 0;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding-inline: 6px 5px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--side-soft, color-mix(in oklch, var(--esp-gold) 8%, transparent));
+  }
+  .esp-bt-lane[data-row="BLUE"] {
+    top: 32px;
+  }
+  .esp-bt-lane[data-row="MID"] {
+    top: 68px;
+  }
+  .esp-bt-lane[data-row="RED"] {
+    top: 104px;
+  }
+  .esp-bt-add {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    margin-left: auto;
+    border-radius: 6px;
+    color: var(--esp-ink);
+    background: var(--esp-gold);
+  }
+  .esp-bt-add:hover:not(:disabled) {
+    filter: brightness(1.1);
+  }
+  .esp-bt-add:focus-visible {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+  .esp-bt-add:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  /* Miniatures of the four kinds of marker, for the legend next to the hint. */
+  .esp-bt-key {
+    display: inline-grid;
+    place-items: center;
+    width: 14px;
+    height: 14px;
+  }
+  .esp-bt-key[data-key="turn"] {
+    border-radius: 4px;
+    background: var(--muted);
+    box-shadow: 0 0 0 1.5px var(--esp-blue);
+  }
+  .esp-bt-key[data-key="lock"] {
+    border-radius: 999px;
+    color: var(--esp-gold-text);
+    box-shadow: 0 0 0 1.5px var(--esp-gold);
+  }
+  .esp-bt-key[data-key="flag"] {
+    border-radius: 4px;
+    color: var(--esp-ink);
+    background: var(--esp-gold);
+  }
+  .esp-bt-key[data-key="mark"] {
+    border-radius: 999px;
+    color: var(--esp-blue);
+    box-shadow: 0 0 0 1.5px var(--esp-blue);
+  }
+  .esp-bt-key[data-key="pill"] {
+    width: 22px;
+    border-radius: 6px;
+    background: var(--card);
+    box-shadow: 0 0 0 1.5px var(--esp-gold);
+  }
+  /* Markers an editor may drag to another second while recording. */
+  .esp-bt-turn[data-movable],
+  .esp-bt-edge[data-movable],
+  .esp-bt-lock[data-movable],
+  .esp-bt-flag[data-movable],
+  .esp-bt-mark[data-movable],
+  .esp-pill[data-movable] {
+    cursor: grab;
+    touch-action: none;
+  }
+  .esp-bt-edge[data-movable],
+  .esp-bt-lock[data-movable],
+  .esp-bt-flag[data-movable] {
+    cursor: ew-resize;
+  }
+  .esp-bt-turn[data-dragging],
+  .esp-bt-edge[data-dragging],
+  .esp-bt-lock[data-dragging],
+  .esp-bt-flag[data-dragging],
+  .esp-bt-mark[data-dragging],
+  .esp-pill[data-dragging] {
+    z-index: 6;
+    cursor: grabbing;
+    transition: none;
+    box-shadow:
+      0 0 0 2px var(--esp-gold),
+      0 6px 16px oklch(0 0 0 / 0.35);
   }
 
   /* Timeline pills: killer ⚔ victim, hero › item, finisher › objective. */

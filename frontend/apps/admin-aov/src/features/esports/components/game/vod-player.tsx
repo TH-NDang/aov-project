@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, type PointerEvent } from "react"
 import {
   ArrowUpRight,
+  Captions,
   ExternalLink,
   GripHorizontal,
   Maximize,
@@ -79,6 +80,11 @@ const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2]
 /** Where the floating player was last dragged to; a per-viewer convenience. */
 const POSITION_KEY = "esports:mini-player-position"
 const EDGE = 8
+const CAPTIONS_SHOW = "Phụ đề: hiện điều khiển của YouTube"
+const CAPTIONS_HIDE = "Ẩn điều khiển của YouTube"
+const CAPTIONS_WHY =
+  "Phụ đề được tắt hoặc bật trong hàng nút của YouTube (nút CC, hoặc nút của tiện ích phụ đề): " +
+  "bấm để hiện hàng nút đó"
 
 type Position = { x: number; y: number }
 
@@ -103,6 +109,10 @@ function savePosition(position: Position) {
  * Loads the official player without autoplay so the timeline can use the video's actual duration. YouTube's own
  * controls are off; the bar below the video (never over it) plays, seeks, sets volume, speed and full screen. When the
  * page scrolls past the video it floats and can be dragged by its title bar.
+ *
+ * Captions are switched inside YouTube's frame, never from this page: the player API and cc_load_policy changed
+ * nothing when tried, and text over the video may also come from a subtitle extension of the viewer's browser,
+ * whose button sits in YouTube's control row. The captions button therefore brings that row back for a moment.
  */
 export const VodPlayer = forwardRef<
   VodPlayerHandle,
@@ -121,6 +131,9 @@ export const VodPlayer = forwardRef<
   const player = useRef<YTPlayer | null>(null)
   const ready = useRef(false)
   const pendingSeek = useRef<{ second: number; play: boolean } | null>(null)
+  // True from a seek of a video that was never played until its first frame is on screen; see `seekTo`.
+  const holdFrame = useRef(false)
+  const soundOff = useRef(false)
   const latestStart = useRef(startAt)
   latestStart.current = startAt
   const callbacks = useRef({ onTime, onDuration, onPlayingChange })
@@ -136,6 +149,7 @@ export const VodPlayer = forwardRef<
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(100)
   const [rate, setRate] = useState(1)
+  const [youtubeControls, setYoutubeControls] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const [position, setPosition] = useState<Position | null>(savedPosition)
   const latestPosition = useRef(position)
@@ -210,7 +224,7 @@ export const VodPlayer = forwardRef<
           playerVars: {
             start: Math.max(0, Math.floor(initial)),
             autoplay: 0,
-            controls: 0,
+            controls: youtubeControls ? 1 : 0,
             disablekb: 1,
             fs: 0,
             iv_load_policy: 3,
@@ -232,6 +246,13 @@ export const VodPlayer = forwardRef<
             },
             onStateChange: (event: { data: number }) => {
               if (cancelled) return
+              if (event.data === PLAYING && holdFrame.current) {
+                // The frame that was asked for is drawn: stop on it, and give the sound back.
+                holdFrame.current = false
+                player.current?.pauseVideo()
+                if (!soundOff.current) player.current?.unMute?.()
+                return
+              }
               setPlaying(event.data === PLAYING)
               callbacks.current.onPlayingChange(event.data === PLAYING)
             },
@@ -255,16 +276,34 @@ export const VodPlayer = forwardRef<
     return () => {
       cancelled = true
       ready.current = false
+      holdFrame.current = false
       window.clearInterval(poll)
       player.current?.destroy()
       player.current = null
     }
-    // The player is created once per video; later seeks go through the handle, not `startAt`.
-  }, [videoId])
+    // The player is created once per video and once more when YouTube's controls are shown or hidden, which only a
+    // new player can do; later seeks go through the handle, not `startAt`.
+  }, [videoId, youtubeControls])
 
+  soundOff.current = muted
+  /** The viewer asked to play while a first frame was awaited: the video simply keeps running, with its sound. */
+  const releaseHold = (current: YTPlayer) => {
+    if (!holdFrame.current) return
+    holdFrame.current = false
+    if (!soundOff.current) current.unMute?.()
+  }
   const seekTo = (second: number, play = false) => {
     const target = Math.max(0, second)
     if (ready.current && player.current) {
+      // YouTube starts a video that was never played as soon as it is sought, and draws nothing if it is paused at
+      // once. A seek that did not ask to play lets it start without sound and stops it on the first frame, so a
+      // marker dragged along the timeline shows the picture there without setting the broadcast running.
+      const state = player.current.getPlayerState()
+      if (play) releaseHold(player.current)
+      else if ((state === -1 || state === 5) && !holdFrame.current) {
+        holdFrame.current = true
+        player.current.mute?.()
+      }
       player.current.seekTo(target, true)
       if (play) player.current.playVideo()
     } else {
@@ -277,6 +316,7 @@ export const VodPlayer = forwardRef<
       pendingSeek.current = { second: pendingSeek.current?.second ?? latestStart.current, play: true }
       return
     }
+    releaseHold(current)
     if (current.getPlayerState() === PLAYING) current.pauseVideo()
     else current.playVideo()
   }
@@ -528,6 +568,25 @@ export const VodPlayer = forwardRef<
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            className={cn(control, youtubeControls && "bg-white/20")}
+            aria-label={youtubeControls ? CAPTIONS_HIDE : CAPTIONS_SHOW}
+            title={youtubeControls ? CAPTIONS_HIDE : CAPTIONS_WHY}
+            aria-pressed={youtubeControls}
+            onClick={() => {
+              // The new player continues where this one is, playing or paused as it was.
+              pendingSeek.current = { second: now ?? latestStart.current, play: playing }
+              setYoutubeControls(!youtubeControls)
+            }}
+          >
+            <Captions size={16} />
+          </button>
+          {youtubeControls && (
+            <span className={cn("shrink-0 px-1 text-xs text-white/85", floating ? "hidden" : "hidden md:inline")}>
+              Tắt hoặc bật phụ đề ở hàng nút trên video
+            </span>
+          )}
           <button
             type="button"
             className={control}

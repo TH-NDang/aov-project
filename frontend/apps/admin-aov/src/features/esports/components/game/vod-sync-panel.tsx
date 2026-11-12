@@ -1,7 +1,10 @@
-import { useState } from "react"
-import { Clock3, Link2, Pause, Plus, RefreshCw, Trash2 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import type { Side } from "@aov/community-contracts"
+import { Clock3, Crown, Flag, Link2, Pause, Plus, RefreshCw, Save, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
+import { cn } from "@aov/ui/lib/utils"
+import type { TeamView } from "../../model/game-view"
 import {
   formatClock,
   gameToVideo,
@@ -11,29 +14,49 @@ import {
   youtubeVideoId,
   type VodPause,
 } from "../../model/vod"
-import { TimeTag, VIDEO_MARK, VideoMark } from "../primitives"
+import { TeamLogo, TimeTag, VIDEO_MARK, VideoMark } from "../primitives"
+
+/** What the panel can change; every key is optional so one save carries only what was edited. */
+export type VodSyncChange = {
+  url?: string
+  startSecond?: number | null
+  pauses?: VodPause[]
+  duration?: number
+  winner?: Side | null
+}
 
 /**
- * Admin controls that tie the game clock to the official broadcast. The usual flow: pause the video
- * anywhere in the game, read the in-game clock on screen and press sync. Once the start is known,
- * pauses and the end of the game are entered as positions in the video, like everything else recorded.
+ * Admin controls that tie the game clock to the official broadcast, from its start to its end. The usual flow: pause
+ * the video anywhere in the game, read the in-game clock on screen and press sync. Once the start is known, pauses
+ * and the end of the game are entered as positions in the video, like everything else recorded. The winner is
+ * recorded with the end, so closing a game needs no panel of its own.
  */
 export function VodSyncPanel({
   url,
   startSecond,
   pauses,
-  duration,
+  recordedDuration,
   gameAt,
   videoNow,
+  number,
+  teams,
+  winner,
+  focus,
   onChange,
 }: {
   url: string
   startSecond: number | null
   pauses: VodPause[]
-  duration: number
+  /** The recorded length of the game, or null while it has no end yet. */
+  recordedDuration: number | null
   gameAt: number
   videoNow: number | null
-  onChange: (change: { url?: string; startSecond?: number | null; pauses?: VodPause[]; duration?: number }) => void
+  number: number
+  teams: Record<Side, TeamView>
+  winner: Side | null
+  /** Opens the panel on the end of the game, for someone who came to close it. */
+  focus?: "end"
+  onChange: (change: VodSyncChange) => void
 }) {
   const sync = { url, startSecond, pauses }
   const synced = startSecond != null
@@ -43,8 +66,16 @@ export function VodSyncPanel({
   const [start, setStart] = useState(startSecond == null ? "" : formatClock(startSecond))
   const [pauseFrom, setPauseFrom] = useState(nowText)
   const [pauseTo, setPauseTo] = useState("")
-  const [end, setEnd] = useState(synced ? formatClock(gameToVideo(sync, duration)) : "")
-  const [length, setLength] = useState(formatClock(duration))
+  // A game without a recorded end ends where the video is now, which is where its last second is being watched.
+  const [end, setEnd] = useState(
+    synced ? (recordedDuration != null ? formatClock(gameToVideo(sync, recordedDuration)) : nowText) : "",
+  )
+  const [length, setLength] = useState(recordedDuration != null ? formatClock(recordedDuration) : "")
+  const [won, setWon] = useState<Side | null>(winner)
+  const ending = useRef<HTMLFieldSetElement>(null)
+  useEffect(() => {
+    if (focus === "end") ending.current?.scrollIntoView?.({ block: "nearest" })
+  }, [focus])
   const clockSecond = parseClock(clock)
   const linkValid = !link.trim() || !!youtubeVideoId(link)
 
@@ -54,6 +85,11 @@ export function VodSyncPanel({
   const endSecond = parseClock(end)
   const endGame =
     startSecond != null && endSecond !== null && endSecond > startSecond ? videoToGame(sync, endSecond) : null
+  const typedLength = parseClock(length)
+  // What the end block would record: the game clock at the end mark, or the typed length without a video.
+  const closing = synced ? (endGame ? Math.round(endGame) : null) : typedLength && typedLength > 0 ? typedLength : null
+  const endTyped = synced ? end.trim() !== "" : length.trim() !== ""
+  const endChanged = closing !== null && closing !== recordedDuration
 
   return (
     <section className="space-y-4 p-4 text-sm">
@@ -121,91 +157,27 @@ export function VodSyncPanel({
         </div>
       </div>
 
-      <div className="grid gap-3 @2xl:grid-cols-2">
-        <label className="space-y-1.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            <VideoMark /> Ván bắt đầu tại (mốc video)
-          </span>
-          <span className="flex gap-2">
-            <Input
-              value={start}
-              onChange={(event) => setStart(event.target.value)}
-              className="esp-num h-8"
-              placeholder="1:02:30"
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={start.trim() !== "" && parseClock(start) === null}
-              onClick={() => onChange({ startSecond: start.trim() ? parseClock(start) : null })}
-            >
-              Lưu
-            </Button>
-          </span>
-        </label>
-        {synced ? (
-          <label className="space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">
-              <VideoMark /> Ván kết thúc tại (mốc video)
-            </span>
-            <span className="flex gap-2">
-              <Input
-                value={end}
-                onChange={(event) => setEnd(event.target.value)}
-                className="esp-num h-8"
-                placeholder="1:20:10"
-                aria-invalid={end.trim() !== "" && endGame === null}
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                type="button"
-                onClick={() => setEnd(nowText)}
-                title="Lấy vị trí video"
-              >
-                <Clock3 size={13} />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!endGame}
-                onClick={() => endGame && onChange({ duration: Math.round(endGame) })}
-              >
-                Lưu
-              </Button>
-            </span>
-            <span className="block text-xs text-muted-foreground">
-              {endGame ? (
-                <>
-                  Thời lượng ván <TimeTag kind="game" seconds={endGame} className="text-foreground" />
-                </>
-              ) : (
-                "Mốc kết thúc phải sau mốc bắt đầu."
-              )}
-            </span>
-          </label>
-        ) : (
-          <label className="space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">⏱ Thời lượng ván</span>
-            <span className="flex gap-2">
-              <Input
-                value={length}
-                onChange={(event) => setLength(event.target.value)}
-                className="esp-num h-8"
-                placeholder="18:42"
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!parseClock(length)}
-                onClick={() => onChange({ duration: parseClock(length) ?? duration })}
-              >
-                Lưu
-              </Button>
-            </span>
-          </label>
-        )}
-      </div>
+      <label className="block space-y-1.5">
+        <span className="text-xs font-medium text-muted-foreground">
+          <VideoMark /> Ván bắt đầu tại (mốc video)
+        </span>
+        <span className="flex gap-2">
+          <Input
+            value={start}
+            onChange={(event) => setStart(event.target.value)}
+            className="esp-num h-8"
+            placeholder="1:02:30"
+          />
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={start.trim() !== "" && parseClock(start) === null}
+            onClick={() => onChange({ startSecond: start.trim() ? parseClock(start) : null })}
+          >
+            Lưu
+          </Button>
+        </span>
+      </label>
 
       <div className="space-y-2">
         <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
@@ -288,6 +260,95 @@ export function VodSyncPanel({
           <p className="text-xs text-muted-foreground">Đặt mốc bắt đầu ván trước khi ghi tạm dừng.</p>
         )}
       </div>
+
+      {/* Closing the game: where it ends and who won, saved together. */}
+      <fieldset ref={ending} className="space-y-3 rounded-lg border p-3" data-game-end>
+        <legend className="flex items-center gap-1.5 px-1 text-xs font-semibold">
+          <Flag size={13} /> Kết thúc ván {number}
+        </legend>
+        <div className="grid grid-cols-2 gap-2" role="group" aria-label={`Đội thắng ván ${number}`}>
+          {(["BLUE", "RED"] as const).map((side) => (
+            <button
+              key={side}
+              type="button"
+              data-side={side}
+              aria-pressed={won === side}
+              onClick={() => setWon(won === side ? null : side)}
+              className={cn(
+                "flex items-center gap-2 rounded-xl border border-l-4 border-l-[var(--side)] px-3 py-2 text-left transition",
+                won === side ? "border-[var(--esp-gold)] bg-[var(--esp-gold-soft)]" : "hover:bg-muted",
+              )}
+            >
+              <TeamLogo team={teams[side]} size={26} />
+              <span className="min-w-0 flex-1 truncate font-semibold">{teams[side].name}</span>
+              {won === side && <Crown size={15} className="text-[var(--esp-gold)]" aria-label="thắng" />}
+            </button>
+          ))}
+        </div>
+        <label className="block space-y-1.5">
+          <span className="text-xs font-medium text-muted-foreground">
+            {synced ? (
+              <>
+                <VideoMark /> Ván kết thúc tại (mốc video)
+              </>
+            ) : (
+              "⏱ Thời lượng ván"
+            )}
+          </span>
+          <span className="flex gap-2">
+            {synced ? (
+              <>
+                <Input
+                  value={end}
+                  onChange={(event) => setEnd(event.target.value)}
+                  className="esp-num h-8"
+                  placeholder="1:20:10"
+                  aria-invalid={endTyped && closing === null}
+                />
+                <Button size="sm" variant="outline" type="button" onClick={() => setEnd(nowText)}>
+                  <Clock3 size={13} /> Hiện tại ({VIDEO_MARK} {nowText})
+                </Button>
+              </>
+            ) : (
+              <Input
+                value={length}
+                onChange={(event) => setLength(event.target.value)}
+                className="esp-num h-8"
+                placeholder="18:42"
+                aria-invalid={endTyped && closing === null}
+              />
+            )}
+          </span>
+          <span className="block text-xs text-muted-foreground">
+            {closing !== null ? (
+              <>
+                Thời lượng ván <TimeTag kind="game" seconds={closing} className="text-foreground" />
+              </>
+            ) : endTyped ? (
+              <span className="text-destructive">
+                {synced ? "Mốc kết thúc phải sau mốc bắt đầu." : "Thời lượng chưa đúng dạng phút:giây."}
+              </span>
+            ) : (
+              "Để trống nếu chưa rõ; đội thắng vẫn được lưu."
+            )}
+          </span>
+        </label>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            type="button"
+            disabled={(endTyped && closing === null) || (!endChanged && won === winner)}
+            onClick={() =>
+              onChange({
+                ...(endChanged ? { duration: closing! } : {}),
+                ...(won !== winner ? { winner: won } : {}),
+              })
+            }
+          >
+            <Save size={14} /> Lưu kết thúc ván
+          </Button>
+        </div>
+      </fieldset>
     </section>
   )
 }

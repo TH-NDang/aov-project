@@ -110,6 +110,16 @@ export const setDraftTimes = (
   change: Partial<Pick<GameDraft, "startSecond" | "lockedSecond">>,
 ): GameContent => ({ ...content, draft: { ...readDraft(content), ...change } })
 
+/** The game with one ban/pick turn moved to another video second; null when the turn is not recorded. */
+export function moveTurn(content: GameContent, order: number, videoSecond: number): GameContent | null {
+  const draft = readDraft(content)
+  if (!draft.turns.some((turn) => turn.order === order)) return null
+  const turns = draft.turns.map((turn) =>
+    turn.order === order ? { ...turn, atSecond: Math.max(0, Math.round(videoSecond)) } : turn,
+  )
+  return { ...content, draft: { ...draft, turns } }
+}
+
 /** Picked heroes of one team, in pick order. */
 export const teamPicks = (draft: GameDraft, side: Side) =>
   draft.turns

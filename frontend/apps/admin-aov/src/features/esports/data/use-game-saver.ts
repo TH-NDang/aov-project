@@ -98,10 +98,31 @@ export function useGameSaver(entry: DocumentView<GameContent>) {
     return run
   }, [client])
 
+  /** Takes the public copy of the game down; the draft and the publication history stay. */
+  const withdraw = useCallback(() => {
+    const run = queue.current.then(async () => {
+      setState({ status: "saving" })
+      try {
+        const withdrawn = await tournamentApi.withdraw(latest.current)
+        latest.current = withdrawn
+        client.setQueriesData<DocumentView<GameContent>[]>({ queryKey: [...tournamentKeys.all, "games"] }, (rows) =>
+          rows?.map((row) => (row.id === withdrawn.id ? withdrawn : row)),
+        )
+        setState({ status: "saved", savedAt: new Date() })
+        return true
+      } catch (error) {
+        setState({ status: "error", error: tournamentError(error) })
+        return false
+      }
+    })
+    queue.current = run
+    return run
+  }, [client])
+
   const reload = useCallback(async () => {
     await client.invalidateQueries({ queryKey: [...tournamentKeys.all, "games"] })
     setState({ status: "idle" })
   }, [client])
 
-  return { save, publish, state, reload }
+  return { save, publish, withdraw, state, reload }
 }

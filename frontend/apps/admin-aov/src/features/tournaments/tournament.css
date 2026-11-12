@@ -824,71 +824,9 @@ button.tournament-registry-card:hover,
   overflow-y: auto;
   padding-right: 5px;
 }
-.tournament-loadout-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-.tournament-loadout-section {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 20px;
-}
-.tournament-loadout-section > header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.tournament-loadout-section h4,
 .tournament-section-title {
   font-weight: 600;
   font-size: 13px;
-}
-.tournament-loadout-section > header > select {
-  max-width: 210px;
-  font-size: 12px;
-}
-.tournament-loadout-row {
-  display: grid;
-  grid-template-columns: minmax(150px, 1fr) 75px 60px 34px;
-  gap: 6px;
-  align-items: center;
-}
-.tournament-loadout-row > input[type="number"] {
-  width: 100%;
-}
-.tournament-loadout-row > input[list] {
-  grid-column: 1/-1;
-}
-.tournament-arcana-totals {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-.tournament-arcana-totals span {
-  display: flex;
-  gap: 6px;
-  border-radius: 5px;
-  padding: 4px 7px;
-  background: var(--muted);
-}
-.tournament-arcana-totals span[data-color="RED"] {
-  color: #cf6474;
-}
-.tournament-arcana-totals span[data-color="PURPLE"] {
-  color: #a185d0;
-}
-.tournament-arcana-totals span[data-color="GREEN"] {
-  color: #63ad8c;
-}
-.tournament-arcana-totals > strong {
-  margin-left: auto;
-  color: var(--foreground);
 }
 .tournament-equipment-editor {
   display: flex;
@@ -1098,18 +1036,8 @@ button.tournament-registry-card:hover,
   .tournament-participant-sheet textarea {
     font-size: 16px !important;
   }
-  .tournament-loadout-row {
-    grid-template-columns: minmax(100px, 1fr) 63px 47px 29px;
-    gap: 4px;
-  }
   .tournament-inventory-slots {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .tournament-loadout-section > header {
-    align-items: start;
-  }
-  .tournament-loadout-section > header > select {
-    max-width: 190px;
   }
   .tournament-page select {
     font-size: 12px;

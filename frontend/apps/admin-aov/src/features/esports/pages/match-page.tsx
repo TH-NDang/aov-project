@@ -5,11 +5,11 @@ import type { DocumentView, GameContent, Reference, SeriesContent } from "@aov/c
 import {
   CalendarClock,
   Crown,
-  Database,
   ExternalLink,
   FastForward,
   Flag,
   Gem,
+  Info,
   Keyboard,
   Link2,
   ListChecks,
@@ -23,6 +23,7 @@ import {
   Rewind,
   ShieldBan,
   Swords,
+  Undo2,
   Users,
   Youtube,
 } from "lucide-react"
@@ -30,7 +31,6 @@ import { Button } from "@aov/ui/components/button"
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { cn } from "@aov/ui/lib/utils"
-import { GameEditor } from "@/features/tournaments/game-editor"
 import { RegistryEditor } from "@/features/tournaments/registry-editor"
 import { initialGame } from "@/features/tournaments/tournament-model"
 import { tournamentApi, tournamentError, tournamentKeys } from "@/features/tournaments/tournament-api"
@@ -51,8 +51,8 @@ import type { RosterOption } from "../components/game/draft-editor"
 import { usePhoneLayout } from "../components/game/floating-panel"
 import { useSavedPlayhead } from "../components/game/use-saved-playhead"
 import { VodPlayer, type VodPlayerHandle } from "../components/game/vod-player"
-import { BroadcastTimeline } from "../components/series/broadcast-timeline"
-import { broadcastChapters } from "../model/broadcast-timeline"
+import { BroadcastTimeline, type TimelineRow } from "../components/series/broadcast-timeline"
+import { broadcastChapters, type RetimeTarget } from "../model/broadcast-timeline"
 import { seriesWinner } from "../model/competition"
 import { buildGameView, referenceIndex, type GameView, type TeamView } from "../model/game-view"
 import { stageInfo } from "../model/labels"
@@ -71,7 +71,9 @@ import {
 import { killScoreAt, type TimelineEvent, type TimelineKind } from "../model/timeline"
 import { formatClock, parseClock, youtubeLinkTime, youtubeVideoId } from "../model/vod"
 import { seriesLocks } from "../model/series-rules"
-import { earliestLive, readDraft } from "../model/draft"
+import { earliestLive, moveTurn, readDraft, setDraftTimes } from "../model/draft"
+import { MARK_LABELS, moveMark } from "../model/observation-marks"
+import { moveEvent, withPlayback } from "../model/timeline-io"
 import { recordingProgress, type RecordingProgress } from "../model/recording-progress"
 import { ProgressBadge } from "../components/game/progress-badge"
 import {
@@ -90,6 +92,10 @@ const isTyping = (target: EventTarget | null) =>
   (!!target.closest("input, textarea, select, [contenteditable=true]") || target.isContentEditable)
 /** Readings far from a requested seek are ignored this long, while YouTube still reports the old position. */
 const SEEK_SETTLE_MS = 2500
+/** How long a moved marker can be put back with one click. */
+const UNDO_MS = 8000
+/** A marker moved on the timeline: what happened, and how to put it back. */
+type MoveUndo = { id: number; gameId: string; text: string; revert: () => void }
 export type GameStart = { url: string; second: number }
 
 const linkSecond = (value: string | null) =>
@@ -185,28 +191,6 @@ function MatchView({ access }: { access: Access }) {
       </EsportsPage>
     )
 
-  const dataGame = params.get("view") === "data" ? sorted.find((entry) => entry.id === params.get("game")) : null
-  if (access.canWrite && dataGame)
-    return (
-      <div className="esports">
-        <GameEditor
-          key={dataGame.id}
-          entry={dataGame}
-          teams={view.teams}
-          players={players.data ?? []}
-          canWrite={access.canWrite}
-          canPublish={access.canPublish}
-          actorKey={access.actorKey}
-          tournamentRegion={view.tournament.content.region}
-          tournamentId={tournamentId}
-          seriesGames={sorted}
-          bestOf={record.content.bestOf}
-          repeatPicksAllowed={record.content.repeatPicksAllowed}
-          onBack={() => setParam({ view: null })}
-        />
-      </div>
-    )
-
   const nextNumber = Math.max(0, ...sorted.map((entry) => entry.content.number)) + 1
   const canAddGame = access.canWrite && sorted.length < record.content.bestOf
 
@@ -254,8 +238,10 @@ function MatchView({ access }: { access: Access }) {
         onEnableEditing={() => setParam({ edit: "1" })}
         requestedGame={params.get("game")}
         fromLink={linkSecond(params.get("t"))}
-        onConsumeLink={() => setParam({ game: null, t: null })}
-        onOpenData={(gameId) => setParam({ game: gameId, view: "data" })}
+        // Links to the former game data page open the same game with its info panel.
+        openInfo={params.get("view") === "data"}
+        onConsumeLink={() => setParam({ game: null, t: null, view: null })}
+        tournamentRegion={view.tournament.content.region}
         resultNote={
           record.content.result && !sorted.length
             ? `Tỉ số cho biết đã đấu ${(record.content.result.scoreA ?? 0) + (record.content.result.scoreB ?? 0)} ván nhưng chưa ghi ván nào.`
@@ -304,8 +290,9 @@ function MatchViewer({
   onEnableEditing,
   requestedGame,
   fromLink,
+  openInfo,
   onConsumeLink,
-  onOpenData,
+  tournamentRegion,
   resultNote,
   addGame,
 }: {
@@ -320,8 +307,9 @@ function MatchViewer({
   onEnableEditing: () => void
   requestedGame: string | null
   fromLink: number | null
+  openInfo: boolean
   onConsumeLink: () => void
-  onOpenData: (gameId: string) => void
+  tournamentRegion?: string
   /** Shown before the first game is recorded. */
   resultNote: string | null
   /** Records the next game; with a video it starts at the playhead, outside every recorded game. */
@@ -345,8 +333,8 @@ function MatchViewer({
   )
   const at = Math.min(savedAt, duration)
   useEffect(() => {
-    if (requestedGame || fromLink !== null) onConsumeLink()
-  }, [requestedGame, fromLink, onConsumeLink])
+    if (requestedGame || fromLink !== null || openInfo) onConsumeLink()
+  }, [requestedGame, fromLink, openInfo, onConsumeLink])
 
   const here = chapterAt(chapters, at)
   const [lastFocus, setLastFocus] = useState<string | null>(here?.gameId ?? chapters[0]?.gameId ?? null)
@@ -375,7 +363,7 @@ function MatchViewer({
   const [playing, setPlaying] = useState(false)
   const [videoNow, setVideoNow] = useState<number | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [panel, setPanel] = useState<Panel | null>(null)
+  const [panel, setPanel] = useState<Panel | null>(openInfo ? { kind: "info" } : null)
   const [detail, setDetail] = useState<DetailRequest | null>(null)
   const [phoneTab, setPhoneTab] = useState<"feed" | "board">("feed")
 
@@ -488,6 +476,110 @@ function MatchViewer({
   }, [flash])
   const [keysOpen, setKeysOpen] = useState(false)
   const gameFrom = focused?.from ?? null
+
+  // Recording on the bar. A moment is recorded in the game the position belongs to; seeking there first makes that
+  // game the focused one, so the composer opens in it.
+  const createAt = (row: TimelineRow, second?: number) => {
+    const target = second ?? at
+    const chapter = chapterAt(chapters, target)
+    if (!chapter?.live || target < chapter.start) {
+      setFlash({ text: "Vị trí này chưa nằm trong ván nào đã vào trận", id: Date.now() })
+      return
+    }
+    if (second !== undefined) seek(second)
+    setPanel({
+      kind: "composer",
+      eventKind: row === "MID" ? "OBJECTIVE" : "KILL",
+      at: target,
+      side: row === "MID" ? undefined : row,
+    })
+  }
+  const [undo, setUndo] = useState<MoveUndo | null>(null)
+  useEffect(() => {
+    if (!undo) return
+    const timer = window.setTimeout(() => setUndo(null), UNDO_MS)
+    return () => window.clearTimeout(timer)
+  }, [undo])
+  // The saver belongs to the focused game, so a move can only be undone while that game is still the focused one.
+  const undoGame = undo?.gameId
+  useEffect(() => {
+    if (undoGame && undoGame !== focused?.gameId) setUndo(null)
+  }, [undoGame, focused?.gameId])
+  const retime = (target: RetimeTarget, second: number) => {
+    const chapter = chapters.find((candidate) => candidate.gameId === target.gameId)
+    if (!chapter || target.gameId !== focused?.gameId) return
+    const view = views[target.gameId]
+    type Change = (content: GameContent) => GameContent | null
+    const save = (change: Change) => void gameActions.current?.save((content) => change(content) ?? content)
+    const move = (text: string, apply: Change, revert: Change) => {
+      save(apply)
+      setUndo({ id: Date.now(), gameId: target.gameId, text, revert: () => save(revert) })
+    }
+    const onVideo = (before: number) => `${VIDEO_MARK} ${formatClock(before)} → ${formatClock(second)}`
+    const game = `Ván ${view?.number ?? chapter.number}`
+
+    if (target.kind === "turn") {
+      const turn = chapter.draft?.turns.find((candidate) => candidate.order === target.order)
+      if (turn?.atSecond == null || turn.atSecond === second) return
+      const before = turn.atSecond
+      move(
+        `Lượt ${turn.order} · ${turn.hero?.name ?? (turn.kind === "BAN" ? "cấm" : "chọn")}: ${onVideo(before)}`,
+        (content) => moveTurn(content, target.order, second),
+        (content) => moveTurn(content, target.order, before),
+      )
+      return
+    }
+    if (target.kind === "draftStart" || target.kind === "draftLock") {
+      const start = target.kind === "draftStart"
+      const before = start ? chapter.draft?.start : chapter.draft?.locked
+      if (before == null || before === second) return
+      const at = (value: number) => (start ? { startSecond: value } : { lockedSecond: value })
+      move(
+        `${start ? "Bắt đầu cấm chọn" : "Chốt đội hình"} · ${game}: ${onVideo(before)}`,
+        (content) => setDraftTimes(content, at(second)),
+        (content) => setDraftTimes(content, at(before)),
+      )
+      return
+    }
+    if (target.kind === "gameStart") {
+      if (!chapter.live || chapter.start === second) return
+      const before = chapter.start
+      // Moments are stored on the game clock, so they travel with its 0:00.
+      move(
+        `Vào trận · ${game}: ${onVideo(before)} · sự kiện của ván dời theo`,
+        (content) => withPlayback(content, { startSecond: second }),
+        (content) => withPlayback(content, { startSecond: before }),
+      )
+      return
+    }
+    if (target.kind === "mark") {
+      const next = Math.round(chapterClock(chapter, second))
+      if (next === target.at) return
+      move(
+        `Video hiện ${MARK_LABELS[target.part]} · ${view?.sides[target.side].team.shortName ?? game}: ⏱ ${formatClock(target.at)} → ${formatClock(next)}`,
+        (content) => moveMark(content, target, next),
+        (content) => moveMark(content, { ...target, at: next }, target.at),
+      )
+      return
+    }
+    const event = chapter.events.find((candidate) => candidate.id === target.id)
+    const next = Math.round(chapterClock(chapter, second))
+    if (!event || next === Math.round(event.at)) return
+    const before = event.at
+    const name =
+      event.kind === "KILL"
+        ? "Hạ gục"
+        : event.kind === "OBJECTIVE"
+          ? "Mục tiêu"
+          : event.kind === "NOTE"
+            ? event.title || "Khoảnh khắc"
+            : "Trang bị"
+    move(
+      `${name} · ${game}: ⏱ ${formatClock(before)} → ${formatClock(next)}`,
+      (content) => moveEvent(content, target.id, next),
+      (content) => moveEvent(content, target.id, before),
+    )
+  }
 
   const shortcuts = useRef({ seek, step, at, editable, panel, videoId, hasGame, gameFrom })
   shortcuts.current = { seek, step, at, editable, panel, videoId, hasGame, gameFrom }
@@ -664,6 +756,33 @@ function MatchViewer({
       lookups={lookups}
       label={videoId ? "Dòng thời gian video" : "Dòng thời gian trận"}
       heroIcon={heroIcon}
+      notice={
+        undo && (
+          <span
+            key={undo.id}
+            role="status"
+            className="esp-num flex items-center gap-2 text-foreground animate-in fade-in"
+          >
+            Đã đổi giây · {undo.text}
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-6 rounded-full px-2.5 text-xs"
+              onClick={() => {
+                undo.revert()
+                setUndo(null)
+              }}
+            >
+              <Undo2 size={12} /> Hoàn tác
+            </Button>
+          </span>
+        )
+      }
+      editing={
+        editable && focused
+          ? { gameId: focused.gameId, canCreate: focused.live, onCreate: createAt, onRetime: retime }
+          : undefined
+      }
       onSeek={(second) => {
         setActiveId(null)
         seek(second)
@@ -719,8 +838,14 @@ function MatchViewer({
       {progressButton}
       {editable && focused && (
         <>
-          <Button size="sm" variant="outline" onClick={() => setPanel({ kind: "sync" })} aria-label="Video & đồng bộ">
-            <Link2 size={14} /> {phone ? "" : "Video & đồng bộ"}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPanel({ kind: "sync" })}
+            aria-label="Video, đồng bộ và kết thúc ván"
+            title="Link video, mốc vào trận, tạm dừng, mốc kết thúc và đội thắng"
+          >
+            <Link2 size={14} /> {phone ? "" : "Video & kết thúc ván"}
           </Button>
           <Button size="sm" variant="outline" onClick={() => setPanel({ kind: "draft" })} aria-label="Cấm chọn">
             <ShieldBan size={14} /> {phone ? "" : "Cấm chọn"}
@@ -729,26 +854,16 @@ function MatchViewer({
             size="sm"
             variant="outline"
             onClick={() => setPanel({ kind: "loadout" })}
-            aria-label="Phụ trợ, phù hiệu và bảng ngọc"
+            aria-label="Phụ trợ, phù hiệu, bảng ngọc và trang bị"
           >
-            <Gem size={14} /> {phone ? "" : "Phụ trợ & ngọc"}
+            <Gem size={14} /> {phone ? "" : "Phụ trợ, ngọc, trang bị"}
           </Button>
           {focused.live ? (
-            <>
-              {!phone && (
-                <Button size="sm" onClick={() => setPanel({ kind: "composer", eventKind: "KILL" })}>
-                  <Plus size={14} /> Ghi sự kiện
-                </Button>
-              )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setPanel({ kind: "result" })}
-                aria-label="Kết thúc ván"
-              >
-                <Crown size={14} /> {phone ? "" : `Kết thúc ván ${focused.number}`}
+            !phone && (
+              <Button size="sm" onClick={() => setPanel({ kind: "composer", eventKind: "KILL" })}>
+                <Plus size={14} /> Ghi sự kiện
               </Button>
-            </>
+            )
           ) : (
             <Button
               size="sm"
@@ -765,11 +880,15 @@ function MatchViewer({
               <Flag size={14} /> Vào trận {focused.number} tại <VideoMark /> {formatClock(at)}
             </Button>
           )}
-          {canWrite && !phone && (
-            <Button size="sm" variant="ghost" onClick={() => onOpenData(focused.gameId)}>
-              <Database size={14} /> Dữ liệu ván {focused.number}
-            </Button>
-          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setPanel({ kind: "info" })}
+            aria-label={`Thông tin ván ${focused.number}`}
+            title="Mùa và patch của ván, số ván, ghi chú, gỡ công khai, xóa ván"
+          >
+            <Info size={14} /> {phone ? "" : `Thông tin ván ${focused.number}`}
+          </Button>
         </>
       )}
       {editable && startButton}
@@ -809,7 +928,7 @@ function MatchViewer({
             items={items}
             catalog={catalog.data}
             canPublish={canPublish}
-            onOpenData={() => onOpenData(focused.gameId)}
+            tournamentRegion={tournamentRegion}
             onEnableEditing={onEnableEditing}
             heroes={catalog.data?.heroes ?? []}
             spells={catalog.data?.spells ?? []}
@@ -913,6 +1032,7 @@ const SHORTCUTS: { keys: string[]; text: string; edit?: boolean }[] = [
   { keys: ["[", "]"], text: "Sự kiện trước / sau" },
   { keys: ["E"], text: "Ghi sự kiện", edit: true },
   { keys: ["K", "O", "I", "N"], text: "Ghi hạ gục / mục tiêu / trang bị / khoảnh khắc", edit: true },
+  { keys: ["Alt", "←", "→"], text: "Dời mốc đang chọn trên thanh 1 giây (giữ Shift: 5 giây)", edit: true },
   { keys: ["?"], text: "Mở / đóng danh sách này" },
 ]
 
