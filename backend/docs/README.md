@@ -46,6 +46,7 @@ trong `target/openapi/`, không được xem là một đặc tả thủ công c
 | [024](adr/ADR-024-tuong-nhieu-dang.md) | Tướng nhiều dạng (Flowborn): tướng danh mục chứa các dạng chơi được, mỗi dạng giữ danh tính và lịch sử riêng |
 | [025](adr/ADR-025-thong-ke-dau-hang.md) | Bản chụp thống kê đấu hạng: đọc từ ảnh Bảng Phân Bậc Tướng, mỗi giá trị có ảnh dẫn chứng và trạng thái duyệt |
 | [026](adr/ADR-026-build-de-cu.md) | Build đề cử theo tướng: module `build`, trang ngọc và bộ phù hiệu dùng chung theo nội dung, lần chụp có duyệt và xác nhận |
+| [027](adr/ADR-027-thu-vien-anh-tuong.md) | Thư viện ảnh của tướng: ảnh theo bản tính khi đọc, ảnh gắn thêm cho icon chiêu trước khi làm lại, sticker và ảnh sự kiện |
 | [028](adr/ADR-028-account-security-settings.md) | Cài đặt bảo mật tài khoản: mã email đổi mật khẩu, phiên đăng nhập, xác thực hai bước |
 
 ADR mới cần nêu bối cảnh, quyết định, đánh đổi và cách kiểm chứng. Không dùng ADR để tuyên bố
