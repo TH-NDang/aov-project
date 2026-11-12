@@ -17,7 +17,7 @@ Các mục bên dưới vẫn mô tả đích toàn backend; bảng này xác đ
 | Hero admin | GET/POST admin/heroes; GET admin/heroes/publish-readiness; GET admin/heroes/{id}; GET admin/heroes/{id}/revisions; GET revision/draft detail; POST drafts; PUT sáu section; POST publish/discard |
 | Hero public | GET heroes; heroes/{id}; heroes/{id}/manifest; heroes/{id}/changes |
 | Immutable section | hero-profile-revisions, hero-overview-rating-revisions, hero-stats-revisions, hero-skills-revisions, hero-skins-revisions, hero-media-binding-revisions |
-| Patch history | POST admin/patch-variants/{id}/hero-changes; GET patches, patches/{id}, patches/{id}/changes |
+| Patch history | POST admin/patch-variants/{id}/hero-changes; POST admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous; GET patches, patches/{id}, patches/{id}/changes |
 
 Tất cả path trong bảng nối sau `/api/wiki/v1/`. POST tạo trả 201; publish variant trả 204;
 Hero mutation/publish/discard trả 200 với composition revision mới nhất. Create Hero trả
@@ -56,7 +56,8 @@ Changelog có type HERO_STAT_CHANGE/HERO_SKILL_CHANGE/HERO_ROLE_CHANGE/HERO_VISU
 request admin vẫn dùng discriminator STAT/SKILL/ROLE/VISUAL/MECHANIC/OTHER. Change summary fallback theo locale.
 STAT dùng statKey/oldValue/newValue/unit, SKILL dùng skillKey/fieldKey/oldValue/newValue,
 ROLE dùng roleCode/added, VISUAL dùng mediaRole/oldAssetId/newAssetId, MECHANIC dùng mechanicKey/description,
-OTHER dùng description; tất cả cần changeKind. Change set là dữ liệu biên tập, không tự tạo khi publish.
+OTHER dùng description; tất cả cần changeKind. Khi đọc, dòng MECHANIC có thêm `previous`
+(`{description, sourceUrl, recordedAt}` hoặc `null`): mô tả trước khi đổi ghi sau theo mục 39b. Change set là dữ liệu biên tập, không tự tạo khi publish.
 
 Các API Hero/Patch chưa hỗ trợ query at, nên không nhận query này. Quy tắc resolver theo thời điểm
 vẫn được thực hiện qua contract nội bộ GameplayContexts. Region update, catalog authoring khác,
@@ -1694,6 +1695,18 @@ patchVariantId) và `appliedChangeSetIds`. Giá trị suy ra ghi change set và 
 Tham số tùy chọn `anchorRevisionId` chọn mốc thay cho thuật toán tự động. Mốc phải đã xuất bản,
 thuộc đúng tướng/ruleset và có patch xác định trong ruleset. Không hợp lệ trả HTTP 422
 `HERO_INVALID_CONTENT`; không âm thầm đổi sang mốc khác. Khi bỏ tham số, hành vi cũ được giữ nguyên.
+
+### 39b. Mô tả trước khi đổi của dòng cơ chế
+
+```http
+POST /api/wiki/v1/admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous
+```
+
+Quyền `patch:write`. Body `{description, sourceUrl}`: `description` là văn bản người biên tập tự viết, không rỗng, tối
+đa 4.000 ký tự; `sourceUrl` là link HTTP(S) của nguồn. Dòng `changeId` phải là dòng MECHANIC thuộc change set
+`changeSetId`. Mỗi dòng nhận tối đa một mô tả; ghi lần hai trả 409 `HERO_PATCH_CHANGE_CONFLICT`, không có API sửa hay
+xóa. Dòng không tồn tại hoặc nội dung sai trả 422 `HERO_INVALID_CONTENT`. Trả 201 `{id}` là `changeId`. Mô tả không
+đổi `patch-view` và không tạo snapshot ([ADR-016](adr/ADR-016-patch-note-changes.md)).
 
 ---
 

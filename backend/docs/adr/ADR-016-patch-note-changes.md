@@ -77,6 +77,22 @@ patch đó dù ghi chú cập nhật đã được ghi.
   phần này thường thiếu hoặc chỉ khác cách ghi, còn thay đổi thật đã nằm trong ghi chú cập nhật của patch. API công
   khai vẫn trả revision theo mốc như trước; wiki ghép phần kỹ năng của mốc vào dữ liệu hiện tại.
 
+### Bổ sung ngày 2026-11-12: mô tả trước khi đổi của dòng cơ chế
+
+Ghi chú cập nhật của một lần làm lại thường chỉ mô tả cơ chế mới, không có giá trị cũ để so, và tướng thường chưa có
+revision ở patch trước đó. Nguồn khác, ví dụ một bản cũ của trang wiki bên ngoài, có thể cho biết kỹ năng làm gì trước
+khi đổi, nhưng change set đã ghi thì bất biến.
+
+- Mỗi dòng MECHANIC có thể có thêm tối đa một mô tả "trước khi đổi": văn bản người biên tập tự viết và link HTTP(S) của
+  nguồn. Mô tả lưu ở bảng riêng `hero.hero_mechanic_change_previous`, chỉ thêm, không sửa hay xóa; dòng cơ chế và
+  change set giữ nguyên.
+- Ghi được sau khi change set đã ghi, cần quyền `patch:write`. Mô tả này không phải dữ liệu đã quan sát: không suy ra
+  số liệu, không tạo snapshot và không đổi kết quả `patch-view`.
+- Lịch sử thay đổi (Admin và công khai) trả `previous: {description, sourceUrl, recordedAt}` trên dòng cơ chế, `null`
+  khi chưa ghi.
+- Nguồn bên ngoài có giấy phép riêng (Liquipedia dùng CC BY-SA): người biên tập viết lại bằng lời của mình, không chép
+  nguyên văn, và luôn ghi nguồn; giao diện hiện link nguồn cạnh mô tả.
+
 ## Hệ quả
 
 - Ghi được thay đổi của các patch đã qua mà không cần thu thập lại toàn bộ dữ liệu tướng.

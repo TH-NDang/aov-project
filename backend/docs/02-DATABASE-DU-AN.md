@@ -676,6 +676,21 @@ FIX
 OTHER
 ```
 
+### Mô tả trước khi đổi của dòng cơ chế
+
+`hero.hero_mechanic_change_previous` (migration `V065`, ADR-016 bổ sung ngày 2026-11-12):
+
+| Column | Type |
+|---|---|
+| mechanic_change_id | UUID PK, FK → `hero.hero_mechanic_change(id)` — tối đa một mô tả cho mỗi dòng cơ chế |
+| description | TEXT NOT NULL, không rỗng, tối đa 4.000 ký tự — người biên tập tự viết |
+| source_url | TEXT NOT NULL — link HTTP(S) của nguồn |
+| created_at | TIMESTAMPTZ |
+| created_by_issuer | TEXT |
+| created_by_subject | TEXT |
+
+Chỉ thêm như các bảng lịch sử khác (trigger `hero.guard_change_history`); dòng cơ chế gốc không đổi.
+
 ---
 
 # PHẦN B — MEDIA SCHEMA
