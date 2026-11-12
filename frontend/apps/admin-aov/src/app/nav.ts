@@ -80,6 +80,13 @@ export const NAV_GROUPS: NavGroup[] = [
             activePaths: ["/hero/media", "/media"],
             capability: "catalog:read",
           },
+          {
+            title: "Thống kê đấu hạng",
+            icon: "competition",
+            to: "/ranking",
+            description: "Tỷ lệ thắng, chọn, cấm và chỉ số mỗi trận đọc từ ảnh game",
+            capability: "catalog:read",
+          },
         ],
       },
       {

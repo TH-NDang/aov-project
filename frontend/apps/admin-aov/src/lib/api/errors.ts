@@ -72,6 +72,12 @@ const MESSAGES: Record<string, string> = {
   ITEM_CATALOG_INVALID: "Danh mục trang bị chưa hợp lệ.",
   PORTRAIT_TARGET_INVALID: "Nơi nhận ảnh chưa hợp lệ.",
   DATA_UNAVAILABLE: "Không đọc được dữ liệu mẫu.",
+  HERO_RANKING_SNAPSHOT_EXISTS: "Bản chụp này đã được nhập.",
+  HERO_RANKING_SNAPSHOT_NOT_FOUND: "Không còn bản chụp này.",
+  HERO_RANKING_VALUE_NOT_FOUND: "Không còn giá trị này trong bản chụp.",
+  HERO_RANKING_VERSION_CONFLICT: "Người khác vừa sửa mục này. Tải lại trang rồi thử lại.",
+  HERO_RANKING_REVIEW_OPEN: "Còn giá trị chờ duyệt, nên chưa xác nhận được cả bản chụp.",
+  HERO_RANKING_INVALID: "Dữ liệu thống kê chưa hợp lệ.",
 }
 
 export function errorMessage(error: unknown): string {

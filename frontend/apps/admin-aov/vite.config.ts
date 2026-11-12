@@ -7,6 +7,7 @@ import { extname, resolve, sep } from "node:path"
 import { fileURLToPath, URL } from "node:url"
 import { jsonStorage } from "./server/json-storage.ts"
 import { patchCaptures } from "./server/patch-captures.ts"
+import { rankingCaptures } from "./server/ranking-captures.ts"
 import { shopCaptures } from "./server/shop-captures.ts"
 
 const RESOURCES_ROOT = fileURLToPath(new URL("../../../resources/Lien-Quan-v3", import.meta.url))
@@ -101,6 +102,7 @@ export default defineConfig({
     aovResources(),
     patchCaptures(fileURLToPath(new URL(".", import.meta.url))),
     shopCaptures(fileURLToPath(new URL(".", import.meta.url))),
+    rankingCaptures(fileURLToPath(new URL(".", import.meta.url))),
     jsonStorage(fileURLToPath(new URL("./storage", import.meta.url))),
   ],
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
