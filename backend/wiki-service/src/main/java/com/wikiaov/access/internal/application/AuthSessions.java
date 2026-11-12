@@ -6,6 +6,7 @@ import com.wikiaov.platform.ApiException;
 import com.wikiaov.platform.PlatformErrorCode;
 import java.util.Collection;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -24,8 +25,8 @@ public class AuthSessions {
         this.resourceClientId = resourceClientId;
     }
 
-    public IdentityTokens.Tokens password(String username, String password) {
-        return authorized(identity.password(username, password));
+    public IdentityTokens.Tokens password(String username, String password, @Nullable String otp) {
+        return authorized(identity.password(username, password, otp));
     }
 
     public IdentityTokens.Tokens refresh(String refreshToken) {

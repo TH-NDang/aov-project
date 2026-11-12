@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { WikiIcon } from "../../components/wiki-icon"
 import { Link, useNavigate } from "react-router"
 import { PublicAccountMenu, PublicAccountSummary } from "@aov/ui/components/public-account-menu"
 import { publicAuthError } from "@aov/ui/lib/public-auth"
@@ -7,8 +8,15 @@ import { WikiHeader } from "../../components/wiki-header"
 import { signIn, signOut, completeLogin, useWikiSession } from "./wiki-auth"
 
 export function WikiAccountMenu({ inline = false }: { inline?: boolean }) {
-  const { locale, setLocale } = useWikiContext()
+  const { locale, setLocale, href } = useWikiContext()
   const session = useWikiSession()
+  const settings =
+    session.status === "authenticated" ? (
+      <Link to={href("/account")}>
+        <WikiIcon name="settings" size={17} />
+        {wikiText(locale, "Cài đặt tài khoản", "Account settings")}
+      </Link>
+    ) : undefined
   const accountProps = {
     product: "wiki" as const,
     locale,
@@ -21,6 +29,7 @@ export function WikiAccountMenu({ inline = false }: { inline?: boolean }) {
     loading: session.status === "loading",
     onSignIn: () => signIn(),
     onSignOut: () => signOut(),
+    children: settings,
   }
   return inline ? (
     <div className="public-account-panel public-account-inline" data-product="wiki">

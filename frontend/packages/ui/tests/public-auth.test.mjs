@@ -207,3 +207,47 @@ test("Wiki uses an independent public client transaction and registration endpoi
   assert.equal(url.searchParams.get("ui_locales"), "vi")
   assert.ok(url.pathname.endsWith("/registrations"))
 })
+
+test("account actions add kc_action and forced re-authentication, then report their status once", async () => {
+  const auth = createPublicAuth({ ...config, clientId: "aov-wiki", storageKey: "wiki-login", returnPath: "/" })
+  location.pathname = "/account"
+  location.search = ""
+  location.hash = ""
+  await auth.signIn(false, { action: "delete_credential:0f1e2d3c-aaaa-bbbb-cccc-1234567890ab", reauthenticate: true })
+  const url = new URL(assigned.at(-1))
+  assert.equal(url.searchParams.get("kc_action"), "delete_credential:0f1e2d3c-aaaa-bbbb-cccc-1234567890ab")
+  assert.equal(url.searchParams.get("max_age"), "0")
+  const flow = JSON.parse(storage.get("wiki-login"))
+  assert.equal(flow.returnTo, "/account")
+  location.pathname = "/auth/callback"
+  location.search = `?state=${flow.state}&code=authorization-code&kc_action=delete_credential&kc_action_status=success`
+  assert.equal(await auth.completeLogin(), "/account")
+  const result = { action: "delete_credential:0f1e2d3c-aaaa-bbbb-cccc-1234567890ab", status: "success" }
+  assert.deepEqual(auth.accountActionResult(), result)
+  assert.deepEqual(auth.accountActionResult(), result, "reading does not consume the result")
+  auth.clearAccountActionResult()
+  assert.equal(auth.accountActionResult(), null)
+})
+
+test("account actions reject unknown actions and report cancellations", async () => {
+  const auth = createPublicAuth(config)
+  await assert.rejects(auth.signIn(false, { action: "UPDATE_EMAIL" }), /Unsupported account action/)
+  await assert.rejects(auth.signIn(false, { action: "delete_credential:../x" }), /Unsupported account action/)
+  assert.equal(assigned.length, 0)
+  await auth.signIn(false, { action: "CONFIGURE_TOTP" })
+  const url = new URL(assigned.at(-1))
+  assert.equal(url.searchParams.get("kc_action"), "CONFIGURE_TOTP")
+  assert.equal(url.searchParams.has("max_age"), false)
+  const flow = JSON.parse(storage.get(config.storageKey))
+  location.pathname = "/auth/callback"
+  location.search = `?state=${flow.state}&code=authorization-code&kc_action_status=cancelled`
+  await auth.completeLogin()
+  assert.deepEqual(auth.accountActionResult(), { action: "CONFIGURE_TOTP", status: "cancelled" })
+})
+
+test("a plain sign-in carries no account action result", async () => {
+  const auth = createPublicAuth(config)
+  await callback(auth)
+  await auth.completeLogin()
+  assert.equal(auth.accountActionResult(), null)
+})

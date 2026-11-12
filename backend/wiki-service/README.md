@@ -150,6 +150,32 @@ client, role tổng hợp và tài khoản đích. Chạy lại không tạo tr�
 hiện có. Có thể truyền `-ServerUrl`, `-Realm`, `-TargetUsername`, `-Credential`; máy chủ ngoài local
 phải dùng HTTPS. Đây không phải công cụ đồng bộ toàn bộ realm.
 
+### Cài đặt bảo mật tài khoản (ADR-028)
+
+Trang Cài đặt tài khoản của Wiki gọi `/api/wiki/v1/users/me/security/**`. Backend cần:
+
+- `WIKI_SERVICE_CLIENT_SECRET`: secret của client `wiki-service` (service account `view-users`, `manage-users`,
+  token exchange sang audience `account`). Thiếu secret thì các endpoint trả `503 USER_ACCOUNT_PROVIDER_UNAVAILABLE`.
+- SMTP `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH`, `MAIL_STARTTLS` và người gửi
+  `MAIL_FROM`. Thiếu host hoặc người gửi thì không đổi được mật khẩu ở trang Cài đặt.
+
+Local: chạy Mailpit rồi xem email tại `http://localhost:8025`. Profile `local` đã trỏ SMTP tới `localhost:1025`.
+
+```powershell
+docker compose --profile mail up -d mailpit
+```
+
+Realm import mới đã có client `wiki-service` với secret lấy từ biến môi trường của container Keycloak. Với realm đã
+tồn tại (và lần đầu sau import, để bật form mã khôi phục và flow hỏi mã sau đăng nhập Google), đặt
+`WIKI_SERVICE_CLIENT_SECRET` rồi chạy:
+
+```powershell
+./scripts/sync-account-security.ps1
+```
+
+Script hỏi `PSCredential` quản trị realm `master`, chạy lại an toàn, không cấp role cho người dùng. Bật/tắt xác thực
+hai bước và xem mã khôi phục diễn ra trên trang Keycloak theme `aov-public`; Keycloak phải mount bản theme mới.
+
 ## API và OpenAPI
 
 URL API dùng `/api/wiki/v1/...`; controller khai báo `ApiPaths.ROOT`/`ApiPaths.ADMIN` và

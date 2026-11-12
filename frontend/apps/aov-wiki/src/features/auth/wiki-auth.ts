@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAccountCurrency } from "@aov/ui/lib/currency"
-import { createPublicAuth } from "@aov/ui/lib/public-auth"
+import { createPublicAuth, type AccountAction } from "@aov/ui/lib/public-auth"
 import { useAccountTimeZone } from "@aov/ui/lib/time-zone"
 import { useAccountDateFormat } from "@aov/ui/lib/time-zone"
 
@@ -13,9 +13,21 @@ const auth = createPublicAuth({
   nameField: "displayName",
   locale: () => document.documentElement.lang || "vi",
 })
-export const { signIn, signOut, completeLogin, useSession: useWikiSession } = auth
-/** The signed-in reader's bearer token for personal requests, or null when nobody is signed in. */
+export const {
+  signIn,
+  signOut,
+  completeLogin,
+  accountActionResult,
+  clearAccountActionResult,
+  useSession: useWikiSession,
+} = auth
+/** The signed-in reader's bearer token for personal requests; rejects when nobody is signed in. */
 export const wikiAccessToken = () => auth.accessToken()
+
+/** Runs a Keycloak account action (authenticator, recovery codes, removal) and returns to the current page. */
+export function startAccountAction(action: AccountAction, options: { reauthenticate?: boolean } = {}) {
+  return signIn(false, { action, reauthenticate: options.reauthenticate })
+}
 void auth.restoreSession()
 
 type WikiProfile = {

@@ -77,7 +77,7 @@ class AuthControllerTest {
 
     @Test
     void passwordLoginKeepsRefreshTokenOutOfJsonAndSetsHttpOnlyCookie() throws Exception {
-        when(sessions.password("editor", "test-password")).thenReturn(tokens());
+        when(sessions.password("editor", "test-password", null)).thenReturn(tokens());
         mvc.perform(authPost("login").contentType("application/json")
                 .content("{\"username\":\"editor\",\"password\":\"test-password\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.accessToken").value("access"))
@@ -90,11 +90,25 @@ class AuthControllerTest {
 
     @Test
     void invalidCredentialsDoNotSetSessionCookie() throws Exception {
-        when(sessions.password("editor", "wrong"))
+        when(sessions.password("editor", "wrong", null))
                 .thenThrow(new ApiException(AuthErrorCode.AUTH_INVALID_CREDENTIALS, "Rejected"));
         mvc.perform(authPost("login").contentType("application/json")
                 .content("{\"username\":\"editor\",\"password\":\"wrong\"}"))
                 .andExpect(status().isUnauthorized()).andExpect(cookie().doesNotExist("aov_admin_refresh"));
+    }
+
+    @Test
+    void passwordLoginForwardsAnOptionalSixDigitCode() throws Exception {
+        when(sessions.password("editor", "test-password", "123456")).thenReturn(tokens());
+        mvc.perform(authPost("login").contentType("application/json")
+                .content("{\"username\":\"editor\",\"password\":\"test-password\",\"otp\":\"123456\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.accessToken").value("access"));
+        for (String otp : new String[] {"12345", "1234567", "12345a"}) {
+            mvc.perform(authPost("login").contentType("application/json")
+                    .content("{\"username\":\"editor\",\"password\":\"test-password\",\"otp\":\"" + otp + "\"}"))
+                    .andExpect(status().isBadRequest());
+        }
+        verify(sessions).password("editor", "test-password", "123456");
     }
 
     @Test

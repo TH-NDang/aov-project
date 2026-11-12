@@ -8,6 +8,7 @@ import com.wikiaov.platform.ApiException;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.MediaType;
@@ -48,10 +49,12 @@ class KeycloakTokens implements IdentityTokens {
         this.client = RestClient.builder().requestFactory(factory).build();
     }
 
-    public Tokens password(String username, String password) {
+    public Tokens password(String username, String password, @Nullable String otp) {
         var form = form("password");
         form.add("username", username);
         form.add("password", password);
+        if (otp != null)
+            form.add("totp", otp);
         form.add("scope", "openid");
         return exchange(form, AuthErrorCode.AUTH_INVALID_CREDENTIALS);
     }

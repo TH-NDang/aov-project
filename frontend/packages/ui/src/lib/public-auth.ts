@@ -1,5 +1,20 @@
 import { useSyncExternalStore } from "react"
 
+/** Keycloak application-initiated actions used by account settings (ADR-028). */
+export type AccountAction = "CONFIGURE_TOTP" | "CONFIGURE_RECOVERY_AUTHN_CODES" | `delete_credential:${string}`
+export type AccountActionResult = { action: AccountAction; status: "success" | "cancelled" | "error" }
+export type SignInOptions = {
+  /** Runs a Keycloak required action, e.g. authenticator setup, before returning. */
+  action?: AccountAction
+  /** Forces the password (and the second factor when configured) to be entered again. */
+  reauthenticate?: boolean
+  /** App path to open after the callback; defaults to the current page. */
+  returnTo?: string
+}
+const ACCOUNT_ACTION = /^(CONFIGURE_TOTP|CONFIGURE_RECOVERY_AUTHN_CODES|delete_credential:[A-Za-z0-9-]{1,64})$/
+export const isAccountAction = (value: unknown): value is AccountAction =>
+  typeof value === "string" && ACCOUNT_ACTION.test(value)
+
 type Session = { status: "anonymous" | "authenticated" | "loading"; name: string; revision: number; error?: string }
 type Credentials = { access: string; refresh?: string; idToken?: string; expires: number }
 type Config = {
@@ -84,6 +99,7 @@ export function createPublicAuth(config: Config) {
   let completing: Promise<string> | null = null
   let starting: Promise<void> | null = null
   let generation = 0
+  let actionResult: AccountActionResult | null = null
   const listeners = new Set<() => void>()
   const issuer = config.issuer.replace(/\/$/, "")
   const callback = () => `${location.origin}${callbackPath}`
@@ -114,8 +130,10 @@ export function createPublicAuth(config: Config) {
     })
   }
 
-  function signIn(register = false): Promise<void> {
+  function signIn(register = false, options: SignInOptions = {}): Promise<void> {
     if (starting) return starting
+    if (options.action !== undefined && !isAccountAction(options.action))
+      return Promise.reject(new Error("Unsupported account action."))
     starting = (async () => {
       completing = null
       const verifier = encode(crypto.getRandomValues(new Uint8Array(48)))
@@ -129,10 +147,16 @@ export function createPublicAuth(config: Config) {
           verifier,
           state,
           created: Date.now(),
-          returnTo: appPath(location.pathname) + location.search + location.hash,
+          returnTo: safeAuthReturnPath(
+            options.returnTo ?? appPath(location.pathname) + location.search + location.hash,
+            config.returnPath,
+          ),
+          ...(options.action ? { action: options.action } : {}),
         }),
       )
       const params = authorizeParams(state, challenge)
+      if (options.action) params.set("kc_action", options.action)
+      if (options.reauthenticate) params.set("max_age", "0")
       location.assign(`${issuer}/protocol/openid-connect/${register ? "registrations" : "auth"}?${params}`)
     })().finally(() => {
       starting = null
@@ -258,7 +282,13 @@ export function createPublicAuth(config: Config) {
       const params = new URLSearchParams(location.search)
       history.replaceState(null, "", location.pathname)
       if (!saved) throw new Error("Login transaction not found.")
-      const flow = JSON.parse(saved) as { state: string; verifier: string; created: number; returnTo: string }
+      const flow = JSON.parse(saved) as {
+        state: string
+        verifier: string
+        created: number
+        returnTo: string
+        action?: unknown
+      }
       if (
         typeof flow.state !== "string" ||
         !flow.state ||
@@ -273,6 +303,10 @@ export function createPublicAuth(config: Config) {
       )
         throw new Error("Invalid or expired login transaction.")
       await finishLogin(params.get("code")!, flow.verifier, started)
+      const status = params.get("kc_action_status")
+      actionResult = isAccountAction(flow.action)
+        ? { action: flow.action, status: status === "success" || status === "cancelled" ? status : "error" }
+        : null
       return safeAuthReturnPath(flow.returnTo, config.returnPath)
     })().catch((error: unknown) => {
       if (started === generation) {
@@ -303,8 +337,21 @@ export function createPublicAuth(config: Config) {
     return renewing
   }
 
+  /**
+   * Result of the account action that ended with the last callback. Reading does not consume it, so a component may
+   * read it while rendering (React may render twice); call clearAccountActionResult once it has been handled.
+   */
+  function accountActionResult() {
+    return actionResult
+  }
+
+  function clearAccountActionResult() {
+    actionResult = null
+  }
+
   function signOut(remote = true) {
     generation++
+    actionResult = null
     const idToken = credentials?.idToken
     credentials = null
     completing = null
@@ -317,5 +364,15 @@ export function createPublicAuth(config: Config) {
         `${issuer}/protocol/openid-connect/logout?${new URLSearchParams({ id_token_hint: idToken, post_logout_redirect_uri: location.origin + base.slice(0, -1) + config.returnPath })}`,
       )
   }
-  return { useSession, signIn, signOut, accessToken, completeLogin, restoreSession, getSnapshot }
+  return {
+    useSession,
+    signIn,
+    signOut,
+    accessToken,
+    completeLogin,
+    restoreSession,
+    getSnapshot,
+    accountActionResult,
+    clearAccountActionResult,
+  }
 }

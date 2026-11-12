@@ -61,7 +61,7 @@ public class AuthController implements AuthApi {
         guard(request);
         throttle.check("login-ip:" + request.getRemoteAddr(), 30);
         throttle.check("login-user:" + body.username().trim().toLowerCase(Locale.ROOT), 10);
-        return accept(sessions.password(body.username().trim(), body.password()), response);
+        return accept(sessions.password(body.username().trim(), body.password(), body.otp()), response);
     }
 
     @PostMapping(path = "/refresh", version = "1")

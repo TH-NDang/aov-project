@@ -17,6 +17,20 @@ spring:
       timeout: ${REDIS_TIMEOUT:200ms}
       ssl:
         enabled: ${REDIS_SSL:false}
+  # Account security email (ADR-028). Without a host or wiki.account.mail.from, password changes are unavailable.
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
+      mail.smtp.starttls.required: ${MAIL_STARTTLS:true}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
   jpa:
     open-in-view: false
     hibernate:
@@ -49,6 +63,9 @@ management:
     # The cache is optional; losing Redis must not make the database-backed API unready.
     redis:
       enabled: false
+    # Account email is optional (ADR-028); a missing SMTP server only disables password changes.
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:
@@ -63,6 +80,13 @@ wiki:
     admin-ttl: ${READ_MODEL_CACHE_ADMIN_TTL:30s}
     retry-delay: ${READ_MODEL_CACHE_RETRY_DELAY:5s}
     max-value-bytes: ${READ_MODEL_CACHE_MAX_VALUE_BYTES:8388608}
+  account:
+    keycloak:
+      client-id: ${WIKI_SERVICE_CLIENT_ID:wiki-service}
+      client-secret: ${WIKI_SERVICE_CLIENT_SECRET:}
+    mail:
+      from: ${MAIL_FROM:}
+      product-name: ${MAIL_PRODUCT_NAME:AOV}
   user:
     profile-defaults:
       locale: ${USER_DEFAULT_LOCALE:vi-VN}

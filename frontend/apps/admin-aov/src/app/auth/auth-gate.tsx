@@ -29,12 +29,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [otp, setOtp] = useState("")
   const [visible, setVisible] = useState(false)
   const [method, setMethod] = useState<"account" | "google">("account")
   function changeOpen(value: boolean) {
     if (busy && method === "account") return
     if (!value) cancelLogin()
     setPassword("")
+    setOtp("")
     setVisible(false)
     setError(null)
     setOpen(value)
@@ -45,12 +47,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
     setMethod(provider)
     try {
       if (provider === "google") await loginGoogle()
-      else await loginPassword(username.trim(), password)
+      else await loginPassword(username.trim(), password, otp.length === 6 ? otp : undefined)
     } catch (cause) {
       setError(authMessage(cause))
     } finally {
       setBusy(false)
       setPassword("")
+      // Authenticator codes are single-use.
+      setOtp("")
       setVisible(false)
     }
   }
@@ -154,9 +158,31 @@ export function AuthGate({ children }: { children: ReactNode }) {
                 </button>
               </div>
             </div>
+            <div className="space-y-2">
+              <label htmlFor="admin-otp" className="text-xs text-[#c4c2cc]">
+                Mã xác thực 2 bước (nếu tài khoản đã bật)
+              </label>
+              <input
+                id="admin-otp"
+                name="otp"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                disabled={busy}
+                value={otp}
+                onChange={(event) => setOtp(event.target.value.replace(/D/g, "").slice(0, 6))}
+                placeholder="6 chữ số trong ứng dụng xác thực"
+                aria-describedby="admin-otp-help"
+                className={inputStyle + " tracking-[0.3em]"}
+              />
+              <p id="admin-otp-help" className="text-xs text-[#aaa6b5]">
+                Bỏ trống nếu chưa bật. Mã khôi phục chỉ dùng được khi đăng nhập bằng Google hoặc trên Wiki.
+              </p>
+            </div>
             <button
               type="submit"
-              disabled={busy || !username.trim() || !password}
+              disabled={busy || !username.trim() || !password || (otp.length > 0 && otp.length !== 6)}
               className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl bg-[#e7bd7a] px-4 font-semibold text-[#242019] hover:bg-[#f3cf99] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e7bd7a] disabled:opacity-50"
             >
               Đăng nhập <ArrowUpRight className="size-4" />
