@@ -691,6 +691,27 @@ OTHER
 
 Chỉ thêm như các bảng lịch sử khác (trigger `hero.guard_change_history`); dòng cơ chế gốc không đổi.
 
+### Thư viện ảnh của tướng
+
+`hero.hero_gallery_item` (migration `V066`, [ADR-027](adr/ADR-027-thu-vien-anh-tuong.md)): ảnh trong media được gắn
+thẳng vào tướng, cho ảnh không bản nào dùng. Ảnh theo bản được tính khi đọc, không lưu ở đây.
+
+| Column | Type |
+|---|---|
+| id | UUID PK |
+| hero_id | UUID NOT NULL, FK → `hero.hero(id)` |
+| asset_id | UUID NOT NULL — logical ref tới `media.media_asset` |
+| kind | VARCHAR(16): `HERO_ART`, `SKIN`, `SKILL`, `STICKER`, `OTHER` |
+| caption | TEXT NULL, tối đa 500 ký tự |
+| part_key | VARCHAR(64) NULL — mã chiêu hoặc trang phục ảnh nói tới |
+| until_patch_variant_id | UUID NULL — ảnh của giai đoạn trước patch này |
+| sort_order | INTEGER NOT NULL |
+| lock_version | BIGINT NOT NULL — client thấy là `version` / `expectedVersion` |
+| created_at, updated_at | TIMESTAMPTZ |
+| created_by_issuer, created_by_subject | TEXT |
+
+`UNIQUE(hero_id, asset_id)`. Sửa và xóa được; xóa chỉ bỏ liên kết, ảnh vẫn ở media.
+
 ---
 
 # PHẦN B — MEDIA SCHEMA

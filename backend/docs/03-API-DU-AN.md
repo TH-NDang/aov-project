@@ -1708,6 +1708,46 @@ Quyền `patch:write`. Body `{description, sourceUrl}`: `description` là văn b
 xóa. Dòng không tồn tại hoặc nội dung sai trả 422 `HERO_INVALID_CONTENT`. Trả 201 `{id}` là `changeId`. Mô tả không
 đổi `patch-view` và không tạo snapshot ([ADR-016](adr/ADR-016-patch-note-changes.md)).
 
+### 39c. Thư viện ảnh của tướng
+
+[ADR-027](adr/ADR-027-thu-vien-anh-tuong.md).
+
+```http
+GET /api/wiki/v1/admin/heroes/{heroId}/gallery?locale=vi-VN
+```
+
+Quyền `catalog:read`. Trả `{items}`, mỗi mục là một ảnh:
+
+- `assetId`, `kind` (`HERO_ART`, `SKIN`, `SKILL`, `STICKER`, `OTHER`), `roles` (nơi ảnh hiện, ví dụ `PORTRAIT`,
+  `SKIN_ART:<skinKey>`, `SKILL_ICON:<skillKey>`, `SKILL_LIBRARY:<skillKey>`, `GALLERY`), `partKey`, `partName` (tên
+  chiêu hoặc trang phục theo `locale`, rơi về `vi-VN`).
+- `current`: ảnh đang hiện ở bản đang hiệu lực, hoặc là ảnh thư viện kỹ năng.
+- `versions`: các bản chưa hủy dùng ảnh, mỗi bản `{revisionId, revisionNo, state, current, patchVariantId}`.
+- `attachment`: `null` với ảnh chỉ có theo bản; với ảnh gắn thêm là
+  `{id, caption, untilPatchVariantId, sortOrder, version}`.
+
+Ảnh đang dùng đứng trước, rồi ảnh của bản cũ (bản mới hơn trước), rồi ảnh gắn thêm theo `sortOrder`. Ảnh vừa thuộc
+bản vừa được gắn thêm chỉ hiện một lần.
+
+```http
+POST   /api/wiki/v1/admin/heroes/{heroId}/gallery
+PUT    /api/wiki/v1/admin/heroes/{heroId}/gallery/{itemId}
+DELETE /api/wiki/v1/admin/heroes/{heroId}/gallery/{itemId}?expectedVersion=N
+```
+
+Quyền `hero:write`, có hiệu lực ngay, không cần xuất bản lại tướng. POST nhận
+`{assetId, kind, caption?, partKey?, untilPatchVariantId?}` và trả 201 `{id}`. PUT nhận
+`{expectedVersion, kind, caption?, partKey?, untilPatchVariantId?}` và trả `{id, version}`. DELETE chỉ bỏ liên kết,
+ảnh vẫn ở media, trả 204.
+
+- Ảnh phải tồn tại, còn hiệu lực và có loại hợp với `kind`: `HERO_ART` nhận ảnh đại diện, chân dung, nền; `SKIN` nhận
+  ảnh trang phục; `SKILL` nhận icon kỹ năng; `STICKER` nhận sticker chibi; `OTHER` nhận mọi loại. Sai trả 422
+  `HERO_INVALID_MEDIA`.
+- `caption` tối đa 500 ký tự, `partKey` tối đa 64 ký tự, `untilPatchVariantId` phải là patch của bộ quy tắc; sai trả
+  422 `HERO_INVALID_CONTENT`.
+- Gắn trùng một ảnh hoặc `expectedVersion` cũ trả 409 `HERO_GALLERY_ITEM_CONFLICT`. Mục không thuộc tướng trả 404
+  `HERO_GALLERY_ITEM_NOT_FOUND`; tướng không tồn tại trả 404 `HERO_NOT_FOUND`.
+
 ---
 
 ## 40. Item/Arcana/... patch changes
