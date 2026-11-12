@@ -1,4 +1,4 @@
--- One-time email codes that confirm a password change in the identity provider (ADR-024).
+-- One-time email codes that confirm a password change in the identity provider (ADR-028).
 -- Only a hash of the code is stored; passwords, emails and tokens never reach this table.
 CREATE TABLE user_profile.password_change_challenge (
     id UUID PRIMARY KEY,
