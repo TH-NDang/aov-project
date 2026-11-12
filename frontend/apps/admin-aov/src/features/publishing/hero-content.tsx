@@ -17,7 +17,6 @@ import { HeroSkillsView } from "./hero-skills-view"
 import type { HeroContentTab } from "./hero-location"
 import { HeroAsset } from "./hero-asset"
 import { HeroGallery } from "./hero-gallery"
-import { ImageCreditSummary } from "./image-credit-summary"
 import { HeroSkinsView } from "./hero-skins-view"
 import { visibleSkins } from "./hero-skins"
 import { heroContentSectionId, heroContentTabs } from "./hero-content-tabs"
@@ -368,11 +367,7 @@ function HeroContentBody({
       <TabSection title="Ảnh" icon={ImageIcon} status={sectionStatus("media")} actions={editAction("MEDIA_BINDINGS")}>
         {editorIn("media") ?? (
           <div id="hero-MEDIA_BINDINGS" className="min-w-0 space-y-4">
-            {/* Each image's own credit lives in its info button; this line only sums them up. */}
-            <ImageCreditSummary
-              label="ảnh tướng"
-              assetIds={roles.map((role) => content.MEDIA_BINDINGS?.bindings[role])}
-            />
+            {/* No credit summary line here: each image keeps its own credit in its info button and the large view. */}
             {/* A saved hero shows its whole gallery: every version's images and those attached to it (ADR-027). */}
             {heroId ? (
               <HeroGallery

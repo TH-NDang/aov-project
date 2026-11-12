@@ -6,7 +6,9 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { cn } from "@aov/ui/lib/utils"
 import { backendRequest } from "@/app/auth/session"
 import { confirmAction } from "@/components/confirm-dialog"
+import type { LightboxImage } from "@/components/image-lightbox"
 import { errorMessage } from "@/lib/api/errors"
+import { useAssetGallery } from "./asset-gallery"
 import { AssetPicker } from "./asset-picker"
 import { control } from "./fields"
 import { HeroAsset } from "./hero-asset"
@@ -154,6 +156,8 @@ export function HeroGallery({
     items.filter((image) => (key === "ALL" || image.kind === key) && inPeriod(image, period)).length
   const shown = items.filter((image) => (kind === "ALL" || image.kind === kind) && inPeriod(image, period))
   const selected = shown.find((image) => image.assetId === chosen) ?? shown[0]
+  // The large view steps through the images the grid shows now, in the same order, so the filter carries over.
+  const largeView = useAssetGallery(shown.map((image) => ({ id: image.assetId, title: imageTitle(image, name) })))
 
   if (gallery.isPending) return <p className="type-meta">Đang tải thư viện ảnh…</p>
   if (gallery.isError)
@@ -212,6 +216,7 @@ export function HeroGallery({
               key={selected.assetId}
               heroId={heroId}
               image={selected}
+              gallery={largeView(shown.indexOf(selected))}
               name={name}
               patchName={patchName}
               canWrite={canWrite}
@@ -278,7 +283,7 @@ function TileBadge({ image, patchName }: { image: GalleryImage; patchName: (id: 
       : until
         ? `Trước ${patchName(until) ?? "patch"}`
         : image.versions.length
-          ? "Bản cũ"
+          ? "Ảnh cũ"
           : null
   if (!label) return null
   // A dark strip over the artwork, so the word reads on any picture.
@@ -289,19 +294,40 @@ function TileBadge({ image, patchName }: { image: GalleryImage; patchName: (id: 
   )
 }
 
-function imageTitle(image: GalleryImage, name: string) {
-  if (image.attachment?.caption) return image.attachment.caption
+/** Whose image it is (the caption, skin or skill, else the hero) and what kind of picture it is, as two parts. */
+function imageParts(image: GalleryImage, name: string) {
   const place = role(image)
   const what = place === "GALLERY" ? KIND_NAMES[image.kind] : (ROLE_NAMES[place] ?? place)
-  return [image.partName ?? (place === "HEAD" || place === "PORTRAIT" || place === "SPLASH" ? name : null), what]
-    .filter(Boolean)
-    .join(" · ")
+  return { who: image.attachment?.caption ?? image.partName ?? name, what }
+}
+
+function imageTitle(image: GalleryImage, name: string) {
+  if (image.attachment?.caption) return image.attachment.caption
+  const { who, what } = imageParts(image, name)
+  return `${who} · ${what}`
+}
+
+/** Where the image stands for readers, in plain words, with a color: shown now, waiting in a draft, or from before. */
+function imageStatus(image: GalleryImage, patchName: (id: string | null) => string | null) {
+  const until = image.attachment?.untilPatchVariantId
+  if (image.current) return { text: "Đang hiện trên Wiki", tone: "text-[var(--aov-success)]" }
+  if (draftOnly(image)) return { text: "Chưa lên Wiki: chỉ có trong bản nháp", tone: "text-[var(--aov-warning)]" }
+  if (until) return { text: `Ảnh cũ, dùng trước ${patchName(until) ?? "bản cập nhật đã chọn"}`, tone: "" }
+  if (image.versions.length) return { text: "Ảnh cũ, bản đang hiện trên Wiki không còn dùng", tone: "" }
+  return { text: "Gắn thêm vào thư viện của tướng", tone: "" }
+}
+
+/** One hero data version that uses the image, in words a reader can follow. */
+function versionState(version: GalleryImage["versions"][number]) {
+  if (version.state === "DRAFT") return "bản nháp, chưa xuất bản"
+  return version.current ? "đang hiện trên Wiki" : "bản cũ"
 }
 
 /** The chosen image large, what it is, which versions used it, and for an attached one, how to change it. */
 function GalleryDetail({
   heroId,
   image,
+  gallery,
   name,
   patchName,
   canWrite,
@@ -310,6 +336,8 @@ function GalleryDetail({
 }: {
   heroId: string
   image: GalleryImage
+  /** The images the large view steps through, opened at this one. */
+  gallery: { images: LightboxImage[]; index: number } | undefined
   name: string
   patchName: (id: string | null) => string | null
   canWrite: boolean
@@ -328,15 +356,8 @@ function GalleryDetail({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: galleryKey(heroId) }),
     onError: (failure) => setError(errorMessage(failure)),
   })
-  const status = image.current
-    ? "Đang dùng"
-    : draftOnly(image)
-      ? "Chỉ có ở bản nháp"
-      : attachment?.untilPatchVariantId
-        ? `Dùng trước ${patchName(attachment.untilPatchVariantId) ?? "patch đã chọn"}`
-        : image.versions.length
-          ? "Chỉ còn ở bản cũ"
-          : "Gắn thêm vào tướng"
+  const { who, what } = imageParts(image, name)
+  const status = imageStatus(image, patchName)
 
   return (
     <aside aria-label="Ảnh đang xem" className="min-w-0 space-y-3 rounded-xl border p-3 @min-[640px]:self-start">
@@ -346,22 +367,25 @@ function GalleryDetail({
         className={PREVIEW_SHAPE[imageShape(image)].className}
         naturalAspectRatio={PREVIEW_SHAPE[imageShape(image)].ratio}
         preview
+        gallery={gallery}
       />
       <div className="space-y-1">
-        <p className="type-section-title break-words">{imageTitle(image, name)}</p>
-        <p className="type-meta">
-          {KIND_NAMES[image.kind]} · {status}
-        </p>
+        <p className="type-section-title break-words">{who}</p>
+        <p className="type-meta">{what}</p>
+        <p className={cn("type-body", status.tone)}>{status.text}</p>
       </div>
       {image.versions.length > 0 && (
-        <div className="space-y-1">
-          <p className="type-label text-muted-foreground">Có trong</p>
-          <ul className="type-body space-y-0.5">
+        <div className="space-y-1.5">
+          <p className="type-label text-muted-foreground">Có trong bản dữ liệu tướng</p>
+          <ul className="space-y-1.5">
             {image.versions.map((version) => (
               <li key={version.revisionId}>
-                Bản {version.revisionNo} ·{" "}
-                {version.state === "DRAFT" ? "Bản nháp" : version.current ? "Đang hiệu lực" : "Bản cũ"}
-                {patchName(version.patchVariantId) ? ` · ${patchName(version.patchVariantId)}` : ""}
+                <p className="type-body">
+                  Bản {version.revisionNo}: {versionState(version)}
+                </p>
+                {patchName(version.patchVariantId) && (
+                  <p className="type-meta">Bản cập nhật {patchName(version.patchVariantId)}</p>
+                )}
               </li>
             ))}
           </ul>
