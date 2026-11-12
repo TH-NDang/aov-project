@@ -139,10 +139,22 @@ và dữ liệu giữ nguyên.
   chạy tắt tiếng tới khung hình đầu tiên rồi dừng tại đó.
 - Thanh chi tiết hiện một khoảng video tính bằng phút hoặc giờ, không còn hệ số phóng 1×–32×. Một buổi phát dài cả
   chục giờ trong khi một ván chỉ vài chục phút, nên khi chưa ai chọn, thanh tự lấy khoảng tròn nhỏ nhất chứa trọn
-  ván đang xem cùng vùng cấm chọn của nó (5, 10, 15, 30 phút, 1, 2, 4, 8 giờ, hoặc cả video) và đặt ván vào giữa;
+  ván đang xem cùng vùng cấm chọn của nó (5, 10, 15, 20, 30, 45 phút, 1, 1,5, 2, 4, 8 giờ, hoặc cả video) và đặt ván vào giữa;
   sang ván khác thì thanh theo ván đó. Chưa có ván nào thì hiện khoảng một phần tư video dài. Nút thu, phóng đi
   từng nấc của dãy trên và từ đó thanh giữ khoảng người dùng chọn; "Vừa ván" đưa về khoảng tự chọn, "Toàn video"
   hiện cả video.
+- Phóng và thu thanh bằng cử chỉ (bổ sung cùng ngày): giữ Ctrl rồi lăn chuột, chụm hai ngón trên bàn rê, hoặc chụm
+  hai ngón trên màn hình cảm ứng. Điểm nằm dưới con trỏ hay giữa hai ngón giữ nguyên chỗ, nên phóng vào đâu thì
+  thanh mở ra ở đó. Khoảng hiển thị lúc này đổi liên tục, từ 1 phút tới cả video; hai nút thu, phóng vẫn đi theo
+  nấc tròn. Lăn chuột không giữ Ctrl vẫn cuộn trang, vuốt một ngón vẫn cuộn thanh và chạm vẫn là tua.
+- Trên điện thoại (bổ sung cùng ngày, sau khi người dùng xem trang ở màn 393 px): đầu trang trận không còn chữ đè
+  lên tỷ số (bỏ dãy chấm số ván thắng vì tỷ số đã nói điều đó); hàng công cụ giữ tên từng nút và cuộn ngang thay cho
+  các biểu tượng trần; bỏ nút "Phím tắt"; dòng gợi ý của thanh rút còn một dòng nói bằng cử chỉ chạm; ba nút phạm vi
+  nằm trên một dòng. Các bảng ghi mở từ dưới lên chỉ cao tới khoảng 62% màn hình để video ghim phía trên vẫn nhìn
+  thấy trong lúc ghi. Bảng ngọc hiện từng màu qua ba tab kèm số viên, thay vì ba danh sách nối dài.
+- Vùng cấm chọn kết thúc tại mốc chốt đội hình: phần gạch chéo đi từ mốc bắt đầu tới mốc chốt, vì sau khi chốt không
+  còn lượt cấm hay chọn nào. Từ mốc chốt tới cờ vào trận là khoảng chờ vào trận, vẽ nhạt và không gạch chéo. Ván
+  chưa có mốc chốt thì vùng vẫn kéo tới cờ vào trận (hoặc tới vị trí ước lượng khi chưa vào trận) như trước.
 - Mép vùng cấm chọn kéo được (bổ sung cùng ngày, thay cho quyết định ban đầu là chỉ chỉnh trong bảng): mốc bắt đầu
   cấm chọn ở mép trái, mốc chốt đội hình, và cờ vào trận ở mép phải. Giới hạn theo đúng điều kiện dịch vụ kiểm tra:
   bắt đầu cấm chọn không sau lượt đầu, mốc chốt và cờ vào trận, và không lấn vào ván trước; mốc chốt nằm giữa lượt
@@ -216,3 +228,8 @@ Quyết định:
   tướng đã mở thẻ tướng.
 - Khi đang ghi, bấm vào phụ trợ, phù hiệu hoặc vòng ngọc của một tuyển thủ mở bảng "Phụ trợ, ngọc, trang bị" đúng
   tuyển thủ và đúng phần đó. Đây là lối tắt vào cùng một bảng, không phải ô nhập thứ hai.
+- Hai bảng đội hiện đối xứng khi nằm cạnh nhau (làm thử theo đề nghị của người dùng, cùng ngày): bảng đội đỏ soi
+  gương bảng đội xanh. Ảnh tướng nằm ở hai mép ngoài; tên và hàng biểu tượng canh về phía ảnh; KDA và trang bị nằm
+  phía trong; ở đầu bảng, hai con số hạ gục đứng sát nhau ở giữa. Thứ tự soi gương cả trong hàng biểu tượng và sáu ô
+  trang bị, nên ô gần ảnh tướng nhất của hai đội là cùng một ô. Khi hai bảng xếp chồng trên màn hẹp, cả hai giữ
+  cùng một chiều như cũ.
