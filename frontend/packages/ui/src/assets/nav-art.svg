@@ -244,4 +244,27 @@
     <circle cx="45" cy="43" r="3.2" fill="url(#gold)"/>
     <path fill="url(#gold)" d="m32 4 2.6 5.2 5.7.8-4.1 4 1 5.7-5.2-2.7-5.2 2.7 1-5.7-4.1-4 5.7-.8z"/>
   </symbol>
+  <!-- Recommended builds: a loadout card of six item slots, starred as the game's pick. -->
+  <symbol id="builds" viewBox="0 0 64 64" stroke="#3a3540" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="4" y="16" width="44" height="43" rx="5" fill="url(#paper)"/>
+    <rect x="9" y="22" width="10" height="10" rx="2" fill="url(#gold)"/>
+    <rect x="21.5" y="22" width="10" height="10" rx="2" fill="url(#steel)"/>
+    <rect x="34" y="22" width="10" height="10" rx="2" fill="url(#jade)"/>
+    <rect x="9" y="36" width="10" height="10" rx="2" fill="url(#coral)"/>
+    <rect x="21.5" y="36" width="10" height="10" rx="2" fill="url(#blue)"/>
+    <rect x="34" y="36" width="10" height="10" rx="2" fill="url(#plum)"/>
+    <path fill="none" stroke="#b28c67" stroke-width="3" d="M10 52h16m5 0h7"/>
+    <path fill="url(#gold)" d="m50 2 2.6 6.5 7 .4-5.4 4.4 1.8 6.8-6-3.8-5.9 3.8 1.8-6.8-5.4-4.4 7-.4z"/>
+  </symbol>
+  <!-- Ranked statistics: a rank shield with its chevrons in front of a board of rising bars. -->
+  <symbol id="ranking" viewBox="0 0 64 64" stroke="#383440" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="18" y="6" width="42" height="48" rx="5" fill="url(#paper)"/>
+    <path fill="none" stroke="#b28c67" stroke-width="3" d="M27 14h12"/>
+    <path fill="url(#jade)" d="M33 36h7v13h-7z"/>
+    <path fill="url(#gold)" d="M42 28h7v21h-7z"/>
+    <path fill="url(#coral)" d="M51 19h6v30h-6z"/>
+    <path fill="url(#plum)" d="m4 28 13-6 13 6v13c0 9-6 15-13 19-7-4-13-10-13-19z"/>
+    <path fill="url(#gold)" d="m9 38 8-5 8 5v5l-8-5-8 5z"/>
+    <path fill="url(#gold)" d="m9 47 8-5 8 5v4l-8-5-8 5z"/>
+  </symbol>
 </svg>

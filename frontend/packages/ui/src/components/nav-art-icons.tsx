@@ -31,4 +31,6 @@ export const navArtIcons = {
   broadcast: createArtworkIcon(artwork, "broadcast"),
   videos: createArtworkIcon(artwork, "videos"),
   gameModes: createArtworkIcon(artwork, "gameModes"),
+  builds: createArtworkIcon(artwork, "builds"),
+  ranking: createArtworkIcon(artwork, "ranking"),
 }
