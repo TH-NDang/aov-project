@@ -1,8 +1,11 @@
 package com.wikiaov.access.internal.application.port;
 
+import org.jspecify.annotations.Nullable;
+
 /** Keycloak operations used by the admin authentication gateway. */
 public interface IdentityTokens {
-    Tokens password(String username, String password);
+    /** Direct grant; {@code otp} is forwarded as Keycloak's {@code totp} parameter when present. */
+    Tokens password(String username, String password, @Nullable String otp);
 
     Tokens refresh(String refreshToken);
 

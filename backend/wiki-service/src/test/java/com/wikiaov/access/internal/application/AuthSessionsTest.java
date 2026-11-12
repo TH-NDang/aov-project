@@ -23,16 +23,16 @@ class AuthSessionsTest {
 
     @Test
     void acceptsVerifiedTokenWithCatalogRead() {
-        when(identity.password("editor", "test-password")).thenReturn(tokens);
+        when(identity.password("editor", "test-password", null)).thenReturn(tokens);
         when(decoder.decode("access")).thenReturn(jwt(List.of("catalog:read")));
-        assertThat(sessions.password("editor", "test-password")).isEqualTo(tokens);
+        assertThat(sessions.password("editor", "test-password", null)).isEqualTo(tokens);
     }
 
     @Test
     void rejectsAndRevokesAccountWithoutAdminCapability() {
-        when(identity.password("reader", "test-password")).thenReturn(tokens);
+        when(identity.password("reader", "test-password", null)).thenReturn(tokens);
         when(decoder.decode("access")).thenReturn(jwt(List.of("media:write")));
-        assertThatThrownBy(() -> sessions.password("reader", "test-password")).isInstanceOf(ApiException.class);
+        assertThatThrownBy(() -> sessions.password("reader", "test-password", null)).isInstanceOf(ApiException.class);
         verify(identity).revoke("refresh");
     }
 

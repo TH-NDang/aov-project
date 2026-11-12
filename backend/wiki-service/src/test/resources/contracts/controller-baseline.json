@@ -1,5 +1,5 @@
 {
-  "com/wikiaov/access/internal/web/AuthController.java": "9330cf1589b90603e8a5255c2b770809a59097aaaa2996011942113e28ff1481",
+  "com/wikiaov/access/internal/web/AuthController.java": "9941d6cf4a56700507d4a38381ee78567979f12f428b3cf97e787cbfe96eccb9",
   "com/wikiaov/access/internal/web/CurrentActorController.java": "480fad0198b0ad6452b68a50fa758a256b175b207f34ea17f2b7ad0d61281058",
   "com/wikiaov/arcana/internal/web/ArcanaAdminController.java": "9dfed9f845c8762f47c0d1a8ba02b98684a94053467e84553501a6d68e8e7fd3",
   "com/wikiaov/arcana/internal/web/ArcanaPatchChangeController.java": "f3d4a87c51939ca35b37a65c473b547892c7efec8a7c72fed604fe5af33897f3",
