@@ -493,6 +493,34 @@ class DomainCoreIntegrationTest {
                 Map.of("kind", "BUFF", "expectedVersion", 0), 200);
         send(put(ROOT + "/admin/hero-changes/" + newerChange + "/assessment"),
                 Map.of("kind", "NERF", "expectedVersion", 0), 409);
+
+        // A mechanic change takes, once and later, what it did before; the recorded change itself stays as it was.
+        var mechanic = changeOfType(heroChanges(second).getFirst(), "HERO_MECHANIC_CHANGE");
+        var stat = changeOfType(heroChanges(second).getFirst(), "HERO_STAT_CHANGE");
+        assertThat(mechanic).containsEntry("previous", null);
+        String previousPath = ROOT + "/admin/hero-changes/" + newerChange + "/mechanics/" + mechanic.get("id")
+                + "/previous";
+        send(post(previousPath), Map.of("description", "Earlier behaviour", "sourceUrl", "ftp://example.org/old"), 422);
+        send(post(previousPath), Map.of("description", "  ", "sourceUrl", "https://example.org/old"), 422);
+        send(post(previousPath), Map.of("description", "x".repeat(4001), "sourceUrl", "https://example.org/old"), 422);
+        send(post(ROOT + "/admin/hero-changes/" + newerChange + "/mechanics/" + stat.get("id") + "/previous"),
+                Map.of("description", "Not a mechanic", "sourceUrl", "https://example.org/old"), 422);
+        send(post(ROOT + "/admin/hero-changes/" + olderChange + "/mechanics/" + mechanic.get("id") + "/previous"),
+                Map.of("description", "Another change set", "sourceUrl", "https://example.org/old"), 422);
+        assertThat(send(post(previousPath),
+                Map.of("description", " Earlier behaviour ", "sourceUrl", "https://example.org/old?oldid=1"), 201))
+                .containsEntry("id", mechanic.get("id"));
+        send(post(previousPath), Map.of("description", "Second time", "sourceUrl", "https://example.org/old"), 409);
+        var recordedMechanic = changeOfType(heroChanges(second).getFirst(), "HERO_MECHANIC_CHANGE");
+        assertThat(recordedMechanic).containsEntry("description", "Synthetic adjustment");
+        assertThat((Map<String, Object>) recordedMechanic.get("previous"))
+                .containsEntry("description", "Earlier behaviour")
+                .containsEntry("sourceUrl", "https://example.org/old?oldid=1")
+                .containsEntry("recordedAt", "2026-10-15T06:00:00Z");
+        assertThatThrownBy(() -> jdbc.sql("UPDATE hero.hero_mechanic_change_previous SET description = 'changed'")
+                .update()).hasMessageContaining("append only");
+        assertThat(jdbc.sql("SELECT count(*) FROM access.audit_event WHERE aggregate_id=? AND "
+                + "action='HERO_MECHANIC_PREVIOUS_RECORDED'").param(hero).query(Long.class).single()).isEqualTo(1L);
         var assessed = send(get(ROOT + "/admin/heroes?patchVariantId=" + second), null, 200);
         var assessedHero = (Map<String, Object>) ((List<?>) assessed.get("items")).getFirst();
         var assessedChange = (Map<String, Object>) ((List<?>) assessedHero.get("gameplayChanges")).getFirst();
@@ -900,6 +928,20 @@ class DomainCoreIntegrationTest {
                                 assets.get(MediaSemanticType.HERO_PORTRAIT), "SPLASH",
                                 assets.get(MediaSemanticType.HERO_SPLASH))),
                 200);
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> heroChanges(UUID variantId) throws Exception {
+        var response = mvc.perform(get(ROOT + "/admin/patch-variants/" + variantId + "/hero-changes")
+                .with(jwt().authorities(new SimpleGrantedAuthority("catalog:read")))).andExpect(status().isOk())
+                .andReturn().getResponse();
+        return json.readValue(response.getContentAsString(), List.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> changeOfType(Map<String, Object> changeSet, String type) {
+        return ((List<Map<String, Object>>) changeSet.get("changes")).stream()
+                .filter(change -> type.equals(change.get("type"))).findFirst().orElseThrow();
     }
 
     @SuppressWarnings("unchecked")

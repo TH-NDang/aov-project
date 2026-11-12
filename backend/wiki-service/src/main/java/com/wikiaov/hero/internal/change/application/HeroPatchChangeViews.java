@@ -3,6 +3,7 @@ package com.wikiaov.hero.internal.change.application;
 import com.wikiaov.hero.internal.change.persistence.HeroPatchHistory.Entry;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.MechanicChangeClassification;
+import com.wikiaov.hero.internal.change.persistence.entity.MechanicChangePrevious;
 import com.wikiaov.hero.internal.change.persistence.entity.OtherChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
@@ -12,6 +13,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /** Preserves the existing history JSON field names while persistence uses typed entities. */
 final class HeroPatchChangeViews {
@@ -46,7 +48,7 @@ final class HeroPatchChangeViews {
             result.put("summary", entry.translation().getSummary());
         }
 
-        var changes = entry.changes().stream().map(HeroPatchChangeViews::change)
+        var changes = entry.changes().stream().map(change -> change(change, entry.previous()))
                 .sorted(Comparator.<Map<String, Object>>comparingInt(value -> (Integer) value.get("sortOrder"))
                         .thenComparingInt(value -> TYPE_ORDER.indexOf((String) value.get("type"))))
                 .toList();
@@ -54,7 +56,8 @@ final class HeroPatchChangeViews {
         return result;
     }
 
-    private static Map<String, Object> change(HeroChangeClassification change) {
+    private static Map<String, Object> change(HeroChangeClassification change,
+            Map<UUID, MechanicChangePrevious> previous) {
         Map<String, Object> value = new LinkedHashMap<>();
         value.put("id", change.getId());
         value.put("changeKind", change.getChangeKind());
@@ -90,6 +93,7 @@ final class HeroPatchChangeViews {
                 value.put("type", "HERO_MECHANIC_CHANGE");
                 value.put("mechanicKey", item.getMechanicKey());
                 value.put("description", item.getDescription());
+                value.put("previous", item.getId() == null ? null : previous(previous.get(item.getId())));
             }
             case OtherChangeClassification item -> {
                 value.put("type", "HERO_OTHER_CHANGE");
@@ -99,5 +103,17 @@ final class HeroPatchChangeViews {
         }
 
         return value;
+    }
+
+    /** What the mechanic did before its change, with the source it was written from; null until recorded. */
+    private static Map<String, Object> previous(MechanicChangePrevious value) {
+        if (value == null)
+            return null;
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("description", value.getDescription());
+        result.put("sourceUrl", value.getSourceUrl());
+        result.put("recordedAt", value.getCreatedAt());
+        return result;
     }
 }

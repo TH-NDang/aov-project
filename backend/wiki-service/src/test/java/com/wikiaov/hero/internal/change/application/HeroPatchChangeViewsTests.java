@@ -81,7 +81,8 @@ class HeroPatchChangeViewsTests {
                 .containsEntry("oldValue", new BigDecimal("3500")).containsEntry("newValue", new BigDecimal("3400"))
                 .doesNotContainKeys("unit", "changeSetId");
         assertThat(facts.get(3)).containsEntry("roleCode", "WARRIOR").containsEntry("added", true);
-        assertThat(facts.get(4)).containsEntry("mechanicKey", "landing").containsEntry("description", "Fixed landing");
+        assertThat(facts.get(4)).containsEntry("mechanicKey", "landing").containsEntry("description", "Fixed landing")
+                .containsEntry("previous", null);
         assertThat(facts.get(5)).containsEntry("mediaRole", "HEAD").containsEntry("oldAssetId", null)
                 .containsEntry("newAssetId", visual.getNewAssetId());
     }

@@ -33,7 +33,10 @@ class HeroPatchHistoryTests {
     private final HeroPatchChangeTranslationRepository translations = mock(HeroPatchChangeTranslationRepository.class);
     private final HeroChangeClassificationRepository changes = mock(HeroChangeClassificationRepository.class);
     private final HeroPatchAssessmentRepository assessments = mock(HeroPatchAssessmentRepository.class);
-    private final HeroPatchHistory history = new HeroPatchHistory(sets, translations, changes, assessments);
+    private final MechanicChangeRepository mechanics = mock(MechanicChangeRepository.class);
+    private final MechanicChangePreviousRepository previous = mock(MechanicChangePreviousRepository.class);
+    private final HeroPatchHistory history = new HeroPatchHistory(sets, translations, changes, assessments, mechanics,
+            previous);
 
     @Test
     void batchesHistoryAndKeepsRequestedVietnameseAndAlphabeticalLocaleFallback() {

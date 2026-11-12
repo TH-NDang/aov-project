@@ -285,15 +285,18 @@ public class HeroPatchChanges implements HeroChangeQueries {
     }
 
     private static void requireSourceUrl(String value) {
+        if (!isHttpUrl(value))
+            throw HeroValidation.invalid("The source must be an http(s) URL of the official patch notes.");
+    }
+
+    private static boolean isHttpUrl(String value) {
         try {
             var uri = value == null ? null : new URI(value);
-            if (uri != null && uri.getHost() != null
-                    && ("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme())))
-                return;
+            return uri != null && uri.getHost() != null
+                    && ("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()));
         } catch (URISyntaxException ignored) {
-            // Reported below together with a missing URL.
+            return false;
         }
-        throw HeroValidation.invalid("The source must be an http(s) URL of the official patch notes.");
     }
 
     @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.AssessmentInput")
@@ -329,6 +332,44 @@ public class HeroPatchChanges implements HeroChangeQueries {
         audit.record(new AuditEntry(actor, "HERO_PATCH_ASSESSED", "HERO", heroId, null, input.expectedVersion(),
                 value.getVersion(), null, Map.of("changeSetId", changeSetId, "kind", input.kind().name())));
         return Map.of("kind", value.getKind(), "version", value.getVersion());
+    }
+
+    @io.swagger.v3.oas.annotations.media.Schema(name = "com.wikiaov.hero.internal.application.service.HeroPatchChanges.PreviousInput")
+    public record PreviousInput(
+            String description,
+            String sourceUrl
+    ) {
+    }
+
+    /**
+     * Adds what a mechanic did before its change, written by an editor from a cited source. The recorded change stays
+     * as it was, and nothing is derived from the text (ADR-016, 2026-11-12).
+     */
+    @Transactional
+    @PreAuthorize("hasAuthority('patch:write')")
+    public UUID recordPrevious(UUID changeSetId, UUID changeId, PreviousInput input) {
+        var change = history.mechanicChange(changeId).filter(item -> item.getChangeSetId().equals(changeSetId))
+                .orElseThrow(() -> HeroValidation.invalid("The mechanic change was not found in this change set."));
+        UUID heroId = history.heroId(changeSetId)
+                .orElseThrow(() -> HeroValidation.invalid("The hero change set was not found."));
+        store.lockHero(heroId);
+
+        String description = input == null || input.description() == null ? "" : input.description().strip();
+        if (description.isEmpty() || description.length() > 4000)
+            throw HeroValidation.invalid("The previous description must have between 1 and 4000 characters.");
+        String sourceUrl = input.sourceUrl() == null ? null : input.sourceUrl().strip();
+        if (!isHttpUrl(sourceUrl))
+            throw HeroValidation.invalid("The source of the previous description must be an http(s) URL.");
+        if (history.hasPrevious(change.getId()))
+            throw new ApiException(HeroErrorCode.HERO_PATCH_CHANGE_CONFLICT,
+                    "This mechanic change already has its previous description.");
+
+        var actor = actors.require();
+        history.appendPrevious(change.getId(), description, sourceUrl, clock.instant(), actor);
+
+        audit.record(new AuditEntry(actor, "HERO_MECHANIC_PREVIOUS_RECORDED", "HERO", heroId, null, null, null, null,
+                Map.of("changeSetId", changeSetId, "changeId", changeId)));
+        return change.getId();
     }
 
     private static boolean sameNumber(java.math.BigDecimal a, java.math.BigDecimal b) {

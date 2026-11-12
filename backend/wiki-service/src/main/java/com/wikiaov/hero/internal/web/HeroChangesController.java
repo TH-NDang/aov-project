@@ -33,6 +33,13 @@ public class HeroChangesController implements HeroChangesApi {
         return changes.assess(id, input);
     }
 
+    @PostMapping(path = "/admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous", version = "1")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Map<String, UUID> recordPrevious(@PathVariable UUID changeSetId, @PathVariable UUID changeId,
+            @RequestBody HeroPatchChanges.PreviousInput input) {
+        return Map.of("id", changes.recordPrevious(changeSetId, changeId, input));
+    }
+
     @GetMapping(path = "/admin/patch-variants/{id}/hero-changes", version = "1")
     public List<Map<String, Object>> authoringChanges(@PathVariable UUID id,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {

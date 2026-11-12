@@ -7,6 +7,7 @@ import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchAssessment;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeSet;
 import com.wikiaov.hero.internal.change.persistence.entity.HeroPatchChangeTranslation;
 import com.wikiaov.hero.internal.change.persistence.entity.MechanicChangeClassification;
+import com.wikiaov.hero.internal.change.persistence.entity.MechanicChangePrevious;
 import com.wikiaov.hero.internal.change.persistence.entity.OtherChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.RoleChangeClassification;
 import com.wikiaov.hero.internal.change.persistence.entity.SkillChangeClassification;
@@ -38,13 +39,18 @@ public class HeroPatchHistory {
     private final HeroPatchChangeTranslationRepository translations;
     private final HeroChangeClassificationRepository changes;
     private final HeroPatchAssessmentRepository assessments;
+    private final MechanicChangeRepository mechanics;
+    private final MechanicChangePreviousRepository previous;
 
     public HeroPatchHistory(HeroPatchChangeSetRepository changeSets, HeroPatchChangeTranslationRepository translations,
-            HeroChangeClassificationRepository changes, HeroPatchAssessmentRepository assessments) {
+            HeroChangeClassificationRepository changes, HeroPatchAssessmentRepository assessments,
+            MechanicChangeRepository mechanics, MechanicChangePreviousRepository previous) {
         this.changeSets = changeSets;
         this.translations = translations;
         this.changes = changes;
         this.assessments = assessments;
+        this.mechanics = mechanics;
+        this.previous = previous;
     }
 
     public void create(UUID id, UUID variantId, com.wikiaov.hero.internal.domain.HeroChanges.Record input,
@@ -92,6 +98,28 @@ public class HeroPatchHistory {
         changes.save(value);
     }
 
+    public Optional<MechanicChangeClassification> mechanicChange(UUID id) {
+        return mechanics.findById(id);
+    }
+
+    public boolean hasPrevious(UUID mechanicChangeId) {
+        return previous.existsById(mechanicChangeId);
+    }
+
+    /** Adds what a mechanic did before its change; the change itself is never rewritten. */
+    public void appendPrevious(UUID mechanicChangeId, String description, String sourceUrl, Instant createdAt,
+            Actor actor) {
+        var value = new MechanicChangePrevious();
+        value.setMechanicChangeId(mechanicChangeId);
+        value.setDescription(description);
+        value.setSourceUrl(sourceUrl);
+        value.setCreatedAt(createdAt);
+        value.setCreatedByIssuer(actor.issuer());
+        value.setCreatedBySubject(actor.subject());
+
+        previous.saveAndFlush(value);
+    }
+
     public Optional<UUID> heroId(UUID changeSetId) {
         return changeSets.findHeroId(changeSetId);
     }
@@ -136,8 +164,14 @@ public class HeroPatchHistory {
                 .collect(Collectors.toMap(HeroPatchAssessment::getChangeSetId, Function.identity()));
         var copyById = translations.findByChangeSetIdIn(ids).stream()
                 .collect(Collectors.groupingBy(HeroPatchChangeTranslation::getChangeSetId));
-        var changesById = changes.findByChangeSetIdIn(ids).stream()
-                .collect(Collectors.groupingBy(HeroChangeClassification::getChangeSetId));
+        var facts = changes.findByChangeSetIdIn(ids);
+        var changesById = facts.stream().collect(Collectors.groupingBy(HeroChangeClassification::getChangeSetId));
+        var mechanicIds = facts.stream().filter(MechanicChangeClassification.class::isInstance)
+                .map(HeroChangeClassification::getId).toList();
+        var previousById = mechanicIds.isEmpty()
+                ? Map.<UUID, MechanicChangePrevious>of()
+                : previous.findAllById(mechanicIds).stream()
+                        .collect(Collectors.toMap(MechanicChangePrevious::getMechanicChangeId, Function.identity()));
 
         var preferred = Comparator.comparing((HeroPatchChangeTranslation t) -> !t.getLocale().equals(locale))
                 .thenComparing(t -> !t.getLocale().equals("vi-VN"))
@@ -145,15 +179,21 @@ public class HeroPatchHistory {
 
         return headers.stream().map(header -> new Entry(header, assessmentById.get(header.getId()),
                 copyById.getOrDefault(header.getId(), List.of()).stream().min(preferred).orElse(null),
-                changesById.getOrDefault(header.getId(), List.of()))).toList();
+                changesById.getOrDefault(header.getId(), List.of()), previousById)).toList();
     }
 
+    /** A change set with its facts and, by mechanic change id, what those mechanics did before. */
     public record Entry(
             Header header,
             HeroPatchAssessment assessment,
             HeroPatchChangeTranslation translation,
-            List<HeroChangeClassification> changes
+            List<HeroChangeClassification> changes,
+            Map<UUID, MechanicChangePrevious> previous
     ) {
+        public Entry(Header header, HeroPatchAssessment assessment, HeroPatchChangeTranslation translation,
+                List<HeroChangeClassification> changes) {
+            this(header, assessment, translation, changes, Map.of());
+        }
     }
 
     private static StatChangeClassification stat(StatChange input) {
