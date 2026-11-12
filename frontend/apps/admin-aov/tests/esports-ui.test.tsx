@@ -363,8 +363,8 @@ test("the full video timeline exposes its actual duration and seeks chapters in 
     assert.equal(slider.getAttribute("aria-valuemax"), "20144")
     assert.equal(slider.getAttribute("aria-valuetext"), "10:40")
     const range = () => document.querySelector('[aria-label="Phạm vi đang xem"]')?.textContent
-    assert.equal(range(), "2 giờ", "a long video without a game opens on about a quarter of it")
-    assert.match((slider as HTMLElement).style.width, /^calc\(279\.7\d*% - 28px\)$/)
+    assert.equal(range(), "1,5 giờ", "a long video without a game opens on about a quarter of it")
+    assert.match((slider as HTMLElement).style.width, /^calc\(373\.0\d*% - 28px\)$/)
     assert.equal(document.querySelector(".esp-track-ticks")?.lastElementChild?.textContent, "5:35:44")
     assert.ok(document.querySelectorAll(".esp-track-ticks > span").length <= 10)
     await act(async () => document.querySelector<HTMLButtonElement>('[data-chapter="g2"]')!.click())

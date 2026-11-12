@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@aov/ui/components/hover-card"
 import {
+  clampSpan,
   defaultSpan,
   retimeRange,
   spanLabel,
@@ -52,6 +54,8 @@ const PILL_PX = 76
 const ROW_TOP = { BLUE: 48, MID: 84, RED: 120 } as const
 /** A press that travels less than this is a click, so a marker is never moved by an unsteady hand. */
 const DRAG_PX = 5
+/** Wheel travel, in pixels, that changes the span by a factor of e; one notch of a mouse wheel is about a third. */
+const WHEEL_ZOOM_PX = 300
 /** While a marker is dragged the video is asked to seek no more often than this, in milliseconds. */
 const FOLLOW_MS = 140
 /** Marks of one team taken at the same second sit this many pixels apart instead of on top of each other. */
@@ -227,9 +231,87 @@ export function BroadcastTimeline({
     const position = (current / duration) * (track.current?.clientWidth ?? 0)
     if (position < element.scrollLeft || position > element.scrollLeft + element.clientWidth) scrollTo(current)
   }, [current, duration])
+  // A gesture zooms around a point: the video second under it and where that sits in the viewport. The track is
+  // put back under the point before the browser paints the new width.
+  const anchor = useRef<{ second: number; offset: number } | null>(null)
+  const spanNow = useRef(shown)
+  spanNow.current = shown
+  const zoomAround = (wanted: number, clientX: number) => {
+    const element = viewport.current
+    const bar = track.current
+    const next = clampSpan(duration, wanted)
+    if (!element || !bar || next === spanNow.current) return
+    const rect = bar.getBoundingClientRect()
+    anchor.current = {
+      second: Math.min(1, Math.max(0, (clientX - rect.left) / Math.max(1, rect.width))) * duration,
+      offset: clientX - element.getBoundingClientRect().left,
+    }
+    // Several wheel events arrive between two renders; each continues from the last one.
+    spanNow.current = next
+    setSpan(next)
+  }
+  const gestures = useRef({ zoomAround })
+  gestures.current = { zoomAround }
+  const pinching = useRef(false)
+  useLayoutEffect(() => {
+    const point = anchor.current
+    const element = viewport.current
+    const bar = track.current
+    if (!point || !element || !bar) return
+    const rect = bar.getBoundingClientRect()
+    const start = rect.left - element.getBoundingClientRect().left + element.scrollLeft
+    element.scrollLeft = start + (point.second / duration) * rect.width - point.offset
+  }, [shown, duration])
   // Keyed on the span, not the scale: the player corrects the video length by a second once it starts, which must
   // not move the track.
-  useEffect(() => scrollTo(current), [shown])
+  useEffect(() => {
+    if (anchor.current) anchor.current = null
+    else scrollTo(current)
+  }, [shown])
+  // Ctrl + wheel (a pinch on a trackpad arrives the same way) and a two-finger pinch on a touch screen zoom the
+  // track. The listeners are attached by hand because they must be able to cancel the browser's own page zoom.
+  useEffect(() => {
+    const element = viewport.current
+    if (!element) return
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return
+      event.preventDefault()
+      const travel = event.deltaY * (event.deltaMode === 1 ? 33 : 1)
+      const factor = Math.exp(Math.max(-WHEEL_ZOOM_PX, Math.min(WHEEL_ZOOM_PX, travel)) / WHEEL_ZOOM_PX)
+      gestures.current.zoomAround(spanNow.current * factor, event.clientX)
+    }
+    let pinch: { apart: number; span: number } | null = null
+    const apart = (touches: TouchList) =>
+      Math.max(24, Math.hypot(touches[0]!.clientX - touches[1]!.clientX, touches[0]!.clientY - touches[1]!.clientY))
+    const onTouchStart = (event: TouchEvent) => {
+      if (event.touches.length !== 2) return
+      pinching.current = true
+      pinch = { apart: apart(event.touches), span: spanNow.current }
+    }
+    const onTouchMove = (event: TouchEvent) => {
+      if (!pinch || event.touches.length !== 2) return
+      event.preventDefault()
+      const middle = (event.touches[0]!.clientX + event.touches[1]!.clientX) / 2
+      gestures.current.zoomAround((pinch.span * pinch.apart) / apart(event.touches), middle)
+    }
+    const onTouchEnd = (event: TouchEvent) => {
+      if (event.touches.length < 2) pinch = null
+      // The fingers of a pinch lift one after the other; neither lift is a tap that seeks.
+      if (event.touches.length === 0) window.setTimeout(() => (pinching.current = false), 0)
+    }
+    element.addEventListener("wheel", onWheel, { passive: false })
+    element.addEventListener("touchstart", onTouchStart, { passive: true })
+    element.addEventListener("touchmove", onTouchMove, { passive: false })
+    element.addEventListener("touchend", onTouchEnd)
+    element.addEventListener("touchcancel", onTouchEnd)
+    return () => {
+      element.removeEventListener("wheel", onWheel)
+      element.removeEventListener("touchstart", onTouchStart)
+      element.removeEventListener("touchmove", onTouchMove)
+      element.removeEventListener("touchend", onTouchEnd)
+      element.removeEventListener("touchcancel", onTouchEnd)
+    }
+  }, [])
   // While the span follows the focused game, a change of game brings that whole game into view.
   const following = span === null
   const focusedId = focused?.gameId
@@ -297,7 +379,8 @@ export function BroadcastTimeline({
   const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
     const start = pointer.current
     pointer.current = null
-    if (start && !start.drag && Math.abs(event.clientX - start.x) < 8) onSeek(secondAt(event.clientX))
+    if (start && !start.drag && !pinching.current && Math.abs(event.clientX - start.x) < 8)
+      onSeek(secondAt(event.clientX))
   }
 
   /** Range a marker may be dragged in, or null when it stays where it is (read-only, or another game's marker). */
@@ -440,8 +523,8 @@ export function BroadcastTimeline({
             aria-label="Phạm vi đang xem"
             title={
               following
-                ? "Khoảng video thanh đang hiện, tự chọn vừa với ván đang xem"
-                : "Khoảng video thanh đang hiện. “Vừa ván” đưa về khoảng tự chọn"
+                ? "Khoảng video thanh đang hiện, tự chọn vừa với ván đang xem. Ctrl + lăn chuột hoặc chụm hai ngón để phóng"
+                : "Khoảng video thanh đang hiện. Ctrl + lăn chuột hoặc chụm hai ngón để phóng; “Vừa ván” đưa về khoảng tự chọn"
             }
           >
             {spanLabel(shown, duration)}
@@ -514,7 +597,10 @@ export function BroadcastTimeline({
               <span
                 key={`draft-${chapter.gameId}`}
                 className="esp-bt-overview-draft"
-                style={{ left: pct(chapter.draft.start), width: pct(chapter.start - chapter.draft.start) }}
+                style={{
+                  left: pct(chapter.draft.start),
+                  width: pct((chapter.draft.locked ?? chapter.start) - chapter.draft.start),
+                }}
               />
             ) : null,
           )}
@@ -674,7 +760,10 @@ export function BroadcastTimeline({
               const startKey = keyOf(startTarget)
               const lockKey = keyOf(lockTarget)
               const zoneStart = shownAt(startKey, draft.start)
-              const zoneEnd = shownAt(keyOf({ kind: "gameStart", gameId: chapter.gameId }), chapter.start)
+              const liveAt = shownAt(keyOf({ kind: "gameStart", gameId: chapter.gameId }), chapter.start)
+              // Nothing is banned or picked after the lock: the phase ends there, and the rest is the wait for the game.
+              const lockAt = draft.locked == null ? null : shownAt(lockKey, draft.locked)
+              const zoneEnd = lockAt ?? liveAt
               const canMoveStart = !!movable(startTarget)
               const canMoveLock = !!movable(lockTarget)
               // Turns belong to teams, not players: teammates still swap heroes until the lock.
@@ -688,6 +777,14 @@ export function BroadcastTimeline({
                   >
                     <span className="esp-bt-draft-label">Cấm chọn · V{chapter.number}</span>
                   </div>
+                  {lockAt != null && liveAt > lockAt && (
+                    <div
+                      className="esp-bt-draft-wait"
+                      style={{ left: pct(lockAt), width: pct(liveAt - lockAt) }}
+                      title="Chờ vào trận"
+                      aria-hidden="true"
+                    />
+                  )}
                   <button
                     type="button"
                     data-marker

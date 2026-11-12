@@ -40,7 +40,7 @@ export function broadcastChapters(
 }
 
 /** Lengths of video the detail track offers to show at once, in seconds; the whole video is always the widest. */
-const SPAN_STEPS = [300, 600, 900, 1800, 3600, 7200, 14400, 28800]
+const SPAN_STEPS = [300, 600, 900, 1200, 1800, 2700, 3600, 5400, 7200, 14400, 28800]
 
 export const timelineSpans = (duration: number) => [...SPAN_STEPS.filter((step) => step < duration), duration]
 
@@ -54,8 +54,19 @@ export function defaultSpan(duration: number, chapter?: Pick<GameChapter, "from"
   return timelineSpans(duration).find((span) => span >= wanted) ?? duration
 }
 
-export const spanLabel = (span: number, duration: number) =>
-  span >= duration ? "Cả video" : span < 3600 ? `${Math.round(span / 60)} phút` : `${span / 3600} giờ`
+/** The shortest span a gesture can zoom in to, in seconds. */
+const SHORTEST_SPAN = 60
+
+/** A span a gesture asked for, kept between one minute and the whole video. */
+export const clampSpan = (duration: number, span: number) =>
+  Math.min(duration, Math.max(Math.min(SHORTEST_SPAN, duration), span))
+
+export function spanLabel(span: number, duration: number) {
+  if (span >= duration) return "Cả video"
+  if (span < 3600) return `${Math.max(1, Math.round(span / 60))} phút`
+  // Gestures stop anywhere, so hours carry one decimal, written the Vietnamese way.
+  return `${String(Math.round(span / 360) / 10).replace(".", ",")} giờ`
+}
 
 /**
  * A marker of one game that an editor may drag along the video axis: a recorded moment, a ban/pick turn, an edge of

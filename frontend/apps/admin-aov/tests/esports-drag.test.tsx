@@ -4,6 +4,7 @@ import React, { act } from "react"
 import { JSDOM } from "jsdom"
 import type { GameContent, Participant } from "@aov/community-contracts"
 import {
+  clampSpan,
   defaultSpan,
   retimeRange,
   spanLabel,
@@ -303,6 +304,11 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
       /Bắt đầu cấm chọn ván 1 · 1:40/,
     )
     assert.equal(document.querySelectorAll("[data-movable]").length, 0, "reading moves nothing")
+    // The hatched ban/pick zone runs from its start (100) to the lock (250); the wait until the game (300) is apart.
+    assert.equal(document.querySelector<HTMLElement>(".esp-bt-draft")!.style.width, "12.5%")
+    const wait = document.querySelector<HTMLElement>(".esp-bt-draft-wait")!
+    assert.match(wait.style.left, /^20\.83/)
+    assert.match(wait.style.width, /^4\.16/)
     await act(async () => shown.click())
     assert.deepEqual(seeks, [342], "a mark seeks to the moment it stands for")
     await drag('[data-edge="draftStart"]', 100, 60)
@@ -349,7 +355,20 @@ test("dragging an edge or a mark makes the video follow, and a cancelled drag pu
 
 test("the track opens on a span that holds the focused game, whatever the length of the video", () => {
   const broadcast = 11 * 3600 + 54 * 60 + 59
-  assert.deepEqual(timelineSpans(broadcast), [300, 600, 900, 1800, 3600, 7200, 14400, 28800, broadcast])
+  assert.deepEqual(timelineSpans(broadcast), [
+    300,
+    600,
+    900,
+    1200,
+    1800,
+    2700,
+    3600,
+    5400,
+    7200,
+    14400,
+    28800,
+    broadcast,
+  ])
   assert.deepEqual(timelineSpans(1200), [300, 600, 900, 1200], "a short video never offers more than itself")
 
   // Game 1 of the grand final: 11:37 of play after seven minutes of bans and picks.
@@ -357,12 +376,85 @@ test("the track opens on a span that holds the focused game, whatever the length
   assert.equal(defaultSpan(broadcast, game), 1800)
   assert.equal(spanLabel(defaultSpan(broadcast, game), broadcast), "30 phút")
   assert.equal(defaultSpan(broadcast, { from: 0, end: 2700 }), 3600, "a long game takes the next round span")
+  assert.equal(defaultSpan(broadcast, { from: 0, end: 1700 }), 2700, "a game just over half an hour gets 45 minutes")
   assert.equal(defaultSpan(broadcast, { from: 0, end: broadcast }), broadcast)
   assert.equal(defaultSpan(broadcast, null), 14400, "without a game, about a quarter of a long video")
   assert.equal(defaultSpan(1500, null), 1500, "a short video is shown whole")
   assert.equal(defaultSpan(1500, { from: 100, end: 1400 }), 1500)
   assert.deepEqual(
-    [300, 3600, 14400, broadcast].map((span) => spanLabel(span, broadcast)),
-    ["5 phút", "1 giờ", "4 giờ", "Cả video"],
+    [300, 2700, 3600, 5400, 14400, broadcast].map((span) => spanLabel(span, broadcast)),
+    ["5 phút", "45 phút", "1 giờ", "1,5 giờ", "4 giờ", "Cả video"],
   )
+})
+
+test("the track zooms around the pointer with Ctrl + wheel and with a two-finger pinch", async () => {
+  await withDom(async (document, render) => {
+    const { BroadcastTimeline } = await import("../src/features/esports/components/series/broadcast-timeline")
+    const window = document.defaultView!
+    await render(
+      <BroadcastTimeline
+        duration={7200}
+        current={600}
+        chapters={[]}
+        events={[]}
+        views={{}}
+        chapterTitle={() => ""}
+        focusedGameId={null}
+        activeId={null}
+        isDimmed={() => false}
+        lookups={{ itemIcon: () => null, itemTier: () => 3 }}
+        onSeek={() => {}}
+        onSelect={() => {}}
+        onOpen={() => {}}
+      />,
+    )
+    const view = document.querySelector<HTMLElement>("[data-timeline-viewport]")!
+    view.getBoundingClientRect = () => ({ left: 0, top: 0, width: 1000, height: 180 }) as DOMRect
+    document.querySelector<HTMLElement>('[role="slider"]')!.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 4000, height: 158 }) as DOMRect
+    const range = () => document.querySelector('[aria-label="Phạm vi đang xem"]')?.textContent
+    const gesture = async (type: string, values: Record<string, unknown>) => {
+      const event = Object.assign(new window.Event(type, { bubbles: true, cancelable: true }), values)
+      await act(async () => void view.dispatchEvent(event))
+      return event
+    }
+    const fingers = (first: number, second: number) => ({
+      touches: [
+        { clientX: first, clientY: 0 },
+        { clientX: second, clientY: 0 },
+      ],
+    })
+    assert.equal(range(), "30 phút")
+
+    const scroll = await gesture("wheel", { deltaY: -300, clientX: 500 })
+    assert.equal(scroll.defaultPrevented, false, "a plain wheel still scrolls the page")
+    assert.equal(range(), "30 phút")
+
+    const zoomIn = await gesture("wheel", { deltaY: -300, ctrlKey: true, clientX: 500 })
+    assert.equal(zoomIn.defaultPrevented, true, "the browser does not zoom the page as well")
+    assert.equal(range(), "11 phút", "one long pull of the wheel shows about a third of the span")
+    await gesture("wheel", { deltaY: 300, ctrlKey: true, clientX: 500 })
+    await gesture("wheel", { deltaY: 300, ctrlKey: true, clientX: 500 })
+    assert.equal(range(), "1,4 giờ")
+    for (let turn = 0; turn < 3; turn++) await gesture("wheel", { deltaY: 9, deltaMode: 1, ctrlKey: true, clientX: 0 })
+    assert.equal(range(), "Cả video", "zooming out stops at the whole video")
+    assert.equal(document.querySelector<HTMLButtonElement>('[aria-label="Thu nhỏ timeline"]')!.disabled, true)
+
+    await gesture("touchstart", fingers(400, 600))
+    await gesture("touchmove", fingers(300, 700))
+    assert.equal(range(), "1 giờ", "fingers twice as far apart show half the span")
+    const pinch = await gesture("touchmove", fingers(100, 900))
+    assert.equal(pinch.defaultPrevented, true)
+    assert.equal(range(), "30 phút")
+    await gesture("touchend", { touches: [] })
+    await gesture("touchmove", fingers(0, 1000))
+    assert.equal(range(), "30 phút", "a pinch ends when the fingers lift")
+
+    for (let turn = 0; turn < 8; turn++) await gesture("wheel", { deltaY: -300, ctrlKey: true, clientX: 500 })
+    assert.equal(range(), "1 phút", "zooming in stops at one minute")
+    assert.equal(document.querySelector<HTMLButtonElement>('[aria-label="Phóng to timeline"]')!.disabled, true)
+    assert.equal(clampSpan(7200, 5), 60)
+    assert.equal(clampSpan(30, 5), 30, "a video shorter than a minute is its own shortest span")
+    assert.equal(clampSpan(7200, 99999), 7200)
+  })
 })
