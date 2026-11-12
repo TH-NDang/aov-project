@@ -14,6 +14,9 @@ export const ARCANA_COLORS: { code: ArcanaColor; label: string }[] = [
 /** A page holds ten stones of each colour. */
 export const STONES_PER_COLOR = 10
 
+/** Players' pages are made of tier III stones alone, so recording offers no other tier. */
+export const ARCANA_PAGE_TIER = 3
+
 export const TIER_NUMERALS = ["I", "II", "III"] as const
 
 export const isArcanaColor = (color?: string | null): color is ArcanaColor =>

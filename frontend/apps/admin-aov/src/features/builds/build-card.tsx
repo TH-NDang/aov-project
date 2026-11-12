@@ -155,6 +155,7 @@ function Editor({
               references={references}
               label={`Ngọc ${index + 1}`}
               round
+              filter={references.onArcanaPage}
               onChange={(value) => set({ arcana: at(draft.arcana, index, { ...entry, arcanaId: value }) })}
             />
             <Input

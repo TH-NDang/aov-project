@@ -15,6 +15,7 @@ import { confirmAction } from "@/components/confirm-dialog"
 import { initials } from "../model/game-view"
 import {
   ARCANA_COLORS,
+  ARCANA_PAGE_TIER,
   STONES_PER_COLOR,
   TIER_NUMERALS,
   arcanaColorLocked,
@@ -213,7 +214,8 @@ function ArcanaColumn({
   const total = stonesOf(value.entries, color)
   const chosen = value.entries.filter((entry) => entry.color === color)
   const locked = arcanaColorLocked(value.entries, color)
-  // Stones recorded from another tier, or typed by hand before, are not among the buttons of this tier.
+  // Stones of a lower tier recorded before tier III became the only choice, or typed by hand, are not among the
+  // buttons; they stay listed below so they can still be seen and removed.
   const elsewhere = chosen.filter((entry) => !options.some((stone) => stone.id === entry.selection.id))
   const same = (a: ArcanaAllocation, b: ArcanaAllocation) => a.color === b.color
   const step = (entry: ArcanaAllocation, delta: number) =>
@@ -273,10 +275,12 @@ function ArcanaColumn({
             </div>
           )
         })}
-        {!options.length && <p className="px-1.5 py-2 text-xs text-muted-foreground">Danh mục chưa có ngọc cấp này.</p>}
+        {!options.length && (
+          <p className="px-1.5 py-2 text-xs text-muted-foreground">Danh mục chưa có ngọc cấp III màu này.</p>
+        )}
       </div>
       {elsewhere.length > 0 && (
-        <ul className="space-y-0.5 border-t p-1" aria-label={`Ngọc ${label} đã ghi ngoài cấp đang xem`}>
+        <ul className="space-y-0.5 border-t p-1" aria-label={`Ngọc ${label} đã ghi ngoài cấp III`}>
           {elsewhere.map((entry, index) => {
             const reference = byId.get(entry.selection.id ?? "")
             const name = arcanaLabel(entry.selection.name ?? reference?.name)
@@ -334,7 +338,6 @@ function ArcanaEditor({
   observedAt?: ObservedAtControl
   onChange: Change<Loadout<ArcanaAllocation>>
 }) {
-  const [tier, setTier] = useState(3)
   // Where the three columns do not fit side by side, one colour is shown at a time.
   const [colorShown, setColorShown] = useState<ArcanaColor>("RED")
   const byId = useMemo(() => new Map(catalog.arcana.map((stone) => [stone.id, stone])), [catalog.arcana])
@@ -374,28 +377,9 @@ function ArcanaEditor({
         </p>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground">Cấp ngọc</span>
-            <span className="inline-flex rounded-md bg-muted p-0.5" role="group" aria-label="Cấp ngọc">
-              {[3, 2, 1].map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={tier === option}
-                  onClick={() => setTier(option)}
-                  className={cn(
-                    "h-6 min-w-8 rounded px-2 text-xs font-semibold",
-                    tier === option ? "bg-background shadow-sm" : "text-muted-foreground",
-                  )}
-                >
-                  {TIER_NUMERALS[option - 1]}
-                </button>
-              ))}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              Bấm một loại ngọc để lấy hết số viên còn trống của màu đó.
-            </span>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Chỉ có ngọc cấp III. Bấm một loại ngọc để lấy hết số viên còn trống của màu đó.
+          </p>
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1 @lg:hidden" role="group" aria-label="Màu ngọc">
             {ARCANA_COLORS.map((color) => (
               <button
@@ -426,7 +410,9 @@ function ArcanaEditor({
                 className={colorShown === color.code ? undefined : "hidden @lg:block"}
                 value={value}
                 byId={byId}
-                options={catalog.arcana.filter((stone) => stone.color === color.code && stone.tier === tier)}
+                options={catalog.arcana.filter(
+                  (stone) => stone.color === color.code && stone.tier === ARCANA_PAGE_TIER,
+                )}
                 onChange={onChange}
               />
             ))}

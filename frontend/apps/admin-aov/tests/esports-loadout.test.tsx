@@ -254,7 +254,8 @@ test("arcana and emblems are picked on pictures and their status follows what is
     }
     await render(<Host />)
     assert.equal(document.querySelector("select"), null, "no dropdown asks how well the loadout was observed")
-    assert.equal(document.querySelector('[data-stone="r1-ap"]'), null, "tier III is listed first")
+    assert.equal(document.querySelector('[data-stone="r1-ap"]'), null, "only tier III stones are offered")
+    assert.equal(document.querySelector('[aria-label="Cấp ngọc"]'), null, "no switch offers a lower tier")
     assert.match(document.querySelector('[data-stone="r-ad"]')!.textContent ?? "", /Công vật lý · Xuyên giáp/)
 
     await click('[data-stone="r-ad"]')
@@ -272,22 +273,6 @@ test("arcana and emblems are picked on pictures and their status follows what is
     assert.equal(latest.arcana.status, "PARTIAL")
     await click('[aria-label="Bỏ Máu tối đa"]')
     assert.deepEqual(ids(latest.arcana.entries), ["r-ad", "g-armor"])
-
-    await act(async () =>
-      [...document.querySelectorAll<HTMLButtonElement>('[aria-label="Cấp ngọc"] button')]
-        .find((entry) => entry.textContent === "I")!
-        .click(),
-    )
-    assert.ok(document.querySelector('[data-stone="r1-ap"]'), "lower tiers are one switch away")
-    await click('[data-stone="r1-ap"]')
-    assert.deepEqual(
-      latest.arcana.entries.map((entry) => [entry.selection.id, entry.count]),
-      [
-        ["r-ad", 9],
-        ["g-armor", 10],
-        ["r1-ap", 1],
-      ],
-    )
 
     await click('[data-enchantment="light-1"]')
     await click('[data-enchantment="light-3"]')
@@ -334,13 +319,44 @@ test("arcana and emblems are picked on pictures and their status follows what is
         .click(),
     )
     await settle()
-    assert.match(document.querySelector('[role="alertdialog"]')?.textContent ?? "", /3 loại ngọc đã ghi/)
+    assert.match(document.querySelector('[role="alertdialog"]')?.textContent ?? "", /2 loại ngọc đã ghi/)
     await act(async () => confirmButton(document, "Bỏ và đánh dấu")!.click())
     await settle()
     assert.equal(latest.arcana.status, "NOT_SHOWN")
     assert.deepEqual(latest.arcana.entries, [])
     assert.match(document.querySelector('[data-part="arcana"]')!.textContent ?? "", /không xem đây là bảng trống/)
     assert.equal(document.querySelector('[data-stone="r-ad"]'), null)
+  })
+})
+
+test("a lower-tier stone recorded earlier stays listed and can be removed, though it is no longer offered", async () => {
+  await withDom(async ({ document, render, click }) => {
+    const { LoadoutEditor } = await import("../src/features/esports/pages/loadout-editor")
+    let latest = participant("MID", {
+      arcana: {
+        status: "PARTIAL",
+        entries: [{ selection: { id: "r1-ap", name: stones.magic.name }, color: "RED", count: 2 }],
+      },
+    })
+    function Host() {
+      const [value, setValue] = useState(latest)
+      return (
+        <LoadoutEditor
+          participant={value}
+          catalog={catalog}
+          onChange={(change) => {
+            latest = change(latest)
+            setValue(latest)
+          }}
+        />
+      )
+    }
+    await render(<Host />)
+    assert.equal(document.querySelector('[data-stone="r1-ap"]'), null, "tier I is not among the choices")
+    const earlier = document.querySelector('[aria-label="Ngọc Đỏ đã ghi ngoài cấp III"]')
+    assert.match(earlier?.textContent ?? "", /Công phép · Tốc đánh.*cấp I/)
+    await click('[aria-label="Bỏ Công phép · Tốc đánh"]')
+    assert.deepEqual(latest.arcana.entries, [])
   })
 })
 

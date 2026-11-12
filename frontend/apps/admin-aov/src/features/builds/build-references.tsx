@@ -1,11 +1,17 @@
 import { useMemo, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
 import { Check, Search } from "lucide-react"
 import { EntityReferenceIcon, type EntityIconResolver } from "@aov/ui/components/entity-rich-text"
 import { Input } from "@aov/ui/components/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { foldEntitySearch, referenceTranslation, type EntityReference } from "@aov/ui/lib/entity-rich-text"
 import { cn } from "@aov/ui/lib/utils"
+import { backendRequest } from "@/app/auth/session"
+import { defaultRulesetId } from "@/features/publishing/default-ruleset"
+import { useContentLocale } from "@/features/publishing/publication-overview"
+import { createPublishingApi } from "@/features/publishing/publishing-api"
 import { useReferenceCatalog } from "@/features/terminology/catalog"
+import { useWarehouseCatalog } from "@/features/warehouse/warehouse-api"
 
 export type BuildKind = "item" | "enchantment" | "arcana" | "spell"
 
@@ -15,14 +21,33 @@ export interface BuildReferences {
   lookup: (kind: BuildKind, id: string | null | undefined) => EntityReference | undefined
   options: Record<BuildKind, EntityReference[]>
   resolveIcon?: EntityIconResolver
+  /** Whether an arcana may go on a build's page: only tier III does. Every arcana passes until the tiers have loaded. */
+  onArcanaPage: (entity: EntityReference) => boolean
 }
 
 export const referenceName = (entity: EntityReference | undefined, fallback = "Chưa xác định") =>
   (entity && referenceTranslation(entity, "vi-VN")?.name) || fallback
 
+/** A build's arcana page, like a player's in a tournament, is made of tier III arcana alone. */
+export const ARCANA_PAGE_TIER = 3
+
+const publishing = createPublishingApi(backendRequest)
+
+/** The tier of every arcana, by identifier, read from the arcana warehouse of the default ruleset. */
+function useArcanaTiers() {
+  const locale = useContentLocale()
+  const rulesets = useQuery({ queryKey: ["publishing-rulesets"], queryFn: publishing.rulesets, staleTime: 60000 })
+  const arcana = useWarehouseCatalog("arcana", defaultRulesetId(rulesets.data), locale)
+  return useMemo(
+    () => (arcana.data ? new Map(arcana.data.map((entry) => [entry.id, entry.content.tier])) : undefined),
+    [arcana.data],
+  )
+}
+
 /** Items, enchantments, arcana and spells of the Wiki, from the shared reference catalog, by kind and identifier. */
 export function useBuildReferences(): BuildReferences {
   const { entities, resolveIcon } = useReferenceCatalog()
+  const tiers = useArcanaTiers()
   return useMemo(() => {
     const byKey = new Map<string, EntityReference>()
     const options = Object.fromEntries(KINDS.map((kind) => [kind, [] as EntityReference[]])) as Record<
@@ -35,8 +60,13 @@ export function useBuildReferences(): BuildReferences {
         options[entity.kind as BuildKind].push(entity)
       }
     for (const kind of KINDS) options[kind].sort((a, b) => referenceName(a).localeCompare(referenceName(b), "vi"))
-    return { lookup: (kind, id) => (id ? byKey.get(`${kind}:${id}`) : undefined), options, resolveIcon }
-  }, [entities, resolveIcon])
+    return {
+      lookup: (kind, id) => (id ? byKey.get(`${kind}:${id}`) : undefined),
+      options,
+      resolveIcon,
+      onArcanaPage: (entity) => !tiers || tiers.get(entity.id) === ARCANA_PAGE_TIER,
+    }
+  }, [entities, resolveIcon, tiers])
 }
 
 /** One reference icon with its name as the tooltip; an empty slot shows a dashed box. */
