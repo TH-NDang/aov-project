@@ -223,14 +223,22 @@ function Peek({
  * arcana ring. Each icon shows what is recorded on hover; while recording, the last three open the recording panel
  * on that player and part.
  */
-export function SeatLoadout({ seat, onEdit }: { seat: GameSeat; onEdit?: (part: LoadoutPart) => void }) {
+export function SeatLoadout({
+  seat,
+  onEdit,
+  className,
+}: {
+  seat: GameSeat
+  onEdit?: (part: LoadoutPart) => void
+  className?: string
+}) {
   const lane = LANE_LABELS[seat.lane].name
   const emblem = seat.enchantments.entries.filter((entry) => entry.primary).at(-1) ?? seat.enchantments.entries[0]
   const counts = stoneCounts(seat.arcana)
   const stones = seat.arcana.entries.reduce((sum, entry) => sum + entry.count, 0)
   const edit = (part: LoadoutPart) => (onEdit ? () => onEdit(part) : undefined)
   return (
-    <span className="flex items-center gap-1.5" data-seat-loadout={seat.key}>
+    <span className={cn("flex items-center gap-1.5", className)} data-seat-loadout={seat.key}>
       <Peek label={`Đường: ${lane}`} card={<p className="font-semibold">{lane}</p>}>
         <LaneIcon lane={seat.lane} size={18} className="text-[var(--side)]" />
       </Peek>

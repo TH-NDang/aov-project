@@ -596,3 +596,22 @@ test("rows recorded without a name are removed one at a time, and it is the clic
     assert.equal(latest.arcana.status, "UNKNOWN")
   })
 })
+
+test("side by side, the red team's panel mirrors the blue one", async () => {
+  await withDom(async ({ document, render }) => {
+    const { Scoreboard } = await import("../src/features/esports/components/game/scoreboard")
+    await render(
+      <Scoreboard game={view()} events={[]} at={0} focusSeat={null} onFocusSeat={() => {}} itemIcon={() => null} />,
+    )
+    // The mirror applies only where the board itself is wide enough for two panels, which it measures as a container.
+    assert.ok(document.querySelector('section[data-side="BLUE"]')!.closest(".\\@container\\/board"))
+    const classes = (selector: string) => document.querySelector(selector)!.className
+    const mirrored = /@5xl\/board:flex-row-reverse/
+    assert.match(classes('section[data-side="RED"] header'), mirrored)
+    assert.doesNotMatch(classes('section[data-side="BLUE"] header'), mirrored)
+    assert.match(classes('section[data-side="RED"] li'), /@5xl\/board:\[direction:rtl\]/)
+    assert.doesNotMatch(classes('section[data-side="BLUE"] li'), /direction:rtl/)
+    assert.match(classes('[data-seat-loadout="RED:TOP"]'), mirrored, "the icons of a row are mirrored too")
+    assert.doesNotMatch(classes('[data-seat-loadout="BLUE:TOP"]'), mirrored)
+  })
+})
