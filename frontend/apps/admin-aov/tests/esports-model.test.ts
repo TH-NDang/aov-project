@@ -904,3 +904,31 @@ test("a hero written with a plain apostrophe matches the catalog's curly one eve
   assert.equal(ybneth[0]!.bans, 2)
   assert.equal(ybneth[0]!.name, "Y’bneth", "the catalog's spelling is shown")
 })
+
+test("an imported hero name finds its catalog hero by code or by the checked list, and shows the catalog name", async () => {
+  const { referenceIndex } = await import("../src/features/esports/model/game-view")
+  const hero = (id: string, code: string, name: string) => ({ id, code, name, iconUrl: `/${code}.png` })
+  const lookup = referenceIndex([
+    hero("lubu", "lu-bu", "Lữ Bố"),
+    hero("richter", "riktor", "Richter"),
+    hero("diaochan", "diaochan", "Điêu Thuyền"),
+    hero("ming", "ming", "Ming"),
+    hero("flowborn-mid", "flowborn-mid", "Flowborn Pháp sư"),
+  ])
+  assert.deepEqual(
+    ["Lu Bu", "Riktor", "Diao Chan", "Ming Shiyin", "Flowborn Mage"].map((name) => lookup({ name })?.name),
+    ["Lữ Bố", "Richter", "Điêu Thuyền", "Ming", "Flowborn Pháp sư"],
+  )
+  assert.equal(lookup({ name: "Lu Bu" })?.iconUrl, "/lu-bu.png")
+  assert.equal(
+    lookup({ name: "The Joker" })?.iconUrl,
+    undefined,
+    "a hero the catalog lacks keeps its recorded name only",
+  )
+  assert.equal(lookup({ name: "The Joker" })?.name, "The Joker")
+  assert.equal(
+    lookup({ id: "lubu", name: "Lu Bu" })?.name,
+    "Lu Bu",
+    "a selection with an id keeps the name recorded with it",
+  )
+})

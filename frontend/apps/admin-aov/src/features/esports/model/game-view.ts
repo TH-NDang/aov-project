@@ -12,7 +12,8 @@ import type {
   TeamContent,
 } from "@aov/community-contracts"
 import { LANE_ORDER } from "./labels"
-import { nameKey } from "./name-key"
+import { IMPORTED_HERO_CODES } from "./imported-hero-names"
+import { compactKey, nameKey } from "./name-key"
 import { seatKey, type SeatKey } from "./timeline"
 
 export type IconRef = { id?: string | null; name: string; iconUrl?: string | null; tier?: number | null }
@@ -60,16 +61,30 @@ export function initials(name: string) {
   return (words.length > 1 ? words.map((word) => word[0]).join("") : name.slice(0, 3)).slice(0, 4).toLocaleUpperCase()
 }
 
-/** Catalog lookup by id first, then by display name for selections recorded without an id. */
+/**
+ * Catalog lookup by id first. A selection recorded without an id is matched by name, then by the catalog code the
+ * name spells ("Lu Bu" is `lu-bu`), then through the names imported games use for heroes the catalog calls otherwise.
+ * A name match shows the catalog's spelling; an id match keeps the name recorded with it.
+ */
 export function referenceIndex(references: Reference[] = []) {
   const byId = new Map(references.map((entry) => [entry.id, entry]))
   const byName = new Map(references.map((entry) => [nameKey(entry.name), entry]))
+  const byCode = new Map(references.flatMap((entry) => (entry.code ? [[compactKey(entry.code), entry] as const] : [])))
+  const byRecordedName = (name: string) => {
+    const imported = IMPORTED_HERO_CODES[nameKey(name)]
+    return (
+      byName.get(nameKey(name)) ??
+      byCode.get(compactKey(name)) ??
+      (imported ? byCode.get(compactKey(imported)) : undefined)
+    )
+  }
   return (selection?: Selection | null): IconRef | null => {
     if (!selection || (!selection.id && !selection.name)) return null
-    const match = (selection.id && byId.get(selection.id)) || byName.get(nameKey(selection.name ?? ""))
+    const byIdMatch = selection.id ? byId.get(selection.id) : undefined
+    const match = byIdMatch ?? (selection.name ? byRecordedName(selection.name) : undefined)
     return {
       id: selection.id,
-      name: selection.name || match?.name || "Chưa rõ",
+      name: (byIdMatch ? selection.name || match?.name : match?.name || selection.name) || "Chưa rõ",
       iconUrl: match?.iconUrl,
       tier: match?.tier,
     }
