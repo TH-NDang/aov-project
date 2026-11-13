@@ -88,6 +88,12 @@ hoặc viết lại. Các bản ghi còn được ván hoặc lịch sử công 
 kiểm tra lại các danh tính cha cần thiết. Ảnh trên Media/R2 có vòng đời riêng; xóa hồ sơ không
 đồng nghĩa xóa ảnh đang có thể được nhiều nơi sử dụng.
 
+Bổ sung 2026-11-13: bản thể thức của chính giải, khi chưa từng công bố (lịch sử không có lần công bố hay thu hồi
+nào), là một phần của giải. Nó không được tính là liên kết chặn việc xóa giải, các trận, ván và dòng đội hình đăng ký
+của giải; trước đây bản nháp này chặn mọi giải đã có thể thức, kể cả giải nhập nhầm. Khi giải vào thùng rác, danh sách
+mùa giải của đơn vị tổ chức hay chuỗi giải không hiện bản thể thức đó; khôi phục giải thì hiện lại. Thể thức đã từng
+công bố hoặc thu hồi vẫn là lịch sử và tiếp tục chặn việc xóa như cũ.
+
 Các thao tác ghi dùng cùng một khóa transaction phạm vi đồ thị tham chiếu giải đấu trong PostgreSQL,
 để việc tạo liên kết không chạy lọt giữa kiểm tra sử dụng và xóa. Khóa này chỉ bao quanh công việc
 database nhập tay; không giữ khóa trong lúc gọi Wiki, upload ảnh hay chờ dịch vụ ngoài.
