@@ -1,6 +1,6 @@
 import { useState } from "react"
 import type { Catalog, EquipmentEvent, EquipmentSnapshot, Participant } from "@aov/community-contracts"
-import { ArrowDownUp, Camera, Plus, Trash2 } from "lucide-react"
+import { ArrowDownUp, Camera, Clock3, Plus, Trash2 } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { CatalogPicker } from "./catalog-picker"
 import { emptySnapshot, minuteLabel, parseGameTime } from "./tournament-model"
@@ -180,13 +180,17 @@ function EventEditor({
 export function EquipmentEditor({
   participant,
   catalog,
+  nowGame,
   onChange,
 }: {
   participant: Participant
   catalog: Catalog
+  /** The game second the video is at, when a synced video plays beside the editor. */
+  nowGame?: number | null
   onChange: (participant: Participant) => void
 }) {
-  const [time, setTime] = useState("00:00")
+  // Recording follows the video, so a new mark starts at the moment on screen instead of 00:00.
+  const [time, setTime] = useState(() => minuteLabel(nowGame ?? 0))
   const [error, setError] = useState("")
   function add(type: "snapshot" | "event") {
     const seconds = parseGameTime(time)
@@ -231,6 +235,12 @@ export function EquipmentEditor({
             inputMode="numeric"
           />
         </label>
+        {nowGame != null && minuteLabel(nowGame) !== time && (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setTime(minuteLabel(nowGame))}>
+            <Clock3 size={14} />
+            Lấy lúc video {minuteLabel(nowGame)}
+          </Button>
+        )}
         <Button type="button" variant="outline" size="sm" onClick={() => add("snapshot")}>
           <Camera size={14} />
           Thêm mốc 6 ô

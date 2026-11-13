@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import type { Catalog, GameContent, ObservationStatus, Participant, Side } from "@aov/community-contracts"
-import { Clock3, EyeOff, Shield, Swords, TriangleAlert, X } from "lucide-react"
+import { Clock3, EyeOff, Shield, Swords, TriangleAlert, Users, X } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Textarea } from "@aov/ui/components/textarea"
 import { cn } from "@aov/ui/lib/utils"
 import { EquipmentEditor } from "@/features/tournaments/equipment-editor"
 import { LoadoutEditor, type ObservedAtControl } from "./loadout-editor"
 import { HeroIcon, LaneIcon, TimeTag, VIDEO_MARK } from "../components/primitives"
+import {
+  canFillFromRoster,
+  fillFromRoster,
+  rosterOptionLabel,
+  type RosterOption,
+} from "../components/game/draft-editor"
 import { ReferencePicker } from "../components/game/reference-picker"
 import type { GameView, IconRef } from "../model/game-view"
 import { LANE_LABELS } from "../model/labels"
@@ -82,6 +88,7 @@ export function LoadoutPanel({
   content: savedContent,
   view,
   catalog,
+  roster,
   clock,
   target,
   error,
@@ -91,6 +98,8 @@ export function LoadoutPanel({
   content: GameContent
   view: GameView
   catalog: Catalog
+  /** Each team's registered players at this tournament, starters first. */
+  roster: (teamId: string) => RosterOption[]
   clock?: LoadoutClock
   /** Opens on this player and part; a new object re-targets a panel that is already open. */
   target?: LoadoutTarget | null
@@ -107,11 +116,17 @@ export function LoadoutPanel({
   }
   const [content, apply] = useOptimisticContent(savedContent, onChange)
   const [seat, setSeat] = useState<Seat>(() => seatOf(target?.seat) ?? { side: "BLUE", index: 0 })
-  const [tab, setTab] = useState<"loadout" | "equipment">("loadout")
+  const [tab, setTab] = useState<"loadout" | "equipment">(target?.part === "equipment" ? "equipment" : "loadout")
   const root = useRef<HTMLDivElement>(null)
   const scrollTo = useRef<LoadoutPart | null>(target?.part ?? null)
   const side = content.sides.find((entry) => entry.side === seat.side) ?? content.sides[0]
   const participant = side?.participants[seat.index]
+  // Those registered for this seat's lane come first; the roster already puts starters before substitutes.
+  const members = side
+    ? [...roster(side.teamId)].sort(
+        (a, b) => Number(b.lane === participant?.lane) - Number(a.lane === participant?.lane),
+      )
+    : []
   // A mark taken before the game clock starts (draft, loading screen) is kept at 0:00.
   const nowGame = clock?.videoNow != null ? Math.max(0, Math.round(clock.toGame(clock.videoNow) ?? 0)) : null
 
@@ -120,7 +135,7 @@ export function LoadoutPanel({
     if (!wanted) return
     scrollTo.current = target?.part ?? null
     setSeat(wanted)
-    setTab("loadout")
+    setTab(target?.part === "equipment" ? "equipment" : "loadout")
     // Only a new request moves the panel; the lookup reads the seats of the same game.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target])
@@ -200,13 +215,28 @@ export function LoadoutPanel({
                     )}
                   >
                     <HeroIcon hero={entry.hero} size={22} />
-                    <span className="max-w-20 truncate">{entry.playerName}</span>
+                    {value?.playerId ? (
+                      <span className="max-w-20 truncate">{entry.playerName}</span>
+                    ) : (
+                      <span className="text-amber-600 dark:text-amber-400">Chưa ghi</span>
+                    )}
                     <SeatDots participant={value} />
                   </button>
                 )
               })}
             </div>
             <div className="flex flex-wrap gap-1.5 pl-3 text-xs">
+              {canFillFromRoster(content, roster, code) && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7"
+                  title="Điền các ô chưa ghi bằng người đăng ký ở giải đúng vị trí, ưu tiên đội hình chính. Ván có người vào thay vẫn cần sửa tay."
+                  onClick={() => apply((current) => fillFromRoster(current, roster, code))}
+                >
+                  <Users size={13} /> Điền tuyển thủ theo đội hình
+                </Button>
+              )}
               {nowGame != null && (
                 <>
                   <Button
@@ -282,13 +312,38 @@ export function LoadoutPanel({
 
       {participant && (
         <section className="space-y-3 rounded-xl border p-3" data-side={seat.side} aria-label="Thông tin tuyển thủ">
-          <header className="flex flex-wrap items-center gap-2">
+          {/* Who played this seat is chosen here, from the team's registered players. */}
+          <header className="flex flex-wrap items-center gap-2" data-part="player">
             <LaneIcon lane={participant.lane} size={16} className="text-[var(--side)]" />
-            <span className="font-semibold">{view.sides[seat.side].seats[seat.index]?.playerName}</span>
+            <select
+              aria-label={`Tuyển thủ ${LANE_LABELS[participant.lane].name} của ${view.sides[seat.side].team.name}`}
+              value={participant.playerId ?? ""}
+              onChange={(event) => updateSeat(seat, (value) => ({ ...value, playerId: event.target.value || null }))}
+              className={cn(
+                "h-8 max-w-full min-w-44 rounded-md border bg-background px-2 text-sm font-semibold",
+                !participant.playerId && "border-dashed border-amber-500 text-amber-600 dark:text-amber-400",
+              )}
+            >
+              <option value="">Chưa ghi tuyển thủ</option>
+              {participant.playerId && !members.some((member) => member.id === participant.playerId) && (
+                <option value={participant.playerId}>{view.sides[seat.side].seats[seat.index]?.playerName}</option>
+              )}
+              {members.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {rosterOptionLabel(member, participant.lane)}
+                </option>
+              ))}
+            </select>
             <span className="text-xs text-muted-foreground">
               {LANE_LABELS[participant.lane].name} · {participant.hero?.name || "chưa có tướng"}
             </span>
           </header>
+          {!members.length && (
+            <p className="text-xs text-muted-foreground">
+              {view.sides[seat.side].team.name} chưa có đội hình đăng ký ở giải này nên chưa có ai để chọn. Thêm ở bước
+              “Đội & đội hình” của giải.
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2" data-part="spell">
             <span className="text-xs font-medium text-muted-foreground">Phụ trợ</span>
             <ReferencePicker
@@ -356,8 +411,10 @@ export function LoadoutPanel({
             />
           ) : (
             <EquipmentEditor
+              key={`equipment-${seat.side}-${seat.index}`}
               participant={participant}
               catalog={catalog}
+              nowGame={nowGame}
               // The editor answers with a whole player; only its own two lists are taken from that copy.
               onChange={(next) =>
                 updateSeat(seat, (value) => ({

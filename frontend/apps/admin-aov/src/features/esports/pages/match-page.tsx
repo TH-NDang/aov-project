@@ -47,7 +47,7 @@ import {
   VideoMark,
   WinPips,
 } from "../components/primitives"
-import type { RosterOption } from "../components/game/draft-editor"
+import { byStanding, type RosterOption } from "../components/game/draft-editor"
 import { usePhoneLayout } from "../components/game/floating-panel"
 import { useSavedPlayhead } from "../components/game/use-saved-playhead"
 import { VodPlayer, type VodPlayerHandle } from "../components/game/vod-player"
@@ -156,12 +156,18 @@ function MatchView({ access }: { access: Access }) {
   const roster = useMemo(() => {
     const names = new Map((players.data ?? []).map((player) => [player.id, player.content.nickname]))
     const byTeam = new Map<string, RosterOption[]>()
+    // Members who left stay listed, last, so a game they played can still name them; filling never seats them.
     for (const { content } of rosters.data ?? []) {
-      if (content.status === "INACTIVE") continue
       const members = byTeam.get(content.teamId) ?? []
-      members.push({ id: content.playerId, name: names.get(content.playerId) ?? "Tuyển thủ", lane: content.lane })
+      members.push({
+        id: content.playerId,
+        name: names.get(content.playerId) ?? "Tuyển thủ",
+        lane: content.lane,
+        status: content.status,
+      })
       byTeam.set(content.teamId, members)
     }
+    for (const members of byTeam.values()) members.sort(byStanding)
     return (teamId: string) => byTeam.get(teamId) ?? []
   }, [players.data, rosters.data])
 
@@ -861,9 +867,9 @@ function MatchViewer({
             size="sm"
             variant="outline"
             onClick={() => setPanel({ kind: "loadout" })}
-            aria-label="Phụ trợ, phù hiệu, bảng ngọc và trang bị"
+            aria-label="Tuyển thủ, phụ trợ, phù hiệu, bảng ngọc và trang bị"
           >
-            <Gem size={14} /> {phone ? "Ngọc, trang bị" : "Phụ trợ, ngọc, trang bị"}
+            <Gem size={14} /> {phone ? "Tuyển thủ, đồ" : "Tuyển thủ, ngọc, trang bị"}
           </Button>
           {focused.live ? (
             !phone && (

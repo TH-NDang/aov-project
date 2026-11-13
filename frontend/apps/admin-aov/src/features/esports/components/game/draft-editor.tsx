@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import type { DraftKind, GameContent, Lane, Reference, Selection, Side } from "@aov/community-contracts"
+import type { DraftKind, GameContent, Lane, Reference, RosterStatus, Selection, Side } from "@aov/community-contracts"
 import { ArrowLeftRight, Ban, History, Lock, LockOpen, Undo2, Users } from "lucide-react"
 import { Button } from "@aov/ui/components/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
@@ -21,7 +21,12 @@ import { formatClock } from "../../model/vod"
 import { HeroIcon, LaneIcon, TeamLogo, TimeTag, VIDEO_MARK } from "../primitives"
 import { ReferencePicker } from "./reference-picker"
 
-export type RosterOption = { id: string; name: string; lane?: Lane | null }
+export type RosterOption = { id: string; name: string; lane?: Lane | null; status?: RosterStatus }
+
+/** Starters first, then members of unknown standing, then substitutes. */
+const STANDING: Record<RosterStatus, number> = { ACTIVE: 0, UNKNOWN: 1, SUBSTITUTE: 2, INACTIVE: 3 }
+export const byStanding = (a: RosterOption, b: RosterOption) =>
+  STANDING[a.status ?? "UNKNOWN"] - STANDING[b.status ?? "UNKNOWN"]
 
 const otherSide = (side: Side): Side => (side === "BLUE" ? "RED" : "BLUE")
 
@@ -39,22 +44,57 @@ export function swapSides(content: GameContent): GameContent {
   }
 }
 
-/** Fills empty player slots from the registered roster by lane. */
-export function fillFromRoster(content: GameContent, roster: (teamId: string) => RosterOption[]): GameContent {
+/**
+ * Fills empty player slots from the registered roster by lane, a starter before a substitute, and never seats one
+ * player twice in a team. With `only`, the other team is left as it is. Substitutions are not known here, so a game
+ * a substitute played still needs that seat changed by hand.
+ */
+export function fillFromRoster(
+  content: GameContent,
+  roster: (teamId: string) => RosterOption[],
+  only?: Side,
+): GameContent {
   return {
     ...content,
     sides: content.sides.map((side) => {
-      const members = roster(side.teamId)
+      if (only && side.side !== only) return side
+      const members = [...roster(side.teamId)].sort(byStanding)
+      const seated = new Set(side.participants.flatMap((participant) => participant.playerId ?? []))
       return {
         ...side,
-        participants: side.participants.map((participant) =>
-          participant.playerId
-            ? participant
-            : { ...participant, playerId: members.find((member) => member.lane === participant.lane)?.id ?? null },
-        ),
+        participants: side.participants.map((participant) => {
+          if (participant.playerId) return participant
+          const member = members.find(
+            (option) => option.lane === participant.lane && option.status !== "INACTIVE" && !seated.has(option.id),
+          )
+          if (!member) return participant
+          seated.add(member.id)
+          return { ...participant, playerId: member.id }
+        }),
       }
     }),
   }
+}
+
+/** A member as a choice for a seat: the lane only when it is not the seat's, and whether they sit out or left. */
+export const rosterOptionLabel = (member: RosterOption, lane: Lane) =>
+  [
+    member.name,
+    member.lane && member.lane !== lane ? ` (${LANE_LABELS[member.lane].name})` : "",
+    member.status === "INACTIVE" ? " · đã rời" : member.status === "SUBSTITUTE" ? " · dự bị" : "",
+  ].join("")
+
+/** Whether filling from the roster would seat anyone: some seat is empty and a member plays its lane. */
+export function canFillFromRoster(content: GameContent, roster: (teamId: string) => RosterOption[], only?: Side) {
+  return content.sides.some(
+    (side) =>
+      (!only || side.side === only) &&
+      side.participants.some(
+        (participant) =>
+          !participant.playerId &&
+          roster(side.teamId).some((member) => member.lane === participant.lane && member.status !== "INACTIVE"),
+      ),
+  )
 }
 
 /**
@@ -390,8 +430,7 @@ export function DraftEditor({
                 <option value="">Tuyển thủ…</option>
                 {members.map((member) => (
                   <option key={member.id} value={member.id}>
-                    {member.name}
-                    {member.lane && member.lane !== participant.lane ? ` (${LANE_LABELS[member.lane].name})` : ""}
+                    {rosterOptionLabel(member, participant.lane)}
                   </option>
                 ))}
               </select>
@@ -403,8 +442,7 @@ export function DraftEditor({
     )
   }
 
-  const missingPlayers = content.sides.some((side) => side.participants.some((participant) => !participant.playerId))
-  const canFill = missingPlayers && content.sides.some((side) => roster(side.teamId).some((member) => member.lane))
+  const canFill = canFillFromRoster(content, roster)
 
   const lineupView = (
     <div className="space-y-2">

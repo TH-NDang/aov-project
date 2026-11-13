@@ -1048,6 +1048,7 @@ test("the loadout panel marks a whole team at the broadcast moment and keeps unk
           },
         }}
         catalog={{ heroes: [], items: [], arcana: [], enchantments: [], spells: [] }}
+        roster={() => []}
         clock={{ videoNow: 1827, toGame: (second) => second - 1800, toVideo: (second) => second + 1800 }}
         onSeekGame={() => {}}
         onChange={(change) => results.push(change(content) as typeof content)}

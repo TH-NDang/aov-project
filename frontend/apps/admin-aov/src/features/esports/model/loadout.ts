@@ -2,8 +2,8 @@ import type { ArcanaAllocation, EnchantmentAllocation, ObservationStatus, Refere
 
 export type ArcanaColor = "RED" | "PURPLE" | "GREEN"
 
-/** The parts of a player's loadout the scoreboard can open the recording panel on. */
-export type LoadoutPart = "spell" | "enchantments" | "arcana"
+/** The parts of a player's row the scoreboard can open the recording panel on. */
+export type LoadoutPart = "player" | "spell" | "enchantments" | "arcana" | "equipment"
 
 export const ARCANA_COLORS: { code: ArcanaColor; label: string }[] = [
   { code: "RED", label: "Đỏ" },

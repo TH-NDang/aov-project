@@ -1,6 +1,6 @@
 import { useMemo } from "react"
 import type { Side } from "@aov/community-contracts"
-import { Ban, Crown, Flag, History, TriangleAlert } from "lucide-react"
+import { Ban, Crown, Flag, History, PackagePlus, TriangleAlert, UserPlus } from "lucide-react"
 import { cn } from "@aov/ui/lib/utils"
 import type { GameView, IconRef } from "../../model/game-view"
 import {
@@ -45,7 +45,7 @@ export function Scoreboard({
   /** Heroes each team already played earlier in the series, shown from game 2 on. */
   locks?: HeroLocks
   heroIcon?: (hero: { id?: string | null; name: string }) => string | null | undefined
-  /** While recording: opens the recording panel on this player's spell, emblems or arcana. */
+  /** While recording: opens the recording panel on this seat's player, spell, emblems, arcana or equipment. */
   onEditLoadout?: (seat: SeatKey, part: LoadoutPart) => void
 }) {
   const stats = useMemo(() => seatStatsAt(events, at), [events, at])
@@ -184,19 +184,34 @@ export function Scoreboard({
                 </EntityRef>
                 {/* The name leads; the hero is the portrait beside it, whose card names it. */}
                 <span className={cn("min-w-0 space-y-1", on("@5xl/board:[direction:ltr]"))}>
-                  <button
-                    type="button"
-                    aria-pressed={focused}
-                    onClick={() => onFocusSeat(focused ? null : seat.key)}
-                    className={cn(
-                      "flex max-w-full items-center gap-1.5 text-left",
-                      on("@5xl/board:ml-auto @5xl/board:flex-row-reverse @5xl/board:text-right"),
-                    )}
-                    title="Lọc diễn biến theo tuyển thủ này"
-                  >
-                    {seat.photoUrl && <PlayerPhoto name={seat.playerName} url={seat.photoUrl} size={16} />}
-                    <span className="truncate text-sm font-semibold">{seat.playerName}</span>
-                  </button>
+                  {!seat.playerId && onEditLoadout ? (
+                    // While recording, an empty seat asks for its player and opens the picker in one click.
+                    <button
+                      type="button"
+                      onClick={() => onEditLoadout(seat.key, "player")}
+                      className={cn(
+                        "flex max-w-full items-center gap-1 rounded-md border border-dashed border-amber-500 px-1.5 py-0.5 text-left text-xs font-semibold text-amber-600 hover:bg-amber-500/10 dark:text-amber-400",
+                        on("@5xl/board:ml-auto @5xl/board:flex-row-reverse"),
+                      )}
+                      title="Chọn tuyển thủ chơi vị trí này"
+                    >
+                      <UserPlus size={13} aria-hidden="true" /> Ghi tuyển thủ
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-pressed={focused}
+                      onClick={() => onFocusSeat(focused ? null : seat.key)}
+                      className={cn(
+                        "flex max-w-full items-center gap-1.5 text-left",
+                        on("@5xl/board:ml-auto @5xl/board:flex-row-reverse @5xl/board:text-right"),
+                      )}
+                      title="Lọc diễn biến theo tuyển thủ này"
+                    >
+                      {seat.photoUrl && <PlayerPhoto name={seat.playerName} url={seat.photoUrl} size={16} />}
+                      <span className="truncate text-sm font-semibold">{seat.playerName}</span>
+                    </button>
+                  )}
                   <span
                     className={cn("flex flex-wrap items-center gap-x-2 gap-y-1", on("@5xl/board:flex-row-reverse"))}
                   >
@@ -244,6 +259,18 @@ export function Scoreboard({
                     ) : (
                       <ItemSlot key={index} index={index} item={item} size={28} />
                     ),
+                  )}
+                  {onEditLoadout && (
+                    // The six slots read what is recorded; this button beside them opens equipment recording.
+                    <button
+                      type="button"
+                      onClick={() => onEditLoadout(seat.key, "equipment")}
+                      className="grid size-7 shrink-0 place-items-center rounded-md border border-dashed text-muted-foreground hover:border-[var(--side)] hover:text-foreground"
+                      title={`Ghi trang bị của ${seat.playerId ? seat.playerName : "vị trí này"} lúc này`}
+                      aria-label={`Ghi trang bị của ${seat.playerId ? seat.playerName : "vị trí này"}`}
+                    >
+                      <PackagePlus size={14} aria-hidden="true" />
+                    </button>
                   )}
                 </span>
               </li>

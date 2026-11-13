@@ -322,8 +322,8 @@ export function FocusedGame({
             // A phone shows the title on one line.
             title={
               phone
-                ? `Ngọc, trang bị · Ván ${view.number}`
-                : `Phụ trợ · phù hiệu · ngọc · trang bị · Ván ${view.number}`
+                ? `Tuyển thủ, trang bị · Ván ${view.number}`
+                : `Tuyển thủ · phụ trợ · phù hiệu · ngọc · trang bị · Ván ${view.number}`
             }
             icon={<Gem size={15} />}
             onClose={() => onPanel(null)}
@@ -333,6 +333,7 @@ export function FocusedGame({
               content={entry.content}
               view={view}
               catalog={catalog}
+              roster={roster}
               clock={
                 videoId && chapter.synced
                   ? {

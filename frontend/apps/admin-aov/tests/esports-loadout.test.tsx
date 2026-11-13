@@ -437,6 +437,7 @@ test("edits made before the previous one is saved do not undo each other", async
           content={content}
           view={view()}
           catalog={catalog}
+          roster={() => []}
           error={error}
           onSeekGame={() => {}}
           onChange={send}
@@ -558,12 +559,14 @@ test("the panel opens on the player and part asked from the scoreboard", async (
         content={gameContent()}
         view={view()}
         catalog={catalog}
+        roster={() => []}
         target={target}
         onSeekGame={() => {}}
         onChange={() => true}
       />
     )
-    const selected = () => document.querySelector('button[aria-pressed="true"][title]')?.textContent
+    // A seat without a player marks its chip as unrecorded instead of a name; the chip title still names the seat.
+    const selected = () => document.querySelector('button[aria-pressed="true"][title]')?.getAttribute("title")
     await render(panel({ seat: "RED:SUPPORT", part: "arcana" }))
     assert.match(selected() ?? "", /R4/)
     await render(panel({ seat: "BLUE:MID", part: "arcana" }))
@@ -629,5 +632,123 @@ test("side by side, the red team's panel mirrors the blue one", async () => {
     assert.doesNotMatch(classes('section[data-side="BLUE"] li'), /direction:rtl/)
     assert.match(classes('[data-seat-loadout="RED:TOP"]'), mirrored, "the icons of a row are mirrored too")
     assert.doesNotMatch(classes('[data-seat-loadout="BLUE:TOP"]'), mirrored)
+  })
+})
+
+test("filling from the roster seats a starter before a substitute, never a player who left, and never one twice", async () => {
+  const { canFillFromRoster, fillFromRoster } = await import("../src/features/esports/components/game/draft-editor")
+  type Option = Parameters<typeof fillFromRoster>[1] extends (teamId: string) => (infer T)[] ? T : never
+  const blue: Option[] = [
+    { id: "sub-mid", name: "Bench", lane: "MID", status: "SUBSTITUTE" },
+    { id: "left-top", name: "Gone", lane: "TOP", status: "INACTIVE" },
+    { id: "mid", name: "Starter", lane: "MID", status: "ACTIVE" },
+    { id: "jungle", name: "Jungler", lane: "JUNGLE" },
+  ]
+  const roster = (teamId: string): Option[] =>
+    teamId === "BLUE" ? blue : [{ id: "red-top", name: "Red", lane: "TOP", status: "ACTIVE" }]
+  const seatOf = (content: GameContent, side: number, lane: string) =>
+    content.sides[side]!.participants.find((entry) => entry.lane === lane)!.playerId ?? null
+
+  const filled = fillFromRoster(gameContent(), roster, "BLUE")
+  assert.equal(seatOf(filled, 0, "MID"), "mid", "a starter before a substitute")
+  assert.equal(seatOf(filled, 0, "TOP"), null, "a player who left is not seated")
+  assert.equal(seatOf(filled, 0, "JUNGLE"), "jungle")
+  assert.equal(seatOf(filled, 1, "TOP"), null, "the other team is left as it is")
+  assert.equal(canFillFromRoster(filled, roster, "BLUE"), false, "nothing more to fill for that team")
+  assert.equal(canFillFromRoster(filled, roster, "RED"), true)
+
+  const starterOnTop = gameContent({ playerId: "mid" })
+  assert.equal(
+    seatOf(fillFromRoster(starterOnTop, roster, "BLUE"), 0, "MID"),
+    "sub-mid",
+    "a seated player is not seated again",
+  )
+})
+
+test("the panel names who played a seat, fills a team from its roster and opens on equipment", async () => {
+  await withDom(async ({ document, render }) => {
+    const { LoadoutPanel } = await import("../src/features/esports/pages/loadout-panel")
+    const roster = (teamId: string) =>
+      teamId === "BLUE"
+        ? [
+            { id: "p-top", name: "Topper", lane: "TOP" as const, status: "ACTIVE" as const },
+            { id: "p-bench", name: "Bench", lane: "TOP" as const, status: "SUBSTITUTE" as const },
+          ]
+        : []
+    let latest = gameContent()
+    function Host({ part }: { part?: "equipment" }) {
+      const [content, setContent] = useState(latest)
+      return (
+        <LoadoutPanel
+          content={content}
+          view={view()}
+          catalog={catalog}
+          roster={roster}
+          target={{ seat: "BLUE:TOP", part }}
+          onSeekGame={() => {}}
+          onChange={(change) => {
+            latest = change(latest)
+            setContent(latest)
+            return true
+          }}
+        />
+      )
+    }
+    await render(<Host />)
+    const picker = () => document.querySelector<HTMLSelectElement>('[data-part="player"] select')!
+    assert.equal(picker().value, "", "an empty seat says so")
+    assert.deepEqual(
+      [...picker().options].map((option) => option.textContent),
+      ["Chưa ghi tuyển thủ", "Topper", "Bench · dự bị"],
+    )
+    const fillButton = (side: string) =>
+      [...document.querySelectorAll(`section[data-side="${side}"] button`)].find((button) =>
+        button.textContent?.includes("Điền tuyển thủ theo đội hình"),
+      ) as HTMLButtonElement | undefined
+    assert.equal(fillButton("RED"), undefined, "a team without a roster offers no fill")
+    await act(async () => fillButton("BLUE")!.click())
+    assert.equal(latest.sides[0]!.participants[0]!.playerId, "p-top", "the starter takes the seat")
+
+    await act(async () => {
+      picker().value = "p-bench"
+      picker().dispatchEvent(new document.defaultView!.Event("change", { bubbles: true }))
+    })
+    assert.equal(latest.sides[0]!.participants[0]!.playerId, "p-bench", "a substitute is chosen by hand")
+
+    assert.equal(document.querySelector('[aria-label="Thời điểm trang bị trong ván"]'), null)
+    await render(<Host part="equipment" />)
+    assert.ok(document.querySelector('[aria-label="Thời điểm trang bị trong ván"]'), "equipment opens straight away")
+  })
+})
+
+test("while recording, an empty seat asks for its player and a button beside the slots opens equipment", async () => {
+  await withDom(async ({ document, render }) => {
+    const { Scoreboard } = await import("../src/features/esports/components/game/scoreboard")
+    const opened: string[] = []
+    const board = (recording: boolean) => (
+      <Scoreboard
+        game={view({ "BLUE:TOP": { playerId: "p1" } })}
+        events={[]}
+        at={0}
+        focusSeat={null}
+        onFocusSeat={() => {}}
+        itemIcon={() => null}
+        onEditLoadout={recording ? (seat, part) => opened.push(`${seat} ${part}`) : undefined}
+      />
+    )
+    await render(board(false))
+    assert.equal(document.querySelector('button[title="Chọn tuyển thủ chơi vị trí này"]'), null, "reading only")
+    assert.equal(document.querySelector('button[aria-label^="Ghi trang bị"]'), null)
+
+    await render(board(true))
+    const rows = [...document.querySelectorAll('section[data-side="BLUE"] li')]
+    assert.equal(rows[0]!.querySelector('button[title="Chọn tuyển thủ chơi vị trí này"]'), null, "a named seat")
+    await act(async () =>
+      rows[1]!.querySelector<HTMLButtonElement>('button[title="Chọn tuyển thủ chơi vị trí này"]')!.click(),
+    )
+    await act(async () =>
+      rows[0]!.querySelector<HTMLButtonElement>('button[aria-label="Ghi trang bị của B0"]')!.click(),
+    )
+    assert.deepEqual(opened, ["BLUE:JUNGLE player", "BLUE:TOP equipment"])
   })
 })
