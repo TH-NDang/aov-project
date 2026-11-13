@@ -3,9 +3,10 @@ import type { Reference, Selection } from "@aov/community-contracts"
 import { EyeOff, Search, X } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@aov/ui/components/popover"
 import { Input } from "@aov/ui/components/input"
+import { nameKey } from "../../model/name-key"
 import { allowedOptions, unavailableReason, type Unavailable } from "../../model/series-rules"
 
-const fold = (value: string) => value.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").toLocaleLowerCase()
+const fold = nameKey
 
 /**
  * Picks a hero or spell from the catalogue. Entries that the rules make unavailable are left out of the suggestions

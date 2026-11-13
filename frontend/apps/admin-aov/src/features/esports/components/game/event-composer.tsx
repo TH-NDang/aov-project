@@ -20,6 +20,7 @@ import {
   type TimelineEvent,
   type TimelineKind,
 } from "../../model/timeline"
+import { nameKey } from "../../model/name-key"
 import { formatClock, parseClock } from "../../model/vod"
 import { HeroIcon, ItemSlot, LaneIcon, TimeTag, VIDEO_MARK, VideoMark } from "../primitives"
 import { KIND_ICONS } from "./event-text"
@@ -238,7 +239,7 @@ export function EventComposer({
       at: second,
       note: draft.note.trim() || undefined,
     }
-    const reference = items.find((item) => item.name.toLocaleLowerCase() === draft.item.trim().toLocaleLowerCase())
+    const reference = items.find((item) => nameKey(item.name) === nameKey(draft.item))
     const event: TimelineEvent =
       draft.kind === "KILL"
         ? {

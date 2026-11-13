@@ -1,12 +1,12 @@
 import type { GameContent, Selection, Side } from "@aov/community-contracts"
+import { nameKey } from "./name-key"
 
 /** A hero a team already played in an earlier game of the series. */
 export type HeroUse = { gameNumber: number; hero: { id?: string | null; name: string } }
 export type HeroLocks = { decider: boolean; byTeam: Map<string, HeroUse[]> }
 export type Unavailable = { reason: string }
 
-const fold = (value: string) =>
-  value.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/gi, "d").trim().toLocaleLowerCase()
+const fold = nameKey
 
 /** Every key a hero can be matched by: its catalogue id and its folded name, so id-less observations still match. */
 export function heroKeys(hero: Selection | null | undefined): string[] {

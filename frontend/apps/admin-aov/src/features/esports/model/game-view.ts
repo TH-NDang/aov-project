@@ -12,6 +12,7 @@ import type {
   TeamContent,
 } from "@aov/community-contracts"
 import { LANE_ORDER } from "./labels"
+import { nameKey } from "./name-key"
 import { seatKey, type SeatKey } from "./timeline"
 
 export type IconRef = { id?: string | null; name: string; iconUrl?: string | null; tier?: number | null }
@@ -62,10 +63,10 @@ export function initials(name: string) {
 /** Catalog lookup by id first, then by display name for selections recorded without an id. */
 export function referenceIndex(references: Reference[] = []) {
   const byId = new Map(references.map((entry) => [entry.id, entry]))
-  const byName = new Map(references.map((entry) => [entry.name.toLocaleLowerCase(), entry]))
+  const byName = new Map(references.map((entry) => [nameKey(entry.name), entry]))
   return (selection?: Selection | null): IconRef | null => {
     if (!selection || (!selection.id && !selection.name)) return null
-    const match = (selection.id && byId.get(selection.id)) || byName.get((selection.name ?? "").toLocaleLowerCase())
+    const match = (selection.id && byId.get(selection.id)) || byName.get(nameKey(selection.name ?? ""))
     return {
       id: selection.id,
       name: selection.name || match?.name || "Chưa rõ",

@@ -863,3 +863,44 @@ test("a marker can only be dragged where the service would accept it", () => {
   assert.equal(turned.sides, doc.content.sides, "line-ups and bans are not rebuilt by a change of second")
   assert.equal(moveTurn(doc.content, 9, 10), null)
 })
+
+test("a hero written with a plain apostrophe matches the catalog's curly one everywhere", async () => {
+  const { referenceIndex } = await import("../src/features/esports/model/game-view")
+  const { heroKeys } = await import("../src/features/esports/model/series-rules")
+  const { nameKey } = await import("../src/features/esports/model/name-key")
+  const catalog = [{ id: "ybneth", code: "ybneth", name: "Y’bneth", iconUrl: "/ybneth.png" }]
+
+  assert.equal(nameKey("Y'bneth"), nameKey("Y’bneth"))
+  assert.equal(nameKey("  Tel‘Annas "), nameKey("Tel'Annas"))
+  assert.equal(
+    referenceIndex(catalog)({ name: "Y'bneth" })?.iconUrl,
+    "/ybneth.png",
+    "the imported name finds its picture",
+  )
+
+  const imported = heroKeys({ name: "Y'bneth" })
+  const recorded = heroKeys({ id: "ybneth", name: "Y’bneth" })
+  assert.ok(
+    imported.some((key) => recorded.includes(key)),
+    "a series rule sees both spellings as one hero",
+  )
+
+  const content = (heroName: string, id?: string) =>
+    ({
+      seriesId: "s",
+      number: 1,
+      region: "VN",
+      locale: "vi-VN",
+      winner: "BLUE",
+      sides: [
+        { side: "BLUE", teamId: "a", bans: [], participants: [{ lane: "MID", hero: { id, name: heroName } }] },
+        { side: "RED", teamId: "b", bans: [{ name: "Y'bneth" }], participants: [] },
+      ],
+    }) as unknown as Parameters<typeof gameStatistics>[0][number]
+  const stats = gameStatistics([content("Y'bneth"), content("Y’bneth", "ybneth")])
+  const ybneth = stats.heroes.filter((entry) => nameKey(entry.name) === nameKey("Y'bneth"))
+  assert.equal(ybneth.length, 1, "statistics count one hero, not two spellings")
+  assert.equal(ybneth[0]!.picks, 2)
+  assert.equal(ybneth[0]!.bans, 2)
+  assert.equal(ybneth[0]!.name, "Y’bneth", "the catalog's spelling is shown")
+})
