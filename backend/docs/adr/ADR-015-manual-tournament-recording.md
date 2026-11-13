@@ -209,8 +209,9 @@ Quyết định:
   của ván. Bảng hiện kết quả ngay; khi dịch vụ từ chối, bảng quay về bản đã lưu và nêu lý do ngay trong bảng.
 - Phù hiệu và bảng ngọc chọn bằng ô có hình, không còn dòng trống với ô tìm, ô màu, ô cấp và ô số:
   - Bảng ngọc có ba cột Đỏ, Tím, Xanh, mỗi cột đếm số viên trên 10. Mỗi loại ngọc là một ô gồm hình và tên chỉ số,
-    đúng chữ video hiện (tên trong danh mục bỏ phần màu và cấp). Mặc định hiện cấp III; cấp I và II mở bằng nút
-    chọn cấp. Bấm một ô lấy hết số viên còn trống của màu đó, tức 10 viên ở lần bấm đầu. Màu đang đủ 10 viên của
+    đúng chữ video hiện (tên trong danh mục bỏ phần màu và cấp). Chỉ có ngọc cấp III (sửa ngày 2026-11-13: bảng
+    ngọc của tuyển thủ chỉ gồm ngọc cấp III nên bỏ nút chọn cấp); ngọc cấp thấp đã ghi từ trước vẫn hiện riêng và bỏ
+    được. Bấm một ô lấy hết số viên còn trống của màu đó, tức 10 viên ở lần bấm đầu. Màu đang đủ 10 viên của
     một loại thì bấm loại khác là đổi loại. Màu đã chia cho nhiều loại và đủ 10 viên thì phải giảm một loại trước.
     Nút − và + chỉnh từng viên; giảm về 0 là bỏ loại đó.
   - Phù hiệu chọn nhánh chính trước, rồi mỗi cấp I, II, III một ô. Bấm ô khác cùng cấp là đổi, bấm ô đang chọn là
@@ -233,3 +234,25 @@ Quyết định:
   phía trong; ở đầu bảng, hai con số hạ gục đứng sát nhau ở giữa. Thứ tự soi gương cả trong hàng biểu tượng và sáu ô
   trang bị, nên ô gần ảnh tướng nhất của hai đội là cùng một ô. Khi hai bảng xếp chồng trên màn hẹp, cả hai giữ
   cùng một chiều như cũ.
+
+## Ghi tuyển thủ và trang bị từ hàng tuyển thủ
+
+Bổ sung 2026-11-13, theo góp ý của người dùng: trang trận còn nhiều dòng "Chưa ghi tuyển thủ" mà không biết sửa ở
+đâu, và phần thêm trang bị khó tìm. Chỉ đổi giao diện Admin; hợp đồng API, luật kiểm tra và dữ liệu giữ nguyên.
+
+Nguyên nhân các dòng trống: khi nhập lịch sử từ Liquipedia, mỗi giải chỉ đọc được đội hình của đội đầu tiên, nên ghế
+của các đội còn lại không tìm được tuyển thủ theo vị trí và để trống. Đội hình đăng ký được bổ sung sau, nhưng các ván
+đã nhập không tự điền lại. Ô chọn tuyển thủ trước đây chỉ nằm trong bảng "Cấm chọn", ở phần đội hình.
+
+Quyết định:
+
+- Khi đang ghi, ghế chưa có tuyển thủ hiện nút "Ghi tuyển thủ" ở chỗ tên. Bấm mở bảng của tuyển thủ (đổi tên thành
+  "Tuyển thủ, ngọc, trang bị") đúng ghế đó. Đầu phần của mỗi ghế là ô chọn tuyển thủ trong đội hình đăng ký của đội ở
+  giải: người cùng vị trí lên đầu, đội hình chính trước dự bị, người đã rời ở cuối và có ghi chú. Đội chưa có đội
+  hình thì bảng nói rõ cần thêm ở bước "Đội & đội hình".
+- Mỗi đội có nút "Điền tuyển thủ theo đội hình" khi còn ghế trống mà đội hình có người đúng vị trí. Nút chỉ điền ghế
+  trống, chọn người đội hình chính trước dự bị, không điền người đã rời và không xếp một người vào hai ghế. Nút
+  trong bảng "Cấm chọn" dùng cùng luật. Ván có người vào thay vẫn phải sửa tay ghế đó, vì dữ liệu chưa ghi ai thay ai
+  ở ván nào.
+- Cạnh sáu ô trang bị của mỗi hàng có nút ghi trang bị, mở bảng đúng tuyển thủ ở phần "Trang bị theo mốc". Khi video
+  đã đồng bộ, ô thời gian của mốc mới lấy sẵn thời điểm đang xem và có nút lấy lại thời điểm đó.
