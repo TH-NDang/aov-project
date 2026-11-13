@@ -914,10 +914,18 @@ test("an imported hero name finds its catalog hero by code or by the checked lis
     hero("diaochan", "diaochan", "Điêu Thuyền"),
     hero("ming", "ming", "Ming"),
     hero("flowborn-mid", "flowborn-mid", "Flowborn Pháp sư"),
+    hero("helen", "helen", "Helen"),
+    hero("bolt-baron", "bolt-baron", "Bolt Baron"),
+    hero("dolia", "dolia", "Dolia"),
   ])
   assert.deepEqual(
     ["Lu Bu", "Riktor", "Diao Chan", "Ming Shiyin", "Flowborn Mage"].map((name) => lookup({ name })?.name),
     ["Lữ Bố", "Richter", "Điêu Thuyền", "Ming", "Flowborn Pháp sư"],
+  )
+  assert.deepEqual(
+    ["Payna", "Peura", "Sikong Zhen", "Doria"].map((name) => lookup({ name })?.name),
+    ["Helen", "Helen", "Bolt Baron", "Dolia"],
+    "a reworked hero and the Honor of Kings names of two others",
   )
   assert.equal(lookup({ name: "Lu Bu" })?.iconUrl, "/lu-bu.png")
   assert.equal(
