@@ -16,7 +16,7 @@ public class PlanReferences implements CompetitionReferences {
 
     @Override
     public long identityReferences(String kind, UUID id) {
-        return plans.countReferences(id.toString());
+        return plans.countReferences(kind, id.toString());
     }
 
     @Override

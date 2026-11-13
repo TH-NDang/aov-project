@@ -1,7 +1,9 @@
 package com.wikiaov.community.tournament.internal.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -769,6 +771,53 @@ class TournamentApiIntegrationTest {
         write(post(ADMIN + "/teams/" + side.teamId() + "/restore"), Map.of("version", version(deletedTeam)));
         write(post(ADMIN + "/roster-memberships/" + roster.get("id") + "/restore"),
                 Map.of("version", version(deletedRoster)));
+    }
+
+    @Test
+    void aTournamentsOwnDraftPlanGoesToTheTrashWithItWhilePublishedPlanHistoryKeepsProtectingIt() throws Exception {
+        var fixture = fixture();
+        String tournament = ADMIN + "/tournaments/" + fixture.tournamentId();
+        write(put(ADMIN + "/competitions/" + fixture.tournamentId()), Map.of("version", 0, "content", Map.of()));
+        mvc.perform(authorized(get(ADMIN + "/series/" + fixture.seriesId() + "/deletion-impact")))
+                .andExpect(jsonPath("$.canDelete").value(true));
+        mvc.perform(authorized(get(tournament + "/deletion-impact")))
+                .andExpect(jsonPath("$.usages[*].type", not(hasItem("COMPETITION_PAGE"))));
+
+        write(post(ADMIN + "/series/" + fixture.seriesId() + "/delete"), Map.of("version", 0));
+        var current = json.readValue(mvc.perform(authorized(get(tournament))).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString(), Map.class);
+        var deleted = write(post(tournament + "/delete"), Map.of("version", version(current)));
+        assertThat(planIds()).doesNotContain(fixture.tournamentId().toString());
+        var restored = write(post(tournament + "/restore"), Map.of("version", version(deleted)));
+        assertThat(planIds()).contains(fixture.tournamentId().toString());
+
+        try (var connection = DriverManager.getConnection(DATABASE.getJdbcUrl(), DATABASE.getUsername(),
+                DATABASE.getPassword());
+                var statement = connection.prepareStatement("""
+                        INSERT INTO tournament.plan_revision (id, tournament_id, content, action, actor, created_at)
+                        VALUES (?, ?, '{}'::jsonb, 'WITHDRAW', 'test-editor', now())
+                        """)) {
+            statement.setObject(1, UUID.randomUUID());
+            statement.setObject(2, fixture.tournamentId());
+            statement.executeUpdate();
+        }
+        mvc.perform(authorized(post(tournament + "/delete")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("version", version(restored)))))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("TOURNAMENT_RECORD_IN_USE"))
+                .andExpect(jsonPath("$.usages[*].type", hasItem("COMPETITION_PAGE")));
+    }
+
+    /** Every plan id the admin season list returns, page by page. */
+    private List<String> planIds() throws Exception {
+        var ids = new ArrayList<String>();
+        for (int page = 0;; page++) {
+            var slice = json.readTree(mvc.perform(authorized(get(ADMIN + "/competitions"))
+                    .param("page", String.valueOf(page)).param("size", "100"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            slice.path("items").forEach(item -> ids.add(item.path("id").asText()));
+            if (slice.path("items").isEmpty())
+                return ids;
+        }
     }
 
     @Test
