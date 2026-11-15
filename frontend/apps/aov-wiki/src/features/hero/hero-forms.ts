@@ -60,7 +60,6 @@ export function heroWithForm(hero: HeroDetail, form?: HeroFormDetail): HeroDetai
   }
 }
 
-/** The detail of the form being read, matched by key; the first form when none or an unknown key is asked for. */
 /** The scope of today's data: what the page shows outside the abilities, whichever patch is chosen. */
 export function currentScope<T extends WikiCatalogScope>(scope: T): WikiCatalogScope {
   return { region: scope.region, locale: scope.locale, seasonId: "", patchVariantId: "", includeUnscoped: false }
@@ -93,6 +92,7 @@ function skillsOf<T extends Pick<HeroDetail, "content" | "skillMedia" | "skillSt
   }
 }
 
+/** The detail of the form being read, matched by key; the first form when none or an unknown key is asked for. */
 export function selectedForm(hero: HeroDetail, formKey?: string | null) {
   const forms = hero.forms ?? []
   return forms.find((form) => form.formKey === formKey) ?? forms[0]
