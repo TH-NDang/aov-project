@@ -21,6 +21,7 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview --port 5175 --strictPort",
     "typecheck": "tsc -p tsconfig.json && tsc -p tests/tsconfig.json --noEmit",
+    "test": "tsx --tsconfig tests/tsconfig.json --import ./tests/fixtures/css-loader.mjs --test --test-force-exit --test-concurrency=2 \"tests/*.test.ts\" \"tests/*.test.tsx\"",
     "test:storage": "node --experimental-strip-types --test tests/storage.test.ts",
     "test:table": "node --experimental-strip-types --test tests/table.test.ts",
     "test:heroes": "node --experimental-strip-types --test tests/heroes.test.ts",
