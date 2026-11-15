@@ -7,7 +7,7 @@ import { HeroStatsEditor } from "./hero-stats-editor"
 import type { StatDefault } from "./combat-attributes"
 import { AssetPicker } from "./asset-picker"
 import { retainImageOptions } from "./image-options"
-import { heroRatingScale } from "./hero-rating-scale"
+import { heroRatingScale } from "@aov/ui/lib/hero-rating-scale"
 import { Field, SectionSources } from "./fields"
 import {
   SECTIONS,
