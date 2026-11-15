@@ -19,7 +19,6 @@ import org.springframework.web.context.request.WebRequest;
 import tools.jackson.databind.json.JsonMapper;
 
 @RestController
-@RequestMapping(ApiPaths.ROOT)
 public class ReferenceController implements ReferenceApi {
     private final ReferenceCatalog catalog;
     private final PublicReferenceCatalog references;
@@ -36,14 +35,14 @@ public class ReferenceController implements ReferenceApi {
         this.cache = cache;
     }
 
-    @GetMapping(path = "/admin/reference-catalog", version = "1")
+    @GetMapping(path = ApiPaths.ADMIN + "/reference-catalog", version = "1")
     public AdminReferenceCatalogView adminReferences(@RequestParam(required = false) UUID rulesetId,
             HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("rulesetId"));
         return adminReferences.read(rulesetId);
     }
 
-    @GetMapping(path = "/reference-catalog", version = "1")
+    @GetMapping(path = ApiPaths.ROOT + "/reference-catalog", version = "1")
     public ResponseEntity<ReferenceSettingsView> references(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale,
             @RequestParam(required = false) UUID seasonId, @RequestParam(required = false) UUID patchVariantId,
@@ -55,20 +54,20 @@ public class ReferenceController implements ReferenceApi {
                 : references.read(region, locale, seasonId, patchVariantId, includeUnscoped), web);
     }
 
-    @GetMapping(path = "/reference-settings", version = "1")
+    @GetMapping(path = ApiPaths.ROOT + "/reference-settings", version = "1")
     public ResponseEntity<ReferenceSettingsView> publicSettings(HttpServletRequest request, WebRequest web) {
         QueryParameters.requireOnly(request, Set.of());
         return cached(cache.read(ReadModelCache.Area.PUBLIC_TERMS, "all", ReferenceSettingsView.class,
                 catalog::readPublic), web);
     }
 
-    @GetMapping(path = "/admin/reference-settings", version = "1")
+    @GetMapping(path = ApiPaths.ADMIN + "/reference-settings", version = "1")
     public ReferenceSettingsView adminSettings(HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of());
         return catalog.readAdmin();
     }
 
-    @PutMapping(path = "/admin/reference-settings", version = "1")
+    @PutMapping(path = ApiPaths.ADMIN + "/reference-settings", version = "1")
     public ReferenceSettingsView save(@RequestBody SaveReferenceSettings request) {
         return catalog.save(request.expectedVersion(), request.settings());
     }

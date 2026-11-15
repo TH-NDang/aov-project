@@ -17,9 +17,9 @@ import com.wikiaov.gamemode.internal.application.response.GameModeViews.OwnLineu
 import com.wikiaov.gamemode.internal.application.response.GameModeViews.PublicLineup;
 import com.wikiaov.gamemode.internal.catalog.application.GameModeCatalog;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent;
-import com.wikiaov.gamemode.internal.domain.CommunityLineupRules;
-import com.wikiaov.gamemode.internal.domain.LineupInsights;
 import com.wikiaov.gamemode.internal.guide.application.AutoChessGuides;
+import com.wikiaov.gamemode.internal.lineup.domain.CommunityLineupRules;
+import com.wikiaov.gamemode.internal.lineup.domain.LineupInsights;
 import com.wikiaov.gamemode.internal.lineup.persistence.CommunityLineupRepository;
 import com.wikiaov.gamemode.internal.lineup.persistence.LineupLikeRepository;
 import com.wikiaov.gamemode.internal.lineup.persistence.entity.CommunityLineup;

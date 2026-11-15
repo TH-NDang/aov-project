@@ -1,8 +1,10 @@
-package com.wikiaov.gamemode.internal.domain;
+package com.wikiaov.gamemode.internal.lineup.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
+import com.wikiaov.gamemode.internal.domain.AutoChessFixtures;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

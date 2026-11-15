@@ -91,7 +91,7 @@ public class PatchReleaseWorkflow {
             seasons.requireRelease(seasonId, input.regionId(), input.effectiveAt());
         else
             seasons.requireReleaseDate(seasonId, input.regionId(), input.effectiveOn());
-        if (input.sourceUrl() != null && !input.sourceUrl().matches("https?://[^\s]+"))
+        if (input.sourceUrl() != null && !input.sourceUrl().matches("https?://\\S+"))
             throw invalid("Source URL must use HTTP or HTTPS.");
     }
 

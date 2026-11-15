@@ -13,8 +13,8 @@ import com.wikiaov.gamemode.internal.application.response.GameModeViews.Revision
 import com.wikiaov.gamemode.internal.catalog.application.GameModeCatalog;
 import com.wikiaov.gamemode.internal.catalog.persistence.entity.GameMode;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent;
-import com.wikiaov.gamemode.internal.domain.AutoChessContentRules;
 import com.wikiaov.gamemode.internal.domain.RevisionRecord;
+import com.wikiaov.gamemode.internal.guide.domain.AutoChessContentRules;
 import com.wikiaov.gamemode.internal.guide.persistence.AutoChessRevisionRepository;
 import com.wikiaov.gamemode.internal.guide.persistence.entity.AutoChessRevision;
 import com.wikiaov.gamemode.internal.lineup.application.LineupLikeCounts;

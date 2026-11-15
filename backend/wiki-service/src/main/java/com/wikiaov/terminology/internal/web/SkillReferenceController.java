@@ -13,7 +13,6 @@ import org.springframework.web.context.request.WebRequest;
 import tools.jackson.databind.json.JsonMapper;
 
 @RestController
-@RequestMapping(ApiPaths.ROOT)
 public class SkillReferenceController implements SkillReferenceApi {
     private final SkillReferenceCatalog catalog;
     private final JsonMapper json;
@@ -23,7 +22,7 @@ public class SkillReferenceController implements SkillReferenceApi {
         this.json = json;
     }
 
-    @GetMapping(path = "/admin/reference-skills", version = "1")
+    @GetMapping(path = ApiPaths.ADMIN + "/reference-skills", version = "1")
     public PageSlice<Candidate> admin(@RequestParam(required = false) UUID rulesetId,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID heroId, @RequestParam(required = false) String ids,
@@ -33,7 +32,7 @@ public class SkillReferenceController implements SkillReferenceApi {
         return catalog.admin(rulesetId, locale, q, heroId, ids, page, size);
     }
 
-    @GetMapping(path = "/reference-skills", version = "1")
+    @GetMapping(path = ApiPaths.ROOT + "/reference-skills", version = "1")
     public ResponseEntity<PageSlice<Candidate>> published(@RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "") String q,
             @RequestParam(required = false) UUID heroId, @RequestParam(required = false) String ids,

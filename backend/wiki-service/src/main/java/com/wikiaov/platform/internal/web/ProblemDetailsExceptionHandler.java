@@ -93,9 +93,6 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
                 new HttpHeaders(), request);
     }
 
-    // ---- Spring MVC exceptions with a precise code
-    // ------------------------------------------------------
-
     /**
      * Converters may throw ApiException (e.g. UNSUPPORTED_REGION); Spring wraps it,
      * so unwrap it here.
@@ -239,9 +236,6 @@ class ProblemDetailsExceptionHandler extends ResponseEntityExceptionHandler {
         }
         return status.is5xxServerError() ? PlatformErrorCode.INTERNAL_ERROR : PlatformErrorCode.INVALID_REQUEST;
     }
-
-    // ---- Rendering
-    // --------------------------------------------------------------------------------------
 
     private ResponseEntity<Object> render(ApiException ex, HttpHeaders headers, WebRequest request) {
         if (ex.getErrorCode().status().is5xxServerError()) {

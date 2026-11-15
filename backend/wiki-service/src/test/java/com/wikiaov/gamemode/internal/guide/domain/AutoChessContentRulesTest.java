@@ -1,12 +1,14 @@
-package com.wikiaov.gamemode.internal.domain;
+package com.wikiaov.gamemode.internal.guide.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.wikiaov.gamemode.internal.domain.AutoChessContent;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.Lineup;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupStage;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.LineupUnit;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.Trait;
 import com.wikiaov.gamemode.internal.domain.AutoChessContent.TraitTier;
+import com.wikiaov.gamemode.internal.domain.AutoChessFixtures;
 import com.wikiaov.platform.ApiFieldError;
 import java.util.ArrayList;
 import java.util.List;

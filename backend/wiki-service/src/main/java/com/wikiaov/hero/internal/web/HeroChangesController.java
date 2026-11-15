@@ -11,7 +11,6 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(ApiPaths.ROOT)
 public class HeroChangesController implements HeroChangesApi {
     private final HeroPatchChanges changes;
     private final HeroPatchDerivation derivation;
@@ -21,40 +20,40 @@ public class HeroChangesController implements HeroChangesApi {
         this.derivation = derivation;
     }
 
-    @PostMapping(path = "/admin/patch-variants/{id}/hero-changes", version = "1")
+    @PostMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, UUID> record(@PathVariable UUID id,
             @RequestBody com.wikiaov.hero.internal.domain.HeroChanges.Record body) {
         return Map.of("id", changes.record(id, body));
     }
 
-    @PutMapping(path = "/admin/hero-changes/{id}/assessment", version = "1")
+    @PutMapping(path = ApiPaths.ADMIN + "/hero-changes/{id}/assessment", version = "1")
     public Map<String, Object> assess(@PathVariable UUID id, @RequestBody HeroPatchChanges.AssessmentInput input) {
         return changes.assess(id, input);
     }
 
-    @PostMapping(path = "/admin/hero-changes/{changeSetId}/mechanics/{changeId}/previous", version = "1")
+    @PostMapping(path = ApiPaths.ADMIN + "/hero-changes/{changeSetId}/mechanics/{changeId}/previous", version = "1")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, UUID> recordPrevious(@PathVariable UUID changeSetId, @PathVariable UUID changeId,
             @RequestBody HeroPatchChanges.PreviousInput input) {
         return Map.of("id", changes.recordPrevious(changeSetId, changeId, input));
     }
 
-    @GetMapping(path = "/admin/patch-variants/{id}/hero-changes", version = "1")
+    @GetMapping(path = ApiPaths.ADMIN + "/patch-variants/{id}/hero-changes", version = "1")
     public List<Map<String, Object>> authoringChanges(@PathVariable UUID id,
             @RequestParam(defaultValue = "vi-VN") String locale, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("locale"));
         return changes.forAuthoringVariant(id, locale);
     }
 
-    @GetMapping(path = "/admin/heroes/{heroId}/patch-view", version = "1")
+    @GetMapping(path = ApiPaths.ADMIN + "/heroes/{heroId}/patch-view", version = "1")
     public HeroPatchView patchView(@PathVariable UUID heroId, @RequestParam UUID patchVariantId,
             @RequestParam(required = false) UUID anchorRevisionId, HttpServletRequest request) {
         QueryParameters.requireOnly(request, Set.of("patchVariantId", "anchorRevisionId"));
         return derivation.at(heroId, patchVariantId, anchorRevisionId);
     }
 
-    @GetMapping(path = "/heroes/{heroId}/changes", version = "1")
+    @GetMapping(path = ApiPaths.ROOT + "/heroes/{heroId}/changes", version = "1")
     public ResponseEntity<?> history(@PathVariable UUID heroId, @RequestParam(defaultValue = "VN") String region,
             @RequestParam(defaultValue = "vi-VN") String locale, @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
