@@ -32,6 +32,16 @@ export function isApiError(error: unknown, code?: string): error is ApiError {
 
 /** Vietnamese messages keyed by stable error codes. */
 const MESSAGES: Record<string, string> = {
+  SOURCE_COLLECTION_CODE_TAKEN: "Đã có bộ tệp dùng mã này. Chọn mã khác.",
+  SOURCE_COLLECTION_VERSION_CONFLICT: "Bộ tệp vừa được sửa ở nơi khác. Tải lại rồi sửa tiếp.",
+  SOURCE_FILE_PATH_TAKEN: "Đường dẫn này đã có tệp khác trong bộ. Mở tệp đó và chọn Thay tệp nếu muốn thay.",
+  SOURCE_FILE_VERSION_CONFLICT: "Tệp vừa thay đổi ở nơi khác. Tải lại rồi thử lại.",
+  SOURCE_FILE_TYPE_NOT_ALLOWED: "Loại tệp này không được lưu trong kho riêng tư.",
+  SOURCE_FILE_TOO_LARGE: "Tệp quá lớn để tải lên. Dùng công cụ đồng bộ dòng lệnh cho tệp lớn.",
+  SOURCE_UPLOAD_REJECTED: "Tệp tải lên không khớp với tệp đã chọn (nội dung, dung lượng hoặc loại). Chọn lại tệp.",
+  SOURCE_UPLOAD_NOT_UPLOADED: "Tệp chưa lên tới kho. Thử tải lên lại.",
+  SOURCE_OBJECT_IN_USE: "Bytes này vẫn được một tệp hoặc bản ghi dùng, nên không xóa được.",
+  SOURCE_OBJECT_BUSY: "Bytes giống hệt đang được xóa. Chờ một lát rồi thử lại.",
   MEDIA_ASSET_IN_USE: "Ảnh còn được sử dụng trong dữ liệu, bản nháp hoặc lịch sử. Gỡ liên kết trước khi xoá.",
   MEDIA_UPLOAD_IN_PROGRESS: "Ảnh đang được tải lên. Chờ hoàn tất rồi thử lại.",
   MEDIA_ASSET_VERSION_CONFLICT: "Ảnh vừa thay đổi. Kiểm tra thông tin mới và xác nhận lại trước khi xoá.",

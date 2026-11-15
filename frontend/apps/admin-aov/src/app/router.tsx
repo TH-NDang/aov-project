@@ -73,9 +73,9 @@ const routes: RouteObject[] = [
           },
           {
             path: "image-management",
-            handle: title("Quản lý ảnh"),
+            handle: title("Quản lý tệp"),
             lazy: async () => ({
-              Component: (await import("@/features/media/image-management-page")).ImageManagementPage,
+              Component: (await import("@/features/files/file-management-page")).FileManagementPage,
             }),
           },
           {

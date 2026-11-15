@@ -89,7 +89,7 @@ export function ImageCreditPanel({
               className="ml-auto inline-flex items-center gap-1 text-primary hover:underline"
             >
               <PencilLine aria-hidden className="size-3" />
-              {gap === "none" ? "Xem trong Quản lý ảnh" : "Bổ sung trong Quản lý ảnh"}
+              {gap === "none" ? "Xem trong Quản lý tệp" : "Bổ sung trong Quản lý tệp"}
             </Link>
           )}
         </div>
