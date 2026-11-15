@@ -1,4 +1,5 @@
 import { Link } from "react-router"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { ChangeKindLabel } from "../../components/patch-changes-row"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { changeKind, publishedNotesForSubject } from "../../lib/published-change-subjects"
@@ -21,31 +22,26 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
   const error = changes.failed || scope.optionsError
   if (!patches.length && !error) return null
   return (
-    <section className="space-y-3">
-      <h3 className="type-section-title">{t("Thay đổi theo phiên bản", "Changes by version")}</h3>
+    <section>
+      <h3>{t("Thay đổi theo phiên bản", "Changes by version")}</h3>
       {patches.map(({ variant, rows }) => (
-        <div key={variant.id} className="space-y-1">
-          <div className="flex flex-wrap items-baseline gap-x-2">
-            <h4 className="type-label">
-              <Link to={scope.href(`/updates/${variant.code}`)} className="hover:text-primary">
-                {variant.code}
-              </Link>
-            </h4>
-            <span className="type-meta">{seasons.get(variant.seasonId)?.displayName}</span>
-          </div>
-          <ul className="divide-y border-y">
+        <div key={variant.id} className="wiki-warehouse-update">
+          <h4>
+            <Link to={scope.href(`/updates/${variant.code}`)}>
+              {/* A version goes by the day it took effect, as the version picker names it. */}
+              <LocalTime value={variant.regionalDate} locale={scope.locale} fallback={variant.title || variant.code} />
+            </Link>
+            <small>{seasons.get(variant.seasonId)?.displayName}</small>
+          </h4>
+          <ul>
             {rows.map((row, i) => (
-              <li key={row.changeSetId ?? row.id ?? i} className="space-y-1 py-2">
-                <strong className="type-label">
+              <li key={row.changeSetId ?? row.id ?? i}>
+                <strong>
                   <ChangeKindLabel kind={changeKind(row) ?? "UPDATED"} />
                 </strong>
-                {row.summary && (
-                  <p lang={row.actualLocale ?? undefined} className="type-body whitespace-pre-line">
-                    {row.summary}
-                  </p>
-                )}
+                {row.summary && <p lang={row.actualLocale ?? undefined}>{row.summary}</p>}
                 {row.sourceUrl && /^https?:\/\//i.test(row.sourceUrl) && (
-                  <a href={row.sourceUrl} target="_blank" rel="noopener noreferrer" className="type-meta underline">
+                  <a href={row.sourceUrl} target="_blank" rel="noopener noreferrer">
                     {t("Nguồn công bố", "Publication source")}
                   </a>
                 )}
@@ -55,11 +51,10 @@ export function WarehouseUpdates({ entry }: { entry: PublishedWarehouseRecord })
         </div>
       ))}
       {error && (
-        <p role="status" className="type-meta">
+        <p role="status" className="wiki-warehouse-detail-note">
           {t("Chưa tải được hết ghi chú.", "Some notes could not be loaded.")}{" "}
           <button
             type="button"
-            className="underline"
             onClick={() => {
               if (scope.optionsError) void scope.retryOptions()
               changes.retry()

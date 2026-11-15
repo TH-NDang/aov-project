@@ -1,53 +1,22 @@
 .wiki-library-shell {
-  --library-surface: var(--aov-surface);
   position: relative;
   isolation: isolate;
   flex: 1;
   min-height: 100svh;
 }
-.wiki-library-shell::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  inset: 0 0 auto;
-  height: 420px;
-  background: radial-gradient(70% 100% at 50% 0%, var(--aov-accent-soft), transparent);
-  pointer-events: none;
-}
-.wiki-library-body {
-  display: grid;
-  width: min(100%, 1280px);
-  min-height: calc(100svh - 48px);
-  grid-template-columns: 216px minmax(0, 1fr);
-  margin-inline: auto;
-  padding-inline: var(--wiki-gutter);
-}
 
-.wiki-library-sidebar {
-  position: sticky;
-  top: 48px;
-  align-self: start;
-  height: calc(100svh - 48px);
-  overflow-y: auto;
-  border-inline-end: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 26%, transparent);
-}
-
-.wiki-library-sidebar > h2 {
-  font: var(--wiki-type-section);
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--aov-line);
-  color: var(--aov-text-soft);
-}
-
+/* A page of the library: centered, as wide as the product allows. The sections live in the header. */
 .wiki-library-main {
-  min-width: 0;
-  padding: clamp(14px, 1.8vw, 24px) 0 48px clamp(16px, 2.2vw, 32px);
+  width: min(100%, var(--aov-page-max));
+  min-height: calc(100svh - var(--wiki-header-height));
+  margin-inline: auto;
+  padding: 20px var(--wiki-gutter) 56px;
   outline: none;
 }
 .wiki-library-main-compact {
-  --public-tab-bar-top: 48px;
+  --public-tab-bar-top: var(--wiki-header-height);
   min-width: 0;
-  min-height: calc(100svh - 48px);
+  min-height: calc(100svh - var(--wiki-header-height));
   padding: 12px var(--wiki-gutter) 24px;
   outline: none;
 }
@@ -59,30 +28,4 @@
 .wiki-hero-detail-main {
   min-width: 0;
   outline: none;
-}
-
-@media (min-width: 1600px) {
-  .wiki-library-body {
-    width: min(100%, 1360px);
-  }
-}
-
-.wiki-catalog-heading {
-  padding: 0 0 12px;
-}
-.wiki-catalog-heading nav {
-  font: var(--wiki-type-meta);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--wiki-muted);
-}
-.wiki-catalog-heading nav a:hover {
-  color: var(--gold);
-}
-.wiki-catalog-heading h1 {
-  font: var(--wiki-type-page);
-  margin-top: 5px;
-  color: var(--wiki-text);
-  letter-spacing: -0.02em;
 }

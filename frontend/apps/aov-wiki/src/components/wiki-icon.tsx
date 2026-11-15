@@ -48,22 +48,11 @@ const PATHS = {
       <circle cx="18" cy="19" r="2" />
     </>
   ),
-  collection: (
-    <>
-      <rect x="6" y="6" width="13" height="16" rx="2" />
-      <path d="M15 3H5a2 2 0 0 0-2 2v13m9-8 3 4-3 4-3-4Z" />
-    </>
-  ),
-  book: (
-    <>
-      <path d="M5 4h12a2 2 0 0 1 2 2v14H7a3 3 0 0 1-3-3V5a1 1 0 0 1 1-1Z" />
-      <path d="M7 4v13m-3 0h15m-9-9h6m-6 4h4" />
-    </>
-  ),
+  /** A cut gem: a skin's grade. Girdle and two facets only, so it still reads at 16px. */
   badge: (
     <>
-      <path d="m12 3 8 5v7l-8 6-8-6V8Z" />
-      <path d="m12 7 2 3 3 1-2 3v3l-3-1-3 1v-3l-2-3 3-1Z" />
+      <path d="M7 4h10l4.5 5.5L12 20.5 2.5 9.5Z" />
+      <path d="M2.5 9.5h19M9.5 4 8 9.5l4 11 4-11L14.5 4" />
     </>
   ),
   search: (
@@ -90,8 +79,8 @@ const PATHS = {
   ),
   coins: (
     <>
-      <circle cx="9" cy="9" r="6" />
-      <path d="M17.5 10.5a6 6 0 1 1-7 7" />
+      <circle cx="8.25" cy="8.25" r="6" />
+      <path d="M16.75 9.75a6 6 0 1 1-7 7" />
     </>
   ),
   spark: <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z" />,
@@ -118,17 +107,16 @@ const PATHS = {
       <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
     </>
   ),
-  chevron: <path d="m8 10 4 4 4-4" />,
-  chevronRight: <path d="m10 8 4 4-4 4" />,
-  chevronLeft: <path d="m14 8-4 4 4 4" />,
+  chevron: <path d="m7 9.5 5 5 5-5" />,
+  chevronRight: <path d="m9.5 7 5 5-5 5" />,
+  chevronLeft: <path d="m14.5 7-5 5 5 5" />,
   rows: <path d="M4 7h16M4 12h16M4 17h16" />,
   copy: <path d="M9 9h10v11H9zM6 15H5V4h10v1" />,
   plus: <path d="M12 5v14M5 12h14" />,
   share: <path d="M4 13v6h16v-6M12 3v12M7.5 7.5 12 3l4.5 4.5" />,
-  trash: <path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6" />,
   /** A broom, tilted as if sweeping: handle, binding, a fanned head with bristles. Clears without deleting. */
   broom: (
-    <g transform="translate(12 12) rotate(30) scale(0.9) translate(-12 -12)">
+    <g transform="translate(14.3 10.9) rotate(30) scale(0.9) translate(-12 -12)">
       <path d="M12 2v8.5" />
       <path d="M8.5 10.5h7l.5 2.5H8Z" />
       <path d="M8 13 5.5 21h13L16 13" />
@@ -165,12 +153,6 @@ const PATHS = {
     </>
   ),
   contents: <path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1" />,
-  map: (
-    <>
-      <path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2Zm6-2v14m6-12v14" />
-      <path d="m5 13 2-3m4-1 2 3m4 2 2-3" />
-    </>
-  ),
 } satisfies Record<string, ReactNode>
 export type WikiIconName = keyof typeof PATHS | SectionIcon
 

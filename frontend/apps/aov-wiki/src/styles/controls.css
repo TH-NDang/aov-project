@@ -1,0 +1,114 @@
+/* The Wiki's form fields and plain buttons: the contact page, the feedback dialog, the account page and page states. */
+.wiki-field {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 6px;
+}
+.wiki-field-label {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-input {
+  font: var(--wiki-type-body);
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 7px 12px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  transition:
+    border-color 160ms,
+    background 160ms;
+}
+.wiki-input::placeholder {
+  color: var(--aov-muted);
+}
+.wiki-input:hover:not(:disabled) {
+  border-color: var(--aov-line-strong);
+}
+/* A gold ring two pixels wide marks the field being typed in. */
+.wiki-input:focus {
+  border-color: var(--aov-accent);
+  outline: none;
+  background: var(--aov-sunken);
+  box-shadow: 0 0 0 1px var(--aov-accent);
+}
+.wiki-input:disabled {
+  opacity: 0.6;
+}
+textarea.wiki-input {
+  min-height: 132px;
+  resize: vertical;
+}
+/* A native select with the Wiki's chevron in place of the browser's arrow. */
+.wiki-select {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+.wiki-select > select {
+  appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+}
+.wiki-select > select option {
+  background: var(--aov-popover);
+  color: var(--aov-text);
+}
+.wiki-select > svg {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  color: var(--aov-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.wiki-button {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  padding: 0 16px;
+  background: transparent;
+  color: var(--aov-text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background 160ms,
+    border-color 160ms;
+}
+.wiki-button:hover:not(:disabled) {
+  background: var(--aov-raised);
+}
+/* The one main action of a form or a dialog. */
+.wiki-button[data-primary] {
+  border-color: transparent;
+  background: var(--aov-accent);
+  color: var(--aov-on-accent);
+}
+.wiki-button[data-primary]:hover:not(:disabled) {
+  background: var(--aov-accent-strong);
+}
+.wiki-button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+@media (max-width: 899.98px) {
+  /* Below 16px, iPhones zoom the whole page when a field takes focus. */
+  .wiki-input {
+    font-size: 16px;
+  }
+  .wiki-input,
+  .wiki-button {
+    min-height: 44px;
+  }
+}

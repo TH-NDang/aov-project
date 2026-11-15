@@ -13,7 +13,7 @@
   --wiki-type-meta: 400 0.8125rem/1.125rem var(--wiki-font-reading);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 899.98px) {
   :root {
     --wiki-type-page: 700 1.375rem/1.75rem var(--wiki-font-reading);
     --wiki-type-section: 600 1.0625rem/1.4375rem var(--wiki-font-reading);
@@ -28,20 +28,16 @@
   }
 }
 
-/* Reuse the same reading roles for shared catalog components and public pages. */
+/* Reuse the same reading roles for shared catalog components and public pages; section titles are gold in the Wiki. */
 .type-section-title {
   font: var(--wiki-type-section);
+  color: var(--aov-accent);
 }
 
 .type-body {
   font: var(--wiki-type-body);
 }
 
-.wiki-type-prose {
-  font: var(--wiki-type-prose);
-}
-
-.type-meta,
-.wiki-type-meta {
+.type-meta {
   font: var(--wiki-type-meta);
 }

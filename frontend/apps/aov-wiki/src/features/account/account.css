@@ -1,0 +1,35 @@
+/* The account page: its head on the page column, then the settings in a reading column under it. */
+.wiki-account-page {
+  width: min(100%, var(--aov-page-max));
+  flex: 1;
+  margin-inline: auto;
+  padding: 20px var(--wiki-gutter) 56px;
+  outline: none;
+}
+.wiki-account-page > .public-account-security {
+  max-width: 760px;
+}
+/* The shared settings take the Wiki's page title and its flat cards. */
+.wiki-account-page .public-account-security h1 {
+  font: var(--wiki-type-page);
+  letter-spacing: -0.02em;
+}
+.wiki-account-page .pas-section {
+  border-color: transparent;
+}
+.wiki-account-signin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+.wiki-account-signin p {
+  font: var(--wiki-type-body);
+  color: var(--aov-danger);
+}
+
+@media (max-width: 899.98px) {
+  .wiki-account-page {
+    padding: 12px var(--wiki-gutter) 32px;
+  }
+}

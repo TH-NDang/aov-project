@@ -1,0 +1,36 @@
+/* Every section of the Wiki in its group, as the contents sheet of the compact header lists them. */
+.wiki-library-navigation {
+  font: var(--wiki-type-body);
+  padding: 0 12px;
+}
+.wiki-library-nav-group {
+  margin: 18px 0;
+}
+.wiki-library-nav-group h3 {
+  font: var(--wiki-type-meta);
+  padding: 0 10px 8px;
+  color: var(--aov-muted);
+  font-weight: 600;
+}
+.wiki-library-nav-link {
+  font: var(--wiki-type-body);
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 10px;
+  border-radius: var(--aov-radius-control);
+  padding: 6px 10px;
+  color: var(--aov-text);
+  text-decoration: none;
+}
+.wiki-library-nav-link svg {
+  flex: none;
+}
+.wiki-library-nav-link:hover {
+  background: var(--aov-raised);
+}
+.wiki-library-nav-link[aria-current="page"] {
+  background: color-mix(in srgb, var(--aov-accent) 10%, transparent);
+  color: var(--aov-accent);
+  box-shadow: inset 2px 0 var(--aov-accent);
+}

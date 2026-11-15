@@ -2,13 +2,13 @@ import { type CSSProperties, type ReactNode } from "react"
 import { Outlet, useLocation, useMatch } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { WikiHeader } from "../components/wiki-header"
-import { LibraryNavigation } from "./library-navigation"
 import { warehouseKind } from "../features/warehouse/warehouse-types"
 import "./wiki-library-layout.css"
 import { useWikiContext } from "../context/wiki-context"
 import { libraryPageMeta, type PageMeta } from "../lib/seo/page-meta"
 import { usePageHead } from "../lib/seo/use-page-head"
 
+/** The frame of every list and reference page: the header with the sections, then the page at full width. */
 export function WikiLibraryLayout() {
   const { t, locale } = useWikiContext()
   const layout = usePageLayout()
@@ -19,17 +19,18 @@ export function WikiLibraryLayout() {
   const isTerms = useMatch("/terms/*")
   const isModes = useMatch("/modes/*")
   const isModeDetail = useMatch("/modes/:code/*")
-  const isHeroList = useMatch("/hero")
-  const searchScope = isWarehouse ? "warehouse" : isSkins ? "skins" : "heroes"
+  const isPatchDetail = useMatch("/updates/:patchCode")
   const active = isModes
     ? "modes"
     : isTerms
       ? "terms"
       : isUpdates
         ? "updates"
-        : searchScope === "warehouse"
+        : isWarehouse
           ? warehouseKind(pathname.split("/")[2] ?? null)
-          : searchScope
+          : isSkins
+            ? "skins"
+            : "heroes"
   const pageTitle = t(active)
   usePageHead(libraryPageMeta(pathname, locale))
 
@@ -37,28 +38,21 @@ export function WikiLibraryLayout() {
     <div className="wiki-library-shell">
       {/* On the compact layout the armory's parts are tabs below the header, which names the whole armory. */}
       {/* A mode's page opens on its cover, so on phones the header starts clear over it and darkens on scroll. */}
+      {/* One mode or one update names itself in its own h1; the header then only says which section it belongs to. */}
       <WikiHeader
         variant={layout === "compact" && isModeDetail ? "hero" : "library"}
         pageTitle={layout === "compact" && isWarehouse ? t("warehouse") : pageTitle}
+        pageTitleIsHeading={!isModeDetail && !isPatchDetail}
         section={active}
-        searchScope={searchScope}
-        ownSearch={!!(isHeroList || isSkins || isWarehouse)}
       />
-      {layout === "compact" ? (
-        <main id="main" className="wiki-library-main-compact" data-cover={isModeDetail ? "" : undefined} tabIndex={-1}>
-          <Outlet />
-        </main>
-      ) : (
-        <div className="wiki-library-body">
-          <aside className="wiki-library-sidebar" aria-label={t("contents")}>
-            <h2>{t("contents")}</h2>
-            <LibraryNavigation active={active} />
-          </aside>
-          <main id="main" className="wiki-library-main" tabIndex={-1}>
-            <Outlet />
-          </main>
-        </div>
-      )}
+      <main
+        id="main"
+        className={layout === "compact" ? "wiki-library-main-compact" : "wiki-library-main"}
+        data-cover={layout === "compact" && isModeDetail ? "" : undefined}
+        tabIndex={-1}
+      >
+        <Outlet />
+      </main>
     </div>
   )
 }

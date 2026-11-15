@@ -1,12 +1,15 @@
-import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
-import { usePublishedChanges } from "../../lib/wiki-patch-changes"
-import { CatalogHeading } from "../../layout/catalog-heading"
-import { useState } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { Link, useSearchParams } from "react-router"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@aov/ui/components/tooltip"
-import { heroCatalogQuery, type HeroListItem } from "./hero-api"
-import { heroFormPath, heroSearchTexts } from "./hero-forms"
+import { useSearchParams } from "react-router"
+import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
+import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
+import { PatchChangesRow, type ChangedSubject } from "../../components/patch-changes-row"
+import { WikiIcon } from "../../components/wiki-icon"
+import { WikiVersionPicker } from "../../components/wiki-version-picker"
+import { useWikiContext, wikiText } from "../../context/wiki-context"
+import { CatalogHeading } from "../../layout/catalog-heading"
+import { usePublishedChanges } from "../../lib/wiki-patch-changes"
+import { heroCatalogQuery } from "./hero-api"
+import { HeroCard } from "./hero-card"
 import {
   HERO_POSITIONS,
   HERO_ROLES,
@@ -15,18 +18,13 @@ import {
   selectedHeroFilters,
   type HeroFilterOption,
 } from "./hero-classifications"
+import { HeroFilterChips } from "./hero-filter-chips"
+import { heroFormPath, heroSearchTexts } from "./hero-forms"
 import { HeroGlyph } from "./hero-glyph"
 import { HeroGridSkeleton } from "./hero-loading"
-import { WikiImage } from "../../components/wiki-image"
-import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
-import { WikiIcon } from "../../components/wiki-icon"
 import "./hero-directory.css"
-import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { WikiVersionPicker } from "../../components/wiki-version-picker"
-import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
-import { PublicFilterSheet } from "@aov/ui/components/public-filter-sheet"
 
-/** The same choices with their names written out, as a touch screen has no tooltip to explain an icon. */
+/** A filter group inside the bottom sheet: large targets in two columns, each with its mark and name. */
 function FilterSheetChoices<Value extends string>({
   label,
   options,
@@ -59,119 +57,6 @@ function FilterSheetChoices<Value extends string>({
   )
 }
 
-function FilterChoices<Value extends string>({
-  label,
-  options,
-  selected,
-  onToggle,
-}: {
-  label: string
-  options: readonly HeroFilterOption<Value>[]
-  selected: readonly Value[]
-  onToggle: (value: Value) => void
-}) {
-  const { locale } = useWikiContext()
-  return (
-    <div className="wiki-hero-filter-row">
-      <div className="wiki-hero-filter-label">
-        <span>{label}</span>
-      </div>
-      <div
-        className="wiki-hero-filter-choices"
-        role="group"
-        aria-label={wikiText(locale, `Lọc theo ${label.toLowerCase()}`, `Filter by ${label.toLowerCase()}`)}
-      >
-        {options.map((option) => (
-          <Tooltip key={option.value}>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                className="wiki-hero-filter-chip"
-                aria-label={option.label}
-                aria-pressed={selected.includes(option.value)}
-                onClick={() => onToggle(option.value)}
-              >
-                <HeroGlyph name={option.glyph} />
-                <span className="sr-only">{option.label}</span>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={6}>
-              {option.label}
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function HeroCard({ hero, from }: { hero: HeroListItem; from: string }) {
-  const { href, locale } = useWikiContext()
-  const [failedUrls, setFailedUrls] = useState<string[]>([])
-  const portraitUrl = hero.portrait?.currentVersion?.url
-  const imageUrl = [portraitUrl, hero.head?.currentVersion?.url].find((url) => url && !failedUrls.includes(url))
-  const media = imageUrl === portraitUrl ? hero.portrait : hero.head
-  const roles = localizedHeroOptions(HERO_ROLES, locale).filter((role) => hero.roles.includes(role.value))
-
-  return (
-    <div className="relative">
-      <Link
-        className="wiki-hero-card"
-        data-role={hero.roles[0]}
-        to={href(`/hero/${hero.code}`)}
-        state={{ from }}
-        aria-label={`${hero.name}${roles.length ? ` — ${roles.map((role) => role.label).join(", ")}` : ""}`}
-      >
-        <div className="wiki-hero-card-portrait" data-image-kind={imageUrl === portraitUrl ? "portrait" : "head"}>
-          {imageUrl ? (
-            <WikiImage
-              src={imageUrl}
-              focus={media?.currentVersion?.focalPoint}
-              alt=""
-              width="140"
-              height="160"
-              loading="lazy"
-              decoding="async"
-              onError={() => setFailedUrls((current) => [...current, imageUrl])}
-            />
-          ) : (
-            <span className="wiki-hero-card-placeholder" aria-hidden="true">
-              {hero.name.charAt(0)}
-            </span>
-          )}
-        </div>
-        <div className="wiki-hero-card-body">
-          <span className="wiki-hero-card-name">
-            {hero.name}
-            {hero.unscopedBaseline && (
-              <span className="block wiki-type-meta text-muted-foreground">
-                {wikiText(locale, "Chưa rõ mốc", "Undated baseline")}
-              </span>
-            )}
-          </span>
-          {!!roles.length && (
-            <span className="wiki-hero-card-roles" aria-hidden="true">
-              {roles.slice(0, 2).map((role) => (
-                <span key={role.value} title={role.label}>
-                  <HeroGlyph name={role.glyph} />
-                  <span className="wiki-hero-card-role-label">{role.label}</span>
-                </span>
-              ))}
-            </span>
-          )}
-        </div>
-      </Link>
-      {imageUrl && media?.currentVersion && (
-        <ImageCredit
-          className="top-2 right-2 bottom-auto"
-          sources={media.currentVersion.sources}
-          contactHref={`/contact?assetId=${media.assetId}&versionId=${media.currentVersion.versionId}`}
-        />
-      )}
-    </div>
-  )
-}
-
 export function HeroDirectory() {
   const scope = useWikiContext()
   const layout = usePageLayout()
@@ -184,16 +69,17 @@ export function HeroDirectory() {
   const positions = selectedHeroFilters(searchParams.get("position"), HERO_POSITIONS)
   const hasFilters = ["q", "role", "position"].some((key) => searchParams.has(key))
   const needle = normalizedHeroSearch(search)
-  const visibleHeroes = (query.data?.items || []).filter((hero) => {
+  const heroes = query.data?.items ?? []
+  const visibleHeroes = heroes.filter((hero) => {
     const matchesSearch = !needle || normalizedHeroSearch(heroSearchTexts(hero).join(" ")).includes(needle)
     const matchesRole = !roles.length || roles.some((role) => hero.roles.includes(role))
     const matchesPosition = !positions.length || positions.some((position) => hero.positions?.includes(position))
     return matchesSearch && matchesRole && matchesPosition
   })
-  const publishedHeroes = new Map(query.data?.items.map((hero) => [hero.id, hero]))
+  const publishedHeroes = new Map(heroes.map((hero) => [hero.id, hero]))
   // Changes are recorded per form, so a form's change opens that form on its hero's page (ADR-024).
   const publishedForms = new Map(
-    query.data?.items.flatMap((hero) => (hero.forms ?? []).map((form) => [form.id, { hero, form }] as const)),
+    heroes.flatMap((hero) => (hero.forms ?? []).map((form) => [form.id, { hero, form }] as const)),
   )
   const visibleIds = new Set(visibleHeroes.map((hero) => hero.id))
   const changed: ChangedSubject[] = []
@@ -238,6 +124,12 @@ export function HeroDirectory() {
 
   const currentFilters = searchParams.toString()
   const returnPath = `/hero${currentFilters ? `?${currentFilters}` : ""}`
+  const laneLabel = wikiText(locale, "Vị trí", "Lane")
+  const roleLabel = wikiText(locale, "Vai trò", "Role")
+  const laneOptions = localizedHeroOptions(HERO_POSITIONS, locale)
+  const roleOptions = localizedHeroOptions(HERO_ROLES, locale)
+  const filtersLabel = wikiText(locale, "Bộ lọc tướng", "Hero filters")
+  const picker = <WikiVersionPicker changedVariants={changes.changedVariants} />
   const searchBox = (
     <label className="wiki-hero-search">
       <WikiIcon name="search" size={18} />
@@ -251,88 +143,68 @@ export function HeroDirectory() {
       />
     </label>
   )
+  const found = visibleHeroes.length
 
   return (
     <div className="wiki-hero-directory">
-      <CatalogHeading title={wikiText(locale, "Thư viện Tướng", "Hero library")} section={t("characters")} />
-      <WikiVersionPicker changedVariants={changes.changedVariants} />
+      <CatalogHeading title={wikiText(locale, "Thư viện Tướng", "Hero library")} action={picker} />
       {layout === "compact" ? (
-        <section
-          className="wiki-hero-toolbar-compact public-panel"
-          aria-label={wikiText(locale, "Bộ lọc tướng", "Hero filters")}
-        >
-          {searchBox}
-          <PublicFilterSheet
-            title={wikiText(locale, "Lọc tướng", "Filter heroes")}
-            triggerLabel={wikiText(locale, "Lọc", "Filter")}
-            count={roles.length + positions.length}
-            resetLabel={wikiText(locale, "Xóa lọc", "Clear")}
-            onReset={() => clearFilters(["role", "position"])}
-            resultLabel={wikiText(
-              locale,
-              `Xem ${visibleHeroes.length} tướng`,
-              `Show ${visibleHeroes.length} ${visibleHeroes.length === 1 ? "hero" : "heroes"}`,
-            )}
-          >
-            <FilterSheetChoices
-              label={wikiText(locale, "Vị trí", "Lane")}
-              options={localizedHeroOptions(HERO_POSITIONS, locale)}
-              selected={positions}
-              onToggle={(value) => toggleFilter("position", value, positions)}
-            />
-            <FilterSheetChoices
-              label={wikiText(locale, "Vai trò", "Role")}
-              options={localizedHeroOptions(HERO_ROLES, locale)}
-              selected={roles}
-              onToggle={(value) => toggleFilter("role", value, roles)}
-            />
-          </PublicFilterSheet>
-        </section>
-      ) : (
-        <section
-          className="wiki-hero-filters public-panel wiki-slip"
-          aria-label={wikiText(locale, "Bộ lọc tướng", "Hero filters")}
-        >
-          <div className="wiki-hero-filter-tools">
+        <>
+          <section className="wiki-hero-toolbar-compact" aria-label={filtersLabel}>
             {searchBox}
-            {hasFilters && (
-              <button
-                className="wiki-hero-clear"
-                type="button"
-                onClick={() => clearFilters()}
-                aria-label={wikiText(locale, "Xóa bộ lọc", "Clear filters")}
-                title={wikiText(locale, "Xóa bộ lọc", "Clear filters")}
-              >
-                <WikiIcon name="close" size={14} /> {wikiText(locale, "Xóa lọc", "Clear filters")}
-              </button>
-            )}
-            {query.data && (
-              <span className="wiki-hero-result-count" role="status" aria-live="polite">
-                {visibleHeroes.length} {wikiText(locale, "tướng", visibleHeroes.length === 1 ? "hero" : "heroes")}
-              </span>
-            )}
-          </div>
-          <TooltipProvider delayDuration={180}>
-            <FilterChoices
-              label={wikiText(locale, "Vị trí", "Lane")}
-              options={localizedHeroOptions(HERO_POSITIONS, locale)}
+            <PublicFilterSheet
+              title={wikiText(locale, "Lọc tướng", "Filter heroes")}
+              triggerLabel={wikiText(locale, "Lọc", "Filter")}
+              count={roles.length + positions.length}
+              resetLabel={wikiText(locale, "Xóa lọc", "Clear")}
+              onReset={() => clearFilters(["role", "position"])}
+              resultLabel={wikiText(locale, `Xem ${found} tướng`, `Show ${found} ${found === 1 ? "hero" : "heroes"}`)}
+            >
+              <FilterSheetChoices
+                label={laneLabel}
+                options={laneOptions}
+                selected={positions}
+                onToggle={(value) => toggleFilter("position", value, positions)}
+              />
+              <FilterSheetChoices
+                label={roleLabel}
+                options={roleOptions}
+                selected={roles}
+                onToggle={(value) => toggleFilter("role", value, roles)}
+              />
+            </PublicFilterSheet>
+          </section>
+          {/* Under the search, as on every list: the version is read once, the search is used all the time. */}
+          <div className="wiki-hero-version">{picker}</div>
+        </>
+      ) : (
+        <section className="wiki-hero-controls" aria-label={filtersLabel}>
+          {searchBox}
+          <div className="wiki-hero-filter-groups">
+            <HeroFilterChips
+              label={laneLabel}
+              options={laneOptions}
               selected={positions}
               onToggle={(value) => toggleFilter("position", value, positions)}
             />
-            <FilterChoices
-              label={wikiText(locale, "Vai trò", "Role")}
-              options={localizedHeroOptions(HERO_ROLES, locale)}
+            <HeroFilterChips
+              label={roleLabel}
+              options={roleOptions}
               selected={roles}
               onToggle={(value) => toggleFilter("role", value, roles)}
             />
-          </TooltipProvider>
+          </div>
         </section>
       )}
 
-      <PatchChangesRow entries={changed} failed={changes.failed} retry={changes.retry} />
-      {query.isPending ? (
-        <HeroGridSkeleton />
-      ) : query.isError && !query.data ? (
+      {/* The changed heroes wait for the list, which gives them their pictures and their pages. */}
+      <PatchChangesRow
+        entries={query.isPending ? [] : changed}
+        pending={changes.pending || query.isPending}
+        failed={changes.failed}
+        retry={changes.retry}
+      />
+      {query.isError && !query.data ? (
         <div className="wiki-hero-list-state" role="status">
           <h2>{wikiText(locale, "Chưa thể tải thư viện Tướng", "Could not load the hero library")}</h2>
           <p>{wikiText(locale, "Vui lòng kiểm tra kết nối và thử lại.", "Check your connection and try again.")}</p>
@@ -340,7 +212,7 @@ export function HeroDirectory() {
             {t("retry")}
           </button>
         </div>
-      ) : !visibleHeroes.length ? (
+      ) : query.data && !found ? (
         <div className="wiki-hero-list-state" role="status">
           <h2>
             {hasFilters
@@ -359,17 +231,35 @@ export function HeroDirectory() {
           )}
         </div>
       ) : (
-        <>
-          <h2 className="mb-2 type-section-title">
-            {wikiText(locale, "Tất cả tướng", "All heroes")}
-            {layout === "compact" && <span className="wiki-hero-grid-count">{visibleHeroes.length}</span>}
-          </h2>
-          <div className="wiki-hero-grid">
-            {visibleHeroes.map((hero) => (
-              <HeroCard hero={hero} from={returnPath} key={hero.id} />
-            ))}
-          </div>
-        </>
+        <section aria-labelledby="wiki-hero-list-title">
+          <header className="wiki-hero-list-heading">
+            <h2 id="wiki-hero-list-title">
+              {hasFilters ? wikiText(locale, "Kết quả", "Results") : wikiText(locale, "Tất cả tướng", "All heroes")}
+            </h2>
+            {query.data && (
+              <small role="status">
+                {hasFilters
+                  ? wikiText(locale, `${found}/${heroes.length} tướng`, `${found} of ${heroes.length} heroes`)
+                  : found}
+              </small>
+            )}
+            {hasFilters && (
+              <button type="button" className="wiki-hero-clear" onClick={() => clearFilters()}>
+                <WikiIcon name="close" size={14} />
+                {wikiText(locale, "Xóa bộ lọc", "Clear filters")}
+              </button>
+            )}
+          </header>
+          {query.data ? (
+            <div className="wiki-hero-grid">
+              {visibleHeroes.map((hero) => (
+                <HeroCard key={hero.id} hero={hero} from={returnPath} credit />
+              ))}
+            </div>
+          ) : (
+            <HeroGridSkeleton />
+          )}
+        </section>
       )}
     </div>
   )

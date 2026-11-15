@@ -3,13 +3,12 @@ import { useLocation, useSearchParams } from "react-router"
 import { useQuery } from "@tanstack/react-query"
 import { EntityRichText } from "@aov/ui/components/entity-rich-text"
 import { gameplayIcons } from "@aov/ui/components/gameplay-icons"
-import { OrnateDivider, OrnatePanel } from "../../components/ornate-panel"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { createEntityIndex } from "@aov/ui/lib/entity-rich-text"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
-import { FeedbackDialog } from "../../layout/feedback-dialog"
+import { FeedbackDialog } from "../../components/feedback-dialog"
 import { HeroHistory } from "./hero-history"
-import { HeroVersionChanges, useHeroVersion } from "./hero-version-changes"
+import { HeroVersionChanges, HeroVersionUnchanged, useHeroVersion } from "./hero-version-changes"
 import { localizedStatText, statText } from "./hero-stat-text"
 import { HeroRatings } from "./hero-ratings"
 import { useHeroVideos, useVideoParam, VideoGallery } from "../videos/subject-videos"
@@ -213,10 +212,7 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
           )
         })}
       </div>
-      <article
-        className="wiki-skill-read public-panel wiki-slip"
-        aria-label={active.name ?? skillLabel(active, locale)}
-      >
+      <article className="wiki-skill-read" aria-label={active.name ?? skillLabel(active, locale)}>
         <header className="wiki-edit-heading">
           <div className="wiki-skill-title">
             <span className="wiki-skill-title-icon">
@@ -283,7 +279,7 @@ function AbilityPanel({ hero, handbook }: { hero: HeroDetail; handbook: Handbook
         <SkillVideos
           skillKey={active.skillKey}
           videos={videos.bySkill.get(active.skillKey) ?? []}
-          patchCode={videos.patchCode}
+          patchName={videos.patchName}
         />
         {active.description ? (
           <div className="wiki-skill-prose" key={active.skillKey}>
@@ -413,12 +409,15 @@ function HeroVideos({ handbook }: { handbook: Handbook }) {
       id="hero-videos"
       videos={videos.general}
       heading={text("Video", "Videos")}
-      patchCode={videos.patchCode}
+      patchName={videos.patchName}
     />
   )
 }
 
-/** Wide screens open with the artwork and, beside it, a panel with who the hero is. Compact screens have only the artwork here. */
+/**
+ * Wide screens open with who the hero is on the left, written straight on the page, and the artwork filling the right.
+ * Compact screens have only the artwork here.
+ */
 export function HeroStage({ art, identity, children }: { art: ReactNode; identity: ReactNode; children: ReactNode }) {
   if (usePageLayout() === "compact")
     return (
@@ -430,11 +429,10 @@ export function HeroStage({ art, identity, children }: { art: ReactNode; identit
   return (
     <div className="wiki-hero-stage">
       {art}
-      <OrnatePanel className="wiki-hero-stage-panel">
+      <div className="wiki-hero-stage-info">
         {identity}
-        <OrnateDivider />
         {children}
-      </OrnatePanel>
+      </div>
     </div>
   )
 }
@@ -448,13 +446,15 @@ type HandbookLayoutProps = {
   picker: ReactNode
 }
 
-/** A list of abilities on the dark ground beside the chosen one, written on a slip of paper. */
+/** The abilities as a row of cards, the chosen one written out below at full width. */
 function AbilitiesSection({ hero, handbook }: { hero: HeroDetail; handbook: Handbook }) {
   return (
     <section className="wiki-skillbook" aria-labelledby="wiki-kit-title">
-      <h2 id="wiki-kit-title" className="wiki-night-title" tabIndex={-1}>
-        {handbook.text("Bộ kỹ năng", "Abilities")}
-      </h2>
+      <header className="wiki-hero-section-head">
+        <h2 id="wiki-kit-title" tabIndex={-1}>
+          {handbook.text("Bộ kỹ năng", "Abilities")}
+        </h2>
+      </header>
       <AbilityPanel hero={hero} handbook={handbook} />
     </section>
   )
@@ -472,6 +472,16 @@ function HandbookParts({ hero, skinOwner, handbook }: { hero: HeroDetail; skinOw
   )
 }
 
+/** The version being read: the picker, then what there is to say about that version in a line. */
+function VersionScope({ hero, handbook, picker }: Pick<HandbookLayoutProps, "hero" | "handbook" | "picker">) {
+  return (
+    <div className="wiki-hero-scope">
+      {picker}
+      <HeroVersionUnchanged hero={hero} version={handbook.version} />
+    </div>
+  )
+}
+
 function HandbookWide({ hero, skinOwner, handbook, art, identity, picker }: HandbookLayoutProps) {
   const openSkill = useAbilityJump(handbook)
   return (
@@ -481,7 +491,7 @@ function HandbookWide({ hero, skinOwner, handbook, art, identity, picker }: Hand
           <OverviewPanel hero={hero} handbook={handbook} />
         </div>
       </HeroStage>
-      <div className="wiki-hero-scope">{picker}</div>
+      <VersionScope hero={hero} handbook={handbook} picker={picker} />
       <div className="wiki-handbook">
         <div className="wiki-handbook-main">
           <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} />
@@ -502,10 +512,10 @@ function HandbookCompact({ hero, skinOwner, handbook, art, picker }: HandbookLay
   return (
     <>
       {art}
-      <div className="wiki-hero-scope">{picker}</div>
+      <VersionScope hero={hero} handbook={handbook} picker={picker} />
       <div className="wiki-handbook wiki-handbook-compact">
         <HeroVersionChanges hero={hero} version={handbook.version} onOpenSkill={openSkill} collapsible />
-        <div className="wiki-handbook-profile public-panel wiki-slip">
+        <div className="wiki-handbook-profile">
           <OverviewPanel hero={hero} handbook={handbook} />
         </div>
         <HandbookParts hero={hero} skinOwner={skinOwner} handbook={handbook} />

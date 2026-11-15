@@ -3,7 +3,7 @@
   /* Lists come up as they scroll into view, in browsers that can drive an animation from scrolling. */
   @supports (animation-timeline: view()) {
     .wiki-hero-grid > *,
-    .wiki-index li,
+    .wiki-section-tiles li,
     .wiki-updates-season li,
     .wiki-patch-subject,
     .wiki-skin-group,
@@ -23,10 +23,6 @@
       animation-timeline: scroll(root);
       animation-range: 0 460px;
     }
-  }
-
-  .wiki-home-banner img {
-    animation: public-drift 16s ease-in-out infinite alternate;
   }
 
   .wiki-hero-rating-track > span > span {

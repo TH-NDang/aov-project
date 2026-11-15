@@ -1,0 +1,402 @@
+/* A skin's picture and its small parts, shared by the skin library, the viewer and the hero page. */
+.wiki-skin-art {
+  object-fit: cover;
+  object-position: center 15%;
+}
+.wiki-skin-art-head {
+  object-position: center;
+}
+.wiki-skin-art-art {
+  object-position: 60% center;
+}
+/* The game's own tier label, drawn over a corner of the picture. */
+.wiki-skin-badge {
+  position: absolute;
+  z-index: 3;
+  top: 6px;
+  left: 6px;
+  width: 52px;
+  height: 26px;
+  border-radius: 0;
+  object-fit: contain;
+  object-position: left top;
+  filter: drop-shadow(0 1px 3px rgb(0 0 0 / 70%));
+  pointer-events: none;
+}
+.wiki-skin-badge .wiki-image-placeholder {
+  opacity: 0;
+}
+.wiki-skin-hero-head {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+/* A skin with no picture: a quiet tile with the hero's face dimmed, so a row of them does not read as broken. */
+.wiki-skin-missing {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  padding: 8px 8px 24%;
+  background: var(--aov-surface);
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  text-align: center;
+}
+.wiki-skin-missing[data-preview] {
+  padding-bottom: 8px;
+}
+.wiki-skin-missing .wiki-skin-hero-head {
+  width: min(46%, 96px);
+  height: auto;
+  aspect-ratio: 1;
+  opacity: 0.45;
+  filter: saturate(0.4);
+}
+.wiki-skin-missing-initial {
+  font: 700 1.5rem/1 var(--wiki-font-display);
+  opacity: 0.6;
+}
+
+/* The same picture, blurred and dimmed, fills the sides of a stage when a skin only has a tall portrait. */
+.wiki-skin-preview-backdrop {
+  position: absolute;
+  z-index: 0;
+  inset: -40px;
+  background-position: center;
+  background-size: cover;
+  filter: blur(28px) brightness(0.42);
+}
+.wiki-skin-preview-art {
+  position: relative;
+  z-index: 1;
+  object-fit: contain;
+  object-position: center;
+}
+
+/*
+ * The viewer: the picture with the rail of the same list under it, and what is known about the skin beside it.
+ * Narrow windows stack the three; phones show them in a bottom drawer.
+ */
+.wiki-skin-preview[data-slot="dialog-content"] {
+  --skin-preview-width: min(1320px, calc(100vw - 48px));
+  display: grid;
+  width: var(--skin-preview-width);
+  max-width: none;
+  max-height: calc(100dvh - 48px);
+  grid-template:
+    "stage info" auto
+    "rail info" auto / minmax(0, 1fr) 340px;
+  gap: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--aov-radius-media);
+  padding: 0;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-skin-preview.public-bottom-drawer[data-vaul-drawer] {
+  --drawer-surface: var(--aov-surface);
+  --drawer-text: var(--aov-text);
+  --drawer-muted: var(--aov-muted);
+  --drawer-line: var(--aov-line);
+  --drawer-accent: var(--aov-accent);
+}
+.wiki-skin-preview.public-bottom-drawer > .public-bottom-body {
+  padding: 0 0 env(safe-area-inset-bottom);
+}
+/* On the picture until the viewer is wide enough to give the button a place beside the name. */
+.wiki-skin-preview-close {
+  position: absolute;
+  z-index: 5;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--aov-sunken) 70%, transparent);
+  color: var(--aov-text);
+}
+.wiki-skin-preview-close:hover {
+  background: var(--aov-sunken);
+}
+/* The stage has the shape of the game's own splash pictures, so most of them fill it edge to edge. */
+.wiki-skin-preview-image {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 13 / 8;
+  grid-area: stage;
+  place-items: center;
+  overflow: hidden;
+  background: var(--aov-sunken);
+  touch-action: pan-y;
+}
+.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-image {
+  max-height: 46dvh;
+}
+.wiki-skin-preview-image > :is(.wiki-skin-preview-art, .wiki-skin-missing) {
+  position: absolute;
+  inset: 0;
+}
+.wiki-skin-preview-step {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  width: min(18%, 120px);
+  align-items: center;
+  padding-inline: 12px;
+  color: var(--aov-text);
+}
+.wiki-skin-preview-step[data-side="previous"] {
+  left: 0;
+  justify-content: flex-start;
+}
+.wiki-skin-preview-step[data-side="next"] {
+  right: 0;
+  justify-content: flex-end;
+}
+.wiki-skin-preview-step > span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--aov-sunken) 70%, transparent);
+  transition: background 160ms ease-out;
+}
+.wiki-skin-preview-step:hover > span,
+.wiki-skin-preview-step:focus-visible > span {
+  background: var(--aov-sunken);
+}
+.wiki-skin-preview-step:focus-visible {
+  outline: none;
+}
+.wiki-skin-preview-step:focus-visible > span {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-step {
+  width: 22%;
+  padding-inline: 8px;
+}
+.wiki-skin-preview-count {
+  position: absolute;
+  z-index: 3;
+  right: 12px;
+  bottom: 12px;
+  border-radius: var(--aov-radius-pill);
+  padding: 2px 9px;
+  background: color-mix(in srgb, var(--aov-sunken) 70%, transparent);
+  color: var(--aov-text);
+  font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.wiki-skin-preview-set {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  grid-area: rail;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 10px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--aov-line-strong) transparent;
+}
+/* A small picture for each skin of the list; the one on show carries the accent outline, as on the hero page. */
+.wiki-skin-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  flex: 0 0 54px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-raised);
+  opacity: 0.8;
+  transition: opacity 140ms ease-out;
+}
+.wiki-skin-thumb > :is(.wiki-skin-art, .wiki-skin-missing) {
+  position: absolute;
+  inset: 0;
+}
+.wiki-skin-thumb:is(:hover, :focus-visible, [aria-current="true"]) {
+  opacity: 1;
+}
+.wiki-skin-thumb[aria-current="true"] {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 1px;
+}
+.wiki-skin-thumb:focus-visible {
+  outline: 2px solid var(--aov-accent-strong);
+  outline-offset: 1px;
+}
+.wiki-skin-preview-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  grid-area: info;
+  gap: 12px;
+  padding: 16px 20px 20px;
+}
+.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-info {
+  padding: 12px 16px 20px;
+}
+.wiki-skin-preview-info .wiki-edit-heading {
+  align-items: start;
+}
+.wiki-skin-preview-info [data-slot="dialog-title"] {
+  padding-block: 4px;
+  color: var(--aov-text);
+  font: 700 1.375rem/1.75rem var(--wiki-font-reading);
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+/* What is known about the skin, one fact a row: a muted name, then the value. */
+.wiki-skin-preview-facts {
+  display: grid;
+  margin: 0;
+}
+.wiki-skin-preview-facts > div {
+  display: grid;
+  min-height: 44px;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--aov-line);
+  padding-block: 6px;
+}
+.wiki-skin-preview-facts > div:not(:has(dd > *)) {
+  display: none;
+}
+.wiki-skin-preview-facts dt {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-skin-preview-facts dd {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--aov-text);
+  font: var(--wiki-type-body);
+  overflow-wrap: anywhere;
+}
+.wiki-skin-preview-facts .wiki-skin-badge {
+  position: relative;
+  inset: auto;
+  width: 48px;
+  height: 26px;
+  flex: none;
+  filter: none;
+}
+.wiki-skin-preview-hero {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+a.wiki-skin-preview-hero {
+  color: var(--aov-accent);
+}
+a.wiki-skin-preview-hero:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-skin-preview-hero .wiki-skin-hero-head {
+  width: 24px;
+  height: 24px;
+}
+.wiki-skin-preview-hero > svg {
+  flex: none;
+}
+.wiki-skin-preview-acquisition {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.wiki-skin-preview-acquisition > svg {
+  flex: none;
+  color: var(--aov-accent);
+}
+/* The source is written out; the button beside it opens the full record of where the picture comes from. */
+.wiki-skin-preview-credit {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-skin-preview-credit > button {
+  position: static;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--aov-muted);
+  box-shadow: none;
+}
+.wiki-skin-preview-credit > button:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-credit > button {
+  width: 36px;
+  height: 36px;
+}
+
+/* Beside the picture the text scrolls on its own, so the picture alone sets the viewer's height. */
+@media (min-width: 1100px) {
+  .wiki-skin-preview[data-slot="dialog-content"] .wiki-skin-preview-image {
+    max-height: calc(100dvh - 48px - 104px);
+  }
+  .wiki-skin-preview[data-slot="dialog-content"] .wiki-skin-preview-info {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-left: 1px solid var(--aov-line);
+    contain: size;
+  }
+  .wiki-skin-preview[data-slot="dialog-content"] .wiki-edit-heading {
+    padding-right: 36px;
+  }
+  .wiki-skin-preview[data-slot="dialog-content"] .wiki-skin-preview-close {
+    top: 12px;
+    right: 12px;
+    border-radius: var(--aov-radius-control);
+    background: transparent;
+    color: var(--aov-muted);
+  }
+  .wiki-skin-preview[data-slot="dialog-content"] .wiki-skin-preview-close:hover {
+    background: var(--aov-raised);
+    color: var(--aov-text);
+  }
+}
+@media (max-width: 1099.98px) {
+  .wiki-skin-preview[data-slot="dialog-content"] {
+    --skin-preview-width: min(720px, calc(100vw - 48px));
+    grid-template:
+      "stage" auto
+      "rail" auto
+      "info" auto / minmax(0, 1fr);
+    overflow-y: auto;
+  }
+}

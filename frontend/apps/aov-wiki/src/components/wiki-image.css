@@ -23,7 +23,12 @@
   inset: 0;
   z-index: 1;
   border-radius: inherit;
-  background: linear-gradient(110deg, #c3d0e108 20%, #d9e4f217 42%, #c3d0e108 64%);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--aov-text-soft) 3%, transparent) 20%,
+    color-mix(in srgb, var(--aov-text-soft) 9%, transparent) 42%,
+    color-mix(in srgb, var(--aov-text-soft) 3%, transparent) 64%
+  );
   background-size: 240% 100%;
   pointer-events: none;
   opacity: 1;

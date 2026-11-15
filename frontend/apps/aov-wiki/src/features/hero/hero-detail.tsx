@@ -16,6 +16,7 @@ import { HeroGlyph } from "./hero-glyph"
 import { HeroQuickSwitch } from "./hero-quick-switch"
 import { HeroDetailLoading } from "./hero-loading"
 import { HeroLaterObservationNote } from "./hero-later-observation"
+import { WikiIcon } from "../../components/wiki-icon"
 import { WikiImage } from "../../components/wiki-image"
 import { WikiImageCredit as ImageCredit } from "../../components/wiki-image-credit"
 import "./hero-detail.css"
@@ -50,6 +51,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
   const page = detail && heroWithForm(detail, formDetail)
   const media = { ...detail?.media, ...formDetail?.media }
   const gameplay = form ?? hero
+  const formRole = form && hero.forms ? formLabelRole(form, hero.forms) : undefined
   const history = useHeroChangedVariants(gameplay.id)
   const layout = usePageLayout()
   const [failedUrls, setFailedUrls] = useState<string[]>([])
@@ -73,6 +75,13 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
 
   const identity = (
     <>
+      {/* The header marks the section; a wide page adds one quiet way back, a compact one has it in its header. */}
+      {layout !== "compact" && (
+        <Link className="wiki-hero-profile-back" to={scope.href(returnTo)}>
+          <WikiIcon name="chevronLeft" size={16} />
+          {wikiText(locale, "Thư viện Tướng", "Hero library")}
+        </Link>
+      )}
       <div className="wiki-hero-profile-identity">
         <span className="wiki-hero-profile-head" aria-hidden="true">
           {identityImage ? (
@@ -96,14 +105,14 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
       </div>
       <HeroFormSwitch hero={hero} current={form} />
       {(page?.unscopedBaseline ?? gameplay.unscopedBaseline) && (
-        <span className="mt-2 inline-flex rounded-full bg-black/20 px-2 py-1 text-xs text-white/70">
-          {wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}
-        </span>
+        <span className="wiki-hero-baseline">{wikiText(locale, "Dữ liệu nền · Chưa rõ mốc", "Undated baseline")}</span>
       )}
       {detail?.content.profile?.title && <p className="wiki-hero-epithet">{detail.content.profile.title}</p>}
       <div className="wiki-hero-role-strip">
         {localizedHeroOptions(HERO_ROLES, locale)
           .filter((role) => (page?.content.profile?.roles ?? gameplay.roles).includes(role.value))
+          // The form switch above already shows the role that names the form being read.
+          .filter((role) => role.value !== formRole)
           .map((role) => (
             <span key={role.value}>
               <HeroGlyph name={role.glyph} />
@@ -118,8 +127,11 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
               {position.label}
             </span>
           ))}
-        <HeroPriceTag heroId={gameplay.id} fallbackHeroId={form ? hero.id : undefined} />
-        <HeroVideoButton heroId={hero.id} />
+        {/* The price and the videos wrap to the next line together, never one of them alone. */}
+        <div className="wiki-hero-role-extras">
+          <HeroPriceTag heroId={gameplay.id} fallbackHeroId={form ? hero.id : undefined} />
+          <HeroVideoButton heroId={hero.id} />
+        </div>
       </div>
     </>
   )
@@ -127,7 +139,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
     <section className="wiki-hero-profile" data-artwork={kind} aria-labelledby="hero-profile-title">
       {artwork && media[kind]?.currentVersion && (
         <ImageCredit
-          className="right-4 bottom-4"
+          className="wiki-hero-art-credit"
           sources={media[kind].currentVersion?.sources}
           contactHref={`/contact?assetId=${media[kind].assetId}&versionId=${media[kind].currentVersion?.versionId}`}
         />
@@ -171,16 +183,7 @@ function HeroArtwork({ hero, form, returnTo }: { hero: HeroListItem; form?: Hero
       )}
 
       <PublicEmbers className="wiki-artwork-embers" count={layout === "compact" ? 14 : 28} />
-      <div className="wiki-hero-profile-content">
-        <nav className="wiki-hero-profile-breadcrumb" aria-label={wikiText(locale, "Đường dẫn", "Breadcrumb")}>
-          <Link to={scope.href("/")}>{t("home")}</Link>
-          <span>/</span>
-          <Link to={scope.href(returnTo)}>{wikiText(locale, "Thư viện Tướng", "Hero library")}</Link>
-          <span>/</span>
-          <span aria-current="page">{hero.name}</span>
-        </nav>
-        {layout === "compact" && identity}
-      </div>
+      {layout === "compact" && <div className="wiki-hero-profile-content">{identity}</div>}
     </section>
   )
   const later = page?.laterObservation
@@ -251,10 +254,7 @@ export function HeroDetailPage() {
 
   return (
     <HeroDetailLayout meta={notFoundMeta(locale, location.pathname, "heroes")}>
-      <div
-        className="wiki-hero-profile-state wiki-mascot-state"
-        style={{ "--hero-accent": "#d6bd8e" } as CSSProperties}
-      >
+      <div className="wiki-hero-profile-state wiki-mascot-state">
         <h1>
           {catalog.isError
             ? wikiText(locale, "Chưa tải được tướng", "Could not load this hero")

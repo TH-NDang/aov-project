@@ -1,11 +1,19 @@
-import { useState, type ReactNode } from "react"
+import { useState, type DragEvent, type ReactNode } from "react"
 import { WikiIcon } from "../../components/wiki-icon"
-import { BOARD_COLUMNS, BOARD_ROWS, ROW_LABEL, cellOf, type BoardRow, type LineupUnit } from "./auto-chess-model"
-import { UnitPortrait, type GuideIndex } from "./auto-chess-guide"
+import {
+  BOARD_COLUMNS,
+  BOARD_ROWS,
+  ROW_LABEL,
+  cellOf,
+  traitCounts,
+  type BoardRow,
+  type LineupUnit,
+} from "./auto-chess-model"
+import { ChoiceSwitch, TraitIcon, UnitPortrait, type GuideIndex } from "./guide-ui"
 
 /*
  * A player's half of the board as the game draws it: three rows of seven square cells, the front row on top facing
- * the opponent. Lineup cards show where each unit stands; the builder places units by tapping cells.
+ * the opponent. Lineup cards show where each unit stands; the builder places units by tapping or dragging.
  */
 
 const COLUMNS = Array.from({ length: BOARD_COLUMNS }, (_, at) => at + 1)
@@ -34,42 +42,69 @@ export function useLineupView() {
   return [view, choose] as const
 }
 
-/** Two icon buttons that switch a lineup between the board and the list. */
-export function LineupViewSwitch({ view, onChange }: { view: LineupView; onChange: (view: LineupView) => void }) {
+/** Switches a lineup between the board and the list. */
+export function LineupViewSwitch({
+  view,
+  onChange,
+  labels = false,
+}: {
+  view: LineupView
+  onChange: (view: LineupView) => void
+  labels?: boolean
+}) {
   return (
-    <span className="view-switch" role="group" aria-label="Cách xem đội hình">
-      <button
-        type="button"
-        aria-pressed={view === "board"}
-        title="Xem trên bàn cờ"
-        aria-label="Xem trên bàn cờ"
-        onClick={() => onChange("board")}
-      >
-        <WikiIcon name="chessboard" size={18} />
-      </button>
-      <button
-        type="button"
-        aria-pressed={view === "list"}
-        title="Xem dạng danh sách"
-        aria-label="Xem dạng danh sách"
-        onClick={() => onChange("list")}
-      >
-        <WikiIcon name="all" size={18} />
-      </button>
-    </span>
+    <ChoiceSwitch
+      label="Cách xem đội hình"
+      value={view}
+      onChange={onChange}
+      labels={labels}
+      options={[
+        { value: "board", label: "Bàn cờ", icon: <WikiIcon name="chessboard" size={16} /> },
+        { value: "list", label: "Danh sách", icon: <WikiIcon name="all" size={16} /> },
+      ]}
+    />
   )
 }
 
-/** The grid itself; `cell` draws what stands on each cell. */
+/** What a dragged unit carries: its code, under a type of its own so nothing else dropped on the board counts. */
+const UNIT_DRAG = "application/x-aov-unit"
+
+/** Starts dragging a unit, from the pool or from the board. */
+export const dragUnit = (code: string) => (event: DragEvent) => {
+  event.dataTransfer.setData(UNIT_DRAG, code)
+  event.dataTransfer.effectAllowed = "move"
+}
+
+/** The grid itself; `cell` draws what stands on each cell, `onDropUnit` lets units be dragged onto cells. */
 export function BoardGrid({
   label,
   cell,
   footer,
+  onDropUnit,
 }: {
   label: string
   cell: (row: BoardRow, column: number) => ReactNode
   footer?: ReactNode
+  onDropUnit?: (code: string, row: BoardRow, column: number) => void
 }) {
+  const [over, setOver] = useState<string | null>(null)
+  const drop = (row: BoardRow, column: number) =>
+    onDropUnit && {
+      onDragOver: (event: DragEvent) => {
+        if (!event.dataTransfer.types.includes(UNIT_DRAG)) return
+        event.preventDefault()
+        event.dataTransfer.dropEffect = "move"
+        setOver(`${row}-${column}`)
+      },
+      onDragLeave: () => setOver((current) => (current === `${row}-${column}` ? null : current)),
+      onDrop: (event: DragEvent) => {
+        const code = event.dataTransfer.getData(UNIT_DRAG)
+        setOver(null)
+        if (!code) return
+        event.preventDefault()
+        onDropUnit(code, row, column)
+      },
+    }
   return (
     <div className="board-wrap">
       <span className="board-enemy" aria-hidden="true">
@@ -79,7 +114,14 @@ export function BoardGrid({
         {BOARD_ROWS.map((row) => (
           <div key={row} className="board-row" role="row" aria-label={ROW_LABEL[row]}>
             {COLUMNS.map((column) => (
-              <div key={column} className="board-cell" role="gridcell" aria-label={`${ROW_LABEL[row]}, ô ${column}`}>
+              <div
+                key={column}
+                className="board-cell"
+                role="gridcell"
+                aria-label={`${ROW_LABEL[row]}, ô ${column}`}
+                data-over={over === `${row}-${column}` || undefined}
+                {...drop(row, column)}
+              >
                 {cell(row, column)}
               </div>
             ))}
@@ -98,12 +140,14 @@ export function BoardPiece({
   selected,
   onClick,
   title,
+  draggable,
 }: {
   item: { unitCode: string; carry: boolean }
   index: GuideIndex
   selected?: boolean
   onClick: () => void
   title?: string
+  draggable?: boolean
 }) {
   const unit = index.units.get(item.unitCode)
   if (!unit) return null
@@ -113,6 +157,8 @@ export function BoardPiece({
       className="board-piece"
       aria-pressed={selected}
       title={title ?? `${unit.name}${item.carry ? " · chủ lực" : ""}`}
+      draggable={draggable || undefined}
+      onDragStart={draggable ? dragUnit(unit.code) : undefined}
       onClick={onClick}
     >
       <UnitPortrait unit={unit} index={index} />
@@ -169,5 +215,31 @@ export function LineupBoard({
         )
       }
     />
+  )
+}
+
+/** The factions and classes a lineup turns on, each with how many of its units count toward it. */
+export function ActiveTraits({ units, emblems, index }: { units: LineupUnit[]; emblems: string[]; index: GuideIndex }) {
+  const counts = traitCounts(
+    index.content,
+    units.map((unit) => unit.unitCode),
+    emblems,
+  ).filter((count) => count.reachedTier >= 0)
+  if (!counts.length) return null
+  return (
+    <div className="guide-trait-tags" aria-label="Phe và Nghề kích hoạt">
+      {counts.map((count) => (
+        <span
+          key={count.trait.code}
+          className="guide-trait-tag"
+          data-active="true"
+          title={count.trait.tiers[count.reachedTier]?.effect}
+        >
+          <TraitIcon trait={count.trait} index={index} size={18} />
+          <b>{count.count}</b>
+          {count.trait.name}
+        </span>
+      ))}
+    </div>
   )
 }

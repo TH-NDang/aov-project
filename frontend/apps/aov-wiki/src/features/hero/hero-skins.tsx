@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "react-router"
 import { WikiIcon } from "../../components/wiki-icon"
@@ -8,7 +8,8 @@ import { groupSkins } from "../skins/skin-groups"
 import { previewSource, SkinArtwork, SkinBadgeImage, SkinPreview, skinId } from "../skins/skin-preview"
 import type { HeroDetail } from "./hero-api"
 import { currentScope } from "./hero-forms"
-import { useDragScroll } from "./use-drag-scroll"
+import { useSkinAcquisition } from "./hero-shop"
+import { useDragScroll } from "../../lib/use-drag-scroll"
 import "./hero-skins.css"
 
 const preload = (skin: SkinEntry) => {
@@ -16,20 +17,76 @@ const preload = (skin: SkinEntry) => {
   if (source) new Image().src = source
 }
 
+/*
+ * Measured in widths of the rail beside the picture: the rail is 1/1.7 of the picture's width and the picture has the
+ * game's 1386:852 shape, which gives the picture's height; a gap is about 2% of the rail. A thumbnail is 3:4.
+ */
+const PICTURE_HEIGHT = (1.7 * 852) / 1386
+const RAIL_GAP = 0.022
+
+/**
+ * How many thumbnails share a row beside the picture: the largest thumbnails whose rows still end with the picture, and
+ * never a single one alone in the last row.
+ */
+function railColumns(count: number) {
+  for (let columns = 3; columns < 8; columns++) {
+    if (count > columns && count % columns === 1) continue
+    const rows = Math.ceil(count / columns)
+    const thumb = ((1 - RAIL_GAP * (columns - 1)) / columns) * (4 / 3)
+    if (rows * thumb + RAIL_GAP * (rows - 1) <= PICTURE_HEIGHT) return columns
+  }
+  return 8
+}
+
+const railStyle = (count: number) => ({ "--skin-columns": railColumns(count) }) as CSSProperties
+
 function HeroSkinsSkeleton({ label }: { label: string }) {
   return (
-    <div role="status" aria-label={label} aria-busy="true">
+    <div className="wiki-hero-skin-viewer" role="status" aria-label={label} aria-busy="true">
       <span className="wiki-hero-skin-stage wiki-skeleton" />
-      <div className="wiki-hero-skin-rail" aria-hidden="true">
+      <span className="wiki-hero-skin-caption wiki-hero-skin-caption-skeleton wiki-skeleton" aria-hidden="true" />
+      <div className="wiki-hero-skin-rail" style={railStyle(6)} aria-hidden="true">
         {Array.from({ length: 6 }, (_, index) => (
-          <span className="wiki-skin-thumb wiki-skeleton" key={index} />
+          <span className="wiki-hero-skin-thumb wiki-skeleton" key={index} />
         ))}
       </div>
     </div>
   )
 }
 
-/** The hero's skins on the hero page itself: one large image, the rest a tap away, and the full viewer on demand. */
+/**
+ * The chosen skin in words: its name, then its tier and how it is obtained on one line. It stands under the picture,
+ * so a long name never pushes the other skins away from under the pointer.
+ */
+function SkinCaption({ skin, position, total }: { skin: SkinEntry; position: number; total: number }) {
+  const acquisition = useSkinAcquisition(skin.heroId, skin.skinKey)
+  return (
+    <div className="wiki-hero-skin-caption">
+      <strong aria-live="polite">{skin.name}</strong>
+      {total > 1 && (
+        <span className="wiki-hero-skin-count">
+          {position}/{total}
+        </span>
+      )}
+      {(skin.badge || acquisition) && (
+        <p className="wiki-hero-skin-facts">
+          {skin.badge && (
+            <span className="wiki-hero-skin-tier">
+              <SkinBadgeImage key={skin.badge.icon?.currentVersion?.url} badge={skin.badge} />
+              {skin.badge.name}
+            </span>
+          )}
+          {acquisition && <span>{acquisition}</span>}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The hero's skins on the hero page itself: one picture in its own proportions, its caption, and every other skin a
+ * tap away. The full viewer opens on demand.
+ */
 export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string }) {
   const scope = useWikiContext()
   const text = (vi: string, en: string) => wikiText(scope.locale, vi, en)
@@ -74,35 +131,31 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
     for (const delta of [1, -1]) preload(skins[(index + delta + skins.length) % skins.length])
   }, [selectedKey, index, skins])
 
-  const head = (count?: number) => (
-    <div className="wiki-hero-skins-head">
-      <h2 id="wiki-hero-skins-title">
-        {text("Trang phục", "Skins")}
-        {!!count && <span>{count}</span>}
-      </h2>
-      <Link to={scope.href(`/skins?hero=${encodeURIComponent(library)}`)}>
-        {text("Mở trong kho trang phục", "Open in the skin library")}
-        <WikiIcon name="arrow" size={14} />
-      </Link>
-    </div>
-  )
-
   if (!query.isPending && !query.isError && !skins.length) return null
 
   return (
     <section id="wiki-hero-skins" className="wiki-hero-skins" tabIndex={-1} aria-labelledby="wiki-hero-skins-title">
-      {head(skins.length)}
+      <header className="wiki-hero-section-head">
+        <h2 id="wiki-hero-skins-title">
+          {text("Trang phục", "Skins")}
+          {skins.length > 0 && <small>{skins.length}</small>}
+        </h2>
+        <Link className="wiki-hero-section-more" to={scope.href(`/skins?hero=${encodeURIComponent(library)}`)}>
+          {text("Kho trang phục", "Skin library")}
+          <WikiIcon name="arrow" size={14} />
+        </Link>
+      </header>
       {query.isPending ? (
         <HeroSkinsSkeleton label={text("Đang tải trang phục…", "Loading skins…")} />
       ) : !selected ? (
         <p className="wiki-handbook-notice" role="status">
-          {text("Chưa tải được trang phục.", "The skins could not be loaded.")}
+          {text("Chưa tải được trang phục.", "The skins could not be loaded.")}{" "}
           <button type="button" onClick={() => void query.refetch()}>
             {scope.t("retry")}
           </button>
         </p>
       ) : (
-        <>
+        <div className="wiki-hero-skin-viewer" data-single={skins.length < 2 || undefined}>
           <div
             className="wiki-hero-skin-stage"
             onPointerDown={(event) => {
@@ -122,7 +175,8 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
               move(dx < 0 ? 1 : -1)
             }}
           >
-            {previewSource(selected) && (
+            {/* Only a skin without wide artwork leaves room around its picture, which the blurred copy fills. */}
+            {!selected.art?.currentVersion?.url && previewSource(selected) && (
               <span
                 className="wiki-skin-preview-backdrop"
                 style={{ backgroundImage: `url("${previewSource(selected)}")` }}
@@ -142,22 +196,6 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
             <span className="wiki-hero-skin-expand" aria-hidden="true">
               <WikiIcon name="expand" size={16} />
             </span>
-            <div className="wiki-hero-skin-caption">
-              <div>
-                <strong aria-live="polite">{selected.name}</strong>
-                {selected.badge && (
-                  <span className="wiki-hero-skin-tier">
-                    <SkinBadgeImage key={selected.badge.icon?.currentVersion?.url} badge={selected.badge} />
-                    {selected.badge.name}
-                  </span>
-                )}
-              </div>
-              {skins.length > 1 && (
-                <span className="wiki-hero-skin-count">
-                  {index + 1}/{skins.length}
-                </span>
-              )}
-            </div>
             {skins.length > 1 && (
               <>
                 <button
@@ -181,9 +219,11 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
               </>
             )}
           </div>
+          <SkinCaption skin={selected} position={index + 1} total={skins.length} />
           {skins.length > 1 && (
             <div
               className="wiki-hero-skin-rail"
+              style={railStyle(skins.length)}
               ref={scroll.ref}
               role="group"
               aria-label={text("Chọn trang phục", "Choose a skin")}
@@ -202,7 +242,7 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
                     key={skin.skinKey}
                     ref={active ? activeThumb : undefined}
                     type="button"
-                    className="wiki-skin-thumb"
+                    className="wiki-hero-skin-thumb"
                     data-skin-card={skinId(skin)}
                     aria-current={active || undefined}
                     aria-label={`${text("Xem", "View")} ${skin.name}`}
@@ -225,7 +265,7 @@ export function HeroSkins({ hero, owner }: { hero: HeroDetail; owner?: string })
             onMove={(skin) => setSelectedKey(skin.skinKey)}
             heroLink={false}
           />
-        </>
+        </div>
       )}
     </section>
   )

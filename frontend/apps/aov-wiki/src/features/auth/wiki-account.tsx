@@ -6,6 +6,7 @@ import { publicAuthError } from "@aov/ui/lib/public-auth"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiHeader } from "../../components/wiki-header"
 import { signIn, signOut, completeLogin, useWikiSession } from "./wiki-auth"
+import "./wiki-account.css"
 
 export function WikiAccountMenu({ inline = false }: { inline?: boolean }) {
   const { locale, setLocale, href } = useWikiContext()
@@ -60,9 +61,8 @@ export function WikiLoginCallback() {
   return (
     <>
       <WikiHeader />
-      <main id="main" className="mx-auto grid max-w-lg flex-1 content-center gap-5 p-8 text-center">
-        <img src="/images/mole-logo-v4.png" alt="" width={72} height={72} className="mx-auto rounded-2xl" />
-        <h1 className="text-xl font-bold text-gold">
+      <main id="main" tabIndex={-1} className="wiki-login-callback wiki-mascot-state">
+        <h1>
           {error
             ? wikiText(locale, "Đăng nhập chưa hoàn tất", "Sign-in incomplete")
             : wikiText(locale, "Đang hoàn tất đăng nhập…", "Completing sign-in…")}
@@ -70,13 +70,19 @@ export function WikiLoginCallback() {
         {error ? (
           <>
             <p role="alert">{publicAuthError(locale)}</p>
-            <button
-              className="rounded-lg border border-gold/40 p-3 text-gold"
-              onClick={() => void signIn().catch(() => setError(true))}
-            >
-              {wikiText(locale, "Thử đăng nhập lại", "Try again")}
-            </button>
-            <Link to={href("/")}>{wikiText(locale, "Về trang chủ", "Back home")}</Link>
+            <div className="wiki-login-callback-actions">
+              <button
+                type="button"
+                className="wiki-button"
+                data-primary=""
+                onClick={() => void signIn().catch(() => setError(true))}
+              >
+                {wikiText(locale, "Thử đăng nhập lại", "Try again")}
+              </button>
+              <Link className="wiki-button" to={href("/")}>
+                {wikiText(locale, "Về trang chủ", "Back home")}
+              </Link>
+            </div>
           </>
         ) : (
           <p role="status">

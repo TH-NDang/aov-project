@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router"
 import { useWikiContext } from "../../context/wiki-context"
-import { TraitIcon, UnitPortrait, useGuideIndex, type GuideIndex } from "./auto-chess-guide"
+import { TraitIcon, UnitPortrait, useGuideIndex, type GuideIndex } from "./guide-ui"
 import type { PublicGuide } from "./mode-api"
+import { ModeHeading } from "./mode-ui"
 
 /*
  * The overview shows how a match of the auto chess mode works as pictures instead of paragraphs. Every figure follows the
@@ -53,7 +54,8 @@ function SwordsIcon() {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M4 4l9 9M4 4h4M4 4v4M20 4l-9 9M20 4h-4M20 4v4M7 17l-3 3M17 17l3 3M9.5 14.5l-3 3M14.5 14.5l3 3" />
+      <path d="m4 4 12 12m-2.5 2.5 5-5M16 16l3.5 3.5" />
+      <path d="M20 4 8 16m2.5 2.5-5-5M8 16l-3.5 3.5" />
     </svg>
   )
 }
@@ -71,26 +73,10 @@ function MonsterIcon() {
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M5 10c0-4 3-7 7-7s7 3 7 7v6l-2 2-2-2-2 2-1-1-1 1-2-2-2 2-2-2Z" />
-      <path d="M9 10h.01M15 10h.01M5 6 3 3M19 6l2-3" />
-    </svg>
-  )
-}
-
-function ChestIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="22"
-      height="22"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M4 10h16v9H4zM4 10a8 5 0 0 1 16 0M11 12h2v3h-2z" />
+      <g transform="translate(0 1.5)">
+        <path d="M5 10c0-4 3-7 7-7s7 3 7 7v6l-2 2-2-2-2 2-1-1-1 1-2-2-2 2-2-2Z" />
+        <path d="M9 10h.01M15 10h.01M5 6 3 3M19 6l2-3" />
+      </g>
     </svg>
   )
 }
@@ -104,50 +90,53 @@ function HeartIcon() {
 }
 
 /** Eight players, knocked out one by one until one is left: the goal of a match in one picture. */
-function GoalCard() {
+function GoalSection() {
   // Steps 0–6 knock a player out each; step 7 holds the winner a moment before the match starts again.
   const step = useCycle(PLAYERS + 1, 900, PLAYERS - 1)
   const out = Math.min(step, PLAYERS - 1)
   return (
-    <section className="ov-card" aria-label="Mục tiêu">
-      <header>
-        <span className="ov-kicker">Mục tiêu</span>
-        <h2>Trụ lại cuối cùng</h2>
-      </header>
-      <div className="ov-players" aria-hidden="true">
-        {Array.from({ length: PLAYERS }, (_, at) => {
-          // Players leave from the last seat backwards, so seat 1 is the one who survives.
-          const gone = at >= PLAYERS - out
-          const winner = out === PLAYERS - 1 && at === 0
-          return (
-            <span key={at} className="ov-player" data-out={gone || undefined} data-winner={winner || undefined}>
-              <b>{winner ? "★" : at + 1}</b>
-              <i style={{ width: gone ? "0%" : "100%" }} />
-            </span>
-          )
-        })}
-      </div>
-      <p className="ov-text">
-        <strong>{PLAYERS} người chơi</strong>, mỗi người <strong>{START_HEALTH} máu</strong>. Thua một hiệp đối kháng bị
-        trừ máu; hết máu thì bị loại. Người còn lại cuối cùng thắng.
-      </p>
-      <div className="ov-ranks" role="img" aria-label="Hạng 1 đến 4 tính là thắng, 5 đến 8 tính là thua">
-        {Array.from({ length: PLAYERS }, (_, at) => (
-          <span key={at} data-win={at < 4 || undefined}>
-            {at + 1}
-          </span>
-        ))}
-      </div>
-      <div className="ov-rank-legend">
-        <span data-win="true">Hạng 1–4 · thắng, hạng càng cao càng nhiều điểm</span>
-        <span>Hạng 5–8 · thua, hạng càng thấp càng bị trừ nhiều điểm</span>
+    <section className="mode-section" aria-labelledby="ov-goal">
+      <ModeHeading id="ov-goal" title="Mục tiêu" note="Trụ lại cuối cùng" />
+      <div className="ov-split">
+        <div className="ov-figure">
+          <div className="ov-players" aria-hidden="true">
+            {Array.from({ length: PLAYERS }, (_, at) => {
+              // Players leave from the last seat backwards, so seat 1 is the one who survives.
+              const gone = at >= PLAYERS - out
+              const winner = out === PLAYERS - 1 && at === 0
+              return (
+                <span key={at} className="ov-player" data-out={gone || undefined} data-winner={winner || undefined}>
+                  <b>{winner ? "★" : at + 1}</b>
+                  <i style={{ width: gone ? "0%" : "100%" }} />
+                </span>
+              )
+            })}
+          </div>
+          <div className="ov-ranks" role="img" aria-label="Hạng 1 đến 4 tính là thắng, 5 đến 8 tính là thua">
+            {Array.from({ length: PLAYERS }, (_, at) => (
+              <span key={at} data-win={at < 4 || undefined}>
+                {at + 1}
+              </span>
+            ))}
+          </div>
+        </div>
+        <div className="ov-copy">
+          <p className="ov-text">
+            <strong>{PLAYERS} người chơi</strong>, mỗi người <strong>{START_HEALTH} máu</strong>. Thua một hiệp đối
+            kháng bị trừ máu; hết máu thì bị loại. Người còn lại cuối cùng thắng.
+          </p>
+          <ul className="ov-rank-legend">
+            <li data-win="true">Hạng 1–4 tính là thắng, hạng càng cao càng nhiều điểm.</li>
+            <li>Hạng 5–8 tính là thua, hạng càng thấp càng bị trừ nhiều điểm.</li>
+          </ul>
+        </div>
       </div>
     </section>
   )
 }
 
 /** One round as a loop of three steps, the current one lit, with the guide's own pictures. */
-function RoundCard({ index, code }: { index: GuideIndex; code: string }) {
+function RoundSection({ index, code }: { index: GuideIndex; code: string }) {
   const { href } = useWikiContext()
   const step = useCycle(3, 2400, -1)
   const base = `/modes/${encodeURIComponent(code)}`
@@ -158,63 +147,56 @@ function RoundCard({ index, code }: { index: GuideIndex; code: string }) {
   const item = index.content.items.find((entry) => entry.iconAssetId) ?? index.content.items[0]
   const itemSrc = index.image(item?.iconAssetId)
   return (
-    <section className="ov-card ov-round" aria-label="Một hiệp đấu">
-      <header>
-        <span className="ov-kicker">Mỗi hiệp</span>
-        <h2>Xếp đội hình → giao tranh → tính máu</h2>
-      </header>
+    <section className="mode-section" aria-labelledby="ov-round">
+      <ModeHeading id="ov-round" title="Mỗi hiệp" note="Xếp đội hình → giao tranh → tính máu" />
       <ol className="ov-steps">
         <li className="ov-step" data-active={step === 0 || undefined}>
-          <div className="ov-step-art">
+          <h3>
+            <span className="ov-step-number">1</span>
+            Xếp đội hình
+          </h3>
+          <div className="ov-step-art" aria-hidden="true">
             {unit && <UnitPortrait unit={unit} index={index} size="md" />}
             <span className="ov-plus">+</span>
             {trait && <TraitIcon trait={trait} index={index} size={40} />}
             <span className="ov-plus">+</span>
             {itemSrc ? <img className="ov-item" src={itemSrc} alt="" /> : null}
           </div>
-          <h3>
-            <span className="ov-step-number">1</span>
-            Xếp đội hình
-          </h3>
-          <p>Kết hợp quân cờ, Phe/Nghề và trang bị.</p>
-          <span className="ov-links">
-            <Link to={href(`${base}/quan-co`)}>Quân cờ</Link>
-            <Link to={href(`${base}/phe-nghe`)}>Phe & Nghề</Link>
-            <Link to={href(`${base}/trang-bi`)}>Trang bị</Link>
-          </span>
+          <p>
+            Kết hợp <Link to={href(`${base}/quan-co`)}>quân cờ</Link>,{" "}
+            <Link to={href(`${base}/phe-nghe`)}>Phe/Nghề</Link> và <Link to={href(`${base}/trang-bi`)}>trang bị</Link>.
+          </p>
         </li>
         <li className="ov-step" data-active={step === 1 || undefined}>
-          <div className="ov-fights">
+          <h3>
+            <span className="ov-step-number">2</span>
+            Giao tranh
+          </h3>
+          <div className="ov-step-art ov-fights">
             <div className="ov-fight">
               <SwordsIcon />
               <b>Đối kháng</b>
               <small>Ghép cặp với người chơi khác</small>
             </div>
-            <div className="ov-fight" data-kind="monster">
+            <div className="ov-fight">
               <MonsterIcon />
               <b>Quái</b>
-              <small>
-                <ChestIcon /> Rơi trang bị, thẻ tăng sao…
-              </small>
+              <small>Rơi trang bị, thẻ tăng sao…</small>
             </div>
           </div>
-          <h3>
-            <span className="ov-step-number">2</span>
-            Giao tranh
-          </h3>
           <p>Hai loại vòng đấu: gặp người chơi khác hoặc đánh quái lấy chiến lợi phẩm.</p>
         </li>
         <li className="ov-step" data-active={step === 2 || undefined}>
-          <div className="ov-step-art ov-hit">
+          <h3>
+            <span className="ov-step-number">3</span>
+            Tính máu
+          </h3>
+          <div className="ov-step-art ov-hit" aria-hidden="true">
             <HeartIcon />
             <span className="ov-hit-bar">
               <i />
             </span>
           </div>
-          <h3>
-            <span className="ov-step-number">3</span>
-            Tính máu
-          </h3>
           <p>Bên thua bị trừ máu. Hết giờ mà chưa phân thắng bại thì cả hai cùng bị trừ.</p>
         </li>
       </ol>
@@ -223,69 +205,70 @@ function RoundCard({ index, code }: { index: GuideIndex; code: string }) {
 }
 
 /** The health formula as something to play with: pick how many units the winner kept and the stage damage. */
-function DamageCard() {
+function DamageSection() {
   const [alive, setAlive] = useState(3)
   const [stage, setStage] = useState(2)
   const lost = alive < 5 ? alive * 2 + stage : 9 + (alive - 5) + stage
   const left = Math.max(0, START_HEALTH - lost)
   return (
-    <section className="ov-card ov-damage" aria-label="Trừ máu khi thua">
-      <header>
-        <span className="ov-kicker">Khi thua</span>
-        <h2>Bị trừ bao nhiêu máu?</h2>
-      </header>
-      <div className="ov-field">
-        <span className="ov-label">Quân còn sống của bên thắng</span>
-        <div className="ov-alive" role="group" aria-label="Số quân còn sống của bên thắng">
-          {Array.from({ length: BOARD_SLOTS }, (_, at) => (
-            <button
-              key={at}
-              type="button"
-              aria-label={`${at + 1} quân`}
-              aria-pressed={at + 1 === alive}
-              data-on={at < alive || undefined}
-              onClick={() => setAlive(at + 1)}
-            />
-          ))}
-          <b>{alive}</b>
+    <section className="mode-section" aria-labelledby="ov-damage">
+      <ModeHeading id="ov-damage" title="Khi thua" note="Bị trừ bao nhiêu máu?" />
+      <div className="ov-split">
+        <div className="ov-figure">
+          <div className="ov-field">
+            <span className="ov-label">Quân còn sống của bên thắng</span>
+            <div className="ov-alive" role="group" aria-label="Số quân còn sống của bên thắng">
+              {Array.from({ length: BOARD_SLOTS }, (_, at) => (
+                <button
+                  key={at}
+                  type="button"
+                  aria-label={`${at + 1} quân`}
+                  aria-pressed={at + 1 === alive}
+                  data-on={at < alive || undefined}
+                  onClick={() => setAlive(at + 1)}
+                />
+              ))}
+              <b>{alive}</b>
+            </div>
+          </div>
+          <div className="ov-field">
+            <span className="ov-label">Sát thương người chơi · tăng dần theo giai đoạn trận</span>
+            <div className="ov-stepper">
+              <button type="button" aria-label="Giảm" disabled={stage <= 0} onClick={() => setStage(stage - 1)}>
+                −
+              </button>
+              <b>{stage}</b>
+              <button type="button" aria-label="Tăng" disabled={stage >= 30} onClick={() => setStage(stage + 1)}>
+                +
+              </button>
+            </div>
+          </div>
+          <div className="ov-formula" aria-live="polite">
+            {alive < 5 ? (
+              <span>
+                {alive} × 2 + {stage}
+              </span>
+            ) : (
+              <span>
+                9 + ({alive} − 5) + {stage}
+              </span>
+            )}
+            <strong>= −{lost} máu</strong>
+          </div>
+          <div className="ov-health" role="img" aria-label={`Còn ${left} trên ${START_HEALTH} máu`}>
+            <i style={{ width: `${left}%` }} />
+            <i className="ov-health-lost" style={{ left: `${left}%`, width: `${Math.min(lost, START_HEALTH)}%` }} />
+            <span>
+              {START_HEALTH} → {left}
+            </span>
+          </div>
         </div>
+        <ul className="ov-notes">
+          <li>Dưới 5 quân: số quân còn sống × 2 + sát thương người chơi.</li>
+          <li>Từ 5 quân: 9 + (số quân − 5) + sát thương người chơi.</li>
+          <li>Thua bản sao (ghép trận khi số người lẻ) thì không chịu sát thương người chơi.</li>
+        </ul>
       </div>
-      <div className="ov-field">
-        <span className="ov-label">Sát thương người chơi · tăng dần theo giai đoạn trận</span>
-        <div className="ov-stepper">
-          <button type="button" aria-label="Giảm" disabled={stage <= 0} onClick={() => setStage(stage - 1)}>
-            −
-          </button>
-          <b>{stage}</b>
-          <button type="button" aria-label="Tăng" disabled={stage >= 30} onClick={() => setStage(stage + 1)}>
-            +
-          </button>
-        </div>
-      </div>
-      <div className="ov-formula" aria-live="polite">
-        {alive < 5 ? (
-          <span>
-            {alive} × 2 + {stage}
-          </span>
-        ) : (
-          <span>
-            9 + ({alive} − 5) + {stage}
-          </span>
-        )}
-        <strong>= −{lost} máu</strong>
-      </div>
-      <div className="ov-health" role="img" aria-label={`Còn ${left} trên ${START_HEALTH} máu`}>
-        <i style={{ width: `${left}%` }} />
-        <i className="ov-health-lost" style={{ left: `${left}%`, width: `${Math.min(lost, START_HEALTH)}%` }} />
-        <span>
-          {START_HEALTH} → {left}
-        </span>
-      </div>
-      <ul className="ov-notes">
-        <li>Dưới 5 quân: số quân còn sống × 2 + sát thương người chơi.</li>
-        <li>Từ 5 quân: 9 + (số quân − 5) + sát thương người chơi.</li>
-        <li>Thua bản sao (ghép trận khi số người lẻ) thì không chịu sát thương người chơi.</li>
-      </ul>
     </section>
   )
 }
@@ -294,10 +277,10 @@ function DamageCard() {
 export function AutoChessOverview({ guide, code }: { guide: PublicGuide; code: string }) {
   const index = useGuideIndex(guide)
   return (
-    <div className="ov-grid">
-      <GoalCard />
-      <RoundCard index={index} code={code} />
-      <DamageCard />
-    </div>
+    <>
+      <GoalSection />
+      <RoundSection index={index} code={code} />
+      <DamageSection />
+    </>
   )
 }

@@ -19,7 +19,8 @@ const SECTIONS = [
   { id: "wiki-hero-builds", Icon: catalogIcons.items, vi: "Build đề cử", en: "Recommended builds" },
   { id: "wiki-hero-skins", Icon: catalogIcons.skins, vi: "Trang phục", en: "Skins" },
   { id: "hero-videos", Icon: navArtIcons.videos, vi: "Video", en: "Videos" },
-  { id: "wiki-hero-history-title", Icon: gameplayIcons.cooldown, vi: "Các lần thay đổi khác", en: "Other changes" },
+  // Shorter than the section's own title, so the entry keeps to one line in the side column.
+  { id: "wiki-hero-history-title", Icon: gameplayIcons.cooldown, vi: "Lịch sử thay đổi", en: "Change history" },
 ]
 
 /** Far enough below the sticky header that a section counts as being read once its heading settles under it. */

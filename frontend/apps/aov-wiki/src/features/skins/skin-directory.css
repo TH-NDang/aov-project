@@ -1,106 +1,169 @@
+/* The skin library: a search and filters pinned under the header, then every hero's skins as one row of cards. */
 .wiki-skin-directory {
+  --skin-gap: 12px;
   min-width: 0;
-  width: 100%;
-  max-width: 920px;
 }
-.wiki-skin-toolbar {
+/* Holds its line while the count is still unknown, so the page does not move when it arrives. */
+.wiki-skin-summary {
+  display: inline-block;
+  min-height: 1.5rem;
+}
+.wiki-skin-version {
   display: flex;
-  flex-wrap: wrap;
+  min-width: 0;
+  flex: none;
   align-items: center;
-  gap: 7px;
-  border: 1px solid var(--aov-line);
-  border-radius: 12px;
-  padding: 5px;
-  background: linear-gradient(100deg, #111c2a66, #1421322e);
-  box-shadow: inset 0 1px #ffffff03;
+  color: var(--aov-muted);
 }
+.wiki-skin-version:empty {
+  display: none;
+}
+
+/* ---------- Search and filters ---------- */
+.wiki-skin-toolbar-marker {
+  display: block;
+  height: 0;
+}
+/* Pinned, as the list below is long and the hero filter is the way to jump within it. */
+.wiki-skin-toolbar {
+  position: sticky;
+  z-index: 15;
+  top: var(--wiki-header-height);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -8px calc(-1 * var(--wiki-gutter)) 12px;
+  padding: 8px var(--wiki-gutter);
+}
+.wiki-skin-toolbar[data-stuck] {
+  background: var(--aov-bg);
+}
+.wiki-skin-toolbar[data-stuck]::after {
+  content: "";
+  position: absolute;
+  right: var(--wiki-gutter);
+  bottom: 0;
+  left: var(--wiki-gutter);
+  height: 1px;
+  background: var(--aov-line);
+}
+/* The search gives up width before a filter does, and a long choice is shortened before anything leaves the row. */
 .wiki-skin-search {
   display: flex;
-  min-width: 170px;
+  min-width: 160px;
   height: 36px;
+  flex: 0 100 360px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 4px 0 12px;
+  background: var(--aov-surface);
+  color: var(--aov-muted);
+}
+.wiki-skin-search:focus-within {
+  border-color: var(--aov-accent);
+  background: var(--aov-sunken);
+}
+.wiki-skin-search > label {
+  display: flex;
+  min-width: 0;
+  height: 100%;
   flex: 1;
   align-items: center;
-  gap: 9px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  padding-inline: 10px;
-  color: var(--aov-muted);
-  background: #0c18244d;
+  gap: 8px;
 }
-.wiki-skin-search > svg {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
+.wiki-skin-search svg {
+  flex: none;
 }
 .wiki-skin-search input {
   width: 100%;
   min-width: 0;
   height: 100%;
   border: 0;
+  outline: 0;
   background: transparent;
-  outline: none;
   color: var(--aov-text);
-  font-size: 0.8125rem;
+  font: var(--wiki-type-body);
+  text-overflow: ellipsis;
 }
 .wiki-skin-search input::placeholder {
   color: var(--aov-muted);
 }
-.wiki-skin-search:focus-within {
-  border-color: color-mix(in srgb, var(--aov-accent) 35%, transparent);
-  background: #0c182480;
-}
-.wiki-skin-filter-strip {
-  display: flex;
-  min-width: 0;
-  max-width: 100%;
-  align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  touch-action: pan-x;
-}
-.wiki-skin-filter-strip::-webkit-scrollbar {
+.wiki-skin-search input::-webkit-search-cancel-button {
   display: none;
 }
-.wiki-skin-select[data-slot="select-trigger"],
-span.wiki-skin-select {
-  width: 130px;
-  height: 36px;
-  flex-shrink: 0;
-  gap: 8px;
-  border: 1px solid var(--aov-line);
-  border-radius: 8px;
-  padding-inline: 10px;
-  background: #26344875;
-  color: var(--aov-text-soft);
-  box-shadow: none;
-  font-size: 0.8125rem;
+.wiki-skin-search-clear {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-muted);
 }
-.wiki-skin-select[data-slot="select-trigger"] > svg:first-child {
-  flex-shrink: 0;
-  color: var(--aov-accent);
+.wiki-skin-search-clear:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+/* One filter: the list to choose from and, once something is chosen, a button that clears it. */
+.wiki-skin-filter {
+  display: flex;
+  min-width: 104px;
+  height: 36px;
+  flex: 0 1 auto;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+}
+.wiki-skin-filter:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-skin-filter[data-active] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.wiki-skin-select[data-slot="select-trigger"] {
+  width: auto;
+  min-width: 0;
+  max-width: 300px;
+  height: 100%;
+  flex: 1;
+  gap: 8px;
+  border: 0;
+  border-radius: inherit;
+  padding: 0 10px;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
+}
+.wiki-skin-select[data-slot="select-trigger"]:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
+}
+.wiki-skin-select[data-slot="select-trigger"] > svg {
+  flex: none;
+  color: inherit;
 }
 .wiki-skin-select[data-slot="select-trigger"] > [data-slot="select-value"] {
   min-width: 0;
   flex: 1;
   text-align: left;
 }
-.wiki-skin-select[data-slot="select-trigger"]:hover,
-.wiki-skin-select[data-active="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 28%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 5%, transparent);
-  color: var(--aov-accent);
+.wiki-skin-filter-clear {
+  display: grid;
+  width: 32px;
+  flex: none;
+  place-items: center;
+  border-left: 1px solid color-mix(in srgb, var(--aov-accent) 40%, transparent);
+  border-radius: 0 5px 5px 0;
 }
-.wiki-skin-select-menu[data-slot="select-content"] {
-  max-height: min(300px, var(--radix-select-content-available-height));
-  border-color: color-mix(in srgb, var(--aov-accent) 20%, transparent);
-  border-radius: 12px;
-  background: #202e40;
-  color: var(--aov-text);
-}
-.wiki-skin-select-menu [data-slot="select-item"] {
-  min-height: 36px;
-  font-size: 0.8125rem;
+.wiki-skin-filter-clear:hover {
+  background: color-mix(in srgb, var(--aov-accent) 16%, transparent);
 }
 .wiki-skin-filter-choice {
   display: flex;
@@ -111,34 +174,26 @@ span.wiki-skin-select {
 }
 .wiki-skin-filter-art {
   display: grid;
+  height: 24px;
   flex: none;
   place-items: center;
-  height: 28px;
-  color: #c1ac83;
+  color: var(--aov-muted);
 }
 .wiki-skin-filter-art-hero {
-  width: 28px;
+  width: 24px;
+  overflow: hidden;
   border-radius: 50%;
   object-fit: cover;
 }
 .wiki-skin-filter-art-badge {
-  width: 48px;
+  width: 42px;
   object-fit: contain;
 }
 .wiki-skin-filter-art > .wiki-image {
   object-fit: inherit;
 }
-.wiki-skin-select[data-slot="select-trigger"] .wiki-skin-filter-art-hero {
-  width: 22px;
-  height: 22px;
-}
-.wiki-skin-select[data-slot="select-trigger"] .wiki-skin-filter-art-badge {
-  width: 34px;
-  height: 22px;
-}
-.wiki-skin-select[data-slot="select-trigger"][data-active="true"] {
-  width: auto;
-  max-width: 180px;
+.wiki-skin-filter-name {
+  min-width: 0;
 }
 .wiki-skin-select .wiki-skin-filter-name {
   overflow: hidden;
@@ -148,102 +203,290 @@ span.wiki-skin-select {
 .wiki-skin-select-variant {
   margin-inline-start: 6px;
   color: var(--aov-muted);
-  font-size: 0.8125rem;
+  font: var(--wiki-type-meta);
 }
-.wiki-skin-clear {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 8px;
-  color: var(--gold);
+.wiki-skin-select .wiki-skin-select-variant {
+  color: inherit;
 }
-.wiki-skin-clear:hover {
-  background: color-mix(in srgb, var(--aov-accent) 6%, transparent);
+.wiki-skin-select-menu[data-slot="select-content"] {
+  max-height: min(360px, var(--radix-select-content-available-height));
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-popover);
+  box-shadow: var(--aov-shadow-lg);
+  color: var(--aov-text);
+}
+.wiki-skin-select-menu [data-slot="select-item"] {
+  min-height: 36px;
+  border-radius: var(--aov-radius-control);
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
+}
+.wiki-skin-select-menu [data-slot="select-item"]:is(:focus, [data-highlighted]) {
+  background: var(--aov-raised);
+  color: var(--aov-text);
 }
 .wiki-skin-sort {
   display: inline-flex;
+  height: 36px;
   flex: none;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding-inline: 10px;
-  border-radius: 8px;
-  color: var(--aov-accent);
-  font-size: 0.8125rem;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 0 12px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
+  white-space: nowrap;
 }
 .wiki-skin-sort:hover,
 .wiki-skin-sort[data-state="open"] {
-  background: color-mix(in srgb, var(--aov-accent) 8%, transparent);
+  background: var(--aov-raised);
+  color: var(--aov-text);
 }
-.wiki-skin-sort-menu fieldset {
+.wiki-skin-sort[data-active] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+.wiki-skin-sort-menu[data-slot="popover-content"] {
+  width: 264px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  padding: 12px;
+  background: var(--aov-popover);
+  box-shadow: var(--aov-shadow-lg);
+  color: var(--aov-text);
+}
+.wiki-skin-sort-menu [role="radiogroup"] {
   display: grid;
-  gap: 2px;
   min-width: 0;
+  gap: 2px;
 }
-.wiki-skin-sort-menu fieldset + fieldset {
-  margin-top: 12px;
-  border-top: 1px solid var(--wiki-line);
-  padding-top: 8px;
+.wiki-skin-sort-menu [role="radiogroup"] + [role="radiogroup"] {
+  margin-top: 10px;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 10px;
 }
-.wiki-skin-sort-menu legend {
+.wiki-skin-sort-menu p {
   margin-bottom: 4px;
-  color: var(--muted-foreground);
-  font-size: 0.8125rem;
-  font-weight: 600;
+  color: var(--aov-muted);
+  font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
 }
 .wiki-skin-sort-menu label {
   display: flex;
+  min-height: 36px;
   align-items: center;
-  gap: 9px;
-  min-height: 34px;
+  gap: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
 }
 .wiki-skin-sort-menu input {
-  accent-color: var(--gold);
+  accent-color: var(--aov-accent);
 }
-.wiki-skin-groups {
+.wiki-skin-clear {
+  display: inline-flex;
+  min-height: 36px;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  padding-inline: 6px;
+  color: var(--aov-accent);
+  font: var(--wiki-type-meta);
+  white-space: nowrap;
+}
+.wiki-skin-clear:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Compact layout: the search and one filter button; the choices live in the sheet and show below as chips. */
+.wiki-skin-toolbar-compact {
+  margin-bottom: 0;
+}
+.wiki-skin-toolbar-compact .wiki-skin-search {
+  min-width: 0;
+  height: 40px;
+  flex: 1 1 0;
+}
+/* 16px keeps iOS from zooming the page when the field gets focus. */
+.wiki-skin-toolbar-compact .wiki-skin-search input {
+  font-size: 16px;
+}
+.wiki-skin-status {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
-  margin-top: 18px;
+  min-width: 0;
+  min-height: 36px;
+  margin-bottom: 8px;
 }
-.wiki-skin-group-heading {
+/* One row that scrolls sideways when the chosen filters are long. */
+.wiki-skin-result {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin: 0 calc(-1 * var(--wiki-gutter));
+  overflow-x: auto;
+  padding: 4px var(--wiki-gutter);
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+.wiki-skin-chip {
+  position: relative;
+  display: inline-flex;
+  height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--aov-accent);
+  border-radius: var(--aov-radius-pill);
+  padding: 0 10px 0 4px;
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+  font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
+  white-space: nowrap;
+}
+/* The chip is 32px high and its touch target 40px. */
+.wiki-skin-chip::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
+}
+.wiki-skin-chip .wiki-skin-filter-art {
+  color: inherit;
+}
+.wiki-skin-chip .wiki-skin-filter-art-badge {
+  margin-left: 4px;
+}
+.wiki-skin-sheet {
+  display: grid;
+  gap: 18px;
+}
+.wiki-skin-sheet-field {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+.wiki-skin-sheet-field > span {
+  color: var(--aov-muted);
+  font: 600 0.8125rem/1.125rem var(--wiki-font-reading);
+}
+.wiki-skin-sheet .wiki-skin-filter {
+  height: 44px;
+}
+.wiki-skin-sheet .wiki-skin-select[data-slot="select-trigger"] {
+  max-width: none;
+}
+.wiki-skin-sheet-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+/* Three long names do not fit one row of a phone, and two beside one would leave the third alone. */
+.wiki-skin-sheet-choices[data-count="3"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 560px) {
+  .wiki-skin-sheet-choices[data-count="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.wiki-skin-sheet-choices > button {
+  min-height: 44px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  padding: 6px 10px;
+  color: var(--aov-text-soft);
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
+  text-align: left;
+}
+.wiki-skin-sheet-choices > button[aria-pressed="true"] {
+  border-color: var(--aov-accent);
+  background: var(--aov-accent-soft);
+  color: var(--aov-accent-strong);
+}
+
+/* ---------- Heroes and their skins ---------- */
+.wiki-skin-groups {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+.wiki-skin-group {
+  min-width: 0;
+}
+.wiki-skin-group-heading {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 .wiki-skin-group-heading h2 {
+  min-width: 0;
+  color: var(--aov-accent);
   font: var(--wiki-type-section);
-}
-.wiki-skin-group-heading > span:last-child {
-  font: var(--wiki-type-meta);
-  color: var(--muted-foreground);
+  overflow-wrap: anywhere;
 }
 .wiki-skin-group-heading .wiki-skin-hero-head {
-  height: 26px;
-  width: 26px;
+  width: 28px;
+  height: 28px;
 }
-.wiki-skin-row {
+.wiki-skin-group-count {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+  white-space: nowrap;
+}
+.wiki-skin-group-link {
+  display: inline-flex;
+  min-height: 32px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--aov-accent);
+  font: var(--wiki-type-category);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wiki-skin-group-link:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.wiki-skin-group-link[data-fold] > svg {
+  transform: rotate(180deg);
+}
+/* Whole cards only: the page says how many fit a row, and a row that holds more ends with a tile that opens it. */
+.wiki-skin-grid {
   display: grid;
+  grid-template-columns: repeat(var(--skin-columns), minmax(0, 1fr));
+  gap: var(--skin-gap);
+}
+/*
+ * A phone swipes a hero's skins sideways. One card fewer than a grid row is whole and the next is cut near its
+ * middle by the edge of the screen, at every width, so the row always shows there is more.
+ */
+.wiki-skin-strip {
+  display: grid;
+  grid-auto-columns: calc((100% - (var(--skin-columns) - 1) * var(--skin-gap)) / (var(--skin-columns) - 0.55));
   grid-auto-flow: column;
-  grid-auto-columns: clamp(104px, 12vw, 140px);
-  gap: 8px;
+  gap: var(--skin-gap);
+  margin-right: calc(-1 * var(--wiki-gutter));
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-  scrollbar-color: #bec8d244 transparent;
-  padding: 5px 4px 8px;
+  padding-right: var(--wiki-gutter);
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
 }
-.wiki-skin-row[data-dragging] {
+.wiki-skin-strip::-webkit-scrollbar,
+.wiki-skin-result::-webkit-scrollbar {
+  display: none;
+}
+.wiki-skin-strip[data-dragging] {
   cursor: grabbing;
-}
-.wiki-skin-heading-skeleton {
-  width: 110px;
-  height: 24px;
 }
 .wiki-skin-card {
   position: relative;
@@ -251,135 +494,110 @@ span.wiki-skin-select {
   display: block;
   min-width: 0;
   aspect-ratio: 7 / 11;
-  border: 0;
-  border-radius: 8px;
-  padding: 0;
-  background: #111d2c;
-  color: var(--aov-accent-strong);
-  text-align: left;
-  transition:
-    transform 220ms ease-out,
-    box-shadow 220ms ease-out;
-}
-.wiki-skin-frame {
-  position: absolute;
-  display: block;
-  inset: 0;
   overflow: hidden;
-  border: 1px solid var(--aov-line);
-  border-radius: inherit;
-  background: linear-gradient(140deg, #39495e, #152235);
-  box-shadow: 0 8px 24px #09111f38;
-  transition: border-color 200ms ease-out;
+  border-radius: var(--aov-radius-card);
+  padding: 0;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  scroll-margin: calc(var(--wiki-header-height) + 68px) 0 16px;
+  scroll-snap-align: start;
+  text-align: left;
 }
-.wiki-skin-frame::after {
-  content: "";
+.wiki-skin-card > :is(.wiki-skin-art, .wiki-skin-missing) {
   position: absolute;
-  z-index: 2;
   inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, #08142140, transparent 30%, #0a162414 48%, #091421bd 73%, #08121ff5);
 }
-.wiki-skin-art {
-  object-fit: cover;
-  object-position: center 15%;
+.wiki-skin-card:focus-visible,
+.wiki-skin-more:focus-visible {
+  outline: 2px solid var(--aov-accent);
+  outline-offset: 2px;
 }
-.wiki-skin-art > img {
-  transition:
-    opacity 180ms ease-out,
-    transform 350ms ease-out;
-}
-.wiki-skin-art-head {
-  object-position: center;
-}
-.wiki-skin-art-art {
-  object-position: 60% center;
-}
-.wiki-skin-frame-corner {
-  position: absolute;
-  z-index: 3;
-  right: 5px;
-  bottom: 5px;
-  width: 20px;
-  height: 20px;
-  border-right: 1px solid color-mix(in srgb, var(--aov-accent) 44%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 44%, transparent);
-  border-radius: 0 0 3px;
-  pointer-events: none;
-}
-.wiki-skin-badge {
-  position: absolute;
-  z-index: 4;
-  top: 7px;
-  left: 8px;
-  width: 58px;
-  height: 29px;
-  object-fit: contain;
-  object-position: left top;
-  filter: drop-shadow(0 2px 4px #05101ed9);
-  border-radius: 0;
-  pointer-events: none;
-}
-.wiki-skin-badge .wiki-image-placeholder {
-  opacity: 0;
-}
+/* The name is read on a scrim over the foot of the picture. */
 .wiki-skin-card-caption {
   position: absolute;
-  z-index: 4;
+  z-index: 2;
   inset: auto 0 0;
-  display: block;
-  padding: 14px 10px 10px;
+  display: grid;
+  padding: 40px 10px 10px;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--aov-sunken) 94%, transparent),
+    color-mix(in srgb, var(--aov-sunken) 78%, transparent) 55%,
+    transparent
+  );
 }
 .wiki-skin-card-name {
-  font: var(--wiki-type-entry);
-  display: flex;
-  min-height: 36px;
-  align-items: end;
   color: var(--aov-text);
+  font: var(--wiki-type-entry);
   overflow-wrap: anywhere;
   text-wrap: balance;
-  text-shadow: 0 1px 8px #020a1480;
 }
-.wiki-skin-hero-head {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 22%, transparent);
-  border-radius: 50%;
-  object-fit: cover;
+.wiki-skin-card-hero,
+.wiki-skin-card-caption > small {
+  color: var(--aov-text-soft);
+  font: var(--wiki-type-meta);
 }
-.wiki-skin-card:focus-visible {
-  outline: 2px solid var(--aov-accent);
-  outline-offset: 4px;
+.wiki-skin-more {
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 7 / 11;
+  place-content: center;
+  justify-items: center;
+  border-radius: var(--aov-radius-card);
+  padding: 8px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  text-align: center;
 }
-.wiki-skin-missing {
-  display: flex;
-  width: 100%;
-  height: 100%;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  background: radial-gradient(ellipse at 50% 30%, #8c7c6333, transparent 70%);
+.wiki-skin-more:hover {
+  background: var(--aov-raised);
+}
+.wiki-skin-more > strong {
+  font: 700 1.5rem/2rem var(--wiki-font-reading);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-skin-more > span {
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-skin-more > svg {
+  margin-top: 10px;
   color: var(--aov-accent);
-  font-size: 0.8125rem;
 }
-.wiki-skin-missing > span:first-child {
-  font: 700 48px/1 var(--wiki-font-display);
-  opacity: 0.55;
+@media (hover: hover) and (pointer: fine) {
+  .wiki-skin-card .wiki-skin-art > img {
+    transition:
+      opacity 180ms ease-out,
+      transform 320ms ease-out;
+  }
+  .wiki-skin-card:hover .wiki-skin-art > img {
+    transform: scale(1.05);
+  }
+  .wiki-skin-card:hover .wiki-skin-card-name {
+    color: var(--aov-accent-strong);
+  }
 }
-.wiki-skin-skeleton {
-  pointer-events: none;
+
+/* ---------- Loading, empty and failed ---------- */
+.wiki-skin-heading-skeleton {
+  width: 140px;
+  height: 24px;
+  border-radius: var(--aov-radius-control);
 }
-.wiki-skin-name-skeleton {
-  display: block;
-  width: 75%;
-  height: 36px;
-  border-radius: 4px;
+.wiki-skin-filter.wiki-skeleton {
+  width: 112px;
+  border-color: transparent;
+}
+.wiki-skin-search.wiki-skeleton {
+  border-color: transparent;
+}
+.wiki-skin-toolbar-compact .wiki-skin-filter.wiki-skeleton {
+  width: 84px;
+  height: 40px;
 }
 .wiki-skin-state {
   display: grid;
-  min-height: 350px;
+  min-height: 320px;
   place-content: center;
   justify-items: center;
   gap: 12px;
@@ -388,464 +606,60 @@ span.wiki-skin-select {
   text-align: center;
 }
 .wiki-skin-state h2 {
+  color: var(--aov-text);
   font: var(--wiki-type-section);
-  color: var(--aov-accent);
 }
 .wiki-skin-state p {
+  max-width: 360px;
   font: var(--wiki-type-body);
 }
 .wiki-skin-state button,
 .wiki-skin-refresh-error button {
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 33%, transparent);
-  border-radius: 10px;
-  padding: 8px 16px;
-  color: var(--gold);
-  font-size: 0.8125rem;
+  min-height: 36px;
+  border: 1px solid var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  padding: 6px 16px;
+  color: var(--aov-text);
+  font: var(--wiki-type-category);
+}
+.wiki-skin-state button:hover,
+.wiki-skin-refresh-error button:hover {
+  background: var(--aov-raised);
 }
 .wiki-skin-state button:disabled,
 .wiki-skin-refresh-error button:disabled {
   opacity: 0.5;
+  cursor: wait;
 }
 .wiki-skin-refresh-error {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: 14px;
-  color: var(--aov-accent);
-  font-size: 0.8125rem;
-}
-.wiki-skin-preview[data-slot="dialog-content"] {
-  --skin-preview-width: min(1240px, calc(100vw - 40px));
-  --skin-preview-side: 300px;
-  --skin-preview-height: min(calc((var(--skin-preview-width) - var(--skin-preview-side)) * 0.625), calc(100dvh - 40px));
-  display: grid;
-  width: var(--skin-preview-width);
-  max-width: none;
-  max-height: calc(100dvh - 40px);
-  grid-template-columns: minmax(0, 1fr) var(--skin-preview-side);
-  gap: 0;
-  overflow-y: auto;
-  border: 1px solid var(--aov-line);
-  border-radius: 9px 24px 9px 9px;
-  padding: 0;
-  background: #1b293a;
-  color: var(--aov-accent-strong);
-  box-shadow: 0 30px 120px #02091299;
-}
-.wiki-skin-preview-close {
-  position: absolute;
-  z-index: 5;
-  top: 12px;
-  right: 12px;
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 25%, transparent);
-  border-radius: 50%;
-  background: #0b1829bb;
-  color: var(--aov-accent);
-}
-.wiki-skin-preview.public-bottom-drawer > .public-bottom-body {
-  padding: 0 0 env(safe-area-inset-bottom);
-}
-.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-image {
-  height: auto;
-  max-height: 48dvh;
-  aspect-ratio: 16 / 10;
-}
-.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-info {
-  height: auto;
-  overflow: visible;
-  padding: 14px 14px 18px;
-}
-.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-set {
-  min-height: 0;
-  flex: none;
-}
-.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-set ul {
-  display: flex;
-  overflow: auto hidden;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-set li {
-  width: 62px;
-  flex: none;
-}
-.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-step {
-  width: 22%;
-  padding-inline: 8px;
-}
-.wiki-skin-preview.public-bottom-drawer .wiki-skin-preview-step > span {
-  width: 36px;
-  height: 36px;
-}
-.wiki-skin-preview-close:hover {
-  background: #101a2be8;
-}
-.wiki-skin-preview-image {
-  position: relative;
-  display: grid;
-  min-width: 0;
-  height: var(--skin-preview-height);
-  place-items: center;
-  overflow: hidden;
-  background: #101c2a;
-  touch-action: pan-y;
-}
-.wiki-skin-preview-backdrop {
-  position: absolute;
-  z-index: 0;
-  inset: -40px;
-  background-position: center;
-  background-size: cover;
-  filter: blur(28px) brightness(0.42);
-}
-.wiki-skin-preview-art {
-  position: relative;
-  z-index: 1;
-}
-.wiki-skin-preview-step {
-  position: absolute;
-  z-index: 3;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  width: min(18%, 120px);
-  align-items: center;
-  padding-inline: 12px;
-  color: var(--aov-accent-strong);
-}
-.wiki-skin-preview-step[data-side="previous"] {
-  left: 0;
-  justify-content: flex-start;
-}
-.wiki-skin-preview-step[data-side="next"] {
-  right: 0;
-  justify-content: flex-end;
-}
-.wiki-skin-preview-step > span {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 30%, transparent);
-  border-radius: 50%;
-  background: #0b1829bb;
-  transition: background 160ms ease-out;
-}
-.wiki-skin-preview-step:hover > span,
-.wiki-skin-preview-step:focus-visible > span {
-  background: #101a2bf2;
-}
-.wiki-skin-preview-art {
-  object-fit: contain;
-  object-position: center;
-}
-.wiki-skin-preview-info {
-  display: flex;
-  min-width: 0;
-  height: var(--skin-preview-height);
-  flex-direction: column;
-  align-items: start;
-  gap: 12px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding: 38px 16px 14px;
-}
-.wiki-skin-preview-set {
-  display: flex;
-  width: 100%;
-  min-height: 112px;
-  flex: 1 1 0;
-  flex-direction: column;
-  border-top: 1px solid var(--aov-line);
-  padding-top: 12px;
-}
-.wiki-skin-preview-set h3 {
-  font: var(--wiki-type-meta);
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  color: var(--aov-muted);
-}
-.wiki-skin-preview-set h3 span {
-  color: var(--aov-accent);
-  font-variant-numeric: tabular-nums;
-}
-.wiki-skin-preview-set ul {
-  display: grid;
-  min-height: 0;
-  flex: 1;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-content: start;
-  gap: 6px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-.wiki-skin-thumb {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 3 / 4;
-  overflow: hidden;
-  border: 1px solid var(--aov-line);
-  border-radius: 6px;
-  background: #101c2a;
-  opacity: 0.72;
-  transition: opacity 140ms ease-out;
-}
-.wiki-skin-thumb:hover,
-.wiki-skin-thumb:focus-visible {
-  opacity: 1;
-}
-.wiki-skin-thumb[aria-current="true"] {
-  border-color: var(--aov-accent);
-  box-shadow: 0 0 0 1px var(--aov-accent);
-  opacity: 1;
-}
-.wiki-skin-thumb > .wiki-skin-art {
-  position: absolute;
-  inset: 0;
-}
-.wiki-skin-preview-heroes {
-  display: grid;
-  width: 100%;
-  flex: none;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-.wiki-skin-preview-heroes button {
-  display: flex;
-  min-width: 0;
-  min-height: 40px;
-  align-items: center;
-  gap: 4px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-  padding: 4px 6px;
-  color: var(--aov-accent);
-  font: var(--wiki-type-meta);
-}
-.wiki-skin-preview-heroes button:last-child {
-  justify-content: flex-end;
-}
-.wiki-skin-preview-heroes button:hover {
-  background: #0b182966;
-  color: var(--aov-accent-strong);
-}
-.wiki-skin-preview-heroes span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.wiki-skin-preview-heroes svg,
-.wiki-skin-preview-heroes .wiki-skin-hero-head {
-  flex: none;
-}
-.wiki-skin-preview-hint {
-  display: none;
-  width: 100%;
-  color: var(--aov-muted);
-  font: var(--wiki-type-meta);
-  text-align: center;
-}
-@media (hover: hover) and (pointer: fine) {
-  .wiki-skin-preview-hint {
-    display: block;
-  }
-}
-.wiki-skin-preview-eyebrow {
-  font: var(--wiki-type-meta);
-  color: var(--aov-accent);
-  letter-spacing: 0.15em;
-}
-.wiki-skin-preview-info [data-slot="dialog-title"] {
-  font: var(--wiki-type-page);
-  color: var(--aov-accent-strong);
-  overflow-wrap: anywhere;
-}
-.wiki-skin-preview-info [data-slot="dialog-description"] {
+  gap: 8px 12px;
+  margin-bottom: 16px;
+  border-radius: var(--aov-radius-card);
+  padding: 10px 14px;
+  background: var(--aov-surface);
+  color: var(--aov-text-soft);
   font: var(--wiki-type-body);
-  color: var(--aov-muted);
 }
-.wiki-skin-preview-badge {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: var(--aov-accent);
-  font-size: 0.8125rem;
-}
-.wiki-skin-preview-badge .wiki-skin-badge {
-  position: relative;
-  inset: auto;
-  width: 62px;
-  height: 32px;
-}
-.wiki-skin-preview-hero {
-  display: inline-flex;
-  max-width: 100%;
-  min-height: 42px;
-  align-items: center;
-  gap: 9px;
-  margin-top: 10px;
-  border-top: 1px solid var(--aov-line);
-  padding-top: 15px;
-  color: var(--aov-accent);
-  font-size: 0.8125rem;
-  text-decoration: none;
-}
-.wiki-skin-preview-hero:hover {
-  color: var(--aov-accent-strong);
-}
-.wiki-skin-preview-hero .wiki-skin-hero-head {
-  width: 28px;
-  height: 28px;
-}
-@media (hover: hover) and (pointer: fine) {
-  .wiki-skin-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 32px #09111f66;
-  }
-  .wiki-skin-card:hover .wiki-skin-frame {
-    border-color: color-mix(in srgb, var(--aov-accent) 50%, transparent);
-  }
-  .wiki-skin-card:hover .wiki-skin-art > img {
-    transform: scale(1.06);
-  }
-  .wiki-skin-frame::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 16%) 50%, transparent 62%);
-    pointer-events: none;
-    transform: translateX(-120%);
-    transition: transform 650ms ease-out;
-  }
-  .wiki-skin-card:hover .wiki-skin-frame::after {
-    transform: translateX(120%);
-  }
-}
-@media (min-width: 1600px) {
-  .wiki-skin-directory {
-    max-width: 1024px;
-  }
-}
-@media (min-width: 641px) and (max-width: 899px) {
-  .wiki-skin-card-caption {
-    padding: 10px;
-  }
-  .wiki-skin-card-name {
-    min-height: 32px;
-  }
-  .wiki-skin-search {
-    width: 100%;
-    flex-basis: 100%;
-  }
-  .wiki-skin-select[data-slot="select-trigger"],
-  span.wiki-skin-select {
-    width: 136px;
-  }
-}
-@media (max-width: 640px) {
-  .wiki-skin-toolbar {
-    gap: 5px;
-    padding: 5px;
-    border-radius: 10px;
-  }
-  .wiki-skin-search {
-    min-width: 0;
-    height: 36px;
-    flex-basis: 100%;
-  }
-  .wiki-skin-search input {
-    font-size: 16px;
-  }
-  .wiki-skin-filter-strip {
-    width: 100%;
-  }
-  .wiki-skin-select[data-slot="select-trigger"],
-  span.wiki-skin-select {
-    width: clamp(84px, 27vw, 124px);
-    height: 36px;
-    font-size: 0.8125rem;
-  }
-  .wiki-skin-card {
-    border-radius: 6px;
-  }
-  .wiki-skin-badge {
-    top: 5px;
-    left: 5px;
-    width: 48px;
-    height: 24px;
-  }
-  .wiki-skin-card-caption {
-    padding: 22px 8px 8px;
-  }
-  .wiki-skin-card-name {
-    min-height: 28px;
-  }
-  .wiki-skin-hero-head {
-    width: 13px;
-    height: 13px;
-  }
-  .wiki-skin-frame-corner {
-    right: 3px;
-    bottom: 3px;
-    width: 12px;
-    height: 12px;
-    opacity: 0.5;
-  }
-  .wiki-skin-name-skeleton {
-    height: 28px;
-  }
-  .wiki-skin-preview[data-slot="dialog-content"] {
-    width: calc(100vw - 24px);
-    max-height: calc(100dvh - 24px);
-    grid-template-columns: 1fr;
-    border-radius: 8px 20px 8px 8px;
-  }
-  .wiki-skin-preview-image {
-    height: min(60svh, 510px);
-  }
-  .wiki-skin-preview-info {
-    gap: 11px;
-    padding: 20px;
-  }
 
-  .wiki-skin-preview-hero {
-    margin-top: 3px;
+@media (max-width: 899.98px) {
+  .wiki-skin-directory {
+    --skin-gap: 8px;
   }
-}
-@media (max-width: 350px) {
+  .wiki-skin-groups {
+    gap: 22px;
+  }
+  .wiki-skin-group-heading {
+    margin-bottom: 8px;
+  }
   .wiki-skin-card-caption {
-    padding-inline: 6px;
+    padding: 32px 8px 8px;
   }
-  .wiki-skin-badge {
-    width: 40px;
-    height: 21px;
+  .wiki-skin-card > .wiki-skin-badge {
+    width: 44px;
+    height: 22px;
   }
-}
-@media (prefers-reduced-motion: reduce) {
-  .wiki-skin-card,
-  .wiki-skin-frame,
-  .wiki-skin-art > img {
-    transition: none;
-    transform: none;
-  }
-}
-.wiki-skin-preview-acquisition {
-  font: var(--wiki-type-entry);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 8px;
-  color: var(--aov-text);
-}
-.wiki-skin-preview-acquisition > svg {
-  flex: none;
-  color: var(--aov-wiki-gold);
 }

@@ -1,0 +1,226 @@
+/* A heading with the edit button at its end, on the hero page, in the skin viewer and in the warehouse detail. */
+.wiki-edit-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* The pencil that opens the dialog and the dialog's close button: quiet until pointed at. */
+.wiki-feedback-trigger,
+.wiki-feedback-close {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-muted);
+}
+.wiki-feedback-trigger:hover,
+.wiki-feedback-close:hover {
+  background: var(--aov-raised);
+  color: var(--aov-accent);
+}
+/* The close button sits at the dialog's edge, so its focus ring is drawn inside it. */
+.wiki-feedback-close:focus-visible {
+  outline-offset: -2px;
+}
+.wiki-feedback-trigger.with-label {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  width: auto;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 8px;
+}
+
+/* The dialog: a floating surface with the title, one line about what happens, the form and one main action. */
+.wiki-feedback-dialog[data-slot="dialog-content"] {
+  display: block;
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-media);
+  padding: 20px 24px 24px;
+  background: var(--aov-popover);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-feedback-dialog.public-bottom-drawer > .public-bottom-body {
+  padding: 0 16px max(16px, env(safe-area-inset-bottom));
+}
+.wiki-feedback-heading,
+.wiki-feedback-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.wiki-feedback-heading {
+  margin-right: -8px;
+}
+.wiki-feedback-heading [data-slot="dialog-title"] {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+.wiki-feedback-note,
+.wiki-feedback-original,
+.wiki-feedback-status,
+.wiki-feedback-receipt p {
+  font: var(--wiki-type-body);
+  color: var(--aov-muted);
+  overflow-wrap: anywhere;
+}
+.wiki-feedback-note {
+  margin: 2px 0 20px;
+}
+.wiki-feedback-note strong {
+  color: var(--aov-text);
+}
+.wiki-feedback-form fieldset {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+/* Inside a floating surface a field sits one step below it, as a field sits below the page. */
+.wiki-feedback-form .wiki-input {
+  background: var(--aov-surface);
+}
+.wiki-feedback-form .wiki-input:focus {
+  background: var(--aov-sunken);
+}
+.wiki-feedback-original summary {
+  font: var(--wiki-type-category);
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.wiki-feedback-original summary:hover {
+  color: var(--aov-text);
+}
+.wiki-feedback-original p {
+  max-height: 130px;
+  margin-top: 8px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+.wiki-feedback-original > div {
+  margin-top: 8px;
+}
+.wiki-feedback-original > div strong {
+  font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-feedback-contact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 12px;
+}
+.wiki-feedback-actions {
+  justify-content: flex-end;
+  border-top: 1px solid var(--aov-line);
+  padding-top: 16px;
+}
+.wiki-feedback-status {
+  margin-top: 12px;
+  color: var(--aov-accent);
+}
+.wiki-feedback-receipt {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  margin-top: 4px;
+}
+.wiki-feedback-receipt strong {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+
+/* Screenshots kept on the device for comparison: small tiles and one dashed tile that adds another. */
+.wiki-feedback-attachments {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.wiki-feedback-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.wiki-feedback-images figure {
+  position: relative;
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+  border-radius: var(--aov-radius-control);
+  background: var(--aov-surface);
+}
+.wiki-feedback-images figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* The remove button sits on the screenshot itself, so it takes the overlay colours used on artwork. */
+.wiki-feedback-images figure button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgb(8 12 22 / 80%);
+  color: #fff;
+}
+.wiki-feedback-upload {
+  display: flex;
+  width: 82px;
+  height: 82px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed var(--aov-line-strong);
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text-soft);
+  cursor: pointer;
+}
+.wiki-feedback-upload svg {
+  width: 24px;
+  height: 24px;
+}
+.wiki-feedback-upload > span {
+  font: var(--wiki-type-meta);
+}
+.wiki-feedback-upload:hover {
+  border-color: color-mix(in srgb, var(--aov-accent) 44%, transparent);
+  color: var(--aov-accent);
+}
+.wiki-feedback-upload:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.wiki-feedback-image-note {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-feedback-error {
+  font: var(--wiki-type-meta);
+  color: var(--aov-danger);
+}
+
+@media (max-width: 899.98px) {
+  .wiki-feedback-trigger,
+  .wiki-feedback-close {
+    width: 40px;
+    height: 40px;
+  }
+}
+@media (max-width: 379.98px) {
+  .wiki-feedback-contact {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

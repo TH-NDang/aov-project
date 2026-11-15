@@ -1,8 +1,186 @@
+/* Wide layout: brand, the main sections, the search and the tools on one bar. */
+.wiki-header {
+  position: sticky;
+  z-index: 40;
+  top: 0;
+  height: var(--wiki-header-height);
+  border-bottom: 1px solid var(--header-line);
+  background: var(--header-bg);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+}
+/* Over a hero's artwork the bar starts clear and fills in during the first 100px of scroll. */
 .wiki-header[data-variant="hero"] {
-  background: rgba(var(--hero-surface-rgb, 20, 25, 32), calc(var(--header-solid, 0) * 0.96));
-  border-bottom-color: rgb(255 255 255 / calc(var(--header-solid, 0) * 0.08));
+  border-bottom-color: color-mix(in srgb, var(--aov-wiki-gold) calc(var(--header-solid, 0) * 18%), transparent);
+  background: color-mix(in srgb, var(--aov-wiki-bar) calc(var(--header-solid, 0) * 94%), transparent);
   backdrop-filter: blur(calc(var(--header-solid, 0) * 20px)) saturate(calc(1 + var(--header-solid, 0) * 0.4));
   -webkit-backdrop-filter: blur(calc(var(--header-solid, 0) * 20px)) saturate(calc(1 + var(--header-solid, 0) * 0.4));
+}
+.wiki-header-inner {
+  display: flex;
+  width: min(100%, var(--aov-page-max));
+  height: 100%;
+  align-items: center;
+  gap: 16px;
+  margin-inline: auto;
+  padding-inline: var(--wiki-gutter);
+}
+.wiki-header-brand {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+}
+.wiki-header-logo {
+  flex: none;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-header-logo > img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 50%, transparent);
+  border-radius: var(--aov-radius-control);
+  object-fit: cover;
+}
+.wiki-header-logo:hover > img {
+  opacity: 0.85;
+}
+.wiki-topnav {
+  display: flex;
+  flex: none;
+  align-self: stretch;
+  gap: 2px;
+}
+.wiki-topnav > a,
+.wiki-topnav-menu {
+  font: var(--wiki-type-category);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  color: var(--aov-text-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wiki-topnav > a:hover,
+.wiki-topnav-menu:is(:hover, [data-state="open"]) {
+  color: var(--aov-text);
+}
+.wiki-topnav > a[aria-current],
+.wiki-topnav-menu[data-current] {
+  color: var(--aov-accent);
+}
+.wiki-topnav > a[aria-current]::after,
+.wiki-topnav-menu[data-current]::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 0;
+  left: 10px;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--aov-accent);
+}
+.wiki-topnav-menu > svg {
+  color: var(--aov-muted);
+}
+.wiki-topnav-panel[data-slot] {
+  min-width: 220px;
+  padding: 6px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-popover);
+  color: var(--aov-text);
+  box-shadow: var(--aov-shadow-lg);
+}
+.wiki-topnav-panel a {
+  font: var(--wiki-type-category);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+.wiki-topnav-panel a:is(:hover, :focus, [data-highlighted]) {
+  background: var(--aov-raised);
+  outline: 0;
+}
+.wiki-topnav-panel a[aria-current] {
+  color: var(--aov-accent);
+}
+.wiki-header .wiki-search {
+  flex: 0 1 280px;
+  margin-left: auto;
+}
+.wiki-header-tools {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+/* Over artwork the controls keep a backing of their own until the bar has filled in. */
+.wiki-header[data-variant="hero"]
+  :is(.wiki-preference-trigger, .wiki-header-search-toggle, .wiki-search:not(:focus-within)) {
+  border-color: color-mix(in srgb, var(--aov-line-strong) 70%, transparent);
+  background: color-mix(in srgb, var(--aov-wiki-bar) 72%, transparent);
+}
+/* Narrow desktops and tablets on their side: the wordmark gives its room to the sections. */
+@media (max-width: 1179.98px) {
+  .wiki-header-inner {
+    gap: 10px;
+  }
+  .wiki-header .public-app-wordmark {
+    display: none;
+  }
+  .wiki-topnav > a,
+  .wiki-topnav-menu {
+    padding: 0 8px;
+  }
+  .wiki-header .wiki-search {
+    flex-basis: 220px;
+  }
+}
+/* Shown only where the bar has no room for the field. */
+.wiki-header-search-toggle {
+  display: none;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  place-items: center;
+  margin-left: auto;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-control);
+  color: var(--aov-text-soft);
+}
+.wiki-header-search-toggle:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+/* The narrowest wide layout: the search is a button, and pressing it swaps the sections for the field. */
+@media (max-width: 1023.98px) {
+  .wiki-header .wiki-search {
+    display: none;
+  }
+  .wiki-header-search-toggle {
+    display: grid;
+  }
+  .wiki-header-inner[data-searching] .wiki-topnav {
+    display: none;
+  }
+  .wiki-header-inner[data-searching] .wiki-search {
+    display: flex;
+    flex: 1;
+    margin-left: 0;
+  }
+  .wiki-header-inner[data-searching] .wiki-header-search-toggle {
+    margin-left: 0;
+  }
 }
 
 .wiki-preferences-desktop {
@@ -17,7 +195,7 @@
   align-items: center;
   gap: 6px;
   border: 1px solid var(--aov-line);
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
   padding: 0 7px;
   color: var(--aov-text-soft);
 }
@@ -36,13 +214,12 @@
 }
 .wiki-preference-panel[data-slot="popover-content"] {
   width: min(320px, calc(100vw - 24px));
-  border: 1px solid color-mix(in srgb, var(--aov-accent) 14%, transparent);
-  border-radius: 12px;
+  border: 1px solid var(--aov-line);
+  border-radius: var(--aov-radius-card);
   padding: 14px;
-  background: #162233f5;
+  background: var(--aov-popover);
   color: var(--aov-text);
-  box-shadow: 0 15px 45px #0006;
-  backdrop-filter: blur(20px);
+  box-shadow: var(--aov-shadow-lg);
 }
 .wiki-preference-panel h2 {
   font: var(--wiki-type-section);
@@ -61,7 +238,7 @@
   align-items: center;
   gap: 10px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--aov-radius-control);
   padding: 8px;
   text-align: left;
 }
@@ -81,8 +258,7 @@
   color: var(--aov-muted);
 }
 .wiki-preference-options > button[aria-pressed="true"] {
-  border-color: color-mix(in srgb, var(--aov-accent) 14%, transparent);
-  background: color-mix(in srgb, var(--aov-accent) 5%, transparent);
+  background: var(--aov-accent-soft);
   color: var(--aov-accent);
 }
 .wiki-preference-options > button:hover:not(:disabled) {
@@ -108,9 +284,6 @@
   color: var(--aov-accent);
   text-align: left;
 }
-.wiki-preference-language[data-slot="popover-content"] {
-  width: 200px;
-}
 .wiki-preferences-mobile {
   display: grid;
   gap: 10px;
@@ -118,8 +291,7 @@
 .public-preferences-body .wiki-preferences-mobile {
   gap: 0;
   padding: 0 12px;
-  border: 1px solid var(--aov-line);
-  border-radius: 12px;
+  border-radius: var(--aov-radius-card);
   background: var(--aov-raised);
 }
 .public-preferences-body .wiki-preferences-mobile > .wiki-preference-row {
@@ -131,7 +303,7 @@
   border-bottom: 0;
 }
 .public-preferences-body .wiki-preferences-mobile > .wiki-preference-row > span {
-  font-size: 0.8125rem;
+  font: var(--wiki-type-meta);
   color: var(--aov-text-soft);
 }
 .public-preferences-body .wiki-preferences-mobile .wiki-preference-mobile-select {
@@ -141,7 +313,7 @@
   border: 0;
   background: transparent;
   color: var(--aov-accent);
-  font-size: 0.8125rem;
+  font: var(--wiki-type-meta);
   text-align: right;
 }
 .wiki-preferences-mobile > .wiki-preference-row:has(> .public-time-zone-error) {
@@ -171,28 +343,28 @@
   align-items: center;
   gap: 9px;
   color: var(--aov-text-soft);
-  font-size: 0.8125rem;
+  font: var(--wiki-type-meta);
 }
 .wiki-preferences-mobile .wiki-preference-mobile-select {
   width: 47%;
   min-height: 36px;
   border: 1px solid var(--aov-line);
-  border-radius: 7px;
+  border-radius: var(--aov-radius-control);
   padding: 5px;
-  background: #1a2737;
+  background: var(--aov-surface);
   color: var(--aov-accent);
-  font-size: 0.8125rem;
+  font: var(--wiki-type-meta);
 }
-/* Compact layout: a single row with the current place, search and the "more" sheet. */
+/* Compact layout: a single row with the current place, search, the contents and the "more" sheet. */
 .wiki-compact-header {
   position: sticky;
   z-index: 40;
   top: 0;
   display: flex;
-  height: 48px;
+  height: var(--wiki-header-height);
   align-items: center;
-  gap: 4px;
-  padding-inline: 8px;
+  gap: 2px;
+  padding-inline: 6px;
   color: var(--aov-text);
 }
 .wiki-compact-header::before {
@@ -200,22 +372,24 @@
   position: absolute;
   z-index: -1;
   inset: 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 18%, transparent);
-  background: color-mix(in srgb, var(--aov-wiki-bar) 94%, transparent);
+  border-bottom: 1px solid var(--header-line);
+  background: var(--header-bg);
   opacity: var(--header-solid, 0);
 }
 .wiki-compact-header[data-variant="library"]::before {
   opacity: 1;
 }
-.wiki-compact-header[data-variant="hero"]::before {
+.wiki-compact-header[data-searching] {
+  gap: 6px;
+  padding-inline: 6px 12px;
 }
 .wiki-compact-title {
   font: var(--wiki-type-section);
   min-width: 0;
   flex: 1;
   overflow: hidden;
-  padding-inline: 8px;
-  color: var(--gold);
+  padding-inline: 6px;
+  color: var(--aov-text);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -229,9 +403,8 @@
 .wiki-compact-brand > img {
   width: 28px;
   height: 28px;
-  border: 1px solid #efc78480;
-  border-radius: 7px;
-  background: #bd843f;
+  border: 1px solid color-mix(in srgb, var(--aov-accent) 50%, transparent);
+  border-radius: var(--aov-radius-control);
   object-fit: cover;
 }
 .wiki-mobile-wordmark {
@@ -241,6 +414,7 @@
   display: flex;
   align-items: center;
 }
+/* A plain 40px target; a soft disc appears on hover and over artwork. */
 .wiki-compact-button {
   position: relative;
   isolation: isolate;
@@ -249,64 +423,27 @@
   height: 40px;
   flex: none;
   place-items: center;
-  color: var(--aov-text);
+  color: var(--aov-text-soft);
   touch-action: manipulation;
 }
 .wiki-compact-button::before {
   content: "";
   position: absolute;
   z-index: -1;
-  inset: 4px;
-  border: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 50%, transparent);
+  inset: 3px;
   border-radius: 50%;
 }
-.wiki-compact-button:is(:hover, [data-state="open"])::before {
-  border-color: var(--gold);
-}
-.wiki-compact-header[data-variant="hero"] .wiki-compact-button {
-  color: var(--aov-wiki-gold);
-}
-.wiki-compact-header[data-variant="hero"] .wiki-compact-button::before {
-  border-color: color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
-  background: #080b0f2e;
-  backdrop-filter: blur(4px);
-}
-
-.wiki-search-suggestions {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  z-index: 60;
-  min-width: 260px;
-  padding: 6px;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-popover);
-  box-shadow: var(--aov-shadow-lg);
-}
-.wiki-search-suggestions a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: var(--aov-radius-control);
+.wiki-compact-button:is(:hover, [data-state="open"]) {
   color: var(--aov-text);
-  text-decoration: none;
 }
-.wiki-search-suggestions a:is(:hover, :focus-visible) {
+.wiki-compact-button:is(:hover, [data-state="open"])::before {
   background: var(--aov-raised);
 }
-.wiki-search-suggestions strong {
-  font: var(--wiki-type-category);
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* Over a cover the buttons need their own backing until the bar has filled in. */
+.wiki-compact-header[data-variant="hero"] .wiki-compact-button {
+  color: var(--aov-text);
 }
-.wiki-search-suggestions span:last-child {
-  font: var(--wiki-type-meta);
-  flex: none;
-  color: var(--aov-muted);
+.wiki-compact-header[data-variant="hero"] .wiki-compact-button::before {
+  background: color-mix(in srgb, var(--aov-wiki-bar) calc((1 - var(--header-solid, 0)) * 55%), transparent);
+  backdrop-filter: blur(calc((1 - var(--header-solid, 0)) * 4px));
 }

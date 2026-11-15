@@ -1,0 +1,36 @@
+/* The head of a library page: a way back for nested pages, the title with one action, one muted line. */
+.wiki-catalog-heading {
+  display: grid;
+  gap: 4px;
+  padding: 4px 0 16px;
+}
+.wiki-catalog-back {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  gap: 2px;
+  margin-left: -4px;
+  color: var(--aov-muted);
+  font: var(--wiki-type-meta);
+}
+.wiki-catalog-back:hover,
+.wiki-catalog-back:focus-visible {
+  color: var(--aov-accent);
+}
+.wiki-catalog-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.wiki-catalog-title h1 {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+  letter-spacing: -0.02em;
+}
+.wiki-catalog-heading > p {
+  max-width: 72ch;
+  color: var(--aov-muted);
+  font: var(--wiki-type-body);
+}

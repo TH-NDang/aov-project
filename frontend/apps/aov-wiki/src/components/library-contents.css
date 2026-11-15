@@ -1,0 +1,38 @@
+/* The contents sheet of the compact header: a title, a close button, then every section. */
+.wiki-library-sheet[data-slot="sheet-content"] {
+  width: min(86vw, 320px);
+  max-width: 320px;
+  gap: 0;
+  border-color: var(--aov-line);
+  background: var(--aov-popover);
+  color: var(--aov-text);
+}
+.wiki-library-sheet-heading {
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--aov-line);
+  padding: 8px 8px 8px 22px;
+}
+.wiki-library-sheet-heading [data-slot="sheet-title"] {
+  font: var(--wiki-type-section);
+  color: var(--aov-text);
+}
+.wiki-library-sheet-close {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--aov-text-soft);
+}
+.wiki-library-sheet-close:hover {
+  background: var(--aov-raised);
+  color: var(--aov-text);
+}
+.wiki-library-sheet-scroll {
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}

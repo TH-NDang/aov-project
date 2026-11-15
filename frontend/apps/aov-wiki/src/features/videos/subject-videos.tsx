@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react"
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useLocation, useNavigate, useSearchParams } from "react-router"
 import { usePageLayout } from "@aov/ui/hooks/use-page-layout"
 import { useWikiContext, wikiText } from "../../context/wiki-context"
 import { WikiIcon } from "../../components/wiki-icon"
 import { orderedPatches } from "../hero/hero-patch-line"
+import { PatchName } from "../hero/hero-patch-name"
 import { subjectVideosQuery } from "./video-api"
 import {
   byPurpose,
@@ -33,7 +34,10 @@ function useVersionedVideos(videos: readonly PublicVideo[] | undefined, selected
     const selected = selectedId || scope.patchVariantId || options?.patches.find((patch) => patch.isCurrent)?.id
     return {
       videos: videosAtVersion(videos ?? [], timeline, selected),
-      patchCode: (video: PublicVideo) => timeline.find((patch) => patch.id === video.patchVariantId)?.code,
+      patchName: (video: PublicVideo) => {
+        const patch = timeline.find((item) => item.id === video.patchVariantId)
+        return patch && <PatchName patch={patch} />
+      },
     }
   }, [options, scope.patchVariantId, selectedId, videos])
 }
@@ -76,14 +80,27 @@ export function useVideoParam() {
   }
 }
 
+/** The first column count, in order of preference, whose last row does not hold a single card alone. */
+function fillingColumns(count: number, preferred: readonly number[]) {
+  return preferred.find((columns) => count <= columns || count % columns !== 1) ?? preferred[0]
+}
+
+/** Column counts for a medium and a wide place, so a row of cards never ends with one card alone. */
+function videoColumns(count: number) {
+  return {
+    "--video-columns-medium": fillingColumns(count, [3, 2, 4]),
+    "--video-columns-wide": fillingColumns(count, [3, 4, 5]),
+  } as CSSProperties
+}
+
 function VideoCard({
   video,
-  patchCode,
+  patchName,
   showPurpose,
   onOpen,
 }: {
   video: PublicVideo
-  patchCode?: string
+  patchName?: ReactNode
   showPurpose: boolean
   onOpen: () => void
 }) {
@@ -96,9 +113,9 @@ function VideoCard({
       <span className="wiki-video-title">{video.title}</span>
       <span className="wiki-video-meta">
         {showPurpose && <span>{purposeLabel(video.purpose, locale)}</span>}
-        {patchCode && (
+        {patchName && (
           <span className="wiki-video-patch">
-            {text("Từ bản", "From")} {patchCode}
+            {text("Từ bản", "From")} {patchName}
           </span>
         )}
         {video.channelName && <span>{video.channelName}</span>}
@@ -107,7 +124,7 @@ function VideoCard({
     </>
   )
   return (
-    <li className="wiki-video-card public-panel">
+    <li className="wiki-video-card">
       {canPlayHere(video) ? (
         <button
           type="button"
@@ -132,13 +149,13 @@ function VideoCard({
 }
 
 /**
- * A row of videos that opens each one in the theater. Filters appear only when the videos have more than one purpose, and a
- * long list stays short until the reader asks for the rest.
+ * A set of video cards that opens each one in the theater. Filters appear only when the videos have more than one
+ * purpose, and a long list stays short until the reader asks for the rest.
  */
 export function VideoGallery({
   videos,
   heading,
-  patchCode,
+  patchName,
   limit: wideLimit = 6,
   filters = true,
   headingLevel = 2,
@@ -146,7 +163,7 @@ export function VideoGallery({
 }: {
   videos: readonly PublicVideo[]
   heading: string
-  patchCode?: (video: PublicVideo) => string | undefined
+  patchName?: (video: PublicVideo) => ReactNode
   limit?: number
   filters?: boolean
   headingLevel?: 2 | 3
@@ -178,8 +195,10 @@ export function VideoGallery({
   return (
     <section className="wiki-videos" id={id} aria-label={heading}>
       <div className="wiki-videos-heading">
-        <Heading>{heading}</Heading>
-        <span className="wiki-videos-count">{videos.length}</span>
+        <Heading>
+          {heading}
+          <small>{videos.length}</small>
+        </Heading>
       </div>
       {filters && purposes.length > 1 && (
         <div className="wiki-videos-filters" role="group" aria-label={text("Lọc video", "Filter videos")}>
@@ -193,19 +212,25 @@ export function VideoGallery({
           ))}
         </div>
       )}
-      <ul className="wiki-video-list">
+      <ul className="wiki-video-list" style={videoColumns(shown.length)}>
         {shown.map((video) => (
           <VideoCard
             key={video.id}
             video={video}
-            patchCode={patchCode?.(video)}
+            patchName={patchName?.(video)}
             showPurpose={purposes.length > 1}
             onOpen={() => videoParam.open(video)}
           />
         ))}
       </ul>
       {matching.length > limit && (
-        <button type="button" className="wiki-videos-more" onClick={() => setExpanded(!expanded)}>
+        <button
+          type="button"
+          className="wiki-videos-more"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+        >
+          <WikiIcon name="chevron" size={16} />
           {expanded ? text("Thu gọn", "Show less") : `${text("Xem thêm", "Show")} ${matching.length - limit} video`}
         </button>
       )}
@@ -213,7 +238,7 @@ export function VideoGallery({
         video={playing}
         playlist={playlist}
         heading={filtered && listed ? purposeLabel(listed, locale) : heading}
-        patchCode={patchCode}
+        patchName={patchName}
         onSelect={videoParam.select}
         onClose={videoParam.close}
       />
@@ -232,7 +257,7 @@ export function useHeroVideos(heroId: string, selectedId?: string | null) {
       ...split,
       firstVideo: playable[0] ?? null,
       firstLore: playable.find((video) => video.purpose === "LORE") ?? null,
-      patchCode: versioned.patchCode,
+      patchName: versioned.patchName,
     }
   }, [versioned])
 }
@@ -265,12 +290,12 @@ export function HeroVideoButton({ heroId }: { heroId: string }) {
 export function SubjectVideos({ kind, id, heading }: { kind: VideoSubjectKind; id: string; heading?: string }) {
   const { locale } = useWikiContext()
   const query = useQuery(subjectVideosQuery(kind, id))
-  const { videos, patchCode } = useVersionedVideos(query.data)
+  const { videos, patchName } = useVersionedVideos(query.data)
   return (
     <VideoGallery
       videos={videos}
       heading={heading ?? wikiText(locale, "Video", "Videos")}
-      patchCode={patchCode}
+      patchName={patchName}
       headingLevel={3}
       limit={4}
     />

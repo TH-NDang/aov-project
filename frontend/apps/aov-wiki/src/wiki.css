@@ -1,14 +1,16 @@
 @import "@aov/ui/styles.css";
 @import "./styles/typography.css";
 @import "./styles/motion.css";
-@import "./components/ornate-panel.css";
+@import "./styles/controls.css";
 
+/* The Wiki's palette: the shared token names take the Wiki's colours from tokens.css. The Wiki is always dark. */
 :root.dark {
   color-scheme: dark;
   --aov-bg: var(--aov-wiki-night);
-  --aov-surface: var(--aov-wiki-panel);
-  --aov-raised: var(--aov-wiki-panel-high);
-  --aov-sunken: var(--aov-wiki-panel-deep);
+  /* Cards sit one quiet step above the page; hover and controls take the next step. */
+  --aov-surface: var(--aov-wiki-panel-deep);
+  --aov-raised: var(--aov-wiki-panel);
+  --aov-sunken: var(--aov-wiki-bar);
   --aov-popover: var(--aov-wiki-panel);
   --aov-line: var(--aov-wiki-line);
   --aov-line-strong: var(--aov-wiki-line-strong);
@@ -21,102 +23,63 @@
   --aov-muted: var(--aov-wiki-text-muted);
   --aov-accent: var(--aov-wiki-gold);
   --aov-accent-strong: var(--aov-wiki-gold-bright);
-  --aov-accent-soft: rgb(211 188 142 / 15%);
+  --aov-accent-soft: color-mix(in srgb, var(--aov-wiki-gold) 15%, transparent);
   --aov-on-accent: var(--aov-wiki-night);
   --aov-chart: var(--aov-wiki-gold);
-  --wiki-panel: var(--aov-surface);
-  --wiki-line: var(--aov-line);
-  --wiki-muted: var(--aov-muted);
-  --wiki-text: var(--aov-text);
   --wiki-gutter: var(--aov-gutter);
-
+  /* The top bar: 56px with the sections in it, 48px on the compact layout. */
+  --wiki-header-height: var(--aov-topbar);
+  /* The header and the footer: the bar colour, almost opaque, over a faint gold rule. */
   --header-bg: color-mix(in srgb, var(--aov-wiki-bar) 94%, transparent);
   --header-line: color-mix(in srgb, var(--aov-wiki-gold) 18%, transparent);
-  --header-text: var(--aov-text);
-  --header-muted: var(--aov-muted);
-  --gold: var(--aov-accent);
-  /* Logo background tone; underline of the AOVWiKi wordmark */
-  --amber-accent: #c98f45;
+  /* A faint light at the top of the page; it stays still while the page scrolls. */
+  --aov-wiki-backdrop:
+    radial-gradient(
+      70% 420px at 50% -90px,
+      color-mix(in srgb, var(--aov-wiki-text-muted) 22%, transparent),
+      transparent 72%
+    ),
+    var(--aov-wiki-night);
 }
 
-/* Inside a panel the Wiki's names follow the panel's tokens. */
-.public-panel {
-  --gold: var(--aov-accent);
-  --wiki-panel: var(--aov-surface);
-  --wiki-line: var(--aov-line);
-  --wiki-muted: var(--aov-muted);
-  --wiki-text: var(--aov-text);
-}
-/* Rows inside a framed sheet run to the sheet's own edge. */
-.ornate-panel {
-  --wiki-gutter: var(--ornate-pad, clamp(16px, 2.4vw, 28px));
-}
-/* A plain panel: no frame or corners, just the slate surface. */
-.wiki-slip {
-  border-radius: 12px;
-  padding: 16px 18px;
-  background: var(--aov-bg);
-  box-shadow: 0 16px 34px -26px rgb(0 0 0 / 90%);
-  color: var(--aov-text);
-}
-/* A page to read: one wide panel with a gold rule above its title. */
-.wiki-document {
-  border-top: 2px solid var(--aov-wiki-gold);
-  border-radius: 4px 4px 12px 12px;
-  padding: clamp(16px, 2.4vw, 28px);
-  background: var(--aov-bg);
-  color: var(--aov-text);
-}
-/* A section's heading: soft gold, with a thin line and a small diamond at each end below it. */
-.wiki-night-title,
-.type-section-title,
-.wiki-handbook h2:not(.sr-only),
-.wiki-index h2,
-.wiki-home-heroes-heading h2,
-.wiki-skin-group-heading h2,
-.wiki-updates-season h2 {
-  color: var(--aov-wiki-gold);
-}
-/* Game data colors its terms for a near-black screen, and the deepest of them fade on a slate panel. */
-.public-panel :is(.wiki-skill-prose, .wiki-skill-meta) [style*="color"] {
-  filter: brightness(1.3);
-}
-.wiki-night-title {
-  font: var(--wiki-type-section);
-}
-.wiki-rule {
-  position: relative;
-  border-bottom: 1px solid color-mix(in srgb, var(--aov-wiki-gold) 30%, transparent);
-  padding-bottom: 10px;
-}
-.wiki-rule::before,
-.wiki-rule::after {
-  content: "";
-  position: absolute;
-  bottom: -3px;
-  width: 5px;
-  height: 5px;
-  background: color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
-  transform: rotate(45deg);
-}
-.wiki-rule::before {
-  left: 0;
-}
-.wiki-rule::after {
-  right: 0;
+@media (max-width: 899.98px) {
+  :root.dark {
+    --wiki-header-height: 48px;
+  }
 }
 
-/* Exposes the tokens above as utilities: bg-header, border-header-line, text-header-muted, text-gold, bg-amber-accent, font-heading… */
+/* A floating panel takes the raised step for itself, so what is marked inside it takes the step above. */
+:root.dark
+  :is(
+    [data-slot="popover-content"],
+    [data-slot="dropdown-menu-content"],
+    [data-slot="dropdown-menu-sub-content"],
+    [data-slot="select-content"],
+    [data-slot="hover-card-content"],
+    [data-slot="combobox-content"],
+    .public-bottom-drawer,
+    .wiki-feedback-dialog,
+    .wiki-search-panel,
+    .wiki-library-sheet
+  ) {
+  --aov-raised: var(--aov-wiki-panel-high);
+  --accent: var(--aov-wiki-panel-high);
+  --secondary: var(--aov-wiki-panel-high);
+  --muted: var(--aov-wiki-panel-high);
+}
+
+/* Shared bottom sheets read the Stream's colour names; in the Wiki they take the Wiki's panel colours. */
+.public-bottom-drawer[data-vaul-drawer] {
+  --hub-surface: var(--aov-popover);
+  --hub-text: var(--aov-text);
+  --hub-muted: var(--aov-muted);
+  --hub-border: var(--aov-line);
+  --hub-accent: var(--aov-accent);
+}
+
+/* Tailwind's sans family is the Wiki's reading face; the page width is the shared column. */
 @theme inline {
-  --color-header: var(--header-bg);
-  --color-header-line: var(--header-line);
-  --color-header-text: var(--header-text);
-  --color-header-muted: var(--header-muted);
-  --color-gold: var(--gold);
-  --color-amber-accent: var(--amber-accent);
   --font-sans: var(--wiki-font-reading);
-  --font-heading: var(--wiki-font-display);
-  --font-wordmark: "Arial Black", "Segoe UI", sans-serif;
   --container-page: var(--aov-page-max);
 }
 
@@ -162,85 +125,13 @@
   }
 }
 
-.wiki-search-domain {
-  font: var(--wiki-type-meta);
-  max-width: 40%;
-  min-width: 0;
-  cursor: pointer;
-  border: 0;
-  border-right: 1px solid var(--wiki-line);
-  padding-right: 5px;
-  color: var(--gold);
-  background: transparent;
-}
-.wiki-search-domain option {
-  color: var(--wiki-text);
-  background: var(--wiki-panel);
-}
-@media (max-width: 760px) {
+@media (max-width: 899.98px) {
   /* Below 16px, iPhones zoom the whole page when a field takes focus. */
   input,
   select,
   textarea {
     font-size: max(16px, 1em);
   }
-  .wiki-change-skill-link,
-  .wiki-patch-expand,
-  .wiki-hero-video-button,
-  .wiki-footer-brand {
-    min-height: 36px;
-  }
-  .wiki-home-slide-dot,
-  .wiki-home-icon-button {
-    min-width: 36px;
-    height: 36px;
-  }
-}
-.wiki-account-page {
-  display: grid;
-  align-content: start;
-  gap: 20px;
-  margin: 0 auto;
-  width: min(100%, 820px);
-  flex: 1;
-  padding: clamp(24px, 5vw, 60px) var(--wiki-gutter);
-}
-.wiki-account-signin {
-  display: grid;
-  gap: 14px;
-  justify-items: start;
-  border: 1px solid var(--wiki-line);
-  border-radius: var(--aov-radius-card);
-  background: var(--wiki-panel);
-  padding: clamp(18px, 4vw, 32px);
-}
-.wiki-account-signin h1 {
-  font: var(--wiki-type-page);
-}
-.wiki-account-signin p {
-  color: var(--wiki-muted);
-  line-height: 1.6;
-}
-.wiki-account-signin-button {
-  min-height: 44px;
-  border-radius: var(--aov-radius-control);
-  background: var(--aov-accent);
-  color: var(--aov-on-accent);
-  padding: 8px 18px;
-  font-weight: 700;
-}
-.wiki-contact-page {
-  margin: 0 auto;
-  width: min(100%, 720px);
-  flex: 1;
-  padding: clamp(24px, 5vw, 60px) var(--wiki-gutter);
-}
-.wiki-contact-page h1 {
-  font: var(--wiki-type-page);
-}
-.wiki-contact-page form {
-  border-top: 1px solid var(--wiki-line);
-  padding-top: 24px;
 }
 
 /* Empty results and missing pages show the wiki mascot, so a dead end still feels like the product. */
@@ -254,5 +145,5 @@
   height: 72px;
   margin-bottom: 4px;
   border-radius: var(--aov-radius-media);
-  background: url("/images/mole-logo-v4.png") center / cover no-repeat;
+  background: url("/images/mole-logo-v4-160.png") center / cover no-repeat;
 }

@@ -1,74 +1,10 @@
 .wiki-hero-directory {
   max-width: 100%;
+  /* On a compact page the row of changes scrolls out to the screen edges. */
+  --wiki-changes-bleed: var(--wiki-gutter);
 }
-/* Wide layout: search first on its own line, then the two filter groups, in the same place at every width. */
-.wiki-hero-filters {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: center;
-  gap: 8px 28px;
-  margin-block: 12px 18px;
-}
-.wiki-hero-filter-row {
-  display: flex;
-  min-width: 0;
-  min-height: 40px;
-  align-items: center;
-  gap: 10px;
-}
-.wiki-hero-filter-label {
-  font: var(--wiki-type-meta);
-  display: flex;
-  flex-shrink: 0;
-  flex-direction: column;
-  align-items: start;
-  gap: 2px;
-  color: var(--aov-muted);
-}
-.wiki-hero-filter-choices {
-  display: flex;
-  min-width: 0;
-  max-width: 100%;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.wiki-hero-filter-choices::-webkit-scrollbar {
-  display: none;
-}
-.wiki-hero-filter-chip {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: var(--aov-radius-control);
-  background: transparent;
-  color: var(--aov-text-soft);
-  transition:
-    color 160ms,
-    border-color 160ms,
-    background 160ms;
-}
-.wiki-hero-filter-chip:hover {
-  color: var(--aov-text);
-  background: var(--aov-raised);
-}
-.wiki-hero-filter-chip[aria-pressed="true"] {
-  border-color: var(--aov-accent);
-  color: var(--aov-accent);
-  background: var(--aov-accent-soft);
-}
-.wiki-hero-filter-tools {
-  display: flex;
-  grid-column: 1 / -1;
-  min-width: 0;
-  align-items: center;
-  gap: 12px;
-}
+
+/* The field that searches the heroes by name, on this page and in the quick switch. */
 .wiki-hero-search {
   display: flex;
   flex: 1;
@@ -79,9 +15,12 @@
   gap: 8px;
   border: 1px solid var(--aov-line);
   border-radius: var(--aov-radius-control);
-  padding-inline: 10px;
+  padding-inline: 12px 10px;
   color: var(--aov-muted);
   background: var(--aov-surface);
+}
+.wiki-hero-search > svg {
+  flex: none;
 }
 .wiki-hero-search input {
   font: var(--wiki-type-body);
@@ -98,160 +37,69 @@
 }
 .wiki-hero-search:focus-within {
   border-color: var(--aov-accent);
-}
-.wiki-hero-clear {
-  font: var(--wiki-type-meta);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  min-height: 36px;
-  color: var(--aov-accent);
-}
-.wiki-hero-clear > span {
-  font-size: 18px;
-  line-height: 1;
-}
-.wiki-hero-result-count {
-  font: var(--wiki-type-meta);
-  margin-left: auto;
-  color: var(--aov-muted);
-  white-space: nowrap;
+  background: var(--aov-sunken);
 }
 
-.wiki-hero-grid {
+/* Wide layout: the search on its own line, then the lanes and the roles as two groups of chips. */
+.wiki-hero-controls {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-  gap: 20px 14px;
-  margin-top: 12px;
+  gap: 12px;
+  margin-bottom: 28px;
 }
-.wiki-hero-card {
-  --hero-card-tint: #6d646f;
-  position: relative;
-  display: block;
-  min-width: 0;
-  padding: 5px;
-  border-radius: 2px;
-  background: var(--aov-wiki-panel);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--aov-wiki-gold) 22%, transparent);
-  color: var(--aov-text);
-  text-decoration: none;
-  transition:
-    transform 200ms ease-out,
-    box-shadow 200ms ease-out;
-}
-/* Small gold ticks at the corners of the frame. */
-.wiki-hero-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 0 0 / 10px 2px,
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 0 0 / 2px 10px,
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 100% 0 / 10px 2px,
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 100% 0 / 2px 10px,
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 0 100% / 10px 2px,
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 0 100% / 2px 10px,
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 100% 100% / 10px 2px,
-    linear-gradient(var(--aov-wiki-gold), var(--aov-wiki-gold)) 100% 100% / 2px 10px;
-  background-repeat: no-repeat;
-  pointer-events: none;
-}
-.wiki-hero-card[data-role="MAGE"] {
-  --hero-card-tint: #796a91;
-}
-.wiki-hero-card[data-role="TANK"] {
-  --hero-card-tint: #657f79;
-}
-.wiki-hero-card[data-role="SUPPORT"] {
-  --hero-card-tint: #63898b;
-}
-.wiki-hero-card[data-role="MARKSMAN"] {
-  --hero-card-tint: #a17b4e;
-}
-.wiki-hero-card[data-role="WARRIOR"] {
-  --hero-card-tint: #8b7464;
-}
-.wiki-hero-card[data-role="ASSASSIN"] {
-  --hero-card-tint: #6a728c;
-}
-.wiki-hero-grid > * {
-  display: grid;
-}
-.wiki-hero-card-portrait {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  overflow: hidden;
-  background: linear-gradient(145deg, var(--hero-card-tint), var(--aov-raised));
-}
-.wiki-hero-card-portrait img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 15%;
-  transition:
-    opacity 180ms ease-out,
-    transform 320ms ease-out;
-}
-.wiki-hero-card-portrait[data-image-kind="head"] img {
-  object-position: center;
-}
-.wiki-hero-card-placeholder {
-  display: grid;
-  height: 100%;
-  place-items: center;
-  color: var(--aov-accent-strong);
-  font: var(--wiki-type-hero);
-}
-.wiki-hero-card-body {
+/* A group that does not fit beside the other moves to the next line whole; a single chip never wraps alone. */
+.wiki-hero-filter-groups {
   display: flex;
   min-width: 0;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 4px 4px;
-}
-.wiki-hero-card-name {
-  font: var(--wiki-type-entry);
-  overflow-wrap: anywhere;
-  transition: color 160ms;
-}
-.wiki-hero-card-roles {
-  display: flex;
   flex-wrap: wrap;
-  gap: 2px 10px;
+  gap: 8px 20px;
 }
-.wiki-hero-card-roles > span {
+
+/* The heading of the list: its name, how many heroes it holds and, while filtered, the way back to all of them. */
+.wiki-hero-list-heading {
+  display: flex;
+  min-height: 32px;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.wiki-hero-list-heading h2 {
+  min-width: 0;
+  color: var(--aov-accent);
+  font: var(--wiki-type-section);
+}
+.wiki-hero-list-heading small {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--aov-muted);
   font: var(--wiki-type-meta);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wiki-hero-clear {
   display: inline-flex;
+  min-height: 32px;
+  flex: none;
   align-items: center;
   gap: 4px;
-  color: var(--aov-muted);
+  margin-left: auto;
+  color: var(--aov-accent);
+  font: var(--wiki-type-category);
+  white-space: nowrap;
 }
-.wiki-hero-card-roles .wiki-hero-glyph {
-  width: 15px;
-  height: 15px;
+.wiki-hero-clear:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
-@media (hover: hover) {
-  .wiki-hero-card:hover {
-    transform: translateY(-3px);
-    box-shadow:
-      inset 0 0 0 1px var(--aov-wiki-gold),
-      0 14px 28px -14px rgb(211 188 142 / 42%);
-  }
-  .wiki-hero-card:hover .wiki-hero-card-portrait img {
-    transform: scale(1.07);
-  }
-  .wiki-hero-card:hover .wiki-hero-card-name {
-    color: var(--aov-accent);
-  }
+
+/* Seven cards across the full page, fewer as it narrows. */
+.wiki-hero-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
 }
-.wiki-hero-card:focus-visible {
-  outline-offset: 4px;
-}
-.wiki-hero-card-skeleton {
-  pointer-events: none;
-}
+
 .wiki-hero-list-state {
   display: grid;
   min-height: 280px;
@@ -271,6 +119,7 @@
 }
 .wiki-hero-list-state button {
   font: var(--wiki-type-category);
+  min-height: 36px;
   margin-top: 6px;
   border: 1px solid var(--aov-line-strong);
   border-radius: var(--aov-radius-control);
@@ -289,12 +138,18 @@
 .wiki-hero-toolbar-compact {
   position: sticky;
   z-index: 15;
-  top: 48px;
+  top: var(--wiki-header-height);
   display: flex;
   gap: 8px;
-  margin-inline: calc(-1 * var(--wiki-gutter));
+  margin: -4px calc(-1 * var(--wiki-gutter)) 0;
   padding: 8px var(--wiki-gutter);
   background: var(--aov-bg);
+}
+/* The version the list shows: one quiet line under the search. */
+.wiki-hero-version {
+  display: flex;
+  min-width: 0;
+  margin-bottom: 12px;
 }
 .wiki-hero-toolbar-compact .wiki-hero-search {
   height: 40px;
@@ -304,26 +159,21 @@
 .wiki-hero-toolbar-compact .wiki-hero-search input {
   font-size: 16px;
 }
-.wiki-hero-grid-count {
-  margin-left: 8px;
-  color: var(--aov-muted);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-}
 .wiki-hero-sheet-group {
   min-width: 0;
   border: 0;
   padding: 0;
 }
 .wiki-hero-sheet-group > legend {
-  font: var(--wiki-type-label);
+  font: var(--wiki-type-meta);
   margin-bottom: 8px;
   padding: 0;
-  color: var(--aov-muted);
+  color: var(--drawer-muted, var(--aov-muted));
 }
+/* Three across, which the five lanes and the six roles both fill without leaving one choice alone on a row. */
 .wiki-hero-sheet-group > div {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 .wiki-hero-sheet-choice {
@@ -332,41 +182,56 @@
   min-height: 44px;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--aov-line);
+  border: 1px solid var(--drawer-line, var(--aov-line));
   border-radius: var(--aov-radius-control);
-  padding-inline: 10px;
+  padding: 4px 10px;
   color: var(--aov-text-soft);
-  font-size: 14px;
-  line-height: 20px;
+  font: var(--wiki-type-category);
+  font-weight: 400;
   text-align: left;
-  white-space: nowrap;
+}
+/* A phone has room for two; the lane left over takes the whole last row. */
+@media (max-width: 519.98px) {
+  .wiki-hero-sheet-group > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wiki-hero-sheet-choice:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+.wiki-hero-sheet-choice .wiki-hero-glyph {
+  width: 20px;
+  height: 20px;
 }
 .wiki-hero-sheet-choice[aria-pressed="true"] {
   border-color: var(--aov-accent);
   background: var(--aov-accent-soft);
-  color: var(--aov-accent);
+  color: var(--aov-accent-strong);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 1099.98px) {
   .wiki-hero-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px 8px;
-  }
-  .wiki-hero-card-body {
-    align-items: center;
-    padding: 6px 2px 3px;
-    text-align: center;
-  }
-  .wiki-hero-card-roles {
-    justify-content: center;
-    gap: 6px;
-  }
-  .wiki-hero-card-role-label {
-    display: none;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
-@media (min-width: 420px) and (max-width: 640px) {
+@media (max-width: 899.98px) {
+  .wiki-hero-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .wiki-hero-list-heading,
+  .wiki-hero-clear {
+    min-height: 36px;
+  }
+}
+@media (max-width: 719.98px) {
   .wiki-hero-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+@media (max-width: 479.98px) {
+  .wiki-hero-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

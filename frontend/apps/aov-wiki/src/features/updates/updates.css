@@ -1,12 +1,6 @@
-.wiki-updates {
-  max-width: 860px;
-}
-.wiki-updates-lead {
-  font: var(--wiki-type-body);
-  max-width: 62ch;
-  margin-top: 4px;
-  color: var(--aov-muted);
-}
+/* Patch notes: the list of patches, one patch, and the changes of one hero. Everything sits straight on the page. */
+
+/* ---------- States shared by the list and the patch page ---------- */
 .wiki-updates-state {
   font: var(--wiki-type-body);
   display: grid;
@@ -15,7 +9,7 @@
   padding: 24px 0;
   color: var(--aov-muted);
 }
-.wiki-updates-state h1 {
+.wiki-updates-state :is(h1, h2) {
   font: var(--wiki-type-page);
   color: var(--aov-text);
 }
@@ -24,236 +18,484 @@
 }
 .wiki-updates-state button {
   font: var(--wiki-type-category);
-  border: 1px solid var(--aov-line-strong);
+  min-height: 36px;
   border-radius: var(--aov-radius-control);
-  padding: 6px 14px;
+  padding: 0 14px;
+  background: var(--aov-raised);
   color: var(--aov-text);
 }
-
-.wiki-updates-season {
-  margin-top: 24px;
+/* Placeholders hold the place of the rows that are loading. */
+.wiki-updates-skeleton {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
 }
-.wiki-updates-season h2 {
+.wiki-updates-skeleton > span:not(.sr-only) {
+  height: 76px;
+  border-radius: var(--aov-radius-card);
+  background: var(--aov-surface);
+}
+
+/* ---------- Section heading: the season of a list, the kind of thing a patch changed ---------- */
+.wiki-updates-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--aov-accent) 24%, transparent);
+}
+.wiki-updates-heading h2 {
   font: var(--wiki-type-section);
-  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  color: var(--aov-accent);
+}
+.wiki-updates-heading h2 small {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-updates-heading p {
+  font: var(--wiki-type-meta);
+  margin-top: 2px;
+  color: var(--aov-muted);
+}
+
+/* ---------- The list of patches ---------- */
+.wiki-updates-season + .wiki-updates-season {
+  margin-top: 36px;
 }
 .wiki-updates-season ol {
-  position: relative;
   display: grid;
-  gap: 12px;
-  padding-left: 26px;
-}
-.wiki-updates-season ol::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 7px;
-  width: 1px;
-  background: color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
-}
-.wiki-updates-season li {
-  position: relative;
-}
-.wiki-updates-season li::before {
-  content: "";
-  position: absolute;
-  top: 18px;
-  left: -24px;
-  width: 11px;
-  height: 11px;
-  background: var(--aov-wiki-gold);
-  box-shadow: 0 0 0 3px var(--aov-wiki-night);
-  transform: rotate(45deg);
+  gap: 10px;
+  margin-top: 14px;
 }
 .wiki-updates-row {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) auto;
-  align-items: baseline;
-  gap: 12px;
-  padding: 14px 16px;
+  grid-template-columns: 104px minmax(0, 1fr) auto 20px;
+  align-items: center;
+  gap: 4px 20px;
+  min-height: 76px;
+  padding: 14px 16px 14px 20px;
   border-radius: var(--aov-radius-card);
-  border-radius: 10px;
-  background: var(--aov-bg);
+  background: var(--aov-surface);
   color: var(--aov-text);
   text-decoration: none;
-  transition:
-    background 160ms,
-    transform 200ms ease-out;
+  transition: background 150ms;
 }
-.wiki-updates-row:is(:hover, :focus-visible) {
-  background: var(--aov-surface);
+.wiki-updates-row:hover {
+  background: var(--aov-raised);
 }
-.wiki-updates-row[data-current] {
-  padding-block: 20px;
-  box-shadow: 0 0 0 1px var(--aov-wiki-gold);
-}
-@media (hover: hover) {
-  .wiki-updates-row:hover {
-    transform: translateX(3px);
-  }
-}
-.wiki-updates-row time {
-  font: var(--wiki-type-meta);
+.wiki-updates-date {
+  font: 600 0.9375rem/1.375rem var(--wiki-font-reading);
   color: var(--aov-muted);
   font-variant-numeric: tabular-nums;
 }
-.wiki-updates-row strong {
-  font: var(--wiki-type-entry);
-  color: var(--aov-text);
-}
-.wiki-updates-row:is(:hover, :focus-visible) strong {
+.wiki-updates-row[data-current] .wiki-updates-date {
   color: var(--aov-accent);
+}
+.wiki-updates-copy {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.wiki-updates-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+.wiki-updates-title strong {
+  font: var(--wiki-type-entry);
+}
+.wiki-updates-row:hover .wiki-updates-title strong {
+  color: var(--aov-accent-strong);
 }
 .wiki-updates-current {
   font: var(--wiki-type-meta);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--aov-success);
   white-space: nowrap;
 }
-
-.wiki-patch-header nav:first-child {
-  font: var(--wiki-type-meta);
-  display: flex;
-  gap: 6px;
-  color: var(--aov-muted);
+.wiki-updates-current::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
-.wiki-patch-header nav:first-child a {
-  color: inherit;
-  text-decoration: none;
-}
-.wiki-patch-header nav:first-child a:hover {
-  color: var(--aov-text);
-}
-.wiki-patch-header h1 {
-  font: var(--wiki-type-page);
-  margin-top: 8px;
-  text-wrap: balance;
-}
-.wiki-patch-meta {
+/* One line about what the patch changed: how many heroes, then how many of each kind. */
+.wiki-updates-summary {
   font: var(--wiki-type-meta);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 12px;
-  margin-top: 6px;
+  gap: 2px 14px;
+  min-height: 1.125rem;
   color: var(--aov-muted);
 }
-.wiki-patch-meta a {
+.wiki-updates-summary > b {
+  color: var(--aov-text-soft);
+  font-weight: 400;
+}
+.wiki-updates-kind {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  color: var(--aov-accent);
-  text-decoration: none;
+  color: var(--kind-color, var(--aov-info));
+  white-space: nowrap;
 }
-.wiki-patch-meta a:hover {
-  text-decoration: underline;
+.wiki-updates-kind > svg {
+  flex: none;
 }
-.wiki-patch-jump {
+.wiki-updates-kind > b {
+  color: var(--aov-text-soft);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+/* As wide as a full row of portraits with its count, so the first portrait starts on one line in every row. */
+.wiki-updates-faces {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 14px;
+  width: calc(8 * 32px + 7 * 4px + 40px);
+  align-items: center;
+  gap: 4px;
 }
-.wiki-patch-jump a {
-  font: var(--wiki-type-category);
-  padding: 6px 12px;
+.wiki-updates-face {
+  display: block;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  overflow: hidden;
   border-radius: var(--aov-radius-control);
-  background: var(--aov-surface);
-  color: var(--aov-text);
-  text-decoration: none;
-}
-.wiki-patch-jump a:hover {
   background: var(--aov-raised);
 }
-.wiki-patch-jump span {
-  color: var(--aov-muted);
-  font-weight: 400;
+.wiki-updates-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
-.wiki-patch-section {
-  margin-top: 28px;
-  scroll-margin-top: 64px;
-}
-.wiki-patch-section h2 {
-  font: var(--wiki-type-section);
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.wiki-patch-section h2 span {
+.wiki-updates-more {
   font: var(--wiki-type-meta);
+  margin-left: 4px;
+  color: var(--aov-muted);
+  font-variant-numeric: tabular-nums;
+}
+.wiki-updates-row > svg {
   color: var(--aov-muted);
 }
-.wiki-patch-subjects {
+
+/* ---------- One patch: the head ---------- */
+.wiki-patch-meta {
+  font: var(--wiki-type-meta);
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  color: var(--aov-muted);
+}
+.wiki-patch-source {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  min-height: 24px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--aov-accent);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.wiki-patch-source:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* The compact header names the section, so the page names the patch itself and leads back to the list. */
+.wiki-patch-compact-head {
   display: grid;
-  gap: 10px;
+  gap: 4px;
+  padding-bottom: 14px;
 }
-.wiki-patch-subject {
-  display: grid;
-  gap: 8px;
-  padding: 14px 16px;
-  border-radius: var(--aov-radius-card);
-  background: var(--aov-surface);
-}
-.wiki-hero-history .wiki-patch-subjects {
-  position: relative;
-  padding-left: 26px;
-}
-.wiki-hero-history .wiki-patch-subjects::before {
-  content: "";
-  position: absolute;
-  top: 8px;
-  bottom: 8px;
-  left: 7px;
-  width: 1px;
-  background: color-mix(in srgb, var(--aov-wiki-gold) 60%, transparent);
-}
-.wiki-hero-history .wiki-patch-subject {
-  position: relative;
-  border-radius: 10px;
-  background: var(--aov-bg);
-}
-.wiki-hero-history .wiki-patch-subject::before {
-  content: "";
-  position: absolute;
-  top: 16px;
-  left: -24px;
-  width: 11px;
-  height: 11px;
-  background: var(--aov-wiki-gold);
-  box-shadow: 0 0 0 3px var(--aov-wiki-night);
-  transform: rotate(45deg);
-}
-.wiki-patch-subject > header {
+.wiki-patch-compact-links {
   display: flex;
+  min-height: 36px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
-.wiki-patch-subject strong {
-  font: var(--wiki-type-entry);
-}
-.wiki-patch-subject > p {
-  font: var(--wiki-type-body);
-  color: var(--aov-text-soft);
-}
-.wiki-patch-subject-link {
+.wiki-patch-back {
+  font: var(--wiki-type-meta);
   display: inline-flex;
-  min-width: 0;
+  min-height: 36px;
   align-items: center;
-  gap: 10px;
+  gap: 2px;
+  margin-left: -4px;
+  color: var(--aov-muted);
+  text-decoration: none;
+}
+.wiki-patch-back:hover {
+  color: var(--aov-accent);
+}
+.wiki-patch-title {
+  font: var(--wiki-type-page);
+  color: var(--aov-text);
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.wiki-patch-summary {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  margin-bottom: 20px;
+  color: var(--aov-text-soft);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- One patch: the notes beside an index of what changed ---------- */
+.wiki-patch-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.wiki-patch-layout[data-rail] {
+  grid-template-columns: minmax(0, 1fr) 208px;
+  align-items: start;
+  column-gap: 32px;
+}
+@media (min-width: 1180px) {
+  .wiki-patch-layout[data-rail] {
+    grid-template-columns: minmax(0, 1fr) 240px;
+    column-gap: 48px;
+  }
+}
+.wiki-patch-main {
+  min-width: 0;
+}
+.wiki-patch-section {
+  scroll-margin-top: calc(var(--wiki-header-height) + 16px);
+}
+.wiki-patch-section + .wiki-patch-section {
+  margin-top: 36px;
+}
+.wiki-patch-section:focus,
+.wiki-patch-subject:focus {
+  outline: none;
+}
+.wiki-patch-expand {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  min-height: 24px;
+  flex: none;
+  align-items: center;
+  color: var(--aov-accent);
+  white-space: nowrap;
+}
+.wiki-patch-expand:hover {
+  color: var(--aov-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The index on wide screens: every hero the patch changed, with the kind of change, and the reader's place. */
+.wiki-patch-rail {
+  position: sticky;
+  top: calc(var(--wiki-header-height) + 16px);
+  max-height: calc(100dvh - var(--wiki-header-height) - 32px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.wiki-patch-rail h2 {
+  font: var(--wiki-type-meta);
+  margin-bottom: 8px;
+  padding-inline: 10px;
+  color: var(--aov-muted);
+}
+.wiki-patch-rail-group + .wiki-patch-rail-group {
+  margin-top: 16px;
+}
+.wiki-patch-rail-label {
+  font: var(--wiki-type-category);
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 8px;
+  border-radius: var(--aov-radius-control);
+  padding-inline: 10px;
   color: var(--aov-text);
   text-decoration: none;
 }
-a.wiki-patch-subject-link:hover strong {
+.wiki-patch-rail-label > span {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-patch-rail-label:hover {
+  color: var(--aov-accent-strong);
+}
+.wiki-patch-rail ul {
+  display: grid;
+  gap: 2px;
+}
+.wiki-patch-rail li a {
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  border-radius: var(--aov-radius-control);
+  padding: 4px 10px 4px 6px;
+  color: var(--aov-text-soft);
+  text-decoration: none;
+  transition:
+    background 140ms ease-out,
+    color 140ms ease-out;
+}
+.wiki-patch-rail li a[data-plain] {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-left: 10px;
+}
+.wiki-patch-rail li a:hover {
+  background: var(--aov-surface);
+  color: var(--aov-text);
+}
+.wiki-patch-rail li a[aria-current] {
+  background: var(--aov-accent-soft);
   color: var(--aov-accent);
+  font-weight: 600;
+}
+.wiki-patch-rail .wiki-patch-subject-art {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--aov-radius-control);
+}
+.wiki-patch-rail li a > svg {
+  flex: none;
+}
+
+/* The same index on compact screens: the kinds of thing changed as chips, the heroes as a row that scrolls sideways. */
+.wiki-patch-jump,
+.wiki-patch-strip {
+  position: relative;
+  margin-inline: calc(-1 * var(--wiki-gutter));
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+.wiki-patch-jump::-webkit-scrollbar,
+.wiki-patch-strip::-webkit-scrollbar {
+  display: none;
+}
+.wiki-patch-jump {
+  display: flex;
+  gap: 8px;
+  padding: 0 var(--wiki-gutter) 12px;
+}
+.wiki-patch-jump a {
+  font: var(--wiki-type-category);
+  display: inline-flex;
+  min-height: 36px;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--aov-radius-pill);
+  padding-inline: 14px;
+  background: var(--aov-surface);
+  color: var(--aov-text);
+  text-decoration: none;
+}
+.wiki-patch-jump a > span {
+  color: var(--aov-muted);
+  font-weight: 400;
+}
+.wiki-patch-strip {
+  margin-bottom: 20px;
+}
+.wiki-patch-strip ul {
+  display: flex;
+  width: max-content;
+  gap: 4px;
+  padding-inline: calc(var(--wiki-gutter) - 6px);
+}
+.wiki-patch-strip a {
+  font: 400 0.75rem/1rem var(--wiki-font-reading);
+  display: grid;
+  width: 64px;
+  align-content: start;
+  justify-items: center;
+  gap: 6px;
+  border-radius: var(--aov-radius-card);
+  padding: 6px 2px;
+  color: var(--aov-text-soft);
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.wiki-patch-strip-art {
+  position: relative;
+  display: block;
+  width: 48px;
+  height: 48px;
+}
+.wiki-patch-strip-art > svg {
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  box-sizing: content-box;
+  border: 2px solid var(--aov-bg);
+  border-radius: 50%;
+  background: var(--aov-bg);
+}
+
+/* ---------- One thing a patch changed: a hero with its changes, an armory entry with its note ---------- */
+.wiki-patch-subjects {
+  display: grid;
+}
+.wiki-patch-subject {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding-block: 20px;
+  scroll-margin-top: calc(var(--wiki-header-height) + 12px);
+}
+.wiki-patch-subject + .wiki-patch-subject {
+  border-top: 1px solid var(--aov-line);
+}
+.wiki-patch-subject:last-child {
+  padding-bottom: 0;
+}
+.wiki-patch-subject > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 12px;
+}
+.wiki-patch-subject > header h3 {
+  font: var(--wiki-type-entry);
+  color: var(--aov-text);
+}
+.wiki-patch-subject > p {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+/* The name leads to the hero or the entry: its target is taller than its line without moving anything. */
+.wiki-patch-subject h3 a {
+  display: inline-block;
+  margin-block: -8px;
+  padding-block: 8px;
+  color: inherit;
+  text-decoration: none;
+}
+.wiki-patch-subject h3 a:hover {
+  color: var(--aov-accent-strong);
 }
 .wiki-patch-subject-art {
   font: var(--wiki-type-entry);
   display: grid;
+  width: 48px;
+  height: 48px;
   flex: none;
-  width: 36px;
-  height: 36px;
   place-items: center;
   overflow: hidden;
   border-radius: var(--aov-radius-control);
@@ -265,63 +507,114 @@ a.wiki-patch-subject-link:hover strong {
   height: 100%;
   object-fit: cover;
 }
+/* A hero: who it is, then what changed. The portrait hangs left of one edge shared by the name and every change. */
+.wiki-patch-hero > .wiki-patch-hero-head {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+.wiki-patch-hero > .wiki-patch-hero-head h3 {
+  font: var(--wiki-type-section);
+}
+.wiki-patch-hero-body {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding-left: 62px;
+}
+.wiki-patch-hero-body > p {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+/* With room to spare the hero stands beside its changes and stays in sight while they are read. */
+@media (min-width: 1180px) {
+  .wiki-patch-hero {
+    grid-template-columns: 260px minmax(0, 1fr);
+    align-items: start;
+    column-gap: 24px;
+  }
+  .wiki-patch-hero > .wiki-patch-hero-head {
+    position: sticky;
+    top: calc(var(--wiki-header-height) + 16px);
+  }
+  .wiki-patch-hero-body {
+    padding-left: 0;
+  }
+}
+.wiki-patch-hero-meta {
+  font: var(--wiki-type-meta);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  color: var(--aov-muted);
+}
 
+/* ---------- The kind of a change: its drawn mark and its name in the colour of its meaning ---------- */
+.wiki-change-kind,
+.wiki-updates-kind {
+  --kind-color: var(--aov-info);
+}
 .wiki-change-kind {
-  --kind-color: var(--aov-muted);
   font: var(--wiki-type-meta);
   display: inline-flex;
   flex: none;
   align-items: center;
-  border: 1px solid color-mix(in srgb, var(--kind-color) 40%, transparent);
-  border-radius: var(--aov-radius-control);
-  padding: 2px 8px 2px 6px;
-  background: color-mix(in srgb, var(--kind-color) 12%, transparent);
   color: var(--kind-color);
+  white-space: nowrap;
 }
-.wiki-change-kind[data-kind="BUFF"],
-.wiki-change-kind[data-kind="ADDED"] {
+:is(.wiki-change-kind, .wiki-updates-kind)[data-kind="BUFF"] {
   --kind-color: var(--aov-success);
 }
-.wiki-change-kind[data-kind="NERF"],
-.wiki-change-kind[data-kind="REMOVED"] {
+:is(.wiki-change-kind, .wiki-updates-kind):is([data-kind="NERF"], [data-kind="REMOVED"]) {
   --kind-color: var(--aov-danger);
 }
-.wiki-change-kind[data-kind="REWORK"] {
-  --kind-color: var(--aov-accent);
-}
-.wiki-change-kind[data-kind="FIX"] {
-  --kind-color: var(--aov-info);
-}
-.wiki-change-kind[data-kind="ADJUSTMENT"],
-.wiki-change-kind[data-kind="BALANCE"] {
+:is(.wiki-change-kind, .wiki-updates-kind)[data-kind="REWORK"] {
   --kind-color: var(--aov-warning);
 }
+:is(.wiki-change-kind, .wiki-updates-kind):is([data-kind="ADDED"], [data-kind="RELEASE"]) {
+  --kind-color: var(--aov-accent);
+}
+
+/* ---------- The changes of one hero: abilities apart by spacing, each field with its before and after ---------- */
 .wiki-change-groups {
   display: grid;
-  gap: 8px;
+  min-width: 0;
+  gap: 20px;
 }
 .wiki-change-group {
   min-width: 0;
-  overflow: hidden;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
 }
 .wiki-change-group-head {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 2px 12px;
-  padding: 6px 10px;
-  background: var(--aov-raised);
+  gap: 12px;
 }
 .wiki-change-group-head h4 {
-  font: var(--wiki-type-category);
+  font: var(--wiki-type-entry);
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   color: var(--aov-text);
+}
+.wiki-change-skill-art {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  color: var(--aov-accent);
+}
+.wiki-change-skill-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .wiki-change-skill-link {
   font: var(--wiki-type-meta);
@@ -332,32 +625,187 @@ a.wiki-patch-subject-link:hover strong {
   gap: 4px;
   color: var(--aov-accent);
   text-decoration: none;
+  white-space: nowrap;
 }
 .wiki-change-skill-link:is(:hover, :focus-visible) {
+  color: var(--aov-accent-strong);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
-.wiki-change-toggle {
+.wiki-change-list {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+}
+.wiki-change-group-head + .wiki-change-list {
+  margin-top: 8px;
+}
+.wiki-change-list > li {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.wiki-change-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.wiki-change-title {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+}
+.wiki-change-title strong {
   font: var(--wiki-type-category);
+  color: var(--aov-text);
+}
+.wiki-change-list p {
+  font: var(--wiki-type-body);
+  max-width: 72ch;
+  color: var(--aov-text-soft);
+}
+.wiki-change-list p > .wiki-change-kind {
+  margin-right: 10px;
+  vertical-align: -3px;
+}
+/* Before is quiet and after is strong; neither row is filled or coloured. */
+.wiki-change-compare {
+  display: grid;
+  gap: 2px;
+}
+.wiki-change-compare > div {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+}
+.wiki-change-compare dt {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-change-compare dd {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+/* One term of a formula keeps its words together; the line breaks before the next operator instead. */
+.wiki-change-term {
+  display: inline-block;
+  max-width: 100%;
+}
+.wiki-change-values {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-change-list .wiki-change-values {
+  color: var(--aov-text);
+}
+.wiki-change-compare [data-side="before"] dd,
+.wiki-change-old,
+.wiki-change-arrow {
+  color: var(--aov-muted);
+}
+.wiki-change-compare [data-side="after"] dd,
+.wiki-change-new {
+  color: var(--aov-text);
+  font-weight: 600;
+}
+.wiki-rank-toggle {
+  font: var(--wiki-type-meta);
   display: inline-flex;
-  min-height: 32px;
+  min-height: 28px;
+  flex: none;
   align-items: center;
   gap: 4px;
-  justify-self: start;
-  width: fit-content;
+  margin-block: -4px;
   border-radius: var(--aov-radius-control);
-  padding: 4px 10px 4px 6px;
+  padding-inline: 6px 8px;
+  color: var(--aov-text-soft);
+  white-space: nowrap;
+}
+.wiki-rank-toggle[aria-pressed="true"] {
   background: var(--aov-raised);
   color: var(--aov-text);
 }
-.wiki-change-toggle:is(:hover, :focus-visible) {
-  color: var(--aov-accent);
+.wiki-rank-toggle:is(:hover, :focus-visible) {
+  background: var(--aov-raised);
+  color: var(--aov-text);
 }
-.wiki-change-toggle svg {
-  transition: transform 140ms;
+/* A value at each skill level. Its row names line up with the before and after labels of fields written as two lines. */
+.wiki-change-rank-table {
+  /* Holds the text kept for screen readers, which would otherwise widen the page from a cell scrolled out of sight. */
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
-.wiki-change-toggle[aria-expanded="true"] svg {
-  transform: rotate(180deg);
+.wiki-change-rank-table table {
+  font: 400 0.875rem/1.25rem var(--wiki-font-reading);
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
 }
+.wiki-change-rank-table :is(th, td) {
+  min-width: 56px;
+  padding: 4px 8px;
+  text-align: right;
+  white-space: nowrap;
+}
+.wiki-change-rank-table thead :is(th, td) {
+  font: var(--wiki-type-meta);
+  border-bottom: 1px solid var(--aov-line);
+  color: var(--aov-muted);
+}
+.wiki-change-rank-table tbody th {
+  font: var(--wiki-type-meta);
+  min-width: calc(3rem + 8px);
+  padding-left: 0;
+  color: var(--aov-muted);
+  text-align: left;
+}
+.wiki-change-rank-table thead td {
+  min-width: calc(3rem + 8px);
+}
+.wiki-change-rank-table tr[data-side="before"] td {
+  color: var(--aov-muted);
+}
+.wiki-change-rank-table tr[data-side="after"] td {
+  color: var(--aov-text-soft);
+}
+.wiki-change-rank-table tr[data-side="after"] td[data-changed] {
+  color: var(--aov-text);
+  font-weight: 600;
+}
+/* Under a table of levels: the share of each stat the formula adds, names in one column and values in another. */
+.wiki-change-shares {
+  font: var(--wiki-type-body);
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: baseline;
+  gap: 2px 16px;
+  font-variant-numeric: tabular-nums;
+}
+.wiki-change-shares > div {
+  display: contents;
+}
+.wiki-change-shares dt {
+  font: var(--wiki-type-meta);
+  color: var(--aov-muted);
+}
+.wiki-change-shares dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  color: var(--aov-text-soft);
+}
+
+/* A long set is cut short until the reader asks for the rest. */
 .wiki-change-detail {
   min-width: 0;
 }
@@ -370,233 +818,111 @@ a.wiki-patch-subject-link:hover strong {
   min-width: 0;
   gap: 10px;
 }
-.wiki-patch-expand {
-  font: var(--wiki-type-meta);
-  align-self: center;
-  margin-left: auto;
-  color: var(--aov-accent);
-}
-.wiki-patch-expand:hover {
-  text-decoration: underline;
-}
-.wiki-change-skill-art {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: none;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 50%;
-}
-.wiki-change-skill-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.wiki-change-list {
-  display: grid;
-  padding-inline: 10px;
-}
-.wiki-change-list > li {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-  padding-block: 10px;
-}
-.wiki-change-list > li + li {
-  border-top: 1px solid var(--aov-line);
-}
-.wiki-change-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px 12px;
-}
-.wiki-change-compare {
-  display: grid;
-  gap: 4px;
-  margin-top: 2px;
-}
-.wiki-change-compare > div {
-  font: var(--wiki-type-body);
-  display: grid;
-  grid-template-columns: 3rem minmax(0, 1fr);
-  align-items: baseline;
-  gap: 8px;
-  border-radius: var(--aov-radius-control);
-  padding: 4px 8px;
-  background: var(--aov-raised);
-}
-.wiki-change-compare dt {
-  font: var(--wiki-type-meta);
-  color: var(--aov-muted);
-}
-.wiki-change-compare dd {
-  color: var(--aov-text);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-.wiki-rank {
-  display: grid;
-  min-width: 0;
-  gap: 4px;
-}
-.wiki-rank-head {
-  font: var(--wiki-type-meta);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--aov-muted);
-}
-.wiki-rank-head button {
-  border-radius: var(--aov-radius-control);
-  padding: 2px 6px;
-  color: var(--aov-text-soft);
-}
-.wiki-rank-head button:is(:hover, :focus-visible) {
-  background: var(--aov-raised);
-}
-.wiki-change-rank-table {
-  max-width: 100%;
-  overflow-x: auto;
-  border: 1px solid var(--aov-line);
-  border-radius: var(--aov-radius-control);
-}
-.wiki-change-rank-table table {
-  font: var(--wiki-type-meta);
-  width: 100%;
-  border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
-}
-.wiki-change-rank-table th,
-.wiki-change-rank-table td {
-  min-width: 76px;
-  border-top: 1px solid var(--aov-line);
-  padding: 6px 8px;
-  text-align: center;
-  vertical-align: top;
-}
-.wiki-change-rank-table thead th {
-  border-top: 0;
-  background: var(--aov-raised);
-  color: var(--aov-muted);
-  font-weight: 600;
-}
-.wiki-change-rank-table tbody th,
-.wiki-change-rank-table thead th:first-child {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  /* Wide enough that a stat name takes one line, or two on a phone, instead of a column of single words. */
-  min-width: 128px;
-  background: var(--aov-raised);
-  color: var(--aov-text);
-  font-weight: 600;
-  text-align: left;
-}
-@media (max-width: 640px) {
-  .wiki-change-rank-table tbody th,
-  .wiki-change-rank-table thead th:first-child {
-    min-width: 92px;
-  }
-}
-.wiki-change-rank-table tr[data-side="before"] td[data-changed="true"] {
-  background: var(--aov-wiki-panel-deep);
-  color: var(--aov-text-soft);
-}
-.wiki-change-rank-table tr[data-side="after"] td[data-changed="true"] {
-  background: rgb(211 188 142 / 16%);
-  color: var(--aov-text);
-  font-weight: 600;
-}
-.wiki-change-rank-table .wiki-rank-summary {
-  min-width: 150px;
-  border-left: 1px solid var(--aov-line);
-  text-align: left;
-}
-.wiki-patch-subject-name {
-  display: grid;
-  min-width: 0;
-}
-.wiki-patch-subject-name small {
-  font: var(--wiki-type-meta);
-  color: var(--aov-muted);
-}
-.wiki-patch-new {
-  font: var(--wiki-type-meta);
-  margin-left: 8px;
-  border: 1px solid var(--aov-accent);
-  border-radius: var(--aov-radius-pill);
-  padding: 1px 8px;
-  color: var(--aov-accent);
-  vertical-align: middle;
-}
-.wiki-patch-overall {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 6px;
-}
-.wiki-patch-overall small {
-  font: var(--wiki-type-meta);
-  color: var(--aov-muted);
-}
-.wiki-change-head strong {
+.wiki-change-toggle {
   font: var(--wiki-type-category);
+  display: inline-flex;
+  width: fit-content;
+  min-height: 36px;
+  align-items: center;
+  justify-self: start;
+  gap: 4px;
+  border-radius: var(--aov-radius-control);
+  padding: 0 12px 0 8px;
+  background: var(--aov-raised);
   color: var(--aov-text);
 }
-.wiki-change-list p {
-  font: var(--wiki-type-body);
-  color: var(--aov-text-soft);
+.wiki-change-toggle:is(:hover, :focus-visible) {
+  color: var(--aov-accent-strong);
 }
-.wiki-change-values {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px 8px;
-  font-variant-numeric: tabular-nums;
+.wiki-change-toggle svg {
+  transition: transform 140ms;
 }
-.wiki-change-old {
-  color: var(--aov-muted);
-}
-.wiki-change-arrow {
-  color: var(--aov-muted);
+.wiki-change-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
 }
 
-@media (max-width: 640px) {
-  .wiki-updates-row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    padding: 12px;
+/* Wide screens have room to set the fields of an ability under its name, past its picture. */
+@media (min-width: 900px) {
+  .wiki-change-group-head + .wiki-change-list {
+    padding-left: 42px;
   }
-  .wiki-updates-row strong {
-    grid-column: 1 / -1;
-    grid-row: 2;
+}
+
+/* ---------- Compact screens ---------- */
+@media (max-width: 899.98px) {
+  .wiki-updates-skeleton > span:not(.sr-only) {
+    height: 140px;
+  }
+  .wiki-updates-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    padding: 14px 16px;
+  }
+  .wiki-updates-row > svg {
+    display: none;
+  }
+  .wiki-updates-faces {
+    width: auto;
+    margin-top: 4px;
+  }
+  /* A little closer, so the counts of a busy patch still share one line on a 320px phone. */
+  .wiki-updates-summary {
+    column-gap: 12px;
+  }
+  /* The drawn mark and the number stay; the name of the kind is left to screen readers. */
+  .wiki-updates-kind > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .wiki-patch-source {
+    min-height: 36px;
+  }
+  .wiki-patch-section + .wiki-patch-section {
+    margin-top: 28px;
+  }
+  /* A touch target taller than the heading it shares a line with, without pushing the heading's rule down. */
+  .wiki-patch-expand {
+    min-height: 36px;
+    margin-block: -6px;
   }
   .wiki-patch-subject {
-    padding: 12px;
+    padding-block: 16px;
   }
-}
-.wiki-patch-section h2 svg,
-.wiki-patch-jump a svg {
-  flex: none;
-  align-self: center;
-}
-.wiki-patch-jump a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.wiki-updates-row {
-  grid-template-columns: 32px 96px minmax(0, 1fr) auto;
-  align-items: center;
-}
-@media (max-width: 640px) {
-  .wiki-updates-row {
-    grid-template-columns: 32px minmax(0, 1fr) auto;
+  /* The portrait sits beside the name only; the changes take the whole width. */
+  .wiki-patch-hero > .wiki-patch-hero-head {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
   }
-  .wiki-updates-row strong {
-    grid-column: 2 / -1;
+  .wiki-patch-hero-head .wiki-patch-subject-art {
+    width: 40px;
+    height: 40px;
+  }
+  .wiki-patch-hero-body {
+    padding-left: 0;
+  }
+  .wiki-change-skill-art {
+    width: 28px;
+    height: 28px;
+  }
+  .wiki-change-group-head h4 {
+    gap: 8px;
+  }
+  .wiki-change-skill-link,
+  .wiki-rank-toggle {
+    min-height: 36px;
+  }
+  .wiki-rank-toggle {
+    margin-block: -8px;
+  }
+  .wiki-change-rank-table :is(th, td) {
+    min-width: 44px;
+    padding-inline: 6px;
+  }
+  .wiki-change-toggle {
+    min-height: 40px;
   }
 }
