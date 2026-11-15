@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
+import { chooseDateFormat, currentTimeZone, DATE_TIME_FORMAT, formatInZone } from "@aov/ui/lib/time-zone"
 import { dateLabel, scheduleDate, parseScheduleDate, scheduleDateText } from "../src/features/publishing/schedule-date"
 
 test("typed dates round-trip without accepting impossible calendar dates", () => {
@@ -16,10 +17,21 @@ test("calendar dates remain date-only while supplied times retain their instant"
     at: new Date("2026-10-16T09:30").toISOString(),
     on: null,
   })
-  assert.equal(dateLabel("2026-10-16", "en-US"), "Oct 16, 2026")
+  assert.equal(dateLabel("2026-10-16", "en-US"), "10/16/2026")
   assert.equal(
     dateLabel("2026-10-16T02:30:00Z", "en-US"),
-    new Date("2026-10-16T02:30:00Z").toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+    formatInZone("2026-10-16T02:30:00Z", currentTimeZone(), DATE_TIME_FORMAT, "en-US"),
   )
   assert.equal(dateLabel(null), "—")
+})
+
+test("schedule dates follow the date format the reader chose", () => {
+  try {
+    chooseDateFormat("YMD")
+    assert.equal(dateLabel("2026-10-16"), "2026-10-16")
+    // Where the time stands depends on the language; the date itself must read in the chosen order.
+    assert.match(dateLabel("2026-10-16T02:30:00Z"), /\b2026-10-1[56]\b/)
+  } finally {
+    chooseDateFormat("AUTO")
+  }
 })

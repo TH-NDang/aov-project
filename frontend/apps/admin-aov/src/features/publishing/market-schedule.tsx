@@ -10,10 +10,10 @@ import { ActionStrip } from "@/components/action-strip"
 import { errorMessage } from "@/lib/api/errors"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@aov/ui/components/sheet"
 import { Badge } from "@aov/ui/components/badge"
+import { LocalTime } from "@aov/ui/components/local-time"
 import { MarketBadge } from "./market-badge"
 import { useIsWide } from "@/hooks/use-media-query"
 import {
-  dateLabel,
   marketReleaseLabel,
   phaseLabels,
   type Market,
@@ -58,8 +58,19 @@ export function PatchMarketSchedule({
                 <span className="type-meta">Chưa xác định thị trường</span>
               )}
               <p className="type-meta">
-                {start ? `Từ ${dateLabel(start, locale)}` : "Chưa có ngày áp dụng"}
-                {end && ` đến ${dateLabel(end, locale)}`}
+                {start ? (
+                  <>
+                    Từ <LocalTime value={start} locale={locale} />
+                  </>
+                ) : (
+                  "Chưa có ngày áp dụng"
+                )}
+                {end && (
+                  <>
+                    {" "}
+                    đến <LocalTime value={end} locale={locale} />
+                  </>
+                )}
               </p>
             </div>
             <div className="type-meta">{marketReleaseLabel(r, market)}</div>
@@ -174,7 +185,8 @@ export function MarketSchedule({
                         <Badge variant="outline">{s.phase === "CURRENT" ? "Đang diễn ra" : phaseLabels[s.phase]}</Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {dateLabel(s.startsOn ?? s.startsAt, locale)} – {dateLabel(s.endsOn ?? s.endsAt, locale)}
+                        <LocalTime value={s.startsOn ?? s.startsAt} locale={locale} fallback="—" /> –{" "}
+                        <LocalTime value={s.endsOn ?? s.endsAt} locale={locale} fallback="—" />
                       </p>
                     </div>
                   ))}
@@ -195,8 +207,12 @@ export function MarketSchedule({
                           <Badge variant="outline">{marketReleaseLabel(r, market)}</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {dateLabel(r.effectiveOn ?? r.effectiveAt, locale)} →{" "}
-                          {releaseEnd(r, data) ? dateLabel(releaseEnd(r, data), locale) : "Chưa có mốc kết thúc"}
+                          <LocalTime value={r.effectiveOn ?? r.effectiveAt} locale={locale} fallback="—" /> →{" "}
+                          {releaseEnd(r, data) ? (
+                            <LocalTime value={releaseEnd(r, data)} locale={locale} />
+                          ) : (
+                            "Chưa có mốc kết thúc"
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           Gameplay: {data.rulesets.find((rule) => rule.id === v?.rulesetId)?.code}
@@ -403,7 +419,8 @@ function MarketVersionEditor({
               releases.map((r) => (
                 <div key={r.id} className="border-l-2 pl-3">
                   <p className="type-body">
-                    {marketReleaseLabel(r, market)} · {dateLabel(r.effectiveOn ?? r.effectiveAt, locale)}
+                    {marketReleaseLabel(r, market)} ·{" "}
+                    <LocalTime value={r.effectiveOn ?? r.effectiveAt} locale={locale} fallback="—" />
                   </p>
                   {!dateOnly && r.phase === "AWAITING_CONFIRMATION" && (
                     <>
