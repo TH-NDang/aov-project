@@ -17,6 +17,16 @@ class CapacityDomainTest {
     }
 
     @Test
+    void storageLeadsWithTheLargerFigureSoAFreshBatchCountsBeforeCloudflareCatchesUp() {
+        assertThat(StorageReading.of(4_300_000_000L, 1_080_000_000L))
+                .isEqualTo(new StorageReading(4_300_000_000L, false));
+        assertThat(StorageReading.of(1_080_000_000L, 1_090_000_000L))
+                .isEqualTo(new StorageReading(1_090_000_000L, true));
+        assertThat(StorageReading.of(1_080_000_000L, null)).isEqualTo(new StorageReading(1_080_000_000L, false));
+        assertThat(StorageReading.of(5, 5L)).isEqualTo(new StorageReading(5, false));
+    }
+
+    @Test
     void operationsFollowTheCloudflareClassesAndUnknownNamesCountAsClassA() {
         assertThat(R2Operations.classify("PutObject")).isEqualTo(OperationClass.CLASS_A);
         assertThat(R2Operations.classify("CopyObject")).isEqualTo(OperationClass.CLASS_A);

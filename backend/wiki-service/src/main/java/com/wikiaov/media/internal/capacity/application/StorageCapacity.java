@@ -11,6 +11,7 @@ import com.wikiaov.media.internal.capacity.application.StorageCapacityViews.Targ
 import com.wikiaov.media.internal.capacity.application.port.R2Analytics;
 import com.wikiaov.media.internal.capacity.domain.CapacityLevel;
 import com.wikiaov.media.internal.capacity.domain.R2Operations;
+import com.wikiaov.media.internal.capacity.domain.StorageReading;
 import com.wikiaov.media.internal.source.application.SourceOrphans;
 import com.wikiaov.media.internal.source.domain.SourceDigest;
 import com.wikiaov.media.internal.source.persistence.SourceObjectRepository;
@@ -169,13 +170,16 @@ public class StorageCapacity {
     }
 
     private StorageCapacityViews.Storage storage(long databaseBytes, R2Analytics.Usage cloudflare) {
-        boolean measured = cloudflare.state() == R2Analytics.State.OK;
-        long bytes = measured
+        @Nullable
+        Long measured = cloudflare.state() == R2Analytics.State.OK
                 ? cloudflare.buckets().stream().mapToLong(R2Analytics.Bucket::bytes).sum()
-                : databaseBytes;
-        double share = (double) bytes / properties.freeStorageBytes();
-        return new StorageCapacityViews.Storage(measured ? FigureSource.CLOUDFLARE : FigureSource.DATABASE, bytes,
-                share, level(share));
+                : null;
+        StorageReading reading = StorageReading.of(databaseBytes, measured);
+
+        double share = (double) reading.bytes() / properties.freeStorageBytes();
+        return new StorageCapacityViews.Storage(reading.fromCloudflare()
+                ? FigureSource.CLOUDFLARE
+                : FigureSource.DATABASE, reading.bytes(), share, level(share));
     }
 
     private StorageCapacityViews.Operations operations(String month, StorageCapacityViews.Month thisMonth,
