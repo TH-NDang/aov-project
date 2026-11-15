@@ -128,6 +128,8 @@ Nguồn chính là database:
 - Đây là nguồn duy nhất biết số thao tác thật, kể cả lần CDN đọc R2 khi cache miss và lượt xem ảnh đối chứng. Nó cũng
   biết dung lượng thật của từng bucket, kể cả object mồ côi như upload bỏ dở.
 - Kết quả được cache 15 phút. Chưa cấu hình hoặc lỗi thì trang vẫn hiện số liệu database.
+- Cloudflare chỉ cập nhật dung lượng theo chu kỳ (lần chuyển ngày 15/11/2026 chưa hiện sau nửa giờ), nên dung lượng
+  đầu trang lấy số lớn hơn giữa database và Cloudflare. Thao tác vẫn lấy số Cloudflare.
 
 Không liệt kê object (ListObjects): đó là thao tác lớp A, phải mở rộng ADR-006, và chỉ biết bytes chứ không biết loại
 hay số thao tác.

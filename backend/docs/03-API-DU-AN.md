@@ -3513,8 +3513,10 @@ URL sống `wiki.sources.link-validity` (mặc định 10 phút) và chỉ dùng
 - `level`: `OK`, `WARNING` (từ ngưỡng `warning`), `CRITICAL` (từ ngưỡng `critical`), `OVER` (quá 100% mức miễn phí).
 - `months`: 12 tháng gần nhất theo lịch UTC, cộng Media và tệp nguồn tải lên trong tháng; thao tác là ước lượng.
 - `cloudflare.state`: `NOT_CONFIGURED`, `OK` hoặc `UNAVAILABLE`. Khi `OK` có thêm `checkedAt`, `buckets`
-  (`{bucket, objects, bytes, pendingUploads}`) và `operations` (`{from, to, classA, classB, free}`). Khi đó `storage`
-  và `operations` lấy số của Cloudflare với `source: "CLOUDFLARE"`. Số Cloudflare được cache 15 phút.
+  (`{bucket, objects, bytes, pendingUploads}`) và `operations` (`{from, to, classA, classB, free}`). Khi đó `operations`
+  lấy số của Cloudflare với `source: "CLOUDFLARE"`. `storage` lấy số lớn hơn giữa database và tổng Cloudflare, ghi
+  `source` theo số được chọn: Cloudflare có cả bytes ngoài danh mục nhưng chỉ cập nhật dung lượng theo chu kỳ, nên lượt
+  vừa tải vẫn được tính ngay. Số Cloudflare được cache 15 phút.
 
 `POST /admin/storage/estimates` — body `{target: "MEDIA" | "SOURCES", files: [{sha256?, sizeBytes}]}`, 1–20.000 tệp.
 
