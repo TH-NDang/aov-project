@@ -1,4 +1,5 @@
 import { backendRequest } from "@/app/auth/session"
+import { fetchPublishedSets, isSourceAccessDenied } from "../files/capture-sets"
 import type { Request } from "../publishing/publishing-api"
 
 export type BuildSourceKind = "PRO" | "HOT" | "SYSTEM"
@@ -103,7 +104,7 @@ export interface Reviewed {
   capture: CaptureSummary
 }
 
-/** A capture set the screenshot reader left in `resources/extracted/builds/<day>/`. */
+/** A capture set published to the private bucket with the sync tool's publish-captures (ADR-030). */
 export interface BuildCaptureSet {
   capturedOn: string
   code: string
@@ -149,20 +150,21 @@ export function createBuildsApi(request: Request = backendRequest) {
 
 export const buildsApi = createBuildsApi()
 
-const CAPTURES = "/__build-captures"
-
-/** Screenshots live only beside the dev server, so their address is local and never goes through the API. */
-export const captureImageUrl = (imageId: string) => `${CAPTURES}/images/${imageId}.png`
-
-/** Capture sets on this machine; null where the dev server has no `resources/` folder. */
-export async function fetchCaptureSets(signal?: AbortSignal): Promise<BuildCaptureSet[] | null> {
-  const response = await fetch(`${CAPTURES}/sets.json`, { signal }).catch(() => null)
-  if (!response?.ok || !response.headers.get("Content-Type")?.includes("json")) return null
-  return ((await response.json()) as { sets: BuildCaptureSet[] }).sets
+/** Published capture sets, newest first; null where the account cannot open source files. */
+export async function fetchCaptureSets(): Promise<BuildCaptureSet[] | null> {
+  try {
+    return (await fetchPublishedSets("BUILD_CAPTURE"))
+      .map((entry) => entry.set.set)
+      .sort((a, b) => b.capturedAt.localeCompare(a.capturedAt))
+  } catch (failure) {
+    if (isSourceAccessDenied(failure)) return null
+    throw failure
+  }
 }
 
+/** The import body of one published set; the screenshots stay in the private bucket, named by SHA-256. */
 export async function fetchCaptureSet(capturedOn: string): Promise<unknown> {
-  const response = await fetch(`${CAPTURES}/sets/${capturedOn}.json`)
-  if (!response.ok) throw new Error(`Không đọc được bộ ảnh ngày ${capturedOn}.`)
-  return response.json()
+  const published = (await fetchPublishedSets("BUILD_CAPTURE")).find((entry) => entry.set.set.capturedOn === capturedOn)
+  if (!published) throw new Error(`Không đọc được bộ ảnh ngày ${capturedOn}.`)
+  return published.set.capture
 }

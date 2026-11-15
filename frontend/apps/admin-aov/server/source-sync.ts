@@ -5,6 +5,11 @@
  *   node --experimental-strip-types server/source-sync.ts plan <folder|zip> --collection <code> [options]
  *   node --experimental-strip-types server/source-sync.ts push <folder|zip> --collection <code> --apply [options]
  *   node --experimental-strip-types server/source-sync.ts pull --collection <code> --to <folder> [--apply]
+ *   node --experimental-strip-types server/source-sync.ts publish-captures <extracted folder> --collection <code> [--apply]
+ *
+ * publish-captures builds the derived manifest Admin reads (capture-manifest.json) from an extracted folder such as
+ * resources/extracted/2026-s4/2026-10-30 or resources/extracted/shop/2026-09-16, by the category of the collection,
+ * after checking that every picture it names is already in the collection. Run it again whenever a review changes.
  *
  * Options: --category <CATEGORY> --label <text> --captured-on <yyyy-mm-dd> (to create a missing collection),
  * --prefix <folder in the collection>, --exclude <text in a path> (repeatable), --replace (overwrite a path that names
@@ -19,7 +24,28 @@ import { mkdir, open, readdir, readFile, stat, writeFile, rename } from "node:fs
 import { tmpdir } from "node:os"
 import { basename, dirname, join, relative, resolve, sep } from "node:path"
 import { pathToFileURL } from "node:url"
+import { BUILD_MANIFEST, type BuildManifest } from "./build-captures.ts"
+import {
+  buildCaptureSet,
+  buildPictures,
+  CAPTURE_KINDS,
+  CAPTURE_SET_FILE,
+  missingPictures,
+  patchCaptureSet,
+  patchPictures,
+  rankingCaptureSet,
+  rankingPictures,
+  shopCaptureSet,
+  shopPictures,
+  type CaptureKind,
+  type CaptureSetFile,
+  type ExpectedPicture,
+} from "./capture-sets.ts"
 import { extractInnerArchive, readZipDirectory, readZipEntry } from "./nested-zip.ts"
+import { loadCaptureManifest } from "./patch-captures.ts"
+import { RANKING_MANIFEST, type RankingManifest } from "./ranking-captures.ts"
+import type { ShopManifest } from "./shop-capture-manifest.ts"
+import { SHOP_MANIFEST } from "./shop-captures.ts"
 
 const TYPES: Record<string, string> = {
   png: "image/png",
@@ -62,6 +88,36 @@ export function contentTypeOf(path: string) {
   const extension = name.includes(".") ? name.slice(name.lastIndexOf(".") + 1).toLowerCase() : ""
   return TYPES[extension] ?? null
 }
+
+const startsWith = (head: Uint8Array, bytes: readonly number[], at = 0) =>
+  bytes.every((byte, index) => head[at + index] === byte)
+const ascii = (text: string) => [...text].map((character) => character.charCodeAt(0))
+
+/**
+ * The type an image's own bytes say, as the backend checks them (SourceContentTypes). A screenshot saved as ".png" can
+ * hold a JPEG, and declaring it by its name gets the upload refused.
+ */
+export function imageTypeOf(head: Uint8Array): string | null {
+  if (startsWith(head, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) return "image/png"
+  if (startsWith(head, [0xff, 0xd8, 0xff])) return "image/jpeg"
+  if (startsWith(head, ascii("GIF87a")) || startsWith(head, ascii("GIF89a"))) return "image/gif"
+  if (startsWith(head, ascii("RIFF")) && startsWith(head, ascii("WEBP"), 8)) return "image/webp"
+  return null
+}
+
+async function headOf(file: string) {
+  const handle = await open(file, "r")
+  try {
+    const { buffer, bytesRead } = await handle.read(Buffer.alloc(12), 0, 12, 0)
+    return buffer.subarray(0, bytesRead)
+  } finally {
+    await handle.close()
+  }
+}
+
+/** Images are declared by their bytes; other files by their name. */
+const declaredType = (named: string, head: Uint8Array) =>
+  named.startsWith("image/") ? (imageTypeOf(head) ?? named) : named
 
 /** The same path rules as the backend (SourcePaths): relative, NFC, no empty, "." or ".." segment. */
 export function normalizePath(path: string): string | null {
@@ -109,7 +165,13 @@ export async function collectFolder(folder: string, prefix = "", excludes: strin
       else if (entry.isFile()) {
         const size = (await stat(full)).size
         const accepted = accept(collected, withPrefix(prefix, local), size)
-        if (accepted) collected.items.push({ ...accepted, sha256: await hashFile(full), read: () => readFile(full) })
+        if (accepted)
+          collected.items.push({
+            ...accepted,
+            contentType: declaredType(accepted.contentType, await headOf(full)),
+            sha256: await hashFile(full),
+            read: () => readFile(full),
+          })
       }
     }
   }
@@ -121,7 +183,13 @@ export async function collectFolder(folder: string, prefix = "", excludes: strin
 export async function collectFile(file: string, prefix = ""): Promise<Collected> {
   const collected: Collected = { items: [], skipped: [] }
   const accepted = accept(collected, withPrefix(prefix, basename(file)), (await stat(file)).size)
-  if (accepted) collected.items.push({ ...accepted, sha256: await hashFile(file), read: () => readFile(file) })
+  if (accepted)
+    collected.items.push({
+      ...accepted,
+      contentType: declaredType(accepted.contentType, await headOf(file)),
+      sha256: await hashFile(file),
+      read: () => readFile(file),
+    })
   return collected
 }
 
@@ -161,7 +229,13 @@ export async function collectZip(zipPath: string, prefix = "", excludes: string[
             await file.close()
           }
         }
-        collected.items.push({ ...accepted, sha256: sha256(await read()), read })
+        const bytes = await read()
+        collected.items.push({
+          ...accepted,
+          contentType: declaredType(accepted.contentType, bytes.subarray(0, 12)),
+          sha256: sha256(bytes),
+          read,
+        })
       }
     } finally {
       await handle.close()
@@ -183,6 +257,7 @@ interface Collection {
   id: string
   code: string
   version: number
+  category?: string
 }
 
 interface RemoteFile {
@@ -437,6 +512,73 @@ export async function pull(api: SourceApi, collection: Collection, target: strin
   return { ...result, toDownload: missing.length }
 }
 
+const readJsonFile = async <T>(path: string) => JSON.parse(await readFile(path, "utf8")) as T
+
+/** The derived manifest of an extracted folder and the pictures it names, by the category of its collection. */
+export async function captureSetFromFolder(
+  kind: CaptureKind,
+  folder: string,
+): Promise<{ set: CaptureSetFile; pictures: ExpectedPicture[] }> {
+  if (kind === "HERO_CAPTURE") {
+    const manifest = await loadCaptureManifest(folder, basename(resolve(folder)))
+    return { set: patchCaptureSet(manifest), pictures: patchPictures(manifest) }
+  }
+  if (kind === "SHOP_CAPTURE") {
+    const manifest = await readJsonFile<ShopManifest>(join(folder, SHOP_MANIFEST))
+    return { set: shopCaptureSet(manifest), pictures: shopPictures(manifest) }
+  }
+  if (kind === "BUILD_CAPTURE") {
+    const manifest = await readJsonFile<BuildManifest>(join(folder, BUILD_MANIFEST))
+    return { set: buildCaptureSet(manifest), pictures: buildPictures(manifest) }
+  }
+  const manifest = await readJsonFile<RankingManifest>(join(folder, RANKING_MANIFEST))
+  return { set: rankingCaptureSet(manifest), pictures: rankingPictures(manifest) }
+}
+
+/**
+ * Publishes the derived manifest Admin reads, replacing the previous one on purpose: it is rebuilt from the reviews, not
+ * edited. Refuses while a picture it names is not in the collection with the same bytes, so Admin never links a gap.
+ */
+export async function publishCaptures(
+  api: SourceApi,
+  collection: Collection,
+  folder: string,
+  options: { apply: boolean; receipts: string; log?: (line: string) => void },
+) {
+  const kind = CAPTURE_KINDS.find((candidate) => candidate === collection.category)
+  if (!kind) throw new Error(`${collection.code} is a ${collection.category ?? "?"} collection, not a capture set.`)
+
+  const { set, pictures } = await captureSetFromFolder(kind, folder)
+  const files = await api.files(collection.id)
+  const missing = missingPictures(pictures, files)
+  if (missing.length)
+    throw new Error(
+      `${missing.length} of ${pictures.length} pictures are not in ${collection.code} at their path, ` +
+        `for example ${missing[0]!.path}. Push them first.`,
+    )
+
+  const bytes = Buffer.from(JSON.stringify(set) + "\n")
+  const item: SourceItem = {
+    path: CAPTURE_SET_FILE,
+    sizeBytes: bytes.length,
+    sha256: sha256(bytes),
+    contentType: "application/json",
+    read: async () => bytes,
+  }
+  const unchanged = files.some((file) => file.path === CAPTURE_SET_FILE && file.sha256 === item.sha256)
+  const summary = { kind, pictures: pictures.length, sizeBytes: bytes.length, sha256: item.sha256, unchanged }
+  if (!options.apply || unchanged) return { ...summary, published: false }
+
+  const result = await push(api, collection, [item], {
+    receipts: options.receipts,
+    replace: true,
+    workers: 1,
+    log: options.log,
+  })
+  if (result.failed > 0) throw new Error(`${CAPTURE_SET_FILE} could not be published.`)
+  return { ...summary, published: true }
+}
+
 function option(args: string[], name: string) {
   const index = args.indexOf(`--${name}`)
   return index >= 0 ? args[index + 1] : undefined
@@ -477,9 +619,10 @@ const gigabytes = (bytes: number) => `${(bytes / 1e9).toFixed(3)} GB`
 async function main(args: string[]) {
   const [command, source] = args
   const code = option(args, "collection")
-  if (!command || !["plan", "push", "pull"].includes(command) || !code)
+  if (!command || !["plan", "push", "pull", "publish-captures"].includes(command) || !code)
     throw new Error(
-      "Usage: source-sync.ts plan|push <folder|zip> --collection <code> | pull --collection <code> --to <folder>",
+      "Usage: source-sync.ts plan|push <folder|zip> --collection <code> | pull --collection <code> --to <folder> | " +
+        "publish-captures <extracted folder> --collection <code>",
     )
   const api = new SourceApi(
     option(args, "backend") ?? "http://localhost:8080",
@@ -495,6 +638,16 @@ async function main(args: string[]) {
     const result = await pull(api, collection, target, args.includes("--apply"))
     console.log(JSON.stringify(result, null, 2))
     if (!args.includes("--apply")) console.log("Plan only. Add --apply to download.")
+    return
+  }
+
+  if (command === "publish-captures") {
+    if (!source) throw new Error("publish-captures needs the extracted folder of the set.")
+    const collection = await api.findCollection(code)
+    if (!collection) throw new Error(`Collection ${code} does not exist. Push its pictures first.`)
+    const result = await publishCaptures(api, collection, source, { apply: args.includes("--apply"), receipts })
+    console.log(JSON.stringify(result, null, 2))
+    if (!args.includes("--apply") && !result.unchanged) console.log("Plan only. Add --apply to publish.")
     return
   }
 

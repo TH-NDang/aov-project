@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
-import { mkdir, mkdtemp, rm, stat, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
@@ -12,7 +12,9 @@ import {
   type CaptureImage,
   type HeroSourceCoverage,
 } from "../server/patch-capture-manifest"
-import { createPatchCaptureHandler, findResourcesRoot } from "../server/patch-captures"
+import { missingPictures, patchCaptureSet, patchPictures } from "../server/capture-sets"
+import { findResourcesRoot, loadCaptureManifest } from "../server/patch-captures"
+import { collectZip } from "../server/source-sync"
 
 const png = (text: string) => new TextEncoder().encode(`\x89PNG fixture ${text}`)
 const sha = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex")
@@ -234,103 +236,61 @@ async function fixtureRepository() {
   await writeFile(join(resources, "raw", "outer.zip"), zipSync({ [INNER]: inner }, { level: 1 }))
   return {
     root,
+    resources,
     directory,
-    cache: join(root, "cache"),
     worktree: join(root, ".claude", "worktrees", "feature", "apps", "admin"),
   }
 }
 
-async function request(
-  handler: ReturnType<typeof createPatchCaptureHandler>,
-  url: string,
-  method = "GET",
-): Promise<{ status: number; headers: Record<string, unknown>; body: Buffer; next: boolean }> {
-  return new Promise((resolve, reject) => {
-    let status = 0
-    let headers: Record<string, unknown> = {}
-    const res = {
-      writeHead(code: number, values: Record<string, unknown>) {
-        status = code
-        headers = values
-      },
-      end(body?: string | Buffer) {
-        resolve({ status, headers, body: Buffer.from(body ?? ""), next: false })
-      },
-    }
-    handler({ url, method } as never, res as never, () =>
-      resolve({ status: 0, headers: {}, body: Buffer.alloc(0), next: true }),
-    ).catch(reject)
-  })
+/** What push stores for the set's archives: every ZIP entry under `raw/`, as the transfer runs it. */
+async function pushedPictures(resources: string, ...archives: string[]) {
+  const collected = await Promise.all(archives.map((name) => collectZip(join(resources, "raw", name), "raw")))
+  return collected.flatMap((entry) => entry.items)
 }
 
-test("the dev endpoint serves verified originals from the nested archive and refuses anything else", async () => {
-  const { root, cache, worktree } = await fixtureRepository()
+test("the published set names each picture by its bytes and by the path push stored it under", async () => {
+  const { root, resources, directory, worktree } = await fixtureRepository()
   try {
-    assert.equal(findResourcesRoot(worktree, ""), join(root, "resources"))
-    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache })
+    assert.equal(findResourcesRoot(worktree, ""), resources)
+    const manifest = await loadCaptureManifest(directory, "2026-10-30")
+    const set = patchCaptureSet(manifest)
+    assert.deepEqual([set.kind, set.patchCode, set.archive], ["HERO_CAPTURE", "2026-10-30", "outer.zip"])
+    assert.deepEqual(
+      [set.heroes["d-arcy"]!.heroCode, set.heroes["d-arcy"]!.sourceFolder, set.heroes["d-arcy"]!.images.length],
+      ["d-arcy", "darcy", 4],
+    )
+    const skillOne = set.heroes.airi!.images.find((item) => item.fileName === airi.skillOne.ref.file_name)!
+    assert.deepEqual(
+      [skillOne.sha256, skillOne.path],
+      [airi.skillOne.ref.sha256, `raw/outer/01_airi/${airi.skillOne.ref.member}`],
+    )
+    assert.deepEqual([set.coverage.totalImages, set.coverage.linkedToItem], [10, 7])
 
-    const hero = await request(handler, "/2026-10-30/heroes/d-arcy.json")
-    assert.equal(hero.status, 200)
-    const body = JSON.parse(hero.body.toString()) as { heroCode: string; sourceFolder: string; images: unknown[] }
-    assert.deepEqual([body.heroCode, body.sourceFolder, body.images.length], ["d-arcy", "darcy", 4])
-
-    const picture = await request(handler, `/2026-10-30/images/${airi.skillOne.ref.sha256}.png`)
-    assert.equal(picture.status, 200)
-    assert.equal(picture.headers["Content-Type"], "image/png")
-    assert.match(String(picture.headers["Cache-Control"]), /immutable/)
-    assert.deepEqual(new Uint8Array(picture.body), airi.skillOne.bytes)
-    // A hit must not unpack again: the inner archive stays in the cache, outside the read-only resources folder.
-    const cached = join(cache, "a".repeat(16), INNER)
-    const before = (await stat(cached)).mtimeMs
-    await request(handler, `/2026-10-30/images/${airi.passive.ref.sha256}.png`)
-    assert.equal((await stat(cached)).mtimeMs, before)
-
-    const head = await request(handler, `/2026-10-30/images/${airi.skillOne.ref.sha256}.png`, "HEAD")
-    assert.deepEqual([head.status, head.body.length], [200, 0])
-
-    const code = async (url: string, method?: string) => {
-      const response = await request(handler, url, method)
-      return [response.status, (JSON.parse(response.body.toString()) as { code: string }).code]
-    }
-    assert.deepEqual(await code("/2026-01-01/heroes/airi.json"), [404, "PATCH_NOT_FOUND"])
-    assert.deepEqual(await code("/2026-10-30/heroes/zuka.json"), [404, "HERO_NOT_FOUND"])
-    assert.deepEqual(await code(`/2026-10-30/images/${"f".repeat(64)}.png`), [404, "IMAGE_NOT_FOUND"])
-    assert.deepEqual(await code("/2026-10-30/images/not-a-hash.png"), [400, "INVALID_REQUEST"])
-    assert.deepEqual(await code("/..%2f..%2fsecrets/heroes/airi.json"), [400, "INVALID_REQUEST"])
-    assert.deepEqual(await code("/2026-10-30/heroes/airi.json", "POST"), [405, "METHOD_NOT_ALLOWED"])
-    assert.equal((await request(handler, "/2026-10-30/raw/outer.zip")).next, true)
-
-    const sets = await request(handler, "/sets.json")
-    assert.deepEqual(JSON.parse(sets.body.toString()), { patches: ["2026-10-30"] })
-
-    const coverage = await request(handler, "/2026-10-30/coverage.json")
-    const summary = JSON.parse(coverage.body.toString()) as { totalImages: number; linkedToItem: number }
-    assert.deepEqual([summary.totalImages, summary.linkedToItem], [10, 7])
+    const pushed = await pushedPictures(resources, "outer.zip")
+    assert.deepEqual(missingPictures(patchPictures(manifest), pushed), [], "every picture is where push put it")
+    // The derived manifest goes through JSON, so it must not carry the in-memory maps.
+    assert.deepEqual(JSON.parse(JSON.stringify(set)), set)
   } finally {
     await rm(root, { recursive: true, force: true })
   }
 })
 
-test("every hero's coverage is served and read again once a reviewer adds to the set", async () => {
-  const { root, directory, cache, worktree } = await fixtureRepository()
+test("publishing again after a reviewer adds to the set carries the new readings", async () => {
+  const { root, directory } = await fixtureRepository()
   try {
-    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache, signatureTtlMs: 0 })
-    type Body = { patchCode: string; heroes: { heroCode: string; attributes: { values: unknown }[] }[] }
-    const read = async () => JSON.parse((await request(handler, "/2026-10-30/heroes.json")).body.toString()) as Body
-    const before = await read()
-    assert.equal(before.patchCode, "2026-10-30")
+    const before = patchCaptureSet(await loadCaptureManifest(directory, "2026-10-30"))
     assert.deepEqual(
-      before.heroes.map((hero) => hero.heroCode),
+      before.sources.map((hero) => hero.heroCode),
       ["airi", "d-arcy"],
     )
-    assert.equal(before.heroes[1]!.attributes[0]!.values, null)
+    assert.equal(before.sources[1]!.attributes[0]!.values, null)
 
     await writeFile(
       join(directory, "manual", "observed-attributes.json"),
       JSON.stringify([{ heroCode: "d-arcy", values: { health: 3400 }, source: darcy.attributes.ref }]),
     )
-    const after = await read()
-    assert.deepEqual(after.heroes[1]!.attributes[0]!.values, { health: 3400 }, "no restart needed")
+    const after = patchCaptureSet(await loadCaptureManifest(directory, "2026-10-30"))
+    assert.deepEqual(after.sources[1]!.attributes[0]!.values, { health: 3400 })
   } finally {
     await rm(root, { recursive: true, force: true })
   }
@@ -352,14 +312,14 @@ test("a later capture run lists its own inner archives, and two runs may not sha
   )
 })
 
-test("an image from a later capture run is served from that run's archive", async () => {
-  const { root, directory, cache, worktree } = await fixtureRepository()
+test("a picture from a later capture run is published under that run's archive", async () => {
+  const { root, resources, directory } = await fixtureRepository()
   try {
     const bytes = png("airi/later attributes")
     const member = "pick-airi/airi/0450-hero-024-attributes.png"
     const ref = { archive: "01_later.zip", member, sha256: sha(bytes), file_name: "0450-hero-024-attributes.png" }
     const inner = zipSync({ [member]: bytes }, { level: 6 })
-    await writeFile(join(root, "resources", "raw", "later.zip"), zipSync({ "01_later.zip": inner }, { level: 1 }))
+    await writeFile(join(resources, "raw", "later.zip"), zipSync({ "01_later.zip": inner }, { level: 1 }))
     const files = dataset()
     const supplements = [{ archive: "later.zip", sha256: "c".repeat(64), innerArchives: ["01_later.zip"] }]
     await writeFile(join(directory, "source-manifest.json"), JSON.stringify({ ...files.sourceManifest, supplements }))
@@ -373,33 +333,27 @@ test("an image from a later capture run is served from that run's archive", asyn
       JSON.stringify([...files.attributeSources, { heroCode: "airi", source: ref, index: 3 }]),
     )
 
-    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache })
-    const picture = await request(handler, `/2026-10-30/images/${ref.sha256}.png`)
-    assert.equal(picture.status, 200)
-    assert.deepEqual(new Uint8Array(picture.body), bytes)
-    await stat(join(cache, "c".repeat(16), "01_later.zip"))
-
-    const earlier = await request(handler, `/2026-10-30/images/${airi.skillOne.ref.sha256}.png`)
-    assert.deepEqual(new Uint8Array(earlier.body), airi.skillOne.bytes, "the set's own archive still serves its images")
-
-    const hero = JSON.parse((await request(handler, "/2026-10-30/heroes/airi.json")).body.toString()) as {
-      images: { fileName: string; section: string; link: string }[]
-    }
-    const later = hero.images.find((item) => item.fileName === ref.file_name)!
-    assert.deepEqual([later.section, later.link], ["ATTRIBUTES", "REVIEWED"])
+    const manifest = await loadCaptureManifest(directory, "2026-10-30")
+    const later = patchCaptureSet(manifest).heroes.airi!.images.find((item) => item.fileName === ref.file_name)!
+    assert.deepEqual(
+      [later.section, later.link, later.path],
+      ["ATTRIBUTES", "REVIEWED", `raw/later/01_later/${member}`],
+    )
+    const pushed = await pushedPictures(resources, "outer.zip", "later.zip")
+    assert.deepEqual(missingPictures(patchPictures(manifest), pushed), [], "the set's own archive keeps its pictures")
   } finally {
     await rm(root, { recursive: true, force: true })
   }
 })
 
-test("an in-match run is marked and explained, one panel backs several skills, and its JPEGs are served as JPEG", async () => {
-  const { root, directory, cache, worktree } = await fixtureRepository()
+test("an in-match run is marked and explained, one panel backs several skills, and stays a JPEG", async () => {
+  const { root, resources, directory } = await fixtureRepository()
   try {
     const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, ...new TextEncoder().encode("in-match skill panel")])
     const member = "aya-in-match/airi/07-squirrel-skill-panel.jpg"
     const ref = { archive: "01_match.zip", member, sha256: sha(bytes), file_name: "07-squirrel-skill-panel.jpg" }
     const inner = zipSync({ [member]: bytes }, { level: 0 })
-    await writeFile(join(root, "resources", "raw", "match.zip"), zipSync({ "01_match.zip": inner }, { level: 0 }))
+    await writeFile(join(resources, "raw", "match.zip"), zipSync({ "01_match.zip": inner }, { level: 0 }))
     const files = dataset()
     const supplements = [
       { archive: "match.zip", sha256: "e".repeat(64), innerArchives: ["01_match.zip"], screen: "IN_MATCH" },
@@ -419,46 +373,38 @@ test("an in-match run is marked and explained, one panel backs several skills, a
       })
     await writeFile(join(directory, "manual", "import-rows.json"), JSON.stringify(rows))
 
-    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache })
-    const picture = await request(handler, `/2026-10-30/images/${ref.sha256}.png`)
-    assert.equal(picture.status, 200)
-    assert.equal(picture.headers["Content-Type"], "image/jpeg")
-    const earlier = await request(handler, `/2026-10-30/images/${airi.passive.ref.sha256}.png`)
-    assert.equal(earlier.headers["Content-Type"], "image/png")
-
-    const hero = JSON.parse((await request(handler, "/2026-10-30/heroes/airi.json")).body.toString()) as {
-      images: CaptureImage[]
-    }
-    const panel = hero.images.find((item) => item.fileName === ref.file_name)!
+    const set = patchCaptureSet(await loadCaptureManifest(directory, "2026-10-30"))
+    const images: CaptureImage[] = set.heroes.airi!.images
+    const panel = images.find((item) => item.fileName === ref.file_name)!
     assert.deepEqual(
       [panel.section, panel.link, panel.skillKey, panel.alsoSkillKeys, panel.screen],
       ["SKILL", "REVIEWED", "skill-1-2", ["skill-2-2"], "IN_MATCH"],
     )
     assert.match(panel.notes.at(-1)!, /trong trận/)
-    assert.equal(hero.images.find((item) => item.fileName === airi.passive.ref.file_name)!.screen, undefined)
-
-    const all = JSON.parse((await request(handler, "/2026-10-30/heroes.json")).body.toString()) as {
-      heroes: HeroSourceCoverage[]
-    }
-    const skills = all.heroes.find((item) => item.heroCode === "airi")!.skills
+    assert.equal(images.find((item) => item.fileName === airi.passive.ref.file_name)!.screen, undefined)
+    const sources: HeroSourceCoverage[] = set.sources
+    const skills = sources.find((item) => item.heroCode === "airi")!.skills
     for (const skillKey of ["skill-1-2", "skill-2-2"])
       assert.deepEqual(skills.find((item) => item.skillKey === skillKey)!.shown, [ref.file_name], skillKey)
+
+    // The bucket serves the type stored at upload, which push reads from the name: the JPEG is not sent as a PNG.
+    const pushed = await pushedPictures(resources, "match.zip")
+    assert.equal(pushed.find((item) => item.sha256 === ref.sha256)!.contentType, "image/jpeg")
   } finally {
     await rm(root, { recursive: true, force: true })
   }
 })
 
-test("a damaged cached archive is reported, never shown as the original", async () => {
-  const { root, cache, worktree } = await fixtureRepository()
+test("a picture missing from the collection, or stored with other bytes, is reported before anything is published", async () => {
+  const { root, resources, directory } = await fixtureRepository()
   try {
-    const target = join(cache, "a".repeat(16), INNER)
-    await mkdir(join(cache, "a".repeat(16)), { recursive: true })
-    const swapped = zipSync({ [airi.skillOne.ref.member]: png("something else") })
-    await writeFile(target, swapped)
-    const handler = createPatchCaptureHandler({ start: worktree, cacheRoot: cache })
-    const response = await request(handler, `/2026-10-30/images/${airi.skillOne.ref.sha256}.png`)
-    assert.equal(response.status, 502)
-    assert.equal((JSON.parse(response.body.toString()) as { code: string }).code, "IMAGE_HASH_MISMATCH")
+    const manifest = await loadCaptureManifest(directory, "2026-10-30")
+    const pushed = await pushedPictures(resources, "outer.zip")
+    const path = `raw/outer/01_airi/${airi.skillOne.ref.member}`
+    const swapped = pushed.map((item) => (item.path === path ? { ...item, sha256: "f".repeat(64) } : item))
+    assert.deepEqual(missingPictures(patchPictures(manifest), swapped), [{ sha256: airi.skillOne.ref.sha256, path }])
+    const without = pushed.filter((item) => item.path !== path)
+    assert.equal(missingPictures(patchPictures(manifest), without).length, 1)
   } finally {
     await rm(root, { recursive: true, force: true })
   }

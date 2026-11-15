@@ -101,7 +101,7 @@ export function BuildsPage() {
     if (!selected) return
     const accepted = await confirmAction({
       title: "Xóa lần chụp này?",
-      description: `Mọi bộ, ghi chú duyệt và liên kết ảnh dẫn chứng của lần chụp ${selected.code} sẽ bị xóa. Ảnh gốc trong resources vẫn giữ nguyên.`,
+      description: `Mọi bộ, ghi chú duyệt và liên kết ảnh dẫn chứng của lần chụp ${selected.code} sẽ bị xóa. Ảnh gốc trong Tệp nguồn vẫn giữ nguyên.`,
       confirmLabel: "Xóa lần chụp",
     })
     if (!accepted) return
@@ -149,7 +149,7 @@ export function BuildsPage() {
       ) : !selected ? (
         <div className="grid justify-items-start gap-3 rounded-lg border border-dashed p-6">
           <p className="type-body text-muted-foreground">
-            Chưa có lần chụp build nào. Nhập bộ ảnh đã đọc từ resources/extracted/builds.
+            Chưa có lần chụp build nào. Nhập một bộ ảnh đã đọc trong Tệp nguồn.
           </p>
           <Button type="button" disabled={!canWrite} onClick={() => setImporting(true)}>
             <FileUp className="size-4" /> Nhập lần chụp

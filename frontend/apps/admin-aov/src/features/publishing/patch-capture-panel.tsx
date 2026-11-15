@@ -38,9 +38,10 @@ import {
   captureGroupTarget,
   captureRegions,
   captureImageTitle,
-  captureImageUrl,
   captureLinkHints,
   captureLinkLabels,
+  captureSha256,
+  captureSourcePath,
   clampCaptureZoom,
   zoomCaptureAt,
   type CaptureGroup,
@@ -49,6 +50,7 @@ import {
   type CaptureZoom,
 } from "./patch-capture-model"
 import { usePatchCaptureContext, type CaptureState, type PatchCaptureWorkspace } from "./use-patch-captures"
+import { useSourceUrls } from "../files/source-links"
 
 const ZOOM_STEP = 1.25
 const SIZE_KEY = "aov-admin:hero-capture-size"
@@ -146,7 +148,7 @@ function CaptureResizeHandle({
   )
 }
 
-/** Header toggle for the whole panel; hidden where the capture endpoint does not exist. */
+/** Header toggle for the whole panel; hidden for an account that cannot open source files. */
 export function PatchCaptureToggle() {
   const captures = usePatchCaptureContext()
   if (!captures || captures.state.status === "idle" || captures.state.status === "unavailable") return null
@@ -249,7 +251,8 @@ export function CaptureCardThumbnail({
   box,
   className = "w-16",
 }: {
-  url: string
+  /** Empty while the presigned link is on its way. */
+  url: string | undefined
   box: NonNullable<CaptureImage["box"]>
   className?: string
 }) {
@@ -258,19 +261,21 @@ export function CaptureCardThumbnail({
       className={cn("relative block overflow-hidden bg-muted", className)}
       style={{ aspectRatio: box.width / box.height }}
     >
-      <img
-        src={url}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        className="absolute max-w-none"
-        style={{
-          width: `${(box.imageWidth / box.width) * 100}%`,
-          height: `${(box.imageHeight / box.height) * 100}%`,
-          left: `${(-box.x / box.width) * 100}%`,
-          top: `${(-box.y / box.height) * 100}%`,
-        }}
-      />
+      {url && (
+        <img
+          src={url}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="absolute max-w-none"
+          style={{
+            width: `${(box.imageWidth / box.width) * 100}%`,
+            height: `${(box.imageHeight / box.height) * 100}%`,
+            left: `${(-box.x / box.width) * 100}%`,
+            top: `${(-box.y / box.height) * 100}%`,
+          }}
+        />
+      )}
     </span>
   )
 }
@@ -278,6 +283,8 @@ export function CaptureCardThumbnail({
 function CaptureViewer({
   image,
   url,
+  failed,
+  onExpired,
   title,
   frame,
   zoom,
@@ -290,7 +297,12 @@ function CaptureViewer({
   onRegion,
 }: {
   image: CaptureImage
-  url: string
+  /** The presigned link; empty while it is on its way. */
+  url: string | undefined
+  /** No stored bytes were found for the picture. */
+  failed: boolean
+  /** Asks for a new link when the old one has expired; false when the link was fresh and the picture is broken. */
+  onExpired: () => boolean
   title: string
   frame: RefObject<HTMLDivElement | null>
   zoom: CaptureZoom
@@ -303,7 +315,8 @@ function CaptureViewer({
   onReady: (natural: { width: number; height: number }) => void
   onRegion: (region: CaptureRegion) => void
 }) {
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading")
+  const [loaded, setLoaded] = useState<"loading" | "ready" | "error">("loading")
+  const status = failed ? "error" : loaded
   const [drag, setDrag] = useState<{ pointer: number; x: number; y: number } | null>(null)
   const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null)
   // Where a press started and on which region, so a press that did not move still picks the region while zoomed.
@@ -379,18 +392,23 @@ function CaptureViewer({
         )
       }}
     >
-      <img
-        src={url}
-        alt={title}
-        draggable={false}
-        className="size-full origin-top-left object-contain"
-        style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` }}
-        onLoad={(event) => {
-          setStatus("ready")
-          onReady({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
-        }}
-        onError={() => setStatus("error")}
-      />
+      {url && (
+        <img
+          src={url}
+          alt={title}
+          draggable={false}
+          className="size-full origin-top-left object-contain"
+          style={{ transform: `translate(${zoom.x}px, ${zoom.y}px) scale(${zoom.scale})` }}
+          onLoad={(event) => {
+            setLoaded("ready")
+            onReady({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })
+          }}
+          onError={() => {
+            // A link past its ten minutes is renewed and the picture loads again under the new one.
+            if (!onExpired()) setLoaded("error")
+          }}
+        />
+      )}
       {image.box && status === "ready" && <CaptureCardMark box={image.box} zoom={zoom} />}
       {status === "ready" && natural && frameSize && regions.length > 0 && (
         // Outlined while the pointer is over the picture; each part names where it leads.
@@ -419,7 +437,7 @@ function CaptureViewer({
       )}
       {status === "loading" && (
         <p role="status" className="type-meta absolute inset-0 flex items-center justify-center p-4 text-center">
-          {image.url ? "Đang mở ảnh gốc…" : "Đang mở ảnh gốc từ ZIP… Lần đầu mở mỗi bộ ZIP mất vài giây."}
+          Đang mở ảnh gốc…
         </p>
       )}
       {status === "error" && (
@@ -462,7 +480,7 @@ function CaptureViewer({
   )
 }
 
-function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: CaptureImage; url: string }) {
+function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: CaptureImage; url: string | undefined }) {
   return (
     <div className="space-y-3 px-3 py-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -496,18 +514,21 @@ function CaptureDetails({ group, image, url }: { group: CaptureGroup; image: Cap
         </div>
       )}
       <div className="flex min-w-0 items-center gap-2 overflow-hidden rounded-md border bg-muted/40 px-2 py-1.5 text-xs">
-        <code className="min-w-0 flex-1 truncate font-mono" title={`${image.archive} › ${image.member}`}>
+        <code className="min-w-0 flex-1 truncate font-mono" title={captureSourcePath(image)}>
           {image.fileName}
         </code>
-        <CopyButton
-          value={`${image.archive}/${image.member}`}
-          label={image.url ? "Sao chép đường dẫn ảnh" : "Sao chép đường dẫn trong ZIP"}
-        />
-        <Button variant="ghost" size="icon-xs" asChild>
-          <a href={url} target="_blank" rel="noreferrer" aria-label="Mở ảnh gốc trong thẻ mới">
+        <CopyButton value={captureSourcePath(image)} label="Sao chép đường dẫn tệp nguồn" />
+        {url ? (
+          <Button variant="ghost" size="icon-xs" asChild>
+            <a href={url} target="_blank" rel="noreferrer" aria-label="Mở ảnh gốc trong thẻ mới">
+              <ExternalLink />
+            </a>
+          </Button>
+        ) : (
+          <Button variant="ghost" size="icon-xs" disabled aria-label="Mở ảnh gốc trong thẻ mới">
             <ExternalLink />
-          </a>
-        </Button>
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -601,7 +622,9 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
     event.preventDefault()
     action()
   }
-  const url = image ? captureImageUrl(patchCode ?? "", image) : ""
+  // The open group's pictures go out as one request, so moving through the strip never waits for a link.
+  const urls = useSourceUrls(group?.images.map(captureSha256) ?? [])
+  const url = image ? urls.url(captureSha256(image)) : undefined
   const message = group?.shop ? null : stateMessage(state, patchCode)
   return (
     <aside
@@ -738,6 +761,8 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                 key={image.id}
                 image={image}
                 url={url}
+                failed={urls.failed(captureSha256(image))}
+                onExpired={() => urls.retry(captureSha256(image))}
                 title={`${group.title} · ${image.fileName}`}
                 frame={frame}
                 zoom={zoom}
@@ -828,15 +853,17 @@ export function PatchCapturePanel({ captures }: { captures: PatchCaptureWorkspac
                       onClick={() => (member.skinKey ? open(group, member) : captures.select(group.key, member.id))}
                     >
                       {member.box ? (
-                        <CaptureCardThumbnail url={captureImageUrl(patchCode ?? "", member)} box={member.box} />
-                      ) : (
+                        <CaptureCardThumbnail url={urls.url(captureSha256(member))} box={member.box} />
+                      ) : urls.url(captureSha256(member)) ? (
                         <img
-                          src={captureImageUrl(patchCode ?? "", member)}
+                          src={urls.url(captureSha256(member))}
                           alt=""
                           loading="lazy"
                           decoding="async"
                           className="aspect-[20/9] w-full bg-muted object-cover"
                         />
+                      ) : (
+                        <span className="block aspect-[20/9] w-full bg-muted" />
                       )}
                     </button>
                   ))}

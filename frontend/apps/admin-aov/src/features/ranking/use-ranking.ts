@@ -25,7 +25,7 @@ export function useRankingDetail(id: string | null | undefined) {
 }
 
 export function useCaptureSets() {
-  return useQuery({ queryKey: rankingKeys.captureSets, queryFn: ({ signal }) => fetchCaptureSets(signal) })
+  return useQuery({ queryKey: rankingKeys.captureSets, queryFn: () => fetchCaptureSets() })
 }
 
 interface HeroPage {

@@ -5,7 +5,15 @@ import { createServer, type Server } from "node:http"
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { collectFolder, normalizePath, pull, push, SourceApi } from "../server/source-sync.ts"
+import {
+  collectFolder,
+  imageTypeOf,
+  normalizePath,
+  publishCaptures,
+  pull,
+  push,
+  SourceApi,
+} from "../server/source-sync.ts"
 
 const sha256 = (bytes: Buffer) => createHash("sha256").update(bytes).digest("hex")
 
@@ -15,7 +23,7 @@ async function fakeBackend() {
   const incoming = new Map<string, Buffer>()
   const uploads = new Map<string, { path: string; sha256: string }>()
   const files: { id: string; path: string; sha256: string; sizeBytes: number }[] = []
-  let collection: { id: string; code: string; version: number } | null = null
+  let collection: { id: string; code: string; version: number; category?: string } | null = null
   let next = 0
   const server: Server = createServer(async (request, response) => {
     const chunks: Buffer[] = []
@@ -31,7 +39,8 @@ async function fakeBackend() {
     if (request.method === "GET" && path === "/admin/source-collections")
       return json(200, { items: collection ? [collection] : [], page: 0, size: 100, totalElements: collection ? 1 : 0 })
     if (request.method === "POST" && path === "/admin/source-collections") {
-      collection = { id: "c1", code: JSON.parse(body.toString()).code, version: 0 }
+      const input = JSON.parse(body.toString())
+      collection = { id: "c1", code: input.code, version: 0, category: input.category }
       return json(201, collection)
     }
     if (request.method === "POST" && path === "/admin/source-collections/c1/uploads") {
@@ -176,6 +185,95 @@ test("push stores new bytes once, verifies them, and a second push only places w
     assert.match(refused[0], /REFUSED \.\.\/evil\.txt/)
   } finally {
     backend.server.close()
+    await rm(work, { recursive: true, force: true })
+  }
+})
+
+test("publish-captures refuses a set whose screenshots are not stored, then replaces its manifest only when it changed", async () => {
+  const work = await mkdtemp(join(tmpdir(), "source-sync-publish-"))
+  const backend = await fakeBackend()
+  try {
+    const shot = Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3])
+    const raw = join(work, "raw", "builds", "2026-11-11")
+    const extracted = join(work, "extracted", "builds", "2026-11-11")
+    await mkdir(join(raw, "pro-001"), { recursive: true })
+    await mkdir(extracted, { recursive: true })
+    await writeFile(join(raw, "pro-001", "1.png"), shot)
+    const manifest = (needsReview: boolean) => ({
+      capturedOn: "2026-11-11",
+      capture: {
+        code: "vn-pro-20261111",
+        capturedAt: "2026-11-11T05:02:43Z",
+        sourceTimeZone: "Asia/Ho_Chi_Minh",
+        sourceLabel: "Đề cử Pro",
+        regionCode: "VN",
+        images: [{}],
+        heroes: [{ builds: [{ needsReview }] }],
+      },
+      images: { [sha256(shot)]: { path: "pro-001/1.png" } },
+    })
+    await writeFile(join(extracted, "build-manifest.json"), JSON.stringify(manifest(true)))
+    const collection = await backend.api.call<{ id: string; code: string; version: number; category: string }>(
+      "/admin/source-collections",
+      { method: "POST", body: { code: "builds-test", category: "BUILD_CAPTURE" } },
+    )
+    const receipts = join(work, "receipts.jsonl")
+    const options = (apply: boolean) => ({ apply, receipts, log: () => {} })
+
+    await assert.rejects(publishCaptures(backend.api, collection, extracted, options(true)), /1 of 1 pictures/)
+    const shots = await collectFolder(raw, "raw/builds/2026-11-11")
+    await push(backend.api, collection, shots.items, { receipts, log: () => {} })
+
+    const planned = await publishCaptures(backend.api, collection, extracted, options(false))
+    assert.deepEqual([planned.kind, planned.pictures, planned.published], ["BUILD_CAPTURE", 1, false])
+    assert.equal(
+      backend.files.some((file) => file.path === "capture-manifest.json"),
+      false,
+      "a plan writes nothing",
+    )
+
+    const published = await publishCaptures(backend.api, collection, extracted, options(true))
+    assert.equal(published.published, true)
+    const first = backend.files.find((file) => file.path === "capture-manifest.json")!.sha256
+    const set = JSON.parse(backend.objects.get(first)!.toString())
+    assert.deepEqual([set.kind, set.set.needsReview, set.capture.code], ["BUILD_CAPTURE", 1, "vn-pro-20261111"])
+
+    const again = await publishCaptures(backend.api, collection, extracted, options(true))
+    assert.deepEqual([again.unchanged, again.published], [true, false], "nothing changed, nothing is sent")
+
+    await writeFile(join(extracted, "build-manifest.json"), JSON.stringify(manifest(false)))
+    const replaced = await publishCaptures(backend.api, collection, extracted, options(true))
+    assert.equal(replaced.published, true, "a changed review replaces the manifest on purpose")
+    const current = backend.files.find((file) => file.path === "capture-manifest.json")!
+    assert.notEqual(current.sha256, first)
+    assert.equal(JSON.parse(backend.objects.get(current.sha256)!.toString()).set.needsReview, 0)
+
+    const media = { ...collection, category: "IMPORT_DATA" }
+    await assert.rejects(publishCaptures(backend.api, media, extracted, options(true)), /not a capture set/)
+  } finally {
+    backend.server.close()
+    await rm(work, { recursive: true, force: true })
+  }
+})
+
+test("images are declared by their bytes, so a JPEG saved as .png is not refused", async () => {
+  const work = await mkdtemp(join(tmpdir(), "source-sync-types-"))
+  try {
+    const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1])
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0x0d])
+    await writeFile(join(work, "ui-import-complete.png"), jpeg)
+    await writeFile(join(work, "real.png"), png)
+    await writeFile(join(work, "notes.json"), "{}")
+    const types = Object.fromEntries((await collectFolder(work)).items.map((item) => [item.path, item.contentType]))
+    assert.deepEqual(types, {
+      "notes.json": "application/json",
+      "real.png": "image/png",
+      "ui-import-complete.png": "image/jpeg",
+    })
+    assert.equal(imageTypeOf(Buffer.from("GIF89a")), "image/gif")
+    assert.equal(imageTypeOf(Buffer.from("RIFF    WEBP")), "image/webp")
+    assert.equal(imageTypeOf(Buffer.from("not an image")), null)
+  } finally {
     await rm(work, { recursive: true, force: true })
   }
 })

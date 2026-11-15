@@ -4,7 +4,8 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { test } from "node:test"
-import { createBuildCaptureHandler } from "../server/build-captures"
+import { missingPictures } from "../server/capture-sets"
+import { captureSetFromFolder, collectFolder } from "../server/source-sync"
 import type { Build, BuildHero, CaptureDetail } from "../src/features/builds/builds-api"
 import {
   confirmBodyOf,
@@ -117,38 +118,20 @@ test("the panel crop shows only the build part of a 2400 x 1080 screenshot", () 
   assert.equal(style.top, `${(-170 / 760) * 100}%`)
 })
 
-const call = async (handler: ReturnType<typeof createBuildCaptureHandler>, url: string, method = "GET") => {
-  const chunks: Buffer[] = []
-  let status = 0
-  let passed = false
-  const res = {
-    writeHead(code: number) {
-      status = code
-    },
-    end(chunk?: Uint8Array | string) {
-      if (chunk) chunks.push(Buffer.from(chunk))
-    },
-  }
-  await handler({ url, method } as never, res as never, () => {
-    passed = true
-  })
-  return { status, body: Buffer.concat(chunks), passed }
-}
-
-test("the dev endpoint offers capture sets and serves only verified screenshots", async () => {
+test("a published set offers its import body, and a screenshot that changed is never published", async () => {
   const resources = await mkdtemp(join(tmpdir(), "build-captures-"))
-  const previous = process.env.AOV_RESOURCES_DIR
-  process.env.AOV_RESOURCES_DIR = resources
   try {
     const bytes = Buffer.from("png-bytes")
     const good = createHash("sha256").update(bytes).digest("hex")
     const bad = "f".repeat(64)
-    await mkdir(join(resources, "raw", "builds", "2026-11-11", "pro-001"), { recursive: true })
-    await writeFile(join(resources, "raw", "builds", "2026-11-11", "pro-001", "pro-001-1.png"), bytes)
-    await writeFile(join(resources, "raw", "builds", "2026-11-11", "pro-001", "pro-001-2.png"), Buffer.from("other"))
-    await mkdir(join(resources, "extracted", "builds", "2026-11-11"), { recursive: true })
+    const raw = join(resources, "raw", "builds", "2026-11-11")
+    await mkdir(join(raw, "pro-001"), { recursive: true })
+    await writeFile(join(raw, "pro-001", "pro-001-1.png"), bytes)
+    await writeFile(join(raw, "pro-001", "pro-001-2.png"), Buffer.from("other"))
+    const extracted = join(resources, "extracted", "builds", "2026-11-11")
+    await mkdir(extracted, { recursive: true })
     await writeFile(
-      join(resources, "extracted", "builds", "2026-11-11", "build-manifest.json"),
+      join(extracted, "build-manifest.json"),
       JSON.stringify({
         capturedOn: "2026-11-11",
         capture: {
@@ -163,33 +146,28 @@ test("the dev endpoint offers capture sets and serves only verified screenshots"
         images: { [good]: { path: "pro-001/pro-001-1.png" }, [bad]: { path: "pro-001/pro-001-2.png" } },
       }),
     )
-    const handler = createBuildCaptureHandler({ start: resources })
 
-    const sets = await call(handler, "/sets.json")
-    assert.equal(sets.status, 200)
-    assert.deepEqual(JSON.parse(sets.body.toString()).sets, [
-      {
-        capturedOn: "2026-11-11",
-        code: "vn-pro-20261111",
-        capturedAt: "2026-11-11T05:02:43Z",
-        sourceTimeZone: "Asia/Ho_Chi_Minh",
-        sourceLabel: "Đề cử Pro",
-        regionCode: "VN",
-        heroes: 1,
-        builds: 2,
-        needsReview: 1,
-      },
+    const { set, pictures } = await captureSetFromFolder("BUILD_CAPTURE", extracted)
+    assert.equal(set.kind, "BUILD_CAPTURE")
+    if (set.kind !== "BUILD_CAPTURE") return
+    assert.deepEqual(set.set, {
+      capturedOn: "2026-11-11",
+      code: "vn-pro-20261111",
+      capturedAt: "2026-11-11T05:02:43Z",
+      sourceTimeZone: "Asia/Ho_Chi_Minh",
+      sourceLabel: "Đề cử Pro",
+      regionCode: "VN",
+      heroes: 1,
+      builds: 2,
+      needsReview: 1,
+    })
+    assert.equal(set.capture.code, "vn-pro-20261111")
+
+    const pushed = (await collectFolder(raw, "raw/builds/2026-11-11")).items
+    assert.deepEqual(missingPictures(pictures, pushed), [
+      { sha256: bad, path: "raw/builds/2026-11-11/pro-001/pro-001-2.png" },
     ])
-    assert.equal(JSON.parse((await call(handler, "/sets/2026-11-11.json")).body.toString()).code, "vn-pro-20261111")
-    assert.equal((await call(handler, "/sets/2026-11-12.json")).status, 404)
-    assert.deepEqual((await call(handler, `/images/${good}.png`)).body, bytes)
-    assert.equal((await call(handler, `/images/${bad}.png`)).status, 502)
-    assert.equal((await call(handler, "/images/nope.png")).status, 400)
-    assert.equal((await call(handler, "/sets.json", "POST")).status, 405)
-    assert.equal((await call(handler, "/other")).passed, true)
   } finally {
-    if (previous === undefined) delete process.env.AOV_RESOURCES_DIR
-    else process.env.AOV_RESOURCES_DIR = previous
     await rm(resources, { recursive: true, force: true })
   }
 })

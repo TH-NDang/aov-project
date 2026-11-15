@@ -105,30 +105,37 @@ Khi chuyển dữ liệu sang backend, dùng `backendRequest` để gửi Bearer
 ## Ảnh gốc của patch
 
 Nút **Ảnh gốc** ở đầu trang tướng mở khung xem ảnh chụp gốc nằm cạnh dữ liệu đã nhập, tự theo mục đang xem.
-Middleware `/__patch-captures` trong `server/patch-captures.ts` chỉ chạy ở Vite dev/preview và chỉ đọc `resources/`.
-Không có middleware này (bản build triển khai) thì nút tự ẩn.
+Ảnh và danh mục ảnh nằm trong bucket riêng tư `aov-source-private` (ADR-030), ở bộ tệp nguồn loại **Ảnh tướng theo patch**.
+Admin đọc `capture-manifest.json` của bộ qua link ký sẵn, rồi xin link cho các ảnh đang mở theo SHA-256. Bytes đi thẳng từ R2
+tới trình duyệt, nên bản build triển khai dùng được như Vite dev. Tài khoản không có `catalog:read` không thấy nút.
 
-- Bộ ảnh của một patch là `resources/extracted/<mùa>/<patch>/`, ảnh lấy từ ZIP lồng trong `resources/raw/`.
-  Worktree không có `resources/raw` sẽ tìm ở thư mục cha, hoặc đặt `AOV_RESOURCES_DIR`.
+- Manifest được dựng trên máy có tệp rà soát, từ `resources/extracted/<mùa>/<patch>/`; ảnh lấy từ ZIP lồng trong
+  `resources/raw/`. Đẩy ảnh lên trước (`pnpm sources:sync push`, ảnh trong ZIP thành `raw/<ZIP>/<ZIP con>/<tệp>`), rồi chạy
+  trong `apps/admin-aov`:
+
+  ```powershell
+  pnpm sources:sync publish-captures ../../../resources/extracted/2026-s4/2026-10-30 --collection hero-capture-2026-10-30 --apply
+  ```
+
+  Lệnh từ chối khi còn ảnh chưa có trong bộ, hoặc có nhưng khác bytes. Sửa bản rà soát thì chạy lại: manifest chỉ được thay
+  khi nội dung đổi. Bỏ `--apply` để xem trước mà không ghi gì.
 - Lượt chụp bổ sung cho cùng patch được ghi vào `supplements` của `source-manifest.json` (tên ZIP trong `resources/raw/`,
-  SHA-256 và danh sách ZIP con). Ảnh của ZIP con có tên trong danh sách đó được lấy từ ZIP bổ sung; hai lượt không được trùng
-  tên ZIP con.
+  SHA-256 và danh sách ZIP con). Ảnh của ZIP con có tên trong danh sách đó nằm dưới thư mục của ZIP bổ sung; hai lượt không
+  được trùng tên ZIP con.
 - Lượt bổ sung ghi `screen: "IN_MATCH"` là ảnh chụp trong trận (ví dụ bảng Chiêu thức của dạng sóc nhỏ của Aya, chỉ có
   trong trận). Ảnh này có ghi chú riêng, không vẽ vùng bấm hay tự phóng to theo bố cục trang tướng dù cùng tỉ lệ 20:9, và
-  được gửi đúng định dạng (JPEG hoặc PNG theo nội dung tệp).
+  giữ đúng định dạng JPEG hoặc PNG đã lưu.
 - Một ảnh có thể là nguồn đã rà của nhiều kỹ năng (bảng Chiêu thức trong trận liệt kê mọi kỹ năng): khi nhiều kỹ năng trong
   `manual/import-rows.json` cùng nêu ảnh đó, ảnh nằm ở kỹ năng đầu tiên và các kỹ năng sau trong `alsoSkillKeys`, và hiện ở
   nhóm của từng kỹ năng.
 - Mỗi ảnh nối theo bản rà soát (`manual/import-rows.json`, `manual-attribute-sources.json`, `manual/source-gaps.json`),
   chỉ ảnh tổng quan nối theo tên tệp. Ảnh bị loại hoặc chưa rõ mục không bao giờ gắn vào kỹ năng trùng tên.
-- Lần đầu đọc một ZIP con mất vài giây vì phải giải nén cả ZIP đó vào `%TEMP%/aov-patch-captures`
-  (tổng khoảng 1,6 GB, xóa được bất cứ lúc nào, đổi nơi lưu bằng `AOV_CAPTURE_CACHE`).
-- `GET /__patch-captures/<patch>/coverage.json` trả về tỉ lệ nối và danh sách ảnh chưa nối.
-- `GET /__patch-captures/<patch>/heroes.json` trả về, cho từng tướng, ảnh của từng mục: ảnh tổng quan; ảnh thuộc tính kèm
-  số đã đọc được (`manual/observed-attributes.json`, giá trị `null` hoặc thiếu là không nhìn thấy); từng kỹ năng với ảnh đã
-  rà soát, ảnh mang tên kỹ năng nhưng bị loại, mô tả bị cắt, có thấy bảng cấp hay không và lời dặn chụp lại
-  (`recapture-requests.review.json`).
-- Middleware đọc lại bộ ảnh khi một tệp JSON trong thư mục patch được thêm, xóa hoặc sửa, nên không cần khởi động lại Vite.
+- `capture-manifest.json` gồm: tỉ lệ nối và danh sách ảnh chưa nối (`coverage`); cho từng tướng, ảnh của từng mục
+  (`sources`): ảnh tổng quan, ảnh thuộc tính kèm số đã đọc được (`manual/observed-attributes.json`, giá trị `null` hoặc thiếu
+  là không nhìn thấy), từng kỹ năng với ảnh đã rà soát, ảnh mang tên kỹ năng nhưng bị loại, mô tả bị cắt, có thấy bảng cấp
+  hay không và lời dặn chụp lại (`recapture-requests.review.json`); và ảnh của từng tướng kèm SHA-256 và đường dẫn trong bộ
+  (`heroes`).
+- Link ảnh sống 10 phút; khung ảnh xin lại khi link cũ hết hạn. Manifest chỉ tải lại khi SHA-256 của nó đổi.
 
 ### Vùng trên ảnh và điều hướng (09/11/2026)
 
@@ -168,17 +175,21 @@ Trang **Sẵn sàng xuất bản** có thêm cột **Ảnh gốc cần chụp** 
 
 Mỗi mục có một mức: **Gỡ chặn xuất bản** (điều kiện xuất bản đang thiếu chỉ ảnh này cung cấp được), **Thiếu dữ liệu**,
 **Chưa đối chiếu được** và **Nên xem lại**. Bộ lọc xếp tướng mà chụp xong là đủ điều kiện xuất bản lên đầu, rồi tướng chưa
-xuất bản, rồi tướng cần ít ảnh hơn. Trang đọc lại bộ ảnh mỗi 30 giây và khi quay lại cửa sổ.
+xuất bản, rồi tướng cần ít ảnh hơn. Trang xem lại danh sách bộ ảnh mỗi 30 giây và khi quay lại cửa sổ, nên bộ vừa công bố
+bằng `publish-captures` hiện ra mà không cần tải lại trang.
 
 ### Ảnh cửa hàng
 
 Giá tướng và cách nhận trang phục đọc từ ảnh chụp cửa hàng trong game cũng đối chiếu trong khung **Ảnh gốc**, ở nhóm
 **Giá tướng** và **Trang phục**, kể cả khi patch đang xem chưa có bộ ảnh. Nút ảnh cạnh giá và cạnh từng trang phục mở đúng
-thẻ đó: phần còn lại của ảnh được làm tối, **Vừa khung** để xem cả màn hình. Middleware `/__shop-captures` trong
-`server/shop-captures.ts` cũng chỉ chạy ở Vite dev/preview và chỉ đọc `resources/`.
+thẻ đó: phần còn lại của ảnh được làm tối, **Vừa khung** để xem cả màn hình. Ảnh và danh mục nằm trong bộ tệp nguồn loại
+**Ảnh cửa hàng**, đọc qua link ký sẵn như ảnh patch; lượt chụp mới nhất đứng trước.
 
 - Ảnh nằm ở `resources/raw/shop/<ngày chụp>/{tuong,trang-phuc}/`, kết quả đọc và bảng nối nằm ở
-  `resources/extracted/shop/<ngày chụp>/` (`shop-manifest.json`). Giống bộ ảnh patch, hai thư mục này không commit.
+  `resources/extracted/shop/<ngày chụp>/` (`shop-manifest.json`). Hai thư mục này không commit: đẩy chúng lên bộ
+  `shop-<ngày chụp>` rồi chạy `pnpm sources:sync publish-captures ../../../resources/extracted/shop/<ngày chụp>
+  --collection shop-<ngày chụp> --apply`. Build đề cử và thống kê đấu hạng làm y như vậy với `extracted/builds/<ngày>` và
+  `extracted/ranking/<ngày>`; hộp **Nhập** của hai trang đó liệt kê các bộ đã công bố.
 - Sau một lần chụp mới, chạy trong `apps/admin-aov`:
 
   ```powershell

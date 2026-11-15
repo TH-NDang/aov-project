@@ -15,8 +15,8 @@ import { fetchCaptureSet, type CaptureSummary } from "./builds-api"
 import { useCaptureActions, useCaptureSets } from "./use-builds"
 
 /**
- * Brings in a capture set the screenshot reader left in `resources/extracted/builds/<day>/`. Only sets on this machine
- * are offered, and one already imported shows as such.
+ * Brings in a capture set published to the private bucket with publish-captures (ADR-030), so a built Admin offers the
+ * same sets as a dev server. One already imported shows as such.
  */
 export function ImportDialog({
   open,
@@ -55,18 +55,19 @@ export function ImportDialog({
         <DialogHeader>
           <DialogTitle>Nhập lần chụp build</DialogTitle>
           <DialogDescription>
-            Bộ ảnh đã đọc nằm ở resources/extracted/builds trên máy này. Bộ chờ duyệt là bộ có ô chưa nhận ra hoặc phải
-            suy luận.
+            Bộ ảnh đã đọc nằm trong Quản lý tệp › Tệp nguồn. Bộ chờ duyệt là bộ có ô chưa nhận ra hoặc phải suy luận.
           </DialogDescription>
         </DialogHeader>
         {sets.isPending ? (
           <p className="type-body text-muted-foreground">Đang tìm bộ ảnh…</p>
+        ) : sets.isError ? (
+          <p className="type-body text-destructive">{errorMessage(sets.error)}</p>
         ) : !sets.data ? (
           <p className="type-body text-muted-foreground">
-            Máy chủ dev không thấy thư mục resources, nên không có bộ ảnh nào để nhập.
+            Tài khoản này không mở được tệp nguồn, nên không có bộ ảnh nào để nhập.
           </p>
         ) : !sets.data.length ? (
-          <p className="type-body text-muted-foreground">Chưa có bộ ảnh nào trong resources/extracted/builds.</p>
+          <p className="type-body text-muted-foreground">Chưa có bộ ảnh build nào trong Tệp nguồn.</p>
         ) : (
           <ul className="divide-y rounded-lg border">
             {sets.data.map((set) => (

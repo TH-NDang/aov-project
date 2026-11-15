@@ -10,11 +10,11 @@ import {
   cardBox,
   heroShopImages,
   parseSources,
-  shopImageUrl,
   type ShopHeroRow,
   type ShopSkinRow,
 } from "../server/shop-capture-manifest"
-import { createShopCaptureHandler } from "../server/shop-captures"
+import { missingPictures } from "../server/capture-sets"
+import { captureSetFromFolder, collectFolder } from "../server/source-sync"
 
 const screen = { width: 2400, height: 1080 }
 
@@ -107,7 +107,7 @@ test("each hero keeps its own price and skins, with what was read and from which
   assert.equal(price[0]?.reading, "28.888 vàng · 599 quân huy")
   assert.equal(price[0]?.card, 1)
   assert.equal(price[0]?.box?.x, 615)
-  assert.equal(price[0]?.url, shopImageUrl("a".repeat(64)))
+  assert.deepEqual([price[0]?.sha256, price[0]?.path], ["a".repeat(64), "raw/shop/2026-09-16/tuong/a.jpg"])
   assert.equal(skins[0]?.skinKey, "tamyn-nu-thuyen-truong-1")
   assert.equal(skins[0]?.reading, "Nhận từ sự kiện")
   assert.equal(skins[0]?.box, null, "no row start was given for this screenshot")
@@ -214,67 +214,30 @@ test("importing copies only the screenshots something was read from, and can saf
   })
 })
 
-const call = async (
-  handler: ReturnType<typeof createShopCaptureHandler>,
-  url: string,
-  method = "GET",
-): Promise<{ status: number; type: string; body: Buffer; passed: boolean }> => {
-  const chunks: Buffer[] = []
-  let status = 0
-  let type = ""
-  let passed = false
-  const res = {
-    writeHead(code: number, headers: Record<string, string>) {
-      status = code
-      type = headers["Content-Type"] ?? ""
-    },
-    end(chunk?: Uint8Array | string) {
-      if (chunk) chunks.push(Buffer.from(chunk))
-    },
-  }
-  await handler({ url, method } as never, res as never, () => {
-    passed = true
-  })
-  return { status, type, body: Buffer.concat(chunks), passed }
-}
-
-test("the dev endpoint lists a hero's cards and serves verified images, and nothing else", async () => {
+test("the published set lists each hero's cards, and every screenshot is where push stores it", async () => {
   await withSource(async ({ source, resources, heroImage }) => {
     await importShopCaptures(options(source, resources))
-    const previous = process.env.AOV_RESOURCES_DIR
-    process.env.AOV_RESOURCES_DIR = resources
-    try {
-      const handler = createShopCaptureHandler({ start: source })
-      const listed = await call(handler, "/heroes/tamyn.json")
-      assert.equal(listed.status, 200)
-      const { images: shown } = JSON.parse(listed.body.toString()) as { images: { kind: string; url: string }[] }
-      assert.deepEqual(
-        shown.map((image) => image.kind),
-        ["price", "skin"],
-      )
-      assert.deepEqual(JSON.parse((await call(handler, "/heroes/nobody.json")).body.toString()).images, [])
+    const extracted = join(resources, "extracted", "shop", "2026-09-16")
+    const { set, pictures } = await captureSetFromFolder("SHOP_CAPTURE", extracted)
+    assert.equal(set.kind, "SHOP_CAPTURE")
+    if (set.kind !== "SHOP_CAPTURE") return
+    assert.deepEqual(
+      set.heroes.tamyn!.map((image) => image.kind),
+      ["price", "skin"],
+    )
+    assert.equal(set.heroes.nobody, undefined)
+    const price = set.heroes.tamyn![0]!
+    assert.deepEqual([price.sha256, price.path], [sha(heroImage), "raw/shop/2026-09-16/tuong/a.jpg"])
 
-      const id = sha(heroImage)
-      const served = await call(handler, `/images/${id}.jpg`)
-      assert.equal(served.status, 200)
-      assert.equal(served.type, "image/jpeg")
-      assert.deepEqual(new Uint8Array(served.body), heroImage)
+    const raw = join(resources, "raw", "shop", "2026-09-16")
+    const pushed = async () => (await collectFolder(raw, "raw/shop/2026-09-16")).items
+    assert.deepEqual(missingPictures(pictures, await pushed()), [])
 
-      assert.equal((await call(handler, `/images/${"f".repeat(64)}.jpg`)).status, 404)
-      assert.equal((await call(handler, "/images/..%2Fsecret.jpg")).status, 400)
-      assert.equal((await call(handler, "/heroes/Bad_Code.json")).status, 400)
-      assert.equal((await call(handler, `/images/${id}.jpg`, "POST")).status, 405)
-      assert.equal((await call(handler, "/other")).passed, true)
-
-      await writeFile(join(resources, "raw", "shop", "2026-09-16", "tuong", "a.jpg"), "changed")
-      assert.equal(
-        (await call(handler, `/images/${id}.jpg`)).status,
-        502,
-        "a changed file is never shown as the original",
-      )
-    } finally {
-      if (previous === undefined) delete process.env.AOV_RESOURCES_DIR
-      else process.env.AOV_RESOURCES_DIR = previous
-    }
+    await writeFile(join(raw, "tuong", "a.jpg"), "changed")
+    assert.deepEqual(
+      missingPictures(pictures, await pushed()).map((picture) => picture.path),
+      ["raw/shop/2026-09-16/tuong/a.jpg"],
+      "a changed file is never published as the original",
+    )
   })
 })
