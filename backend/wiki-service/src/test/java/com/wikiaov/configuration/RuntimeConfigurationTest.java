@@ -38,21 +38,32 @@ class RuntimeConfigurationTest {
             assertThat(environment.getProperty("spring.datasource.url"))
                     .isEqualTo("jdbc:postgresql://database.example.test:5432/configuration_test");
             assertThat(environment.getProperty("wiki.storage.endpoint")).isEqualTo("http://storage.example.test:8333");
-            assertThat(environment.getProperty("wiki.storage.create-bucket-if-missing", Boolean.class)).isTrue();
-            assertThat(environment.getProperty("wiki.storage.upload-origins"))
-                    .isEqualTo("http://localhost:5175,http://localhost:5174");
             assertThat(environment.getProperty("wiki.auth.secure-cookies", Boolean.class)).isFalse();
         });
     }
 
     @Test
-    void localCloudStorageCanDisableBucketProvisioning() {
-        withProfile("local", Map.of("STORAGE_CREATE_BUCKET_IF_MISSING", "false",
-                "STORAGE_ASSETS_BUCKET", "public-assets"), environment -> {
+    void localDevelopmentUsesCloudStorageWithoutStartingSeaweedFs() {
+        withProfile("local", Map.of("STORAGE_ASSETS_BUCKET", "public-assets",
+                "STORAGE_SOURCES_BUCKET", "private-sources"), environment -> {
+                    assertThat(environment.getProperty("spring.docker.compose.profiles.active")).isNull();
                     assertThat(environment.getProperty("wiki.storage.create-bucket-if-missing", Boolean.class))
                             .isFalse();
+                    assertThat(environment.getProperty("wiki.storage.upload-origins")).isNull();
                     assertThat(environment.getProperty("wiki.storage.assets-bucket")).isEqualTo("public-assets");
+                    assertThat(environment.getProperty("wiki.storage.sources-bucket")).isEqualTo("private-sources");
                 });
+    }
+
+    @Test
+    void localStorageProfileStartsAndProvisionsSeaweedFs() {
+        withProfile("local,local-storage", environment -> {
+            assertThat(environment.getProperty("spring.docker.compose.profiles.active")).isEqualTo("local-storage");
+            assertThat(environment.getProperty("wiki.storage.endpoint")).isEqualTo("http://storage.example.test:8333");
+            assertThat(environment.getProperty("wiki.storage.create-bucket-if-missing", Boolean.class)).isTrue();
+            assertThat(environment.getProperty("wiki.storage.upload-origins"))
+                    .isEqualTo("http://localhost:5175,http://localhost:5174");
+        });
     }
 
     @Test

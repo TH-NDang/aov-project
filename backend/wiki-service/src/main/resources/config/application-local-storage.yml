@@ -1,0 +1,18 @@
+# Optional offline object storage: SeaweedFS from compose.yaml (ADR-030 section 14).
+# Run with the Spring profiles "local,local-storage" and without the R2 environment file.
+spring:
+  docker:
+    compose:
+      profiles:
+        active: local-storage
+
+wiki:
+  storage:
+    # Keys match infra/local/seaweedfs/s3.json.
+    endpoint: ${STORAGE_ENDPOINT:http://localhost:8333}
+    access-key: ${STORAGE_ACCESS_KEY:wiki-local}
+    secret-key: ${STORAGE_SECRET_KEY:wiki-local-storage}
+    create-bucket-if-missing: ${STORAGE_CREATE_BUCKET_IF_MISSING:true}
+    # Browser origins allowed to PUT presigned uploads: admin media and stream avatars. Cloud buckets (R2) are
+    # configured in the provider instead, see infra/cloudflare/upload-cors.json.
+    upload-origins: ${ADMIN_ORIGIN:http://localhost:5175},http://localhost:5174

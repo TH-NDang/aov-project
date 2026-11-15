@@ -19,7 +19,14 @@ docker compose --profile identity up -d
 
 Chỉ tạo `.env` khi chưa có file riêng; không ghi đè secret hoặc cấu hình đang sử dụng. Keycloak
 thuộc profile Compose `identity`; Spring Boot profile `local` khởi động các dependency mặc định và
-giữ chúng chạy khi ứng dụng dừng. Bucket Media được tạo nếu chưa có ở local.
+giữ chúng chạy khi ứng dụng dừng.
+
+Object storage là Cloudflare R2, kể cả khi dev (ADR-030 mục 14): điền các biến `STORAGE_*` trong `.env`
+bằng khóa thật của bạn, hoặc chạy launcher với `-EnvironmentFile .env.r2` (xem
+[`infra/cloudflare/README.md`](infra/cloudflare/README.md)). Bucket được tạo trong dashboard Cloudflare,
+ứng dụng không tự tạo. SeaweedFS không còn tự chạy; muốn làm việc không có mạng thì bật
+`docker compose --profile local-storage up -d seaweedfs`, bỏ các biến R2 và chạy Spring với profile
+`local,local-storage`.
 
 Launcher đọc `.env` thành giá trị literal, giữ biến đã export trong process làm ưu tiên. Có thể
 chọn file khác bằng `-EnvironmentFile <path>` hoặc dùng `-DryRun` để xem lệnh và **tên** biến mà
@@ -40,7 +47,7 @@ Không reset volume để đổi cấu hình hoặc nạp lại realm.
 |---|---|
 | API | `http://localhost:8080/api/wiki/v1` |
 | PostgreSQL | `localhost:5432`, database `wiki` |
-| SeaweedFS S3 / filer | `http://localhost:8333` / `http://localhost:8888` |
+| Object storage | R2 theo `STORAGE_ENDPOINT`; SeaweedFS `http://localhost:8333` chỉ khi bật `local-storage` |
 | Keycloak | `http://localhost:8081` |
 | Redis | `localhost:6379` |
 
@@ -53,7 +60,8 @@ volume giữ nguyên sau khi sắp xếp thư mục.
 | Vị trí | Vai trò |
 |---|---|
 | [`config/application.yml`](src/main/resources/config/application.yml) | Cấu hình Spring chung và biến môi trường |
-| [`config/application-local.yml`](src/main/resources/config/application-local.yml) | Default local, Compose và tạo bucket |
+| [`config/application-local.yml`](src/main/resources/config/application-local.yml) | Default local và Compose |
+| [`config/application-local-storage.yml`](src/main/resources/config/application-local-storage.yml) | Tùy chọn SeaweedFS local: bật dịch vụ Compose, tạo bucket |
 | [`config/application-prod.yml`](src/main/resources/config/application-prod.yml) | Log JSON, hạn chế chi tiết health |
 | [`config/application-test.yml`](src/main/resources/config/application-test.yml) | Cấu hình kiểm thử, không dùng dependency dev |
 | [`.env.example`](.env.example) | Mẫu local cho Compose và launcher; `.env` không được commit |
@@ -72,6 +80,8 @@ classpath. Production dùng profile `prod` và cấp cấu hình từ môi trư�
 | `COMMUNITY_API_BASE_URL` | Địa chỉ `community-service`; bắt buộc ở profile `prod`, phải là HTTPS, loopback hoặc tên service nội bộ không có dấu chấm |
 | `ADMIN_AUTH_CLIENT_ID`, `ADMIN_AUTH_CLIENT_SECRET`, `GOOGLE_LOGIN_ENABLED` | Confidential client của backend và tùy chọn Google |
 | `STORAGE_ENDPOINT`, `STORAGE_REGION`, `STORAGE_BUCKET` | Object storage S3-compatible |
+| `STORAGE_ASSETS_BUCKET`, `STORAGE_SOURCES_BUCKET` | Bucket ảnh công khai và bucket tệp nguồn riêng tư (ADR-014, ADR-030); để trống thì dùng `STORAGE_BUCKET` |
+| `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_ANALYTICS_TOKEN` | Tùy chọn: số liệu dung lượng và thao tác thật của R2 trong Admin; token chỉ có quyền Account Analytics: Read |
 | `STORAGE_ACCESS_KEY`, `STORAGE_SECRET_KEY`, `STORAGE_PATH_STYLE` | Credentials và cách đánh địa chỉ S3 |
 | `STORAGE_PUBLIC_ENDPOINT` | Tùy chọn: endpoint ghi vào presigned URL cho trình duyệt khi service gọi storage qua mạng nội bộ |
 | `MEDIA_PUBLIC_BASE_URL` | Prefix phân phối `assets/` qua proxy/CDN |
