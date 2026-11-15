@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Formats staged files before each commit so every editor produces the same layout.
 //
-//   Java under backend/wiki-service/src  -> Spotless (backend/wiki-service/config/format/eclipse-formatter.xml)
-//   Code under frontend/                 -> Prettier (frontend/.prettierrc.json), when installed
+//   Java under backend/<service>/src  -> Spotless of that service (backend/<service>/config/format/eclipse-formatter.xml)
+//   Code under frontend/              -> Prettier (frontend/.prettierrc.json), when installed
 //
 // A fully staged file is formatted and staged again. A partially staged file is formatted in the
 // working tree only and the commit stops, so hunks you did not stage are never committed by accident.
@@ -16,7 +16,7 @@ if (process.env.SKIP_FORMAT === "1") {
   process.exit(0);
 }
 
-const JAVA_MODULE = "backend/wiki-service";
+const JAVA_MODULES = ["backend/wiki-service", "backend/community-service"];
 const FRONTEND = "frontend";
 const PRETTIER_FILES = /\.(?:[cm]?[jt]sx?|json|css|html)$/;
 const PRETTIER_SKIP = /(?:^|\/)(?:pnpm-lock\.yaml|package-lock\.json)$/;
@@ -28,7 +28,10 @@ process.chdir(root);
 const staged = split(git(["diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"]));
 const unstaged = new Set(split(git(["diff", "--name-only", "-z"])));
 
-const javaFiles = staged.filter((f) => f.startsWith(`${JAVA_MODULE}/src/`) && f.endsWith(".java"));
+const javaFilesByModule = new Map(
+  JAVA_MODULES.map((module) => [module, staged.filter((f) => f.startsWith(`${module}/src/`) && f.endsWith(".java"))]),
+);
+const javaFiles = [...javaFilesByModule.values()].flat();
 const frontendFiles = staged.filter(
   (f) => f.startsWith(`${FRONTEND}/`) && PRETTIER_FILES.test(f) && !PRETTIER_SKIP.test(f),
 );
@@ -39,8 +42,10 @@ if (javaFiles.length === 0 && frontendFiles.length === 0) {
 
 const before = new Map([...javaFiles, ...frontendFiles].map((f) => [f, hash(f)]));
 
-if (javaFiles.length > 0) {
-  formatJava(javaFiles);
+for (const [module, files] of javaFilesByModule) {
+  if (files.length > 0) {
+    formatJava(module, files);
+  }
 }
 if (frontendFiles.length > 0) {
   formatFrontend(frontendFiles);
@@ -65,21 +70,21 @@ if (partial.length > 0) {
   process.exit(1);
 }
 
-function formatJava(files) {
-  const moduleDir = path.join(root, JAVA_MODULE);
+function formatJava(module, files) {
+  const moduleDir = path.join(root, module);
   const windows = process.platform === "win32";
   for (let i = 0; i < files.length; i += MAVEN_BATCH) {
     // Spotless matches each regex against the absolute path; accept both path separators.
     const patterns = files
       .slice(i, i + MAVEN_BATCH)
-      .map((f) => ".*" + escapeRegex(f.slice(JAVA_MODULE.length + 1)).replaceAll("/", "[\\\\/]"))
+      .map((f) => ".*" + escapeRegex(f.slice(module.length + 1)).replaceAll("/", "[\\\\/]"))
       .join(",");
     const args = ["-q", "-B", "spotless:apply", `-DspotlessFiles=${patterns}`];
     const result = windows
       ? spawnSync("cmd.exe", ["/d", "/c", "mvnw.cmd", ...args], { cwd: moduleDir, encoding: "utf8" })
       : spawnSync("sh", ["./mvnw", ...args], { cwd: moduleDir, encoding: "utf8" });
     if (result.error || result.status !== 0) {
-      console.error("[format] Spotless failed (syntax error, or Java/Maven not available):");
+      console.error(`[format] Spotless failed in ${module} (syntax error, or Java/Maven not available):`);
       console.error(result.error?.message ?? `${result.stdout}${result.stderr}`.trim().split("\n").slice(-30).join("\n"));
       console.error("[format] Fix the problem, or skip formatting once with: SKIP_FORMAT=1 git commit ...");
       process.exit(1);
