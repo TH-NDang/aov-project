@@ -77,8 +77,10 @@ function StorageReport({ summary }: { summary: StorageSummary }) {
             <CardTitle>Dung lượng đã dùng</CardTitle>
             <CardDescription>
               {storage.source === "CLOUDFLARE"
-                ? "Theo số liệu Cloudflare của ba bucket."
-                : "Theo danh mục trong database: ảnh công khai, tệp nguồn và upload đang chờ."}
+                ? "Theo số liệu Cloudflare của ba bucket, gồm cả bytes chưa có trong danh mục."
+                : summary.cloudflare.state === "OK"
+                  ? "Theo danh mục trong database. Cloudflare chỉ cập nhật dung lượng theo chu kỳ, nên chưa tính lượt tải gần đây."
+                  : "Theo danh mục trong database: ảnh công khai, tệp nguồn và upload đang chờ."}
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
