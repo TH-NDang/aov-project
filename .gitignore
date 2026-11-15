@@ -5,6 +5,9 @@
 
 # ---- resources/ IS committed: images go through Git LFS (see .gitattributes) ----
 /resources/Lien-Quan-v3/program/trang-bi/editor-server.pid
+# Local captures and review sets move to the private R2 bucket instead (ADR-030); never commit them.
+/resources/raw/
+/resources/extracted/
 
 # ---- Secrets / local configuration ----
 .env
