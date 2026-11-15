@@ -1057,7 +1057,7 @@ class MediaAdminApiIntegrationTest {
         }
     }
 
-    /** Stands in for the hero module until it implements the usage contract (Phase 3). */
+    /** An extra usage provider that each test fills by hand, next to the real ones, to put an asset in use. */
     static class StubUsages implements MediaUsageProvider {
 
         final Map<UUID, List<MediaUsage>> byAsset = new ConcurrentHashMap<>();
