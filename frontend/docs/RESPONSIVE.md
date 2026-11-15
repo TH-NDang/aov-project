@@ -27,7 +27,7 @@ Không dùng `order` trong CSS hay để `flex-wrap` tự quyết định thứ 
 - Dãy tab dài cuộn ngang trên một hàng, không xuống dòng.
 - Ô tìm kiếm giữ độ rộng tối thiểu bằng `flex-basis`, không dùng `flex: 1` kèm `flex-wrap` vì ô sẽ bị bóp nhỏ mà các ô khác không xuống dòng.
 - Tiêu đề cột và nhãn nút không xuống dòng. Bảng không đủ chỗ thì ẩn cột phụ trước.
-- Nút bấm trên màn hình cảm ứng cao tối thiểu 36px. Ô nhập trên Wiki dùng chữ 16px để iPhone không tự phóng to trang.
+- Nút bấm trên màn hình cảm ứng cao tối thiểu 36px, nên 40px trên compact. Ô nhập trên điện thoại dùng chữ 16px để iPhone không tự phóng to trang.
 - Khi đổi kiểu xem hoặc đổi mục, trang không được nhảy vị trí.
 
 ## Component dùng chung
@@ -36,23 +36,39 @@ Không dùng `order` trong CSS hay để `flex-wrap` tự quyết định thứ 
 |---|---|
 | `PublicFilterSheet` | Trên compact: một nút "Lọc" cạnh ô tìm kiếm, toàn bộ bộ lọc nằm trong drawer dưới và hiện số kết quả |
 | `PublicTabBar` | Dãy tab dính dưới đầu trang, cuộn ngang |
+| `CatalogHeading` (Wiki, `apps/aov-wiki/src/layout/catalog-heading.tsx`) | Đầu trang danh sách trên wide: tiêu đề, một dòng mờ, tối đa một nút hoặc phiên bản dữ liệu bên phải, đường quay lại cho trang con. Trên compact không hiện, vì header đã ghi tên trang; trang không có tên trên header (Liên hệ, Tài khoản) bật `compact` để giữ lại |
 
 ## AOV Wiki
 
+Trang nằm trong cột `--aov-page-max` (1280px) với lề `--wiki-gutter`, cùng cột với thanh đầu trang. Không có cột mục
+lục bên trái và không có thanh điều hướng ở đáy màn hình.
+
 | Trang | Compact | Wide |
 |---|---|---|
-| Đầu trang | Một hàng: về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục, thêm | Logo, ô tìm kiếm giữa trang, cài đặt và tài khoản |
-| Điều hướng mục | Nút mục lục mở danh sách đầy đủ | Cột mục lục bên trái |
-| Chi tiết tướng | Ảnh và tên → Chọn patch → Một dòng "Thay đổi ở bản này", bấm để mở xuống → Tổng quan gọn → Bộ kỹ năng → Trang phục → Video → Các lần thay đổi khác. Nút nổi mở drawer các phần | Màn đầu: ảnh tướng bên trái, bảng tên và Tổng quan bên phải. Sau đó: Chọn patch → Thay đổi → Bộ kỹ năng → Trang phục → Video → Lịch sử, mỗi phần một bảng. Từ 1180px có cột mục lục bên phải, dưới đó dùng nút nổi |
-| Danh sách tướng | Ô tìm và nút Lọc dính dưới đầu trang → Thay đổi tại patch → Lưới tướng | Ô tìm → Vị trí và Vai trò → Thay đổi tại patch → Lưới tướng |
-| Kho trang bị | Tab Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ → Tìm kiếm → Danh sách | Mục lục bên trái, thanh công cụ một hàng, danh sách |
-| Chế độ chơi | Ô tìm → hàng bộ lọc cuộn ngang → Cẩm nang nổi bật → Danh sách dạng hàng: ảnh nhỏ, tên, thời lượng, tình trạng | Ô tìm và bộ lọc một hàng → Cẩm nang nổi bật → Lưới thẻ có ảnh theo nhóm PVP, Giải trí |
-| Một chế độ | Ảnh → Hàng tab cẩm nang dính dưới đầu trang → Thông tin nhanh hai cột → Giới thiệu → Luật chơi gấp theo nhóm, nhóm đầu mở sẵn | Ảnh → Hàng tab → Giới thiệu và Luật chơi bên trái, Thông tin nhanh dính bên phải |
-| Cẩm nang Cờ Liên quân | Quân cờ: lọc Phe/Nghề bằng icon, mỗi loại một hàng cuộn ngang; nút giá (đồng vàng + số) chia đều một hàng; lưới 4 cột chỉ ảnh và tên, chia theo giá. Phe & Nghề: lưới icon, bấm icon mở chi tiết trong ngăn kéo; bảng Phe × Nghề cuộn ngang, cột Nghề đứng yên. Chúc phúc: một cột thẻ màu theo bậc. Đội hình: nút chuyển Bàn cờ / Danh sách ở đầu mục; bàn cờ 3 hàng × 7 ô vuông (hàng trước ở trên, phía đối thủ), chỉ ảnh quân; danh sách là bàn 5×2; Phe/Nghề, trang bị và chúc phúc ưu tiên xếp dưới. Xếp đội hình: chế độ bàn cờ 3 × 7 — bấm ô trống mở ngăn chọn quân cho đúng ô đó, bấm quân để chọn rồi bấm ô khác để chuyển hoặc đổi chỗ, quân chưa có ô nằm ở hàng chờ dưới bàn; chế độ danh sách là 10 ô + ô thêm → Phe/Nghề đang kích hoạt | Quân cờ: thẻ có icon Phe và Nghề ngăn bằng vạch, rê chuột để xem tên, chia theo giá. Phe & Nghề: lưới icon bên trái, chi tiết dính bên phải. Đội hình: bàn cờ 3 × 7 (rộng tối đa 560px, tên quân hiện trên ảnh) hoặc bàn 5×2 bên trái, Phe/Nghề, trang bị và chúc phúc ưu tiên bên phải. Xếp đội hình: bàn cờ 3 × 7 hoặc 10 ô + ô thêm bên trái, Phe/Nghề bên phải |
+| Đầu trang | Một hàng cao 48px: logo (trang chủ) hoặc nút về trang chủ hoặc quay lại, tên trang, tìm kiếm, mục lục, "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập | Một thanh cao 56px: logo và menu chuyển ứng dụng, các mục Tướng, Trang phục, Kho trang bị (menu bốn phần), Chế độ chơi, Cập nhật, Thuật ngữ, ô tìm kiếm, thị trường và tài khoản. Dưới 1180px ẩn chữ AOV Wiki; dưới 1024px ô tìm kiếm thành nút, bấm thì ô nhập thay chỗ các mục |
+| Điều hướng mục | Nút mục lục mở tấm trượt bên phải với mọi mục theo nhóm | Các mục nằm trên thanh đầu trang |
+| Đầu trang danh sách | Tên trang nằm trên header, trang không lặp lại. Trang con (một chế độ, một bản cập nhật) tự có đường quay lại và tên | `CatalogHeading`: tiêu đề, một dòng mờ, phiên bản dữ liệu hoặc một nút bên phải; trang con có đường quay lại phía trên tiêu đề |
+| Trang chủ | Ảnh tướng của ngày ở trên, header trong suốt đè lên → tiêu đề, ô tìm lớn, dòng bản đang áp dụng → 9 ô mục thành 3 × 3, icon trên tên, không có số đếm → Thay đổi ở bản đang áp dụng, hai tướng một hàng → Các bản cập nhật → Vai trò | Ảnh tướng của ngày phủ nửa phải, tiêu đề và ô tìm lớn bên trái → 9 ô mục trên một hàng (3 × 3 dưới 1180px) → Thay đổi ở bản đang áp dụng bên trái, Các bản cập nhật và 6 vai trò ở cột phải 340px (300px dưới 1180px) |
+| Chi tiết tướng | Ảnh, tên, vai trò, giá và nút Video trên ảnh → Phiên bản dữ liệu → Một dòng "Thay đổi ở bản này", bấm để mở xuống → Tổng quan gọn → Bộ kỹ năng → Build đề cử (khi có) → Trang phục → Video → Lịch sử thay đổi. Nút nổi mở drawer các phần | Màn đầu: tên, vai trò, giá và Tổng quan bên trái, ảnh tướng phủ bên phải, mờ dần vào nền. Sau đó: Phiên bản dữ liệu → Thay đổi ở bản này → Bộ kỹ năng → Build đề cử → Trang phục → Video → Lịch sử thay đổi, đặt thẳng trên nền. Từ 1180px có cột "Trên trang này" bên phải, dưới đó dùng nút nổi |
+| Danh sách tướng | Ô tìm và nút Lọc (Vị trí, Vai trò trong drawer) dính dưới đầu trang → dòng phiên bản dữ liệu → Thay đổi ở bản đang xem → Lưới tướng 5 cột (4 dưới 720px, 3 dưới 480px) | Tiêu đề và phiên bản dữ liệu → Ô tìm, chip Vị trí và Vai trò có icon và tên → Thay đổi ở bản đang xem → Lưới tướng 7 cột (6 dưới 1100px) |
+| Trang phục | Ô tìm và nút Lọc (tướng, bậc, hai kiểu sắp xếp trong drawer) dính dưới đầu trang → dòng phiên bản → bộ lọc đang chọn thành chip bỏ được, kèm số kết quả → mỗi tướng một hàng vuốt ngang, thẻ cuối bị mép màn hình cắt để báo còn nữa | Tiêu đề, số trang phục và phiên bản → thanh công cụ một hàng dính dưới đầu trang: tìm, tướng, bậc, sắp xếp → mỗi tướng một hàng 8, 7 hoặc 6 thẻ trọn vẹn tùy độ rộng, cuối hàng là ô "+N" mở hết hàng tại chỗ. Lọc một tướng, hoặc tìm và lọc bậc ra nhiều tướng, thì thành một lưới |
+| Kho trang bị | Tab Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ dính dưới đầu trang → Ô tìm và nút Lọc → dòng phiên bản → Danh mục (trang bị là danh sách dưới 768px vì sơ đồ cửa hàng cần ba cột). Chọn một mục mở tấm chi tiết từ bên phải, từ dưới lên khi màn hình từ 640px trở xuống | Tiêu đề và phiên bản → một hàng tìm kiếm và bộ lọc (trang bị có thêm nút chuyển Sơ đồ / Danh sách và một hàng chip chỉ số) → Danh mục rộng hết cột; chọn một mục thì chi tiết đứng bên phải, rộng 320–380px |
+| Một bản cập nhật | Quay lại "Tất cả bản cập nhật" → tên bản và thông tin → hàng mục lục cuộn ngang, có ảnh tướng → thay đổi theo nhóm Tướng, Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ | Tiêu đề có đường quay lại, ngày và nguồn → thay đổi theo nhóm bên trái, mục lục dính bên phải tô sáng mục đang đọc |
+| Chế độ chơi | Ô tìm → hàng chip lọc cuộn ngang → Cẩm nang nổi bật (ảnh nhỏ cạnh tên) → các nhóm, mỗi chế độ một hàng: ảnh nhỏ, tên, thời lượng, tình trạng → ghi chú lịch ở cuối | Tiêu đề, số chế độ và ghi chú lịch → Ô tìm và chip lọc một hàng → Cẩm nang nổi bật → Lưới thẻ có ảnh theo nhóm PVP, Chế độ giải trí, tối đa 6 thẻ một hàng (4 dưới 1180px) |
+| Một chế độ | Quay lại và tên chế độ → Hàng tab cẩm nang dính dưới đầu trang (khi chế độ có cẩm nang) → Ảnh → Giới thiệu → Thông tin nhanh dạng ô → Một câu nêu những gì chưa ghi nhận → Luật chơi gấp theo nhóm, nhóm đầu mở sẵn → Nguồn | Tiêu đề có đường quay lại → Hàng tab → Ảnh bên trái; giới thiệu, thông tin nhanh dạng hàng ngăn bằng vạch và nguồn bên phải → Luật chơi |
+| Cẩm nang Cờ Liên quân | Quân cờ: ô tìm, nút Lọc (giá, Phe, Nghề) và nút chuyển Theo giá / Chỉ số; theo giá là tiêu đề từng giá rồi lưới 5 cột (7 cột từ 600px) chỉ ảnh và tên; bảng chỉ số chỉ giữ cột đang sắp xếp để không cuộn ngang; bấm quân mở chi tiết trong ngăn kéo. Phe & Nghề: danh mục, bấm một mục mở chi tiết trong ngăn kéo; bảng Phe × Nghề cuộn ngang, cột Nghề đứng yên. Trang bị, Chúc phúc, Nhiệm vụ: các hàng ngăn bằng vạch; Chúc phúc lọc bằng ô tìm và chip theo bậc. Đội hình: nút chuyển Bàn cờ / Danh sách; bàn cờ 3 hàng × 7 ô vuông (hàng trước ở trên, phía đối thủ), quân chưa có ô nằm ở hàng chờ dưới bàn; danh sách 5 quân một hàng. Xếp đội hình: bàn cờ là phần chính — bấm ô trống mở sheet chọn quân cho đúng ô đó, bấm quân để chọn rồi bấm ô khác để chuyển hoặc đổi chỗ; chế độ danh sách là 10 ô + ô thêm → Phe/Nghề đang kích hoạt | Quân cờ: một hàng công cụ (tìm, chip giá, chip Phe và chip Nghề mở bảng chọn, nút chuyển); mỗi giá một hàng như cửa hàng trong game, 14 quân một hàng từ 1180px, 7 quân dưới đó; bảng chỉ số sắp được theo nhiều cột. Phe & Nghề: danh mục bên trái, chi tiết bên phải dính dưới hàng tab. Đội hình: mỗi đội hình một thẻ, hai thẻ một hàng. Xếp đội hình: thẻ bàn cờ và mọi quân chờ bên dưới để bấm hoặc kéo vào ô, Phe/Nghề đang kích hoạt ở cột phải. Phân tích: hai cột |
 
 ## AOV Stream
 
-Hàng tab Bảng tin, Giải đấu, Khám phá nằm ở đầu trang trên cả hai bố cục. Trang giải đấu: compact có ô tìm và nút Lọc, wide có ô tìm cùng nhóm ô lọc trên một hàng.
+Hàng tab Bảng tin, Giải đấu, Khám phá nằm ở đầu trang trên cả hai bố cục: trên wide nằm trong thanh trên, trên compact
+là hàng thứ hai dính ở đầu màn hình. Trang nằm trong cột `--aov-page-max` với lề `--hub-gutter`, cùng cột với thanh trên.
+
+| Trang | Compact | Wide |
+|---|---|---|
+| Đầu trang | Hàng thương hiệu cao 48px (cú, chữ AOV Stream, nút tìm kiếm, chuông khi đã đăng nhập, "⋯" dưới 768px hoặc tài khoản) cuộn đi khi đọc; hàng tab bên dưới dính lại, cuộn ngang, dưới 420px bỏ icon. Bấm tìm kiếm thì nút quay lại và ô nhập thay hàng thương hiệu | Một thanh cao 56px: cú và menu chuyển ứng dụng, ba mục, ô tìm kiếm, chuông thông báo và tài khoản. Dưới 1100px ô tìm thu thành nút, bấm thì ô nhập chiếm cả thanh |
+| Bảng tin | Dải Trận đấu cuộn ngang → chip lọc bảng tin → bài viết, tải thêm khi cuộn | Dải Trận đấu → bảng tin bên trái, cột phụ 320px bên phải: Giải đang và sắp diễn ra; Tham gia cộng đồng khi chưa đăng nhập, Đang theo dõi và Gợi ý theo dõi khi đã đăng nhập. Dưới 1100px cột phụ ẩn vì chỉ chứa lối tắt đã có ở chỗ khác |
+| Giải đấu | Tiêu đề và nút Tra cứu ván đấu → tab Các giải đấu, Lịch & kết quả → ô tìm và nút Lọc → Đang và sắp diễn ra → các hệ thống giải. Ở tab Lịch & kết quả, chip Tất cả, Lịch đấu, Kết quả nằm hàng riêng dưới ô tìm | Tiêu đề, một dòng mờ và nút Tra cứu ván đấu → tab → ô tìm cùng nhóm ô lọc trên một hàng (chip Tất cả, Lịch đấu, Kết quả cạnh ô tìm) → Đang và sắp diễn ra → mỗi hệ thống giải một nhóm, mùa mới nhất trước, mùa cũ gấp lại |
+| Một giải | Quay lại Tất cả giải đấu → đầu giải (logo, hệ thống giải, tên, trạng thái, ngày, số đội, giải thưởng, nhà vô địch) → tab Tổng quan, Lịch & kết quả, BXH & nhánh đấu, Đội tham dự, cuộn ngang → Tổng quan: trận, bảng xếp hạng, nhánh đấu, rồi Thông tin, Thể thức, Giải thưởng cá nhân | Như compact; từ 1080px Thông tin, Thể thức, Giải thưởng cá nhân nằm ở cột phải 320px |
 
 ## Admin
 
@@ -109,48 +125,63 @@ Component dùng chung cho ngăn chi tiết: `SectionContents`, `ContentsSection`
 | Tuyển thủ | Ẩn cột theo độ rộng, tên đội chuyển xuống dòng phụ khi ẩn cột đội |
 | Quản lý ảnh | Lọc nguồn một khối, loại ảnh cùng số lượng và kiểu xem một khối |
 
-## Phong cách: Wiki và Stream khác nhau
+## Phong cách: một khung, hai bảng màu
 
-Không dùng nền màu mờ lấy từ ảnh hay nền sặc sỡ: màu mạnh chỉ đến từ chính ảnh tướng và icon. Chuyển động nhẹ và tắt khi người đọc bật giảm chuyển động.
+Wiki và Stream dùng chung một khung và một bộ cách trình bày, chỉ khác bảng màu: thanh trên chứa thương hiệu, các mục
+chính, tìm kiếm và tài khoản; trang nằm trong cùng cột với thanh trên; mỗi trang danh sách mở bằng tiêu đề, một dòng mờ
+và tối đa một nút; nội dung đặt thẳng trên nền, chỉ thứ bấm được hoặc nhóm cần tách biệt mới là thẻ; chip, tab và bo
+góc theo cùng một thang (xem `DESIGN-TOKENS.md`).
 
-**Không dùng một khung cho mọi chỗ.** Mỗi loại nội dung có cách trình bày riêng. Trang nhiều dữ liệu cần nền yên tĩnh, không đặt họa tiết phía sau chữ. Ảnh mẫu chỉ để học hỏi: họa tiết và bố cục là thiết kế riêng.
+Màu mạnh chỉ đến từ ảnh và icon của game. Không dùng nền sặc sỡ, góc vàng, khung trang trí, họa tiết hay dải màu phía
+sau chữ và dữ liệu. Chuyển động nhẹ và tắt khi người đọc bật giảm chuyển động.
 
-### AOV Wiki: xanh than và vàng nhạt
+**Không lồng khung trong khung.** Một nhóm đã nằm trong thẻ thì bên trong chỉ ngăn bằng khoảng trống hoặc đường kẻ mảnh.
+Các hàng của một danh sách dài nằm thẳng trên nền, ngăn nhau bằng đường 1px.
 
-Nền trang xanh than, bảng xám xanh, tiêu đề và dấu nhấn vàng nhạt. Màu nằm trong `tokens.css` với tên `--aov-wiki-*` và được `wiki.css` gán vào các token chung. Lớp `.public-panel` cho nội dung trong bảng thấp hơn bảng một bậc để thẻ nổi lên.
+### AOV Wiki: Đêm hoàng kim
+
+Nền xanh mực đậm, thẻ sáng hơn nền một bậc, tiêu đề mục và dấu nhấn vàng đậm; Wiki luôn tối. Màu nằm trong `tokens.css`
+với tên `--aov-wiki-*` và được `wiki.css` gán vào các token chung.
 
 | Nội dung | Cách trình bày |
 |---|---|
-| Màn đầu trang tướng | `OrnatePanel`: bảng có góc vàng và hình huy hiệu mờ. Chỉ dùng ở đây |
-| Bộ lọc tướng, kỹ năng đang chọn, Tổng quan trên điện thoại, Cập nhật mùa, Danh mục | `.wiki-slip`: bảng trơn bo góc |
-| Kho trang bị và phần chi tiết | Đặt thẳng trên nền, thẻ bảng xám xanh, icon nổi rõ. Phần chi tiết cùng tông, icon có ánh vàng |
-| Thay đổi ở bản này | Dải bảng có vạch vàng bên trái |
-| Danh sách kỹ năng | Đặt thẳng trên nền, kỹ năng đang chọn có vạch vàng |
-| Trang phục | Ảnh lớn đặt thẳng trên nền, viền vàng mảnh |
-| Thẻ tướng | Khung xám xanh có góc vàng nhỏ, tên dưới ảnh |
-| Video | Máy tính: thẻ bo góc theo lưới. Điện thoại: hàng dọc, ảnh bên trái như danh sách trong trình phát, hiện 3 mục đầu |
-| Ghi chú cập nhật, Các lần thay đổi khác | Dòng thời gian: đường vàng dọc và các bảng nhỏ |
-| Trang một bản cập nhật, Thuật ngữ | `.wiki-document`: một trang đọc có đường vàng ở trên |
-| Danh mục ở trang chủ | Huy hiệu tròn viền vàng, nhãn vàng nhạt |
+| Thanh đầu trang | Nền gần đặc màu thanh, vạch vàng mờ ở dưới. Mục đang ở có chữ vàng và gạch chân vàng |
+| Đầu trang danh sách | `CatalogHeading`: tiêu đề màu chữ, một dòng mờ, phiên bản dữ liệu hoặc một nút bên phải; không có ảnh hay hình trang trí |
+| Mở đầu trang chủ và trang tướng | Ảnh tướng phủ nửa phải, mờ dần vào nền ở mép trái và mép dưới; chữ đặt thẳng trên nền bên trái. Trên compact ảnh nằm trên cùng, tên tướng ở chân ảnh |
+| Tiêu đề mục | Màu vàng, số đếm nhỏ màu mờ, tối đa một liên kết bên phải, đường vàng mảnh bên dưới |
+| Thẻ (tướng, ô mục, trang phục, mục kho, chế độ, kỹ năng) | Nền thẻ, bo 10px, không viền, không bóng; rê chuột sáng lên một bậc. Thẻ đang chọn có viền vàng 1px và nền vàng rất nhạt |
+| Thay đổi ở bản này | Một bề mặt, vạch bên trái theo màu của loại thay đổi: tăng sức mạnh xanh lá, giảm đỏ, làm lại cam, mới vàng, còn lại xanh dương |
+| Thay đổi ở bản đang áp dụng trên trang chủ | Nhóm theo loại thay đổi, mỗi tướng một thẻ nhỏ có vạch màu của loại bên trái |
+| Lịch sử thay đổi, các bản cập nhật, luật chơi, nhiệm vụ | Hàng đặt thẳng trên nền, ngăn bằng đường mảnh |
+| Chip lọc | Viên cao 32px màu thẻ; chip đang chọn có viền vàng trên nền vàng nhạt, chữ vàng sáng |
+| Tab | Gạch chân vàng dưới tab đang mở, một hàng, cuộn ngang khi thiếu chỗ |
+| Video | Máy tính: thẻ theo lưới, số cột chọn để hàng cuối không còn một thẻ lẻ. Điện thoại: hàng dọc, ảnh bên trái như danh sách trong trình phát, hiện 3 mục đầu |
 | Tham chiếu trong đoạn văn | Chữ thường cùng cỡ, chỉ khác màu, gạch chân khi rê chuột. Bôi đen được cả câu đi qua tham chiếu; thẻ thông tin chỉ mở khi bấm xong hoặc rê chuột |
 | Icon thuật ngữ và chỉ số | Hình đơn sắc lấy màu chữ xung quanh |
+| Trạng thái trống và lỗi | Linh vật chuột chũi, một câu nói rõ chuyện gì xảy ra và bước tiếp theo |
 
 ### AOV Stream: màu của logo cú
 
-Chàm đêm, lông xanh tím, mắt vàng, mặt kem. Màu nằm trong `tokens.css` với tên `--aov-stream-*`. Trang theo chế độ sáng hoặc tối của người xem, riêng thanh trên, dải tiêu đề và chân trang luôn tối.
+Chàm đêm, lông xanh tím, mắt vàng, mặt kem. Màu nằm trong `tokens.css` với tên `--aov-stream-*`. Trang theo chế độ sáng
+hoặc tối của người xem, riêng thanh trên và chân trang luôn màu chàm đêm.
 
 | Nội dung | Cách trình bày |
 |---|---|
-| Nền trang | Hoàng hôn xanh tím, họa tiết vảy lông mờ dần từ đầu trang |
-| Thanh trên | Dải chàm đêm, mục đang chọn là viên vàng như mắt cú |
-| Tiêu đề trang | Dải chàm bo góc, hình cú ở cuối dải |
-| Tiêu đề mục | Một chấm vàng như mắt cú |
-| Mục đang chọn | Trang sáng: nền chàm, chữ kem. Trang tối: nền vàng, chữ chàm. Tab giữ chữ thường và có vạch vàng |
+| Nền trang | Một màu phẳng: sương xanh nhạt ở giao diện sáng, chàm đêm ở giao diện tối; không họa tiết |
+| Mục đang ở trên thanh trên | Khối bo góc màu chàm giống nền logo, chữ kem đậm, ngôi sao vàng nhỏ ở góc |
 | Chữ logo | Vẽ bằng nét tròn đậm cho hợp con cú: AOV màu kem của mặt cú, Stream màu xanh tím của lông, kèm ngôi sao nhỏ của logo |
-| Mục đang ở trên đầu trang | Khối bo góc màu chàm giống nền logo, chữ kem đậm, ngôi sao nhỏ ở góc |
-| Thẻ hồ sơ | Ảnh bìa phía trên, viền sáng lên khi rê chuột |
+| Đầu trang danh sách | `.tn-page-head`: tiêu đề 28/36, một dòng mờ (ẩn trên compact), tối đa một nút bên phải |
+| Đầu một giải, một trận | Nền `.hub-art` màu sinh từ tên, vì các giải chưa có ảnh riêng; chỉ cao vừa nội dung |
+| Tiêu đề mục | `.tn-heading`: 18/24 đậm, số đếm mờ, một liên kết bên phải |
+| Thẻ | Nền thẻ, bo 10px, không viền; rê chuột đổi nền, không xê dịch thẻ. Thẻ trận nhỏ `.tn-match` giữ viền mảnh |
+| Màu nhấn | Giao diện sáng: chàm của cú. Giao diện tối: vàng mắt cú. Liên kết, chip và tab đang chọn theo màu này |
+| Chip | `.hub-pills`: một hàng cuộn ngang, chip đang chọn tô đặc màu nhấn |
+| Tab | `.cp-tabs`: chữ 14px; tab đang mở giữ màu chữ thường, đậm hơn và có vạch màu nhấn bên dưới; một hàng cuộn ngang |
+| Logo đội và giải | Nằm trên ô `--hub-plate`, để logo vẽ cho nền tối vẫn thấy ở giao diện sáng |
+| Trang trong danh bạ | Thẻ gọn: logo hoặc ảnh, tên tối đa ba dòng, nút theo dõi; không dùng ảnh bìa |
+| Trạng thái trống và lỗi | `.hub-state`: cú 48px, một câu, bước tiếp theo |
 
-Chưa dùng Three.js và ảnh tạo bằng AI, vì SVG và CSS đủ cho các họa tiết hiện có. Chỉ thêm khi có cảnh hoặc hình mà SVG không vẽ được.
+Chưa dùng Three.js và ảnh tạo bằng AI, vì SVG và CSS đủ cho các hình hiện có. Chỉ thêm khi có cảnh hoặc hình mà SVG không vẽ được.
 
 ## Cách đo lại
 

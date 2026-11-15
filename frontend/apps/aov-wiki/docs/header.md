@@ -1,102 +1,108 @@
 # Header wiki
 
-- Tham khảo bố cục: https://wiki.hoyolab.com/pc/hsr/home (xem mục "Bố cục theo HoYoWiki")
-- Phạm vi: header, logo, theme tối cố định và responsive; dùng chung cho trang chủ, thư viện Tướng/Trang phục, Kho trang bị và chi tiết Tướng qua các biến thể `home`, `library`, `hero`.
-- Trên thư viện và chi tiết Tướng, tìm kiếm điều hướng đến `/hero?q=...` để lọc danh sách thật. Thư viện Trang phục dùng `/skins?q=...`, Kho trang bị dùng `/warehouse/<tab>?q=...` và giữ tab hiện tại; cùng form và popup với nhãn tương ứng. Tìm kiếm chung trên trang chủ vẫn ghi rõ trạng thái sắp ra mắt; tài khoản đã có luồng đăng nhập thật.
-- Logo hiện tại: `public/images/mole-logo-v4.png`, tạo bằng công cụ imagegen tích hợp; các phiên bản trước và prompt được lưu lại bên dưới.
-- Đã kiểm tra trên trình duyệt ở chiều rộng 320, 390, 768 và 1440 px; không tràn ngang. Popup tài khoản đóng bằng Escape.
+- Phạm vi: thanh đầu trang dùng chung cho mọi trang của Wiki (`WikiHeader` trong `src/components/wiki-header.tsx`, style
+  trong `wiki-header.css`), ô tìm kiếm chung (`src/components/wiki-search.tsx`), chuyển ứng dụng, thị trường dữ liệu và
+  tài khoản. Wiki luôn dùng theme tối.
+- Hai bố cục chọn bằng `usePageLayout`: thanh rộng từ 900px, một hàng compact dưới 900px. Nguyên tắc chung nằm ở
+  `frontend/docs/RESPONSIVE.md`.
+- Không có cột mục lục bên trái và không có thanh điều hướng cố định ở đáy màn hình: trên wide các mục nằm trên thanh,
+  trên compact nằm trong tấm mục lục mở từ header.
+- Logo hiện tại: `public/images/mole-logo-v4.png`, tạo bằng công cụ imagegen tích hợp. Header, chân trang, favicon và
+  trạng thái trống dùng bản 160px `public/images/mole-logo-v4-160.png`. Các phiên bản trước và prompt được lưu lại bên
+  dưới để tham khảo.
 
-## Prompt tạo logo
+## Thanh rộng (từ 900px)
 
-```text
-Use case: logo-brand. Create a single original compact mascot logo for a Vietnamese game knowledge wiki: a curious mole digging through a little mound of earth and uncovering a small ancient golden fragment, expressing rediscovery of buried knowledge. Friendly clever mole with pointed snout, tiny eyes and large digging paws; strong readable silhouette, refined flat illustration, clean bold contours, minimal details legible at 48px. Warm earth brown, cream and muted gold, suitable on a dark charcoal website header. Centered square composition tightly framing mascot. Transparent background. No text, no letters, no watermark, no surrounding badge. Save the generated asset and return its local file path.
-```
+- Cao 56px (`--wiki-header-height`), dính ở đầu trang, nền màu thanh gần đặc (`--header-bg`) có blur, vạch vàng mờ ở
+  dưới (`--header-line`). Nội dung thanh nằm trong cùng cột với trang: rộng tối đa `--aov-page-max`, lề `--wiki-gutter`,
+  nên logo thẳng hàng với mép nội dung.
+- Trái: logo chuột chũi 32px dẫn về trang chủ; chữ AOV Wiki kèm mũi tên là nút mở menu chuyển ứng dụng. Danh sách
+  (`SECTIONS` trong `wiki-header.tsx`) gồm AOV Wiki và AOV Stream, có logo, mô tả và nhãn **Đang xem**. Chọn Stream mở
+  frontend Stream trong cùng tab.
+- Giữa: các mục chính (`TopNavigation`) là Tướng, Trang phục, Kho trang bị, Chế độ chơi, Cập nhật, Thuật ngữ. Kho trang
+  bị là một menu gồm Trang bị, Phù hiệu, Bảng ngọc, Phụ trợ, mỗi mục có hình. Mục đang ở có chữ vàng và gạch chân vàng;
+  khi đang ở một phần của kho thì nút Kho trang bị được đánh dấu. Đường dẫn, hình và nhóm của các mục nằm trong
+  `src/lib/wiki-sections.ts`.
+- Phải: ô tìm kiếm chung (cao 36px, rộng 280px), nút thị trường dữ liệu (cờ và mã thị trường, mở bảng chọn thị trường)
+  và tài khoản.
+- Dưới 1180px: ẩn chữ AOV Wiki, chỉ còn logo và mũi tên; ô tìm kiếm còn 220px.
+- Dưới 1024px: ô tìm kiếm thành nút kính lúp. Bấm thì ô nhập thay chỗ các mục và nút chuyển thành dấu đóng; đóng tìm
+  kiếm thì focus về lại nút.
+- Trang tướng (`variant="hero"`): thanh nằm trên ảnh tướng, trong suốt ở đầu trang; trong 100px cuộn đầu tiên nền, vạch
+  dưới và độ blur tăng dần. `useScrollProgressVar` ghi `--header-solid` thẳng lên thẻ header, không cập nhật state hay
+  render lại React theo mỗi lần cuộn. Trong lúc thanh còn trong, ô tìm kiếm và các nút có nền riêng để đọc được trên ảnh.
 
-## Logo phiên bản 2
+## Tìm kiếm chung
 
-Logo hiện tại: `public/images/mole-logo-v2.png`, tạo bằng imagegen tích hợp. Chỉ giữ đầu chuột chũi trên nền xanh trầm; khung bo góc và viền được triển khai bằng CSS. Wordmark nghiêng, AOV đậm màu kem, WIKI vàng đất, điểm gạch xanh ngắn; bỏ tagline.
+- `WikiSearch` là ô tìm duy nhất của Wiki: trên thanh đầu trang (`size="bar"`), ô lớn ở trang chủ và trang không tìm
+  thấy (`size="hero"`), và hàng tìm kiếm của header compact (`size="sheet"`).
+- Gõ chữ thì danh sách gợi ý mở dưới ô: tối đa 8 tên đã xuất bản thuộc tướng, trang bị, phù hiệu, bảng ngọc, phụ trợ và
+  thuật ngữ, mỗi tên có hình và loại. Tên trùng khớp đứng trước, rồi tên bắt đầu bằng từ khóa, rồi tên chứa từ khóa; tìm
+  không phân biệt dấu và tính cả tên khác. Tên lấy từ `GET /reference-catalog` theo thị trường, ngôn ngữ và mốc dữ liệu
+  đang xem, chỉ tải khi bắt đầu gõ.
+- Cuối danh sách là "Lọc danh sách": Tướng, Trang phục, Trang bị, Thuật ngữ, mỗi mục mở danh sách đó với từ khóa trong
+  `q`, cho trang phục và cho những tên ngoài 8 gợi ý.
+- Phím ↑ ↓ đi qua các tên rồi các danh sách, Enter mở mục đang đánh dấu, Escape xóa từ khóa rồi mới đóng. Chưa tải được
+  danh sách tên thì báo rõ và thử lại khi gõ tiếp.
+- Ô nhập trên điện thoại dùng chữ 16px để iPhone không tự phóng to trang.
 
-Prompt:
+## Compact (dưới 900px)
 
-```text
-Create a minimalist original app icon for AOV Wiki. Only one subject: a friendly curious mole HEAD, with a long broad cream snout, tiny dark eyes, rounded brown head and tiny pink nose. No body, paws, dirt, objects, treasure, lettering or decorative sparkles. Bold flat graphic silhouette with very few large color shapes, legible at 40px. Front three-quarter view, head fills 80% of square. Warm cream and cocoa brown mole against solid muted teal background (#346366), no texture or gradients. Square edge-to-edge background; website will apply a rounded square crop and border. Clean distinctive mascot mark, not another brand's character.
-```
+Một hàng cao 48px (`WikiHeaderCompact`):
 
-## Logo phiên bản 3
+- Trái: trang chủ, Liên hệ, Tài khoản và trang không tìm thấy hiện logo 28px kèm chữ AOV Wiki; các trang danh sách có nút
+  về trang chủ; trang tướng có nút quay lại danh sách tướng, giữ nguyên bộ lọc đang dùng.
+- Giữa: tên trang, bỏ chữ "Thư viện" ở đầu. Đây là `h1` của trang, trừ trang một chế độ và trang một bản cập nhật: hai
+  trang này tự có `h1` mang tên riêng, nên header chỉ ghi tên mục (`pageTitleIsHeading`). Kho trang bị ghi chung "Kho
+  trang bị", bốn phần là dãy tab dính ngay dưới header.
+- Phải: tìm kiếm, mục lục và "⋯". Bấm tìm kiếm thì cả hàng thành nút đóng và ô nhập; danh sách gợi ý trải gần hết bề ngang
+  dưới header.
+- Mục lục (`LibraryContents` trong `src/components/library-contents.tsx`) mở tấm trượt từ phải, rộng tối đa 320px, liệt
+  kê mọi mục theo bốn nhóm Sổ tay nhân vật, Kho trang bị, Lối chơi, Tham khảo (`LibraryNavigation` trong
+  `src/components/library-navigation.tsx`). Mục đang xem được đánh dấu; chọn một mục thì tấm đóng.
+- Nền: các trang danh sách có nền đặc. Trang chủ, trang tướng, trang một chế độ và các trang không thuộc thư viện bắt
+  đầu trong suốt rồi đặc dần trong 100px cuộn đầu tiên; ảnh mở đầu của trang chủ và trang tướng nằm ngay dưới header.
+  Ở biến thể `hero` (trang tướng, trang một chế độ) mỗi nút có đĩa nền mờ riêng.
+- Nút cao 40px, vòng nền hiện khi rê chuột hoặc khi tấm của nút đang mở.
 
-Tạo bằng imagegen tích hợp; file `public/images/mole-logo-v3.png`. Nền hổ phách, viền vàng ấm, biểu cảm tò mò và nét đậm giúp nhận diện ở kích thước nhỏ.
+### Menu "⋯"
 
-Prompt:
+- Mở drawer dưới (`MoreMenu`) dùng chung `PublicPreferencesDrawer` với Stream: hàng tài khoản ở đầu
+  (`PublicAccountSummary`, không mở popup tài khoản lồng nhau), hai ô Wiki/Stream, rồi nhóm cài đặt ngôn ngữ, múi giờ,
+  định dạng ngày, tiền tệ và thị trường dữ liệu.
+- Logo ứng dụng 32px; hàng cài đặt cao 48px. Nội dung cuộn khi màn hình thấp, giữ khoảng đệm theo vùng an toàn phía dưới.
+- Thanh kéo 36×3px nằm trong vùng 64×24px và chỉ vùng này nhận thao tác kéo đóng; cuộn/chọn bên trong không kéo theo
+  drawer. Nền phía sau giữ nguyên kích thước, phủ mờ nhẹ; hiệu ứng mở 240ms và tắt khi người dùng bật giảm chuyển động.
 
-```text
-Design one polished original mascot app icon for AOV Wiki. A charming curious MOLE HEAD only, three-quarter view, distinctive pointed cream muzzle and small rosy nose, two tiny lively dark eyes looking upward, subtle asymmetric smile, three sculpted tufts on the top of its cocoa brown head. Strong bold dark cocoa outlines, clean graphic shapes, sophisticated playful game-wiki branding, not generic clipart. Head fills 85 percent of square, readable at 42 pixels. Warm ochre amber background, softly lighter in center, NO teal or blue. Warm cream face, rich dark brown head, restrained golden rim highlight. Give the mole a memorable inquisitive expression without adding props. No body, no paws, no soil, no treasure, no objects, no text, no sparkles. Edge-to-edge square background, rounded border will be applied in CSS. Crisp professional 2D mascot icon.
-```
+## Cách viết style
 
-## Logo phiên bản 4
+Header dùng class riêng trong `wiki-header.css`; mọi màu lấy từ token (`--aov-*`, `--header-bg`, `--header-line`), bo
+góc lấy từ `--aov-radius-control` và `--aov-radius-card`. `src/wiki.css` giữ:
 
-Chỉnh bằng imagegen tích hợp từ phiên bản 3. File hiện tại: `public/images/mole-logo-v4.png`. Chuột chũi ló từ góc dưới trái, nhìn trực diện người dùng; giữ nền hổ phách và khung CSS.
+- import `@aov/ui/styles.css` và các file trong `src/styles/` (vai trò chữ, chuyển động, ô nhập và nút dùng chung);
+- bảng màu Wiki gán vào các token chung (xem `frontend/docs/DESIGN-TOKENS.md`), cùng `--wiki-gutter`,
+  `--wiki-header-height` (56px, 48px dưới 900px), `--header-bg` và `--header-line`;
+- `@theme inline` cho `--font-sans` và `--container-page`;
+- vài style nền trong `@layer base` (`#root`, nền trang, focus ring, giảm chuyển động).
 
-Prompt:
+Lưu ý khi sửa: `rounded-md/lg/xl` của Tailwind đi theo token `--radius` của shadcn (10px), không phải thang bo góc của
+Wiki, nên chỗ nào dùng class Tailwind thì ghi bo góc bằng token hoặc px.
 
-```text
-Edit this mole mascot app icon. Preserve the original brown/cream mole identity, charming polished 2D illustration, warm amber background and warm lighting. Change pose and composition: mole peeks into the square from the BOTTOM LEFT CORNER, its neck and lower head cropped by bottom and left edges, head slightly tilted, face turned FRONT toward the viewer, BOTH eyes making direct eye contact with the user, pink nose aimed toward camera, curious friendly subtle smile. Head occupies lower-left two thirds of image, leave clear amber negative space above and at upper right. It should feel like the mole is peeking out from below the app icon to greet the viewer. Keep large legible facial features for a 46px icon. No paws, soil, artifacts, text, extra objects, badges or inset borders. Square edge-to-edge amber background; rounded crop is applied by the website.
-```
+## Góp ý trang
 
-## Bố cục theo HoYoWiki (bản hiện tại)
-
-Bám theo thanh điều hướng của https://wiki.hoyolab.com/pc/hsr/home (giống bản Genshin):
-
-- Cao 48px, nền `#000000a6` + blur, viền dưới trắng 8%, padding ngang 24px.
-- Trái: logo chuột chũi dẫn về trang chủ; tên **AOV Wiki** kèm mũi tên là nút mở menu chuyển ứng dụng. Danh sách (`SECTIONS` trong `wiki-header.tsx`) gồm AOV Wiki và AOV Stream, có logo, mô tả và nhãn **Đang xem**. Chọn Stream mở frontend Stream trong cùng tab.
-- Giữa: ô tìm kiếm cao 28px, tối đa 540px, bo 23px, căn giữa màn hình bằng lưới 3 cột (`minmax(max-content, 1fr) | minmax(0, 540px) | minmax(max-content, 1fr)`).
-- Phải: chọn thị trường dữ liệu và icon tài khoản. Hover hoặc nhấn icon mở popup ngôn ngữ và đăng nhập; không có lựa chọn giao diện. Thư viện và chi tiết Tướng có thêm icon **Phản hồi vấn đề** trên desktop.
-- Dropdown/popover dùng chung hằng `PANEL_SURFACE` trong `wiki-header.tsx` (nền tối trong mờ, bo 12px).
-- Responsive: ≤1100px ẩn chữ "Sắp ra mắt"; ≤860px ô tìm kiếm thành nút kính lúp; ≤640px chuyển sang bố cục điện thoại (xem dưới). Đã kiểm tra ở 320, 375, 1024, 1440px — không tràn ngang, không lỗi console.
-
-### Cách viết style
-
-Bố cục header dùng class Tailwind trong `wiki-header.tsx`, giống `admin-aov`. Biến thể chi tiết Tướng có thêm `wiki-header.css` để phối nền, viền và độ blur theo vị trí cuộn. `src/wiki.css` giữ:
-
-- import `@aov/ui/styles.css`, biến màu theme của wiki;
-- `@theme inline` đăng ký token thành utility: `bg-header`, `border-header-line`, `text-header-text`, `text-header-muted`, `text-gold`, `bg-amber-accent` (gạch dưới chữ AOV, cùng tông nền logo), `font-wordmark`;
-- vài style nền trong `@layer base` (`#root`, font, focus ring, giảm chuyển động).
-
-Lưu ý khi sửa:
-
-- Bo góc ghi bằng px (`rounded-[8px]`…) vì `rounded-md/lg/xl` đi theo token `--radius` của shadcn (10px), không phải mặc định của Tailwind.
-- Không đưa `font-wordmark`/`font-[...]` cùng `font-black` qua `cn()`: tailwind-merge coi họ font và độ đậm là xung đột và xoá mất một class. Tương tự, `leading-*` đặt trước `text-[size]` trong `cn()` sẽ bị xoá.
-
-## Header thư viện và chi tiết Tướng
-
-- `WikiHeader` nhận `variant`, `pageTitle`, `onOpenContents` và `feedback`. Trang chủ giữ bố cục hiện có; thư viện dùng nền xanh xám phù hợp với danh sách. Header chi tiết Tướng trong suốt khi ở đầu trang trên cả desktop và điện thoại, để ảnh nền phía sau liền với trang.
-- Trong 100px cuộn đầu tiên, nền, viền dưới và độ blur của header chi tiết tăng dần. `useScrollProgressVar` chỉ ghi `--header-solid` trực tiếp lên thẻ header, không cập nhật state hoặc render lại React theo mỗi lần cuộn. Màu nền đọc từ `--hero-surface-rgb` của bố cục chi tiết, cùng bảng màu ảnh trong `hero-appearance.ts`; thiếu cấu hình thì dùng nền tối dự phòng.
-- Ô tìm kiếm trên hai biến thể Tướng hoạt động bằng form: nhập tên rồi nhấn Enter để mở `/hero?q=...`; gửi rỗng sẽ về `/hero`. Không có nút mũi tên điều hướng trong ô nhập. Từ 860px trở xuống, icon kính lúp mở popup chứa cùng form; chữ nhập 16px và gợi ý phím tìm kiếm cho bàn phím điện thoại. Bộ lọc danh sách và tìm kiếm không phân biệt dấu được mô tả trong `layout.md`.
-- Trên điện thoại, thư viện hiện “Tướng” ở giữa thay cho logo và wordmark; chi tiết không hiện cả tên tướng lẫn logo/wordmark trên header. Header chi tiết chỉ có Trang chủ bên trái, Tìm kiếm và “⋯” bên phải; Mục lục nằm trong “⋯”. Menu đóng trước khi mở **Mục lục** từ phải qua bằng `Sheet` để không chồng lớp khóa focus. Thư viện vẫn giữ nút mục lục riêng. Nút “⋯” còn phụ trách chuyển ứng dụng và thị trường dữ liệu; tài khoản/ngôn ngữ nằm trong menu “⋯”. Desktop vẫn có logo và wordmark trên cả hai biến thể.
-- Mục lục thư viện trên desktop nằm ở cột bên trái dưới header. Nhóm **Sổ tay nhân vật** chứa **Danh sách tướng** (`/hero`) và **Trang phục** (`/skins`). Nhóm **Kho trang bị** chứa **Trang bị**, **Phù hiệu**, **Bảng ngọc**, **Phụ trợ**; các mục dùng query `tab` của `/warehouse` và chỉ mục đang xem được đánh dấu. Bản đồ và Chế độ chơi vẫn là các mục độc lập. Chi tiết Tướng dùng ảnh rộng nên không hiện cột này; mục lục trên điện thoại dùng cùng nội dung điều hướng.
-
-- Riêng header chi tiết trên mobile dùng vùng chạm 40px, vòng tròn nhìn thấy 28px và icon 16px. Nền trong nhẹ, viền theo màu điểm nhấn của tướng. Mép trên ảnh có gradient tối cao 140–200px, đậm nhẹ ở đầu rồi tan dần để nút dễ nhìn mà ảnh vẫn liền mạch. Icon đổi tướng nằm cạnh tên trong thân trang, mở bảng chọn bên trái; mục lục vẫn mở bên phải.
-
-## Phản hồi vấn đề
-
-- Icon chỉ hiện trên desktop của thư viện và chi tiết Tướng, mở `Dialog` dùng chung của `@aov/ui`. Người dùng có thể viết tối đa 1.000 ký tự và chọn tối đa 3 ảnh PNG/JPG, 5 MB mỗi ảnh để xem trước.
-- Chưa có endpoint gửi phản hồi. Nút **Lưu bản nháp** chỉ lưu nội dung chữ, đường dẫn trang và thời gian trên thiết bị qua `localStorage`; giao diện nói rõ bản nháp chưa được gửi đến quản trị viên.
-- Ảnh đính kèm chỉ tồn tại trong bộ nhớ khi còn ở trang, không được upload hoặc lưu cùng bản nháp. Thoát trang hoặc tải lại sẽ mất các ảnh này.
-
-## Điện thoại (≤640px)
-
-Theo bản mobile của HoYoWiki (https://wiki.hoyolab.com/m/hsr/home):
-
-- Cao 44px, lề ngang 15px. Trên trang chủ, ban đầu trong suốt trên ảnh nền; trong 100px cuộn đầu tiên nền đặc `#202329` và viền dưới hiện dần (`useScrollProgressVar` ghi biến CSS `--header-solid` thẳng lên thẻ header, không render lại React). Thư viện dùng nền xanh xám, còn chi tiết áp dụng màu và chuyển động cuộn như mô tả ở phần header Tướng.
-- Trái: nút tròn 28px viền trắng 25% về **Trang chủ** (`/`), như nút home của HoYoWiki mobile. Mũi tên chọn khu vực cạnh AOVWiKi bị ẩn trên điện thoại.
-- Giữa: trên trang chủ là logo 24px + chữ AOVWiKi 18px, căn giữa tuyệt đối; thư viện hiện “Tướng”, chi tiết để trống vùng này.
-- Phải: các icon tìm kiếm và "⋯"; không có icon tài khoản riêng trên mobile. Thư viện và chi tiết có thêm nút mở mục lục.
-- Nút "⋯" mở tấm trượt từ dưới lên (`MoreMenu`) để chuyển Wiki/Stream và chọn thị trường dữ liệu. Các mục tài khoản, ngôn ngữ và đăng nhập/đăng xuất nằm ngay trong menu này. Wiki không có thanh điều hướng cố định dưới.
-- Bên trong menu dùng bố cục gọn: hàng tài khoản ở đầu, hai ô Wiki/Stream cạnh nhau, rồi nhóm ngôn ngữ và thị trường. Logo ứng dụng 30px, chữ 12–14px; hàng cài đặt cao 48px. Nội dung cuộn khi màn hình thấp, giữ khoảng đệm theo vùng an toàn phía dưới.
-- Drawer dùng `PublicPreferencesDrawer` chung với Stream. Thanh kéo 36×3px nằm trong vùng 64×24px và chỉ vùng này nhận thao tác kéo đóng; cuộn/chọn bên trong không kéo theo drawer. Nền phía sau giữ nguyên kích thước, phủ mờ nhẹ; hiệu ứng mở 240ms và tắt khi người dùng bật giảm chuyển động.
+- `FeedbackDialog` (`src/components/feedback-dialog.tsx`) mở từ nút "Góp ý trang này" ở chân trang của mọi trang. Trang
+  tướng (Tổng quan, kỹ năng đang xem) và trình xem trang phục có nút "Đề xuất chỉnh sửa" cho đúng phần đó, kèm nội dung
+  đang hiển thị để đối chiếu.
+- Góp ý được gửi qua `POST /api/wiki/v1/media/contact-requests` (`src/features/contact/contact-request.ts`) cùng tên,
+  email, đường dẫn trang và mốc dữ liệu đang xem; tối đa 4.000 ký tự. Gửi xong hiện mã tiếp nhận.
+- Nút **Lưu nháp** chỉ lưu nội dung chữ, đường dẫn trang và thời gian trên thiết bị qua `localStorage`.
+- Ảnh đính kèm (tối đa 3 ảnh PNG/JPG, 5 MB mỗi ảnh) chỉ để đối chiếu trên thiết bị, không được gửi hay lưu cùng bản
+  nháp. Thoát trang hoặc tải lại sẽ mất các ảnh này.
 
 ## Chuyển giữa Wiki và Stream
 
-- Desktop dùng menu cạnh logo; điện thoại dùng mục AOV Stream trong menu "⋯". Stream có menu tương ứng cạnh logo cú để quay về Wiki, trên cả desktop và điện thoại.
+- Thanh rộng dùng menu cạnh logo; compact dùng hai ô Wiki/Stream trong menu "⋯". Stream có menu tương ứng cạnh logo cú
+  để quay về Wiki.
 - Chữ logo và các dòng ứng dụng dùng chung `PublicAppWordmark`/`PublicAppOptionBody` từ `@aov/ui`: AOV nét dày nghiêng, gạch nhấn vát, tên sản phẩm chữ hoa giãn nhẹ. Wiki dùng màu kem/hổ phách của chuột chũi; Stream dùng kem/tím chàm và điểm vàng của cú. Menu Wiki dùng nền tối; menu Stream theo giao diện sáng/tối của trang.
 - Cấu hình `VITE_STREAM_URL` trong môi trường của `apps/aov-wiki` để đặt địa chỉ Stream. Nếu bỏ trống, dùng cùng giao thức và hostname với Wiki, cổng `5174`, hỗ trợ cả truy cập qua IP trong mạng LAN.
 - Khi triển khai, đặt URL công khai đầy đủ trước khi build, ví dụ `VITE_STREAM_URL=https://stream.example.com`; khởi động lại dev server khi thay biến môi trường. Chiều ngược lại dùng `VITE_WIKI_URL` trong `apps/aov-stream`.
@@ -104,15 +110,59 @@ Theo bản mobile của HoYoWiki (https://wiki.hoyolab.com/m/hsr/home):
 
 ## Tài khoản
 
-`PublicAccountMenu` dùng chung với Stream, hỗ trợ hover trên desktop và nhấn/bàn phím. Mobile dùng
-`PublicAccountSummary` ngay trong menu “⋯”, không mở popup tài khoản lồng nhau. Ngôn ngữ và
-thị trường nằm trong nhóm cài đặt của menu; Wiki không có thiết lập giao diện. Ngôn ngữ dùng
-`WikiContext`, giữ thị trường/bộ lọc hiện tại.
+`PublicAccountMenu` dùng chung với Stream, hỗ trợ hover trên desktop và nhấn/bàn phím; popup gom ngôn ngữ, múi giờ, định
+dạng ngày, tiền tệ và đăng nhập. Compact dùng `PublicAccountSummary` ngay trong menu “⋯”, không mở popup tài khoản lồng
+nhau. Wiki không có thiết lập giao diện. Ngôn ngữ dùng `WikiContext`, giữ thị trường/bộ lọc hiện tại.
 Đăng nhập qua trang AOV riêng tại máy chủ xác thực, public client `aov-wiki` với Code + PKCE S256.
 Callback `/auth/callback` đọc tên qua `/api/wiki/v1/users/me` rồi trở lại URL trước đăng nhập.
-Khi đã đăng nhập, popup tài khoản (desktop) và hàng tài khoản trong menu “⋯” (mobile) có liên kết
+Khi đã đăng nhập, popup tài khoản (desktop) và hàng tài khoản trong menu “⋯” (compact) có liên kết
 **Cài đặt tài khoản** tới `/account`: đổi mật khẩu bằng mã gửi email, xem/đăng xuất thiết bị và bật/tắt xác thực
 hai bước (ADR-028). Phần giao diện dùng chung `PublicAccountSecurity` của `@aov/ui`; bật/tắt 2FA chuyển sang trang
 Keycloak theme AOV bằng `kc_action` rồi quay lại `/account`.
 Cấu hình `VITE_AUTH_ISSUER`, `VITE_AUTH_CLIENT_ID` trước khi build; xem
 [cài đặt theme](../../../../backend/wiki-service/infra/local/keycloak-themes/README.md).
+
+## Logo và prompt tạo logo
+
+Phần này giữ lại prompt của các phiên bản logo để tham khảo khi cần vẽ lại. Logo đang dùng là phiên bản 4.
+
+### Phiên bản 1
+
+```text
+Use case: logo-brand. Create a single original compact mascot logo for a Vietnamese game knowledge wiki: a curious mole digging through a little mound of earth and uncovering a small ancient golden fragment, expressing rediscovery of buried knowledge. Friendly clever mole with pointed snout, tiny eyes and large digging paws; strong readable silhouette, refined flat illustration, clean bold contours, minimal details legible at 48px. Warm earth brown, cream and muted gold, suitable on a dark charcoal website header. Centered square composition tightly framing mascot. Transparent background. No text, no letters, no watermark, no surrounding badge. Save the generated asset and return its local file path.
+```
+
+### Phiên bản 2
+
+File `public/images/mole-logo-v2.png` (không còn trong repo), tạo bằng imagegen tích hợp. Chỉ giữ đầu chuột chũi trên
+nền xanh trầm; khung bo góc và viền làm bằng CSS. Wordmark nghiêng, AOV đậm màu kem, WIKI vàng đất, điểm gạch xanh
+ngắn; bỏ tagline.
+
+Prompt:
+
+```text
+Create a minimalist original app icon for AOV Wiki. Only one subject: a friendly curious mole HEAD, with a long broad cream snout, tiny dark eyes, rounded brown head and tiny pink nose. No body, paws, dirt, objects, treasure, lettering or decorative sparkles. Bold flat graphic silhouette with very few large color shapes, legible at 40px. Front three-quarter view, head fills 80% of square. Warm cream and cocoa brown mole against solid muted teal background (#346366), no texture or gradients. Square edge-to-edge background; website will apply a rounded square crop and border. Clean distinctive mascot mark, not another brand's character.
+```
+
+### Phiên bản 3
+
+Tạo bằng imagegen tích hợp; file `public/images/mole-logo-v3.png` (không còn trong repo). Nền hổ phách, viền vàng ấm,
+biểu cảm tò mò và nét đậm giúp nhận diện ở kích thước nhỏ.
+
+Prompt:
+
+```text
+Design one polished original mascot app icon for AOV Wiki. A charming curious MOLE HEAD only, three-quarter view, distinctive pointed cream muzzle and small rosy nose, two tiny lively dark eyes looking upward, subtle asymmetric smile, three sculpted tufts on the top of its cocoa brown head. Strong bold dark cocoa outlines, clean graphic shapes, sophisticated playful game-wiki branding, not generic clipart. Head fills 85 percent of square, readable at 42 pixels. Warm ochre amber background, softly lighter in center, NO teal or blue. Warm cream face, rich dark brown head, restrained golden rim highlight. Give the mole a memorable inquisitive expression without adding props. No body, no paws, no soil, no treasure, no objects, no text, no sparkles. Edge-to-edge square background, rounded border will be applied in CSS. Crisp professional 2D mascot icon.
+```
+
+### Phiên bản 4 (đang dùng)
+
+Chỉnh bằng imagegen tích hợp từ phiên bản 3. File `public/images/mole-logo-v4.png`, bản 160px
+`public/images/mole-logo-v4-160.png`. Chuột chũi ló từ góc dưới trái, nhìn trực diện người dùng; giữ nền hổ phách. Trên
+thanh đầu trang logo có viền vàng mảnh và bo 6px bằng CSS.
+
+Prompt:
+
+```text
+Edit this mole mascot app icon. Preserve the original brown/cream mole identity, charming polished 2D illustration, warm amber background and warm lighting. Change pose and composition: mole peeks into the square from the BOTTOM LEFT CORNER, its neck and lower head cropped by bottom and left edges, head slightly tilted, face turned FRONT toward the viewer, BOTH eyes making direct eye contact with the user, pink nose aimed toward camera, curious friendly subtle smile. Head occupies lower-left two thirds of image, leave clear amber negative space above and at upper right. It should feel like the mole is peeking out from below the app icon to greet the viewer. Keep large legible facial features for a 46px icon. No paws, soil, artifacts, text, extra objects, badges or inset borders. Square edge-to-edge amber background; rounded crop is applied by the website.
+```
