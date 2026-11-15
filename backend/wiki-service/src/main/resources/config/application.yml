@@ -103,17 +103,27 @@ wiki:
     # Client whose client roles (resource_access.<client>.roles) carry the capabilities.
     resource-client-id: ${JWT_RESOURCE_CLIENT_ID:wiki-service}
   storage:
-    # Any S3-compatible service: SeaweedFS locally, Cloudflare R2 / AWS S3 in production (ADR-006).
+    # Any S3-compatible service (ADR-006): Cloudflare R2 for development and production, SeaweedFS in tests.
     endpoint: ${STORAGE_ENDPOINT:}
     # Browser-facing endpoint for presigned URLs when the service reaches storage over a private network.
     public-endpoint: ${STORAGE_PUBLIC_ENDPOINT:}
     region: ${STORAGE_REGION:us-east-1}
     bucket: ${STORAGE_BUCKET:wiki-media}
     assets-bucket: ${STORAGE_ASSETS_BUCKET:}
+    # Private bucket for source files under sources/ (ADR-030); empty uses the private bucket.
+    sources-bucket: ${STORAGE_SOURCES_BUCKET:}
+    # Optional real R2 figures in Admin (ADR-030 section 9): a token with only "Account Analytics: Read".
+    analytics:
+      account-id: ${CLOUDFLARE_ACCOUNT_ID:}
+      api-token: ${CLOUDFLARE_ANALYTICS_TOKEN:}
     path-style-access: ${STORAGE_PATH_STYLE:true}
     access-key: ${STORAGE_ACCESS_KEY:}
     secret-key: ${STORAGE_SECRET_KEY:}
     create-bucket-if-missing: false
+  # Private source files: evidence captures and import data (ADR-030).
+  sources:
+    max-upload-size: 2GB
+    link-validity: 10m
   media:
     # Media policy (01 section 13.5). Only PNG, JPEG and WebP are accepted.
     max-upload-size: 25MB

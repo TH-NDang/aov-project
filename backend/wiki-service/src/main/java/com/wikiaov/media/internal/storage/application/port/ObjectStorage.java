@@ -42,5 +42,13 @@ public interface ObjectStorage {
     PresignedRequest presignPut(String key, String contentType, Duration validity);
 
     /** Creates a temporary download URL for a private object. */
-    PresignedRequest presignGet(String key, Duration validity);
+    default PresignedRequest presignGet(String key, Duration validity) {
+        return presignGet(key, validity, null);
+    }
+
+    /**
+     * Creates a temporary download URL for a private object. A {@code downloadName} makes browsers save the object
+     * under that file name instead of showing it.
+     */
+    PresignedRequest presignGet(String key, Duration validity, @Nullable String downloadName);
 }
