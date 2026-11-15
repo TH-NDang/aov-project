@@ -38,7 +38,7 @@ class HeroQueriesTest {
     @BeforeEach
     void resolvePublishedContext() {
         when(contexts.resolve("VN", at)).thenReturn(context);
-        when(forms.structure()).thenReturn(HeroFormStructure.empty());
+        when(forms.structure()).thenReturn(new HeroFormStructure(List.of()));
     }
 
     @Test
@@ -55,7 +55,7 @@ class HeroQueriesTest {
         var portrait = asset(portraitId, MediaSemanticType.HERO_PORTRAIT, MediaAssetState.ACTIVE);
         when(media.findAll(Set.of(headId, portraitId))).thenReturn(Map.of(headId, head, portraitId, portrait));
 
-        var result = queries.list("VN", "en-US", 1, 1, "", null, "code,asc");
+        var result = queries.list("VN", "en-US", 1, 1, "", null, "code,asc", null, null, false, false);
 
         assertThat(items(result)).singleElement().satisfies(item -> assertThat(item)
                 .containsEntry("id", selected.identity().getId())
@@ -94,7 +94,7 @@ class HeroQueriesTest {
         when(media.findAll(Set.of(headId, missingId, blockedId, incompleteId)))
                 .thenReturn(Map.of(headId, head, blockedId, blockedPortrait, incompleteId, incompletePortrait));
 
-        var result = queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc");
+        var result = queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", null, null, false, false);
 
         assertThat(items(result)).hasSize(4).allSatisfy(item -> assertThat(item)
                 .containsEntry("head", head).doesNotContainKey("portrait"));
@@ -107,7 +107,7 @@ class HeroQueriesTest {
         var hero = hero("airi", Map.of(MediaRole.HEAD, UUID.randomUUID()));
         when(store.heroes(false)).thenReturn(List.of(hero.identity()));
 
-        var result = queries.list("VN", "vi-VN", 1, 20, "", null, "code,asc");
+        var result = queries.list("VN", "vi-VN", 1, 20, "", null, "code,asc", null, null, false, false);
 
         assertThat(items(result)).isEmpty();
         assertThat(result).containsEntry("totalElements", 1).containsEntry("totalPages", 1);
@@ -122,9 +122,9 @@ class HeroQueriesTest {
         when(contexts.resolveCatalog("VN", at, season, null)).thenReturn(context);
         when(store.heroes(false)).thenReturn(List.of(hero.identity()));
 
-        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, null, false)))
+        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, null, false, false)))
                 .isEmpty();
-        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, null, true)))
+        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, null, true, false)))
                 .singleElement().satisfies(item -> assertThat(item).containsEntry("unscopedBaseline", true));
         verify(contexts, times(2)).resolveCatalog("VN", at, season, null);
     }
@@ -146,7 +146,7 @@ class HeroQueriesTest {
         observeAt(veteran, context.patchVariantId());
         observeAt(newcomer, context.patchVariantId());
 
-        var result = queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, earlier, false);
+        var result = queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", season, earlier, false, false);
 
         assertThat(items(result)).singleElement().satisfies(item -> assertThat(item)
                 .containsEntry("code", "airi")
@@ -163,7 +163,7 @@ class HeroQueriesTest {
         var scheduled = contexts.rulesetVariants(context.rulesetId()).get(1).id();
         observeAt(hero, scheduled);
 
-        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc"))).isEmpty();
+        assertThat(items(queries.list("VN", "vi-VN", 0, 20, "", null, "code,asc", null, null, false, false))).isEmpty();
     }
 
     private void observeAt(CatalogHero hero, UUID variantId) {

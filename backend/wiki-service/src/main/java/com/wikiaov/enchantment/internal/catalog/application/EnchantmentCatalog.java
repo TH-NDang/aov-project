@@ -82,13 +82,6 @@ public class EnchantmentCatalog {
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
     public PageSlice<EnchantmentView> list(UUID rulesetId, String locale, String q, int page, int size,
-            UUID seasonId, UUID patchVariantId) {
-        return queries.list(rulesetId, locale, q, page, size, seasonId, patchVariantId);
-    }
-
-    @PreAuthorize("hasAuthority('catalog:read')")
-    @Transactional(readOnly = true)
-    public PageSlice<EnchantmentView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged) {
         return queries.list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged);
     }

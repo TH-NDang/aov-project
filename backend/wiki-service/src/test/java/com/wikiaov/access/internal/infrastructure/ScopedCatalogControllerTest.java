@@ -64,7 +64,7 @@ class ScopedCatalogControllerTest {
         var hero = UUID.randomUUID();
         var season = UUID.randomUUID();
         var patch = UUID.randomUUID();
-        when(heroes.list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false))
+        when(heroes.list("VN", "en-US", 0, 20, "", null, "code,asc", season, patch, false, false))
                 .thenReturn(Map.of("items", List.of()));
         when(heroes.detail(hero, "VN", "en-US", false, season, patch, false))
                 .thenReturn(Map.of("id", hero));

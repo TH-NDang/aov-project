@@ -54,11 +54,6 @@ public class SkinBadges {
     }
 
     @PreAuthorize("hasAuthority('catalog:read')")
-    public PageSlice<SkinBadgeView> list(UUID rulesetId, String locale, String q, int page, int size) {
-        return list(rulesetId, locale, q, null, false, page, size);
-    }
-
-    @PreAuthorize("hasAuthority('catalog:read')")
     public PageSlice<SkinBadgeView> list(UUID rulesetId, String locale, String q, UUID groupId,
             boolean ungrouped, int page, int size) {
         HeroMediaQueries.bounds(page, size);

@@ -21,6 +21,4 @@ public interface SpellRevisionRepository extends JpaRepository<SpellRevision, UU
                 or exists (select e.id from SpellRemoval e where e.patchVariantId = :variantId and e.revisionId = r.id))
             """)
     List<SpellRevision> publishedForChanges(UUID rulesetId, UUID variantId);
-
-    List<SpellRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }

@@ -24,13 +24,6 @@ public final class SkinBadgeCommands {
             UUID groupId,
             @Size(max = 12) @Pattern(regexp = "[a-z]{2}|global") String regionCode
     ) {
-        public Create(String code, String kind, List<Translation> translations) {
-            this(code, kind, translations, null, null);
-        }
-
-        public Create(String code, String kind, List<Translation> translations, UUID groupId) {
-            this(code, kind, translations, groupId, null);
-        }
     }
 
     public record Update(

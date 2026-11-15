@@ -190,10 +190,6 @@ public class HeroPatchHistory {
             List<HeroChangeClassification> changes,
             Map<UUID, MechanicChangePrevious> previous
     ) {
-        public Entry(Header header, HeroPatchAssessment assessment, HeroPatchChangeTranslation translation,
-                List<HeroChangeClassification> changes) {
-            this(header, assessment, translation, changes, Map.of());
-        }
     }
 
     private static StatChangeClassification stat(StatChange input) {

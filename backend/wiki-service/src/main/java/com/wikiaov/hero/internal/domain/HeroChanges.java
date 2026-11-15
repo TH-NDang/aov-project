@@ -120,12 +120,6 @@ public final class HeroChanges {
             @NotEmpty @Size(max = 200) List<@Valid Change> changes,
             Boolean introducesHero
     ) {
-        public Record(UUID heroId, ChangeSource sourceKind, String sourceUrl, UUID fromHeroRevisionId,
-                UUID toHeroRevisionId, List<Summary> summaryTranslations, List<Change> changes) {
-            this(heroId, sourceKind, sourceUrl, fromHeroRevisionId, toHeroRevisionId, summaryTranslations, changes,
-                    null);
-        }
-
         public ChangeSource source() {
             return sourceKind == null ? ChangeSource.SNAPSHOT : sourceKind;
         }

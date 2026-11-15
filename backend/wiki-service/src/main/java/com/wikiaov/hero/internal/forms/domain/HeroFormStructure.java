@@ -17,10 +17,6 @@ public final class HeroFormStructure {
         this.byForm = forms.stream().collect(Collectors.toUnmodifiableMap(Form::heroId, form -> form));
     }
 
-    public static HeroFormStructure empty() {
-        return new HeroFormStructure(List.of());
-    }
-
     public boolean holdsForms(UUID heroId) {
         return byHolder.containsKey(heroId);
     }

@@ -62,7 +62,7 @@ class HeroPatchChangeViewsTests {
         visual.setNewAssetId(UUID.randomUUID());
         visual.setSortOrder(5);
 
-        var entry = new Entry(header, assessment, null, List.of(visual, role, stat, other, mechanic, skill));
+        var entry = new Entry(header, assessment, null, List.of(visual, role, stat, other, mechanic, skill), Map.of());
         var result = HeroPatchChangeViews.render(List.of(entry)).getFirst();
 
         assertThat(result).containsEntry("heroId", hero).containsEntry("heroCode", "airi")

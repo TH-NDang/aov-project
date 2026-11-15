@@ -48,18 +48,6 @@ public class HeroCatalog {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
-            UUID rulesetId, String locale, String sort) {
-        return list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort, false);
-    }
-
-    @PreAuthorize("hasAuthority('catalog:read')")
-    public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
-            UUID rulesetId, String locale, String sort, boolean includeUnchanged) {
-        return list(page, size, q, seasonId, patchVariantId, rulesetId, locale, sort, includeUnchanged, "", "", null);
-    }
-
-    @PreAuthorize("hasAuthority('catalog:read')")
-    public PageSlice<HeroCatalogView> list(int page, int size, String q, UUID seasonId, UUID patchVariantId,
             UUID rulesetId, String locale, String sort, boolean includeUnchanged, String role, String position,
             Boolean hasWarnings) {
         if (page < 0 || size < 1 || size > 100 || (long) page * size > Integer.MAX_VALUE)

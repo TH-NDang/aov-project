@@ -10,10 +10,6 @@ import org.springframework.data.repository.query.Param;
 public interface HeroPatchChangeSetRepository extends JpaRepository<HeroPatchChangeSet, UUID> {
     List<HeroPatchChangeSet> findByHeroIdInAndPatchVariantIdIn(Collection<UUID> heroIds, Collection<UUID> variants);
 
-    List<HeroPatchChangeSet> findByPatchVariantIdOrderByCreatedAtDescId(UUID variantId);
-
-    List<HeroPatchChangeSet> findByHeroIdOrderByCreatedAtDescId(UUID heroId);
-
     @Query("""
             select c.id as id, c.heroId as heroId, h.code as heroCode, c.patchVariantId as patchVariantId,
                 c.fromHeroRevisionId as fromHeroRevisionId, c.toHeroRevisionId as toHeroRevisionId,

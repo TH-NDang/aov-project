@@ -20,6 +20,4 @@ public interface EnchantmentRevisionRepository extends JpaRepository<Enchantment
                 select f.id from EnchantmentPatchChange f where f.patchVariantId = :variantId and f.toRevisionId = r.id))
             """)
     List<EnchantmentRevision> publishedForChanges(UUID rulesetId, UUID variantId);
-
-    List<EnchantmentRevision> findByIconAssetIdAndStateNot(UUID assetId, String state);
 }

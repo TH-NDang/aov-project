@@ -85,7 +85,7 @@ class HeroPatchHistoryTests {
         var at = Instant.parse("2026-10-20T03:00:00Z");
         var source = new com.wikiaov.hero.internal.domain.HeroChanges.Record(UUID.randomUUID(), null, null, null,
                 target,
-                List.of(new Summary("vi-VN", "Summary")), List.of(new OtherChange(Kind.OTHER, "Note")));
+                List.of(new Summary("vi-VN", "Summary")), List.of(new OtherChange(Kind.OTHER, "Note")), null);
         history.create(changeSet, variant, source, at, actor);
         history.appendTranslation(changeSet, source.summaryTranslations().getFirst());
         List<Change> facts = List.of(

@@ -56,11 +56,4 @@ public final class HeroCommands {
             @NotBlank @Size(max = 32) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String formKey
     ) {
     }
-
-    public record SectionUpdate<T>(
-            @NotNull @Positive Long expectedDraftVersion,
-            @NotNull @Valid T content,
-            @Size(max = 4000) String changeNote
-    ) {
-    }
 }

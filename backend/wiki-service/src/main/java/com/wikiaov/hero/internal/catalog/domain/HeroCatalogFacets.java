@@ -7,8 +7,6 @@ public record HeroCatalogFacets(
         Set<String> positions,
         Boolean hasWarnings
 ) {
-    public static final HeroCatalogFacets ALL = new HeroCatalogFacets(Set.of(), Set.of(), null);
-
     public boolean active() {
         return !roles.isEmpty() || !positions.isEmpty() || hasWarnings != null;
     }

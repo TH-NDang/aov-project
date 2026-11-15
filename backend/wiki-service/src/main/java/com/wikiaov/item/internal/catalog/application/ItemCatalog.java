@@ -73,19 +73,6 @@ public class ItemCatalog {
 
     @PreAuthorize("hasAuthority('catalog:read')")
     @Transactional(readOnly = true)
-    public PageSlice<ItemView> list(UUID rulesetId, String locale, String q, int page, int size) {
-        return queries.list(rulesetId, locale, q, page, size);
-    }
-
-    @PreAuthorize("hasAuthority('catalog:read')")
-    @Transactional(readOnly = true)
-    public PageSlice<ItemView> list(UUID rulesetId, String locale, String q, int page, int size,
-            UUID seasonId, UUID patchVariantId) {
-        return queries.list(rulesetId, locale, q, page, size, seasonId, patchVariantId);
-    }
-
-    @PreAuthorize("hasAuthority('catalog:read')")
-    @Transactional(readOnly = true)
     public PageSlice<ItemView> list(UUID rulesetId, String locale, String q, int page, int size,
             UUID seasonId, UUID patchVariantId, boolean includeUnchanged, boolean includeUnscoped) {
         return queries.list(rulesetId, locale, q, page, size, seasonId, patchVariantId, includeUnchanged,
